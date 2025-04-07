@@ -99,7 +99,7 @@ enabled = true
 # in emails.
 site_url = "https://sunlo.app"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://sunlo-nextjs-*-michaelsnook.vercel.app/*", "https://sunlo-nextjs-*-michaelsnooks-projects.vercel.app/*", "https://www.sunlo.app/*", "http://localhost:5173/*", "https://www.sunlo.app/getting-started", "http://localhost:5173/getting-started"]
+additional_redirect_urls = ["https://sunlo-tanstack-*-michaelsnook.vercel.app/*", "https://sunlo-tanstack-*-michaelsnooks-projects.vercel.app/*", "https://www.sunlo.app/*", "http://localhost:5173/*", "https://www.sunlo.app/getting-started", "http://localhost:5173/getting-started"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # If disabled, the refresh token will never expire.

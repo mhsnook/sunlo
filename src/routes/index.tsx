@@ -31,7 +31,7 @@ export const Route = createFileRoute('/')({
 const className = 'mr-2 h-6 w-4'
 
 const footerNavigationItems = [
-	<a href="https://github.com/mhsnook/sunlo-tanstack">
+	<a href="https://github.com/mhsnook/sunlo">
 		<Code className={className} />
 		GitHub
 	</a>,
@@ -344,21 +344,15 @@ function Index() {
 					<p>
 						If you&apos;re a developer or a language expert and would like to
 						help,{' '}
-						<a
-							className="s-link"
-							href="https://github.com/michaelsnook/sunlo-nextjs"
-						>
+						<a className="s-link" href="https://github.com/michaelsnook/sunlo">
 							check out the code on GitHub
 						</a>{' '}
 						or find me on socials (
-						<a className="s-link" href="https://twitter.com/michaelsnook">
+						<a className="s-link" href="https://twitter.com/mhsnook">
 							tw
 						</a>{' '}
 						&amp;{' '}
-						<a
-							className="s-link"
-							href="https://bsky.app/profile/michaelsnook.com"
-						>
+						<a className="s-link" href="https://bsky.app/profile/sunlo.app">
 							bsky
 						</a>
 						).
