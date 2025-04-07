@@ -17,13 +17,13 @@ import SuccessCheckmark from '@/components/SuccessCheckmark'
 import { uuid } from '@/types/main'
 
 type SignUpProps = {
-	referrer: uuid
+	referrer?: uuid
 }
 
 export const Route = createFileRoute('/_auth/signup')({
 	validateSearch: (search: Record<string, unknown>): SignUpProps => {
 		return {
-			referrer: (search.referrer as string) || '',
+			referrer: (search.referrer as uuid) || undefined,
 		}
 	},
 	component: SignUp,
@@ -43,7 +43,7 @@ const FormSchema = z.object({
 type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
-	const { referrer }: SignUpProps = Route.useSearch()
+	const { referrer } = Route.useSearch()
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
 		mutationFn: async ({ email, password, user_role }: FormInputs) => {

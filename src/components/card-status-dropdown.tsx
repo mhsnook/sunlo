@@ -15,10 +15,10 @@ import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 interface CardStatusDropdownProps {
-	deckId: uuid
+	deckId?: uuid
 	pid: uuid
 	lang: string
-	card: CardRow | null
+	card?: CardRow
 	className?: string
 }
 

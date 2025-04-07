@@ -21,10 +21,6 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, OctagonMinus } from 'lucide-react'
 
-export const Route = createFileRoute('/_user/learn/$lang/$id')({
-	component: RouteComponent,
-})
-
 function PhraseNotFound() {
 	return (
 		<Callout variant="problem">
@@ -36,6 +32,10 @@ function PhraseNotFound() {
 	)
 }
 
+export const Route = createFileRoute('/_user/learn/$lang/$id')({
+	component: RouteComponent,
+})
+
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const {
@@ -43,11 +43,12 @@ function RouteComponent() {
 	} = Route.useRouteContext()
 	const { data: language } = useQuery(languageQueryOptions(lang))
 	const { data: deck } = useQuery(deckQueryOptions(lang, userId))
-	const phrase = language.phrasesMap[id] ?? null
+	const phrase = language?.phrasesMap[id] ?? null
 
 	if (phrase === null) return <PhraseNotFound />
 
-	const card = deck.cardsMap[id] ?? null
+	const card = deck?.cardsMap[id] ?? undefined
+	const deckId = deck?.meta.id ?? undefined
 
 	return (
 		<Card>
@@ -60,7 +61,7 @@ function RouteComponent() {
 						</Badge>
 					</div>
 					<CardStatusDropdown
-						deckId={deck.meta.id}
+						deckId={deckId}
 						card={card}
 						pid={phrase.id}
 						lang={lang}
@@ -118,7 +119,7 @@ function RouteComponent() {
 							size="default"
 						/>
 						<div className="flex-grow"></div>
-						<Link to={`/learn/${lang}/library`}>
+						<Link to={`/learn/$lang/library`} params={{ lang }}>
 							<Button variant="ghost">Back to library</Button>
 						</Link>
 					</div>
