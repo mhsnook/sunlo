@@ -1,0 +1,17 @@
+{
+	"applinks": {
+		"details": [
+			{
+				"appIDs": [
+					"Sunlo.app.app.sunlo.dev"
+				],
+				"components": [
+					{
+						"/": "/*",
+						"comment": "Matches any URL"
+					}
+				]
+			}
+		]
+	}
+}

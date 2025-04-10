@@ -21,6 +21,7 @@ tauri-build = { version = "2.0.6", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "2.3.1", features = [] }
+tauri-plugin-deep-link = "2.0.0"
 
 # TODO I'm not sure why this has to be here but it fixes the build
 tauri-plugin-updater = "2"

@@ -4,7 +4,7 @@
 	"identifier": "app.sunlo.dev",
 	"build": {
 		"frontendDist": "../dist",
-		"devUrl": "http://10.0.0.17:5173",
+		"devUrl": "http://127.0.0.1:5173",
 		"beforeDevCommand": "pnpm dev",
 		"beforeBuildCommand": "pnpm build"
 	},
@@ -25,6 +25,9 @@
 	"bundle": {
 		"active": true,
 		"targets": "all",
+		"iOS": {
+			"developmentTeam": "Sunlo.app"
+		},
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",
@@ -42,6 +45,12 @@
 			"endpoints": [
 				"https://cdn.crabnebula.app/update/sunlo/sunlo-tanstack/{{target}}-{{arch}}/{{current_version}}"
 			]
+		},
+		"deep-link": {
+			"mobile": [{ "host": "sunlo.app" }],
+			"desktop": {
+				"schemes": ["sunlo"]
+			}
 		}
 	}
 }
