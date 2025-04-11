@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useProfile } from '@/lib/use-profile'
 import { ago } from '@/lib/dayjs'
+import Flagged from '@/components/flagged'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
@@ -45,7 +46,11 @@ export default function Page() {
 										:	'never'}
 									</p>
 								</div>
-								<div className="flex items-center justify-between">
+
+								<Flagged
+									name="deck_metadata_on_cards"
+									className="flex items-center justify-between"
+								>
 									<div className="flex items-center space-x-1">
 										<Users className="text-info size-4" />
 										<span className="text-sm">{0} friends studying</span>
@@ -54,7 +59,7 @@ export default function Page() {
 										<Star className="text-warning size-4" />
 										<span className="text-sm">{4.5}</span>
 									</div>
-								</div>
+								</Flagged>
 							</CardContent>
 						</Card>
 					</Link>

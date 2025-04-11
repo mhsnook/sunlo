@@ -15,4 +15,5 @@ export const flags: FlagMap = {
 	learning_goals: { enabled: false },
 	text_to_speech: { enabled: false },
 	cards_schedule_metadata: { enabled: false },
+	deck_metadata_on_cards: { enabled: false },
 }
