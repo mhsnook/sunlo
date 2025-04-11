@@ -1,5 +1,5 @@
 import { PostgrestError } from '@supabase/supabase-js'
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, UseQueryResult } from '@tanstack/react-query'
 import type { DeckMeta, DecksMap, ProfileFull, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
@@ -11,20 +11,25 @@ async function fetchAndShapeProfileFull() {
 		.select(`*, decks_array:user_deck_plus(*)`)
 		.maybeSingle()
 		.throwOnError()
-	if (!data) return null
+	if (data === null) return null
 	const { decks_array, ...profile } = data
-	const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
-	const deckLanguages: Array<string> = decks_array.map((d) => d.lang)
+	const decksMap: DecksMap | undefined = mapArray<DeckMeta, 'lang'>(
+		decks_array,
+		'lang'
+	)
+	const deckLanguages: Array<string> = decks_array
+		.map((d) => d.lang)
+		.filter((d) => typeof d === 'string')
 	return { ...profile, decksMap, deckLanguages } as ProfileFull
 }
 
-export const profileQuery = (userId = '') =>
-	queryOptions<ProfileFull, PostgrestError>({
+export const profileQuery = (userId: uuid | null) =>
+	queryOptions<ProfileFull | undefined | null, PostgrestError>({
 		queryKey: ['user', userId],
 		queryFn: async () => {
-			if (!userId) return null
 			return await fetchAndShapeProfileFull()
 		},
+		enabled: !!userId,
 	})
 
 export const useProfile = () => {

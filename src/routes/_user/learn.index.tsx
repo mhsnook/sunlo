@@ -1,9 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { FolderPlus, Home, Search, Star, Users } from 'lucide-react'
+import { Star, Users } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import type { TitleBar } from '@/types/main'
 import { useProfile } from '@/lib/use-profile'
 import { ago } from '@/lib/dayjs'
 
@@ -17,7 +16,7 @@ export default function Page() {
 		<main className="grid gap-4 @lg:grid-cols-2">
 			{isPending ?
 				<Loader />
-			:	Object.entries(profile?.decksMap).map(([key, deck]) => (
+			:	Object.entries(profile?.decksMap ?? []).map(([key, deck]) => (
 					<Link
 						key={key}
 						to="/learn/$lang"
