@@ -13,10 +13,7 @@ async function fetchAndShapeProfileFull() {
 		.throwOnError()
 	if (data === null) return null
 	const { decks_array, ...profile } = data
-	const decksMap: DecksMap | undefined = mapArray<DeckMeta, 'lang'>(
-		decks_array,
-		'lang'
-	)
+	const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
 	const deckLanguages: Array<string> = decks_array
 		.map((d) => d.lang)
 		.filter((d) => typeof d === 'string')
@@ -24,7 +21,7 @@ async function fetchAndShapeProfileFull() {
 }
 
 export const profileQuery = (userId: uuid | null) =>
-	queryOptions<ProfileFull | undefined | null, PostgrestError>({
+	queryOptions<ProfileFull | null, PostgrestError>({
 		queryKey: ['user', userId],
 		queryFn: async () => {
 			return await fetchAndShapeProfileFull()

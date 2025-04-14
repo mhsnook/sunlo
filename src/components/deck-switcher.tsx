@@ -25,14 +25,19 @@ const useDeckMenuData = () => {
 	const { data, isPending, error } = useProfile()
 	if (isPending) return undefined
 	if (error) throw Error(error.message)
-	if (!data?.deckLanguages.length) return null
-	return data.deckLanguages?.map((lang) => ({
-		lang,
-		name: languages[lang],
-		to: `/learn/$lang`,
-		badge: data.decksMap[lang].cards_active + data.decksMap[lang].cards_learned,
-		params: { lang },
-	}))
+	if (!data) return null
+
+	return data.deckLanguages?.map((lang) => {
+		return {
+			lang,
+			name: languages[lang],
+			to: `/learn/$lang`,
+			badge:
+				(data.decksMap[lang]?.cards_active ?? 0) +
+				(data.decksMap[lang]?.cards_learned ?? 0),
+			params: { lang },
+		}
+	})
 }
 
 function NoDecks() {

@@ -26,7 +26,8 @@ export default function TranslationLanguageField({
 	const myLanguages = [
 		profile?.language_primary,
 		...(profile?.languages_spoken || []),
-	]
+	].filter((l) => !!l)
+
 	const [open, setOpen] = useState(false)
 	const generalLanguageOptions = useMemo(
 		() =>

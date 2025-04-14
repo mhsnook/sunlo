@@ -4,7 +4,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { Home } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn')({
-	component: () => <LearnLayout />,
+	component: LearnLayout,
 	loader: () => {
 		return {
 			appnav: ['/learn', '/learn/add-deck', '/learn/quick-search'],

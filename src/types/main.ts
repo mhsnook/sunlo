@@ -129,7 +129,7 @@ export type ProfileFull = Tables<'user_profile'> & {
 	deckLanguages: Array<string>
 	friendships?: Array<FriendshipRow>
 }
-export type DecksMap = null | {
+export type DecksMap = {
 	[key: string]: DeckMeta
 }
 
