@@ -23,10 +23,19 @@ export const Route = createFileRoute('/_user')({
 		}
 		return context.auth
 	},
-	loader: async ({ context: { queryClient, auth } }) => {
-		if (auth.userId)
-			// this line is making sure the entire route tree awaits till we have the profile
-			await queryClient.ensureQueryData(profileQuery(auth.userId))
+	loader: async ({
+		context: {
+			queryClient,
+			auth: { userId },
+		},
+		location,
+	}) => {
+		// if for some reason there is no profile, we must create one!
+		if (location.pathname !== '/getting-started') {
+			const data = await queryClient.fetchQuery(profileQuery(userId))
+			if (data === null) throw redirect({ to: '/getting-started' })
+		}
+
 		return {
 			titleBar: {
 				title: `Learning Home`,

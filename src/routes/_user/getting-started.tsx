@@ -2,19 +2,20 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useAuth } from '@/lib/hooks'
 import ProfileCreationForm from '@/components/profile-creation-form'
 import { useProfile } from '@/lib/use-profile'
-import { Loader } from '@/components/ui/loader'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
 import { uuid } from '@/types/main'
 
 type GettingStartedProps = {
-	referrer: uuid
+	referrer?: uuid
 }
 
 export const Route = createFileRoute('/_user/getting-started')({
-	validateSearch: (search: Record<string, unknown>): GettingStartedProps => {
-		return {
-			referrer: (search.referrer as string) || '',
-		}
+	validateSearch: (search?: Record<string, unknown>): GettingStartedProps => {
+		return search ?
+				{
+					referrer: (search.referrer as string) || '',
+				}
+			:	{}
 	},
 	component: GettingStartedPage,
 })
@@ -29,10 +30,9 @@ function GettingStartedPage() {
 		: userRole === 'learner' ? '/learn/add-deck'
 		: '/friends'
 
-	return (
-		profile === undefined ? <Loader />
-		: profile !== null ? <Navigate to={nextPage} />
-		: <main className="w-app px-[5cqw] py-10">
+	return profile !== null ?
+			<Navigate to={nextPage} />
+		:	<main className="w-app px-[5cqw] py-10">
 				<div className="my-4 space-y-4 text-center">
 					<h1 className="d1">Welcome to Sunlo</h1>
 					<div className="mx-auto flex max-w-sm flex-row items-center gap-4">
@@ -43,7 +43,6 @@ function GettingStartedPage() {
 						</p>
 					</div>
 				</div>
-				<ProfileCreationForm userId={userId} />
+				<ProfileCreationForm userId={userId!} />
 			</main>
-	)
 }
