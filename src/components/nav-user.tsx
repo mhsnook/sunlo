@@ -1,4 +1,4 @@
-import { ChevronsUpDown, Lock, LogOut, Mail, UserPen } from 'lucide-react'
+import { ChevronsUpDown, LogOut } from 'lucide-react'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
