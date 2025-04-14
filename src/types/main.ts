@@ -20,7 +20,7 @@ export type SelectOption = { value: string; label: string }
 export type LinkType = {
 	name: string
 	title?: string
-	link?: {
+	link: {
 		to: string
 		params?: Route['types']['params']
 	}

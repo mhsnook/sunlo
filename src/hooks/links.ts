@@ -8,7 +8,6 @@ import {
 	LogIn,
 	Mail,
 	MessageSquarePlus,
-	NotebookPen,
 	Rocket,
 	School,
 	Search,
@@ -185,7 +184,7 @@ export function useLinks(paths: Array<string>) {
 }
 
 export function makeLinks(paths: Array<string>, lang?: string) {
-	if (!paths) return null
+	if (!paths) return []
 	const l = links(lang)
 	return paths.map((p) => l[p])
 }

@@ -33,7 +33,10 @@ export function NavUser() {
 	const { data: profile, isPending } = useProfile()
 	const signOut = useSignOut()
 	if (isPending || !profile) return null
-	const { avatar_url, username } = profile
+	// these fallbacks are only here because view types always
+	// include `| null` for every field :(
+	const avatar_url = profile.avatar_url || undefined
+	const username = profile.username || undefined
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
@@ -74,10 +77,12 @@ export function NavUser() {
 						</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>
-							{data.map((item) => (
+							{data?.map((item) => (
 								<DropdownMenuItem key={item.link.to} asChild>
 									<Link to={item.link.to}>
-										<item.Icon />
+										{item.Icon ?
+											<item.Icon />
+										:	null}
 										{item.title ?? item.name}
 									</Link>
 								</DropdownMenuItem>
