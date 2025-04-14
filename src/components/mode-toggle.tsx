@@ -1,11 +1,4 @@
-import {
-	Check,
-	ChevronsUpDown,
-	MonitorCog,
-	Moon,
-	Sun,
-	SunMoon,
-} from 'lucide-react'
+import { Check, ChevronsUpDown, MonitorCog, Moon, Sun } from 'lucide-react'
 
 import {
 	DropdownMenu,
@@ -14,7 +7,6 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme-provider'
-import { cn } from '@/lib/utils'
 import {
 	SidebarMenu,
 	SidebarMenuButton,

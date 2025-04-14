@@ -138,7 +138,7 @@ export function CardStatusDropdown({
 	const choice =
 		!deckId ? 'nodeck'
 		: !cardPresent ? 'nocard'
-		: cardPresent?.status
+		: cardPresent.status
 
 	return (
 		<DropdownMenu>

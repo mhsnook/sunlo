@@ -17,7 +17,7 @@ export function AppNav() {
 
 function Nav({ matches }: { matches: ReturnType<typeof useMatches> }) {
 	const match = matches.findLast((m) => !!m?.loaderData?.appnav)
-	const links = useLinks(match?.loaderData.appnav)
+	const links = useLinks(match?.loaderData?.appnav)
 	if (!links || !links.length) return null
 	return (
 		<ScrollArea>

@@ -1,5 +1,5 @@
 import { PostgrestError } from '@supabase/supabase-js'
-import { queryOptions, useQuery, UseQueryResult } from '@tanstack/react-query'
+import { queryOptions, useQuery } from '@tanstack/react-query'
 import type { DeckMeta, DecksMap, ProfileFull, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'

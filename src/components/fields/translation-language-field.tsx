@@ -23,7 +23,10 @@ export default function TranslationLanguageField({
 	error,
 }: ControlledFieldProps) {
 	const { data: profile } = useProfile()
-	const myLanguages = [profile?.language_primary, ...profile?.languages_spoken]
+	const myLanguages = [
+		profile?.language_primary,
+		...(profile?.languages_spoken || []),
+	]
 	const [open, setOpen] = useState(false)
 	const generalLanguageOptions = useMemo(
 		() =>

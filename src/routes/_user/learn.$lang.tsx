@@ -3,14 +3,7 @@ import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/lib/use-language'
 import { deckQueryOptions } from '@/lib/use-deck'
-import {
-	BookCopy,
-	BookHeart,
-	NotebookPen,
-	Rocket,
-	Search,
-	Settings,
-} from 'lucide-react'
+import { BookHeart } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,

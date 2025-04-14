@@ -3,7 +3,6 @@ import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
 import supabase from '@/lib/supabase-client'
-import { parseHash } from '@/lib/utils'
 import { ShowError } from '@/components/errors'
 import { buttonVariants } from '@/components/ui/button-variants'
 
