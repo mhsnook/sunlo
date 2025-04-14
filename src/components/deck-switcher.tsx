@@ -53,15 +53,16 @@ function NoDecks() {
 	)
 }
 
-export function DeckSwitcher({ lang }: { lang: string }) {
+export function DeckSwitcher({ lang }: { lang?: string }) {
 	const { isMobile } = useSidebar()
 	const deckMenuData = useDeckMenuData()
-	if (deckMenuData === undefined) return null
 
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
-				{deckMenuData === null ?
+				{deckMenuData === undefined ?
+					<div style={{ height: 48, width: '100%' }} />
+				: deckMenuData === null ?
 					<NoDecks />
 				:	<DropdownMenu>
 						<DropdownMenuTrigger asChild>

@@ -21,7 +21,7 @@ const learnMenu = makeLinks([
 ])
 const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
 
-export function NavMain({ lang }: { lang: string }) {
+export function NavMain({ lang }: { lang?: string }) {
 	const deckMenu = !lang ? null : makeLinks(deckLinks, lang)
 
 	return (
