@@ -46,6 +46,8 @@ import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn.$
 import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn.$lang.add-phrase'
 import { Route as UserLearnLangIdImport } from './routes/_user/learn.$lang.$id'
 import { Route as UserFriendsSearchUidImport } from './routes/_user/friends.search.$uid'
+import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn.$lang.review.index'
+import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn.$lang.review.go'
 
 // Create Virtual Routes
 
@@ -279,6 +281,18 @@ const UserFriendsSearchUidRoute = UserFriendsSearchUidImport.update({
   id: '/$uid',
   path: '/$uid',
   getParentRoute: () => UserFriendsSearchRoute,
+} as any)
+
+const UserLearnLangReviewIndexRoute = UserLearnLangReviewIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserLearnLangReviewRoute,
+} as any)
+
+const UserLearnLangReviewGoRoute = UserLearnLangReviewGoImport.update({
+  id: '/go',
+  path: '/go',
+  getParentRoute: () => UserLearnLangReviewRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -544,6 +558,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangIndexImport
       parentRoute: typeof UserLearnLangImport
     }
+    '/_user/learn/$lang/review/go': {
+      id: '/_user/learn/$lang/review/go'
+      path: '/go'
+      fullPath: '/learn/$lang/review/go'
+      preLoaderRoute: typeof UserLearnLangReviewGoImport
+      parentRoute: typeof UserLearnLangReviewImport
+    }
+    '/_user/learn/$lang/review/': {
+      id: '/_user/learn/$lang/review/'
+      path: '/'
+      fullPath: '/learn/$lang/review/'
+      preLoaderRoute: typeof UserLearnLangReviewIndexImport
+      parentRoute: typeof UserLearnLangReviewImport
+    }
   }
 }
 
@@ -596,12 +624,25 @@ const UserFriendsRouteWithChildren = UserFriendsRoute._addFileChildren(
   UserFriendsRouteChildren,
 )
 
+interface UserLearnLangReviewRouteChildren {
+  UserLearnLangReviewGoRoute: typeof UserLearnLangReviewGoRoute
+  UserLearnLangReviewIndexRoute: typeof UserLearnLangReviewIndexRoute
+}
+
+const UserLearnLangReviewRouteChildren: UserLearnLangReviewRouteChildren = {
+  UserLearnLangReviewGoRoute: UserLearnLangReviewGoRoute,
+  UserLearnLangReviewIndexRoute: UserLearnLangReviewIndexRoute,
+}
+
+const UserLearnLangReviewRouteWithChildren =
+  UserLearnLangReviewRoute._addFileChildren(UserLearnLangReviewRouteChildren)
+
 interface UserLearnLangRouteChildren {
   UserLearnLangIdRoute: typeof UserLearnLangIdRoute
   UserLearnLangAddPhraseRoute: typeof UserLearnLangAddPhraseRoute
   UserLearnLangDeckSettingsRoute: typeof UserLearnLangDeckSettingsRoute
   UserLearnLangLibraryRoute: typeof UserLearnLangLibraryRoute
-  UserLearnLangReviewRoute: typeof UserLearnLangReviewRoute
+  UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
   UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
 }
@@ -611,7 +652,7 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangAddPhraseRoute: UserLearnLangAddPhraseRoute,
   UserLearnLangDeckSettingsRoute: UserLearnLangDeckSettingsRoute,
   UserLearnLangLibraryRoute: UserLearnLangLibraryRoute,
-  UserLearnLangReviewRoute: UserLearnLangReviewRoute,
+  UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
   UserLearnLangSearchRoute: UserLearnLangSearchRoute,
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
 }
@@ -708,9 +749,11 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/learn/$lang/review': typeof UserLearnLangReviewRoute
+  '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 
 export interface FileRoutesByTo {
@@ -743,9 +786,10 @@ export interface FileRoutesByTo {
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/learn/$lang/review': typeof UserLearnLangReviewRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
+  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
 }
 
 export interface FileRoutesById {
@@ -784,9 +828,11 @@ export interface FileRoutesById {
   '/_user/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/_user/learn/$lang/review': typeof UserLearnLangReviewRoute
+  '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 
 export interface FileRouteTypes {
@@ -828,6 +874,8 @@ export interface FileRouteTypes {
     | '/learn/$lang/review'
     | '/learn/$lang/search'
     | '/learn/$lang/'
+    | '/learn/$lang/review/go'
+    | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -859,9 +907,10 @@ export interface FileRouteTypes {
     | '/learn/$lang/add-phrase'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/library'
-    | '/learn/$lang/review'
     | '/learn/$lang/search'
     | '/learn/$lang'
+    | '/learn/$lang/review/go'
+    | '/learn/$lang/review'
   id:
     | '__root__'
     | '/'
@@ -901,6 +950,8 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
     | '/_user/learn/$lang/'
+    | '/_user/learn/$lang/review/go'
+    | '/_user/learn/$lang/review/'
   fileRoutesById: FileRoutesById
 }
 
@@ -1118,7 +1169,11 @@ export const routeTree = rootRoute
     },
     "/_user/learn/$lang/review": {
       "filePath": "_user/learn.$lang.review.tsx",
-      "parent": "/_user/learn/$lang"
+      "parent": "/_user/learn/$lang",
+      "children": [
+        "/_user/learn/$lang/review/go",
+        "/_user/learn/$lang/review/"
+      ]
     },
     "/_user/learn/$lang/search": {
       "filePath": "_user/learn.$lang.search.tsx",
@@ -1127,6 +1182,14 @@ export const routeTree = rootRoute
     "/_user/learn/$lang/": {
       "filePath": "_user/learn.$lang.index.tsx",
       "parent": "/_user/learn/$lang"
+    },
+    "/_user/learn/$lang/review/go": {
+      "filePath": "_user/learn.$lang.review.go.tsx",
+      "parent": "/_user/learn/$lang/review"
+    },
+    "/_user/learn/$lang/review/": {
+      "filePath": "_user/learn.$lang.review.index.tsx",
+      "parent": "/_user/learn/$lang/review"
     }
   }
 }
