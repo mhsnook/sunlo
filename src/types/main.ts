@@ -110,6 +110,7 @@ export type CardMeta = Tables<'user_card_plus'>
 export type CardInsert = TablesInsert<'user_card'>
 export type UserCardInsert = CardInsert // @TODO remove
 
+export type ReviewableCard = Tables<'user_card_review_today'>
 export type ReviewInsert =
 	Database['public']['Functions']['record_review_and_schedule']['Args']
 export type ReviewScheduled =
