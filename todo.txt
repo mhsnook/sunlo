@@ -2,7 +2,7 @@ USER TESTING FIXES
 1. when you have a pending friend request it should be visible from the friends home
 1. add a deck -- the "select one language" input should have a better type-to-search which includes the language name as well a the code
 1. when you go to the library and add cards to your deck, and then go to the review page, it's still loaded the empty-set that was returned before
-1. malformed link like /learn/undefined should 404, or at least say 'do you wanna start learning this?' 
+1. malformed link like /learn/undefined should 404, or at least say 'do you wanna start learning this?'
 	- at least we should validate this parameter has length === 3 to even match it
 1. When you try to sign up using existing creds you get an error and then get logged in. We
 	should handle this. (inspect and special-case the error before throwing, and toast accordingly)
@@ -16,7 +16,7 @@ EPIC: Postgres DX / Run Supabase Locally
 1. make the email stuff work with the local setup
 1. pgTap set up testing framework / run tests on the RPC functions: https://supabase.com/docs/guides/database/extensions/pgtap
 1. ✅ switch to v8
-	- test out pglinter? 
+	- test out pglinter?
 1. future:
 	- use postmark templates like [this](https://github.com/supabase/auth/issues/304#issuecomment-998029660)
 
@@ -60,7 +60,7 @@ MOCKS / Incompletes
 		- move the Quick Search link into the navbar??
 1. $lang/library needs a search bar added to filter in realtime
 1. ✅ The "new friend signup" screens -- what are we doing here? selecting which deck(s) we're helping with... and then what?
-1. Public Library is a special browsing experience that needs to be built!	
+1. Public Library is a special browsing experience that needs to be built!
 	1. $lang/library has this "recently reviewed" filter which probably should be a field on the user_card_plus view
 	1. $lang/index needs the review overview graph thing made
 1. ✅ Deck Settings: replace with the nicer radio: https://v0.dev/chat/PNg3tT-DSoC,
