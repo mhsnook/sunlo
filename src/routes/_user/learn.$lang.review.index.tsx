@@ -24,6 +24,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useState } from 'react'
+import {
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+	DrawerTrigger,
+} from '@/components/ui/drawer'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -55,57 +63,57 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 const defaultRecs = [
 	{
 		pid: 1,
-		text: 'வணக்கம்',
-		translation: { text: 'Hello' },
+		text: 'Vanakkam, eppadi irukkinga?',
+		translation: { text: 'Hello, how are you?' },
 		selected: true,
 		source: 'friend',
 	},
 	{
 		pid: 2,
-		text: 'நன்றி',
-		translation: { text: 'Thank you' },
+		text: 'Enakku Tamil theriyum, aanal konjam mattum',
+		translation: { text: 'I know Tamil, but only a little' },
 		selected: true,
-		source: 'friend',
+		source: 'algo',
 	},
 	{
 		pid: 3,
-		text: 'எப்படி இருக்கிறீர்கள்',
-		translation: { text: 'How are you?' },
+		text: 'Neenga romba azhaga irukkinga',
+		translation: { text: 'You look very beautiful' },
 		selected: true,
 		source: 'friend',
 	},
 	{
 		pid: 4,
-		text: 'என் பெயர்',
-		translation: { text: 'My name is' },
+		text: 'Enakku Tamil saapadu romba pidikkum',
+		translation: { text: 'I really like Tamil food' },
 		selected: true,
 		source: 'algo',
 	},
 	{
 		pid: 5,
-		text: 'சாப்பிட',
-		translation: { text: 'To eat' },
+		text: 'Naan Chennai-il vaazhndhirukiren',
+		translation: { text: 'I have lived in Chennai' },
 		selected: true,
-		source: 'algo',
+		source: 'friend',
 	},
 	{
 		pid: 6,
-		text: 'தண்ணீர்',
-		translation: { text: 'Water' },
+		text: 'Indha pazham romba inippu',
+		translation: { text: 'This fruit is very sweet' },
 		selected: true,
 		source: 'algo',
 	},
 	{
 		pid: 7,
-		text: 'நல்ல',
-		translation: { text: 'Good' },
+		text: 'Naalai kaalaiyil sandhippom',
+		translation: { text: 'We will meet tomorrow morning' },
 		selected: true,
-		source: 'algo',
+		source: 'friend',
 	},
 	{
 		pid: 8,
-		text: 'காலை வணக்கம்',
-		translation: { text: 'Good morning' },
+		text: 'Ungalukku enna venum?',
+		translation: { text: 'What do you want?' },
 		selected: true,
 		source: 'algo',
 	},
@@ -202,12 +210,7 @@ function ReviewPage() {
 						</CardContent>
 					</Card>
 				</div>
-				<ReviewCardsToAddToDeck
-					recs={recs}
-					setRecs={setRecs}
-					reviewStats={reviewStats}
-				/>
-				<div className="flex flex-col justify-center gap-4 @lg:flex-row">
+				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
 					<Link
 						to="/learn/$lang/review/go"
 						params={{ lang }}
@@ -215,9 +218,18 @@ function ReviewPage() {
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Link>
-					<Button variant="outline" size="lg">
-						Customize my session
-					</Button>
+					<Drawer>
+						<DrawerTrigger asChild>
+							<Button className="font-normal" variant="outline" size="lg">
+								Customize my session
+							</Button>
+						</DrawerTrigger>
+						<ReviewCardsToAddToDeck
+							recs={recs}
+							setRecs={setRecs}
+							reviewStats={reviewStats}
+						/>
+					</Drawer>
 				</div>
 			</CardContent>
 		</Card>
@@ -241,24 +253,25 @@ function ReviewCardsToAddToDeck({
 		setRecs(updatedCards)
 	}
 	return (
-		<Card className="mb-8">
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2 text-xl">
-					<Users className="h-5 w-5 text-purple-500" />
-					Recommended for you ({reviewStats.fromFriends} of{' '}
-					{recs.filter((r) => r.source === 'friends')} selected)
-				</CardTitle>
-				<CardDescription>
-					Review and select which recommended cards you want to include in your
-					session
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<div className="grid gap-3 @lg:grid-cols-2">
+		<DrawerContent>
+			<div className="mx-auto w-full max-w-prose">
+				<DrawerHeader>
+					<DrawerTitle className="flex items-center gap-2 text-xl">
+						<Users className="h-5 w-5 text-purple-500" />
+						Recommended for you ({reviewStats.fromFriends} of{' '}
+						{recs.filter((r) => r.source === 'friends')} selected)
+					</DrawerTitle>
+					<DrawerDescription>
+						Review and select which recommended cards you want to include in
+						your session
+					</DrawerDescription>
+				</DrawerHeader>
+				<div className="grid gap-3 p-4 @lg:grid-cols-2">
 					{recs.map((card) => (
 						<Card
+							onClick={() => toggleCardSelection(card.pid)}
 							key={card.pid}
-							className={`border-1 ${card.selected ? 'border-purple-400 bg-purple-600/10' : 'border-gray-200'}`}
+							className={`border-1 ${card.selected ? 'border-primary bg-primary/10' : ''}`}
 						>
 							<CardHeader className="p-3 pb-0">
 								<CardTitle className="text-base">{card.text}</CardTitle>
@@ -268,7 +281,6 @@ function ReviewCardsToAddToDeck({
 								<Button
 									variant={card.selected ? 'default' : 'outline'}
 									size="sm"
-									onClick={() => toggleCardSelection(card.pid)}
 									className={
 										card.selected ? 'bg-purple-600 hover:bg-purple-700' : ''
 									}
@@ -286,7 +298,7 @@ function ReviewCardsToAddToDeck({
 						</Card>
 					))}
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</DrawerContent>
 	)
 }
