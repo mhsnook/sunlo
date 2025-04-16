@@ -154,8 +154,8 @@ function ReviewPage() {
 					Your personalized review session is prepared and waiting for you.
 					Here's what to expect:
 				</p>
-				<div className="mb-8 grid gap-6 md:grid-cols-3">
-					<Card>
+				<div className="mb-8 flex flex-row flex-wrap gap-6 text-sm">
+					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
 							<CardTitle className="flex items-center gap-2 text-xl">
 								Total Cards
@@ -172,7 +172,7 @@ function ReviewPage() {
 						</CardContent>
 					</Card>
 
-					<Card>
+					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
 							<CardTitle className="text-xl">New Cards</CardTitle>
 						</CardHeader>
@@ -187,7 +187,7 @@ function ReviewPage() {
 						</CardContent>
 					</Card>
 
-					<Card>
+					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
 							<CardTitle className="flex items-center gap-2 text-xl">
 								<Users className="h-5 w-5 text-purple-500" />
@@ -200,11 +200,11 @@ function ReviewPage() {
 								<Badge variant="outline">{reviewStats.fromFriends}</Badge>
 							</div>
 							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Public library:</span>
+								<span className="text-muted-foreground">Sunlo's recs:</span>
 								<Badge variant="outline">{reviewStats.fromAlgo}</Badge>
 							</div>
 							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Your deck:</span>
+								<span className="text-muted-foreground">From your deck:</span>
 								<Badge variant="outline">{reviewStats.fromOwnDeck}</Badge>
 							</div>
 						</CardContent>
@@ -271,29 +271,28 @@ function ReviewCardsToAddToDeck({
 						<Card
 							onClick={() => toggleCardSelection(card.pid)}
 							key={card.pid}
-							className={`border-1 ${card.selected ? 'border-primary bg-primary/10' : ''}`}
+							className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${card.selected ? 'border-primary bg-primary/10' : ''}`}
 						>
 							<CardHeader className="p-3 pb-0">
 								<CardTitle className="text-base">{card.text}</CardTitle>
 								<CardDescription>{card.translation.text}</CardDescription>
 							</CardHeader>
 							<CardFooter className="flex justify-end p-3 pt-0">
-								<Button
+								<Badge
 									variant={card.selected ? 'default' : 'outline'}
-									size="sm"
-									className={
-										card.selected ? 'bg-purple-600 hover:bg-purple-700' : ''
-									}
+									className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
 								>
-									{card.selected ?
-										<>
-											<CheckCircle className="mr-1 h-4 w-4" /> Selected
-										</>
-									:	<>
-											<XCircle className="mr-1 h-4 w-4" /> Deselected
-										</>
-									}
-								</Button>
+									<span
+										className={`flex flex-row items-center gap-1 [grid-area:stack] ${card.selected ? '' : 'invisible'}`}
+									>
+										<CheckCircle className="mr-1 h-3 w-3" /> Selected
+									</span>
+									<span
+										className={`[grid-area:stack] ${card.selected ? 'invisible' : ''}`}
+									>
+										Tap to select
+									</span>
+								</Badge>
 							</CardFooter>
 						</Card>
 					))}
