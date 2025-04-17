@@ -23,7 +23,9 @@ export default function OneSidebarMenu({
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
 							<Link {...item.link}>
-								<item.Icon />
+								{typeof item.Icon === 'function' ?
+									<item.Icon />
+								:	null}
 								<span>{item.title ?? item.name}</span>
 							</Link>
 						</SidebarMenuButton>

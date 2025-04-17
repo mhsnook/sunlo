@@ -4,6 +4,7 @@ import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/lib/use-language'
 import { deckQueryOptions } from '@/lib/use-deck'
 import { BookHeart } from 'lucide-react'
+import { reviewablesQueryOptions } from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -18,11 +19,23 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			languageQueryOptions(lang)
 		)
 		const deckLoader = queryClient.ensureQueryData(
-			deckQueryOptions(lang, userId)
+			deckQueryOptions(lang, userId!)
+		)
+		const reviewablesLoader = queryClient.ensureQueryData(
+			reviewablesQueryOptions(lang, userId!)
 		)
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
-		const both = { l: await languageLoader, d: await deckLoader }
+		const data = {
+			language: await languageLoader,
+			deck: await deckLoader,
+			reviewableCards: await reviewablesLoader,
+		}
 		return {
+			language: data.language,
+			deck: data.deck,
+			reviewableCards: data.reviewableCards.map(
+				(r) => data.deck.cardsMap[r.phrase_id!]
+			),
 			appnav: [
 				'/learn/$lang',
 				'/learn/$lang/review',

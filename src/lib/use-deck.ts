@@ -29,8 +29,12 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 		.eq('lang', lang)
 		.maybeSingle()
 		.throwOnError()
+	if (!data)
+		throw Error(
+			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
+		)
 	const { cards: cardsArray, ...meta }: DeckFetched = data
-	const pids: pids = cardsArray?.map((c) => c.phrase_id)
+	const pids: pids = cardsArray?.map((c) => c.phrase_id!)
 	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
 	return {
 		meta,
@@ -39,7 +43,7 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 	}
 }
 
-export const deckQueryOptions = (lang: string, userId: uuid) =>
+export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 	queryOptions({
 		queryKey: ['user', lang],
 		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1]),

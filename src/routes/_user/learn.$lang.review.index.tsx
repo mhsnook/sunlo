@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useLoaderData } from '@tanstack/react-router'
 import {
 	Card,
 	CardContent,
@@ -8,17 +8,15 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 
-import type { ReviewableCard } from '@/types/main'
 import languages from '@/lib/languages'
-import { deckQueryOptions } from '@/lib/use-deck'
-import { reviewablesQueryOptions } from '@/lib/use-reviewables'
 import {
 	BookOpen,
+	CalendarClock,
 	CheckCircle,
 	ChevronRight,
-	Shuffle,
+	MessageSquare,
+	MessageSquarePlus,
 	Users,
-	XCircle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,32 +30,10 @@ import {
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
+import Flagged from '@/components/flagged'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		if (!userId) throw new Error('No userId present, for some reason')
-		const promise1 = queryClient.fetchQuery(deckQueryOptions(lang, userId))
-		const promise2 = queryClient.fetchQuery(
-			reviewablesQueryOptions(lang, userId)
-		)
-		const data = {
-			deck: await promise1,
-			reviewables: (await promise2) as ReviewableCard[],
-		}
-		console.log(`preparing today's review`, data)
-		return {
-			reviewableCards: data.reviewables.map(
-				(r) => data.deck.cardsMap[r.phrase_id!]
-			),
-		}
-	},
 })
 
 const defaultRecs = [
@@ -121,7 +97,7 @@ const defaultRecs = [
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { reviewableCards } = Route.useLoaderData()
+	const { reviewableCards } = useLoaderData({ from: '/_user/learn/$lang' })
 	const [recs, setRecs] = useState(defaultRecs)
 	const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
 	const recStats = {
@@ -133,6 +109,7 @@ function ReviewPage() {
 	}
 
 	const reviewStats = {
+		previouslyReviewed: reviewableCards.length,
 		totalScheduled:
 			reviewableCards?.length +
 			Math.max(newCardsDesiredCount, recStats.fromFriends + recStats.fromAlgo),
@@ -164,51 +141,81 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 								<BookOpen />
-								{reviewStats.totalScheduled + reviewStats.totalNewCards}
+								{reviewStats.totalScheduled}
 							</p>
-							<p className="text-muted-foreground">
-								cards scheduled for review today
-							</p>
+							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
 					</Card>
 
 					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">New Cards</CardTitle>
+							<CardTitle className="text-xl">New Phrases</CardTitle>
 						</CardHeader>
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
-								<Shuffle />
+								<MessageSquarePlus />
 								<span>{reviewStats.totalNewCards}</span>
 							</p>
 							<p className="text-muted-foreground">
-								new cards will be introduced
+								cards you haven't seen before
 							</p>
 						</CardContent>
 					</Card>
-
 					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
-							<CardTitle className="flex items-center gap-2 text-xl">
-								<Users className="h-5 w-5 text-purple-500" />
-								Sources
-							</CardTitle>
+							<CardTitle className="text-xl">Scheduled</CardTitle>
 						</CardHeader>
-						<CardContent className="space-y-2">
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Friend recs:</span>
-								<Badge variant="outline">{reviewStats.fromFriends}</Badge>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Sunlo's recs:</span>
-								<Badge variant="outline">{reviewStats.fromAlgo}</Badge>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">From your deck:</span>
-								<Badge variant="outline">{reviewStats.fromOwnDeck}</Badge>
-							</div>
+						<CardContent>
+							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
+								<CalendarClock />
+								<span>{reviewStats.previouslyReviewed}</span>
+							</p>
+							<p className="text-muted-foreground">
+								scheduled based on past reviews
+							</p>
 						</CardContent>
 					</Card>
+					<Flagged name="smart_recommendations">
+						<Card className="grow basis-40">
+							<CardHeader className="pb-2">
+								<CardTitle className="flex items-center gap-2 text-xl">
+									<MessageSquare className="text-primary" />
+									Sources
+								</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-2">
+								<Flagged name="friend_recommendations">
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">Friend recs:</span>
+										<Badge variant="outline">{reviewStats.fromFriends}</Badge>
+									</div>
+								</Flagged>
+								<Flagged name="smart_recommendations">
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">Sunlo's recs:</span>
+										<Badge variant="outline">{reviewStats.fromAlgo}</Badge>
+									</div>
+								</Flagged>
+								<div className="flex items-center justify-between">
+									<span className="text-muted-foreground">From your deck:</span>
+									<Badge variant="outline">{reviewStats.fromOwnDeck}</Badge>
+								</div>
+								<Flagged name="smart_recommendations">
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">
+											Public library:
+										</span>
+										<Badge variant="outline">
+											{reviewStats.totalNewCards -
+												reviewStats.fromAlgo -
+												reviewStats.fromFriends -
+												reviewStats.fromOwnDeck}
+										</Badge>
+									</div>
+								</Flagged>
+							</CardContent>
+						</Card>
+					</Flagged>
 				</div>
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
 					<Link
@@ -218,18 +225,20 @@ function ReviewPage() {
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Link>
-					<Drawer>
-						<DrawerTrigger asChild>
-							<Button className="font-normal" variant="outline" size="lg">
-								Customize my session
-							</Button>
-						</DrawerTrigger>
-						<ReviewCardsToAddToDeck
-							recs={recs}
-							setRecs={setRecs}
-							reviewStats={reviewStats}
-						/>
-					</Drawer>
+					<Flagged name="smart_recommendations">
+						<Drawer>
+							<DrawerTrigger asChild>
+								<Button className="font-normal" variant="outline" size="lg">
+									Customize my session
+								</Button>
+							</DrawerTrigger>
+							<ReviewCardsToAddToDeck
+								recs={recs}
+								setRecs={setRecs}
+								reviewStats={reviewStats}
+							/>
+						</Drawer>
+					</Flagged>
 				</div>
 			</CardContent>
 		</Card>
