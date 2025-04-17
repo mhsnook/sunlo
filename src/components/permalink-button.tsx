@@ -11,7 +11,7 @@ export default function PermalinkButton({
 	size = 'badge',
 	className = '',
 	...props
-}: { text: string } & LinkProps & ButtonProps) {
+}: { text?: string } & LinkProps & ButtonProps) {
 	return !to ? null : (
 			<Link
 				to={to}
