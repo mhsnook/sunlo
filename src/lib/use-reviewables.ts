@@ -27,14 +27,9 @@ export const postReview = async (submitData: ReviewInsert) => {
 	if (!submitData?.user_card_id || !submitData?.score)
 		throw new Error('Invalid review; cannot log')
 
-	// if (prevId) submitData['id'] = prevId
-
-	// console.log(`About to post the review,`, submitData, prevId)
-
 	const { data } = await supabase
-		.rpc('record_review_and_schedule', submitData)
+		.rpc('insert_user_card_review', submitData)
 		.throwOnError()
 
-	// console.log(`We posted the review,`, data, error)
 	return data
 }

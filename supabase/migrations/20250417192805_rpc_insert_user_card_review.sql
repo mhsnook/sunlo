@@ -1,12 +1,14 @@
-create or replace function "public"."insert_user_card_review" (
+create
+or replace function "public"."insert_user_card_review" (
 	"user_card_id" "uuid",
 	"score" integer,
 	"desired_retention" numeric default 0.9
-) RETURNS timestamp with time zone LANGUAGE "plv8" as $$
+) returns timestamp with time zone language "plv8" as $$
 
-const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, review.* FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
+const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
+
 const prev = prevReviewQuery[0] ?? null
-// if (!prev) throw new Error(`could not find a card "${user_card_id}" to record score: ${score}`)
+if (!prev?.user_card_id) throw new Error(`could not find that card, got "${prev.user_card_id}" looking for "${user_card_id}" to record score: ${score}`)
 
 var calc = {
 	current: new Date(),
@@ -37,7 +39,7 @@ if (prev.id === null) {
 }
 
 if (typeof calc.stability !== 'number' || typeof calc.difficulty !== 'number' || calc.stability < 0 || calc.difficulty > 10 || calc.difficulty < 1) {
-	throw new Error(`Difficulty or stability is out of range: ${calc.new_difficulty}, ${calc.new_stability}`)
+	throw new Error(`Difficulty or stability is out of range: ${calc.difficulty}, ${calc.stability}`)
 	return null
 }
 
@@ -62,6 +64,8 @@ if (!calc.scheduled_for) {
 	throw new Error(`New scheduled_for value is not working...`)
 	return null
 }
+
+// console.log(`Throwing before the thing: ${JSON.stringify(user_card_id, prev, calc)}`)
 
 const insertedResult = plv8.execute(
 	`INSERT INTO public.user_card_review (score, user_card_id, user_deck_id, review_time_retrievability, difficulty, stability) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
