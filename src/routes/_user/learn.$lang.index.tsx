@@ -103,6 +103,7 @@ function FriendsSection({ lang }: LangOnlyComponentProps) {
 
 function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data } = useDeckMeta(lang)
+	if (!data) throw Error('This deck does not exist, sorry 🧄☹️🥦')
 	return (
 		<Card>
 			<CardHeader>
@@ -137,7 +138,9 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 			</CardHeader>
 			<CardContent className="text-sm">
 				<p>Your last review was {ago(data.most_recent_review_at)}</p>
-				<p>You've kept up with your routine 4 out of 5 days this week</p>
+				<Flagged name="routines_goals">
+					<p>You've kept up with your routine 4 out of 5 days this week</p>
+				</Flagged>
 				<p>34 active cards are scheduled for today, along with 15 new ones</p>
 			</CardContent>
 			<CardFooter>

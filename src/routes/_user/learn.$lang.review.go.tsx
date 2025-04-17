@@ -1,53 +1,21 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useLoaderData } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { TitleBar } from '@/types/main'
 import { FlashCardReviewSession } from '@/components/flash-card-review-session'
 import languages from '@/lib/languages'
-import { deckQueryOptions } from '@/lib/use-deck'
-import { reviewablesQueryOptions } from '@/lib/use-reviewables'
-import { BookHeart } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		if (!userId) throw new Error('No userId present, for some reason')
-		const promise1 = queryClient.fetchQuery(deckQueryOptions(lang, userId))
-		const promise2 = queryClient.fetchQuery(
-			reviewablesQueryOptions(lang, userId)
-		)
-		const data = {
-			deck: await promise1,
-			reviewables: await promise2,
-		}
-		console.log(`preparing today's review`, data)
+	loader: () => {
 		return {
-			reviewableCards: data.reviewables.map(
-				(r) => data.deck.cardsMap[r.phrase_id!]
-			),
 			appnav: [],
-			contextMenu: [
-				'/learn/$lang/search',
-				'/learn/$lang/add-phrase',
-				'/learn/$lang/deck-settings',
-			],
-			titleBar: {
-				title: `Review ${languages[lang]} cards`,
-				Icon: BookHeart,
-			} as TitleBar,
 		}
 	},
 })
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { reviewableCards } = Route.useLoaderData()
+	const { reviewableCards } = useLoaderData({ from: '/_user/learn/$lang' })
 	return reviewableCards.length === 0 ?
 			<Empty lang={lang} />
 		:	<FlashCardReviewSession cards={reviewableCards} lang={lang} />

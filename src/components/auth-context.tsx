@@ -22,7 +22,7 @@ export const AuthContext = createContext<AuthState>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
-	const [sessionState, setSessionState] = useState<Session>(null)
+	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 	const setLoaded = () => setIsLoaded(true)
 
@@ -62,8 +62,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 	const value = {
 		isAuth: sessionState?.user.role === 'authenticated',
-		userId: sessionState?.user.id,
-		userEmail: sessionState?.user.email,
+		userId: sessionState?.user.id ?? null,
+		userEmail: sessionState?.user.email ?? null,
 		userRole: (sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 	}
 

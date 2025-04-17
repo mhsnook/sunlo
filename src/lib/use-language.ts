@@ -27,8 +27,12 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 		.eq('lang', lang)
 		.maybeSingle()
 		.throwOnError()
+	if (!data)
+		throw Error(
+			`This language was not found in the database. Please double check the language code in your URL or report a bug to an admin. (The language code provided: ${lang}. This should be a 3-character string like "eng" or "hin".) ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
+		)
 	const { phrases: phrasesArray, ...meta }: LanguageFetched = data
-	const pids: pids = phrasesArray?.map((p) => p.id)
+	const pids: pids = phrasesArray?.map((p) => p.id!)
 	const phrasesMap: PhrasesMap = mapArray(phrasesArray, 'id')
 	return {
 		meta,
