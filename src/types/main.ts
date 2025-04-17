@@ -112,7 +112,7 @@ export type UserCardInsert = CardInsert // @TODO remove
 
 export type ReviewableCard = Tables<'user_card_review_today'>
 export type ReviewInsert =
-	Database['public']['Functions']['record_review_and_schedule']['Args']
+	Database['public']['Functions']['insert_user_card_review']['Args']
 export type ReviewScheduled =
 	| Tables<'user_card_scheduled'>
 	| Database['public']['Functions']['record_review_and_schedule']['Returns']
