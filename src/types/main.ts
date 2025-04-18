@@ -99,9 +99,15 @@ export type CardsMap = {
 	[key: uuid]: CardFull
 }
 
+export type DeckPids = {
+	all: pids
+	reviewed: pids
+	unreviewed: pids
+	today: pids
+}
 export type DeckLoaded = {
 	meta: DeckMeta
-	pids: pids
+	pids: DeckPids
 	cardsMap: CardsMap
 }
 
