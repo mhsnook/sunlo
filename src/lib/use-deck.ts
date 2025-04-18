@@ -18,7 +18,7 @@ import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 
 const qs = {
-	card_full: `*, reviews:user_card_scheduled(*)` as const,
+	card_full: `*, reviews:user_card_review(*)` as const,
 	deck_full: () => `*, cards:user_card_plus(${qs.card_full})` as const,
 }
 

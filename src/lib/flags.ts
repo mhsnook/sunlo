@@ -18,4 +18,5 @@ export const flags: FlagMap = {
 	cards_schedule_metadata: { enabled: false },
 	deck_metadata_on_cards: { enabled: false },
 	routines_goals: { enabled: false },
+	client_side_fsrs_scheduling: { enabled: false },
 }
