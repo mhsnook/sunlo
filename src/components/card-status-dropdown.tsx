@@ -18,7 +18,7 @@ interface CardStatusDropdownProps {
 	deckId?: uuid
 	pid: uuid
 	lang: string
-	card?: CardRow
+	card?: CardRow | null
 	className?: string
 }
 
@@ -137,7 +137,7 @@ export function CardStatusDropdown({
 	const cardPresent = cardMutation.data ?? card
 	const choice =
 		!deckId ? 'nodeck'
-		: !cardPresent ? 'nocard'
+		: !cardPresent?.status ? 'nocard'
 		: cardPresent.status
 
 	return (
