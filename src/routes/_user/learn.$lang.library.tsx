@@ -139,15 +139,15 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 
 	const pids = useMemo(
 		() => ({
-			all: language.pids,
-			inDeck: deck.pids,
-			recentlyViewed: deck.pids.filter(
+			all: language?.pids,
+			inDeck: deck?.pids.all,
+			recentlyViewed: deck?.pids.all.filter(
 				(p) =>
 					deck.cardsMap[p].reviews?.[0]?.created_at &&
 					inLastWeek(deck.cardsMap[p].reviews[0].created_at)
 			),
 		}),
-		[language.pids, deck.pids, deck.cardsMap]
+		[language?.pids, deck?.pids, deck?.cardsMap]
 	)
 
 	const filteredPids = pids[filter]
