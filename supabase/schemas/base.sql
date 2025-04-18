@@ -1,63 +1,82 @@
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
+set
+	statement_timeout = 0;
+
+set
+	lock_timeout = 0;
+
+set
+	idle_in_transaction_session_timeout = 0;
+
+set
+	client_encoding = 'UTF8';
+
+set
+	standard_conforming_strings = on;
+
+select
+	pg_catalog.set_config ('search_path', '', false);
+
+set
+	check_function_bodies = false;
+
+set
+	xmloption = content;
+
+set
+	client_min_messages = warning;
+
+set
+	row_security = off;
 
 -- CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+alter schema "public" OWNER to "postgres";
 
-ALTER SCHEMA "public" OWNER TO "postgres";
+create extension IF not exists "plv8"
+with
+	SCHEMA "pg_catalog";
 
-CREATE EXTENSION IF NOT EXISTS "plv8" WITH SCHEMA "pg_catalog";
+create extension IF not exists "pg_stat_statements"
+with
+	SCHEMA "extensions";
 
-CREATE EXTENSION IF NOT EXISTS "pg_stat_statements" WITH SCHEMA "extensions";
+create extension IF not exists "pgcrypto"
+with
+	SCHEMA "extensions";
 
-CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA "extensions";
+create extension IF not exists "pgjwt"
+with
+	SCHEMA "extensions";
 
-CREATE EXTENSION IF NOT EXISTS "pgjwt" WITH SCHEMA "extensions";
+create extension IF not exists "supabase_vault"
+with
+	SCHEMA "vault";
 
-CREATE EXTENSION IF NOT EXISTS "supabase_vault" WITH SCHEMA "vault";
+create extension IF not exists "uuid-ossp"
+with
+	SCHEMA "extensions";
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA "extensions";
+create type "public"."card_status" as ENUM('active', 'learned', 'skipped');
 
-CREATE TYPE "public"."card_status" AS ENUM (
-    'active',
-    'learned',
-    'skipped'
-);
+alter type "public"."card_status" OWNER to "postgres";
 
-ALTER TYPE "public"."card_status" OWNER TO "postgres";
+COMMENT on TYPE "public"."card_status" is 'card status is either active, learned or skipped';
 
-COMMENT ON TYPE "public"."card_status" IS 'card status is either active, learned or skipped';
+create type "public"."friend_request_response" as ENUM('accept', 'decline', 'cancel', 'remove', 'invite');
 
-CREATE TYPE "public"."friend_request_response" AS ENUM (
-    'accept',
-    'decline',
-    'cancel',
-    'remove',
-    'invite'
-);
+alter type "public"."friend_request_response" OWNER to "postgres";
 
-ALTER TYPE "public"."friend_request_response" OWNER TO "postgres";
+create type "public"."learning_goal" as ENUM('moving', 'family', 'visiting');
 
-CREATE TYPE "public"."learning_goal" AS ENUM (
-    'moving',
-    'family',
-    'visiting'
-);
+alter type "public"."learning_goal" OWNER to "postgres";
 
-ALTER TYPE "public"."learning_goal" OWNER TO "postgres";
+COMMENT on TYPE "public"."learning_goal" is 'why are you learning this language?';
 
-COMMENT ON TYPE "public"."learning_goal" IS 'why are you learning this language?';
-
-CREATE OR REPLACE FUNCTION "public"."add_phrase_translation_card"("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") RETURNS "uuid"
-    LANGUAGE "plpgsql"
-    AS $$
+create or replace function "public"."add_phrase_translation_card" (
+	"text" "text",
+	"lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text"
+) RETURNS "uuid" LANGUAGE "plpgsql" as $$
 DECLARE
     new_phrase_id uuid;
     user_deck_id uuid;
@@ -84,93 +103,94 @@ BEGIN
 END;
 $$;
 
-ALTER FUNCTION "public"."add_phrase_translation_card"("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") OWNER TO "postgres";
+alter function "public"."add_phrase_translation_card" (
+	"text" "text",
+	"lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text"
+) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_clamp_d"("difficulty" numeric) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) RETURNS numeric LANGUAGE "plv8" as $$
   return Math.min(Math.max(difficulty, 1.0), 10.0);
 $$;
 
-ALTER FUNCTION "public"."fsrs_clamp_d"("difficulty" numeric) OWNER TO "postgres";
+alter function "public"."fsrs_clamp_d" ("difficulty" numeric) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_d_0"("score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_d_0" ("score" integer) RETURNS numeric LANGUAGE "plv8" as $$
 	const W_4 = 7.1949;
 	const W_5 = 0.5345;
 	return plv8.find_function("fsrs_clamp_d")(W_4 - Math.exp(W_5 * (score - 1.0)) + 1.0);
 $$;
 
-ALTER FUNCTION "public"."fsrs_d_0"("score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_d_0" ("score" integer) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_days_between"("date_before" timestamp with time zone, "date_after" timestamp with time zone) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_days_between" (
+	"date_before" timestamp with time zone,
+	"date_after" timestamp with time zone
+) RETURNS numeric LANGUAGE "plv8" as $$
 	// returns interval, in days, rounded to the second
 	return Math.round((new Date(date_after) - new Date(date_before)) / 60 / 60 / 24) / 1000;
 $$;
 
-ALTER FUNCTION "public"."fsrs_days_between"("date_before" timestamp with time zone, "date_after" timestamp with time zone) OWNER TO "postgres";
+alter function "public"."fsrs_days_between" (
+	"date_before" timestamp with time zone,
+	"date_after" timestamp with time zone
+) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_delta_d"("score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_delta_d" ("score" integer) RETURNS numeric LANGUAGE "plv8" as $$
 	const W_6 = 1.4604;
   return -W_6 * (score - 3.0);
 $$;
 
-ALTER FUNCTION "public"."fsrs_delta_d"("score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_delta_d" ("score" integer) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_difficulty"("difficulty" numeric, "score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) RETURNS numeric LANGUAGE "plv8" as $$
 	const W_7 = 0.0046;
 	return plv8.find_function("fsrs_clamp_d")(W_7 * plv8.find_function("fsrs_d_0")(4) + (1.0 - W_7) * plv8.find_function("fsrs_dp")(difficulty, score));
 $$;
 
-ALTER FUNCTION "public"."fsrs_difficulty"("difficulty" numeric, "score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_dp"("difficulty" numeric, "score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) RETURNS numeric LANGUAGE "plv8" as $$
 	return difficulty + plv8.find_function("fsrs_delta_d")(score) * ((10.0 - difficulty) / 9.0);
 $$;
 
-ALTER FUNCTION "public"."fsrs_dp"("difficulty" numeric, "score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_interval"("desired_retrievability" numeric, "stability" numeric) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_interval" (
+	"desired_retrievability" numeric,
+	"stability" numeric
+) RETURNS numeric LANGUAGE "plv8" as $$
 	const f = 19.0 / 81.0;
 	const c = -0.5;
 	return (stability / f) * (Math.pow(desired_retrievability, 1.0 / c) - 1.0);
 $$;
 
-ALTER FUNCTION "public"."fsrs_interval"("desired_retrievability" numeric, "stability" numeric) OWNER TO "postgres";
+alter function "public"."fsrs_interval" (
+	"desired_retrievability" numeric,
+	"stability" numeric
+) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_retrievability"("time_in_days" numeric, "stability" numeric) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) RETURNS numeric LANGUAGE "plv8" as $$
 	const f = 19.0 / 81.0;
 	const c = -0.5;
 	return Math.pow(1.0 + f * (time_in_days / stability), c);
 $$;
 
-ALTER FUNCTION "public"."fsrs_retrievability"("time_in_days" numeric, "stability" numeric) OWNER TO "postgres";
+alter function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_s_0"("score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_s_0" ("score" integer) RETURNS numeric LANGUAGE "plv8" as $$
 	const W = [0.40255, 1.18385, 3.173, 15.69105];
 	return W[score - 1];
 $$;
 
-ALTER FUNCTION "public"."fsrs_s_0"("score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_s_0" ("score" integer) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_s_fail" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
+) RETURNS numeric LANGUAGE "plv8" as $$
 	const W_11 = 1.9395;
 	const W_12 = 0.11;
 	const W_13 = 0.29605;
@@ -183,11 +203,18 @@ CREATE OR REPLACE FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stabili
 	return Math.min(s_f2, stability);
 $$;
 
-ALTER FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) OWNER TO "postgres";
+alter function "public"."fsrs_s_fail" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
+) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_s_success" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) RETURNS numeric LANGUAGE "plv8" as $$
 	const W_8 = 1.54575;
 	const W_9 = 0.1192;
 	const W_10 = 1.01925;
@@ -203,54 +230,72 @@ CREATE OR REPLACE FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stab
   return stability * alpha;
 $$;
 
-ALTER FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_s_success" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) OWNER to "postgres";
 
-CREATE OR REPLACE FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) RETURNS numeric
-    LANGUAGE "plv8"
-    AS $$
+create or replace function "public"."fsrs_stability" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) RETURNS numeric LANGUAGE "plv8" as $$
 	return (score === 1) ?
 			plv8.find_function("fsrs_s_fail")(difficulty, stability, review_time_retrievability)
 		: plv8.find_function("fsrs_s_success")(difficulty, stability, review_time_retrievability, score);
 $$;
 
-ALTER FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) OWNER TO "postgres";
+alter function "public"."fsrs_stability" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) OWNER to "postgres";
 
-SET default_tablespace = '';
+set
+	default_tablespace = '';
 
-SET default_table_access_method = "heap";
+set
+	default_table_access_method = "heap";
 
-CREATE TABLE IF NOT EXISTS "public"."user_card_scheduled" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "scheduled_for" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "user_card_id" "uuid" NOT NULL,
-    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "new_difficulty" numeric NOT NULL,
-    "new_stability" numeric NOT NULL,
-    "review_time_difficulty" numeric,
-    "review_time_stability" numeric,
-    "score" smallint NOT NULL,
-    "new_interval_r90" numeric DEFAULT '1'::numeric NOT NULL,
-    "review_time_retrievability" numeric,
-    "prev_id" "uuid",
-    "user_deck_id" "uuid",
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "reviewed_at" timestamp with time zone,
-    CONSTRAINT "user_card_scheduled_interval_r90_check" CHECK (("new_interval_r90" > (0)::numeric)),
-    CONSTRAINT "user_card_scheduled_review_time_difficulty_check" CHECK ((("review_time_difficulty" >= 0.0) AND ("review_time_difficulty" <= 10.0))),
-    CONSTRAINT "user_card_scheduled_review_time_stability_check" CHECK (("review_time_stability" >= 0.0)),
-    CONSTRAINT "user_card_scheduled_score_check" CHECK (("score" = ANY (ARRAY[1, 2, 3, 4])))
+create table if not exists "public"."user_card_scheduled" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"scheduled_for" timestamp with time zone default "now" () not null,
+	"user_card_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"new_difficulty" numeric not null,
+	"new_stability" numeric not null,
+	"review_time_difficulty" numeric,
+	"review_time_stability" numeric,
+	"score" smallint not null,
+	"new_interval_r90" numeric default '1'::numeric not null,
+	"review_time_retrievability" numeric,
+	"prev_id" "uuid",
+	"user_deck_id" "uuid",
+	"updated_at" timestamp with time zone default "now" () not null,
+	"reviewed_at" timestamp with time zone,
+	constraint "user_card_scheduled_interval_r90_check" check (("new_interval_r90" > (0)::numeric)),
+	constraint "user_card_scheduled_review_time_difficulty_check" check (
+		(
+			("review_time_difficulty" >= 0.0)
+			and ("review_time_difficulty" <= 10.0)
+		)
+	),
+	constraint "user_card_scheduled_review_time_stability_check" check (("review_time_stability" >= 0.0)),
+	constraint "user_card_scheduled_score_check" check (("score" = any (array[1, 2, 3, 4])))
 );
 
-ALTER TABLE "public"."user_card_scheduled" OWNER TO "postgres";
+alter table "public"."user_card_scheduled" OWNER to "postgres";
 
-COMMENT ON TABLE "public"."user_card_scheduled" IS 'A record for each time a user_card is due to be reviewed';
+COMMENT on table "public"."user_card_scheduled" is 'A record for each time a user_card is due to be reviewed';
 
-COMMENT ON COLUMN "public"."user_card_scheduled"."new_interval_r90" IS 'days till the predicted interval till the Retrievability will be 0.90';
+COMMENT on column "public"."user_card_scheduled"."new_interval_r90" is 'days till the predicted interval till the Retrievability will be 0.90';
 
-CREATE OR REPLACE FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) RETURNS "public"."user_card_scheduled"
-    LANGUAGE "plv8"
-    AS $_$
+create or replace function "public"."record_review_and_schedule" ("user_card_id" "uuid", "score" integer) RETURNS "public"."user_card_scheduled" LANGUAGE "plv8" as $_$
 
 var calc = {
 	reviewed_at: new Date(),
@@ -337,683 +382,1144 @@ return response
 
 $_$;
 
-ALTER FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) OWNER TO "postgres";
+alter function "public"."record_review_and_schedule" ("user_card_id" "uuid", "score" integer) OWNER to "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."friend_request_action" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "uid_by" "uuid" NOT NULL,
-    "uid_for" "uuid" NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "action_type" "public"."friend_request_response",
-    "uid_less" "uuid",
-    "uid_more" "uuid"
+create table if not exists "public"."friend_request_action" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid_by" "uuid" not null,
+	"uid_for" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"action_type" "public"."friend_request_response",
+	"uid_less" "uuid",
+	"uid_more" "uuid"
 );
 
-ALTER TABLE "public"."friend_request_action" OWNER TO "postgres";
+alter table "public"."friend_request_action" OWNER to "postgres";
 
-COMMENT ON COLUMN "public"."friend_request_action"."uid_less" IS 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
+COMMENT on column "public"."friend_request_action"."uid_less" is 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
 
-COMMENT ON COLUMN "public"."friend_request_action"."uid_more" IS 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
+COMMENT on column "public"."friend_request_action"."uid_more" is 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
 
-CREATE OR REPLACE VIEW "public"."friend_summary" WITH ("security_invoker"='true') AS
- SELECT DISTINCT ON ("a"."uid_less", "a"."uid_more") "a"."uid_less",
-    "a"."uid_more",
-        CASE
-            WHEN ("a"."action_type" = 'accept'::"public"."friend_request_response") THEN 'friends'::"text"
-            WHEN ("a"."action_type" = 'invite'::"public"."friend_request_response") THEN 'pending'::"text"
-            WHEN ("a"."action_type" = ANY (ARRAY['decline'::"public"."friend_request_response", 'cancel'::"public"."friend_request_response", 'remove'::"public"."friend_request_response"])) THEN 'unconnected'::"text"
-            ELSE NULL::"text"
-        END AS "status",
-    "a"."created_at" AS "most_recent_created_at",
-    "a"."uid_by" AS "most_recent_uid_by",
-    "a"."uid_for" AS "most_recent_uid_for",
-    "a"."action_type" AS "most_recent_action_type"
-   FROM "public"."friend_request_action" "a"
-  ORDER BY "a"."uid_less", "a"."uid_more", "a"."created_at" DESC;
+create or replace view "public"."friend_summary"
+with
+	("security_invoker" = 'true') as
+select distinct
+	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
+	"a"."uid_more",
+	case
+		when (
+			"a"."action_type" = 'accept'::"public"."friend_request_response"
+		) then 'friends'::"text"
+		when (
+			"a"."action_type" = 'invite'::"public"."friend_request_response"
+		) then 'pending'::"text"
+		when (
+			"a"."action_type" = any (
+				array[
+					'decline'::"public"."friend_request_response",
+					'cancel'::"public"."friend_request_response",
+					'remove'::"public"."friend_request_response"
+				]
+			)
+		) then 'unconnected'::"text"
+		else null::"text"
+	end as "status",
+	"a"."created_at" as "most_recent_created_at",
+	"a"."uid_by" as "most_recent_uid_by",
+	"a"."uid_for" as "most_recent_uid_for",
+	"a"."action_type" as "most_recent_action_type"
+from
+	"public"."friend_request_action" "a"
+order by
+	"a"."uid_less",
+	"a"."uid_more",
+	"a"."created_at" desc;
 
-ALTER TABLE "public"."friend_summary" OWNER TO "postgres";
+alter table "public"."friend_summary" OWNER to "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."language" (
-    "name" "text" NOT NULL,
-    "lang" character varying NOT NULL,
-    "alias_of" character varying
+create table if not exists "public"."language" (
+	"name" "text" not null,
+	"lang" character varying not null,
+	"alias_of" character varying
 );
 
-ALTER TABLE "public"."language" OWNER TO "postgres";
+alter table "public"."language" OWNER to "postgres";
 
-COMMENT ON TABLE "public"."language" IS 'The languages that people are trying to learn';
+COMMENT on table "public"."language" is 'The languages that people are trying to learn';
 
-CREATE TABLE IF NOT EXISTS "public"."phrase" (
-    "text" "text" NOT NULL,
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "added_by" "uuid" DEFAULT "auth"."uid"(),
-    "lang" character varying NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"()
+create table if not exists "public"."phrase" (
+	"text" "text" not null,
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"added_by" "uuid" default "auth"."uid" (),
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" ()
 );
 
-ALTER TABLE "public"."phrase" OWNER TO "postgres";
+alter table "public"."phrase" OWNER to "postgres";
 
-COMMENT ON COLUMN "public"."phrase"."added_by" IS 'User who added this card';
+COMMENT on column "public"."phrase"."added_by" is 'User who added this card';
 
-COMMENT ON COLUMN "public"."phrase"."lang" IS 'The 3-letter code for the language (iso-369-3)';
+COMMENT on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-CREATE TABLE IF NOT EXISTS "public"."user_deck" (
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "lang" character varying NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "learning_goal" "public"."learning_goal" DEFAULT 'moving'::"public"."learning_goal" NOT NULL,
-    "archived" boolean DEFAULT false NOT NULL
+create table if not exists "public"."user_deck" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
+	"archived" boolean default false not null
 );
 
-ALTER TABLE "public"."user_deck" OWNER TO "postgres";
+alter table "public"."user_deck" OWNER to "postgres";
 
-COMMENT ON TABLE "public"."user_deck" IS 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
+COMMENT on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
 
-COMMENT ON COLUMN "public"."user_deck"."uid" IS 'The owner user''s ID';
+COMMENT on column "public"."user_deck"."uid" is 'The owner user''s ID';
 
-COMMENT ON COLUMN "public"."user_deck"."lang" IS 'The 3-letter code for the language (iso-369-3)';
+COMMENT on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-COMMENT ON COLUMN "public"."user_deck"."created_at" IS 'the moment the deck was created';
+COMMENT on column "public"."user_deck"."created_at" is 'the moment the deck was created';
 
-COMMENT ON COLUMN "public"."user_deck"."learning_goal" IS 'why are you learning this language?';
+COMMENT on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
 
-COMMENT ON COLUMN "public"."user_deck"."archived" IS 'is the deck archived or active';
+COMMENT on column "public"."user_deck"."archived" is 'is the deck archived or active';
 
-CREATE OR REPLACE VIEW "public"."language_plus" AS
- WITH "first" AS (
-         SELECT "l"."lang",
-            "l"."name",
-            "l"."alias_of",
-            ( SELECT "count"(DISTINCT "d"."uid") AS "count"
-                   FROM "public"."user_deck" "d"
-                  WHERE (("l"."lang")::"text" = ("d"."lang")::"text")) AS "learners",
-            ( SELECT "count"(DISTINCT "p"."id") AS "count"
-                   FROM "public"."phrase" "p"
-                  WHERE (("l"."lang")::"text" = ("p"."lang")::"text")) AS "phrases_to_learn"
-           FROM "public"."language" "l"
-          GROUP BY "l"."lang", "l"."name", "l"."alias_of"
-        ), "second" AS (
-         SELECT "first"."lang",
-            "first"."name",
-            "first"."alias_of",
-            "first"."learners",
-            "first"."phrases_to_learn",
-            ("first"."learners" * "first"."phrases_to_learn") AS "display_score"
-           FROM "first"
-          ORDER BY ("first"."learners" * "first"."phrases_to_learn") DESC
-        )
- SELECT "second"."lang",
-    "second"."name",
-    "second"."alias_of",
-    "second"."learners",
-    "second"."phrases_to_learn",
-    "rank"() OVER (ORDER BY "second"."display_score" DESC) AS "rank",
-    "rank"() OVER (ORDER BY "second"."display_score" DESC, "second"."name") AS "display_order"
-   FROM "second";
+create or replace view "public"."language_plus" as
+with
+	"first" as (
+		select
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of",
+			(
+				select
+					"count" (distinct "d"."uid") as "count"
+				from
+					"public"."user_deck" "d"
+				where
+					(("l"."lang")::"text" = ("d"."lang")::"text")
+			) as "learners",
+			(
+				select
+					"count" (distinct "p"."id") as "count"
+				from
+					"public"."phrase" "p"
+				where
+					(("l"."lang")::"text" = ("p"."lang")::"text")
+			) as "phrases_to_learn"
+		from
+			"public"."language" "l"
+		group by
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of"
+	),
+	"second" as (
+		select
+			"first"."lang",
+			"first"."name",
+			"first"."alias_of",
+			"first"."learners",
+			"first"."phrases_to_learn",
+			("first"."learners" * "first"."phrases_to_learn") as "display_score"
+		from
+			"first"
+		order by
+			("first"."learners" * "first"."phrases_to_learn") desc
+	)
+select
+	"second"."lang",
+	"second"."name",
+	"second"."alias_of",
+	"second"."learners",
+	"second"."phrases_to_learn",
+	"rank" () over (
+		order by
+			"second"."display_score" desc
+	) as "rank",
+	"rank" () over (
+		order by
+			"second"."display_score" desc,
+			"second"."name"
+	) as "display_order"
+from
+	"second";
 
-ALTER TABLE "public"."language_plus" OWNER TO "postgres";
+alter table "public"."language_plus" OWNER to "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."phrase_relation" (
-    "from_phrase_id" "uuid",
-    "to_phrase_id" "uuid",
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "added_by" "uuid" DEFAULT "auth"."uid"()
+create table if not exists "public"."phrase_relation" (
+	"from_phrase_id" "uuid",
+	"to_phrase_id" "uuid",
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"added_by" "uuid" default "auth"."uid" ()
 );
 
-ALTER TABLE "public"."phrase_relation" OWNER TO "postgres";
+alter table "public"."phrase_relation" OWNER to "postgres";
 
-COMMENT ON COLUMN "public"."phrase_relation"."added_by" IS 'User who added this association';
+COMMENT on column "public"."phrase_relation"."added_by" is 'User who added this association';
 
-CREATE OR REPLACE VIEW "public"."phrase_plus" AS
- SELECT "p"."text",
-    "p"."id",
-    "p"."added_by",
-    "p"."lang",
-    "p"."created_at",
-    ARRAY( SELECT
-                CASE
-                    WHEN ("r"."to_phrase_id" = "p"."id") THEN "r"."from_phrase_id"
-                    ELSE "r"."to_phrase_id"
-                END AS "to_phrase_id"
-           FROM "public"."phrase_relation" "r"
-          WHERE (("p"."id" = "r"."to_phrase_id") OR ("p"."id" = "r"."from_phrase_id"))) AS "relation_pids"
-   FROM "public"."phrase" "p";
+create or replace view "public"."phrase_plus" as
+select
+	"p"."text",
+	"p"."id",
+	"p"."added_by",
+	"p"."lang",
+	"p"."created_at",
+	ARRAY(
+		select
+			case
+				when ("r"."to_phrase_id" = "p"."id") then "r"."from_phrase_id"
+				else "r"."to_phrase_id"
+			end as "to_phrase_id"
+		from
+			"public"."phrase_relation" "r"
+		where
+			(
+				("p"."id" = "r"."to_phrase_id")
+				or ("p"."id" = "r"."from_phrase_id")
+			)
+	) as "relation_pids"
+from
+	"public"."phrase" "p";
 
-ALTER TABLE "public"."phrase_plus" OWNER TO "postgres";
+alter table "public"."phrase_plus" OWNER to "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."phrase_translation" (
-    "text" "text" NOT NULL,
-    "literal" "text",
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "phrase_id" "uuid" NOT NULL,
-    "added_by" "uuid" DEFAULT "auth"."uid"(),
-    "lang" character varying NOT NULL
+create table if not exists "public"."phrase_translation" (
+	"text" "text" not null,
+	"literal" "text",
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"phrase_id" "uuid" not null,
+	"added_by" "uuid" default "auth"."uid" (),
+	"lang" character varying not null
 );
 
-ALTER TABLE "public"."phrase_translation" OWNER TO "postgres";
+alter table "public"."phrase_translation" OWNER to "postgres";
 
-COMMENT ON TABLE "public"."phrase_translation" IS 'A translation of one phrase into another language';
+COMMENT on table "public"."phrase_translation" is 'A translation of one phrase into another language';
 
-COMMENT ON COLUMN "public"."phrase_translation"."added_by" IS 'User who added this translation';
+COMMENT on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
-COMMENT ON COLUMN "public"."phrase_translation"."lang" IS 'The 3-letter code for the language (iso-369-3)';
+COMMENT on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-CREATE TABLE IF NOT EXISTS "public"."user_profile" (
-    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "username" "text",
-    "avatar_url" "text",
-    "updated_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "languages_spoken" character varying[] DEFAULT '{}'::character varying[] NOT NULL,
-    "language_primary" "text" DEFAULT 'EN'::"text" NOT NULL,
-    CONSTRAINT "username_length" CHECK (("char_length"("username") >= 3))
+create table if not exists "public"."user_profile" (
+	"uid" "uuid" default "auth"."uid" () not null,
+	"username" "text",
+	"avatar_url" "text",
+	"updated_at" timestamp with time zone,
+	"created_at" timestamp with time zone default "now" () not null,
+	"languages_spoken" character varying[] default '{}'::character varying[] not null,
+	"language_primary" "text" default 'EN'::"text" not null,
+	constraint "username_length" check (("char_length" ("username") >= 3))
 );
 
-ALTER TABLE "public"."user_profile" OWNER TO "postgres";
+alter table "public"."user_profile" OWNER to "postgres";
 
-COMMENT ON COLUMN "public"."user_profile"."uid" IS 'Primary key (same as auth.users.id and uid())';
+COMMENT on column "public"."user_profile"."uid" is 'Primary key (same as auth.users.id and uid())';
 
-CREATE OR REPLACE VIEW "public"."public_profile" AS
- SELECT "user_profile"."uid",
-    "user_profile"."username",
-    "user_profile"."avatar_url"
-   FROM "public"."user_profile";
+create or replace view "public"."public_profile" as
+select
+	"user_profile"."uid",
+	"user_profile"."username",
+	"user_profile"."avatar_url"
+from
+	"public"."user_profile";
 
-ALTER TABLE "public"."public_profile" OWNER TO "postgres";
+alter table "public"."public_profile" OWNER to "postgres";
 
-CREATE TABLE IF NOT EXISTS "public"."user_card" (
-    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
-    "phrase_id" "uuid" NOT NULL,
-    "user_deck_id" "uuid" NOT NULL,
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "status" "public"."card_status" DEFAULT 'active'::"public"."card_status"
+create table if not exists "public"."user_card" (
+	"uid" "uuid" default "auth"."uid" () not null,
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"phrase_id" "uuid" not null,
+	"user_deck_id" "uuid" not null,
+	"updated_at" timestamp with time zone default "now" (),
+	"created_at" timestamp with time zone default "now" (),
+	"status" "public"."card_status" default 'active'::"public"."card_status"
 );
 
-ALTER TABLE "public"."user_card" OWNER TO "postgres";
-
-COMMENT ON TABLE "public"."user_card" IS 'Which card is in which deck, and its status';
-
-COMMENT ON COLUMN "public"."user_card"."uid" IS 'The owner user''s ID';
-
-COMMENT ON COLUMN "public"."user_card"."user_deck_id" IS 'Foreign key to the user_deck item to which this card belongs';
-
-CREATE OR REPLACE VIEW "public"."user_card_plus" WITH ("security_invoker"='true') AS
- SELECT "deck"."lang",
-    "card"."id",
-    "card"."uid",
-    "card"."status",
-    "card"."phrase_id",
-    "card"."user_deck_id",
-    "card"."created_at",
-    "card"."updated_at"
-   FROM ("public"."user_card" "card"
-     JOIN "public"."user_deck" "deck" ON (("deck"."id" = "card"."user_deck_id")));
-
-ALTER TABLE "public"."user_card_plus" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_pick_new_active" WITH ("security_invoker"='true') AS
- SELECT "card"."id" AS "user_card_id",
-    NULL::"uuid" AS "prev_id",
-    NULL::timestamp with time zone AS "prev_created_at",
-    NULL::numeric AS "review_time_difficulty",
-    NULL::numeric AS "review_time_stability",
-    NULL::timestamp with time zone AS "last_scheduled_for",
-    NULL::numeric AS "last_scheduled_interval",
-    NULL::numeric AS "overdue_days",
-    NULL::double precision AS "overdue_percent"
-   FROM ("public"."user_card_plus" "card"
-     LEFT JOIN "public"."user_card_scheduled" "reviews" ON (("reviews"."user_card_id" = "card"."id")))
-  WHERE (("reviews"."id" IS NULL) AND ("card"."status" = 'active'::"public"."card_status"))
-  ORDER BY ("random"())
- LIMIT 15;
-
-ALTER TABLE "public"."user_card_pick_new_active" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_scheduled_today" WITH ("security_invoker"='true') AS
- WITH "first" AS (
-         SELECT DISTINCT ON ("record"."user_card_id") "record"."user_card_id",
-            "record"."id" AS "prev_id",
-            "record"."created_at" AS "prev_created_at",
-            "record"."new_difficulty" AS "review_time_difficulty",
-            "record"."new_stability" AS "review_time_stability",
-            "record"."scheduled_for" AS "last_scheduled_for",
-            "record"."new_interval_r90" AS "last_scheduled_interval",
-            ((((EXTRACT(epoch FROM CURRENT_TIMESTAMP) - EXTRACT(epoch FROM "record"."scheduled_for")) / 60.0) / 60.0) / 24.0) AS "overdue_days",
-            ((((((EXTRACT(epoch FROM CURRENT_TIMESTAMP) - EXTRACT(epoch FROM "record"."scheduled_for")))::double precision / (60.0)::double precision) / (60.0)::double precision) / (24.0)::double precision) / ("record"."new_interval_r90")::double precision) AS "overdue_percent"
-           FROM "public"."user_card_scheduled" "record"
-          ORDER BY "record"."user_card_id", "record"."created_at" DESC
-        )
- SELECT "first"."user_card_id",
-    "first"."prev_id",
-    "first"."prev_created_at",
-    "first"."review_time_difficulty",
-    "first"."review_time_stability",
-    "first"."last_scheduled_for",
-    "first"."last_scheduled_interval",
-    "first"."overdue_days",
-    "first"."overdue_percent"
-   FROM "first"
-  WHERE ("first"."last_scheduled_for" < "now"())
-  ORDER BY ("random"());
-
-ALTER TABLE "public"."user_card_scheduled_today" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_review_today" WITH ("security_invoker"='true') AS
- WITH "first" AS (
-         SELECT "user_card_scheduled_today"."prev_id",
-            "user_card_scheduled_today"."user_card_id",
-            "user_card_scheduled_today"."review_time_difficulty",
-            "user_card_scheduled_today"."review_time_stability",
-            "user_card_scheduled_today"."last_scheduled_for",
-            "user_card_scheduled_today"."last_scheduled_interval",
-            "user_card_scheduled_today"."overdue_days",
-            "user_card_scheduled_today"."overdue_percent",
-            "user_card_scheduled_today"."prev_created_at"
-           FROM "public"."user_card_scheduled_today"
-        UNION ALL
-         SELECT "user_card_pick_new_active"."prev_id",
-            "user_card_pick_new_active"."user_card_id",
-            "user_card_pick_new_active"."review_time_difficulty",
-            "user_card_pick_new_active"."review_time_stability",
-            "user_card_pick_new_active"."last_scheduled_for",
-            "user_card_pick_new_active"."last_scheduled_interval",
-            "user_card_pick_new_active"."overdue_days",
-            "user_card_pick_new_active"."overdue_percent",
-            "user_card_pick_new_active"."prev_created_at"
-           FROM "public"."user_card_pick_new_active"
-        )
- SELECT "first"."prev_id",
-    "first"."user_card_id",
-    "first"."review_time_difficulty",
-    "first"."review_time_stability",
-    "first"."last_scheduled_for",
-    "first"."last_scheduled_interval",
-    "first"."overdue_days",
-    "first"."overdue_percent",
-    "first"."prev_created_at",
-    "card"."lang",
-    "card"."phrase_id"
-   FROM ("first"
-     JOIN "public"."user_card_plus" "card" ON (("first"."user_card_id" = "card"."id")))
-  WHERE ("card"."status" = 'active'::"public"."card_status")
-  ORDER BY ("random"());
-
-ALTER TABLE "public"."user_card_review_today" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_deck_plus" AS
-SELECT
-    NULL::"uuid" AS "id",
-    NULL::"uuid" AS "uid",
-    NULL::character varying AS "lang",
-    NULL::"public"."learning_goal" AS "learning_goal",
-    NULL::boolean AS "archived",
-    NULL::"text" AS "language",
-    NULL::timestamp with time zone AS "created_at",
-    NULL::bigint AS "cards_learned",
-    NULL::bigint AS "cards_active",
-    NULL::bigint AS "cards_skipped",
-    NULL::bigint AS "lang_total_phrases",
-    NULL::timestamp with time zone AS "most_recent_review_at",
-    NULL::bigint AS "count_reviews_7d",
-    NULL::bigint AS "count_reviews_7d_positive";
-
-ALTER TABLE "public"."user_deck_plus" OWNER TO "postgres";
-
-ALTER TABLE ONLY "public"."phrase"
-    ADD CONSTRAINT "card_phrase_id_int_key" UNIQUE ("id");
-
-ALTER TABLE ONLY "public"."phrase"
-    ADD CONSTRAINT "card_phrase_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."phrase_relation"
-    ADD CONSTRAINT "card_see_also_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."phrase_relation"
-    ADD CONSTRAINT "card_see_also_uuid_key" UNIQUE ("id");
-
-ALTER TABLE ONLY "public"."phrase_translation"
-    ADD CONSTRAINT "card_translation_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."phrase_translation"
-    ADD CONSTRAINT "card_translation_uuid_key" UNIQUE ("id");
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "ensure_phrases_unique_within_deck" UNIQUE ("user_deck_id", "phrase_id");
-
-ALTER TABLE ONLY "public"."friend_request_action"
-    ADD CONSTRAINT "friend_request_action_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."language"
-    ADD CONSTRAINT "language_code2_key" UNIQUE ("lang");
-
-ALTER TABLE ONLY "public"."language"
-    ADD CONSTRAINT "language_pkey" PRIMARY KEY ("lang");
-
-ALTER TABLE ONLY "public"."user_deck"
-    ADD CONSTRAINT "one_deck_per_language_per_user" UNIQUE ("uid", "lang");
-
-ALTER TABLE ONLY "public"."user_profile"
-    ADD CONSTRAINT "profile_old_id_key" UNIQUE ("uid");
-
-ALTER TABLE ONLY "public"."user_profile"
-    ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("uid");
-
-ALTER TABLE ONLY "public"."user_profile"
-    ADD CONSTRAINT "profiles_username_key" UNIQUE ("username");
-
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "user_deck_card_membership_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "user_deck_card_membership_uuid_key" UNIQUE ("id");
-
-ALTER TABLE ONLY "public"."user_deck"
-    ADD CONSTRAINT "user_deck_pkey" PRIMARY KEY ("id");
-
-ALTER TABLE ONLY "public"."user_deck"
-    ADD CONSTRAINT "user_deck_uuid_key" UNIQUE ("id");
-
-CREATE UNIQUE INDEX "uid_card" ON "public"."user_card" USING "btree" ("uid", "phrase_id");
-
-CREATE UNIQUE INDEX "uid_deck" ON "public"."user_deck" USING "btree" ("uid", "lang");
-
-CREATE UNIQUE INDEX "unique_text_phrase_lang" ON "public"."phrase_translation" USING "btree" ("text", "lang", "phrase_id");
-
-CREATE OR REPLACE VIEW "public"."user_deck_plus" WITH ("security_invoker"='true') AS
- SELECT "d"."id",
-    "d"."uid",
-    "d"."lang",
-    "d"."learning_goal",
-    "d"."archived",
-    ( SELECT "l"."name"
-           FROM "public"."language" "l"
-          WHERE (("l"."lang")::"text" = ("d"."lang")::"text")
-         LIMIT 1) AS "language",
-    "d"."created_at",
-    "count"(*) FILTER (WHERE ("c"."status" = 'learned'::"public"."card_status")) AS "cards_learned",
-    "count"(*) FILTER (WHERE ("c"."status" = 'active'::"public"."card_status")) AS "cards_active",
-    "count"(*) FILTER (WHERE ("c"."status" = 'skipped'::"public"."card_status")) AS "cards_skipped",
-    ( SELECT "count"(*) AS "count"
-           FROM "public"."phrase" "p"
-          WHERE (("p"."lang")::"text" = ("d"."lang")::"text")) AS "lang_total_phrases",
-    ( SELECT "max"("c"."created_at") AS "max"
-           FROM "public"."user_card_scheduled" "r"
-          WHERE ("r"."user_deck_id" = "d"."id")
-         LIMIT 1) AS "most_recent_review_at",
-    ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
-          WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)))
-         LIMIT 1) AS "count_reviews_7d",
-    ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
-          WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)) AND ("r"."score" >= 2))
-         LIMIT 1) AS "count_reviews_7d_positive"
-   FROM ("public"."user_deck" "d"
-     LEFT JOIN "public"."user_card" "c" ON (("d"."id" = "c"."user_deck_id")))
-  GROUP BY "d"."id", "d"."lang", "d"."created_at"
-  ORDER BY ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
-          WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)))
-         LIMIT 1) DESC NULLS LAST, "d"."created_at" DESC;
-
-ALTER TABLE ONLY "public"."friend_request_action"
-    ADD CONSTRAINT "friend_request_action_uid_by_fkey" FOREIGN KEY ("uid_by") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."friend_request_action"
-    ADD CONSTRAINT "friend_request_action_uid_for_fkey" FOREIGN KEY ("uid_for") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."friend_request_action"
-    ADD CONSTRAINT "friend_request_action_uid_less_fkey" FOREIGN KEY ("uid_less") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."friend_request_action"
-    ADD CONSTRAINT "friend_request_action_uid_more_fkey" FOREIGN KEY ("uid_more") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."phrase"
-    ADD CONSTRAINT "phrase_added_by_fkey" FOREIGN KEY ("added_by") REFERENCES "public"."user_profile"("uid") ON DELETE SET NULL;
-
-ALTER TABLE ONLY "public"."phrase"
-    ADD CONSTRAINT "phrase_lang_fkey" FOREIGN KEY ("lang") REFERENCES "public"."language"("lang");
-
-ALTER TABLE ONLY "public"."phrase_relation"
-    ADD CONSTRAINT "phrase_see_also_added_by_fkey" FOREIGN KEY ("added_by") REFERENCES "public"."user_profile"("uid") ON DELETE SET NULL;
-
-ALTER TABLE ONLY "public"."phrase_relation"
-    ADD CONSTRAINT "phrase_see_also_from_phrase_id_fkey" FOREIGN KEY ("from_phrase_id") REFERENCES "public"."phrase"("id");
-
-ALTER TABLE ONLY "public"."phrase_relation"
-    ADD CONSTRAINT "phrase_see_also_to_phrase_id_fkey" FOREIGN KEY ("to_phrase_id") REFERENCES "public"."phrase"("id");
-
-ALTER TABLE ONLY "public"."phrase_translation"
-    ADD CONSTRAINT "phrase_translation_added_by_fkey" FOREIGN KEY ("added_by") REFERENCES "public"."user_profile"("uid") ON DELETE SET NULL;
-
-ALTER TABLE ONLY "public"."phrase_translation"
-    ADD CONSTRAINT "phrase_translation_lang_fkey" FOREIGN KEY ("lang") REFERENCES "public"."language"("lang");
-
-ALTER TABLE ONLY "public"."phrase_translation"
-    ADD CONSTRAINT "phrase_translation_phrase_id_fkey" FOREIGN KEY ("phrase_id") REFERENCES "public"."phrase"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "user_card_phrase_id_fkey" FOREIGN KEY ("phrase_id") REFERENCES "public"."phrase"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_uid_fkey" FOREIGN KEY ("uid") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_user_card_id_fkey" FOREIGN KEY ("user_card_id") REFERENCES "public"."user_card"("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_user_deck_id_fkey" FOREIGN KEY ("user_deck_id") REFERENCES "public"."user_deck"("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "user_card_uid_fkey" FOREIGN KEY ("uid") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card"
-    ADD CONSTRAINT "user_card_user_deck_id_fkey" FOREIGN KEY ("user_deck_id") REFERENCES "public"."user_deck"("id") ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_deck"
-    ADD CONSTRAINT "user_deck_lang_fkey" FOREIGN KEY ("lang") REFERENCES "public"."language"("lang");
-
-ALTER TABLE ONLY "public"."user_deck"
-    ADD CONSTRAINT "user_deck_uid_fkey" FOREIGN KEY ("uid") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
-
-CREATE POLICY "Anyone can add cards" ON "public"."phrase" FOR INSERT TO "authenticated" WITH CHECK (true);
-
-CREATE POLICY "Enable all actions for users based on uid" ON "public"."user_card_scheduled" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "uid")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "uid"));
-
-CREATE POLICY "Enable read access for all users" ON "public"."language" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."phrase" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."phrase_relation" FOR SELECT USING (true);
-
-CREATE POLICY "Enable read access for all users" ON "public"."phrase_translation" FOR SELECT USING (true);
-
-CREATE POLICY "Enable users to view their own data only" ON "public"."friend_request_action" FOR SELECT TO "authenticated" USING (((( SELECT "auth"."uid"() AS "uid") = "uid_by") OR (( SELECT "auth"."uid"() AS "uid") = "uid_for")));
-
-CREATE POLICY "Logged in users can add see_also's" ON "public"."phrase_relation" FOR INSERT TO "authenticated" WITH CHECK (true);
-
-CREATE POLICY "Logged in users can add translations" ON "public"."phrase_translation" FOR INSERT TO "authenticated" WITH CHECK (true);
-
-CREATE POLICY "Policy with table joins" ON "public"."friend_request_action" FOR INSERT TO "authenticated" WITH CHECK (((( SELECT "auth"."uid"() AS "uid") = "uid_by") AND (((( SELECT "auth"."uid"() AS "uid") = "uid_less") AND ("uid_for" = "uid_more")) OR ((( SELECT "auth"."uid"() AS "uid") = "uid_more") AND ("uid_for" = "uid_less")))));
-
-CREATE POLICY "User can view and update their own profile" ON "public"."user_profile" TO "authenticated" USING (("uid" = "auth"."uid"())) WITH CHECK (("uid" = "auth"."uid"()));
-
-CREATE POLICY "User data only for this user" ON "public"."user_card" USING (("auth"."uid"() = "uid")) WITH CHECK (("auth"."uid"() = "uid"));
-
-CREATE POLICY "User data only for this user" ON "public"."user_deck" USING (("auth"."uid"() = "uid")) WITH CHECK (("auth"."uid"() = "uid"));
-
-ALTER TABLE "public"."friend_request_action" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."language" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."phrase" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."phrase_relation" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."phrase_translation" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."user_card" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."user_card_scheduled" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."user_deck" ENABLE ROW LEVEL SECURITY;
-
-ALTER TABLE "public"."user_profile" ENABLE ROW LEVEL SECURITY;
-
-ALTER PUBLICATION "supabase_realtime" OWNER TO "postgres";
-
-REVOKE USAGE ON SCHEMA "public" FROM PUBLIC;
-GRANT USAGE ON SCHEMA "public" TO "anon";
-GRANT USAGE ON SCHEMA "public" TO "authenticated";
-GRANT USAGE ON SCHEMA "public" TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."add_phrase_translation_card"("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") TO "anon";
-GRANT ALL ON FUNCTION "public"."add_phrase_translation_card"("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") TO "authenticated";
-GRANT ALL ON FUNCTION "public"."add_phrase_translation_card"("text" "text", "lang" "text", "translation_text" "text", "translation_lang" "text") TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_clamp_d"("difficulty" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_clamp_d"("difficulty" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_clamp_d"("difficulty" numeric) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_d_0"("score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_d_0"("score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_d_0"("score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_days_between"("date_before" timestamp with time zone, "date_after" timestamp with time zone) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_days_between"("date_before" timestamp with time zone, "date_after" timestamp with time zone) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_days_between"("date_before" timestamp with time zone, "date_after" timestamp with time zone) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_delta_d"("score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_delta_d"("score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_delta_d"("score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_difficulty"("difficulty" numeric, "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_difficulty"("difficulty" numeric, "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_difficulty"("difficulty" numeric, "score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_dp"("difficulty" numeric, "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_dp"("difficulty" numeric, "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_dp"("difficulty" numeric, "score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_interval"("desired_retrievability" numeric, "stability" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_interval"("desired_retrievability" numeric, "stability" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_interval"("desired_retrievability" numeric, "stability" numeric) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_retrievability"("time_in_days" numeric, "stability" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_retrievability"("time_in_days" numeric, "stability" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_retrievability"("time_in_days" numeric, "stability" numeric) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_s_0"("score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_s_0"("score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_s_0"("score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_s_fail"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_s_success"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "service_role";
-
-GRANT ALL ON TABLE "public"."friend_request_action" TO "anon";
-GRANT ALL ON TABLE "public"."friend_request_action" TO "authenticated";
-GRANT ALL ON TABLE "public"."friend_request_action" TO "service_role";
-
-GRANT ALL ON TABLE "public"."friend_summary" TO "anon";
-GRANT ALL ON TABLE "public"."friend_summary" TO "authenticated";
-GRANT ALL ON TABLE "public"."friend_summary" TO "service_role";
-
-GRANT ALL ON TABLE "public"."language" TO "anon";
-GRANT ALL ON TABLE "public"."language" TO "authenticated";
-GRANT ALL ON TABLE "public"."language" TO "service_role";
-
-GRANT ALL ON TABLE "public"."phrase" TO "anon";
-GRANT ALL ON TABLE "public"."phrase" TO "authenticated";
-GRANT ALL ON TABLE "public"."phrase" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_deck" TO "anon";
-GRANT ALL ON TABLE "public"."user_deck" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_deck" TO "service_role";
-
-GRANT ALL ON TABLE "public"."language_plus" TO "anon";
-GRANT ALL ON TABLE "public"."language_plus" TO "authenticated";
-GRANT ALL ON TABLE "public"."language_plus" TO "service_role";
-
-GRANT ALL ON TABLE "public"."phrase_relation" TO "anon";
-GRANT ALL ON TABLE "public"."phrase_relation" TO "authenticated";
-GRANT ALL ON TABLE "public"."phrase_relation" TO "service_role";
-
-GRANT ALL ON TABLE "public"."phrase_plus" TO "anon";
-GRANT ALL ON TABLE "public"."phrase_plus" TO "authenticated";
-GRANT ALL ON TABLE "public"."phrase_plus" TO "service_role";
-
-GRANT ALL ON TABLE "public"."phrase_translation" TO "anon";
-GRANT ALL ON TABLE "public"."phrase_translation" TO "authenticated";
-GRANT ALL ON TABLE "public"."phrase_translation" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_profile" TO "anon";
-GRANT ALL ON TABLE "public"."user_profile" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_profile" TO "service_role";
-
-GRANT ALL ON TABLE "public"."public_profile" TO "anon";
-GRANT ALL ON TABLE "public"."public_profile" TO "authenticated";
-GRANT ALL ON TABLE "public"."public_profile" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card" TO "anon";
-GRANT ALL ON TABLE "public"."user_card" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_plus" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_plus" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_plus" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_deck_plus" TO "anon";
-GRANT ALL ON TABLE "public"."user_deck_plus" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_deck_plus" TO "service_role";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON SEQUENCES  TO "service_role";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON FUNCTIONS  TO "service_role";
-
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "postgres";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "anon";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "authenticated";
-ALTER DEFAULT PRIVILEGES FOR ROLE "postgres" IN SCHEMA "public" GRANT ALL ON TABLES  TO "service_role";
-
-RESET ALL;
+alter table "public"."user_card" OWNER to "postgres";
+
+COMMENT on table "public"."user_card" is 'Which card is in which deck, and its status';
+
+COMMENT on column "public"."user_card"."uid" is 'The owner user''s ID';
+
+COMMENT on column "public"."user_card"."user_deck_id" is 'Foreign key to the user_deck item to which this card belongs';
+
+create or replace view "public"."user_card_plus"
+with
+	("security_invoker" = 'true') as
+select
+	"deck"."lang",
+	"card"."id",
+	"card"."uid",
+	"card"."status",
+	"card"."phrase_id",
+	"card"."user_deck_id",
+	"card"."created_at",
+	"card"."updated_at"
+from
+	(
+		"public"."user_card" "card"
+		join "public"."user_deck" "deck" on (("deck"."id" = "card"."user_deck_id"))
+	);
+
+alter table "public"."user_card_plus" OWNER to "postgres";
+
+create or replace view "public"."user_card_pick_new_active"
+with
+	("security_invoker" = 'true') as
+select
+	"card"."id" as "user_card_id",
+	null::"uuid" as "prev_id",
+	null::timestamp with time zone as "prev_created_at",
+	null::numeric as "review_time_difficulty",
+	null::numeric as "review_time_stability",
+	null::timestamp with time zone as "last_scheduled_for",
+	null::numeric as "last_scheduled_interval",
+	null::numeric as "overdue_days",
+	null::double precision as "overdue_percent"
+from
+	(
+		"public"."user_card_plus" "card"
+		left join "public"."user_card_scheduled" "reviews" on (("reviews"."user_card_id" = "card"."id"))
+	)
+where
+	(
+		("reviews"."id" is null)
+		and (
+			"card"."status" = 'active'::"public"."card_status"
+		)
+	)
+order by
+	("random" ())
+limit
+	15;
+
+alter table "public"."user_card_pick_new_active" OWNER to "postgres";
+
+create or replace view "public"."user_card_scheduled_today"
+with
+	("security_invoker" = 'true') as
+with
+	"first" as (
+		select distinct
+			on ("record"."user_card_id") "record"."user_card_id",
+			"record"."id" as "prev_id",
+			"record"."created_at" as "prev_created_at",
+			"record"."new_difficulty" as "review_time_difficulty",
+			"record"."new_stability" as "review_time_stability",
+			"record"."scheduled_for" as "last_scheduled_for",
+			"record"."new_interval_r90" as "last_scheduled_interval",
+			(
+				(
+					(
+						(
+							EXTRACT(
+								epoch
+								from
+									CURRENT_TIMESTAMP
+							) - EXTRACT(
+								epoch
+								from
+									"record"."scheduled_for"
+							)
+						) / 60.0
+					) / 60.0
+				) / 24.0
+			) as "overdue_days",
+			(
+				(
+					(
+						(
+							(
+								(
+									EXTRACT(
+										epoch
+										from
+											CURRENT_TIMESTAMP
+									) - EXTRACT(
+										epoch
+										from
+											"record"."scheduled_for"
+									)
+								)
+							)::double precision / (60.0)::double precision
+						) / (60.0)::double precision
+					) / (24.0)::double precision
+				) / ("record"."new_interval_r90")::double precision
+			) as "overdue_percent"
+		from
+			"public"."user_card_scheduled" "record"
+		order by
+			"record"."user_card_id",
+			"record"."created_at" desc
+	)
+select
+	"first"."user_card_id",
+	"first"."prev_id",
+	"first"."prev_created_at",
+	"first"."review_time_difficulty",
+	"first"."review_time_stability",
+	"first"."last_scheduled_for",
+	"first"."last_scheduled_interval",
+	"first"."overdue_days",
+	"first"."overdue_percent"
+from
+	"first"
+where
+	("first"."last_scheduled_for" < "now" ())
+order by
+	("random" ());
+
+alter table "public"."user_card_scheduled_today" OWNER to "postgres";
+
+create or replace view "public"."user_card_review_today"
+with
+	("security_invoker" = 'true') as
+with
+	"first" as (
+		select
+			"user_card_scheduled_today"."prev_id",
+			"user_card_scheduled_today"."user_card_id",
+			"user_card_scheduled_today"."review_time_difficulty",
+			"user_card_scheduled_today"."review_time_stability",
+			"user_card_scheduled_today"."last_scheduled_for",
+			"user_card_scheduled_today"."last_scheduled_interval",
+			"user_card_scheduled_today"."overdue_days",
+			"user_card_scheduled_today"."overdue_percent",
+			"user_card_scheduled_today"."prev_created_at"
+		from
+			"public"."user_card_scheduled_today"
+		union all
+		select
+			"user_card_pick_new_active"."prev_id",
+			"user_card_pick_new_active"."user_card_id",
+			"user_card_pick_new_active"."review_time_difficulty",
+			"user_card_pick_new_active"."review_time_stability",
+			"user_card_pick_new_active"."last_scheduled_for",
+			"user_card_pick_new_active"."last_scheduled_interval",
+			"user_card_pick_new_active"."overdue_days",
+			"user_card_pick_new_active"."overdue_percent",
+			"user_card_pick_new_active"."prev_created_at"
+		from
+			"public"."user_card_pick_new_active"
+	)
+select
+	"first"."prev_id",
+	"first"."user_card_id",
+	"first"."review_time_difficulty",
+	"first"."review_time_stability",
+	"first"."last_scheduled_for",
+	"first"."last_scheduled_interval",
+	"first"."overdue_days",
+	"first"."overdue_percent",
+	"first"."prev_created_at",
+	"card"."lang",
+	"card"."phrase_id"
+from
+	(
+		"first"
+		join "public"."user_card_plus" "card" on (("first"."user_card_id" = "card"."id"))
+	)
+where
+	(
+		"card"."status" = 'active'::"public"."card_status"
+	)
+order by
+	("random" ());
+
+alter table "public"."user_card_review_today" OWNER to "postgres";
+
+create or replace view "public"."user_deck_plus" as
+select
+	null::"uuid" as "id",
+	null::"uuid" as "uid",
+	null::character varying as "lang",
+	null::"public"."learning_goal" as "learning_goal",
+	null::boolean as "archived",
+	null::"text" as "language",
+	null::timestamp with time zone as "created_at",
+	null::bigint as "cards_learned",
+	null::bigint as "cards_active",
+	null::bigint as "cards_skipped",
+	null::bigint as "lang_total_phrases",
+	null::timestamp with time zone as "most_recent_review_at",
+	null::bigint as "count_reviews_7d",
+	null::bigint as "count_reviews_7d_positive";
+
+alter table "public"."user_deck_plus" OWNER to "postgres";
+
+alter table only "public"."phrase"
+add constraint "card_phrase_id_int_key" unique ("id");
+
+alter table only "public"."phrase"
+add constraint "card_phrase_pkey" primary key ("id");
+
+alter table only "public"."phrase_relation"
+add constraint "card_see_also_pkey" primary key ("id");
+
+alter table only "public"."phrase_relation"
+add constraint "card_see_also_uuid_key" unique ("id");
+
+alter table only "public"."phrase_translation"
+add constraint "card_translation_pkey" primary key ("id");
+
+alter table only "public"."phrase_translation"
+add constraint "card_translation_uuid_key" unique ("id");
+
+alter table only "public"."user_card"
+add constraint "ensure_phrases_unique_within_deck" unique ("user_deck_id", "phrase_id");
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_pkey" primary key ("id");
+
+alter table only "public"."language"
+add constraint "language_code2_key" unique ("lang");
+
+alter table only "public"."language"
+add constraint "language_pkey" primary key ("lang");
+
+alter table only "public"."user_deck"
+add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
+
+alter table only "public"."user_profile"
+add constraint "profile_old_id_key" unique ("uid");
+
+alter table only "public"."user_profile"
+add constraint "profiles_pkey" primary key ("uid");
+
+alter table only "public"."user_profile"
+add constraint "profiles_username_key" unique ("username");
+
+alter table only "public"."user_card_scheduled"
+add constraint "user_card_scheduled_pkey" primary key ("id");
+
+alter table only "public"."user_card"
+add constraint "user_deck_card_membership_pkey" primary key ("id");
+
+alter table only "public"."user_card"
+add constraint "user_deck_card_membership_uuid_key" unique ("id");
+
+alter table only "public"."user_deck"
+add constraint "user_deck_pkey" primary key ("id");
+
+alter table only "public"."user_deck"
+add constraint "user_deck_uuid_key" unique ("id");
+
+create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
+
+create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
+
+create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
+
+create or replace view "public"."user_deck_plus"
+with
+	("security_invoker" = 'true') as
+select
+	"d"."id",
+	"d"."uid",
+	"d"."lang",
+	"d"."learning_goal",
+	"d"."archived",
+	(
+		select
+			"l"."name"
+		from
+			"public"."language" "l"
+		where
+			(("l"."lang")::"text" = ("d"."lang")::"text")
+		limit
+			1
+	) as "language",
+	"d"."created_at",
+	"count" (*) filter (
+		where
+			("c"."status" = 'learned'::"public"."card_status")
+	) as "cards_learned",
+	"count" (*) filter (
+		where
+			("c"."status" = 'active'::"public"."card_status")
+	) as "cards_active",
+	"count" (*) filter (
+		where
+			("c"."status" = 'skipped'::"public"."card_status")
+	) as "cards_skipped",
+	(
+		select
+			"count" (*) as "count"
+		from
+			"public"."phrase" "p"
+		where
+			(("p"."lang")::"text" = ("d"."lang")::"text")
+	) as "lang_total_phrases",
+	(
+		select
+			"max" ("c"."created_at") as "max"
+		from
+			"public"."user_card_scheduled" "r"
+		where
+			("r"."user_deck_id" = "d"."id")
+		limit
+			1
+	) as "most_recent_review_at",
+	(
+		select
+			"count" (*) as "count"
+		from
+			"public"."user_card_scheduled" "r"
+		where
+			(
+				("r"."user_deck_id" = "d"."id")
+				and (
+					"r"."created_at" > ("now" () - '7 days'::interval)
+				)
+			)
+		limit
+			1
+	) as "count_reviews_7d",
+	(
+		select
+			"count" (*) as "count"
+		from
+			"public"."user_card_scheduled" "r"
+		where
+			(
+				("r"."user_deck_id" = "d"."id")
+				and (
+					"r"."created_at" > ("now" () - '7 days'::interval)
+				)
+				and ("r"."score" >= 2)
+			)
+		limit
+			1
+	) as "count_reviews_7d_positive"
+from
+	(
+		"public"."user_deck" "d"
+		left join "public"."user_card" "c" on (("d"."id" = "c"."user_deck_id"))
+	)
+group by
+	"d"."id",
+	"d"."lang",
+	"d"."created_at"
+order by
+	(
+		select
+			"count" (*) as "count"
+		from
+			"public"."user_card_scheduled" "r"
+		where
+			(
+				("r"."user_deck_id" = "d"."id")
+				and (
+					"r"."created_at" > ("now" () - '7 days'::interval)
+				)
+			)
+		limit
+			1
+	) desc nulls last,
+	"d"."created_at" desc;
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_uid_by_fkey" foreign KEY ("uid_by") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_uid_for_fkey" foreign KEY ("uid_for") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_uid_less_fkey" foreign KEY ("uid_less") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_uid_more_fkey" foreign KEY ("uid_more") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."phrase"
+add constraint "phrase_added_by_fkey" foreign KEY ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."phrase"
+add constraint "phrase_lang_fkey" foreign KEY ("lang") references "public"."language" ("lang");
+
+alter table only "public"."phrase_relation"
+add constraint "phrase_see_also_added_by_fkey" foreign KEY ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."phrase_relation"
+add constraint "phrase_see_also_from_phrase_id_fkey" foreign KEY ("from_phrase_id") references "public"."phrase" ("id");
+
+alter table only "public"."phrase_relation"
+add constraint "phrase_see_also_to_phrase_id_fkey" foreign KEY ("to_phrase_id") references "public"."phrase" ("id");
+
+alter table only "public"."phrase_translation"
+add constraint "phrase_translation_added_by_fkey" foreign KEY ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."phrase_translation"
+add constraint "phrase_translation_lang_fkey" foreign KEY ("lang") references "public"."language" ("lang");
+
+alter table only "public"."phrase_translation"
+add constraint "phrase_translation_phrase_id_fkey" foreign KEY ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."user_card"
+add constraint "user_card_phrase_id_fkey" foreign KEY ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."user_card_scheduled"
+add constraint "user_card_scheduled_uid_fkey" foreign KEY ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."user_card_scheduled"
+add constraint "user_card_scheduled_user_card_id_fkey" foreign KEY ("user_card_id") references "public"."user_card" ("id") on update cascade on delete cascade;
+
+alter table only "public"."user_card_scheduled"
+add constraint "user_card_scheduled_user_deck_id_fkey" foreign KEY ("user_deck_id") references "public"."user_deck" ("id") on update cascade on delete cascade;
+
+alter table only "public"."user_card"
+add constraint "user_card_uid_fkey" foreign KEY ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."user_card"
+add constraint "user_card_user_deck_id_fkey" foreign KEY ("user_deck_id") references "public"."user_deck" ("id") on delete cascade;
+
+alter table only "public"."user_deck"
+add constraint "user_deck_lang_fkey" foreign KEY ("lang") references "public"."language" ("lang");
+
+alter table only "public"."user_deck"
+add constraint "user_deck_uid_fkey" foreign KEY ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+create policy "Anyone can add cards" on "public"."phrase" for INSERT to "authenticated"
+with
+	check (true);
+
+create policy "Enable all actions for users based on uid" on "public"."user_card_scheduled" to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+)
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable read access for all users" on "public"."language" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."phrase" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."phrase_relation" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."phrase_translation" for
+select
+	using (true);
+
+create policy "Enable users to view their own data only" on "public"."friend_request_action" for
+select
+	to "authenticated" using (
+		(
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "uid_by"
+			)
+			or (
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "uid_for"
+			)
+		)
+	);
+
+create policy "Logged in users can add see_also's" on "public"."phrase_relation" for INSERT to "authenticated"
+with
+	check (true);
+
+create policy "Logged in users can add translations" on "public"."phrase_translation" for INSERT to "authenticated"
+with
+	check (true);
+
+create policy "Policy with table joins" on "public"."friend_request_action" for INSERT to "authenticated"
+with
+	check (
+		(
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "uid_by"
+			)
+			and (
+				(
+					(
+						(
+							select
+								"auth"."uid" () as "uid"
+						) = "uid_less"
+					)
+					and ("uid_for" = "uid_more")
+				)
+				or (
+					(
+						(
+							select
+								"auth"."uid" () as "uid"
+						) = "uid_more"
+					)
+					and ("uid_for" = "uid_less")
+				)
+			)
+		)
+	);
+
+create policy "User can view and update their own profile" on "public"."user_profile" to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "User data only for this user" on "public"."user_card" using (("auth"."uid" () = "uid"))
+with
+	check (("auth"."uid" () = "uid"));
+
+create policy "User data only for this user" on "public"."user_deck" using (("auth"."uid" () = "uid"))
+with
+	check (("auth"."uid" () = "uid"));
+
+alter table "public"."friend_request_action" ENABLE row LEVEL SECURITY;
+
+alter table "public"."language" ENABLE row LEVEL SECURITY;
+
+alter table "public"."phrase" ENABLE row LEVEL SECURITY;
+
+alter table "public"."phrase_relation" ENABLE row LEVEL SECURITY;
+
+alter table "public"."phrase_translation" ENABLE row LEVEL SECURITY;
+
+alter table "public"."user_card" ENABLE row LEVEL SECURITY;
+
+alter table "public"."user_card_scheduled" ENABLE row LEVEL SECURITY;
+
+alter table "public"."user_deck" ENABLE row LEVEL SECURITY;
+
+alter table "public"."user_profile" ENABLE row LEVEL SECURITY;
+
+alter publication "supabase_realtime" OWNER to "postgres";
+
+revoke USAGE on SCHEMA "public"
+from
+	PUBLIC;
+
+grant USAGE on SCHEMA "public" to "anon";
+
+grant USAGE on SCHEMA "public" to "authenticated";
+
+grant USAGE on SCHEMA "public" to "service_role";
+
+grant all on FUNCTION "public"."add_phrase_translation_card" (
+	"text" "text",
+	"lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text"
+) to "anon";
+
+grant all on FUNCTION "public"."add_phrase_translation_card" (
+	"text" "text",
+	"lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text"
+) to "authenticated";
+
+grant all on FUNCTION "public"."add_phrase_translation_card" (
+	"text" "text",
+	"lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text"
+) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";
+
+grant all on FUNCTION "public"."fsrs_clamp_d" ("difficulty" numeric) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_clamp_d" ("difficulty" numeric) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_d_0" ("score" integer) to "anon";
+
+grant all on FUNCTION "public"."fsrs_d_0" ("score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_d_0" ("score" integer) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_days_between" (
+	"date_before" timestamp with time zone,
+	"date_after" timestamp with time zone
+) to "anon";
+
+grant all on FUNCTION "public"."fsrs_days_between" (
+	"date_before" timestamp with time zone,
+	"date_after" timestamp with time zone
+) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_days_between" (
+	"date_before" timestamp with time zone,
+	"date_after" timestamp with time zone
+) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_delta_d" ("score" integer) to "anon";
+
+grant all on FUNCTION "public"."fsrs_delta_d" ("score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_delta_d" ("score" integer) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "anon";
+
+grant all on FUNCTION "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "anon";
+
+grant all on FUNCTION "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_interval" (
+	"desired_retrievability" numeric,
+	"stability" numeric
+) to "anon";
+
+grant all on FUNCTION "public"."fsrs_interval" (
+	"desired_retrievability" numeric,
+	"stability" numeric
+) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_interval" (
+	"desired_retrievability" numeric,
+	"stability" numeric
+) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "anon";
+
+grant all on FUNCTION "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_s_0" ("score" integer) to "anon";
+
+grant all on FUNCTION "public"."fsrs_s_0" ("score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_s_0" ("score" integer) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_s_fail" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
+) to "anon";
+
+grant all on FUNCTION "public"."fsrs_s_fail" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
+) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_s_fail" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
+) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_s_success" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "anon";
+
+grant all on FUNCTION "public"."fsrs_s_success" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_s_success" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "service_role";
+
+grant all on FUNCTION "public"."fsrs_stability" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "anon";
+
+grant all on FUNCTION "public"."fsrs_stability" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "authenticated";
+
+grant all on FUNCTION "public"."fsrs_stability" (
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"score" integer
+) to "service_role";
+
+grant all on table "public"."user_card_scheduled" to "anon";
+
+grant all on table "public"."user_card_scheduled" to "authenticated";
+
+grant all on table "public"."user_card_scheduled" to "service_role";
+
+grant all on FUNCTION "public"."record_review_and_schedule" ("user_card_id" "uuid", "score" integer) to "anon";
+
+grant all on FUNCTION "public"."record_review_and_schedule" ("user_card_id" "uuid", "score" integer) to "authenticated";
+
+grant all on FUNCTION "public"."record_review_and_schedule" ("user_card_id" "uuid", "score" integer) to "service_role";
+
+grant all on table "public"."friend_request_action" to "anon";
+
+grant all on table "public"."friend_request_action" to "authenticated";
+
+grant all on table "public"."friend_request_action" to "service_role";
+
+grant all on table "public"."friend_summary" to "anon";
+
+grant all on table "public"."friend_summary" to "authenticated";
+
+grant all on table "public"."friend_summary" to "service_role";
+
+grant all on table "public"."language" to "anon";
+
+grant all on table "public"."language" to "authenticated";
+
+grant all on table "public"."language" to "service_role";
+
+grant all on table "public"."phrase" to "anon";
+
+grant all on table "public"."phrase" to "authenticated";
+
+grant all on table "public"."phrase" to "service_role";
+
+grant all on table "public"."user_deck" to "anon";
+
+grant all on table "public"."user_deck" to "authenticated";
+
+grant all on table "public"."user_deck" to "service_role";
+
+grant all on table "public"."language_plus" to "anon";
+
+grant all on table "public"."language_plus" to "authenticated";
+
+grant all on table "public"."language_plus" to "service_role";
+
+grant all on table "public"."phrase_relation" to "anon";
+
+grant all on table "public"."phrase_relation" to "authenticated";
+
+grant all on table "public"."phrase_relation" to "service_role";
+
+grant all on table "public"."phrase_plus" to "anon";
+
+grant all on table "public"."phrase_plus" to "authenticated";
+
+grant all on table "public"."phrase_plus" to "service_role";
+
+grant all on table "public"."phrase_translation" to "anon";
+
+grant all on table "public"."phrase_translation" to "authenticated";
+
+grant all on table "public"."phrase_translation" to "service_role";
+
+grant all on table "public"."user_profile" to "anon";
+
+grant all on table "public"."user_profile" to "authenticated";
+
+grant all on table "public"."user_profile" to "service_role";
+
+grant all on table "public"."public_profile" to "anon";
+
+grant all on table "public"."public_profile" to "authenticated";
+
+grant all on table "public"."public_profile" to "service_role";
+
+grant all on table "public"."user_card" to "anon";
+
+grant all on table "public"."user_card" to "authenticated";
+
+grant all on table "public"."user_card" to "service_role";
+
+grant all on table "public"."user_card_plus" to "anon";
+
+grant all on table "public"."user_card_plus" to "authenticated";
+
+grant all on table "public"."user_card_plus" to "service_role";
+
+grant all on table "public"."user_card_pick_new_active" to "anon";
+
+grant all on table "public"."user_card_pick_new_active" to "authenticated";
+
+grant all on table "public"."user_card_pick_new_active" to "service_role";
+
+grant all on table "public"."user_card_scheduled_today" to "anon";
+
+grant all on table "public"."user_card_scheduled_today" to "authenticated";
+
+grant all on table "public"."user_card_scheduled_today" to "service_role";
+
+grant all on table "public"."user_card_review_today" to "anon";
+
+grant all on table "public"."user_card_review_today" to "authenticated";
+
+grant all on table "public"."user_card_review_today" to "service_role";
+
+grant all on table "public"."user_deck_plus" to "anon";
+
+grant all on table "public"."user_deck_plus" to "authenticated";
+
+grant all on table "public"."user_deck_plus" to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on SEQUENCES to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on FUNCTIONS to "service_role";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "postgres";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "anon";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "authenticated";
+
+alter default privileges for ROLE "postgres" in SCHEMA "public"
+grant all on TABLES to "service_role";
+
+reset all;
