@@ -129,28 +129,33 @@ function PopularPhrases({ lang }: LangOnlyComponentProps) {
 	)
 }
 
+type FilterEnum =
+	| 'language'
+	| 'deck'
+	| 'reviewed_last_7d'
+	| 'not_in_deck'
+	| 'recommended'
+
 function DeckContents({ lang }: LangOnlyComponentProps) {
 	const { data: deck } = useDeck(lang)
 	const { data: language } = useLanguage(lang)
-
-	const [filter, setFilter] = useState<'all' | 'inDeck' | 'recentlyViewed'>(
-		'all'
-	)
-
+	if (!language) throw new Error("Could not load this language's data")
+	if (!deck) throw new Error("Could not load this deck's data")
+	const [filter, setFilter] = useState<FilterEnum>('not_in_deck')
 	const pids = useMemo(
 		() => ({
-			all: language?.pids,
-			inDeck: deck?.pids.all,
-			recentlyViewed: deck?.pids.all.filter(
-				(p) =>
-					deck.cardsMap[p].reviews?.[0]?.created_at &&
-					inLastWeek(deck.cardsMap[p].reviews[0].created_at)
+			language: language.pids,
+			deck: deck.pids.all,
+			reviewed_last_7d: deck.pids.reviewed_last_7d,
+			not_in_deck: language.pids.filter(
+				(pid) => deck.pids.all.indexOf(pid) === -1
 			),
+			recommended: [],
 		}),
-		[language?.pids, deck?.pids, deck?.cardsMap]
+		[language.pids, deck.pids.all, deck.pids.reviewed_last_7d]
 	)
 
-	const filteredPids = pids[filter]
+	const filteredPids = pids[filter!]
 	return (
 		<Card>
 			<CardHeader>
@@ -174,35 +179,43 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 			<CardContent>
 				<div className="text-muted-foreground mb-4 flex flex-row flex-wrap gap-2">
 					<span className="text-sm">Filters:</span>
-					<Badge variant="outline">
-						<label className="flex cursor-pointer gap-1">
-							<Checkbox
-								onClick={() => setFilter('all')}
-								checked={filter === 'all'}
-							/>{' '}
-							all phrases ({pids.all.length})
-						</label>
-					</Badge>
-					<Badge variant="outline">
-						<label className="flex cursor-pointer gap-1">
-							<Checkbox
-								onClick={() => setFilter('inDeck')}
-								checked={filter === 'inDeck'}
-							/>{' '}
-							in your deck ({pids.inDeck.length})
-						</label>
-					</Badge>
-					<Badge variant="outline">
-						<label className="flex cursor-pointer gap-1">
-							<Checkbox
-								onClick={() => setFilter('recentlyViewed')}
-								checked={filter === 'recentlyViewed'}
-							/>{' '}
-							reviewed recently ({pids.recentlyViewed.length})
-						</label>
-					</Badge>
+					<BadgeFilter
+						name="language"
+						setFilter={setFilter}
+						filter={filter}
+						text="All phrases"
+						count={pids.language?.length}
+					/>
+					<BadgeFilter
+						name="deck"
+						setFilter={setFilter}
+						filter={filter}
+						text="In your deck"
+						count={pids.deck?.length}
+					/>
+					<BadgeFilter
+						name="recommended"
+						setFilter={setFilter}
+						filter={filter}
+						text="Recommended"
+						count={pids.recommended?.length}
+					/>
+					<BadgeFilter
+						name="not_in_deck"
+						setFilter={setFilter}
+						filter={filter}
+						text="Not in deck"
+						count={pids.not_in_deck?.length}
+					/>
+					<BadgeFilter
+						name="reviewed_last_7d"
+						setFilter={setFilter}
+						filter={filter}
+						text="Reviewed past week"
+						count={pids.reviewed_last_7d?.length}
+					/>
 				</div>
-				{language.pids.length > 0 ?
+				{pids.language!.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						<LanguagePhrasesAccordionComponent
 							pids={filteredPids}
@@ -217,5 +230,28 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 				}
 			</CardContent>
 		</Card>
+	)
+}
+
+function BadgeFilter({
+	setFilter,
+	name,
+	text,
+	filter,
+	count = 0,
+}: {
+	setFilter: (val: FilterEnum) => void
+	name: FilterEnum
+	text: string
+	filter: FilterEnum
+	count: number
+}) {
+	return (
+		<Badge variant="outline">
+			<label className="flex cursor-pointer gap-1">
+				<Checkbox onClick={() => setFilter(name)} checked={filter === name} />{' '}
+				{text} ({count})
+			</label>
+		</Badge>
 	)
 }
