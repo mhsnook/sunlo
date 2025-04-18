@@ -1,11 +1,11 @@
-create
-or replace function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
-	"score" integer,
-	"desired_retention" numeric default 0.9
-) returns timestamp with time zone language "plv8" as $$
+create or replace function public.insert_user_card_review (
+	user_card_id uuid,
+	score integer,
+	desired_retention numeric default 0.9
+) returns timestamp with time zone language plv8 as $$
 
 const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
+// throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
 
 const prev = prevReviewQuery[0] ?? null
 if (!prev?.user_card_id) throw new Error(`could not find that card, got "${prev.user_card_id}" looking for "${user_card_id}" to record score: ${score}`)

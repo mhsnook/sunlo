@@ -13,6 +13,7 @@ import { Button } from './ui/button'
 import { Ellipsis } from 'lucide-react'
 import { useDeckCard } from '@/lib/use-deck'
 import { dateDiff, intervals, retrievability, round } from '@/lib/utils'
+import Flagged from './flagged'
 
 export default function PhraseExtraInfo({
 	pid,
@@ -69,7 +70,8 @@ function CardSection({ card }: { card: CardFull }) {
 		: 0
 	)
 	const rev = reviews?.[0] || null
-	const retr = !rev ? null : retrievability(rev.created_at, rev.new_stability)
+	const retr =
+		!rev ? null : retrievability(card.last_reviewed_at, card.stability)
 	return (
 		<div className="block space-y-4">
 			<div className="flex flex-col">
@@ -78,23 +80,23 @@ function CardSection({ card }: { card: CardFull }) {
 			</div>
 			<div className="flex flex-col">
 				<span className="font-semibold">Card created at</span>
-				<span>{ago(card.created_at)}</span>
+				<span>{ago(card.created_at!)}</span>
 			</div>
-			{!rev ?
+			{!card.last_reviewed_at ?
 				<p>Never reviewed</p>
 			:	<>
 					<div className="flex flex-col">
 						<span className="font-semibold">
 							Recentest of {reviews.length} reviews
 						</span>
-						<span>{ago(reviews[0].created_at)}</span>
+						<span>{ago(card.last_reviewed_at)}</span>
 					</div>
 					<div className="flex flex-col">
 						<span className="font-semibold">Card current variables:</span>
 						<span>
-							Difficulty {round(rev.new_difficulty)}, Stability{' '}
-							{round(rev.new_stability)}, {round(dateDiff(rev.created_at), 3)}{' '}
-							days since last review.
+							Difficulty {round(rev.difficulty)}, Stability{' '}
+							{round(rev.stability)}, {round(dateDiff(rev.created_at), 3)} days
+							since last review.
 						</span>
 						<span>Expected retrievability if reviewed this minute: {retr}</span>
 						<span>
@@ -111,21 +113,18 @@ function CardSection({ card }: { card: CardFull }) {
 				<ul className="space-y-2">
 					{reviews.map((r) => (
 						<li key={r.id} className="hover:bg-background/20 border p-2">
-							<p>
-								score: {r.score}, {ago(r.created_at)}, next due{' '}
-								{ago(r.scheduled_for)}
+							<p className="text-muted-foreground font-semibold">
+								{ago(r.created_at)}
 							</p>
-							<p>{r.created_at}</p>
 							<p>Expected R: {round(r.review_time_retrievability)}</p>
-							<p>
-								Difficulty: {round(r.new_difficulty)} from{' '}
-								{round(r.review_time_difficulty)}
-							</p>
-							<p>
-								Stability: {round(r.new_stability)} from{' '}
-								{round(r.review_time_stability)}
-							</p>
-							<p>New Interval: {round(r.new_interval_r90)} days</p>
+							<p>Difficulty: {round(r.difficulty)}</p>
+							<p>Stability: {round(r.stability)} from </p>
+							<span>
+								score: {r.score}
+								<Flagged name="client_side_fsrs_scheduling">
+									<>next due {ago(r.scheduled_for)}</>
+								</Flagged>
+							</span>
 						</li>
 					))}
 				</ul>

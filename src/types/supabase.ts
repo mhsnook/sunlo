@@ -824,9 +824,14 @@ export type Database = {
       user_card_plus: {
         Row: {
           created_at: string | null
+          current_timestamp: string | null
+          difficulty: number | null
           id: string | null
           lang: string | null
+          last_reviewed_at: string | null
           phrase_id: string | null
+          retrievability_now: number | null
+          stability: number | null
           status: Database["public"]["Enums"]["card_status"] | null
           uid: string | null
           updated_at: string | null
