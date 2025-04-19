@@ -429,13 +429,6 @@ export type Database = {
             foreignKeyName: "user_card_review_user_card_id_fkey"
             columns: ["user_card_id"]
             isOneToOne: false
-            referencedRelation: "user_card_pick_new_active"
-            referencedColumns: ["user_card_id"]
-          },
-          {
-            foreignKeyName: "user_card_review_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
             referencedRelation: "user_card_plus"
             referencedColumns: ["id"]
           },
@@ -448,113 +441,6 @@ export type Database = {
           },
           {
             foreignKeyName: "user_card_review_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck_plus"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_card_scheduled: {
-        Row: {
-          created_at: string
-          id: string
-          new_difficulty: number
-          new_interval_r90: number
-          new_stability: number
-          prev_id: string | null
-          review_time_difficulty: number | null
-          review_time_retrievability: number | null
-          review_time_stability: number | null
-          reviewed_at: string | null
-          scheduled_for: string
-          score: number
-          uid: string
-          updated_at: string
-          user_card_id: string
-          user_deck_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          new_difficulty: number
-          new_interval_r90?: number
-          new_stability: number
-          prev_id?: string | null
-          review_time_difficulty?: number | null
-          review_time_retrievability?: number | null
-          review_time_stability?: number | null
-          reviewed_at?: string | null
-          scheduled_for?: string
-          score: number
-          uid?: string
-          updated_at?: string
-          user_card_id: string
-          user_deck_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          new_difficulty?: number
-          new_interval_r90?: number
-          new_stability?: number
-          prev_id?: string | null
-          review_time_difficulty?: number | null
-          review_time_retrievability?: number | null
-          review_time_stability?: number | null
-          reviewed_at?: string | null
-          scheduled_for?: string
-          score?: number
-          uid?: string
-          updated_at?: string
-          user_card_id?: string
-          user_deck_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_card_scheduled_uid_fkey"
-            columns: ["uid"]
-            isOneToOne: false
-            referencedRelation: "public_profile"
-            referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_uid_fkey"
-            columns: ["uid"]
-            isOneToOne: false
-            referencedRelation: "user_profile"
-            referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card_pick_new_active"
-            referencedColumns: ["user_card_id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card_plus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_deck_id_fkey"
             columns: ["user_deck_id"]
             isOneToOne: false
             referencedRelation: "user_deck_plus"
@@ -807,20 +693,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_card_pick_new_active: {
-        Row: {
-          last_scheduled_for: string | null
-          last_scheduled_interval: number | null
-          overdue_days: number | null
-          overdue_percent: number | null
-          prev_created_at: string | null
-          prev_id: string | null
-          review_time_difficulty: number | null
-          review_time_stability: number | null
-          user_card_id: string | null
-        }
-        Relationships: []
-      }
       user_card_plus: {
         Row: {
           created_at: string | null
@@ -893,87 +765,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "language_plus"
             referencedColumns: ["lang"]
-          },
-        ]
-      }
-      user_card_review_today: {
-        Row: {
-          lang: string | null
-          last_scheduled_for: string | null
-          last_scheduled_interval: number | null
-          overdue_days: number | null
-          overdue_percent: number | null
-          phrase_id: string | null
-          prev_created_at: string | null
-          prev_id: string | null
-          review_time_difficulty: number | null
-          review_time_stability: number | null
-          user_card_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_card_phrase_id_fkey"
-            columns: ["phrase_id"]
-            isOneToOne: false
-            referencedRelation: "phrase"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_phrase_id_fkey"
-            columns: ["phrase_id"]
-            isOneToOne: false
-            referencedRelation: "phrase_plus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language"
-            referencedColumns: ["lang"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language_plus"
-            referencedColumns: ["lang"]
-          },
-        ]
-      }
-      user_card_scheduled_today: {
-        Row: {
-          last_scheduled_for: string | null
-          last_scheduled_interval: number | null
-          overdue_days: number | null
-          overdue_percent: number | null
-          prev_created_at: string | null
-          prev_id: string | null
-          review_time_difficulty: number | null
-          review_time_stability: number | null
-          user_card_id: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card_pick_new_active"
-            referencedColumns: ["user_card_id"]
-          },
-          {
-            foreignKeyName: "user_card_scheduled_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card_plus"
-            referencedColumns: ["id"]
           },
         ]
       }
