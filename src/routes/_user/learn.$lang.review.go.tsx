@@ -15,10 +15,35 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { reviewableCards } = useLoaderData({ from: '/_user/learn/$lang' })
+	const { deck } = useLoaderData({ from: '/_user/learn/$lang' })
+	const desiredRetention = 0.9
+	const desiredNewCardCount = 15
+	const reviewableCards = [
+		...deck.pids.reviewed.filter((pid) => {
+			const card = deck.cardsMap[pid]
+			return (
+				card.retrievability_now !== null &&
+				card.retrievability_now <= desiredRetention
+			)
+		}),
+		...deck.pids.unreviewed
+			.sort((a, b) => {
+				const cardA = deck.cardsMap[a]
+				const cardB = deck.cardsMap[b]
+				return (
+					cardB.created_at! > cardA.created_at! ? 1
+					: cardB === cardA ? 0
+					: -1
+				)
+			})
+			.slice(0, desiredNewCardCount),
+	]
 	return reviewableCards.length === 0 ?
 			<Empty lang={lang} />
-		:	<FlashCardReviewSession cards={reviewableCards} lang={lang} />
+		:	<FlashCardReviewSession
+				cards={reviewableCards.map((p) => deck.cardsMap[p])}
+				lang={lang}
+			/>
 }
 
 const Empty = ({ lang }: { lang: string }) => (
