@@ -4,7 +4,12 @@ import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
-import { CardFull, ReviewScheduled, uuid } from '@/types/main'
+import type {
+	CardFull,
+	ReviewScheduled,
+	TranslationRow,
+	uuid,
+} from '@/types/main'
 import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -120,7 +125,7 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 								</div>
 								<div>
 									{!showTranslation ? null : (
-										phrase.translations.map((trans) => (
+										phrase.translations.map((trans: TranslationRow) => (
 											<div key={trans.id} className="mt-4 flex items-center">
 												<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
 													{trans.lang}
@@ -142,7 +147,7 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 								</div>
 							</CardContent>
 							<UserCardReviewScoreButtonsRow
-								user_card_id={card.id}
+								user_card_id={card.id!}
 								isButtonsShown={showTranslation}
 								showTheButtons={() => setShowTranslation(true)}
 								proceed={() => {
@@ -185,10 +190,7 @@ function UserCardReviewScoreButtonsRow({
 			return res
 		},
 		onSuccess: (data) => {
-			console.log(
-				`onSuccess firing for a review, next scheduled at ${data.scheduled_for}`,
-				data
-			)
+			console.log(`Review mutation success; next scheduled at:`, data)
 			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
 			if (data.score === 2)

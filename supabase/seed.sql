@@ -772,18 +772,6 @@ INSERT INTO "public"."user_card" ("uid", "id", "phrase_id", "user_deck_id", "upd
 
 
 --
--- Data for Name: user_card_scheduled; Type: TABLE DATA; Schema: public; Owner: postgres
---
-
-INSERT INTO "public"."user_card_scheduled" ("id", "created_at", "scheduled_for", "user_card_id", "uid", "new_difficulty", "new_stability", "review_time_difficulty", "review_time_stability", "score", "new_interval_r90", "review_time_retrievability", "prev_id", "user_deck_id", "updated_at", "reviewed_at") VALUES
-	('2feda41f-12db-4087-ad39-2dff67409b4e', '2025-01-23 11:05:18.189922+00', '2025-02-03 11:05:18.231+00', '4396f3d7-4d63-41ae-bae1-dfa57862f9b5', 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', 5.27296793128744, 10.7412059217368, 5.282434422319, 3.173, 3, 11, 0.904670841821817, '5313a015-64b2-4cd5-a06c-792bbf83c3de', '02be6d52-2f23-498d-ab24-a7cc0975c075', '2025-01-23 11:05:18.189922+00', '2025-01-23 11:05:18.231+00'),
-	('b39c80ce-936e-4ef6-88ec-edd4e5bfe278', '2025-01-23 11:05:38.255751+00', '2025-01-24 11:05:38.256+00', '5d01f16c-d980-4aee-85f7-06acb124977d', 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', 7.1949, 0.40255, NULL, NULL, 1, 1, NULL, NULL, '02be6d52-2f23-498d-ab24-a7cc0975c075', '2025-01-23 11:05:38.255751+00', '2025-01-23 11:05:38.256+00'),
-	('91e15535-179e-4dbd-82c8-329dd80eb1a2', '2025-01-23 11:03:59.665897+00', '2025-01-26 11:03:59.707+00', 'b211a041-abbc-4beb-a886-25042d053351', 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', 5.282434422319, 3.173, NULL, NULL, 3, 3, NULL, NULL, '02be6d52-2f23-498d-ab24-a7cc0975c075', '2025-01-23 11:03:59.665897+00', '2025-01-23 11:03:59.707+00'),
-	('74fd4a9f-3333-4ab6-8753-7edce819d958', '2025-01-23 11:04:12.011471+00', '2025-01-26 11:04:12.012+00', 'b211a041-abbc-4beb-a886-25042d053351', 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', 4.51098560696467, 3.173, 5.282434422319, 3.173, 4, 3, 1, '91e15535-179e-4dbd-82c8-329dd80eb1a2', '02be6d52-2f23-498d-ab24-a7cc0975c075', '2025-01-23 11:04:12.011471+00', '2025-01-23 11:04:12.012+00'),
-	('5313a015-64b2-4cd5-a06c-792bbf83c3de', '2025-01-20 11:04:32.241664+00', '2025-01-23 11:04:32.242+00', '4396f3d7-4d63-41ae-bae1-dfa57862f9b5', 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', 5.282434422319, 3.173, NULL, NULL, 3, 3, NULL, NULL, '02be6d52-2f23-498d-ab24-a7cc0975c075', '2025-01-20 11:04:32.241664+00', '2025-01-20 11:04:32.242+00');
-
-
---
 -- Data for Name: buckets; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 

@@ -15,31 +15,28 @@ import SharePhraseButton from './share-phrase-button'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
-	pids?: pids
+	pids?: pids | null
 }
 
 export function LanguagePhrasesAccordionComponent({
 	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
-	const {
-		data: { phrasesMap, pids: languagePids },
-	} = useLanguage(lang)
-	const {
-		data: {
-			cardsMap,
-			meta: { id: deckId },
-		},
-	} = useDeck(lang)
-	const pidsToUse = pids ?? languagePids
+	const { data: language } = useLanguage(lang)
+	const { data: deck } = useDeck(lang)
+	if (!language)
+		throw new Error(
+			"We can't find that language. Are you sure you have the correct URL?"
+		)
+	const pidsToUse = pids ?? language.pids
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pidsToUse.map((pid) => (
 				<PhraseAccordionItem
 					key={pid}
-					phrase={phrasesMap[pid]}
-					card={cardsMap[pid] ?? null}
-					deckId={deckId}
+					phrase={language.phrasesMap[pid]}
+					card={deck?.cardsMap[pid] ?? null}
+					deckId={deck?.meta.id}
 				/>
 			))}
 		</Accordion>
@@ -48,7 +45,7 @@ export function LanguagePhrasesAccordionComponent({
 
 function PhraseAccordionItem({
 	phrase,
-	card,
+	card = null,
 	deckId,
 }: {
 	phrase: PhraseFull
@@ -56,12 +53,12 @@ function PhraseAccordionItem({
 	deckId: uuid
 }) {
 	return (
-		<AccordionItem value={phrase.id} className="mb-2 rounded border px-2">
+		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
 			<div className="flex flex-row items-center gap-2">
 				<CardStatusDropdown
-					lang={phrase.lang}
+					lang={phrase.lang!}
 					deckId={deckId}
-					pid={phrase.id}
+					pid={phrase.id!}
 					card={card}
 				/>
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
@@ -88,19 +85,19 @@ function PhraseAccordionItem({
 						/>
 						<PermalinkButton
 							to="/learn/$lang/$id"
-							params={{ lang: phrase.lang, id: phrase.id }}
+							params={{ lang: phrase.lang!, id: phrase.id! }}
 							variant="link"
 							className="text-xs"
 						/>
 						<SharePhraseButton
-							pid={phrase.id}
-							lang={phrase.lang}
+							pid={phrase.id!}
+							lang={phrase.lang!}
 							variant="link"
 							className="text-xs"
 						/>
 						<PhraseExtraInfo
-							lang={phrase.lang}
-							pid={phrase.id}
+							lang={phrase.lang!}
+							pid={phrase.id!}
 							className="ms-auto"
 						/>
 					</div>

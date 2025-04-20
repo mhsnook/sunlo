@@ -99,9 +99,16 @@ export type CardsMap = {
 	[key: uuid]: CardFull
 }
 
+export type DeckPids = {
+	all: pids
+	reviewed: pids
+	reviewed_last_7d: pids
+	unreviewed: pids
+	today: pids
+}
 export type DeckLoaded = {
 	meta: DeckMeta
-	pids: pids
+	pids: DeckPids
 	cardsMap: CardsMap
 }
 
@@ -112,13 +119,11 @@ export type UserCardInsert = CardInsert // @TODO remove
 
 export type ReviewableCard = Tables<'user_card_review_today'>
 export type ReviewInsert =
-	Database['public']['Functions']['record_review_and_schedule']['Args']
-export type ReviewScheduled =
-	| Tables<'user_card_scheduled'>
-	| Database['public']['Functions']['record_review_and_schedule']['Returns']
+	Database['public']['Functions']['insert_user_card_review']['Args']
+export type ReviewRow = Tables<'user_card_review'>
 
 export type CardFull = CardMeta & {
-	reviews: Array<ReviewScheduled>
+	reviews: Array<ReviewRow>
 }
 
 export type PublicProfile = Tables<'public_profile'>

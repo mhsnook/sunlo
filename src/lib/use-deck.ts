@@ -12,13 +12,14 @@ import type {
 	DeckLoaded,
 	CardFull,
 	uuid,
-	pids,
+	DeckPids,
 } from '@/types/main'
 import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
+import { inLastWeek } from './dayjs'
 
 const qs = {
-	card_full: `*, reviews:user_card_scheduled(*)` as const,
+	card_full: `*, reviews:user_card_review(*)` as const,
 	deck_full: () => `*, cards:user_card_plus(${qs.card_full})` as const,
 }
 
@@ -34,7 +35,32 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
 		)
 	const { cards: cardsArray, ...meta }: DeckFetched = data
-	const pids: pids = cardsArray?.map((c) => c.phrase_id!)
+	const pids: DeckPids = {
+		all: cardsArray?.map((c) => c.phrase_id!) ?? [],
+		reviewed:
+			cardsArray
+				?.filter((c) => c.last_reviewed_at !== null)
+				.map((c) => c.phrase_id!) ?? [],
+		reviewed_last_7d:
+			cardsArray
+				?.filter(
+					(c) => c.last_reviewed_at !== null && inLastWeek(c.last_reviewed_at)
+				)
+				?.map((c) => c.phrase_id!) ?? [],
+		unreviewed:
+			cardsArray
+				?.filter((c) => c.last_reviewed_at === null)
+				?.map((c) => c.phrase_id!) ?? [],
+		today:
+			(cardsArray ?? [])
+				.filter(
+					(c) =>
+						c.last_reviewed_at !== null &&
+						typeof c.retrievability_now === 'number' &&
+						c.retrievability_now <= 0.9
+				)
+				?.map((c) => c.phrase_id!) ?? [],
+	}
 	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
 	return {
 		meta,
@@ -73,7 +99,7 @@ export const useDeckPids = (lang: string) => {
 	return useQuery({
 		...deckQueryOptions(lang, userId),
 		select: (data: DeckLoaded) => data.pids,
-	}) as UseQueryResult<pids>
+	}) as UseQueryResult<DeckPids>
 }
 
 export const useDeckCardsMap = (lang: string) => {

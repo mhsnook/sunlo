@@ -14,6 +14,7 @@ import {
 	CalendarClock,
 	CheckCircle,
 	ChevronRight,
+	MessageCircleWarningIcon,
 	MessageSquare,
 	MessageSquarePlus,
 	Users,
@@ -31,95 +32,114 @@ import {
 	DrawerTrigger,
 } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
+import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
 })
 
-const defaultRecs = [
+const exampleRec = {
+	pid: 'uuid-1',
+	text: 'Vanakkam, eppadi irukkinga?',
+	translation: { text: 'Hello, how are you?' },
+	selected: true,
+	source: 'friend',
+}
+
+const defaultRecs: Array<typeof exampleRec> = [] /*
+	exampleRec,
 	{
-		pid: 1,
-		text: 'Vanakkam, eppadi irukkinga?',
-		translation: { text: 'Hello, how are you?' },
-		selected: true,
-		source: 'friend',
-	},
-	{
-		pid: 2,
+		pid: 'uuid-2',
 		text: 'Enakku Tamil theriyum, aanal konjam mattum',
 		translation: { text: 'I know Tamil, but only a little' },
 		selected: true,
 		source: 'algo',
 	},
 	{
-		pid: 3,
+		pid: 'uuid-3',
 		text: 'Neenga romba azhaga irukkinga',
 		translation: { text: 'You look very beautiful' },
 		selected: true,
 		source: 'friend',
 	},
 	{
-		pid: 4,
+		pid: 'uuid-4',
 		text: 'Enakku Tamil saapadu romba pidikkum',
 		translation: { text: 'I really like Tamil food' },
 		selected: true,
 		source: 'algo',
 	},
 	{
-		pid: 5,
+		pid: 'uuid-5',
 		text: 'Naan Chennai-il vaazhndhirukiren',
 		translation: { text: 'I have lived in Chennai' },
 		selected: true,
 		source: 'friend',
 	},
 	{
-		pid: 6,
+		pid: 'uuid-6',
 		text: 'Indha pazham romba inippu',
 		translation: { text: 'This fruit is very sweet' },
 		selected: true,
 		source: 'algo',
 	},
 	{
-		pid: 7,
+		pid: 'uuid-7',
 		text: 'Naalai kaalaiyil sandhippom',
 		translation: { text: 'We will meet tomorrow morning' },
 		selected: true,
 		source: 'friend',
 	},
 	{
-		pid: 8,
+		pid: 'uuid-8',
 		text: 'Ungalukku enna venum?',
 		translation: { text: 'What do you want?' },
 		selected: true,
 		source: 'algo',
 	},
-]
+] */
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { reviewableCards } = useLoaderData({ from: '/_user/learn/$lang' })
-	const [recs, setRecs] = useState(defaultRecs)
-	const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
-	const recStats = {
+	const {
+		deck: { pids: deckPids },
+	} = useLoaderData({ from: '/_user/learn/$lang' })
+
+	// all recs for cards we've never reviewed (unreviewed cards are included)
+	const [recs, setRecs] = useState(() =>
+		defaultRecs.filter((r) => deckPids.reviewed.indexOf(r.pid) === -1)
+	)
+
+	const recPids = {
+		all: recs.map((r) => r.pid),
 		fromFriends: recs.filter(
 			(r) => r.source === 'friend' && r.selected === true
-		).length,
-		fromAlgo: recs.filter((r) => r.source === 'algo' && r.selected === true)
-			.length,
+		),
+		fromAlgo: recs.filter((r) => r.source === 'algo' && r.selected === true),
+		selected: recs.filter((r) => r.selected === true).map((r) => r.pid),
 	}
 
-	const reviewStats = {
-		previouslyReviewed: reviewableCards.length,
-		totalScheduled:
-			reviewableCards?.length +
-			Math.max(newCardsDesiredCount, recStats.fromFriends + recStats.fromAlgo),
-		totalNewCards: newCardsDesiredCount,
-		...recStats,
-		fromOwnDeck: Math.max(
-			newCardsDesiredCount - recStats.fromFriends - recStats.fromAlgo,
-			0
-		),
-	}
+	// later this will be user-configurable
+	const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
+
+	// don't let it be a negative number
+	const cardCountDesiredAfterRecs = Math.max(
+		0,
+		newCardsDesiredCount - recPids.selected.length
+	)
+	// will be 0 if there are enough recs to fill today's quota
+
+	// unreviewed cards that aren't already in the recs
+	const cardPidsAvailabileInDeck = deckPids.unreviewed.filter(
+		(p) => recPids.all.indexOf(p) === -1
+	)
+
+	const countNewCardsToPick = Math.min(
+		cardPidsAvailabileInDeck.length,
+		cardCountDesiredAfterRecs
+	)
+	const countAllNewCardsToday = countNewCardsToPick + recPids.selected.length
+	const countAllCardsToday = countAllNewCardsToday + deckPids.today.length
 
 	return (
 		<Card>
@@ -141,7 +161,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 								<BookOpen />
-								{reviewStats.totalScheduled}
+								{countAllCardsToday}
 							</p>
 							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
@@ -154,7 +174,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 								<MessageSquarePlus />
-								<span>{reviewStats.totalNewCards}</span>
+								<span>{countAllNewCardsToday}</span>
 							</p>
 							<p className="text-muted-foreground">
 								cards you haven't seen before
@@ -168,7 +188,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
 								<CalendarClock />
-								<span>{reviewStats.previouslyReviewed}</span>
+								<span>{recPids.selected.length}</span>
 							</p>
 							<p className="text-muted-foreground">
 								scheduled based on past reviews
@@ -187,36 +207,59 @@ function ReviewPage() {
 								<Flagged name="friend_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Friend recs:</span>
-										<Badge variant="outline">{reviewStats.fromFriends}</Badge>
+										<Badge variant="outline">
+											{recPids.fromFriends.length}
+										</Badge>
 									</div>
 								</Flagged>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{reviewStats.fromAlgo}</Badge>
+										<Badge variant="outline">{recPids.fromAlgo.length}</Badge>
 									</div>
 								</Flagged>
 								<div className="flex items-center justify-between">
 									<span className="text-muted-foreground">From your deck:</span>
-									<Badge variant="outline">{reviewStats.fromOwnDeck}</Badge>
+									<Badge variant="outline">{countNewCardsToPick}</Badge>
 								</div>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">
 											Public library:
 										</span>
-										<Badge variant="outline">
-											{reviewStats.totalNewCards -
-												reviewStats.fromAlgo -
-												reviewStats.fromFriends -
-												reviewStats.fromOwnDeck}
-										</Badge>
+										<Badge variant="outline">0</Badge>
 									</div>
 								</Flagged>
 							</CardContent>
 						</Card>
 					</Flagged>
 				</div>
+				{!(newCardsDesiredCount > countAllNewCardsToday) ? null : (
+					<Callout className="my-4">
+						<MessageCircleWarningIcon />
+						<div>
+							It looks like you don't have enough new cards to review today. You
+							can go ahead with the review like this, or you can add more.{' '}
+							<div className="my-2 flex flex-col justify-around gap-2 @lg:flex-row">
+								<Link
+									className={buttonVariants({ variant: 'secondary' })}
+									to="/learn/$lang/library"
+									params={{ lang }}
+								>
+									go to the Library to pick more
+								</Link>
+
+								<Link
+									className={buttonVariants({ variant: 'secondary' })}
+									to="/learn/$lang/add-phrase"
+									params={{ lang }}
+								>
+									add a new phrase to the Library
+								</Link>
+							</div>
+						</div>
+					</Callout>
+				)}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
 					<Link
 						to="/learn/$lang/review/go"
@@ -235,7 +278,7 @@ function ReviewPage() {
 							<ReviewCardsToAddToDeck
 								recs={recs}
 								setRecs={setRecs}
-								reviewStats={reviewStats}
+								recPids={recPids}
 							/>
 						</Drawer>
 					</Flagged>
@@ -248,14 +291,14 @@ function ReviewPage() {
 function ReviewCardsToAddToDeck({
 	recs,
 	setRecs,
-	reviewStats,
+	recPids,
 }: {
 	recs: typeof defaultRecs
 	setRecs: (recs: typeof defaultRecs) => void
-	reviewStats: any
+	recPids: any
 }) {
 	// Toggle card selection
-	const toggleCardSelection = (pid: number) => {
+	const toggleCardSelection = (pid: string) => {
 		const updatedCards = recs.map((card) =>
 			card.pid === pid ? { ...card, selected: !card.selected } : card
 		)
@@ -267,7 +310,7 @@ function ReviewCardsToAddToDeck({
 				<DrawerHeader>
 					<DrawerTitle className="flex items-center gap-2 text-xl">
 						<Users className="h-5 w-5 text-purple-500" />
-						Recommended for you ({reviewStats.fromFriends} of{' '}
+						Recommended for you ({recPids.fromFriends.length} of{' '}
 						{recs.filter((r) => r.source === 'friends')} selected)
 					</DrawerTitle>
 					<DrawerDescription>

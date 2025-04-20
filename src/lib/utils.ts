@@ -42,10 +42,15 @@ export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
 }
 
 export function retrievability(
-	prev_at: string | Date,
+	prev_at: string | Date | null,
 	stability: number,
 	later_at?: string | Date
 ) {
+	if (!prev_at || !stability)
+		throw Error(
+			'Something went wrong calcaulating retrievability on the client'
+		)
+
 	const F = 19.0 / 81.0,
 		C = -0.5
 	const diff = dateDiff(prev_at, later_at)

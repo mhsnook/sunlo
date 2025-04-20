@@ -9,7 +9,7 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
--- CREATE EXTENSION IF NOT EXISTS "pgsodium" WITH SCHEMA "pgsodium";
+CREATE EXTENSION IF NOT EXISTS "pgsodium";
 
 ALTER SCHEMA "public" OWNER TO "postgres";
 
@@ -63,10 +63,10 @@ DECLARE
     user_deck_id uuid;
 BEGIN
     -- get the deck ID
-    SELECT id into user_deck_id FROM user_deck AS d 
-    WHERE d.lang = add_phrase_translation_card.lang AND d.uid = auth.uid() 
+    SELECT id into user_deck_id FROM user_deck AS d
+    WHERE d.lang = add_phrase_translation_card.lang AND d.uid = auth.uid()
     LIMIT 1;
-    
+
     -- Insert a new phrase and get the id
     INSERT INTO phrase (text, lang)
     VALUES (text, lang)
@@ -215,129 +215,96 @@ $$;
 
 ALTER FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) OWNER TO "postgres";
 
-SET default_tablespace = '';
-
-SET default_table_access_method = "heap";
-
-CREATE TABLE IF NOT EXISTS "public"."user_card_scheduled" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "scheduled_for" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "user_card_id" "uuid" NOT NULL,
-    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
-    "new_difficulty" numeric NOT NULL,
-    "new_stability" numeric NOT NULL,
-    "review_time_difficulty" numeric,
-    "review_time_stability" numeric,
-    "score" smallint NOT NULL,
-    "new_interval_r90" numeric DEFAULT '1'::numeric NOT NULL,
-    "review_time_retrievability" numeric,
-    "prev_id" "uuid",
-    "user_deck_id" "uuid",
-    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
-    "reviewed_at" timestamp with time zone,
-    CONSTRAINT "user_card_scheduled_interval_r90_check" CHECK (("new_interval_r90" > (0)::numeric)),
-    CONSTRAINT "user_card_scheduled_review_time_difficulty_check" CHECK ((("review_time_difficulty" >= 0.0) AND ("review_time_difficulty" <= 10.0))),
-    CONSTRAINT "user_card_scheduled_review_time_stability_check" CHECK (("review_time_stability" >= 0.0)),
-    CONSTRAINT "user_card_scheduled_score_check" CHECK (("score" = ANY (ARRAY[1, 2, 3, 4])))
-);
-
-ALTER TABLE "public"."user_card_scheduled" OWNER TO "postgres";
-
-COMMENT ON TABLE "public"."user_card_scheduled" IS 'A record for each time a user_card is due to be reviewed';
-
-COMMENT ON COLUMN "public"."user_card_scheduled"."new_interval_r90" IS 'days till the predicted interval till the Retrievability will be 0.90';
-
-CREATE OR REPLACE FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) RETURNS "public"."user_card_scheduled"
+CREATE OR REPLACE FUNCTION "public"."insert_user_card_review"("user_card_id" "uuid", "score" integer, "desired_retention" numeric DEFAULT 0.9) RETURNS timestamp with time zone
     LANGUAGE "plv8"
     AS $_$
 
+const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
+// throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
+
+const prev = prevReviewQuery[0] ?? null
+if (!prev?.user_card_id) throw new Error(`could not find that card, got "${prev.user_card_id}" looking for "${user_card_id}" to record score: ${score}`)
+
 var calc = {
-	reviewed_at: new Date(),
+	current: new Date(),
 	review_time_retrievability: null,
-	new_difficulty: null,
-	new_stability: null,
-	new_interval_r90: null,
+	difficulty: null,
+	stability: null,
+	new_interval: null,
 	scheduled_for: null
 }
-
-const desired_retention = 0.9
-const prevResult = plv8.execute("SELECT c.user_deck_id, s.id, s.reviewed_at, s.new_difficulty AS difficulty, s.new_stability AS stability FROM public.user_card_plus AS c LEFT JOIN public.user_card_scheduled AS s ON (s.user_card_id = c.id) WHERE c.id = $1 ORDER BY s.reviewed_at DESC LIMIT 1", [user_card_id])
-const prev = prevResult[0] ?? null
-
-if (!prev) throw new Error(`could not find a card "${user_card_id}" to record score: ${score}`)
 // throw new Error(`prev.id ${prev.id}`)
 
 if (prev.id === null) {
-	calc.new_stability = plv8.find_function("fsrs_s_0")(score)
-	calc.new_difficulty = plv8.find_function("fsrs_d_0")(score)
+	calc.stability = plv8.find_function("fsrs_s_0")(score)
+	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
+	calc.review_time_retrievability = null
 } else {
-	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.reviewed_at, calc.reviewed_at)
+	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.created_at, calc.current)
 	if (typeof time_between_reviews !== 'number' || time_between_reviews < -1)
-		throw new Error(`Time between reviews is not a number or is less than -1 (can''t have a most recent review in the future). value calculated as: ${time_between_reviews}, for ${prev.reviewed_at} and ${calc.reviewed_at}`)
+		throw new Error(`Time between reviews is not a number or is less than -1 (can''t have a most recent review in the future). value calculated as: ${time_between_reviews}, for ${prev.created_at} and ${calc.current}`)
 	try {
 		calc.review_time_retrievability = plv8.find_function("fsrs_retrievability")(time_between_reviews, prev.stability)
 		if (typeof calc.review_time_retrievability !== 'number' || calc.review_time_retrievability > 1 || calc.review_time_retrievability < 0) throw new Error(`retrievability is not a number or has wrong value: ${calc.review_time_retrievability}`)
-		calc.new_stability = plv8.find_function("fsrs_stability")(prev.difficulty, prev.stability, calc.review_time_retrievability, score)
-		calc.new_difficulty = plv8.find_function("fsrs_difficulty")(prev.difficulty, score)
+		calc.stability = plv8.find_function("fsrs_stability")(prev.difficulty, prev.stability, calc.review_time_retrievability, score)
+		calc.difficulty = plv8.find_function("fsrs_difficulty")(prev.difficulty, score)
 	} catch(e) {
 		throw new Error(`Something went wrong in the main calc part.` + JSON.stringify([prev, calc]))
 	}
 }
 
-if (typeof calc.new_stability !== 'number' || typeof calc.new_difficulty !== 'number' || calc.new_stability < 0 || calc.new_difficulty > 10 || calc.new_difficulty < 1) {
-	throw new Error(`Difficulty or stability is out of range: ${calc.new_difficulty}, ${calc.new_stability}`)
+if (typeof calc.stability !== 'number' || typeof calc.difficulty !== 'number' || calc.stability < 0 || calc.difficulty > 10 || calc.difficulty < 1) {
+	throw new Error(`Difficulty or stability is out of range: ${calc.difficulty}, ${calc.stability}`)
 	return null
 }
 
 // assign interval (a float, rounded to an integer) and schedule date
 try {
-	calc.new_interval_r90 = score === 1 ? 1 : Math.max(
+	calc.new_interval = score === 1 ? 1 : Math.max(
 		Math.round(
-			plv8.find_function("fsrs_interval")(desired_retention, calc.new_stability)
+			plv8.find_function("fsrs_interval")(desired_retention, calc.stability)
 		),
 		1.0
 	)
-	var date_obj = new Date(calc.reviewed_at)
 	calc.scheduled_for = new Date(
-		date_obj.setDate(
-			date_obj.getDate() + calc.new_interval_r90
+		calc.current.setDate(
+			calc.current.getDate() + calc.new_interval
 		)
 	)
 } catch(e) {
 	throw new Error('Something went wrong in the scheduling part' + JSON.stringify(calc))
 }
 
-if (typeof calc.new_interval_r90 !== 'number') {
-	throw new Error(`New interval is not a number: ${calc.new_interval_r90}`)
+if (!calc.scheduled_for) {
+	throw new Error(`New scheduled_for value is not working...`)
 	return null
 }
 
+// console.log(`Throwing before the thing: ${JSON.stringify(user_card_id, prev, calc)}`)
+
 const insertedResult = plv8.execute(
-	`INSERT INTO public.user_card_scheduled (updated_at, reviewed_at, score, user_card_id, user_deck_id, prev_id, review_time_difficulty, review_time_stability, review_time_retrievability, new_difficulty, new_stability, new_interval_r90, scheduled_for) VALUES (NOW(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
+	`INSERT INTO public.user_card_review (score, user_card_id, user_deck_id, review_time_retrievability, difficulty, stability) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
 	[
-		calc.reviewed_at,
 		score,
 		user_card_id,
 		prev.user_deck_id,
-		prev.id,
-		prev.difficulty,
-		prev.stability,
 		calc.review_time_retrievability,
-		calc.new_difficulty,
-		calc.new_stability,
-		calc.new_interval_r90,
-		calc.scheduled_for
+		calc.difficulty,
+		calc.stability
 	]
 );
 
 const response = insertedResult[0] ?? null;
 if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${user_card_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
-return response
+return calc.scheduled_for
 
 $_$;
 
-ALTER FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) OWNER TO "postgres";
+ALTER FUNCTION "public"."insert_user_card_review"("user_card_id" "uuid", "score" integer, "desired_retention" numeric) OWNER TO "postgres";
+
+SET default_tablespace = '';
+
+SET default_table_access_method = "heap";
 
 CREATE TABLE IF NOT EXISTS "public"."friend_request_action" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
@@ -540,6 +507,24 @@ COMMENT ON COLUMN "public"."user_card"."uid" IS 'The owner user''s ID';
 
 COMMENT ON COLUMN "public"."user_card"."user_deck_id" IS 'Foreign key to the user_deck item to which this card belongs';
 
+CREATE TABLE IF NOT EXISTS "public"."user_card_review" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "uid" "uuid" DEFAULT "auth"."uid"() NOT NULL,
+    "user_card_id" "uuid" NOT NULL,
+    "score" smallint NOT NULL,
+    "difficulty" numeric,
+    "stability" numeric,
+    "review_time_retrievability" numeric,
+    "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "user_deck_id" "uuid" NOT NULL,
+    CONSTRAINT "user_card_review_difficulty_check" CHECK ((("difficulty" >= 0.0) AND ("difficulty" <= 10.0))),
+    CONSTRAINT "user_card_review_score_check" CHECK (("score" = ANY (ARRAY[1, 2, 3, 4]))),
+    CONSTRAINT "user_card_review_stability_check" CHECK (("stability" >= 0.0))
+);
+
+ALTER TABLE "public"."user_card_review" OWNER TO "postgres";
+
 CREATE OR REPLACE VIEW "public"."user_card_plus" WITH ("security_invoker"='true') AS
  SELECT "deck"."lang",
     "card"."id",
@@ -548,100 +533,29 @@ CREATE OR REPLACE VIEW "public"."user_card_plus" WITH ("security_invoker"='true'
     "card"."phrase_id",
     "card"."user_deck_id",
     "card"."created_at",
-    "card"."updated_at"
-   FROM ("public"."user_card" "card"
-     JOIN "public"."user_deck" "deck" ON (("deck"."id" = "card"."user_deck_id")));
+    "card"."updated_at",
+    "review"."created_at" AS "last_reviewed_at",
+    "review"."difficulty",
+    "review"."stability",
+    CURRENT_TIMESTAMP AS "current_timestamp",
+    "public"."fsrs_retrievability"(((EXTRACT(epoch FROM (CURRENT_TIMESTAMP - "review"."created_at")) / (3600)::numeric) / (24)::numeric), "review"."stability") AS "retrievability_now"
+   FROM (("public"."user_card" "card"
+     JOIN "public"."user_deck" "deck" ON (("deck"."id" = "card"."user_deck_id")))
+     LEFT JOIN ( SELECT "rev"."id",
+            "rev"."uid",
+            "rev"."user_card_id",
+            "rev"."score",
+            "rev"."difficulty",
+            "rev"."stability",
+            "rev"."review_time_retrievability",
+            "rev"."created_at",
+            "rev"."updated_at",
+            "rev"."user_deck_id"
+           FROM ("public"."user_card_review" "rev"
+             LEFT JOIN "public"."user_card_review" "rev2" ON ((("rev"."user_card_id" = "rev2"."user_card_id") AND ("rev"."created_at" < "rev2"."created_at"))))
+          WHERE ("rev2"."created_at" IS NULL)) "review" ON (("card"."id" = "review"."user_card_id")));
 
 ALTER TABLE "public"."user_card_plus" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_pick_new_active" WITH ("security_invoker"='true') AS
- SELECT "card"."id" AS "user_card_id",
-    NULL::"uuid" AS "prev_id",
-    NULL::timestamp with time zone AS "prev_created_at",
-    NULL::numeric AS "review_time_difficulty",
-    NULL::numeric AS "review_time_stability",
-    NULL::timestamp with time zone AS "last_scheduled_for",
-    NULL::numeric AS "last_scheduled_interval",
-    NULL::numeric AS "overdue_days",
-    NULL::double precision AS "overdue_percent"
-   FROM ("public"."user_card_plus" "card"
-     LEFT JOIN "public"."user_card_scheduled" "reviews" ON (("reviews"."user_card_id" = "card"."id")))
-  WHERE (("reviews"."id" IS NULL) AND ("card"."status" = 'active'::"public"."card_status"))
-  ORDER BY ("random"())
- LIMIT 15;
-
-ALTER TABLE "public"."user_card_pick_new_active" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_scheduled_today" WITH ("security_invoker"='true') AS
- WITH "first" AS (
-         SELECT DISTINCT ON ("record"."user_card_id") "record"."user_card_id",
-            "record"."id" AS "prev_id",
-            "record"."created_at" AS "prev_created_at",
-            "record"."new_difficulty" AS "review_time_difficulty",
-            "record"."new_stability" AS "review_time_stability",
-            "record"."scheduled_for" AS "last_scheduled_for",
-            "record"."new_interval_r90" AS "last_scheduled_interval",
-            ((((EXTRACT(epoch FROM CURRENT_TIMESTAMP) - EXTRACT(epoch FROM "record"."scheduled_for")) / 60.0) / 60.0) / 24.0) AS "overdue_days",
-            ((((((EXTRACT(epoch FROM CURRENT_TIMESTAMP) - EXTRACT(epoch FROM "record"."scheduled_for")))::double precision / (60.0)::double precision) / (60.0)::double precision) / (24.0)::double precision) / ("record"."new_interval_r90")::double precision) AS "overdue_percent"
-           FROM "public"."user_card_scheduled" "record"
-          ORDER BY "record"."user_card_id", "record"."created_at" DESC
-        )
- SELECT "first"."user_card_id",
-    "first"."prev_id",
-    "first"."prev_created_at",
-    "first"."review_time_difficulty",
-    "first"."review_time_stability",
-    "first"."last_scheduled_for",
-    "first"."last_scheduled_interval",
-    "first"."overdue_days",
-    "first"."overdue_percent"
-   FROM "first"
-  WHERE ("first"."last_scheduled_for" < "now"())
-  ORDER BY ("random"());
-
-ALTER TABLE "public"."user_card_scheduled_today" OWNER TO "postgres";
-
-CREATE OR REPLACE VIEW "public"."user_card_review_today" WITH ("security_invoker"='true') AS
- WITH "first" AS (
-         SELECT "user_card_scheduled_today"."prev_id",
-            "user_card_scheduled_today"."user_card_id",
-            "user_card_scheduled_today"."review_time_difficulty",
-            "user_card_scheduled_today"."review_time_stability",
-            "user_card_scheduled_today"."last_scheduled_for",
-            "user_card_scheduled_today"."last_scheduled_interval",
-            "user_card_scheduled_today"."overdue_days",
-            "user_card_scheduled_today"."overdue_percent",
-            "user_card_scheduled_today"."prev_created_at"
-           FROM "public"."user_card_scheduled_today"
-        UNION ALL
-         SELECT "user_card_pick_new_active"."prev_id",
-            "user_card_pick_new_active"."user_card_id",
-            "user_card_pick_new_active"."review_time_difficulty",
-            "user_card_pick_new_active"."review_time_stability",
-            "user_card_pick_new_active"."last_scheduled_for",
-            "user_card_pick_new_active"."last_scheduled_interval",
-            "user_card_pick_new_active"."overdue_days",
-            "user_card_pick_new_active"."overdue_percent",
-            "user_card_pick_new_active"."prev_created_at"
-           FROM "public"."user_card_pick_new_active"
-        )
- SELECT "first"."prev_id",
-    "first"."user_card_id",
-    "first"."review_time_difficulty",
-    "first"."review_time_stability",
-    "first"."last_scheduled_for",
-    "first"."last_scheduled_interval",
-    "first"."overdue_days",
-    "first"."overdue_percent",
-    "first"."prev_created_at",
-    "card"."lang",
-    "card"."phrase_id"
-   FROM ("first"
-     JOIN "public"."user_card_plus" "card" ON (("first"."user_card_id" = "card"."id")))
-  WHERE ("card"."status" = 'active'::"public"."card_status")
-  ORDER BY ("random"());
-
-ALTER TABLE "public"."user_card_review_today" OWNER TO "postgres";
 
 CREATE OR REPLACE VIEW "public"."user_deck_plus" AS
 SELECT
@@ -704,8 +618,8 @@ ALTER TABLE ONLY "public"."user_profile"
 ALTER TABLE ONLY "public"."user_profile"
     ADD CONSTRAINT "profiles_username_key" UNIQUE ("username");
 
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_pkey" PRIMARY KEY ("id");
+ALTER TABLE ONLY "public"."user_card_review"
+    ADD CONSTRAINT "user_card_review_pkey" PRIMARY KEY ("id");
 
 ALTER TABLE ONLY "public"."user_card"
     ADD CONSTRAINT "user_deck_card_membership_pkey" PRIMARY KEY ("id");
@@ -743,22 +657,22 @@ CREATE OR REPLACE VIEW "public"."user_deck_plus" WITH ("security_invoker"='true'
            FROM "public"."phrase" "p"
           WHERE (("p"."lang")::"text" = ("d"."lang")::"text")) AS "lang_total_phrases",
     ( SELECT "max"("c"."created_at") AS "max"
-           FROM "public"."user_card_scheduled" "r"
+           FROM "public"."user_card_review" "r"
           WHERE ("r"."user_deck_id" = "d"."id")
          LIMIT 1) AS "most_recent_review_at",
     ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
+           FROM "public"."user_card_review" "r"
           WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)))
          LIMIT 1) AS "count_reviews_7d",
     ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
+           FROM "public"."user_card_review" "r"
           WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)) AND ("r"."score" >= 2))
          LIMIT 1) AS "count_reviews_7d_positive"
    FROM ("public"."user_deck" "d"
      LEFT JOIN "public"."user_card" "c" ON (("d"."id" = "c"."user_deck_id")))
   GROUP BY "d"."id", "d"."lang", "d"."created_at"
   ORDER BY ( SELECT "count"(*) AS "count"
-           FROM "public"."user_card_scheduled" "r"
+           FROM "public"."user_card_review" "r"
           WHERE (("r"."user_deck_id" = "d"."id") AND ("r"."created_at" > ("now"() - '7 days'::interval)))
          LIMIT 1) DESC NULLS LAST, "d"."created_at" DESC;
 
@@ -801,14 +715,11 @@ ALTER TABLE ONLY "public"."phrase_translation"
 ALTER TABLE ONLY "public"."user_card"
     ADD CONSTRAINT "user_card_phrase_id_fkey" FOREIGN KEY ("phrase_id") REFERENCES "public"."phrase"("id") ON DELETE CASCADE;
 
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_uid_fkey" FOREIGN KEY ("uid") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."user_card_review"
+    ADD CONSTRAINT "user_card_review_user_card_id_fkey" FOREIGN KEY ("user_card_id") REFERENCES "public"."user_card"("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_user_card_id_fkey" FOREIGN KEY ("user_card_id") REFERENCES "public"."user_card"("id") ON UPDATE CASCADE ON DELETE CASCADE;
-
-ALTER TABLE ONLY "public"."user_card_scheduled"
-    ADD CONSTRAINT "user_card_scheduled_user_deck_id_fkey" FOREIGN KEY ("user_deck_id") REFERENCES "public"."user_deck"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."user_card_review"
+    ADD CONSTRAINT "user_card_review_user_deck_id_fkey" FOREIGN KEY ("user_deck_id") REFERENCES "public"."user_deck"("id") ON UPDATE CASCADE ON DELETE SET NULL;
 
 ALTER TABLE ONLY "public"."user_card"
     ADD CONSTRAINT "user_card_uid_fkey" FOREIGN KEY ("uid") REFERENCES "public"."user_profile"("uid") ON UPDATE CASCADE ON DELETE CASCADE;
@@ -824,7 +735,7 @@ ALTER TABLE ONLY "public"."user_deck"
 
 CREATE POLICY "Anyone can add cards" ON "public"."phrase" FOR INSERT TO "authenticated" WITH CHECK (true);
 
-CREATE POLICY "Enable all actions for users based on uid" ON "public"."user_card_scheduled" TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "uid")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "uid"));
+CREATE POLICY "Enable insert for authenticated users only" ON "public"."user_card_review" FOR INSERT TO "authenticated" WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "uid"));
 
 CREATE POLICY "Enable read access for all users" ON "public"."language" FOR SELECT USING (true);
 
@@ -834,7 +745,11 @@ CREATE POLICY "Enable read access for all users" ON "public"."phrase_relation" F
 
 CREATE POLICY "Enable read access for all users" ON "public"."phrase_translation" FOR SELECT USING (true);
 
+CREATE POLICY "Enable users to update their own data only" ON "public"."user_card_review" FOR UPDATE TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "uid")) WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "uid"));
+
 CREATE POLICY "Enable users to view their own data only" ON "public"."friend_request_action" FOR SELECT TO "authenticated" USING (((( SELECT "auth"."uid"() AS "uid") = "uid_by") OR (( SELECT "auth"."uid"() AS "uid") = "uid_for")));
+
+CREATE POLICY "Enable users to view their own data only" ON "public"."user_card_review" FOR SELECT TO "authenticated" USING ((( SELECT "auth"."uid"() AS "uid") = "uid"));
 
 CREATE POLICY "Logged in users can add see_also's" ON "public"."phrase_relation" FOR INSERT TO "authenticated" WITH CHECK (true);
 
@@ -860,7 +775,7 @@ ALTER TABLE "public"."phrase_translation" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."user_card" ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE "public"."user_card_scheduled" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "public"."user_card_review" ENABLE ROW LEVEL SECURITY;
 
 ALTER TABLE "public"."user_deck" ENABLE ROW LEVEL SECURITY;
 
@@ -925,13 +840,9 @@ GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability
 GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "authenticated";
 GRANT ALL ON FUNCTION "public"."fsrs_stability"("difficulty" numeric, "stability" numeric, "review_time_retrievability" numeric, "score" integer) TO "service_role";
 
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_scheduled" TO "service_role";
-
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "anon";
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "authenticated";
-GRANT ALL ON FUNCTION "public"."record_review_and_schedule"("user_card_id" "uuid", "score" integer) TO "service_role";
+GRANT ALL ON FUNCTION "public"."insert_user_card_review"("user_card_id" "uuid", "score" integer, "desired_retention" numeric) TO "anon";
+GRANT ALL ON FUNCTION "public"."insert_user_card_review"("user_card_id" "uuid", "score" integer, "desired_retention" numeric) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."insert_user_card_review"("user_card_id" "uuid", "score" integer, "desired_retention" numeric) TO "service_role";
 
 GRANT ALL ON TABLE "public"."friend_request_action" TO "anon";
 GRANT ALL ON TABLE "public"."friend_request_action" TO "authenticated";
@@ -981,21 +892,13 @@ GRANT ALL ON TABLE "public"."user_card" TO "anon";
 GRANT ALL ON TABLE "public"."user_card" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_card" TO "service_role";
 
+GRANT ALL ON TABLE "public"."user_card_review" TO "anon";
+GRANT ALL ON TABLE "public"."user_card_review" TO "authenticated";
+GRANT ALL ON TABLE "public"."user_card_review" TO "service_role";
+
 GRANT ALL ON TABLE "public"."user_card_plus" TO "anon";
 GRANT ALL ON TABLE "public"."user_card_plus" TO "authenticated";
 GRANT ALL ON TABLE "public"."user_card_plus" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_pick_new_active" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_scheduled_today" TO "service_role";
-
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "anon";
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "authenticated";
-GRANT ALL ON TABLE "public"."user_card_review_today" TO "service_role";
 
 GRANT ALL ON TABLE "public"."user_deck_plus" TO "anon";
 GRANT ALL ON TABLE "public"."user_deck_plus" TO "authenticated";
