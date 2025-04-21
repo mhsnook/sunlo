@@ -42,7 +42,12 @@ function Title({
 	const data = match?.loaderData.titleBar
 	if (!data) return null
 	const Icon = !data ? null : data.Icon
-	const onBackClick = data?.onBackClick ?? goBack
+	const onBackClick =
+		!data?.onBackClick ? goBack
+		: typeof data.onBackClick === 'function' ? data.onBackClick
+		: typeof data.onBackClick === 'string' ?
+			() => navigate({ to: data.onBackClick })
+		:	goBack
 	return (
 		<>
 			<Button variant="ghost" size="icon-sm" onClick={onBackClick}>

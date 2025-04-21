@@ -42,7 +42,7 @@ Data fetching:
   - When in doubt, invalidate all the data rather than attempting optimistic updates.
 - Cache key structure is like this for queries:
   - ['languages', lang] is the full data set of LanguageLoaded
-  - ['user', lang] is the full data set of DeckLoaded
+  - ['user', lang, 'deck'] is the full data set of DeckLoaded
   - ['user', uid] is the ProfileFull
   - ['user', 'friends', 'summaries'] is my own friends list
   - ['public', 'profile', uid]
