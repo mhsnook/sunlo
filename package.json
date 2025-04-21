@@ -14,6 +14,8 @@
 		"migrate": "supabase db diff -f new_migration",
 		"types": "supabase gen types typescript --local > ./src/types/supabase.ts",
 		"types:production": "supabase gen types typescript --project-id hepudeougzlgnuqvybrj > ./src/types/supabase.ts",
+		"seeds:make": "supabase db dump --data-only --local --schema='public,auth,storage' > supabase/seed.sql",
+		"seeds:apply": "supabase db reset",
 		"prepare": "husky"
 	},
 	"dependencies": {
