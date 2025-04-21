@@ -40,8 +40,8 @@ function DeckSettingsPage() {
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<GoalForm meta={meta} />
-				<ArchiveForm meta={meta} />
+				<GoalForm meta={meta!} />
+				<ArchiveForm meta={meta!} />
 			</CardContent>
 		</Card>
 	)
@@ -71,7 +71,7 @@ function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
 		PostgrestError,
 		DeckGoalFormInputs
 	>({
-		mutationKey: ['user', lang, 'deck-settings'],
+		mutationKey: ['user', lang, 'deck', 'settings'],
 		mutationFn: async (values: DeckGoalFormInputs) => {
 			const { data } = await supabase
 				.from('user_deck')
@@ -83,7 +83,9 @@ function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
 		},
 		onSuccess: (data) => {
 			toast.success('Your deck settings have been updated.')
-			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			void queryClient.invalidateQueries({
+				queryKey: ['user', lang, 'deck'],
+			})
 			reset(data)
 		},
 		onError: () => {
@@ -147,11 +149,11 @@ function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
 			await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
-				.eq('id', id)
+				.eq('id', id!)
 				.throwOnError()
 		},
 		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			void queryClient.invalidateQueries({ queryKey: ['user', lang, 'deck'] })
 			if (archived) toast.success('The deck has been re-activated!')
 			else
 				toast.success(
@@ -179,7 +181,7 @@ function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
 							<Button variant="default" disabled={!archived}>
 								Restore deck
 							</Button>
-						:	<Button variant="destructive-outline" disabled={archived}>
+						:	<Button variant="destructive-outline" disabled={!!archived}>
 								Archive deck
 							</Button>
 						}

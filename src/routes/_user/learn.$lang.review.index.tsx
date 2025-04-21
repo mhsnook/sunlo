@@ -170,7 +170,7 @@ function ReviewPage() {
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
 			localStorage.setItem(
-				`user-${lang}-review-${dayString}`,
+				JSON.stringify(['user', lang, 'review', dayString]),
 				JSON.stringify(cardPidsAllToday)
 			)
 			return { total: cardPidsAllToday.length, new: cardPidsAllNewToday.length }
@@ -308,8 +308,8 @@ function ReviewPage() {
 						<MessageCircleWarningIcon />
 						<div className="pt-1">
 							It looks like you don't have enough fresh cards in your deck to
-							meet your review goal for today. You can go ahead with the review
-							like this, or you can add more.{' '}
+							meet your review goal for today ({newCardsDesiredCount}). You can
+							go ahead with the review like this, or you can add more.{' '}
 							<div className="my-2 flex flex-col gap-2 @lg:flex-row">
 								<Link
 									className={buttonVariants({ variant: 'outline' })}
@@ -335,7 +335,7 @@ function ReviewPage() {
 						onClick={(e) => {
 							e.preventDefault()
 							e.stopPropagation()
-							void mutate()
+							mutate()
 						}}
 						size="lg"
 						disabled={isPending}

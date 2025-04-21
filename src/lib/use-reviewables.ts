@@ -19,16 +19,16 @@ export function todaysReviewLocalStorageQueryOptions(
 ) {
 	return queryOptions({
 		queryKey: ['user', lang, 'review', dayString],
-		queryFn: ({ queryKey }): pids => {
-			const data = JSON.parse(
-				localStorage.getItem(`user-${lang}-review-${dayString}`) ?? '[]'
-			)
+		queryFn: ({ queryKey }): pids | null => {
+			const data = localStorage.getItem(JSON.stringify(queryKey))
 			console.log(
 				`We went to localstorage and this is what we found: for `,
 				queryKey,
 				data
 			)
-			return data
+			return data ? JSON.parse(data) : null
 		},
+		gcTime: 120_000,
+		staleTime: 1_200_000,
 	})
 }
