@@ -35,7 +35,7 @@ export type TitleBar = {
 	title: string
 	subtitle?: string
 	Icon?: LucideIcon
-	onBackClick?: () => void
+	onBackClick?: string | (() => void)
 }
 
 export type UseSBQuery<T> = UseQueryResult<T, PostgrestError>

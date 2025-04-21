@@ -71,11 +71,10 @@ function AddPhraseTab() {
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
 			const ins: PhraseCardInsert = { lang, ...variables }
-			const { data, error } = await supabase.rpc(
-				'add_phrase_translation_card',
-				ins
-			)
-			if (error) throw error
+			const { data } = await supabase
+				.rpc('add_phrase_translation_card', ins)
+				.throwOnError()
+
 			return data
 		},
 		onSuccess: (data, { translation_lang }) => {
