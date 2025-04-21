@@ -71,7 +71,7 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 
 export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 	queryOptions({
-		queryKey: ['user', lang],
+		queryKey: ['user', lang, 'deck'],
 		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1]),
 		enabled: !!userId && !!lang,
 		gcTime: 1_200_000,

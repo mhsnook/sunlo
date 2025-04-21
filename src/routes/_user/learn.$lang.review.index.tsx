@@ -1,4 +1,11 @@
-import { createFileRoute, Link, useLoaderData } from '@tanstack/react-router'
+import { pids } from '@/types/main'
+import {
+	createFileRoute,
+	Link,
+	Navigate,
+	useLoaderData,
+	useNavigate,
+} from '@tanstack/react-router'
 import {
 	Card,
 	CardContent,
@@ -33,6 +40,11 @@ import {
 } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
+import { useMutation, useQuery } from '@tanstack/react-query'
+// import toast from 'react-hot-toast'
+// import supabase from '@/lib/supabase-client'
+import toast from 'react-hot-toast'
+import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -101,45 +113,95 @@ const defaultRecs: Array<typeof exampleRec> = [] /*
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
+	const { dayString, queryClient } = Route.useRouteContext()
+	const { data: localSessionData } = useQuery(
+		todaysReviewLocalStorageQueryOptions(lang, dayString)
+	)
 	const {
 		deck: { pids: deckPids },
 	} = useLoaderData({ from: '/_user/learn/$lang' })
+
+	// later this will be user-configurable
+	const [newCardsDesiredCount, _setNewCardsDesiredCount] = useState<number>(15)
 
 	// all recs for cards we've never reviewed (unreviewed cards are included)
 	const [recs, setRecs] = useState(() =>
 		defaultRecs.filter((r) => deckPids.reviewed.indexOf(r.pid) === -1)
 	)
-
-	const recPids = {
+	const cardPidsRecommended: Record<
+		'all' | 'fromFriends' | 'fromAlgo' | 'selected',
+		pids
+	> = {
 		all: recs.map((r) => r.pid),
-		fromFriends: recs.filter(
-			(r) => r.source === 'friend' && r.selected === true
-		),
-		fromAlgo: recs.filter((r) => r.source === 'algo' && r.selected === true),
+		fromFriends: recs
+			.filter((r) => r.source === 'friend' && r.selected === true)
+			.map((r) => r.pid),
+		fromAlgo: recs
+			.filter((r) => r.source === 'algo' && r.selected === true)
+			.map((r) => r.pid),
 		selected: recs.filter((r) => r.selected === true).map((r) => r.pid),
 	}
-
-	// later this will be user-configurable
-	const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
 
 	// don't let it be a negative number
 	const cardCountDesiredAfterRecs = Math.max(
 		0,
-		newCardsDesiredCount - recPids.selected.length
+		newCardsDesiredCount - cardPidsRecommended.selected.length
 	)
 	// will be 0 if there are enough recs to fill today's quota
 
 	// unreviewed cards that aren't already in the recs
 	const cardPidsAvailabileInDeck = deckPids.unreviewed.filter(
-		(p) => recPids.all.indexOf(p) === -1
+		(p) => cardPidsRecommended.all.indexOf(p) === -1
 	)
 
-	const countNewCardsToPick = Math.min(
-		cardPidsAvailabileInDeck.length,
+	const cardPidsPickedFromDeck = cardPidsAvailabileInDeck.slice(
+		0,
 		cardCountDesiredAfterRecs
 	)
-	const countAllNewCardsToday = countNewCardsToPick + recPids.selected.length
-	const countAllCardsToday = countAllNewCardsToday + deckPids.today.length
+	const cardPidsAllNewToday = [
+		...cardPidsRecommended.selected,
+		...cardPidsPickedFromDeck,
+	]
+	const cardPidsAllToday = [...cardPidsAllNewToday, ...deckPids.today]
+	const noCards = cardPidsAllToday.length === 0
+
+	const navigate = useNavigate({ from: Route.fullPath })
+	const { mutate, isPending } = useMutation({
+		mutationKey: ['user', lang, 'review', dayString, 'create'],
+		mutationFn: async () => {
+			localStorage.setItem(
+				`user-${lang}-review-${dayString}`,
+				JSON.stringify(cardPidsAllToday)
+			)
+			return { total: cardPidsAllToday.length, new: cardPidsAllNewToday.length }
+			/* const { data } = await supabase
+				.from('user_card')
+				.insert(
+					recPids.selected.map((pid) => ({
+						phrase_id: pid,
+						user_deck_id: meta.id!,
+					}))
+				)
+				.select()
+				.throwOnError()
+			return data */
+		},
+		onSuccess: (sums) => {
+			toast.success(
+				`Ready to go! ${sums.total} to study today, ${sums.new} fresh new cards ready to go.`
+			)
+			queryClient.invalidateQueries({ queryKey: ['user', lang, 'review'] })
+			void navigate({ to: './go' })
+		},
+	})
+
+	if (localSessionData && localSessionData.length > 1) {
+		console.log(
+			`This is the data we are doing a <Navigate> over:`,
+			localSessionData
+		)
+		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+	}
 
 	return (
 		<Card>
@@ -161,7 +223,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 								<BookOpen />
-								{countAllCardsToday}
+								{cardPidsAllToday.length}
 							</p>
 							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
@@ -174,7 +236,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 								<MessageSquarePlus />
-								<span>{countAllNewCardsToday}</span>
+								<span>{cardPidsAllNewToday.length}</span>
 							</p>
 							<p className="text-muted-foreground">
 								cards you haven't seen before
@@ -188,7 +250,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
 								<CalendarClock />
-								<span>{recPids.selected.length}</span>
+								<span>{cardPidsRecommended.selected.length}</span>
 							</p>
 							<p className="text-muted-foreground">
 								scheduled based on past reviews
@@ -208,19 +270,23 @@ function ReviewPage() {
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Friend recs:</span>
 										<Badge variant="outline">
-											{recPids.fromFriends.length}
+											{cardPidsRecommended.fromFriends.length}
 										</Badge>
 									</div>
 								</Flagged>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{recPids.fromAlgo.length}</Badge>
+										<Badge variant="outline">
+											{cardPidsRecommended.fromAlgo.length}
+										</Badge>
 									</div>
 								</Flagged>
 								<div className="flex items-center justify-between">
 									<span className="text-muted-foreground">From your deck:</span>
-									<Badge variant="outline">{countNewCardsToPick}</Badge>
+									<Badge variant="outline">
+										{cardPidsPickedFromDeck.length}
+									</Badge>
 								</div>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
@@ -234,40 +300,48 @@ function ReviewPage() {
 						</Card>
 					</Flagged>
 				</div>
-				{!(newCardsDesiredCount > countAllNewCardsToday) ? null : (
-					<Callout className="my-4">
+				{noCards ?
+					<Empty lang={lang} />
+				: !(newCardsDesiredCount > cardPidsAllNewToday.length) ?
+					null
+				:	<Callout className="my-4" variant="ghost">
 						<MessageCircleWarningIcon />
-						<div>
-							It looks like you don't have enough new cards to review today. You
-							can go ahead with the review like this, or you can add more.{' '}
-							<div className="my-2 flex flex-col justify-around gap-2 @lg:flex-row">
+						<div className="pt-1">
+							It looks like you don't have enough fresh cards in your deck to
+							meet your review goal for today. You can go ahead with the review
+							like this, or you can add more.{' '}
+							<div className="my-2 flex flex-col gap-2 @lg:flex-row">
 								<Link
-									className={buttonVariants({ variant: 'secondary' })}
+									className={buttonVariants({ variant: 'outline' })}
 									to="/learn/$lang/library"
 									params={{ lang }}
 								>
-									go to the Library to pick more
+									Get more cards from Library
 								</Link>
 
 								<Link
-									className={buttonVariants({ variant: 'secondary' })}
+									className={buttonVariants({ variant: 'outline' })}
 									to="/learn/$lang/add-phrase"
 									params={{ lang }}
 								>
-									add a new phrase to the Library
+									Add cards to Library
 								</Link>
 							</div>
 						</div>
 					</Callout>
-				)}
+				}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
-					<Link
-						to="/learn/$lang/review/go"
-						params={{ lang }}
-						className={buttonVariants({ size: 'lg' })}
+					<Button
+						onClick={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void mutate()
+						}}
+						size="lg"
+						disabled={isPending}
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
-					</Link>
+					</Button>
 					<Flagged name="smart_recommendations">
 						<Drawer>
 							<DrawerTrigger asChild>
@@ -278,7 +352,7 @@ function ReviewPage() {
 							<ReviewCardsToAddToDeck
 								recs={recs}
 								setRecs={setRecs}
-								recPids={recPids}
+								recPids={cardPidsRecommended}
 							/>
 						</Drawer>
 					</Flagged>
@@ -353,3 +427,38 @@ function ReviewCardsToAddToDeck({
 		</DrawerContent>
 	)
 }
+
+const Empty = ({ lang }: { lang: string }) => (
+	<Card className="px-[5%] py-6">
+		<CardHeader className="my-6 opacity-70">
+			<CardTitle>No cards to review</CardTitle>
+		</CardHeader>
+		<CardContent className="mb-6 space-y-4">
+			<p>
+				This is empty because there are no active cards in your{' '}
+				{languages[lang]} deck.
+			</p>
+			<p>
+				You can{' '}
+				<Link
+					className="s-link"
+					to="/learn/$lang/library"
+					params={{ lang }}
+					from={Route.fullPath}
+				>
+					browse the library
+				</Link>{' '}
+				to find new phrases to learn, or{' '}
+				<Link
+					className="s-link"
+					to="/learn/$lang/add-phrase"
+					params={{ lang }}
+					from={Route.fullPath}
+				>
+					add your own
+				</Link>
+				!
+			</p>
+		</CardContent>
+	</Card>
+)
