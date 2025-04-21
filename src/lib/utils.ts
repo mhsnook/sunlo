@@ -22,7 +22,7 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 			}
 			return result
 		},
-		{} as Record<string, T>
+		{} as Record<K, T>
 	)
 }
 
@@ -59,4 +59,11 @@ export function retrievability(
 
 export function intervals() {
 	return [1, 2, 3, 4]
+}
+
+export function todayString() {
+	const now = new Date()
+	// some people study after midnight
+	now.setHours(now.getHours() - 4)
+	return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
 }
