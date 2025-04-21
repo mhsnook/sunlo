@@ -4,13 +4,7 @@ import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
-import type {
-	CardFull,
-	ReviewScheduled,
-	TranslationRow,
-	uuid,
-} from '@/types/main'
-import { useLanguagePhrasesMap } from '@/lib/use-language'
+import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { useMutation } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { postReview } from '@/lib/use-reviewables'
@@ -19,9 +13,10 @@ import PhraseExtraInfo from './phrase-extra-info'
 import Flagged from './flagged'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
+import { useLoaderData, useRouteContext } from '@tanstack/react-router'
 
 interface ComponentProps {
-	cards: Array<CardFull>
+	pids: Array<uuid>
 	lang: string
 }
 
@@ -30,10 +25,13 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
+export function FlashCardReviewSession({ pids, lang }: ComponentProps) {
 	const [currentCardIndex, setCurrentCardIndex] = useState(0)
 	const [showTranslation, setShowTranslation] = useState(false)
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	const {
+		deck: { cardsMap },
+		language: { phrasesMap },
+	} = useLoaderData({ from: '/_user/learn/$lang' })
 
 	const navigateCards = (direction: 'forward' | 'back') => {
 		if (direction === 'forward') setCurrentCardIndex(currentCardIndex + 1)
@@ -41,7 +39,7 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 		setShowTranslation(false)
 	}
 
-	const isComplete = currentCardIndex === cards.length
+	const isComplete = currentCardIndex === pids.length
 
 	return (
 		<>
@@ -77,20 +75,20 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 						<ChevronLeft className="size-4" />
 					</Button>
 					<div className="text-center text-sm">
-						Card {currentCardIndex + 1} of {cards.length}
+						Card {currentCardIndex + 1} of {pids.length}
 					</div>
 					<Button
 						size="icon-sm"
 						variant="default"
 						onClick={() => navigateCards('forward')}
-						disabled={currentCardIndex === cards.length}
+						disabled={currentCardIndex === pids.length}
 						aria-label="Next card"
 					>
 						<ChevronRight className="size-4" />
 					</Button>
 				</div>
-				{cards.map((card, i) => {
-					const phrase = phrasesMap[card.phrase_id]
+				{pids.map((pid, i) => {
+					const phrase = phrasesMap[pid]
 					return (
 						<Card
 							key={i}
@@ -102,10 +100,10 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 							<CardHeader className="flex flex-row items-center justify-end gap-2">
 								<PermalinkButton
 									to={'/learn/$lang/$id'}
-									params={{ lang: phrase.lang, id: phrase.id }}
+									params={{ lang: phrase.lang!, id: phrase.id! }}
 								/>
-								<SharePhraseButton lang={phrase.lang} pid={phrase.id} />
-								<PhraseExtraInfo lang={phrase.lang} pid={phrase.id} />
+								<SharePhraseButton lang={phrase.lang!} pid={phrase.id!} />
+								<PhraseExtraInfo lang={phrase.lang!} pid={phrase.id!} />
 							</CardHeader>
 							<CardContent
 								className={`flex grow flex-col items-center justify-center px-[10%] pt-0`}
@@ -116,7 +114,7 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 										<Button
 											size="icon"
 											variant="secondary"
-											onClick={() => playAudio(phrase.text)}
+											onClick={() => playAudio(phrase.text!)}
 											aria-label="Play original phrase"
 										>
 											<Play className="size-4" />
@@ -147,7 +145,9 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 								</div>
 							</CardContent>
 							<UserCardReviewScoreButtonsRow
-								user_card_id={card.id!}
+								lang={lang}
+								pid={pid}
+								user_card_id={cardsMap[pid].id!}
 								isButtonsShown={showTranslation}
 								showTheButtons={() => setShowTranslation(true)}
 								proceed={() => {
@@ -164,6 +164,8 @@ export function FlashCardReviewSession({ lang, cards }: ComponentProps) {
 }
 
 interface CardInnerProps {
+	lang: string
+	pid: uuid
 	user_card_id: uuid
 	isButtonsShown: boolean
 	showTheButtons: () => void
@@ -172,22 +174,26 @@ interface CardInnerProps {
 
 function UserCardReviewScoreButtonsRow({
 	user_card_id,
+	pid,
+	lang,
 	isButtonsShown,
 	showTheButtons,
 	proceed,
 }: CardInnerProps) {
+	const { dayString } = useRouteContext({ from: '/_user/learn/$lang/review' })
 	const { data, mutate, isPending } = useMutation<
-		ReviewScheduled,
+		{ score: number; res: string },
 		PostgrestError,
 		{ score: number }
 	>({
+		mutationKey: ['user', lang, 'review', dayString, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			// if (data?.score === score) return data
 			const res = await postReview({
 				score,
 				user_card_id,
 			})
-			return res
+			return { score, res }
 		},
 		onSuccess: (data) => {
 			console.log(`Review mutation success; next scheduled at:`, data)
