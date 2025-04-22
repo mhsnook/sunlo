@@ -120,6 +120,8 @@ export type UserCardInsert = CardInsert // @TODO remove
 export type ReviewInsert =
 	Database['public']['Functions']['insert_user_card_review']['Args']
 export type ReviewRow = Tables<'user_card_review'>
+export type ReviewUpdate =
+	Database['public']['Functions']['update_user_card_review']['Args']
 
 export type CardFull = CardMeta & {
 	reviews: Array<ReviewRow>

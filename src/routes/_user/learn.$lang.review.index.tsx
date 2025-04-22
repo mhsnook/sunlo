@@ -121,8 +121,8 @@ function ReviewPage() {
 		deck: { pids: deckPids },
 	} = useLoaderData({ from: '/_user/learn/$lang' })
 
-	// later this will be user-configurable
-	const [newCardsDesiredCount, _setNewCardsDesiredCount] = useState<number>(15)
+	// const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
+	const newCardsDesiredCount = 15
 
 	// all recs for cards we've never reviewed (unreviewed cards are included)
 	const [recs, setRecs] = useState(() =>
