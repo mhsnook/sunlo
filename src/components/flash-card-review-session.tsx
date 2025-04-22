@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
 import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
-	getIndexOfFirstUnreviewedCard,
+	getFromLocalStorage,
+	getIndexOfNextUnreviewedCard,
 	postReview,
 	updateReview,
 } from '@/lib/use-reviewables'
@@ -20,9 +21,9 @@ import SharePhraseButton from './share-phrase-button'
 import { useLoaderData, useRouteContext } from '@tanstack/react-router'
 
 interface ComponentProps {
-	pids: Array<uuid>
-	lang: string
 	dailyCacheKey: Array<any>
+	pids: Array<uuid>
+	// lang: string
 }
 
 const playAudio = (text: string) => {
@@ -31,24 +32,34 @@ const playAudio = (text: string) => {
 }
 
 export function FlashCardReviewSession({
-	pids,
-	lang,
 	dailyCacheKey,
+	pids,
+	// lang,
 }: ComponentProps) {
-	const [currentCardIndex, setCurrentCardIndex] = useState(
-		getIndexOfFirstUnreviewedCard(pids, dailyCacheKey)
+	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
+		getIndexOfNextUnreviewedCard(dailyCacheKey, 0)
 	)
 	const [showTranslation, setShowTranslation] = useState(false)
-	const {
-		deck: { cardsMap },
-		language: { phrasesMap },
-	} = useLoaderData({ from: '/_user/learn/$lang' })
+	const { cardsMap, phrasesMap } = useLoaderData({
+		from: '/_user/learn/$lang',
+		select: (data) => ({
+			cardsMap: data.deck.cardsMap,
+			phrasesMap: data.language.phrasesMap,
+		}),
+	})
 
-	const navigateCards = (direction: 'forward' | 'back') => {
-		if (direction === 'forward') setCurrentCardIndex(currentCardIndex + 1)
-		if (direction === 'back') setCurrentCardIndex(currentCardIndex - 1)
-		setShowTranslation(false)
-	}
+	const navigateCards = useCallback(
+		(direction: 'forward' | 'back' | 'next') => {
+			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
+			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
+			if (direction === 'next')
+				setCurrentCardIndex((i) =>
+					getIndexOfNextUnreviewedCard(dailyCacheKey, i)
+				)
+			setShowTranslation(false)
+		},
+		[currentCardIndex, setCurrentCardIndex, setShowTranslation]
+	)
 
 	const isComplete = currentCardIndex === pids.length
 
@@ -156,16 +167,14 @@ export function FlashCardReviewSession({
 								</div>
 							</CardContent>
 							<UserCardReviewScoreButtonsRow
-								lang={lang}
+								dailyCacheKey={dailyCacheKey}
+								// lang={lang}
 								pid={pid}
 								user_card_id={cardsMap[pid].id!}
 								isButtonsShown={showTranslation}
 								showTheButtons={() => setShowTranslation(true)}
 								proceed={() => {
-									setShowTranslation(false)
-									setCurrentCardIndex(
-										getIndexOfFirstUnreviewedCard(pids, dailyCacheKey)
-									)
+									navigateCards('next')
 								}}
 							/>
 						</Card>
@@ -177,7 +186,8 @@ export function FlashCardReviewSession({
 }
 
 interface CardInnerProps {
-	lang: string
+	dailyCacheKey: Array<string>
+	// lang: string
 	pid: uuid
 	user_card_id: uuid
 	isButtonsShown: boolean
@@ -186,28 +196,23 @@ interface CardInnerProps {
 }
 
 function UserCardReviewScoreButtonsRow({
+	dailyCacheKey,
 	user_card_id,
 	pid,
-	lang,
+	// lang,
 	isButtonsShown,
 	showTheButtons,
 	proceed,
 }: CardInnerProps) {
-	const { dayString } = useRouteContext({ from: '/_user/learn/$lang/review' })
-	const { data: prevData } = useQuery({
-		queryKey: ['user', lang, 'review', dayString, pid],
-		queryFn: ({ queryKey }) => {
-			const dataString = localStorage.getItem(JSON.stringify(queryKey))
-			return dataString ? JSON.parse(dataString) : null
-		},
-	})
+	const prevData = getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
+
 	const queryClient = useQueryClient()
 	const { mutate, isPending } = useMutation<
 		ReviewRow,
 		PostgrestError,
 		{ score: number }
 	>({
-		mutationKey: ['user', lang, 'review', dayString, pid],
+		mutationKey: [...dailyCacheKey, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			if (prevData?.score === score) return prevData
 
@@ -230,11 +235,11 @@ function UserCardReviewScoreButtonsRow({
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 			localStorage.setItem(
-				JSON.stringify(['user', lang, 'review', dayString, pid]),
+				JSON.stringify([...dailyCacheKey, pid]),
 				JSON.stringify(data)
 			)
 			queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'review', dayString, pid],
+				queryKey: [...dailyCacheKey, pid],
 			})
 			setTimeout(proceed, 1500)
 		},

@@ -61,9 +61,14 @@ export function intervals() {
 	return [1, 2, 3, 4]
 }
 
+function makeItHave2Digits(input: string | number) {
+	const startingString = String(input)
+	return `0${startingString}`.slice(-2)
+}
+
 export function todayString() {
 	const now = new Date()
 	// some people study after midnight
 	now.setHours(now.getHours() - 4)
-	return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`
+	return `${now.getFullYear()}-${makeItHave2Digits(now.getMonth() + 1)}-${makeItHave2Digits(now.getDate())}`
 }
