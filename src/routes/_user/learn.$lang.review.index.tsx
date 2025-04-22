@@ -3,6 +3,7 @@ import {
 	createFileRoute,
 	Link,
 	Navigate,
+	redirect,
 	useLoaderData,
 	useNavigate,
 } from '@tanstack/react-router'
@@ -41,13 +42,18 @@ import {
 import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
 import { useMutation, useQuery } from '@tanstack/react-query'
-// import toast from 'react-hot-toast'
-// import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
+	loader: async ({ context: { queryClient, dayString }, params: { lang } }) => {
+		const data = await queryClient.fetchQuery(
+			todaysReviewLocalStorageQueryOptions(lang, dayString)
+		)
+		if (data && data.length)
+			redirect({ to: '/learn/$lang/review/go', params: { lang } })
+	},
 })
 
 const exampleRec = {
