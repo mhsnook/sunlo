@@ -419,6 +419,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "user_card_review_uid_fkey"
+            columns: ["uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "user_card_review_uid_fkey"
+            columns: ["uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+          {
             foreignKeyName: "user_card_review_user_card_id_fkey"
             columns: ["user_card_id"]
             isOneToOne: false
