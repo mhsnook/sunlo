@@ -32,3 +32,15 @@ export function todaysReviewLocalStorageQueryOptions(
 		staleTime: 1_200_000,
 	})
 }
+
+export function getIndexOfFirstUnreviewedCard(
+	pids: Array<string>,
+	key: Array<any>
+) {
+	const res = pids.findIndex((pid) => {
+		const res = localStorage.getItem(JSON.stringify([...key, pid]))
+		console.log(res, typeof res)
+		return typeof res !== 'string'
+	})
+	return res === -1 ? pids.length : res
+}

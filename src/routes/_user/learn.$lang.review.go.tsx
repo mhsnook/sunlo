@@ -2,7 +2,10 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 import { FlashCardReviewSession } from '@/components/flash-card-review-session'
 import { useQuery } from '@tanstack/react-query'
-import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
+import {
+	getIndexOfFirstUnreviewedCard,
+	todaysReviewLocalStorageQueryOptions,
+} from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
@@ -19,8 +22,17 @@ function ReviewPage() {
 	const { data: pids } = useQuery(
 		todaysReviewLocalStorageQueryOptions(lang, dayString)
 	)
+	if (!pids || !pids.length) return <Navigate to=".." />
 
-	return !pids || !pids.length ?
-			<Navigate to=".." />
-		:	<FlashCardReviewSession pids={pids} lang={lang} />
+	// checks if we already have some reviews in localStorage
+	const startWith = getIndexOfFirstUnreviewedCard(pids, [
+		'user',
+		lang,
+		'review',
+		dayString,
+	])
+
+	return (
+		<FlashCardReviewSession startWith={startWith} pids={pids} lang={lang} />
+	)
 }
