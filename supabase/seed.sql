@@ -22,7 +22,7 @@ set
 	standard_conforming_strings = on;
 
 select
-	pg_catalog.set_config ('search_path', '',false);
+	pg_catalog.set_config ('search_path', '', false);
 
 set
 	check_function_bodies = false;
@@ -3785,8 +3785,7 @@ insert into
 		"metadata",
 		"version",
 		"owner_id",
-		"user_metadata",
-		"level"
+		"user_metadata"
 	)
 values
 	(
@@ -3800,7 +3799,6 @@ values
 		'{"eTag": "\"44959b1a8ffe5ddc76cfb438a646e9c2\"", "size": 16325, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2025-01-20T17:09:14.000Z", "contentLength": 16325, "httpStatusCode": 200}',
 		'9d451d1c-2831-4228-88bf-81349b1bf97f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		null,
 		null
 	);
 
@@ -3817,7 +3815,7 @@ values
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
-	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813,true);
+	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
 
 --
 -- PostgreSQL database dump complete
