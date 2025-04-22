@@ -4,7 +4,7 @@ import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
-import type { TranslationRow, uuid } from '@/types/main'
+import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
@@ -202,7 +202,7 @@ function UserCardReviewScoreButtonsRow({
 	})
 	const queryClient = useQueryClient()
 	const { mutate, isPending } = useMutation<
-		{ score: number; res: string },
+		ReviewRow,
 		PostgrestError,
 		{ score: number }
 	>({
@@ -213,10 +213,10 @@ function UserCardReviewScoreButtonsRow({
 				score,
 				user_card_id,
 			})
-			return { score, res }
+			return res
 		},
-		onSuccess: (data: { score: number; res: string }) => {
-			console.log(`Review mutation success; next scheduled at:`, data)
+		onSuccess: (data) => {
+			console.log(`Review mutation success`, data)
 			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
 			if (data.score === 2)

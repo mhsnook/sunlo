@@ -909,7 +909,19 @@ export type Database = {
           score: number
           desired_retention?: number
         }
-        Returns: string
+        Returns: {
+          created_at: string
+          difficulty: number | null
+          id: string
+          review_time_retrievability: number | null
+          score: number
+          stability: number | null
+          uid: string
+          updated_at: string
+          user_card_id: string
+          user_deck_id: string
+        }
+      }
       }
     }
     Enums: {
