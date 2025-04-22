@@ -4,8 +4,8 @@ import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
-import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
-import { useMutation } from '@tanstack/react-query'
+import type { TranslationRow, uuid } from '@/types/main'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { postReview } from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -18,6 +18,7 @@ import { useLoaderData, useRouteContext } from '@tanstack/react-router'
 interface ComponentProps {
 	pids: Array<uuid>
 	lang: string
+	startWith: number
 }
 
 const playAudio = (text: string) => {
@@ -25,8 +26,12 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-export function FlashCardReviewSession({ pids, lang }: ComponentProps) {
-	const [currentCardIndex, setCurrentCardIndex] = useState(0)
+export function FlashCardReviewSession({
+	pids,
+	lang,
+	startWith = 0,
+}: ComponentProps) {
+	const [currentCardIndex, setCurrentCardIndex] = useState(startWith)
 	const [showTranslation, setShowTranslation] = useState(false)
 	const {
 		deck: { cardsMap },
@@ -181,7 +186,15 @@ function UserCardReviewScoreButtonsRow({
 	proceed,
 }: CardInnerProps) {
 	const { dayString } = useRouteContext({ from: '/_user/learn/$lang/review' })
-	const { data, mutate, isPending } = useMutation<
+	const { data: prevData } = useQuery({
+		queryKey: ['user', lang, 'review', dayString, pid],
+		queryFn: ({ queryKey }) => {
+			const dataString = localStorage.getItem(JSON.stringify(queryKey))
+			return dataString ? JSON.parse(dataString) : null
+		},
+	})
+	const queryClient = useQueryClient()
+	const { mutate, isPending } = useMutation<
 		{ score: number; res: string },
 		PostgrestError,
 		{ score: number }
@@ -195,7 +208,7 @@ function UserCardReviewScoreButtonsRow({
 			})
 			return { score, res }
 		},
-		onSuccess: (data) => {
+		onSuccess: (data: { score: number; res: string }) => {
 			console.log(`Review mutation success; next scheduled at:`, data)
 			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
@@ -204,6 +217,13 @@ function UserCardReviewScoreButtonsRow({
 			if (data.score === 3)
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
+			localStorage.setItem(
+				JSON.stringify(['user', lang, 'review', dayString, pid]),
+				JSON.stringify(data)
+			)
+			queryClient.invalidateQueries({
+				queryKey: ['user', lang, 'review', dayString, pid],
+			})
 			setTimeout(proceed, 1500)
 		},
 		onError: (error) => {
@@ -214,7 +234,7 @@ function UserCardReviewScoreButtonsRow({
 
 	return (
 		<CardFooter className="flex flex-col">
-			{!isButtonsShown ?
+			{!isButtonsShown && !prevData ?
 				<Button className="mb-3 w-full" onClick={showTheButtons}>
 					Show Translation
 				</Button>
@@ -223,7 +243,9 @@ function UserCardReviewScoreButtonsRow({
 						variant="destructive"
 						onClick={() => mutate({ score: 1 })}
 						disabled={isPending}
-						className={data?.score === 1 ? 'ring-3 ring-offset-1' : ''}
+						className={
+							prevData?.score === 1 ? 'ring-primary ring-2 ring-offset-3' : ''
+						}
 					>
 						Again
 					</Button>
@@ -231,7 +253,9 @@ function UserCardReviewScoreButtonsRow({
 						variant="secondary"
 						onClick={() => mutate({ score: 2 })}
 						disabled={isPending}
-						className={data?.score === 2 ? 'ring-3 ring-offset-1' : ''}
+						className={
+							prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
+						}
 					>
 						Hard
 					</Button>
@@ -241,7 +265,7 @@ function UserCardReviewScoreButtonsRow({
 						disabled={isPending}
 						className={cn(
 							'bg-green-500 hover:bg-green-600',
-							data?.score === 3 ? 'ring-3 ring-offset-1' : ''
+							prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
 						)}
 					>
 						Good
@@ -250,7 +274,7 @@ function UserCardReviewScoreButtonsRow({
 						variant="default"
 						className={cn(
 							'bg-blue-500 hover:bg-blue-600',
-							data?.score === 4 ? 'ring-3 ring-offset-1' : ''
+							prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 						)}
 						onClick={() => mutate({ score: 4 })}
 						disabled={isPending}
