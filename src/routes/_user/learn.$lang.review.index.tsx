@@ -3,7 +3,6 @@ import {
 	createFileRoute,
 	Link,
 	Navigate,
-	redirect,
 	useLoaderData,
 	useNavigate,
 } from '@tanstack/react-router'
@@ -30,7 +29,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
 	Drawer,
 	DrawerContent,
@@ -43,17 +42,11 @@ import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
+import { getFromLocalStorage } from '@/lib/use-reviewables'
+import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
-	loader: async ({ context: { queryClient, dayString }, params: { lang } }) => {
-		const data = await queryClient.fetchQuery(
-			todaysReviewLocalStorageQueryOptions(lang, dayString)
-		)
-		if (data && data.length)
-			redirect({ to: '/learn/$lang/review/go', params: { lang } })
-	},
 })
 
 const exampleRec = {
@@ -119,13 +112,18 @@ const defaultRecs: Array<typeof exampleRec> = [] /*
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { dayString, queryClient } = Route.useRouteContext()
-	const { data: localSessionData } = useQuery(
-		todaysReviewLocalStorageQueryOptions(lang, dayString)
-	)
-	const {
-		deck: { pids: deckPids },
-	} = useLoaderData({ from: '/_user/learn/$lang' })
+	const { queryClient } = Route.useRouteContext()
+	const dayString = todayString()
+
+	const reviewData = useMemo(() => {
+		const dailyCacheKey = ['user', lang, 'review', dayString]
+		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
+	}, [lang, dayString])
+
+	const deckPids = useLoaderData({
+		from: '/_user/learn/$lang',
+		select: (data) => data.deck.pids,
+	})
 
 	// const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
 	const newCardsDesiredCount = 15
@@ -173,10 +171,10 @@ function ReviewPage() {
 
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { mutate, isPending } = useMutation({
-		mutationKey: ['user', lang, 'review', dayString, 'create'],
+		mutationKey: [...reviewData.dailyCacheKey, 'create'],
 		mutationFn: async () => {
 			localStorage.setItem(
-				JSON.stringify(['user', lang, 'review', dayString]),
+				JSON.stringify(reviewData.dailyCacheKey),
 				JSON.stringify(cardPidsAllToday)
 			)
 			return { total: cardPidsAllToday.length, new: cardPidsAllNewToday.length }
@@ -201,11 +199,8 @@ function ReviewPage() {
 		},
 	})
 
-	if (localSessionData && localSessionData.length > 1) {
-		console.log(
-			`This is the data we are doing a <Navigate> over:`,
-			localSessionData
-		)
+	if (reviewData.pids && reviewData.pids.length) {
+		// console.log(`This is the data we are doing a <Navigate> over:`, reviewData)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 	}
 

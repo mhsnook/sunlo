@@ -1,8 +1,10 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 import { FlashCardReviewSession } from '@/components/flash-card-review-session'
-import { useQuery } from '@tanstack/react-query'
-import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
+import { getFromLocalStorage } from '@/lib/use-reviewables'
+import { useMemo } from 'react'
+import { pids } from '@/types/main'
+import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
@@ -11,21 +13,25 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 			appnav: [],
 		}
 	},
+	loaderDeps: () => ({}),
 })
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const { dayString } = Route.useRouteContext()
-	const { data: pids } = useQuery(
-		todaysReviewLocalStorageQueryOptions(lang, dayString)
-	)
-	if (!pids || !pids.length) return <Navigate to=".." />
+	const dayString = todayString()
+
+	const reviewData = useMemo(() => {
+		const dailyCacheKey = ['user', lang, 'review', dayString]
+		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
+	}, [lang, dayString])
+
+	if (!reviewData.pids || !reviewData.pids.length) return <Navigate to=".." />
 
 	return (
 		<FlashCardReviewSession
-			dailyCacheKey={['user', lang, 'review', dayString]}
-			pids={pids}
-			lang={lang}
+			dailyCacheKey={reviewData.dailyCacheKey}
+			pids={reviewData.pids}
+			// lang={lang}
 		/>
 	)
 }

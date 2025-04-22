@@ -7,11 +7,9 @@ import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
-	beforeLoad: () => {
-		return { dayString: todayString() }
-	},
 	loader: async ({ params: { lang } }) => {
 		return {
+			dailyCacheKey: () => ['user', lang, 'review', todayString()],
 			contextMenu: [
 				'/learn/$lang/search',
 				'/learn/$lang/add-phrase',
