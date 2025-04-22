@@ -2,10 +2,7 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 import { FlashCardReviewSession } from '@/components/flash-card-review-session'
 import { useQuery } from '@tanstack/react-query'
-import {
-	getIndexOfFirstUnreviewedCard,
-	todaysReviewLocalStorageQueryOptions,
-} from '@/lib/use-reviewables'
+import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,

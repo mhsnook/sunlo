@@ -4,16 +4,11 @@ import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { BookHeart } from 'lucide-react'
 import { todayString } from '@/lib/utils'
-import { todaysReviewLocalStorageQueryOptions } from '@/lib/use-reviewables'
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
-	beforeLoad: ({ context: { queryClient }, params: { lang } }) => {
-		const dayString = todayString()
-		queryClient.prefetchQuery(
-			todaysReviewLocalStorageQueryOptions(lang, dayString)
-		)
-		return { dayString }
+	beforeLoad: () => {
+		return { dayString: todayString() }
 	},
 	loader: async ({ params: { lang } }) => {
 		return {
