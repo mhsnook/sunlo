@@ -24,15 +24,11 @@ function ReviewPage() {
 	)
 	if (!pids || !pids.length) return <Navigate to=".." />
 
-	// checks if we already have some reviews in localStorage
-	const startWith = getIndexOfFirstUnreviewedCard(pids, [
-		'user',
-		lang,
-		'review',
-		dayString,
-	])
-
 	return (
-		<FlashCardReviewSession startWith={startWith} pids={pids} lang={lang} />
+		<FlashCardReviewSession
+			dailyCacheKey={['user', lang, 'review', dayString]}
+			pids={pids}
+			lang={lang}
+		/>
 	)
 }

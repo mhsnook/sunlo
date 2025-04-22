@@ -7,7 +7,10 @@ import SuccessCheckmark from '@/components/SuccessCheckmark'
 import type { TranslationRow, uuid } from '@/types/main'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
-import { postReview } from '@/lib/use-reviewables'
+import {
+	getIndexOfFirstUnreviewedCard,
+	postReview,
+} from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
 import PhraseExtraInfo from './phrase-extra-info'
 import Flagged from './flagged'
@@ -18,7 +21,7 @@ import { useLoaderData, useRouteContext } from '@tanstack/react-router'
 interface ComponentProps {
 	pids: Array<uuid>
 	lang: string
-	startWith: number
+	dailyCacheKey: Array<any>
 }
 
 const playAudio = (text: string) => {
@@ -29,9 +32,11 @@ const playAudio = (text: string) => {
 export function FlashCardReviewSession({
 	pids,
 	lang,
-	startWith = 0,
+	dailyCacheKey,
 }: ComponentProps) {
-	const [currentCardIndex, setCurrentCardIndex] = useState(startWith)
+	const [currentCardIndex, setCurrentCardIndex] = useState(
+		getIndexOfFirstUnreviewedCard(pids, dailyCacheKey)
+	)
 	const [showTranslation, setShowTranslation] = useState(false)
 	const {
 		deck: { cardsMap },
@@ -157,7 +162,9 @@ export function FlashCardReviewSession({
 								showTheButtons={() => setShowTranslation(true)}
 								proceed={() => {
 									setShowTranslation(false)
-									navigateCards('forward')
+									setCurrentCardIndex(
+										getIndexOfFirstUnreviewedCard(pids, dailyCacheKey)
+									)
 								}}
 							/>
 						</Card>
