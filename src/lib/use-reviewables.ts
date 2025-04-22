@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import supabase from './supabase-client'
-import { pids, ReviewInsert } from '@/types/main'
+import { pids, ReviewInsert, ReviewUpdate } from '@/types/main'
 
 export const postReview = async (submitData: ReviewInsert) => {
 	if (!submitData?.user_card_id || !submitData?.score)
@@ -8,6 +8,16 @@ export const postReview = async (submitData: ReviewInsert) => {
 
 	const { data } = await supabase
 		.rpc('insert_user_card_review', submitData)
+		.throwOnError()
+
+	return data
+}
+
+export const updateReview = async (submitData: ReviewUpdate) => {
+	if (!submitData?.review_id || !submitData?.score)
+		throw new Error('Invalid inputs; cannot update')
+	const { data } = await supabase
+		.rpc('update_user_card_review', submitData)
 		.throwOnError()
 
 	return data
@@ -39,7 +49,6 @@ export function getIndexOfFirstUnreviewedCard(
 ) {
 	const res = pids.findIndex((pid) => {
 		const res = localStorage.getItem(JSON.stringify([...key, pid]))
-		console.log(res, typeof res)
 		return typeof res !== 'string'
 	})
 	return res === -1 ? pids.length : res

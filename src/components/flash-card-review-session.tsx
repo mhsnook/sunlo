@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import {
 	getIndexOfFirstUnreviewedCard,
 	postReview,
+	updateReview,
 } from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
 import PhraseExtraInfo from './phrase-extra-info'
@@ -208,15 +209,19 @@ function UserCardReviewScoreButtonsRow({
 	>({
 		mutationKey: ['user', lang, 'review', dayString, pid],
 		mutationFn: async ({ score }: { score: number }) => {
-			// if (data?.score === score) return data
-			const res = await postReview({
-				score,
-				user_card_id,
-			})
-			return res
+			if (prevData?.score === score) return prevData
+
+			return prevData?.id ?
+					await updateReview({
+						score,
+						review_id: prevData.id,
+					})
+				:	await postReview({
+						score,
+						user_card_id,
+					})
 		},
 		onSuccess: (data) => {
-			console.log(`Review mutation success`, data)
 			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
 			if (data.score === 2)
