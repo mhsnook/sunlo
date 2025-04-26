@@ -43,12 +43,10 @@ const useDeckMenuData = () => {
 function NoDecks() {
 	return (
 		<Callout>
-			<div>
-				<p>It seems like you're not learning any languages yet! Get started.</p>
-				<Button className="mt-2 w-full" asChild>
-					<Link to="/learn/add-deck">Start Learning</Link>
-				</Button>
-			</div>
+			<p>It seems like you're not learning any languages yet! Get started.</p>
+			<Button className="mt-2 w-full" asChild>
+				<Link to="/learn/add-deck">Start Learning</Link>
+			</Button>
 		</Callout>
 	)
 }

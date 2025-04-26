@@ -23,10 +23,14 @@ import { Calendar, OctagonMinus } from 'lucide-react'
 
 function PhraseNotFound() {
 	return (
-		<Callout variant="problem">
-			<Badge variant="destructive" className="p-2">
-				<OctagonMinus />
-			</Badge>
+		<Callout
+			variant="problem"
+			Icon={() => (
+				<Badge variant="destructive" className="p-2">
+					<OctagonMinus />
+				</Badge>
+			)}
+		>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
 		</Callout>
 	)

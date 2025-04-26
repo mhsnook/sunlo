@@ -87,8 +87,15 @@ function Index() {
 				</div>
 			</main>
 
-			<Callout variant="ghost" className="mx-auto max-w-xl">
-				<WandSparkles size={40} />
+			<Callout
+				variant="ghost"
+				className="mx-auto max-w-xl"
+				Icon={() => (
+					<div className="bg-primary flex aspect-square items-center justify-center rounded-full text-white">
+						<WandSparkles size={20} className="m-4" />
+					</div>
+				)}
+			>
 				<p>
 					Sunlo is under development; some of the features you would expect may
 					not have been built yet, but what is here should be working. Please

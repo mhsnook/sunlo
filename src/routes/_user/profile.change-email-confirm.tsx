@@ -10,7 +10,7 @@ export const Route = createFileRoute('/_user/profile/change-email-confirm')({
 	component: ChangeEmailConfirmPage,
 	loader: async ({ location }) => {
 		const hashParams = new URLSearchParams(location.hash)
-		console.log(`inside the loader`, location, hashParams)
+		// console.log(`inside the loader`, location, hashParams)
 		const {
 			data: { user },
 		} = await supabase.auth.getUser()
@@ -24,7 +24,7 @@ export const Route = createFileRoute('/_user/profile/change-email-confirm')({
 
 function ChangeEmailConfirmPage() {
 	const data = Route.useLoaderData()
-	console.log(`the loader data`, data)
+	// console.log(`the loader data`, data)
 	return (
 		<>
 			<CardHeader>
@@ -55,19 +55,16 @@ function ChangeEmailConfirmPage() {
 							</p>
 						</div>
 					</ShowError>
-				:	<Callout>
-						<SuccessCheckmark className="bg-transparent" />
-						<div className="space-y-2">
-							<p>Success!</p>
-							<p>
-								You've changed your email to <strong>{data.userEmail}</strong>.
-							</p>
-							<p>
-								<Link to="/profile" from={Route.fullPath} className="s-link">
-									Return to your profile page.
-								</Link>
-							</p>
-						</div>
+				:	<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+						<p>Success!</p>
+						<p>
+							You've changed your email to <strong>{data.userEmail}</strong>.
+						</p>
+						<p>
+							<Link to="/profile" from={Route.fullPath} className="s-link">
+								Return to your profile page.
+							</Link>
+						</p>
 					</Callout>
 				}
 			</CardContent>

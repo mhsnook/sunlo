@@ -149,20 +149,32 @@ function AcceptInvitePage() {
 	)
 }
 
-const ShowAccepted = () => (
-	<Callout>
-		<SuccessCheckmark />
-		<div>
-			<h2 className="h3">Okay! You're connected.</h2>
-			<p>
-				<Link className={buttonVariants({ variant: 'default' })}>
-					Maybe go look at their deck?
-				</Link>
-			</p>
-		</div>
-	</Callout>
-)
-
+const ShowAccepted = ({ friend }: { friend?: any }) => {
+	if (!friend)
+		throw new Error(
+			`Attempted to render the "success" message` +
+				` but the app isn't aware that the friend request has been accepted,` +
+				` or that the friend's public profile has even been loaded`
+		)
+	return (
+		<Callout Icon={() => <SuccessCheckmark />}>
+			<div>
+				<h2 className="h3">
+					Okay! You're now connected with {friend.username}.
+				</h2>
+				<p>
+					<Link
+						to="/friends/$uid"
+						params={{ uid: friend.uid }}
+						className={buttonVariants({ variant: 'default' })}
+					>
+						Check out their profile
+					</Link>
+				</p>
+			</div>
+		</Callout>
+	)
+}
 const ShowDeclined = () => (
 	<Callout variant="ghost">
 		<div>
