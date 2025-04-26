@@ -43,11 +43,11 @@ export const Route = createFileRoute('/_user/accept-invite')({
 
 function AcceptInvitePage() {
 	const search = Route.useSearch()
-	const { data: learner, isPending } = useQuery(
+	const { data: friend, isPending } = useQuery(
 		publicProfileQuery(search.uid_by)
 	)
-	const { data: friend } = useProfile()
 	const { userId } = useAuth()
+	const { data: profile } = useProfile()
 	if (userId !== search.uid_for) console.log(`mismatched logins`)
 
 	const acceptOrDeclineMutation = useMutation({
@@ -73,21 +73,21 @@ function AcceptInvitePage() {
 	const AcceptInviteForm = () => {
 		return (
 			<>
-				{learner.avatar_url ?
+				{profile ?
 					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 						<img
-							src={learner.avatar_url}
+							src={profile.avatar_url!}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
-							alt={`${learner.username}'s profile picture`}
+							alt={`Your profile picture`}
 						/>
-						{friend.avatar_url ?
+						{friend ?
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={learner.avatar_url}
+									src={friend.avatar_url!}
 									className="mx-auto max-w-32 shrink rounded-xl"
-									alt={`${learner.username}'s profile picture`}
+									alt={`${friend.username}'s profile picture`}
 								/>
 							</>
 						:	null}
@@ -122,7 +122,9 @@ function AcceptInvitePage() {
 				<Loader />
 			:	<Card>
 					<CardHeader>
-						<CardTitle>Accept invite from {learner.username}?</CardTitle>
+						<CardTitle>
+							Accept invite from <strong>{friend?.username}</strong>?
+						</CardTitle>
 						<CardDescription>
 							You'll be able to see some details about their journey learning{' '}
 							{languages[search.lang]}; they won't have any access to your
@@ -140,7 +142,7 @@ function AcceptInvitePage() {
 						: !acceptOrDeclineMutation.isSuccess ?
 							<AcceptInviteForm />
 						: acceptOrDeclineMutation.variables.action === 'accept' ?
-							<ShowAccepted />
+							<ShowAccepted friend={friend} />
 						:	<ShowDeclined />}
 					</CardContent>
 				</Card>
