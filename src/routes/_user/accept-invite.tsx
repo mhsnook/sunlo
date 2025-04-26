@@ -29,15 +29,8 @@ const SearchSchema = z.object({
 	lang: z.string().length(3),
 })
 
-type SearchType = z.infer<typeof SearchSchema>
-
 export const Route = createFileRoute('/_user/accept-invite')({
-	validateSearch: (search: Record<string, unknown>): SearchType => ({
-		uid_by: search.uid_by as string,
-		uid_for: search.uid_for as string,
-		user_deck_id: search.user_deck_id as string,
-		lang: search.lang as string,
-	}),
+	validateSearch: SearchSchema,
 	component: AcceptInvitePage,
 })
 

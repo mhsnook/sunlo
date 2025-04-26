@@ -38,7 +38,7 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute('/_user/friends/search')({
 	component: FriendRequestPage,
-	validateSearch: (search) => SearchSchema.parse(search),
+	validateSearch: SearchSchema,
 })
 
 function FriendRequestPage() {
