@@ -30,6 +30,11 @@ function ProfilePage() {
 	const { data: profile } = useQuery(publicProfileQuery(uid))
 	const { data: relations } = useRelations()
 	const relationship = !relations || !uid ? null : relations.relationsMap[uid]
+
+	if (!profile)
+		throw new Error(
+			'Something went wrong loading this profile... please contact administrator'
+		)
 	return (
 		<main className="mx-auto max-w-sm px-2 py-6">
 			{isMine ?
@@ -40,13 +45,13 @@ function ProfilePage() {
 			<Card>
 				<CardHeader>
 					<CardTitle className="mx-auto">
-						{profile?.username}
+						{profile.username}
 						<span className="opacity-70">'s profile</span>
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4 text-center">
 					<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-						{profile?.avatar_url ?
+						{profile.avatar_url ?
 							<img
 								src={profile.avatar_url}
 								className="size-32 rounded-full object-cover"
@@ -54,7 +59,7 @@ function ProfilePage() {
 						:	<>
 								<User className="text-muted-foreground/20 size-32 rounded-full p-1 blur-xs" />
 								<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
-									{profile.username.slice(0, 2)}
+									{(profile.username ?? '').slice(0, 2)}
 								</span>
 							</>
 						}
