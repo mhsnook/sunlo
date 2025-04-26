@@ -209,12 +209,12 @@ function ReviewPage() {
 			<CardHeader>
 				<CardTitle>Get Ready to review your {languages[lang]} cards</CardTitle>
 			</CardHeader>
-			<CardContent>
-				<p className="text-muted-foreground mb-4 max-w-2xl text-lg">
+			<CardContent className="space-y-4">
+				<p className="text-muted-foreground max-w-2xl text-lg">
 					Your personalized review session is prepared and waiting for you.
 					Here's what to expect:
 				</p>
-				<div className="mb-8 flex flex-row flex-wrap gap-6 text-sm">
+				<div className="flex flex-row flex-wrap gap-4 text-sm">
 					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
 							<CardTitle className="flex items-center gap-2 text-xl">
@@ -258,7 +258,7 @@ function ReviewPage() {
 							</p>
 						</CardContent>
 					</Card>
-					<Flagged name="smart_recommendations">
+					<Flagged name="smart_recommendations" className="hidden">
 						<Card className="grow basis-40">
 							<CardHeader className="pb-2">
 								<CardTitle className="flex items-center gap-2 text-xl">
@@ -301,36 +301,13 @@ function ReviewPage() {
 						</Card>
 					</Flagged>
 				</div>
-				{noCards ?
-					<Empty lang={lang} />
-				: !(newCardsDesiredCount > cardPidsAllNewToday.length) ?
-					null
-				:	<Callout className="my-4" variant="ghost">
-						<MessageCircleWarningIcon />
-						<div className="pt-1">
-							It looks like you don't have enough fresh cards in your deck to
-							meet your review goal for today ({newCardsDesiredCount}). You can
-							go ahead with the review like this, or you can add more.{' '}
-							<div className="my-2 flex flex-col gap-2 @lg:flex-row">
-								<Link
-									className={buttonVariants({ variant: 'outline' })}
-									to="/learn/$lang/library"
-									params={{ lang }}
-								>
-									Get more cards from Library
-								</Link>
-
-								<Link
-									className={buttonVariants({ variant: 'outline' })}
-									to="/learn/$lang/add-phrase"
-									params={{ lang }}
-								>
-									Add cards to Library
-								</Link>
-							</div>
-						</div>
-					</Callout>
-				}
+				{!(newCardsDesiredCount > cardPidsAllNewToday.length) ? null : (
+					<NotEnoughCards
+						lang={lang}
+						newCardsDesiredCount={newCardsDesiredCount}
+						newCardsCount={cardPidsAllNewToday.length}
+					/>
+				)}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
 					<Button
 						onClick={(e) => {
@@ -339,7 +316,7 @@ function ReviewPage() {
 							mutate()
 						}}
 						size="lg"
-						disabled={isPending}
+						disabled={isPending || cardPidsAllNewToday.length === 0}
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Button>
@@ -429,37 +406,54 @@ function ReviewCardsToAddToDeck({
 	)
 }
 
-const Empty = ({ lang }: { lang: string }) => (
-	<Card className="px-[5%] py-6">
-		<CardHeader className="my-6 opacity-70">
-			<CardTitle>No cards to review</CardTitle>
-		</CardHeader>
-		<CardContent className="mb-6 space-y-4">
+function NotEnoughCards({
+	lang,
+	newCardsDesiredCount,
+	newCardsCount,
+}: {
+	lang: string
+	newCardsDesiredCount: number
+	newCardsCount: number
+}) {
+	const isEmpty = newCardsCount === 0
+	return (
+		<Callout variant="ghost" Icon={() => <MessageCircleWarningIcon />}>
 			<p>
-				This is empty because there are no active cards in your{' '}
-				{languages[lang]} deck.
+				It looks like you don't have {isEmpty ? 'any' : 'enough'} new cards{' '}
+				{isEmpty ?
+					"to review. You'll have to add at least a few before you can proceed"
+				:	<>
+						in your deck to meet your goal of{' '}
+						<strong className="italic">
+							{newCardsDesiredCount} new cards a day
+						</strong>
+					</>
+				}
+				.
 			</p>
-			<p>
-				You can{' '}
+			<div className="my-2 flex flex-col gap-2 @lg:flex-row">
 				<Link
-					className="s-link"
+					className={buttonVariants({ variant: 'outline' })}
 					to="/learn/$lang/library"
 					params={{ lang }}
-					from={Route.fullPath}
 				>
-					browse the library
-				</Link>{' '}
-				to find new phrases to learn, or{' '}
+					Add cards from the Library
+				</Link>
+
 				<Link
-					className="s-link"
+					className={buttonVariants({ variant: 'outline' })}
 					to="/learn/$lang/add-phrase"
 					params={{ lang }}
-					from={Route.fullPath}
 				>
-					add your own
+					Create new cards
 				</Link>
-				!
-			</p>
-		</CardContent>
-	</Card>
-)
+			</div>
+			{isEmpty ? null : (
+				<>
+					Or click the big button below and get started with the {newCardsCount}{' '}
+					cards you have.
+				</>
+			)}
+		</Callout>
+	)
+}
