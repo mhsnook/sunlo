@@ -7,8 +7,8 @@ export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
 	loader: () => {
 		return {
-			appnav: ['/learn', '/learn/add-deck', '/learn/quick-search'],
-			contextMenu: ['/learn/add-deck', '/learn/quick-search'],
+			appnav: ['/learn', '/learn/add-deck' /*'/learn/quick-search'*/],
+			contextMenu: ['/learn/add-deck' /*'/learn/quick-search'*/],
 			titleBar: {
 				title: `Learning Home`,
 				subtitle: `Which deck are we studying today?`,
