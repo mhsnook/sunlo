@@ -97,13 +97,12 @@ function Index() {
 				)}
 			>
 				<p>
-					Sunlo is under development; some of the features you would expect may
-					not have been built yet, but what is here should be working. Please
-					get in touch on bluesky at{' '}
+					Sunlo is under development. It should be ready to use, but it's very
+					early days. Please get in touch on BlueSky at{' '}
 					<a className="s-link" href="https://bsky.app/profile/sunlo.app">
 						@sunlo.app
 					</a>{' '}
-					to let us know of any feedback.
+					to let us know of any thoughts, suggestions or feedback.
 				</p>
 			</Callout>
 			<section className="my-16 px-1 pt-4 pb-8 @lg:px-4 @lg:pt-10 @lg:pb-16">
