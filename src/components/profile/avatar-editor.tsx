@@ -89,7 +89,7 @@ export default function AvatarEditor({ url, onUpload }: AvatarEditorProps) {
 				<div
 					className={cn(
 						!url ? 'opacity-100' : '',
-						'absolute inset-0 z-30 flex flex-col justify-center opacity-0 backdrop-blur-sm group-hover:opacity-100'
+						'bg-background/80 absolute inset-0 z-30 flex flex-col justify-center opacity-0 group-hover:opacity-100'
 					)}
 				>
 					{sendImage.isPending ?
