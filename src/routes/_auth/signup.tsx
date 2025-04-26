@@ -94,16 +94,12 @@ function SignUp() {
 			</CardHeader>
 			<CardContent>
 				{signupMutation.isSuccess ?
-					<Callout>
-						<SuccessCheckmark className="bg-transparent" />
-						<div className="space-y-2">
-							<p>Almost done!</p>
-							<p>
-								Find the confirmation link in your email to activate your
-								account.
-							</p>
-							<p>You can close this window.</p>
-						</div>
+					<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+						<p>Almost done!</p>
+						<p>
+							Find the confirmation link in your email to activate your account.
+						</p>
+						<p>You can close this window.</p>
 					</Callout>
 				:	<form
 						role="form"

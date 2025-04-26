@@ -52,17 +52,14 @@ export function PasswordResetForm() {
 	return (
 		<CardContent>
 			{changeMutation.isSuccess ?
-				<Callout>
-					<SuccessCheckmark className="bg-transparent" />
-					<div className="space-y-2">
-						<p>Success!</p>
-						<p>You've changed your password.</p>
-						<p>
-							<Link to="/profile" className="s-link">
-								Return to your profile page.
-							</Link>
-						</p>
-					</div>
+				<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+					<p>Success!</p>
+					<p>You've changed your password.</p>
+					<p>
+						<Link to="/profile" className="s-link">
+							Return to your profile page.
+						</Link>
+					</p>
 				</Callout>
 			:	<form
 					role="form"

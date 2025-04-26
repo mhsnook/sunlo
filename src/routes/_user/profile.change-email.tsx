@@ -68,19 +68,16 @@ function ChangeEmailPage() {
 			</CardHeader>
 			<CardContent>
 				{changeMutation.isSuccess ?
-					<Callout>
-						<SuccessCheckmark className="bg-transparent" />
-						<div className="space-y-2">
-							<p>Step 1 complete:</p>
-							<p>
-								You've requested to change your email to{' '}
-								<strong>{changeMutation.data?.email}</strong>.
-							</p>
-							<p>
-								Please check your new email for a confirmation link to confirm
-								the change.
-							</p>
-						</div>
+					<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+						<p>Step 1 complete:</p>
+						<p>
+							You've requested to change your email to{' '}
+							<strong>{changeMutation.data?.email}</strong>.
+						</p>
+						<p>
+							Please check your new email for a confirmation link to confirm the
+							change.
+						</p>
 					</Callout>
 				:	<form
 						role="form"

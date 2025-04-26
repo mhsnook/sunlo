@@ -1,10 +1,13 @@
 import { cn } from '@/lib/utils'
+import { ReactNode } from '@tanstack/react-router'
+import { LucideIcon } from 'lucide-react'
 import type { HTMLAttributes, PropsWithChildren } from 'react'
 
 type CalloutProps = PropsWithChildren & {
 	variant?: 'default' | 'problem' | 'ghost'
 	className?: string
 	alert?: boolean
+	Icon?: () => LucideIcon | ReactNode
 }
 
 const variants = {
@@ -16,6 +19,7 @@ const variants = {
 export default function Callout({
 	variant = 'default',
 	alert = false,
+	Icon,
 	className,
 	children,
 }: CalloutProps) {
@@ -25,12 +29,17 @@ export default function Callout({
 		<div
 			{...props}
 			className={cn(
-				'flex flex-row items-center gap-4 rounded border px-[4%] py-[3%]',
+				'flex flex-col items-center gap-4 rounded border px-[5%] py-[5%] @lg:flex-row @lg:py-[3%]',
 				variants[variant],
 				className
 			)}
 		>
-			{children}
+			{typeof Icon === 'function' ?
+				<div className="min-w-4vh aspect-square">
+					<Icon />
+				</div>
+			:	null}
+			<div className="space-y-2">{children}</div>
 		</div>
 	)
 }

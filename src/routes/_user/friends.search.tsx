@@ -178,20 +178,17 @@ export default function SearchProfiles() {
 									<Loader />
 								</div>
 							: !(resultsToShow?.length > 0) ?
-								<Callout variant="ghost">
-									<Garlic size={32} />
-									<div className="ms-4 space-y-4">
-										<p>No users match that search.</p>
-										<p>
-											<Link
-												className={buttonVariants({ variant: 'secondary' })}
-												to="/friends/invite"
-												from={Route.fullPath}
-											>
-												Invite a friend to Sunlo
-											</Link>
-										</p>
-									</div>
+								<Callout variant="ghost" Icon={() => <Garlic size={32} />}>
+									<p>No users match that search.</p>
+									<p>
+										<Link
+											className={buttonVariants({ variant: 'outline' })}
+											to="/friends/invite"
+											from={Route.fullPath}
+										>
+											Invite a friend to Sunlo
+										</Link>
+									</p>
 								</Callout>
 							:	<div className="my-6 space-y-2">
 									{resultsToShow.map((profile) => (

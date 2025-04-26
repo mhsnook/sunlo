@@ -23,9 +23,15 @@ export function ShowError({
 	if (show === false) return null
 	if (show === null && !children) return null
 	return (
-		<Callout className={className} variant="problem" alert>
-			<CircleX className="text-destructive/50" aria-hidden={true} />
-			<div>{children || `An unknown error has occurred (sorry)`}</div>
+		<Callout
+			className={className}
+			variant="problem"
+			alert
+			Icon={() => (
+				<CircleX className="text-destructive/50" aria-hidden={true} />
+			)}
+		>
+			{children ?? `An unknown error has occurred (sorry)`}
 		</Callout>
 	)
 }

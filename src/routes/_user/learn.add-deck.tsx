@@ -62,17 +62,14 @@ function NewDeckForm() {
 				className="space-y-4"
 			>
 				{showNewUserUI ?
-					<Callout>
-						<span>👋</span>
-						<div className="space-y-2">
-							<p>
-								Welcome <em>{data?.username}</em>!
-							</p>
-							<p>
-								Create a new deck to start learning, or go to your profile to
-								check for friend requests.
-							</p>
-						</div>
+					<Callout Icon={() => <span>👋</span>}>
+						<p>
+							Welcome <em>{data?.username}</em>!
+						</p>
+						<p>
+							Create a new deck to start learning, or go to your profile to
+							check for friend requests.
+						</p>
 					</Callout>
 				:	<p>
 						You're currently learning{' '}

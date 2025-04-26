@@ -44,10 +44,14 @@ function NotFoundComponent() {
 	}, [navigate])
 	return (
 		<div className="flex h-full w-full items-center justify-center py-10">
-			<Callout variant="problem">
-				<Badge variant="destructive" className="p-2">
-					<OctagonMinus />
-				</Badge>
+			<Callout
+				variant="problem"
+				Icon={() => (
+					<Badge variant="destructive" className="p-2">
+						<OctagonMinus />
+					</Badge>
+				)}
+			>
 				<div className="flex flex-col gap-4">
 					<h1 className="text-2xl">404: Page not found</h1>
 					<p>We did not find a page matching that URL</p>
