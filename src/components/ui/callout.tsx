@@ -34,11 +34,11 @@ export default function Callout({
 				className
 			)}
 		>
-			{typeof Icon === 'function' ?
+			{!Icon ? null : (
 				<div className="min-w-4vh aspect-square">
 					<Icon />
 				</div>
-			:	null}
+			)}
 			<div className="space-y-2">{children}</div>
 		</div>
 	)
