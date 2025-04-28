@@ -177,7 +177,7 @@ function ReviewPage() {
 				JSON.stringify(reviewData.dailyCacheKey),
 				JSON.stringify(cardPidsAllToday)
 			)
-			return { total: cardPidsAllToday.length, new: totalCards }
+			return { total: totalCards, new: cardPidsAllNewToday.length }
 			/* const { data } = await supabase
 				.from('user_card')
 				.insert(

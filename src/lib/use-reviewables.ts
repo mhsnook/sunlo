@@ -1,5 +1,5 @@
 import supabase from './supabase-client'
-import { pids, ReviewInsert, ReviewUpdate } from '@/types/main'
+import { pids, ReviewInsert, ReviewUpdate, uuid } from '@/types/main'
 
 export const postReview = async (submitData: ReviewInsert) => {
 	if (!submitData?.user_card_id || !submitData?.score)
@@ -42,4 +42,13 @@ export function getIndexOfNextUnreviewedCard(
 		return entry === null
 	})
 	return index === -1 ? pids.length : index
+}
+
+export function countUnfinishedCards(
+	pids: pids,
+	dailyCacheKey: Array<string>
+): number {
+	return pids.filter((p: uuid) => {
+		return !getFromLocalStorage([...dailyCacheKey, p])
+	}).length
 }
