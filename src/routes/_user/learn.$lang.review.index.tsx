@@ -306,6 +306,7 @@ function ReviewPage() {
 						lang={lang}
 						newCardsDesiredCount={newCardsDesiredCount}
 						newCardsCount={cardPidsAllNewToday.length}
+						noCards={noCards}
 					/>
 				)}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
@@ -410,18 +411,19 @@ function NotEnoughCards({
 	lang,
 	newCardsDesiredCount,
 	newCardsCount,
+	noCards,
 }: {
 	lang: string
 	newCardsDesiredCount: number
 	newCardsCount: number
+	noCards: boolean
 }) {
-	const isEmpty = newCardsCount === 0
 	return (
 		<Callout variant="ghost" Icon={() => <MessageCircleWarningIcon />}>
 			<p>
-				It looks like you don't have {isEmpty ? 'any' : 'enough'} new cards{' '}
-				{isEmpty ?
-					"to review. You'll have to add at least a few before you can proceed"
+				It looks like you don't have {noCards ? 'any' : 'enough new'} cards
+				{noCards ?
+					" to review. You'll have to add at least a few before you can proceed"
 				:	<>
 						in your deck to meet your goal of{' '}
 						<strong className="italic">
@@ -448,7 +450,7 @@ function NotEnoughCards({
 					Create new cards
 				</Link>
 			</div>
-			{isEmpty ? null : (
+			{noCards ? null : (
 				<>
 					Or click the big button below and get started with the {newCardsCount}{' '}
 					cards you have.
