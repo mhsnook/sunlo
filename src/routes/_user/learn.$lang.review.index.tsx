@@ -167,7 +167,7 @@ function ReviewPage() {
 		...cardPidsPickedFromDeck,
 	]
 	const cardPidsAllToday = [...cardPidsAllNewToday, ...deckPids.today]
-	const noCards = cardPidsAllToday.length === 0
+	const totalCards = cardPidsAllToday.length
 
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { mutate, isPending } = useMutation({
@@ -177,7 +177,7 @@ function ReviewPage() {
 				JSON.stringify(reviewData.dailyCacheKey),
 				JSON.stringify(cardPidsAllToday)
 			)
-			return { total: cardPidsAllToday.length, new: cardPidsAllNewToday.length }
+			return { total: cardPidsAllToday.length, new: totalCards }
 			/* const { data } = await supabase
 				.from('user_card')
 				.insert(
@@ -224,7 +224,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 								<BookOpen />
-								{cardPidsAllToday.length}
+								{totalCards}
 							</p>
 							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
@@ -306,7 +306,7 @@ function ReviewPage() {
 						lang={lang}
 						newCardsDesiredCount={newCardsDesiredCount}
 						newCardsCount={cardPidsAllNewToday.length}
-						noCards={noCards}
+						totalCards={totalCards}
 					/>
 				)}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
@@ -317,7 +317,7 @@ function ReviewPage() {
 							mutate()
 						}}
 						size="lg"
-						disabled={isPending || cardPidsAllNewToday.length === 0}
+						disabled={isPending || totalCards === 0}
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Button>
@@ -411,13 +411,14 @@ function NotEnoughCards({
 	lang,
 	newCardsDesiredCount,
 	newCardsCount,
-	noCards,
+	totalCards,
 }: {
 	lang: string
 	newCardsDesiredCount: number
 	newCardsCount: number
-	noCards: boolean
+	totalCards: number
 }) {
+	const noCards = totalCards === 0
 	return (
 		<Callout variant="ghost" Icon={() => <MessageCircleWarningIcon />}>
 			<p>
