@@ -148,7 +148,7 @@
 }
 
 @utility s-link {
-	@apply decoration-primary-foresoft cursor-pointer underline decoration-dashed decoration-2 underline-offset-2 transition-all hover:decoration-2 hover:underline-offset-1;
+	@apply decoration-primary-foresoft hover:decoration-primary-foresoft/50 cursor-pointer underline decoration-2 underline-offset-2 transition-all hover:decoration-2 hover:underline-offset-1;
 }
 
 /* @utility h1 {
@@ -163,7 +163,7 @@
   }
 } */
 @utility d1 {
-	@apply my-4 text-4xl tracking-tight @xl:text-5xl @3xl:text-6xl @5xl:text-8xl; /* font-display;*/
+	@apply my-4 text-4xl font-thin tracking-tight @xl:text-[3rem] @3xl:text-[4rem] @5xl:text-[5rem];
 }
 @utility h2 {
 	@apply my-4 text-2xl @3xl:text-3xl @5xl:text-4xl; /* font-display;*/
