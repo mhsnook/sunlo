@@ -1,4 +1,5 @@
-import { AppSidebarLayout } from '@/components/app-sidebar-layout'
+import { SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar'
 import Navbar from '@/components/navbar'
 import { AppNav } from '@/components/app-nav'
 import { profileQuery } from '@/lib/use-profile'
@@ -49,10 +50,18 @@ export const Route = createFileRoute('/_user')({
 
 function UserLayout() {
 	return (
-		<AppSidebarLayout>
-			<Navbar />
-			<AppNav />
-			<Outlet />
-		</AppSidebarLayout>
+		<div className="flex h-screen w-full overflow-hidden">
+			<AppSidebar />
+			<SidebarInset className="w-full flex-1">
+				<div
+					id="app-sidebar-layout-outlet"
+					className="w-app @container overflow-y-auto pb-6"
+				>
+					<Navbar />
+					<AppNav />
+					<Outlet />
+				</div>
+			</SidebarInset>
+		</div>
 	)
 }
