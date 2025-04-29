@@ -16,7 +16,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover'
-import { allLanguageOptions } from '@/lib/languages'
+import languages, { allLanguageOptions } from '@/lib/languages'
 
 interface SelectOneLanguageProps {
 	autoFocus?: boolean
@@ -36,7 +36,6 @@ export function SelectOneLanguage({
 	tabIndex,
 }: SelectOneLanguageProps) {
 	const [open, setOpen] = React.useState(false)
-
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger autoFocus={autoFocus} asChild className="w-full">
@@ -58,7 +57,19 @@ export function SelectOneLanguage({
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="p-0">
-				<Command>
+				<Command
+					filter={(value, search) => {
+						return (
+							value === '' ? 1
+							: value === search ? 1
+							: value.startsWith(search) ? 0.9
+							: languages[value].toLowerCase().startsWith(search) ? 0.8
+							: `${value} ${languages[value]}`.toLowerCase().includes(search) ?
+								0.7
+							:	0
+						)
+					}}
+				>
 					<CommandInput placeholder="Search language..." className="my-1" />
 					<CommandList>
 						<CommandEmpty>No language found.</CommandEmpty>

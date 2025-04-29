@@ -64,35 +64,51 @@ export default function TranslationLanguageField({
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent className="p-0">
-					<Command>
+					<Command
+						filter={(value, search) => {
+							return (
+								value === '' ? 1
+								: value === search ? 1
+								: value.startsWith(search) ? 0.9
+								: languages[value].toLowerCase().startsWith(search) ? 0.8
+								: (
+									`${value} ${languages[value]}`.toLowerCase().includes(search)
+								) ?
+									0.7
+								:	0
+							)
+						}}
+					>
 						<CommandInput placeholder="Search language..." className="my-1" />
 						<CommandList>
 							<CommandEmpty>No language found.</CommandEmpty>
 							<CommandGroup>
-								{myLanguages.map((lang) => (
-									<CommandItem
-										key={lang}
-										value={lang}
-										onSelect={(currentValue) => {
-											controller.field.onChange(
-												currentValue === controller.field.value ?
-													''
-												:	currentValue
-											)
-											setOpen(false)
-										}}
-									>
-										<Check
-											className={cn(
-												'mr-2 size-4',
-												controller.field.value === lang ?
-													'opacity-100'
-												:	'opacity-0'
-											)}
-										/>
-										{languages[lang]} ({lang})
-									</CommandItem>
-								))}
+								{myLanguages.map((lang) =>
+									lang === undefined ? null : (
+										<CommandItem
+											key={lang}
+											value={lang}
+											onSelect={(currentValue) => {
+												controller.field.onChange(
+													currentValue === controller.field.value ?
+														''
+													:	currentValue
+												)
+												setOpen(false)
+											}}
+										>
+											<Check
+												className={cn(
+													'mr-2 size-4',
+													controller.field.value === lang ?
+														'opacity-100'
+													:	'opacity-0'
+												)}
+											/>
+											{languages[lang]} ({lang})
+										</CommandItem>
+									)
+								)}
 							</CommandGroup>
 							{myLanguages.length === 0 ? null : <CommandSeparator />}
 							<CommandGroup>
