@@ -10,13 +10,19 @@ import { useLinks } from '@/hooks/links'
 import { ScrollArea, ScrollBar } from './ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 
-export function AppNav() {
+export function AppNav({ isScrollingUp }: { isScrollingUp: boolean }) {
 	const matches = useMatches()
 	if (matches.some((match) => match.status === 'pending')) return null
-	return <Nav matches={matches} />
+	return <Nav matches={matches} isScrollingUp={isScrollingUp} />
 }
 
-function Nav({ matches }: { matches: ReturnType<typeof useMatches> }) {
+function Nav({
+	matches,
+	isScrollingUp,
+}: {
+	matches: ReturnType<typeof useMatches>
+	isScrollingUp: boolean
+}) {
 	const match = matches.findLast((m) => !!m?.loaderData?.appnav)
 	const links = useLinks(match?.loaderData?.appnav)
 	const [ref, entry] = useIntersectionObserver({
@@ -29,7 +35,7 @@ function Nav({ matches }: { matches: ReturnType<typeof useMatches> }) {
 		<>
 			<div ref={ref}></div>
 			<div
-				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 mb-4`}
+				className={`bg-background ${isScrollingUp ? 'fixed' : ''} border-b transition-all ${!entry?.isIntersecting ? 'border-border' : 'static border-transparent'} top-0 right-0 left-0 mb-4`}
 			>
 				<ScrollArea>
 					<NavigationMenu className="my-2">

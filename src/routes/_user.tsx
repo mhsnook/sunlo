@@ -6,6 +6,7 @@ import { profileQuery } from '@/lib/use-profile'
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { Home } from 'lucide-react'
+import { useState } from 'react'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -49,6 +50,8 @@ export const Route = createFileRoute('/_user')({
 })
 
 function UserLayout() {
+	const [newY, setNewY] = useState<number>(0)
+	const [prevY, setPrevY] = useState<number>(0)
 	return (
 		<div className="flex h-screen w-full overflow-hidden">
 			<AppSidebar />
@@ -56,9 +59,13 @@ function UserLayout() {
 				<div
 					id="app-sidebar-layout-outlet"
 					className="w-app @container overflow-y-auto pb-6"
+					onScroll={(event) => {
+						setPrevY(newY)
+						setNewY(event.target.scrollTop)
+					}}
 				>
 					<Navbar />
-					<AppNav />
+					<AppNav isScrollingUp={newY < prevY} />
 					<Outlet />
 				</div>
 			</SidebarInset>
