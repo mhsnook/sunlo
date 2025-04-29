@@ -17,7 +17,7 @@ export default function Navbar() {
 	if (matches.some((match) => match.status === 'pending')) return null
 
 	return (
-		<nav className="mb-4 flex items-center justify-between border-b px-[1cqw] py-3">
+		<nav className="flex items-center justify-between border-b px-[1cqw] py-3">
 			<div className="flex h-12 items-center gap-[1cqw]">
 				<SidebarTrigger />
 				<Title matches={matches} />
@@ -91,7 +91,7 @@ function ContextMenu({ matches }) {
 							{...link}
 							className="justify-content-center flex w-full flex-row gap-2"
 						>
-							<Icon className="size-[1.25rem]" />
+							{!Icon ? null : <Icon className="size-[1.25rem]" />}
 							{name}
 						</Link>
 					</DropdownMenuItem>
