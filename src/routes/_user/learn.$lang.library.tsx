@@ -9,7 +9,6 @@ import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases
 import Callout from '@/components/ui/callout'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { inLastWeek } from '@/lib/dayjs'
 import { PhraseCard } from '@/components/phrase-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Brain, Carrot, LucideIcon, Plus, TrendingUp } from 'lucide-react'
@@ -69,32 +68,60 @@ const PhraseSection = ({
 	</div>
 )
 
-const samplePhrases: Record<string, PhraseStub[]> = {
+const recommendedPhrases: Record<string, PhraseStub[]> = {
 	trending: [
-		{ id: '1', text: 'vanakkam', translation: { text: 'Hello', lang: 'eng' } },
-		{ id: '2', text: 'நன்றி', translation: { text: 'Thank you', lang: 'eng' } },
+		{
+			id: '1',
+			lang: 'tam',
+			text: 'vanakkam',
+			translation: [{ text: 'Hello', lang: 'eng' }],
+		},
+		{
+			id: '2',
+			lang: 'tam',
+			text: 'நன்றி',
+			translation: [{ text: 'Thank you', lang: 'eng' }],
+		},
 		{
 			id: '3',
+			lang: 'tam',
 			text: 'en peyar?',
-			translation: { text: 'What is your name?', lang: 'eng' },
+			translation: [{ text: 'What is your name?', lang: 'eng' }],
 		},
 	],
 	challenging: [
 		{
 			id: '4',
+			lang: 'tam',
 			text: 'Tamil teriyum',
-			translation: { text: 'I am learning Tamil', lang: 'eng' },
+			translation: [{ text: 'I am learning Tamil', lang: 'eng' }],
 		},
 		{
 			id: '5',
+			lang: 'tam',
 			text: 'Unga peyar enna?',
-			translation: { text: 'What is your name?', lang: 'eng' },
+			translation: [{ text: 'What is your name?', lang: 'eng' }],
 		},
 	],
 	easy: [
-		{ id: '6', text: 'Sari', translation: { text: 'Yes', lang: 'eng' } },
-		{ id: '7', text: 'Illai', translation: { text: 'No', lang: 'eng' } },
-		{ id: '8', text: 'Sari', translation: { text: 'Okay', lang: 'eng' } },
+		{
+			id: '6',
+			lang: 'tam',
+			text: 'Sari',
+			translation: [{ text: 'Yes', lang: 'eng' }],
+		},
+		{
+			id: '7',
+			lang: 'tam',
+			text: 'Illai',
+			translation: [{ text: 'No', lang: 'eng' }],
+		},
+		{
+			id: '8',
+			lang: 'tam',
+			text: 'Sari',
+			translation: [{ text: 'Okay', lang: 'eng' }],
+		},
 	],
 }
 
@@ -108,19 +135,19 @@ function PopularPhrases({ lang }: LangOnlyComponentProps) {
 			<CardContent className="space-y-4">
 				<PhraseSection
 					description="Popular phrases among all Tamil learners"
-					phrases={samplePhrases.trending}
+					phrases={recommendedPhrases.trending}
 					isLoading={false}
 					Icon={TrendingUp}
 				/>
 				<PhraseSection
 					description="More advanced, but in reach"
-					phrases={samplePhrases.challenging}
+					phrases={recommendedPhrases.challenging}
 					isLoading={false}
 					Icon={Brain}
 				/>
 				<PhraseSection
 					description="Broaden your vocabulary"
-					phrases={samplePhrases.easy}
+					phrases={recommendedPhrases.easy}
 					isLoading={false}
 					Icon={Carrot}
 				/>
