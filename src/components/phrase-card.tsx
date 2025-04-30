@@ -1,22 +1,24 @@
 import { cn } from '@/lib/utils'
 import { PhraseStub } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { Link } from '@tanstack/react-router'
 
 type PhraseCardProps = {
 	phrase: PhraseStub
 }
 
 export const PhraseCard = ({ phrase }: PhraseCardProps) => (
-	<a
+	<Link
 		className={cn(
 			buttonVariants({ variant: 'link' }),
 			`s-link rounded border p-3`
 		)}
-		href="google.com?search=id"
+		to="/learn/$lang/$id"
+		params={{ lang: phrase.lang, id: phrase.id }}
 	>
 		<span className="font-semibold">{phrase.text}</span>{' '}
 		<span className="text-muted-foreground text-sm">
-			{phrase.translation.text}
+			{phrase.translation[0].text}
 		</span>
-	</a>
+	</Link>
 )

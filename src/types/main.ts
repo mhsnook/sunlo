@@ -50,9 +50,10 @@ export type LanguageFetched = LanguageMeta & {
 	phrases: Array<PhraseFull>
 }
 export type PhraseStub = {
+	lang: string
 	id: string
 	text: string
-	translation: { text: string; lang: string }
+	translation: Array<{ text: string; lang: string }>
 }
 
 export type PhrasesMap = {
