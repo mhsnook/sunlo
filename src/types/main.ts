@@ -79,7 +79,7 @@ export type TranslationInsert = TablesInsert<'phrase_translation'>
 export type RelationRow = Tables<'phrase_relation'>
 export type RelationInsert = TablesInsert<'phrase_relation'>
 
-export type PhraseMeta = Tables<'phrase_plus'>
+export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
 }

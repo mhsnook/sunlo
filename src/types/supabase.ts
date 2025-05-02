@@ -211,6 +211,13 @@ export type Database = {
             foreignKeyName: "phrase_see_also_from_phrase_id_fkey"
             columns: ["from_phrase_id"]
             isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_see_also_from_phrase_id_fkey"
+            columns: ["from_phrase_id"]
+            isOneToOne: false
             referencedRelation: "phrase"
             referencedColumns: ["id"]
           },
@@ -219,6 +226,13 @@ export type Database = {
             columns: ["from_phrase_id"]
             isOneToOne: false
             referencedRelation: "phrase_plus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_see_also_to_phrase_id_fkey"
+            columns: ["to_phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
             referencedColumns: ["id"]
           },
           {
@@ -295,6 +309,13 @@ export type Database = {
             foreignKeyName: "phrase_translation_phrase_id_fkey"
             columns: ["phrase_id"]
             isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_translation_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
             referencedRelation: "phrase"
             referencedColumns: ["id"]
           },
@@ -336,6 +357,13 @@ export type Database = {
           user_deck_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
@@ -633,6 +661,44 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_phrase_info: {
+        Row: {
+          avg_difficulty: number | null
+          avg_stability: number | null
+          count_active: number | null
+          count_cards: number | null
+          count_learned: number | null
+          count_skipped: number | null
+          created_at: string | null
+          id: string | null
+          lang: string | null
+          percent_active: number | null
+          percent_learned: number | null
+          percent_skipped: number | null
+          rank_least_difficult: number | null
+          rank_least_skipped: number | null
+          rank_most_learned: number | null
+          rank_most_stable: number | null
+          rank_newest: number | null
+          text: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phrase_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
+        ]
+      }
       phrase_plus: {
         Row: {
           added_by: string | null
@@ -724,6 +790,13 @@ export type Database = {
           user_deck_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
