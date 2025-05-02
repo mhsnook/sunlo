@@ -17,7 +17,8 @@ import { mapArray } from '@/lib/utils'
 
 const qs = {
 	phrase_full: () => `*, translations:phrase_translation(*)` as const,
-	language_full: () => `*, phrases:phrase_plus(${qs.phrase_full()})` as const,
+	language_full: () =>
+		`*, phrases:meta_phrase_info(${qs.phrase_full()})` as const,
 }
 
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
