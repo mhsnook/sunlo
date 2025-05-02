@@ -69,11 +69,11 @@ export function FlashCardReviewSession({
 	const isComplete = currentCardIndex === pids.length
 
 	return (
-		<>
+		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div
-				className={`${isComplete ? 'flex' : 'hidden'} flex-col items-center justify-center gap-4`}
+				className={`${isComplete ? 'flex' : 'hidden'} flex-col items-center justify-center gap-2`}
 			>
-				<div className="flex min-h-10 flex-row items-center justify-center">
+				<div className={`flex min-h-10 flex-row items-center justify-center`}>
 					<Button
 						size="sm"
 						variant="ghost"
@@ -95,9 +95,11 @@ export function FlashCardReviewSession({
 				</Card>
 			</div>
 			<div
-				className={`${isComplete ? 'hidden' : 'flex'} flex-col items-center justify-center gap-4`}
+				className={`${isComplete ? 'hidden' : 'flex'} flex-col items-center justify-center gap-2`}
 			>
-				<div className="flex min-h-10 flex-row items-center justify-center gap-4">
+				<div
+					className={`flex min-h-10 flex-row items-center justify-center gap-4`}
+				>
 					<Button
 						size="icon-sm"
 						variant="default"
@@ -120,8 +122,11 @@ export function FlashCardReviewSession({
 						<ChevronRight className="size-4" />
 					</Button>
 				</div>
+
 				{pids.map((pid, i) => {
 					const phrase = phrasesMap[pid]
+					const card = cardsMap[pid]
+
 					return (
 						<Card
 							key={i}
@@ -181,7 +186,7 @@ export function FlashCardReviewSession({
 								dailyCacheKey={dailyCacheKey}
 								// lang={lang}
 								pid={pid}
-								user_card_id={cardsMap[pid].id!}
+								user_card_id={card.id!}
 								isButtonsShown={showTranslation}
 								showTheButtons={() => setShowTranslation(true)}
 								proceed={() => {
@@ -192,7 +197,7 @@ export function FlashCardReviewSession({
 					)
 				})}
 			</div>
-		</>
+		</div>
 	)
 }
 
