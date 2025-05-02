@@ -22,10 +22,14 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
-import { useDeckMeta } from '@/lib/use-deck'
+import { useDeck, useDeckMeta } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
+import { RecommendedPhrases } from '@/components/recommended-phrases'
+import { processPids } from '@/lib/process-pids'
+import { useMemo } from 'react'
+import { useLanguage } from '@/lib/use-language'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -33,14 +37,24 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const deckIsNew = false
+	const { data: deck } = useDeck(lang)
+	const { data: language } = useLanguage(lang)
+	if (!language) throw new Error("Could not load this language's data")
+	if (!deck) throw new Error("Could not load this deck's data")
+
+	const processedPids = useMemo(
+		() => processPids(language.phrasesMap, language.pids, deck.pids),
+		[language.pids, deck.pids, language.phrasesMap]
+	)
+	const deckIsNew = !(deck.pids.all.length > 0)
 	return (
 		<div className="space-y-8 px-2">
 			{deckIsNew ?
 				<Empty lang={lang} />
 			:	<>
 					<DeckOverview lang={lang} />
-					<Flagged name="friends_activity">
+					<RecommendedPhrases lang={lang} pids={processedPids} />
+					<Flagged name="friends_activity" className="hidden">
 						<FriendsSection lang={lang} />
 					</Flagged>
 					<DeckSettings lang={lang} />

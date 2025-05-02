@@ -23,7 +23,7 @@ dayjs.updateLocale('en', {
 	},
 })
 
-const ago = (dbstring: string) => dayjs(dbstring).fromNow()
+const ago = (dbstring: string | null) => dayjs(dbstring).fromNow()
 
 const inLastWeek = (dbstring: string) =>
 	dayjs(dbstring).isAfter(dayjs().subtract(7, 'days'))
