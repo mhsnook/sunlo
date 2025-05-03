@@ -1,4 +1,7 @@
 import { DeckPids, PhrasesMap, pids } from '@/types/main'
+import { useLanguage } from './use-language'
+import { useDeck } from './use-deck'
+import { useMemo } from 'react'
 
 export type ProcessedPids = ReturnType<typeof processPids>
 
@@ -37,5 +40,24 @@ export function processPids(
 				:	-1
 			),
 		},
+	}
+}
+
+export function useProcessedPids(lang: string) {
+	const { data: language, isPending: isPending1 } = useLanguage(lang)
+	const { data: deck, isPending: isPending2 } = useDeck(lang)
+	if (isPending1 || isPending2)
+		return { data: null, isPending: true, error: null }
+	if (!language || !deck) return {}
+	const processedPids = useMemo(
+		() => processPids(language.phrasesMap, language.pids, deck.pids),
+		[language.pids, deck.pids, language.phrasesMap]
+	)
+	return {
+		language,
+		deck,
+		processedPids,
+		isPending: false,
+		error: null,
 	}
 }

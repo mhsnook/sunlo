@@ -40,10 +40,11 @@ import {
 } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
 import { todayString } from '@/lib/utils'
+import { useDeckPids } from '@/lib/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -57,7 +58,7 @@ const exampleRec = {
 	source: 'friend',
 }
 
-const defaultRecs: Array<typeof exampleRec> = [] /*
+const defaultRecs: Array<typeof exampleRec> = [
 	exampleRec,
 	{
 		pid: 'uuid-2',
@@ -108,7 +109,7 @@ const defaultRecs: Array<typeof exampleRec> = [] /*
 		selected: true,
 		source: 'algo',
 	},
-] */
+]
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
@@ -120,18 +121,13 @@ function ReviewPage() {
 		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
 	}, [lang, dayString])
 
-	const deckPids = useLoaderData({
-		from: '/_user/learn/$lang',
-		select: (data) => data.deck.pids,
-	})
+	const { data: deckPids } = useDeckPids(lang)
 
 	// const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
 	const newCardsDesiredCount = 15
 
-	// all recs for cards we've never reviewed (unreviewed cards are included)
-	const [recs, setRecs] = useState(() =>
-		defaultRecs.filter((r) => deckPids.reviewed.indexOf(r.pid) === -1)
-	)
+	const [unselectedCardPids, setUnselectedCardPids] = useState()
+
 	const cardPidsRecommended: Record<
 		'all' | 'fromFriends' | 'fromAlgo' | 'selected',
 		pids
