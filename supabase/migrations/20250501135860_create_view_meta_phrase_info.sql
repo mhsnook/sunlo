@@ -44,8 +44,8 @@ with
 			),
 			results as (
 				select
-					p.id as phrase_id,
-					p.created_at as phrase_created_at,
+					p.id,
+					p.created_at,
 					p.lang,
 					p.text,
 					avg(c.difficulty) as avg_difficulty,
@@ -80,8 +80,8 @@ with
 					p.text
 			)
 		select
-			results.phrase_id,
-			results.phrase_created_at,
+			results.id,
+			results.created_at,
 			results.lang,
 			results.text,
 			results.avg_difficulty,
@@ -134,7 +134,7 @@ with
 				partition by
 					lang
 				order by
-					phrase_created_at desc
+					created_at desc
 			) as rank_newest
 		from
 			results
