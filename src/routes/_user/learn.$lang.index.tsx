@@ -26,7 +26,7 @@ import { useDeck, useDeckMeta } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
-import { RecommendedPhrases } from '@/components/recommended-phrases'
+import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { processPids } from '@/lib/process-pids'
 import { useMemo } from 'react'
 import { useLanguage } from '@/lib/use-language'
@@ -51,15 +51,13 @@ function WelcomePage() {
 		<div className="space-y-8 px-2">
 			{deckIsNew ?
 				<Empty lang={lang} />
-			:	<>
-					<DeckOverview lang={lang} />
-					<RecommendedPhrases lang={lang} pids={processedPids} />
-					<Flagged name="friends_activity" className="hidden">
-						<FriendsSection lang={lang} />
-					</Flagged>
-					<DeckSettings lang={lang} />
-				</>
-			}
+			:	<DeckOverview lang={lang} />}
+
+			<RecommendedPhrasesCard lang={lang} pids={processedPids} />
+			<Flagged name="friends_activity" className="hidden">
+				<FriendsSection lang={lang} />
+			</Flagged>
+			<DeckSettings lang={lang} />
 		</div>
 	)
 }

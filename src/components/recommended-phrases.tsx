@@ -34,13 +34,12 @@ const PhraseSection = ({
 							)
 					})}
 				</div>
-			:	<p className="text-muted-foreground text-center">No phrases available</p>
-			}
+			:	<p className="text-muted-foreground">No phrases available</p>}
 		</div>
 	)
 }
 
-export function RecommendedPhrases({
+export function RecommendedPhrasesCard({
 	lang,
 	pids,
 }: LangOnlyComponentProps & { pids: ProcessedPids }) {
