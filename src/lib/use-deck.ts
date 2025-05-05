@@ -131,7 +131,7 @@ const pendingDeckLang = {
 	isPending: true,
 }
 
-type ProcessedPids = {
+export type ProcessedPids = {
 	language: pids
 	deck: pids
 	reviewed_last_7d: pids
@@ -145,7 +145,7 @@ type ProcessedPids = {
 	recommended_popular: pids
 }
 
-type ProcessedDeckLangData = {
+export type ProcessedDeckLangData = {
 	languageMeta: LanguageMeta
 	phrasesMap: PhrasesMap
 	deckMeta: DeckMeta
