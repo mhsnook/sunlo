@@ -29,7 +29,6 @@ const PhraseSection = ({
 			{pids?.length > 0 ?
 				<div className="flex flex-row flex-wrap gap-2">
 					{pids.map((pid) => {
-						console.log(`in this loop! pid and phrase`, pid, phrasesMap)
 						return !(pid in phrasesMap) ? null : (
 								<PhraseCard key={pid} phrase={phrasesMap[pid]} />
 							)
