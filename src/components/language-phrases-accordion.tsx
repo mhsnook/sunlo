@@ -7,8 +7,7 @@ import {
 } from '@/components/ui/accordion'
 import { CardStatusDropdown } from './card-status-dropdown'
 import { AddTranslationsDialog } from './add-translations-dialog'
-import { useLanguage } from '@/lib/use-language'
-import { useDeck } from '@/lib/use-deck'
+import { useDeckLang } from '@/lib/use-deck'
 import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
@@ -22,21 +21,23 @@ export function LanguagePhrasesAccordionComponent({
 	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
-	const { data: language } = useLanguage(lang)
-	const { data: deck } = useDeck(lang)
-	if (!language)
-		throw new Error(
-			"We can't find that language. Are you sure you have the correct URL?"
-		)
-	const pidsToUse = pids ?? language.pids
+	const {
+		deckMeta,
+		phrasesMap,
+		pids: loadedPids,
+		cardsMap,
+		isPending,
+	} = useDeckLang(lang)
+	if (isPending === true) return null
+	const pidsToUse = pids ?? loadedPids!.language
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pidsToUse.map((pid) => (
 				<PhraseAccordionItem
 					key={pid}
-					phrase={language.phrasesMap[pid]}
-					card={deck?.cardsMap[pid] ?? null}
-					deckId={deck?.meta.id}
+					phrase={phrasesMap![pid]}
+					card={cardsMap![pid] ?? null}
+					deckId={deckMeta!.id!}
 				/>
 			))}
 		</Accordion>
@@ -52,6 +53,7 @@ function PhraseAccordionItem({
 	card: CardFull | null
 	deckId: uuid
 }) {
+	if (card && !card.id) throw new Error('Attempted to render a card with no ID')
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
 			<div className="flex flex-row items-center gap-2">

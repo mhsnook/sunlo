@@ -13,10 +13,15 @@ import type {
 	CardFull,
 	uuid,
 	DeckPids,
+	LanguageMeta,
+	PhrasesMap,
+	pids,
 } from '@/types/main'
 import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { inLastWeek } from './dayjs'
+import { useLanguage } from './use-language'
+import { useMemo } from 'react'
 
 const qs = {
 	card_full: `*, reviews:user_card_review(*)` as const,
@@ -116,4 +121,108 @@ export const useDeckCard = (pid: uuid, lang: string) => {
 		...deckQueryOptions(lang, userId),
 		select: (data: DeckLoaded) => data.cardsMap[pid],
 	}) as UseQueryResult<CardFull>
+}
+const pendingDeckLang = {
+	languageMeta: null,
+	phrasesMap: null,
+	deckMeta: null,
+	cardsMap: null,
+	pids: null,
+	isPending: true,
+}
+
+type ProcessedPids = {
+	language: pids
+	deck: pids
+	reviewed_last_7d: pids
+	reviewed: pids
+	due_today: pids
+	unreviewed: pids
+	not_in_deck: pids
+	recommended_by_friends: pids
+	recommended_easiest: pids
+	recommended_newest: pids
+	recommended_popular: pids
+}
+
+type ProcessedDeckLangData = {
+	languageMeta: LanguageMeta
+	phrasesMap: PhrasesMap
+	deckMeta: DeckMeta
+	cardsMap: CardsMap
+	pids: ProcessedPids
+	isPending: false
+}
+
+type PendingDeckLangData = typeof pendingDeckLang & { isPending: false }
+
+export function useDeckLang(
+	lang: string
+): ProcessedDeckLangData | PendingDeckLangData {
+	const {
+		data: language,
+		isPending: isPending1,
+		error: error1,
+	} = useLanguage(lang)
+	const { data: deck, isPending: isPending2, error: error2 } = useDeck(lang)
+	if (isPending1 || isPending2) return pendingDeckLang as PendingDeckLangData
+	if (error1) throw error1
+	if (error2) throw error2
+	if (!language?.meta)
+		throw new Error(
+			"We can't find that language. Are you sure you have the correct URL?"
+		)
+	if (!language || !deck)
+		throw Error(
+			'Some error has occurred trying to fetch language, deck or profile'
+		)
+
+	return useMemo(() => {
+		const not_in_deck = language.pids.filter(
+			(pid) => deck.pids.all.indexOf(pid) === -1
+		)
+		return {
+			languageMeta: language.meta,
+			phrasesMap: language.phrasesMap,
+			deckMeta: deck.meta,
+			cardsMap: deck.cardsMap,
+			pids: {
+				language: language.pids,
+				deck: deck.pids.all,
+				reviewed_last_7d: deck.pids.reviewed_last_7d,
+				reviewed: deck.pids.reviewed,
+				due_today: deck.pids.today,
+				unreviewed: deck.pids.unreviewed,
+				not_in_deck,
+				recommended_by_friends: [],
+				recommended_easiest: not_in_deck.toSorted(
+					(pid1, pid2) =>
+						// prioritize LOWER values
+						language.phrasesMap[pid1].avg_difficulty! -
+						language.phrasesMap[pid2].avg_difficulty!
+				),
+				recommended_popular: not_in_deck.toSorted(
+					(pid1, pid2) =>
+						// prioritize HIGHER values
+						language.phrasesMap[pid2].count_cards! -
+						language.phrasesMap[pid1].count_cards!
+				),
+				recommended_newest: not_in_deck.toSorted((pid1, pid2) =>
+					(
+						language.phrasesMap[pid2].created_at! ===
+						language.phrasesMap[pid1].created_at!
+					) ?
+						0
+					: (
+						// prioritize HIGHER values
+						language.phrasesMap[pid2].created_at! >
+						language.phrasesMap[pid1].created_at!
+					) ?
+						1
+					:	-1
+				),
+			},
+			isPending: false,
+		}
+	}, [language.pids, deck.pids, language.phrasesMap])
 }
