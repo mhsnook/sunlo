@@ -22,7 +22,7 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
-import { useDeck, useDeckMeta } from '@/lib/use-deck'
+import { useDeck, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
@@ -114,8 +114,9 @@ function FriendsSection({ lang }: LangOnlyComponentProps) {
 }
 
 function DeckOverview({ lang }: LangOnlyComponentProps) {
-	const { data } = useDeckMeta(lang)
-	if (!data) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+	const { data: deckMeta } = useDeckMeta(lang)
+	const { data: deckPids } = useDeckPids(lang)
+	if (!deckMeta) throw Error('This deck does not exist, sorry 🧄☹️🥦')
 	return (
 		<Card>
 			<CardHeader>
@@ -138,22 +139,25 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
 					<Badge variant="outline">
-						{data.lang_total_phrases} phrases total
+						{deckMeta.lang_total_phrases} phrases total
 					</Badge>
 					<Badge variant="outline">
-						{data.cards_active} cards in your deck
+						{deckMeta.cards_active} cards in your deck
 					</Badge>
 					<Badge variant="outline">
-						{data.count_reviews_7d} reviews last 7d
+						{deckMeta.count_reviews_7d} reviews last 7d
 					</Badge>
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="text-sm">
-				<p>Your last review was {ago(data.most_recent_review_at)}</p>
+				<p>Your last review was {ago(deckMeta.most_recent_review_at)}</p>
 				<Flagged name="routines_goals">
 					<p>You've kept up with your routine 4 out of 5 days this week</p>
 				</Flagged>
-				<p>34 active cards are scheduled for today, along with 15 new ones</p>
+				<p>
+					{deckPids?.today.length} active cards are scheduled for today, along
+					with 15 new ones
+				</p>
 			</CardContent>
 			<CardFooter>
 				<div className="flex flex-row flex-wrap gap-2">
