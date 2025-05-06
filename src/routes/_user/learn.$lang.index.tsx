@@ -27,8 +27,7 @@ import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { processPids } from '@/lib/process-pids'
-import { useMemo } from 'react'
+import { useProcessPids } from '@/lib/process-pids'
 import { useLanguage } from '@/lib/use-language'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
@@ -42,9 +41,10 @@ function WelcomePage() {
 	if (!language) throw new Error("Could not load this language's data")
 	if (!deck) throw new Error("Could not load this deck's data")
 
-	const processedPids = useMemo(
-		() => processPids(language.phrasesMap, language.pids, deck.pids),
-		[language.pids, deck.pids, language.phrasesMap]
+	const processedPids = useProcessPids(
+		language.phrasesMap,
+		language.pids,
+		deck.pids
 	)
 	const deckIsNew = !(deck.pids.all.length > 0)
 	return (

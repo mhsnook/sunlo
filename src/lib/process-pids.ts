@@ -1,8 +1,9 @@
 import { DeckPids, PhrasesMap, pids } from '@/types/main'
+import { useMemo } from 'react'
 
 export type ProcessedPids = ReturnType<typeof processPids>
 
-export function processPids(
+function processPids(
 	phrasesMap: PhrasesMap,
 	languagePids: pids,
 	deckPids: DeckPids
@@ -38,4 +39,15 @@ export function processPids(
 			),
 		},
 	}
+}
+
+export function useProcessPids(
+	phrasesMap: PhrasesMap,
+	languagePids: pids,
+	deckPids: DeckPids
+) {
+	return useMemo(
+		() => processPids(phrasesMap, languagePids, deckPids),
+		[languagePids, deckPids, phrasesMap]
+	)
 }

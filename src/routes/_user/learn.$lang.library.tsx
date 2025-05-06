@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { ProcessedPids, processPids } from '@/lib/process-pids'
+import { ProcessedPids, useProcessPids } from '@/lib/process-pids'
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
@@ -24,9 +24,10 @@ function DeckLibraryPage() {
 	if (!language) throw new Error("Could not load this language's data")
 	if (!deck) throw new Error("Could not load this deck's data")
 
-	const processedPids = useMemo(
-		() => processPids(language.phrasesMap, language.pids, deck.pids),
-		[language.pids, deck.pids, language.phrasesMap]
+	const processedPids = useProcessPids(
+		language.phrasesMap,
+		language.pids,
+		deck.pids
 	)
 	return (
 		<div className="space-y-4 px-2">
