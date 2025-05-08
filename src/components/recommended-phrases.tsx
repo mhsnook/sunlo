@@ -52,19 +52,19 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 			:	<CardContent className="space-y-4">
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
-						pids={pids.recommended.popular.slice(0, 4)}
+						pids={Array.from(pids.top8.popular).slice(0, 4)}
 						lang={lang}
 						Icon={TrendingUp}
 					/>
 					<PhraseSection
 						description="Newly added"
-						pids={pids.recommended.newest.slice(0, 4)}
+						pids={Array.from(pids.top8.newest).slice(0, 4)}
 						lang={lang}
 						Icon={Brain}
 					/>
 					<PhraseSection
 						description="Broaden your vocabulary"
-						pids={pids.recommended.easiest.slice(0, 4)}
+						pids={Array.from(pids.top8.easiest).slice(0, 4)}
 						lang={lang}
 						Icon={Carrot}
 					/>
