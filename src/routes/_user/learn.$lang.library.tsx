@@ -25,7 +25,12 @@ function DeckLibraryPage() {
 	)
 }
 
-type FilterEnum = 'language' | 'deck' | 'reviewed_last_7d' | 'not_in_deck'
+type FilterEnum =
+	| 'language'
+	| 'active'
+	| 'inactive'
+	| 'reviewed_last_7d'
+	| 'not_in_deck'
 // | 'recommended'
 // | 'recommended_by_friends' | 'recommended_easiest' | 'recommended_newest' | 'recommended_popular'
 
@@ -68,14 +73,21 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						setFilter={setFilter}
 						filter={filter}
 						text="All phrases"
-						count={pids.language?.length}
+						count={pids.language?.size}
 					/>
 					<BadgeFilter
-						name="deck"
+						name="active"
 						setFilter={setFilter}
 						filter={filter}
-						text="In your deck"
-						count={pids.deck?.length}
+						text="Active deck"
+						count={pids.active?.size}
+					/>
+					<BadgeFilter
+						name="inactive"
+						setFilter={setFilter}
+						filter={filter}
+						text="Inactive"
+						count={pids.inactive?.size}
 					/>
 					{/*<BadgeFilter
 						name="recommended"
@@ -89,20 +101,20 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						setFilter={setFilter}
 						filter={filter}
 						text="Not in deck"
-						count={pids.not_in_deck?.length}
+						count={pids.not_in_deck?.size}
 					/>
 					<BadgeFilter
 						name="reviewed_last_7d"
 						setFilter={setFilter}
 						filter={filter}
 						text="Reviewed past week"
-						count={pids.reviewed_last_7d?.length}
+						count={pids.reviewed_last_7d?.size}
 					/>
 				</div>
-				{pids.language!.length > 0 ?
+				{pids.language!.size > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						<LanguagePhrasesAccordionComponent
-							pids={filteredPids}
+							pids={Array.from(filteredPids)}
 							lang={lang}
 						/>
 					</div>

@@ -1,9 +1,8 @@
-import { pids } from '@/types/main'
+import { pids, uuid } from '@/types/main'
 import {
 	createFileRoute,
 	Link,
 	Navigate,
-	useLoaderData,
 	useNavigate,
 } from '@tanstack/react-router'
 import {
@@ -14,7 +13,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-
 import languages from '@/lib/languages'
 import {
 	BookOpen,

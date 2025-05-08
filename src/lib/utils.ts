@@ -72,3 +72,7 @@ export function todayString() {
 	now.setHours(now.getHours() - 4)
 	return `${now.getFullYear()}-${makeItHave2Digits(now.getMonth() + 1)}-${makeItHave2Digits(now.getDate())}`
 }
+
+export function min0(num: number) {
+	return Math.max(0, num)
+}
