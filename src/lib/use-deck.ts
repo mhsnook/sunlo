@@ -36,30 +36,30 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 		)
 	const { cards: cardsArray, ...meta }: DeckFetched = data
 	const pids: DeckPids = {
-		all: cardsArray?.map((c) => c.phrase_id!) ?? [],
-		reviewed:
-			cardsArray
-				?.filter((c) => c.last_reviewed_at !== null)
-				.map((c) => c.phrase_id!) ?? [],
-		reviewed_last_7d:
-			cardsArray
-				?.filter(
-					(c) => c.last_reviewed_at !== null && inLastWeek(c.last_reviewed_at)
-				)
-				?.map((c) => c.phrase_id!) ?? [],
-		unreviewed:
-			cardsArray
-				?.filter((c) => c.last_reviewed_at === null)
-				?.map((c) => c.phrase_id!) ?? [],
-		today:
-			(cardsArray ?? [])
-				.filter(
-					(c) =>
-						c.last_reviewed_at !== null &&
-						typeof c.retrievability_now === 'number' &&
-						c.retrievability_now <= 0.9
-				)
-				?.map((c) => c.phrase_id!) ?? [],
+		all: cardsArray.map((c) => c.phrase_id!),
+		active: cardsArray
+			.filter((c) => c.status === 'active')
+			.map((c) => c.phrase_id!),
+		reviewed: cardsArray
+			.filter((c) => c.last_reviewed_at !== null)
+			.map((c) => c.phrase_id!),
+		reviewed_last_7d: cardsArray
+			.filter(
+				(c) => c.last_reviewed_at !== null && inLastWeek(c.last_reviewed_at)
+			)
+			.map((c) => c.phrase_id!),
+		unreviewed_active: cardsArray
+			.filter((c) => c.last_reviewed_at === null && c.status === 'active')
+			.map((c) => c.phrase_id!),
+		today_active: cardsArray
+			.filter(
+				(c) =>
+					c.last_reviewed_at !== null &&
+					typeof c.retrievability_now === 'number' &&
+					c.retrievability_now <= 0.9 &&
+					c.status === 'active'
+			)
+			.map((c) => c.phrase_id!),
 	}
 	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
 	return {

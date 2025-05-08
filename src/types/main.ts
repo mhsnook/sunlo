@@ -102,10 +102,11 @@ export type CardsMap = {
 
 export type DeckPids = {
 	all: pids
+	active: pids
 	reviewed: pids
 	reviewed_last_7d: pids
-	unreviewed: pids
-	today: pids
+	unreviewed_active: pids
+	today_active: pids
 }
 export type DeckLoaded = {
 	meta: DeckMeta
