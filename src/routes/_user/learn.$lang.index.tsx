@@ -149,8 +149,8 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					<p>You've kept up with your routine 4 out of 5 days this week</p>
 				</Flagged>
 				<p>
-					{deckPids?.today.length} active cards are scheduled for today, along
-					with 15 new ones
+					{deckPids?.today_active.length} active cards are scheduled for today,
+					along with 15 new ones
 				</p>
 			</CardContent>
 			<CardFooter>

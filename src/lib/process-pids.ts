@@ -13,33 +13,43 @@ function processPids(
 	const not_in_deck = languagePids.filter(
 		(pid) => deckPids.all.indexOf(pid) === -1
 	)
+	const ranked = {
+		easiest: not_in_deck.toSorted(
+			(pid1, pid2) =>
+				// prioritize LOWER values
+				phrasesMap[pid1].avg_difficulty! - phrasesMap[pid2].avg_difficulty!
+		),
+		popular: not_in_deck.toSorted(
+			(pid1, pid2) =>
+				// prioritize HIGHER values
+				phrasesMap[pid2].count_cards! - phrasesMap[pid1].count_cards!
+		),
+		newest: not_in_deck.toSorted((pid1, pid2) =>
+			phrasesMap[pid2].created_at! === phrasesMap[pid1].created_at! ? 0
+			: (
+				// prioritize HIGHER values
+				phrasesMap[pid2].created_at! > phrasesMap[pid1].created_at!
+			) ?
+				1
+			:	-1
+		),
+	}
+
 	return {
-		language: languagePids,
-		deck: deckPids.all,
-		reviewed_last_7d: deckPids.reviewed_last_7d,
-		not_in_deck,
-		recommended: {
-			by_friends: [],
-			easiest: not_in_deck.toSorted(
-				(pid1, pid2) =>
-					// prioritize LOWER values
-					phrasesMap[pid1].avg_difficulty! - phrasesMap[pid2].avg_difficulty!
-			),
-			popular: not_in_deck.toSorted(
-				(pid1, pid2) =>
-					// prioritize HIGHER values
-					phrasesMap[pid2].count_cards! - phrasesMap[pid1].count_cards!
-			),
-			newest: not_in_deck.toSorted((pid1, pid2) =>
-				phrasesMap[pid2].created_at! === phrasesMap[pid1].created_at! ? 0
-				: (
-					// prioritize HIGHER values
-					phrasesMap[pid2].created_at! > phrasesMap[pid1].created_at!
-				) ?
-					1
-				:	-1
-			),
+		language: new Set(languagePids),
+		deck: new Set(deckPids.all),
+		active: new Set(deckPids.active),
+		unreviewed: {
+			ever_active: new Set(deckPids.unreviewed_active),
+			recently: new Set(deckPids.reviewed_last_7d),
 		},
+		notInDeck: new Set(not_in_deck),
+		top8: {
+			easiest: new Set(ranked.easiest.slice(0, 8)),
+			popular: new Set(ranked.popular.slice(0, 8)),
+			newest: new Set(ranked.newest.slice(0, 8)),
+		},
+		// ranked,
 	}
 }
 
