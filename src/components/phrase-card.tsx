@@ -11,17 +11,14 @@ export const PhraseCard = ({ phrase }: PhraseCardProps) => {
 	if (!phrase.translations || !(phrase?.translations.length > 0)) return null
 	return (
 		<Link
-			className={cn(
-				buttonVariants({ variant: 'link' }),
-				`s-link m-1 rounded border p-3`
-			)}
+			className="s-link hover:bg-primary/10 m-1 block justify-start rounded border p-3 no-underline decoration-2 transition-all hover:underline"
 			to="/learn/$lang/$id"
 			params={{ lang: phrase.lang!, id: phrase.id! }}
 		>
-			<span className="font-semibold">{phrase.text}</span>{' '}
-			<span className="text-muted-foreground text-sm">
+			<p className="font-semibold">{phrase.text}</p>{' '}
+			<p className="text-muted-foreground text-sm">
 				{phrase.translations[0].text}
-			</span>
+			</p>
 		</Link>
 	)
 }

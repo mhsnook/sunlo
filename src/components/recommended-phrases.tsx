@@ -23,11 +23,12 @@ const PhraseSection = ({
 	if (!phrasesMap) return null
 	return (
 		<div>
-			<p className="my-1 text-lg">
-				<Icon className="inline size-6" /> {description}
+			<p className="my-1 flex flex-row justify-between text-lg">
+				{description}
+				<Icon className="inline size-6" />
 			</p>
 			{pids?.length > 0 ?
-				<div className="flex flex-row flex-wrap gap-2">
+				<div className="grid grid-cols-1 gap-2 @xl:grid-cols-2">
 					{pids.map((pid) => {
 						return !(pid in phrasesMap) ? null : (
 								<PhraseCard key={pid} phrase={phrasesMap[pid]} />
