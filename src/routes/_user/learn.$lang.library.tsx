@@ -1,17 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
 import type { LangOnlyComponentProps } from '@/types/main'
-import { useDeck } from '@/lib/use-deck'
-import { useLanguage } from '@/lib/use-language'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import Callout from '@/components/ui/callout'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { ProcessedPids, useProcessPids } from '@/lib/process-pids'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
@@ -19,31 +17,27 @@ export const Route = createFileRoute('/_user/learn/$lang/library')({
 
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
-	const { data: deck } = useDeck(lang)
-	const { data: language } = useLanguage(lang)
-	if (!language) throw new Error("Could not load this language's data")
-	if (!deck) throw new Error("Could not load this deck's data")
 
-	const processedPids = useProcessPids(
-		language.phrasesMap,
-		language.pids,
-		deck.pids
-	)
 	return (
 		<div className="space-y-4 px-2">
-			<DeckContents lang={lang} pids={processedPids} />
+			<DeckContents lang={lang} />
 		</div>
 	)
 }
 
 type FilterEnum = 'language' | 'deck' | 'reviewed_last_7d' | 'not_in_deck'
 // | 'recommended'
+// | 'recommended_by_friends' | 'recommended_easiest' | 'recommended_newest' | 'recommended_popular'
 
-function DeckContents({
-	lang,
-	pids,
-}: LangOnlyComponentProps & { pids: ProcessedPids }) {
+function DeckContents({ lang }: LangOnlyComponentProps) {
+	const pids = useDeckPidsAndRecs(lang)
 	const [filter, setFilter] = useState<FilterEnum>('not_in_deck')
+	if (!pids) {
+		console.log(
+			'Trying to render DeckContents but not getting anything for the recommended pids object'
+		)
+		return null
+	}
 
 	const filteredPids = pids[filter!]
 	return (

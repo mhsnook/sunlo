@@ -1,7 +1,7 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { ProcessedPids } from '@/lib/process-pids'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { PhraseCard } from './phrase-card'
@@ -39,35 +39,37 @@ const PhraseSection = ({
 	)
 }
 
-export function RecommendedPhrasesCard({
-	lang,
-	pids,
-}: LangOnlyComponentProps & { pids: ProcessedPids }) {
+export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
+	const pids = useDeckPidsAndRecs(lang)
+
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Recommended For You</CardTitle>
 			</CardHeader>
-			<CardContent className="space-y-4">
-				<PhraseSection
-					description={`Popular among all ${languages[lang]} learners`}
-					pids={pids.recommended.popular.slice(0, 4)}
-					lang={lang}
-					Icon={TrendingUp}
-				/>
-				<PhraseSection
-					description="Newly added"
-					pids={pids.recommended.newest.slice(0, 4)}
-					lang={lang}
-					Icon={Brain}
-				/>
-				<PhraseSection
-					description="Broaden your vocabulary"
-					pids={pids.recommended.easiest.slice(0, 4)}
-					lang={lang}
-					Icon={Carrot}
-				/>
-			</CardContent>
+			{pids === null ?
+				<Loader2 />
+			:	<CardContent className="space-y-4">
+					<PhraseSection
+						description={`Popular among all ${languages[lang]} learners`}
+						pids={pids.recommended.popular.slice(0, 4)}
+						lang={lang}
+						Icon={TrendingUp}
+					/>
+					<PhraseSection
+						description="Newly added"
+						pids={pids.recommended.newest.slice(0, 4)}
+						lang={lang}
+						Icon={Brain}
+					/>
+					<PhraseSection
+						description="Broaden your vocabulary"
+						pids={pids.recommended.easiest.slice(0, 4)}
+						lang={lang}
+						Icon={Carrot}
+					/>
+				</CardContent>
+			}
 		</Card>
 	)
 }

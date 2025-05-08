@@ -1,5 +1,7 @@
 import { DeckPids, PhrasesMap, pids } from '@/types/main'
 import { useMemo } from 'react'
+import { useDeckPids } from './use-deck'
+import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
 
 export type ProcessedPids = ReturnType<typeof processPids>
 
@@ -41,13 +43,29 @@ function processPids(
 	}
 }
 
-export function useProcessPids(
-	phrasesMap: PhrasesMap,
-	languagePids: pids,
-	deckPids: DeckPids
-) {
-	return useMemo(
-		() => processPids(phrasesMap, languagePids, deckPids),
-		[languagePids, deckPids, phrasesMap]
-	)
+export function useDeckPidsAndRecs(lang: string) {
+	// these two select from the same cache key
+	const { data: phrasesMap, isPending: isPending1 } =
+		useLanguagePhrasesMap(lang)
+	const { data: languagePids, isPending: isPending2 } = useLanguagePids(lang)
+
+	// this query requires auth, which is why it's separate
+	const { data: deckPids, isPending: isPending3 } = useDeckPids(lang)
+
+	// derived data requiring all all three results
+	return useMemo(() => {
+		if (
+			(!phrasesMap && !isPending1) ||
+			(!languagePids && !isPending2) ||
+			(!deckPids && !isPending3)
+		) {
+			throw new Error(
+				'Attempting to call useDeckPidsAndRecs in a situation where the required data is neither present nor pending.'
+			)
+		}
+		// Now `null` always means pending because we always throw errors.
+		return !phrasesMap || !languagePids || !deckPids ?
+				null
+			:	processPids(phrasesMap, languagePids, deckPids)
+	}, [languagePids, deckPids, phrasesMap])
 }
