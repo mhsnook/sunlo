@@ -34,16 +34,19 @@ function processPids(
 			:	-1
 		),
 	}
-
-	return {
+	const base = {
 		language: new Set(languagePids),
 		deck: new Set(deckPids.all),
 		active: new Set(deckPids.active),
-		unreviewed: {
-			ever_active: new Set(deckPids.unreviewed_active),
-			recently: new Set(deckPids.reviewed_last_7d),
-		},
-		notInDeck: new Set(not_in_deck),
+		unreviewed_active: new Set(deckPids.unreviewed_active),
+		reviewed_last_7d: new Set(deckPids.reviewed_last_7d),
+		not_in_deck: new Set(not_in_deck),
+	}
+
+	return {
+		...base,
+		inactive: base.deck.difference(base.active),
+
 		top8: {
 			easiest: new Set(ranked.easiest.slice(0, 8)),
 			popular: new Set(ranked.popular.slice(0, 8)),
