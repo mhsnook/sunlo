@@ -31,10 +31,10 @@ export const friendSummaryToRelative = (
 	d: FriendSummaryFull | FriendSummary
 ): FriendSummaryRelative => {
 	let res: FriendSummaryRelative = {
-		most_recent_action_type: d.most_recent_action_type,
-		most_recent_created_at: d.most_recent_created_at,
-		status: d.status,
-		uidOther: uid === d.uid_less ? d.uid_more : d.uid_less,
+		most_recent_action_type: d.most_recent_action_type!,
+		most_recent_created_at: d.most_recent_created_at!,
+		status: d.status!,
+		uidOther: uid === d.uid_less ? d.uid_more! : d.uid_less!,
 		isMostRecentByMe: uid === d.most_recent_uid_by,
 		isMyUidMore: uid === d.uid_more,
 	}
@@ -45,6 +45,7 @@ export const friendSummaryToRelative = (
 }
 
 const getRelations = async (uid: uuid) => {
+	if (!uid) throw new Error('Getting relations, but no uid provided')
 	const { data } = await supabase
 		.from('friend_summary')
 		.select(
@@ -88,12 +89,12 @@ const oneRelationQuery = (uidMe: uuid, uidOther: uuid) =>
 
 export const useRelations = () => {
 	const { userId } = useAuth()
-	return useQuery(relationsQuery(userId))
+	return useQuery(relationsQuery(userId!))
 }
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
-	return useQuery(oneRelationQuery(userId, uidToUse))
+	return useQuery(oneRelationQuery(userId!, uidToUse))
 }
 
 export const useFriendRequestAction = (uid_for: uuid) => {
