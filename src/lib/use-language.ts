@@ -47,9 +47,6 @@ export const languageQueryOptions = (lang: string) =>
 		queryKey: ['language', lang],
 		queryFn: async ({ queryKey }) => fetchLanguage(queryKey[1]),
 		enabled: lang.length === 3,
-		gcTime: 1_200_000,
-		staleTime: 120_000,
-		refetchOnWindowFocus: false,
 	})
 
 export const useLanguage = (lang: string) =>

@@ -82,9 +82,6 @@ export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 		queryKey: ['user', lang, 'deck'],
 		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1]),
 		enabled: !!userId && !!lang,
-		gcTime: 1_200_000,
-		staleTime: 120_000,
-		refetchOnWindowFocus: false,
 	})
 export const useDeck = (lang: string) => {
 	const { userId } = useAuth()
