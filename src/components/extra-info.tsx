@@ -1,0 +1,42 @@
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from './ui/dialog'
+import { Button } from './ui/button'
+import { Ellipsis } from 'lucide-react'
+import { ReactNode } from '@tanstack/react-router'
+
+export default function ExtraInfo({
+	title,
+	description,
+	className,
+	children,
+}: {
+	title?: string
+	description?: string
+	children: ReactNode
+	className?: string
+}) {
+	return (
+		<Dialog>
+			<DialogTrigger className={className} asChild>
+				<Button variant="ghost" size="icon-sm">
+					<Ellipsis className="size-4" />
+					<span className="sr-only">Show more</span>
+				</Button>
+			</DialogTrigger>
+
+			<DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
+				<DialogHeader>
+					<DialogTitle>{title}</DialogTitle>
+					<DialogDescription>{description}</DialogDescription>
+				</DialogHeader>
+				{children}
+			</DialogContent>
+		</Dialog>
+	)
+}

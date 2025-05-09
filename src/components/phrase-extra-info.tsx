@@ -1,19 +1,10 @@
 import { CardFull, uuid } from '@/types/main'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from './ui/dialog'
 import { ago } from '@/lib/dayjs'
 import { useLanguagePhrase } from '@/lib/use-language'
-import { Button } from './ui/button'
-import { Ellipsis } from 'lucide-react'
 import { useDeckCard } from '@/lib/use-deck'
 import { dateDiff, intervals, retrievability, round } from '@/lib/utils'
 import Flagged from './flagged'
+import ExtraInfo from './extra-info'
 
 export default function PhraseExtraInfo({
 	pid,
@@ -27,40 +18,27 @@ export default function PhraseExtraInfo({
 	const phrase = useLanguagePhrase(pid, lang)
 	const card = useDeckCard(pid, lang)
 
-	return (
-		<Dialog>
-			<DialogTrigger className={className} asChild>
-				<Button variant="ghost" size="icon-sm">
-					<Ellipsis className="size-4" />
-					<span className="sr-only">Show more</span>
-				</Button>
-			</DialogTrigger>
-			{phrase.isPending ? null : (
-				<DialogContent className="max-h-[90vh] max-w-[90vw] overflow-y-auto">
-					<DialogHeader>
-						<DialogTitle>User card details</DialogTitle>
-						<DialogDescription>
-							&ldquo;{phrase.data.text}&rdquo;
-						</DialogDescription>
-					</DialogHeader>
-
-					<div className="block space-y-4">
-						<div className="flex flex-col">
-							<span className="font-semibold">Phrase ID</span>
-							<span>{phrase.data.id}</span>
-						</div>
-						<div className="flex flex-col">
-							<span className="font-semibold">Phrase created at</span>
-							<span>{ago(phrase.data.created_at)}</span>
-						</div>
+	return !phrase.data ? null : (
+			<ExtraInfo
+				title="User card details"
+				description={`“${phrase.data.text}”`}
+				className={className}
+			>
+				<div className="block space-y-4">
+					<div className="flex flex-col">
+						<span className="font-semibold">Phrase ID</span>
+						<span>{phrase.data.id}</span>
 					</div>
-					{!card.data ?
-						<p>Phrase has no card in your deck</p>
-					:	<CardSection card={card.data} />}
-				</DialogContent>
-			)}
-		</Dialog>
-	)
+					<div className="flex flex-col">
+						<span className="font-semibold">Phrase created at</span>
+						<span>{ago(phrase.data.created_at)}</span>
+					</div>
+				</div>
+				{!card.data ?
+					<p>Phrase has no card in your deck</p>
+				:	<CardSection card={card.data} />}
+			</ExtraInfo>
+		)
 }
 
 function CardSection({ card }: { card: CardFull }) {
@@ -71,7 +49,7 @@ function CardSection({ card }: { card: CardFull }) {
 	)
 	const rev = reviews?.[0] || null
 	const retr =
-		!rev ? null : retrievability(card.last_reviewed_at, card.stability)
+		!rev ? null : retrievability(card.last_reviewed_at, card.stability!)
 	return (
 		<div className="block space-y-4">
 			<div className="flex flex-col">

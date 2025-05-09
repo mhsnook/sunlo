@@ -1,4 +1,4 @@
-import { pids, uuid } from '@/types/main'
+import { pids } from '@/types/main'
 import {
 	createFileRoute,
 	Link,
@@ -47,6 +47,7 @@ import { useDeckCardsMap, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { useProfile } from '@/lib/use-profile'
+import ExtraInfo from '@/components/extra-info'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -254,12 +255,36 @@ function ReviewPage() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Get Ready to review your {languages[lang]} cards</CardTitle>
+				<CardTitle className="flex flex-row justify-between">
+					<div>Get Ready to review your {languages[lang]} cards</div>
+					<ExtraInfo>
+						<p>
+							There are {today_active.length} cards waiting for you today based
+							on previous reviews. Then we're going to collate{' '}
+							{countNewCardsDesired} new cards for you (or more, if you
+							choose!).
+						</p>
+						<p>
+							There are {friendRecommendations.length} total friend
+							recommendations, of which you've selected{' '}
+							{selectedFriendRecommendations.length}. So you still need to get{' '}
+							{countNeededFromDeck} more cards; we'll check in your deck,
+							finding {newCardsUnreviewedFromDeck.length} fresh cards.
+						</p>
+						<p>
+							That leaves {countNeededFromAlgo} to fetch from the algo, of which
+							you've selected {approvedAlgoRecs.length}. This means we will pick{' '}
+							{countNeededFromLibraryRandom} phrases just randomly from the
+							library. And in total, we'll make {newCardsToCreate.length} new
+							cards either due to friend/algo recs or randomly from the lib.
+						</p>
+					</ExtraInfo>
+				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<p className="text-muted-foreground max-w-2xl text-lg">
 					Your personalized review session is prepared and waiting for you.
-					Here's what to expect:
+					Here's what to expect...
 				</p>
 				<div className="flex flex-row flex-wrap gap-4 text-sm">
 					<Card className="grow basis-40">
