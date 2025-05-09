@@ -41,7 +41,7 @@ import Callout from '@/components/ui/callout'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
-import { min0, todayString } from '@/lib/utils'
+import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckCardsMap, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
@@ -59,15 +59,22 @@ function ReviewPage() {
 	const { queryClient } = Route.useRouteContext()
 	const dayString = todayString()
 	// const retrievabilityTarget = 0.9
-	const { data: deckPids } = useDeckPids(lang)
 	const { data: meta } = useDeckMeta(lang)
+	const { data: deckPids } = useDeckPids(lang)
+	const pids = useDeckPidsAndRecs(lang)
 
 	if (!meta?.id)
 		throw new Error(
 			"Attempted to build a review but we can't even find a deck ID"
 		)
-	const today_active = deckPids?.today_active ?? []
-	const setOfTodayActive = new Set(today_active)
+	if (!deckPids)
+		throw new Error(
+			"Attempting to build a review but we can't find deckPids data"
+		)
+	if (pids === null)
+		throw new Error('Pids should not be null here :/, even once')
+
+	const today_active = deckPids.today_active
 
 	const reviewData = useMemo(() => {
 		const dailyCacheKey = ['user', lang, 'review', dayString]
@@ -101,13 +108,9 @@ function ReviewPage() {
 	 * 6. Metadata wise: the total new cards is going to be something close to r + a + l, and
 	 * 	total cards will be s + r + a + d + l. To keep things simple we should always filter
 	 * 	out cards _selected_ in the previous step, as well as cards with reviews, and cards
-	 * 	with status 'learned' or 'skipped'
+	 * 	with status 'learned' or 'skipped'.
 	 *
 	 */
-
-	const pids = useDeckPidsAndRecs(lang)
-	if (pids === null)
-		throw new Error('Pids should not be null here :/, even once')
 
 	// 1. we have today's active cards plus we need x more
 	// const [countNeeded, setCountNeeded] = useState<number>(15)
@@ -115,95 +118,108 @@ function ReviewPage() {
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
-	const friendRecs: pids = [] // useCardsRecommendedByFriends(lang)
-	const setOfFriendRecs = new Set(friendRecs).difference(setOfTodayActive)
-	const [selectedFriendRecs, setSelectedFriendRecs] = useState<pids>(() =>
-		Array.from(setOfFriendRecs).slice(0, countNeeded)
+	const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
+	const friendRecsFiltered = useMemo(
+		() => arrayDifference(friendRecsFromDB, [pids.reviewed_or_inactive]),
+		[pids.reviewed_or_inactive, friendRecsFromDB]
 	)
-	// from here on, if this array ^ is length 15 +, the rest of the code should be
-	// idempotent / all sets should come up empty and cards desired = 0
-
-	// just keeping as a set, for later exclusions
-	const setOfSelectedFriendRecs = useMemo(
-		() => new Set(selectedFriendRecs),
-		[selectedFriendRecs]
+	const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
+		friendRecsFiltered.slice(0, countNeeded)
 	)
-
-	// currently, this will always be the same as countNeeded
-	const countNeeded2 = min0(countNeeded - selectedFriendRecs.length)
+	const countNeeded2 = min0(countNeeded - friendRecsSelected.length)
 
 	// 3. algo recs set by user
-	const [selectedAlgoRecs, setSelectedAlgoRecs] = useState<pids>([])
-	// pass this into the recommendation-approver component
-	const algoRecs = useMemo(
+	const algoRecsFiltered = useMemo(
 		() => ({
-			popular: pids.top8.popular.difference(pids.reviewed_or_inactive),
-			easiest: pids.top8.easiest
-				.difference(pids.reviewed_or_inactive)
-				.difference(pids.top8.easiest),
-			newest: pids.top8.newest
-				.difference(pids.reviewed_or_inactive)
-				.difference(pids.top8.popular)
-				.difference(pids.top8.easiest),
+			popular: arrayDifference(pids.top8.popular, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+			]),
+			easiest: arrayDifference(pids.top8.easiest, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+				pids.top8.easiest,
+			]),
+			newest: arrayDifference(pids.top8.newest, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+				pids.top8.popular,
+				pids.top8.easiest,
+			]),
 		}),
-		[pids.top8, pids.reviewed_or_inactive]
+		[pids.top8, pids.reviewed_or_inactive, friendRecsFiltered]
 	)
-
-	const setOfSelectedAlgoRecs = useMemo(
-		() => new Set(selectedAlgoRecs),
-		[selectedAlgoRecs]
-	)
-
-	const countNeeded3 = min0(countNeeded2 - selectedAlgoRecs.length)
+	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
+	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
 
 	// 4. deck cards
 	// pull new unreviewed cards, excluding the friend recs we already got,
 	// and limiting to the number we need from the deck
-	const selectedCardsUnreviewedActive = useMemo(() => {
-		return Array.from(
-			pids.unreviewed_active
-				.difference(setOfSelectedFriendRecs)
-				.difference(setOfSelectedAlgoRecs)
-		).slice(0, countNeeded3)
-	}, [countNeeded3, setOfSelectedFriendRecs, pids.unreviewed_active])
-
-	const setOfSelectedCardsUnreviewedActive = new Set(
-		selectedCardsUnreviewedActive
-	)
+	const cardsUnreviewedActiveSelected = useMemo(() => {
+		return arrayDifference(pids.unreviewed_active, [
+			friendRecsSelected,
+			algoRecsSelected,
+		]).slice(0, countNeeded3)
+	}, [
+		countNeeded3,
+		friendRecsSelected,
+		algoRecsSelected,
+		pids.unreviewed_active,
+	])
 
 	// the user does not get to preview or select these.
 	// in many cases, we'll be done here because people will have 15+ cards
 	// available in their deck. but if not...
 
-	const countNeeded4 = min0(countNeeded3 - selectedCardsUnreviewedActive.length)
+	const countNeeded4 = min0(countNeeded3 - cardsUnreviewedActiveSelected.length)
 
 	// 5. pick cards randomly from the library, if needed
 
 	// sorting by pid is randomish, but stable
-	const selectedLibraryPhrases = useMemo(
+	const libraryPhrasesSelected = useMemo(
 		() =>
-			Array.from(
-				pids.language_selectables
-					.difference(setOfSelectedFriendRecs)
-					.difference(setOfSelectedAlgoRecs)
-					.difference(setOfSelectedCardsUnreviewedActive)
-			)
+			arrayDifference(pids.language_selectables, [
+				friendRecsSelected,
+				algoRecsSelected,
+				cardsUnreviewedActiveSelected,
+			])
 				.sort((a, b) => (a > b ? -1 : 1))
 				.slice(0, countNeeded4),
 		[
 			pids.language_selectables,
-			setOfSelectedFriendRecs,
-			setOfSelectedAlgoRecs,
-			countNeeded,
+			friendRecsSelected,
+			algoRecsSelected,
+			cardsUnreviewedActiveSelected,
+			countNeeded4,
 		]
 	)
 
 	// 6. now let's just collate the cards we need to create on user_card table
-	const newCardsToCreate = [
-		/* selectedFriendRecs.difference(pids.deck) */
-		...selectedAlgoRecs,
-		...selectedLibraryPhrases,
-	]
+	const freshCards = useMemo(
+		() =>
+			arrayUnion([
+				friendRecsSelected, // 2
+				algoRecsSelected, // 3
+				cardsUnreviewedActiveSelected, // 4
+				libraryPhrasesSelected, // 5
+			]),
+		[
+			friendRecsSelected,
+			algoRecsSelected,
+			cardsUnreviewedActiveSelected,
+			libraryPhrasesSelected,
+		]
+	)
+
+	const newCardsToCreate = useMemo(
+		() => arrayDifference(freshCards, [pids.deck]),
+		[pids.deck, freshCards]
+	)
+
+	const allCardsForToday = useMemo(
+		() => arrayUnion([today_active, freshCards]),
+		[freshCards, today_active]
+	)
 
 	const navigate = useNavigate({ from: Route.fullPath })
 	const {
@@ -226,22 +242,20 @@ function ReviewPage() {
 				.throwOnError()
 
 			const newCardsCreated = data.map((c) => c.phrase_id)
-			const allCardsForToday = new Set([
-				...today_active, // 1
-				...selectedFriendRecs, // 2
-				...newCardsCreated, // 3 & 5
-				...selectedCardsUnreviewedActive, // 4
-			])
 
 			localStorage.setItem(
 				JSON.stringify(reviewData.dailyCacheKey),
-				JSON.stringify(Array.from(allCardsForToday))
+				JSON.stringify(allCardsForToday)
 			)
-			return { total: allCardsForToday.size, new: newCardsCreated.length }
+			return {
+				total: allCardsForToday.length,
+				cards_fresh: freshCards.length,
+				cards_created: newCardsCreated.length,
+			}
 		},
 		onSuccess: (sums) => {
 			toast.success(
-				`Ready to go! ${sums.total} to study today, ${sums.new} fresh new cards ready to go.`
+				`Ready to go! ${sums.total} to study today, ${sums.cards_fresh} fresh new cards ready to go.`
 			)
 			queryClient.invalidateQueries({ queryKey: ['user', lang, 'review'] })
 			void navigate({ to: './go' })
@@ -253,13 +267,6 @@ function ReviewPage() {
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 	}
 
-	const displayTotalCards =
-		(deckPids?.today_active.length ?? 0) +
-		newCardsToCreate.length +
-		selectedCardsUnreviewedActive.length
-
-	const displayTotalNew = newCardsToCreate.length
-
 	return (
 		<Card>
 			<CardHeader>
@@ -268,42 +275,42 @@ function ReviewPage() {
 					<ExtraInfo>
 						<p>
 							There are {today_active.length} today_active cards waiting for you
-							today based on previous reviews. Then we're going to collate{' '}
-							{countNeeded} cards_needed new cards for you (or more, if you
-							choose!).
+							today based on previous reviews. Then we're aimed to collate{' '}
+							{countNeeded} cards_needed for you, and ended up with{' '}
+							{freshCards.length} fresh cards, for a total of{' '}
+							{allCardsForToday.length} to review today.
 						</p>
 						<p>
-							There are {friendRecs.length} friendRecs, of which you've selected{' '}
-							{selectedFriendRecs.length} selectedFriendRecs. So you still need
-							to get {countNeeded2} countNeeded2.
+							There are {friendRecsFiltered.length} friendRecs, of which you've
+							selected {friendRecsSelected.length} selectedFriendRecs. So you
+							still need to get {countNeeded2} countNeeded2.
 						</p>
 						<p>
 							We offered some recs from the algo and you selected{' '}
-							{selectedAlgoRecs.length} selectedAlgoRecs, meaning you still need{' '}
+							{algoRecsSelected.length} selectedAlgoRecs, meaning you still need{' '}
 							{countNeeded3} countNeeded3.
 						</p>
 						<p>
-							We picked from cards in your deck ({pids.deck.size} cards) that
-							are unreviewed and active ({pids.unreviewed_active.size}) and not
-							already in the review process or inactive (
-							{pids.reviewed_or_inactive.size}), and grabbed{' '}
-							{selectedCardsUnreviewedActive.length} there, leaving{' '}
-							{countNeeded4} to pull just at random from the library, where we
-							found {selectedLibraryPhrases.length} out of the{' '}
-							{pids.language.size} total phrases and{' '}
-							{pids.language.size - pids.deck.size} not in deck.
+							We picked from cards in your deck ({pids.deck.length} cards) that
+							are unreviewed and active ({pids.unreviewed_active.length},
+							excluding {pids.reviewed_or_inactive.length} reviewed or
+							inactive), and grabbed {cardsUnreviewedActiveSelected.length}{' '}
+							there, leaving {countNeeded4} to pull just at random from the
+							library, where we found {libraryPhrasesSelected.length} out of the{' '}
+							{pids.language.length} total phrases in the library and{' '}
+							{pids.not_in_deck.length} which are not in your deck.
 						</p>
 						<p>
-							So the total number of cards is {displayTotalCards}, which is s +
-							r + a + d + l, or {today_active.length} +{' '}
-							{selectedFriendRecs.length} + {selectedAlgoRecs.length} +{' '}
-							{selectedCardsUnreviewedActive.length} +{' '}
-							{selectedLibraryPhrases.length} ={' '}
+							So the total number of cards is {allCardsForToday.length}, which
+							is <em>scheduled + recs + algo + deck + library</em>, or{' '}
+							{today_active.length} + {friendRecsSelected.length} +{' '}
+							{algoRecsSelected.length} + {cardsUnreviewedActiveSelected.length}{' '}
+							+ {libraryPhrasesSelected.length} ={' '}
 							{today_active.length +
-								selectedFriendRecs.length +
-								selectedAlgoRecs.length +
-								selectedCardsUnreviewedActive.length +
-								selectedLibraryPhrases.length}
+								friendRecsSelected.length +
+								algoRecsSelected.length +
+								cardsUnreviewedActiveSelected.length +
+								libraryPhrasesSelected.length}
 						</p>
 					</ExtraInfo>
 				</CardTitle>
@@ -323,7 +330,7 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 								<BookOpen />
-								{displayTotalCards}
+								{allCardsForToday.length}
 							</p>
 							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
@@ -336,15 +343,14 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 								<MessageSquarePlus />
-								<span>
-									{displayTotalNew + selectedCardsUnreviewedActive.length}
-								</span>
+								<span>{freshCards.length}</span>
 							</p>
 							<p className="text-muted-foreground">
-								cards you haven't seen before, {selectedAlgoRecs.length} from
-								algo, {selectedCardsUnreviewedActive.length} from your deck,{' '}
-								{selectedFriendRecs.length} from friends,{' '}
-								{selectedLibraryPhrases.length} chosen from the library.
+								cards you haven't seen before. Includes{' '}
+								{algoRecsSelected.length} from algo,{' '}
+								{cardsUnreviewedActiveSelected.length} from your deck,{' '}
+								{friendRecsSelected.length} from friends,{' '}
+								{libraryPhrasesSelected.length} chosen from the library.
 							</p>
 						</CardContent>
 					</Card>
@@ -375,20 +381,20 @@ function ReviewPage() {
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Friend recs:</span>
 										<Badge variant="outline">
-											{selectedFriendRecs.length} from friends
+											{friendRecsSelected.length} from friends
 										</Badge>
 									</div>
 								</Flagged>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{selectedAlgoRecs.length}</Badge>
+										<Badge variant="outline">{algoRecsSelected.length}</Badge>
 									</div>
 								</Flagged>
 								<div className="flex items-center justify-between">
 									<span className="text-muted-foreground">From your deck:</span>
 									<Badge variant="outline">
-										{selectedCardsUnreviewedActive.length}
+										{cardsUnreviewedActiveSelected.length}
 									</Badge>
 								</div>
 								<Flagged name="smart_recommendations">
@@ -397,7 +403,7 @@ function ReviewPage() {
 											Public library:
 										</span>
 										<Badge variant="outline">
-											{selectedLibraryPhrases.length}
+											{libraryPhrasesSelected.length}
 										</Badge>
 									</div>
 								</Flagged>
@@ -405,12 +411,12 @@ function ReviewPage() {
 						</Card>
 					</Flagged>
 				</div>
-				{!(countNeeded > displayTotalCards) ? null : (
+				{!(countNeeded > allCardsForToday.length) ? null : (
 					<NotEnoughCards
 						lang={lang}
 						countNeeded={countNeeded}
-						newCardsCount={displayTotalNew}
-						totalCards={displayTotalCards}
+						newCardsCount={allCardsForToday.length}
+						totalCards={allCardsForToday.length}
 					/>
 				)}
 				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
@@ -421,7 +427,7 @@ function ReviewPage() {
 							mutate()
 						}}
 						size="lg"
-						disabled={isPending || displayTotalCards === 0}
+						disabled={isPending || allCardsForToday.length === 0}
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Button>
@@ -434,10 +440,10 @@ function ReviewPage() {
 							</DrawerTrigger>
 							<ReviewCardsToAddToDeck
 								lang={lang}
-								selectedAlgoRecs={selectedAlgoRecs}
-								setSelectedAlgoRecs={setSelectedAlgoRecs}
-								algoRecs={algoRecs}
-								countOfCardsDesired={countNeeded2}
+								selectedAlgoRecs={algoRecsSelected}
+								setSelectedAlgoRecs={setAlgoRecsSelected}
+								algoRecsFiltered={algoRecsFiltered}
+								// countOfCardsDesired={countNeeded2}
 							/>
 						</Drawer>
 					</Flagged>
@@ -449,16 +455,20 @@ function ReviewPage() {
 
 function ReviewCardsToAddToDeck({
 	lang,
-	selectedAlgoRecs,
-	setSelectedAlgoRecs,
-	algoRecs,
-	countOfCardsDesired,
+	algoRecsSelected,
+	setAlgoRecsSelected,
+	algoRecsFiltered,
+	// countOfCardsDesired,
 }: {
 	lang: string
-	selectedAlgoRecs: pids
-	setSelectedAlgoRecs: (recs: pids) => void
-	algoRecs: { popular: Set<string>; easiest: Set<string>; newest: Set<string> }
-	countOfCardsDesired: number
+	algoRecsSelected: pids
+	setAlgoRecsSelected: (recs: pids) => void
+	algoRecsFiltered: {
+		popular: Array<string>
+		easiest: Array<string>
+		newest: Array<string>
+	}
+	// countOfCardsDesired: number
 }) {
 	const { data: cardsMap } = useDeckCardsMap(lang)
 	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
@@ -478,16 +488,16 @@ function ReviewCardsToAddToDeck({
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
 		const updatedRecs =
-			selectedAlgoRecs.indexOf(pid1) === -1 ?
-				[...selectedAlgoRecs, pid1]
-			:	selectedAlgoRecs.filter((pid2) => pid1 !== pid2)
-		setSelectedAlgoRecs(updatedRecs)
+			algoRecsSelected.indexOf(pid1) === -1 ?
+				[...algoRecsSelected, pid1]
+			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
+		setAlgoRecsSelected(updatedRecs)
 	}
-	const allAlgoRecsInOneSet = algoRecs.popular
-		.union(algoRecs.easiest)
-		.union(algoRecs.newest)
-
-	const countAllAlgoRecs = allAlgoRecsInOneSet.size
+	const allAlgoRecs = arrayUnion([
+		algoRecsFiltered.popular,
+		algoRecsFiltered.easiest,
+		algoRecsFiltered.newest,
+	])
 
 	return (
 		<DrawerContent aria-describedby="drawer-description">
@@ -495,8 +505,8 @@ function ReviewCardsToAddToDeck({
 				<DrawerHeader className="bg-background sticky top-0">
 					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
 						<Sparkles className="h-5 w-5 text-purple-500" />
-						Recommended for you ({selectedAlgoRecs.length} of {countAllAlgoRecs}{' '}
-						selected)
+						Recommended for you ({algoRecsSelected.length} of{' '}
+						{allAlgoRecs.length} selected)
 					</DrawerTitle>
 				</DrawerHeader>
 				<div className="grid gap-3 p-4 @lg:grid-cols-2">
@@ -504,8 +514,8 @@ function ReviewCardsToAddToDeck({
 						Review and select which recommended cards you want to include in
 						your session
 					</DrawerDescription>
-					{Array.from(allAlgoRecsInOneSet).map((pid) => {
-						const selected = selectedAlgoRecs.indexOf(pid) > -1
+					{allAlgoRecs.map((pid) => {
+						const selected = algoRecsSelected.indexOf(pid) > -1
 						// @@TODO move this logic obv
 						console.log(
 							`being very loud about filtering phrases and translation languages in the wrong place`
