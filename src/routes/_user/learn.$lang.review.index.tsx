@@ -46,6 +46,7 @@ import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckCardsMap, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useLanguagePhrasesMap } from '@/lib/use-language'
+import { useProfile } from '@/lib/use-profile'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -406,6 +407,15 @@ function ReviewCardsToAddToDeck({
 		throw new Error(
 			"Attempting to present this new-cards-algo-review interface but can't load cardsMap or phrasesMap"
 		)
+	const { data: profile } = useProfile()
+	if (!profile)
+		throw new Error(
+			'Profile should be here on first render, but it is not showing up'
+		)
+	const translation_langs = [
+		profile.language_primary,
+		...profile.languages_spoken,
+	]
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
 		const updatedRecs =
@@ -421,20 +431,20 @@ function ReviewCardsToAddToDeck({
 	const countAllAlgoRecs = allAlgoRecsInOneSet.size
 
 	return (
-		<DrawerContent>
-			<div className="mx-auto w-full max-w-prose">
-				<DrawerHeader>
-					<DrawerTitle className="flex items-center gap-2 text-xl">
-						<Users className="h-5 w-5 text-purple-500" />
+		<DrawerContent aria-describedby="drawer-description">
+			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto">
+				<DrawerHeader className="bg-background sticky top-0">
+					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
+						<Sparkles className="h-5 w-5 text-purple-500" />
 						Recommended for you ({approvedAlgoRecs.length} of {countAllAlgoRecs}{' '}
 						selected)
 					</DrawerTitle>
-					<DrawerDescription>
+				</DrawerHeader>
+				<div className="grid gap-3 p-4 @lg:grid-cols-2">
+					<DrawerDescription className="col-span-2">
 						Review and select which recommended cards you want to include in
 						your session
 					</DrawerDescription>
-				</DrawerHeader>
-				<div className="grid gap-3 p-4 @lg:grid-cols-2">
 					{Array.from(allAlgoRecsInOneSet).map((pid) => {
 						const selected = approvedAlgoRecs.indexOf(pid) > -1
 						return (
