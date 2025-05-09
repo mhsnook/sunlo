@@ -2,6 +2,7 @@ import { DeckPids, PhrasesMap, pids } from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
+import { arrayDifference } from './utils'
 
 export type ProcessedPids = ReturnType<typeof processPids>
 
@@ -10,31 +11,21 @@ function processPids(
 	languagePids: pids,
 	deckPids: DeckPids
 ) {
-	const base = {
-		language: new Set(languagePids),
-		deck: new Set(deckPids.all),
-		active: new Set(deckPids.active),
-		// reviewed: new Set(deckPids.reviewed),
-		reviewed_or_inactive: new Set(deckPids.reviewed_or_inactive),
-		unreviewed_active: new Set(deckPids.unreviewed_active),
-		reviewed_last_7d: new Set(deckPids.reviewed_last_7d),
-		today_active: new Set(deckPids.today_active),
-	}
-	const language_selectables = base.language.difference(
-		base.reviewed_or_inactive
-	)
-	const arr_language_selectables = Array.from(language_selectables)
-	const easiest = arr_language_selectables.toSorted(
+	const language_selectables = arrayDifference(languagePids, [
+		deckPids.reviewed_or_inactive,
+	])
+
+	const easiest = language_selectables.toSorted(
 		(pid1, pid2) =>
 			// prioritize LOWER values
 			phrasesMap[pid1].avg_difficulty! - phrasesMap[pid2].avg_difficulty!
 	)
-	const popular = arr_language_selectables.toSorted(
+	const popular = language_selectables.toSorted(
 		(pid1, pid2) =>
 			// prioritize HIGHER values
 			phrasesMap[pid2].count_cards! - phrasesMap[pid1].count_cards!
 	)
-	const newest = arr_language_selectables.toSorted((pid1, pid2) =>
+	const newest = language_selectables.toSorted((pid1, pid2) =>
 		phrasesMap[pid2].created_at! === phrasesMap[pid1].created_at! ? 0
 		: (
 			// prioritize HIGHER values
@@ -45,14 +36,20 @@ function processPids(
 	)
 
 	return {
-		...base,
-		inactive: base.deck.difference(base.active),
+		language: languagePids,
+		deck: deckPids.all,
+		not_in_deck: arrayDifference(languagePids, [deckPids.all]),
+		active: deckPids.active,
+		reviewed_or_inactive: deckPids.reviewed_or_inactive,
+		inactive: arrayDifference(deckPids.all, [deckPids.active]),
 		language_selectables,
-
+		unreviewed_active: deckPids.unreviewed_active,
+		reviewed_last_7d: deckPids.reviewed_last_7d,
+		today_active: deckPids.today_active,
 		top8: {
-			easiest: new Set(easiest.slice(0, 8)),
-			popular: new Set(popular.slice(0, 8)),
-			newest: new Set(newest.slice(0, 8)),
+			easiest: easiest.slice(0, 8),
+			popular: popular.slice(0, 8),
+			newest: newest.slice(0, 8),
 		},
 	}
 }

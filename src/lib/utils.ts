@@ -1,3 +1,4 @@
+import { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -75,4 +76,16 @@ export function todayString() {
 
 export function min0(num: number) {
 	return Math.max(0, num)
+}
+
+export function arrayUnion(arrs: Array<Array<uuid>>): Array<uuid> {
+	return [...new Set([...arrs.flat()])]
+}
+
+export function arrayDifference(
+	arr1: Array<uuid>,
+	arr2: Array<Array<uuid>>
+): Array<uuid> {
+	const set2 = new Set(arr2.flat())
+	return arr1.filter((item) => !set2.has(item))
 }

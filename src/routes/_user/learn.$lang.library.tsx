@@ -73,21 +73,21 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						setFilter={setFilter}
 						filter={filter}
 						text="All phrases"
-						count={pids.language?.size}
+						count={pids.language?.length}
 					/>
 					<BadgeFilter
 						name="active"
 						setFilter={setFilter}
 						filter={filter}
 						text="Active deck"
-						count={pids.active?.size}
+						count={pids.active?.length}
 					/>
 					<BadgeFilter
 						name="inactive"
 						setFilter={setFilter}
 						filter={filter}
 						text="Inactive"
-						count={pids.inactive?.size}
+						count={pids.inactive?.length}
 					/>
 					{/*<BadgeFilter
 						name="recommended"
@@ -101,20 +101,20 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						setFilter={setFilter}
 						filter={filter}
 						text="Not in deck"
-						count={pids.not_in_deck?.size}
+						count={pids.not_in_deck?.length}
 					/>
 					<BadgeFilter
 						name="reviewed_last_7d"
 						setFilter={setFilter}
 						filter={filter}
 						text="Reviewed past week"
-						count={pids.reviewed_last_7d?.size}
+						count={pids.reviewed_last_7d?.length}
 					/>
 				</div>
-				{pids.language!.size > 0 ?
+				{pids.language!.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						<LanguagePhrasesAccordionComponent
-							pids={Array.from(filteredPids)}
+							pids={filteredPids}
 							lang={lang}
 						/>
 					</div>
