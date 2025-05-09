@@ -48,6 +48,7 @@ import supabase from '@/lib/supabase-client'
 import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { useProfile } from '@/lib/use-profile'
 import ExtraInfo from '@/components/extra-info'
+import { Database } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -66,6 +67,7 @@ function ReviewPage() {
 			"Attempted to build a review but we can't even find a deck ID"
 		)
 	const today_active = deckPids?.today_active ?? []
+	const setOfTodayActive = new Set(today_active)
 
 	const reviewData = useMemo(() => {
 		const dailyCacheKey = ['user', lang, 'review', dayString]
@@ -76,130 +78,131 @@ function ReviewPage() {
 	 * to give the user their 15 new cards, while giving them some control over what
 	 * gets into their deck, while automating much of the selection of new cards.
 	 *
-	 *	1. We desire some `x` new cards (15, for now)
-	 * 2. First priority is to pick up to x number of friend recommendations, `r`
-	 * 	(maybe the user can deselect some). If a recommendation is for a phrase that
-	 * 	is in the deck, it must be un-reviewed to count here.
+	 *	1. We have a goal of some `x` new cards daily (15, for now), in addition to today's
+	 * 	active/scheduled cards, `s`
+	 * 2. First priority is to pick up to x number of friend recommendations, `r`.
+	 * 	Filter out cards with reviews. The user can select/approve them, and what
+	 * 	remains is `selectedFriendRecs` with length r.
 	 * 	(This is currently hardcoded as [] because the feature is unbuilt)
-	 * 3. Then if x - r is greater than zero we need `d` new cards desired from the deck;
-	 * 	unreviewed cards; excluding all the friend recs; chosen at random.
-	 * 4. Then if x - r - d is greater than zero, we need `l` new phrases from the algo;
-	 * 	these are phrases not in the deck, not in friend recs, from the
-	 * 	useDeckPidsAndRecs recommendations object.
-	 * 5. Then if x - r - d - l is still greater than zero, we will pick `r` phrases at
-	 * 	random, from recs.not_in_deck, excluding friend recs. Maybe we will not bother
-	 * 	to exclude algo recs because then we have to care whether the user saw it or
-	 * 	not, and we don't currently have a concept of an "ignored" recommendation (as
-	 * 	the recs come from a stateless SQL view).
+	 * 	x - r = x2
+	 * 3. Then if x2 is a positive number, we still need that many new cards to study.
+	 * 	So we start with algo recs because they're fun; we show them 4 cards from each
+	 * 	of the top8 lists, so long as they have no deck reviews, and the user can
+	 * 	approve them, building `selectedAlgoRecs`, with length a.
+	 * 	x2 - r = x3
+	 * 	Note: algo recs will not filter based on any other status like deck status. This
+	 * 	means the algo section can sort of function to "bump" cards that are unreviewed,
+	 * 	just chilling in the deck, but which are popular or easy.
+	 * 4. If x3 is still a positive number, we will take the first `d` cards from the deck.
+	 * 	x3 - a = x4
+	 * 5. If x4 is still a positive number, we will choose the remainder from the library, `l`.
+	 * 	x4 - d = x5
+	 *		If x5 > l, we will simply not have enough cards.
+	 * 6. Metadata wise: the total new cards is going to be something close to r + a + l, and
+	 * 	total cards will be s + r + a + d + l. To keep things simple we should always filter
+	 * 	out cards _selected_ in the previous step, as well as cards with reviews, and cards
+	 * 	with status 'learned' or 'skipped'
+	 *
 	 */
 
 	const pids = useDeckPidsAndRecs(lang)
 	if (pids === null)
 		throw new Error('Pids should not be null here :/, even once')
 
-	// 1.
-	// const [countNewCardsDesired, setCountNewCardsDesired] = useState<number>(15)
-	const countNewCardsDesired = 15
+	// 1. we have today's active cards plus we need x more
+	// const [countNeeded, setCountNeeded] = useState<number>(15)
+	const countNeeded = 15
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
-	const friendRecommendations: pids = [] // useCardsRecommendedByFriends(lang)
-	const [selectedFriendRecommendations, setSelectedFriendRecommendations] =
-		useState<pids>(() => friendRecommendations.slice(0, countNewCardsDesired))
+	const friendRecs: pids = [] // useCardsRecommendedByFriends(lang)
+	const setOfFriendRecs = new Set(friendRecs).difference(setOfTodayActive)
+	const [selectedFriendRecs, setSelectedFriendRecs] = useState<pids>(() =>
+		Array.from(setOfFriendRecs).slice(0, countNeeded)
+	)
 	// from here on, if this array ^ is length 15 +, the rest of the code should be
 	// idempotent / all sets should come up empty and cards desired = 0
 
 	// just keeping as a set, for later exclusions
-	const setOfAllFriendRecommendations = useMemo(
-		() => new Set(friendRecommendations),
-		[friendRecommendations]
+	const setOfSelectedFriendRecs = useMemo(
+		() => new Set(selectedFriendRecs),
+		[selectedFriendRecs]
 	)
 
-	// 3.
-	// currently, this will always be the same as countNewCardsDesired
-	const countNeededFromDeck = min0(
-		countNewCardsDesired - selectedFriendRecommendations.length
+	// currently, this will always be the same as countNeeded
+	const countNeeded2 = min0(countNeeded - selectedFriendRecs.length)
+
+	// 3. algo recs set by user
+	const [selectedAlgoRecs, setSelectedAlgoRecs] = useState<pids>([])
+	// pass this into the recommendation-approver component
+	const algoRecs = useMemo(
+		() => ({
+			popular: pids.top8.popular.difference(pids.reviewed_or_inactive),
+			easiest: pids.top8.easiest
+				.difference(pids.reviewed_or_inactive)
+				.difference(pids.top8.easiest),
+			newest: pids.top8.newest
+				.difference(pids.reviewed_or_inactive)
+				.difference(pids.top8.popular)
+				.difference(pids.top8.easiest),
+		}),
+		[pids.top8, pids.reviewed_or_inactive]
 	)
 
+	const setOfSelectedAlgoRecs = useMemo(
+		() => new Set(selectedAlgoRecs),
+		[selectedAlgoRecs]
+	)
+
+	const countNeeded3 = min0(countNeeded2 - selectedAlgoRecs.length)
+
+	// 4. deck cards
 	// pull new unreviewed cards, excluding the friend recs we already got,
 	// and limiting to the number we need from the deck
-	const newCardsUnreviewedFromDeck = useMemo(() => {
+	const selectedCardsUnreviewedActive = useMemo(() => {
 		return Array.from(
-			pids.unreviewed_active.difference(setOfAllFriendRecommendations)
-		).slice(0, countNeededFromDeck)
-	}, [
-		countNeededFromDeck,
-		selectedFriendRecommendations,
-		pids.unreviewed_active,
-	])
+			pids.unreviewed_active
+				.difference(setOfSelectedFriendRecs)
+				.difference(setOfSelectedAlgoRecs)
+		).slice(0, countNeeded3)
+	}, [countNeeded3, setOfSelectedFriendRecs, pids.unreviewed_active])
+
+	const setOfSelectedCardsUnreviewedActive = new Set(
+		selectedCardsUnreviewedActive
+	)
+
 	// the user does not get to preview or select these.
 	// in many cases, we'll be done here because people will have 15+ cards
 	// available in their deck. but if not...
 
-	// 4.
-	const countNeededFromAlgo = min0(
-		countNewCardsDesired -
-			selectedFriendRecommendations.length -
-			newCardsUnreviewedFromDeck.length
-	)
-
-	const cardsUnavailableForAlgo = useMemo(
-		() => pids.deck /*.union(setOfAllFriendRecommendations)*/,
-		[pids.deck /*, setOfAllFriendRecommendations*/]
-	)
-	// we will pass these into the recommendation-approver component
-	// where the user will approve phrases
-	const algoRecs = useMemo(
-		() => ({
-			popular: pids.top8.popular.difference(cardsUnavailableForAlgo),
-			easiest: pids.top8.easiest
-				.difference(cardsUnavailableForAlgo)
-				.difference(pids.top8.easiest),
-			newest: pids.top8.newest
-				.difference(cardsUnavailableForAlgo)
-				.difference(pids.top8.popular)
-				.difference(pids.top8.easiest),
-		}),
-		[pids.top8, cardsUnavailableForAlgo]
-	)
-	// set by the user
-	const [approvedAlgoRecs, setApprovedAlgoRecs] = useState<pids>([])
-	const setOfApprovedAlgoRecs = useMemo(
-		() => new Set(approvedAlgoRecs),
-		[approvedAlgoRecs]
-	)
+	const countNeeded4 = min0(countNeeded3 - selectedCardsUnreviewedActive.length)
 
 	// 5. pick cards randomly from the library, if needed
-	const countNeededFromLibraryRandom = min0(
-		countNewCardsDesired -
-			selectedFriendRecommendations.length -
-			newCardsUnreviewedFromDeck.length -
-			approvedAlgoRecs.length
-	)
 
 	// sorting by pid is randomish, but stable
-	const randomSelection = useMemo(
+	const selectedLibraryPhrases = useMemo(
 		() =>
 			Array.from(
-				pids.not_in_deck
-					.difference(setOfApprovedAlgoRecs)
-					.difference(setOfAllFriendRecommendations)
+				pids.language_selectables
+					.difference(setOfSelectedFriendRecs)
+					.difference(setOfSelectedAlgoRecs)
+					.difference(setOfSelectedCardsUnreviewedActive)
 			)
 				.sort((a, b) => (a > b ? -1 : 1))
-				.slice(0, countNeededFromLibraryRandom),
+				.slice(0, countNeeded4),
 		[
-			pids.not_in_deck,
-			setOfApprovedAlgoRecs,
-			setOfAllFriendRecommendations,
-			countNeededFromLibraryRandom,
+			pids.language_selectables,
+			setOfSelectedFriendRecs,
+			setOfSelectedAlgoRecs,
+			countNeeded,
 		]
 	)
 
-	// modify this when friend recs come; & only friend recs not already in deck
+	// 6. now let's just collate the cards we need to create on user_card table
 	const newCardsToCreate = [
-		/* friendRecsNotInDeck */
-		...approvedAlgoRecs,
-		...randomSelection,
+		/* selectedFriendRecs.difference(pids.deck) */
+		...selectedAlgoRecs,
+		...selectedLibraryPhrases,
 	]
 
 	const navigate = useNavigate({ from: Route.fullPath })
@@ -212,26 +215,29 @@ function ReviewPage() {
 		mutationFn: async () => {
 			const { data } = await supabase
 				.from('user_card')
-				.insert(
+				.upsert(
 					newCardsToCreate.map((pid) => ({
 						phrase_id: pid,
 						user_deck_id: meta.id!,
+						status: 'active' as Database['public']['Enums']['card_status'],
 					}))
 				)
 				.select()
 				.throwOnError()
 
-			const allCardsForToday = [
-				/* friendRecsInDeck */
-				...data.map((c) => c.phrase_id), // all new phrases
-				...today_active, // previously scheduled phrases
-			]
+			const newCardsCreated = data.map((c) => c.phrase_id)
+			const allCardsForToday = new Set([
+				...today_active, // 1
+				...selectedFriendRecs, // 2
+				...newCardsCreated, // 3 & 5
+				...selectedCardsUnreviewedActive, // 4
+			])
 
 			localStorage.setItem(
 				JSON.stringify(reviewData.dailyCacheKey),
-				JSON.stringify(allCardsForToday)
+				JSON.stringify(Array.from(allCardsForToday))
 			)
-			return { total: allCardsForToday.length, new: newCardsToCreate.length }
+			return { total: allCardsForToday.size, new: newCardsCreated.length }
 		},
 		onSuccess: (sums) => {
 			toast.success(
@@ -248,7 +254,9 @@ function ReviewPage() {
 	}
 
 	const displayTotalCards =
-		(deckPids?.today_active.length ?? 0) + newCardsToCreate.length
+		(deckPids?.today_active.length ?? 0) +
+		newCardsToCreate.length +
+		selectedCardsUnreviewedActive.length
 
 	const displayTotalNew = newCardsToCreate.length
 
@@ -259,24 +267,43 @@ function ReviewPage() {
 					<div>Get Ready to review your {languages[lang]} cards</div>
 					<ExtraInfo>
 						<p>
-							There are {today_active.length} cards waiting for you today based
-							on previous reviews. Then we're going to collate{' '}
-							{countNewCardsDesired} new cards for you (or more, if you
+							There are {today_active.length} today_active cards waiting for you
+							today based on previous reviews. Then we're going to collate{' '}
+							{countNeeded} cards_needed new cards for you (or more, if you
 							choose!).
 						</p>
 						<p>
-							There are {friendRecommendations.length} total friend
-							recommendations, of which you've selected{' '}
-							{selectedFriendRecommendations.length}. So you still need to get{' '}
-							{countNeededFromDeck} more cards; we'll check in your deck,
-							finding {newCardsUnreviewedFromDeck.length} fresh cards.
+							There are {friendRecs.length} friendRecs, of which you've selected{' '}
+							{selectedFriendRecs.length} selectedFriendRecs. So you still need
+							to get {countNeeded2} countNeeded2.
 						</p>
 						<p>
-							That leaves {countNeededFromAlgo} to fetch from the algo, of which
-							you've selected {approvedAlgoRecs.length}. This means we will pick{' '}
-							{countNeededFromLibraryRandom} phrases just randomly from the
-							library. And in total, we'll make {newCardsToCreate.length} new
-							cards either due to friend/algo recs or randomly from the lib.
+							We offered some recs from the algo and you selected{' '}
+							{selectedAlgoRecs.length} selectedAlgoRecs, meaning you still need{' '}
+							{countNeeded3} countNeeded3.
+						</p>
+						<p>
+							We picked from cards in your deck ({pids.deck.size} cards) that
+							are unreviewed and active ({pids.unreviewed_active.size}) and not
+							already in the review process or inactive (
+							{pids.reviewed_or_inactive.size}), and grabbed{' '}
+							{selectedCardsUnreviewedActive.length} there, leaving{' '}
+							{countNeeded4} to pull just at random from the library, where we
+							found {selectedLibraryPhrases.length} out of the{' '}
+							{pids.language.size} total phrases and{' '}
+							{pids.language.size - pids.deck.size} not in deck.
+						</p>
+						<p>
+							So the total number of cards is {displayTotalCards}, which is s +
+							r + a + d + l, or {today_active.length} +{' '}
+							{selectedFriendRecs.length} + {selectedAlgoRecs.length} +{' '}
+							{selectedCardsUnreviewedActive.length} +{' '}
+							{selectedLibraryPhrases.length} ={' '}
+							{today_active.length +
+								selectedFriendRecs.length +
+								selectedAlgoRecs.length +
+								selectedCardsUnreviewedActive.length +
+								selectedLibraryPhrases.length}
 						</p>
 					</ExtraInfo>
 				</CardTitle>
@@ -309,10 +336,15 @@ function ReviewPage() {
 						<CardContent>
 							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 								<MessageSquarePlus />
-								<span>{displayTotalNew}</span>
+								<span>
+									{displayTotalNew + selectedCardsUnreviewedActive.length}
+								</span>
 							</p>
 							<p className="text-muted-foreground">
-								cards you haven't seen before
+								cards you haven't seen before, {selectedAlgoRecs.length} from
+								algo, {selectedCardsUnreviewedActive.length} from your deck,{' '}
+								{selectedFriendRecs.length} from friends,{' '}
+								{selectedLibraryPhrases.length} chosen from the library.
 							</p>
 						</CardContent>
 					</Card>
@@ -343,20 +375,20 @@ function ReviewPage() {
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Friend recs:</span>
 										<Badge variant="outline">
-											{selectedFriendRecommendations.length} from friends
+											{selectedFriendRecs.length} from friends
 										</Badge>
 									</div>
 								</Flagged>
 								<Flagged name="smart_recommendations">
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{approvedAlgoRecs.length}</Badge>
+										<Badge variant="outline">{selectedAlgoRecs.length}</Badge>
 									</div>
 								</Flagged>
 								<div className="flex items-center justify-between">
 									<span className="text-muted-foreground">From your deck:</span>
 									<Badge variant="outline">
-										{newCardsUnreviewedFromDeck.length}
+										{selectedCardsUnreviewedActive.length}
 									</Badge>
 								</div>
 								<Flagged name="smart_recommendations">
@@ -364,17 +396,19 @@ function ReviewPage() {
 										<span className="text-muted-foreground">
 											Public library:
 										</span>
-										<Badge variant="outline">{randomSelection.length}</Badge>
+										<Badge variant="outline">
+											{selectedLibraryPhrases.length}
+										</Badge>
 									</div>
 								</Flagged>
 							</CardContent>
 						</Card>
 					</Flagged>
 				</div>
-				{!(countNewCardsDesired > displayTotalCards) ? null : (
+				{!(countNeeded > displayTotalCards) ? null : (
 					<NotEnoughCards
 						lang={lang}
-						countNewCardsDesired={countNewCardsDesired}
+						countNeeded={countNeeded}
 						newCardsCount={displayTotalNew}
 						totalCards={displayTotalCards}
 					/>
@@ -400,10 +434,10 @@ function ReviewPage() {
 							</DrawerTrigger>
 							<ReviewCardsToAddToDeck
 								lang={lang}
-								approvedAlgoRecs={approvedAlgoRecs}
-								setApprovedAlgoRecs={setApprovedAlgoRecs}
+								selectedAlgoRecs={selectedAlgoRecs}
+								setSelectedAlgoRecs={setSelectedAlgoRecs}
 								algoRecs={algoRecs}
-								coundOfCardsDesired={countNeededFromAlgo}
+								countOfCardsDesired={countNeeded2}
 							/>
 						</Drawer>
 					</Flagged>
@@ -415,16 +449,16 @@ function ReviewPage() {
 
 function ReviewCardsToAddToDeck({
 	lang,
-	approvedAlgoRecs,
-	setApprovedAlgoRecs,
+	selectedAlgoRecs,
+	setSelectedAlgoRecs,
 	algoRecs,
-	coundOfCardsDesired,
+	countOfCardsDesired,
 }: {
 	lang: string
-	approvedAlgoRecs: pids
-	setApprovedAlgoRecs: (recs: pids) => void
+	selectedAlgoRecs: pids
+	setSelectedAlgoRecs: (recs: pids) => void
 	algoRecs: { popular: Set<string>; easiest: Set<string>; newest: Set<string> }
-	coundOfCardsDesired: number
+	countOfCardsDesired: number
 }) {
 	const { data: cardsMap } = useDeckCardsMap(lang)
 	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
@@ -444,10 +478,10 @@ function ReviewCardsToAddToDeck({
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
 		const updatedRecs =
-			approvedAlgoRecs.indexOf(pid1) === -1 ?
-				[...approvedAlgoRecs, pid1]
-			:	approvedAlgoRecs.filter((pid2) => pid1 !== pid2)
-		setApprovedAlgoRecs(updatedRecs)
+			selectedAlgoRecs.indexOf(pid1) === -1 ?
+				[...selectedAlgoRecs, pid1]
+			:	selectedAlgoRecs.filter((pid2) => pid1 !== pid2)
+		setSelectedAlgoRecs(updatedRecs)
 	}
 	const allAlgoRecsInOneSet = algoRecs.popular
 		.union(algoRecs.easiest)
@@ -461,7 +495,7 @@ function ReviewCardsToAddToDeck({
 				<DrawerHeader className="bg-background sticky top-0">
 					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
 						<Sparkles className="h-5 w-5 text-purple-500" />
-						Recommended for you ({approvedAlgoRecs.length} of {countAllAlgoRecs}{' '}
+						Recommended for you ({selectedAlgoRecs.length} of {countAllAlgoRecs}{' '}
 						selected)
 					</DrawerTitle>
 				</DrawerHeader>
@@ -471,7 +505,7 @@ function ReviewCardsToAddToDeck({
 						your session
 					</DrawerDescription>
 					{Array.from(allAlgoRecsInOneSet).map((pid) => {
-						const selected = approvedAlgoRecs.indexOf(pid) > -1
+						const selected = selectedAlgoRecs.indexOf(pid) > -1
 						// @@TODO move this logic obv
 						console.log(
 							`being very loud about filtering phrases and translation languages in the wrong place`
@@ -531,12 +565,12 @@ function ReviewCardsToAddToDeck({
 
 function NotEnoughCards({
 	lang,
-	countNewCardsDesired,
+	countNeeded,
 	newCardsCount,
 	totalCards,
 }: {
 	lang: string
-	countNewCardsDesired: number
+	countNeeded: number
 	newCardsCount: number
 	totalCards: number
 }) {
@@ -549,9 +583,7 @@ function NotEnoughCards({
 					" to review. You'll have to add at least a few before you can proceed"
 				:	<>
 						in your deck to meet your goal of{' '}
-						<strong className="italic">
-							{countNewCardsDesired} new cards a day
-						</strong>
+						<strong className="italic">{countNeeded} new cards a day</strong>
 					</>
 				}
 				.

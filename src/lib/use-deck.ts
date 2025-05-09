@@ -43,6 +43,14 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 		reviewed: cardsArray
 			.filter((c) => c.last_reviewed_at !== null)
 			.map((c) => c.phrase_id!),
+		reviewed_or_inactive: cardsArray
+			.filter(
+				(c) =>
+					c.last_reviewed_at !== null ||
+					c.status === 'skipped' ||
+					c.status === 'learned'
+			)
+			.map((c) => c.phrase_id!),
 		reviewed_last_7d: cardsArray
 			.filter(
 				(c) => c.last_reviewed_at !== null && inLastWeek(c.last_reviewed_at)
