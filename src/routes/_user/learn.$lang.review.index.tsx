@@ -472,6 +472,25 @@ function ReviewCardsToAddToDeck({
 					</DrawerDescription>
 					{Array.from(allAlgoRecsInOneSet).map((pid) => {
 						const selected = approvedAlgoRecs.indexOf(pid) > -1
+						// @@TODO move this logic obv
+						console.log(
+							`being very loud about filtering phrases and translation languages in the wrong place`
+						)
+						let phrase = phrasesMap[pid]
+						// filter to only spoken languages, sort primary first
+						phrase.translations = phrase.translations
+							.filter((t) => translation_langs.indexOf(t.lang) > -1)
+							.toSorted((a, b) => {
+								return a.lang === b.lang ?
+										0
+									:	translation_langs.indexOf(a.lang) -
+											translation_langs.indexOf(b.lang)
+							})
+						if (phrase.translations.length === 0) {
+							console.log('skipping a phrase with no usable translations')
+							return null
+						}
+
 						return (
 							<Card
 								onClick={() => toggleCardSelection(pid)}
@@ -479,11 +498,9 @@ function ReviewCardsToAddToDeck({
 								className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
 							>
 								<CardHeader className="p-3 pb-0">
-									<CardTitle className="text-base">
-										{phrasesMap[pid].text}
-									</CardTitle>
+									<CardTitle className="text-base">{phrase.text}</CardTitle>
 									<CardDescription>
-										{phrasesMap[pid].translations[0].text}
+										{phrase.translations[0].text}
 									</CardDescription>
 								</CardHeader>
 								<CardFooter className="flex justify-end p-3 pt-0">
