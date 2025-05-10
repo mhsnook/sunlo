@@ -149,6 +149,7 @@ function ReviewPage() {
 		}),
 		[pids.top8, pids.reviewed_or_inactive, friendRecsFiltered]
 	)
+
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
 
@@ -211,7 +212,7 @@ function ReviewPage() {
 		]
 	)
 
-	const newCardsToCreate = useMemo(
+	const cardsToCreate = useMemo(
 		() => arrayDifference(freshCards, [pids.deck]),
 		[pids.deck, freshCards]
 	)
@@ -220,6 +221,8 @@ function ReviewPage() {
 		() => arrayUnion([today_active, freshCards]),
 		[freshCards, today_active]
 	)
+
+	const countSurplusOrDeficit = freshCards.length - countNeeded
 
 	const navigate = useNavigate({ from: Route.fullPath })
 	const {
@@ -232,7 +235,7 @@ function ReviewPage() {
 			const { data } = await supabase
 				.from('user_card')
 				.upsert(
-					newCardsToCreate.map((pid) => ({
+					cardsToCreate.map((pid) => ({
 						phrase_id: pid,
 						user_deck_id: meta.id!,
 						status: 'active' as Database['public']['Enums']['card_status'],
@@ -272,40 +275,58 @@ function ReviewPage() {
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
 					<div>Get Ready to review your {languages[lang]} cards</div>
-					<ExtraInfo>
+					<ExtraInfo title="Explaining today's review cards">
 						<p>
-							There are {today_active.length} today_active cards waiting for you
-							today based on previous reviews. Then we're aimed to collate{' '}
-							{countNeeded} cards_needed for you, and ended up with{' '}
-							{freshCards.length} fresh cards, for a total of{' '}
-							{allCardsForToday.length} to review today.
+							<strong>{today_active.length} cards</strong> scheduled based on
+							previous reviews. <br />
+							<strong>{countNeeded} new cards</strong> is your goal for new
+							cards each day.
+							<br />
+							<strong>{freshCards.length} new cards</strong> have been selected
+							for you/by you. <br />
+							<strong>{Math.abs(countSurplusOrDeficit)} cards</strong>{' '}
+							{countSurplusOrDeficit > 0 ? 'above' : 'less than'} your daily
+							goal.
+							<br />
+							(of which {cardsToCreate.length} were not previously in your
+							deck).
+							<br />
+							<strong>{allCardsForToday.length} total cards</strong> are lined
+							up for your review today.
 						</p>
+						<Flagged name="friend_recommendations">
+							<p>
+								There are {friendRecsFiltered.length} friend recommendations, of
+								which you've selected {friendRecsSelected.length}. So you still
+								need to get {countNeeded2} countNeeded2.
+							</p>
+						</Flagged>
 						<p>
-							There are {friendRecsFiltered.length} friendRecs, of which you've
-							selected {friendRecsSelected.length} selectedFriendRecs. So you
-							still need to get {countNeeded2} countNeeded2.
-						</p>
-						<p>
-							We offered some recs from the algo and you selected{' '}
+							We offered some recs from the algorithm, and you selected{' '}
 							{algoRecsSelected.length} selectedAlgoRecs, meaning you still need{' '}
-							{countNeeded3} countNeeded3.
+							{countNeeded3}.
 						</p>
 						<p>
-							We picked from cards in your deck ({pids.deck.length} cards) that
-							are unreviewed and active ({pids.unreviewed_active.length},
-							excluding {pids.reviewed_or_inactive.length} reviewed or
-							inactive), and grabbed {cardsUnreviewedActiveSelected.length}{' '}
-							there, leaving {countNeeded4} to pull just at random from the
-							library, where we found {libraryPhrasesSelected.length} out of the{' '}
-							{pids.language.length} total phrases in the library and{' '}
-							{pids.not_in_deck.length} which are not in your deck.
+							Next we went looking in your deck for cards you've selected, but
+							haven't reviewed before: there are {pids.unreviewed_active.length}{' '}
+							of them (out of {pids.deck.length} total in your deck), and we
+							managed to get {cardsUnreviewedActiveSelected.length} of them
+							(unsure why there would ever be a discrepancy here), leaving{' '}
+							{countNeeded4} to pull from the library.
+						</p>
+						<p>
+							We have {pids.not_in_deck} cards in the library that aren't
+							already in your deck or weren't chosen from the recommendations,
+							the {pids.language.length} total phrases in the library and found{' '}
+							{pids.not_in_deck.length} which are not in your deck, and we
+							grabbed {libraryPhrasesSelected.length} of them.
 						</p>
 						<p>
 							So the total number of cards is {allCardsForToday.length}, which
-							is <em>scheduled + recs + algo + deck + library</em>, or{' '}
-							{today_active.length} + {friendRecsSelected.length} +{' '}
-							{algoRecsSelected.length} + {cardsUnreviewedActiveSelected.length}{' '}
-							+ {libraryPhrasesSelected.length} ={' '}
+							is {today_active.length} scheduled + {friendRecsSelected.length}{' '}
+							friend recs + {algoRecsSelected.length} algo recs +{' '}
+							{cardsUnreviewedActiveSelected.length} deck +{' '}
+							{libraryPhrasesSelected.length} library ={' '}
 							{today_active.length +
 								friendRecsSelected.length +
 								algoRecsSelected.length +
@@ -335,25 +356,6 @@ function ReviewPage() {
 							<p className="text-muted-foreground">cards to work on today</p>
 						</CardContent>
 					</Card>
-
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">New Phrases</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
-								<MessageSquarePlus />
-								<span>{freshCards.length}</span>
-							</p>
-							<p className="text-muted-foreground">
-								cards you haven't seen before. Includes{' '}
-								{algoRecsSelected.length} from algo,{' '}
-								{cardsUnreviewedActiveSelected.length} from your deck,{' '}
-								{friendRecsSelected.length} from friends,{' '}
-								{libraryPhrasesSelected.length} chosen from the library.
-							</p>
-						</CardContent>
-					</Card>
 					<Card className="grow basis-40">
 						<CardHeader className="pb-2">
 							<CardTitle className="text-xl">Scheduled</CardTitle>
@@ -368,54 +370,59 @@ function ReviewPage() {
 							</p>
 						</CardContent>
 					</Card>
-					<Flagged name="smart_recommendations" className="hidden">
-						<Card className="grow basis-40">
-							<CardHeader className="pb-2">
-								<CardTitle className="flex items-center gap-2 text-xl">
-									<MessageSquare className="text-primary" />
-									Sources
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-2">
-								<Flagged name="friend_recommendations">
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">Friend recs:</span>
-										<Badge variant="outline">
-											{friendRecsSelected.length} from friends
-										</Badge>
-									</div>
-								</Flagged>
-								<Flagged name="smart_recommendations">
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{algoRecsSelected.length}</Badge>
-									</div>
-								</Flagged>
-								<div className="flex items-center justify-between">
-									<span className="text-muted-foreground">From your deck:</span>
-									<Badge variant="outline">
-										{cardsUnreviewedActiveSelected.length}
-									</Badge>
-								</div>
-								<Flagged name="smart_recommendations">
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">
-											Public library:
-										</span>
-										<Badge variant="outline">
-											{libraryPhrasesSelected.length}
-										</Badge>
-									</div>
-								</Flagged>
-							</CardContent>
-						</Card>
-					</Flagged>
+					<Card className="grow basis-40">
+						<CardHeader className="pb-2">
+							<CardTitle className="text-xl">New Phrases</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
+								<MessageSquarePlus />
+								<span>{freshCards.length}</span>
+							</p>
+							<p className="text-muted-foreground">
+								cards you haven't reviewed before
+							</p>
+						</CardContent>
+					</Card>
+
+					<Card className="grow basis-40">
+						<CardHeader className="pb-2">
+							<CardTitle className="flex items-center gap-2 text-xl">
+								<MessageSquare className="text-primary" />
+								Sources
+							</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-2">
+							<Flagged
+								name="friend_recommendations"
+								className="flex items-center justify-between"
+							>
+								<span className="text-muted-foreground">Friend recs:</span>
+								<Badge variant="outline">{friendRecsSelected.length}</Badge>
+							</Flagged>
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground">Sunlo's recs:</span>
+								<Badge variant="outline">{algoRecsSelected.length}</Badge>
+							</div>
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground">From your deck:</span>
+								<Badge variant="outline">
+									{cardsUnreviewedActiveSelected.length}
+								</Badge>
+							</div>
+
+							<div className="flex items-center justify-between">
+								<span className="text-muted-foreground">Public library:</span>
+								<Badge variant="outline">{libraryPhrasesSelected.length}</Badge>
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 				{!(countNeeded > allCardsForToday.length) ? null : (
 					<NotEnoughCards
 						lang={lang}
 						countNeeded={countNeeded}
-						newCardsCount={allCardsForToday.length}
+						newCardsCount={freshCards.length}
 						totalCards={allCardsForToday.length}
 					/>
 				)}
@@ -431,22 +438,20 @@ function ReviewPage() {
 					>
 						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
 					</Button>
-					<Flagged name="smart_recommendations">
-						<Drawer>
-							<DrawerTrigger asChild>
-								<Button className="font-normal" variant="outline" size="lg">
-									Customize my session
-								</Button>
-							</DrawerTrigger>
-							<ReviewCardsToAddToDeck
-								lang={lang}
-								selectedAlgoRecs={algoRecsSelected}
-								setSelectedAlgoRecs={setAlgoRecsSelected}
-								algoRecsFiltered={algoRecsFiltered}
-								// countOfCardsDesired={countNeeded2}
-							/>
-						</Drawer>
-					</Flagged>
+					<Drawer>
+						<DrawerTrigger asChild>
+							<Button className="font-normal" variant="outline" size="lg">
+								Customize my session
+							</Button>
+						</DrawerTrigger>
+						<ReviewCardsToAddToDeck
+							lang={lang}
+							algoRecsSelected={algoRecsSelected}
+							setAlgoRecsSelected={setAlgoRecsSelected}
+							algoRecsFiltered={algoRecsFiltered}
+							// countOfCardsDesired={countNeeded2}
+						/>
+					</Drawer>
 				</div>
 			</CardContent>
 		</Card>
