@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
-import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { PhraseCard } from './phrase-card'
 
 type PhraseSectionProps = {
@@ -19,8 +18,8 @@ const PhraseSection = ({
 	lang,
 	Icon,
 }: PhraseSectionProps) => {
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	if (!phrasesMap) return null
+	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
+	if (!phrasesMapFiltered) return null
 	return (
 		<div>
 			<p className="my-1 text-lg">
@@ -29,8 +28,8 @@ const PhraseSection = ({
 			{pids?.length > 0 ?
 				<div className="flex flex-row flex-wrap gap-2">
 					{pids.map((pid) => {
-						return !(pid in phrasesMap) ? null : (
-								<PhraseCard key={pid} phrase={phrasesMap[pid]} />
+						return !(pid in phrasesMapFiltered) ? null : (
+								<PhraseCard key={pid} phrase={phrasesMapFiltered[pid]} />
 							)
 					})}
 				</div>

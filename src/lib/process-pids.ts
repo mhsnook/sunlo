@@ -62,6 +62,10 @@ function processPids(
 		:	-1
 	)
 
+	const popular8 = popular.slice(0, 8)
+	const easiest8 = arrayDifference(easiest, [popular8]).slice(0, 8)
+	const newest8 = arrayDifference(newest, [popular8, easiest8]).slice(0, 8)
+
 	return {
 		language: languagePids,
 		language_filtered: languagePidsFiltered,
@@ -78,9 +82,9 @@ function processPids(
 		reviewed_last_7d: deckPids.reviewed_last_7d,
 		today_active: deckPids.today_active,
 		top8: {
-			easiest: easiest.slice(0, 8),
-			popular: popular.slice(0, 8),
-			newest: newest.slice(0, 8),
+			easiest: easiest8,
+			popular: popular8,
+			newest: newest8,
 		},
 		phrasesMapFiltered,
 	}
