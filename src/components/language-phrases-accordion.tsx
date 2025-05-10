@@ -62,6 +62,7 @@ function PhraseAccordionItem({
 					lang={phrase.lang!}
 					deckId={deckId}
 					pid={phrase.id!}
+					// @ts-expect-error
 					card={card}
 				/>
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>

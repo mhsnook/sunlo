@@ -4,6 +4,7 @@ import {
 	Link,
 	Navigate,
 	useNavigate,
+	useRouter,
 } from '@tanstack/react-router'
 import {
 	Card,
@@ -16,13 +17,17 @@ import {
 import languages from '@/lib/languages'
 import {
 	BookOpen,
+	Brain,
 	CalendarClock,
+	Carrot,
 	CheckCircle,
 	ChevronRight,
+	LucideIcon,
 	MessageCircleWarningIcon,
 	MessageSquare,
 	MessageSquarePlus,
 	Sparkles,
+	TrendingUp,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,7 +48,7 @@ import toast from 'react-hot-toast'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { useDeckCardsMap, useDeckMeta, useDeckPids } from '@/lib/use-deck'
+import { useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/lib/use-profile'
 import ExtraInfo from '@/components/extra-info'
@@ -137,13 +142,10 @@ function ReviewPage() {
 			easiest: arrayDifference(pids.top8.easiest, [
 				pids.reviewed_or_inactive,
 				friendRecsFiltered,
-				pids.top8.easiest,
 			]),
 			newest: arrayDifference(pids.top8.newest, [
 				pids.reviewed_or_inactive,
 				friendRecsFiltered,
-				pids.top8.popular,
-				pids.top8.easiest,
 			]),
 		}),
 		[pids.top8, pids.reviewed_or_inactive, friendRecsFiltered]
@@ -222,7 +224,7 @@ function ReviewPage() {
 	)
 
 	const countSurplusOrDeficit = freshCards.length - countNeeded
-
+	const router = useRouter()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const {
 		mutate,
@@ -255,11 +257,12 @@ function ReviewPage() {
 				cards_created: newCardsCreated.length,
 			}
 		},
-		onSuccess: (sums) => {
+		onSuccess: async (sums) => {
 			toast.success(
 				`Ready to go! ${sums.total} to study today, ${sums.cards_fresh} fresh new cards ready to go.`
 			)
-			queryClient.invalidateQueries({ queryKey: ['user', lang, 'review'] })
+			queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			await router.invalidate({ sync: true })
 			void navigate({ to: './go' })
 		},
 	})
@@ -314,7 +317,7 @@ function ReviewPage() {
 							{countNeeded4} to pull from the library.
 						</p>
 						<p>
-							We have {pids.not_in_deck} cards in the library that aren't
+							We have {pids.not_in_deck.length} cards in the library that aren't
 							already in your deck or weren't chosen from the recommendations,
 							the {pids.language.length} total phrases in the library and found{' '}
 							{pids.not_in_deck.length} which are not in your deck, and we
@@ -457,6 +460,8 @@ function ReviewPage() {
 	)
 }
 
+type FiltersEnum = 'popular' | 'easiest' | 'newest'
+
 function ReviewCardsToAddToDeck({
 	lang,
 	algoRecsSelected,
@@ -467,11 +472,7 @@ function ReviewCardsToAddToDeck({
 	lang: string
 	algoRecsSelected: pids
 	setAlgoRecsSelected: (recs: pids) => void
-	algoRecsFiltered: {
-		popular: Array<string>
-		easiest: Array<string>
-		newest: Array<string>
-	}
+	algoRecsFiltered: Record<FiltersEnum, pids>
 	// countOfCardsDesired: number
 }) {
 	const res = useDeckPidsAndRecs(lang)
@@ -498,6 +499,27 @@ function ReviewCardsToAddToDeck({
 		algoRecsFiltered.easiest,
 		algoRecsFiltered.newest,
 	])
+	const sections: {
+		key: FiltersEnum
+		description: string
+		Icon: LucideIcon
+	}[] = [
+		{
+			key: 'popular',
+			description: `Popular among all ${languages[lang]} learners`,
+			Icon: TrendingUp,
+		},
+		{
+			key: 'easiest',
+			description: `Broaden your vocabulary`,
+			Icon: Carrot,
+		},
+		{
+			key: 'newest',
+			description: `Newly added`,
+			Icon: Brain,
+		},
+	]
 
 	return (
 		<DrawerContent aria-describedby="drawer-description">
@@ -505,50 +527,63 @@ function ReviewCardsToAddToDeck({
 				<DrawerHeader className="bg-background sticky top-0">
 					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
 						<Sparkles className="h-5 w-5 text-purple-500" />
-						Recommended for you ({algoRecsSelected.length} of{' '}
-						{allAlgoRecs.length} selected)
+						Recommended for you ({algoRecsSelected.length} selected)
 					</DrawerTitle>
 				</DrawerHeader>
-				<div className="grid gap-3 p-4 @lg:grid-cols-2">
-					<DrawerDescription className="col-span-2">
-						Review and select which recommended cards you want to include in
-						your session
-					</DrawerDescription>
-					{allAlgoRecs.map((pid) => {
-						const selected = algoRecsSelected.indexOf(pid) > -1
-						const phrase = phrasesMapFiltered[pid]
-						console.log(`mapping the algo recs`, phrase)
 
+				<DrawerDescription className="">
+					Review and select which recommended cards you want to include in your
+					session
+				</DrawerDescription>
+				<div className="my-6 space-y-6">
+					{sections.map((s) => {
 						return (
-							<Card
-								onClick={() => toggleCardSelection(pid)}
-								key={pid}
-								className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
-							>
-								<CardHeader className="p-3 pb-0">
-									<CardTitle className="text-base">{phrase.text}</CardTitle>
-									<CardDescription>
-										{phrase.translations[0].text}
-									</CardDescription>
-								</CardHeader>
-								<CardFooter className="flex justify-end p-3 pt-0">
-									<Badge
-										variant={selected ? 'default' : 'outline'}
-										className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
-									>
-										<span
-											className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
-										>
-											<CheckCircle className="mr-1 h-3 w-3" /> Selected
-										</span>
-										<span
-											className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
-										>
-											Tap to select
-										</span>
-									</Badge>
-								</CardFooter>
-							</Card>
+							<div>
+								<p className="my-4 text-lg">
+									<s.Icon className="inline size-6" /> {s.description}
+								</p>
+								<div className="grid gap-3 @lg:grid-cols-2">
+									{algoRecsFiltered[s.key].map((pid) => {
+										const selected = algoRecsSelected.indexOf(pid) > -1
+										const phrase = phrasesMapFiltered[pid]
+										console.log(`mapping the algo recs`, phrase)
+
+										return (
+											<Card
+												onClick={() => toggleCardSelection(pid)}
+												key={pid}
+												className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
+											>
+												<CardHeader className="p-3 pb-0">
+													<CardTitle className="text-base">
+														{phrase.text}
+													</CardTitle>
+													<CardDescription>
+														{phrase.translations[0].text}
+													</CardDescription>
+												</CardHeader>
+												<CardFooter className="flex justify-end p-3 pt-0">
+													<Badge
+														variant={selected ? 'default' : 'outline'}
+														className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
+													>
+														<span
+															className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
+														>
+															<CheckCircle className="mr-1 h-3 w-3" /> Selected
+														</span>
+														<span
+															className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
+														>
+															Tap to select
+														</span>
+													</Badge>
+												</CardFooter>
+											</Card>
+										)
+									})}
+								</div>
+							</div>
 						)
 					})}
 				</div>

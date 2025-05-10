@@ -126,7 +126,12 @@ export function FlashCardReviewSession({
 				{pids.map((pid, i) => {
 					const phrase = phrasesMap[pid]
 					const card = cardsMap[pid]
-
+					if (!card || card === null) {
+						console.log(`Error on this card render:`, pid, phrase, card)
+						throw new Error(
+							'Trying to review a card that does not exist. (Consider refreshing the page.)'
+						)
+					}
 					return (
 						<Card
 							key={i}
