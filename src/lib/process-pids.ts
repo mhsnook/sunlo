@@ -1,4 +1,4 @@
-import { DeckPids, PhrasesMap, pids } from '@/types/main'
+import { DeckPids, PhraseFiltered, PhrasesMap, pids } from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
@@ -16,7 +16,7 @@ function processPids(
 	// filter to only spoken languages, sort primary first
 	const phrasesArrayFiltered = languagePids
 		.map((pid) => {
-			const phrase = phrasesMap[pid]
+			const phrase = phrasesMap[pid] as PhraseFiltered
 			phrase.translations = phrase.translations
 				.filter((t) => translationLangs.indexOf(t.lang) > -1)
 				.toSorted((a, b) => {
@@ -24,13 +24,18 @@ function processPids(
 							0
 						:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
 				})
+			// keep the translations we won't understand, to display in more info
+			phrase.translations_other = phrase.translations.filter(
+				(t) => !(translationLangs.indexOf(t.lang) > -1)
+			)
+
 			return phrase
 		})
-		.filter((p) => p.id && p.translations.length > 0)
+		.filter((p) => p.id)
 
 	const languagePidsFiltered = phrasesArrayFiltered
-		.map((p) => p.id)
-		.filter((p) => p !== null)
+		.filter((p) => p.translations.length > 0 && p.id !== null)
+		.map((p) => p.id!)
 	const phrasesMapFiltered: PhrasesMap = mapArray(phrasesArrayFiltered, 'id')
 
 	const language_selectables = arrayDifference(languagePidsFiltered, [

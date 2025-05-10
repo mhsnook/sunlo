@@ -83,6 +83,9 @@ export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
 }
+export type PhraseFiltered = PhraseFull & {
+	translations_other?: Array<TranslationRow>
+}
 export type PhraseFullInsert = PhraseInsert & {
 	translations: Array<TranslationInsert>
 	relation_pids?: pids

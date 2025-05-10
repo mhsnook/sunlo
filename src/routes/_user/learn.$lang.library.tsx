@@ -28,11 +28,13 @@ function DeckLibraryPage() {
 }
 
 type FilterEnum =
-	| 'language'
+	| 'language_filtered'
 	| 'active'
 	| 'inactive'
 	| 'reviewed_last_7d'
 	| 'not_in_deck'
+	| 'language_no_translations'
+	| 'language'
 // | 'recommended'
 // | 'recommended_by_friends' | 'recommended_easiest' | 'recommended_newest' | 'recommended_popular'
 
@@ -71,46 +73,60 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 				<div className="text-muted-foreground mb-4 flex flex-row flex-wrap gap-2">
 					<span className="text-sm">Filters:</span>
 					<BadgeFilter
-						name="language"
+						name="language_filtered"
 						setFilter={setFilter}
 						filter={filter}
 						text="All phrases"
-						count={pids.language?.length}
+						count={pids.language_filtered.length}
 					/>
 					<BadgeFilter
 						name="active"
 						setFilter={setFilter}
 						filter={filter}
 						text="Active deck"
-						count={pids.active?.length}
+						count={pids.active.length}
 					/>
 					<BadgeFilter
 						name="inactive"
 						setFilter={setFilter}
 						filter={filter}
 						text="Inactive"
-						count={pids.inactive?.length}
+						count={pids.inactive.length}
 					/>
 					{/*<BadgeFilter
 						name="recommended"
 						setFilter={setFilter}
 						filter={filter}
 						text="Recommended"
-						count={pids.recommended?.length}
+						count={pids.recommended.length}
 					/>*/}
 					<BadgeFilter
 						name="not_in_deck"
 						setFilter={setFilter}
 						filter={filter}
 						text="Not in deck"
-						count={pids.not_in_deck?.length}
+						count={pids.not_in_deck.length}
 					/>
 					<BadgeFilter
 						name="reviewed_last_7d"
 						setFilter={setFilter}
 						filter={filter}
 						text="Reviewed past week"
-						count={pids.reviewed_last_7d?.length}
+						count={pids.reviewed_last_7d.length}
+					/>
+					<BadgeFilter
+						name="language_no_translations"
+						setFilter={setFilter}
+						filter={filter}
+						text="Needs translations"
+						count={pids.language_no_translations.length}
+					/>
+					<BadgeFilter
+						name="language"
+						setFilter={setFilter}
+						filter={filter}
+						text="No filters"
+						count={pids.language.length}
 					/>
 				</div>
 				{pids.language!.length > 0 ?
