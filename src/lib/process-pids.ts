@@ -2,16 +2,38 @@ import { DeckPids, PhrasesMap, pids } from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
-import { arrayDifference } from './utils'
+import { arrayDifference, mapArray } from './utils'
+import { useProfile } from './use-profile'
 
 export type ProcessedPids = ReturnType<typeof processPids>
 
 function processPids(
+	translationLangs: Array<string>,
 	phrasesMap: PhrasesMap,
 	languagePids: pids,
 	deckPids: DeckPids
 ) {
-	const language_selectables = arrayDifference(languagePids, [
+	// filter to only spoken languages, sort primary first
+	const phrasesArrayFiltered = languagePids
+		.map((pid) => {
+			const phrase = phrasesMap[pid]
+			phrase.translations = phrase.translations
+				.filter((t) => translationLangs.indexOf(t.lang) > -1)
+				.toSorted((a, b) => {
+					return a.lang === b.lang ?
+							0
+						:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
+				})
+			return phrase
+		})
+		.filter((p) => p.id && p.translations.length > 0)
+
+	const languagePidsFiltered = phrasesArrayFiltered
+		.map((p) => p.id)
+		.filter((p) => p !== null)
+	const phrasesMapFiltered: PhrasesMap = mapArray(phrasesArrayFiltered, 'id')
+
+	const language_selectables = arrayDifference(languagePidsFiltered, [
 		deckPids.reviewed_or_inactive,
 	])
 
@@ -37,6 +59,10 @@ function processPids(
 
 	return {
 		language: languagePids,
+		language_filtered: languagePidsFiltered,
+		language_no_translations: arrayDifference(languagePids, [
+			languagePidsFiltered,
+		]),
 		deck: deckPids.all,
 		not_in_deck: arrayDifference(languagePids, [deckPids.all]),
 		active: deckPids.active,
@@ -51,10 +77,13 @@ function processPids(
 			popular: popular.slice(0, 8),
 			newest: newest.slice(0, 8),
 		},
+		phrasesMapFiltered,
 	}
 }
 
 export function useDeckPidsAndRecs(lang: string) {
+	const { data: profile } = useProfile()
+
 	// these two select from the same cache key
 	const { data: phrasesMap, isPending: isPending1 } =
 		useLanguagePhrasesMap(lang)
@@ -65,18 +94,18 @@ export function useDeckPidsAndRecs(lang: string) {
 
 	// derived data requiring all all three results
 	return useMemo(() => {
-		if (
-			(!phrasesMap && !isPending1) ||
-			(!languagePids && !isPending2) ||
-			(!deckPids && !isPending3)
-		) {
+		if (!profile) throw new Error('Profile is not even present...')
+		if (!phrasesMap || !languagePids || !deckPids) {
 			throw new Error(
 				'Attempting to call useDeckPidsAndRecs in a situation where the required data is neither present nor pending.'
 			)
 		}
 		// Now `null` always means pending because we always throw errors.
-		return !phrasesMap || !languagePids || !deckPids ?
-				null
-			:	processPids(phrasesMap, languagePids, deckPids)
-	}, [languagePids, deckPids, phrasesMap])
+		return processPids(
+			[profile.language_primary, ...profile.languages_spoken],
+			phrasesMap,
+			languagePids,
+			deckPids
+		)
+	}, [languagePids, deckPids, phrasesMap, profile])
 }

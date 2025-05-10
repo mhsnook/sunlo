@@ -45,7 +45,6 @@ import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckCardsMap, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
-import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { useProfile } from '@/lib/use-profile'
 import ExtraInfo from '@/components/extra-info'
 import { Database } from '@/types/supabase'
@@ -218,7 +217,7 @@ function ReviewPage() {
 	)
 
 	const allCardsForToday = useMemo(
-		() => arrayUnion([today_active, freshCards]),
+		() => arrayUnion([freshCards, today_active]),
 		[freshCards, today_active]
 	)
 
@@ -475,21 +474,17 @@ function ReviewCardsToAddToDeck({
 	}
 	// countOfCardsDesired: number
 }) {
-	const { data: cardsMap } = useDeckCardsMap(lang)
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	if (!phrasesMap || !cardsMap)
+	const res = useDeckPidsAndRecs(lang)
+	if (!res)
 		throw new Error(
-			"Attempting to present this new-cards-algo-review interface but can't load cardsMap or phrasesMap"
+			'Unable to grab the collated deck pids and filtered phrases'
 		)
+	const phrasesMapFiltered = res.phrasesMapFiltered
 	const { data: profile } = useProfile()
 	if (!profile)
 		throw new Error(
 			'Profile should be here on first render, but it is not showing up'
 		)
-	const translation_langs = [
-		profile.language_primary,
-		...profile.languages_spoken,
-	]
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
 		const updatedRecs =
@@ -521,24 +516,8 @@ function ReviewCardsToAddToDeck({
 					</DrawerDescription>
 					{allAlgoRecs.map((pid) => {
 						const selected = algoRecsSelected.indexOf(pid) > -1
-						// @@TODO move this logic obv
-						console.log(
-							`being very loud about filtering phrases and translation languages in the wrong place`
-						)
-						let phrase = phrasesMap[pid]
-						// filter to only spoken languages, sort primary first
-						phrase.translations = phrase.translations
-							.filter((t) => translation_langs.indexOf(t.lang) > -1)
-							.toSorted((a, b) => {
-								return a.lang === b.lang ?
-										0
-									:	translation_langs.indexOf(a.lang) -
-											translation_langs.indexOf(b.lang)
-							})
-						if (phrase.translations.length === 0) {
-							console.log('skipping a phrase with no usable translations')
-							return null
-						}
+						const phrase = phrasesMapFiltered[pid]
+						console.log(`mapping the algo recs`, phrase)
 
 						return (
 							<Card
