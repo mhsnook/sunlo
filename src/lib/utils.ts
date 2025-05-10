@@ -1,3 +1,4 @@
+import { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -38,6 +39,7 @@ export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
 		: typeof later_at === 'string' ? new Date(later_at)
 		: later_at
 	const prev: Date = typeof prev_at === 'string' ? new Date(prev_at) : prev_at
+	// @ts-expect-error
 	return (later - prev) / 1000 / 24 / 60 / 60
 }
 
@@ -71,4 +73,20 @@ export function todayString() {
 	// some people study after midnight
 	now.setHours(now.getHours() - 4)
 	return `${now.getFullYear()}-${makeItHave2Digits(now.getMonth() + 1)}-${makeItHave2Digits(now.getDate())}`
+}
+
+export function min0(num: number) {
+	return Math.max(0, num)
+}
+
+export function arrayUnion(arrs: Array<Array<uuid>>): Array<uuid> {
+	return [...new Set([...arrs.flat()])]
+}
+
+export function arrayDifference(
+	arr1: Array<uuid>,
+	arr2: Array<Array<uuid>>
+): Array<uuid> {
+	const set2 = new Set(arr2.flat())
+	return arr1.filter((item) => !set2.has(item))
 }

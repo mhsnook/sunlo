@@ -12,15 +12,15 @@ const buttonVariants = cva(
 				destructive:
 					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 				'destructive-outline':
-					'border border-destructive text-destructive bg-destructive/10 hover:bg-destructive hover:text-destructive-foreground',
+					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
 				ghost: 'hover:bg-primary/30 hover:text-accent-foreground',
 				outline: 'border border-primary bg-card hover:bg-primary/20',
 				link: 'text-primary-foresoft underline-offset-4 hover:underline',
 			},
 			size: {
 				default: 'h-10 rounded-md px-4 py-2 gap-2',
-				sm: 'h-9 rounded-md px-3 gap-1',
-				lg: 'rounded-md px-8 py-4 text-xl font-medium rounded-lg gap-3',
+				sm: 'h-9 rounded-md px-3 gap-1 [&_svg]:size-3',
+				lg: 'rounded-md px-8 py-4 text-xl font-medium rounded-lg gap-3 [&_svg]:size-6',
 				icon: 'size-10 rounded-full shrink-0',
 				'icon-sm': 'size-6 rounded-full shrink-0',
 				badge: 'h-6 rounded-full font-sm px-2 gap-1 my-0',

@@ -4,9 +4,9 @@
 		"paths": {
 			"@/*": ["./*"]
 		},
-		"target": "ES2023",
+		"target": "ES2022",
 		"useDefineForClassFields": true,
-		"lib": ["ES2023", "DOM", "DOM.Iterable"],
+		"lib": ["ES2024", "DOM", "DOM.Iterable", "ESNext"],
 		"module": "ESNext",
 		"skipLibCheck": true,
 		/* Bundler mode */

@@ -83,6 +83,9 @@ export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
 }
+export type PhraseFiltered = PhraseFull & {
+	translations_other?: Array<TranslationRow>
+}
 export type PhraseFullInsert = PhraseInsert & {
 	translations: Array<TranslationInsert>
 	relation_pids?: pids
@@ -102,10 +105,12 @@ export type CardsMap = {
 
 export type DeckPids = {
 	all: pids
+	active: pids
 	reviewed: pids
+	reviewed_or_inactive: pids
 	reviewed_last_7d: pids
-	unreviewed: pids
-	today: pids
+	unreviewed_active: pids
+	today_active: pids
 }
 export type DeckLoaded = {
 	meta: DeckMeta

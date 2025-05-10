@@ -12,6 +12,7 @@ import { routeTree } from './routeTree.gen'
 import Routes from './routes'
 
 import 'styles/globals.css'
+import { Button } from './components/ui/button'
 
 const queryClient = new QueryClient()
 
@@ -29,8 +30,13 @@ const router = createRouter({
 			<Loader className="size-12" />
 		</div>
 	),
-	defaultErrorComponent: ({ error }) => (
-		<ShowError show={!!error}>Error: {error?.message}</ShowError>
+	defaultErrorComponent: ({ error, reset }) => (
+		<ShowError show={!!error}>
+			<p>Error: {error?.message}</p>
+			<Button variant="destructive-outline" onClick={() => reset()}>
+				Refresh the page
+			</Button>
+		</ShowError>
 	),
 })
 
@@ -41,7 +47,10 @@ declare module '@tanstack/react-router' {
 	}
 }
 
-createRoot(document.getElementById('root')).render(
+const root = document.getElementById('root')
+if (!root) throw new Error('No root element on the page')
+
+createRoot(root).render(
 	<StrictMode>
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<QueryClientProvider client={queryClient}>

@@ -1,9 +1,8 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
-import { ProcessedPids } from '@/lib/process-pids'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
-import { useLanguagePhrasesMap } from '@/lib/use-language'
 import { PhraseCard } from './phrase-card'
 
 type PhraseSectionProps = {
@@ -19,8 +18,8 @@ const PhraseSection = ({
 	lang,
 	Icon,
 }: PhraseSectionProps) => {
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	if (!phrasesMap) return null
+	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
+	if (!phrasesMapFiltered) return null
 	return (
 		<div>
 			<p className="my-1 text-lg">
@@ -29,8 +28,8 @@ const PhraseSection = ({
 			{pids?.length > 0 ?
 				<div className="flex flex-row flex-wrap gap-2">
 					{pids.map((pid) => {
-						return !(pid in phrasesMap) ? null : (
-								<PhraseCard key={pid} phrase={phrasesMap[pid]} />
+						return !(pid in phrasesMapFiltered) ? null : (
+								<PhraseCard key={pid} phrase={phrasesMapFiltered[pid]} />
 							)
 					})}
 				</div>
@@ -39,35 +38,37 @@ const PhraseSection = ({
 	)
 }
 
-export function RecommendedPhrasesCard({
-	lang,
-	pids,
-}: LangOnlyComponentProps & { pids: ProcessedPids }) {
+export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
+	const pids = useDeckPidsAndRecs(lang)
+
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Recommended For You</CardTitle>
 			</CardHeader>
-			<CardContent className="space-y-4">
-				<PhraseSection
-					description={`Popular among all ${languages[lang]} learners`}
-					pids={pids.recommended.popular.slice(0, 4)}
-					lang={lang}
-					Icon={TrendingUp}
-				/>
-				<PhraseSection
-					description="Newly added"
-					pids={pids.recommended.newest.slice(0, 4)}
-					lang={lang}
-					Icon={Brain}
-				/>
-				<PhraseSection
-					description="Broaden your vocabulary"
-					pids={pids.recommended.easiest.slice(0, 4)}
-					lang={lang}
-					Icon={Carrot}
-				/>
-			</CardContent>
+			{pids === null ?
+				<Loader2 />
+			:	<CardContent className="space-y-4">
+					<PhraseSection
+						description={`Popular among all ${languages[lang]} learners`}
+						pids={pids.top8.popular.slice(0, 4)}
+						lang={lang}
+						Icon={TrendingUp}
+					/>
+					<PhraseSection
+						description="Newly added"
+						pids={pids.top8.newest.slice(0, 4)}
+						lang={lang}
+						Icon={Brain}
+					/>
+					<PhraseSection
+						description="Broaden your vocabulary"
+						pids={pids.top8.easiest.slice(0, 4)}
+						lang={lang}
+						Icon={Carrot}
+					/>
+				</CardContent>
+			}
 		</Card>
 	)
 }

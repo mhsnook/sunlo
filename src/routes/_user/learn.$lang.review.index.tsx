@@ -3,8 +3,8 @@ import {
 	createFileRoute,
 	Link,
 	Navigate,
-	useLoaderData,
 	useNavigate,
+	useRouter,
 } from '@tanstack/react-router'
 import {
 	Card,
@@ -14,17 +14,20 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-
 import languages from '@/lib/languages'
 import {
 	BookOpen,
+	Brain,
 	CalendarClock,
+	Carrot,
 	CheckCircle,
 	ChevronRight,
+	LucideIcon,
 	MessageCircleWarningIcon,
 	MessageSquare,
 	MessageSquarePlus,
-	Users,
+	Sparkles,
+	TrendingUp,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -40,161 +43,235 @@ import {
 } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
-import { todayString } from '@/lib/utils'
+import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { useDeckMeta, useDeckPids } from '@/lib/use-deck'
+import supabase from '@/lib/supabase-client'
+import { useProfile } from '@/lib/use-profile'
+import ExtraInfo from '@/components/extra-info'
+import { Database } from '@/types/supabase'
+import {
+	LanguageIsEmpty,
+	LanguageFilteredIsEmpty,
+} from '@/components/language-is-empty'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
 })
 
-const exampleRec = {
-	pid: 'uuid-1',
-	text: 'Vanakkam, eppadi irukkinga?',
-	translation: { text: 'Hello, how are you?' },
-	selected: true,
-	source: 'friend',
-}
-
-const defaultRecs: Array<typeof exampleRec> = [] /*
-	exampleRec,
-	{
-		pid: 'uuid-2',
-		text: 'Enakku Tamil theriyum, aanal konjam mattum',
-		translation: { text: 'I know Tamil, but only a little' },
-		selected: true,
-		source: 'algo',
-	},
-	{
-		pid: 'uuid-3',
-		text: 'Neenga romba azhaga irukkinga',
-		translation: { text: 'You look very beautiful' },
-		selected: true,
-		source: 'friend',
-	},
-	{
-		pid: 'uuid-4',
-		text: 'Enakku Tamil saapadu romba pidikkum',
-		translation: { text: 'I really like Tamil food' },
-		selected: true,
-		source: 'algo',
-	},
-	{
-		pid: 'uuid-5',
-		text: 'Naan Chennai-il vaazhndhirukiren',
-		translation: { text: 'I have lived in Chennai' },
-		selected: true,
-		source: 'friend',
-	},
-	{
-		pid: 'uuid-6',
-		text: 'Indha pazham romba inippu',
-		translation: { text: 'This fruit is very sweet' },
-		selected: true,
-		source: 'algo',
-	},
-	{
-		pid: 'uuid-7',
-		text: 'Naalai kaalaiyil sandhippom',
-		translation: { text: 'We will meet tomorrow morning' },
-		selected: true,
-		source: 'friend',
-	},
-	{
-		pid: 'uuid-8',
-		text: 'Ungalukku enna venum?',
-		translation: { text: 'What do you want?' },
-		selected: true,
-		source: 'algo',
-	},
-] */
-
 function ReviewPage() {
 	const { lang } = Route.useParams()
 	const { queryClient } = Route.useRouteContext()
 	const dayString = todayString()
+	// const retrievabilityTarget = 0.9
+	const { data: meta } = useDeckMeta(lang)
+	const { data: deckPids } = useDeckPids(lang)
+	const pids = useDeckPidsAndRecs(lang)
+
+	if (!meta?.id)
+		throw new Error(
+			"Attempted to build a review but we can't even find a deck ID"
+		)
+	if (!deckPids)
+		throw new Error(
+			"Attempting to build a review but we can't find deckPids data"
+		)
+	if (pids === null)
+		throw new Error('Pids should not be null here :/, even once')
+
+	const today_active = deckPids.today_active
 
 	const reviewData = useMemo(() => {
 		const dailyCacheKey = ['user', lang, 'review', dayString]
 		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
 	}, [lang, dayString])
 
-	const deckPids = useLoaderData({
-		from: '/_user/learn/$lang',
-		select: (data) => data.deck.pids,
-	})
+	/* This interface has a bunch of steps that need to happen just right in order
+	 * to give the user their 15 new cards, while giving them some control over what
+	 * gets into their deck, while automating much of the selection of new cards.
+	 *
+	 *	1. We have a goal of some `x` new cards daily (15, for now), in addition to today's
+	 * 	active/scheduled cards, `s`
+	 * 2. First priority is to pick up to x number of friend recommendations, `r`.
+	 * 	Filter out cards with reviews. The user can select/approve them, and what
+	 * 	remains is `selectedFriendRecs` with length r.
+	 * 	(This is currently hardcoded as [] because the feature is unbuilt)
+	 * 	x - r = x2
+	 * 3. Then if x2 is a positive number, we still need that many new cards to study.
+	 * 	So we start with algo recs because they're fun; we show them 4 cards from each
+	 * 	of the top8 lists, so long as they have no deck reviews, and the user can
+	 * 	approve them, building `selectedAlgoRecs`, with length a.
+	 * 	x2 - r = x3
+	 * 	Note: algo recs will not filter based on any other status like deck status. This
+	 * 	means the algo section can sort of function to "bump" cards that are unreviewed,
+	 * 	just chilling in the deck, but which are popular or easy.
+	 * 4. If x3 is still a positive number, we will take the first `d` cards from the deck.
+	 * 	x3 - a = x4
+	 * 5. If x4 is still a positive number, we will choose the remainder from the library, `l`.
+	 * 	x4 - d = x5
+	 *		If x5 > l, we will simply not have enough cards.
+	 * 6. Metadata wise: the total new cards is going to be something close to r + a + l, and
+	 * 	total cards will be s + r + a + d + l. To keep things simple we should always filter
+	 * 	out cards _selected_ in the previous step, as well as cards with reviews, and cards
+	 * 	with status 'learned' or 'skipped'.
+	 *
+	 */
 
-	// const [newCardsDesiredCount, setNewCardsDesiredCount] = useState<number>(15)
-	const newCardsDesiredCount = 15
+	// 1. we have today's active cards plus we need x more
+	// const [countNeeded, setCountNeeded] = useState<number>(15)
+	const countNeeded = 15
 
-	// all recs for cards we've never reviewed (unreviewed cards are included)
-	const [recs, setRecs] = useState(() =>
-		defaultRecs.filter((r) => deckPids.reviewed.indexOf(r.pid) === -1)
+	// 2.
+	// haven't built this feature yet, is why it's blank array
+	const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
+	const friendRecsFiltered = useMemo(
+		() => arrayDifference(friendRecsFromDB, [pids.reviewed_or_inactive]),
+		[pids.reviewed_or_inactive, friendRecsFromDB]
 	)
-	const cardPidsRecommended: Record<
-		'all' | 'fromFriends' | 'fromAlgo' | 'selected',
-		pids
-	> = {
-		all: recs.map((r) => r.pid),
-		fromFriends: recs
-			.filter((r) => r.source === 'friend' && r.selected === true)
-			.map((r) => r.pid),
-		fromAlgo: recs
-			.filter((r) => r.source === 'algo' && r.selected === true)
-			.map((r) => r.pid),
-		selected: recs.filter((r) => r.selected === true).map((r) => r.pid),
-	}
-
-	// don't let it be a negative number
-	const cardCountDesiredAfterRecs = Math.max(
-		0,
-		newCardsDesiredCount - cardPidsRecommended.selected.length
+	const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
+		friendRecsFiltered.slice(0, countNeeded)
 	)
-	// will be 0 if there are enough recs to fill today's quota
+	const countNeeded2 = min0(countNeeded - friendRecsSelected.length)
 
-	// unreviewed cards that aren't already in the recs
-	const cardPidsAvailabileInDeck = deckPids.unreviewed.filter(
-		(p) => cardPidsRecommended.all.indexOf(p) === -1
+	// 3. algo recs set by user
+	const algoRecsFiltered = useMemo(
+		() => ({
+			popular: arrayDifference(pids.top8.popular, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+			]),
+			easiest: arrayDifference(pids.top8.easiest, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+			]),
+			newest: arrayDifference(pids.top8.newest, [
+				pids.reviewed_or_inactive,
+				friendRecsFiltered,
+			]),
+		}),
+		[pids.top8, pids.reviewed_or_inactive, friendRecsFiltered]
 	)
 
-	const cardPidsPickedFromDeck = cardPidsAvailabileInDeck.slice(
-		0,
-		cardCountDesiredAfterRecs
-	)
-	const cardPidsAllNewToday = [
-		...cardPidsRecommended.selected,
-		...cardPidsPickedFromDeck,
-	]
-	const cardPidsAllToday = [...cardPidsAllNewToday, ...deckPids.today]
-	const totalCards = cardPidsAllToday.length
+	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
+	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
+	const algosEmpty =
+		algoRecsFiltered.popular.length === 0 &&
+		algoRecsFiltered.easiest.length === 0 &&
+		algoRecsFiltered.newest.length === 0
 
+	// 4. deck cards
+	// pull new unreviewed cards, excluding the friend recs we already got,
+	// and limiting to the number we need from the deck
+	const cardsUnreviewedActiveSelected = useMemo(() => {
+		return arrayDifference(pids.unreviewed_active, [
+			friendRecsSelected,
+			algoRecsSelected,
+		]).slice(0, countNeeded3)
+	}, [
+		countNeeded3,
+		friendRecsSelected,
+		algoRecsSelected,
+		pids.unreviewed_active,
+	])
+
+	// the user does not get to preview or select these.
+	// in many cases, we'll be done here because people will have 15+ cards
+	// available in their deck. but if not...
+
+	const countNeeded4 = min0(countNeeded3 - cardsUnreviewedActiveSelected.length)
+
+	// 5. pick cards randomly from the library, if needed
+
+	// sorting by pid is randomish, but stable
+	const libraryPhrasesSelected = useMemo(
+		() =>
+			arrayDifference(pids.language_selectables, [
+				friendRecsSelected,
+				algoRecsSelected,
+				cardsUnreviewedActiveSelected,
+			])
+				.sort((a, b) => (a > b ? -1 : 1))
+				.slice(0, countNeeded4),
+		[
+			pids.language_selectables,
+			friendRecsSelected,
+			algoRecsSelected,
+			cardsUnreviewedActiveSelected,
+			countNeeded4,
+		]
+	)
+
+	// 6. now let's just collate the cards we need to create on user_card table
+	const freshCards = useMemo(
+		() =>
+			arrayUnion([
+				friendRecsSelected, // 2
+				algoRecsSelected, // 3
+				cardsUnreviewedActiveSelected, // 4
+				libraryPhrasesSelected, // 5
+			]),
+		[
+			friendRecsSelected,
+			algoRecsSelected,
+			cardsUnreviewedActiveSelected,
+			libraryPhrasesSelected,
+		]
+	)
+
+	const cardsToCreate = useMemo(
+		() => arrayDifference(freshCards, [pids.deck]),
+		[pids.deck, freshCards]
+	)
+
+	const allCardsForToday = useMemo(
+		() => arrayUnion([freshCards, today_active]),
+		[freshCards, today_active]
+	)
+
+	const countSurplusOrDeficit = freshCards.length - countNeeded
+	const router = useRouter()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { mutate, isPending } = useMutation({
 		mutationKey: [...reviewData.dailyCacheKey, 'create'],
 		mutationFn: async () => {
-			localStorage.setItem(
-				JSON.stringify(reviewData.dailyCacheKey),
-				JSON.stringify(cardPidsAllToday)
-			)
-			return { total: totalCards, new: cardPidsAllNewToday.length }
-			/* const { data } = await supabase
+			const { data } = await supabase
 				.from('user_card')
-				.insert(
-					recPids.selected.map((pid) => ({
+				.upsert(
+					cardsToCreate.map((pid) => ({
 						phrase_id: pid,
 						user_deck_id: meta.id!,
+						status: 'active' as Database['public']['Enums']['card_status'],
 					}))
 				)
 				.select()
 				.throwOnError()
-			return data */
-		},
-		onSuccess: (sums) => {
-			toast.success(
-				`Ready to go! ${sums.total} to study today, ${sums.new} fresh new cards ready to go.`
+
+			const newCardsCreated = data.map((c) => c.phrase_id)
+
+			localStorage.setItem(
+				JSON.stringify(reviewData.dailyCacheKey),
+				JSON.stringify(allCardsForToday)
 			)
-			queryClient.invalidateQueries({ queryKey: ['user', lang, 'review'] })
+			return {
+				total: allCardsForToday.length,
+				cards_fresh: freshCards.length,
+				cards_created: newCardsCreated.length,
+			}
+		},
+		onSuccess: async (sums) => {
+			toast.success(
+				`Ready to go! ${sums.total} to study today, ${sums.cards_fresh} fresh new cards ready to go.`
+			)
+			if (sums.cards_created !== cardsToCreate.length)
+				console.log(
+					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
+				)
+			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			const clear2 = router.invalidate({ sync: true })
+			await Promise.all([clear1, clear2])
 			void navigate({ to: './go' })
 		},
 	})
@@ -207,200 +284,338 @@ function ReviewPage() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Get Ready to review your {languages[lang]} cards</CardTitle>
+				<CardTitle className="flex flex-row justify-between">
+					<div>Get Ready to review your {languages[lang]} cards</div>
+					<ExtraInfo title="Explaining today's review cards">
+						<p>
+							<strong>{today_active.length} cards</strong> scheduled based on
+							previous reviews. <br />
+							<strong>{countNeeded} new cards</strong> is your goal for new
+							cards each day.
+							<br />
+							<strong>{freshCards.length} new cards</strong> have been selected
+							for you/by you. <br />
+							<strong>{Math.abs(countSurplusOrDeficit)} cards</strong>{' '}
+							{countSurplusOrDeficit > 0 ? 'above' : 'less than'} your daily
+							goal.
+							<br />
+							(of which {cardsToCreate.length} were not previously in your
+							deck).
+							<br />
+							<strong>{allCardsForToday.length} total cards</strong> are lined
+							up for your review today.
+						</p>
+						<Flagged name="friend_recommendations">
+							<p>
+								There are {friendRecsFiltered.length} friend recommendations, of
+								which you've selected {friendRecsSelected.length}. So you still
+								need to get {countNeeded2} countNeeded2.
+							</p>
+						</Flagged>
+						<p>
+							We offered some recs from the algorithm, and you selected{' '}
+							{algoRecsSelected.length} selectedAlgoRecs, meaning you still need{' '}
+							{countNeeded3}.
+						</p>
+						<p>
+							Next we went looking in your deck for cards you've selected, but
+							haven't reviewed before: there are {pids.unreviewed_active.length}{' '}
+							of them (out of {pids.deck.length} total in your deck), and we
+							managed to get {cardsUnreviewedActiveSelected.length} of them
+							(unsure why there would ever be a discrepancy here), leaving{' '}
+							{countNeeded4} to pull from the library.
+						</p>
+						<p>
+							We have {pids.not_in_deck.length} cards in the library that aren't
+							already in your deck or weren't chosen from the recommendations,
+							the {pids.language.length} total phrases in the library and found{' '}
+							{pids.not_in_deck.length} which are not in your deck, and we
+							grabbed {libraryPhrasesSelected.length} of them.
+						</p>
+						<p>
+							So the total number of cards is {allCardsForToday.length}, which
+							is {today_active.length} scheduled + {friendRecsSelected.length}{' '}
+							friend recs + {algoRecsSelected.length} algo recs +{' '}
+							{cardsUnreviewedActiveSelected.length} deck +{' '}
+							{libraryPhrasesSelected.length} library ={' '}
+							{today_active.length +
+								friendRecsSelected.length +
+								algoRecsSelected.length +
+								cardsUnreviewedActiveSelected.length +
+								libraryPhrasesSelected.length}
+						</p>
+					</ExtraInfo>
+				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<p className="text-muted-foreground max-w-2xl text-lg">
 					Your personalized review session is prepared and waiting for you.
-					Here's what to expect:
+					Here's what to expect...
 				</p>
-				<div className="flex flex-row flex-wrap gap-4 text-sm">
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="flex items-center gap-2 text-xl">
-								Total Cards
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
-								<BookOpen />
-								{totalCards}
-							</p>
-							<p className="text-muted-foreground">cards to work on today</p>
-						</CardContent>
-					</Card>
+				{pids.language.length === 0 ?
+					<LanguageIsEmpty lang={lang} />
+				: pids.language_filtered.length === 0 ?
+					<LanguageFilteredIsEmpty lang={lang} />
+				:	<>
+						<div className="flex flex-row flex-wrap gap-4 text-sm">
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="flex items-center gap-2 text-xl">
+										Total Cards
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
+										<BookOpen />
+										{allCardsForToday.length}
+									</p>
+									<p className="text-muted-foreground">
+										cards to work on today
+									</p>
+								</CardContent>
+							</Card>
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="text-xl">Scheduled</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
+										<CalendarClock />
+										<span>{deckPids?.today_active.length}</span>
+									</p>
+									<p className="text-muted-foreground">
+										scheduled based on past reviews
+									</p>
+								</CardContent>
+							</Card>
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="text-xl">New Phrases</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
+										<MessageSquarePlus />
+										<span>{freshCards.length}</span>
+									</p>
+									<p className="text-muted-foreground">
+										cards you haven't reviewed before
+									</p>
+								</CardContent>
+							</Card>
 
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">New Phrases</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
-								<MessageSquarePlus />
-								<span>{cardPidsAllNewToday.length}</span>
-							</p>
-							<p className="text-muted-foreground">
-								cards you haven't seen before
-							</p>
-						</CardContent>
-					</Card>
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">Scheduled</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
-								<CalendarClock />
-								<span>{cardPidsRecommended.selected.length}</span>
-							</p>
-							<p className="text-muted-foreground">
-								scheduled based on past reviews
-							</p>
-						</CardContent>
-					</Card>
-					<Flagged name="smart_recommendations" className="hidden">
-						<Card className="grow basis-40">
-							<CardHeader className="pb-2">
-								<CardTitle className="flex items-center gap-2 text-xl">
-									<MessageSquare className="text-primary" />
-									Sources
-								</CardTitle>
-							</CardHeader>
-							<CardContent className="space-y-2">
-								<Flagged name="friend_recommendations">
-									<div className="flex items-center justify-between">
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="flex items-center gap-2 text-xl">
+										<MessageSquare className="text-primary" />
+										Sources
+									</CardTitle>
+								</CardHeader>
+								<CardContent className="space-y-2">
+									<Flagged
+										name="friend_recommendations"
+										className="flex items-center justify-between"
+									>
 										<span className="text-muted-foreground">Friend recs:</span>
-										<Badge variant="outline">
-											{cardPidsRecommended.fromFriends.length}
-										</Badge>
-									</div>
-								</Flagged>
-								<Flagged name="smart_recommendations">
+										<Badge variant="outline">{friendRecsSelected.length}</Badge>
+									</Flagged>
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">Sunlo's recs:</span>
+										<Badge variant="outline">{algoRecsSelected.length}</Badge>
+									</div>
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">
+											From your deck:
+										</span>
 										<Badge variant="outline">
-											{cardPidsRecommended.fromAlgo.length}
+											{cardsUnreviewedActiveSelected.length}
 										</Badge>
 									</div>
-								</Flagged>
-								<div className="flex items-center justify-between">
-									<span className="text-muted-foreground">From your deck:</span>
-									<Badge variant="outline">
-										{cardPidsPickedFromDeck.length}
-									</Badge>
-								</div>
-								<Flagged name="smart_recommendations">
+
 									<div className="flex items-center justify-between">
 										<span className="text-muted-foreground">
 											Public library:
 										</span>
-										<Badge variant="outline">0</Badge>
+										<Badge variant="outline">
+											{libraryPhrasesSelected.length}
+										</Badge>
 									</div>
-								</Flagged>
-							</CardContent>
-						</Card>
-					</Flagged>
-				</div>
-				{!(newCardsDesiredCount > cardPidsAllNewToday.length) ? null : (
-					<NotEnoughCards
-						lang={lang}
-						newCardsDesiredCount={newCardsDesiredCount}
-						newCardsCount={cardPidsAllNewToday.length}
-						totalCards={totalCards}
-					/>
-				)}
-				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
-					<Button
-						onClick={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-							mutate()
-						}}
-						size="lg"
-						disabled={isPending || totalCards === 0}
-					>
-						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
-					</Button>
-					<Flagged name="smart_recommendations">
-						<Drawer>
-							<DrawerTrigger asChild>
-								<Button className="font-normal" variant="outline" size="lg">
-									Customize my session
-								</Button>
-							</DrawerTrigger>
-							<ReviewCardsToAddToDeck
-								recs={recs}
-								setRecs={setRecs}
-								recPids={cardPidsRecommended}
+								</CardContent>
+							</Card>
+						</div>
+						{!(countNeeded > allCardsForToday.length) ? null : (
+							<NotEnoughCards
+								lang={lang}
+								countNeeded={countNeeded}
+								newCardsCount={freshCards.length}
+								totalCards={allCardsForToday.length}
 							/>
-						</Drawer>
-					</Flagged>
-				</div>
+						)}
+						<div className="flex flex-col justify-center gap-4 @xl:flex-row">
+							<Button
+								onClick={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									mutate()
+								}}
+								size="lg"
+								disabled={isPending || allCardsForToday.length === 0}
+							>
+								Okay, let's get started{' '}
+								<ChevronRight className="ml-2 h-5 w-5" />
+							</Button>
+							<Drawer>
+								<DrawerTrigger asChild>
+									<Button
+										className="font-normal"
+										variant="outline"
+										size="lg"
+										disabled={algosEmpty}
+									>
+										Customize my session
+									</Button>
+								</DrawerTrigger>
+								<ReviewCardsToAddToDeck
+									lang={lang}
+									algoRecsSelected={algoRecsSelected}
+									setAlgoRecsSelected={setAlgoRecsSelected}
+									algoRecsFiltered={algoRecsFiltered}
+									// countOfCardsDesired={countNeeded2}
+								/>
+							</Drawer>
+						</div>
+					</>
+				}
 			</CardContent>
 		</Card>
 	)
 }
 
+type FiltersEnum = 'popular' | 'easiest' | 'newest'
+
 function ReviewCardsToAddToDeck({
-	recs,
-	setRecs,
-	recPids,
+	lang,
+	algoRecsSelected,
+	setAlgoRecsSelected,
+	algoRecsFiltered,
+	// countOfCardsDesired,
 }: {
-	recs: typeof defaultRecs
-	setRecs: (recs: typeof defaultRecs) => void
-	recPids: any
+	lang: string
+	algoRecsSelected: pids
+	setAlgoRecsSelected: (recs: pids) => void
+	algoRecsFiltered: Record<FiltersEnum, pids>
+	// countOfCardsDesired: number
 }) {
-	// Toggle card selection
-	const toggleCardSelection = (pid: string) => {
-		const updatedCards = recs.map((card) =>
-			card.pid === pid ? { ...card, selected: !card.selected } : card
+	const res = useDeckPidsAndRecs(lang)
+	if (!res)
+		throw new Error(
+			'Unable to grab the collated deck pids and filtered phrases'
 		)
-		setRecs(updatedCards)
+	const phrasesMapFiltered = res.phrasesMapFiltered
+	const { data: profile } = useProfile()
+	if (!profile)
+		throw new Error(
+			'Profile should be here on first render, but it is not showing up'
+		)
+	// Toggle card selection
+	const toggleCardSelection = (pid1: string) => {
+		const updatedRecs =
+			algoRecsSelected.indexOf(pid1) === -1 ?
+				[...algoRecsSelected, pid1]
+			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
+		setAlgoRecsSelected(updatedRecs)
 	}
+	const sections: {
+		key: FiltersEnum
+		description: string
+		Icon: LucideIcon
+	}[] = [
+		{
+			key: 'popular',
+			description: `Popular among all ${languages[lang]} learners`,
+			Icon: TrendingUp,
+		},
+		{
+			key: 'easiest',
+			description: `Broaden your vocabulary`,
+			Icon: Carrot,
+		},
+		{
+			key: 'newest',
+			description: `Newly added`,
+			Icon: Brain,
+		},
+	]
+
 	return (
-		<DrawerContent>
-			<div className="mx-auto w-full max-w-prose">
-				<DrawerHeader>
-					<DrawerTitle className="flex items-center gap-2 text-xl">
-						<Users className="h-5 w-5 text-purple-500" />
-						Recommended for you ({recPids.fromFriends.length} of{' '}
-						{recs.filter((r) => r.source === 'friends')} selected)
+		<DrawerContent aria-describedby="drawer-description">
+			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto px-1 pb-10">
+				<DrawerHeader className="bg-background sticky top-0">
+					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
+						<Sparkles className="h-5 w-5 text-purple-500" />
+						Recommended for you ({algoRecsSelected.length} selected)
 					</DrawerTitle>
-					<DrawerDescription>
-						Review and select which recommended cards you want to include in
-						your session
-					</DrawerDescription>
 				</DrawerHeader>
-				<div className="grid gap-3 p-4 @lg:grid-cols-2">
-					{recs.map((card) => (
-						<Card
-							onClick={() => toggleCardSelection(card.pid)}
-							key={card.pid}
-							className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${card.selected ? 'border-primary bg-primary/10' : ''}`}
-						>
-							<CardHeader className="p-3 pb-0">
-								<CardTitle className="text-base">{card.text}</CardTitle>
-								<CardDescription>{card.translation.text}</CardDescription>
-							</CardHeader>
-							<CardFooter className="flex justify-end p-3 pt-0">
-								<Badge
-									variant={card.selected ? 'default' : 'outline'}
-									className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
-								>
-									<span
-										className={`flex flex-row items-center gap-1 [grid-area:stack] ${card.selected ? '' : 'invisible'}`}
-									>
-										<CheckCircle className="mr-1 h-3 w-3" /> Selected
-									</span>
-									<span
-										className={`[grid-area:stack] ${card.selected ? 'invisible' : ''}`}
-									>
-										Tap to select
-									</span>
-								</Badge>
-							</CardFooter>
-						</Card>
-					))}
+				<DrawerDescription className="">
+					Review and select which recommended cards you want to include in your
+					session
+				</DrawerDescription>
+				<div className="my-6 space-y-6">
+					{sections.map((s) => {
+						return (
+							<div>
+								<p className="my-4 text-lg">
+									<s.Icon className="inline size-6" /> {s.description}
+								</p>
+								<div className="grid gap-3 @lg:grid-cols-2">
+									{algoRecsFiltered[s.key].length > 0 ?
+										algoRecsFiltered[s.key].map((pid) => {
+											const selected = algoRecsSelected.indexOf(pid) > -1
+											const phrase = phrasesMapFiltered[pid]
+											// console.log(`mapping the algo recs`, phrase)
+
+											return (
+												<Card
+													onClick={() => toggleCardSelection(pid)}
+													key={pid}
+													className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
+												>
+													<CardHeader className="p-3 pb-0">
+														<CardTitle className="text-base">
+															{phrase.text}
+														</CardTitle>
+														<CardDescription>
+															{phrase.translations[0].text}
+														</CardDescription>
+													</CardHeader>
+													<CardFooter className="flex justify-end p-3 pt-0">
+														<Badge
+															variant={selected ? 'default' : 'outline'}
+															className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
+														>
+															<span
+																className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
+															>
+																<CheckCircle className="me-1 h-3 w-3" />
+																Selected
+															</span>
+															<span
+																className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
+															>
+																Tap to select
+															</span>
+														</Badge>
+													</CardFooter>
+												</Card>
+											)
+										})
+									:	<p className="text-muted-foreground">
+											Sorry, all out of recommendations today
+										</p>
+									}
+								</div>
+							</div>
+						)
+					})}
 				</div>
 			</div>
 		</DrawerContent>
@@ -409,12 +624,12 @@ function ReviewCardsToAddToDeck({
 
 function NotEnoughCards({
 	lang,
-	newCardsDesiredCount,
+	countNeeded,
 	newCardsCount,
 	totalCards,
 }: {
 	lang: string
-	newCardsDesiredCount: number
+	countNeeded: number
 	newCardsCount: number
 	totalCards: number
 }) {
@@ -427,9 +642,7 @@ function NotEnoughCards({
 					" to review. You'll have to add at least a few before you can proceed"
 				:	<>
 						in your deck to meet your goal of{' '}
-						<strong className="italic">
-							{newCardsDesiredCount} new cards a day
-						</strong>
+						<strong className="italic">{countNeeded} new cards a day</strong>
 					</>
 				}
 				.
