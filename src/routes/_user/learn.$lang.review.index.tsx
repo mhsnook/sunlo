@@ -53,6 +53,10 @@ import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/lib/use-profile'
 import ExtraInfo from '@/components/extra-info'
 import { Database } from '@/types/supabase'
+import {
+	LanguageIsEmpty,
+	LanguageFilteredIsEmpty,
+} from '@/components/language-is-empty'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -153,6 +157,10 @@ function ReviewPage() {
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
+	const algosEmpty =
+		algoRecsFiltered.popular.length === 0 &&
+		algoRecsFiltered.easiest.length === 0 &&
+		algoRecsFiltered.newest.length === 0
 
 	// 4. deck cards
 	// pull new unreviewed cards, excluding the friend recs we already got,
@@ -226,11 +234,7 @@ function ReviewPage() {
 	const countSurplusOrDeficit = freshCards.length - countNeeded
 	const router = useRouter()
 	const navigate = useNavigate({ from: Route.fullPath })
-	const {
-		mutate,
-		isPending,
-		data: mutationData,
-	} = useMutation({
+	const { mutate, isPending } = useMutation({
 		mutationKey: [...reviewData.dailyCacheKey, 'create'],
 		mutationFn: async () => {
 			const { data } = await supabase
@@ -261,8 +265,13 @@ function ReviewPage() {
 			toast.success(
 				`Ready to go! ${sums.total} to study today, ${sums.cards_fresh} fresh new cards ready to go.`
 			)
-			queryClient.invalidateQueries({ queryKey: ['user', lang] })
-			await router.invalidate({ sync: true })
+			if (sums.cards_created !== cardsToCreate.length)
+				console.log(
+					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
+				)
+			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			const clear2 = router.invalidate({ sync: true })
+			await Promise.all([clear1, clear2])
 			void navigate({ to: './go' })
 		},
 	})
@@ -343,118 +352,139 @@ function ReviewPage() {
 					Your personalized review session is prepared and waiting for you.
 					Here's what to expect...
 				</p>
-				<div className="flex flex-row flex-wrap gap-4 text-sm">
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="flex items-center gap-2 text-xl">
-								Total Cards
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
-								<BookOpen />
-								{allCardsForToday.length}
-							</p>
-							<p className="text-muted-foreground">cards to work on today</p>
-						</CardContent>
-					</Card>
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">Scheduled</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
-								<CalendarClock />
-								<span>{deckPids?.today_active.length}</span>
-							</p>
-							<p className="text-muted-foreground">
-								scheduled based on past reviews
-							</p>
-						</CardContent>
-					</Card>
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="text-xl">New Phrases</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
-								<MessageSquarePlus />
-								<span>{freshCards.length}</span>
-							</p>
-							<p className="text-muted-foreground">
-								cards you haven't reviewed before
-							</p>
-						</CardContent>
-					</Card>
+				{pids.language.length === 0 ?
+					<LanguageIsEmpty lang={lang} />
+				: pids.language_filtered.length === 0 ?
+					<LanguageFilteredIsEmpty lang={lang} />
+				:	<>
+						<div className="flex flex-row flex-wrap gap-4 text-sm">
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="flex items-center gap-2 text-xl">
+										Total Cards
+									</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
+										<BookOpen />
+										{allCardsForToday.length}
+									</p>
+									<p className="text-muted-foreground">
+										cards to work on today
+									</p>
+								</CardContent>
+							</Card>
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="text-xl">Scheduled</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
+										<CalendarClock />
+										<span>{deckPids?.today_active.length}</span>
+									</p>
+									<p className="text-muted-foreground">
+										scheduled based on past reviews
+									</p>
+								</CardContent>
+							</Card>
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="text-xl">New Phrases</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
+										<MessageSquarePlus />
+										<span>{freshCards.length}</span>
+									</p>
+									<p className="text-muted-foreground">
+										cards you haven't reviewed before
+									</p>
+								</CardContent>
+							</Card>
 
-					<Card className="grow basis-40">
-						<CardHeader className="pb-2">
-							<CardTitle className="flex items-center gap-2 text-xl">
-								<MessageSquare className="text-primary" />
-								Sources
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-2">
-							<Flagged
-								name="friend_recommendations"
-								className="flex items-center justify-between"
+							<Card className="grow basis-40">
+								<CardHeader className="pb-2">
+									<CardTitle className="flex items-center gap-2 text-xl">
+										<MessageSquare className="text-primary" />
+										Sources
+									</CardTitle>
+								</CardHeader>
+								<CardContent className="space-y-2">
+									<Flagged
+										name="friend_recommendations"
+										className="flex items-center justify-between"
+									>
+										<span className="text-muted-foreground">Friend recs:</span>
+										<Badge variant="outline">{friendRecsSelected.length}</Badge>
+									</Flagged>
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">Sunlo's recs:</span>
+										<Badge variant="outline">{algoRecsSelected.length}</Badge>
+									</div>
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">
+											From your deck:
+										</span>
+										<Badge variant="outline">
+											{cardsUnreviewedActiveSelected.length}
+										</Badge>
+									</div>
+
+									<div className="flex items-center justify-between">
+										<span className="text-muted-foreground">
+											Public library:
+										</span>
+										<Badge variant="outline">
+											{libraryPhrasesSelected.length}
+										</Badge>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+						{!(countNeeded > allCardsForToday.length) ? null : (
+							<NotEnoughCards
+								lang={lang}
+								countNeeded={countNeeded}
+								newCardsCount={freshCards.length}
+								totalCards={allCardsForToday.length}
+							/>
+						)}
+						<div className="flex flex-col justify-center gap-4 @xl:flex-row">
+							<Button
+								onClick={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									mutate()
+								}}
+								size="lg"
+								disabled={isPending || allCardsForToday.length === 0}
 							>
-								<span className="text-muted-foreground">Friend recs:</span>
-								<Badge variant="outline">{friendRecsSelected.length}</Badge>
-							</Flagged>
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Sunlo's recs:</span>
-								<Badge variant="outline">{algoRecsSelected.length}</Badge>
-							</div>
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">From your deck:</span>
-								<Badge variant="outline">
-									{cardsUnreviewedActiveSelected.length}
-								</Badge>
-							</div>
-
-							<div className="flex items-center justify-between">
-								<span className="text-muted-foreground">Public library:</span>
-								<Badge variant="outline">{libraryPhrasesSelected.length}</Badge>
-							</div>
-						</CardContent>
-					</Card>
-				</div>
-				{!(countNeeded > allCardsForToday.length) ? null : (
-					<NotEnoughCards
-						lang={lang}
-						countNeeded={countNeeded}
-						newCardsCount={freshCards.length}
-						totalCards={allCardsForToday.length}
-					/>
-				)}
-				<div className="flex flex-col justify-center gap-4 @xl:flex-row">
-					<Button
-						onClick={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-							mutate()
-						}}
-						size="lg"
-						disabled={isPending || allCardsForToday.length === 0}
-					>
-						Okay, let's get started <ChevronRight className="ml-2 h-5 w-5" />
-					</Button>
-					<Drawer>
-						<DrawerTrigger asChild>
-							<Button className="font-normal" variant="outline" size="lg">
-								Customize my session
+								Okay, let's get started{' '}
+								<ChevronRight className="ml-2 h-5 w-5" />
 							</Button>
-						</DrawerTrigger>
-						<ReviewCardsToAddToDeck
-							lang={lang}
-							algoRecsSelected={algoRecsSelected}
-							setAlgoRecsSelected={setAlgoRecsSelected}
-							algoRecsFiltered={algoRecsFiltered}
-							// countOfCardsDesired={countNeeded2}
-						/>
-					</Drawer>
-				</div>
+							<Drawer>
+								<DrawerTrigger asChild>
+									<Button
+										className="font-normal"
+										variant="outline"
+										size="lg"
+										disabled={algosEmpty}
+									>
+										Customize my session
+									</Button>
+								</DrawerTrigger>
+								<ReviewCardsToAddToDeck
+									lang={lang}
+									algoRecsSelected={algoRecsSelected}
+									setAlgoRecsSelected={setAlgoRecsSelected}
+									algoRecsFiltered={algoRecsFiltered}
+									// countOfCardsDesired={countNeeded2}
+								/>
+							</Drawer>
+						</div>
+					</>
+				}
 			</CardContent>
 		</Card>
 	)
@@ -494,11 +524,6 @@ function ReviewCardsToAddToDeck({
 			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
 		setAlgoRecsSelected(updatedRecs)
 	}
-	const allAlgoRecs = arrayUnion([
-		algoRecsFiltered.popular,
-		algoRecsFiltered.easiest,
-		algoRecsFiltered.newest,
-	])
 	const sections: {
 		key: FiltersEnum
 		description: string
@@ -523,14 +548,13 @@ function ReviewCardsToAddToDeck({
 
 	return (
 		<DrawerContent aria-describedby="drawer-description">
-			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto">
+			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto px-1 pb-10">
 				<DrawerHeader className="bg-background sticky top-0">
 					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
 						<Sparkles className="h-5 w-5 text-purple-500" />
 						Recommended for you ({algoRecsSelected.length} selected)
 					</DrawerTitle>
 				</DrawerHeader>
-
 				<DrawerDescription className="">
 					Review and select which recommended cards you want to include in your
 					session
@@ -543,45 +567,51 @@ function ReviewCardsToAddToDeck({
 									<s.Icon className="inline size-6" /> {s.description}
 								</p>
 								<div className="grid gap-3 @lg:grid-cols-2">
-									{algoRecsFiltered[s.key].map((pid) => {
-										const selected = algoRecsSelected.indexOf(pid) > -1
-										const phrase = phrasesMapFiltered[pid]
-										console.log(`mapping the algo recs`, phrase)
+									{algoRecsFiltered[s.key].length > 0 ?
+										algoRecsFiltered[s.key].map((pid) => {
+											const selected = algoRecsSelected.indexOf(pid) > -1
+											const phrase = phrasesMapFiltered[pid]
+											// console.log(`mapping the algo recs`, phrase)
 
-										return (
-											<Card
-												onClick={() => toggleCardSelection(pid)}
-												key={pid}
-												className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
-											>
-												<CardHeader className="p-3 pb-0">
-													<CardTitle className="text-base">
-														{phrase.text}
-													</CardTitle>
-													<CardDescription>
-														{phrase.translations[0].text}
-													</CardDescription>
-												</CardHeader>
-												<CardFooter className="flex justify-end p-3 pt-0">
-													<Badge
-														variant={selected ? 'default' : 'outline'}
-														className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
-													>
-														<span
-															className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
+											return (
+												<Card
+													onClick={() => toggleCardSelection(pid)}
+													key={pid}
+													className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
+												>
+													<CardHeader className="p-3 pb-0">
+														<CardTitle className="text-base">
+															{phrase.text}
+														</CardTitle>
+														<CardDescription>
+															{phrase.translations[0].text}
+														</CardDescription>
+													</CardHeader>
+													<CardFooter className="flex justify-end p-3 pt-0">
+														<Badge
+															variant={selected ? 'default' : 'outline'}
+															className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
 														>
-															<CheckCircle className="mr-1 h-3 w-3" /> Selected
-														</span>
-														<span
-															className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
-														>
-															Tap to select
-														</span>
-													</Badge>
-												</CardFooter>
-											</Card>
-										)
-									})}
+															<span
+																className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
+															>
+																<CheckCircle className="me-1 h-3 w-3" />
+																Selected
+															</span>
+															<span
+																className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
+															>
+																Tap to select
+															</span>
+														</Badge>
+													</CardFooter>
+												</Card>
+											)
+										})
+									:	<p className="text-muted-foreground">
+											Sorry, all out of recommendations today
+										</p>
+									}
 								</div>
 							</div>
 						)

@@ -7,11 +7,11 @@ import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases
 import Callout from '@/components/ui/callout'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
-import { MessageSquarePlus, Plus, SearchX } from 'lucide-react'
+import { Plus, SearchX } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Button } from '@/components/ui/button'
-import { Garlic } from '@/components/garlic'
+import { LanguageIsEmpty } from '@/components/language-is-empty'
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
@@ -138,25 +138,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 							/>
 						:	<Empty clear={() => setFilter('language')} />}
 					</div>
-				:	<Callout className="mt-4" Icon={() => <Garlic size={120} />}>
-						<p>
-							This language is fully empty! But Sunlo is a community effort
-							&ndash; <em>you</em> have the power to do something about it.
-						</p>
-						<p>
-							You must know <em>at least one phrase</em> in this new language,
-							right? Add it to the library!
-						</p>
-						<Link
-							className={buttonVariants({ size: 'lg' })}
-							to="/learn/$lang/add-phrase"
-							params={{ lang }}
-						>
-							<MessageSquarePlus size="48" className="h-12 w-12 grow" /> Add a
-							phrase to the library
-						</Link>
-					</Callout>
-				}
+				:	<LanguageIsEmpty lang={lang} />}
 			</CardContent>
 		</Card>
 	)
