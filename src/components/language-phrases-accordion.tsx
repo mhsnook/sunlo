@@ -7,11 +7,11 @@ import {
 } from '@/components/ui/accordion'
 import { CardStatusDropdown } from './card-status-dropdown'
 import { AddTranslationsDialog } from './add-translations-dialog'
-import { useLanguage } from '@/lib/use-language'
 import { useDeck } from '@/lib/use-deck'
 import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -22,21 +22,24 @@ export function LanguagePhrasesAccordionComponent({
 	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
-	const { data: language } = useLanguage(lang)
 	const { data: deck } = useDeck(lang)
-	if (!language)
+	// we are using filtered phrases but unfiltered pids
+	// because the user will manage filtering
+	const { phrasesMapFiltered, language: languagePids } =
+		useDeckPidsAndRecs(lang)
+	if (!deck)
 		throw new Error(
 			"We can't find that language. Are you sure you have the correct URL?"
 		)
-	const pidsToUse = pids ?? language.pids
+	const pidsToUse = pids ?? languagePids
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pidsToUse.map((pid) => (
 				<PhraseAccordionItem
 					key={pid}
-					phrase={language.phrasesMap[pid]}
+					phrase={phrasesMapFiltered[pid]}
 					card={deck?.cardsMap[pid] ?? null}
-					deckId={deck?.meta.id}
+					deckId={deck?.meta.id!}
 				/>
 			))}
 		</Accordion>
@@ -45,7 +48,7 @@ export function LanguagePhrasesAccordionComponent({
 
 function PhraseAccordionItem({
 	phrase,
-	card = null,
+	card,
 	deckId,
 }: {
 	phrase: PhraseFull
