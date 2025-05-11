@@ -1,6 +1,6 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 
-import { FlashCardReviewSession } from '@/components/flash-card-review-session'
+import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
 import { useMemo } from 'react'
 import { pids } from '@/types/main'
