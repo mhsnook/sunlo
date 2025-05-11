@@ -5,9 +5,9 @@ import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
 import { arrayDifference, mapArray } from './utils'
 import { useProfile } from './use-profile'
 
-export type ProcessedPids = ReturnType<typeof processPids>
+export type ProcessedDeckAndPids = ReturnType<typeof processDeckPidsAndRecs>
 
-function processPids(
+function processDeckPidsAndRecs(
 	translationLangs: Array<string>,
 	phrasesMap: PhrasesMap,
 	languagePids: pids,
@@ -110,7 +110,7 @@ export function useDeckPidsAndRecs(lang: string) {
 			)
 		}
 		// Now `null` always means pending because we always throw errors.
-		return processPids(
+		return processDeckPidsAndRecs(
 			[profile.language_primary, ...profile.languages_spoken],
 			phrasesMap,
 			languagePids,

@@ -15,10 +15,10 @@ import {
 	countUnfinishedCards,
 } from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
-import PhraseExtraInfo from './phrase-extra-info'
-import Flagged from './flagged'
-import PermalinkButton from './permalink-button'
-import SharePhraseButton from './share-phrase-button'
+import PhraseExtraInfo from '../phrase-extra-info'
+import Flagged from '../flagged'
+import PermalinkButton from '../permalink-button'
+import SharePhraseButton from '../share-phrase-button'
 import { useLoaderData } from '@tanstack/react-router'
 
 interface ComponentProps {

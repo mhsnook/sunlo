@@ -1,62 +1,39 @@
 import { pids } from '@/types/main'
 import {
 	createFileRoute,
-	Link,
 	Navigate,
 	useNavigate,
 	useRouter,
 } from '@tanstack/react-router'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
 import {
 	BookOpen,
-	Brain,
 	CalendarClock,
-	Carrot,
-	CheckCircle,
 	ChevronRight,
-	LucideIcon,
-	MessageCircleWarningIcon,
 	MessageSquare,
 	MessageSquarePlus,
-	Sparkles,
-	TrendingUp,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
 import { useMemo, useState } from 'react'
-import {
-	Drawer,
-	DrawerContent,
-	DrawerDescription,
-	DrawerHeader,
-	DrawerTitle,
-	DrawerTrigger,
-} from '@/components/ui/drawer'
+import { Drawer, DrawerTrigger } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
-import Callout from '@/components/ui/callout'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { getFromLocalStorage } from '@/lib/use-reviewables'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { useDeckMeta, useDeckPids } from '@/lib/use-deck'
+import { useDeckMeta } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
-import { useProfile } from '@/lib/use-profile'
-import ExtraInfo from '@/components/extra-info'
 import { Database } from '@/types/supabase'
 import {
 	LanguageIsEmpty,
 	LanguageFilteredIsEmpty,
 } from '@/components/language-is-empty'
+import { NotEnoughCards } from '@/components/review/not-enough-cards'
+import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
+import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -68,57 +45,21 @@ function ReviewPage() {
 	const dayString = todayString()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
-	const { data: deckPids } = useDeckPids(lang)
 	const pids = useDeckPidsAndRecs(lang)
 
 	if (!meta?.id)
 		throw new Error(
 			"Attempted to build a review but we can't even find a deck ID"
 		)
-	if (!deckPids)
-		throw new Error(
-			"Attempting to build a review but we can't find deckPids data"
-		)
 	if (pids === null)
 		throw new Error('Pids should not be null here :/, even once')
 
-	const today_active = deckPids.today_active
+	const today_active = pids.today_active
 
 	const reviewData = useMemo(() => {
 		const dailyCacheKey = ['user', lang, 'review', dayString]
 		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
 	}, [lang, dayString])
-
-	/* This interface has a bunch of steps that need to happen just right in order
-	 * to give the user their 15 new cards, while giving them some control over what
-	 * gets into their deck, while automating much of the selection of new cards.
-	 *
-	 *	1. We have a goal of some `x` new cards daily (15, for now), in addition to today's
-	 * 	active/scheduled cards, `s`
-	 * 2. First priority is to pick up to x number of friend recommendations, `r`.
-	 * 	Filter out cards with reviews. The user can select/approve them, and what
-	 * 	remains is `selectedFriendRecs` with length r.
-	 * 	(This is currently hardcoded as [] because the feature is unbuilt)
-	 * 	x - r = x2
-	 * 3. Then if x2 is a positive number, we still need that many new cards to study.
-	 * 	So we start with algo recs because they're fun; we show them 4 cards from each
-	 * 	of the top8 lists, so long as they have no deck reviews, and the user can
-	 * 	approve them, building `selectedAlgoRecs`, with length a.
-	 * 	x2 - r = x3
-	 * 	Note: algo recs will not filter based on any other status like deck status. This
-	 * 	means the algo section can sort of function to "bump" cards that are unreviewed,
-	 * 	just chilling in the deck, but which are popular or easy.
-	 * 4. If x3 is still a positive number, we will take the first `d` cards from the deck.
-	 * 	x3 - a = x4
-	 * 5. If x4 is still a positive number, we will choose the remainder from the library, `l`.
-	 * 	x4 - d = x5
-	 *		If x5 > l, we will simply not have enough cards.
-	 * 6. Metadata wise: the total new cards is going to be something close to r + a + l, and
-	 * 	total cards will be s + r + a + d + l. To keep things simple we should always filter
-	 * 	out cards _selected_ in the previous step, as well as cards with reviews, and cards
-	 * 	with status 'learned' or 'skipped'.
-	 *
-	 */
 
 	// 1. we have today's active cards plus we need x more
 	// const [countNeeded, setCountNeeded] = useState<number>(15)
@@ -286,65 +227,24 @@ function ReviewPage() {
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
 					<div>Get Ready to review your {languages[lang]} cards</div>
-					<ExtraInfo title="Explaining today's review cards">
-						<p>
-							<strong>{today_active.length} cards</strong> scheduled based on
-							previous reviews. <br />
-							<strong>{countNeeded} new cards</strong> is your goal for new
-							cards each day.
-							<br />
-							<strong>{freshCards.length} new cards</strong> have been selected
-							for you/by you. <br />
-							<strong>{Math.abs(countSurplusOrDeficit)} cards</strong>{' '}
-							{countSurplusOrDeficit > 0 ? 'above' : 'less than'} your daily
-							goal.
-							<br />
-							(of which {cardsToCreate.length} were not previously in your
-							deck).
-							<br />
-							<strong>{allCardsForToday.length} total cards</strong> are lined
-							up for your review today.
-						</p>
-						<Flagged name="friend_recommendations">
-							<p>
-								There are {friendRecsFiltered.length} friend recommendations, of
-								which you've selected {friendRecsSelected.length}. So you still
-								need to get {countNeeded2} countNeeded2.
-							</p>
-						</Flagged>
-						<p>
-							We offered some recs from the algorithm, and you selected{' '}
-							{algoRecsSelected.length} selectedAlgoRecs, meaning you still need{' '}
-							{countNeeded3}.
-						</p>
-						<p>
-							Next we went looking in your deck for cards you've selected, but
-							haven't reviewed before: there are {pids.unreviewed_active.length}{' '}
-							of them (out of {pids.deck.length} total in your deck), and we
-							managed to get {cardsUnreviewedActiveSelected.length} of them
-							(unsure why there would ever be a discrepancy here), leaving{' '}
-							{countNeeded4} to pull from the library.
-						</p>
-						<p>
-							We have {pids.not_in_deck.length} cards in the library that aren't
-							already in your deck or weren't chosen from the recommendations,
-							the {pids.language.length} total phrases in the library and found{' '}
-							{pids.not_in_deck.length} which are not in your deck, and we
-							grabbed {libraryPhrasesSelected.length} of them.
-						</p>
-						<p>
-							So the total number of cards is {allCardsForToday.length}, which
-							is {today_active.length} scheduled + {friendRecsSelected.length}{' '}
-							friend recs + {algoRecsSelected.length} algo recs +{' '}
-							{cardsUnreviewedActiveSelected.length} deck +{' '}
-							{libraryPhrasesSelected.length} library ={' '}
-							{today_active.length +
-								friendRecsSelected.length +
-								algoRecsSelected.length +
-								cardsUnreviewedActiveSelected.length +
-								libraryPhrasesSelected.length}
-						</p>
-					</ExtraInfo>
+					<ExplainTodaysReview
+						today_active={today_active}
+						countNeeded={countNeeded}
+						freshCards={freshCards}
+						countSurplusOrDeficit={countSurplusOrDeficit}
+						cardsToCreate={cardsToCreate}
+						allCardsForToday={allCardsForToday}
+						friendRecsFiltered={friendRecsFiltered}
+						friendRecsSelected={friendRecsSelected}
+						countNeeded2={countNeeded2}
+						algoRecsFiltered={algoRecsFiltered}
+						algoRecsSelected={algoRecsSelected}
+						countNeeded3={countNeeded3}
+						pids={pids}
+						cardsUnreviewedActiveSelected={cardsUnreviewedActiveSelected}
+						countNeeded4={countNeeded4}
+						libraryPhrasesSelected={libraryPhrasesSelected}
+					/>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -381,7 +281,7 @@ function ReviewPage() {
 								<CardContent>
 									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
 										<CalendarClock />
-										<span>{deckPids?.today_active.length}</span>
+										<span>{pids.today_active.length}</span>
 									</p>
 									<p className="text-muted-foreground">
 										scheduled based on past reviews
@@ -460,8 +360,7 @@ function ReviewPage() {
 								size="lg"
 								disabled={isPending || allCardsForToday.length === 0}
 							>
-								Okay, let's get started{' '}
-								<ChevronRight className="ml-2 h-5 w-5" />
+								Okay, let's get started <ChevronRight className="h-5 w-5" />
 							</Button>
 							<Drawer>
 								<DrawerTrigger asChild>
@@ -474,7 +373,7 @@ function ReviewPage() {
 										Customize my session
 									</Button>
 								</DrawerTrigger>
-								<ReviewCardsToAddToDeck
+								<SelectPhrasesToAddToReview
 									lang={lang}
 									algoRecsSelected={algoRecsSelected}
 									setAlgoRecsSelected={setAlgoRecsSelected}
@@ -487,189 +386,5 @@ function ReviewPage() {
 				}
 			</CardContent>
 		</Card>
-	)
-}
-
-type FiltersEnum = 'popular' | 'easiest' | 'newest'
-
-function ReviewCardsToAddToDeck({
-	lang,
-	algoRecsSelected,
-	setAlgoRecsSelected,
-	algoRecsFiltered,
-	// countOfCardsDesired,
-}: {
-	lang: string
-	algoRecsSelected: pids
-	setAlgoRecsSelected: (recs: pids) => void
-	algoRecsFiltered: Record<FiltersEnum, pids>
-	// countOfCardsDesired: number
-}) {
-	const res = useDeckPidsAndRecs(lang)
-	if (!res)
-		throw new Error(
-			'Unable to grab the collated deck pids and filtered phrases'
-		)
-	const phrasesMapFiltered = res.phrasesMapFiltered
-	const { data: profile } = useProfile()
-	if (!profile)
-		throw new Error(
-			'Profile should be here on first render, but it is not showing up'
-		)
-	// Toggle card selection
-	const toggleCardSelection = (pid1: string) => {
-		const updatedRecs =
-			algoRecsSelected.indexOf(pid1) === -1 ?
-				[...algoRecsSelected, pid1]
-			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
-		setAlgoRecsSelected(updatedRecs)
-	}
-	const sections: {
-		key: FiltersEnum
-		description: string
-		Icon: LucideIcon
-	}[] = [
-		{
-			key: 'popular',
-			description: `Popular among all ${languages[lang]} learners`,
-			Icon: TrendingUp,
-		},
-		{
-			key: 'easiest',
-			description: `Broaden your vocabulary`,
-			Icon: Carrot,
-		},
-		{
-			key: 'newest',
-			description: `Newly added`,
-			Icon: Brain,
-		},
-	]
-
-	return (
-		<DrawerContent aria-describedby="drawer-description">
-			<div className="@container relative mx-auto w-full max-w-prose overflow-y-auto px-1 pb-10">
-				<DrawerHeader className="bg-background sticky top-0">
-					<DrawerTitle className="sticky top-0 flex items-center gap-2 text-xl">
-						<Sparkles className="h-5 w-5 text-purple-500" />
-						Recommended for you ({algoRecsSelected.length} selected)
-					</DrawerTitle>
-				</DrawerHeader>
-				<DrawerDescription className="">
-					Review and select which recommended cards you want to include in your
-					session
-				</DrawerDescription>
-				<div className="my-6 space-y-6">
-					{sections.map((s) => {
-						return (
-							<div>
-								<p className="my-4 text-lg">
-									<s.Icon className="inline size-6" /> {s.description}
-								</p>
-								<div className="grid gap-3 @lg:grid-cols-2">
-									{algoRecsFiltered[s.key].length > 0 ?
-										algoRecsFiltered[s.key].map((pid) => {
-											const selected = algoRecsSelected.indexOf(pid) > -1
-											const phrase = phrasesMapFiltered[pid]
-											// console.log(`mapping the algo recs`, phrase)
-
-											return (
-												<Card
-													onClick={() => toggleCardSelection(pid)}
-													key={pid}
-													className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
-												>
-													<CardHeader className="p-3 pb-0">
-														<CardTitle className="text-base">
-															{phrase.text}
-														</CardTitle>
-														<CardDescription>
-															{phrase.translations[0].text}
-														</CardDescription>
-													</CardHeader>
-													<CardFooter className="flex justify-end p-3 pt-0">
-														<Badge
-															variant={selected ? 'default' : 'outline'}
-															className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
-														>
-															<span
-																className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
-															>
-																<CheckCircle className="me-1 h-3 w-3" />
-																Selected
-															</span>
-															<span
-																className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
-															>
-																Tap to select
-															</span>
-														</Badge>
-													</CardFooter>
-												</Card>
-											)
-										})
-									:	<p className="text-muted-foreground">
-											Sorry, all out of recommendations today
-										</p>
-									}
-								</div>
-							</div>
-						)
-					})}
-				</div>
-			</div>
-		</DrawerContent>
-	)
-}
-
-function NotEnoughCards({
-	lang,
-	countNeeded,
-	newCardsCount,
-	totalCards,
-}: {
-	lang: string
-	countNeeded: number
-	newCardsCount: number
-	totalCards: number
-}) {
-	const noCards = totalCards === 0
-	return (
-		<Callout variant="ghost" Icon={() => <MessageCircleWarningIcon />}>
-			<p>
-				It looks like you don't have {noCards ? 'any' : 'enough new'} cards
-				{noCards ?
-					" to review. You'll have to add at least a few before you can proceed"
-				:	<>
-						in your deck to meet your goal of{' '}
-						<strong className="italic">{countNeeded} new cards a day</strong>
-					</>
-				}
-				.
-			</p>
-			<div className="my-2 flex flex-col gap-2 @lg:flex-row">
-				<Link
-					className={buttonVariants({ variant: 'outline' })}
-					to="/learn/$lang/library"
-					params={{ lang }}
-				>
-					Add cards from the Library
-				</Link>
-
-				<Link
-					className={buttonVariants({ variant: 'outline' })}
-					to="/learn/$lang/add-phrase"
-					params={{ lang }}
-				>
-					Create new cards
-				</Link>
-			</div>
-			{noCards ? null : (
-				<>
-					Or click the big button below and get started with the {newCardsCount}{' '}
-					cards you have.
-				</>
-			)}
-		</Callout>
 	)
 }
