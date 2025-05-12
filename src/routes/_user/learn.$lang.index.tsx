@@ -244,46 +244,44 @@ function DeckSettings({ lang }: LangOnlyComponentProps) {
 
 function Empty({ lang }: LangOnlyComponentProps) {
 	return (
-		<Card className="py-10">
+		<Card>
 			<CardHeader>
 				<CardTitle>
-					<h1 className="mb-6 text-3xl font-bold">
-						Welcome to Your New Language Journey!
-					</h1>
+					<h1 className="mb-6 text-3xl font-bold">Welcome to Your New Deck!</h1>
 				</CardTitle>
-				<CardContent className="space-y-6">
-					<p className="text-lg">
-						Let's get started by setting up your learning experience. Do you
-						want to start by browsing the public deck of flash cards, or invite
-						a friend to help you out?
-					</p>
-					<div className="flex flex-col gap-2 @lg:flex-row">
-						<Link
-							to="/learn/$lang/library"
-							params={{ lang }}
-							className={buttonVariants({ variant: 'secondary' })}
-						>
-							<Library /> Browse the {languages[lang]} library
-						</Link>
-						<Link
-							to="/friends"
-							className={buttonVariants({ variant: 'secondary' })}
-						>
-							<Contact /> Invite a friend
-						</Link>
-					</div>
-					<p className="text-lg">
-						Or, do you already have a phrase in mind you'd like to add?
-					</p>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				<p className="text-lg">
+					Let's get started by setting up your learning experience. Do you want
+					to start by browsing the public deck of flash cards, or invite a
+					friend to help you out?
+				</p>
+				<div className="flex flex-col gap-2 @lg:flex-row">
 					<Link
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/library"
 						params={{ lang }}
 						className={buttonVariants({ variant: 'secondary' })}
 					>
-						<NotebookPen /> Add a phrase
+						<Library /> Browse the {languages[lang]} library
 					</Link>
-				</CardContent>
-			</CardHeader>
+					<Link
+						to="/friends"
+						className={buttonVariants({ variant: 'secondary' })}
+					>
+						<Contact /> Invite a friend
+					</Link>
+				</div>
+				<p className="text-lg">
+					Or, do you already have a phrase in mind you'd like to add?
+				</p>
+				<Link
+					to="/learn/$lang/add-phrase"
+					params={{ lang }}
+					className={buttonVariants({ variant: 'secondary' })}
+				>
+					<NotebookPen /> Add a phrase
+				</Link>
+			</CardContent>
 		</Card>
 	)
 }
