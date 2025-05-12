@@ -53,7 +53,6 @@ import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn.$lang
 
 const RequestRemovalLazyImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyImport = createFileRoute('/privacy-policy')()
-const DashboardLazyImport = createFileRoute('/dashboard')()
 const ComponentsLazyImport = createFileRoute('/components')()
 
 // Create/Update Routes
@@ -73,12 +72,6 @@ const PrivacyPolicyLazyRoute = PrivacyPolicyLazyImport.update({
 } as any).lazy(() =>
   import('./routes/privacy-policy.lazy').then((d) => d.Route),
 )
-
-const DashboardLazyRoute = DashboardLazyImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/dashboard.lazy').then((d) => d.Route))
 
 const ComponentsLazyRoute = ComponentsLazyImport.update({
   id: '/components',
@@ -325,13 +318,6 @@ declare module '@tanstack/react-router' {
       path: '/components'
       fullPath: '/components'
       preLoaderRoute: typeof ComponentsLazyImport
-      parentRoute: typeof rootRoute
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardLazyImport
       parentRoute: typeof rootRoute
     }
     '/privacy-policy': {
@@ -719,7 +705,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof UserRouteWithChildren
   '/components': typeof ComponentsLazyRoute
-  '/dashboard': typeof DashboardLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/find-a-friend': typeof AuthFindAFriendRoute
@@ -760,7 +745,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof UserRouteWithChildren
   '/components': typeof ComponentsLazyRoute
-  '/dashboard': typeof DashboardLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/find-a-friend': typeof AuthFindAFriendRoute
@@ -798,7 +782,6 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
   '/components': typeof ComponentsLazyRoute
-  '/dashboard': typeof DashboardLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/_auth/find-a-friend': typeof AuthFindAFriendRoute
@@ -841,7 +824,6 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/components'
-    | '/dashboard'
     | '/privacy-policy'
     | '/request-removal'
     | '/find-a-friend'
@@ -881,7 +863,6 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/components'
-    | '/dashboard'
     | '/privacy-policy'
     | '/request-removal'
     | '/find-a-friend'
@@ -917,7 +898,6 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_user'
     | '/components'
-    | '/dashboard'
     | '/privacy-policy'
     | '/request-removal'
     | '/_auth/find-a-friend'
@@ -960,7 +940,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
   ComponentsLazyRoute: typeof ComponentsLazyRoute
-  DashboardLazyRoute: typeof DashboardLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
 }
@@ -970,7 +949,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
   ComponentsLazyRoute: ComponentsLazyRoute,
-  DashboardLazyRoute: DashboardLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
 }
@@ -989,7 +967,6 @@ export const routeTree = rootRoute
         "/_auth",
         "/_user",
         "/components",
-        "/dashboard",
         "/privacy-policy",
         "/request-removal"
       ]
@@ -1019,9 +996,6 @@ export const routeTree = rootRoute
     },
     "/components": {
       "filePath": "components.lazy.tsx"
-    },
-    "/dashboard": {
-      "filePath": "dashboard.lazy.tsx"
     },
     "/privacy-policy": {
       "filePath": "privacy-policy.lazy.tsx"
