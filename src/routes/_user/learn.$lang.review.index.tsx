@@ -10,9 +10,10 @@ import languages from '@/lib/languages'
 import {
 	BookOpen,
 	CalendarClock,
-	ChevronRight,
 	MessageSquare,
 	MessageSquarePlus,
+	Rocket,
+	Sparkles,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -98,10 +99,11 @@ function ReviewPage() {
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
-	const algosEmpty =
-		algoRecsFiltered.popular.length === 0 &&
-		algoRecsFiltered.easiest.length === 0 &&
-		algoRecsFiltered.newest.length === 0
+	const algosInitialCount =
+		algoRecsFiltered.popular.length +
+		algoRecsFiltered.easiest.length +
+		algoRecsFiltered.newest.length
+	const algosEmpty = algosInitialCount === 0
 
 	// 4. deck cards
 	// pull new unreviewed cards, excluding the friend recs we already got,
@@ -350,27 +352,16 @@ function ReviewPage() {
 								totalCards={allCardsForToday.length}
 							/>
 						)}
-						<div className="flex flex-col justify-center gap-4 @xl:flex-row">
-							<Button
-								onClick={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									mutate()
-								}}
-								size="lg"
-								disabled={isPending || allCardsForToday.length === 0}
-							>
-								Okay, let's get started <ChevronRight className="h-5 w-5" />
-							</Button>
+						<div className="flex basis-80 flex-row flex-wrap justify-items-stretch gap-4">
 							<Drawer>
 								<DrawerTrigger asChild>
 									<Button
-										className="font-normal"
-										variant="outline"
+										className="grow font-normal"
+										variant="secondary"
 										size="lg"
 										disabled={algosEmpty}
 									>
-										Customize my session
+										<Sparkles /> View Recommendations ({algosInitialCount})
 									</Button>
 								</DrawerTrigger>
 								<SelectPhrasesToAddToReview
@@ -381,6 +372,19 @@ function ReviewPage() {
 									// countOfCardsDesired={countNeeded2}
 								/>
 							</Drawer>
+							<Button
+								onClick={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									mutate()
+								}}
+								size="lg"
+								disabled={isPending || allCardsForToday.length === 0}
+								className="grow"
+							>
+								<Rocket className="h-5 w-5" />
+								Start Today's Review
+							</Button>
 						</div>
 					</>
 				}
