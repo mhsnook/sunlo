@@ -71,14 +71,14 @@ function RouteComponent() {
 						lang={lang}
 					/>
 				</div>
-				<CardDescription className="mt-2 flex items-center gap-2">
+				<div className="text-muted-foreground static mt-2 block items-center gap-2 text-sm">
 					{!card ?
 						<span>This card is not in your deck</span>
 					:	<Flagged
 							className="flex flex-row items-center gap-1"
 							name="cards_schedule_metadata"
 						>
-							<span>Difficulty score {card?.difficultyScore ?? '7'}/10</span>
+							<span>Difficulty score {card?.difficulty}/10</span>
 							<span className="mx-2">•</span>
 							<Calendar className="h-4 w-4" />
 							<span>
@@ -87,7 +87,7 @@ function RouteComponent() {
 							</span>
 						</Flagged>
 					}
-				</CardDescription>
+				</div>
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-6">
