@@ -7,7 +7,7 @@ export function UnderConstruction() {
 			variant="ghost"
 			className="mx-auto max-w-xl gap-[5%]"
 			Icon={() => (
-				<div className="bg-primary flex aspect-square items-center justify-center rounded-full text-white">
+				<div className="bg-primary/50 flex aspect-square items-center justify-center rounded-full text-white">
 					<Hammer absoluteStrokeWidth={true} size={36} className="m-4" />
 				</div>
 			)}

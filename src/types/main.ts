@@ -8,6 +8,8 @@ import {
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 
+export type ClientErrorInsert = TablesInsert<'monitor_client_event'>
+
 export type uuid = string
 export type pids = Array<uuid>
 

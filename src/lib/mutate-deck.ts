@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { DeckRow } from '@/types/main'
 import languages from './languages'
 import { useNavigate } from '@tanstack/react-router'
+import { monitorClientEvent } from './use-monitor'
 
 async function postNewDeck(lang: string) {
 	// console.log(`postNewDeck ${lang}`)
@@ -27,14 +28,22 @@ export const useNewDeckMutation = () => {
 			return await postNewDeck(variables.lang)
 		},
 		mutationKey: ['new-deck'],
-		onSuccess: (_, variables) => {
+		onSuccess: async (data, variables) => {
 			void queryClient.invalidateQueries({ queryKey: ['user'] })
 			toast.success(`Created a new deck to learn ${languages[variables.lang]}`)
+			await monitorClientEvent({
+				message: 'New deck created',
+				context: { data, variables },
+			})
 			void navigate({ to: `/learn/$lang`, params: { lang: variables.lang } })
 		},
 		onError: (error) => {
 			console.log(`Error creating deck:`, error)
 			toast.error(`Error creating deck: ${error.message}`)
+			monitorClientEvent({
+				message: 'Error creating deck',
+				context: { name: error.name, message: error.message },
+			})
 		},
 	})
 

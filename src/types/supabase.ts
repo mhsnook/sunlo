@@ -120,6 +120,30 @@ export type Database = {
         }
         Relationships: []
       }
+      monitor_client_event: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string | null
+          uid: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          uid?: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          uid?: string
+        }
+        Relationships: []
+      }
       phrase: {
         Row: {
           added_by: string | null
