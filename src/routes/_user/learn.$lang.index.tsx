@@ -159,7 +159,10 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						to="/learn/$lang/review"
 						params={{ lang }}
 						from={Route.fullPath}
-						className={cn(buttonVariants({ variant: 'default' }), 'flex-1')}
+						className={cn(
+							buttonVariants({ variant: 'default' }),
+							'grow basis-120'
+						)}
 					>
 						<Dumbbell /> Review my {languages[lang]} flashcards
 					</Link>
@@ -167,7 +170,10 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						to="/learn/$lang/library"
 						params={{ lang }}
 						from={Route.fullPath}
-						className={cn(buttonVariants({ variant: 'secondary' }), 'flex-0')}
+						className={cn(
+							buttonVariants({ variant: 'secondary' }),
+							'grow basis-60'
+						)}
 					>
 						<BookCopy />
 						Browse the {languages[lang]} library
@@ -176,7 +182,10 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						to="/learn/$lang/add-phrase"
 						params={{ lang }}
 						from={Route.fullPath}
-						className={cn(buttonVariants({ variant: 'secondary' }), 'flex-0')}
+						className={cn(
+							buttonVariants({ variant: 'secondary' }),
+							'grow basis-60'
+						)}
 					>
 						<NotebookPen />
 						Add a new phrase
