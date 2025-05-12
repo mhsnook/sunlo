@@ -21,7 +21,9 @@ export default function OneSidebarMenu({
 
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel>{title}</SidebarGroupLabel>
+			<SidebarGroupLabel className={!title ? 'sr-only' : ''}>
+				{title}
+			</SidebarGroupLabel>
 			<SidebarMenu>
 				{menu.map((item) => (
 					<SidebarMenuItem key={item.name}>
