@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import Callout from '@/components/ui/callout'
+import { UnderConstruction } from '@/components/under-construction'
 import { GarlicBroccoli } from '@/components/garlic'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -87,24 +87,8 @@ function Index() {
 				</div>
 			</main>
 
-			<Callout
-				variant="ghost"
-				className="mx-auto max-w-xl"
-				Icon={() => (
-					<div className="bg-primary flex aspect-square items-center justify-center rounded-full text-white">
-						<WandSparkles size={20} className="m-4" />
-					</div>
-				)}
-			>
-				<p>
-					Sunlo is under development. It should be ready to use, but it's very
-					early days. Please get in touch on BlueSky at{' '}
-					<a className="s-link" href="https://bsky.app/profile/sunlo.app">
-						@sunlo.app
-					</a>{' '}
-					to let us know of any thoughts, suggestions or feedback.
-				</p>
-			</Callout>
+			<UnderConstruction />
+
 			<section className="my-16 px-1 pt-4 pb-8 @lg:px-4 @lg:pt-10 @lg:pb-16">
 				<h2 className="h2 px-4 text-center @lg:mb-6">
 					Our Approach to Language&nbsp;Learning

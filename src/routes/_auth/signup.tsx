@@ -7,7 +7,12 @@ import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { EmailField, PasswordField, UserRoleField } from '@/components/fields'
 
@@ -15,6 +20,7 @@ import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import SuccessCheckmark from '@/components/SuccessCheckmark'
 import { uuid } from '@/types/main'
+import { UnderConstruction } from '@/components/under-construction'
 
 type SignUpProps = {
 	referrer?: uuid
@@ -89,6 +95,7 @@ function SignUp() {
 
 	return (
 		<>
+			<UnderConstruction />
 			<CardHeader>
 				<CardTitle>Sign Up</CardTitle>
 			</CardHeader>
@@ -140,6 +147,19 @@ function SignUp() {
 					</form>
 				}
 			</CardContent>
+			<CardFooter className="static block space-y-2 opacity-80">
+				<p>
+					By signing up you accept our{' '}
+					<Link className="s-link" to="/privacy-policy">
+						privacy policy
+					</Link>
+					.
+				</p>
+				<p className="italic">
+					Note: we are not GDPR compliant yet; if you life in the EU, you may
+					have to wait till next month.
+				</p>
+			</CardFooter>
 		</>
 	)
 }
