@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
-import { PhraseCard } from './phrase-card'
+import { PhraseTinyCard } from './phrase-tiny-card'
 
 type PhraseSectionProps = {
 	description: string
@@ -22,14 +22,15 @@ const PhraseSection = ({
 	if (!phrasesMapFiltered) return null
 	return (
 		<div>
-			<p className="my-1 text-lg">
-				<Icon className="inline size-6" /> {description}
+			<p className="my-1 flex flex-row justify-between text-lg">
+				{description}
+				<Icon className="inline size-6" />
 			</p>
 			{pids?.length > 0 ?
-				<div className="flex flex-row flex-wrap gap-2">
+				<div className="grid grid-cols-1 gap-2 @xl:grid-cols-2">
 					{pids.map((pid) => {
 						return !(pid in phrasesMapFiltered) ? null : (
-								<PhraseCard key={pid} phrase={phrasesMapFiltered[pid]} />
+								<PhraseTinyCard key={pid} phrase={phrasesMapFiltered[pid]} />
 							)
 					})}
 				</div>
