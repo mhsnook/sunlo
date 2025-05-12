@@ -16,7 +16,9 @@ export default function OneSidebarMenu({
 	menu: Array<LinkType>
 	title: string
 }) {
-	const { toggleSidebar } = useSidebar()
+	const { setOpenMobile } = useSidebar()
+	const closeSidebar = () => setOpenMobile(false)
+
 	return (
 		<SidebarGroup>
 			<SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -24,7 +26,7 @@ export default function OneSidebarMenu({
 				{menu.map((item) => (
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
-							<Link {...item.link} onClick={toggleSidebar}>
+							<Link {...item.link} onClick={closeSidebar}>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>
 							</Link>

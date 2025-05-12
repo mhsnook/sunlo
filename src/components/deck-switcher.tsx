@@ -52,7 +52,8 @@ function NoDecks() {
 }
 
 export function DeckSwitcher({ lang }: { lang?: string }) {
-	const { isMobile, toggleSidebar } = useSidebar()
+	const { isMobile, setOpenMobile } = useSidebar()
+	const closeSidebar = () => setOpenMobile(false)
 	const deckMenuData = useDeckMenuData()
 
 	return (
@@ -97,7 +98,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 									<Link
 										to="/learn/$lang"
 										params={{ lang: deck.lang }}
-										onClick={toggleSidebar}
+										onClick={closeSidebar}
 									>
 										{deck.name}
 										<Badge variant="outline">{deck.badge} cards</Badge>
@@ -107,7 +108,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 							))}
 							<DropdownMenuSeparator />
 							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
-								<Link to="/learn/add-deck" onClick={toggleSidebar}>
+								<Link to="/learn/add-deck" onClick={closeSidebar}>
 									<div className="bg-background flex size-6 items-center justify-center rounded border">
 										<Plus className="size-4" />
 									</div>
