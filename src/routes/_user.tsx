@@ -50,13 +50,10 @@ export const Route = createFileRoute('/_user')({
 
 function UserLayout() {
 	return (
-		<div className="flex h-screen w-full overflow-hidden">
+		<div className="flex h-screen w-full">
 			<AppSidebar />
 			<SidebarInset className="w-full flex-1">
-				<div
-					id="app-sidebar-layout-outlet"
-					className="w-app @container overflow-y-auto pb-6"
-				>
+				<div id="app-sidebar-layout-outlet" className="w-app @container pb-6">
 					<Navbar />
 					<AppNav />
 					<Outlet />
