@@ -95,7 +95,7 @@ function SignUp() {
 
 	return (
 		<>
-			<UnderConstruction />
+			{signupMutation.isSuccess ? null : <UnderConstruction />}
 			<CardHeader>
 				<CardTitle>Sign Up</CardTitle>
 			</CardHeader>
@@ -147,19 +147,21 @@ function SignUp() {
 					</form>
 				}
 			</CardContent>
-			<CardFooter className="static block space-y-2 opacity-80">
-				<p>
-					By signing up you accept our{' '}
-					<Link className="s-link" to="/privacy-policy">
-						privacy policy
-					</Link>
-					.
-				</p>
-				<p className="italic">
-					Note: we are not GDPR compliant yet; if you life in the EU, you may
-					have to wait till next month.
-				</p>
-			</CardFooter>
+			{signupMutation.isSuccess ? null : (
+				<CardFooter className="static block space-y-2 opacity-80">
+					<p>
+						By signing up you accept our{' '}
+						<Link className="s-link" to="/privacy-policy">
+							privacy policy
+						</Link>
+						.
+					</p>
+					<p className="italic">
+						Note: we are not GDPR compliant yet; if you life in the EU, you may
+						have to wait till next month.
+					</p>
+				</CardFooter>
+			)}
 		</>
 	)
 }

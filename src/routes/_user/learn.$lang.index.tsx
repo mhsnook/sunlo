@@ -247,7 +247,7 @@ function Empty({ lang }: LangOnlyComponentProps) {
 		<Card>
 			<CardHeader>
 				<CardTitle>
-					<h1 className="mb-6 text-3xl font-bold">Welcome to Your New Deck!</h1>
+					<p className="mb-6 text-3xl font-bold">Welcome to Your New Deck!</p>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
