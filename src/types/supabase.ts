@@ -417,6 +417,7 @@ export type Database = {
       user_card_review: {
         Row: {
           created_at: string
+          day_session: string | null
           difficulty: number | null
           id: string
           review_time_retrievability: number | null
@@ -429,6 +430,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          day_session?: string | null
           difficulty?: number | null
           id?: string
           review_time_retrievability?: number | null
@@ -441,6 +443,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          day_session?: string | null
           difficulty?: number | null
           id?: string
           review_time_retrievability?: number | null
@@ -992,6 +995,7 @@ export type Database = {
         }
         Returns: {
           created_at: string
+          day_session: string | null
           difficulty: number | null
           id: string
           review_time_retrievability: number | null
@@ -1007,6 +1011,7 @@ export type Database = {
         Args: { review_id: string; score: number }
         Returns: {
           created_at: string
+          day_session: string | null
           difficulty: number | null
           id: string
           review_time_retrievability: number | null

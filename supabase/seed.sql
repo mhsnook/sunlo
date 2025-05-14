@@ -3484,7 +3484,8 @@ insert into
 		"review_time_retrievability",
 		"created_at",
 		"updated_at",
-		"user_deck_id"
+		"user_deck_id",
+		"day_session"
 	)
 values
 	(
@@ -3497,7 +3498,8 @@ values
 		null,
 		current_date - 4 + interval '2 minute',
 		current_date - 4 + interval '2 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '2 minute' - interval '4 hour')::date
 	),
 	(
 		'7b837436-f8e8-4459-85d1-af1366f03887',
@@ -3509,7 +3511,8 @@ values
 		null,
 		current_date - 4 + interval '3 minute',
 		current_date - 4 + interval '3 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '3 minute' - interval '4 hour')::date
 	),
 	(
 		'd6355a75-8842-47ec-8417-262f060c1309',
@@ -3521,7 +3524,8 @@ values
 		null,
 		current_date - 4 + interval '4 minute',
 		current_date - 4 + interval '4 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '4 minute' - interval '4 hour')::date
 	),
 	(
 		'9e587800-834f-40c0-ab2e-dd08a2044d04',
@@ -3533,7 +3537,8 @@ values
 		null,
 		current_date - 4 + interval '5 minute',
 		current_date - 4 + interval '5 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '5 minute' - interval '4 hour')::date
 	),
 	(
 		'e0f40ad4-62d8-478d-80ee-09b98263d670',
@@ -3545,7 +3550,8 @@ values
 		0.999963038938466,
 		current_date - 4 + interval '6 minute',
 		current_date - 4 + interval '6 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '6 minute' - interval '4 hour')::date
 	),
 	(
 		'ee22e0bf-5826-43a5-8b60-2e2220417ef9',
@@ -3557,7 +3563,8 @@ values
 		null,
 		current_date - 4 + interval '7 minute',
 		current_date - 4 + interval '7 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '7 minute' - interval '4 hour')::date
 	),
 	(
 		'd51d56ca-9e9d-452c-826a-0e00b46dac91',
@@ -3569,7 +3576,8 @@ values
 		null,
 		current_date - 4 + interval '8 minute',
 		current_date - 4 + interval '8 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '8 minute' - interval '4 hour')::date
 	),
 	(
 		'2b341982-61fd-4a7f-9c2d-48150ddba547',
@@ -3581,7 +3589,8 @@ values
 		null,
 		current_date - 4 + interval '9 minute',
 		current_date - 4 + interval '9 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '9 minute' - interval '4 hour')::date
 	),
 	(
 		'df1878c1-c5a3-419a-84cc-31f71f6a46cb',
@@ -3593,7 +3602,8 @@ values
 		null,
 		current_date - 4 + interval '10 minute',
 		current_date - 4 + interval '10 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '10 minute' - interval '4 hour')::date
 	),
 	(
 		'f5eda65e-1d59-49b4-aa38-651640631b29',
@@ -3605,7 +3615,8 @@ values
 		null,
 		current_date - 4 + interval '11 minute',
 		current_date - 4 + interval '11 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '11 minute' - interval '4 hour')::date
 	),
 	(
 		'14b26464-4442-48ad-b614-ca82209d0b97',
@@ -3617,7 +3628,8 @@ values
 		1,
 		current_date - 4 + interval '12 minute',
 		current_date - 4 + interval '12 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '12 minute' - interval '4 hour')::date
 	),
 	(
 		'8334fd09-6ae8-472e-8a64-9603d6832ec7',
@@ -3629,7 +3641,8 @@ values
 		1,
 		current_date - 4 + interval '13 minute',
 		current_date - 4 + interval '13 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '13 minute' - interval '4 hour')::date
 	),
 	(
 		'0627dafe-bee7-4e8a-8ab8-e77abc2d54e0',
@@ -3641,7 +3654,8 @@ values
 		1,
 		current_date - 4 + interval '14 minute',
 		current_date - 4 + interval '14 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '14 minute' - interval '4 hour')::date
 	),
 	(
 		'218dbc64-6574-40c0-9ca3-a69b48712d1e',
@@ -3653,7 +3667,8 @@ values
 		null,
 		current_date - 4 + interval '15 minute',
 		current_date - 4 + interval '15 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '15 minute' - interval '4 hour')::date
 	),
 	(
 		'36109500-45e0-4682-9db1-dac8e3a93bb4',
@@ -3665,7 +3680,8 @@ values
 		1,
 		current_date - 4 + interval '16 minute',
 		current_date - 4 + interval '16 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '16 minute' - interval '4 hour')::date
 	),
 	(
 		'049cdf96-8267-4fd7-9d58-1bb298ef21f3',
@@ -3677,7 +3693,8 @@ values
 		1,
 		current_date - 4 + interval '17 minute',
 		current_date - 4 + interval '17 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '17 minute' - interval '4 hour')::date
 	),
 	(
 		'e34bfe2e-9762-407f-b796-299a69dd725a',
@@ -3689,7 +3706,8 @@ values
 		null,
 		current_date - 4 + interval '18 minute',
 		current_date - 4 + interval '18 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '18 minute' - interval '4 hour')::date
 	),
 	(
 		'deb887de-e869-4615-94d2-0acdafadaea6',
@@ -3701,7 +3719,8 @@ values
 		null,
 		current_date - 4 + interval '19 minute',
 		current_date - 4 + interval '19 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '19 minute' - interval '4 hour')::date
 	),
 	(
 		'b21dfcb6-db0c-44c8-a7c3-ad8d3fb4921f',
@@ -3713,7 +3732,8 @@ values
 		0.999963038938466,
 		current_date - 4 + interval '20 minute',
 		current_date - 4 + interval '20 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '20 minute' - interval '4 hour')::date
 	),
 	(
 		'2ea384a4-007a-482c-adcb-9e2f855c4372',
@@ -3725,7 +3745,8 @@ values
 		0.999519825632093,
 		current_date - 4 + interval '21 minute',
 		current_date - 4 + interval '21 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '21 minute' - interval '4 hour')::date
 	),
 	(
 		'b2e60078-4bad-4a8d-a390-ef240ad908c6',
@@ -3737,7 +3758,8 @@ values
 		0.999598247960939,
 		current_date - 4 + interval '22 minute',
 		current_date - 4 + interval '22 minute',
-		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0'
+		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',
+		(current_date - 4 + interval '22 minute' - interval '4 hour')::date
 	);
 
 --
