@@ -98,7 +98,7 @@ export function SelectPhrasesToAddToReview({
 				<div className="my-6 space-y-6">
 					{sections.map((s) => {
 						return (
-							<div>
+							<div key={s.key}>
 								<p className="my-4 text-lg">
 									<s.Icon className="inline size-6" /> {s.description}
 								</p>

@@ -245,6 +245,7 @@ function UserCardReviewScoreButtonsRow({
 				:	await postReview({
 						score,
 						user_card_id,
+						day_session: dailyCacheKey[3],
 					})
 		},
 		onSuccess: (data) => {
