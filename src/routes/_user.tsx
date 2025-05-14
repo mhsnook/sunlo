@@ -22,19 +22,16 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
-		return context.auth
 	},
-	loader: async ({
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-		location,
-	}) => {
+	loader: async ({ context: { queryClient, auth }, location }) => {
 		// if for some reason there is no profile, we must create one!
 		if (location.pathname !== '/getting-started') {
-			const data = await queryClient.fetchQuery(profileQuery(userId))
-			if (data === null) throw redirect({ to: '/getting-started' })
+			const data = await queryClient.fetchQuery(profileQuery(auth.userId))
+
+			if (data === null) {
+				console.log(`We are redirecting you bc there's no profile`, auth)
+				throw redirect({ to: '/getting-started' })
+			}
 		}
 
 		return {
