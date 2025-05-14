@@ -166,61 +166,55 @@ function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
 		},
 	})
 	return (
-		<Card>
-			<CardHeader className="pb-0">
-				<CardTitle>
-					<span className="h4">
-						{archived ? 'Reactivate deck' : 'Archive your deck'}
-					</span>
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<AlertDialog open={open} onOpenChange={setOpen}>
-					<AlertDialogTrigger asChild>
-						{archived ?
-							<Button variant="default" disabled={!archived}>
-								Restore deck
-							</Button>
-						:	<Button variant="destructive-outline" disabled={!!archived}>
-								Archive deck
-							</Button>
-						}
-					</AlertDialogTrigger>
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>
-								{archived ?
-									'Restore this deck?'
-								:	'Are you sure you want to archive this deck?'}
-							</AlertDialogTitle>
-							<AlertDialogDescription>
-								{archived ?
-									`You can pick up right where you left off.`
-								:	`This action will hide the deck from your active decks. You can unarchive it later if needed.`
-								}
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-						<AlertDialogFooter>
-							<AlertDialogCancel
-								className={buttonVariants({ variant: 'secondary' })}
-							>
-								Cancel
-							</AlertDialogCancel>
+		<div className="flex w-full flex-col justify-between p-2 @sm:flex-row">
+			<span className="h4">
+				{archived ? 'Reactivate deck' : 'Archive your deck'}
+			</span>
+			<AlertDialog open={open} onOpenChange={setOpen}>
+				<AlertDialogTrigger asChild>
+					{archived ?
+						<Button variant="default" disabled={!archived}>
+							Restore deck
+						</Button>
+					:	<Button variant="destructive-outline" disabled={!!archived}>
+							Archive deck
+						</Button>
+					}
+				</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>
 							{archived ?
-								<AlertDialogAction onClick={() => mutation.mutate()}>
-									Restore
-								</AlertDialogAction>
-							:	<AlertDialogAction
-									className={buttonVariants({ variant: 'destructive' })}
-									onClick={() => mutation.mutate()}
-								>
-									Archive
-								</AlertDialogAction>
+								'Restore this deck?'
+							:	'Are you sure you want to archive this deck?'}
+						</AlertDialogTitle>
+						<AlertDialogDescription>
+							{archived ?
+								`You can pick up right where you left off.`
+							:	`This action will hide the deck from your active decks. You can unarchive it later if needed.`
 							}
-						</AlertDialogFooter>
-					</AlertDialogContent>
-				</AlertDialog>
-			</CardContent>
-		</Card>
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel
+							className={buttonVariants({ variant: 'secondary' })}
+						>
+							Cancel
+						</AlertDialogCancel>
+						{archived ?
+							<AlertDialogAction onClick={() => mutation.mutate()}>
+								Restore
+							</AlertDialogAction>
+						:	<AlertDialogAction
+								className={buttonVariants({ variant: 'destructive' })}
+								onClick={() => mutation.mutate()}
+							>
+								Archive
+							</AlertDialogAction>
+						}
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
+		</div>
 	)
 }
