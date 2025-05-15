@@ -203,19 +203,20 @@ const languages: { [key: string]: string } = {
 	yor: 'Yoruba',
 	zha: 'Zhuang',
 	zul: 'Zulu',
-}
+} as const
 
-export const opts = (
-	keys: Array<string>
-): Array<{ value: string; label: string }> => {
-	return keys.map((lang) => {
-		return {
-			value: lang,
-			label: languages[lang],
-		}
-	})
-}
+const allLanguageKeys = Array.from(
+	Object.keys(languages)
+) as readonly (keyof typeof languages & string)[]
 
-export const allLanguageOptions = opts(Object.keys(languages))
+export const allLanguageOptions: Array<{
+	value: keyof typeof languages & string
+	label: string
+}> = allLanguageKeys.map((lang) => {
+	return {
+		value: lang,
+		label: languages[lang],
+	}
+})
 
 export default languages
