@@ -12,9 +12,22 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Button } from '@/components/ui/button'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
+import { z } from 'zod'
+
+const filterEnum = z.enum([
+	'language_filtered',
+	'active',
+	'inactive',
+	'reviewed_last_7d',
+	'not_in_deck',
+	'language_no_translations',
+	'language',
+])
+const SearchSchema = z.object({ filter: filterEnum.optional() })
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
+	validateSearch: SearchSchema,
 })
 
 function DeckLibraryPage() {
@@ -27,20 +40,12 @@ function DeckLibraryPage() {
 	)
 }
 
-type FilterEnum =
-	| 'language_filtered'
-	| 'active'
-	| 'inactive'
-	| 'reviewed_last_7d'
-	| 'not_in_deck'
-	| 'language_no_translations'
-	| 'language'
-// | 'recommended'
-// | 'recommended_by_friends' | 'recommended_easiest' | 'recommended_newest' | 'recommended_popular'
+type FilterEnum = z.infer<typeof filterEnum>
 
 function DeckContents({ lang }: LangOnlyComponentProps) {
 	const pids = useDeckPidsAndRecs(lang)
-	const [filter, setFilter] = useState<FilterEnum>('not_in_deck')
+	const search = Route.useSearch()
+	const filter = search.filter || 'not_in_deck'
 	if (!pids) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recommended pids object'
@@ -74,56 +79,48 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 					<span className="text-sm">Filters:</span>
 					<BadgeFilter
 						name="language_filtered"
-						setFilter={setFilter}
 						filter={filter}
 						text="All phrases"
 						count={pids.language_filtered.length}
 					/>
 					<BadgeFilter
 						name="active"
-						setFilter={setFilter}
 						filter={filter}
 						text="Active deck"
 						count={pids.active.length}
 					/>
 					<BadgeFilter
 						name="inactive"
-						setFilter={setFilter}
 						filter={filter}
 						text="Inactive"
 						count={pids.inactive.length}
 					/>
 					{/*<BadgeFilter
 						name="recommended"
-						setFilter={setFilter}
 						filter={filter}
 						text="Recommended"
 						count={pids.recommended.length}
 					/>*/}
 					<BadgeFilter
 						name="not_in_deck"
-						setFilter={setFilter}
 						filter={filter}
 						text="Not in deck"
 						count={pids.not_in_deck.length}
 					/>
 					<BadgeFilter
 						name="reviewed_last_7d"
-						setFilter={setFilter}
 						filter={filter}
 						text="Reviewed past week"
 						count={pids.reviewed_last_7d.length}
 					/>
 					<BadgeFilter
 						name="language_no_translations"
-						setFilter={setFilter}
 						filter={filter}
 						text="Needs translations"
 						count={pids.language_no_translations.length}
 					/>
 					<BadgeFilter
 						name="language"
-						setFilter={setFilter}
 						filter={filter}
 						text="No filters"
 						count={pids.language.length}
@@ -136,7 +133,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 								pids={filteredPids}
 								lang={lang}
 							/>
-						:	<Empty clear={() => setFilter('language')} />}
+						:	<Empty />}
 					</div>
 				:	<LanguageIsEmpty lang={lang} />}
 			</CardContent>
@@ -144,36 +141,42 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 	)
 }
 
-function Empty({ clear }: { clear: () => void }) {
+function Empty() {
+	const { lang } = Route.useParams()
 	return (
 		<Callout variant="ghost" Icon={() => <SearchX />}>
 			<p>There are no phrases in the library that match this search.</p>
-			<Button variant="outline" onClick={clear}>
+			<Link
+				className={buttonVariants({ variant: 'outline' })}
+				to="/learn/$lang/library"
+				params={{ lang }}
+				search={{ filter: 'language' }}
+			>
 				Clear filters
-			</Button>
+			</Link>
 		</Callout>
 	)
 }
 
 function BadgeFilter({
-	setFilter,
 	name,
 	text,
 	filter,
 	count = 0,
 }: {
-	setFilter: (val: FilterEnum) => void
 	name: FilterEnum
 	text: string
 	filter: FilterEnum
 	count: number
 }) {
+	const lang = Route.useParams({ select: (d) => d.lang })
 	return (
-		<Badge variant="outline">
-			<label className="flex cursor-pointer gap-1">
-				<Checkbox onClick={() => setFilter(name)} checked={filter === name} />{' '}
-				{text} ({count})
-			</label>
-		</Badge>
+		<Link to="/learn/$lang/library" params={{ lang }} search={{ filter: name }}>
+			<Badge variant="outline">
+				<label className="flex cursor-pointer gap-1">
+					<Checkbox checked={filter === name} /> {text} ({count})
+				</label>
+			</Badge>
+		</Link>
 	)
 }
