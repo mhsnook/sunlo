@@ -5,7 +5,6 @@ import {
 	DropdownMenuItem,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
-	// DropdownMenuShortcut,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
@@ -55,6 +54,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 	const { isMobile, setOpenMobile } = useSidebar()
 	const closeSidebar = () => setOpenMobile(false)
 	const deckMenuData = useDeckMenuData()
+	const languageName = lang ? languages[lang] : null
 
 	return (
 		<SidebarMenu>
@@ -74,7 +74,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 								</div>
 								<div className="grid flex-1 text-left text-sm leading-tight">
 									<span className="truncate font-semibold">
-										{!lang ? 'Choose a deck' : languages[lang]}
+										{languageName ?? 'Choose a deck'}
 									</span>
 								</div>
 								<ChevronsUpDown className="ml-auto" />
@@ -102,7 +102,6 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 									>
 										{deck.name}
 										<Badge variant="outline">{deck.badge} cards</Badge>
-										{/*<DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>*/}
 									</Link>
 								</DropdownMenuItem>
 							))}
