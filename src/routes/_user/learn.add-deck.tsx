@@ -15,7 +15,12 @@ import Callout from '@/components/ui/callout'
 import { ErrorLabel } from '@/components/fields'
 import { RouteIcon } from 'lucide-react'
 
+const SearchSchema = z.object({
+	lang: z.string().optional(),
+})
+
 export const Route = createFileRoute('/_user/learn/add-deck')({
+	validateSearch: SearchSchema,
 	loader: () => ({
 		titleBar: {
 			title: `Start Learning a New Language`,
@@ -38,12 +43,14 @@ type FormValues = z.infer<typeof NewDeckSchema>
 function NewDeckForm() {
 	const createNewDeck = useNewDeckMutation()
 	const { data } = useProfile()
+	const search = Route.useSearch()
 	const {
 		control,
 		handleSubmit,
 		formState: { errors },
 	} = useForm<FormValues>({
 		resolver: zodResolver(NewDeckSchema),
+		defaultValues: { lang: search.lang },
 	})
 	const controller = useController({ name: 'lang', control })
 
@@ -93,7 +100,8 @@ function NewDeckForm() {
 				<Button
 					type="submit"
 					variant="default"
-					className="my-6"
+					size="lg"
+					className="my-4"
 					disabled={createNewDeck.isPending}
 				>
 					{createNewDeck.isPending ? 'Starting...' : 'Start learning'}

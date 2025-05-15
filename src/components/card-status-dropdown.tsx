@@ -156,7 +156,7 @@ export function CardStatusDropdown({
 			<DropdownMenuContent className="">
 				{!deckId ?
 					<DropdownMenuItem>
-						<Link to="/learn/add-deck">
+						<Link to="/learn/add-deck" search={{ lang }}>
 							<StatusSpan choice="nodeck" />
 						</Link>
 					</DropdownMenuItem>
