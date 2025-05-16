@@ -130,7 +130,9 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						{filteredPids.length > 0 ?
 							<LanguagePhrasesAccordionComponent
-								pids={filteredPids}
+								allPids={pids.language}
+								allPhrases={pids.phrasesMapFiltered}
+								filteredPids={filteredPids}
 								lang={lang}
 							/>
 						:	<Empty />}

@@ -12,8 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { uuid } from '@/types/main'
-import { useLanguage } from '@/lib/use-language'
+import { pids, uuid } from '@/types/main'
+import { useLanguagePhrasesMap, useLanguagePids } from '@/lib/use-language'
 import { useMemo } from 'react'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 
@@ -40,29 +40,34 @@ function SearchTab() {
 	const { lang } = Route.useParams()
 	const { text: filter } = Route.useSearch()
 
-	const {
-		data: { phrasesMap, pids },
-	} = useLanguage(lang)
-	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
-		return pids.map((pid: uuid) => {
+	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	const { data: pids } = useLanguagePids(lang)
+	const searchablePhrases: undefined | Array<SearchablePhrase> = useMemo(() => {
+		return pids?.map((pid: uuid) => {
 			return {
 				pid,
 				text: [
-					phrasesMap[pid].text,
-					...phrasesMap[pid].translations.map((t) => t.text),
+					phrasesMap![pid].text,
+					...phrasesMap![pid].translations.map((t) => t.text),
 				].join(', '),
 			}
 		})
 	}, [phrasesMap, pids])
 
 	const searchResults = useMemo(() => {
-		if (!filter.trim()) return pids
-		return searchablePhrases
+		if (!filter?.trim()) return pids
+		return (searchablePhrases ?? [])
 			.filter((searchable: SearchablePhrase) => {
 				return searchable.text.toUpperCase().indexOf(filter.toUpperCase()) > -1
 			})
 			.map((s) => s.pid)
-	}, [filter, searchablePhrases, pids])
+	}, [filter, searchablePhrases, pids]) as pids
+	if (searchResults === undefined)
+		console.log(
+			`We have encountered a strange situation. searchResults array is undefined, instead of empty.`
+		)
+	if (pids === undefined || phrasesMap === undefined)
+		throw new Error('Unexpected situation; langauge pids is empty')
 
 	return (
 		<Card>
@@ -104,12 +109,17 @@ function SearchTab() {
 					</Button>
 				</div>
 
-				{searchResults?.length > 0 ?
-					<LanguagePhrasesAccordionComponent lang={lang} pids={searchResults} />
-				:	<p className="text-muted-foreground mt-4 text-center">
+				<LanguagePhrasesAccordionComponent
+					lang={lang}
+					filteredPids={searchResults}
+					allPids={pids}
+					allPhrases={phrasesMap}
+				/>
+				{searchResults?.length > 0 ? null : (
+					<p className="text-muted-foreground mt-4 text-center">
 						No results found. Try searching for a phrase or add a new one.
 					</p>
-				}
+				)}
 			</CardContent>
 		</Card>
 	)

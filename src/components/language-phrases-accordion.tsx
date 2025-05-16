@@ -1,4 +1,4 @@
-import { CardFull, PhraseFull, pids, uuid } from '@/types/main'
+import { CardFull, PhraseFull, PhrasesMap, pids, uuid } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/accordion'
 import { CardStatusDropdown } from './card-status-dropdown'
 import { AddTranslationsDialog } from './add-translations-dialog'
-import { useDeck } from '@/lib/use-deck'
+import { useDeckCardsMap, useDeckMeta } from '@/lib/use-deck'
 import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
@@ -15,32 +15,36 @@ import { useDeckPidsAndRecs } from '@/lib/process-pids'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
-	pids?: pids | null
+	allPids: pids
+	filteredPids: pids
+	allPhrases: PhrasesMap
 }
 
 export function LanguagePhrasesAccordionComponent({
 	lang,
-	pids = null,
+	allPids,
+	filteredPids,
+	allPhrases,
 }: PhrasesWithOptionalOrder) {
-	const { data: deck } = useDeck(lang)
+	const { data: deckMeta } = useDeckMeta(lang)
+	const { data: cardsMap } = useDeckCardsMap(lang)
+
 	// we are using filtered phrases but unfiltered pids
 	// because the user will manage filtering
-	const { phrasesMapFiltered, language: languagePids } =
-		useDeckPidsAndRecs(lang)
-	if (!deck)
-		throw new Error(
-			"We can't find that language. Are you sure you have the correct URL?"
-		)
-	const pidsToUse = pids ?? languagePids
+
 	return (
 		<Accordion type="single" collapsible className="w-full">
-			{pidsToUse.map((pid) => (
-				<PhraseAccordionItem
+			{allPids.map((pid) => (
+				<div
 					key={pid}
-					phrase={phrasesMapFiltered[pid]}
-					card={deck?.cardsMap[pid] ?? null}
-					deckId={deck?.meta.id!}
-				/>
+					className={`${filteredPids.indexOf(pid) !== -1 ? '' : 'hidden'}`}
+				>
+					<PhraseAccordionItem
+						phrase={allPhrases[pid]}
+						card={cardsMap ? cardsMap[pid] : null}
+						deckId={deckMeta ? deckMeta.id! : null}
+					/>
+				</div>
 			))}
 		</Accordion>
 	)
