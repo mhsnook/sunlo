@@ -62,10 +62,10 @@ function FriendsSection({ lang }: LangOnlyComponentProps) {
 	const profileQuery = useProfile()
 	if (profileQuery.data === null) return null
 
-	const friendsThisLanguage =
-		profileQuery.data?.friendships?.filter(
-			(f: FriendshipRow) => f.helping_with.indexOf(lang) !== -1
-		) || []
+	// const friendsThisLanguage =
+	// 	profileQuery.data?.friendships?.filter(
+	// 		(f: FriendshipRow) => f.helping_with.indexOf(lang) !== -1
+	// 	) || []
 
 	return (
 		<Card>

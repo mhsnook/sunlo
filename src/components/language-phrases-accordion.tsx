@@ -39,7 +39,7 @@ export function LanguagePhrasesAccordionComponent({
 					key={pid}
 					phrase={phrasesMapFiltered[pid]}
 					card={deck?.cardsMap[pid] ?? null}
-					deckId={deck?.meta.id!}
+					deckId={deck?.meta.id}
 				/>
 			))}
 		</Accordion>
@@ -53,7 +53,7 @@ function PhraseAccordionItem({
 }: {
 	phrase: PhraseFiltered
 	card: CardFull | null
-	deckId: uuid
+	deckId: uuid | null
 }) {
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
@@ -62,7 +62,6 @@ function PhraseAccordionItem({
 					lang={phrase.lang!}
 					deckId={deckId}
 					pid={phrase.id!}
-					// @ts-expect-error
 					card={card}
 				/>
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>

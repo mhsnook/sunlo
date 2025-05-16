@@ -58,7 +58,7 @@ function CardSection({ card }: { card: CardFull }) {
 			</div>
 			<div className="flex flex-col">
 				<span className="font-semibold">Card created at</span>
-				<span>{ago(card.created_at!)}</span>
+				<span>{ago(card.created_at)}</span>
 			</div>
 			{!card.last_reviewed_at ?
 				<p>Never reviewed</p>

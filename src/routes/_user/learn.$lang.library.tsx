@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
@@ -10,7 +9,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, SearchX } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { Button } from '@/components/ui/button'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
 import { z } from 'zod'
 
@@ -53,7 +51,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 		return null
 	}
 
-	const filteredPids = pids[filter!]
+	const filteredPids = pids[filter]
 	return (
 		<Card>
 			<CardHeader>
@@ -126,7 +124,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						count={pids.language.length}
 					/>
 				</div>
-				{pids.language!.length > 0 ?
+				{pids.language.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						{filteredPids.length > 0 ?
 							<LanguagePhrasesAccordionComponent

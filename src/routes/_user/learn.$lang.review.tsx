@@ -7,7 +7,7 @@ import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
-	loader: async ({ params: { lang } }) => {
+	loader: ({ params: { lang } }) => {
 		return {
 			dailyCacheKey: () => ['user', lang, 'review', todayString()],
 			contextMenu: [

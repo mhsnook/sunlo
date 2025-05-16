@@ -54,7 +54,9 @@ function AcceptInvitePage() {
 					user_deck_id: search.user_deck_id,
 					action_type: action,
 				})
+				.throwOnError()
 				.select()
+			return res
 		},
 		onSuccess: () => toast.success('Response successful'), // now redirect somewhere?,
 		onError: (error) => {

@@ -127,12 +127,13 @@ export function useDeckPidsAndRecs(lang: string) {
 	const { data: profile } = useProfile()
 
 	// these two select from the same cache key
-	const { data: phrasesMap, isPending: isPending1 } =
+	const { data: phrasesMap /*, isPending: isPending1 */ } =
 		useLanguagePhrasesMap(lang)
-	const { data: languagePids, isPending: isPending2 } = useLanguagePids(lang)
+	const { data: languagePids /*, isPending: isPending2 */ } =
+		useLanguagePids(lang)
 
 	// this query requires auth, which is why it's separate
-	const { data: deckPids, isPending: isPending3 } = useDeckPids(lang)
+	const { data: deckPids /*, isPending: isPending3 */ } = useDeckPids(lang)
 
 	// derived data requiring all all three results
 	return useMemo(() => {

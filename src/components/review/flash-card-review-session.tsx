@@ -22,7 +22,7 @@ import SharePhraseButton from '../share-phrase-button'
 import { useLoaderData } from '@tanstack/react-router'
 
 interface ComponentProps {
-	dailyCacheKey: Array<any>
+	dailyCacheKey: Array<string>
 	pids: Array<uuid>
 	// lang: string
 }
@@ -63,7 +63,7 @@ export function FlashCardReviewSession({
 				)
 			setShowTranslation(false)
 		},
-		[currentCardIndex, setCurrentCardIndex, setShowTranslation]
+		[currentCardIndex, setCurrentCardIndex, setShowTranslation, dailyCacheKey]
 	)
 
 	const isComplete = currentCardIndex === pids.length
@@ -260,7 +260,7 @@ function UserCardReviewScoreButtonsRow({
 				JSON.stringify([...dailyCacheKey, pid]),
 				JSON.stringify(data)
 			)
-			queryClient.invalidateQueries({
+			void queryClient.invalidateQueries({
 				queryKey: [...dailyCacheKey, pid],
 			})
 			setTimeout(proceed, 1500)

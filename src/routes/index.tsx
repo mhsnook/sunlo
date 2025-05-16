@@ -20,7 +20,6 @@ import {
 	UserPlus,
 	Users,
 	UsersIcon,
-	WandSparkles,
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
 

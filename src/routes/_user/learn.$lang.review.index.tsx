@@ -68,14 +68,17 @@ function ReviewPage() {
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
-	const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
+	// const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
 	const friendRecsFiltered = useMemo(
-		() => arrayDifference(friendRecsFromDB, [pids.reviewed_or_inactive]),
-		[pids.reviewed_or_inactive, friendRecsFromDB]
+		() =>
+			arrayDifference([] /* friendRecsFromDB */, [pids.reviewed_or_inactive]),
+		[pids.reviewed_or_inactive /*, friendRecsFromDB */]
 	)
-	const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
+	/*const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
 		friendRecsFiltered.slice(0, countNeeded)
-	)
+	)*/
+	const friendRecsSelected = friendRecsFiltered.slice(0, countNeeded)
+
 	const countNeeded2 = min0(countNeeded - friendRecsSelected.length)
 
 	// 3. algo recs set by user

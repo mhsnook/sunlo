@@ -39,7 +39,7 @@ export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
 		: typeof later_at === 'string' ? new Date(later_at)
 		: later_at
 	const prev: Date = typeof prev_at === 'string' ? new Date(prev_at) : prev_at
-	// @ts-expect-error
+	// @ts-expect-error it's actually fine to subract date objects like ints
 	return (later - prev) / 1000 / 24 / 60 / 60
 }
 
