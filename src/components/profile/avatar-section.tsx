@@ -12,14 +12,12 @@ export default function AvatarSection() {
 					htmlFor="single"
 				>
 					{isPending ?
-						<div style={{ height: 144, width: 144 }}></div>
+						<div className="size-36"></div>
 					: profile?.avatar_url ?
 						<img
 							src={profile.avatar_url}
-							width={144}
-							height={144}
 							alt={`${profile?.username ?? 'Someone'}'s profile image`}
-							className="rounded-full"
+							className="size-36 rounded-full object-cover"
 						/>
 					:	<User size={144} />}
 				</label>
