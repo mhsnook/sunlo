@@ -1,5 +1,5 @@
 import supabase from '@/lib/supabase-client'
-import { CardRow, uuid } from '@/types/main'
+import { CardFull, CardRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -15,10 +15,10 @@ import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 interface CardStatusDropdownProps {
-	deckId?: uuid
+	deckId: uuid | null
 	pid: uuid
 	lang: string
-	card?: CardRow | null
+	card?: CardFull | null
 	className?: string
 }
 

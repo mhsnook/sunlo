@@ -6,18 +6,11 @@ import SharePhraseButton from '@/components/share-phrase-button'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { deckQueryOptions } from '@/lib/use-deck'
-import { languageQueryOptions } from '@/lib/use-language'
-import { useQuery } from '@tanstack/react-query'
+import { useDeckCard, useDeckMeta } from '@/lib/use-deck'
+import { useLanguagePhrase } from '@/lib/use-language'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, OctagonMinus } from 'lucide-react'
 
@@ -42,17 +35,13 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
-	const {
-		auth: { userId },
-	} = Route.useRouteContext()
-	const { data: language } = useQuery(languageQueryOptions(lang))
-	const { data: deck } = useQuery(deckQueryOptions(lang, userId))
-	const phrase = language?.phrasesMap[id] ?? null
+	const { data: phrase } = useLanguagePhrase(id, lang)
+	const { data: card } = useDeckCard(id, lang)
+	const { data: deckMeta } = useDeckMeta(lang)
 
-	if (phrase === null) return <PhraseNotFound />
+	if (!phrase) return <PhraseNotFound />
 
-	const card = deck?.cardsMap[id] ?? undefined
-	const deckId = deck?.meta.id ?? undefined
+	const deckId = deckMeta?.id ?? null
 
 	return (
 		<Card>
@@ -61,13 +50,13 @@ function RouteComponent() {
 					<div className="flex items-center gap-2">
 						<CardTitle className="text-2xl">{phrase.text}</CardTitle>
 						<Badge variant="outline" className="ml-2">
-							{languages[phrase.lang]}
+							{languages[lang]}
 						</Badge>
 					</div>
 					<CardStatusDropdown
 						deckId={deckId}
 						card={card}
-						pid={phrase.id}
+						pid={id}
 						lang={lang}
 					/>
 				</div>
@@ -117,8 +106,8 @@ function RouteComponent() {
 					<div className="flex flex-wrap gap-2">
 						<CopyLinkButton variant="outline" size="default" />
 						<SharePhraseButton
-							pid={phrase.id}
-							lang={phrase.lang}
+							pid={id}
+							lang={lang}
 							variant="outline"
 							size="default"
 						/>

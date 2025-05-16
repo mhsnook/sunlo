@@ -71,6 +71,9 @@ export function AddTranslationsDialog({
 			void queryClient.invalidateQueries({
 				queryKey: ['language', phrase.lang],
 			})
+			void queryClient.invalidateQueries({
+				queryKey: ['user', phrase.lang],
+			})
 		},
 		onError: (error) => {
 			toast.error(error.message)
