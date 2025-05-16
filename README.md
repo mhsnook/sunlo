@@ -1,15 +1,17 @@
 # Sunlo.app
 
-A react SPA and a Supabase project
+A react SPA and a Supabase project.
 
 ## Local Setup
+
+**tl;dr:** Install docker desktop, the Supabase CLI, and NPM packages, run the Supabase DB start (or reset) and run the vite server.
 
 ### Supabase back-end
 
 - Install [Docker Desktop](https://docs.docker.com/desktop/)
 - Install [Supabase cli](https://supabase.com/docs/guides/local-development/cli/getting-started)
-- `supabase start`
-- `supabase db reset`
+- `supabase start` to set up the Supabase project for the first time
+- `supabase db reset` to run migrations and seeds
 
 ### React front-end
 
@@ -18,8 +20,7 @@ A react SPA and a Supabase project
 - populate the environment variables in .env with the outputs from `supabase start`
 - `pnpm dev`
 
-Access the in the browser at `127.0.0.1:5173`. (The Vite server should respond to any requests on port 5173,
-but not `localhost`.)
+Access the in the browser at `127.0.0.1:5173`. (The Vite server should respond to any requests on port 5173, but not always `localhost`.)
 
 ### Mobile Apps with Tauri
 
@@ -54,21 +55,6 @@ The migrations should run when the main branch deploys. Or you can `supabase db 
 To work on the seeds, get your local database into the shape you want and then:
 
 - `supabase db dump --local --data-only > supabase/seed.sql`
-
-If you want to start over from the production database, since we're not launched yet, it's okay
-to dump the production database and use the interface to remove all the users except the sample
-user, along with their profiles. (Everything else will cascade and delete, at least, at the time
-of this writing.)
-
-- dump the db: `supabase db dump --data-only > supabase/seed.sql`
-- then run the db locally and delete the users and profiles through the admin
-- Then when the local database is ready to be seed-ified, use the local data dump listed above
-
-### FAQ
-
-- If you want to blow away migrations to recreate them you can directly modify the table `supabase_migrations.schema_migration`
-- Write migrations by hand: `supabase migration new some_migration_name_here`
-- Generate a migration from the local database: `supabase db diff -f some_migration_name_here`
 
 When your local supabase starts up it will spit out the environment variables you need for your environment file.
 You can either change your values in `.env.local` or add another file `.env.development.local` which overrides its values.
