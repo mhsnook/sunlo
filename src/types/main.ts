@@ -57,14 +57,12 @@ export type PhraseStub = {
 }
 
 export type PhrasesMap = {
-	[key: uuid]: PhraseFull
+	[key: uuid]: PhraseFiltered
 }
 export type LanguageLoaded = {
 	meta: LanguageMeta
 	pids: pids
-	phrasesMap: {
-		[key: string]: PhraseFull
-	}
+	phrasesMap: PhrasesMap
 }
 
 export type PhraseRow = Tables<'phrase'>
@@ -84,6 +82,7 @@ export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
 }
 export type PhraseFiltered = PhraseFull & {
+	translations_mine?: Array<TranslationRow>
 	translations_other?: Array<TranslationRow>
 }
 export type PhraseFullInsert = PhraseInsert & {

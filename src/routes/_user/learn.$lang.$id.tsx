@@ -12,7 +12,14 @@ import languages from '@/lib/languages'
 import { useDeckCard, useDeckMeta } from '@/lib/use-deck'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Calendar, OctagonMinus } from 'lucide-react'
+import { Calendar, ChevronsUpDown, OctagonMinus } from 'lucide-react'
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { useState } from 'react'
 
 function PhraseNotFound() {
 	return (
@@ -38,10 +45,23 @@ function RouteComponent() {
 	const { data: phrase } = useLanguagePhrase(id, lang)
 	const { data: card } = useDeckCard(id, lang)
 	const { data: deckMeta } = useDeckMeta(lang)
+	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
+	const [isOpen, setIsOpen] = useState(false)
 
 	if (!phrase) return <PhraseNotFound />
 
+	const translations_mine =
+		phrasesMapFiltered[id].translations_mine ?? phrase.translations
+	const translations_other = phrasesMapFiltered[id].translations_other ?? []
+
 	const deckId = deckMeta?.id ?? null
+
+	console.log(
+		`Phrase, translations, other`,
+		phrase,
+		translations_mine,
+		translations_other
+	)
 
 	return (
 		<Card>
@@ -83,7 +103,7 @@ function RouteComponent() {
 					<div>
 						<h3 className="mb-3 text-lg font-medium">Translations</h3>
 						<div className="space-y-3">
-							{phrase.translations.map((translation) => (
+							{translations_mine.map((translation) => (
 								<div key={translation.id} className="bg-muted rounded-lg p-3">
 									<div className="flex items-center justify-between">
 										<p className="text-md">{translation.text}</p>
@@ -93,12 +113,37 @@ function RouteComponent() {
 									</div>
 								</div>
 							))}
-							<AddTranslationsDialog
-								phrase={phrase}
-								variant="outline"
-								className="mt-2 w-full"
-							/>
 						</div>
+						{translations_other.length === 0 ? null : (
+							<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+								<CollapsibleTrigger>
+									<Button variant="link" size="sm">
+										<ChevronsUpDown className="h-4 w-4" />
+										{isOpen ? 'Hide extra' : 'Show hidden'} translations
+									</Button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="space-y-3">
+									{translations_other.map((translation) => (
+										<div
+											key={translation.id}
+											className="bg-muted rounded-lg p-3"
+										>
+											<div className="flex items-center justify-between">
+												<p className="text-md">{translation.text}</p>
+												<Badge variant="outline">
+													{languages[translation.lang]}
+												</Badge>
+											</div>
+										</div>
+									))}
+								</CollapsibleContent>
+							</Collapsible>
+						)}
+						<AddTranslationsDialog
+							phrase={phrase}
+							variant="outline"
+							className="mt-3 w-full"
+						/>
 					</div>
 
 					<Separator />

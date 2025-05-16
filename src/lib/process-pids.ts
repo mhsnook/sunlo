@@ -1,4 +1,10 @@
-import { DeckPids, PhraseFiltered, PhrasesMap, pids } from '@/types/main'
+import {
+	DeckPids,
+	PhraseFiltered,
+	PhrasesMap,
+	pids,
+	TranslationRow,
+} from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
@@ -6,6 +12,37 @@ import { arrayDifference, mapArray } from './utils'
 import { useProfile } from './use-profile'
 
 export type ProcessedDeckAndPids = ReturnType<typeof processDeckPidsAndRecs>
+
+function splitTranslations(
+	translationLangs: Array<string>,
+	translations_incoming: Array<TranslationRow>
+): {
+	translations_mine: Array<TranslationRow>
+	translations_other: Array<TranslationRow>
+} {
+	const translations_mine = translations_incoming
+		.filter((t) => translationLangs.indexOf(t.lang) > -1)
+		.toSorted((a, b) => {
+			return a.lang === b.lang ?
+					0
+				:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
+		})
+	const translations_other = translations_incoming.filter(
+		(t) => translationLangs.indexOf(t.lang) === -1
+	)
+	if (translations_incoming.length > 4)
+		console.log(
+			`phrase getting translations split out`,
+			translationLangs,
+			translations_incoming,
+			translations_mine,
+			translations_other
+		)
+	return {
+		translations_mine,
+		translations_other,
+	}
+}
 
 function processDeckPidsAndRecs(
 	translationLangs: Array<string>,
@@ -16,18 +53,14 @@ function processDeckPidsAndRecs(
 	// filter to only spoken languages, sort primary first
 	const phrasesArrayFiltered = languagePids
 		.map((pid) => {
-			const phrase = phrasesMap[pid] as PhraseFiltered
-			phrase.translations = phrase.translations
-				.filter((t) => translationLangs.indexOf(t.lang) > -1)
-				.toSorted((a, b) => {
-					return a.lang === b.lang ?
-							0
-						:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
-				})
-			// keep the translations we won't understand, to display in more info
-			phrase.translations_other = phrase.translations.filter(
-				(t) => !(translationLangs.indexOf(t.lang) > -1)
+			let phrase = phrasesMap[pid] as PhraseFiltered
+
+			const { translations_mine, translations_other } = splitTranslations(
+				translationLangs,
+				[...phrase.translations]
 			)
+			phrase.translations_mine = translations_mine
+			phrase.translations_other = translations_other
 
 			return phrase
 		})
