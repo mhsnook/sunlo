@@ -1,4 +1,4 @@
-import { CardFull, PhraseFull, pids, uuid } from '@/types/main'
+import { CardFull, PhraseFiltered, pids, uuid } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
@@ -51,7 +51,7 @@ function PhraseAccordionItem({
 	card,
 	deckId,
 }: {
-	phrase: PhraseFull
+	phrase: PhraseFiltered
 	card: CardFull | null
 	deckId: uuid
 }) {
@@ -71,7 +71,7 @@ function PhraseAccordionItem({
 				<div className="space-y-1 pt-2 pl-6">
 					<p className="text-sm text-gray-500">Translations</p>
 					<ul className="space-y-1">
-						{phrase.translations.map((translation, index) => (
+						{phrase.translations_mine?.map((translation, index) => (
 							<li key={index} className="flex items-center">
 								<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
 									{translation.lang}
