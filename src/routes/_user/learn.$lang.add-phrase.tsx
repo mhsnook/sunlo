@@ -40,7 +40,7 @@ export const Route = createFileRoute('/_user/learn/$lang/add-phrase')({
 })
 
 const addPhraseSchema = z.object({
-	text: z.string().min(1, 'Please enter a phrase'),
+	phrase_text: z.string().min(1, 'Please enter a phrase'),
 	translation_lang: z
 		.string()
 		.length(3, 'Provide a language for the translation'),
@@ -65,12 +65,12 @@ function AddPhraseTab() {
 		formState: { errors },
 	} = useForm<AddPhraseFormValues>({
 		resolver: zodResolver(addPhraseSchema),
-		defaultValues: { text: searchPhrase },
+		defaultValues: { phrase_text: searchPhrase },
 	})
 
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
-			const ins: PhraseCardInsert = { lang, ...variables }
+			const ins: PhraseCardInsert = { phrase_lang: lang, ...variables }
 			const { data } = await supabase
 				.rpc('add_phrase_translation_card', ins)
 				.throwOnError()
