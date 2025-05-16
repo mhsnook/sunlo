@@ -127,6 +127,7 @@ export type Database = {
           id: string
           lang: string
           text: string
+          text_script: string | null
         }
         Insert: {
           added_by?: string | null
@@ -134,6 +135,7 @@ export type Database = {
           id?: string
           lang: string
           text: string
+          text_script?: string | null
         }
         Update: {
           added_by?: string | null
@@ -141,6 +143,7 @@ export type Database = {
           id?: string
           lang?: string
           text?: string
+          text_script?: string | null
         }
         Relationships: [
           {
@@ -259,6 +262,7 @@ export type Database = {
           literal: string | null
           phrase_id: string
           text: string
+          text_script: string | null
         }
         Insert: {
           added_by?: string | null
@@ -267,6 +271,7 @@ export type Database = {
           literal?: string | null
           phrase_id: string
           text: string
+          text_script?: string | null
         }
         Update: {
           added_by?: string | null
@@ -275,6 +280,7 @@ export type Database = {
           literal?: string | null
           phrase_id?: string
           text?: string
+          text_script?: string | null
         }
         Relationships: [
           {
@@ -907,10 +913,12 @@ export type Database = {
     Functions: {
       add_phrase_translation_card: {
         Args: {
-          text: string
-          lang: string
+          phrase_text: string
+          phrase_lang: string
           translation_text: string
           translation_lang: string
+          phrase_text_script?: string
+          translation_text_script?: string
         }
         Returns: string
       }
