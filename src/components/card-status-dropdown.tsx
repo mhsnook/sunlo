@@ -13,9 +13,10 @@ import {
 } from './ui/dropdown-menu'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { memo } from 'react'
 
 interface CardStatusDropdownProps {
-	deckId?: uuid
+	deckId: uuid | null
 	pid: uuid
 	lang: string
 	card?: CardRow | null
@@ -84,7 +85,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-export function CardStatusDropdown({
+const CardStatusDropdown = memo(function CardStatusDropdown({
 	deckId,
 	pid,
 	lang,
@@ -190,4 +191,5 @@ export function CardStatusDropdown({
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
-}
+})
+export { CardStatusDropdown }

@@ -11,7 +11,7 @@ import { useDeckCardsMap, useDeckMeta } from '@/lib/use-deck'
 import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { memo } from 'react'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -50,14 +50,14 @@ export function LanguagePhrasesAccordionComponent({
 	)
 }
 
-function PhraseAccordionItem({
+const PhraseAccordionItem = memo(function PhraseAccordionItem({
 	phrase,
 	card,
 	deckId,
 }: {
 	phrase: PhraseFull
 	card: CardFull | null
-	deckId: uuid
+	deckId: uuid | null
 }) {
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
@@ -113,4 +113,4 @@ function PhraseAccordionItem({
 			</AccordionContent>
 		</AccordionItem>
 	)
-}
+})
