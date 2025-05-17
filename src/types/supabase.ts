@@ -430,7 +430,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          day_session?: string
+          day_session: string
           difficulty?: number | null
           id?: string
           review_time_retrievability?: number | null
