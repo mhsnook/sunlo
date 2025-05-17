@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
 import { uuid } from '@/types/main'
-import { useLanguage } from '@/lib/use-language'
+import { useLanguagePhrasesMap, useLanguagePids } from '@/lib/use-language'
 import { useMemo } from 'react'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 
@@ -40,10 +40,11 @@ function SearchTab() {
 	const { lang } = Route.useParams()
 	const { text: filter } = Route.useSearch()
 
-	const {
-		data: { phrasesMap, pids },
-	} = useLanguage(lang)
+	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	const { data: pids } = useLanguagePids(lang)
+
 	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
+		if (!pids || !phrasesMap) return []
 		return pids.map((pid: uuid) => {
 			return {
 				pid,
@@ -56,7 +57,7 @@ function SearchTab() {
 	}, [phrasesMap, pids])
 
 	const searchResults = useMemo(() => {
-		if (!filter.trim()) return pids
+		if (!filter?.trim()) return pids
 		return searchablePhrases
 			.filter((searchable: SearchablePhrase) => {
 				return searchable.text.toUpperCase().indexOf(filter.toUpperCase()) > -1
@@ -86,6 +87,7 @@ function SearchTab() {
 								}),
 							})
 						}}
+						defaultValue={filter}
 					/>
 				</div>
 				<div className="flex flex-row gap-2">
@@ -96,7 +98,7 @@ function SearchTab() {
 						<Link
 							to="/learn/$lang/add-phrase"
 							from={Route.fullPath}
-							search={(search: SearchParams) => ({ ...search, filter })}
+							search={(search: SearchParams) => ({ ...search, text: filter })}
 						>
 							<NotebookPen />
 							Add New Phrase
@@ -104,7 +106,7 @@ function SearchTab() {
 					</Button>
 				</div>
 
-				{searchResults?.length > 0 ?
+				{!searchResults?.length ?
 					<LanguagePhrasesAccordionComponent lang={lang} pids={searchResults} />
 				:	<p className="text-muted-foreground mt-4 text-center">
 						No results found. Try searching for a phrase or add a new one.
