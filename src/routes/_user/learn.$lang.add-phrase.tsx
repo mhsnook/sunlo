@@ -82,7 +82,7 @@ function AddPhraseTab() {
 				'New phrase has been added to the public library and will appear in your next review'
 			)
 			console.log(`Success:`, data)
-			reset({ text: '', translation_text: '', translation_lang })
+			reset({ phrase_text: '', translation_text: '', translation_lang })
 			refocusRef?.current?.focus()
 		},
 		onError: (error) => {
@@ -115,7 +115,7 @@ function AddPhraseTab() {
 							Text of the Phrase (in {languages[lang]})
 						</Label>
 						<Controller
-							name="text"
+							name="phrase_text"
 							control={control}
 							render={({ field }) => (
 								<Textarea
@@ -147,7 +147,11 @@ function AddPhraseTab() {
 						register={register}
 					/>
 					<div className="flex flex-col gap-2 @xl:flex-row">
-						<Button type="submit" disabled={addPhraseMutation.isPending}>
+						<Button
+							type="submit"
+							className={addPhraseMutation.isPending ? 'opacity-60' : ''}
+							disabled={addPhraseMutation.isPending}
+						>
 							{addPhraseMutation.isPending ?
 								<Loader />
 							:	<NotebookPen />}
@@ -157,7 +161,10 @@ function AddPhraseTab() {
 							<Link
 								to="/learn/$lang/search"
 								from={Route.fullPath}
-								search={(search: SearchParams) => ({ ...search, text })}
+								search={(search: SearchParams) => ({
+									...search,
+									text,
+								})}
 							>
 								<Search />
 								Search for similar phrases
