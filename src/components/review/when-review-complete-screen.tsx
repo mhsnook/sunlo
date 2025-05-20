@@ -6,6 +6,7 @@ import {
 	countAgainCards,
 	countSkippedCards,
 	countUnfinishedCards,
+	resetExtrasPids,
 } from '@/lib/use-reviewables'
 
 export function WhenComplete({
@@ -36,7 +37,13 @@ export function WhenComplete({
 					:	null}
 					. Let's go back and finish them &mdash; you can do it!
 				</p>
-				<Button size="lg" onClick={go}>
+				<Button
+					size="lg"
+					onClick={() => {
+						resetExtrasPids(dailyCacheKey)
+						go()
+					}}
+				>
 					Review unfinished cards ({unfinishedCount})
 				</Button>
 			</CardContent>

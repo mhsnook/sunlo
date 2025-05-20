@@ -31,30 +31,13 @@ export function setFromLocalStorage(queryKey: Array<string>, value: any) {
 	localStorage.setItem(JSON.stringify(queryKey), JSON.stringify(value))
 }
 
-export function addExtrasPid(dailyCacheKey: Array<string>, pid: uuid) {
-	const extras = getFromLocalStorage<pids>([...dailyCacheKey, 'extras']) ?? []
-	setFromLocalStorage([...dailyCacheKey, 'extras'], [...extras, pid])
-}
-
-export function getExtrasPids(dailyCacheKey: Array<string>): pids {
-	return getFromLocalStorage([...dailyCacheKey, 'extras']) ?? []
-}
-
-export function getIndexOfNextUnreviewedCard(
-	dailyCacheKey: Array<string>,
-	currentCardIndex: number
-) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
-	if (pids === null)
-		throw new Error(
-			'trying to fetch index of first card, but there is no review set up for today'
-		)
-	const index = pids.findIndex((p, i) => {
-		if (currentCardIndex > i) return false
-		const entry = getFromLocalStorage([...dailyCacheKey, p])
-		return entry === null
+export function resetExtrasPids(dailyCacheKey: Array<string>) {
+	const pids = getFromLocalStorage<pids>(dailyCacheKey) ?? []
+	const extras = pids.filter((pid) => {
+		const review = getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
+		return review === null || review.score === 1
 	})
-	return index === -1 ? pids.length : index
+	setFromLocalStorage(dailyCacheKey, extras)
 }
 
 export function getIndexOfNextUnfinishedCard(
@@ -71,17 +54,8 @@ export function getIndexOfNextUnfinishedCard(
 		const entry = getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
 		return entry === null || entry.score === 1
 	})
-	const indexSecondTime = pids.findIndex((p, i) => {
-		if (currentCardIndex < i) return false
-		const entry = getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
-		return entry === null || entry.score === 1
-	})
 
-	return (
-		index !== -1 ? index
-		: indexSecondTime !== -1 ? indexSecondTime
-		: pids.length
-	)
+	return index !== -1 ? index : pids.length
 }
 
 export function countSkippedCards(
@@ -89,7 +63,7 @@ export function countSkippedCards(
 	dailyCacheKey: Array<string>
 ): number {
 	return pids.filter((p: uuid) => {
-		return !getFromLocalStorage([...dailyCacheKey, p])
+		return !getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
 	}).length
 }
 
