@@ -66,6 +66,7 @@ export default function TranslationLanguageField({
 				<PopoverContent className="p-0">
 					<Command
 						filter={(value, search) => {
+							search = search.toLocaleLowerCase()
 							return (
 								value === '' ? 1
 								: value === search ? 1
