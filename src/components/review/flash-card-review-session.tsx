@@ -3,16 +3,13 @@ import toast from 'react-hot-toast'
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
+import type { pids, ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
 	postReview,
 	updateReview,
 	getFromLocalStorage,
-	getIndexOfNextUnreviewedCard,
-	getExtrasPids,
-	addExtrasPid,
 	setFromLocalStorage,
 	getIndexOfNextUnfinishedCard,
 } from '@/lib/use-reviewables'
@@ -26,8 +23,6 @@ import { WhenComplete } from './when-review-complete-screen'
 
 interface ComponentProps {
 	dailyCacheKey: Array<string>
-	pids: Array<uuid>
-	// lang: string
 }
 
 const playAudio = (text: string) => {
@@ -35,13 +30,14 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-export function FlashCardReviewSession({
-	dailyCacheKey,
-	pids,
-	// lang,
-}: ComponentProps) {
+export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
+	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+	if (!pids?.length) {
+		throw new Error(`Error fetching phrase manifest from localStorage`)
+	}
+
 	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
-		getIndexOfNextUnreviewedCard(dailyCacheKey, 0)
+		getIndexOfNextUnfinishedCard(dailyCacheKey, 0)
 	)
 	const [showTranslation, setShowTranslation] = useState(false)
 	const { cardsMap, phrasesMap } = useLoaderData({
@@ -252,19 +248,15 @@ function UserCardReviewScoreButtonsRow({
 					})
 		},
 		onSuccess: (data) => {
-			if (data.score === 1) {
+			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
-				const extras = getExtrasPids(dailyCacheKey)
-				console.log(`1 Extras!`, extras)
-				addExtrasPid(dailyCacheKey, pid)
-			}
+
 			if (data.score === 2)
 				toast('okay', { icon: '🤷', position: 'bottom-center' })
 			if (data.score === 3)
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.score === 4) {
-				toast.success('nice', { position: 'bottom-center' })
-			}
+			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
+
 			setFromLocalStorage([...dailyCacheKey, pid], data)
 			void queryClient.invalidateQueries({
 				queryKey: [...dailyCacheKey, pid],
