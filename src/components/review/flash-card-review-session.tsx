@@ -3,7 +3,6 @@ import toast from 'react-hot-toast'
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import SuccessCheckmark from '@/components/success-checkmark'
 import type { pids, ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -22,6 +21,7 @@ import Flagged from '../flagged'
 import PermalinkButton from '../permalink-button'
 import SharePhraseButton from '../share-phrase-button'
 import { useLoaderData } from '@tanstack/react-router'
+import { WhenComplete } from './when-review-complete-screen'
 
 interface ComponentProps {
 	dailyCacheKey: Array<string>
@@ -332,33 +332,4 @@ function UserCardReviewScoreButtonsRow({
 			}
 		</CardFooter>
 	)
-}
-
-function WhenComplete({
-	pids,
-	dailyCacheKey,
-	go,
-}: {
-	pids: pids
-	dailyCacheKey: Array<string>
-	go: () => void
-}) {
-	const skippedCardsCount = countUnfinishedCards(pids, dailyCacheKey)
-	return skippedCardsCount ?
-			<CardContent className="flex grow flex-col items-center justify-center gap-6 pt-0 pb-16">
-				<h2 className="text-2xl font-bold">Almost there!</h2>
-				<p className="text-center text-lg">
-					You're at the end of the queue, but there are still{' '}
-					{skippedCardsCount} cards you skipped over. Let's go back and finish
-					them &mdash; you can do it!
-				</p>
-				<Button size="lg" onClick={go}>
-					Review incomplete cards
-				</Button>
-			</CardContent>
-		:	<CardContent className="flex grow flex-col items-center justify-center gap-6 pt-0 pb-16">
-				<h2 className="text-2xl font-bold">Good work!</h2>
-				<p className="text-lg">You've completed your review for today.</p>
-				<SuccessCheckmark />
-			</CardContent>
 }
