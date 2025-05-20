@@ -27,6 +27,19 @@ export function getFromLocalStorage<T>(queryKey: Array<string>): null | T {
 	return typeof data === 'string' ? JSON.parse(data) : null
 }
 
+export function setFromLocalStorage(queryKey: Array<string>, value: any) {
+	localStorage.setItem(JSON.stringify(queryKey), JSON.stringify(value))
+}
+
+export function addExtrasPid(dailyCacheKey: Array<string>, pid: uuid) {
+	const extras = getFromLocalStorage<pids>([...dailyCacheKey, 'extras']) ?? []
+	setFromLocalStorage([...dailyCacheKey, 'extras'], [...extras, pid])
+}
+
+export function getExtrasPids(dailyCacheKey: Array<string>): pids {
+	return getFromLocalStorage([...dailyCacheKey, 'extras']) ?? []
+}
+
 export function getIndexOfNextUnreviewedCard(
 	dailyCacheKey: Array<string>,
 	currentCardIndex: number
