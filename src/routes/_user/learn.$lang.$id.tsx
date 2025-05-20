@@ -20,6 +20,7 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useState } from 'react'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 function PhraseNotFound() {
 	return (
@@ -55,13 +56,6 @@ function RouteComponent() {
 	const translations_other = phrasesMapFiltered[id].translations_other ?? []
 
 	const deckId = deckMeta?.id ?? null
-
-	console.log(
-		`Phrase, translations, other`,
-		phrase,
-		translations_mine,
-		translations_other
-	)
 
 	return (
 		<Card>
@@ -116,11 +110,11 @@ function RouteComponent() {
 						</div>
 						{translations_other.length === 0 ? null : (
 							<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-								<CollapsibleTrigger>
-									<Button variant="link" size="sm">
-										<ChevronsUpDown className="h-4 w-4" />
-										{isOpen ? 'Hide extra' : 'Show hidden'} translations
-									</Button>
+								<CollapsibleTrigger
+									className={buttonVariants({ variant: 'link', size: 'sm' })}
+								>
+									<ChevronsUpDown className="h-4 w-4" />
+									{isOpen ? 'Hide extra' : 'Show hidden'} translations
 								</CollapsibleTrigger>
 								<CollapsibleContent className="space-y-3">
 									{translations_other.map((translation) => (
