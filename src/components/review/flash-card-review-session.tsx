@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 import { Play, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { pids, ReviewRow, TranslationRow, uuid } from '@/types/main'
+import type { ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import {
@@ -11,9 +11,10 @@ import {
 	updateReview,
 	getFromLocalStorage,
 	getIndexOfNextUnreviewedCard,
-	countUnfinishedCards,
 	getExtrasPids,
 	addExtrasPid,
+	setFromLocalStorage,
+	getIndexOfNextUnfinishedCard,
 } from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
 import PhraseExtraInfo from '../phrase-extra-info'
@@ -52,16 +53,16 @@ export function FlashCardReviewSession({
 	})
 
 	const navigateCards = useCallback(
-		(direction: 'forward' | 'back' | 'next' | 'skipped') => {
+		(direction: 'forward' | 'back' | 'next' | 'unfinished') => {
 			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
 			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
 			if (direction === 'next')
 				setCurrentCardIndex((i) =>
-					getIndexOfNextUnreviewedCard(dailyCacheKey, i)
+					getIndexOfNextUnfinishedCard(dailyCacheKey, i)
 				)
-			if (direction === 'skipped')
+			if (direction === 'unfinished')
 				setCurrentCardIndex(() =>
-					getIndexOfNextUnreviewedCard(dailyCacheKey, 0)
+					getIndexOfNextUnfinishedCard(dailyCacheKey, 0)
 				)
 			setShowTranslation(false)
 		},
@@ -91,7 +92,7 @@ export function FlashCardReviewSession({
 						<WhenComplete
 							pids={pids}
 							dailyCacheKey={dailyCacheKey}
-							go={() => navigateCards('skipped')}
+							go={() => navigateCards('unfinished')}
 						/>
 					)}
 				</Card>
@@ -264,10 +265,7 @@ function UserCardReviewScoreButtonsRow({
 			if (data.score === 4) {
 				toast.success('nice', { position: 'bottom-center' })
 			}
-			localStorage.setItem(
-				JSON.stringify([...dailyCacheKey, pid]),
-				JSON.stringify(data)
-			)
+			setFromLocalStorage([...dailyCacheKey, pid], data)
 			void queryClient.invalidateQueries({
 				queryKey: [...dailyCacheKey, pid],
 			})
