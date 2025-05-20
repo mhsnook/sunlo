@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import { buttonVariants } from '@/components/ui/button-variants'

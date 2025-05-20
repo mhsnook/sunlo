@@ -1,5 +1,5 @@
 import { ShowError } from '@/components/errors'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'

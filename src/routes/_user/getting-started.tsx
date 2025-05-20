@@ -2,7 +2,7 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useAuth } from '@/lib/hooks'
 import ProfileCreationForm from '@/components/profile-creation-form'
 import { useProfile } from '@/lib/use-profile'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 
 type GettingStartedProps = {

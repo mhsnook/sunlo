@@ -4,10 +4,10 @@ import {
 	NavigationMenuItem,
 	NavigationMenuLink,
 	NavigationMenuList,
-} from './ui/navigation-menu'
+} from '@/components/ui/navigation-menu'
 import { LinkType } from '@/types/main'
 import { useLinks } from '@/hooks/links'
-import { ScrollArea, ScrollBar } from './ui/scroll-area'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 
 export function AppNav() {

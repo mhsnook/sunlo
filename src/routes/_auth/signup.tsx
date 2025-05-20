@@ -18,7 +18,7 @@ import { EmailField, PasswordField, UserRoleField } from '@/components/fields'
 
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 import { UnderConstruction } from '@/components/under-construction'
 
