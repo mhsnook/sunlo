@@ -30,14 +30,7 @@ function splitTranslations(
 	const translations_other = translations_incoming.filter(
 		(t) => translationLangs.indexOf(t.lang) === -1
 	)
-	if (translations_incoming.length > 4)
-		console.log(
-			`phrase getting translations split out`,
-			translationLangs,
-			translations_incoming,
-			translations_mine,
-			translations_other
-		)
+
 	return {
 		translations_mine,
 		translations_other,

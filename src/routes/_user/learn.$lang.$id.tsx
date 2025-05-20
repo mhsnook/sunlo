@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/collapsible'
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { roundAndTrim } from '@/lib/utils'
 
 function PhraseNotFound() {
 	return (
@@ -77,18 +78,22 @@ function RouteComponent() {
 				<div className="text-muted-foreground static mt-2 block items-center gap-2 text-sm">
 					{!card ?
 						<span>This card is not in your deck</span>
-					:	<Flagged
-							className="flex flex-row items-center gap-1"
-							name="cards_schedule_metadata"
-						>
-							<span>Difficulty score {card?.difficulty}/10</span>
-							<span className="mx-2">•</span>
-							<Calendar className="h-4 w-4" />
-							<span>
-								Next review scheduled for {card?.nextReview?.day ?? 'Tuesday'}{' '}
-								(in {card?.nextReview?.daysFromNow ?? '4'} days)
-							</span>
-						</Flagged>
+					: !card?.difficulty ?
+						<span>You haven't reviewed this card before</span>
+					:	<>
+							<span>Difficulty: {roundAndTrim(card.difficulty, 1)} / 10</span>
+							<Flagged
+								className="flex flex-row items-center gap-1"
+								name="cards_schedule_metadata"
+							>
+								<span className="mx-2">•</span>
+								<Calendar className="h-4 w-4" />
+								<span>
+									Next review scheduled for {card?.nextReview?.day ?? 'Tuesday'}{' '}
+									(in {card?.nextReview?.daysFromNow ?? '4'} days)
+								</span>
+							</Flagged>
+						</>
 					}
 				</div>
 			</CardHeader>

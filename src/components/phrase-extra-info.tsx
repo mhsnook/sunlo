@@ -2,7 +2,7 @@ import { CardFull, uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { useDeckCard } from '@/lib/use-deck'
-import { dateDiff, intervals, retrievability, round } from '@/lib/utils'
+import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 
@@ -42,14 +42,17 @@ export default function PhraseExtraInfo({
 }
 
 function CardSection({ card }: { card: CardFull }) {
-	const reviews = card?.reviews.sort((a, b) =>
-		a.created_at > b.created_at ? -1
-		: a.created_at < b.created_at ? 1
-		: 0
-	)
-	const rev = reviews?.[0] || null
+	const reviews =
+		card?.reviews.sort((a, b) =>
+			a.created_at > b.created_at ? -1
+			: a.created_at < b.created_at ? 1
+			: 0
+		) ?? []
+	const rev = reviews[0] || null
 	const retr =
-		!rev ? null : retrievability(card.last_reviewed_at, card.stability!)
+		card.last_reviewed_at && card.stability ?
+			retrievability(card.last_reviewed_at, card.stability!)
+		:	0
 	return (
 		<div className="block space-y-4">
 			<div className="flex flex-col">
@@ -60,7 +63,7 @@ function CardSection({ card }: { card: CardFull }) {
 				<span className="font-semibold">Card created at</span>
 				<span>{ago(card.created_at)}</span>
 			</div>
-			{!card.last_reviewed_at ?
+			{!card.last_reviewed_at || !reviews.length ?
 				<p>Never reviewed</p>
 			:	<>
 					<div className="flex flex-col">
@@ -72,15 +75,18 @@ function CardSection({ card }: { card: CardFull }) {
 					<div className="flex flex-col">
 						<span className="font-semibold">Card current variables:</span>
 						<span>
-							Difficulty {round(rev.difficulty)}, Stability{' '}
-							{round(rev.stability)}, {round(dateDiff(rev.created_at), 3)} days
-							since last review.
+							Difficulty {roundAndTrim(rev.difficulty!)}, Stability{' '}
+							{roundAndTrim(rev.stability!)},{' '}
+							{roundAndTrim(dateDiff(rev.created_at), 1)} days since last
+							review.
 						</span>
-						<span>Expected retrievability if reviewed this minute: {retr}</span>
+						<span>
+							Expected retrievability if reviewed now: {Math.round(retr * 100)}%
+						</span>
 						<span>
 							Interval spread for a review this minute:{' '}
 							{intervals()
-								.map((i) => round(i))
+								.map((i) => roundAndTrim(i))
 								.join(', ')}
 						</span>
 					</div>
@@ -94,9 +100,9 @@ function CardSection({ card }: { card: CardFull }) {
 							<p className="text-muted-foreground font-semibold">
 								{ago(r.created_at)}
 							</p>
-							<p>Expected R: {round(r.review_time_retrievability)}</p>
-							<p>Difficulty: {round(r.difficulty)}</p>
-							<p>Stability: {round(r.stability)} from </p>
+							<p>Expected R: {roundAndTrim(r.review_time_retrievability!)}</p>
+							<p>Difficulty: {roundAndTrim(r.difficulty!)}</p>
+							<p>Stability: {roundAndTrim(r.stability!)} from </p>
 							<span>
 								score: {r.score}
 								<Flagged name="client_side_fsrs_scheduling">

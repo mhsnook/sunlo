@@ -27,10 +27,19 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	)
 }
 
-export function round(num: number, pow: number = 2) {
-	return num === undefined || num === null ?
-			'null'
-		:	Math.pow(10, -pow) * Math.round(Math.pow(10, pow) * num)
+function trimmedNumberString(num: number, places: number): string {
+	// We may end up with string like 5.1234.00 and that's okay
+	const content = num.toString() + '.' + '0'.repeat(places)
+
+	return content.substring(0, content.indexOf('.') + places + 1)
+}
+
+export function round(num: number, places: number = 2): number {
+	return Math.pow(10, -places) * Math.round(Math.pow(10, places) * num)
+}
+
+export function roundAndTrim(num: number, places: number = 2): string {
+	return trimmedNumberString(round(num, places), places)
 }
 
 export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
@@ -47,7 +56,7 @@ export function retrievability(
 	prev_at: string | Date | null,
 	stability: number,
 	later_at?: string | Date
-) {
+): number {
 	if (!prev_at || !stability)
 		throw Error(
 			'Something went wrong calcaulating retrievability on the client'
