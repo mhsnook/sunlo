@@ -3,11 +3,15 @@ import { useController } from 'react-hook-form'
 import { ErrorLabel, type ControlledFieldProps } from '.'
 import { useProfile } from '@/lib/use-profile'
 import { useMemo, useState } from 'react'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Check, ChevronsUpDown } from 'lucide-react'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 import {
 	Command,
 	CommandEmpty,
@@ -15,7 +19,7 @@ import {
 	CommandItem,
 	CommandList,
 	CommandSeparator,
-} from '../ui/command'
+} from '@/components/ui/command'
 import { CommandGroup } from 'cmdk'
 
 export default function TranslationLanguageField({

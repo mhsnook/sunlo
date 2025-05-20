@@ -15,15 +15,15 @@ import {
 	DrawerDescription,
 	DrawerHeader,
 	DrawerTitle,
-} from '../ui/drawer'
+} from '@/components/ui/drawer'
 import {
 	Card,
 	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from '../ui/card'
-import { Badge } from '../ui/badge'
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 
 export type AlgoRecsFiltersEnum = 'popular' | 'easiest' | 'newest'
 export type AlgoRecsObject = Record<AlgoRecsFiltersEnum, pids>

@@ -4,17 +4,17 @@ import {
 	FieldValues,
 	Control,
 } from 'react-hook-form'
-import ErrorLabel from './error-label'
+import ErrorLabel from '@/components/fields/error-label'
 
-import AvatarEditorField from './avatar-editor-field'
-import EmailField from './email-field'
-import LanguagePrimaryField from './language-primary-field'
-import LanguagesSpokenField from './languages-spoken-field'
-import PasswordField from './password-field'
-import UsernameField from './username-field'
-import UserRoleField from './user-role-field'
-import TranslationLanguageField from './translation-language-field'
-import TranslationTextField from './translation-text-field'
+import AvatarEditorField from '@/components/fields/avatar-editor-field'
+import EmailField from '@/components/fields/email-field'
+import LanguagePrimaryField from '@/components/fields/language-primary-field'
+import LanguagesSpokenField from '@/components/fields/languages-spoken-field'
+import PasswordField from '@/components/fields/password-field'
+import UsernameField from '@/components/fields/username-field'
+import UserRoleField from '@/components/fields/user-role-field'
+import TranslationLanguageField from '@/components/fields/translation-language-field'
+import TranslationTextField from '@/components/fields/translation-text-field'
 
 type AnyFieldType = {
 	error: FieldError

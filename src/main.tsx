@@ -12,7 +12,7 @@ import { routeTree } from './routeTree.gen'
 import Routes from './routes'
 
 import 'styles/globals.css'
-import { Button } from './components/ui/button'
+import { Button } from '@/components/ui/button'
 
 const queryClient = new QueryClient({
 	defaultOptions: {

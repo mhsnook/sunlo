@@ -1,6 +1,6 @@
 import { MessageCircleWarningIcon } from 'lucide-react'
-import Callout from '../ui/callout'
-import { buttonVariants } from '../ui/button-variants'
+import Callout from '@/components/ui/callout'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { Link } from '@tanstack/react-router'
 
 export function NotEnoughCards({

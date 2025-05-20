@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
-import { Garlic } from './garlic'
-import Callout from './ui/callout'
-import { buttonVariants } from './ui/button-variants'
+import { Garlic } from '@/components/garlic'
+import Callout from '@/components/ui/callout'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { MessageSquarePlus } from 'lucide-react'
 
 export function LanguageIsEmpty({ lang }: { lang: string }) {

@@ -1,9 +1,9 @@
 import languages from '@/lib/languages'
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
-import { PhraseTinyCard } from './phrase-tiny-card'
+import { PhraseTinyCard } from '@/components/phrase-tiny-card'
 
 type PhraseSectionProps = {
 	description: string

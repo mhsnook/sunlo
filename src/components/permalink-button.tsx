@@ -1,5 +1,5 @@
 import { LinkIcon } from 'lucide-react'
-import { ButtonProps, buttonVariants } from './ui/button-variants'
+import { ButtonProps, buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
 import { Link, LinkProps } from '@tanstack/react-router'
 

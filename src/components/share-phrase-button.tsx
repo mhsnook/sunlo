@@ -1,8 +1,8 @@
-import type { ButtonProps } from './ui/button-variants'
+import type { ButtonProps } from '@/components/ui/button-variants'
 import type { uuid } from '@/types/main'
 import { Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 import { useLanguagePhrase } from '@/lib/use-language'
 import languages from '@/lib/languages'
 
