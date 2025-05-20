@@ -13,6 +13,8 @@ import {
 	getFromLocalStorage,
 	getIndexOfNextUnreviewedCard,
 	countUnfinishedCards,
+	getExtrasPids,
+	addExtrasPid,
 } from '@/lib/use-reviewables'
 import { PostgrestError } from '@supabase/supabase-js'
 import PhraseExtraInfo from '../phrase-extra-info'
@@ -249,13 +251,19 @@ function UserCardReviewScoreButtonsRow({
 					})
 		},
 		onSuccess: (data) => {
-			if (data.score === 1)
+			if (data.score === 1) {
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
+				const extras = getExtrasPids(dailyCacheKey)
+				console.log(`1 Extras!`, extras)
+				addExtrasPid(dailyCacheKey, pid)
+			}
 			if (data.score === 2)
 				toast('okay', { icon: '🤷', position: 'bottom-center' })
 			if (data.score === 3)
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
+			if (data.score === 4) {
+				toast.success('nice', { position: 'bottom-center' })
+			}
 			localStorage.setItem(
 				JSON.stringify([...dailyCacheKey, pid]),
 				JSON.stringify(data)
