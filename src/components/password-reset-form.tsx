@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 import { ShowError } from '@/components/errors'
 import { PasswordField } from '@/components/fields'
 

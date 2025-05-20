@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/sidebar'
 import { useProfile } from '@/lib/use-profile'
 import languages from '@/lib/languages'
-import Callout from './ui/callout'
-import { Button } from './ui/button'
+import Callout from '@/components/ui/callout'
+import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
-import { Badge } from './ui/badge'
+import { Badge } from '@/components/ui/badge'
 
 const useDeckMenuData = () => {
 	const { data, isPending, error } = useProfile()

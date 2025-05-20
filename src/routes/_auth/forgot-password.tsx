@@ -12,7 +12,7 @@ import Callout from '@/components/ui/callout'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShowError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
-import SuccessCheckmark from '@/components/SuccessCheckmark'
+import SuccessCheckmark from '@/components/success-checkmark'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,
