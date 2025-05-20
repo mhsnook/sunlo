@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
 
-import { Loader } from '../ui/loader'
+import { Loader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/lib/use-profile'
 import { ShowError } from '@/components/errors'

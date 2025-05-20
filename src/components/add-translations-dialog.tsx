@@ -15,10 +15,13 @@ import {
 	DialogTitle,
 	DialogDescription,
 	DialogFooter,
-} from './ui/dialog'
-import { Button } from './ui/button'
-import { ButtonProps } from './ui/button-variants'
-import { TranslationLanguageField, TranslationTextField } from './fields'
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { ButtonProps } from '@/components/ui/button-variants'
+import {
+	TranslationLanguageField,
+	TranslationTextField,
+} from '@/components/fields'
 import { useRef } from 'react'
 
 const AddTranslationsInputs = z.object({

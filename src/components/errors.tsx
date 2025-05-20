@@ -1,6 +1,6 @@
 import { CircleX } from 'lucide-react'
 import type { PropsWithChildren } from 'react'
-import Callout from './ui/callout'
+import Callout from '@/components/ui/callout'
 
 /*
   If the error message passed as `children` is nullable, we can simply use:

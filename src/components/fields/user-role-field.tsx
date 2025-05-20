@@ -1,7 +1,7 @@
 import { BookOpen, Handshake, LifeBuoy } from 'lucide-react'
 import { type ControlledFieldProps, ErrorLabel } from '.'
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group'
-import { Label } from '../ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Label } from '@/components/ui/label'
 import { useController } from 'react-hook-form'
 import { cn } from '@/lib/utils'
 

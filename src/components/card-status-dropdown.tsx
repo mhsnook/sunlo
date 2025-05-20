@@ -4,13 +4,13 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { CheckCircle, CircleMinus, Plus, Sparkles, Zap } from 'lucide-react'
-import { Badge } from './ui/badge'
+import { Badge } from '@/components/ui/badge'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from './ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 

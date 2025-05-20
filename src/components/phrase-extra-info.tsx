@@ -3,8 +3,8 @@ import { ago } from '@/lib/dayjs'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { useDeckCard } from '@/lib/use-deck'
 import { dateDiff, intervals, retrievability, round } from '@/lib/utils'
-import Flagged from './flagged'
-import ExtraInfo from './extra-info'
+import Flagged from '@/components/flagged'
+import ExtraInfo from '@/components/extra-info'
 
 export default function PhraseExtraInfo({
 	pid,

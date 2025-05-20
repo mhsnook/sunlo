@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast'
 import { Share } from 'lucide-react'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 
 export function NativeShareButton({
 	shareData,

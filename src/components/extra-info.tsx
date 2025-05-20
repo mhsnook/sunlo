@@ -5,8 +5,8 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from './ui/dialog'
-import { Button } from './ui/button'
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { Ellipsis } from 'lucide-react'
 import { ReactNode } from '@tanstack/react-router'
 

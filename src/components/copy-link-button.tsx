@@ -1,7 +1,7 @@
 import { Copy } from 'lucide-react'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
-import { ButtonProps } from './ui/button-variants'
+import { ButtonProps } from '@/components/ui/button-variants'
 
 export default function CopyLinkButton({
 	url,

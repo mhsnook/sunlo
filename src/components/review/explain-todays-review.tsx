@@ -2,7 +2,7 @@ import { pids } from '@/types/main'
 import Flagged from '../flagged'
 import { ProcessedDeckAndPids } from '@/lib/process-pids'
 import ExtraInfo from '../extra-info'
-import { AlgoRecsObject } from './select-phrases-to-add-to-review'
+import { AlgoRecsObject } from '@/components/review/select-phrases-to-add-to-review'
 
 type ExplainingTheReviewProps = {
 	today_active: pids

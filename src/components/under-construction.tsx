@@ -1,5 +1,5 @@
 import { Hammer } from 'lucide-react'
-import Callout from './ui/callout'
+import Callout from '@/components/ui/callout'
 
 export function UnderConstruction() {
 	return (
