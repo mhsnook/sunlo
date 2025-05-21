@@ -23,7 +23,7 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 	}
 
 	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
-		getIndexOfNextUnfinishedCard(dailyCacheKey, 0)
+		getIndexOfNextUnfinishedCard(dailyCacheKey, -1)
 	)
 
 	const { cardsMap, phrasesMap } = useLoaderData({
@@ -44,7 +44,7 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 				)
 			if (direction === 'unfinished')
 				setCurrentCardIndex(() =>
-					getIndexOfNextUnfinishedCard(dailyCacheKey, 0)
+					getIndexOfNextUnfinishedCard(dailyCacheKey, -1)
 				)
 		},
 		[currentCardIndex, setCurrentCardIndex, dailyCacheKey]

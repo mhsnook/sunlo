@@ -21,6 +21,10 @@ export function WhenComplete({
 	const skippedCount = countSkippedCards(pids, dailyCacheKey)
 	const againCount = countAgainCards(pids, dailyCacheKey)
 	const unfinishedCount = countUnfinishedCards(pids, dailyCacheKey)
+	const goBackAndStartAgain = () => {
+		resetExtrasPids(dailyCacheKey)
+		go()
+	}
 	return (
 		<Card className="mx-auto flex h-[80vh] w-full flex-col">
 			<CardContent className="flex grow flex-col items-center justify-center gap-6 pt-0 pb-16">
@@ -40,13 +44,7 @@ export function WhenComplete({
 							:	null}
 							. Let's go back and finish them &mdash; you can do it!
 						</p>
-						<Button
-							size="lg"
-							onClick={() => {
-								resetExtrasPids(dailyCacheKey)
-								go()
-							}}
-						>
+						<Button size="lg" onClick={goBackAndStartAgain}>
 							Review unfinished cards ({unfinishedCount})
 						</Button>
 					</>
