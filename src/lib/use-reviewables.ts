@@ -50,7 +50,8 @@ export function getIndexOfNextUnfinishedCard(
 			'trying to fetch index of first card, but there is no review set up for today'
 		)
 	const index = pids.findIndex((p, i) => {
-		if (currentCardIndex > i) return false
+		// if we're currently at card 3 of 40, don't even check cards 0-3
+		if (i <= currentCardIndex) return false
 		const entry = getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
 		return entry === null || entry.score === 1
 	})

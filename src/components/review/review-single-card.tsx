@@ -73,7 +73,6 @@ export function ReviewSingleCard({
 		onSuccess: (data) => {
 			if (data.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
-
 			if (data.score === 2)
 				toast('okay', { icon: '🤷', position: 'bottom-center' })
 			if (data.score === 3)
