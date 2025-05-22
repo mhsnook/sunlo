@@ -13,25 +13,20 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 			appnav: [],
 		}
 	},
-	loaderDeps: () => ({}),
 })
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
-	const dayString = todayString()
+	// referential stability for the cache key
+	const [dailyCacheKey] = useState(() => [
+		'user',
+		lang,
+		'review',
+		todayString(),
+	])
 
-	const reviewData = useMemo(() => {
-		const dailyCacheKey = ['user', lang, 'review', dayString]
-		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
-	}, [lang, dayString])
+	const reviewPids = getFromLocalStorage<pids>(dailyCacheKey)
+	if (!reviewPids || !reviewPids.length) return <Navigate to=".." />
 
-	if (!reviewData.pids || !reviewData.pids.length) return <Navigate to=".." />
-
-	return (
-		<FlashCardReviewSession
-			dailyCacheKey={reviewData.dailyCacheKey}
-			pids={reviewData.pids}
-			// lang={lang}
-		/>
-	)
+	return <FlashCardReviewSession dailyCacheKey={dailyCacheKey} />
 }
