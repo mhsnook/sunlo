@@ -224,6 +224,10 @@ function ReviewPage() {
 		},
 	})
 
+	const extrasPids = getExtrasFromLocalStorage(dailyCacheKey)
+	if (extrasPids)
+		return <Navigate to="/learn/$lang/review/extras" params={{ lang }} />
+
 	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
 	if (reviewPids && reviewPids.length)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />

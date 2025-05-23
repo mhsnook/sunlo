@@ -8,6 +8,7 @@ import {
 	countUnfinishedCards,
 	setExtrasPids,
 } from '@/lib/use-reviewables'
+import { useNavigate } from '@tanstack/react-router'
 
 export function WhenComplete({
 	pids,
@@ -21,8 +22,10 @@ export function WhenComplete({
 	const skippedCount = countSkippedCards(pids, dailyCacheKey)
 	const againCount = countAgainCards(pids, dailyCacheKey)
 	const unfinishedCount = countUnfinishedCards(pids, dailyCacheKey)
-	const goBackAndStartAgain = () => {
+	const navigate = useNavigate({ from: '/learn/$lang/review/go' })
+	const goToTheExtrasReview = () => {
 		setExtrasPids(dailyCacheKey)
+		navigate({ to: '/learn/$lang/review/extras' })
 		go()
 	}
 	return (
@@ -44,7 +47,7 @@ export function WhenComplete({
 							:	null}
 							. Let's go back and finish them &mdash; you can do it!
 						</p>
-						<Button size="lg" onClick={goBackAndStartAgain}>
+						<Button size="lg" onClick={goToTheExtrasReview}>
 							Review unfinished cards ({unfinishedCount})
 						</Button>
 					</>

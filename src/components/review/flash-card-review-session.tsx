@@ -11,13 +11,21 @@ import {
 
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
+import { useDeckCardsMap } from '@/lib/use-deck'
+import { useLanguagePhrasesMap } from '@/lib/use-language'
+import { Loader } from '@/components/ui/loader'
 
 interface ComponentProps {
 	dailyCacheKey: DailyCacheKey
+	extras?: boolean
+	lang: string
 }
 
-export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+export function FlashCardReviewSession({
+	dailyCacheKey,
+	extras = false,
+	lang,
+}: ComponentProps) {
 	if (!pids?.length) {
 		throw new Error(`Error fetching phrase manifest from localStorage`)
 	}
@@ -26,13 +34,8 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 		getIndexOfNextUnfinishedCard(dailyCacheKey, -1)
 	)
 
-	const { cardsMap, phrasesMap } = useLoaderData({
-		from: '/_user/learn/$lang',
-		select: (data) => ({
-			cardsMap: data.deck.cardsMap,
-			phrasesMap: data.language.phrasesMap,
-		}),
-	})
+	const { data: cardsMap } = useDeckCardsMap(lang)
+	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
 
 	const navigateCards = useCallback(
 		(direction: 'forward' | 'back' | 'next' | 'unfinished') => {
@@ -51,7 +54,7 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 	)
 
 	const isComplete = currentCardIndex === pids.length
-
+	if (!phrasesMap || !cardsMap) return <Loader />
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div
@@ -105,18 +108,20 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 					</Button>
 				</div>
 
-				{pids.map((pid, i) => (
-					<ReviewSingleCard
-						key={i}
-						isCurrentlyShown={i === currentCardIndex}
-						dailyCacheKey={dailyCacheKey}
-						phrase={phrasesMap[pid]}
-						card={cardsMap[pid]}
-						proceed={() => {
-							navigateCards('next')
-						}}
-					/>
-				))}
+				{pids.map((pid, i) =>
+					!cardsMap[pid] || !phrasesMap[pid] ?
+						null
+					:	<ReviewSingleCard
+							key={i}
+							isCurrentlyShown={i === currentCardIndex}
+							dailyCacheKey={dailyCacheKey}
+							phrase={phrasesMap[pid]}
+							card={cardsMap[pid]}
+							proceed={() => {
+								navigateCards('next')
+							}}
+						/>
+				)}
 			</div>
 		</div>
 	)

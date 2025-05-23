@@ -8,7 +8,7 @@ import { useState } from 'react'
 import { todayString } from '@/lib/utils'
 import { DailyCacheKey } from '@/types/main'
 
-export const Route = createFileRoute('/_user/learn/$lang/review/go')({
+export const Route = createFileRoute('/_user/learn/$lang/review/extras')({
 	component: ReviewPage,
 	loader: () => {
 		return {
@@ -32,8 +32,8 @@ function ReviewPage() {
 		return <Navigate to="/learn/$lang/review" params={{ lang }} />
 
 	const extrasPids = getExtrasFromLocalStorage(dailyCacheKey)
-	if (extrasPids)
-		return <Navigate to="/learn/$lang/review/extras" params={{ lang }} />
+	if (!extrasPids)
+		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	return (
 		<FlashCardReviewSession
