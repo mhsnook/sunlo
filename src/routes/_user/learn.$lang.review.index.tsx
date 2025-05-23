@@ -1,4 +1,4 @@
-import { pids } from '@/types/main'
+import { DailyCacheKey, pids } from '@/types/main'
 import {
 	createFileRoute,
 	Navigate,
@@ -22,7 +22,11 @@ import { Drawer, DrawerTrigger } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { getFromLocalStorage } from '@/lib/use-reviewables'
+import {
+	getExtrasFromLocalStorage,
+	getManifestFromLocalStorage,
+	setManifestFromLocalStorage,
+} from '@/lib/use-reviewables'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckMeta } from '@/lib/use-deck'
@@ -43,10 +47,15 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 function ReviewPage() {
 	const { lang } = Route.useParams()
 	const { queryClient } = Route.useRouteContext()
-	const dayString = todayString()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
+	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
+		'user',
+		lang,
+		'review',
+		todayString(),
+	])
 
 	if (!meta?.id)
 		throw new Error(
@@ -56,11 +65,6 @@ function ReviewPage() {
 		throw new Error('Pids should not be null here :/, even once')
 
 	const today_active = pids.today_active
-
-	const reviewData = useMemo(() => {
-		const dailyCacheKey = ['user', lang, 'review', dayString]
-		return { dailyCacheKey, pids: getFromLocalStorage<pids>(dailyCacheKey) }
-	}, [lang, dayString])
 
 	// 1. we have today's active cards plus we need x more
 	// const [countNeeded, setCountNeeded] = useState<number>(15)
@@ -181,7 +185,7 @@ function ReviewPage() {
 	const router = useRouter()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { mutate, isPending } = useMutation({
-		mutationKey: [...reviewData.dailyCacheKey, 'create'],
+		mutationKey: [...dailyCacheKey, 'create'],
 		mutationFn: async () => {
 			const { data } = await supabase
 				.from('user_card')
@@ -197,10 +201,8 @@ function ReviewPage() {
 
 			const newCardsCreated = data.map((c) => c.phrase_id)
 
-			localStorage.setItem(
-				JSON.stringify(reviewData.dailyCacheKey),
-				JSON.stringify(allCardsForToday)
-			)
+			setManifestFromLocalStorage(dailyCacheKey, allCardsForToday)
+
 			return {
 				total: allCardsForToday.length,
 				cards_fresh: freshCards.length,
@@ -222,10 +224,9 @@ function ReviewPage() {
 		},
 	})
 
-	if (reviewData.pids && reviewData.pids.length) {
-		// console.log(`This is the data we are doing a <Navigate> over:`, reviewData)
+	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
+	if (reviewPids && reviewPids.length)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
-	}
 
 	return (
 		<Card>

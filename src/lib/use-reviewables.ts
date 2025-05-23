@@ -1,3 +1,4 @@
+import type { DailyCacheKey } from '@/types/main'
 import supabase from './supabase-client'
 import { pids, ReviewInsert, ReviewRow, ReviewUpdate, uuid } from '@/types/main'
 
@@ -22,29 +23,52 @@ export const updateReview = async (submitData: ReviewUpdate) => {
 	return data
 }
 
-export function getFromLocalStorage<T>(queryKey: Array<string>): null | T {
+function getFromLocalStorage<T>(queryKey: DailyCacheKey): null | T {
 	const data = localStorage.getItem(JSON.stringify(queryKey))
 	return typeof data === 'string' ? JSON.parse(data) : null
 }
 
-export function setFromLocalStorage(queryKey: Array<string>, value: any) {
+function setFromLocalStorage(queryKey: DailyCacheKey, value: any) {
 	localStorage.setItem(JSON.stringify(queryKey), JSON.stringify(value))
 }
 
-export function resetExtrasPids(dailyCacheKey: Array<string>) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey) ?? []
-	const extras = pids.filter((pid) => {
+export const getManifestFromLocalStorage = getFromLocalStorage as (
+	dailyCacheKey: DailyCacheKey
+) => pids | null
+export const setManifestFromLocalStorage = setFromLocalStorage
+
+export const getExtrasFromLocalStorage = (dailyCacheKey: DailyCacheKey) =>
+	getFromLocalStorage<pids>([...dailyCacheKey, 'extras'])
+
+export const setExtrasFromLocalStorage = (
+	dailyCacheKey: DailyCacheKey,
+	data: any
+) => setFromLocalStorage([...dailyCacheKey, 'extras'], data)
+
+export function setExtrasPids(dailyCacheKey: DailyCacheKey) {
+	const extras = getManifestFromLocalStorage(dailyCacheKey)?.filter((pid) => {
 		const review = getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
 		return review === null || review.score === 1
 	})
-	setFromLocalStorage(dailyCacheKey, extras)
+	setExtrasFromLocalStorage(dailyCacheKey, extras)
 }
 
+export const getReviewFromLocalStorage = (
+	dailyCacheKey: DailyCacheKey,
+	pid: uuid
+): ReviewRow | null => getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
+
+export const setReviewFromLocalStorage = (
+	dailyCacheKey: DailyCacheKey,
+	pid: uuid,
+	review: ReviewRow
+) => setFromLocalStorage([...dailyCacheKey, pid], review)
+
 export function getIndexOfNextUnfinishedCard(
-	dailyCacheKey: Array<string>,
+	dailyCacheKey: DailyCacheKey,
 	currentCardIndex: number
 ) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+	const pids = getManifestFromLocalStorage(dailyCacheKey)
 	if (pids === null)
 		throw new Error(
 			'trying to fetch index of first card, but there is no review set up for today'
@@ -61,16 +85,16 @@ export function getIndexOfNextUnfinishedCard(
 
 export function countSkippedCards(
 	pids: pids,
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 ): number {
-	return pids.filter((p: uuid) => {
-		return !getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
+	return pids.filter((pid: uuid) => {
+		return !getReviewFromLocalStorage(dailyCacheKey, pid)
 	}).length
 }
 
 export function countAgainCards(
 	pids: pids,
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 ): number {
 	return pids.filter((p: uuid) => {
 		return getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score === 1
@@ -79,11 +103,9 @@ export function countAgainCards(
 
 export function countUnfinishedCards(
 	pids: pids,
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 ): number {
-	return pids.filter((p: uuid) => {
-		return !(
-			(getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score ?? 0) > 1
-		)
+	return pids.filter((pid: uuid) => {
+		return !((getReviewFromLocalStorage(dailyCacheKey, pid)?.score ?? 0) > 1)
 	}).length
 }

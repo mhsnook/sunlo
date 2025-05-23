@@ -1,4 +1,4 @@
-import { pids } from '@/types/main'
+import { DailyCacheKey, pids } from '@/types/main'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
@@ -6,7 +6,7 @@ import {
 	countAgainCards,
 	countSkippedCards,
 	countUnfinishedCards,
-	resetExtrasPids,
+	setExtrasPids,
 } from '@/lib/use-reviewables'
 
 export function WhenComplete({
@@ -15,14 +15,14 @@ export function WhenComplete({
 	go,
 }: {
 	pids: pids
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 	go: () => void
 }) {
 	const skippedCount = countSkippedCards(pids, dailyCacheKey)
 	const againCount = countAgainCards(pids, dailyCacheKey)
 	const unfinishedCount = countUnfinishedCards(pids, dailyCacheKey)
 	const goBackAndStartAgain = () => {
-		resetExtrasPids(dailyCacheKey)
+		setExtrasPids(dailyCacheKey)
 		go()
 	}
 	return (

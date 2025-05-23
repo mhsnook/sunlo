@@ -1,19 +1,19 @@
 import { useCallback, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { pids } from '@/types/main'
+import type { DailyCacheKey } from '@/types/main'
 
 import {
-	getFromLocalStorage,
+	getExtrasFromLocalStorage,
 	getIndexOfNextUnfinishedCard,
+	getManifestFromLocalStorage,
 } from '@/lib/use-reviewables'
 
-import { useLoaderData } from '@tanstack/react-router'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 
 interface ComponentProps {
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 }
 
 export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {

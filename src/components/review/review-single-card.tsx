@@ -1,11 +1,12 @@
 import {
-	getFromLocalStorage,
 	postReview,
-	setFromLocalStorage,
 	updateReview,
+	getReviewFromLocalStorage,
+	setReviewFromLocalStorage,
 } from '@/lib/use-reviewables'
 import {
 	CardFull,
+	DailyCacheKey,
 	PhraseFiltered,
 	ReviewRow,
 	TranslationRow,
@@ -24,7 +25,7 @@ import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
 
 interface ReviewSingleCardProps {
-	dailyCacheKey: Array<string>
+	dailyCacheKey: DailyCacheKey
 	isCurrentlyShown: boolean
 	phrase: PhraseFiltered
 	card: CardFull
@@ -44,10 +45,7 @@ export function ReviewSingleCard({
 	proceed,
 }: ReviewSingleCardProps) {
 	const [revealCard, setRevealCard] = useState(false)
-	const prevData = getFromLocalStorage<ReviewRow>([
-		...dailyCacheKey,
-		phrase.id!,
-	])
+	const prevData = getReviewFromLocalStorage(dailyCacheKey, phrase.id!)
 
 	const queryClient = useQueryClient()
 	const { mutate, isPending } = useMutation<
@@ -79,7 +77,7 @@ export function ReviewSingleCard({
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 
-			setFromLocalStorage([...dailyCacheKey, phrase.id!], data)
+			setReviewFromLocalStorage(dailyCacheKey, phrase.id!, data)
 			void queryClient.invalidateQueries({
 				queryKey: [...dailyCacheKey, phrase.id],
 			})
