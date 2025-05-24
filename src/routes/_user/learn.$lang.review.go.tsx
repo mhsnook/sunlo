@@ -31,15 +31,9 @@ function ReviewPage() {
 	if (!reviewPids || !reviewPids.length)
 		return <Navigate to="/learn/$lang/review" params={{ lang }} />
 
-	const extrasPids = getExtrasFromLocalStorage(dailyCacheKey)
-	if (extrasPids)
-		return <Navigate to="/learn/$lang/review/extras" params={{ lang }} />
+	const againPids = getAgainsFromLocalStorage(dailyCacheKey)
+	if (againPids)
+		return <Navigate to="/learn/$lang/review/agains" params={{ lang }} />
 
-	return (
-		<FlashCardReviewSession
-			dailyCacheKey={dailyCacheKey}
-			extras={true}
-			lang={lang}
-		/>
-	)
+	return <FlashCardReviewSession dailyCacheKey={dailyCacheKey} lang={lang} />
 }

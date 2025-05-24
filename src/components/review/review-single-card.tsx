@@ -26,9 +26,9 @@ import { Play } from 'lucide-react'
 
 interface ReviewSingleCardProps {
 	dailyCacheKey: DailyCacheKey
-	isCurrentlyShown: boolean
 	phrase: PhraseFiltered
 	card: CardFull
+	loop: boolean
 	proceed: () => void
 }
 
@@ -39,9 +39,9 @@ const playAudio = (text: string) => {
 
 export function ReviewSingleCard({
 	dailyCacheKey,
-	isCurrentlyShown,
 	phrase,
 	card,
+	loop,
 	proceed,
 }: ReviewSingleCardProps) {
 	const [revealCard, setRevealCard] = useState(false)
@@ -54,9 +54,14 @@ export function ReviewSingleCard({
 		{ score: number }
 	>({
 		mutationKey: [...dailyCacheKey, phrase.id],
+		// @ts-expect-error ts-2322
 		mutationFn: async ({ score }: { score: number }) => {
+			if (loop)
+				return {
+					...prevData,
+					score,
+				}
 			if (prevData?.score === score) return prevData
-
 			return prevData?.id ?
 					await updateReview({
 						score,
@@ -90,12 +95,7 @@ export function ReviewSingleCard({
 	})
 
 	return (
-		<Card
-			className={cn(
-				`mx-auto h-[80vh] w-full flex-col`,
-				isCurrentlyShown ? 'flex' : 'hidden'
-			)}
-		>
+		<Card className="mx-auto flex h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
 				<PermalinkButton
 					to={'/learn/$lang/$id'}

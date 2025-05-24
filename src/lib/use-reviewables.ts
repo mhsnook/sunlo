@@ -37,20 +37,20 @@ export const getManifestFromLocalStorage = getFromLocalStorage as (
 ) => pids | null
 export const setManifestFromLocalStorage = setFromLocalStorage
 
-export const getExtrasFromLocalStorage = (dailyCacheKey: DailyCacheKey) =>
-	getFromLocalStorage<pids>([...dailyCacheKey, 'extras'])
+export const getAgainsFromLocalStorage = (dailyCacheKey: DailyCacheKey) =>
+	getFromLocalStorage<pids>([...dailyCacheKey, 'agains'])
 
-export const setExtrasFromLocalStorage = (
+export const setAgainsFromLocalStorage = (
 	dailyCacheKey: DailyCacheKey,
 	data: any
-) => setFromLocalStorage([...dailyCacheKey, 'extras'], data)
+) => setFromLocalStorage([...dailyCacheKey, 'agains'], data)
 
-export function setExtrasPids(dailyCacheKey: DailyCacheKey) {
-	const extras = getManifestFromLocalStorage(dailyCacheKey)?.filter((pid) => {
+export function setAgainPids(dailyCacheKey: DailyCacheKey) {
+	const agains = getManifestFromLocalStorage(dailyCacheKey)?.filter((pid) => {
 		const review = getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
-		return review === null || review.score === 1
+		return review?.score === 1
 	})
-	setExtrasFromLocalStorage(dailyCacheKey, extras)
+	setAgainsFromLocalStorage(dailyCacheKey, agains)
 }
 
 export const getReviewFromLocalStorage = (
@@ -64,14 +64,14 @@ export const setReviewFromLocalStorage = (
 	review: ReviewRow
 ) => setFromLocalStorage([...dailyCacheKey, pid], review)
 
-export function getIndexOfNextUnfinishedCard(
+export function getIndexOfNextUnreviewedCard(
 	dailyCacheKey: DailyCacheKey,
 	currentCardIndex: number
 ) {
 	const pids = getManifestFromLocalStorage(dailyCacheKey)
 	if (pids === null)
 		throw new Error(
-			'trying to fetch index of first card, but there is no review set up for today'
+			'trying to fetch index of next card, but there is no review set up for today'
 		)
 	const index = pids.findIndex((p, i) => {
 		// if we're currently at card 3 of 40, don't even check cards 0-3
@@ -83,7 +83,26 @@ export function getIndexOfNextUnfinishedCard(
 	return index !== -1 ? index : pids.length
 }
 
-export function countSkippedCards(
+export function getIndexOfNextAgainCard(
+	dailyCacheKey: DailyCacheKey,
+	currentCardIndex: number
+) {
+	const pids = getManifestFromLocalStorage(dailyCacheKey)
+	if (pids === null)
+		throw new Error(
+			'trying to fetch index of next card, but there is no review set up for today'
+		)
+	const index = pids.findIndex((pid, i) => {
+		// if we're currently at card 3 of 40, don't even check cards 0-3
+		if (i <= currentCardIndex) return false
+		const entry = getReviewFromLocalStorage(dailyCacheKey, pid)
+		return entry?.score === 1
+	})
+
+	return index !== -1 ? index : pids.length
+}
+
+export function countUnreviewedCards(
 	pids: pids,
 	dailyCacheKey: DailyCacheKey
 ): number {
@@ -98,14 +117,5 @@ export function countAgainCards(
 ): number {
 	return pids.filter((p: uuid) => {
 		return getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score === 1
-	}).length
-}
-
-export function countUnfinishedCards(
-	pids: pids,
-	dailyCacheKey: DailyCacheKey
-): number {
-	return pids.filter((pid: uuid) => {
-		return !((getReviewFromLocalStorage(dailyCacheKey, pid)?.score ?? 0) > 1)
 	}).length
 }

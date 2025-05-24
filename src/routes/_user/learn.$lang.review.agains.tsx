@@ -1,14 +1,14 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
 import {
-	getExtrasFromLocalStorage,
+	getAgainsFromLocalStorage,
 	getManifestFromLocalStorage,
 } from '@/lib/use-reviewables'
 import { useState } from 'react'
 import { todayString } from '@/lib/utils'
 import { DailyCacheKey } from '@/types/main'
 
-export const Route = createFileRoute('/_user/learn/$lang/review/extras')({
+export const Route = createFileRoute('/_user/learn/$lang/review/agains')({
 	component: ReviewPage,
 	loader: () => {
 		return {
@@ -31,14 +31,14 @@ function ReviewPage() {
 	if (!reviewPids || !reviewPids.length)
 		return <Navigate to="/learn/$lang/review" params={{ lang }} />
 
-	const extrasPids = getExtrasFromLocalStorage(dailyCacheKey)
-	if (!extrasPids)
+	const againPids = getAgainsFromLocalStorage(dailyCacheKey)
+	if (!againPids)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	return (
 		<FlashCardReviewSession
 			dailyCacheKey={dailyCacheKey}
-			extras={true}
+			loop={true}
 			lang={lang}
 		/>
 	)
