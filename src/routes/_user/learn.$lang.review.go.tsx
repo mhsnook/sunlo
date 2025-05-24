@@ -1,7 +1,7 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
 import {
-	getExtrasFromLocalStorage,
+	getAgainsFromLocalStorage,
 	getManifestFromLocalStorage,
 } from '@/lib/use-reviewables'
 import { useState } from 'react'

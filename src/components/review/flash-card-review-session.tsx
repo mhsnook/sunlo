@@ -152,3 +152,12 @@ export function FlashCardReviewSession({
 		</div>
 	)
 }
+/*
+function NavStandard() {
+	return ()
+}
+
+function NavLoop() {
+	return ()
+}
+*/
