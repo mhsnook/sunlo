@@ -1,8 +1,8 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
 import {
-	getAgainsFromLocalStorage,
 	getManifestFromLocalStorage,
+	useReviewState,
 } from '@/lib/use-reviewables'
 import { useState } from 'react'
 import { todayString } from '@/lib/utils'
@@ -10,30 +10,33 @@ import { DailyCacheKey } from '@/types/main'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
-	loader: () => {
+	loader: ({ params: { lang } }) => {
+		const dailyCacheKey: DailyCacheKey = ['user', lang, 'review', todayString()]
+
+		const pidsManifest = getManifestFromLocalStorage(dailyCacheKey)
+		if (!pidsManifest || !pidsManifest.length) throw redirect({ to: '..' })
+
 		return {
 			appnav: [],
+			dailyCacheKey,
+			pidsManifest,
 		}
 	},
 })
 
 function ReviewPage() {
-	const { lang } = Route.useParams()
+	const data = Route.useLoaderData()
 	// referential stability for the cache key
-	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
-		'user',
-		lang,
-		'review',
-		todayString(),
-	])
+	const [dailyCacheKey] = useState<DailyCacheKey>(data.dailyCacheKey)
+	const {
+		data: { reviewStage },
+	} = useReviewState(dailyCacheKey)
 
-	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
-	if (!reviewPids || !reviewPids.length)
-		return <Navigate to="/learn/$lang/review" params={{ lang }} />
-
-	const againPids = getAgainsFromLocalStorage(dailyCacheKey)
-	if (againPids)
-		return <Navigate to="/learn/$lang/review/agains" params={{ lang }} />
-
-	return <FlashCardReviewSession dailyCacheKey={dailyCacheKey} lang={lang} />
+	return (
+		<FlashCardReviewSession
+			dailyCacheKey={dailyCacheKey}
+			pidsManifest={data.pidsManifest}
+			reviewStage={reviewStage}
+		/>
+	)
 }

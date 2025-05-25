@@ -1,40 +1,34 @@
-import { DailyCacheKey, pids } from '@/types/main'
+import { DailyCacheKey } from '@/types/main'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
-import {
-	countAgainCards,
-	countUnreviewedCards,
-	setAgainPids,
-} from '@/lib/use-reviewables'
-import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useReviewStageMutation, useReviewState } from '@/lib/use-reviewables'
+
+type ComponentProps = {
+	dailyCacheKey: DailyCacheKey
+	goToFirstSkipped: () => void
+	goToFirstAgain: () => void
+}
 
 export function WhenComplete({
-	pids,
 	dailyCacheKey,
-	goToSkipped,
-}: {
-	pids: pids
-	dailyCacheKey: DailyCacheKey
-	goToSkipped: () => void
-}) {
-	const [doneWithFirstReview, setDoneWithFirstReview] = useState<boolean>(false)
-	const [goingBackToSkipped, setGoingBackToSkipped] = useState<boolean>(false)
-	const unreviewedCount = countUnreviewedCards(pids, dailyCacheKey)
-	const againCount = countAgainCards(pids, dailyCacheKey)
-	const navigate = useNavigate({ from: '/learn/$lang/review/go' })
-	const goToTheLoop = () => {
-		setAgainPids(dailyCacheKey)
-		// goToLoop()
-		navigate({ from: '/learn/$lang/review/agains' })
-	}
+	goToFirstSkipped,
+	goToFirstAgain,
+}: ComponentProps) {
+	// console.log(reviewStage)
+	const {
+		data: { reviewStage, unreviewedCount, againCount },
+	} = useReviewState(dailyCacheKey)
+	const { mutate: setReviewStage } = useReviewStageMutation(dailyCacheKey)
+
 	return (
 		<Card className="mx-auto flex h-[80vh] w-full flex-col">
 			<CardContent className="flex grow flex-col items-center justify-center gap-6 pt-0 pb-16">
-				{unreviewedCount && !goingBackToSkipped && !doneWithFirstReview ?
+				{(
+					unreviewedCount && reviewStage < 2 // usually 1
+				) ?
 					<>
-						<h2 className="text-2xl font-bold">Almost there!</h2>
+						<h2 className="text-2xl font-bold">Step 1 of 3 complete</h2>
 						<p className="text-center text-lg">
 							You've completed your first pass, but there are still
 							{unreviewedCount} cards you haven't reviewed yet. Let's go back
@@ -43,8 +37,8 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							onClick={() => {
-								setGoingBackToSkipped(true)
-								goToSkipped()
+								setReviewStage(2)
+								goToFirstSkipped()
 							}}
 						>
 							Review Skipped cards ({unreviewedCount})
@@ -52,16 +46,56 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							variant="secondary"
-							onClick={() => setDoneWithFirstReview(true)}
+							onClick={() => {
+								setReviewStage(3)
+							}}
 						>
 							Let's move on
 						</Button>
 					</>
-				: againCount && (doneWithFirstReview || goingBackToSkipped) ?
-					<Button onClick={goToTheLoop}>Review ({againCount})</Button>
+				: againCount && reviewStage < 4 ?
+					<>
+						<h2 className="text-2xl font-bold">Step 3 of 3</h2>
+						<p className="text-center text-lg">
+							There are {againCount} cards that you weren't able to get right
+							and asked to see again.
+						</p>
+						<Button
+							size="lg"
+							onClick={() => {
+								setReviewStage(4)
+								goToFirstAgain()
+							}}
+						>
+							Review {againCount} cards
+						</Button>
+						<p className="">
+							If these are new cards and you're trying to make these memories
+							for the first time, you might want to try one of these tricks:
+							<ul className="ms-6 list-disc">
+								<li>
+									get out a paper and pencil and write the phrase down or draw a
+									doodle
+								</li>
+								<li>think of a mnemonic device or a rhyme</li>
+								<li>
+									imagine cartoon character or a funny animal saying the phrase
+								</li>
+							</ul>
+						</p>
+						<p>
+							{' '}
+							All of these can help you commit the phase to useable memory
+							&ndash; and as always, don't forget to say the phrase outloud! Add
+							as many senses as you can.{' '}
+						</p>
+						<Button variant="link" onClick={() => setReviewStage(5)}></Button>
+					</>
 				:	<>
 						<h2 className="text-2xl font-bold">Good work!</h2>
-						<p className="text-lg">You've completed your review for today.</p>
+						<p className="text-center text-lg">
+							You've completed your review for today.
+						</p>
 						<SuccessCheckmark />
 					</>
 				}

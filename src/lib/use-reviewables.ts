@@ -1,6 +1,11 @@
-import type { DailyCacheKey } from '@/types/main'
+import type { DailyCacheKey, ReviewStages } from '@/types/main'
 import supabase from './supabase-client'
 import { pids, ReviewInsert, ReviewRow, ReviewUpdate, uuid } from '@/types/main'
+import {
+	useMutation,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 
 export const postReview = async (submitData: ReviewInsert) => {
 	if (!submitData?.user_card_id || !submitData?.score)
@@ -37,21 +42,15 @@ export const getManifestFromLocalStorage = getFromLocalStorage as (
 ) => pids | null
 export const setManifestFromLocalStorage = setFromLocalStorage
 
-export const getAgainsFromLocalStorage = (dailyCacheKey: DailyCacheKey) =>
-	getFromLocalStorage<pids>([...dailyCacheKey, 'agains'])
+const getAgainsFromLocalManifest = (dailyCacheKey: DailyCacheKey) =>
+	getManifestFromLocalStorage(dailyCacheKey)?.filter((p: uuid) => {
+		return getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score === 1
+	}) ?? []
 
-export const setAgainsFromLocalStorage = (
-	dailyCacheKey: DailyCacheKey,
-	data: any
-) => setFromLocalStorage([...dailyCacheKey, 'agains'], data)
-
-export function setAgainPids(dailyCacheKey: DailyCacheKey) {
-	const agains = getManifestFromLocalStorage(dailyCacheKey)?.filter((pid) => {
-		const review = getFromLocalStorage<ReviewRow>([...dailyCacheKey, pid])
-		return review?.score === 1
-	})
-	setAgainsFromLocalStorage(dailyCacheKey, agains)
-}
+const getUnreviewedFromLocalManifest = (dailyCacheKey: DailyCacheKey) =>
+	getManifestFromLocalStorage(dailyCacheKey)?.filter((pid: uuid) => {
+		return !getReviewFromLocalStorage(dailyCacheKey, pid)
+	}) ?? []
 
 export const getReviewFromLocalStorage = (
 	dailyCacheKey: DailyCacheKey,
@@ -73,17 +72,17 @@ export function getIndexOfNextUnreviewedCard(
 		throw new Error(
 			'trying to fetch index of next card, but there is no review set up for today'
 		)
-	const index = pids.findIndex((p, i) => {
+	const index = pids.findIndex((pid, i) => {
 		// if we're currently at card 3 of 40, don't even check cards 0-3
 		if (i <= currentCardIndex) return false
-		const entry = getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])
-		return entry === null || entry.score === 1
+		const entry = getReviewFromLocalStorage(dailyCacheKey, pid)
+		return entry === null
 	})
 
 	return index !== -1 ? index : pids.length
 }
 
-export function getIndexOfNextAgainCard(
+function getIndexOfNextAgainCard(
 	dailyCacheKey: DailyCacheKey,
 	currentCardIndex: number
 ) {
@@ -102,20 +101,54 @@ export function getIndexOfNextAgainCard(
 	return index !== -1 ? index : pids.length
 }
 
-export function countUnreviewedCards(
-	pids: pids,
-	dailyCacheKey: DailyCacheKey
-): number {
-	return pids.filter((pid: uuid) => {
-		return !getReviewFromLocalStorage(dailyCacheKey, pid)
-	}).length
+export function getIndexOfLoopedAgainCard(
+	dailyCacheKey: DailyCacheKey,
+	i: number
+) {
+	const countManifestCards =
+		getManifestFromLocalStorage(dailyCacheKey)?.length ?? 0
+	const foundCardIndex = getIndexOfNextAgainCard(dailyCacheKey, i)
+	const finalFoundIndex =
+		!(foundCardIndex === countManifestCards) ? foundCardIndex : (
+			getIndexOfNextAgainCard(dailyCacheKey, -1)
+		)
+	return finalFoundIndex
 }
 
-export function countAgainCards(
-	pids: pids,
-	dailyCacheKey: DailyCacheKey
-): number {
-	return pids.filter((p: uuid) => {
-		return getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score === 1
-	}).length
+export function setLocalReviewStage(
+	dailyCacheKey: DailyCacheKey,
+	stage: ReviewStages
+) {
+	setFromLocalStorage([...dailyCacheKey, 'stage'], stage)
+}
+
+export const useReviewState = (dailyCacheKey: DailyCacheKey) =>
+	useSuspenseQuery({
+		queryKey: [...dailyCacheKey, 'review-state'],
+		queryFn: () => {
+			return {
+				reviewStage:
+					getFromLocalStorage<ReviewStages>([...dailyCacheKey, 'stage']) ?? 0,
+				totalCount: getManifestFromLocalStorage(dailyCacheKey)?.length ?? 0,
+				unreviewedCount: getUnreviewedFromLocalManifest(dailyCacheKey).length,
+				againCount: getAgainsFromLocalManifest(dailyCacheKey).length,
+			}
+		},
+		refetchOnMount: true,
+		refetchOnWindowFocus: true,
+	})
+
+export const useReviewStageMutation = (dailyCacheKey: DailyCacheKey) => {
+	const queryClient = useQueryClient()
+	return useMutation<void, Error, ReviewStages>({
+		mutationFn: async (val: ReviewStages) => {
+			setLocalReviewStage(dailyCacheKey, val)
+			return
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: [...dailyCacheKey, 'review-state'],
+			})
+		},
+	})
 }

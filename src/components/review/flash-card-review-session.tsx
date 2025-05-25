@@ -1,78 +1,58 @@
 import { useCallback, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { DailyCacheKey } from '@/types/main'
+import type { DailyCacheKey, pids, ReviewStages } from '@/types/main'
 
 import {
+	getIndexOfLoopedAgainCard,
 	getIndexOfNextUnreviewedCard,
-	getIndexOfNextAgainCard,
-	getManifestFromLocalStorage,
-	getAgainsFromLocalStorage,
+	useReviewState,
 } from '@/lib/use-reviewables'
 
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
-import { useDeckCardsMap } from '@/lib/use-deck'
-import { useLanguagePhrasesMap } from '@/lib/use-language'
-import { Loader } from '@/components/ui/loader'
 
-interface ComponentProps {
+interface ThisComponentProps {
 	dailyCacheKey: DailyCacheKey
-	loop?: boolean
-	lang: string
+	pidsManifest: pids
+	reviewStage: ReviewStages
 }
 
 export function FlashCardReviewSession({
 	dailyCacheKey,
-	loop = false,
-	lang,
-}: ComponentProps) {
-	const pids =
-		loop ?
-			getAgainsFromLocalStorage(dailyCacheKey)
-		:	getManifestFromLocalStorage(dailyCacheKey)
-
-	// do we have to change this bc the agains one can be length 0?
-	if (!pids?.length) {
-		throw new Error(
-			`Error fetching phrase manifest from localStorage, loop: ${loop}`
-		)
-	}
-
+	pidsManifest,
+	reviewStage,
+}: ThisComponentProps) {
 	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
-		getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
+		reviewStage < 4 ?
+			getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
+		:	getIndexOfLoopedAgainCard(dailyCacheKey, -1)
 	)
-
-	const { data: cardsMap } = useDeckCardsMap(lang)
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	console.log(`currentCardInde`, currentCardIndex, reviewStage)
+	const { data: state } = useReviewState(dailyCacheKey)
 
 	const navigateCards = useCallback(
 		(direction: 'forward' | 'back' | 'next' | 'first' | 'loop') => {
+			if (direction === 'first')
+				setCurrentCardIndex(() =>
+					getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
+				)
 			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
 			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
 			if (direction === 'next')
 				setCurrentCardIndex((i) =>
 					getIndexOfNextUnreviewedCard(dailyCacheKey, i)
 				)
-			if (direction === 'first')
-				setCurrentCardIndex(() =>
-					getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
-				)
+			// the loop only applies to again-cards, and we don't want to have to
+			// wait a render cycle for the function ref to update to then call it
 			if (direction === 'loop')
-				setCurrentCardIndex((i) => {
-					const foundCardIndex = getIndexOfNextAgainCard(dailyCacheKey, i)
-					const finalFoundIndex =
-						!(foundCardIndex === pids.length) ?
-							foundCardIndex
-						:	getIndexOfNextAgainCard(dailyCacheKey, -1)
-					return finalFoundIndex
-				})
+				setCurrentCardIndex((i) => getIndexOfLoopedAgainCard(dailyCacheKey, i))
 		},
-		[currentCardIndex, setCurrentCardIndex, dailyCacheKey]
+		[dailyCacheKey]
 	)
 
-	const isComplete = currentCardIndex === pids.length
-	if (!phrasesMap || !cardsMap) return <Loader />
+	const isComplete = currentCardIndex === pidsManifest.length
+
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div
@@ -91,10 +71,9 @@ export function FlashCardReviewSession({
 				</div>
 				{!isComplete ? null : (
 					<WhenComplete
-						pids={pids}
 						dailyCacheKey={dailyCacheKey}
-						goToSkipped={() => navigateCards('first')}
-						goToLoop={() => navigateCards('loop')}
+						goToFirstSkipped={() => navigateCards('first')}
+						goToFirstAgain={() => navigateCards('loop')}
 					/>
 				)}
 			</div>
@@ -114,39 +93,35 @@ export function FlashCardReviewSession({
 						<ChevronLeft className="size-4" />
 					</Button>
 					<div className="w-40 text-center text-sm">
-						Card {currentCardIndex + 1} of {pids.length}
+						Card {currentCardIndex + 1} of {pidsManifest.length}
 					</div>
 					<Button
 						size="icon-sm"
 						variant="default"
 						onClick={() => navigateCards('forward')}
-						disabled={currentCardIndex === pids.length}
+						disabled={currentCardIndex === pidsManifest.length}
 						aria-label="Next card"
 					>
 						<ChevronRight className="size-4" />
 					</Button>
 				</div>
 				<div className="w-full">
-					{pids.map((pid, i) =>
-						!cardsMap[pid] || !phrasesMap[pid] ?
-							null
-						:	<div
-								key={i}
-								className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
-							>
-								<ReviewSingleCard
-									dailyCacheKey={dailyCacheKey}
-									phrase={phrasesMap[pid]}
-									card={cardsMap[pid]}
-									loop={loop}
-									proceed={
-										loop ?
-											() => navigateCards('loop')
-										:	() => navigateCards('next')
-									}
-								/>
-							</div>
-					)}
+					{pidsManifest.map((pid, i) => (
+						<div
+							key={i}
+							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
+						>
+							<ReviewSingleCard
+								dailyCacheKey={dailyCacheKey}
+								pid={pid}
+								proceed={
+									state.reviewStage < 4 ?
+										() => navigateCards('next')
+									:	() => navigateCards('loop')
+								}
+							/>
+						</div>
+					))}
 				</div>
 			</div>
 		</div>

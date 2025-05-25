@@ -48,7 +48,6 @@ import { Route as UserLearnLangIdImport } from './routes/_user/learn.$lang.$id'
 import { Route as UserFriendsSearchUidImport } from './routes/_user/friends.search.$uid'
 import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn.$lang.review.index'
 import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn.$lang.review.go'
-import { Route as UserLearnLangReviewAgainsImport } from './routes/_user/learn.$lang.review.agains'
 
 // Create Virtual Routes
 
@@ -286,12 +285,6 @@ const UserLearnLangReviewIndexRoute = UserLearnLangReviewIndexImport.update({
 const UserLearnLangReviewGoRoute = UserLearnLangReviewGoImport.update({
   id: '/go',
   path: '/go',
-  getParentRoute: () => UserLearnLangReviewRoute,
-} as any)
-
-const UserLearnLangReviewAgainsRoute = UserLearnLangReviewAgainsImport.update({
-  id: '/agains',
-  path: '/agains',
   getParentRoute: () => UserLearnLangReviewRoute,
 } as any)
 
@@ -551,13 +544,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangIndexImport
       parentRoute: typeof UserLearnLangImport
     }
-    '/_user/learn/$lang/review/agains': {
-      id: '/_user/learn/$lang/review/agains'
-      path: '/agains'
-      fullPath: '/learn/$lang/review/agains'
-      preLoaderRoute: typeof UserLearnLangReviewAgainsImport
-      parentRoute: typeof UserLearnLangReviewImport
-    }
     '/_user/learn/$lang/review/go': {
       id: '/_user/learn/$lang/review/go'
       path: '/go'
@@ -625,13 +611,11 @@ const UserFriendsRouteWithChildren = UserFriendsRoute._addFileChildren(
 )
 
 interface UserLearnLangReviewRouteChildren {
-  UserLearnLangReviewAgainsRoute: typeof UserLearnLangReviewAgainsRoute
   UserLearnLangReviewGoRoute: typeof UserLearnLangReviewGoRoute
   UserLearnLangReviewIndexRoute: typeof UserLearnLangReviewIndexRoute
 }
 
 const UserLearnLangReviewRouteChildren: UserLearnLangReviewRouteChildren = {
-  UserLearnLangReviewAgainsRoute: UserLearnLangReviewAgainsRoute,
   UserLearnLangReviewGoRoute: UserLearnLangReviewGoRoute,
   UserLearnLangReviewIndexRoute: UserLearnLangReviewIndexRoute,
 }
@@ -753,7 +737,6 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/learn/$lang/review/agains': typeof UserLearnLangReviewAgainsRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
@@ -789,7 +772,6 @@ export interface FileRoutesByTo {
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
-  '/learn/$lang/review/agains': typeof UserLearnLangReviewAgainsRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
 }
@@ -832,7 +814,6 @@ export interface FileRoutesById {
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/_user/learn/$lang/review/agains': typeof UserLearnLangReviewAgainsRoute
   '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
@@ -875,7 +856,6 @@ export interface FileRouteTypes {
     | '/learn/$lang/review'
     | '/learn/$lang/search'
     | '/learn/$lang/'
-    | '/learn/$lang/review/agains'
     | '/learn/$lang/review/go'
     | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
@@ -910,7 +890,6 @@ export interface FileRouteTypes {
     | '/learn/$lang/library'
     | '/learn/$lang/search'
     | '/learn/$lang'
-    | '/learn/$lang/review/agains'
     | '/learn/$lang/review/go'
     | '/learn/$lang/review'
   id:
@@ -951,7 +930,6 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
     | '/_user/learn/$lang/'
-    | '/_user/learn/$lang/review/agains'
     | '/_user/learn/$lang/review/go'
     | '/_user/learn/$lang/review/'
   fileRoutesById: FileRoutesById
@@ -1167,7 +1145,6 @@ export const routeTree = rootRoute
       "filePath": "_user/learn.$lang.review.tsx",
       "parent": "/_user/learn/$lang",
       "children": [
-        "/_user/learn/$lang/review/agains",
         "/_user/learn/$lang/review/go",
         "/_user/learn/$lang/review/"
       ]
@@ -1179,10 +1156,6 @@ export const routeTree = rootRoute
     "/_user/learn/$lang/": {
       "filePath": "_user/learn.$lang.index.tsx",
       "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/review/agains": {
-      "filePath": "_user/learn.$lang.review.agains.tsx",
-      "parent": "/_user/learn/$lang/review"
     },
     "/_user/learn/$lang/review/go": {
       "filePath": "_user/learn.$lang.review.go.tsx",

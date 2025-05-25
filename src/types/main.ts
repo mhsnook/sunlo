@@ -1,5 +1,9 @@
 import { Database, Enums, Tables, TablesInsert } from './supabase'
-import { UseMutationResult, UseQueryResult } from '@tanstack/react-query'
+import {
+	QueryKey,
+	UseMutationResult,
+	UseQueryResult,
+} from '@tanstack/react-query'
 import {
 	PostgrestError,
 	PostgrestMaybeSingleResponse,
@@ -15,6 +19,15 @@ export type LangOnlyComponentProps = {
 	lang: string
 }
 
+/*
+	0. not yet initialised in localstorage
+	1. doing the first review
+	2. going back for unreviewed
+	3. skip unreviewed and see screen asking to re-review
+	4. doing re-reviews
+	5. skip re-reviews and end
+*/
+export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
 export type DailyCacheKey = ['user', string, 'review', ...Array<string>]
 
 export type SelectOption = { value: string; label: string }

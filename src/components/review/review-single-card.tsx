@@ -3,16 +3,14 @@ import {
 	updateReview,
 	getReviewFromLocalStorage,
 	setReviewFromLocalStorage,
+	useReviewState,
 } from '@/lib/use-reviewables'
-import {
-	CardFull,
-	DailyCacheKey,
-	PhraseFiltered,
-	ReviewRow,
-	TranslationRow,
-} from '@/types/main'
+import { DailyCacheKey, ReviewRow, TranslationRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+	useMutation,
+	// useQueryClient
+} from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -23,12 +21,12 @@ import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
+import { useLanguagePhrase } from '@/lib/use-language'
+import { useDeckCard } from '@/lib/use-deck'
 
 interface ReviewSingleCardProps {
 	dailyCacheKey: DailyCacheKey
-	phrase: PhraseFiltered
-	card: CardFull
-	loop: boolean
+	pid: uuid
 	proceed: () => void
 }
 
@@ -39,39 +37,55 @@ const playAudio = (text: string) => {
 
 export function ReviewSingleCard({
 	dailyCacheKey,
-	phrase,
-	card,
-	loop,
+	pid,
 	proceed,
 }: ReviewSingleCardProps) {
+	const lang = dailyCacheKey[1]
 	const [revealCard, setRevealCard] = useState(false)
-	const prevData = getReviewFromLocalStorage(dailyCacheKey, phrase.id!)
+	const [prevData, setPrevData] = useState(() =>
+		getReviewFromLocalStorage(dailyCacheKey, pid)
+	)
+	const { data: state } = useReviewState(dailyCacheKey)
 
-	const queryClient = useQueryClient()
+	const { data: phrase } = useLanguagePhrase(pid, lang)
+	const { data: card } = useDeckCard(pid, lang)
+
+	// const queryClient = useQueryClient()
 	const { mutate, isPending } = useMutation<
 		ReviewRow,
 		PostgrestError,
 		{ score: number }
 	>({
-		mutationKey: [...dailyCacheKey, phrase.id],
+		mutationKey: [...dailyCacheKey, pid],
 		// @ts-expect-error ts-2322
 		mutationFn: async ({ score }: { score: number }) => {
-			if (loop)
+			if (!card || !card.id)
+				throw new Error('Trying card review mutation but no card exists')
+
+			// We want 1 mutation per day per card. We can send a second mutation
+			// only during stage 1 or 2, to _correct_ an improper input.
+
+			// no mutations when re-reviewing incorrect
+			if (state.reviewStage > 2)
 				return {
 					...prevData,
 					score,
 				}
+
+			// during stages 1 and 2 send an update only if the score has changed
 			if (prevData?.score === score) return prevData
-			return prevData?.id ?
-					await updateReview({
-						score,
-						review_id: prevData.id,
-					})
-				:	await postReview({
-						score,
-						user_card_id: card.id!,
-						day_session: dailyCacheKey[3],
-					})
+			if (prevData?.id)
+				return await updateReview({
+					score,
+					review_id: prevData.id,
+				})
+
+			// standard case: card has not been reviewed today
+			return await postReview({
+				score,
+				user_card_id: card.id,
+				day_session: dailyCacheKey[3],
+			})
 		},
 		onSuccess: (data) => {
 			if (data.score === 1)
@@ -82,10 +96,12 @@ export function ReviewSingleCard({
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 
-			setReviewFromLocalStorage(dailyCacheKey, phrase.id!, data)
-			void queryClient.invalidateQueries({
-				queryKey: [...dailyCacheKey, phrase.id],
-			})
+			setReviewFromLocalStorage(dailyCacheKey, pid, data)
+			setPrevData(data)
+			// queryClient.setQueryData([...dailyCacheKey, pid], data)
+			/* void queryClient.invalidateQueries({
+				queryKey: [...dailyCacheKey, pid],
+			}) */
 			setTimeout(proceed, 1000)
 		},
 		onError: (error) => {
@@ -94,15 +110,16 @@ export function ReviewSingleCard({
 		},
 	})
 
+	if (!phrase || !card) return null
 	return (
 		<Card className="mx-auto flex h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
 				<PermalinkButton
 					to={'/learn/$lang/$id'}
-					params={{ lang: phrase.lang!, id: phrase.id! }}
+					params={{ lang: lang, id: pid }}
 				/>
-				<SharePhraseButton lang={phrase.lang!} pid={phrase.id!} />
-				<PhraseExtraInfo lang={phrase.lang!} pid={phrase.id!} />
+				<SharePhraseButton lang={lang} pid={pid} />
+				<PhraseExtraInfo lang={lang} pid={pid} />
 			</CardHeader>
 			<CardContent
 				className={`flex grow flex-col items-center justify-center px-[10%] pt-0`}
@@ -154,7 +171,9 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={
-								prevData?.score === 1 ? 'ring-primary ring-2 ring-offset-3' : ''
+								prevData?.score === 1 && state.reviewStage !== 4 ?
+									'ring-primary ring-2 ring-offset-3'
+								:	''
 							}
 						>
 							Again
