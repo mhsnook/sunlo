@@ -4,54 +4,75 @@ import { Button } from '@/components/ui/button'
 import type { DailyCacheKey } from '@/types/main'
 
 import {
-	getExtrasFromLocalStorage,
-	getIndexOfNextUnfinishedCard,
+	getIndexOfNextUnreviewedCard,
+	getIndexOfNextAgainCard,
 	getManifestFromLocalStorage,
+	getAgainsFromLocalStorage,
 } from '@/lib/use-reviewables'
 
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
+import { useDeckCardsMap } from '@/lib/use-deck'
+import { useLanguagePhrasesMap } from '@/lib/use-language'
+import { Loader } from '@/components/ui/loader'
 
 interface ComponentProps {
 	dailyCacheKey: DailyCacheKey
+	loop?: boolean
+	lang: string
 }
 
-export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+export function FlashCardReviewSession({
+	dailyCacheKey,
+	loop = false,
+	lang,
+}: ComponentProps) {
+	const pids =
+		loop ?
+			getAgainsFromLocalStorage(dailyCacheKey)
+		:	getManifestFromLocalStorage(dailyCacheKey)
+
+	// do we have to change this bc the agains one can be length 0?
 	if (!pids?.length) {
-		throw new Error(`Error fetching phrase manifest from localStorage`)
+		throw new Error(
+			`Error fetching phrase manifest from localStorage, loop: ${loop}`
+		)
 	}
 
 	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
-		getIndexOfNextUnfinishedCard(dailyCacheKey, -1)
+		getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
 	)
 
-	const { cardsMap, phrasesMap } = useLoaderData({
-		from: '/_user/learn/$lang',
-		select: (data) => ({
-			cardsMap: data.deck.cardsMap,
-			phrasesMap: data.language.phrasesMap,
-		}),
-	})
+	const { data: cardsMap } = useDeckCardsMap(lang)
+	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
 
 	const navigateCards = useCallback(
-		(direction: 'forward' | 'back' | 'next' | 'unfinished') => {
+		(direction: 'forward' | 'back' | 'next' | 'first' | 'loop') => {
 			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
 			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
 			if (direction === 'next')
 				setCurrentCardIndex((i) =>
-					getIndexOfNextUnfinishedCard(dailyCacheKey, i)
+					getIndexOfNextUnreviewedCard(dailyCacheKey, i)
 				)
-			if (direction === 'unfinished')
+			if (direction === 'first')
 				setCurrentCardIndex(() =>
-					getIndexOfNextUnfinishedCard(dailyCacheKey, -1)
+					getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
 				)
+			if (direction === 'loop')
+				setCurrentCardIndex((i) => {
+					const foundCardIndex = getIndexOfNextAgainCard(dailyCacheKey, i)
+					const finalFoundIndex =
+						!(foundCardIndex === pids.length) ?
+							foundCardIndex
+						:	getIndexOfNextAgainCard(dailyCacheKey, -1)
+					return finalFoundIndex
+				})
 		},
 		[currentCardIndex, setCurrentCardIndex, dailyCacheKey]
 	)
 
 	const isComplete = currentCardIndex === pids.length
-
+	if (!phrasesMap || !cardsMap) return <Loader />
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div
@@ -72,7 +93,8 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 					<WhenComplete
 						pids={pids}
 						dailyCacheKey={dailyCacheKey}
-						go={() => navigateCards('unfinished')}
+						goToSkipped={() => navigateCards('first')}
+						goToLoop={() => navigateCards('loop')}
 					/>
 				)}
 			</div>
@@ -91,7 +113,7 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 					>
 						<ChevronLeft className="size-4" />
 					</Button>
-					<div className="text-center text-sm">
+					<div className="w-40 text-center text-sm">
 						Card {currentCardIndex + 1} of {pids.length}
 					</div>
 					<Button
@@ -104,19 +126,28 @@ export function FlashCardReviewSession({ dailyCacheKey }: ComponentProps) {
 						<ChevronRight className="size-4" />
 					</Button>
 				</div>
-
-				{pids.map((pid, i) => (
-					<ReviewSingleCard
-						key={i}
-						isCurrentlyShown={i === currentCardIndex}
-						dailyCacheKey={dailyCacheKey}
-						phrase={phrasesMap[pid]}
-						card={cardsMap[pid]}
-						proceed={() => {
-							navigateCards('next')
-						}}
-					/>
-				))}
+				<div className="w-full">
+					{pids.map((pid, i) =>
+						!cardsMap[pid] || !phrasesMap[pid] ?
+							null
+						:	<div
+								key={i}
+								className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
+							>
+								<ReviewSingleCard
+									dailyCacheKey={dailyCacheKey}
+									phrase={phrasesMap[pid]}
+									card={cardsMap[pid]}
+									loop={loop}
+									proceed={
+										loop ?
+											() => navigateCards('loop')
+										:	() => navigateCards('next')
+									}
+								/>
+							</div>
+					)}
+				</div>
 			</div>
 		</div>
 	)
