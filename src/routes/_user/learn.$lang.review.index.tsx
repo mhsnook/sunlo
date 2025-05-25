@@ -23,7 +23,7 @@ import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-	getExtrasFromLocalStorage,
+	getAgainsFromLocalStorage,
 	getManifestFromLocalStorage,
 	setManifestFromLocalStorage,
 } from '@/lib/use-reviewables'
@@ -224,9 +224,13 @@ function ReviewPage() {
 		},
 	})
 
+	const againPids = getAgainsFromLocalStorage(dailyCacheKey)
+
 	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
 	if (reviewPids && reviewPids.length)
-		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+		if (againPids)
+			return <Navigate to="/learn/$lang/review/agains" params={{ lang }} />
+		else return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	return (
 		<Card>
