@@ -23,8 +23,8 @@ import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-	getAgainsFromLocalStorage,
 	getManifestFromLocalStorage,
+	setLocalReviewStage,
 	setManifestFromLocalStorage,
 } from '@/lib/use-reviewables'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
@@ -202,6 +202,7 @@ function ReviewPage() {
 			const newCardsCreated = data.map((c) => c.phrase_id)
 
 			setManifestFromLocalStorage(dailyCacheKey, allCardsForToday)
+			setLocalReviewStage(dailyCacheKey, 1)
 
 			return {
 				total: allCardsForToday.length,
@@ -224,13 +225,10 @@ function ReviewPage() {
 		},
 	})
 
-	const againPids = getAgainsFromLocalStorage(dailyCacheKey)
-
 	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
-	if (reviewPids && reviewPids.length)
-		if (againPids)
-			return <Navigate to="/learn/$lang/review/agains" params={{ lang }} />
-		else return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+
+	if (reviewPids?.length)
+		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	return (
 		<Card>
