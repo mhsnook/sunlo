@@ -42,7 +42,7 @@ export function ReviewSingleCard({
 }: ReviewSingleCardProps) {
 	const lang = dailyCacheKey[1]
 	const [revealCard, setRevealCard] = useState(false)
-	const [prevData, setPrevData] = useState(() =>
+	const [prevData, setPrevData] = useState<ReviewRow | null>(
 		getReviewFromLocalStorage(dailyCacheKey, pid)
 	)
 	const { data: state } = useReviewState(dailyCacheKey)
@@ -111,6 +111,8 @@ export function ReviewSingleCard({
 	})
 
 	if (!phrase || !card) return null
+
+	const showAnswers = prevData && state.reviewStage === 1 ? true : revealCard
 	return (
 		<Card className="mx-auto flex h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
@@ -138,7 +140,7 @@ export function ReviewSingleCard({
 					</Flagged>
 				</div>
 				<div>
-					{!revealCard ? null : (
+					{!showAnswers ? null : (
 						phrase.translations.map((trans: TranslationRow) => (
 							<div key={trans.id} className="mt-4 flex items-center">
 								<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
@@ -161,7 +163,7 @@ export function ReviewSingleCard({
 				</div>
 			</CardContent>
 			<CardFooter className="flex flex-col">
-				{!revealCard ?
+				{!showAnswers ?
 					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
 						Show Translation
 					</Button>
