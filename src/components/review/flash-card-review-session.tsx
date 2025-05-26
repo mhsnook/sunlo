@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DailyCacheKey, pids, ReviewStages } from '@/types/main'
@@ -11,6 +11,7 @@ import {
 
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface ThisComponentProps {
 	dailyCacheKey: DailyCacheKey
@@ -28,9 +29,8 @@ export function FlashCardReviewSession({
 			getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
 		:	getIndexOfLoopedAgainCard(dailyCacheKey, -1)
 	)
-	console.log(`currentCardInde`, currentCardIndex, reviewStage)
 	const { data: state } = useReviewState(dailyCacheKey)
-
+	const queryClient = useQueryClient()
 	const navigateCards = useCallback(
 		(direction: 'forward' | 'back' | 'next' | 'first' | 'loop') => {
 			if (direction === 'first')
@@ -52,6 +52,12 @@ export function FlashCardReviewSession({
 	)
 
 	const isComplete = currentCardIndex === pidsManifest.length
+	useEffect(() => {
+		if (isComplete)
+			queryClient.invalidateQueries({
+				queryKey: [...dailyCacheKey, 'review-state'],
+			})
+	}, [isComplete])
 
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
