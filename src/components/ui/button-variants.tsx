@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const buttonVariants = cva(
-	'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+	'inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 	{
 		variants: {
 			variant: {
@@ -15,7 +15,7 @@ const buttonVariants = cva(
 					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
 				ghost: 'hover:bg-primary/30 hover:text-accent-foreground',
 				outline: 'border border-primary bg-card hover:bg-primary/20',
-				link: 'text-primary-foresoft underline-offset-4 hover:underline',
+				link: 's-link',
 			},
 			size: {
 				default: 'h-10 rounded-md px-4 py-2 gap-2',
