@@ -61,57 +61,65 @@ export function FlashCardReviewSession({
 
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
-			<div
-				className={`${isComplete ? 'flex' : 'hidden'} flex-col items-center justify-center gap-2`}
-			>
-				<div className={`flex min-h-10 flex-row items-center justify-center`}>
-					<Button
-						size="sm"
-						variant="ghost"
-						aria-label="back one card"
-						onClick={() => navigateCards('back')}
-						className="ps-2 pe-4"
-					>
-						<ChevronLeft className="me-1 size-4" /> Back one card
-					</Button>
+			<div className="mb-2 flex flex-col items-center justify-center gap-2">
+				<div className="flex min-h-10 flex-row items-center justify-center">
+					{!isComplete && state.reviewStage === 1 ?
+						<>
+							<Button
+								size="icon-sm"
+								variant="default"
+								onClick={() => navigateCards('back')}
+								disabled={currentCardIndex === 0}
+								aria-label="Previous card"
+							>
+								<ChevronLeft className="size-4" />
+							</Button>
+							<div className="w-40 text-center text-sm">
+								Card {currentCardIndex + 1} of {pidsManifest.length}
+							</div>
+							<Button
+								size="icon-sm"
+								variant="default"
+								onClick={() => navigateCards('forward')}
+								disabled={currentCardIndex === pidsManifest.length}
+								aria-label="Next card"
+							>
+								<ChevronRight className="size-4" />
+							</Button>
+						</>
+					: !isComplete && state.reviewStage > 1 ?
+						<Button
+							size="sm"
+							variant="ghost"
+							aria-label="skip for today"
+							onClick={() => navigateCards('next')}
+							className="ps-4 pe-2"
+						>
+							Skip for today <ChevronRight className="size-4" />
+						</Button>
+					: state.reviewStage === 1 ?
+						<Button
+							size="sm"
+							variant="ghost"
+							aria-label="back one card"
+							onClick={() => navigateCards('back')}
+							className="ps-2 pe-4"
+						>
+							<ChevronLeft className="size-4" /> Back one card
+						</Button>
+					:	null}
 				</div>
-				{!isComplete ? null : (
+			</div>
+			<div className="flex flex-col items-center justify-center gap-2">
+				<div className={isComplete ? 'w-full' : 'hidden'}>
 					<WhenComplete
 						dailyCacheKey={dailyCacheKey}
 						goToFirstSkipped={() => navigateCards('first')}
 						goToFirstAgain={() => navigateCards('loop')}
 					/>
-				)}
-			</div>
-			<div
-				className={`${isComplete ? 'hidden' : 'flex'} flex-col items-center justify-center gap-2`}
-			>
-				<div
-					className={`flex min-h-10 flex-row items-center justify-center gap-4`}
-				>
-					<Button
-						size="icon-sm"
-						variant="default"
-						onClick={() => navigateCards('back')}
-						disabled={currentCardIndex === 0}
-						aria-label="Previous card"
-					>
-						<ChevronLeft className="size-4" />
-					</Button>
-					<div className="w-40 text-center text-sm">
-						Card {currentCardIndex + 1} of {pidsManifest.length}
-					</div>
-					<Button
-						size="icon-sm"
-						variant="default"
-						onClick={() => navigateCards('forward')}
-						disabled={currentCardIndex === pidsManifest.length}
-						aria-label="Next card"
-					>
-						<ChevronRight className="size-4" />
-					</Button>
 				</div>
-				<div className="w-full">
+
+				<div className={!isComplete ? 'w-full' : 'hidden'}>
 					{pidsManifest.map((pid, i) => (
 						<div
 							key={i}
