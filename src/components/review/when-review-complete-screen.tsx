@@ -1,5 +1,5 @@
 import { DailyCacheKey } from '@/types/main'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
 import { useReviewStageMutation, useReviewState } from '@/lib/use-reviewables'
@@ -15,20 +15,22 @@ export function WhenComplete({
 	goToFirstSkipped,
 	goToFirstAgain,
 }: ComponentProps) {
-	// console.log(reviewStage)
 	const {
 		data: { reviewStage, unreviewedCount, againCount },
 	} = useReviewState(dailyCacheKey)
 	const { mutate: setReviewStage } = useReviewStageMutation(dailyCacheKey)
 
+	const showWhich =
+		unreviewedCount && reviewStage < 2 ? 'a'
+		: againCount && reviewStage < 4 ? 'b'
+		: 'c'
+
 	return (
-		<Card className="mx-auto flex h-[80vh] w-full flex-col">
-			<CardContent className="flex grow flex-col items-center justify-center gap-6 pt-0 pb-16">
-				{(
-					unreviewedCount && reviewStage < 2 // usually 1
-				) ?
+		<Card className="mx-auto flex min-h-[80vh] w-full flex-col items-center justify-center pt-12">
+			<CardContent className="flex grow flex-col justify-center gap-6">
+				{showWhich === 'a' ?
 					<>
-						<h2 className="text-2xl font-bold">Step 1 complete</h2>
+						<CardTitle className="text-center">Step 2 of 3</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your first pass, but there{' '}
 							{unreviewedCount === 1 ?
@@ -56,9 +58,9 @@ export function WhenComplete({
 							Skip step 2
 						</Button>
 					</>
-				: againCount && reviewStage < 4 ?
+				: showWhich === 'b' ?
 					<>
-						<h2 className="text-2xl font-bold">Step 3 of 3</h2>
+						<CardTitle className="text-center">Step 3 of 3</CardTitle>
 						<p className="text-center text-lg">
 							There {againCount === 1 ? 'is 1 card' : `are ${againCount} cards`}{' '}
 							that you weren't able to get right and asked to see again.
@@ -97,13 +99,13 @@ export function WhenComplete({
 							Skip step 3
 						</Button>
 					</>
-				:	<>
-						<h2 className="text-2xl font-bold">Good work!</h2>
+				:	<div className="flex h-full flex-col items-center justify-center gap-4 pb-16">
+						<CardTitle className="text-center">Step 3 of 3</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your review for today.
 						</p>
 						<SuccessCheckmark />
-					</>
+					</div>
 				}
 			</CardContent>
 		</Card>

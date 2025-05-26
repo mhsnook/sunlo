@@ -66,7 +66,7 @@ export function ReviewSingleCard({
 			// only during stage 1 or 2, to _correct_ an improper input.
 
 			// no mutations when re-reviewing incorrect
-			if (state.reviewStage > 2)
+			if (state.reviewStage > 3)
 				return {
 					...prevData,
 					score,
@@ -96,8 +96,9 @@ export function ReviewSingleCard({
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 
-			setReviewFromLocalStorage(dailyCacheKey, pid, data)
-			setPrevData(data)
+			const mergedData = { ...prevData, ...data }
+			setReviewFromLocalStorage(dailyCacheKey, pid, mergedData)
+			setPrevData(mergedData)
 			// queryClient.setQueryData([...dailyCacheKey, pid], data)
 			/* void queryClient.invalidateQueries({
 				queryKey: [...dailyCacheKey, pid],
@@ -114,7 +115,7 @@ export function ReviewSingleCard({
 
 	const showAnswers = prevData && state.reviewStage === 1 ? true : revealCard
 	return (
-		<Card className="mx-auto flex h-[80vh] w-full flex-col">
+		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
 				<PermalinkButton
 					to={'/learn/$lang/$id'}
