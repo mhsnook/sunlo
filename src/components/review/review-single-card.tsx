@@ -1,11 +1,9 @@
 import {
 	useReviewState,
 	useOneReview,
-	updateReview,
-	postReview,
-	setOneReview,
+	useReviewMutation,
 } from '@/lib/use-reviewables'
-import { DailyCacheKey, ReviewRow, TranslationRow, uuid } from '@/types/main'
+import { DailyCacheKey, TranslationRow, uuid } from '@/types/main'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -17,9 +15,6 @@ import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
 import { useLanguagePhrase } from '@/lib/use-language'
-import { useDeckCard } from '@/lib/use-deck'
-import { PostgrestError } from '@supabase/supabase-js'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 interface ReviewSingleCardProps {
 	dailyCacheKey: DailyCacheKey
@@ -41,11 +36,16 @@ export function ReviewSingleCard({
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReview(dailyCacheKey, pid)
 	const { data: state } = useReviewState(dailyCacheKey)
+	const { mutate, isPending } = useReviewMutation(
+		pid,
+		dailyCacheKey,
+		proceed,
+		() => setRevealCard(false)
+	)
 
 	const { data: phrase } = useLanguagePhrase(pid, lang)
-	const { data: card } = useDeckCard(pid, lang)
 
-	if (!phrase || !card) return null
+	if (!phrase) return null
 
 	const showAnswers = prevData && state.reviewStage === 1 ? true : revealCard
 	return (
@@ -102,141 +102,54 @@ export function ReviewSingleCard({
 					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
 						Show Translation
 					</Button>
-				: card ?
-					<Buttons
-						pid={pid}
-						card_id={card.id!}
-						dailyCacheKey={dailyCacheKey}
-						proceed={proceed}
-						resetRevealCard={() => setRevealCard(false)}
-					/>
-				:	null}
+				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
+						<Button
+							variant="destructive"
+							onClick={() => mutate({ score: 1 })}
+							disabled={isPending}
+							className={
+								prevData?.score === 1 && state.reviewStage < 4 ?
+									'ring-primary ring-2 ring-offset-3'
+								:	''
+							}
+						>
+							Again
+						</Button>
+						<Button
+							variant="secondary"
+							onClick={() => mutate({ score: 2 })}
+							disabled={isPending}
+							className={
+								prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
+							}
+						>
+							Hard
+						</Button>
+						<Button
+							variant="default"
+							onClick={() => mutate({ score: 3 })}
+							disabled={isPending}
+							className={cn(
+								'bg-green-500 hover:bg-green-600',
+								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
+							)}
+						>
+							Good
+						</Button>
+						<Button
+							variant="default"
+							className={cn(
+								'bg-blue-500 hover:bg-blue-600',
+								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
+							)}
+							onClick={() => mutate({ score: 4 })}
+							disabled={isPending}
+						>
+							Easy
+						</Button>
+					</div>
+				}
 			</CardFooter>
 		</Card>
-	)
-}
-
-type ButtonsRowMutationProps = {
-	pid: uuid
-	card_id: uuid
-	dailyCacheKey: DailyCacheKey
-	proceed: () => void
-	resetRevealCard: () => void
-}
-
-function Buttons({
-	pid,
-	card_id,
-	dailyCacheKey,
-	proceed,
-	resetRevealCard,
-}: ButtonsRowMutationProps) {
-	const queryClient = useQueryClient()
-	const { data: prevData } = useOneReview(dailyCacheKey, pid)
-	const { data: state } = useReviewState(dailyCacheKey)
-	const { mutate, isPending } = useMutation<
-		ReviewRow,
-		PostgrestError,
-		{ score: number }
-	>({
-		mutationKey: [...dailyCacheKey, pid],
-		// @ts-expect-error ts-2322 -- because Supabase view fields are always | null
-		mutationFn: async ({ score }: { score: number }) => {
-			if (!card_id)
-				throw new Error('Trying card review mutation but no card exists')
-
-			// We want 1 mutation per day per card. We can send a second mutation
-			// only during stage 1 or 2, to _correct_ an improper input.
-
-			// no mutations when re-reviewing incorrect
-			if (state.reviewStage > 2)
-				return {
-					...prevData,
-					score,
-				}
-
-			// during stages 1 and 2 send an update only if the score has changed
-			if (prevData?.score === score) return prevData
-			if (prevData?.id)
-				return await updateReview({
-					score,
-					review_id: prevData.id,
-				})
-
-			// standard case: card has not been reviewed today
-			return await postReview({
-				score,
-				user_card_id: card_id,
-				day_session: dailyCacheKey[3],
-			})
-		},
-		onSuccess: (data) => {
-			if (data.score === 1)
-				toast('okay', { icon: '🤔', position: 'bottom-center' })
-			if (data.score === 2)
-				toast('okay', { icon: '🤷', position: 'bottom-center' })
-			if (data.score === 3)
-				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
-
-			const mergedData = { ...prevData, ...data }
-			setOneReview(dailyCacheKey, pid, mergedData, queryClient)
-			setTimeout(() => {
-				resetRevealCard()
-				proceed()
-			}, 1000)
-		},
-		onError: (error) => {
-			toast.error(`There was an error posting your review: ${error.message}`)
-			console.log(`Error posting review:`, error)
-		},
-	})
-	return (
-		<div className="mb-3 grid w-full grid-cols-4 gap-2">
-			<Button
-				variant="destructive"
-				onClick={() => mutate({ score: 1 })}
-				disabled={isPending}
-				className={
-					prevData?.score === 1 && state.reviewStage < 4 ?
-						'ring-primary ring-2 ring-offset-3'
-					:	''
-				}
-			>
-				Again
-			</Button>
-			<Button
-				variant="secondary"
-				onClick={() => mutate({ score: 2 })}
-				disabled={isPending}
-				className={
-					prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
-				}
-			>
-				Hard
-			</Button>
-			<Button
-				variant="default"
-				onClick={() => mutate({ score: 3 })}
-				disabled={isPending}
-				className={cn(
-					'bg-green-500 hover:bg-green-600',
-					prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
-				)}
-			>
-				Good
-			</Button>
-			<Button
-				variant="default"
-				className={cn(
-					'bg-blue-500 hover:bg-blue-600',
-					prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
-				)}
-				onClick={() => mutate({ score: 4 })}
-				disabled={isPending}
-			>
-				Easy
-			</Button>
-		</div>
 	)
 }

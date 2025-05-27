@@ -4,8 +4,13 @@ import { pids, ReviewInsert, ReviewRow, ReviewUpdate, uuid } from '@/types/main'
 import {
 	QueryClient,
 	queryOptions,
+	useMutation,
+	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import { useDeckCard } from './use-deck'
+import { PostgrestError } from '@supabase/supabase-js'
 
 export const postReview = async (submitData: ReviewInsert) => {
 	if (!submitData?.user_card_id || !submitData?.score)
@@ -160,6 +165,8 @@ export const useOneReview = (dailyCacheKey: DailyCacheKey, pid: uuid) =>
 		refetchOnWindowFocus: true,
 	})
 
+// for when you DON'T want to send a mutation to the DB
+// (second review in a day doesn't count for the algo)
 export const setOneReview = (
 	dailyCacheKey: DailyCacheKey,
 	pid: uuid,
@@ -168,4 +175,72 @@ export const setOneReview = (
 ) => {
 	queryClient.setQueryData([...dailyCacheKey, pid], data)
 	setFromLocalStorage([...dailyCacheKey, pid], data)
+}
+
+// for when you want to send a mutation to the DB
+// and update the local cache and this custom query cache
+export function useReviewMutation(
+	pid: uuid,
+	dailyCacheKey: DailyCacheKey,
+	proceed: () => void,
+	resetRevealCard: () => void
+) {
+	const queryClient = useQueryClient()
+	const { data: prevData } = useOneReview(dailyCacheKey, pid)
+	const { data: state } = useReviewState(dailyCacheKey)
+	const { data: card } = useDeckCard(pid, dailyCacheKey[1])
+
+	return useMutation<ReviewRow, PostgrestError, { score: number }>({
+		mutationKey: [...dailyCacheKey, pid],
+		// @ts-expect-error ts-2322 -- because Supabase view fields are always | null
+		mutationFn: async ({ score }: { score: number }) => {
+			if (!card?.id)
+				throw new Error('Trying card review mutation but no card exists')
+
+			// We want 1 mutation per day per card. We can send a second mutation
+			// only during stage 1 or 2, to _correct_ an improper input.
+
+			// no mutations when re-reviewing incorrect
+			if (state.reviewStage > 2)
+				return {
+					...prevData,
+					score,
+				}
+
+			// during stages 1 and 2 send an update only if the score has changed
+			if (prevData?.score === score) return prevData
+			if (prevData?.id)
+				return await updateReview({
+					score,
+					review_id: prevData.id,
+				})
+
+			// standard case: card has not been reviewed today
+			return await postReview({
+				score,
+				user_card_id: card.id,
+				day_session: dailyCacheKey[3],
+			})
+		},
+		onSuccess: (data) => {
+			if (data.score === 1)
+				toast('okay', { icon: '🤔', position: 'bottom-center' })
+			if (data.score === 2)
+				toast('okay', { icon: '🤷', position: 'bottom-center' })
+			if (data.score === 3)
+				toast('got it', { icon: '👍️', position: 'bottom-center' })
+			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
+
+			const mergedData = { ...prevData, ...data }
+			setOneReview(dailyCacheKey, pid, mergedData, queryClient)
+			setTimeout(() => {
+				resetRevealCard()
+				proceed()
+			}, 1000)
+		},
+		onError: (error) => {
+			toast.error(`There was an error posting your review: ${error.message}`)
+			console.log(`Error posting review:`, error)
+		},
+	})
 }
