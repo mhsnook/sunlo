@@ -9,10 +9,6 @@ USER TESTING FIXES
 
 
 EPIC: Postgres DX / Run Supabase Locally
-1. ✅ run locally & document
-1. ✅ add migrations maybe? maybe just seeds or schema?
-	- ✅ organize seeds a bit more so they can be committed (no user data, phrases separated from sample user data)
-1. ✅ connect supabase and vercel env variables
 1. make the email stuff work with the local setup
 1. pgTap set up testing framework / run tests on the RPC functions: https://supabase.com/docs/guides/database/extensions/pgtap
 1. ✅ switch to v8
@@ -25,7 +21,6 @@ EPIC OF SIGNUPS AND GETTING STARTED AND CONNECTING FRIENDS
 1.	add "copy invitation text" to invite page
 1.	~make the signup email nice~
 1. the getting-started flow:
-	*	✅ learners get the add-first-deck page
 	*	✅ friends get an accept-friendship page
 		*	✅ Build this "accept-one-particular-invite" page
 		*	original invite needs to embed the friend's uid
@@ -38,7 +33,7 @@ EDGE CASES LEFT BEHIND
 1. When you reach the getting-started page with no "user role" set
 	* rn the redirect pretends you're a helper
 	* we should probably ask ppl instead
-1. If you hack the client it's possible to "Accept" an invitation that hasn't been sent;
+1. ✅ If you hack the client it's possible to "Accept" an invitation that hasn't been sent;
 		the RLS can reject these and/or the friend_summary view can check and verify the who sequence.
 		Both of these options seem secure, and they won't conflict.
 	- replace this RLS hack with an RPC
@@ -50,8 +45,8 @@ EDGE CASES LEFT BEHIND
 MOCKS / Incompletes
 1. Invite-A-Friend is a whole feature-set that needs to be built!
 	1. Invite a new user /friends/invite hasn't been tested through
-		- may need the email and whatsapp links wired up to have the referring user id?
-		- may need a "copy to clipboard" link (for desktop or both?)
+		- ✅ may need the email and whatsapp links wired up to have the referring user id?
+		- ✅ may need a "copy to clipboard" link (for desktop or both?)
 1. ✅ The "Deck Home" screen or Welcome Screen
 		✅ Deck overview section, recent reviews and such
 			- wire it up
@@ -79,8 +74,8 @@ CARD INTERACTIONS
 	- or no deck (start learning this language)
 	- or not logged in (login)
 1. deeper interactions with cards:
-	- when we open these accordion things, should we open a whole dialog or a sonner? or have a button that opens the whole dialog?
-	- $lang/library/phrase/$pid perhaps should be built which permalinks to the same thing as goes in the dialog
+	- when we open these accordion things, should we open a whole dialog or a drawer? or have a button that opens the whole dialog?
+	- $lang/library/$pid perhaps should be built which permalinks to the same thing as goes in the dialog
 	- ✅ add translations button must work
 1. "suggest edits to this card"
 
@@ -94,7 +89,6 @@ UI POLISH
 1. This chat's features: https://v0.dev/chat/animated-card-interface-MHacnAB0fOp
 	1. slide the cards in and out horizontally
 	1. give us a completion progress bar in the /review interface
-1. suspend until profile loads
 1. when the router loader is suspending and then stops, transition in
 1. replace my multi-language select with https://craft.mxkaske.dev/post/fancy-multi-select
 
@@ -112,6 +106,3 @@ ONGOING DATA-HEALTH PRUNING/CURING
 		revoke execute on function public.hello_world from anon;
 		-- grant execute on function public.hello_world from authenticated;
 		```
-1. Implement multi-column constraints for things like:
-		- ✅ user_deck should be unique on (language, uid)
-		- ✅ user_card should be unique on (phrase_id, uid)

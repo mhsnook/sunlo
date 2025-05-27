@@ -2,7 +2,8 @@ import { DailyCacheKey } from '@/types/main'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
-import { useReviewStageMutation, useReviewState } from '@/lib/use-reviewables'
+import { setReviewStage, useReviewState } from '@/lib/use-reviewables'
+import { useQueryClient } from '@tanstack/react-query'
 
 type ComponentProps = {
 	dailyCacheKey: DailyCacheKey
@@ -18,7 +19,8 @@ export function WhenComplete({
 	const {
 		data: { reviewStage, unreviewedCount, againCount },
 	} = useReviewState(dailyCacheKey)
-	const { mutate: setReviewStage } = useReviewStageMutation(dailyCacheKey)
+
+	const queryClient = useQueryClient()
 
 	const showWhich =
 		unreviewedCount && reviewStage < 2 ? 'a'
@@ -42,7 +44,7 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							onClick={() => {
-								setReviewStage(2)
+								setReviewStage(dailyCacheKey, 2, queryClient)
 								goToFirstSkipped()
 							}}
 						>
@@ -52,7 +54,7 @@ export function WhenComplete({
 							size="lg"
 							variant="link"
 							onClick={() => {
-								setReviewStage(3)
+								setReviewStage(dailyCacheKey, 3, queryClient)
 							}}
 						>
 							Skip step 2
@@ -68,7 +70,7 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							onClick={() => {
-								setReviewStage(4)
+								setReviewStage(dailyCacheKey, 4, queryClient)
 								goToFirstAgain()
 							}}
 						>
@@ -91,11 +93,15 @@ export function WhenComplete({
 							</ol>
 						</div>
 						<p>
-							All of these can help you commit the phase to useable memory
+							All of these can help you commit the phrase to useable memory
 							&ndash; and as always, don't forget to say the phrase outloud! Use
 							as many senses as you can.{' '}
 						</p>
-						<Button variant="link" size="lg" onClick={() => setReviewStage(5)}>
+						<Button
+							variant="link"
+							size="lg"
+							onClick={() => setReviewStage(dailyCacheKey, 5, queryClient)}
+						>
 							Skip step 3
 						</Button>
 					</>

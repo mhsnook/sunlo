@@ -1,19 +1,18 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
-import {
-	getManifestFromLocalStorage,
-	useReviewState,
-} from '@/lib/use-reviewables'
+import { manifestQuery, useReviewState } from '@/lib/use-reviewables'
 import { useState } from 'react'
 import { todayString } from '@/lib/utils'
 import { DailyCacheKey } from '@/types/main'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
-	loader: ({ params: { lang } }) => {
+	loader: async ({ params: { lang }, context: { queryClient } }) => {
 		const dailyCacheKey: DailyCacheKey = ['user', lang, 'review', todayString()]
 
-		const pidsManifest = getManifestFromLocalStorage(dailyCacheKey)
+		const pidsManifest = await queryClient.fetchQuery(
+			manifestQuery(dailyCacheKey)
+		)
 		if (!pidsManifest || !pidsManifest.length) throw redirect({ to: '..' })
 
 		return {

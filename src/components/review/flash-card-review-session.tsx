@@ -33,6 +33,7 @@ export function FlashCardReviewSession({
 	const queryClient = useQueryClient()
 	const navigateCards = useCallback(
 		(direction: 'forward' | 'back' | 'next' | 'first' | 'loop') => {
+			console.log(`navigateCards running: ${direction}`)
 			if (direction === 'first')
 				setCurrentCardIndex(() =>
 					getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
@@ -40,9 +41,10 @@ export function FlashCardReviewSession({
 			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
 			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
 			if (direction === 'next')
-				setCurrentCardIndex((i) =>
-					getIndexOfNextUnreviewedCard(dailyCacheKey, i)
-				)
+				setCurrentCardIndex((i) => {
+					console.log(`setCurrentCardIndex, ${i}`)
+					return getIndexOfNextUnreviewedCard(dailyCacheKey, i)
+				})
 			// the loop only applies to again-cards, and we don't want to have to
 			// wait a render cycle for the function ref to update to then call it
 			if (direction === 'loop')
@@ -51,6 +53,10 @@ export function FlashCardReviewSession({
 		[dailyCacheKey]
 	)
 
+	// this is basically like saying, every time we show the WhenComplete
+	// component, re-calculate its data. So even though this isn't using
+	// reactive state, it's calculating when needed, and acting a bit
+	// like a route loader for the proposed /review/complete route.
 	const isComplete = currentCardIndex === pidsManifest.length
 	useEffect(() => {
 		if (isComplete)
@@ -128,10 +134,10 @@ export function FlashCardReviewSession({
 							<ReviewSingleCard
 								dailyCacheKey={dailyCacheKey}
 								pid={pid}
-								proceed={
+								proceed={() =>
 									state.reviewStage < 4 ?
-										() => navigateCards('next')
-									:	() => navigateCards('loop')
+										navigateCards('next')
+									:	navigateCards('loop')
 								}
 							/>
 						</div>

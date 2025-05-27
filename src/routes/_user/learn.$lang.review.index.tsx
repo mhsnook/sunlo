@@ -22,11 +22,7 @@ import { Drawer, DrawerTrigger } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import {
-	getManifestFromLocalStorage,
-	setLocalReviewStage,
-	setManifestFromLocalStorage,
-} from '@/lib/use-reviewables'
+import { setManifest, setReviewStage, useManifest } from '@/lib/use-reviewables'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckMeta } from '@/lib/use-deck'
@@ -201,9 +197,6 @@ function ReviewPage() {
 
 			const newCardsCreated = data.map((c) => c.phrase_id)
 
-			setManifestFromLocalStorage(dailyCacheKey, allCardsForToday)
-			setLocalReviewStage(dailyCacheKey, 1)
-
 			return {
 				total: allCardsForToday.length,
 				cards_fresh: freshCards.length,
@@ -218,6 +211,8 @@ function ReviewPage() {
 				console.log(
 					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
 				)
+			setManifest(dailyCacheKey, allCardsForToday, queryClient)
+			setReviewStage(dailyCacheKey, 1, queryClient)
 			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
 			const clear2 = router.invalidate({ sync: true })
 			await Promise.all([clear1, clear2])
@@ -225,7 +220,7 @@ function ReviewPage() {
 		},
 	})
 
-	const reviewPids = getManifestFromLocalStorage(dailyCacheKey)
+	const { data: reviewPids } = useManifest(dailyCacheKey)
 
 	if (reviewPids?.length)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
