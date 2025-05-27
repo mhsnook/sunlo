@@ -201,7 +201,7 @@ export function useReviewMutation(
 			// only during stage 1 or 2, to _correct_ an improper input.
 
 			// no mutations when re-reviewing incorrect
-			if (state.reviewStage > 2)
+			if (state.reviewStage > 3)
 				return {
 					...prevData,
 					score,
