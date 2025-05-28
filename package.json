@@ -70,7 +70,7 @@
 		"@types/react": "^19.1.2",
 		"@types/react-dom": "^19.1.2",
 		"@typescript-eslint/eslint-plugin": "^8.31.0",
-		"@vitejs/plugin-react-swc": "^3.9.0",
+		"@vitejs/plugin-react": "^4.5.0",
 		"clsx": "^2.1.1",
 		"eslint": "^9.25.1",
 		"eslint-plugin-react-hooks": "5.1.0-rc-fb9a90fa48-20240614",
