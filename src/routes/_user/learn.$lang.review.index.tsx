@@ -362,7 +362,7 @@ function ReviewPage() {
 										size="lg"
 										disabled={algosEmpty}
 									>
-										<Sparkles /> View Recommendations ({algosInitialCount})
+										<Sparkles /> Recommendations ({algosInitialCount})
 									</Button>
 								</DrawerTrigger>
 								<SelectPhrasesToAddToReview
