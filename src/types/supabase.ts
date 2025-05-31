@@ -1018,7 +1018,7 @@ export type Database = {
       }
       insert_user_card_review: {
         Args: {
-          user_card_id: string
+          phrase_id: string
           score: number
           day_session: string
           desired_retention?: number

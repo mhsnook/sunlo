@@ -9,13 +9,9 @@ import {
 	useSuspenseQuery,
 } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { useDeckCard } from './use-deck'
 import { PostgrestError } from '@supabase/supabase-js'
 
-export const postReview = async (submitData: ReviewInsert) => {
-	if (!submitData?.user_card_id || !submitData?.score)
-		throw new Error('Invalid review; cannot log')
-
+const postReview = async (submitData: ReviewInsert) => {
 	const { data } = await supabase
 		.rpc('insert_user_card_review', submitData)
 		.throwOnError()
@@ -23,7 +19,7 @@ export const postReview = async (submitData: ReviewInsert) => {
 	return data
 }
 
-export const updateReview = async (submitData: ReviewUpdate) => {
+const updateReview = async (submitData: ReviewUpdate) => {
 	if (!submitData?.review_id || !submitData?.score)
 		throw new Error('Invalid inputs; cannot update')
 	const { data } = await supabase
@@ -188,15 +184,11 @@ export function useReviewMutation(
 	const queryClient = useQueryClient()
 	const { data: prevData } = useOneReview(dailyCacheKey, pid)
 	const { data: state } = useReviewState(dailyCacheKey)
-	const { data: card } = useDeckCard(pid, dailyCacheKey[1])
 
 	return useMutation<ReviewRow, PostgrestError, { score: number }>({
 		mutationKey: [...dailyCacheKey, pid],
 		// @ts-expect-error ts-2322 -- because Supabase view fields are always | null
 		mutationFn: async ({ score }: { score: number }) => {
-			if (!card?.id)
-				throw new Error('Trying card review mutation but no card exists')
-
 			// We want 1 mutation per day per card. We can send a second mutation
 			// only during stage 1 or 2, to _correct_ an improper input.
 
@@ -218,7 +210,8 @@ export function useReviewMutation(
 			// standard case: card has not been reviewed today
 			return await postReview({
 				score,
-				user_card_id: card.id,
+				phrase_id: pid,
+				lang: dailyCacheKey[1],
 				day_session: dailyCacheKey[3],
 			})
 		},
