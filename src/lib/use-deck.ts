@@ -3,6 +3,7 @@ import {
 	type UseQueryResult,
 	queryOptions,
 	useQuery,
+	useSuspenseQuery,
 } from '@tanstack/react-query'
 
 import type {
@@ -92,7 +93,7 @@ export const useDeck = (lang: string) => {
 
 export const useDeckMeta = (lang: string) => {
 	const { userId } = useAuth()
-	return useQuery({
+	return useSuspenseQuery({
 		...deckQueryOptions(lang, userId),
 		select: (data: DeckLoaded) => data.meta,
 	}) as UseQueryResult<DeckMeta>

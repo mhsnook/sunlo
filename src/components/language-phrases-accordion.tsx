@@ -12,6 +12,7 @@ import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { useProfile } from '@/lib/use-profile'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -27,11 +28,9 @@ export function LanguagePhrasesAccordionComponent({
 	// because the user will manage filtering
 	const { phrasesMapFiltered, language: languagePids } =
 		useDeckPidsAndRecs(lang)
-	if (!deck)
-		throw new Error(
-			"We can't find that language. Are you sure you have the correct URL?"
-		)
+
 	const pidsToUse = pids ?? languagePids
+
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pidsToUse.map((pid) => (
@@ -39,7 +38,6 @@ export function LanguagePhrasesAccordionComponent({
 					key={pid}
 					phrase={phrasesMapFiltered[pid]}
 					card={deck?.cardsMap[pid] ?? null}
-					deckId={deck?.meta.id}
 				/>
 			))}
 		</Accordion>
@@ -49,18 +47,17 @@ export function LanguagePhrasesAccordionComponent({
 function PhraseAccordionItem({
 	phrase,
 	card,
-	deckId,
 }: {
 	phrase: PhraseFiltered
 	card: CardFull | null
-	deckId: uuid | null
 }) {
+	const { data: profile } = useProfile()
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
 			<div className="flex flex-row items-center gap-2">
 				<CardStatusDropdown
 					lang={phrase.lang!}
-					deckId={deckId}
+					deckPresent={profile?.deckLanguages?.includes(phrase.lang!) ?? false}
 					pid={phrase.id!}
 					card={card}
 				/>
