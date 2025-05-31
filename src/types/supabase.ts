@@ -437,6 +437,8 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string | null
           review_time_retrievability: number | null
           score: number
           stability: number | null
@@ -450,6 +452,8 @@ export type Database = {
           day_session: string
           difficulty?: number | null
           id?: string
+          lang: string
+          phrase_id?: string | null
           review_time_retrievability?: number | null
           score: number
           stability?: number | null
@@ -463,6 +467,8 @@ export type Database = {
           day_session?: string
           difficulty?: number | null
           id?: string
+          lang?: string
+          phrase_id?: string | null
           review_time_retrievability?: number | null
           score?: number
           stability?: number | null
@@ -472,6 +478,27 @@ export type Database = {
           user_deck_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase_plus"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_card_review_uid_fkey"
             columns: ["uid"]
@@ -1001,6 +1028,8 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string | null
           review_time_retrievability: number | null
           score: number
           stability: number | null
@@ -1017,6 +1046,8 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string | null
           review_time_retrievability: number | null
           score: number
           stability: number | null
