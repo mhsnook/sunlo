@@ -338,6 +338,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          lang: string
           phrase_id: string
           status: Database["public"]["Enums"]["card_status"] | null
           uid: string
@@ -347,6 +348,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          lang: string
           phrase_id: string
           status?: Database["public"]["Enums"]["card_status"] | null
           uid?: string
@@ -356,6 +358,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          lang?: string
           phrase_id?: string
           status?: Database["public"]["Enums"]["card_status"] | null
           uid?: string
@@ -363,6 +366,20 @@ export type Database = {
           user_deck_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
@@ -796,9 +813,22 @@ export type Database = {
           status: Database["public"]["Enums"]["card_status"] | null
           uid: string | null
           updated_at: string | null
-          user_deck_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
@@ -833,34 +863,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profile"
             referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck_plus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language"
-            referencedColumns: ["lang"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language_plus"
-            referencedColumns: ["lang"]
           },
         ]
       }
