@@ -1,3 +1,24 @@
+CURRENT: Removing user_deck.id in place of (user_deck.uid, user_deck.lang)
+
+1.	user_card_review, add lang and phrase_id, drop user_card_id and user_deck_id
+1.	insert_user_card_review and update_user_card_review, stop requiring user_card_id
+	and require phrase_id instead
+1.	update card review: fix a bug where it would pretend the last review was the
+	current review, while recalculating FSRS values, giving wrong numbers any time
+	you used the redo feature
+	1. stop recalculating review_time_retrievability as we do not update data that
+		it relies on
+1.	user_card: remove user_deck_id and use lang instead
+1.	view user_card_plus, remove user_deck_id, and stop using phrase_id in
+	the joins and such
+1.	
+
+
+
+1. check that updating review function still works, as well as insert review
+
+
+
 USER TESTING FIXES
 1. when you have a pending friend request it should be visible from the friends home
 1. add a deck -- the "select one language" input should have a better type-to-search which includes the language name as well a the code

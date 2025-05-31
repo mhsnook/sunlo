@@ -95,13 +95,8 @@ or replace function "public"."add_phrase_translation_card" (
 ) returns "uuid" language "plpgsql" as $$
 DECLARE
     new_phrase_id uuid;
-    user_deck_id uuid;
-BEGIN
-    -- get the deck ID
-    SELECT id into user_deck_id FROM public.user_deck AS d
-    WHERE d.lang = phrase_lang AND d.uid = auth.uid()
-    LIMIT 1;
 
+BEGIN
     -- Insert a new phrase and get the id
     INSERT INTO public.phrase (text, lang, text_script)
     VALUES (phrase_text, phrase_lang, phrase_text_script)
@@ -112,8 +107,8 @@ BEGIN
     VALUES (new_phrase_id, translation_text, translation_lang, translation_text_script);
 
     -- Insert a new user card for the authenticated user
-    INSERT INTO public.user_card (phrase_id, status, lang, user_deck_id)
-    VALUES (new_phrase_id, 'active', phrase_lang, user_deck_id);
+    INSERT INTO public.user_card (phrase_id, status, lang)
+    VALUES (new_phrase_id, 'active', phrase_lang);
 
     RETURN new_phrase_id;
 END;
@@ -296,8 +291,9 @@ create table if not exists
 		"review_time_retrievability" numeric,
 		"created_at" timestamp with time zone default "now" () not null,
 		"updated_at" timestamp with time zone default "now" () not null,
-		"user_deck_id" "uuid" not null,
 		"day_session" "date" not null,
+		"lang" character varying not null,
+		"phrase_id" "uuid" not null,
 		constraint "user_card_review_difficulty_check" check (
 			(
 				("difficulty" >= 0.0)
@@ -312,17 +308,19 @@ alter table "public"."user_card_review" owner to "postgres";
 
 create
 or replace function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
+	"phrase_id" "uuid",
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric default 0.9
-) returns "public"."user_card_review" language "plv8" as $_$
+) returns "public"."user_card_review" language "plv8" as $$
 
-const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [user_card_id])
+// auth check should be unnecessary because of RLS but it
+// should also be redundant for the planner
+const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 ORDER BY created_at DESC LIMIT 1", [phrase_id])
 // throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
 
 const prev = prevReviewQuery[0] ?? null
-if (!prev?.user_card_id) throw new Error(`could not find that card, got "${prev.user_card_id}" looking for "${user_card_id}" to record score: ${score}`)
+if (!prev?.id) throw new Error(`could not find that card, got "${prev?.id}" looking for "${phrase_id}" to record score: ${score}`)
 
 var calc = {
 	current: new Date(),
@@ -382,11 +380,11 @@ if (!calc.scheduled_for) {
 // console.log(`Throwing before the thing: ${JSON.stringify(user_card_id, prev, calc)}`)
 
 const insertedResult = plv8.execute(
-	`INSERT INTO public.user_card_review (score, user_card_id, user_deck_id, day_session, review_time_retrievability, difficulty, stability) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+	`INSERT INTO public.user_card_review (score, phrase_id, lang, day_session, review_time_retrievability, difficulty, stability) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
 	[
 		score,
-		user_card_id,
-		prev.user_deck_id,
+		phrase_id,
+		prev.lang,
 		day_session,
 		calc.review_time_retrievability,
 		calc.difficulty,
@@ -395,28 +393,28 @@ const insertedResult = plv8.execute(
 );
 
 const response = insertedResult[0] ?? null;
-if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${user_card_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
+if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
 return response
 
-$_$;
+$$;
 
 alter function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
+	"phrase_id" "uuid",
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
 ) owner to "postgres";
 
 create
-or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
+or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $$
 
-const reviewQuery = plv8.execute("SELECT * from public.user_card_review where id = $1", [review_id])
+const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id = $1", [review_id])
 const review = reviewQuery[0] ?? null
 if (!review) throw new Error(`Could not update because we couldn't find a review with ID ${review_id}`)
 
-const prevReviewQuery = plv8.execute("SELECT card.user_deck_id, card.id AS user_card_id, review.id, review.created_at, review.review_time_retrievability, review.difficulty, review.stability FROM public.user_card_plus AS card LEFT JOIN public.user_card_review AS review ON (review.user_card_id = card.id) WHERE card.id = $1 ORDER BY review.created_at DESC LIMIT 1", [review.user_card_id])
+const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND created_at < $2 ORDER BY review.created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
 const prev = prevReviewQuery[0] ?? null
-if (!prev?.user_card_id) throw new Error(`could not find that card, got "${prev.user_card_id}" looking for "${review.user_card_id}" to update with score: ${score}`)
+// sometimes there is no previous review and that's okay
 
 
 var calc = {
@@ -430,14 +428,11 @@ var calc = {
 if (prev.id === null) {
 	calc.stability = plv8.find_function("fsrs_s_0")(score)
 	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
-	calc.review_time_retrievability = null
 } else {
 	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.created_at, calc.current)
 	if (typeof time_between_reviews !== 'number' || time_between_reviews < -1)
 		throw new Error(`Time between reviews is not a number or is less than -1 (can''t have a most recent review in the future). value calculated as: ${time_between_reviews}, for ${prev.created_at} and ${calc.current}`)
 	try {
-		calc.review_time_retrievability = plv8.find_function("fsrs_retrievability")(time_between_reviews, prev.stability)
-		if (typeof calc.review_time_retrievability !== 'number' || calc.review_time_retrievability > 1 || calc.review_time_retrievability < 0) throw new Error(`retrievability is not a number or has wrong value: ${calc.review_time_retrievability}`)
 		calc.stability = plv8.find_function("fsrs_stability")(prev.difficulty, prev.stability, calc.review_time_retrievability, score)
 		calc.difficulty = plv8.find_function("fsrs_difficulty")(prev.difficulty, score)
 	} catch(e) {
@@ -461,10 +456,10 @@ const updatedResult = plv8.execute(
 );
 
 const response = updatedResult[0] ?? null;
-if (!response) throw new Error(`Got all the way to the end and did not manage to update anything. for review ${review_id}, card ${review.user_card_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
+if (!response) throw new Error(`Got all the way to the end and did not manage to update anything. for review ${review_id}, phrase ${review.phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
 return response
 
-$_$;
+$$;
 
 alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
 
@@ -634,28 +629,6 @@ from
 
 alter table "public"."language_plus" owner to "postgres";
 
-create or replace view
-	"public"."meta_phrase_info" as
-select
-	null::"uuid" as "id",
-	null::timestamp with time zone as "created_at",
-	null::character varying as "lang",
-	null::"text" as "text",
-	null::numeric as "avg_difficulty",
-	null::numeric as "avg_stability",
-	null::bigint as "count_cards",
-	null::bigint as "count_active",
-	null::bigint as "count_learned",
-	null::bigint as "count_skipped",
-	null::numeric as "percent_active",
-	null::numeric as "percent_learned",
-	null::numeric as "percent_skipped",
-	null::bigint as "rank_least_difficult",
-	null::bigint as "rank_most_stable",
-	null::bigint as "rank_least_skipped",
-	null::bigint as "rank_most_learned",
-	null::bigint as "rank_newest";
-
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
@@ -748,7 +721,6 @@ create table if not exists
 		"uid" "uuid" default "auth"."uid" () not null,
 		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
 		"phrase_id" "uuid" not null,
-		"user_deck_id" "uuid" not null,
 		"updated_at" timestamp with time zone default "now" (),
 		"created_at" timestamp with time zone default "now" (),
 		"status" "public"."card_status" default 'active'::"public"."card_status",
@@ -761,10 +733,6 @@ comment on table "public"."user_card" is 'Which card is in which deck, and its s
 
 comment on column "public"."user_card"."uid" is 'The owner user''s ID';
 
-comment on column "public"."user_card"."user_deck_id" is 'Foreign key to the user_deck item to which this card belongs';
-
-comment on column "public"."user_card"."lang" is 'language code';
-
 create or replace view
 	"public"."user_card_plus"
 with
@@ -775,7 +743,6 @@ select
 	"card"."uid",
 	"card"."status",
 	"card"."phrase_id",
-	"card"."user_deck_id",
 	"card"."created_at",
 	"card"."updated_at",
 	"review"."created_at" as "last_reviewed_at",
@@ -801,48 +768,31 @@ from
 			select
 				"rev"."id",
 				"rev"."uid",
-				"rev"."user_card_id",
+				"rev"."phrase_id",
 				"rev"."score",
 				"rev"."difficulty",
 				"rev"."stability",
 				"rev"."review_time_retrievability",
 				"rev"."created_at",
 				"rev"."updated_at",
-				"rev"."user_deck_id"
+				"rev"."lang"
 			from
 				(
 					"public"."user_card_review" "rev"
 					left join "public"."user_card_review" "rev2" on (
 						(
-							("rev"."user_card_id" = "rev2"."user_card_id")
+							("rev"."phrase_id" = "rev2"."phrase_id")
+							and ("rev"."uid" = "rev2"."uid")
 							and ("rev"."created_at" < "rev2"."created_at")
 						)
 					)
 				)
 			where
 				("rev2"."created_at" is null)
-		) "review" on (("card"."id" = "review"."user_card_id"))
+		) "review" on (("card"."phrase_id" = "review"."phrase_id"))
 	);
 
 alter table "public"."user_card_plus" owner to "postgres";
-
-create or replace view
-	"public"."user_deck_plus" as
-select
-	null::"uuid" as "id",
-	null::"uuid" as "uid",
-	null::character varying as "lang",
-	null::"public"."learning_goal" as "learning_goal",
-	null::boolean as "archived",
-	null::"text" as "language",
-	null::timestamp with time zone as "created_at",
-	null::bigint as "cards_learned",
-	null::bigint as "cards_active",
-	null::bigint as "cards_skipped",
-	null::bigint as "lang_total_phrases",
-	null::timestamp with time zone as "most_recent_review_at",
-	null::bigint as "count_reviews_7d",
-	null::bigint as "count_reviews_7d_positive";
 
 alter table "public"."user_deck_plus" owner to "postgres";
 
@@ -865,7 +815,7 @@ alter table only "public"."phrase_translation"
 add constraint "card_translation_uuid_key" unique ("id");
 
 alter table only "public"."user_card"
-add constraint "ensure_phrases_unique_within_deck" unique ("user_deck_id", "phrase_id");
+add constraint "ensure_phrases_unique_within_deck" unique ("lang", "phrase_id");
 
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_pkey" primary key ("id");
@@ -914,8 +864,6 @@ create or replace view
 with
 	("security_invoker" = 'true') as
 select
-	"d"."id",
-	"d"."uid",
 	"d"."lang",
 	"d"."learning_goal",
 	"d"."archived",
@@ -956,7 +904,7 @@ select
 		from
 			"public"."user_card_review" "r"
 		where
-			("r"."user_deck_id" = "d"."id")
+			(("r"."lang")::"text" = ("d"."lang")::"text")
 		limit
 			1
 	) as "most_recent_review_at",
@@ -967,7 +915,7 @@ select
 			"public"."user_card_review" "r"
 		where
 			(
-				("r"."user_deck_id" = "d"."id")
+				(("r"."lang")::"text" = ("d"."lang")::"text")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 			)
 		limit
@@ -980,7 +928,7 @@ select
 			"public"."user_card_review" "r"
 		where
 			(
-				("r"."user_deck_id" = "d"."id")
+				(("r"."lang")::"text" = ("d"."lang")::"text")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 				and ("r"."score" >= 2)
 			)
@@ -990,11 +938,12 @@ select
 from
 	(
 		"public"."user_deck" "d"
-		left join "public"."user_card" "c" on (("d"."id" = "c"."user_deck_id"))
+		left join "public"."user_card" "c" on ((("d"."lang")::"text" = ("c"."lang")::"text"))
 	)
 group by
-	"d"."id",
 	"d"."lang",
+	"d"."learning_goal",
+	"d"."archived",
 	"d"."created_at"
 order by
 	(
@@ -1004,7 +953,7 @@ order by
 			"public"."user_card_review" "r"
 		where
 			(
-				("r"."user_deck_id" = "d"."id")
+				(("r"."lang")::"text" = ("d"."lang")::"text")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 			)
 		limit
@@ -1012,29 +961,89 @@ order by
 	) desc nulls last,
 	"d"."created_at" desc;
 
+alter table "public"."user_deck_plus" owner to "postgres";
+
+alter table only "public"."phrase"
+add constraint "card_phrase_id_int_key" unique ("id");
+
+alter table only "public"."phrase"
+add constraint "card_phrase_pkey" primary key ("id");
+
+alter table only "public"."phrase_relation"
+add constraint "card_see_also_pkey" primary key ("id");
+
+alter table only "public"."phrase_relation"
+add constraint "card_see_also_uuid_key" unique ("id");
+
+alter table only "public"."phrase_translation"
+add constraint "card_translation_pkey" primary key ("id");
+
+alter table only "public"."phrase_translation"
+add constraint "card_translation_uuid_key" unique ("id");
+
+alter table only "public"."friend_request_action"
+add constraint "friend_request_action_pkey" primary key ("id");
+
+alter table only "public"."language"
+add constraint "language_code2_key" unique ("lang");
+
+alter table only "public"."language"
+add constraint "language_pkey" primary key ("lang");
+
+alter table only "public"."user_deck"
+add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
+
+alter table only "public"."user_profile"
+add constraint "profile_old_id_key" unique ("uid");
+
+alter table only "public"."user_profile"
+add constraint "profiles_pkey" primary key ("uid");
+
+alter table only "public"."user_profile"
+add constraint "profiles_username_key" unique ("username");
+
+alter table only "public"."user_card_review"
+add constraint "user_card_review_pkey" primary key ("id");
+
+alter table only "public"."user_card"
+add constraint "user_deck_card_membership_pkey" primary key ("id");
+
+alter table only "public"."user_card"
+add constraint "user_deck_card_membership_uuid_key" unique ("id");
+
+alter table only "public"."user_deck"
+add constraint "user_deck_pkey" primary key ("id");
+
+alter table only "public"."user_deck"
+add constraint "user_deck_uuid_key" unique ("id");
+
+create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
+
+create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
+
+create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
+
 create or replace view
-	"public"."meta_phrase_info"
-with
-	("security_invoker" = 'false') as
+	"public"."meta_phrase_info" as
 with
 	"recent_review" as (
 		select
 			"r1"."id",
 			"r1"."uid",
-			"r1"."user_card_id",
+			"r1"."phrase_id",
+			"r1"."lang",
 			"r1"."score",
 			"r1"."difficulty",
 			"r1"."stability",
 			"r1"."review_time_retrievability",
 			"r1"."created_at",
-			"r1"."updated_at",
-			"r1"."user_deck_id"
+			"r1"."updated_at"
 		from
 			(
 				"public"."user_card_review" "r1"
 				left join "public"."user_card_review" "r2" on (
 					(
-						("r1"."user_card_id" = "r2"."user_card_id")
+						("r1"."phrase_id" = "r2"."phrase_id")
 						and ("r1"."created_at" < "r2"."created_at")
 					)
 				)
@@ -1044,7 +1053,6 @@ with
 	),
 	"card_with_recentest_review" as (
 		select distinct
-			"c"."id",
 			"c"."phrase_id",
 			"c"."status",
 			"r"."difficulty",
@@ -1053,7 +1061,7 @@ with
 		from
 			(
 				"public"."user_card" "c"
-				join "recent_review" "r" on (("c"."id" = "r"."user_card_id"))
+				join "recent_review" "r" on (("c"."phrase_id" = "r"."phrase_id"))
 			)
 	),
 	"results" as (
@@ -1064,7 +1072,7 @@ with
 			"p"."text",
 			"avg" ("c"."difficulty") as "avg_difficulty",
 			"avg" ("c"."stability") as "avg_stability",
-			"count" (distinct "c"."id") as "count_cards",
+			"count" (distinct "c"."phrase_id") as "count_cards",
 			"sum" (
 				case
 					when ("c"."status" = 'active'::"public"."card_status") then 1
@@ -1211,19 +1219,19 @@ alter table only "public"."user_card"
 add constraint "user_card_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
 
 alter table only "public"."user_card_review"
+add constraint "user_card_review_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid");
+
+alter table only "public"."user_card_review"
+add constraint "user_card_review_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on update cascade on delete set null;
+
+alter table only "public"."user_card_review"
+add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("phrase_id", "uid") references "public"."user_card" ("phrase_id", "uid");
+
+alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
-
-alter table only "public"."user_card_review"
-add constraint "user_card_review_user_card_id_fkey" foreign key ("user_card_id") references "public"."user_card" ("id") on update cascade on delete set null;
-
-alter table only "public"."user_card_review"
-add constraint "user_card_review_user_deck_id_fkey" foreign key ("user_deck_id") references "public"."user_deck" ("id") on update cascade on delete set null;
 
 alter table only "public"."user_card"
 add constraint "user_card_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
-
-alter table only "public"."user_card"
-add constraint "user_card_user_deck_id_fkey" foreign key ("user_deck_id") references "public"."user_deck" ("id") on delete cascade;
 
 alter table only "public"."user_deck"
 add constraint "user_deck_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
@@ -1551,21 +1559,21 @@ grant all on table "public"."user_card_review" to "authenticated";
 grant all on table "public"."user_card_review" to "service_role";
 
 grant all on function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
+	"phrase_id" "uuid",
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
 ) to "anon";
 
 grant all on function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
+	"phrase_id" "uuid",
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
 ) to "authenticated";
 
 grant all on function "public"."insert_user_card_review" (
-	"user_card_id" "uuid",
+	"phrase_id" "uuid",
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric

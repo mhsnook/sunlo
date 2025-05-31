@@ -25,7 +25,6 @@ import { z } from 'zod'
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
 	uid_for: z.string().uuid(),
-	user_deck_id: z.string().uuid(),
 	lang: z.string().length(3),
 })
 
@@ -39,9 +38,14 @@ function AcceptInvitePage() {
 	const { data: friend, isPending } = useQuery(
 		publicProfileQuery(search.uid_by)
 	)
+	if (!search?.uid_by)
+		throw new Error('This URL is missing the uid_by parameter')
 	const { userId } = useAuth()
 	const { data: profile } = useProfile()
-	if (userId !== search.uid_for) console.log(`mismatched logins`)
+	if (!userId || userId !== search.uid_for)
+		throw new Error(
+			'Something went wrong; you are not logged in, or this invite link is for a different user'
+		)
 
 	const acceptOrDeclineMutation = useMutation({
 		mutationKey: ['invite', 'accept-or-decline', search.uid_by],

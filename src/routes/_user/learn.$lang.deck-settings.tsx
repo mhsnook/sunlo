@@ -40,8 +40,8 @@ function DeckSettingsPage() {
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<GoalForm meta={meta!} />
-				<ArchiveForm meta={meta!} />
+				<GoalForm lang={meta?.lang!} learning_goal={meta?.learning_goal!} />
+				<ArchiveForm archived={meta?.archived} lang={lang} />
 			</CardContent>
 		</Card>
 	)
@@ -49,12 +49,12 @@ function DeckSettingsPage() {
 
 const DeckGoalSchema = z.object({
 	learning_goal: z.enum(['visiting', 'family', 'moving']),
-	id: z.string().uuid(),
+	lang: z.string().min(3, { message: 'You must select a deck to modify' }),
 })
 
 type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
 
-function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
+function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	const queryClient = useQueryClient()
 	const {
 		control,
@@ -63,7 +63,7 @@ function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
 		formState: { errors, isDirty },
 	} = useForm<DeckGoalFormInputs>({
 		resolver: zodResolver(DeckGoalSchema),
-		defaultValues: { learning_goal, id },
+		defaultValues: { learning_goal, lang },
 	})
 
 	const updateDeckGoalMutation = useMutation<
@@ -76,9 +76,11 @@ function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ learning_goal: values.learning_goal })
-				.eq('id', values.id)
+				.eq('lang', lang)
 				.throwOnError()
 				.select()
+			if (!data)
+				throw new Error('Failed to update deck goal: did not find deck')
 			return data[0]
 		},
 		onSuccess: (data) => {
@@ -140,7 +142,7 @@ function GoalForm({ meta: { learning_goal, id, lang } }: { meta: DeckMeta }) {
 	)
 }
 
-function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
+function ArchiveForm({ archived, lang }: Partial<DeckMeta>) {
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
 
@@ -149,7 +151,7 @@ function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
 			await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
-				.eq('id', id!)
+				.eq('lang', lang!)
 				.throwOnError()
 		},
 		onSuccess: () => {
@@ -165,6 +167,7 @@ function ArchiveForm({ meta: { id, archived, lang } }: { meta: DeckMeta }) {
 			toast.error(`Failed to update deck status`)
 		},
 	})
+
 	return (
 		<div className="flex w-full flex-col justify-between p-2 @sm:flex-row">
 			<span className="h4">
