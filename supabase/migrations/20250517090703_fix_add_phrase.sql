@@ -29,8 +29,8 @@ BEGIN
     VALUES (new_phrase_id, translation_text, translation_lang, translation_text_script);
 
     -- Insert a new user card for the authenticated user
-    INSERT INTO public.user_card (phrase_id, status, user_deck_id)
-    VALUES (new_phrase_id, 'active', user_deck_id);
+    INSERT INTO public.user_card (phrase_id, status, lang, user_deck_id)
+    VALUES (new_phrase_id, 'active', phrase_lang, user_deck_id);
 
     RETURN new_phrase_id;
 END;

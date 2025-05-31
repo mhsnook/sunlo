@@ -56,8 +56,8 @@ function CardSection({ card }: { card: CardFull }) {
 	return (
 		<div className="block space-y-4">
 			<div className="flex flex-col">
-				<span className="font-semibold">Card ID</span>
-				<span>{card.id}</span>
+				<span className="font-semibold">Card Phrase ID</span>
+				<span>{card.phrase_id}</span>
 			</div>
 			<div className="flex flex-col">
 				<span className="font-semibold">Card created at</span>
@@ -106,7 +106,7 @@ function CardSection({ card }: { card: CardFull }) {
 							<span>
 								score: {r.score}
 								<Flagged name="client_side_fsrs_scheduling">
-									<>next due {ago(r.scheduled_for)}</>
+									<>{/*next due {ago(r.scheduled_for)}*/}</>
 								</Flagged>
 							</span>
 						</li>

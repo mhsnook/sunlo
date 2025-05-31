@@ -338,31 +338,59 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          lang: string
           phrase_id: string
           status: Database["public"]["Enums"]["card_status"] | null
           uid: string
           updated_at: string | null
-          user_deck_id: string
         }
         Insert: {
           created_at?: string | null
           id?: string
+          lang: string
           phrase_id: string
           status?: Database["public"]["Enums"]["card_status"] | null
           uid?: string
           updated_at?: string | null
-          user_deck_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
+          lang?: string
           phrase_id?: string
           status?: Database["public"]["Enums"]["card_status"] | null
           uid?: string
           updated_at?: string | null
-          user_deck_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck"
+            referencedColumns: ["lang", "uid"]
+          },
+          {
+            foreignKeyName: "user_card_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck_plus"
+            referencedColumns: ["lang", "uid"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
@@ -398,20 +426,6 @@ export type Database = {
             referencedRelation: "user_profile"
             referencedColumns: ["uid"]
           },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck_plus"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_card_review: {
@@ -420,41 +434,93 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string
           review_time_retrievability: number | null
           score: number
           stability: number | null
           uid: string
           updated_at: string
-          user_card_id: string
-          user_deck_id: string
+          user_card_id: string | null
         }
         Insert: {
           created_at?: string
           day_session: string
           difficulty?: number | null
           id?: string
+          lang: string
+          phrase_id: string
           review_time_retrievability?: number | null
           score: number
           stability?: number | null
           uid?: string
           updated_at?: string
-          user_card_id: string
-          user_deck_id: string
+          user_card_id?: string | null
         }
         Update: {
           created_at?: string
           day_session?: string
           difficulty?: number | null
           id?: string
+          lang?: string
+          phrase_id?: string
           review_time_retrievability?: number | null
           score?: number
           stability?: number | null
           uid?: string
           updated_at?: string
-          user_card_id?: string
-          user_deck_id?: string
+          user_card_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_review_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck"
+            referencedColumns: ["lang", "uid"]
+          },
+          {
+            foreignKeyName: "user_card_review_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck_plus"
+            referencedColumns: ["lang", "uid"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase_plus"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_uid_fkey"
+            columns: ["phrase_id", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_card"
+            referencedColumns: ["phrase_id", "uid"]
+          },
+          {
+            foreignKeyName: "user_card_review_phrase_id_uid_fkey"
+            columns: ["phrase_id", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_card_plus"
+            referencedColumns: ["phrase_id", "uid"]
+          },
           {
             foreignKeyName: "user_card_review_uid_fkey"
             columns: ["uid"]
@@ -468,34 +534,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "user_profile"
             referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "user_card_review_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_review_user_card_id_fkey"
-            columns: ["user_card_id"]
-            isOneToOne: false
-            referencedRelation: "user_card_plus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_review_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_review_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck_plus"
-            referencedColumns: ["id"]
           },
         ]
       }
@@ -796,9 +834,36 @@ export type Database = {
           status: Database["public"]["Enums"]["card_status"] | null
           uid: string | null
           updated_at: string | null
-          user_deck_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "user_card_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck"
+            referencedColumns: ["lang", "uid"]
+          },
+          {
+            foreignKeyName: "user_card_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck_plus"
+            referencedColumns: ["lang", "uid"]
+          },
           {
             foreignKeyName: "user_card_phrase_id_fkey"
             columns: ["phrase_id"]
@@ -834,34 +899,6 @@ export type Database = {
             referencedRelation: "user_profile"
             referencedColumns: ["uid"]
           },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_card_user_deck_id_fkey"
-            columns: ["user_deck_id"]
-            isOneToOne: false
-            referencedRelation: "user_deck_plus"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language"
-            referencedColumns: ["lang"]
-          },
-          {
-            foreignKeyName: "user_deck_lang_fkey"
-            columns: ["lang"]
-            isOneToOne: false
-            referencedRelation: "language_plus"
-            referencedColumns: ["lang"]
-          },
         ]
       }
       user_deck_plus: {
@@ -873,7 +910,6 @@ export type Database = {
           count_reviews_7d: number | null
           count_reviews_7d_positive: number | null
           created_at: string | null
-          id: string | null
           lang: string | null
           lang_total_phrases: number | null
           language: string | null
@@ -989,7 +1025,8 @@ export type Database = {
       }
       insert_user_card_review: {
         Args: {
-          user_card_id: string
+          phrase_id: string
+          lang: string
           score: number
           day_session: string
           desired_retention?: number
@@ -999,13 +1036,14 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string
           review_time_retrievability: number | null
           score: number
           stability: number | null
           uid: string
           updated_at: string
-          user_card_id: string
-          user_deck_id: string
+          user_card_id: string | null
         }
       }
       update_user_card_review: {
@@ -1015,13 +1053,14 @@ export type Database = {
           day_session: string
           difficulty: number | null
           id: string
+          lang: string
+          phrase_id: string
           review_time_retrievability: number | null
           score: number
           stability: number | null
           uid: string
           updated_at: string
-          user_card_id: string
-          user_deck_id: string
+          user_card_id: string | null
         }
       }
     }
