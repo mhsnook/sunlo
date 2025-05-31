@@ -52,6 +52,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 	}
 
 	const filteredPids = pids[filter]
+
 	return (
 		<Card>
 			<CardHeader>

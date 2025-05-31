@@ -53,10 +53,8 @@ function ReviewPage() {
 		todayString(),
 	])
 
-	if (!meta?.id)
-		throw new Error(
-			"Attempted to build a review but we can't even find a deck ID"
-		)
+	if (meta?.lang !== lang)
+		throw new Error("Attempted to build a review but we can't find the deck")
 	if (pids === null)
 		throw new Error('Pids should not be null here :/, even once')
 
@@ -188,7 +186,6 @@ function ReviewPage() {
 				.upsert(
 					cardsToCreate.map((pid) => ({
 						phrase_id: pid,
-						user_deck_id: meta.id!,
 						lang,
 						status: 'active' as Database['public']['Enums']['card_status'],
 					}))

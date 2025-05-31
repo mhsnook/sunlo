@@ -9,7 +9,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { useDeckCard, useDeckMeta } from '@/lib/use-deck'
+import { useDeckCard } from '@/lib/use-deck'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Calendar, ChevronsUpDown, OctagonMinus } from 'lucide-react'
@@ -22,6 +22,7 @@ import {
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { roundAndTrim } from '@/lib/utils'
+import { useProfile } from '@/lib/use-profile'
 
 function PhraseNotFound() {
 	return (
@@ -46,7 +47,7 @@ function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const { data: phrase } = useLanguagePhrase(id, lang)
 	const { data: card } = useDeckCard(id, lang)
-	const { data: deckMeta } = useDeckMeta(lang)
+	const { data: profile } = useProfile()
 	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -56,7 +57,7 @@ function RouteComponent() {
 		phrasesMapFiltered[id].translations_mine ?? phrase.translations
 	const translations_other = phrasesMapFiltered[id].translations_other ?? []
 
-	const deckId = deckMeta?.id ?? null
+	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
 
 	return (
 		<Card>
@@ -69,7 +70,7 @@ function RouteComponent() {
 						</Badge>
 					</div>
 					<CardStatusDropdown
-						deckId={deckId}
+						deckPresent={deckPresent}
 						card={card}
 						pid={id}
 						lang={lang}
@@ -89,8 +90,9 @@ function RouteComponent() {
 								<span className="mx-2">•</span>
 								<Calendar className="h-4 w-4" />
 								<span>
-									Next review scheduled for {card?.nextReview?.day ?? 'Tuesday'}{' '}
-									(in {card?.nextReview?.daysFromNow ?? '4'} days)
+									Next review scheduled for{' '}
+									{card?.nextReview?.day ?? '"unknown"'} (in{' '}
+									{card?.nextReview?.daysFromNow ?? '4'} days)
 								</span>
 							</Flagged>
 						</>
