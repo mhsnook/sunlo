@@ -15,9 +15,9 @@ import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 
 interface CardStatusDropdownProps {
-	deckId: uuid | null
 	pid: uuid
 	lang: string
+	deckPresent?: boolean
 	card?: CardFull | null
 	className?: string
 }
@@ -85,10 +85,10 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 }
 
 export function CardStatusDropdown({
-	deckId,
 	pid,
 	lang,
 	card,
+	deckPresent,
 	className,
 }: CardStatusDropdownProps) {
 	const queryClient = useQueryClient()
@@ -99,23 +99,19 @@ export function CardStatusDropdown({
 	>({
 		mutationKey: ['upsert-card', pid],
 		mutationFn: async (variables: { status: LearningStatus }) => {
-			if (!deckId || !pid)
-				throw new Error('Some required input not provided: deck ID, phrase ID')
-
 			const { data } =
-				card?.id ?
+				card ?
 					await supabase
 						.from('user_card')
 						.update({
 							status: variables.status,
 						})
-						.eq('id', card.id)
+						.eq('phrase_id', pid)
 						.select()
 						.throwOnError()
 				:	await supabase
 						.from('user_card')
 						.insert({
-							user_deck_id: deckId,
 							lang,
 							phrase_id: pid,
 							status: variables.status,
@@ -135,11 +131,12 @@ export function CardStatusDropdown({
 		},
 	})
 
-	const cardPresent = cardMutation.data ?? card
+	// optimistic update not needed because we invalidate the query
+	// const cardPresent = cardMutation.data ?? card
 	const choice =
-		!deckId ? 'nodeck'
-		: !cardPresent?.status ? 'nocard'
-		: cardPresent.status
+		!deckPresent ? 'nodeck'
+		: !card ? 'nocard'
+		: card.status!
 
 	return (
 		<DropdownMenu>
@@ -155,13 +152,13 @@ export function CardStatusDropdown({
 				</Badge>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="">
-				{!deckId ?
+				{!deckPresent ?
 					<DropdownMenuItem>
 						<Link to="/learn/add-deck" search={{ lang }}>
 							<StatusSpan choice="nodeck" />
 						</Link>
 					</DropdownMenuItem>
-				: !cardPresent ?
+				: !card ?
 					<DropdownMenuItem
 						onClick={() => cardMutation.mutate({ status: 'active' })}
 					>
@@ -169,19 +166,19 @@ export function CardStatusDropdown({
 					</DropdownMenuItem>
 				:	<>
 						<DropdownMenuItem
-							disabled={cardPresent?.status === 'active'}
+							disabled={card?.status === 'active'}
 							onClick={() => cardMutation.mutate({ status: 'active' })}
 						>
 							<StatusSpan choice="active" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							disabled={cardPresent?.status === 'learned'}
+							disabled={card?.status === 'learned'}
 							onClick={() => cardMutation.mutate({ status: 'learned' })}
 						>
 							<StatusSpan choice="learned" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							disabled={cardPresent?.status === 'skipped'}
+							disabled={card?.status === 'skipped'}
 							onClick={() => cardMutation.mutate({ status: 'skipped' })}
 						>
 							<StatusSpan choice="skipped" />
