@@ -116,6 +116,7 @@ export function CardStatusDropdown({
 						.from('user_card')
 						.insert({
 							user_deck_id: deckId,
+							lang,
 							phrase_id: pid,
 							status: variables.status,
 						})

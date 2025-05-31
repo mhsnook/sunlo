@@ -189,6 +189,7 @@ function ReviewPage() {
 					cardsToCreate.map((pid) => ({
 						phrase_id: pid,
 						user_deck_id: meta.id!,
+						lang,
 						status: 'active' as Database['public']['Enums']['card_status'],
 					}))
 				)
