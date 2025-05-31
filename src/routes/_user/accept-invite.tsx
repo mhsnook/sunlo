@@ -51,7 +51,6 @@ function AcceptInvitePage() {
 				.insert({
 					uid_by: search.uid_by,
 					uid_for: userId,
-					user_deck_id: search.user_deck_id,
 					action_type: action,
 				})
 				.throwOnError()
