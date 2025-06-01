@@ -13,6 +13,7 @@ export default function UsernameField({ register, error }: FieldProps) {
 				placeholder="e.g. Learnie McLearnerson, Helpar1992"
 				{...register('username')}
 				inputMode="text"
+				tabIndex={1}
 				aria-invalid={!!error}
 				className={error ? 'bg-destructive/20' : ''}
 			/>

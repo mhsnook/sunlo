@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/hooks'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -91,6 +92,7 @@ export function CardStatusDropdown({
 	deckPresent,
 	className,
 }: CardStatusDropdownProps) {
+	const { userId } = useAuth()
 	const queryClient = useQueryClient()
 	const cardMutation = useMutation<
 		CardRow,
@@ -107,6 +109,7 @@ export function CardStatusDropdown({
 							status: variables.status,
 						})
 						.eq('phrase_id', pid)
+						.eq('uid', userId!)
 						.select()
 						.throwOnError()
 				:	await supabase
@@ -138,54 +141,57 @@ export function CardStatusDropdown({
 		: !card ? 'nocard'
 		: card.status!
 
-	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger className={cn('group flex rounded-full', className)}>
-				<Badge
-					variant="outline"
-					className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
+	// @TODO: if no userId, maybe we should prompt to sign up
+	return !userId ? null : (
+			<DropdownMenu>
+				<DropdownMenuTrigger
+					className={cn('group flex rounded-full', className)}
 				>
-					{cardMutation.isSuccess ?
-						<CheckCircle className="size-4 text-green-500" />
-					:	statusStrings[choice].icon()}{' '}
-					{statusStrings[choice].short}
-				</Badge>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent className="">
-				{!deckPresent ?
-					<DropdownMenuItem>
-						<Link to="/learn/add-deck" search={{ lang }}>
-							<StatusSpan choice="nodeck" />
-						</Link>
-					</DropdownMenuItem>
-				: !card ?
-					<DropdownMenuItem
-						onClick={() => cardMutation.mutate({ status: 'active' })}
+					<Badge
+						variant="outline"
+						className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
 					>
-						<StatusSpan choice="nocard" />
-					</DropdownMenuItem>
-				:	<>
+						{cardMutation.isSuccess ?
+							<CheckCircle className="size-4 text-green-500" />
+						:	statusStrings[choice].icon()}{' '}
+						{statusStrings[choice].short}
+					</Badge>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent className="">
+					{!deckPresent ?
+						<DropdownMenuItem>
+							<Link to="/learn/add-deck" search={{ lang }}>
+								<StatusSpan choice="nodeck" />
+							</Link>
+						</DropdownMenuItem>
+					: !card ?
 						<DropdownMenuItem
-							disabled={card?.status === 'active'}
 							onClick={() => cardMutation.mutate({ status: 'active' })}
 						>
-							<StatusSpan choice="active" />
+							<StatusSpan choice="nocard" />
 						</DropdownMenuItem>
-						<DropdownMenuItem
-							disabled={card?.status === 'learned'}
-							onClick={() => cardMutation.mutate({ status: 'learned' })}
-						>
-							<StatusSpan choice="learned" />
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							disabled={card?.status === 'skipped'}
-							onClick={() => cardMutation.mutate({ status: 'skipped' })}
-						>
-							<StatusSpan choice="skipped" />
-						</DropdownMenuItem>
-					</>
-				}
-			</DropdownMenuContent>
-		</DropdownMenu>
-	)
+					:	<>
+							<DropdownMenuItem
+								disabled={card?.status === 'active'}
+								onClick={() => cardMutation.mutate({ status: 'active' })}
+							>
+								<StatusSpan choice="active" />
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								disabled={card?.status === 'learned'}
+								onClick={() => cardMutation.mutate({ status: 'learned' })}
+							>
+								<StatusSpan choice="learned" />
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								disabled={card?.status === 'skipped'}
+								onClick={() => cardMutation.mutate({ status: 'skipped' })}
+							>
+								<StatusSpan choice="skipped" />
+							</DropdownMenuItem>
+						</>
+					}
+				</DropdownMenuContent>
+			</DropdownMenu>
+		)
 }
