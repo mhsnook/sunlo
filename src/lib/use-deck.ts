@@ -24,11 +24,12 @@ const qs = {
 	deck_full: () => `*, cards:user_card_plus(${qs.card_full})` as const,
 }
 
-async function fetchDeck(lang: string): Promise<DeckLoaded> {
+async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const { data } = await supabase
 		.from('user_deck_plus')
 		.select(qs.deck_full())
 		.eq('lang', lang)
+		.eq('uid', uid)
 		.maybeSingle()
 		.throwOnError()
 	if (!data)
@@ -81,7 +82,7 @@ async function fetchDeck(lang: string): Promise<DeckLoaded> {
 export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 	queryOptions({
 		queryKey: ['user', lang, 'deck'],
-		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1]),
+		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1], userId!),
 		enabled: !!userId && !!lang,
 	})
 export const useDeck = (lang: string) => {

@@ -316,7 +316,7 @@ or replace function "public"."insert_user_card_review" (
 
 // auth check should be unnecessary because of RLS but it
 // should also be redundant for the planner
-const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 ORDER BY created_at DESC LIMIT 1", [phrase_id])
+const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND uid = auth.uid() ORDER BY created_at DESC LIMIT 1", [phrase_id])
 // throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
 
 const prev = prevReviewQuery[0] ?? null
@@ -410,7 +410,7 @@ const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id
 const review = reviewQuery[0] ?? null
 if (!review) throw new Error(`Could not update because we couldn't find a review with ID ${review_id}`)
 
-const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND created_at < $2 ORDER BY created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
+const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND uid = auth.uid() AND created_at < $2 ORDER BY created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
 const prev = prevReviewQuery[0] ?? null
 
 var calc = {
@@ -833,7 +833,10 @@ select
 		from
 			"public"."user_card_review" "r"
 		where
-			(("r"."lang")::"text" = ("d"."lang")::"text")
+			(
+				(("r"."lang")::"text" = ("d"."lang")::"text")
+				and ("r"."uid" = "d"."uid")
+			)
 		limit
 			1
 	) as "most_recent_review_at",
@@ -845,6 +848,7 @@ select
 		where
 			(
 				(("r"."lang")::"text" = ("d"."lang")::"text")
+				and ("r"."uid" = "d"."uid")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 			)
 		limit
@@ -858,6 +862,7 @@ select
 		where
 			(
 				(("r"."lang")::"text" = ("d"."lang")::"text")
+				and ("r"."uid" = "d"."uid")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 				and ("r"."score" >= 2)
 			)
@@ -867,7 +872,12 @@ select
 from
 	(
 		"public"."user_deck" "d"
-		left join "public"."user_card" "c" on ((("d"."lang")::"text" = ("c"."lang")::"text"))
+		left join "public"."user_card" "c" on (
+			(
+				(("d"."lang")::"text" = ("c"."lang")::"text")
+				and ("d"."uid" = "c"."uid")
+			)
+		)
 	)
 group by
 	"d"."uid",
@@ -884,6 +894,7 @@ order by
 		where
 			(
 				(("r"."lang")::"text" = ("d"."lang")::"text")
+				and ("r"."uid" = "d"."uid")
 				and ("r"."created_at" > ("now" () - '7 days'::interval))
 			)
 		limit
