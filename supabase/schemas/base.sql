@@ -284,7 +284,6 @@ create table if not exists
 	"public"."user_card_review" (
 		"id" "uuid" default "gen_random_uuid" () not null,
 		"uid" "uuid" default "auth"."uid" () not null,
-		"user_card_id" "uuid" not null,
 		"score" smallint not null,
 		"difficulty" numeric,
 		"stability" numeric,
@@ -309,10 +308,11 @@ alter table "public"."user_card_review" owner to "postgres";
 create
 or replace function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
+	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric default 0.9
-) returns "public"."user_card_review" language "plv8" as $$
+) returns "public"."user_card_review" language "plv8" as $_$
 
 // auth check should be unnecessary because of RLS but it
 // should also be redundant for the planner
@@ -320,7 +320,6 @@ const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHER
 // throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
 
 const prev = prevReviewQuery[0] ?? null
-if (!prev?.id) throw new Error(`could not find that card, got "${prev?.id}" looking for "${phrase_id}" to record score: ${score}`)
 
 var calc = {
 	current: new Date(),
@@ -332,7 +331,7 @@ var calc = {
 }
 // throw new Error(`prev.id ${prev.id}`)
 
-if (prev.id === null) {
+if (!prev) {
 	calc.stability = plv8.find_function("fsrs_s_0")(score)
 	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
 	calc.review_time_retrievability = null
@@ -377,14 +376,12 @@ if (!calc.scheduled_for) {
 	return null
 }
 
-// console.log(`Throwing before the thing: ${JSON.stringify(user_card_id, prev, calc)}`)
-
 const insertedResult = plv8.execute(
 	`INSERT INTO public.user_card_review (score, phrase_id, lang, day_session, review_time_retrievability, difficulty, stability) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
 	[
 		score,
 		phrase_id,
-		prev.lang,
+		lang,
 		day_session,
 		calc.review_time_retrievability,
 		calc.difficulty,
@@ -396,26 +393,25 @@ const response = insertedResult[0] ?? null;
 if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
 return response
 
-$$;
+$_$;
 
 alter function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
+	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
 ) owner to "postgres";
 
 create
-or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $$
+or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
 
 const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id = $1", [review_id])
 const review = reviewQuery[0] ?? null
 if (!review) throw new Error(`Could not update because we couldn't find a review with ID ${review_id}`)
 
-const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND created_at < $2 ORDER BY review.created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
+const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND created_at < $2 ORDER BY created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
 const prev = prevReviewQuery[0] ?? null
-// sometimes there is no previous review and that's okay
-
 
 var calc = {
 	current: review.created_at,
@@ -425,7 +421,7 @@ var calc = {
 }
 // throw new Error(`prev.id ${prev.id}`)
 
-if (prev.id === null) {
+if (!prev) {
 	calc.stability = plv8.find_function("fsrs_s_0")(score)
 	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
 } else {
@@ -456,10 +452,10 @@ const updatedResult = plv8.execute(
 );
 
 const response = updatedResult[0] ?? null;
-if (!response) throw new Error(`Got all the way to the end and did not manage to update anything. for review ${review_id}, phrase ${review.phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
+if (!response) throw new Error(`Got all the way to the end and did not manage to update anything. for review ${review_id}, card ${review.phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
 return response
 
-$$;
+$_$;
 
 alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
 
@@ -629,6 +625,28 @@ from
 
 alter table "public"."language_plus" owner to "postgres";
 
+create or replace view
+	"public"."meta_phrase_info" as
+select
+	null::"uuid" as "id",
+	null::timestamp with time zone as "created_at",
+	null::character varying as "lang",
+	null::"text" as "text",
+	null::numeric as "avg_difficulty",
+	null::numeric as "avg_stability",
+	null::bigint as "count_cards",
+	null::bigint as "count_active",
+	null::bigint as "count_learned",
+	null::bigint as "count_skipped",
+	null::numeric as "percent_active",
+	null::numeric as "percent_learned",
+	null::numeric as "percent_skipped",
+	null::bigint as "rank_least_difficult",
+	null::bigint as "rank_most_stable",
+	null::bigint as "rank_least_skipped",
+	null::bigint as "rank_most_learned",
+	null::bigint as "rank_newest";
+
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
@@ -642,33 +660,6 @@ create table if not exists
 alter table "public"."phrase_relation" owner to "postgres";
 
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
-
-create or replace view
-	"public"."phrase_plus" as
-select
-	"p"."text",
-	"p"."id",
-	"p"."added_by",
-	"p"."lang",
-	"p"."created_at",
-	array (
-		select
-			case
-				when ("r"."to_phrase_id" = "p"."id") then "r"."from_phrase_id"
-				else "r"."to_phrase_id"
-			end as "to_phrase_id"
-		from
-			"public"."phrase_relation" "r"
-		where
-			(
-				("p"."id" = "r"."to_phrase_id")
-				or ("p"."id" = "r"."from_phrase_id")
-			)
-	) as "relation_pids"
-from
-	"public"."phrase" "p";
-
-alter table "public"."phrase_plus" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_translation" (
@@ -737,6 +728,33 @@ create or replace view
 	"public"."user_card_plus"
 with
 	("security_invoker" = 'true') as
+with
+	"review" as (
+		select
+			"rev"."id",
+			"rev"."uid",
+			"rev"."score",
+			"rev"."difficulty",
+			"rev"."stability",
+			"rev"."review_time_retrievability",
+			"rev"."created_at",
+			"rev"."updated_at",
+			"rev"."day_session",
+			"rev"."lang",
+			"rev"."phrase_id"
+		from
+			(
+				"public"."user_card_review" "rev"
+				left join "public"."user_card_review" "rev2" on (
+					(
+						("rev"."phrase_id" = "rev2"."phrase_id")
+						and ("rev"."created_at" < "rev2"."created_at")
+					)
+				)
+			)
+		where
+			("rev2"."created_at" is null)
+	)
 select
 	"card"."lang",
 	"card"."id",
@@ -764,106 +782,17 @@ select
 from
 	(
 		"public"."user_card" "card"
-		left join (
-			select
-				"rev"."id",
-				"rev"."uid",
-				"rev"."phrase_id",
-				"rev"."score",
-				"rev"."difficulty",
-				"rev"."stability",
-				"rev"."review_time_retrievability",
-				"rev"."created_at",
-				"rev"."updated_at",
-				"rev"."lang"
-			from
-				(
-					"public"."user_card_review" "rev"
-					left join "public"."user_card_review" "rev2" on (
-						(
-							("rev"."phrase_id" = "rev2"."phrase_id")
-							and ("rev"."uid" = "rev2"."uid")
-							and ("rev"."created_at" < "rev2"."created_at")
-						)
-					)
-				)
-			where
-				("rev2"."created_at" is null)
-		) "review" on (("card"."phrase_id" = "review"."phrase_id"))
+		left join "review" on (("card"."phrase_id" = "review"."phrase_id"))
 	);
 
 alter table "public"."user_card_plus" owner to "postgres";
-
-alter table "public"."user_deck_plus" owner to "postgres";
-
-alter table only "public"."phrase"
-add constraint "card_phrase_id_int_key" unique ("id");
-
-alter table only "public"."phrase"
-add constraint "card_phrase_pkey" primary key ("id");
-
-alter table only "public"."phrase_relation"
-add constraint "card_see_also_pkey" primary key ("id");
-
-alter table only "public"."phrase_relation"
-add constraint "card_see_also_uuid_key" unique ("id");
-
-alter table only "public"."phrase_translation"
-add constraint "card_translation_pkey" primary key ("id");
-
-alter table only "public"."phrase_translation"
-add constraint "card_translation_uuid_key" unique ("id");
-
-alter table only "public"."user_card"
-add constraint "ensure_phrases_unique_within_deck" unique ("lang", "phrase_id");
-
-alter table only "public"."friend_request_action"
-add constraint "friend_request_action_pkey" primary key ("id");
-
-alter table only "public"."language"
-add constraint "language_code2_key" unique ("lang");
-
-alter table only "public"."language"
-add constraint "language_pkey" primary key ("lang");
-
-alter table only "public"."user_deck"
-add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
-
-alter table only "public"."user_profile"
-add constraint "profile_old_id_key" unique ("uid");
-
-alter table only "public"."user_profile"
-add constraint "profiles_pkey" primary key ("uid");
-
-alter table only "public"."user_profile"
-add constraint "profiles_username_key" unique ("username");
-
-alter table only "public"."user_card_review"
-add constraint "user_card_review_pkey" primary key ("id");
-
-alter table only "public"."user_card"
-add constraint "user_deck_card_membership_pkey" primary key ("id");
-
-alter table only "public"."user_card"
-add constraint "user_deck_card_membership_uuid_key" unique ("id");
-
-alter table only "public"."user_deck"
-add constraint "user_deck_pkey" primary key ("id");
-
-alter table only "public"."user_deck"
-add constraint "user_deck_uuid_key" unique ("id");
-
-create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
-
-create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
-
-create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
 create or replace view
 	"public"."user_deck_plus"
 with
 	("security_invoker" = 'true') as
 select
+	"d"."uid",
 	"d"."lang",
 	"d"."learning_goal",
 	"d"."archived",
@@ -941,6 +870,7 @@ from
 		left join "public"."user_card" "c" on ((("d"."lang")::"text" = ("c"."lang")::"text"))
 	)
 group by
+	"d"."uid",
 	"d"."lang",
 	"d"."learning_goal",
 	"d"."archived",
@@ -1214,6 +1144,9 @@ add constraint "phrase_translation_phrase_id_fkey" foreign key ("phrase_id") ref
 
 alter table only "public"."user_card"
 add constraint "user_card_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
+
+alter table only "public"."user_card"
+add constraint "user_card_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid");
 
 alter table only "public"."user_card"
 add constraint "user_card_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
@@ -1560,6 +1493,7 @@ grant all on table "public"."user_card_review" to "service_role";
 
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
+	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
@@ -1567,6 +1501,7 @@ grant all on function "public"."insert_user_card_review" (
 
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
+	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
@@ -1574,6 +1509,7 @@ grant all on function "public"."insert_user_card_review" (
 
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
+	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
 	"desired_retention" numeric
@@ -1632,12 +1568,6 @@ grant all on table "public"."phrase_relation" to "anon";
 grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
-
-grant all on table "public"."phrase_plus" to "anon";
-
-grant all on table "public"."phrase_plus" to "authenticated";
-
-grant all on table "public"."phrase_plus" to "service_role";
 
 grant all on table "public"."phrase_translation" to "anon";
 
