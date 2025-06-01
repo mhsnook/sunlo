@@ -40,8 +40,8 @@ function DeckSettingsPage() {
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<GoalForm lang={meta?.lang!} learning_goal={meta?.learning_goal!} />
-				<ArchiveForm archived={meta?.archived} lang={lang} />
+				<GoalForm lang={lang} learning_goal={meta?.learning_goal!} />
+				<ArchiveForm archived={meta?.archived ?? false} lang={lang} />
 			</CardContent>
 		</Card>
 	)
@@ -142,7 +142,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	)
 }
 
-function ArchiveForm({ archived, lang }: Partial<DeckMeta>) {
+function ArchiveForm({ archived, lang }: Pick<DeckMeta, 'archived' | 'lang'>) {
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
 
