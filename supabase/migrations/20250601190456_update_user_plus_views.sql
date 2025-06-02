@@ -18,7 +18,8 @@ with
 				user_card_review r1
 				left join user_card_review r2 on (
 					(
-						(r1.phrase_id = r2.phrase_id)
+						(r1.uid = r2.uid)
+						and (r1.phrase_id = r2.phrase_id)
 						and (r1.created_at < r2.created_at)
 					)
 				)
@@ -36,7 +37,10 @@ with
 		from
 			(
 				user_card c
-				join recent_review r on ((c.phrase_id = r.phrase_id))
+				join recent_review r on (
+					(c.phrase_id = r.phrase_id)
+					and (c.uid = r.uid)
+				)
 			)
 	),
 	results as (
@@ -143,7 +147,9 @@ from
 	results;
 
 create or replace view
-	"public"."user_card_plus" as
+	"public"."user_card_plus"
+with
+	("security_invoker" = 'true') as
 with
 	review as (
 		select
@@ -164,6 +170,7 @@ with
 				left join user_card_review rev2 on (
 					(
 						(rev.phrase_id = rev2.phrase_id)
+						and (rev.uid = rev2.uid)
 						and (rev.created_at < rev2.created_at)
 					)
 				)
@@ -198,11 +205,16 @@ select
 from
 	(
 		user_card card
-		left join review on ((card.phrase_id = review.phrase_id))
+		left join review on (
+			(card.phrase_id = review.phrase_id)
+			and (card.uid = review.uid)
+		)
 	);
 
 create or replace view
-	"public"."user_deck_plus" as
+	"public"."user_deck_plus"
+with
+	("security_invoker" = 'true') as
 select
 	d.uid,
 	d.lang,

@@ -748,6 +748,7 @@ with
 				left join "public"."user_card_review" "rev2" on (
 					(
 						("rev"."phrase_id" = "rev2"."phrase_id")
+						and ("rev"."uid" = "rev2"."uid")
 						and ("rev"."created_at" < "rev2"."created_at")
 					)
 				)
@@ -782,7 +783,12 @@ select
 from
 	(
 		"public"."user_card" "card"
-		left join "review" on (("card"."phrase_id" = "review"."phrase_id"))
+		left join "review" on (
+			(
+				("card"."phrase_id" = "review"."phrase_id")
+				and ("card"."uid" = "review"."uid")
+			)
+		)
 	);
 
 alter table "public"."user_card_plus" owner to "postgres";
@@ -947,6 +953,9 @@ alter table only "public"."user_card_review"
 add constraint "user_card_review_pkey" primary key ("id");
 
 alter table only "public"."user_card"
+add constraint "user_card_uid_phrase_id_key" unique ("uid", "phrase_id");
+
+alter table only "public"."user_card"
 add constraint "user_deck_card_membership_pkey" primary key ("id");
 
 alter table only "public"."user_card"
@@ -984,7 +993,8 @@ with
 				"public"."user_card_review" "r1"
 				left join "public"."user_card_review" "r2" on (
 					(
-						("r1"."phrase_id" = "r2"."phrase_id")
+						("r1"."uid" = "r2"."uid")
+						and ("r1"."phrase_id" = "r2"."phrase_id")
 						and ("r1"."created_at" < "r2"."created_at")
 					)
 				)
@@ -1002,7 +1012,12 @@ with
 		from
 			(
 				"public"."user_card" "c"
-				join "recent_review" "r" on (("c"."phrase_id" = "r"."phrase_id"))
+				join "recent_review" "r" on (
+					(
+						("c"."phrase_id" = "r"."phrase_id")
+						and ("c"."uid" = "r"."uid")
+					)
+				)
 			)
 	),
 	"results" as (
@@ -1157,19 +1172,19 @@ alter table only "public"."user_card"
 add constraint "user_card_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
 
 alter table only "public"."user_card"
-add constraint "user_card_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid");
+add constraint "user_card_lang_uid_fkey" foreign key ("uid", "lang") references "public"."user_deck" ("uid", "lang");
 
 alter table only "public"."user_card"
 add constraint "user_card_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
 
 alter table only "public"."user_card_review"
-add constraint "user_card_review_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid");
+add constraint "user_card_review_lang_uid_fkey" foreign key ("uid", "lang") references "public"."user_deck" ("uid", "lang");
 
 alter table only "public"."user_card_review"
 add constraint "user_card_review_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on update cascade on delete set null;
 
 alter table only "public"."user_card_review"
-add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("phrase_id", "uid") references "public"."user_card" ("phrase_id", "uid");
+add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("uid", "phrase_id") references "public"."user_card" ("uid", "phrase_id");
 
 alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
