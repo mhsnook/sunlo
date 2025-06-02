@@ -106,7 +106,7 @@ export function WhenComplete({
 						</Button>
 					</>
 				:	<div className="flex h-full flex-col items-center justify-center gap-4 pb-16">
-						<CardTitle className="text-center">Step 3 of 3</CardTitle>
+						<CardTitle className="text-center">Well done!</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your review for today.
 						</p>

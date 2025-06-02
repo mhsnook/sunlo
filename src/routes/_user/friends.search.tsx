@@ -54,7 +54,7 @@ function FriendRequestPage() {
 function PendingInvitationsSection() {
 	const { data, isPending, error } = useRelations()
 
-	return !(data?.uids.invitations?.length > 0) ?
+	return !data?.uids.invitations?.length ?
 			<p
 				className={`text-muted-foreground mx-2 ${isPending ? 'invisible' : ''}`}
 			>
