@@ -1,10 +1,5 @@
 alter table "public"."user_card"
-add column "lang" character varying not null;
-
-alter table "public"."user_card"
-add constraint "user_card_lang_fkey" foreign key (lang) references language (lang) on update cascade on delete cascade not valid;
-
-alter table "public"."user_card" validate constraint "user_card_lang_fkey";
+add column "lang" character varying;
 
 update "public"."user_card" c
 set
@@ -13,6 +8,11 @@ from
 	"public"."phrase" p
 where
 	c.phrase_id = p.id;
+
+alter table "public"."user_card"
+add constraint "user_card_lang_fkey" foreign key (lang) references language (lang) on update cascade on delete cascade not valid;
+
+alter table "public"."user_card" validate constraint "user_card_lang_fkey";
 
 drop view public.user_card_plus;
 
