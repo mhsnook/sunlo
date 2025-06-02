@@ -56,6 +56,10 @@ function Index() {
 	return (
 		<>
 			<main className="mb-8 flex flex-row flex-wrap gap-4 @xl:my-20">
+				<div className="absolute inset-0 -z-10 opacity-20">
+					<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.3_1px,_transparent_1px)] bg-[length:20px_20px]"></div>
+					<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.25)_2px,_transparent_2px)] bg-[length:30px_30px]"></div>
+				</div>
 				<div className="mx-auto flex max-w-[537px] basis-11/12 flex-col justify-center space-y-4 @xl:basis-3/5">
 					<h1 className="d1 mt-12 text-center @xl:mt-8 @xl:mb-4 @xl:text-start @3xl:mb-10">
 						Sunlo: social language&nbsp;learning
