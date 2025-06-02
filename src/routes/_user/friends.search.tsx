@@ -24,12 +24,13 @@ import { Input } from '@/components/ui/input'
 import Callout from '@/components/ui/callout'
 
 import { useRelations } from '@/lib/friends'
-import type { PublicProfile } from '@/types/main'
+import type { PublicProfile, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
+import { useAuth } from '@/lib/hooks'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -95,12 +96,16 @@ function PendingInvitationsSection() {
 			</Card>
 }
 
-const searchAsync = async (query: string): Promise<PublicProfile[]> => {
+const searchAsync = async (
+	query: string,
+	uid: uuid
+): Promise<PublicProfile[] | null> => {
 	if (!query) return null
 	const { data } = await supabase
 		.from('public_profile')
 		.select('uid, username, avatar_url')
 		.ilike('username', `%${query}%`)
+		.neq('uid', uid)
 		.limit(10)
 		.throwOnError()
 	return data || []
@@ -108,6 +113,7 @@ const searchAsync = async (query: string): Promise<PublicProfile[]> => {
 
 export default function SearchProfiles() {
 	const { query } = Route.useSearch()
+	const { userId } = useAuth()
 	const debouncedQuery = useDebounce(query, 500)
 	const navigate = useNavigate({ from: Route.fullPath })
 	const setQueryInputValue = (val: string) =>
@@ -125,9 +131,9 @@ export default function SearchProfiles() {
 		error,
 		isFetching,
 	} = useQuery({
-		queryKey: ['public_profile', 'search', debouncedQuery],
-		queryFn: async ({ queryKey }) => searchAsync(queryKey[2]),
-		enabled: debouncedQuery?.length > 0,
+		queryKey: ['public_profile', 'search', debouncedQuery as string],
+		queryFn: async ({ queryKey }) => searchAsync(queryKey[2]!, userId!),
+		enabled: !!debouncedQuery?.length && !!userId,
 	})
 
 	const prevResults = usePrevious(searchResults)

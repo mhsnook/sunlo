@@ -5,10 +5,11 @@ import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 
-async function fetchAndShapeProfileFull() {
+async function fetchAndShapeProfileFull(uid: uuid) {
 	const { data } = await supabase
 		.from('user_profile')
 		.select(`*, decks_array:user_deck_plus(*)`)
+		.eq('uid', uid)
 		.maybeSingle()
 		.throwOnError()
 	if (data === null) return null
@@ -24,7 +25,7 @@ export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
 		queryKey: ['user', userId],
 		queryFn: async () => {
-			return await fetchAndShapeProfileFull()
+			return await fetchAndShapeProfileFull(userId!)
 		},
 		enabled: !!userId,
 	})

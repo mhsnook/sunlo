@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
+import { useAuth } from '@/lib/hooks'
+import { uuid } from '@/types/main'
 
 export const Route = createFileRoute('/_auth/find-a-friend')({
 	component: SearchProfilesComponent,
@@ -21,11 +23,12 @@ const SearchSchema = z.object({
 
 type SearchFormData = z.infer<typeof SearchSchema>
 
-const searchProfiles = async (query: string) => {
+const searchProfiles = async (query: string, uid: uuid) => {
 	const { data } = await supabase
 		.from('public_profile')
 		.select('uid, username, avatar_url')
 		.ilike('username', `%${query}%`)
+		.neq('uid', uid)
 		.limit(10)
 		.throwOnError()
 
@@ -40,13 +43,13 @@ export function SearchProfilesComponent() {
 	} = useForm<SearchFormData>({
 		resolver: zodResolver(SearchSchema),
 	})
-
+	const { userId } = useAuth()
 	const {
 		data: searchResults,
 		mutate: search,
 		isPending: isSearching,
 	} = useMutation({
-		mutationFn: (data: SearchFormData) => searchProfiles(data.query),
+		mutationFn: (data: SearchFormData) => searchProfiles(data.query, userId!),
 		onError: () => toast.error('Failed to search profiles'),
 	})
 

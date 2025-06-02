@@ -31,10 +31,10 @@ export const friendSummaryToRelative = (
 	d: FriendSummaryFull | FriendSummary
 ): FriendSummaryRelative => {
 	let res: FriendSummaryRelative = {
-		most_recent_action_type: d.most_recent_action_type,
-		most_recent_created_at: d.most_recent_created_at,
-		status: d.status,
-		uidOther: uid === d.uid_less ? d.uid_more : d.uid_less,
+		most_recent_action_type: d.most_recent_action_type!,
+		most_recent_created_at: d.most_recent_created_at!,
+		status: d.status!,
+		uidOther: uid === d.uid_less ? d.uid_more! : d.uid_less!,
 		isMostRecentByMe: uid === d.most_recent_uid_by,
 		isMyUidMore: uid === d.uid_more,
 	}
@@ -50,6 +50,7 @@ const getRelations = async (uid: uuid) => {
 		.select(
 			'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
 		)
+		.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
 		.throwOnError()
 
 	const cleanArray: Array<FriendSummaryRelative> = data.map((d) =>
