@@ -22,6 +22,7 @@ import {
 	UsersIcon,
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { HeroSection } from '@/components/homepage/hero-section'
 
 export const Route = createFileRoute('/')({
 	component: Index,
@@ -55,41 +56,8 @@ const footerNavigationItems = [
 function Index() {
 	return (
 		<>
-			<main className="mb-8 flex flex-row flex-wrap gap-4 @xl:my-20">
-				<div className="absolute inset-0 -z-10 opacity-20">
-					<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.3_1px,_transparent_1px)] bg-[length:20px_20px]"></div>
-					<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.25)_2px,_transparent_2px)] bg-[length:30px_30px]"></div>
-				</div>
-				<div className="mx-auto flex max-w-[537px] basis-11/12 flex-col justify-center space-y-4 @xl:basis-3/5">
-					<h1 className="d1 mt-12 text-center @xl:mt-8 @xl:mb-4 @xl:text-start @3xl:mb-10">
-						Sunlo: social language&nbsp;learning
-					</h1>
-					<p className="text-center text-xl @xl:h-[120px] @xl:text-start">
-						Create your own flash cards, pick from a crowd-sourced pool, or send
-						your friend some key phrases to help them learn.
-					</p>
-				</div>
-				<div className="mx-auto flex-none space-y-4 text-center @xl:basis-1/3">
-					<GarlicBroccoli />
-					<div className="flex w-60 flex-col gap-1 place-self-center">
-						<Link
-							to="/signup"
-							from="/"
-							className={buttonVariants({ size: 'lg' })}
-						>
-							Sign up
-						</Link>
-						<Link
-							to="/login"
-							from="/"
-							className={buttonVariants({ size: 'lg', variant: 'outline' })}
-						>
-							Log in
-						</Link>
-					</div>
-				</div>
-			</main>
-
+			<HeroSection />
+			<br />
 			<UnderConstruction />
 
 			<section className="my-16 px-1 pt-4 pb-8 @lg:px-4 @lg:pt-10 @lg:pb-16">
