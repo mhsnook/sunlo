@@ -1,21 +1,23 @@
 import { Construction, Mail, MessageCircle } from 'lucide-react'
 
-export function UnderConstruction() {
+export function UnderConstructionNotice() {
 	return (
 		<section className="mx-auto w-full max-w-172 px-4 py-8">
 			<div className="container mx-auto max-w-4xl">
-				<div className="border-border/50 from-background to-primary/5 relative overflow-hidden rounded-2xl border bg-gradient-to-br p-8 shadow-sm backdrop-blur-sm">
+				<div className="border-border/50 from-background/80 relative overflow-hidden rounded-2xl border bg-gradient-to-br to-indigo-200/80 p-6 shadow-sm sm:p-8 dark:to-indigo-900/80">
 					{/* Subtle background pattern */}
 					<div className="bg-grid-small absolute inset-0 opacity-5" />
 
-					<div className="relative flex items-start gap-6">
+					<div className="relative flex flex-col items-center gap-6 sm:flex-row sm:items-start">
+						{/* Icon - centered on mobile, left-aligned on larger screens */}
 						<div className="flex-shrink-0">
-							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
-								<Construction className="h-8 w-8 text-white" />
+							<div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg sm:h-16 sm:w-16">
+								<Construction className="h-7 w-7 text-white sm:h-8 sm:w-8" />
 							</div>
 						</div>
 
-						<div className="flex-1 space-y-4">
+						{/* Content - centered on mobile, left-aligned on larger screens */}
+						<div className="flex-1 space-y-4 text-center sm:text-left">
 							<div className="space-y-2">
 								<h3 className="text-foreground text-xl font-semibold">
 									We're putting the finishing touches on Sunlo
@@ -29,7 +31,7 @@ export function UnderConstruction() {
 							</div>
 
 							{/* Contact options */}
-							<div className="flex flex-wrap items-center gap-6 pt-2">
+							<div className="flex flex-col items-center gap-4 pt-2 sm:flex-row sm:items-start sm:gap-6">
 								<a
 									href="https://bsky.app/profile/sunlo.app"
 									target="_blank"

@@ -20,7 +20,7 @@ import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import SuccessCheckmark from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
-import { UnderConstruction } from '@/components/under-construction'
+import { UnderConstructionNotice } from '@/components/homepage/under-construction'
 
 type SignUpProps = {
 	referrer?: uuid
@@ -95,7 +95,7 @@ function SignUp() {
 
 	return (
 		<>
-			{signupMutation.isSuccess ? null : <UnderConstruction />}
+			{signupMutation.isSuccess ? null : <UnderConstructionNotice />}
 			<CardHeader>
 				<CardTitle>Sign Up</CardTitle>
 			</CardHeader>
