@@ -26,6 +26,7 @@ import { useDeckMeta } from '@/lib/use-deck'
 import { DeckMeta, DeckRow } from '@/types/main'
 import { LearningGoalField } from '@/components/fields/learning-goal-field'
 import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/hooks'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -56,6 +57,7 @@ type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	const queryClient = useQueryClient()
+	const { userId } = useAuth()
 	const {
 		control,
 		handleSubmit,
@@ -77,6 +79,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 				.from('user_deck')
 				.update({ learning_goal: values.learning_goal })
 				.eq('lang', lang)
+				.eq('uid', userId!)
 				.throwOnError()
 				.select()
 			if (!data)
@@ -145,13 +148,14 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 function ArchiveForm({ archived, lang }: Pick<DeckMeta, 'archived' | 'lang'>) {
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
-
+	const { userId } = useAuth()
 	const mutation = useMutation({
 		mutationFn: async () => {
 			await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
 				.eq('lang', lang!)
+				.eq('uid', userId!)
 				.throwOnError()
 		},
 		onSuccess: () => {

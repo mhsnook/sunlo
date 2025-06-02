@@ -35,6 +35,7 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
+import { useAuth } from '@/lib/hooks'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPage,
@@ -42,6 +43,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 
 function ReviewPage() {
 	const { lang } = Route.useParams()
+	const { userId } = useAuth()
 	const { queryClient } = Route.useRouteContext()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
@@ -187,6 +189,7 @@ function ReviewPage() {
 					cardsToCreate.map((pid) => ({
 						phrase_id: pid,
 						lang,
+						uid: userId!,
 						status: 'active' as Database['public']['Enums']['card_status'],
 					}))
 				)
@@ -194,7 +197,11 @@ function ReviewPage() {
 				.throwOnError()
 
 			const newCardsCreated = data.map((c) => c.phrase_id)
-
+			if (newCardsCreated.length !== cardsToCreate.length) {
+				console.warn(
+					`Error creating cards: expected ${cardsToCreate.length} but got ${newCardsCreated.length}`
+				)
+			}
 			return {
 				total: allCardsForToday.length,
 				cards_fresh: freshCards.length,
