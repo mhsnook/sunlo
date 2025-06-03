@@ -1,75 +1,70 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DailyCacheKey, pids, ReviewStages } from '@/types/main'
-
 import {
 	getIndexOfLoopedAgainCard,
 	getIndexOfNextUnreviewedCard,
-	useReviewState,
 } from '@/lib/use-reviewables'
-
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
-import { useQueryClient } from '@tanstack/react-query'
+import { QueryClient } from '@tanstack/react-query'
 
 interface ThisComponentProps {
 	dailyCacheKey: DailyCacheKey
-	pidsManifest: pids
+	manifest: pids
 	reviewStage: ReviewStages
+	queryClient: QueryClient
 }
 
 export function FlashCardReviewSession({
 	dailyCacheKey,
-	pidsManifest,
+	manifest,
 	reviewStage,
+	queryClient,
 }: ThisComponentProps) {
 	const [currentCardIndex, setCurrentCardIndex] = useState(() =>
 		reviewStage < 4 ?
-			getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
-		:	getIndexOfLoopedAgainCard(dailyCacheKey, -1)
+			getIndexOfNextUnreviewedCard(queryClient, dailyCacheKey, manifest, -1)
+		:	getIndexOfLoopedAgainCard(queryClient, dailyCacheKey, manifest, -1)
 	)
-	const { data: state } = useReviewState(dailyCacheKey)
-	const queryClient = useQueryClient()
+
 	const navigateCards = useCallback(
 		(direction: 'forward' | 'back' | 'next' | 'first' | 'loop') => {
 			console.log(`navigateCards running: ${direction}`)
 			if (direction === 'first')
 				setCurrentCardIndex(() =>
-					getIndexOfNextUnreviewedCard(dailyCacheKey, -1)
+					getIndexOfNextUnreviewedCard(queryClient, dailyCacheKey, manifest, -1)
 				)
 			if (direction === 'forward') setCurrentCardIndex((i) => i + 1)
 			if (direction === 'back') setCurrentCardIndex((i) => i - 1)
 			if (direction === 'next')
 				setCurrentCardIndex((i) => {
 					console.log(`setCurrentCardIndex, ${i}`)
-					return getIndexOfNextUnreviewedCard(dailyCacheKey, i)
+					return getIndexOfNextUnreviewedCard(
+						queryClient,
+						dailyCacheKey,
+						manifest,
+						i
+					)
 				})
 			// the loop only applies to again-cards, and we don't want to have to
 			// wait a render cycle for the function ref to update to then call it
 			if (direction === 'loop')
-				setCurrentCardIndex((i) => getIndexOfLoopedAgainCard(dailyCacheKey, i))
+				setCurrentCardIndex((i) =>
+					getIndexOfLoopedAgainCard(queryClient, dailyCacheKey, manifest, i)
+				)
 		},
 		[dailyCacheKey]
 	)
 
-	// this is basically like saying, every time we show the WhenComplete
-	// component, re-calculate its data. So even though this isn't using
-	// reactive state, it's calculating when needed, and acting a bit
-	// like a route loader for the proposed /review/complete route.
-	const isComplete = currentCardIndex === pidsManifest.length
-	useEffect(() => {
-		if (isComplete)
-			queryClient.invalidateQueries({
-				queryKey: [...dailyCacheKey, 'review-state'],
-			})
-	}, [isComplete])
+	const isComplete = currentCardIndex === manifest.length
 
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div className="mb-2 flex flex-col items-center justify-center gap-2">
 				<div className="flex min-h-10 flex-row items-center justify-center">
-					{!isComplete && state.reviewStage === 1 ?
+					{!isComplete && reviewStage === 1 ?
 						<>
 							<Button
 								size="icon-sm"
@@ -81,19 +76,19 @@ export function FlashCardReviewSession({
 								<ChevronLeft className="size-4" />
 							</Button>
 							<div className="w-40 text-center text-sm">
-								Card {currentCardIndex + 1} of {pidsManifest.length}
+								Card {currentCardIndex + 1} of {manifest.length}
 							</div>
 							<Button
 								size="icon-sm"
 								variant="default"
 								onClick={() => navigateCards('forward')}
-								disabled={currentCardIndex === pidsManifest.length}
+								disabled={currentCardIndex === manifest.length}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					: !isComplete && state.reviewStage > 1 ?
+					: !isComplete && reviewStage > 1 ?
 						<Button
 							size="sm"
 							variant="ghost"
@@ -103,7 +98,7 @@ export function FlashCardReviewSession({
 						>
 							Skip for today <ChevronRight className="size-4" />
 						</Button>
-					: state.reviewStage === 1 ?
+					: reviewStage === 1 ?
 						<Button
 							size="sm"
 							variant="ghost"
@@ -126,7 +121,7 @@ export function FlashCardReviewSession({
 				</div>
 
 				<div className={!isComplete ? 'w-full' : 'hidden'}>
-					{pidsManifest.map((pid, i) => (
+					{manifest.map((pid, i) => (
 						<div
 							key={i}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
@@ -135,7 +130,7 @@ export function FlashCardReviewSession({
 								dailyCacheKey={dailyCacheKey}
 								pid={pid}
 								proceed={() =>
-									state.reviewStage < 4 ?
+									reviewStage < 4 ?
 										navigateCards('next')
 									:	navigateCards('loop')
 								}

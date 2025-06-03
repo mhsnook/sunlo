@@ -1,4 +1,4 @@
-import { useReviewState } from '@/lib/use-reviewables'
+import { useReviewStage } from '@/lib/use-reviewables'
 import { DailyCacheKey, TranslationRow, uuid } from '@/types/main'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -32,8 +32,7 @@ export function ReviewSingleCard({
 	const lang = dailyCacheKey[1]
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
-
-	const { data: state } = useReviewState(dailyCacheKey)
+	const { data: stage } = useReviewStage(dailyCacheKey)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
 		dailyCacheKey,
@@ -45,7 +44,7 @@ export function ReviewSingleCard({
 
 	if (!phrase) return null
 
-	const showAnswers = prevData && state.reviewStage === 1 ? true : revealCard
+	const showAnswers = prevData && stage === 1 ? true : revealCard
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
@@ -106,7 +105,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={
-								prevData?.score === 1 && state.reviewStage < 4 ?
+								prevData?.score === 1 && stage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
 							}
