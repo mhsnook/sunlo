@@ -5,6 +5,7 @@ import {
 	queryOptions,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
+import { useReviewsToday } from '@/lib/use-reviews'
 
 function getFromLocalStorage<T>(queryKey: DailyCacheKey): null | T {
 	const data = localStorage.getItem(JSON.stringify(queryKey))
@@ -17,8 +18,8 @@ function setFromLocalStorage(queryKey: DailyCacheKey, value: any) {
 
 export const manifestQuery = (dailyCacheKey: DailyCacheKey) =>
 	queryOptions({
-		queryKey: dailyCacheKey,
-		queryFn: () => getFromLocalStorage<pids>(dailyCacheKey),
+		queryKey: [...dailyCacheKey, 'manifest'],
+		queryFn: () => getFromLocalStorage<pids>([...dailyCacheKey, 'manifest']),
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,
 	})
@@ -31,19 +32,9 @@ export const setManifest = (
 	data: pids,
 	queryClient: QueryClient
 ) => {
-	setFromLocalStorage(dailyCacheKey, data)
-	queryClient.setQueryData(dailyCacheKey, data)
+	setFromLocalStorage([...dailyCacheKey, 'manifest'], data)
+	queryClient.setQueryData([...dailyCacheKey, 'manifest'], data)
 }
-
-const getAgainsFromLocalManifest = (dailyCacheKey: DailyCacheKey) =>
-	getFromLocalStorage<pids>(dailyCacheKey)?.filter((p: uuid) => {
-		return getFromLocalStorage<ReviewRow>([...dailyCacheKey, p])?.score === 1
-	}) ?? []
-
-const getUnreviewedFromLocalManifest = (dailyCacheKey: DailyCacheKey) =>
-	getFromLocalStorage<pids>(dailyCacheKey)?.filter((pid: uuid) => {
-		return !getReviewFromLocalStorage(dailyCacheKey, pid)
-	}) ?? []
 
 const getReviewFromLocalStorage = (
 	dailyCacheKey: DailyCacheKey,
@@ -54,7 +45,7 @@ export function getIndexOfNextUnreviewedCard(
 	dailyCacheKey: DailyCacheKey,
 	currentCardIndex: number
 ) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+	const pids = getFromLocalStorage<pids>([...dailyCacheKey, 'manifest'])
 	if (pids === null)
 		throw new Error(
 			'trying to fetch index of next card, but there is no review set up for today'
@@ -73,7 +64,7 @@ function getIndexOfNextAgainCard(
 	dailyCacheKey: DailyCacheKey,
 	currentCardIndex: number
 ) {
-	const pids = getFromLocalStorage<pids>(dailyCacheKey)
+	const pids = getFromLocalStorage<pids>([...dailyCacheKey, 'manifest'])
 	if (pids === null)
 		throw new Error(
 			'trying to fetch index of next card, but there is no review set up for today'
@@ -93,7 +84,7 @@ export function getIndexOfLoopedAgainCard(
 	i: number
 ) {
 	const countManifestCards =
-		getFromLocalStorage<pids>(dailyCacheKey)?.length ?? 0
+		getFromLocalStorage<pids>([...dailyCacheKey, 'manifest'])?.length ?? 0
 	const foundCardIndex = getIndexOfNextAgainCard(dailyCacheKey, i)
 	const finalFoundIndex =
 		!(foundCardIndex === countManifestCards) ? foundCardIndex : (
@@ -102,21 +93,31 @@ export function getIndexOfLoopedAgainCard(
 	return finalFoundIndex
 }
 
-export const useReviewState = (dailyCacheKey: DailyCacheKey) =>
-	useSuspenseQuery({
+export const useReviewState = (dailyCacheKey: DailyCacheKey) => {
+	const { data: reviews } = useReviewsToday(dailyCacheKey)
+	const { data: manifest } = useManifest(dailyCacheKey)
+
+	return useSuspenseQuery({
 		queryKey: [...dailyCacheKey, 'review-state'],
 		queryFn: () => {
-			return {
+			const res = {
 				reviewStage:
 					getFromLocalStorage<ReviewStages>([...dailyCacheKey, 'stage']) ?? 0,
-				totalCount: getFromLocalStorage<pids>(dailyCacheKey)?.length ?? 0,
-				unreviewedCount: getUnreviewedFromLocalManifest(dailyCacheKey).length,
-				againCount: getAgainsFromLocalManifest(dailyCacheKey).length,
+				totalCount: manifest?.length ?? 0,
+				unreviewedCount: manifest?.filter(
+					(pid) => !reviews?.find((r) => r.phrase_id === pid)
+				).length,
+				againCount: manifest?.filter((pid) =>
+					reviews?.find((r) => r.phrase_id === pid && r.score === 1)
+				).length,
 			}
+			console.log('useReviewState', res)
+			return res
 		},
 		refetchOnMount: true,
 		refetchOnWindowFocus: true,
 	})
+}
 
 export const setReviewStage = (
 	dailyCacheKey: DailyCacheKey,

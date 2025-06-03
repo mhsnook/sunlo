@@ -121,9 +121,12 @@ export function useReviewMutation(
 			// this is done instead of using invalidateQueries... why? IDK.
 			// it does ensure that the local cache is updated even when the db
 			// data is not changed (e.g. re-reviewing a card)
-			queryClient.setQueryData<Array<ReviewRow>>([dailyCacheKey], (oldData) => {
+			queryClient.setQueryData<Array<ReviewRow>>(dailyCacheKey, (oldData) => {
 				return [...(oldData ?? []), mergedData]
 			})
+			/*queryClient.invalidateQueries({
+				queryKey: dailyCacheKey,
+			})*/
 			setTimeout(() => {
 				resetRevealCard()
 				proceed()
