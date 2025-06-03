@@ -1,8 +1,4 @@
-import {
-	useReviewState,
-	useOneReview,
-	useReviewMutation,
-} from '@/lib/use-reviewables'
+import { useReviewState } from '@/lib/use-reviewables'
 import { DailyCacheKey, TranslationRow, uuid } from '@/types/main'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -15,6 +11,7 @@ import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
 import { useLanguagePhrase } from '@/lib/use-language'
+import { useOneReviewToday, useReviewMutation } from '@/lib/use-reviews'
 
 interface ReviewSingleCardProps {
 	dailyCacheKey: DailyCacheKey
@@ -34,7 +31,8 @@ export function ReviewSingleCard({
 }: ReviewSingleCardProps) {
 	const lang = dailyCacheKey[1]
 	const [revealCard, setRevealCard] = useState(false)
-	const { data: prevData } = useOneReview(dailyCacheKey, pid)
+	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
+
 	const { data: state } = useReviewState(dailyCacheKey)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
