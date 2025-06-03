@@ -2,8 +2,13 @@ import { DailyCacheKey } from '@/types/main'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
-import { setReviewStage, useReviewState } from '@/lib/use-reviewables'
+import {
+	setReviewStage,
+	useManifest,
+	useReviewStage,
+} from '@/lib/use-reviewables'
 import { useQueryClient } from '@tanstack/react-query'
+import { useReviewsToday } from '@/lib/use-reviews'
 
 type ComponentProps = {
 	dailyCacheKey: DailyCacheKey
@@ -16,15 +21,18 @@ export function WhenComplete({
 	goToFirstSkipped,
 	goToFirstAgain,
 }: ComponentProps) {
-	const {
-		data: { reviewStage, unreviewedCount, againCount },
-	} = useReviewState(dailyCacheKey)
-
+	const { data: reviewsToday } = useReviewsToday(dailyCacheKey)
+	const { data: manifest } = useManifest(dailyCacheKey)
+	const { data: stage } = useReviewStage(dailyCacheKey)
 	const queryClient = useQueryClient()
 
+	if (!reviewsToday || !manifest || !stage) return null
+
+	const unreviewedCount = manifest.length - reviewsToday.totalReviewed
+	const againCount = reviewsToday.totalAgain
 	const showWhich =
-		unreviewedCount && reviewStage < 2 ? 'a'
-		: againCount && reviewStage < 4 ? 'b'
+		unreviewedCount && stage < 2 ? 'a'
+		: againCount && stage < 4 ? 'b'
 		: 'c'
 
 	return (

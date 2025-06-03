@@ -29,6 +29,14 @@ export type LangOnlyComponentProps = {
 */
 export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
 export type DailyCacheKey = ['user', string, 'review', ...Array<string>]
+export type ReviewsMap = {
+	[key: uuid]: ReviewRow
+}
+export type ReviewsLoaded = {
+	map: ReviewsMap
+	totalReviewed: number
+	totalAgain: number
+}
 
 export type SelectOption = { value: string; label: string }
 // Don't keep using these. use the framework's types for links and routes
