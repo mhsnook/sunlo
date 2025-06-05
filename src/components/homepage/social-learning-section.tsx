@@ -100,7 +100,10 @@ export function SocialLearningSection() {
 							</Card>
 
 							<div className="text-center">
-								<Button className="rounded-full bg-rose-500 px-8 py-3 font-semibold text-white hover:bg-rose-600">
+								<Button
+									size="lg"
+									className="transform rounded-full bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600"
+								>
 									Invite Your Family
 								</Button>
 							</div>
@@ -170,7 +173,7 @@ export function SocialLearningSection() {
 									<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-green-400 to-blue-400">
 										<Sparkles className="h-6 w-6 text-white" />
 									</div>
-									<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-800">
+									<div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tl from-stone-800 to-slate-800">
 										<Github className="h-6 w-6 text-white" />
 									</div>
 								</div>
@@ -186,13 +189,14 @@ export function SocialLearningSection() {
 							</p>
 
 							<div className="flex flex-col justify-center gap-4 sm:flex-row">
-								<Button className="rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-3 font-semibold text-white hover:from-green-600 hover:to-emerald-600">
+								<Button className="transform rounded-full border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700 hover:to-emerald-700">
 									Start Learning Free
 								</Button>
 								<Button
 									variant="outline"
-									className="rounded-full border-2 border-white/30 bg-transparent px-8 py-3 font-semibold text-white hover:bg-white/10"
+									className="rounded-full border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10"
 								>
+									<Github className="h-6 w-6 text-white" />
 									View on GitHub
 								</Button>
 							</div>

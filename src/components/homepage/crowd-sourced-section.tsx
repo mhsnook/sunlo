@@ -166,7 +166,10 @@ export function CrowdSourcedSection() {
 							</Card>
 
 							<div className="text-center">
-								<Button className="rounded-full bg-emerald-500 px-8 py-3 font-semibold text-white hover:bg-emerald-600">
+								<Button
+									size="lg"
+									className="transform rounded-full bg-emerald-600 font-semibold transition-all duration-300 hover:scale-105 hover:bg-emerald-700"
+								>
 									Explore Phrase Library
 								</Button>
 							</div>

@@ -182,7 +182,10 @@ export function SpacedRepetitionSection() {
 
 					{/* CTA */}
 					<div className="text-center">
-						<Button className="transform rounded-full bg-gradient-to-r from-purple-500 to-violet-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl">
+						<Button
+							size="lg"
+							className="transform rounded-full bg-gradient-to-r from-purple-500 to-violet-500 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl"
+						>
 							Start Smart Learning
 						</Button>
 					</div>
