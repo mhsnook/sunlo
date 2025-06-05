@@ -99,7 +99,7 @@ export function HeroSection() {
 						<div className="mx-auto mb-8 flex max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
 							<Button
 								size="lg"
-								className="group w-full transform rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-indigo-600 hover:shadow-xl sm:w-auto dark:from-blue-400 dark:to-indigo-400 dark:hover:from-blue-500 dark:hover:to-indigo-500"
+								className="group w-full transform rounded-full border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600"
 							>
 								Start Learning Free
 								<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
@@ -107,7 +107,7 @@ export function HeroSection() {
 							<Button
 								size="lg"
 								variant="outline"
-								className="w-full rounded-full border-2 border-white/30 bg-transparent px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5"
+								className="w-full rounded-full border-2 border-white/30 bg-transparent text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5"
 							>
 								Sign In
 							</Button>
