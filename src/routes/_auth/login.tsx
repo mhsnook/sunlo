@@ -7,7 +7,7 @@ import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { ShowError } from '@/components/errors'
@@ -73,7 +73,7 @@ export default function LoginForm() {
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (
-		<>
+		<Card className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
 			<CardHeader>
 				<CardTitle>Please log in</CardTitle>
 			</CardHeader>
@@ -129,6 +129,6 @@ export default function LoginForm() {
 					</p>
 				</form>
 			</CardContent>
-		</>
+		</Card>
 	)
 }
