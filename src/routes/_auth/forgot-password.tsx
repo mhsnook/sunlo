@@ -9,7 +9,7 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShowError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
 import SuccessCheckmark from '@/components/success-checkmark'
@@ -61,7 +61,7 @@ function ForgotPasswordPage() {
 	})
 
 	return (
-		<>
+		<Card className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
 			<CardHeader>
 				<CardTitle>Recover your password</CardTitle>
 			</CardHeader>
@@ -103,6 +103,6 @@ function ForgotPasswordPage() {
 					</form>
 				}
 			</CardContent>
-		</>
+		</Card>
 	)
 }

@@ -1,6 +1,8 @@
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Brain, Clock, Target, BarChart3, Calendar, Zap } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import { buttonVariants } from '../ui/button-variants'
 
 export function SpacedRepetitionSection() {
 	return (
@@ -182,12 +184,15 @@ export function SpacedRepetitionSection() {
 
 					{/* CTA */}
 					<div className="text-center">
-						<Button
-							size="lg"
-							className="transform rounded-full bg-gradient-to-r from-purple-500 to-violet-500 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl"
+						<Link
+							to="/signup"
+							className={cn(
+								buttonVariants({ size: 'lg' }),
+								'transform rounded-full bg-gradient-to-r from-purple-500 to-violet-500 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl'
+							)}
 						>
 							Start Smart Learning
-						</Button>
+						</Link>
 					</div>
 				</div>
 			</div>

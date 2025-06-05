@@ -1,5 +1,4 @@
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import {
 	Heart,
 	Users,
@@ -11,6 +10,9 @@ import {
 	InfinityIcon,
 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import { buttonVariants } from '../ui/button-variants'
 
 export function SocialLearningSection() {
 	const [isForFriends, setIsForFriends] = useState(false)
@@ -116,12 +118,15 @@ export function SocialLearningSection() {
 							</Card>
 
 							<div className="text-center">
-								<Button
-									size="lg"
-									className="transform rounded-full bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600"
+								<Link
+									to="/signup"
+									className={cn(
+										buttonVariants({ size: 'lg' }),
+										'transform rounded-full bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600'
+									)}
 								>
 									Invite Your {isForFriends ? 'Friends' : 'Family'}
-								</Button>
+								</Link>
 							</div>
 						</div>
 
@@ -210,16 +215,28 @@ export function SocialLearningSection() {
 							</p>
 
 							<div className="flex flex-col justify-center gap-4 sm:flex-row">
-								<Button className="transform rounded-full border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700 hover:to-emerald-700">
-									Start Learning Free
-								</Button>
-								<Button
-									variant="outline"
-									className="rounded-full border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10"
+								<Link
+									to="/signup"
+									className={cn(
+										buttonVariants(),
+										'"transform hover:to-emerald-700" rounded-full border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700'
+									)}
 								>
-									<Github className="h-6 w-6 text-white" />
+									Start Learning Free
+								</Link>
+
+								<a
+									href="https://github.com/mhsnook/sunlo"
+									target="_blank"
+									rel="noopener noreferrer"
+									className={cn(
+										buttonVariants({ variant: 'outline' }),
+										'rounded-full border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10'
+									)}
+								>
+									<Github />
 									View on GitHub
-								</Button>
+								</a>
 							</div>
 						</Card>
 					</div>
