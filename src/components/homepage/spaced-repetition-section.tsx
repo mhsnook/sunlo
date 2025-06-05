@@ -57,27 +57,27 @@ export function SpacedRepetitionSection() {
 									</div>
 
 									<div className="flex items-center gap-4">
-										<div className="h-3 w-3 rounded-full bg-yellow-400"></div>
+										<div className="h-3 w-3 rounded-full bg-blue-400"></div>
 										<div className="flex-1">
 											<div className="mb-1 flex justify-between text-sm text-purple-100">
 												<span>&ldquo;¿Dónde está el baño?&rdquo;</span>
 												<span>Review in 2 days</span>
 											</div>
 											<div className="h-2 w-full rounded-full bg-white/10">
-												<div className="h-2 w-3/4 rounded-full bg-yellow-400"></div>
+												<div className="h-2 w-3/4 rounded-full bg-blue-400"></div>
 											</div>
 										</div>
 									</div>
 
 									<div className="flex items-center gap-4">
-										<div className="h-3 w-3 rounded-full bg-blue-400"></div>
+										<div className="h-3 w-3 rounded-full bg-yellow-400"></div>
 										<div className="flex-1">
 											<div className="mb-1 flex justify-between text-sm text-purple-100">
 												<span>&ldquo;Me gusta mucho&rdquo;</span>
 												<span>Review tomorrow</span>
 											</div>
 											<div className="h-2 w-full rounded-full bg-white/10">
-												<div className="h-2 w-1/2 rounded-full bg-blue-400"></div>
+												<div className="h-2 w-1/2 rounded-full bg-yellow-400"></div>
 											</div>
 										</div>
 									</div>
@@ -99,7 +99,7 @@ export function SpacedRepetitionSection() {
 								<div className="mt-6 rounded-lg bg-white/10 p-4">
 									<div className="flex items-center gap-2 text-sm text-purple-100">
 										<Zap className="h-4 w-4 text-yellow-400" />
-										<span>Next review session: 15 minutes (4 cards)</span>
+										<span>Next review session: 20 minutes (54 cards)</span>
 									</div>
 								</div>
 							</Card>
