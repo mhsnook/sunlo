@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import {
+	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
@@ -96,72 +97,83 @@ function SignUp() {
 	return (
 		<>
 			{signupMutation.isSuccess ? null : <UnderConstructionNotice />}
-			<CardHeader>
-				<CardTitle>Sign Up</CardTitle>
-			</CardHeader>
-			<CardContent>
-				{signupMutation.isSuccess ?
-					<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
-						<p>Almost done!</p>
+			<Card className="mx-auto mt-[1cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
+				<CardHeader>
+					<CardTitle>Sign Up</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{signupMutation.isSuccess ?
+						<Callout
+							Icon={() => <SuccessCheckmark className="bg-transparent" />}
+						>
+							<p>Almost done!</p>
+							<p>
+								Find the confirmation link in your email to activate your
+								account.
+							</p>
+							<p>You can close this window.</p>
+						</Callout>
+					:	<form
+							role="form"
+							noValidate
+							className="space-y-4"
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
+							onSubmit={handleSubmit(
+								signupMutation.mutate as SubmitHandler<FormInputs>
+							)}
+						>
+							<fieldset
+								className="flex flex-col gap-y-4"
+								disabled={isSubmitting}
+							>
+								<EmailField
+									register={register}
+									error={errors.email}
+									autoFocus
+									tabIndex={1}
+								/>
+								<PasswordField
+									register={register}
+									error={errors.password}
+									tabIndex={2}
+								/>
+								<UserRoleField
+									control={control}
+									error={errors.user_role}
+									tabIndex={3}
+								/>
+							</fieldset>
+							<div className="flex flex-row justify-between">
+								<Button disabled={signupMutation.isPending}>Sign Up</Button>
+								<Link
+									to="/login"
+									className={buttonVariants({ variant: 'link' })}
+								>
+									Already have an account?
+								</Link>
+							</div>
+							<ShowError show={!!signupMutation.error}>
+								Problem signing up: {signupMutation.error?.message}
+							</ShowError>
+						</form>
+					}
+				</CardContent>
+				{signupMutation.isSuccess ? null : (
+					<CardFooter className="static block space-y-2 opacity-80">
 						<p>
-							Find the confirmation link in your email to activate your account.
-						</p>
-						<p>You can close this window.</p>
-					</Callout>
-				:	<form
-						role="form"
-						noValidate
-						className="space-y-4"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit(
-							signupMutation.mutate as SubmitHandler<FormInputs>
-						)}
-					>
-						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-							<EmailField
-								register={register}
-								error={errors.email}
-								autoFocus
-								tabIndex={1}
-							/>
-							<PasswordField
-								register={register}
-								error={errors.password}
-								tabIndex={2}
-							/>
-							<UserRoleField
-								control={control}
-								error={errors.user_role}
-								tabIndex={3}
-							/>
-						</fieldset>
-						<div className="flex flex-row justify-between">
-							<Button disabled={signupMutation.isPending}>Sign Up</Button>
-							<Link to="/login" className={buttonVariants({ variant: 'link' })}>
-								Already have an account?
+							By signing up you accept our{' '}
+							<Link className="s-link" to="/privacy-policy">
+								privacy policy
 							</Link>
-						</div>
-						<ShowError show={!!signupMutation.error}>
-							Problem signing up: {signupMutation.error?.message}
-						</ShowError>
-					</form>
-				}
-			</CardContent>
-			{signupMutation.isSuccess ? null : (
-				<CardFooter className="static block space-y-2 opacity-80">
-					<p>
-						By signing up you accept our{' '}
-						<Link className="s-link" to="/privacy-policy">
-							privacy policy
-						</Link>
-						.
-					</p>
-					<p className="italic">
-						Note: we are not GDPR compliant yet; if you life in the EU, you may
-						have to wait till next month.
-					</p>
-				</CardFooter>
-			)}
+							.
+						</p>
+						<p className="mt-8 italic">
+							Note: we are not GDPR compliant yet; if you live in the EU/EEA,
+							you may have to wait till next month.
+						</p>
+					</CardFooter>
+				)}
+			</Card>
 		</>
 	)
 }

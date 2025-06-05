@@ -1,8 +1,10 @@
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Users, BookOpen, Heart, Star, ArrowRight } from 'lucide-react'
 import { ThemeToggle } from '@/components/homepage/theme-toggle'
 import { UnderConstructionNotice } from './under-construction'
+import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import { buttonVariants } from '../ui/button-variants'
 
 export function HeroSection() {
 	return (
@@ -97,20 +99,25 @@ export function HeroSection() {
 					{/* Call to action */}
 					<div className="mb-16 text-center">
 						<div className="mx-auto mb-8 flex max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
-							<Button
-								size="lg"
-								className="group w-full transform rounded-full border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600"
+							<Link
+								to="/signup"
+								className={cn(
+									buttonVariants({ size: 'lg' }),
+									'group w-full transform rounded-full border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600'
+								)}
 							>
 								Start Learning Free
 								<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-							</Button>
-							<Button
-								size="lg"
-								variant="outline"
-								className="w-full rounded-full border-2 border-white/30 bg-transparent text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5"
+							</Link>
+							<Link
+								to="/login"
+								className={cn(
+									buttonVariants({ size: 'lg', variant: 'outline' }),
+									'w-full rounded-full border-2 border-white/30 bg-transparent text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+								)}
 							>
 								Sign In
-							</Button>
+							</Link>
 						</div>
 
 						{/* Trust indicators */}

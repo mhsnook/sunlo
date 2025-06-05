@@ -1,15 +1,16 @@
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import {
 	Globe,
 	Users,
-	TrendingUp,
 	CheckCircle,
 	Search,
 	Filter,
 	MessagesSquare,
 	ChartColumnIncreasing,
 } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { cn } from '@/lib/utils'
+import { buttonVariants } from '../ui/button-variants'
 
 export function CrowdSourcedSection() {
 	return (
@@ -166,12 +167,15 @@ export function CrowdSourcedSection() {
 							</Card>
 
 							<div className="text-center">
-								<Button
-									size="lg"
-									className="transform rounded-full bg-emerald-600 font-semibold transition-all duration-300 hover:scale-105 hover:bg-emerald-700"
+								<Link
+									to="/signup"
+									className={cn(
+										buttonVariants({ size: 'lg' }),
+										'transform rounded-full bg-emerald-600 font-semibold transition-all duration-300 hover:scale-105 hover:bg-emerald-700'
+									)}
 								>
 									Explore Phrase Library
-								</Button>
+								</Link>
 							</div>
 						</div>
 					</div>
