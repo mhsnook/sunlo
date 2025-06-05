@@ -10,8 +10,11 @@ import {
 	Sparkles,
 	InfinityIcon,
 } from 'lucide-react'
+import { useState } from 'react'
 
 export function SocialLearningSection() {
+	const [isForFriends, setIsForFriends] = useState(false)
+
 	return (
 		<section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-rose-900 via-pink-800 to-orange-900 dark:from-rose-900 dark:via-pink-900 dark:to-orange-900">
 			{/* Background pattern */}
@@ -29,15 +32,19 @@ export function SocialLearningSection() {
 					<div className="mb-16 text-center">
 						<div className="mb-6 flex justify-center">
 							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-400/20">
-								<Heart className="h-8 w-8 text-rose-300" />
+								<Heart
+									role="button"
+									onClick={() => setIsForFriends((val) => !val)}
+									className="h-8 w-8 text-rose-300"
+								/>
 							</div>
 						</div>
 						<h2 className="mb-6 text-5xl font-bold text-white md:text-6xl">
 							Friends & Family Learning
 						</h2>
-						<p className="mx-auto max-w-3xl text-xl leading-relaxed text-rose-100 md:text-2xl">
+						<p className="mx-auto max-w-2xl text-xl leading-relaxed text-rose-100 md:text-2xl">
 							Turn language learning into a shared journey with the people who
-							matter most
+							{isForFriends ? ' you explore the world with' : ' matter most'}
 						</p>
 					</div>
 
@@ -48,7 +55,7 @@ export function SocialLearningSection() {
 							<Card className="border-white/10 bg-white/5 p-6">
 								<h3 className="mb-4 flex items-center gap-3 text-xl font-semibold text-white">
 									<MessageCircle className="h-6 w-6 text-rose-300" />
-									Family Learning Circle
+									{isForFriends ? 'Close Friends' : 'Family'} Learning Circle
 								</h3>
 
 								<div className="space-y-3">
@@ -58,10 +65,13 @@ export function SocialLearningSection() {
 										</div>
 										<div className="flex-1">
 											<div className="text-sm text-white">
-												Mom sent you a phrase pack
+												{isForFriends ? 'Manju ' : 'Mom '}
+												sent you a phrase pack
 											</div>
 											<div className="text-xs text-rose-200">
-												"Essential Spanish for your trip"
+												{isForFriends ?
+													`"Essential Kannada now that you've moved"`
+												:	'"Essential Punjabi for your trip"'}
 											</div>
 										</div>
 										<Gift className="h-4 w-4 text-rose-300" />
@@ -73,10 +83,13 @@ export function SocialLearningSection() {
 										</div>
 										<div className="flex-1">
 											<div className="text-sm text-white">
-												Dad is practicing with you
+												{isForFriends ? 'Devu ' : 'Dad '}
+												is practicing with you
 											</div>
 											<div className="text-xs text-rose-200">
-												"Let&apos;s learn together!"
+												{isForFriends ?
+													`"Let's learn all the swear words!"`
+												:	`"Let's learn all the best food words!"`}
 											</div>
 										</div>
 										<Users className="h-4 w-4 text-orange-300" />
@@ -88,10 +101,13 @@ export function SocialLearningSection() {
 										</div>
 										<div className="flex-1">
 											<div className="text-sm text-white">
-												Sister shared a memory tip
+												{isForFriends ? 'Shilpa ' : 'Sister '}
+												shared a memory tip
 											</div>
 											<div className="text-xs text-rose-200">
-												"This helped me remember!"
+												{isForFriends ?
+													'"These drinking songs are fun asf"'
+												:	'"These folk songs are super catchy!"'}
 											</div>
 										</div>
 										<Share2 className="h-4 w-4 text-pink-300" />
@@ -104,7 +120,7 @@ export function SocialLearningSection() {
 									size="lg"
 									className="transform rounded-full bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600"
 								>
-									Invite Your Family
+									Invite Your {isForFriends ? 'Friends' : 'Family'}
 								</Button>
 							</div>
 						</div>
@@ -121,9 +137,10 @@ export function SocialLearningSection() {
 											Emotional Support
 										</h3>
 										<p className="text-rose-100">
-											Learning with loved ones provides motivation,
-											encouragement, and accountability that keeps you going
-											when it gets tough.
+											Learning with{' '}
+											{isForFriends ? ' your besties ' : ' loved ones '}
+											provides motivation, encouragement, and accountability
+											that keeps you going when it gets tough.
 										</p>
 									</div>
 								</div>
@@ -139,8 +156,9 @@ export function SocialLearningSection() {
 											Shared Progress
 										</h3>
 										<p className="text-rose-100">
-											Celebrate milestones together, share achievements, and
-											create friendly competition that makes learning fun.
+											When one of us learns more, it's a gateway for all of us
+											to learn more. Discover fun and useful phrases and share
+											them with your {isForFriends ? 'pals' : 'family'}.
 										</p>
 									</div>
 								</div>
@@ -156,8 +174,11 @@ export function SocialLearningSection() {
 											Personalized Gifts
 										</h3>
 										<p className="text-rose-100">
-											Family members can send you custom phrase packs, cultural
-											tips, and learning resources tailored to your interests.
+											{isForFriends ?
+												'Friends and colleagues '
+											:	'Family members '}
+											can send you custom phrase packs, cultural tips, and
+											learning resources tailored to your interests.
 										</p>
 									</div>
 								</div>
