@@ -34,6 +34,7 @@ export function HeroSection() {
 									width={200}
 									height={120}
 									className="drop-shadow-2xl"
+									fetchPriority="high"
 								/>
 								<div className="absolute -top-2 -right-2 h-6 w-6 animate-pulse rounded-full bg-yellow-400 shadow-lg dark:bg-yellow-300"></div>
 							</div>
