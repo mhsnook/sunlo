@@ -23,9 +23,9 @@ export function UnderConstructionNotice() {
 									We're putting the finishing touches on Sunlo
 								</h3>
 								<p className="leading-relaxed text-white/70">
-									Our platform is under active development and should be ready
-									soon. Feel free to explore what's available, and don't
-									hesitate to reach out if you encounter any issues or have
+									Our platform is under active development. It should be ready
+									to use and learn with, but some features you might expect may
+									still be on the way. Don't hesitate to reach out if you have
 									feedback to share.
 								</p>
 							</div>
