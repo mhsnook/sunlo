@@ -8,7 +8,10 @@ import { buttonVariants } from '../ui/button-variants'
 
 export function HeroSection() {
 	return (
-		<div className="dark:from-background dark:to-muted relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:via-slate-800">
+		<div
+			role="banner"
+			className="dark:from-background dark:to-muted relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:via-slate-800"
+		>
 			{/* Theme Toggle */}
 			<ThemeToggle />
 
@@ -58,9 +61,9 @@ export function HeroSection() {
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-400/20 dark:bg-green-400/30">
 										<BookOpen className="h-6 w-6 text-green-300 dark:text-green-200" />
 									</div>
-									<h3 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
 										Personal Flash Cards
-									</h3>
+									</h2>
 									<p className="text-sm text-slate-200 dark:text-slate-300">
 										Create custom cards tailored to your learning style
 									</p>
@@ -72,9 +75,9 @@ export function HeroSection() {
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-400/20 dark:bg-blue-400/30">
 										<Users className="h-6 w-6 text-blue-300 dark:text-blue-200" />
 									</div>
-									<h3 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
 										Community Pool
-									</h3>
+									</h2>
 									<p className="text-sm text-slate-200 dark:text-slate-300">
 										Access thousands of crowd-sourced learning materials
 									</p>
@@ -86,9 +89,9 @@ export function HeroSection() {
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-400/20 dark:bg-yellow-400/30">
 										<Heart className="h-6 w-6 text-yellow-300 dark:text-yellow-200" />
 									</div>
-									<h3 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
 										Help Friends
-									</h3>
+									</h2>
 									<p className="text-sm text-slate-200 dark:text-slate-300">
 										Share essential phrases and learn together
 									</p>
