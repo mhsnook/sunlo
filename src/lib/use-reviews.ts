@@ -100,27 +100,17 @@ export function useReviewMutation(
 
 	return useMutation<ReviewRow, PostgrestError, { score: number }>({
 		mutationKey: [...dailyCacheKey, pid],
-		// @ts-expect-error ts-2322 -- because Supabase view fields are always | null
 		mutationFn: async ({ score }: { score: number }) => {
-			// We want 1 mutation per day per card. We can send a second mutation
-			// only during stage 1 or 2, to _correct_ an improper input.
+			// during stages 1 & 2, these are corrections; only update only if score changes
+			if (stage < 3 && prevData?.score === score) return prevData
 
-			// no mutations when re-reviewing incorrect
-			if (stage > 3)
-				return {
-					...prevData,
-					score,
-				}
-
-			// during stages 1 and 2 send an update only if the score has changed
-			if (prevData?.score === score) return prevData
-			if (prevData?.id)
+			if (stage < 3 && prevData?.id)
 				return await updateReview({
 					score,
 					review_id: prevData.id,
 				})
 
-			// standard case: card has not been reviewed today
+			// standard case: this should be represented by a new review record
 			return await postReview({
 				score,
 				phrase_id: pid,
