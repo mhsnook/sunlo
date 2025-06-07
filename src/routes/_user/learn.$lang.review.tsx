@@ -1,7 +1,9 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useParams } from '@tanstack/react-router'
 import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { BookHeart } from 'lucide-react'
+import { todayString } from '@/lib/utils'
+import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
@@ -22,5 +24,12 @@ export const Route = createFileRoute('/_user/learn/$lang/review')({
 })
 
 function ReviewPage() {
-	return <Outlet />
+	const { lang } = Route.useParams()
+	const [dayString] = todayString()
+
+	return (
+		<ReviewStoreProvider key={`${lang}:${dayString}`}>
+			<Outlet />
+		</ReviewStoreProvider>
+	)
 }

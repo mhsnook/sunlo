@@ -52,14 +52,15 @@ function ReviewPage() {
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
+	const dayString = todayString()
 	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
 		'user',
 		lang,
 		'review',
-		todayString(),
+		dayString,
 	])
 
-	const setManifest = useInitialiseReviewStore()
+	const setManifest = useInitialiseReviewStore(lang, dayString)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
