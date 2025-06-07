@@ -75,7 +75,7 @@ export function useReviewsToday(dailyCacheKey: DailyCacheKey) {
 	const { userId } = useAuth()
 	return useQuery({
 		...reviewsQuery(userId!, dailyCacheKey),
-		enabled: !!userId,
+		enabled: !!userId && !!dailyCacheKey,
 	})
 }
 
@@ -83,7 +83,7 @@ export function useOneReviewToday(dailyCacheKey: DailyCacheKey, pid: uuid) {
 	const { userId } = useAuth()
 	return useQuery({
 		...reviewsQuery(userId!, dailyCacheKey),
-		enabled: !!userId,
+		enabled: !!userId && !!dailyCacheKey && !!pid,
 		select: (data: ReviewsLoaded) => data.map[pid],
 	})
 }

@@ -1,26 +1,18 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { DailyCacheKey, pids, ReviewStages } from '@/types/main'
 import {
 	useCardIndex,
+	useManifest,
 	useReviewActions,
 	useReviewStage,
 } from '@/lib/use-review-store'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
-import { QueryClient } from '@tanstack/react-query'
 
-interface ThisComponentProps {
-	dailyCacheKey: DailyCacheKey
-	manifest: pids
-}
-
-export function FlashCardReviewSession({
-	dailyCacheKey,
-	manifest,
-}: ThisComponentProps) {
+export function FlashCardReviewSession() {
 	const currentCardIndex = useCardIndex()
 	const reviewStage = useReviewStage()
+	const manifest = useManifest()
 	const { gotoNext, gotoPrevious, gotoNextValid } = useReviewActions()
 
 	const isComplete = currentCardIndex === manifest.length
@@ -78,7 +70,7 @@ export function FlashCardReviewSession({
 			</div>
 			<div className="flex flex-col items-center justify-center gap-2">
 				<div className={isComplete ? 'w-full' : 'hidden'}>
-					<WhenComplete dailyCacheKey={dailyCacheKey} />
+					<WhenComplete />
 				</div>
 
 				<div className={!isComplete ? 'w-full' : 'hidden'}>
@@ -87,7 +79,7 @@ export function FlashCardReviewSession({
 							key={i}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
 						>
-							<ReviewSingleCard dailyCacheKey={dailyCacheKey} pid={pid} />
+							<ReviewSingleCard pid={pid} />
 						</div>
 					))}
 				</div>
