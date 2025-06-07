@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
-import { manifestQuery, useReviewStage } from '@/lib/use-reviewables'
+import { getManifest, useReviewStage } from '@/lib/use-review-store'
 import { useState } from 'react'
 import { todayString } from '@/lib/utils'
 import { DailyCacheKey } from '@/types/main'
@@ -17,17 +17,10 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		},
 	}) => {
 		const dailyCacheKey: DailyCacheKey = ['user', lang, 'review', todayString()]
-		const reviewsFetch = queryClient.ensureQueryData(
+		const reviews = await queryClient.ensureQueryData(
 			reviewsQuery(userId!, dailyCacheKey)
 		)
-		const manifestFetch = queryClient.ensureQueryData(
-			manifestQuery(dailyCacheKey)
-		)
-		const [_reviews, manifest] = await Promise.all([
-			reviewsFetch,
-			manifestFetch,
-		])
-
+		const manifest = getManifest()
 		if (!manifest || !manifest.length) throw redirect({ to: '..' })
 
 		return {
@@ -42,16 +35,14 @@ function ReviewPage() {
 	const data = Route.useLoaderData()
 	// referential stability for the cache key, even if the loader data changes
 	const [dailyCacheKey] = useState<DailyCacheKey>(data.dailyCacheKey)
-	const { data: reviewStage } = useReviewStage(dailyCacheKey)
-	const { queryClient } = Route.useRouteContext()
+	const reviewStage = useReviewStage()
+
 	if (typeof reviewStage !== 'number' || typeof data.manifest !== 'object')
 		return <Loader />
 	return (
 		<FlashCardReviewSession
 			dailyCacheKey={dailyCacheKey}
 			manifest={data.manifest}
-			reviewStage={reviewStage}
-			queryClient={queryClient}
 		/>
 	)
 }

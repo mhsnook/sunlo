@@ -1,4 +1,4 @@
-import { useReviewStage } from '@/lib/use-reviewables'
+import { useReviewStage } from '@/lib/use-review-store'
 import { DailyCacheKey, TranslationRow, uuid } from '@/types/main'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
@@ -16,7 +16,6 @@ import { useOneReviewToday, useReviewMutation } from '@/lib/use-reviews'
 interface ReviewSingleCardProps {
 	dailyCacheKey: DailyCacheKey
 	pid: uuid
-	proceed: () => void
 }
 
 const playAudio = (text: string) => {
@@ -27,17 +26,13 @@ const playAudio = (text: string) => {
 export function ReviewSingleCard({
 	dailyCacheKey,
 	pid,
-	proceed,
 }: ReviewSingleCardProps) {
 	const lang = dailyCacheKey[1]
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
-	const { data: stage } = useReviewStage(dailyCacheKey)
-	const { mutate, isPending } = useReviewMutation(
-		pid,
-		dailyCacheKey,
-		proceed,
-		() => setRevealCard(false)
+	const stage = useReviewStage()
+	const { mutate, isPending } = useReviewMutation(pid, dailyCacheKey, () =>
+		setRevealCard(false)
 	)
 
 	const { data: phrase } = useLanguagePhrase(pid, lang)
