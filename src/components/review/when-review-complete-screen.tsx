@@ -3,32 +3,25 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
 import {
-	setReviewStage,
-	useManifest,
+	useReviewActions,
 	useReviewStage,
-} from '@/lib/use-reviewables'
-import { useQueryClient } from '@tanstack/react-query'
+	useManifestLength,
+} from '@/lib/use-review-store'
 import { useReviewsToday } from '@/lib/use-reviews'
 
 type ComponentProps = {
 	dailyCacheKey: DailyCacheKey
-	goToFirstSkipped: () => void
-	goToFirstAgain: () => void
 }
 
-export function WhenComplete({
-	dailyCacheKey,
-	goToFirstSkipped,
-	goToFirstAgain,
-}: ComponentProps) {
+export function WhenComplete({ dailyCacheKey }: ComponentProps) {
 	const { data: reviewsToday } = useReviewsToday(dailyCacheKey)
-	const { data: manifest } = useManifest(dailyCacheKey)
-	const { data: stage } = useReviewStage(dailyCacheKey)
-	const queryClient = useQueryClient()
+	const manifestLength = useManifestLength()
+	const stage = useReviewStage()
+	const actions = useReviewActions()
 
-	if (!reviewsToday || !manifest || !stage) return null
+	if (!reviewsToday || !manifestLength || !stage) return null
 
-	const unreviewedCount = manifest.length - reviewsToday.totalReviewed
+	const unreviewedCount = manifestLength - reviewsToday.totalReviewed
 	const againCount = reviewsToday.totalAgain
 	const showWhich =
 		unreviewedCount && stage < 2 ? 'a'
@@ -52,8 +45,7 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							onClick={() => {
-								setReviewStage(dailyCacheKey, 2, queryClient)
-								goToFirstSkipped()
+								actions.gotoReviewUnreviewed
 							}}
 						>
 							Review Skipped cards ({unreviewedCount})
@@ -62,7 +54,7 @@ export function WhenComplete({
 							size="lg"
 							variant="link"
 							onClick={() => {
-								setReviewStage(dailyCacheKey, 3, queryClient)
+								actions.skipReviewUnreviewed()
 							}}
 						>
 							Skip step 2
@@ -78,8 +70,7 @@ export function WhenComplete({
 						<Button
 							size="lg"
 							onClick={() => {
-								setReviewStage(dailyCacheKey, 4, queryClient)
-								goToFirstAgain()
+								actions.gotoReviewAgains()
 							}}
 						>
 							Review cards ({againCount})
@@ -108,7 +99,7 @@ export function WhenComplete({
 						<Button
 							variant="link"
 							size="lg"
-							onClick={() => setReviewStage(dailyCacheKey, 5, queryClient)}
+							onClick={() => actions.skipReviewAgains()}
 						>
 							Skip step 3
 						</Button>

@@ -11,7 +11,7 @@ import {
 	uuid,
 } from '@/types/main'
 import toast from 'react-hot-toast'
-import { useReviewStage } from './use-reviewables'
+import { useReviewActions, useReviewStage } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from './utils'
 
@@ -91,12 +91,12 @@ export function useOneReviewToday(dailyCacheKey: DailyCacheKey, pid: uuid) {
 export function useReviewMutation(
 	pid: uuid,
 	dailyCacheKey: DailyCacheKey,
-	proceed: () => void,
 	resetRevealCard: () => void
 ) {
 	const queryClient = useQueryClient()
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
-	const { data: stage } = useReviewStage(dailyCacheKey)
+	const stage = useReviewStage()
+	const { gotoNextValid } = useReviewActions()
 
 	return useMutation<ReviewRow, PostgrestError, { score: number }>({
 		mutationKey: [...dailyCacheKey, pid],
@@ -137,7 +137,7 @@ export function useReviewMutation(
 
 			setTimeout(() => {
 				resetRevealCard()
-				proceed()
+				gotoNextValid()
 			}, 1000)
 		},
 		onError: (error) => {
