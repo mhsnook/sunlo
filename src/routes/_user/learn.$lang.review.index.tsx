@@ -25,7 +25,6 @@ import toast from 'react-hot-toast'
 import {
 	useInitialiseReviewStore,
 	useManifestLength,
-	useReviewStage,
 } from '@/lib/use-review-store'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
@@ -42,23 +41,23 @@ import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
-	component: ReviewPage,
+	component: ReviewPageSetup,
 })
 
-function ReviewPage() {
+function ReviewPageSetup() {
 	const { lang } = Route.useParams()
 	const { userId } = useAuth()
 	const { queryClient } = Route.useRouteContext()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
+	const dayString = todayString()
 	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
 		'user',
 		lang,
 		'review',
-		todayString(),
+		dayString,
 	])
-
 	const setManifest = useInitialiseReviewStore()
 
 	if (meta?.lang !== lang)
@@ -222,7 +221,7 @@ function ReviewPage() {
 				console.log(
 					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
 				)
-			setManifest(allCardsForToday)
+			setManifest(allCardsForToday, lang, dayString)
 
 			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
 			const clear2 = router.invalidate({ sync: true })

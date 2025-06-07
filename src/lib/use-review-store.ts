@@ -1,18 +1,24 @@
-import type { ReviewRow, ReviewStages, uuid } from '@/types/main'
+import { useReviewStore } from '@/components/review/review-context-provider'
+import type { DailyCacheKey, ReviewRow, ReviewStages, uuid } from '@/types/main'
 import { pids } from '@/types/main'
-import { create } from 'zustand'
+import { useMemo } from 'react'
+import { createStore, useStore } from 'zustand'
 
 type ReviewsInProgressMap = Record<uuid, ReviewRow | null>
 
-type ReviewStoreState = {
-	stage: ReviewStages
-	currentCardIndex: number
-	manifest: pids
-	manifestLength: number
-	reviewsMap: ReviewsInProgressMap
+const DEFAULT_PROPS = {
+	dayString: '',
+	lang: '',
+	stage: 0 as ReviewStages,
+	currentCardIndex: -1,
+	manifest: [] as pids,
+	manifestLength: 0,
+	reviewsMap: {} as ReviewsInProgressMap,
 }
 
-type ReviewStoreActions = {
+type ReviewProps = typeof DEFAULT_PROPS
+
+type ReviewActions = {
 	skipReviewUnreviewed: () => void
 	skipReviewAgains: () => void
 	gotoReviewUnreviewed: () => void
@@ -20,79 +26,62 @@ type ReviewStoreActions = {
 	gotoNextValid: () => void
 	gotoNext: () => void
 	gotoPrevious: () => void
-	init: (manifest: pids) => void
+	init: (manifest: pids, lang: string, dayString: string) => void
 	addReview: (review: ReviewRow) => void
 }
 
-const useReviewStore = create<
-	ReviewStoreState & { actions: ReviewStoreActions }
->((set) => ({
-	stage: 0,
-	currentCardIndex: -1,
-	manifest: [],
-	manifestLength: 0,
-	reviewsMap: {},
-	actions: {
-		skipReviewUnreviewed: () => set({ stage: 3 }),
-		skipReviewAgains: () => set({ stage: 5 }),
+export type ReviewState = ReviewProps & {
+	actions: ReviewActions
+}
 
-		gotoReviewUnreviewed: () =>
-			set((state) => ({
-				stage: 2,
-				currentCardIndex: getIndexOfNextUnreviewedCard(state),
-			})),
-		gotoReviewAgains: () =>
-			set((state) => ({
-				stage: 4,
-				currentCardIndex: getIndexOfNextAgainCard(state),
-			})),
+export type ReviewStore = ReturnType<typeof createReviewStore>
 
-		gotoNextValid: () =>
-			set((state) => ({
-				currentCardIndex:
-					state.stage < 3 ?
-						getIndexOfNextUnreviewedCard(state)
-					:	getIndexOfNextAgainCard(state),
-			})),
-		gotoNext: () =>
-			set((state) => ({ currentCardIndex: state.currentCardIndex + 1 })),
-		gotoPrevious: () =>
-			set((state) => ({ currentCardIndex: state.currentCardIndex - 1 })),
+export function createReviewStore(lang: string, dayString: string) {
+	return createStore<ReviewState>()((set) => ({
+		...DEFAULT_PROPS,
+		lang,
+		dayString,
+		actions: {
+			skipReviewUnreviewed: () => set({ stage: 3 }),
+			skipReviewAgains: () => set({ stage: 5 }),
 
-		init: (manifest: pids) =>
-			set((state) => {
-				return {
-					// all of these should be no-op if the data is already set
-					manifest: state.manifest.length === 0 ? manifest : state.manifest,
-					manifestLength:
-						state.manifestLength === 0 ? manifest.length : state.manifestLength,
+			gotoReviewUnreviewed: () =>
+				set((state) => ({
+					stage: 2,
+					currentCardIndex: getIndexOfNextUnreviewedCard(state),
+				})),
+			gotoReviewAgains: () =>
+				set((state) => ({
+					stage: 4,
+					currentCardIndex: getIndexOfNextAgainCard(state),
+				})),
+
+			gotoNextValid: () =>
+				set((state) => ({
 					currentCardIndex:
-						state.currentCardIndex === -1 ? 0 : state.currentCardIndex,
-					stage: state.stage === 0 ? 1 : state.stage,
-					reviewsMap:
-						state.reviewsMap ?
-							state.reviewsMap
-						:	manifest.reduce<ReviewsInProgressMap>(
-								(acc: ReviewsInProgressMap, pid) => {
-									acc[pid] = null
-									return acc
-								},
-								{}
-							),
-				}
-			}),
+						state.stage < 3 ?
+							getIndexOfNextUnreviewedCard(state)
+						:	getIndexOfNextAgainCard(state),
+				})),
+			gotoNext: () =>
+				set((state) => ({ currentCardIndex: state.currentCardIndex + 1 })),
+			gotoPrevious: () =>
+				set((state) => ({ currentCardIndex: state.currentCardIndex - 1 })),
 
-		addReview: (review: ReviewRow) =>
-			set((state) => ({
-				reviewsMap: {
-					...state.reviewsMap,
-					[review.phrase_id]: review,
-				},
-			})),
-	},
-}))
+					if (state.manifest.length) return state
 
-function getIndexOfNextUnreviewedCard(state: ReviewStoreState) {
+			addReview: (review: ReviewRow) =>
+				set((state) => ({
+					reviewsMap: {
+						...state.reviewsMap,
+						[review.phrase_id]: review,
+					},
+				})),
+		},
+	}))
+}
+
+function getIndexOfNextUnreviewedCard(state: ReviewState) {
 	const index = state.manifest.findIndex((pid, i) => {
 		// if we're currently at card 3 of 40, don't even check cards 0-3
 		// but if we're at 40/40 we should check from the start
@@ -104,7 +93,7 @@ function getIndexOfNextUnreviewedCard(state: ReviewStoreState) {
 	return index !== -1 ? index : state.manifestLength
 }
 
-function getIndexOfNextAgainCard(state: ReviewStoreState) {
+function getIndexOfNextAgainCard(state: ReviewState) {
 	const index = state.manifest.findIndex((_, i) => {
 		// we want first to check state.currentCardIndex + 1
 		const indexChecking =
@@ -116,23 +105,48 @@ function getIndexOfNextAgainCard(state: ReviewStoreState) {
 	return index !== -1 ? index : state.manifestLength
 }
 
-export const useReviewStage = () => useReviewStore((state) => state.stage)
+export const useReviewLang = (): string => {
+	return useReviewStore((store) => store.lang)
+}
 
-export const useCardIndex = () =>
-	useReviewStore((state) => state.currentCardIndex)
+export const useReviewDayString = (): string => {
+	return useReviewStore((store) => store.dayString)
+}
 
-export const useReviewByIndex = (index: number) =>
-	useReviewStore((state) => state.reviewsMap[state.manifest[index]])
+export const useReviewCacheKey = (): DailyCacheKey => {
+	const lang = useReviewLang()
+	const dayString = useReviewDayString()
+	return useMemo(() => ['user', lang, 'review', dayString], [lang, dayString])
+}
 
-export const usePidByIndex = (index: number) =>
-	useReviewStore((state) => state.manifest[index])
+export const useReviewStage = (): ReviewStages => {
+	return useReviewStore((state) => state.stage)
+}
 
-export const useManifestLength = () =>
-	useReviewStore((state) => state.manifestLength)
+export const useCardIndex = (): number => {
+	return useReviewStore((state) => state.currentCardIndex)
+}
 
-export const useInitialiseReviewStore = () =>
-	useReviewStore((state) => state.actions.init)
+export const useReviewByIndex = (index: number): ReviewRow | null => {
+	return useReviewStore((state) => state.reviewsMap[state.manifest[index]])
+}
 
-export const useReviewActions = () => useReviewStore((state) => state.actions)
+export const usePidByIndex = (index: number): uuid => {
+	return useReviewStore((state) => state.manifest[index])
+}
 
-export const getManifest = () => useReviewStore.getState().manifest
+export const useManifest = (): pids => {
+	return useReviewStore((state) => state.manifest)
+}
+
+export const useManifestLength = (): number => {
+	return useReviewStore((state) => state.manifestLength)
+}
+
+export const useInitialiseReviewStore = (): ReviewActions['init'] => {
+	return useReviewStore((state) => state.actions.init)
+}
+
+export const useReviewActions = (): ReviewActions => {
+	return useReviewStore((state) => state.actions)
+}
