@@ -1,4 +1,3 @@
-import { DailyCacheKey } from '@/types/main'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import SuccessCheckmark from '@/components/success-checkmark'
@@ -6,14 +5,12 @@ import {
 	useReviewActions,
 	useReviewStage,
 	useManifestLength,
+	useReviewCacheKey,
 } from '@/lib/use-review-store'
 import { useReviewsToday } from '@/lib/use-reviews'
 
-type ComponentProps = {
-	dailyCacheKey: DailyCacheKey
-}
-
-export function WhenComplete({ dailyCacheKey }: ComponentProps) {
+export function WhenComplete() {
+	const dailyCacheKey = useReviewCacheKey()
 	const { data: reviewsToday } = useReviewsToday(dailyCacheKey)
 	const manifestLength = useManifestLength()
 	const stage = useReviewStage()

@@ -1,5 +1,9 @@
-import { useReviewStage } from '@/lib/use-review-store'
-import { DailyCacheKey, TranslationRow, uuid } from '@/types/main'
+import {
+	useReviewCacheKey,
+	useReviewLang,
+	useReviewStage,
+} from '@/lib/use-review-store'
+import { TranslationRow, uuid } from '@/types/main'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -14,7 +18,6 @@ import { useLanguagePhrase } from '@/lib/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/lib/use-reviews'
 
 interface ReviewSingleCardProps {
-	dailyCacheKey: DailyCacheKey
 	pid: uuid
 }
 
@@ -23,11 +26,9 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-export function ReviewSingleCard({
-	dailyCacheKey,
-	pid,
-}: ReviewSingleCardProps) {
-	const lang = dailyCacheKey[1]
+export function ReviewSingleCard({ pid }: ReviewSingleCardProps) {
+	const dailyCacheKey = useReviewCacheKey()
+	const lang = useReviewLang()
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
 	const stage = useReviewStage()
