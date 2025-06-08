@@ -10,20 +10,20 @@ export function HeroSection() {
 	return (
 		<div
 			role="banner"
-			className="dark:from-background dark:to-muted relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 dark:via-slate-800"
+			className="dark:from-background dark:to-muted from-primary/30 via-background to-foresoft relative min-h-screen overflow-hidden bg-gradient-to-br dark:via-slate-800"
 		>
 			{/* Theme Toggle */}
 			<ThemeToggle />
 
 			{/* Subtle background pattern */}
 			<div className="absolute inset-0 opacity-20 dark:opacity-30">
-				<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.1)_1px,_transparent_1px)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.1)_1px,_transparent_1px)]"></div>
+				<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(0,0,0,0.5)_1px,_transparent_1px)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.3)_1px,_transparent_1px)]"></div>
 			</div>
 
 			{/* Floating elements for visual interest */}
-			<div className="absolute top-20 left-10 h-20 w-20 rounded-full bg-green-400/20 blur-xl dark:bg-green-400/30"></div>
-			<div className="absolute top-40 right-20 h-32 w-32 rounded-full bg-yellow-400/20 blur-xl dark:bg-yellow-400/30"></div>
-			<div className="absolute bottom-40 left-20 h-24 w-24 rounded-full bg-blue-400/20 blur-xl dark:bg-blue-400/30"></div>
+			<div className="absolute top-20 left-[5%] h-20 w-20 rounded-full bg-green-600/40 blur-xl dark:bg-green-400/30"></div>
+			<div className="absolute top-40 right-[5%] h-32 w-32 rounded-full bg-yellow-600/30 blur-xl dark:bg-yellow-400/30"></div>
+			<div className="absolute bottom-40 left-[7%] h-24 w-24 rounded-full bg-blue-600/30 blur-xl dark:bg-blue-400/30"></div>
 
 			<div className="relative z-10 container mx-auto px-4 py-16">
 				<div className="mx-auto max-w-5xl">
@@ -43,11 +43,11 @@ export function HeroSection() {
 							</div>
 						</div>
 
-						<h1 className="mb-6 bg-gradient-to-r from-white via-blue-200 to-indigo-200 bg-clip-text text-6xl font-bold tracking-tight text-transparent md:text-8xl dark:from-white dark:via-blue-200 dark:to-indigo-200">
+						<h1 className="from-foreground to-primary mb-6 bg-gradient-to-r bg-clip-text text-6xl font-bold tracking-tight text-transparent md:text-8xl dark:from-white dark:via-blue-200 dark:to-indigo-200">
 							Sunlo
 						</h1>
 
-						<p className="mx-auto mb-8 max-w-2xl text-2xl font-extralight text-slate-200 md:text-3xl dark:text-slate-300">
+						<p className="text-foreground mx-auto mb-8 max-w-2xl text-2xl font-extralight md:text-3xl dark:text-slate-300">
 							Social language learning that brings people&nbsp;together
 						</p>
 					</div>
@@ -56,43 +56,43 @@ export function HeroSection() {
 					<div className="mb-16 text-center">
 						{/* Feature highlights */}
 						<div className="mx-auto mb-12 grid max-w-4xl gap-6 md:grid-cols-3">
-							<Card className="-sm border-white/20 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
-									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-400/20 dark:bg-green-400/30">
+									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-700/70 dark:bg-green-400/30">
 										<BookOpen className="h-6 w-6 text-green-300 dark:text-green-200" />
 									</div>
-									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold opacity-80">
 										Personal Flash Cards
 									</h2>
-									<p className="text-sm text-slate-200 dark:text-slate-300">
+									<p className="text-sm opacity-80">
 										Create custom cards tailored to your learning style
 									</p>
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
-									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-400/20 dark:bg-blue-400/30">
+									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-700/70 dark:bg-blue-400/30">
 										<Users className="h-6 w-6 text-blue-300 dark:text-blue-200" />
 									</div>
-									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold opacity-80">
 										Community Pool
 									</h2>
-									<p className="text-sm text-slate-200 dark:text-slate-300">
+									<p className="text-sm opacity-80">
 										Access thousands of crowd-sourced learning materials
 									</p>
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
 								<div className="flex flex-col items-center text-center">
-									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-400/20 dark:bg-yellow-400/30">
+									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-700/70 dark:bg-yellow-400/30">
 										<Heart className="h-6 w-6 text-yellow-300 dark:text-yellow-200" />
 									</div>
-									<h2 className="mb-2 font-semibold text-white dark:text-slate-100">
+									<h2 className="mb-2 font-semibold opacity-80">
 										Help Friends
 									</h2>
-									<p className="text-sm text-slate-200 dark:text-slate-300">
+									<p className="text-sm opacity-80">
 										Share essential phrases and learn together
 									</p>
 								</div>
@@ -107,7 +107,7 @@ export function HeroSection() {
 								to="/signup"
 								className={cn(
 									buttonVariants({ size: 'lg' }),
-									'group w-full transform rounded-full border-2 border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:from-blue-500 dark:to-indigo-500 dark:hover:from-blue-600 dark:hover:to-indigo-600'
+									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform rounded-full border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
 								)}
 							>
 								Start Learning Free
@@ -117,7 +117,7 @@ export function HeroSection() {
 								to="/login"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'outline' }),
-									'w-full rounded-full border-2 border-white/30 bg-transparent text-lg font-semibold text-white transition-all duration-300 hover:bg-white/10 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+									'border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full rounded-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
 								Sign In
@@ -125,13 +125,13 @@ export function HeroSection() {
 						</div>
 
 						{/* Trust indicators */}
-						<div className="flex flex-col items-center justify-center gap-6 text-sm text-slate-300 sm:flex-row dark:text-slate-400">
+						<div className="text-muted-foreground flex flex-col items-center justify-center gap-6 text-sm sm:flex-row">
 							<div className="flex items-center gap-2">
 								<div className="flex">
 									{[...Array(5)].map((_, i) => (
 										<Star
 											key={i}
-											className="h-4 w-4 fill-yellow-400 text-yellow-400 dark:fill-yellow-300 dark:text-yellow-300"
+											className="h-4 w-4 fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300"
 										/>
 									))}
 								</div>
