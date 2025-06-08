@@ -81,7 +81,7 @@ export function FooterNavigation() {
 								<Link
 									className={cn(
 										buttonVariants(),
-										'group font-space-grotesk w-full transform rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-indigo-600 hover:shadow-xl'
+										'group font-space-grotesk from-primary hover:to-primary w-full transform rounded-full bg-gradient-to-r to-indigo-500 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:shadow-xl'
 									)}
 									to="/signup"
 								>

@@ -188,7 +188,7 @@ export function SpacedRepetitionSection() {
 							to="/signup"
 							className={cn(
 								buttonVariants({ size: 'lg' }),
-								'transform rounded-full bg-gradient-to-r from-purple-500 to-violet-500 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl'
+								'from-primary transform rounded-full bg-gradient-to-r to-violet-500 font-semibold shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-600 hover:to-violet-600 hover:shadow-xl'
 							)}
 						>
 							Start Smart Learning
