@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { FlashCardReviewSession } from '@/components/review/flash-card-review-session'
 import { useManifest, useReviewStage } from '@/lib/use-review-store'
 import { todayString } from '@/lib/utils'
@@ -28,10 +28,11 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 })
 
 function ReviewPage() {
-	const reviewStage = useReviewStage()
 	const manifest = useManifest()
 
-	if (typeof reviewStage !== 'number' || typeof manifest !== 'object')
-		return <Loader />
+	if (typeof manifest !== 'object') return <Loader />
+
+	if (!manifest.length) return <Navigate to=".." />
+
 	return <FlashCardReviewSession />
 }
