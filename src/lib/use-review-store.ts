@@ -1,8 +1,14 @@
-import { useReviewStore } from '@/components/review/review-context-provider'
-import type { DailyCacheKey, ReviewRow, ReviewStages, uuid } from '@/types/main'
-import { pids } from '@/types/main'
 import { useMemo } from 'react'
-import { createStore, useStore } from 'zustand'
+import { createStore } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { useReviewStore } from '@/components/review/review-context-provider'
+import type {
+	DailyCacheKey,
+	ReviewRow,
+	ReviewStages,
+	pids,
+	uuid,
+} from '@/types/main'
 
 type ReviewsInProgressMap = Record<uuid, ReviewRow | null>
 
@@ -37,48 +43,91 @@ export type ReviewState = ReviewProps & {
 export type ReviewStore = ReturnType<typeof createReviewStore>
 
 export function createReviewStore(lang: string, dayString: string) {
-	return createStore<ReviewState>()((set) => ({
-		...DEFAULT_PROPS,
-		lang,
-		dayString,
-		actions: {
-			skipReviewUnreviewed: () => set({ stage: 3 }),
-			skipReviewAgains: () => set({ stage: 5 }),
+	return createStore<ReviewState>()(
+		persist<ReviewState>(
+			(set) => ({
+				...DEFAULT_PROPS,
+				lang,
+				dayString,
+				actions: {
+					skipReviewUnreviewed: () => set({ stage: 3 }),
+					skipReviewAgains: () => set({ stage: 5 }),
 
-			gotoReviewUnreviewed: () =>
-				set((state) => ({
-					stage: 2,
-					currentCardIndex: getIndexOfNextUnreviewedCard(state),
-				})),
-			gotoReviewAgains: () =>
-				set((state) => ({
-					stage: 4,
-					currentCardIndex: getIndexOfNextAgainCard(state),
-				})),
+					gotoReviewUnreviewed: () =>
+						set((state) => ({
+							stage: 2,
+							currentCardIndex: getIndexOfNextUnreviewedCard(state),
+						})),
+					gotoReviewAgains: () =>
+						set((state) => ({
+							stage: 4,
+							currentCardIndex: getIndexOfNextAgainCard(state),
+						})),
 
-			gotoNextValid: () =>
-				set((state) => ({
-					currentCardIndex:
-						state.stage < 3 ?
-							getIndexOfNextUnreviewedCard(state)
-						:	getIndexOfNextAgainCard(state),
-				})),
-			gotoNext: () =>
-				set((state) => ({ currentCardIndex: state.currentCardIndex + 1 })),
-			gotoPrevious: () =>
-				set((state) => ({ currentCardIndex: state.currentCardIndex - 1 })),
+					gotoNextValid: () =>
+						set((state) => ({
+							currentCardIndex:
+								state.stage < 3 ?
+									getIndexOfNextUnreviewedCard(state)
+								:	getIndexOfNextAgainCard(state),
+						})),
+					gotoNext: () =>
+						set((state) => ({ currentCardIndex: state.currentCardIndex + 1 })),
+					gotoPrevious: () =>
+						set((state) => ({ currentCardIndex: state.currentCardIndex - 1 })),
 
-					if (state.manifest.length) return state
+					init: (manifest: pids, lang: string, dayString: string) =>
+						set((state) => {
+							console.log(`The set fn inside the init fn`, manifest)
+							// if the lang doesn't match, we have an error
+							if (lang !== state.lang)
+								throw new Error(
+									'Mismatching language codes between route param and context provider (active state)'
+								)
+							// ensure we only init once
+							if (state.manifest.length) return state
+							return {
+								// now we'll just assume these can be wiped out
+								lang,
+								dayString,
+								manifest,
+								manifestLength: manifest.length,
+								currentCardIndex: 0,
+								stage: 1,
+								reviewsMap: manifest.reduce<ReviewsInProgressMap>(
+									(acc: ReviewsInProgressMap, pid) => {
+										acc[pid] = null
+										return acc
+									},
+									{}
+								),
+							}
+						}),
 
-			addReview: (review: ReviewRow) =>
-				set((state) => ({
-					reviewsMap: {
-						...state.reviewsMap,
-						[review.phrase_id]: review,
-					},
-				})),
-		},
-	}))
+					addReview: (review: ReviewRow) =>
+						set((state) => ({
+							reviewsMap: {
+								...state.reviewsMap,
+								[review.phrase_id]: review,
+							},
+						})),
+				},
+			}),
+			{
+				name: `review-store-${lang}`,
+				partialize: (state) => ({
+					// Only persist the state you want
+					lang: state.lang,
+					dayString: state.dayString,
+					stage: state.stage,
+					currentCardIndex: state.currentCardIndex,
+					manifest: state.manifest,
+					manifestLength: state.manifestLength,
+					reviewsMap: state.reviewsMap,
+				}),
+			}
+		)
+	)
 }
 
 function getIndexOfNextUnreviewedCard(state: ReviewState) {
