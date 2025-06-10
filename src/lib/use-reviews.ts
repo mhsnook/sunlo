@@ -1,11 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+	useMutation,
+	useQuery,
+	useQueryClient,
+	useSuspenseQuery,
+} from '@tanstack/react-query'
 import supabase from './supabase-client'
 import { useAuth } from './hooks'
 import {
 	DailyCacheKey,
 	ReviewInsert,
 	ReviewRow,
-	ReviewsLoaded,
 	ReviewsMap,
 	ReviewUpdate,
 	uuid,
@@ -33,18 +37,10 @@ const updateReview = async (submitData: ReviewUpdate) => {
 	return data
 }
 
-export function reviewsMapToLoaded(map: ReviewsMap): ReviewsLoaded {
-	return {
-		map,
-		totalReviewed: Object.keys(map).length,
-		totalAgain: Object.values(map).filter((r) => r.score === 1).length,
-	}
-}
-
 export function reviewsQuery(userId: uuid, dailyCacheKey: DailyCacheKey) {
 	return {
 		queryKey: dailyCacheKey,
-		queryFn: async (): Promise<ReviewsLoaded> => {
+		queryFn: async (): Promise<ReviewsMap> => {
 			const { data } = await supabase
 				.from('user_card_review')
 				.select()
@@ -66,7 +62,7 @@ export function reviewsQuery(userId: uuid, dailyCacheKey: DailyCacheKey) {
 						'phrase_id'
 					)
 
-			return reviewsMapToLoaded(map)
+			return map
 		},
 	}
 }
@@ -79,12 +75,28 @@ export function useReviewsToday(dailyCacheKey: DailyCacheKey) {
 	})
 }
 
+type ReviewStats = {
+	reviewed: number
+	again: number
+}
+
+export function useReviewsTodayStats(dailyCacheKey: DailyCacheKey) {
+	const { userId } = useAuth()
+	return useSuspenseQuery<ReviewsMap, Error, ReviewStats>({
+		...reviewsQuery(userId!, dailyCacheKey),
+		select: (data: ReviewsMap): ReviewStats => ({
+			reviewed: Object.keys(data).length,
+			again: Object.values(data).filter((r) => r.score === 1).length,
+		}),
+	})
+}
+
 export function useOneReviewToday(dailyCacheKey: DailyCacheKey, pid: uuid) {
 	const { userId } = useAuth()
 	return useQuery({
 		...reviewsQuery(userId!, dailyCacheKey),
 		enabled: !!userId && !!dailyCacheKey && !!pid,
-		select: (data: ReviewsLoaded) => data.map[pid],
+		select: (data: ReviewsMap) => data[pid],
 	})
 }
 
@@ -96,7 +108,7 @@ export function useReviewMutation(
 	const queryClient = useQueryClient()
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
 	const stage = useReviewStage()
-	const { gotoNextValid } = useReviewActions()
+	const { gotoNextValid, addReview } = useReviewActions()
 
 	return useMutation<ReviewRow, PostgrestError, { score: number }>({
 		mutationKey: [...dailyCacheKey, pid],
@@ -131,9 +143,11 @@ export function useReviewMutation(
 			// this is done instead of using invalidateQueries... why? IDK.
 			// it does ensure that the local cache is updated even when the db
 			// data is not changed (e.g. re-reviewing a card)
-			queryClient.setQueryData<ReviewsLoaded>(dailyCacheKey, (oldData) => {
-				return reviewsMapToLoaded({ ...oldData?.map, [pid]: mergedData })
+			queryClient.setQueryData<ReviewsMap>(dailyCacheKey, (oldData) => {
+				return { ...oldData, [pid]: mergedData }
 			})
+
+			addReview(mergedData)
 
 			setTimeout(() => {
 				resetRevealCard()
