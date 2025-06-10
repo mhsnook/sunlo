@@ -7,19 +7,20 @@ import {
 	useManifestLength,
 	useReviewCacheKey,
 } from '@/lib/use-review-store'
-import { useReviewsToday } from '@/lib/use-reviews'
+import { useReviewsToday, useReviewsTodayStats } from '@/lib/use-reviews'
 
 export function WhenComplete() {
 	const dailyCacheKey = useReviewCacheKey()
 	const { data: reviewsToday } = useReviewsToday(dailyCacheKey)
+	const { data: reviewStats } = useReviewsTodayStats(dailyCacheKey)
 	const manifestLength = useManifestLength()
 	const stage = useReviewStage()
 	const actions = useReviewActions()
 
 	if (!reviewsToday || !manifestLength || !stage) return null
 
-	const unreviewedCount = manifestLength - reviewsToday.totalReviewed
-	const againCount = reviewsToday.totalAgain
+	const unreviewedCount = manifestLength - reviewStats.reviewed
+	const againCount = reviewStats.again
 	const showWhich =
 		unreviewedCount && stage < 2 ? 'a'
 		: againCount && stage < 4 ? 'b'
@@ -42,7 +43,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewUnreviewed
+								actions.gotoReviewUnreviewed()
 							}}
 						>
 							Review Skipped cards ({unreviewedCount})
