@@ -1,9 +1,10 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { Brain, Carrot, Loader2, LucideIcon, TrendingUp } from 'lucide-react'
+import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { PhraseTinyCard } from '@/components/phrase-tiny-card'
+import { Loader } from '@/components/ui/loader'
 
 type PhraseSectionProps = {
 	description: string
@@ -48,7 +49,7 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 				<CardTitle>Recommended For You</CardTitle>
 			</CardHeader>
 			{pids === null ?
-				<Loader2 />
+				<Loader />
 			:	<CardContent className="space-y-4">
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
