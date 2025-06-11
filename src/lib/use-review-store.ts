@@ -120,7 +120,7 @@ export function createReviewStore(lang: string, dayString: string) {
 					},
 				}),
 				{
-					name: `review-store-${lang}`,
+					name: `sunlo-review:${lang}-${dayString}`,
 					partialize: (state): ReviewProps => ({
 						lang: state.lang,
 						dayString: state.dayString,
