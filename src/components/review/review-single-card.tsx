@@ -4,7 +4,7 @@ import {
 	useReviewStage,
 } from '@/lib/use-review-store'
 import { TranslationRow, uuid } from '@/types/main'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -32,9 +32,8 @@ export function ReviewSingleCard({ pid }: ReviewSingleCardProps) {
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
 	const stage = useReviewStage()
-	const { mutate, isPending } = useReviewMutation(pid, dailyCacheKey, () =>
-		setRevealCard(false)
-	)
+	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
+	const { mutate, isPending } = useReviewMutation(pid, dailyCacheKey, closeCard)
 
 	const { data: phrase } = useLanguagePhrase(pid, lang)
 
