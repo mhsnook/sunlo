@@ -9,6 +9,7 @@ import { LinkType } from '@/types/main'
 import { useLinks } from '@/hooks/links'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
+import { memo } from 'react'
 
 export function AppNav() {
 	const matches = useMatches()
@@ -16,7 +17,11 @@ export function AppNav() {
 	return <Nav matches={matches} />
 }
 
-function Nav({ matches }: { matches: ReturnType<typeof useMatches> }) {
+const Nav = memo(function Nav({
+	matches,
+}: {
+	matches: ReturnType<typeof useMatches>
+}) {
 	const match = matches.findLast((m) => !!m?.loaderData?.appnav)
 	const links = useLinks(match?.loaderData?.appnav)
 	const [ref, entry] = useIntersectionObserver({
@@ -64,4 +69,4 @@ function Nav({ matches }: { matches: ReturnType<typeof useMatches> }) {
 			</div>
 		</>
 	)
-}
+})
