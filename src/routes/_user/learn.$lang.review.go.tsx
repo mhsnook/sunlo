@@ -23,23 +23,21 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 			auth: { userId },
 		},
 	}) => {
-		const dailyCacheKey: DailyCacheKey = ['user', lang, 'review', todayString()]
-		const reviews = await queryClient.ensureQueryData(
-			reviewsQuery(userId!, dailyCacheKey)
+		const dayString: string = todayString()
+		const _reviews = await queryClient.ensureQueryData(
+			reviewsQuery(userId!, ['user', lang, 'review', dayString])
 		)
 
 		return {
 			appnav: [],
-			dailyCacheKey,
+			dayString,
 		}
 	},
 })
 
 function ReviewPage() {
 	const manifest = useManifest()
-
 	if (typeof manifest !== 'object') return <Loader />
-
 	if (!manifest.length) return <Navigate to=".." />
 
 	return <FlashCardReviewSession />
