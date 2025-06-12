@@ -33,7 +33,7 @@ const statusStrings = {
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card activated',
-		icon: () => <Zap className="size-4 text-yellow-500" aria-label="Active" />,
+		icon: () => <Zap className="size-4 text-yellow-600" aria-label="Active" />,
 	},
 	learned: {
 		short: 'learned',
@@ -41,7 +41,7 @@ const statusStrings = {
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "&ldquo;"learned"',
 		icon: () => (
-			<Sparkles className="size-4 text-green-500" aria-label="Learned" />
+			<Sparkles className="size-4 text-green-600" aria-label="Learned" />
 		),
 	},
 	skipped: {
@@ -50,7 +50,7 @@ const statusStrings = {
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
 		icon: () => (
-			<CircleMinus className="size-4 text-gray-500" aria-label="Skipped" />
+			<CircleMinus className="size-4 text-gray-600" aria-label="Skipped" />
 		),
 	},
 	nocard: {
@@ -58,7 +58,7 @@ const statusStrings = {
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => <Plus className="size-4 text-gray-500" aria-label="Add card" />,
+		icon: () => <Plus className="size-4 text-gray-600" aria-label="Add card" />,
 	},
 	nodeck: {
 		short: '...',
@@ -66,7 +66,7 @@ const statusStrings = {
 		actionSecond: 'Create a new deck to learn this phrase and more',
 		done: 'Deck archived',
 		icon: () => (
-			<Plus className="size-4 text-gray-500" aria-label="Start learning" />
+			<Plus className="size-4 text-gray-600" aria-label="Start learning" />
 		),
 	},
 }
@@ -77,7 +77,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 			{statusStrings[choice].icon()}
 			<div>
 				<p className="font-bold">{statusStrings[choice].action}</p>
-				<p className="text-muted-foreground text-sm">
+				<p className="text-opacity-80 text-sm">
 					{statusStrings[choice].actionSecond}
 				</p>
 			</div>
@@ -172,20 +172,32 @@ export function CardStatusDropdown({
 						</DropdownMenuItem>
 					:	<>
 							<DropdownMenuItem
-								disabled={card?.status === 'active'}
-								onClick={() => cardMutation.mutate({ status: 'active' })}
+								onClick={() =>
+									card?.status === 'active' ?
+										false
+									:	cardMutation.mutate({ status: 'active' })
+								}
+								className={card?.status === 'active' ? 'bg-primary/30' : ''}
 							>
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								disabled={card?.status === 'learned'}
-								onClick={() => cardMutation.mutate({ status: 'learned' })}
+								onClick={() =>
+									card?.status === 'learned' ?
+										false
+									:	cardMutation.mutate({ status: 'learned' })
+								}
+								className={card?.status === 'learned' ? 'bg-primary/30' : ''}
 							>
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								disabled={card?.status === 'skipped'}
-								onClick={() => cardMutation.mutate({ status: 'skipped' })}
+								onClick={() =>
+									card?.status === 'skipped' ?
+										false
+									:	cardMutation.mutate({ status: 'skipped' })
+								}
+								className={card?.status === 'skipped' ? 'bg-primary/30' : ''}
 							>
 								<StatusSpan choice="skipped" />
 							</DropdownMenuItem>
