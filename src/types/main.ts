@@ -151,6 +151,10 @@ export type CardFull = CardMeta & {
 	reviews: Array<ReviewRow>
 }
 
+export type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
+	manifest: Array<uuid>
+}
+
 export type PublicProfile = Tables<'public_profile'>
 export type ProfileRow = Tables<'user_profile'>
 export type ProfileInsert = TablesInsert<'user_profile'>

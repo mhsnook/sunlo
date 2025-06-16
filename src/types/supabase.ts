@@ -558,6 +558,45 @@ export type Database = {
           },
         ]
       }
+      user_deck_review_state: {
+        Row: {
+          created_at: string
+          day_session: string
+          lang: string
+          manifest: Json | null
+          uid: string
+        }
+        Insert: {
+          created_at?: string
+          day_session: string
+          lang: string
+          manifest?: Json | null
+          uid?: string
+        }
+        Update: {
+          created_at?: string
+          day_session?: string
+          lang?: string
+          manifest?: Json | null
+          uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_deck_review_state_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck"
+            referencedColumns: ["lang", "uid"]
+          },
+          {
+            foreignKeyName: "user_deck_review_state_lang_uid_fkey"
+            columns: ["lang", "uid"]
+            isOneToOne: false
+            referencedRelation: "user_deck_plus"
+            referencedColumns: ["lang", "uid"]
+          },
+        ]
+      }
       user_profile: {
         Row: {
           avatar_url: string | null
