@@ -6,7 +6,6 @@ import {
 	useReviewStage,
 } from '@/lib/use-review-store'
 import { todayString } from '@/lib/utils'
-import { DailyCacheKey } from '@/types/main'
 import { reviewsQuery } from '@/lib/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
