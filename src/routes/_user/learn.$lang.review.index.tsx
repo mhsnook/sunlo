@@ -1,10 +1,5 @@
 import { DailyCacheKey, pids } from '@/types/main'
-import {
-	createFileRoute,
-	Navigate,
-	useNavigate,
-	useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
 	Card,
 	CardContent,
@@ -31,6 +26,7 @@ import toast from 'react-hot-toast'
 import {
 	useInitialiseReviewStore,
 	useManifestLength,
+	useReviewDayString,
 } from '@/lib/use-review-store'
 import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
@@ -45,7 +41,7 @@ import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
-import { useDailyReviewState } from '@/lib/use-reviews'
+import { useDailyReviewState, useReviewsTodayStats } from '@/lib/use-reviews'
 import dayjs from 'dayjs'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
@@ -56,10 +52,11 @@ function ReviewPageSetup() {
 	const { lang } = Route.useParams()
 	const { userId } = useAuth()
 	const { queryClient } = Route.useRouteContext()
+	const manifestLength = useManifestLength()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
-	const [dayString] = useState(() => todayString())
+	const dayString = useReviewDayString()
 	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
 		'user',
 		lang,
@@ -196,7 +193,6 @@ function ReviewPageSetup() {
 	)
 
 	const countSurplusOrDeficit = freshCards.length - countNeeded
-	const router = useRouter()
 	const { mutate, isPending } = useMutation({
 		mutationKey: [...dailyCacheKey, 'create'],
 		mutationFn: async () => {
@@ -256,42 +252,21 @@ function ReviewPageSetup() {
 				)
 
 			setManifest(allCardsForToday, lang, dayString)
-
-			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
-			const clear2 = router.invalidate({ sync: true })
-			await Promise.all([clear1, clear2])
+			await queryClient.invalidateQueries({ queryKey: ['user', lang] })
 		},
 	})
-
-	const manifestLength = useManifestLength()
 
 	if (manifestLength)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	if (manifestToRestore !== null)
 		return (
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex flex-row justify-between">
-						<div>Get Ready to review your {languages[lang]} cards</div>
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					<p>
-						You already have a review in progress for today (
-						{dayjs(dayString).format('dddd')}). Continue?
-					</p>
-				</CardContent>
-				<CardFooter>
-					<Button
-						onClick={() =>
-							setManifest(manifestToRestore.manifest, lang, dayString)
-						}
-					>
-						Continue
-					</Button>
-				</CardFooter>
-			</Card>
+			<ContinueReview
+				continueReview={() =>
+					setManifest(manifestToRestore.manifest, lang, dayString)
+				}
+				manifestLength={manifestToRestore.manifest.length}
+			/>
 		)
 
 	return (
@@ -459,6 +434,51 @@ function ReviewPageSetup() {
 					</>
 				}
 			</CardContent>
+		</Card>
+	)
+}
+
+type ContinueReviewProps = {
+	continueReview: () => void
+	manifestLength: number
+}
+
+function ContinueReview({
+	continueReview,
+	manifestLength,
+}: ContinueReviewProps) {
+	const dayString = useReviewDayString()
+	const { lang } = Route.useParams()
+	const { data: stats } = useReviewsTodayStats([
+		'user',
+		lang,
+		'review',
+		dayString,
+	])
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="flex flex-row justify-between">
+					<div>Get Ready to review your {languages[lang]} cards</div>
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<p>
+					{dayjs(dayString).format('dddd')}: You already have a review in
+					progres for today.
+				</p>
+				<p>
+					Your in-progress session has {manifestLength} cards in it, and you've
+					already reviewed {stats.reviewed} of them. Continue where you left
+					off?
+				</p>
+			</CardContent>
+			<CardFooter>
+				<Button size="lg" onClick={continueReview}>
+					Continue
+				</Button>
+			</CardFooter>
 		</Card>
 	)
 }
