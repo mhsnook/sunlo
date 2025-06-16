@@ -11,6 +11,7 @@ import {
 	ReviewInsert,
 	ReviewRow,
 	ReviewsMap,
+	ReviewStateManifestRow,
 	ReviewUpdate,
 	uuid,
 } from '@/types/main'
@@ -65,6 +66,33 @@ export function reviewsQuery(userId: uuid, dailyCacheKey: DailyCacheKey) {
 			return map
 		},
 	}
+}
+
+export function useDailyReviewState(
+	uid: uuid,
+	lang: string,
+	day_session: string
+) {
+	return useSuspenseQuery({
+		queryKey: ['user', lang, 'review', day_session, uid, 'manifest'],
+		queryFn: async () =>
+			(
+				await supabase
+					.from('user_deck_review_state')
+					.select()
+					.match({
+						uid,
+						lang,
+						day_session,
+					})
+					.throwOnError()
+					.maybeSingle()
+			).data as ReviewStateManifestRow | null,
+		gcTime: Infinity,
+		staleTime: Infinity,
+		refetchOnMount: true,
+		refetchOnReconnect: true,
+	})
 }
 
 export function useReviewsToday(dailyCacheKey: DailyCacheKey) {

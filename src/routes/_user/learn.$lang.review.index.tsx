@@ -5,7 +5,13 @@ import {
 	useNavigate,
 	useRouter,
 } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+	Card,
+	CardContent,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 import languages from '@/lib/languages'
 import {
 	BookOpen,
@@ -39,6 +45,8 @@ import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
+import { useDailyReviewState } from '@/lib/use-reviews'
+import dayjs from 'dayjs'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -51,7 +59,7 @@ function ReviewPageSetup() {
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
-	const dayString = todayString()
+	const [dayString] = useState(() => todayString())
 	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
 		'user',
 		lang,
@@ -59,6 +67,11 @@ function ReviewPageSetup() {
 		dayString,
 	])
 	const setManifest = useInitialiseReviewStore()
+	const { data: manifestToRestore } = useDailyReviewState(
+		userId!,
+		lang,
+		dayString
+	)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
@@ -184,7 +197,6 @@ function ReviewPageSetup() {
 
 	const countSurplusOrDeficit = freshCards.length - countNeeded
 	const router = useRouter()
-	const navigate = useNavigate({ from: Route.fullPath })
 	const { mutate, isPending } = useMutation({
 		mutationKey: [...dailyCacheKey, 'create'],
 		mutationFn: async () => {
@@ -207,10 +219,22 @@ function ReviewPageSetup() {
 					`Error creating cards: expected ${cardsToCreate.length} but got ${newCardsCreated.length}`
 				)
 			}
+			const { data: data2 } = await supabase
+				.from('user_deck_review_state')
+				.insert({
+					lang,
+					day_session: dayString,
+					uid: userId!,
+					manifest: allCardsForToday,
+				})
+				.throwOnError()
+				.select()
+				.single()
 			return {
 				total: allCardsForToday.length,
 				cards_fresh: freshCards.length,
 				cards_created: newCardsCreated.length,
+				manifest: data2?.manifest,
 			}
 		},
 		onSuccess: async (sums) => {
@@ -221,12 +245,21 @@ function ReviewPageSetup() {
 				console.log(
 					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
 				)
+			if (
+				!Array.isArray(sums.manifest) ||
+				sums.manifest.length !== allCardsForToday.length
+			)
+				console.log(
+					`Alert: unexpected mismatch between manifest before and after creation: ${allCardsForToday.length}, ${sums.manifest.length}`,
+					allCardsForToday,
+					sums.manifest
+				)
+
 			setManifest(allCardsForToday, lang, dayString)
 
 			const clear1 = queryClient.invalidateQueries({ queryKey: ['user', lang] })
 			const clear2 = router.invalidate({ sync: true })
 			await Promise.all([clear1, clear2])
-			void navigate({ to: './go' })
 		},
 	})
 
@@ -234,6 +267,32 @@ function ReviewPageSetup() {
 
 	if (manifestLength)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+
+	if (manifestToRestore !== null)
+		return (
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex flex-row justify-between">
+						<div>Get Ready to review your {languages[lang]} cards</div>
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<p>
+						You already have a review in progress for today (
+						{dayjs(dayString).format('dddd')}). Continue?
+					</p>
+				</CardContent>
+				<CardFooter>
+					<Button
+						onClick={() =>
+							setManifest(manifestToRestore.manifest, lang, dayString)
+						}
+					>
+						Continue
+					</Button>
+				</CardFooter>
+			</Card>
+		)
 
 	return (
 		<Card>
