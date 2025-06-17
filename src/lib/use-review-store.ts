@@ -50,6 +50,7 @@ export function createReviewStore(lang: string, dayString: string) {
 					...DEFAULT_PROPS,
 					lang,
 					dayString,
+					dailyCacheKey: ['user', lang, 'review', dayString],
 					actions: {
 						skipReviewUnreviewed: () => set({ stage: 3 }),
 						skipReviewAgains: () => set({ stage: 5 }),

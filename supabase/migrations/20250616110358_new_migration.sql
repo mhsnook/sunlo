@@ -1,7 +1,7 @@
 create table "public"."user_deck_review_state" (
     "lang" character varying not null,
     "uid" uuid not null default auth.uid(),
-    "day_session" character varying not null,
+    "day_session" date not null,
     "created_at" timestamp with time zone not null default now(),
     "manifest" jsonb
 );
@@ -16,22 +16,6 @@ alter table "public"."user_deck_review_state" add constraint "user_deck_review_s
 alter table "public"."user_deck_review_state" add constraint "user_deck_review_state_lang_uid_fkey" FOREIGN KEY (lang, uid) REFERENCES user_deck(lang, uid) ON UPDATE CASCADE ON DELETE CASCADE not valid;
 
 alter table "public"."user_deck_review_state" validate constraint "user_deck_review_state_lang_uid_fkey";
-
-grant delete on table "public"."user_deck_review_state" to "anon";
-
-grant insert on table "public"."user_deck_review_state" to "anon";
-
-grant references on table "public"."user_deck_review_state" to "anon";
-
-grant select on table "public"."user_deck_review_state" to "anon";
-
-grant trigger on table "public"."user_deck_review_state" to "anon";
-
-grant truncate on table "public"."user_deck_review_state" to "anon";
-
-grant update on table "public"."user_deck_review_state" to "anon";
-
-grant delete on table "public"."user_deck_review_state" to "authenticated";
 
 grant insert on table "public"."user_deck_review_state" to "authenticated";
 
