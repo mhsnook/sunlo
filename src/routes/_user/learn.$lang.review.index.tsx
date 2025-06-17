@@ -1,4 +1,4 @@
-import { DailyCacheKey, pids } from '@/types/main'
+import { pids, uuid } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
 	Card,
@@ -25,10 +25,10 @@ import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
 	useInitialiseReviewStore,
-	useManifestLength,
 	useReviewDayString,
+	useReviewStage,
 } from '@/lib/use-review-store'
-import { arrayDifference, arrayUnion, min0, todayString } from '@/lib/utils'
+import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckMeta } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
@@ -41,7 +41,7 @@ import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
-import { useDailyReviewState, useReviewsTodayStats } from '@/lib/use-reviews'
+import { useReviewsToday, useReviewsTodayStats } from '@/lib/use-reviews'
 import dayjs from 'dayjs'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
@@ -50,25 +50,15 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 
 function ReviewPageSetup() {
 	const { lang } = Route.useParams()
+	const dayString = useReviewDayString()
+	const stage = useReviewStage()
 	const { userId } = useAuth()
 	const { queryClient } = Route.useRouteContext()
-	const manifestLength = useManifestLength()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
-	const dayString = useReviewDayString()
-	const [dailyCacheKey] = useState<DailyCacheKey>(() => [
-		'user',
-		lang,
-		'review',
-		dayString,
-	])
 	const setManifest = useInitialiseReviewStore()
-	const { data: manifestToRestore } = useDailyReviewState(
-		userId!,
-		lang,
-		dayString
-	)
+	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
@@ -194,7 +184,7 @@ function ReviewPageSetup() {
 
 	const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
-		mutationKey: [...dailyCacheKey, 'create'],
+		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
 			const { data } = await supabase
 				.from('user_card')
@@ -226,11 +216,14 @@ function ReviewPageSetup() {
 				.throwOnError()
 				.select()
 				.single()
+
+			// console.log(`I made the manifest:`, data2)
+
 			return {
 				total: allCardsForToday.length,
 				cards_fresh: freshCards.length,
 				cards_created: newCardsCreated.length,
-				manifest: data2?.manifest,
+				manifest: data2?.manifest as Array<uuid>,
 			}
 		},
 		onSuccess: async (sums) => {
@@ -246,25 +239,25 @@ function ReviewPageSetup() {
 				sums.manifest.length !== allCardsForToday.length
 			)
 				console.log(
-					`Alert: unexpected mismatch between manifest before and after creation: ${allCardsForToday.length}, ${sums.manifest.length}`,
+					`Alert: unexpected mismatch between manifest before and after creation: ${allCardsForToday.length}, ${sums.manifest?.length}`,
 					allCardsForToday,
 					sums.manifest
 				)
 
-			setManifest(allCardsForToday, lang, dayString)
-			await queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			await queryClient.refetchQueries({ queryKey: ['user', lang] })
+
+			setManifest(lang, dayString)
 		},
 	})
 
-	if (manifestLength)
+	// stage === 0 until the init fn runs
+	if (manifestToRestore && stage)
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	if (manifestToRestore !== null)
 		return (
 			<ContinueReview
-				continueReview={() =>
-					setManifest(manifestToRestore.manifest, lang, dayString)
-				}
+				continueReview={() => setManifest(lang, dayString)}
 				manifestLength={manifestToRestore.manifest.length}
 			/>
 		)
@@ -449,12 +442,7 @@ function ContinueReview({
 }: ContinueReviewProps) {
 	const dayString = useReviewDayString()
 	const { lang } = Route.useParams()
-	const { data: stats } = useReviewsTodayStats([
-		'user',
-		lang,
-		'review',
-		dayString,
-	])
+	const { data: stats } = useReviewsTodayStats(lang, dayString)
 
 	return (
 		<Card>

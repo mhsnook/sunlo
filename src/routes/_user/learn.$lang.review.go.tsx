@@ -1,17 +1,20 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
 	useCardIndex,
-	useManifest,
+	useNextValid,
 	useReviewActions,
+	useReviewDayString,
+	useReviewLang,
 	useReviewStage,
 } from '@/lib/use-review-store'
 import { todayString } from '@/lib/utils'
-import { reviewsQuery } from '@/lib/use-reviews'
+import { reviewsQuery, useManifest } from '@/lib/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
+import { pids } from '@/types/main'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
@@ -23,8 +26,8 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		},
 	}) => {
 		const dayString: string = todayString()
-		const _reviews = await queryClient.ensureQueryData(
-			reviewsQuery(userId!, ['user', lang, 'review', dayString])
+		const _todaysReviewData = await queryClient.ensureQueryData(
+			reviewsQuery(userId!, lang, dayString)
 		)
 
 		return {
@@ -35,18 +38,22 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 })
 
 function ReviewPage() {
-	const manifest = useManifest()
-	if (typeof manifest !== 'object') return <Loader />
-	if (!manifest.length) return <Navigate to=".." />
+	const lang = useReviewLang()
+	const dayString = useReviewDayString()
+	const { data: manifest } = useManifest(lang, dayString)
+	const stage = useReviewStage()
 
-	return <FlashCardReviewSession />
+	if (typeof manifest !== 'object') return <Loader />
+	if (!manifest?.length || stage === 0) return <Navigate to=".." />
+
+	return <FlashCardReviewSession manifest={manifest} />
 }
 
-function FlashCardReviewSession() {
+function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 	const currentCardIndex = useCardIndex()
 	const reviewStage = useReviewStage()
-	const manifest = useManifest()
-	const { gotoNext, gotoPrevious, gotoNextValid } = useReviewActions()
+	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
+	const nextValidIndex = useNextValid()
 
 	const isComplete = currentCardIndex === manifest.length
 
@@ -72,7 +79,7 @@ function FlashCardReviewSession() {
 								size="icon-sm"
 								variant="default"
 								onClick={gotoNext}
-								disabled={currentCardIndex === manifest.length}
+								disabled={isComplete}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
@@ -83,7 +90,7 @@ function FlashCardReviewSession() {
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={gotoNextValid}
+							onClick={() => gotoIndex(nextValidIndex)}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />

@@ -24,7 +24,6 @@ export type LangOnlyComponentProps = {
 	5. skip re-reviews and end
 */
 export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
-export type DailyCacheKey = ['user', string, 'review', ...Array<string>]
 export type ReviewsMap = {
 	[key: uuid]: ReviewRow
 }
@@ -151,8 +150,23 @@ export type CardFull = CardMeta & {
 	reviews: Array<ReviewRow>
 }
 
-export type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
-	manifest: Array<uuid>
+export type DailyReviewStateFetched =
+	| null
+	| (ReviewStateManifestRow & {
+			user_card_review: Array<ReviewRow>
+	  })
+export type DailyReviewStateLoaded =
+	| null
+	| (ReviewStateManifestRow & {
+			reviewsMap: ReviewsMap
+			stats: ReviewStats
+	  })
+export type ReviewStats = {
+	reviewed: number
+	again: number
+}
+type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
+	manifest: pids
 }
 
 export type PublicProfile = Tables<'public_profile'>

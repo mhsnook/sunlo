@@ -7,16 +7,23 @@ import {
 import supabase from './supabase-client'
 import { useAuth } from './hooks'
 import {
-	DailyCacheKey,
+	DailyReviewStateFetched,
+	DailyReviewStateLoaded,
+	pids,
 	ReviewInsert,
 	ReviewRow,
 	ReviewsMap,
-	ReviewStateManifestRow,
+	ReviewStats,
 	ReviewUpdate,
 	uuid,
 } from '@/types/main'
 import toast from 'react-hot-toast'
-import { useReviewActions, useReviewStage } from './use-review-store'
+import {
+	useCardIndex,
+	useNextValid,
+	useReviewActions,
+	useReviewStage,
+} from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from './utils'
 
@@ -37,24 +44,46 @@ const updateReview = async (submitData: ReviewUpdate) => {
 
 	return data
 }
-
-export function reviewsQuery(userId: uuid, dailyCacheKey: DailyCacheKey) {
+function mapToStats(reviewsMap: ReviewsMap) {
 	return {
-		queryKey: dailyCacheKey,
-		queryFn: async (): Promise<ReviewsMap> => {
-			const { data } = await supabase
-				.from('user_card_review')
-				.select()
-				.eq('day_session', dailyCacheKey[3])
-				.eq('lang', dailyCacheKey[1])
-				.eq('uid', userId)
-				//.eq('lang', lang)
+		reviewed: Object.keys(reviewsMap).length,
+		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
+	}
+}
+export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
+	return {
+		queryKey: [
+			'user',
+			lang,
+			'review',
+			day_session,
+			userId,
+			'manifest',
+		] as readonly string[],
+		queryFn: async ({
+			queryKey,
+		}: {
+			queryKey: readonly unknown[]
+		}): Promise<DailyReviewStateLoaded> => {
+			const [, lang, , day_session, uid] = queryKey as string[]
+			const { data } = (await supabase
+				.from('user_deck_review_state')
+				.select('*, user_card_review(*)')
+				.match({
+					uid,
+					lang,
+					day_session,
+				})
 				.throwOnError()
-			const map: ReviewsMap =
-				!data || !data.length ?
+				.maybeSingle()) as { data: DailyReviewStateFetched }
+			if (!data) return null
+			const { user_card_review: reviews, ...reviewStateRow } = data
+
+			const reviewsMap: ReviewsMap =
+				!reviews?.length ?
 					{}
 				:	mapArray<ReviewRow, 'phrase_id'>(
-						data.sort((a, b) =>
+						reviews.sort((a, b) =>
 							a.created_at === b.created_at ? 0
 								// earlier items will come first and be overwritten in the map
 							: a.created_at > b.created_at ? 1
@@ -63,83 +92,70 @@ export function reviewsQuery(userId: uuid, dailyCacheKey: DailyCacheKey) {
 						'phrase_id'
 					)
 
-			return map
+			return {
+				...reviewStateRow,
+				reviewsMap,
+				stats: mapToStats(reviewsMap),
+			} as DailyReviewStateLoaded
 		},
 	}
 }
 
-export function useDailyReviewState(
-	uid: uuid,
-	lang: string,
-	day_session: string
-) {
+// does not need to be used inside the review-store context
+export function useReviewsToday(lang: string, day_session: string) {
+	const { userId: uid } = useAuth()
 	return useSuspenseQuery({
-		queryKey: ['user', lang, 'review', day_session, uid, 'manifest'],
-		queryFn: async () =>
-			(
-				await supabase
-					.from('user_deck_review_state')
-					.select()
-					.match({
-						uid,
-						lang,
-						day_session,
-					})
-					.throwOnError()
-					.maybeSingle()
-			).data as ReviewStateManifestRow | null,
-		gcTime: Infinity,
-		staleTime: Infinity,
-		refetchOnMount: true,
-		refetchOnReconnect: true,
+		...reviewsQuery(uid!, lang, day_session),
 	})
 }
 
-export function useReviewsToday(dailyCacheKey: DailyCacheKey) {
+export function useReviewsTodayStats(lang: string, day_session: string) {
+	const { userId: uid } = useAuth()
+	return useSuspenseQuery<DailyReviewStateLoaded, Error, ReviewStats | null>({
+		...reviewsQuery(uid!, lang, day_session),
+		select: (data) => data?.stats ?? null,
+	})
+}
+
+export function useManifest(lang: string, day_session: string) {
+	const { userId: uid } = useAuth()
+	return useSuspenseQuery<DailyReviewStateLoaded, Error, pids>({
+		...reviewsQuery(uid!, lang, day_session),
+		select: (data: DailyReviewStateLoaded) => (data?.manifest as pids) ?? null,
+	})
+}
+
+export function useOneReviewToday(
+	lang: string,
+	day_session: string,
+	pid: uuid
+) {
 	const { userId } = useAuth()
 	return useQuery({
-		...reviewsQuery(userId!, dailyCacheKey),
-		enabled: !!userId && !!dailyCacheKey,
-	})
-}
-
-type ReviewStats = {
-	reviewed: number
-	again: number
-}
-
-export function useReviewsTodayStats(dailyCacheKey: DailyCacheKey) {
-	const { userId } = useAuth()
-	return useSuspenseQuery<ReviewsMap, Error, ReviewStats>({
-		...reviewsQuery(userId!, dailyCacheKey),
-		select: (data: ReviewsMap): ReviewStats => ({
-			reviewed: Object.keys(data).length,
-			again: Object.values(data).filter((r) => r.score === 1).length,
-		}),
-	})
-}
-
-export function useOneReviewToday(dailyCacheKey: DailyCacheKey, pid: uuid) {
-	const { userId } = useAuth()
-	return useQuery({
-		...reviewsQuery(userId!, dailyCacheKey),
-		enabled: !!userId && !!dailyCacheKey && !!pid,
-		select: (data: ReviewsMap) => data[pid],
+		...reviewsQuery(userId!, lang, day_session),
+		enabled: !!userId && !!pid,
+		select: (data: DailyReviewStateLoaded) => data?.reviewsMap[pid] ?? null,
 	})
 }
 
 export function useReviewMutation(
 	pid: uuid,
-	dailyCacheKey: DailyCacheKey,
+	lang: string,
+	day_session: string,
 	resetRevealCard: () => void
 ) {
 	const queryClient = useQueryClient()
-	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
+	const { userId } = useAuth()
+	const currentCardIndex = useCardIndex()
+	const { data: prevData } = useOneReviewToday(lang, day_session, pid)
 	const stage = useReviewStage()
-	const { gotoNextValid, addReview } = useReviewActions()
-
+	const { gotoIndex } = useReviewActions()
+	const nextIndex = useNextValid()
+	const { data: reviewsData } = useReviewsToday(lang, day_session)
+	// this mutation should only be loaded when the manifest is present
+	const manifest = reviewsData!.manifest
 	return useMutation<ReviewRow, PostgrestError, { score: number }>({
-		mutationKey: [...dailyCacheKey, pid],
+		mutationKey: ['user', lang, 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			// during stages 1 & 2, these are corrections; only update only if score changes
 			if (stage < 3 && prevData?.score === score) return prevData
@@ -154,8 +170,8 @@ export function useReviewMutation(
 			return await postReview({
 				score,
 				phrase_id: pid,
-				lang: dailyCacheKey[1],
-				day_session: dailyCacheKey[3],
+				lang,
+				day_session,
 			})
 		},
 		onSuccess: (data) => {
@@ -167,19 +183,30 @@ export function useReviewMutation(
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 
-			const mergedData = { ...prevData, ...data }
+			const mergedData = { ...prevData, ...data, day_first_review: !prevData }
 			// this is done instead of using invalidateQueries... why? IDK.
 			// it does ensure that the local cache is updated even when the db
 			// data is not changed (e.g. re-reviewing a card)
-			queryClient.setQueryData<ReviewsMap>(dailyCacheKey, (oldData) => {
-				return { ...oldData, [pid]: mergedData }
-			})
-
-			addReview(mergedData)
+			queryClient.setQueryData<DailyReviewStateLoaded>(
+				['user', lang, 'review', day_session, userId, 'manifest'],
+				(oldData): DailyReviewStateLoaded => {
+					if (!oldData) throw new Error('No previous data in cache')
+					const newMap = { ...oldData.reviewsMap, [pid]: mergedData }
+					return {
+						...oldData,
+						reviewsMap: newMap,
+						stats: mapToStats(newMap),
+					}
+				}
+			)
 
 			setTimeout(() => {
 				resetRevealCard()
-				gotoNextValid()
+				// if the next is the same as current, it means we're on the final card, which
+				// is the only situation where the out-of-date nextIndex needs to be corrected
+				if (nextIndex === currentCardIndex && data.score > 1)
+					gotoIndex(manifest.length)
+				else gotoIndex(nextIndex)
 			}, 1000)
 		},
 		onError: (error) => {

@@ -4,22 +4,33 @@ import SuccessCheckmark from '@/components/success-checkmark'
 import {
 	useReviewActions,
 	useReviewStage,
-	useManifestLength,
-	useReviewCacheKey,
+	useReviewLang,
+	useReviewDayString,
+	getIndexOfNextUnreviewedCard,
+	getIndexOfNextAgainCard,
 } from '@/lib/use-review-store'
 import { useReviewsToday, useReviewsTodayStats } from '@/lib/use-reviews'
 
 export function WhenComplete() {
-	const dailyCacheKey = useReviewCacheKey()
-	const { data: reviewsToday } = useReviewsToday(dailyCacheKey)
-	const { data: reviewStats } = useReviewsTodayStats(dailyCacheKey)
-	const manifestLength = useManifestLength()
+	const lang = useReviewLang()
+	const dayString = useReviewDayString()
+	const { data: reviewStats } = useReviewsTodayStats(lang, dayString)
+	const {
+		data: { manifest, reviewsMap },
+	} = useReviewsToday(lang, dayString)
+
+	const firstUnreviewedIndex = getIndexOfNextUnreviewedCard(
+		manifest,
+		reviewsMap,
+		-1
+	)
+	const firstAgainIndex = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
 	const stage = useReviewStage()
 	const actions = useReviewActions()
 
-	if (!reviewsToday || !manifestLength || !stage) return null
+	if (!reviewsMap || !manifest.length || !stage) return null
 
-	const unreviewedCount = manifestLength - reviewStats.reviewed
+	const unreviewedCount = manifest.length - reviewStats.reviewed
 	const againCount = reviewStats.again
 	const showWhich =
 		unreviewedCount && stage < 2 ? 'a'
@@ -43,7 +54,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewUnreviewed()
+								actions.gotoReviewUnreviewed(firstUnreviewedIndex)
 							}}
 						>
 							Review Skipped cards ({unreviewedCount})
@@ -68,7 +79,7 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewAgains()
+								actions.gotoReviewAgains(firstAgainIndex)
 							}}
 						>
 							Review cards ({againCount})
