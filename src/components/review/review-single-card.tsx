@@ -1,5 +1,5 @@
 import {
-	useReviewCacheKey,
+	useReviewDayString,
 	useReviewLang,
 	useReviewStage,
 } from '@/lib/use-review-store'
@@ -27,13 +27,18 @@ const playAudio = (text: string) => {
 }
 
 export function ReviewSingleCard({ pid }: ReviewSingleCardProps) {
-	const dailyCacheKey = useReviewCacheKey()
+	const dayString = useReviewDayString()
 	const lang = useReviewLang()
 	const [revealCard, setRevealCard] = useState(false)
-	const { data: prevData } = useOneReviewToday(dailyCacheKey, pid)
+	const { data: prevData } = useOneReviewToday(lang, dayString, pid)
 	const stage = useReviewStage()
 	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
-	const { mutate, isPending } = useReviewMutation(pid, dailyCacheKey, closeCard)
+	const { mutate, isPending } = useReviewMutation(
+		pid,
+		lang,
+		dayString,
+		closeCard
+	)
 
 	const { data: phrase } = useLanguagePhrase(pid, lang)
 
