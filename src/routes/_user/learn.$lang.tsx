@@ -18,10 +18,9 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			languageQueryOptions(lang)
 		)
 		const deckLoader = queryClient.ensureQueryData(
-			deckQueryOptions(lang, userId!)
+			deckQueryOptions(lang, userId)
 		)
 
-		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		const data = {
 			language: await languageLoader,
 			deck: await deckLoader,

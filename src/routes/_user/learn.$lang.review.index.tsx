@@ -458,8 +458,8 @@ function ContinueReview({
 				</p>
 				<p>
 					Your in-progress session has {manifestLength} cards in it, and you've
-					already reviewed {stats.reviewed} of them. Continue where you left
-					off?
+					already reviewed {stats?.reviewed ?? 0} of them. Continue where you
+					left off?
 				</p>
 			</CardContent>
 			<CardFooter>

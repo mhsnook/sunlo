@@ -1,6 +1,12 @@
 import { PostgrestError } from '@supabase/supabase-js'
 import { queryOptions, useQuery } from '@tanstack/react-query'
-import type { DeckMeta, DecksMap, ProfileFull, uuid } from '@/types/main'
+import type {
+	DeckMeta,
+	DecksMap,
+	ProfileFull,
+	PublicProfile,
+	uuid,
+} from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
@@ -45,7 +51,7 @@ export const publicProfileQuery = (uid: uuid) =>
 				.eq('uid', uid)
 				.maybeSingle()
 				.throwOnError()
-			return res.data
+			return res.data as PublicProfile | null
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,
 	})

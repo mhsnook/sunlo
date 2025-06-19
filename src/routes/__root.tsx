@@ -6,7 +6,7 @@ import {
 } from '@tanstack/react-router'
 import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { AuthState } from '@/components/auth-context'
+import { AuthState } from '@/types/main'
 import { SidebarProvider } from '@/components/ui/sidebar'
 
 import Callout from '@/components/ui/callout'
