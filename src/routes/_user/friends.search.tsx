@@ -132,7 +132,7 @@ export default function SearchProfiles() {
 		isFetching,
 	} = useQuery({
 		queryKey: ['public_profile', 'search', debouncedQuery as string],
-		queryFn: async ({ queryKey }) => searchAsync(queryKey[2]!, userId!),
+		queryFn: async ({ queryKey }) => searchAsync(queryKey[2], userId!),
 		enabled: !!debouncedQuery?.length && !!userId,
 	})
 

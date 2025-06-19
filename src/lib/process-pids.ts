@@ -46,7 +46,7 @@ function processDeckPidsAndRecs(
 	// filter to only spoken languages, sort primary first
 	const phrasesArrayFiltered = languagePids
 		.map((pid) => {
-			let phrase = phrasesMap[pid] as PhraseFiltered
+			let phrase = phrasesMap[pid]
 
 			const { translations_mine, translations_other } = splitTranslations(
 				translationLangs,

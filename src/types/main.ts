@@ -15,6 +15,15 @@ export type LangOnlyComponentProps = {
 	lang: string
 }
 
+export type RolesEnum = 'learner' | 'helper' | 'both' | null
+
+export type AuthState = {
+	isAuth: boolean
+	userId: uuid | null
+	userEmail: string | null
+	userRole: RolesEnum
+}
+
 /*
 	0. not yet initialised
 	1. doing the first review

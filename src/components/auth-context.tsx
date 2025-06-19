@@ -4,19 +4,11 @@ import {
 	useState,
 	useEffect,
 } from 'react'
-import type { uuid } from '@/types/main'
+
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-
-type RolesEnum = 'learner' | 'helper' | 'both' | null
-
-export type AuthState = {
-	isAuth: boolean
-	userId: uuid | null
-	userEmail: string | null
-	userRole: RolesEnum
-}
+import { AuthState, RolesEnum } from '@/types/main'
 
 export const AuthContext = createContext<AuthState>(undefined)
 

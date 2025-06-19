@@ -21,6 +21,7 @@ import { ArrowRightLeft } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
+import { PublicProfile } from '@/types/main'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -149,7 +150,7 @@ function AcceptInvitePage() {
 	)
 }
 
-const ShowAccepted = ({ friend }: { friend?: any }) => {
+const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
 	if (!friend)
 		throw new Error(
 			`Attempted to render the "success" message` +
@@ -165,7 +166,7 @@ const ShowAccepted = ({ friend }: { friend?: any }) => {
 				<p>
 					<Link
 						to="/friends/$uid"
-						params={{ uid: friend.uid }}
+						params={{ uid: friend.uid! }}
 						className={buttonVariants({ variant: 'default' })}
 					>
 						Check out their profile

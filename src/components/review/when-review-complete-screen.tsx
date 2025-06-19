@@ -9,29 +9,25 @@ import {
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
 } from '@/lib/use-review-store'
-import { useReviewsToday, useReviewsTodayStats } from '@/lib/use-reviews'
+import { useReviewsToday } from '@/lib/use-reviews'
 
 export function WhenComplete() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
-	const { data: reviewStats } = useReviewsTodayStats(lang, dayString)
-	const {
-		data: { manifest, reviewsMap },
-	} = useReviewsToday(lang, dayString)
-
+	const stage = useReviewStage()
+	const actions = useReviewActions()
+	const { data: reviewsToday } = useReviewsToday(lang, dayString)
+	if (!reviewsToday || !stage) return null
+	const { manifest, reviewsMap, stats } = reviewsToday
 	const firstUnreviewedIndex = getIndexOfNextUnreviewedCard(
 		manifest,
 		reviewsMap,
 		-1
 	)
 	const firstAgainIndex = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
-	const stage = useReviewStage()
-	const actions = useReviewActions()
 
-	if (!reviewsMap || !manifest.length || !stage) return null
-
-	const unreviewedCount = manifest.length - reviewStats.reviewed
-	const againCount = reviewStats.again
+	const unreviewedCount = manifest.length - stats.reviewed
+	const againCount = stats.again
 	const showWhich =
 		unreviewedCount && stage < 2 ? 'a'
 		: againCount && stage < 4 ? 'b'

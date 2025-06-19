@@ -35,14 +35,16 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 function DeckSettingsPage() {
 	const { lang } = Route.useParams()
 	const { data: meta } = useDeckMeta(lang)
+	// the query for deck meta suspends higher up in the tree
+	if (!meta) throw new Error(`No deck found for language "${lang}"`)
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<GoalForm lang={lang} learning_goal={meta?.learning_goal!} />
-				<ArchiveForm archived={meta?.archived ?? false} lang={lang} />
+				<GoalForm lang={lang} learning_goal={meta.learning_goal!} />
+				<ArchiveForm archived={meta.archived!} lang={lang} />
 			</CardContent>
 		</Card>
 	)
