@@ -500,6 +500,13 @@ export type Database = {
             referencedRelation: "user_profile"
             referencedColumns: ["uid"]
           },
+          {
+            foreignKeyName: "user_card_review_uid_lang_day_session_fkey"
+            columns: ["uid", "lang", "day_session"]
+            isOneToOne: false
+            referencedRelation: "user_deck_review_state"
+            referencedColumns: ["uid", "lang", "day_session"]
+          },
         ]
       }
       user_deck: {
