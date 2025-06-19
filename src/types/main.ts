@@ -164,12 +164,10 @@ export type DailyReviewStateFetched =
 	| (ReviewStateManifestRow & {
 			user_card_review: Array<ReviewRow>
 	  })
-export type DailyReviewStateLoaded =
-	| null
-	| (ReviewStateManifestRow & {
-			reviewsMap: ReviewsMap
-			stats: ReviewStats
-	  })
+export type DailyReviewStateLoaded = ReviewStateManifestRow & {
+	reviewsMap: ReviewsMap
+	stats: ReviewStats
+}
 export type ReviewStats = {
 	reviewed: number
 	again: number

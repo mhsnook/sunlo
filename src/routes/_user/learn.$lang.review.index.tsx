@@ -1,4 +1,4 @@
-import { pids, uuid } from '@/types/main'
+import { DailyReviewStateLoaded, pids, uuid } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
 	Card,
@@ -24,6 +24,8 @@ import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
+	getIndexOfNextAgainCard,
+	getIndexOfNextUnreviewedCard,
 	useInitialiseReviewStore,
 	useReviewDayString,
 	useReviewStage,
@@ -57,7 +59,7 @@ function ReviewPageSetup() {
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
-	const setManifest = useInitialiseReviewStore()
+	const initLocalReviewState = useInitialiseReviewStore()
 	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
 
 	if (meta?.lang !== lang)
@@ -246,7 +248,7 @@ function ReviewPageSetup() {
 
 			await queryClient.refetchQueries({ queryKey: ['user', lang] })
 
-			setManifest(lang, dayString)
+			initLocalReviewState(lang, dayString)
 		},
 	})
 
@@ -255,12 +257,7 @@ function ReviewPageSetup() {
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	if (manifestToRestore !== null)
-		return (
-			<ContinueReview
-				continueReview={() => setManifest(lang, dayString)}
-				manifestLength={manifestToRestore.manifest.length}
-			/>
-		)
+		return <ContinueReview prevData={manifestToRestore} />
 
 	return (
 		<Card>
@@ -432,17 +429,22 @@ function ReviewPageSetup() {
 }
 
 type ContinueReviewProps = {
-	continueReview: () => void
-	manifestLength: number
+	prevData: DailyReviewStateLoaded
 }
 
-function ContinueReview({
-	continueReview,
-	manifestLength,
-}: ContinueReviewProps) {
+function ContinueReview({ prevData }: ContinueReviewProps) {
+	const initLocalReviewState = useInitialiseReviewStore()
 	const dayString = useReviewDayString()
 	const { lang } = Route.useParams()
-	const { data: stats } = useReviewsTodayStats(lang, dayString)
+	const { manifest, reviewsMap, stats } = prevData
+	const firstUnreviewedIndex = getIndexOfNextUnreviewedCard(
+		manifest,
+		reviewsMap,
+		-1
+	)
+	const firstAgainIndex = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
+	const stage = firstUnreviewedIndex === manifest.length ? 3 : 1
+	const startingIndex = stage === 3 ? firstAgainIndex : firstUnreviewedIndex
 
 	return (
 		<Card>
@@ -457,13 +459,18 @@ function ContinueReview({
 					progres for today.
 				</p>
 				<p>
-					Your in-progress session has {manifestLength} cards in it, and you've
+					Your in-progress session has {manifest.length} cards in it, and you've
 					already reviewed {stats?.reviewed ?? 0} of them. Continue where you
 					left off?
 				</p>
 			</CardContent>
 			<CardFooter>
-				<Button size="lg" onClick={continueReview}>
+				<Button
+					size="lg"
+					onClick={() =>
+						initLocalReviewState(lang, dayString, stage, startingIndex)
+					}
+				>
 					Continue
 				</Button>
 			</CardFooter>

@@ -21,7 +21,12 @@ type ReviewActions = {
 	gotoIndex: (i: number) => void
 	gotoNext: () => void
 	gotoPrevious: () => void
-	init: (lang: string, dayString: string) => void
+	init: (
+		lang: string,
+		dayString: string,
+		stage?: ReviewStages,
+		index?: number
+	) => void
 }
 
 export type ReviewState = ReviewProps & {
@@ -62,7 +67,7 @@ export function createReviewStore(lang: string, dayString: string) {
 								currentCardIndex: state.currentCardIndex - 1,
 							})),
 
-						init: (lang: string, dayString: string) =>
+						init: (lang: string, dayString: string, stage = 1, index = 0) =>
 							set((state) => {
 								// if the lang doesn't match, we have an error
 								if (lang !== state.lang || dayString !== state.dayString)
@@ -72,8 +77,8 @@ export function createReviewStore(lang: string, dayString: string) {
 								// ensure we only init once
 								if (state.stage) return state
 								return {
-									currentCardIndex: 0,
-									stage: 1,
+									currentCardIndex: index,
+									stage,
 								}
 							}),
 
