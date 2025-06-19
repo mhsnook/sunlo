@@ -49,6 +49,7 @@ function mapToStats(reviewsMap: ReviewsMap) {
 	return {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
+		count: Object.keys(reviewsMap).length,
 	}
 }
 

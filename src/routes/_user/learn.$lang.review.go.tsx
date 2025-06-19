@@ -55,13 +55,13 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
 	const nextValidIndex = useNextValid()
 
-	const isComplete = currentCardIndex === manifest.length
+	const atTheEnd = currentCardIndex === manifest.length
 
 	return (
 		<div className="flex-col items-center justify-center gap-2 py-2">
 			<div className="mb-2 flex flex-col items-center justify-center gap-2">
 				<div className="flex min-h-10 flex-row items-center justify-center">
-					{!isComplete && reviewStage === 1 ?
+					{!atTheEnd && reviewStage === 1 ?
 						<>
 							<Button
 								size="icon-sm"
@@ -79,13 +79,13 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 								size="icon-sm"
 								variant="default"
 								onClick={gotoNext}
-								disabled={isComplete}
+								disabled={atTheEnd}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					: !isComplete && reviewStage > 1 ?
+					: !atTheEnd && reviewStage > 1 ?
 						<Button
 							size="sm"
 							variant="ghost"
@@ -109,11 +109,11 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 				</div>
 			</div>
 			<div className="flex flex-col items-center justify-center gap-2">
-				<div className={isComplete ? 'w-full' : 'hidden'}>
+				<div className={atTheEnd ? 'w-full' : 'hidden'}>
 					<WhenComplete />
 				</div>
 
-				<div className={!isComplete ? 'w-full' : 'hidden'}>
+				<div className={!atTheEnd ? 'w-full' : 'hidden'}>
 					{manifest.map((pid, i) => (
 						<div
 							key={i}
