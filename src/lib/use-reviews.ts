@@ -44,12 +44,14 @@ const updateReview = async (submitData: ReviewUpdate) => {
 
 	return data
 }
+
 function mapToStats(reviewsMap: ReviewsMap) {
 	return {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
 	}
 }
+
 export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 	return {
 		queryKey: [
@@ -64,7 +66,7 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 			queryKey,
 		}: {
 			queryKey: readonly unknown[]
-		}): Promise<DailyReviewStateLoaded> => {
+		}): Promise<DailyReviewStateLoaded | null> => {
 			const [, lang, , day_session, uid] = queryKey as string[]
 			const { data } = (await supabase
 				.from('user_deck_review_state')
@@ -111,7 +113,11 @@ export function useReviewsToday(lang: string, day_session: string) {
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const { userId: uid } = useAuth()
-	return useSuspenseQuery<DailyReviewStateLoaded, Error, ReviewStats | null>({
+	return useSuspenseQuery<
+		DailyReviewStateLoaded | null,
+		Error,
+		ReviewStats | null
+	>({
 		...reviewsQuery(uid!, lang, day_session),
 		select: (data) => data?.stats ?? null,
 	})
@@ -119,9 +125,9 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 
 export function useManifest(lang: string, day_session: string) {
 	const { userId: uid } = useAuth()
-	return useSuspenseQuery<DailyReviewStateLoaded, Error, pids>({
+	return useSuspenseQuery<DailyReviewStateLoaded | null, Error, pids>({
 		...reviewsQuery(uid!, lang, day_session),
-		select: (data: DailyReviewStateLoaded) => (data?.manifest as pids) ?? null,
+		select: (data) => (data?.manifest as pids) ?? null,
 	})
 }
 
@@ -131,10 +137,10 @@ export function useOneReviewToday(
 	pid: uuid
 ) {
 	const { userId } = useAuth()
-	return useQuery({
+	return useQuery<DailyReviewStateLoaded | null, Error, ReviewRow | null>({
 		...reviewsQuery(userId!, lang, day_session),
 		enabled: !!userId && !!pid,
-		select: (data: DailyReviewStateLoaded) => data?.reviewsMap[pid] ?? null,
+		select: (data) => data?.reviewsMap[pid] ?? null,
 	})
 }
 
