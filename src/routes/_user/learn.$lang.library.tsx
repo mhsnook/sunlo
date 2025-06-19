@@ -32,7 +32,7 @@ function DeckLibraryPage() {
 	const { lang } = Route.useParams()
 
 	return (
-		<div className="space-y-4 px-2">
+		<div className="space-y-4">
 			<DeckContents lang={lang} />
 		</div>
 	)

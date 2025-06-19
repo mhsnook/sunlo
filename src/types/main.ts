@@ -171,6 +171,7 @@ export type DailyReviewStateLoaded = ReviewStateManifestRow & {
 export type ReviewStats = {
 	reviewed: number
 	again: number
+	count: number
 }
 type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids

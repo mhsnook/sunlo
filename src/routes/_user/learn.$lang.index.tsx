@@ -42,7 +42,7 @@ function WelcomePage() {
 
 	const deckIsNew = !(deck.pids.all.length > 0)
 	return (
-		<div className="space-y-8 px-2">
+		<div className="space-y-8">
 			{deckIsNew ?
 				<Empty lang={lang} />
 			:	<DeckOverview lang={lang} />}

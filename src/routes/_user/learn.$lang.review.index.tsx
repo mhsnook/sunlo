@@ -1,12 +1,6 @@
-import { DailyReviewStateLoaded, pids, uuid } from '@/types/main'
+import { pids, uuid } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import {
-	Card,
-	CardContent,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
 import {
 	BookOpen,
@@ -24,8 +18,6 @@ import Flagged from '@/components/flagged'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
-	getIndexOfNextAgainCard,
-	getIndexOfNextUnreviewedCard,
 	useInitialiseReviewStore,
 	useReviewDayString,
 	useReviewStage,
@@ -43,8 +35,8 @@ import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
-import { useReviewsToday, useReviewsTodayStats } from '@/lib/use-reviews'
-import dayjs from 'dayjs'
+import { useReviewsToday } from '@/lib/use-reviews'
+import { ContinueReview } from '@/components/review/continue-review'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -257,7 +249,13 @@ function ReviewPageSetup() {
 		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
 
 	if (manifestToRestore !== null)
-		return <ContinueReview prevData={manifestToRestore} />
+		return (
+			<ContinueReview
+				lang={lang}
+				dayString={dayString}
+				prevData={manifestToRestore}
+			/>
+		)
 
 	return (
 		<Card>
@@ -424,56 +422,6 @@ function ReviewPageSetup() {
 					</>
 				}
 			</CardContent>
-		</Card>
-	)
-}
-
-type ContinueReviewProps = {
-	prevData: DailyReviewStateLoaded
-}
-
-function ContinueReview({ prevData }: ContinueReviewProps) {
-	const initLocalReviewState = useInitialiseReviewStore()
-	const dayString = useReviewDayString()
-	const { lang } = Route.useParams()
-	const { manifest, reviewsMap, stats } = prevData
-	const firstUnreviewedIndex = getIndexOfNextUnreviewedCard(
-		manifest,
-		reviewsMap,
-		-1
-	)
-	const firstAgainIndex = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
-	const stage = firstUnreviewedIndex === manifest.length ? 3 : 1
-	const startingIndex = stage === 3 ? firstAgainIndex : firstUnreviewedIndex
-
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex flex-row justify-between">
-					<div>Get Ready to review your {languages[lang]} cards</div>
-				</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<p>
-					{dayjs(dayString).format('dddd')}: You already have a review in
-					progres for today.
-				</p>
-				<p>
-					Your in-progress session has {manifest.length} cards in it, and you've
-					already reviewed {stats?.reviewed ?? 0} of them. Continue where you
-					left off?
-				</p>
-			</CardContent>
-			<CardFooter>
-				<Button
-					size="lg"
-					onClick={() =>
-						initLocalReviewState(lang, dayString, stage, startingIndex)
-					}
-				>
-					Continue
-				</Button>
-			</CardFooter>
 		</Card>
 	)
 }

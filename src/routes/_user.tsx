@@ -56,7 +56,9 @@ function UserLayout() {
 				<div id="app-sidebar-layout-outlet" className="w-app @container pb-6">
 					<Navbar />
 					<AppNav />
-					<Outlet />
+					<div className="px-2">
+						<Outlet />
+					</div>
 				</div>
 			</SidebarInset>
 		</div>
