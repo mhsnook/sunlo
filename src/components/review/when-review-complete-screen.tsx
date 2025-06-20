@@ -6,31 +6,20 @@ import {
 	useReviewStage,
 	useReviewLang,
 	useReviewDayString,
-	getIndexOfNextUnreviewedCard,
-	getIndexOfNextAgainCard,
 } from '@/lib/use-review-store'
-import { useReviewsToday } from '@/lib/use-reviews'
+import { useReviewsTodayStats } from '@/lib/use-reviews'
 
 export function WhenComplete() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
 	const stage = useReviewStage()
 	const actions = useReviewActions()
-	const { data: reviewsToday } = useReviewsToday(lang, dayString)
-	if (!reviewsToday || !stage) return null
-	const { manifest, reviewsMap, stats } = reviewsToday
-	const firstUnreviewedIndex = getIndexOfNextUnreviewedCard(
-		manifest,
-		reviewsMap,
-		-1
-	)
-	const firstAgainIndex = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
+	const { data: stats } = useReviewsTodayStats(lang, dayString)
+	if (!stats || !stage) return null
 
-	const unreviewedCount = manifest.length - stats.reviewed
-	const againCount = stats.again
 	const showWhich =
-		unreviewedCount && stage < 2 ? 'a'
-		: againCount && stage < 4 ? 'b'
+		stats.again && stage < 2 ? 'a'
+		: stats.again && stage < 4 ? 'b'
 		: 'c'
 
 	return (
@@ -41,19 +30,19 @@ export function WhenComplete() {
 						<CardTitle className="text-center">Step 2 of 3</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your first pass, but there{' '}
-							{unreviewedCount === 1 ?
+							{stats.unreviewed === 1 ?
 								'is still 1 card'
-							:	`are still ${unreviewedCount} cards`}{' '}
+							:	`are still ${stats.unreviewed} cards`}{' '}
 							you haven't reviewed yet. Let's go back and finish them &mdash;
 							you can do it!
 						</p>
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewUnreviewed(firstUnreviewedIndex)
+								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
 							}}
 						>
-							Review Skipped cards ({unreviewedCount})
+							Review Skipped cards ({stats.unreviewed})
 						</Button>
 						<Button
 							size="lg"
@@ -69,16 +58,18 @@ export function WhenComplete() {
 					<>
 						<CardTitle className="text-center">Step 3 of 3</CardTitle>
 						<p className="text-center text-lg">
-							There {againCount === 1 ? 'is 1 card' : `are ${againCount} cards`}{' '}
-							that you weren't able to get right and asked to see again.
+							There
+							{stats.again === 1 ? ' is 1 card ' : ` are ${stats.again} cards `}
+							that you weren't able to recall the first time and asked to see
+							again.
 						</p>
 						<Button
 							size="lg"
 							onClick={() => {
-								actions.gotoReviewAgains(firstAgainIndex)
+								actions.gotoReviewAgains(stats.firstAgainIndex)
 							}}
 						>
-							Review cards ({againCount})
+							Review cards ({stats.again})
 						</Button>
 						<div>
 							<p className="mb-2">
@@ -99,7 +90,7 @@ export function WhenComplete() {
 						<p>
 							All of these can help you commit the phrase to useable memory
 							&ndash; and as always, don't forget to say the phrase outloud! Use
-							as many senses as you can.{' '}
+							as many senses as you can.
 						</p>
 						<Button
 							variant="link"
