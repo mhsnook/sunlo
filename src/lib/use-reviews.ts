@@ -48,7 +48,7 @@ const updateReview = async (submitData: ReviewUpdate) => {
 	return data
 }
 
-function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
+function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
 	const stats = {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
@@ -72,6 +72,8 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
 
 	return {
 		...stats,
+		unreviewed: stats.count - stats.reviewed,
+		complete: stats.reviewed - stats.again,
 		inferred: { stage, index },
 	}
 }
@@ -117,7 +119,6 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 						),
 						'phrase_id'
 					)
-			console.log(`About to mapToStats`, reviewsMap, data.manifest)
 			return {
 				...reviewStateRow,
 				reviewsMap,

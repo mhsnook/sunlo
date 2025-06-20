@@ -25,23 +25,21 @@ export function ContinueReview({
 	reviewStats,
 }: ContinueReviewProps) {
 	const initLocalReviewState = useInitialiseReviewStore()
-	const cardsDone =
-		reviewStats.inferred.stage === 1 ?
-			reviewStats.reviewed
-		:	reviewStats.count - reviewStats.again
-	const progress = (100 * cardsDone) / reviewStats.count
+
 	const progressString =
-		reviewStats.inferred.stage === 3 ?
-			`${reviewStats.again} remaining out of ${reviewStats.count}`
-		:	`${cardsDone} reviewed out of ${reviewStats.count}`
+		reviewStats.inferred.stage === 5 ?
+			`All ${reviewStats.complete} cards complete!`
+		: reviewStats.inferred.stage === 3 ?
+			`${reviewStats.again} remaining out of ${reviewStats.count} cards today`
+		:	`${reviewStats.complete} reviewed out of ${reviewStats.count} cards today`
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
 					<div>Continue your {languages[lang]} flash card review</div>
 				</CardTitle>
-				<CardDescription>{progressString} cards today</CardDescription>
-				<Progress value={progress} />
+				<CardDescription>{progressString}</CardDescription>
+				<Progress value={(100 * reviewStats.complete) / reviewStats.count} />
 			</CardHeader>
 			<CardContent className="space-y-4 text-xl">
 				<p>
@@ -60,8 +58,7 @@ export function ContinueReview({
 						you left off?
 					</p>
 				:	<p>
-						You've reviewed all {reviewStats.count} cards at least once, but
-						there{' '}
+						You've reviewed all {reviewStats.count} cards, but there{' '}
 						{reviewStats?.again === 1 ?
 							`is one card`
 						:	`are ${reviewStats.again} cards`}{' '}

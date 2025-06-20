@@ -170,8 +170,10 @@ export type DailyReviewStateLoaded = ReviewStateManifestRow & {
 }
 export type ReviewStats = {
 	reviewed: number
+	unreviewed: number
 	again: number
 	count: number
+	complete: number
 	firstUnreviewedIndex: number
 	firstAgainIndex: number
 	inferred: {
