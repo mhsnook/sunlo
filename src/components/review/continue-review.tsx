@@ -1,69 +1,70 @@
-import {
-	getIndexOfNextAgainCard,
-	getIndexOfNextUnreviewedCard,
-	useInitialiseReviewStore,
-} from '@/lib/use-review-store'
-import { DailyReviewStateLoaded } from '@/types/main'
+import { useInitialiseReviewStore } from '@/lib/use-review-store'
+import { ReviewStats } from '@/types/main'
 import {
 	Card,
 	CardContent,
+	CardDescription,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from '../ui/card'
+} from '@/components/ui/card'
 import dayjs from 'dayjs'
-import { Button } from '../ui/button'
+import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
+import { Progress } from '@/components/ui/progress'
 
 type ContinueReviewProps = {
 	lang: string
 	dayString: string
-	prevData: DailyReviewStateLoaded
+	reviewStats: ReviewStats
 }
 
 export function ContinueReview({
 	lang,
 	dayString,
-	prevData,
+	reviewStats,
 }: ContinueReviewProps) {
 	const initLocalReviewState = useInitialiseReviewStore()
-
-	const { manifest, reviewsMap, stats } = prevData
-
-	const stage =
-		stats.reviewed < stats.count ? 1
-		: stats.again === 0 ? 5
-		: 3
-	const indexFn =
-		stage === 3 ? getIndexOfNextAgainCard : getIndexOfNextUnreviewedCard
-	const startingIndex = indexFn(manifest, reviewsMap, -1)
-
+	const cardsDone =
+		reviewStats.inferred.stage === 1 ?
+			reviewStats.reviewed
+		:	reviewStats.count - reviewStats.again
+	const progress = (100 * cardsDone) / reviewStats.count
+	const progressString =
+		reviewStats.inferred.stage === 3 ?
+			`${reviewStats.again} remaining out of ${reviewStats.count}`
+		:	`${cardsDone} reviewed out of ${reviewStats.count}`
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
 					<div>Continue your {languages[lang]} flash card review</div>
 				</CardTitle>
+				<CardDescription>{progressString} cards today</CardDescription>
+				<Progress value={progress} />
 			</CardHeader>
-			<CardContent className="space-y-4">
+			<CardContent className="space-y-4 text-xl">
 				<p>
 					{dayjs(dayString).format('dddd')}: You already have a review in
 					progress for today.
 				</p>
-				{stats.reviewed === 0 ?
+				{reviewStats.reviewed === 0 ?
 					<p>
-						You've set up a review with {stats.count} cards in it, but you
+						You've set up a review with {reviewStats.count} cards in it, but you
 						haven't started reviewing yet. Go ahead and get started!
 					</p>
-				: stage === 1 ?
+				: reviewStats.inferred.stage === 1 ?
 					<p>
-						Today's review session has {stats.count} cards in it, and you've
-						reviewed {stats?.reviewed ?? 0} of them. Continue where you left
-						off?
+						Today's review session has {reviewStats.count} cards in it, and
+						you've reviewed {reviewStats?.reviewed ?? 0} of them. Continue where
+						you left off?
 					</p>
 				:	<p>
-						You've reviewed all {stats.count} cards at least once, but there{' '}
-						{stats?.again === 1 ? `is one card` : `are ${stats.again} cards`}{' '}
+						You've reviewed all {reviewStats.count} cards at least once, but
+						there{' '}
+						{reviewStats?.again === 1 ?
+							`is one card`
+						:	`are ${reviewStats.again} cards`}{' '}
 						left that you've asked to see again. Continue where you left off?
 					</p>
 				}
@@ -72,7 +73,12 @@ export function ContinueReview({
 				<Button
 					size="lg"
 					onClick={() =>
-						initLocalReviewState(lang, dayString, stage, startingIndex)
+						initLocalReviewState(
+							lang,
+							dayString,
+							reviewStats.inferred.stage,
+							reviewStats.inferred.index
+						)
 					}
 				>
 					Continue Review

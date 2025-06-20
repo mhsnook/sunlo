@@ -253,7 +253,7 @@ function ReviewPageSetup() {
 			<ContinueReview
 				lang={lang}
 				dayString={dayString}
-				prevData={manifestToRestore}
+				reviewStats={manifestToRestore.stats}
 			/>
 		)
 

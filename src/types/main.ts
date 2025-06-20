@@ -172,6 +172,12 @@ export type ReviewStats = {
 	reviewed: number
 	again: number
 	count: number
+	firstUnreviewedIndex: number
+	firstAgainIndex: number
+	inferred: {
+		stage: ReviewStages
+		index: number
+	}
 }
 type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids
