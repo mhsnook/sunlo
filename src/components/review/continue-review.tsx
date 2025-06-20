@@ -42,7 +42,7 @@ export function ContinueReview({
 		<Card>
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
-					<div>Get Ready to review your {languages[lang]} cards</div>
+					<div>Continue your {languages[lang]} flash card review</div>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
@@ -50,16 +50,21 @@ export function ContinueReview({
 					{dayjs(dayString).format('dddd')}: You already have a review in
 					progress for today.
 				</p>
-				{stage === 1 ?
+				{stats.reviewed === 0 ?
+					<p>
+						You've set up a review with {stats.count} cards in it, but you
+						haven't started reviewing yet. Go ahead and get started!
+					</p>
+				: stage === 1 ?
 					<p>
 						Today's review session has {stats.count} cards in it, and you've
 						reviewed {stats?.reviewed ?? 0} of them. Continue where you left
 						off?
 					</p>
 				:	<p>
-						Today's review session has {stats.count} cards in it, and there are{' '}
-						{stats?.again ?? 0} cards left that you've asked to see again.
-						Continue where you left off?
+						You've reviewed all {stats.count} cards at least once, but there{' '}
+						{stats?.again === 1 ? `is one card` : `are ${stats.again} cards`}{' '}
+						left that you've asked to see again. Continue where you left off?
 					</p>
 				}
 			</CardContent>
@@ -70,7 +75,7 @@ export function ContinueReview({
 						initLocalReviewState(lang, dayString, stage, startingIndex)
 					}
 				>
-					Continue
+					Continue Review
 				</Button>
 			</CardFooter>
 		</Card>
