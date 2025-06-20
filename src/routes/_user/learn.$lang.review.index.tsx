@@ -37,6 +37,7 @@ import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
 import { useReviewsToday } from '@/lib/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
+import { WhenComplete } from '@/components/review/when-review-complete-screen'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -52,7 +53,10 @@ function ReviewPageSetup() {
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
 	const initLocalReviewState = useInitialiseReviewStore()
-	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
+	const { data: manifestToRestore, isFetching } = useReviewsToday(
+		lang,
+		dayString
+	)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
@@ -238,23 +242,22 @@ function ReviewPageSetup() {
 					sums.manifest
 				)
 
-			await queryClient.refetchQueries({ queryKey: ['user', lang] })
-
 			initLocalReviewState(lang, dayString)
+			await queryClient.refetchQueries({ queryKey: ['user', lang] })
 		},
 	})
 
-	// stage === 0 until the init fn runs
-	if (manifestToRestore && stage)
-		return <Navigate to="/learn/$lang/review/go" params={{ lang }} />
-
-	if (manifestToRestore !== null)
+	// when the manifest is present, skip this page, go to a better one
+	if (manifestToRestore?.stats.count)
 		return (
-			<ContinueReview
-				lang={lang}
-				dayString={dayString}
-				reviewStats={manifestToRestore.stats}
-			/>
+			manifestToRestore.stats.complete === manifestToRestore.stats.count ?
+				<WhenComplete />
+			: stage ? <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+			: <ContinueReview
+					lang={lang}
+					dayString={dayString}
+					reviewStats={manifestToRestore.stats}
+				/>
 		)
 
 	return (

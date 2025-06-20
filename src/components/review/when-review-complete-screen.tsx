@@ -15,10 +15,10 @@ export function WhenComplete() {
 	const stage = useReviewStage()
 	const actions = useReviewActions()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
-	if (!stats || !stage) return null
+	if (!stats) return null
 
 	const showWhich =
-		stats.again && stage < 2 ? 'a'
+		stats.unreviewed && stage < 2 ? 'a'
 		: stats.again && stage < 4 ? 'b'
 		: 'c'
 
