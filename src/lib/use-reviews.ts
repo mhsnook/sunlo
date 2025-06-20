@@ -52,7 +52,7 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
 	const stats = {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
-		count: manifest.length,
+		count: manifest?.length ?? 0,
 		firstUnreviewedIndex: getIndexOfNextUnreviewedCard(
 			manifest,
 			reviewsMap,
@@ -104,7 +104,7 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 				})
 				.throwOnError()
 				.maybeSingle()) as { data: DailyReviewStateFetched }
-			if (!data) return null
+			if (!data || !data.manifest?.length) return null
 			const { user_card_review: reviews, ...reviewStateRow } = data
 
 			const reviewsMap: ReviewsMap =
