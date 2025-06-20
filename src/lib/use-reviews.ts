@@ -45,11 +45,10 @@ const updateReview = async (submitData: ReviewUpdate) => {
 	return data
 }
 
-function mapToStats(reviewsMap: ReviewsMap) {
+function mapToStats(reviewsMap: Omit<ReviewsMap, 'count'>) {
 	return {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
-		count: Object.keys(reviewsMap).length,
 	}
 }
 
@@ -98,7 +97,10 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 			return {
 				...reviewStateRow,
 				reviewsMap,
-				stats: mapToStats(reviewsMap),
+				stats: {
+					...mapToStats(reviewsMap),
+					count: data.manifest.length,
+				},
 			} as DailyReviewStateLoaded
 		},
 	}
