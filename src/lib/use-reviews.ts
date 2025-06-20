@@ -13,12 +13,15 @@ import {
 	ReviewInsert,
 	ReviewRow,
 	ReviewsMap,
+	ReviewStages,
 	ReviewStats,
 	ReviewUpdate,
 	uuid,
 } from '@/types/main'
 import toast from 'react-hot-toast'
 import {
+	getIndexOfNextAgainCard,
+	getIndexOfNextUnreviewedCard,
 	useCardIndex,
 	useNextValid,
 	useReviewActions,
@@ -45,10 +48,31 @@ const updateReview = async (submitData: ReviewUpdate) => {
 	return data
 }
 
-function mapToStats(reviewsMap: Omit<ReviewsMap, 'count'>) {
-	return {
+function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
+	const stats = {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
+		count: manifest.length,
+		firstUnreviewedIndex: getIndexOfNextUnreviewedCard(
+			manifest,
+			reviewsMap,
+			-1
+		),
+		firstAgainIndex: getIndexOfNextAgainCard(manifest, reviewsMap, -1),
+	}
+
+	const stage: ReviewStages =
+		stats.reviewed < stats.count ? 1
+		: stats.again === 0 ? 5
+		: 3
+	const index =
+		stage === 3 ? stats.firstAgainIndex
+		: stage === 5 ? manifest.length
+		: stats.firstUnreviewedIndex
+
+	return {
+		...stats,
+		inferred: { stage, index },
 	}
 }
 
@@ -93,14 +117,11 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 						),
 						'phrase_id'
 					)
-
+			console.log(`About to mapToStats`, reviewsMap, data.manifest)
 			return {
 				...reviewStateRow,
 				reviewsMap,
-				stats: {
-					...mapToStats(reviewsMap),
-					count: data.manifest.length,
-				},
+				stats: mapToStats(reviewsMap, data.manifest),
 			} as DailyReviewStateLoaded
 		},
 	}
@@ -204,7 +225,7 @@ export function useReviewMutation(
 					return {
 						...oldData,
 						reviewsMap: newMap,
-						stats: mapToStats(newMap),
+						stats: mapToStats(newMap, manifest),
 					}
 				}
 			)
