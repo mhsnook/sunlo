@@ -29,7 +29,7 @@ export function ContinueReview({
 	const progressString =
 		reviewStats.inferred.stage === 5 ?
 			`All ${reviewStats.complete} cards complete!`
-		: reviewStats.inferred.stage === 3 ?
+		: reviewStats.inferred.stage >= 3 ?
 			`${reviewStats.again} remaining out of ${reviewStats.count} cards today`
 		:	`${reviewStats.complete} reviewed out of ${reviewStats.count} cards today`
 	return (

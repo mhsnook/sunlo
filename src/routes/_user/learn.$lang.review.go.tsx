@@ -44,7 +44,7 @@ function ReviewPage() {
 	const stage = useReviewStage()
 
 	if (typeof manifest !== 'object') return <Loader />
-	if (!manifest?.length || stage === 0) return <Navigate to=".." />
+	if (!manifest?.length || !stage) return <Navigate to=".." />
 
 	return <FlashCardReviewSession manifest={manifest} />
 }
