@@ -64,9 +64,9 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
 	const stage: ReviewStages =
 		stats.reviewed < stats.count ? 1
 		: stats.again === 0 ? 5
-		: 3
+		: 4
 	const index =
-		stage === 3 ? stats.firstAgainIndex
+		stage === 4 ? stats.firstAgainIndex
 		: stage === 5 ? manifest.length
 		: stats.firstUnreviewedIndex
 
