@@ -8,9 +8,6 @@ import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const avatarFullUrl = (fullPath: string): string =>
-	`https://hepudeougzlgnuqvybrj.supabase.co/storage/v1/object/public/${fullPath}`
-
 const filenameFromFile = (file: File) => {
 	// returns a string like pic-of-my-cat-1a4d06.jpg
 
@@ -50,10 +47,9 @@ export default function AvatarEditor({ url, onUpload }: AvatarEditorProps) {
 				})
 
 			if (error) throw error
-			// is the fullPath not working? why the ts error?
-			// @@TODO fix extraneous guard
-			const path = data['fullPath'] || data.path
-			onUpload(avatarFullUrl(path))
+			onUpload(
+				supabase.storage.from('avatars').getPublicUrl(data.path).data.publicUrl
+			)
 			return data
 		},
 		onSuccess: (data) => {
