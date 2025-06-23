@@ -43,7 +43,22 @@ export const profileQuery = (userId: uuid | null) =>
 
 export const useProfile = () => {
 	const { userId } = useAuth()
-	return useQuery({ ...profileQuery(userId) })
+export const searchPublicProfilesByUsername = async (
+	query: string,
+	uid: uuid
+): Promise<Array<PublicProfile> | null> => {
+	if (!query) return null
+	const { data } = await supabase
+		.from('public_profile')
+		.select('uid, username, avatar_path')
+		.ilike('username', `%${query}%`)
+		.neq('uid', uid)
+		.limit(10)
+		.throwOnError()
+	return data.map((row) => ({
+		...row,
+		avatar_url: avatarUrlify(row.avatar_path),
+	}))
 }
 
 export const publicProfileQuery = (uid: uuid) =>

@@ -24,13 +24,12 @@ import { Input } from '@/components/ui/input'
 import Callout from '@/components/ui/callout'
 
 import { useRelations } from '@/lib/friends'
-import type { PublicProfile, uuid } from '@/types/main'
-import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
+import { searchPublicProfilesByUsername } from '@/lib/use-profile'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -88,27 +87,14 @@ function PendingInvitationsSection() {
 					:	data?.uids.invitations.map((uid) => (
 							<ProfileWithRelationship
 								key={uid}
+								// @TODO replace this with just passing the UID and have the
+								// component grab the relationship from a use-query+selector
 								profile={data?.relationsMap[uid].profile}
 							/>
 						))
 					}
 				</CardContent>
 			</Card>
-}
-
-const searchAsync = async (
-	query: string,
-	uid: uuid
-): Promise<PublicProfile[] | null> => {
-	if (!query) return null
-	const { data } = await supabase
-		.from('public_profile')
-		.select('uid, username, avatar_url')
-		.ilike('username', `%${query}%`)
-		.neq('uid', uid)
-		.limit(10)
-		.throwOnError()
-	return data || []
 }
 
 export default function SearchProfiles() {
@@ -132,7 +118,8 @@ export default function SearchProfiles() {
 		isFetching,
 	} = useQuery({
 		queryKey: ['public_profile', 'search', debouncedQuery as string],
-		queryFn: async ({ queryKey }) => searchAsync(queryKey[2], userId!),
+		queryFn: async ({ queryKey }) =>
+			searchPublicProfilesByUsername(queryKey[2], userId!),
 		enabled: !!debouncedQuery?.length && !!userId,
 	})
 
