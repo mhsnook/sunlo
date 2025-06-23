@@ -606,7 +606,7 @@ export type Database = {
       }
       user_profile: {
         Row: {
-          avatar_url: string | null
+          avatar_path: string | null
           created_at: string
           language_primary: string
           languages_spoken: string[]
@@ -615,7 +615,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
-          avatar_url?: string | null
+          avatar_path?: string | null
           created_at?: string
           language_primary?: string
           languages_spoken?: string[]
@@ -624,7 +624,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
-          avatar_url?: string | null
+          avatar_path?: string | null
           created_at?: string
           language_primary?: string
           languages_spoken?: string[]
@@ -759,17 +759,17 @@ export type Database = {
       }
       public_profile: {
         Row: {
-          avatar_url: string | null
+          avatar_path: string | null
           uid: string | null
           username: string | null
         }
         Insert: {
-          avatar_url?: string | null
+          avatar_path?: string | null
           uid?: string | null
           username?: string | null
         }
         Update: {
-          avatar_url?: string | null
+          avatar_path?: string | null
           uid?: string | null
           username?: string | null
         }

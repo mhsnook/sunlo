@@ -1,6 +1,7 @@
 import { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import supabase from './supabase-client'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -98,4 +99,10 @@ export function arrayDifference(
 ): Array<uuid> {
 	const set2 = new Set(arr2.flat())
 	return arr1.filter((item) => !set2.has(item))
+}
+
+export function avatarUrlify(path?: string | null) {
+	return !path ? null : (
+			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
+		)
 }
