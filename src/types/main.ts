@@ -185,11 +185,14 @@ type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids
 }
 
-export type PublicProfile = Tables<'public_profile'>
+export type PublicProfile = Tables<'public_profile'> & {
+	avatar_url?: string | null
+}
 export type ProfileRow = Tables<'user_profile'>
 export type ProfileInsert = TablesInsert<'user_profile'>
 export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
 export type ProfileFull = Tables<'user_profile'> & {
+	avatar_url: string | null
 	decksMap: DecksMap
 	deckLanguages: Array<string>
 	friendships?: Array<FriendshipRow>

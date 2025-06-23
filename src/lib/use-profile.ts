@@ -8,7 +8,7 @@ import type {
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { mapArray } from '@/lib/utils'
+import { avatarUrlify, mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 
 async function fetchAndShapeProfileFull(uid: uuid) {
@@ -24,7 +24,12 @@ async function fetchAndShapeProfileFull(uid: uuid) {
 	const deckLanguages: Array<string> = decks_array
 		.map((d) => d.lang)
 		.filter((d) => typeof d === 'string')
-	return { ...profile, decksMap, deckLanguages } as ProfileFull
+	return {
+		...profile,
+		avatar_url: avatarUrlify(profile.avatar_path),
+		decksMap,
+		deckLanguages,
+	} as ProfileFull
 }
 
 export const profileQuery = (userId: uuid | null) =>
@@ -45,13 +50,16 @@ export const publicProfileQuery = (uid: uuid) =>
 	queryOptions({
 		queryKey: ['public', 'profile', uid],
 		queryFn: async () => {
-			const res = await supabase
+			const { data } = await supabase
 				.from('public_profile')
 				.select()
 				.eq('uid', uid)
 				.maybeSingle()
 				.throwOnError()
-			return res.data as PublicProfile | null
+			return {
+				...data,
+				avatar_url: avatarUrlify(data?.avatar_path),
+			} as PublicProfile | null
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,
 	})
