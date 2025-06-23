@@ -6,7 +6,7 @@ import { ShowError } from '@/components/errors'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { avatarUrlify, cn } from '@/lib/utils'
 
 const filenameFromFile = (file: File) => {
 	// returns a string like pic-of-my-cat-1a4d06.jpg
@@ -26,11 +26,14 @@ const filenameFromFile = (file: File) => {
 }
 
 interface AvatarEditorProps {
-	url: string
+	avatar_path: string
 	onUpload: (url: string) => void
 }
 
-export default function AvatarEditor({ url, onUpload }: AvatarEditorProps) {
+export default function AvatarEditor({
+	avatar_path,
+	onUpload,
+}: AvatarEditorProps) {
 	const sendImage = useMutation({
 		mutationFn: async (event: ChangeEvent<HTMLInputElement>) => {
 			event.preventDefault()
@@ -47,9 +50,7 @@ export default function AvatarEditor({ url, onUpload }: AvatarEditorProps) {
 				})
 
 			if (error) throw error
-			onUpload(
-				supabase.storage.from('avatars').getPublicUrl(data.path).data.publicUrl
-			)
+			onUpload(data.path)
 			return data
 		},
 		onSuccess: (data) => {
@@ -57,7 +58,7 @@ export default function AvatarEditor({ url, onUpload }: AvatarEditorProps) {
 			toast.success(`Avatar uploaded...`)
 		},
 	})
-
+	const url = avatarUrlify(avatar_path)
 	return (
 		<div className="flex flex-col gap-2">
 			<Label

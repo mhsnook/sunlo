@@ -9,11 +9,11 @@ export default function AvatarEditorField({
 }: ControlledFieldProps) {
 	const {
 		field: { value, onChange },
-	} = useController({ name: 'avatar_url', control })
+	} = useController({ name: 'avatar_path', control })
 	return (
 		<div className="flex flex-col gap-1">
 			<Label className={error ? 'text-destructive' : ''}>Profile picture</Label>
-			<AvatarEditor url={value} onUpload={onChange} />
+			<AvatarEditor avatar_path={value} onUpload={onChange} />
 			<ErrorLabel {...error} />
 		</div>
 	)

@@ -7,7 +7,7 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {  cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import {
