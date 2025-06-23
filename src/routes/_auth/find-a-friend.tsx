@@ -5,13 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
-import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
+import {  cn } from '@/lib/utils'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
-import { uuid } from '@/types/main'
 import {
 	Card,
 	CardContent,
@@ -19,6 +17,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
+import { searchPublicProfilesByUsername } from '@/lib/use-profile'
 
 export const Route = createFileRoute('/_auth/find-a-friend')({
 	component: SearchProfilesComponent,
@@ -29,18 +28,6 @@ const SearchSchema = z.object({
 })
 
 type SearchFormData = z.infer<typeof SearchSchema>
-
-const searchProfiles = async (query: string, uid: uuid) => {
-	const { data } = await supabase
-		.from('public_profile')
-		.select('uid, username, avatar_url')
-		.ilike('username', `%${query}%`)
-		.neq('uid', uid)
-		.limit(10)
-		.throwOnError()
-
-	return data || []
-}
 
 export function SearchProfilesComponent() {
 	const {
@@ -56,7 +43,8 @@ export function SearchProfilesComponent() {
 		mutate: search,
 		isPending: isSearching,
 	} = useMutation({
-		mutationFn: (data: SearchFormData) => searchProfiles(data.query, userId!),
+		mutationFn: (data: SearchFormData) =>
+			searchPublicProfilesByUsername(data.query, userId!),
 		onError: () => toast.error('Failed to search profiles'),
 	})
 
