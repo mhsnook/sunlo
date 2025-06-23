@@ -157,7 +157,7 @@ values
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'GarlicFace',
-		'https://hepudeougzlgnuqvybrj.supabase.co/storage/v1/object/public/avatars/Screenshot from 2025-01-20 22-38-24-1a82b1.png',
+		'http://localhost:54321/storage/v1/object/public/avatars/garlic-broccoli-friends-1ab68c.png',
 		null,
 		'2025-01-20 07:42:48.704054+00',
 		'{fra,fas}',
@@ -3761,6 +3761,7 @@ values
 		'tam',
 		(current_date - 4 + interval '22 minute' - interval '4 hour')::date
 	);
+
 --
 -- Data for Name: prefixes; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
@@ -3776,6 +3777,120 @@ values
 select
 	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
 
+--
+-- PostgreSQL database dump complete
+--
+reset all;
+
+set
+	session_replication_role = replica;
+
+--
+-- PostgreSQL database dump
+--
+-- Dumped from database version 15.8
+-- Dumped by pg_dump version 15.8
+set
+	statement_timeout = 0;
+
+set
+	lock_timeout = 0;
+
+set
+	idle_in_transaction_session_timeout = 0;
+
+set
+	client_encoding = 'UTF8';
+
+set
+	standard_conforming_strings = on;
+
+select
+	pg_catalog.set_config ('search_path', '', false);
+
+set
+	check_function_bodies = false;
+
+set
+	xmloption = content;
+
+set
+	client_min_messages = warning;
+
+set
+	row_security = off;
+
+--
+-- Data for Name: buckets; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+insert into
+	"storage"."buckets" (
+		"id",
+		"name",
+		"owner",
+		"created_at",
+		"updated_at",
+		"public",
+		"avif_autodetection",
+		"file_size_limit",
+		"allowed_mime_types",
+		"owner_id"
+	)
+values
+	(
+		'avatars',
+		'avatars',
+		null,
+		'2025-06-23 08:31:46.251695+00',
+		'2025-06-23 08:31:46.251695+00',
+		true,
+		false,
+		null,
+		null,
+		null
+	);
+
+--
+-- Data for Name: objects; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+insert into
+	"storage"."objects" (
+		"id",
+		"bucket_id",
+		"name",
+		"owner",
+		"created_at",
+		"updated_at",
+		"last_accessed_at",
+		"metadata",
+		"version",
+		"owner_id",
+		"user_metadata"
+	)
+values
+	(
+		'b9e78296-993f-4947-9d3c-027d56859f85',
+		'avatars',
+		'garlic-broccoli-friends-1ab68c.png',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'2025-06-23 08:40:47.685303+00',
+		'2025-06-23 09:27:29.198631+00',
+		'2025-06-23 08:40:47.685303+00',
+		'{"eTag": "\"44959b1a8ffe5ddc76cfb438a646e9c2\"", "size": 16325, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2025-06-23T09:27:29.196Z", "contentLength": 16325, "httpStatusCode": 200}',
+		'283322b6-fabe-46d2-b2c1-c9e2149299e0',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'{}'
+	);
+
+--
+-- Data for Name: prefixes; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+--
+-- Data for Name: s3_multipart_uploads; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
+--
+-- Data for Name: s3_multipart_uploads_parts; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+--
 --
 -- PostgreSQL database dump complete
 --
