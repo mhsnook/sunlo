@@ -27,7 +27,7 @@ const ProfileEditFormSchema = z.object({
 		.string()
 		.length(3, { message: 'A primary language is required' }),
 	languages_spoken: z.array(z.string()),
-	avatar_url: z.string().optional(),
+	avatar_path: z.string().nullable(),
 })
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
@@ -45,8 +45,8 @@ export default function UpdateProfileForm() {
 			:	<Navigate to={`/getting-started`} />
 		:	<PrefilledForm
 				initialData={{
-					avatar_url: data.avatar_url,
-					username: data.username,
+					avatar_path: data.avatar_path,
+					username: data.username ?? '',
 					language_primary: data.language_primary,
 					languages_spoken: data.languages_spoken,
 				}}
@@ -116,7 +116,7 @@ function PrefilledForm({ initialData, uid }: PrefilledFormProps) {
 					control={control}
 					primary={watchPrimary}
 				/>
-				<AvatarEditorField error={errors.avatar_url} control={control} />
+				<AvatarEditorField error={errors.avatar_path} control={control} />
 				<div className="flex flex-col-reverse">
 					<Button disabled={updateProfile.isPending}>Save changes</Button>
 				</div>
