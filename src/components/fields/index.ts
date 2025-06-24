@@ -17,7 +17,7 @@ import TranslationLanguageField from '@/components/fields/translation-language-f
 import TranslationTextField from '@/components/fields/translation-text-field'
 
 type AnyFieldType = {
-	error: FieldError
+	error?: FieldError
 	tabIndex?: number
 	autoFocus?: boolean
 }

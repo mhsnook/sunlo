@@ -147,7 +147,7 @@ insert into
 	"public"."user_profile" (
 		"uid",
 		"username",
-		"avatar_url",
+		"avatar_path",
 		"updated_at",
 		"created_at",
 		"languages_spoken",
@@ -157,7 +157,7 @@ values
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'GarlicFace',
-		'http://localhost:54321/storage/v1/object/public/avatars/garlic-broccoli-friends-1ab68c.png',
+		'garlic-broccoli-friends-1a82b1.png',
 		null,
 		'2025-01-20 07:42:48.704054+00',
 		'{fra,fas}',
@@ -3871,7 +3871,7 @@ values
 	(
 		'b9e78296-993f-4947-9d3c-027d56859f85',
 		'avatars',
-		'garlic-broccoli-friends-1ab68c.png',
+		'garlic-broccoli-friends-1a82b1.png',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'2025-06-23 08:40:47.685303+00',
 		'2025-06-23 09:27:29.198631+00',

@@ -43,6 +43,9 @@ export const profileQuery = (userId: uuid | null) =>
 
 export const useProfile = () => {
 	const { userId } = useAuth()
+	return useQuery({ ...profileQuery(userId) })
+}
+
 export const searchPublicProfilesByUsername = async (
 	query: string,
 	uid: uuid
