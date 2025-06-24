@@ -3845,8 +3845,8 @@ values
 		'2025-06-23 08:31:46.251695+00',
 		true,
 		false,
-		null,
-		null,
+		5000000,
+		'{image/png,image/jpeg,image/gif}',
 		null
 	);
 
