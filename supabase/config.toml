@@ -51,7 +51,7 @@ sql_paths = ["./seed.sql"]
 
 [storage.buckets.avatars]
 public = true
-file_size_limit = "50MB"
+file_size_limit = "5MB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/gif"]
 objects_path = "./avatars"
 
