@@ -1,15 +1,12 @@
-import type { uuid } from '@/types/main'
+import type { ProfileFull, uuid } from '@/types/main'
 
-import { Navigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
 
-import { Loader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
-import { useProfile } from '@/lib/use-profile'
 import { ShowError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
 import {
@@ -32,39 +29,25 @@ const ProfileEditFormSchema = z.object({
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
 
-export default function UpdateProfileForm() {
-	const { data } = useProfile()
-
-	return (
-		!data ?
-			data === undefined ?
-				<Loader />
-			:	<Navigate to={`/getting-started`} />
-		:	<PrefilledForm
-				initialData={{
-					avatar_path: data.avatar_path,
-					username: data.username ?? '',
-					language_primary: data.language_primary,
-					languages_spoken: data.languages_spoken,
-				}}
-				uid={data.uid}
-			/>
-	)
-}
-
-interface PrefilledFormProps {
-	initialData: ProfileEditFormInputs
-	uid: uuid
-}
-
-function PrefilledForm({ initialData, uid }: PrefilledFormProps) {
+export default function UpdateProfileForm({
+	profile,
+}: {
+	profile: ProfileFull
+}) {
 	const queryClient = useQueryClient()
+	const initialData: ProfileEditFormInputs = {
+		username: profile.username ?? '',
+		language_primary: profile.language_primary,
+		languages_spoken: profile.languages_spoken,
+		avatar_path: profile.avatar_path,
+	}
+	const uid: uuid = profile.uid
 
 	const updateProfile = useMutation({
-		mutationFn: async (value: ProfileEditFormInputs) => {
+		mutationFn: async (values: ProfileEditFormInputs) => {
 			const { data } = await supabase
 				.from('user_profile')
-				.update(value)
+				.update(values)
 				.eq('uid', uid)
 				.select()
 				.throwOnError()
