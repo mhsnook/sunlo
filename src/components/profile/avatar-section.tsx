@@ -2,7 +2,7 @@ import { useProfile } from '@/lib/use-profile'
 import { User } from 'lucide-react'
 
 export default function AvatarSection() {
-	const { data: profile, isPending } = useProfile()
+	const { data: profile } = useProfile()
 
 	return (
 		<header className="mx-auto my-4 max-w-sm text-center">
@@ -11,9 +11,7 @@ export default function AvatarSection() {
 					className="bg-foreground/20 mx-auto mb-2 flex size-36 flex-row justify-center rounded-full shadow-lg"
 					htmlFor="single"
 				>
-					{isPending ?
-						<div className="size-36"></div>
-					: profile?.avatar_url ?
+					{profile?.avatar_url ?
 						<img
 							src={profile.avatar_url}
 							alt={`${profile?.username ?? 'Someone'}'s profile image`}

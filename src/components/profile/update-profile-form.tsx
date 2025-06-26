@@ -33,11 +33,8 @@ const ProfileEditFormSchema = z.object({
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
 
 export default function UpdateProfileForm() {
-	const { data, error } = useProfile()
-	// (`Profile data`, data)
-	if (error) return <ShowError>{error.message}</ShowError>
+	const { data } = useProfile()
 
-	// we use placeholders for the profile, so there's no isPending
 	return (
 		!data ?
 			data === undefined ?

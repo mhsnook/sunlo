@@ -21,9 +21,7 @@ import { Link } from '@tanstack/react-router'
 import { Badge } from '@/components/ui/badge'
 
 const useDeckMenuData = () => {
-	const { data, isPending, error } = useProfile()
-	if (isPending) return undefined
-	if (error) throw Error(error.message)
+	const { data } = useProfile()
 	if (!data) return null
 
 	return data.deckLanguages?.map((lang) => {
