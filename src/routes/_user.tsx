@@ -6,6 +6,7 @@ import { profileQuery } from '@/lib/use-profile'
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import { Home } from 'lucide-react'
+import { Loader } from '@/components/ui/loader'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -33,7 +34,9 @@ export const Route = createFileRoute('/_user')({
 	}) => {
 		// if for some reason there is no profile, we must create one!
 		if (location.pathname !== '/getting-started') {
-			const data = await queryClient.fetchQuery(profileQuery(userId))
+			const data = await queryClient.ensureQueryData({
+				...profileQuery(userId),
+			})
 			if (data === null) throw redirect({ to: '/getting-started' })
 		}
 
@@ -46,6 +49,7 @@ export const Route = createFileRoute('/_user')({
 		}
 	},
 	component: UserLayout,
+	pendingComponent: Loader,
 })
 
 function UserLayout() {
