@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -8,25 +7,14 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 
 import { useDeckMeta } from '@/lib/use-deck'
-import { DeckMeta, DeckRow } from '@/types/main'
+import { DeckRow } from '@/types/main'
 import { LearningGoalField } from '@/components/fields/learning-goal-field'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
+import { ArchiveDeckButton } from '@/components/learn/archive-deck-button'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -43,8 +31,15 @@ function DeckSettingsPage() {
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<GoalForm lang={lang} learning_goal={meta.learning_goal!} />
-				<ArchiveForm archived={meta.archived!} lang={lang} />
+				{!meta.archived ?
+					<GoalForm lang={meta.lang!} learning_goal={meta.learning_goal!} />
+				:	null}
+				<div className="flex w-full flex-col justify-between p-2 @sm:flex-row">
+					<span className="h4">
+						{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
+					</span>
+					<ArchiveDeckButton lang={meta.lang!} archived={meta.archived!} />
+				</div>
 			</CardContent>
 		</Card>
 	)
@@ -144,86 +139,5 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 				</form>
 			</CardContent>
 		</Card>
-	)
-}
-
-function ArchiveForm({ archived, lang }: Pick<DeckMeta, 'archived' | 'lang'>) {
-	const [open, setOpen] = useState(false)
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
-	const mutation = useMutation({
-		mutationFn: async () => {
-			await supabase
-				.from('user_deck')
-				.update({ archived: !archived })
-				.eq('lang', lang!)
-				.eq('uid', userId!)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ['user', lang, 'deck'] })
-			if (archived) toast.success('The deck has been re-activated!')
-			else
-				toast.success(
-					'The deck has been archived and hidden from your active decks.'
-				)
-			setOpen(false)
-		},
-		onError: () => {
-			toast.error(`Failed to update deck status`)
-		},
-	})
-
-	return (
-		<div className="flex w-full flex-col justify-between p-2 @sm:flex-row">
-			<span className="h4">
-				{archived ? 'Reactivate deck' : 'Archive your deck'}
-			</span>
-			<AlertDialog open={open} onOpenChange={setOpen}>
-				<AlertDialogTrigger asChild>
-					{archived ?
-						<Button variant="default" disabled={!archived}>
-							Restore deck
-						</Button>
-					:	<Button variant="destructive-outline" disabled={!!archived}>
-							Archive deck
-						</Button>
-					}
-				</AlertDialogTrigger>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>
-							{archived ?
-								'Restore this deck?'
-							:	'Are you sure you want to archive this deck?'}
-						</AlertDialogTitle>
-						<AlertDialogDescription>
-							{archived ?
-								`You can pick up right where you left off.`
-							:	`This action will hide the deck from your active decks. You can unarchive it later if needed.`
-							}
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel
-							className={buttonVariants({ variant: 'secondary' })}
-						>
-							Cancel
-						</AlertDialogCancel>
-						{archived ?
-							<AlertDialogAction onClick={() => mutation.mutate()}>
-								Restore
-							</AlertDialogAction>
-						:	<AlertDialogAction
-								className={buttonVariants({ variant: 'destructive' })}
-								onClick={() => mutation.mutate()}
-							>
-								Archive
-							</AlertDialogAction>
-						}
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
-		</div>
 	)
 }
