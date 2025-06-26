@@ -1,5 +1,4 @@
 import { ChevronsUpDown, LogOut } from 'lucide-react'
-
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
 	DropdownMenu,
@@ -31,13 +30,11 @@ export function NavUser() {
 	const { isMobile, setOpenMobile } = useSidebar()
 	const closeSidebar = () => setOpenMobile(false)
 	const { isAuth, userEmail } = useAuth()
-	const { data: profile, isPending } = useProfile()
+	const { data: profile } = useProfile()
 	const signOut = useSignOut()
-	if (isPending || !profile) return null
-	// these fallbacks are only here because view types always
-	// include `| null` for every field :(
-	const avatar_url = profile.avatar_url || undefined
-	const username = profile.username || undefined
+	if (!profile) return null
+	const { username, avatar_url } = profile
+
 	return (
 		<SidebarMenu>
 			<SidebarMenuItem>
