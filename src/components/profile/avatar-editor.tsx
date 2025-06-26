@@ -16,7 +16,7 @@ const filenameFromFile = (file: File) => {
 	const ext = nameparts.pop()
 
 	// rejoin the remaining parts in case of 'pic.of.my.cat.jpg'
-	const slug = nameparts.join('.')
+	const slug = nameparts.join('.').replaceAll(' ', '-')
 
 	// a hash like '1a4d06' from the image timestamp to track uniqueness
 	const timeHash = Math.round(file.lastModified * 0.000001).toString(16)
