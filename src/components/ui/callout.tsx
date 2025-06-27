@@ -7,7 +7,7 @@ type CalloutProps = PropsWithChildren & {
 	variant?: 'default' | 'problem' | 'ghost'
 	className?: string
 	alert?: boolean
-	Icon?: () => LucideIcon | ReactNode
+	Icon?: LucideIcon | (() => LucideIcon) | ReactNode
 }
 
 const variants = {

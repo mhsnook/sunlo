@@ -1,10 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Star, Users } from 'lucide-react'
+import { Archive, Star, Users } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useProfile } from '@/lib/use-profile'
 import { ago } from '@/lib/dayjs'
 import Flagged from '@/components/flagged'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { DeckCard } from '@/components/learn/deck-card'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
@@ -12,6 +18,12 @@ export const Route = createFileRoute('/_user/learn/')({
 
 export default function Page() {
 	const { data: profile } = useProfile()
+	const [activeTab, setActiveTab] = useState('active')
+	if (!profile) return null
+	const { decksMap, deckLanguages } = profile
+	const activeDecks = deckLanguages.filter((lang) => !decksMap[lang].archived)
+	const archivedDecks = deckLanguages.filter((lang) => decksMap[lang].archived)
+
 	return (
 		<main className="grid gap-4 @lg:grid-cols-2">
 			{Object.entries(profile?.decksMap ?? []).map(([key, deck]) => (

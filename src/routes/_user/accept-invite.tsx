@@ -158,7 +158,7 @@ const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
 				` or that the friend's public profile has even been loaded`
 		)
 	return (
-		<Callout Icon={() => <SuccessCheckmark />}>
+		<Callout Icon={SuccessCheckmark}>
 			<div>
 				<h2 className="h3">
 					Okay! You're now connected with {friend.username}.
