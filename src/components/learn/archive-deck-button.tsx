@@ -56,8 +56,12 @@ export function ArchiveDeckButton({
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogTrigger asChild className={className}>
 				{archived ?
-					<Button variant="default" disabled={!archived}>
-						<ArchiveRestore className="h-4 w-4" />
+					<Button
+						variant="outline"
+						className="bg-primary/20 hover:bg-primary/30 border-2"
+						disabled={!archived}
+					>
+						<ArchiveRestore className="text-primary h-4 w-4" />
 						Restore deck
 					</Button>
 				:	<Button variant="destructive-outline" disabled={!!archived}>
