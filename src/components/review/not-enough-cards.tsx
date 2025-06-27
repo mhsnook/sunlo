@@ -16,7 +16,7 @@ export function NotEnoughCards({
 }) {
 	const noCards = totalCards === 0
 	return (
-		<Callout variant="ghost" Icon={() => <MessageCircleWarningIcon />}>
+		<Callout variant="ghost" Icon={MessageCircleWarningIcon}>
 			<p>
 				It looks like you don't have {noCards ? 'any' : 'enough new'} cards
 				{noCards ?

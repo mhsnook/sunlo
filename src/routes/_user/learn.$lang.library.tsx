@@ -143,7 +143,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 function Empty() {
 	const { lang } = Route.useParams()
 	return (
-		<Callout variant="ghost" Icon={() => <SearchX />}>
+		<Callout variant="ghost" Icon={SearchX}>
 			<p>There are no phrases in the library that match this search.</p>
 			<Link
 				className={buttonVariants({ variant: 'outline' })}
