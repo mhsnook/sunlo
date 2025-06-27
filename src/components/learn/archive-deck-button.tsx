@@ -21,9 +21,11 @@ import { Archive, ArchiveRestore } from 'lucide-react'
 export function ArchiveDeckButton({
 	lang,
 	archived,
+	className = '',
 }: {
 	lang: string
 	archived: boolean
+	className?: string
 }) {
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
@@ -52,7 +54,7 @@ export function ArchiveDeckButton({
 	})
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
-			<AlertDialogTrigger asChild>
+			<AlertDialogTrigger asChild className={className}>
 				{archived ?
 					<Button variant="default" disabled={!archived}>
 						<ArchiveRestore className="h-4 w-4" />

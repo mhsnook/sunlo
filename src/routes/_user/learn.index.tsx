@@ -1,10 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Archive, Star, Users } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { createFileRoute } from '@tanstack/react-router'
+import { Archive } from 'lucide-react'
 
 import { useProfile } from '@/lib/use-profile'
-import { ago } from '@/lib/dayjs'
-import Flagged from '@/components/flagged'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { DeckCard } from '@/components/learn/deck-card'
@@ -25,54 +22,108 @@ export default function Page() {
 	const archivedDecks = deckLanguages.filter((lang) => decksMap[lang].archived)
 
 	return (
-		<main className="grid gap-4 @lg:grid-cols-2">
-			{Object.entries(profile?.decksMap ?? []).map(([key, deck]) => (
-				<Link
-					key={key}
-					to="/learn/$lang"
-					params={{ lang: key }}
-					className="block rounded-lg transition-transform focus:ring-blue-500 focus:ring-offset-1 focus:outline-blue-500"
-				>
-					<Card
-						key={deck.language}
-						className="hover:border-primary h-full overflow-hidden"
-					>
-						<CardHeader className="bg-primary dark text-white">
-							<CardTitle>
-								{deck.language}{' '}
-								<span className="text-muted-foreground text-xs">{key}</span>
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="space-y-2 p-4">
-							<div>
-								<p className="text-muted-foreground text-sm">
-									{deck.cards_active} active cards
-								</p>
-								<p className="text-muted-foreground text-sm">
-									Last studied:{' '}
-									{deck.most_recent_review_at ?
-										ago(deck.most_recent_review_at)
-									:	'never'}
-								</p>
-							</div>
-
-							<Flagged
-								name="deck_metadata_on_cards"
-								className="flex items-center justify-between"
+		<main className="">
+			{/* Navigation Tabs */}
+			<Tabs
+				value={activeTab}
+				onValueChange={setActiveTab}
+				className="w-full space-y-6"
+			>
+				<TabsList className="grid w-full max-w-md grid-cols-2 rounded px-1 py-0">
+					<TabsTrigger value="active" className="flex items-center gap-2">
+						Active Decks
+						{activeDecks.length ?
+							<Badge
+								variant="secondary"
+								className="outline-primary/50 ms-1 outline"
 							>
-								<div className="flex items-center space-x-1">
-									<Users className="text-info size-4" />
-									<span className="text-sm">{0} friends studying</span>
-								</div>
-								<div className="flex items-center space-x-1">
-									<Star className="text-warning size-4" />
-									<span className="text-sm">{4.5}</span>
-								</div>
-							</Flagged>
-						</CardContent>
-					</Card>
-				</Link>
-			))}
+								{activeDecks.length}
+							</Badge>
+						:	null}
+					</TabsTrigger>
+					<TabsTrigger value="archived" className="flex items-center gap-2">
+						<Archive className="h-4 w-4" />
+						Archived
+						{archivedDecks.length > 0 && (
+							<Badge
+								variant="secondary"
+								className="outline-primary/50 ms-1 outline"
+							>
+								{archivedDecks.length}
+							</Badge>
+						)}
+					</TabsTrigger>
+				</TabsList>
+
+				<TabsContent value="active" className="w-full space-y-6">
+					{activeDecks.length > 0 ?
+						<>
+							<div className="flex items-center justify-between">
+								<h2 className="text-lg font-medium">Ready to study</h2>
+								<span className="text--foreground text-sm">
+									{activeDecks.length} deck
+									{activeDecks.length !== 1 ? 's' : ''}
+								</span>
+							</div>
+							<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+								{activeDecks.map((lang) => (
+									<DeckCard key={lang} deck={decksMap[lang]} />
+								))}
+							</div>
+						</>
+					:	<div className="py-12 text-center">
+							<div className="text-muted-foreground mb-4">
+								<Archive className="mx-auto h-12 w-12" />
+							</div>
+							<h3 className="mb-2 text-lg font-medium">No active decks</h3>
+							<p className="text-muted-foreground mb-4">
+								All your decks have been archived. Restore some to start
+								studying!
+							</p>
+							<Button onClick={() => setActiveTab('archived')}>
+								View archived decks
+							</Button>
+						</div>
+					}
+				</TabsContent>
+
+				<TabsContent value="archived" className="w-full space-y-6">
+					{archivedDecks.length > 0 ?
+						<>
+							<div className="flex items-center justify-between">
+								<h2 className="text-lg font-medium">Archived decks</h2>
+								<span className="text-muted-foreground me-2 text-sm">
+									{archivedDecks.length} archived deck
+									{archivedDecks.length !== 1 ? 's' : ''}
+								</span>
+							</div>
+							<Callout Icon={Archive}>
+								<h3 className="font-medium">Archived decks</h3>
+								<p className="mt-1 text-sm opacity-70">
+									These decks are hidden from your main view but can be restored
+									anytime. Your progress is safely preserved.
+								</p>
+							</Callout>
+
+							<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+								{archivedDecks.map((lang) => (
+									<DeckCard key={lang} deck={decksMap[lang]} />
+								))}
+							</div>
+						</>
+					:	<div className="py-12 text-center">
+							<div className="text-muted-foreground mb-4">
+								<Archive className="mx-auto h-12 w-12" />
+							</div>
+							<h3 className="mb-2 text-lg font-medium">No archived decks</h3>
+							<p className="text-muted-foreground">
+								When you archive decks, they'll appear here for easy
+								restoration.
+							</p>
+						</div>
+					}
+				</TabsContent>
+			</Tabs>
 		</main>
 	)
 }
