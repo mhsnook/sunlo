@@ -4,7 +4,6 @@ import Flagged from '@/components/flagged'
 import CopyLinkButton from '@/components/copy-link-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
@@ -144,13 +143,13 @@ function RouteComponent() {
 						<AddTranslationsDialog
 							phrase={phrase}
 							variant="outline"
-							className="mt-3 w-full"
+							className="border-primary-foresoft/30 mt-3"
 						/>
 					</div>
 
 					<Separator />
 
-					<div className="flex flex-wrap gap-2">
+					<div className="flex flex-wrap place-items-center justify-between">
 						<CopyLinkButton variant="outline" size="default" />
 						<SharePhraseButton
 							pid={id}
@@ -158,9 +157,13 @@ function RouteComponent() {
 							variant="outline"
 							size="default"
 						/>
-						<div className="flex-grow"></div>
-						<Link to={`/learn/$lang/library`} params={{ lang }}>
-							<Button variant="ghost">Back to library</Button>
+
+						<Link
+							to={`/learn/$lang/library`}
+							params={{ lang }}
+							className={buttonVariants({ variant: 'secondary' })}
+						>
+							Back to library
 						</Link>
 					</div>
 				</div>

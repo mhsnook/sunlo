@@ -2,6 +2,7 @@ import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
 import { ButtonProps } from '@/components/ui/button-variants'
+import { cn } from '@/lib/utils'
 
 export default function CopyLinkButton({
 	url,
@@ -35,7 +36,7 @@ export default function CopyLinkButton({
 			onClick={copyLink}
 			variant={variant}
 			size={size}
-			className={className}
+			className={cn('border-primary-foresoft/30', className)}
 			{...props}
 		>
 			<Copy className="h-4 w-4" />
