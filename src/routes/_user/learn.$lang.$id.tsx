@@ -74,6 +74,7 @@ function RouteComponent() {
 						card={card}
 						pid={id}
 						lang={lang}
+						button
 					/>
 				</div>
 				<div className="text-muted-foreground static mt-2 block items-center gap-2 text-sm">

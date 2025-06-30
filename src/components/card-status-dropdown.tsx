@@ -14,6 +14,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
+import { Button } from './ui/button'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -21,6 +22,7 @@ interface CardStatusDropdownProps {
 	deckPresent?: boolean
 	card?: CardFull | null
 	className?: string
+	button?: boolean
 }
 
 // TODO check if we can get this from the supabase types?
@@ -30,6 +32,7 @@ type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 const statusStrings = {
 	active: {
 		short: 'active',
+		long: 'Card active',
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card activated',
@@ -37,15 +40,17 @@ const statusStrings = {
 	},
 	learned: {
 		short: 'learned',
+		long: 'Inactive (learned)',
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
-		done: 'Marked "&ldquo;"learned"',
+		done: 'Marked "learned"',
 		icon: () => (
 			<Sparkles className="size-4 text-green-600" aria-label="Learned" />
 		),
 	},
 	skipped: {
 		short: 'skipped',
+		long: 'Inactive (skipped)',
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
@@ -55,6 +60,7 @@ const statusStrings = {
 	},
 	nocard: {
 		short: 'add',
+		long: 'Not in deck',
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
@@ -62,6 +68,7 @@ const statusStrings = {
 	},
 	nodeck: {
 		short: '...',
+		long: 'Not learning language',
 		action: 'Add deck',
 		actionSecond: 'Create a new deck to learn this phrase and more',
 		done: 'Deck archived',
@@ -91,6 +98,7 @@ export function CardStatusDropdown({
 	card,
 	deckPresent,
 	className,
+	button = false,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
@@ -144,18 +152,29 @@ export function CardStatusDropdown({
 	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (
 			<DropdownMenu>
-				<DropdownMenuTrigger
-					className={cn('group flex rounded-full', className)}
-				>
-					<Badge
-						variant="outline"
-						className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
-					>
-						{cardMutation.isSuccess ?
-							<CheckCircle className="size-4 text-green-500" />
-						:	statusStrings[choice].icon()}{' '}
-						{statusStrings[choice].short}
-					</Badge>
+				<DropdownMenuTrigger className={cn('group flex', className)}>
+					{button ?
+						<Button
+							variant="outline"
+							className="group-data-[state=open]:bg-primary border-primary-foresoft/30 m-0 gap-1 group-data-[state=open]:text-white"
+						>
+							{cardMutation.isSuccess ?
+								<CheckCircle className="size-4 text-green-500" />
+							:	statusStrings[choice].icon()}{' '}
+							{cardMutation.data ?
+								statusStrings[choice].done
+							:	statusStrings[choice].long}
+						</Button>
+					:	<Badge
+							variant="outline"
+							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
+						>
+							{cardMutation.isSuccess ?
+								<CheckCircle className="size-4 text-green-500" />
+							:	statusStrings[choice].icon()}{' '}
+							{statusStrings[choice].short}
+						</Badge>
+					}
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">
 					{!deckPresent ?
