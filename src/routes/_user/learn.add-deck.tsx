@@ -14,6 +14,7 @@ import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 import { ErrorLabel } from '@/components/fields'
 import { RouteIcon } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 const SearchSchema = z.object({
 	lang: z.string().optional(),
@@ -47,7 +48,7 @@ function NewDeckForm() {
 	const {
 		control,
 		handleSubmit,
-		formState: { errors },
+		formState: { errors, isValid },
 	} = useForm<FormValues>({
 		resolver: zodResolver(NewDeckSchema),
 		defaultValues: { lang: search.lang },
@@ -58,64 +59,72 @@ function NewDeckForm() {
 	const showNewUserUI = data !== undefined && deckLanguages.length === 0
 
 	return (
-		<main className="w-app space-y-4 px-3 py-6 @sm:px-[6%]">
-			<form
-				name="new-deck"
-				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={handleSubmit(
-					createNewDeck.mutate as SubmitHandler<FormValues>
-				)}
-				className="space-y-4"
-			>
-				{showNewUserUI ?
-					<Callout Icon={() => <span>👋</span>}>
-						<p>
-							Welcome <em>{data?.username}</em>!
-						</p>
-						<p>
-							Create a new deck to start learning, or go to your profile to
-							check for friend requests.
-						</p>
-					</Callout>
-				:	<p>
-						You're currently learning{' '}
-						{deckLanguages.map((l) => (
-							<Badge key={l} className="mx-1">
-								{languages[l]}
-							</Badge>
-						))}
-					</p>
-				}
-				<h2 className="h3">What language would you like to learn?</h2>
-				<SelectOneLanguage
-					autoFocus
-					hasError={!!errors.lang}
-					value={controller.field.value}
-					setValue={controller.field.onChange}
-					disabled={deckLanguages}
-				/>
-				<ErrorLabel {...errors.lang} />
-
-				<Button
-					type="submit"
-					variant="default"
-					size="lg"
-					className="my-4"
-					disabled={createNewDeck.isPending}
-				>
-					{createNewDeck.isPending ? 'Starting...' : 'Start learning'}
-				</Button>
-				{showNewUserUI ?
-					<Link
-						to={`/friends/search`}
-						className={buttonVariants({ variant: 'link' })}
+		<main className="w-app space-y-4 px-3 py-4">
+			<Card>
+				<CardHeader>
+					<CardTitle>
+						<>What language would you like to learn?</>
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<form
+						name="new-deck"
+						noValidate
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
+						onSubmit={handleSubmit(
+							createNewDeck.mutate as SubmitHandler<FormValues>
+						)}
+						className="space-y-6"
 					>
-						View friend requests
-					</Link>
-				:	null}
-			</form>
-			<ShowError>{createNewDeck.error?.message}</ShowError>
+						{showNewUserUI ?
+							<Callout Icon={() => <span>👋</span>}>
+								<p>
+									Welcome <em>{data?.username}</em>!
+								</p>
+								<p>
+									Create a new deck to start learning, or go to your profile to
+									check for friend requests.
+								</p>
+							</Callout>
+						:	<p>
+								You're currently learning{' '}
+								{deckLanguages.map((l) => (
+									<Badge key={l} className="mx-1">
+										{languages[l]}
+									</Badge>
+								))}
+							</p>
+						}
+						<SelectOneLanguage
+							autoFocus
+							hasError={!!errors.lang}
+							value={controller.field.value}
+							setValue={controller.field.onChange}
+							disabled={deckLanguages}
+						/>
+						<ErrorLabel {...errors.lang} />
+
+						<Button
+							type="submit"
+							variant="default"
+							size="lg"
+							className="my-4"
+							disabled={createNewDeck.isPending || !isValid}
+						>
+							{createNewDeck.isPending ? 'Starting...' : 'Start learning'}
+						</Button>
+						{showNewUserUI ?
+							<Link
+								to={`/friends/search`}
+								className={buttonVariants({ variant: 'link' })}
+							>
+								View friend requests
+							</Link>
+						:	null}
+					</form>
+					<ShowError>{createNewDeck.error?.message}</ShowError>
+				</CardContent>
+			</Card>
 		</main>
 	)
 }
