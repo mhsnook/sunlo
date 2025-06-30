@@ -16,6 +16,8 @@ const buttonVariants = cva(
 				ghost: 'hover:bg-primary/30 hover:text-accent-foreground',
 				outline:
 					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft',
+				'outline-primary':
+					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft bg-primary/10',
 				link: 's-link',
 			},
 			size: {

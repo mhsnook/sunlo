@@ -8,7 +8,7 @@ import {
 } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { ago } from '@/lib/dayjs'
-import { Archive, Rocket, Clock, Info, TrendingUp, Sprout } from 'lucide-react'
+import { Archive, Rocket, Clock, TrendingUp, Sprout } from 'lucide-react'
 import { ArchiveDeckButton } from './archive-deck-button'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '../ui/button-variants'
@@ -83,8 +83,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 							<Link
 								to="/learn/$lang/review"
 								className={cn(
-									buttonVariants({ variant: 'outline' }),
-									`bg-primary/20 hover:bg-primary/30 grow basis-60 border-2 font-bold`
+									buttonVariants({ variant: 'outline-primary' }),
+									`grow basis-60`
 								)}
 								params={{ lang: deck.lang! }}
 							>
@@ -94,8 +94,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 						:	<Link
 								to="/learn/$lang/library"
 								className={cn(
-									buttonVariants({ variant: 'outline' }),
-									`bg-primary/20 hover:bg-primary/30 grow basis-60 border-2 font-bold`
+									buttonVariants({ variant: 'outline-primary' }),
+									`grow basis-60`
 								)}
 								params={{ lang: deck.lang! }}
 							>
