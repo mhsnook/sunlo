@@ -28,7 +28,14 @@ export default function OneSidebarMenu({
 				{menu.map((item) => (
 					<SidebarMenuItem key={item.name}>
 						<SidebarMenuButton asChild>
-							<Link {...item.link} onClick={closeSidebar}>
+							<Link
+								{...item.link}
+								onClick={closeSidebar}
+								activeOptions={{ exact: true, includeSearch: false }}
+								activeProps={{
+									className: 'text-primary-foresoft',
+								}}
+							>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>
 							</Link>

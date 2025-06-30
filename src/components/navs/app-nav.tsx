@@ -49,7 +49,7 @@ const Nav = memo(function Nav({
 											{...l.link}
 											className="flex flex-row items-center justify-center gap-2 border-b-2 py-2"
 											activeProps={{
-												className: 'border-primary text-foreground',
+												className: 'border-primary text-primary-foresoft',
 											}}
 											activeOptions={{ exact: true, includeSearch: false }}
 											inactiveProps={{
