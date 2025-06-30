@@ -33,6 +33,7 @@ import { Route as UserProfileChangePasswordImport } from './routes/_user/profile
 import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile.change-email-confirm'
 import { Route as UserProfileChangeEmailImport } from './routes/_user/profile.change-email'
 import { Route as UserLearnQuickSearchImport } from './routes/_user/learn.quick-search'
+import { Route as UserLearnArchivedImport } from './routes/_user/learn.archived'
 import { Route as UserLearnAddDeckImport } from './routes/_user/learn.add-deck'
 import { Route as UserLearnLangImport } from './routes/_user/learn.$lang'
 import { Route as UserFriendsSearchImport } from './routes/_user/friends.search'
@@ -195,6 +196,12 @@ const UserProfileChangeEmailRoute = UserProfileChangeEmailImport.update({
 const UserLearnQuickSearchRoute = UserLearnQuickSearchImport.update({
   id: '/quick-search',
   path: '/quick-search',
+  getParentRoute: () => UserLearnRoute,
+} as any)
+
+const UserLearnArchivedRoute = UserLearnArchivedImport.update({
+  id: '/archived',
+  path: '/archived',
   getParentRoute: () => UserLearnRoute,
 } as any)
 
@@ -439,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnAddDeckImport
       parentRoute: typeof UserLearnImport
     }
+    '/_user/learn/archived': {
+      id: '/_user/learn/archived'
+      path: '/archived'
+      fullPath: '/learn/archived'
+      preLoaderRoute: typeof UserLearnArchivedImport
+      parentRoute: typeof UserLearnImport
+    }
     '/_user/learn/quick-search': {
       id: '/_user/learn/quick-search'
       path: '/quick-search'
@@ -650,6 +664,7 @@ const UserLearnLangRouteWithChildren = UserLearnLangRoute._addFileChildren(
 interface UserLearnRouteChildren {
   UserLearnLangRoute: typeof UserLearnLangRouteWithChildren
   UserLearnAddDeckRoute: typeof UserLearnAddDeckRoute
+  UserLearnArchivedRoute: typeof UserLearnArchivedRoute
   UserLearnQuickSearchRoute: typeof UserLearnQuickSearchRoute
   UserLearnIndexRoute: typeof UserLearnIndexRoute
 }
@@ -657,6 +672,7 @@ interface UserLearnRouteChildren {
 const UserLearnRouteChildren: UserLearnRouteChildren = {
   UserLearnLangRoute: UserLearnLangRouteWithChildren,
   UserLearnAddDeckRoute: UserLearnAddDeckRoute,
+  UserLearnArchivedRoute: UserLearnArchivedRoute,
   UserLearnQuickSearchRoute: UserLearnQuickSearchRoute,
   UserLearnIndexRoute: UserLearnIndexRoute,
 }
@@ -722,6 +738,7 @@ export interface FileRoutesByFullPath {
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/learn/archived': typeof UserLearnArchivedRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -758,6 +775,7 @@ export interface FileRoutesByTo {
   '/friends/invite': typeof UserFriendsInviteRoute
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/learn/archived': typeof UserLearnArchivedRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -799,6 +817,7 @@ export interface FileRoutesById {
   '/_user/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/_user/learn/archived': typeof UserLearnArchivedRoute
   '/_user/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
   '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -841,6 +860,7 @@ export interface FileRouteTypes {
     | '/friends/search'
     | '/learn/$lang'
     | '/learn/add-deck'
+    | '/learn/archived'
     | '/learn/quick-search'
     | '/profile/change-email'
     | '/profile/change-email-confirm'
@@ -876,6 +896,7 @@ export interface FileRouteTypes {
     | '/friends/invite'
     | '/friends/search'
     | '/learn/add-deck'
+    | '/learn/archived'
     | '/learn/quick-search'
     | '/profile/change-email'
     | '/profile/change-email-confirm'
@@ -915,6 +936,7 @@ export interface FileRouteTypes {
     | '/_user/friends/search'
     | '/_user/learn/$lang'
     | '/_user/learn/add-deck'
+    | '/_user/learn/archived'
     | '/_user/learn/quick-search'
     | '/_user/profile/change-email'
     | '/_user/profile/change-email-confirm'
@@ -1047,6 +1069,7 @@ export const routeTree = rootRoute
       "children": [
         "/_user/learn/$lang",
         "/_user/learn/add-deck",
+        "/_user/learn/archived",
         "/_user/learn/quick-search",
         "/_user/learn/"
       ]
@@ -1091,6 +1114,10 @@ export const routeTree = rootRoute
     },
     "/_user/learn/add-deck": {
       "filePath": "_user/learn.add-deck.tsx",
+      "parent": "/_user/learn"
+    },
+    "/_user/learn/archived": {
+      "filePath": "_user/learn.archived.tsx",
       "parent": "/_user/learn"
     },
     "/_user/learn/quick-search": {
