@@ -64,7 +64,7 @@ export default function UpdateProfileForm({
 		control,
 		handleSubmit,
 		watch,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isValid, isDirty },
 	} = useForm<ProfileEditFormInputs>({
 		defaultValues: initialData,
 		resolver: zodResolver(ProfileEditFormSchema),
@@ -98,7 +98,9 @@ export default function UpdateProfileForm({
 				/>
 				<AvatarEditorField error={errors.avatar_path} control={control} />
 				<div className="flex flex-col-reverse">
-					<Button disabled={updateProfile.isPending}>Save changes</Button>
+					<Button disabled={updateProfile.isPending || !isValid || !isDirty}>
+						Save changes
+					</Button>
 				</div>
 				<ShowError show={!!updateProfile.error}>
 					Problem updating profile: {updateProfile.error?.message}

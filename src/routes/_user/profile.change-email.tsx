@@ -53,7 +53,7 @@ function ChangeEmailPage() {
 	const {
 		handleSubmit,
 		register,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isValid },
 	} = useForm<FormInputs>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
@@ -97,7 +97,9 @@ function ChangeEmailPage() {
 							/>
 						</fieldset>
 						<div className="flex flex-row justify-between">
-							<Button disabled={changeMutation.isPending}>Submit</Button>
+							<Button disabled={changeMutation.isPending || !isValid}>
+								Submit
+							</Button>
 							<Link
 								to="/profile"
 								className={buttonVariants({ variant: 'link' })}

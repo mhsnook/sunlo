@@ -41,7 +41,7 @@ export function PasswordResetForm() {
 	const {
 		handleSubmit,
 		register,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isValid },
 	} = useForm<FormInputs>({
 		resolver: zodResolver(FormSchema),
 		defaultValues: {
@@ -79,7 +79,9 @@ export function PasswordResetForm() {
 						/>
 					</fieldset>
 					<div className="flex flex-row justify-between">
-						<Button disabled={changeMutation.isPending}>Submit</Button>
+						<Button disabled={changeMutation.isPending || !isValid}>
+							Submit
+						</Button>
 						<Link to="/profile" className={buttonVariants({ variant: 'link' })}>
 							Back to profile
 						</Link>

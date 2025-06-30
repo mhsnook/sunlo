@@ -41,7 +41,7 @@ export function AddTranslationsDialog({
 		register,
 		control,
 		reset,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isValid },
 	} = useForm<AddTranslationsType>({
 		defaultValues: { translation_text: '', translation_lang: 'eng' },
 		resolver: zodResolver(AddTranslationsInputs),
@@ -136,7 +136,9 @@ export function AddTranslationsDialog({
 						<Button disabled={isSubmitting} variant="secondary">
 							Cancel
 						</Button>
-						<Button variant="default">Add translation</Button>
+						<Button disabled={isSubmitting || !isValid} variant="default">
+							Add translation
+						</Button>
 					</DialogFooter>
 				</form>
 			</DialogContent>
