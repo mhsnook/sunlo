@@ -18,13 +18,6 @@ export default function Page() {
 		<main className="w-full space-y-6">
 			{activeDecks.length > 0 ?
 				<>
-					<div className="flex items-center justify-between">
-						<h2 className="text-lg font-medium">Ready to study</h2>
-						<span className="text--foreground text-sm">
-							{activeDecks.length} deck
-							{activeDecks.length !== 1 ? 's' : ''}
-						</span>
-					</div>
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
 						{activeDecks.map((lang) => (
 							<DeckCard key={lang} deck={decksMap[lang]} />
