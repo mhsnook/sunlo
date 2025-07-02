@@ -187,8 +187,8 @@ importers:
         specifier: ^0.6.11
         version: 0.6.11(prettier@3.3.3)
       supabase:
-        specifier: ^2.26.9
-        version: 2.26.9
+        specifier: ^2.30.4
+        version: 2.30.4
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.0
@@ -2447,8 +2447,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  supabase@2.26.9:
-    resolution: {integrity: sha512-wHl7HtAD2iHMVXL8JZyfSjdI0WYM7EF0ydThp1tSvDANaD2JHCZc8GH1NdzglbwGqdHmjCYeSZ+H28fmucYl7Q==}
+  supabase@2.30.4:
+    resolution: {integrity: sha512-AOCyd2vmBBMTXbnahiCU0reRNxKS4n5CrPciUF2tcTrQ8dLzl1HwcLfe5DrG8E0QRcKHPDdzprmh/2+y4Ta5MA==}
     engines: {npm: '>=8'}
     hasBin: true
 
@@ -4841,7 +4841,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  supabase@2.26.9:
+  supabase@2.30.4:
     dependencies:
       bin-links: 5.0.0
       https-proxy-agent: 7.0.6
