@@ -306,8 +306,6 @@ create table if not exists
 
 alter table "public"."user_card_review" owner to "postgres";
 
-comment on column "public"."user_card_review"."day_first_review" is 'Is it the first review of this card today or not';
-
 create
 or replace function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
@@ -334,17 +332,18 @@ var calc = {
 	day_first_review: true,
 }
 
-if (prev.day_session === day_session) {
+if (!prev) {
+	//-- first review _ever_ gets slightly different calculation
+	calc.stability = plv8.find_function("fsrs_s_0")(score)
+	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
+	calc.review_time_retrievability = null
+}
+else if (prev.day_session === day_session) {
 	// previous review was from today so we do not calculate new values
 	calc.difficulty = prev.difficulty
 	calc.stability = prev.stability
 	calc.review_time_retrievability = prev.review_time_retrievability
 	calc.day_first_review = false
-} else if (!prev) {
-	//-- first review _ever_ gets slightly different calculation
-	calc.stability = plv8.find_function("fsrs_s_0")(score)
-	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
-	calc.review_time_retrievability = null
 } else {
 	//-- this is the main calculation block
 	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.created_at, calc.created_at)
@@ -689,11 +688,11 @@ create table if not exists
 	"public"."user_profile" (
 		"uid" "uuid" default "auth"."uid" () not null,
 		"username" "text",
-		"avatar_url" "text",
 		"updated_at" timestamp with time zone,
 		"created_at" timestamp with time zone default "now" () not null,
 		"languages_spoken" character varying[] default '{}'::character varying[] not null,
 		"language_primary" "text" default 'EN'::"text" not null,
+		"avatar_path" "text",
 		constraint "username_length" check (("char_length" ("username") >= 3))
 	);
 
@@ -706,7 +705,7 @@ create or replace view
 select
 	"user_profile"."uid",
 	"user_profile"."username",
-	"user_profile"."avatar_url"
+	"user_profile"."avatar_path"
 from
 	"public"."user_profile";
 
@@ -915,6 +914,17 @@ order by
 
 alter table "public"."user_deck_plus" owner to "postgres";
 
+create table if not exists
+	"public"."user_deck_review_state" (
+		"lang" character varying not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"day_session" "date" not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"manifest" "jsonb"
+	);
+
+alter table "public"."user_deck_review_state" owner to "postgres";
+
 alter table only "public"."phrase"
 add constraint "card_phrase_id_int_key" unique ("id");
 
@@ -968,6 +978,9 @@ add constraint "user_deck_card_membership_uuid_key" unique ("id");
 
 alter table only "public"."user_deck"
 add constraint "user_deck_pkey" primary key ("id");
+
+alter table only "public"."user_deck_review_state"
+add constraint "user_deck_review_state_pkey" primary key ("lang", "uid", "day_session");
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uuid_key" unique ("id");
@@ -1194,11 +1207,17 @@ add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("uid", "phrase
 alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+alter table only "public"."user_card_review"
+add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", "lang", "day_session") references "public"."user_deck_review_state" ("uid", "lang", "day_session") on update cascade on delete set null;
+
 alter table only "public"."user_card"
 add constraint "user_card_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
 alter table only "public"."user_deck"
 add constraint "user_deck_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
+
+alter table only "public"."user_deck_review_state"
+add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid") references "public"."user_deck" ("lang", "uid") on update cascade on delete cascade;
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -1217,6 +1236,10 @@ with
 			) = "uid"
 		)
 	);
+
+create policy "Enable insert for authenticated users only" on "public"."user_deck_review_state" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
 
 create policy "Enable read access for all users" on "public"."language" for
 select
@@ -1351,6 +1374,8 @@ alter table "public"."user_card" enable row level security;
 alter table "public"."user_card_review" enable row level security;
 
 alter table "public"."user_deck" enable row level security;
+
+alter table "public"."user_deck_review_state" enable row level security;
 
 alter table "public"."user_profile" enable row level security;
 
@@ -1633,6 +1658,12 @@ grant all on table "public"."user_deck_plus" to "anon";
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
+
+grant all on table "public"."user_deck_review_state" to "anon";
+
+grant all on table "public"."user_deck_review_state" to "authenticated";
+
+grant all on table "public"."user_deck_review_state" to "service_role";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";
