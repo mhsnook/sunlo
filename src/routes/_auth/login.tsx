@@ -10,7 +10,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { EmailField, PasswordField } from '@/components/fields'
 
 interface LoginSearchParams {
@@ -114,9 +114,11 @@ export default function LoginForm() {
 							Create account
 						</Link>
 					</div>
-					<ShowError show={!!loginMutation.error}>
-						Problem logging in: {loginMutation.error?.message}
-					</ShowError>
+					<ShowAndLogError
+						error={loginMutation.error}
+						text="Problem logging in"
+					/>
+
 					<p>
 						<Link
 							to="/forgot-password"

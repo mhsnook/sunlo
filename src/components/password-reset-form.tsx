@@ -11,7 +11,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import SuccessCheckmark from '@/components/success-checkmark'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { PasswordField } from '@/components/fields'
 
 const FormSchema = z.object({
@@ -86,9 +86,10 @@ export function PasswordResetForm() {
 							Back to profile
 						</Link>
 					</div>
-					<ShowError show={!!changeMutation.error}>
-						Problem changing password: {changeMutation.error?.message}
-					</ShowError>
+					<ShowAndLogError
+						error={changeMutation.error}
+						text="Problem changing password"
+					/>
 				</form>
 			}
 		</CardContent>

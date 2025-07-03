@@ -48,7 +48,7 @@ export function ShowAndLogError({
 	error: Error | PostgrestError | null
 	text?: string
 	className?: string
-	values?: Record<string, string> | null
+	values?: Record<string, string | null> | null
 }>) {
 	if (!error) return null
 
@@ -92,7 +92,7 @@ function Logger({
 	values = null,
 }: {
 	error: Error | PostgrestError
-	values?: Record<string, string> | null
+	values?: Record<string, string | null> | null
 }) {
 	useEffect(() => {
 		try {
