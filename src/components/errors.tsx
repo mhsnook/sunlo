@@ -1,5 +1,5 @@
 import { TriangleAlert } from 'lucide-react'
-import { useEffect, type PropsWithChildren } from 'react'
+import { memo, useEffect, type PropsWithChildren } from 'react'
 import Callout from '@/components/ui/callout'
 import supabase from '@/lib/supabase-client'
 import { Json } from '@/types/supabase'
@@ -39,7 +39,7 @@ export function ShowError({
 	)
 }
 
-export function ShowAndLogError({
+export const ShowAndLogError = memo(function ShowAndLogError({
 	error,
 	text,
 	className = '',
@@ -75,7 +75,7 @@ export function ShowAndLogError({
 			<p>{error.message} </p>
 		</Callout>
 	)
-}
+})
 
 function errorFallback(context: unknown | null = null) {
 	console.log('Error trying to send the error to database', context)
