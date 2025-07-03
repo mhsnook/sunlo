@@ -2,7 +2,7 @@ import type { ChangeEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
@@ -102,9 +102,7 @@ export default function AvatarEditor({
 				</div>
 			</Label>
 
-			<ShowError show={!!sendImage.error}>
-				Error uploading image: {sendImage.error?.message}
-			</ShowError>
+			<ShowAndLogError error={sendImage.error} text="Error uploading image" />
 		</div>
 	)
 }
