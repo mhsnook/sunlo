@@ -1,4 +1,4 @@
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import SuccessCheckmark from '@/components/success-checkmark'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -132,12 +132,10 @@ function AcceptInvitePage() {
 					</CardHeader>
 					<CardContent className="space-y-4">
 						{acceptOrDeclineMutation.error ?
-							<ShowError show={!!acceptOrDeclineMutation.error}>
-								<p className="text-destructive-foreground h5 font-bold">
-									Something went wrong...
-								</p>
-								<p>{acceptOrDeclineMutation.error?.message}</p>
-							</ShowError>
+							<ShowAndLogError
+								error={acceptOrDeclineMutation.error}
+								text="Something went wrong"
+							/>
 						: !acceptOrDeclineMutation.isSuccess ?
 							<AcceptInviteForm />
 						: acceptOrDeclineMutation.variables.action === 'accept' ?

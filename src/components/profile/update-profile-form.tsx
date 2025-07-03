@@ -7,7 +7,7 @@ import * as z from 'zod'
 import { toast } from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
 import {
 	AvatarEditorField,
@@ -102,9 +102,15 @@ export default function UpdateProfileForm({
 						Save changes
 					</Button>
 				</div>
-				<ShowError show={!!updateProfile.error}>
-					Problem updating profile: {updateProfile.error?.message}
-				</ShowError>
+				<ShowAndLogError
+					error={updateProfile.error}
+					values={{
+						...updateProfile.variables,
+						languages_spoken:
+							updateProfile.variables?.languages_spoken?.join(', ') ?? '',
+					}}
+					text="Error trying to update your profile"
+				/>
 			</fieldset>
 		</form>
 	)

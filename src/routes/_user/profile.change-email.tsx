@@ -11,7 +11,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import SuccessCheckmark from '@/components/success-checkmark'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
 
 export const Route = createFileRoute('/_user/profile/change-email')({
@@ -107,9 +107,10 @@ function ChangeEmailPage() {
 								Back to profile
 							</Link>
 						</div>
-						<ShowError show={!!changeMutation.error}>
-							Problem changing registered email: {changeMutation.error?.message}
-						</ShowError>
+						<ShowAndLogError
+							text="Problem changing registered email"
+							error={changeMutation.error}
+						/>
 					</form>
 				}
 			</CardContent>

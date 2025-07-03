@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
 import SuccessCheckmark from '@/components/success-checkmark'
 
@@ -97,9 +97,11 @@ function ForgotPasswordPage() {
 								Back to login
 							</Link>
 						</div>
-						<ShowError show={!!recoveryMutation.error}>
-							Problem signing up: {recoveryMutation.error?.message}
-						</ShowError>
+						<ShowAndLogError
+							error={recoveryMutation.error}
+							text="There was an uncaught error while submitting your request"
+							values={recoveryMutation.variables}
+						/>
 					</form>
 				}
 			</CardContent>
