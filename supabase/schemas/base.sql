@@ -787,6 +787,18 @@ from
 
 alter table "public"."user_card_plus" owner to "postgres";
 
+create table if not exists
+	"public"."user_client_event" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"uid" "uuid" default "auth"."uid" (),
+		"message" "text",
+		"context" "jsonb",
+		"url" "text"
+	);
+
+alter table "public"."user_client_event" owner to "postgres";
+
 create or replace view
 	"public"."user_deck_plus"
 with
@@ -959,6 +971,9 @@ add constraint "user_card_review_pkey" primary key ("id");
 
 alter table only "public"."user_card"
 add constraint "user_card_uid_phrase_id_key" unique ("uid", "phrase_id");
+
+alter table only "public"."user_client_event"
+add constraint "user_client_event_pkey" primary key ("id");
 
 alter table only "public"."user_card"
 add constraint "user_deck_card_membership_pkey" primary key ("id");
@@ -1203,6 +1218,9 @@ add constraint "user_card_review_uid_lang_day_session_fkey" foreign key ("uid", 
 alter table only "public"."user_card"
 add constraint "user_card_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+alter table only "public"."user_client_event"
+add constraint "user_client_event_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete set null;
+
 alter table only "public"."user_deck"
 add constraint "user_deck_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
@@ -1213,6 +1231,11 @@ alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
 create policy "Anyone can add cards" on "public"."phrase" for insert to "authenticated"
+with
+	check (true);
+
+create policy "Enable insert for any user" on "public"."user_client_event" for insert to "authenticated",
+"anon"
 with
 	check (true);
 
@@ -1373,6 +1396,8 @@ alter table "public"."phrase_translation" enable row level security;
 alter table "public"."user_card" enable row level security;
 
 alter table "public"."user_card_review" enable row level security;
+
+alter table "public"."user_client_event" enable row level security;
 
 alter table "public"."user_deck" enable row level security;
 
@@ -1653,6 +1678,12 @@ grant all on table "public"."user_card_plus" to "anon";
 grant all on table "public"."user_card_plus" to "authenticated";
 
 grant all on table "public"."user_card_plus" to "service_role";
+
+grant all on table "public"."user_client_event" to "anon";
+
+grant all on table "public"."user_client_event" to "authenticated";
+
+grant all on table "public"."user_client_event" to "service_role";
 
 grant all on table "public"."user_deck_plus" to "anon";
 

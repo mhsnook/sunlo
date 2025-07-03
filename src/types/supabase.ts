@@ -509,6 +509,48 @@ export type Database = {
           },
         ]
       }
+      user_client_event: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string | null
+          uid: string | null
+          url: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          uid?: string | null
+          url?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          uid?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_client_event_uid_fkey"
+            columns: ["uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "user_client_event_uid_fkey"
+            columns: ["uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
       user_deck: {
         Row: {
           archived: boolean
