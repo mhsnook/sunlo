@@ -28,23 +28,13 @@ set
 set
 	row_security = off;
 
-create extension if not exists "pg_net"
-with
-	schema "extensions";
-
 create extension if not exists "pgsodium";
 
 alter schema "public" owner to "postgres";
 
-comment on schema "public" is '@graphql({"inflect_names": true})';
-
 create extension if not exists "plv8"
 with
 	schema "pg_catalog";
-
-create extension if not exists "pg_graphql"
-with
-	schema "graphql";
 
 create extension if not exists "pg_stat_statements"
 with
@@ -1296,6 +1286,17 @@ select
 	);
 
 create policy "Enable users to view their own data only" on "public"."user_card_review" for
+select
+	to "authenticated" using (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable users to view their own data only" on "public"."user_deck_review_state" for
 select
 	to "authenticated" using (
 		(
