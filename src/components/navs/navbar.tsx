@@ -90,6 +90,7 @@ function ContextMenu({ matches }) {
 						<Link
 							{...link}
 							className="justify-content-center flex w-full flex-row gap-2"
+							onClick={() => setIsOpen(false)}
 						>
 							{!Icon ? null : <Icon className="size-[1.25rem]" />}
 							{name}
