@@ -143,7 +143,7 @@ function RouteComponent() {
 						<AddTranslationsDialog
 							phrase={phrase}
 							variant="outline"
-							className="border-primary-foresoft/30 mt-3"
+							className="mt-3"
 						/>
 					</div>
 

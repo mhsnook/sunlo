@@ -156,7 +156,7 @@ export function CardStatusDropdown({
 					{button ?
 						<Button
 							variant="outline"
-							className="group-data-[state=open]:bg-primary border-primary-foresoft/30 m-0 gap-1 group-data-[state=open]:text-white"
+							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
 						>
 							{cardMutation.isSuccess ?
 								<CheckCircle className="size-4 text-green-500" />

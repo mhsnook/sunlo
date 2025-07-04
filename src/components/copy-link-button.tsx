@@ -36,7 +36,7 @@ export default function CopyLinkButton({
 			onClick={copyLink}
 			variant={variant}
 			size={size}
-			className={cn('border-primary-foresoft/30', className)}
+			className={className}
 			{...props}
 		>
 			<Copy className="h-4 w-4" />
