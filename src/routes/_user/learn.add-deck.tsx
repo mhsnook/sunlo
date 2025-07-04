@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { SubmitHandler, useController, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ShowAndLogError } from '@/components/errors'
+import { ShowError } from '@/components/errors'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -122,10 +122,7 @@ function NewDeckForm() {
 							</Link>
 						:	null}
 					</form>
-					<ShowAndLogError
-						text="Problem creating new deck"
-						error={createNewDeck.error}
-					/>
+					<ShowError>{createNewDeck.error?.message}</ShowError>
 				</CardContent>
 			</Card>
 		</main>

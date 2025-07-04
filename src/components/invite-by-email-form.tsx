@@ -8,7 +8,7 @@ import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ShowAndLogError } from '@/components/errors'
+import { ShowError } from '@/components/errors'
 import supabase from '@/lib/supabase-client'
 
 /* NOTE: This component does not work and is not used. Using the "invite by email"
@@ -74,12 +74,7 @@ export function InviteFriendForm() {
 					<span className="hidden @md:block">Send</span>
 				</Button>
 			</fieldset>
-			<ShowAndLogError
-				text="There was an error submitting your request"
-				values={invite.variables}
-				error={invite.error}
-				className="mt-4"
-			/>
+			<ShowError className="mt-4">{invite.error?.message}</ShowError>
 		</form>
 	)
 }
