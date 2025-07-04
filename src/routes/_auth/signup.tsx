@@ -18,7 +18,7 @@ import Callout from '@/components/ui/callout'
 import { EmailField, PasswordField, UserRoleField } from '@/components/fields'
 
 import supabase from '@/lib/supabase-client'
-import { ShowAndLogError } from '@/components/errors'
+import { ShowError } from '@/components/errors'
 import SuccessCheckmark from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 import { UnderConstructionNotice } from '@/components/homepage/under-construction'
@@ -152,11 +152,9 @@ function SignUp() {
 									Already have an account?
 								</Link>
 							</div>
-							<ShowAndLogError
-								error={signupMutation.error}
-								values={signupMutation.variables}
-								text="Problem signing up"
-							/>
+							<ShowError show={!!signupMutation.error}>
+								Problem signing up: {signupMutation.error?.message}
+							</ShowError>
 						</form>
 					}
 				</CardContent>
