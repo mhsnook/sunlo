@@ -3184,7 +3184,7 @@ values
 		'aka',
 		'2025-01-20 07:50:10.181751+00',
 		'moving',
-		false
+		true
 	),
 	(
 		'e0b23bba-fe8c-4dfb-bdd6-65b2c60644f0',

@@ -24,17 +24,19 @@ const useDeckMenuData = () => {
 	const { data } = useProfile()
 	if (!data) return null
 
-	return data.deckLanguages?.map((lang) => {
-		return {
-			lang,
-			name: languages[lang],
-			to: `/learn/$lang`,
-			badge:
-				(data.decksMap[lang]?.cards_active ?? 0) +
-				(data.decksMap[lang]?.cards_learned ?? 0),
-			params: { lang },
-		}
-	})
+	return (data.deckLanguages ?? [])
+		.filter((lang) => !data.decksMap[lang].archived)
+		.map((lang) => {
+			return {
+				lang,
+				name: languages[lang],
+				to: `/learn/$lang`,
+				badge:
+					(data.decksMap[lang]?.cards_active ?? 0) +
+					(data.decksMap[lang]?.cards_learned ?? 0),
+				params: { lang },
+			}
+		})
 }
 
 function NoDecks() {
