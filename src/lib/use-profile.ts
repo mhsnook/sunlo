@@ -11,34 +11,31 @@ import supabase from '@/lib/supabase-client'
 import { avatarUrlify, mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 
-async function fetchAndShapeProfileFull(uid: uuid) {
-	const { data } = await supabase
-		.from('user_profile')
-		.select(`*, decks_array:user_deck_plus(*)`)
-		.eq('uid', uid)
-		.maybeSingle()
-		.throwOnError()
-	if (data === null) return null
-	const { decks_array, ...profile } = data
-	const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
-	const deckLanguages: Array<string> = decks_array
-		.map((d) => d.lang)
-		.filter((d) => typeof d === 'string')
-	return {
-		...profile,
-		avatar_url: avatarUrlify(profile.avatar_path),
-		decksMap,
-		deckLanguages,
-	} as ProfileFull
-}
-
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
 		queryKey: ['user', userId],
-		queryFn: async () => {
-			return await fetchAndShapeProfileFull(userId!)
+		queryFn: async ({ queryKey }) => {
+			if (!queryKey[1]) return null
+			const uid = queryKey[1] as uuid
+			const { data } = await supabase
+				.from('user_profile')
+				.select(`*, decks_array:user_deck_plus(*)`)
+				.eq('uid', uid)
+				.maybeSingle()
+				.throwOnError()
+			if (data === null) return null
+			const { decks_array, ...profile } = data
+			const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
+			const deckLanguages: Array<string> = decks_array
+				.map((d) => d.lang)
+				.filter((d) => typeof d === 'string')
+			return {
+				...profile,
+				avatar_url: avatarUrlify(profile.avatar_path),
+				decksMap,
+				deckLanguages,
+			} as ProfileFull
 		},
-		enabled: !!userId,
 	})
 
 export const useProfile = () => {
