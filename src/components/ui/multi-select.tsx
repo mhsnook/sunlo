@@ -77,7 +77,7 @@ export function FancyMultiSelect({
 			onKeyDown={handleKeyDown}
 			className="overflow-visible bg-transparent"
 		>
-			<div className="group border-primary-foresoft/30 ring-offset-background focus-within:ring-ring rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
+			<div className="group border-primary-foresoft/30 hover:border-primary ring-offset-background focus-within:ring-ring rounded-md border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
 				<div className="flex flex-wrap gap-1">
 					{always ?
 						<Badge variant="default">{always}</Badge>

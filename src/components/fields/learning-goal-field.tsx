@@ -18,9 +18,9 @@ export function LearningGoalField({ control, error }: ControlledFieldProps) {
 					htmlFor="moving"
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
-						value === 'moving' ? 'bg-primary/20' : (
-							'hover:bg-primary/10 hover:border-input'
-						)
+						value === 'moving' ?
+							'bg-primary/20 border-primary-foresoft/30'
+						:	'hover:bg-primary/10 hover:border-input'
 					)}
 				>
 					<GraduationCap
@@ -39,9 +39,9 @@ export function LearningGoalField({ control, error }: ControlledFieldProps) {
 					htmlFor="family"
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
-						value === 'family' ? 'bg-primary/20' : (
-							'hover:bg-primary/10 hover:border-input'
-						)
+						value === 'family' ?
+							'bg-primary/20 border-primary-foresoft/30'
+						:	'hover:bg-primary/10 hover:border-input'
 					)}
 				>
 					<Users
@@ -61,9 +61,9 @@ export function LearningGoalField({ control, error }: ControlledFieldProps) {
 					htmlFor="visiting"
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
-						value === 'visiting' ? 'bg-primary/20' : (
-							'hover:bg-primary/10 hover:border-input'
-						)
+						value === 'visiting' ?
+							'bg-primary/20 border-primary-foresoft/30'
+						:	'hover:bg-primary/10 hover:border-input'
 					)}
 				>
 					<Briefcase

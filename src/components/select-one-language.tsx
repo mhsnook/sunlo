@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
-import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
 	Command,
@@ -44,10 +43,7 @@ export function SelectOneLanguage({
 					tabIndex={tabIndex}
 					role="combobox"
 					aria-expanded={open}
-					className={cn(
-						'bg-card placeholder:text-muted-foreground justify-between font-normal',
-						hasError && 'border-destructive'
-					)}
+					className={`placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
 				>
 					{value ?
 						allLanguageOptions.find((language) => language.value === value)
@@ -86,10 +82,7 @@ export function SelectOneLanguage({
 									disabled={disabled?.includes(language.value)}
 								>
 									<Check
-										className={cn(
-											'mr-2 size-4',
-											value === language.value ? 'opacity-100' : 'opacity-0'
-										)}
+										className={`mr-2 size-4 ${value === language.value ? 'opacity-100' : 'opacity-0'}`}
 									/>
 									{language.label} ({language.value})
 								</CommandItem>
