@@ -1,7 +1,8 @@
 import { Label } from '@/components/ui/label'
+import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { useController } from 'react-hook-form'
 import { ErrorLabel, ControlledFieldProps } from '.'
-import SelectMultipleLanguagesInput from '@/components/select-multiple-languages'
+import languages from '@/lib/languages'
 
 export default function LanguagesSpokenField({
 	control,
@@ -19,15 +20,7 @@ export default function LanguagesSpokenField({
 			>
 				Do you know other languages?
 			</Label>
-			<SelectMultipleLanguagesInput
-				selectedLanguages={value}
-				setSelectedLanguages={(v) => {
-					console.log(`Setting language`, v)
-					onChange(v)
-				}}
-				except={primary}
-				// hasError={!!error}
-			/>
+			<FancyMultiSelect always={primary ? languages[primary] : undefined} />
 			<ErrorLabel {...error} />
 		</div>
 	)
