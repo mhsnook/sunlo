@@ -12,6 +12,7 @@ export default function LanguagesSpokenField<T extends FieldValues>({
 	const {
 		field: { value, onChange },
 	} = useController({ name: 'languages_spoken' as Path<T>, control })
+
 	return (
 		<div className="flex flex-col gap-1">
 			<Label
@@ -22,6 +23,8 @@ export default function LanguagesSpokenField<T extends FieldValues>({
 			</Label>
 			<FancyMultiSelect
 				options={allLanguageOptions}
+				selected={value}
+				setSelected={onChange}
 				always={primary ? languages[primary] : undefined}
 			/>
 			<ErrorLabel {...error} />
