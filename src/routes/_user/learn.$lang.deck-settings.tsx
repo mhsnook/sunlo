@@ -117,7 +117,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 						name="learning_goal"
 						control={control}
 						render={() => (
-							<LearningGoalField
+							<LearningGoalField<DeckGoalFormInputs>
 								control={control}
 								error={errors.learning_goal}
 							/>

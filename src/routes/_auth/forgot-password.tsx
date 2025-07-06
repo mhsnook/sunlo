@@ -84,7 +84,7 @@ function ForgotPasswordPage() {
 						)}
 					>
 						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-							<EmailField
+							<EmailField<FormInputs>
 								register={register}
 								error={errors.email}
 								autoFocus

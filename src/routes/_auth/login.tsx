@@ -88,13 +88,13 @@ export default function LoginForm() {
 					)}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-						<EmailField
+						<EmailField<FormInputs>
 							register={register}
 							error={errors.email}
 							autoFocus
 							tabIndex={1}
 						/>
-						<PasswordField
+						<PasswordField<FormInputs>
 							register={register}
 							error={errors.password}
 							tabIndex={2}
