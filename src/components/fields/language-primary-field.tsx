@@ -1,13 +1,16 @@
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { Label } from '@/components/ui/label'
-import { useController } from 'react-hook-form'
-import { ErrorLabel, ControlledFieldProps } from '.'
+import { FieldValues, Path, useController } from 'react-hook-form'
+import { ErrorLabel, type ControlledFieldProps } from '.'
 
-export default function LanguagePrimaryField({
+export default function LanguagePrimaryField<T extends FieldValues>({
 	control,
 	error,
-}: ControlledFieldProps) {
-	const controller = useController({ name: 'language_primary', control })
+}: ControlledFieldProps<T>) {
+	const controller = useController({
+		name: 'language_primary' as Path<T>,
+		control,
+	})
 	// console.log(`Controller is: `, controller)
 
 	return (

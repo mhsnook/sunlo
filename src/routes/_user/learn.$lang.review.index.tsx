@@ -53,10 +53,7 @@ function ReviewPageSetup() {
 	const { data: meta } = useDeckMeta(lang)
 	const pids = useDeckPidsAndRecs(lang)
 	const initLocalReviewState = useInitialiseReviewStore()
-	const { data: manifestToRestore, isFetching } = useReviewsToday(
-		lang,
-		dayString
-	)
+	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")

@@ -22,11 +22,12 @@ type AnyFieldType = {
 	autoFocus?: boolean
 }
 
-export type FieldProps = AnyFieldType & {
-	register: UseFormRegister<FieldValues>
+export type FieldProps<T extends FieldValues> = AnyFieldType & {
+	register: UseFormRegister<T>
 }
-export type ControlledFieldProps = AnyFieldType & {
-	control: Control
+
+export type ControlledFieldProps<T extends FieldValues> = AnyFieldType & {
+	control: Control<T>
 }
 
 export {

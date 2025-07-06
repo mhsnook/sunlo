@@ -85,18 +85,24 @@ export default function UpdateProfileForm({
 				className="grid grid-cols-1 gap-4 @xl:grid-cols-2"
 				disabled={isSubmitting}
 			>
-				<UsernameField error={errors.username} register={register} />
-				<LanguagePrimaryField
+				<UsernameField<ProfileEditFormInputs>
+					error={errors.username}
+					register={register}
+				/>
+				<LanguagePrimaryField<ProfileEditFormInputs>
 					error={errors.language_primary}
 					control={control}
 				/>
-				<LanguagesSpokenField
+				<LanguagesSpokenField<ProfileEditFormInputs>
 					// @TODO the need for [0] coercion means we're not handling the array value nicely
 					error={errors.languages_spoken?.[0]}
 					control={control}
 					primary={watchPrimary}
 				/>
-				<AvatarEditorField error={errors.avatar_path} control={control} />
+				<AvatarEditorField<ProfileEditFormInputs>
+					error={errors.avatar_path}
+					control={control}
+				/>
 				<div className="flex flex-col-reverse">
 					<Button disabled={updateProfile.isPending || !isValid || !isDirty}>
 						Save changes

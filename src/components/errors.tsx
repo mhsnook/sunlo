@@ -77,7 +77,7 @@ export const ShowAndLogError = memo(function ShowAndLogError({
 	)
 })
 
-function errorFallback(context: unknown | null = null) {
+function errorFallback(context: Object | Json | null = null) {
 	console.log('Error trying to send the error to database', context)
 
 	return supabase.from('user_client_event').insert({
@@ -124,9 +124,9 @@ function Logger({
 					if (res.error) errorFallback(res.error)
 				})
 		} catch (e) {
-			errorFallback(e)
+			errorFallback(e as Error)
 		}
-	}, [error])
+	}, [error, values])
 
 	return null
 }

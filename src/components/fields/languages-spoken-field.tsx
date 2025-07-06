@@ -1,17 +1,17 @@
 import { Label } from '@/components/ui/label'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
-import { useController } from 'react-hook-form'
+import { FieldValues, Path, useController } from 'react-hook-form'
 import { ErrorLabel, ControlledFieldProps } from '.'
-import languages from '@/lib/languages'
+import languages, { allLanguageOptions } from '@/lib/languages'
 
-export default function LanguagesSpokenField({
+export default function LanguagesSpokenField<T extends FieldValues>({
 	control,
 	error,
 	primary,
-}: ControlledFieldProps & { primary?: string }) {
+}: ControlledFieldProps<T> & { primary?: string }) {
 	const {
 		field: { value, onChange },
-	} = useController({ name: 'languages_spoken', control })
+	} = useController({ name: 'languages_spoken' as Path<T>, control })
 	return (
 		<div className="flex flex-col gap-1">
 			<Label
@@ -20,7 +20,10 @@ export default function LanguagesSpokenField({
 			>
 				Do you know other languages?
 			</Label>
-			<FancyMultiSelect always={primary ? languages[primary] : undefined} />
+			<FancyMultiSelect
+				options={allLanguageOptions}
+				always={primary ? languages[primary] : undefined}
+			/>
 			<ErrorLabel {...error} />
 		</div>
 	)
