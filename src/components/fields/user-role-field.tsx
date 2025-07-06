@@ -7,7 +7,9 @@ import { cn } from '@/lib/utils'
 
 const outer = 'flex flex-row gap-2 items-center',
 	inner =
-		'transition-colors flex flex-col items-center justify-center h-20 gap-2 rounded-md border bg-popover p-4 w-full'
+		'flex-col gap-2 flex w-full cursor-pointer items-center rounded border p-4 transition-colors',
+	selected = 'bg-primary/20 border-primary-foresoft/30 hover:border-primary',
+	unselected = 'hover:bg-primary/10 border-input'
 
 export default function UserRoleField({
 	control,
@@ -30,12 +32,7 @@ export default function UserRoleField({
 					<RadioGroupItem value="learner" id="learner" className="sr-only" />
 					<Label
 						htmlFor="learner"
-						className={cn(
-							inner,
-							value === 'learner' ?
-								'border-primary bg-primary/20 hover:bg-primary/20'
-							:	'hover:bg-primary/10'
-						)}
+						className={`${inner} ${value === 'learner' ? selected : unselected}`}
 					>
 						<BookOpen size="16" />
 						Learning
@@ -45,12 +42,7 @@ export default function UserRoleField({
 					<RadioGroupItem value="helper" id="helper" className="sr-only" />
 					<Label
 						htmlFor="helper"
-						className={cn(
-							inner,
-							value === 'helper' ?
-								'border-primary bg-primary/20 hover:bg-primary/20'
-							:	'hover:bg-primary/10'
-						)}
+						className={`${inner} ${value === 'helper' ? selected : unselected}`}
 					>
 						<LifeBuoy size="16" />
 						Helping
@@ -60,12 +52,7 @@ export default function UserRoleField({
 					<RadioGroupItem value="both" id="both" className="sr-only" />
 					<Label
 						htmlFor="both"
-						className={cn(
-							inner,
-							value === 'both' ?
-								'border-primary bg-primary/20 hover:bg-primary/20'
-							:	'hover:bg-primary/10'
-						)}
+						className={`${inner} ${value === 'both' ? selected : unselected}`}
 					>
 						<Handshake size="16" />
 						Both

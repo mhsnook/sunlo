@@ -54,10 +54,7 @@ export default function TranslationLanguageField({
 						variant="outline"
 						role="combobox"
 						aria-expanded={open}
-						className={cn(
-							'bg-card placeholder:text-muted-foreground justify-between font-normal',
-							!!error && 'border-destructive'
-						)}
+						className={`bg-card placeholder:text-muted-foreground text-foreground justify-between font-normal ${error ? 'border-destructive' : ''}`}
 					>
 						{controller.field.value ?
 							allLanguageOptions.find(
