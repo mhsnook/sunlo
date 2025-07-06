@@ -108,8 +108,11 @@ export default function UpdateProfileForm({
 					error={errors.avatar_path}
 					control={control}
 				/>
-				<div className="flex flex-row-reverse gap-2">
-					<Button disabled={updateProfile.isPending || !isValid || !isDirty}>
+				<div className="flex flex-row gap-2">
+					<Button
+						type="submit"
+						disabled={updateProfile.isPending || !isValid || !isDirty}
+					>
 						Save changes
 					</Button>
 					<Button

@@ -46,27 +46,26 @@ export function FancyMultiSelect({
 		(value: string) => {
 			setSelected(selected.filter((s) => s !== value))
 		},
-		[selected]
+		[selected, setSelected]
 	)
 
-	const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
-		const input = inputRef.current
-		if (input) {
-			if (e.key === 'Delete' || e.key === 'Backspace') {
-				if (input.value === '') {
-					setSelected(() => {
-						const newSelected = [...selected]
-						newSelected.pop()
-						return newSelected
-					})
+	const handleKeyDown = useCallback(
+		(e: KeyboardEvent<HTMLDivElement>) => {
+			const input = inputRef.current
+			if (input) {
+				if (e.key === 'Delete' || e.key === 'Backspace') {
+					if (input.value === '') {
+						if (selected.length) handleUnselect(selected[selected.length - 1])
+					}
+				}
+				// This is not a default behaviour of the <input /> field
+				if (e.key === 'Escape') {
+					input.blur()
 				}
 			}
-			// This is not a default behaviour of the <input /> field
-			if (e.key === 'Escape') {
-				input.blur()
-			}
-		}
-	}, [])
+		},
+		[selected, inputRef, handleUnselect]
+	)
 
 	const selectables = options.filter(
 		(option) => !selected.includes(option.value)
