@@ -21,7 +21,6 @@ import {
 type Option = Record<'value' | 'label', string>
 
 const addWithoutDuplicates = (array: string[], value: string) => {
-	console.log('adding')
 	if (array.includes(value)) return array
 	return [...array, value]
 }
@@ -41,17 +40,20 @@ export function FancyMultiSelect({
 	const [open, setOpen] = useState(false)
 	const [inputValue, setInputValue] = useState('')
 
-	const handleUnselect = useCallback((value: string) => {
-		setSelected((prev) => prev.filter((s) => s !== value))
-	}, [])
+	const handleUnselect = useCallback(
+		(value: string) => {
+			setSelected(selected.filter((s) => s !== value))
+		},
+		[selected]
+	)
 
 	const handleKeyDown = useCallback((e: KeyboardEvent<HTMLDivElement>) => {
 		const input = inputRef.current
 		if (input) {
 			if (e.key === 'Delete' || e.key === 'Backspace') {
 				if (input.value === '') {
-					setSelected((prev) => {
-						const newSelected = [...prev]
+					setSelected(() => {
+						const newSelected = [...selected]
 						newSelected.pop()
 						return newSelected
 					})
@@ -67,8 +69,6 @@ export function FancyMultiSelect({
 	const selectables = options.filter(
 		(option) => !selected.includes(option.value)
 	)
-
-	console.log(selected, inputValue)
 
 	return (
 		<Command
@@ -132,8 +132,8 @@ export function FancyMultiSelect({
 											}}
 											onSelect={() => {
 												setInputValue('')
-												setSelected((prev) =>
-													addWithoutDuplicates(prev, option.value)
+												setSelected(
+													addWithoutDuplicates(selected, option.value)
 												)
 											}}
 											className={'cursor-pointer'}
