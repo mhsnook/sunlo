@@ -138,11 +138,11 @@ function AddPhraseTab() {
 							)}
 						/>
 					</div>
-					<TranslationLanguageField
+					<TranslationLanguageField<AddPhraseFormValues>
 						error={errors.translation_lang}
 						control={control}
 					/>
-					<TranslationTextField
+					<TranslationTextField<AddPhraseFormValues>
 						error={errors.translation_text}
 						register={register}
 					/>

@@ -2,8 +2,7 @@ import { BookOpen, Handshake, LifeBuoy } from 'lucide-react'
 import { type ControlledFieldProps, ErrorLabel } from '.'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { useController } from 'react-hook-form'
-import { cn } from '@/lib/utils'
+import { FieldValues, Path, useController } from 'react-hook-form'
 
 const outer = 'flex flex-row gap-2 items-center',
 	inner =
@@ -11,14 +10,14 @@ const outer = 'flex flex-row gap-2 items-center',
 	selected = 'bg-primary/20 border-primary-foresoft/30 hover:border-primary',
 	unselected = 'hover:bg-primary/10 border-input'
 
-export default function UserRoleField({
+export default function UserRoleField<T extends FieldValues>({
 	control,
 	error,
 	tabIndex,
-}: ControlledFieldProps) {
+}: ControlledFieldProps<T>) {
 	const {
 		field: { value, onChange },
-	} = useController({ name: 'user_role', control })
+	} = useController({ name: 'user_role' as Path<T>, control })
 
 	return (
 		<div className="space-y-2">

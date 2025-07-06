@@ -1,5 +1,5 @@
 import { Label } from '@/components/ui/label'
-import { useController } from 'react-hook-form'
+import { FieldValues, Path, useController } from 'react-hook-form'
 import { ErrorLabel, type ControlledFieldProps } from '.'
 import { useProfile } from '@/lib/use-profile'
 import { useMemo, useState } from 'react'
@@ -22,10 +22,10 @@ import {
 } from '@/components/ui/command'
 import { CommandGroup } from 'cmdk'
 
-export default function TranslationLanguageField({
+export default function TranslationLanguageField<T extends FieldValues>({
 	control,
 	error,
-}: ControlledFieldProps) {
+}: ControlledFieldProps<T>) {
 	const { data: profile } = useProfile()
 	const myLanguages = [
 		profile?.language_primary,
@@ -41,7 +41,10 @@ export default function TranslationLanguageField({
 		[profile]
 	)
 
-	const controller = useController({ name: 'translation_lang', control })
+	const controller = useController({
+		name: 'translation_lang' as Path<T>,
+		control,
+	})
 
 	return (
 		<div className="flex flex-col gap-1">

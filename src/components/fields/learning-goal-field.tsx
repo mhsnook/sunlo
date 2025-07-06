@@ -2,14 +2,17 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Users, GraduationCap, Briefcase } from 'lucide-react'
 import { ControlledFieldProps } from '.'
-import { useController } from 'react-hook-form'
+import { Path, useController, FieldValues } from 'react-hook-form'
 import { ShowError } from '@/components/errors'
 import { cn } from '@/lib/utils'
 
-export function LearningGoalField({ control, error }: ControlledFieldProps) {
+export function LearningGoalField<T extends FieldValues>({
+	control,
+	error,
+}: ControlledFieldProps<T>) {
 	const {
 		field: { value, onChange },
-	} = useController({ name: 'learning_goal', control })
+	} = useController({ name: 'learning_goal' as Path<T>, control })
 	return (
 		<div>
 			<RadioGroup onValueChange={onChange} className="gap-0">
