@@ -89,10 +89,7 @@ export default function UpdateProfileForm({
 				updateProfile.mutate as SubmitHandler<ProfileEditFormInputs>
 			)}
 		>
-			<fieldset
-				className="grid grid-cols-1 gap-4 @xl:grid-cols-2"
-				disabled={isSubmitting}
-			>
+			<fieldset className="grid grid-cols-1 gap-4" disabled={isSubmitting}>
 				<UsernameField<ProfileEditFormInputs>
 					error={errors.username}
 					register={register}
@@ -111,9 +108,17 @@ export default function UpdateProfileForm({
 					error={errors.avatar_path}
 					control={control}
 				/>
-				<div className="flex flex-col-reverse">
+				<div className="flex flex-row-reverse gap-2">
 					<Button disabled={updateProfile.isPending || !isValid || !isDirty}>
 						Save changes
+					</Button>
+					<Button
+						type="button"
+						onClick={() => reset()}
+						variant="secondary"
+						disabled={updateProfile.isPending || !isDirty}
+					>
+						Reset
 					</Button>
 				</div>
 				<ShowAndLogError
