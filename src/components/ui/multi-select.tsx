@@ -30,11 +30,13 @@ export function FancyMultiSelect({
 	always,
 	selected,
 	setSelected,
+	placeholder = 'Select options...',
 }: {
 	options: Option[]
 	always?: string
 	selected: string[]
 	setSelected: Dispatch<SetStateAction<string[]>>
+	placeholder?: string
 }) {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [open, setOpen] = useState(false)
@@ -111,7 +113,7 @@ export function FancyMultiSelect({
 						onValueChange={setInputValue}
 						onBlur={() => setOpen(false)}
 						onFocus={() => setOpen(true)}
-						placeholder="Select frameworks..."
+						placeholder={placeholder}
 						className="placeholder:text-muted-foreground ml-2 flex-1 bg-transparent outline-none"
 					/>
 				</div>
