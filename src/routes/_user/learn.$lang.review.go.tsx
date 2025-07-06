@@ -26,6 +26,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		},
 	}) => {
 		const dayString: string = todayString()
+		// @ts-expect-error - unused variable
 		const _todaysReviewData = await queryClient.ensureQueryData(
 			reviewsQuery(userId!, lang, dayString)
 		)

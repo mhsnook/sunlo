@@ -1,8 +1,12 @@
 import { type FieldProps, ErrorLabel } from '.'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { FieldValues, Path } from 'react-hook-form'
 
-export default function UsernameField({ register, error }: FieldProps) {
+export default function UsernameField<T extends FieldValues>({
+	register,
+	error,
+}: FieldProps<T>) {
 	return (
 		<div className="flex flex-col gap-1">
 			<Label htmlFor="username" className={error ? 'text-destructive' : ''}>
@@ -11,7 +15,7 @@ export default function UsernameField({ register, error }: FieldProps) {
 			<Input
 				type="text"
 				placeholder="e.g. Learnie McLearnerson, Helpar1992"
-				{...register('username')}
+				{...register('username' as Path<T>)}
 				inputMode="text"
 				tabIndex={1}
 				aria-invalid={!!error}
