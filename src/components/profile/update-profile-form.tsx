@@ -50,11 +50,18 @@ export default function UpdateProfileForm({
 				.update(values)
 				.eq('uid', uid)
 				.select()
+				.maybeSingle()
 				.throwOnError()
 			return data
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
 			toast.success(`Successfully updated your profile`)
+			reset({
+				username: data?.username ?? '',
+				language_primary: data?.language_primary ?? '',
+				languages_spoken: data?.languages_spoken ?? [],
+				avatar_path: data?.avatar_path ?? null,
+			})
 			void queryClient.invalidateQueries({ queryKey: ['user'] })
 		},
 	})
@@ -64,6 +71,7 @@ export default function UpdateProfileForm({
 		control,
 		handleSubmit,
 		watch,
+		reset,
 		formState: { errors, isSubmitting, isValid, isDirty },
 	} = useForm<ProfileEditFormInputs>({
 		defaultValues: initialData,
