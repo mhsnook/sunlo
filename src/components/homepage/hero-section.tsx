@@ -47,8 +47,8 @@ export function HeroSection() {
 							Sunlo
 						</h1>
 
-						<p className="text-foreground mx-auto mb-8 max-w-2xl text-2xl font-extralight md:text-3xl dark:text-slate-300">
-							Social language learning that brings people&nbsp;together
+						<p className="text-foreground mx-auto mb-8 max-w-2xl text-2xl font-extralight text-balance md:text-3xl dark:text-slate-300">
+							Social language learning that brings people together
 						</p>
 					</div>
 
@@ -64,7 +64,7 @@ export function HeroSection() {
 									<h2 className="mb-2 font-semibold opacity-80">
 										Personal Flash Cards
 									</h2>
-									<p className="text-sm opacity-80">
+									<p className="text-sm text-balance opacity-80">
 										Create custom cards tailored to your learning style
 									</p>
 								</div>
@@ -78,7 +78,7 @@ export function HeroSection() {
 									<h2 className="mb-2 font-semibold opacity-80">
 										Community Pool
 									</h2>
-									<p className="text-sm opacity-80">
+									<p className="text-sm text-balance opacity-80">
 										Access thousands of crowd-sourced learning materials
 									</p>
 								</div>
@@ -92,7 +92,7 @@ export function HeroSection() {
 									<h2 className="mb-2 font-semibold opacity-80">
 										Help Friends
 									</h2>
-									<p className="text-sm opacity-80">
+									<p className="text-sm text-balance opacity-80">
 										Share essential phrases and learn together
 									</p>
 								</div>
@@ -128,7 +128,7 @@ export function HeroSection() {
 						<div className="text-muted-foreground flex flex-col items-center justify-center gap-6 text-sm sm:flex-row">
 							<div className="flex items-center gap-2">
 								<div className="flex">
-									{[...Array(5)].map((_, i) => (
+									{[0, 1, 2, 3, 4].map((i) => (
 										<Star
 											key={i}
 											className="h-4 w-4 fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300"

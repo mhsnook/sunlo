@@ -25,7 +25,7 @@ export function SpacedRepetitionSection() {
 								<Brain className="h-8 w-8 text-purple-300" />
 							</div>
 						</div>
-						<h2 className="mb-6 text-5xl font-bold text-white md:text-6xl">
+						<h2 className="mx-auto mb-6 max-w-200 text-5xl font-bold text-balance text-white md:text-6xl">
 							Spaced Repetition System
 						</h2>
 						<p className="mx-auto max-w-3xl text-xl leading-relaxed text-purple-100 md:text-2xl">
@@ -119,9 +119,9 @@ export function SpacedRepetitionSection() {
 											Optimal Timing
 										</h3>
 										<p className="text-purple-100">
-											Reviews are scheduled at the perfect moment - just before
-											you're about to forget, maximizing retention with minimal
-											effort.
+											Reviews are scheduled at the perfect moment &ndash; just
+											before you're about to forget, maximizing retention with
+											minimal effort.
 										</p>
 									</div>
 								</div>

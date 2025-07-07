@@ -33,10 +33,10 @@ export function CrowdSourcedSection() {
 								<Globe className="h-8 w-8 text-emerald-300" />
 							</div>
 						</div>
-						<h2 className="mb-6 text-5xl font-bold text-white md:text-6xl">
+						<h2 className="mx-auto mb-6 max-w-200 text-5xl font-bold text-balance text-white md:text-6xl">
 							Crowd-Sourced Phrase Library
 						</h2>
-						<p className="mx-auto max-w-3xl text-xl leading-relaxed text-emerald-100 md:text-2xl">
+						<p className="mx-auto max-w-3xl text-xl leading-relaxed text-balance text-emerald-100 md:text-2xl">
 							Tap into the collective wisdom of thousands of language learners
 							worldwide
 						</p>
