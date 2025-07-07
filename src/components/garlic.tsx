@@ -17,7 +17,7 @@ export const Garlic = ({ size = 50, className = '' }) => (
 export const GarlicBroccoli = ({ size = 240, className = '' }) => (
 	<img
 		src="/images/logo-pair.png"
-		alt="a smiling garlic"
+		alt="a smiling garlic and broccoli"
 		width={size}
 		height={size / 1.5}
 		className={cn('place-self-center', className)}

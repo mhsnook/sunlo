@@ -54,6 +54,7 @@ function ProfilePage() {
 						{profile.avatar_url ?
 							<img
 								src={profile.avatar_url}
+								alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 								className="size-32 rounded-full object-cover"
 							/>
 						:	<>

@@ -18,7 +18,6 @@ export function AvatarIconRow({
 				{avatar_url ?
 					<img
 						src={avatar_url}
-						aria-disabled="true"
 						alt={`${username}'s avatar`}
 						className="size-8 rounded-full object-cover"
 					/>

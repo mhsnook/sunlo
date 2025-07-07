@@ -117,7 +117,7 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 				<div className={!atTheEnd ? 'w-full' : 'hidden'}>
 					{manifest.map((pid, i) => (
 						<div
-							key={i}
+							key={pid}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
 						>
 							<ReviewSingleCard pid={pid} />
