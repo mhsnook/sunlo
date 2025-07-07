@@ -75,6 +75,7 @@ const SidebarProvider = ({
 			}
 
 			// This sets the cookie to keep the sidebar state.
+			// oxlint-disable-next-line no-undef
 			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
 		},
 		[setOpenProp, open]
@@ -97,7 +98,9 @@ const SidebarProvider = ({
 			}
 		}
 
+		// oxlint-disable-next-line no-undef
 		window.addEventListener('keydown', handleKeyDown)
+		// oxlint-disable-next-line no-undef
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [toggleSidebar])
 
