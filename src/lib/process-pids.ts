@@ -1,10 +1,4 @@
-import {
-	DeckPids,
-	PhraseFiltered,
-	PhrasesMap,
-	pids,
-	TranslationRow,
-} from '@/types/main'
+import { DeckPids, PhrasesMap, pids, TranslationRow } from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
