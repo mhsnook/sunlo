@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { ChevronLeft, MoreVertical } from 'lucide-react'
+import { ChevronLeft, LucideIcon, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -7,13 +7,40 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Link, useMatches, useNavigate } from '@tanstack/react-router'
+import {
+	AnyRoute,
+	Link,
+	RouteMatch,
+	useMatches,
+	useNavigate,
+} from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { useLinks } from '@/hooks/links'
 
+type TitleBarLoaderData = {
+	titleBar?: {
+		title?: string
+		subtitle?: string
+		onBackClick?: string | (() => void)
+		Icon?: LucideIcon
+	}
+	contextMenu: string[]
+}
+type MyMatch = RouteMatch<
+	AnyRoute,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
+> & {
+	loaderData?: TitleBarLoaderData
+}
+
 export default function Navbar() {
-	const matches = useMatches()
+	const matches = useMatches() as MyMatch[]
 	if (matches.some((match) => match.status === 'pending')) return null
 
 	return (
@@ -28,29 +55,25 @@ export default function Navbar() {
 	)
 }
 
-function Title({
-	matches,
-}: {
-	matches: Array<{ loaderData?: { titleBar?: any } }>
-}) {
+function Title({ matches }: { matches: MyMatch[] }) {
 	const navigate = useNavigate()
 	const goBack = useCallback(() => {
 		void navigate({ to: '..' })
 	}, [navigate])
 
 	const match = matches.findLast((m) => !!m?.loaderData?.titleBar)
-	const data = match?.loaderData.titleBar
-	if (!data) return null
-	const Icon = !data ? null : data.Icon
-	const onBackClick =
-		!data?.onBackClick ? goBack
-		: typeof data.onBackClick === 'function' ? data.onBackClick
-		: typeof data.onBackClick === 'string' ?
-			() => navigate({ to: data.onBackClick })
+	const titleBar = match?.loaderData?.titleBar
+	if (!titleBar) return null
+	const Icon = !titleBar ? null : titleBar.Icon
+	const onBackClickFn =
+		titleBar?.onBackClick === undefined ? goBack
+		: typeof titleBar.onBackClick === 'function' ? titleBar.onBackClick
+		: typeof titleBar.onBackClick === 'string' ?
+			() => navigate({ to: titleBar.onBackClick })
 		:	goBack
 	return (
 		<>
-			<Button variant="ghost" size="icon-sm" onClick={onBackClick}>
+			<Button variant="ghost" size="icon-sm" onClick={onBackClickFn}>
 				<ChevronLeft />
 				<span className="sr-only">Back</span>
 			</Button>
@@ -62,18 +85,18 @@ function Title({
 					</span>
 				:	<>&nbsp;</>}
 				<div>
-					<h1 className="text-lg font-bold">{data?.title}</h1>
-					<p className="text-sm">{data?.subtitle}</p>
+					<h1 className="text-lg font-bold">{titleBar?.title}</h1>
+					<p className="text-sm">{titleBar?.subtitle}</p>
 				</div>
 			</div>
 		</>
 	)
 }
 
-function ContextMenu({ matches }) {
+function ContextMenu({ matches }: { matches: MyMatch[] }) {
 	const [isOpen, setIsOpen] = useState(false)
 	const match = matches.findLast((m) => !!m?.loaderData?.contextMenu)
-	const links = useLinks(match?.loaderData.contextMenu)
+	const links = useLinks(match?.loaderData?.contextMenu)
 	if (!links || !links.length) return null
 
 	return (

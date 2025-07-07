@@ -1,4 +1,4 @@
-import { CardFull, PhraseFiltered, pids, uuid } from '@/types/main'
+import { CardFull, PhraseFiltered, pids } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,

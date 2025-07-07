@@ -77,7 +77,7 @@ export const ShowAndLogError = memo(function ShowAndLogError({
 	)
 })
 
-function errorFallback(context: Object | Json | null = null) {
+function errorFallback(context: object | Json | null = null) {
 	console.log('Error trying to send the error to database', context)
 
 	return supabase.from('user_client_event').insert({
@@ -87,6 +87,16 @@ function errorFallback(context: Object | Json | null = null) {
 	})
 }
 
+const includedKeys = [
+	'code',
+	'status',
+	'cause',
+	'name',
+	'stack',
+	'details',
+	'hint',
+] as const
+
 function Logger({
 	error,
 	values = null,
@@ -95,22 +105,23 @@ function Logger({
 	values?: Record<string, string | null> | null
 }) {
 	useEffect(() => {
+		if (typeof error !== 'object') return
 		try {
-			const context: Record<string, string | Record<string, string>> = {}
+			const context: Record<string, Json> = {}
+			for (const [key, value] of Object.entries(error)) {
+				if (
+					key in includedKeys ||
+					typeof value === 'string' ||
+					typeof value === 'number'
+				) {
+					context[key] = String(value)
+				}
+			}
 			if (values) {
 				if ('password' in values) values.password = '***'
-				context.values = values as Record<string, string>
+				context.values = values
 			}
-			Object.keys(error).forEach((key) => {
-				if (
-					key in
-						['code', 'status', 'cause', 'name', 'stack', 'details', 'hint'] ||
-					typeof (error as any)[key] === 'string' ||
-					typeof (error as any)[key] === 'number'
-				) {
-					context[key] = (error as any)[key]
-				}
-			})
+
 			const row = {
 				message: error.message,
 				context,

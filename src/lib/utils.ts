@@ -90,7 +90,7 @@ export function min0(num: number) {
 }
 
 export function arrayUnion(arrs: Array<Array<uuid>>): Array<uuid> {
-	return [...new Set([...arrs.flat()])]
+	return [...new Set(arrs.flat())]
 }
 
 export function arrayDifference(
