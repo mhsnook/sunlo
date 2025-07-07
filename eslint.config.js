@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import oxlint from 'eslint-plugin-oxlint'
 
 export default [
 	{
@@ -57,4 +58,5 @@ export default [
 			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
 		},
 	},
+	...oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 ]
