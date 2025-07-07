@@ -67,8 +67,8 @@ function PhraseAccordionItem({
 				<div className="space-y-1 pt-2 pl-6">
 					<p className="text-sm text-gray-500">Translations</p>
 					<ul className="space-y-1">
-						{phrase.translations_mine?.map((translation, index) => (
-							<li key={index} className="flex items-center">
+						{phrase.translations_mine?.map((translation) => (
+							<li key={translation.id} className="flex items-center">
 								<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
 									{translation.lang}
 								</span>

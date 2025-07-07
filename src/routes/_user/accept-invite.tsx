@@ -78,7 +78,7 @@ function AcceptInvitePage() {
 							src={profile.avatar_url!}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
-							alt={`Your profile picture`}
+							alt={`Your avatar`}
 						/>
 						{friend ?
 							<>
@@ -86,7 +86,7 @@ function AcceptInvitePage() {
 								<img
 									src={friend.avatar_url!}
 									className="mx-auto max-w-32 shrink rounded-xl"
-									alt={`${friend.username}'s profile picture`}
+									alt={`${friend.username}'s avatar`}
 								/>
 							</>
 						:	null}

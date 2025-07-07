@@ -108,8 +108,8 @@ function ContextMenu({ matches }: { matches: MyMatch[] }) {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
-				{links.map(({ link, name, Icon }, index) => (
-					<DropdownMenuItem key={index}>
+				{links.map(({ link, name, Icon }) => (
+					<DropdownMenuItem key={link.to}>
 						<Link
 							{...link}
 							className="justify-content-center flex w-full flex-row gap-2"

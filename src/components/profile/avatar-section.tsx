@@ -14,7 +14,7 @@ export default function AvatarSection() {
 					{profile?.avatar_url ?
 						<img
 							src={profile.avatar_url}
-							alt={`${profile?.username ?? 'Someone'}'s profile image`}
+							alt={`${profile?.username ?? 'Someone'}'s profile pic`}
 							className="size-36 rounded-full object-cover"
 						/>
 					:	<User size={144} />}

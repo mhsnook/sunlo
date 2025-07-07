@@ -69,7 +69,7 @@ export default function AvatarEditor({
 					<div className="z-10 mx-auto my-2 grid aspect-square size-36">
 						<img
 							src={url}
-							alt="Your profile image"
+							alt="Your profile pic, or avatar"
 							className="h-36 rounded-full object-cover"
 						/>
 					</div>
