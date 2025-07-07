@@ -15,7 +15,7 @@
 		"perf": "warn",
 		"style": "off",
 		"restriction": "off",
-		"nursery": "warn"
+		"nursery": "off"
 	},
 	"env": {
 		"builtin": true
@@ -26,7 +26,7 @@
 			"files": ["src/**/*.{ts,tsx}", "vite.config.ts"],
 			"rules": {
 				"react-in-jsx-scope": "off",
-				"no-undef": "warn",
+				"no-console": "off",
 				"for-direction": "error",
 				"no-async-promise-executor": "error",
 				"no-case-declarations": "error",

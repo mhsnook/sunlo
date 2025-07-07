@@ -11,13 +11,10 @@ export default defineConfig(({ mode }) => {
 			chunkSizeWarningLimit: 550,
 			// Tauri uses Chromium on Windows and WebKit on macOS and Linux
 			target:
-				// oxlint-disable-next-line no-undef
 				process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
 			// don't minify for debug builds
-			// oxlint-disable-next-line no-undef
 			minify: !process.env.TAURI_ENV_DEBUG ? 'esbuild' : false,
 			// produce sourcemaps for debug builds
-			// oxlint-disable-next-line no-undef
 			sourcemap: !!process.env.TAURI_ENV_DEBUG,
 		},
 		envPrefix: ['VITE_', 'TAURI_ENV_'],
@@ -35,7 +32,7 @@ export default defineConfig(({ mode }) => {
 				:	undefined,
 			watch: {
 				// tell vite to ignore watching `src-tauri`
-				ignored: ['**/src-tauri/**', '**/supabase/**'],
+				ignored: ['**/src-tauri/**', '**/supabase/**', '.oxlintrc.json'],
 			},
 		},
 	}

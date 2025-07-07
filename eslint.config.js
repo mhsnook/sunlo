@@ -56,7 +56,6 @@ export default [
 			...js.configs.recommended.rules,
 			...tseslint.plugin.configs['recommended'].rules,
 			...tseslint.plugin.configs['recommended-requiring-type-checking'].rules,
-			'no-undef': 'off',
 		},
 	},
 	...oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
