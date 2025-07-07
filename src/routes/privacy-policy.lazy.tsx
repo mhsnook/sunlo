@@ -60,6 +60,7 @@ function Page() {
 						<a
 							href="https://www.freeprivacypolicy.com/free-privacy-policy-generator/"
 							target="_blank"
+							rel="noreferrer"
 						>
 							Free Privacy Policy Generator
 						</a>
@@ -156,11 +157,7 @@ function Page() {
 						<li>
 							<p>
 								<strong>Website</strong> refers to Sunlo, accessible from{' '}
-								<a
-									href="https://sunlo.app"
-									rel="external nofollow noopener"
-									target="_blank"
-								>
+								<a href="https://sunlo.app" rel="noreferrer" target="_blank">
 									https://sunlo.app
 								</a>
 							</p>
@@ -256,6 +253,7 @@ function Page() {
 						<a
 							href="https://www.freeprivacypolicy.com/blog/sample-privacy-policy-template/#Use_Of_Cookies_And_Tracking"
 							target="_blank"
+							rel="noreferrer"
 						>
 							Free Privacy Policy website
 						</a>{' '}
