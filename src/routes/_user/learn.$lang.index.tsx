@@ -64,7 +64,7 @@ function FriendsSection({ lang }: LangOnlyComponentProps) {
 
 	// const friendsThisLanguage =
 	// 	profileQuery.data?.friendships?.filter(
-	// 		(f: FriendshipRow) => f.helping_with.indexOf(lang) !== -1
+	// 		(f: FriendshipRow) => f.helping_with.includes(lang)
 	// 	) || []
 
 	return (

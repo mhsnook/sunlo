@@ -33,12 +33,21 @@ export default function TranslationLanguageField<T extends FieldValues>({
 	].filter((l) => !!l)
 
 	const [open, setOpen] = useState(false)
+
+	const myLanguages = useMemo(
+		() =>
+			[profile?.language_primary, ...(profile?.languages_spoken || [])].filter(
+				(l) => typeof l === 'string' && l.length
+			),
+		[profile]
+	)
+
 	const generalLanguageOptions = useMemo(
 		() =>
 			allLanguageOptions.filter(
-				(option) => myLanguages.indexOf(option.value) === -1
+				(option) => !myLanguages.includes(option.value)
 			),
-		[profile]
+		[myLanguages]
 	)
 
 	const controller = useController({
