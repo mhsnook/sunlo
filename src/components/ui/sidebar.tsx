@@ -23,6 +23,14 @@ const SIDEBAR_WIDTH = '16rem'
 const SIDEBAR_WIDTH_MOBILE = '18rem'
 const SIDEBAR_WIDTH_ICON = '3rem'
 const SIDEBAR_KEYBOARD_SHORTCUT = 'b'
+const styles = {
+	'--sidebar-width': SIDEBAR_WIDTH,
+	'--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
+} as React.CSSProperties
+
+const widthStyles = {
+	'--sidebar-width': SIDEBAR_WIDTH_MOBILE,
+} as React.CSSProperties
 
 type SidebarContextType = {
 	state: 'expanded' | 'collapsed'
@@ -50,7 +58,6 @@ const SidebarProvider = ({
 	open: openProp,
 	onOpenChange: setOpenProp,
 	className,
-	style,
 	children,
 	...props
 }: React.ComponentProps<'div'> & {
@@ -75,7 +82,6 @@ const SidebarProvider = ({
 			}
 
 			// This sets the cookie to keep the sidebar state.
-			// oxlint-disable-next-line no-undef
 			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
 		},
 		[setOpenProp, open]
@@ -98,9 +104,7 @@ const SidebarProvider = ({
 			}
 		}
 
-		// oxlint-disable-next-line no-undef
 		window.addEventListener('keydown', handleKeyDown)
-		// oxlint-disable-next-line no-undef
 		return () => window.removeEventListener('keydown', handleKeyDown)
 	}, [toggleSidebar])
 
@@ -125,13 +129,7 @@ const SidebarProvider = ({
 		<SidebarContext.Provider value={contextValue}>
 			<TooltipProvider delayDuration={0}>
 				<div
-					style={
-						{
-							'--sidebar-width': SIDEBAR_WIDTH,
-							'--sidebar-width-icon': SIDEBAR_WIDTH_ICON,
-							...style,
-						} as React.CSSProperties
-					}
+					style={styles}
 					className={cn(
 						'group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full',
 						className
@@ -185,11 +183,7 @@ const Sidebar = ({
 					data-mobile="true"
 					aria-describedby={undefined}
 					className="bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden"
-					style={
-						{
-							'--sidebar-width': SIDEBAR_WIDTH_MOBILE,
-						} as React.CSSProperties
-					}
+					style={widthStyles}
 					side={side}
 				>
 					<div className="flex h-full w-full flex-col">{children}</div>

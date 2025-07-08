@@ -50,6 +50,8 @@ function NoDecks() {
 	)
 }
 
+const sizeStyles = { height: 48, width: '100%' } as React.CSSProperties
+
 export function DeckSwitcher({ lang }: { lang?: string }) {
 	const { isMobile, setOpenMobile } = useSidebar()
 	const closeSidebar = () => setOpenMobile(false)
@@ -60,7 +62,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 		<SidebarMenu>
 			<SidebarMenuItem>
 				{deckMenuData === undefined ?
-					<div style={{ height: 48, width: '100%' }} />
+					<div style={sizeStyles} />
 				: deckMenuData === null ?
 					<NoDecks />
 				:	<DropdownMenu>
