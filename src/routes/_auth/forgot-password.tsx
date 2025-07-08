@@ -12,7 +12,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShowAndLogError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,
@@ -67,7 +67,7 @@ function ForgotPasswordPage() {
 			</CardHeader>
 			<CardContent>
 				{recoveryMutation.isSuccess ?
-					<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Almost done!</p>
 						<p>
 							Find the password reset link in your email to set a new password.

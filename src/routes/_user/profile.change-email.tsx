@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { ShowAndLogError } from '@/components/errors'
 import { EmailField } from '@/components/fields'
 
@@ -68,7 +68,7 @@ function ChangeEmailPage() {
 			</CardHeader>
 			<CardContent>
 				{changeMutation.isSuccess ?
-					<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Step 1 complete:</p>
 						<p>
 							You've requested to change your email to{' '}

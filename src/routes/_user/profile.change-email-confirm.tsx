@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -55,7 +55,7 @@ function ChangeEmailConfirmPage() {
 							</p>
 						</div>
 					</ShowError>
-				:	<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+				:	<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Success!</p>
 						<p>
 							You've changed your email to <strong>{data.userEmail}</strong>.

@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { Garlic } from '@/components/garlic'
+import { Garlic120 } from '@/components/garlic'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { MessageSquarePlus } from 'lucide-react'
 
 export function LanguageIsEmpty({ lang }: { lang: string }) {
 	return (
-		<Callout className="mt-4" Icon={() => <Garlic size={120} />}>
+		<Callout className="mt-4" Icon={Garlic120}>
 			<h3 className="h3">Library under construction</h3>
 			<p>
 				This language is fully empty! But Sunlo is a community effort &ndash;{' '}
@@ -30,7 +30,7 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 
 export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 	return (
-		<Callout Icon={() => <Garlic size={120} />}>
+		<Callout Icon={Garlic120}>
 			<h3 className="h3">Library under construction</h3>
 			<p>
 				This language has cards but none of them are translated into languages
