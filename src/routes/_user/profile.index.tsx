@@ -37,9 +37,7 @@ function ProfilePage() {
 			<Card>
 				<CardHeader>
 					<CardTitle>Login Credentials</CardTitle>
-					<CardDescription>
-						Update your email or password (or signin method)
-					</CardDescription>
+					<CardDescription>Update your email or password</CardDescription>
 				</CardHeader>
 				<CardContent>
 					<UserAuthCard />

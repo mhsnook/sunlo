@@ -49,7 +49,7 @@ const Nav = memo(function Nav({
 						<NavigationMenuList className="flex w-full flex-row">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
-									className="hover:bg-primary/20 rounded px-4"
+									className="hover:bg-primary/20 rounded-2xl px-4"
 									key={l.link.to}
 								>
 									<NavigationMenuLink asChild>

@@ -104,7 +104,7 @@ export function HeroSection() {
 								to="/signup"
 								className={cn(
 									buttonVariants({ size: 'lg' }),
-									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform rounded-full border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
+									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
 								)}
 							>
 								Start Learning Free
@@ -114,7 +114,7 @@ export function HeroSection() {
 								to="/login"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'outline' }),
-									'border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full rounded-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+									'border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
 								Sign In

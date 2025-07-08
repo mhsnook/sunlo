@@ -81,7 +81,7 @@ export function FooterNavigation() {
 								<Link
 									className={cn(
 										buttonVariants(),
-										'group font-space-grotesk from-primary hover:to-primary w-full transform rounded-full bg-gradient-to-r to-indigo-500 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:shadow-xl'
+										'group font-space-grotesk from-primary hover:to-primary w-full transform bg-gradient-to-r to-indigo-500 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:shadow-xl'
 									)}
 									to="/signup"
 								>
@@ -91,7 +91,7 @@ export function FooterNavigation() {
 								<Link
 									className={cn(
 										buttonVariants({ variant: 'outline' }),
-										'font-space-grotesk w-full rounded-full border-2 border-slate-600 bg-transparent font-semibold text-slate-300 transition-all duration-300 hover:bg-slate-800 hover:text-white'
+										'font-space-grotesk w-full border-2 border-slate-600 bg-transparent font-semibold text-slate-300 transition-all duration-300 hover:bg-slate-800 hover:text-white'
 									)}
 									to="/login"
 								>

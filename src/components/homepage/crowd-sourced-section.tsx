@@ -171,7 +171,7 @@ export function CrowdSourcedSection() {
 									to="/signup"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
-										'transform rounded-full bg-emerald-600 font-semibold transition-all duration-300 hover:scale-105 hover:bg-emerald-700'
+										'transform bg-emerald-600 font-semibold transition-all duration-300 hover:scale-105 hover:bg-emerald-700'
 									)}
 								>
 									Explore Phrase Library
