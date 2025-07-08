@@ -61,6 +61,7 @@ function LanguageNotFound() {
 }
 
 function DeckNotFound({ lang }: LangOnlyComponentProps) {
+	const { setClosedMobile } = useSidebar()
 	return (
 		<Callout className="m-2">
 			<p>
@@ -68,7 +69,7 @@ function DeckNotFound({ lang }: LangOnlyComponentProps) {
 				like to start working on a new deck?
 			</p>
 			<Button className="mt-2 w-full" asChild>
-				<Link to="/learn/add-deck" search={{ lang }}>
+				<Link to="/learn/add-deck" onClick={setClosedMobile} search={{ lang }}>
 					Start Learning
 				</Link>
 			</Button>

@@ -15,7 +15,7 @@ function splitTranslations(
 	translations_other: Array<TranslationRow>
 } {
 	const translations_mine = translations_incoming
-		.filter((t) => translationLangs.indexOf(t.lang) > -1)
+		.filter((t) => translationLangs.includes(t.lang))
 		.toSorted((a, b) => {
 			return a.lang === b.lang ?
 					0

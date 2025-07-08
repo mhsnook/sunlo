@@ -27,18 +27,15 @@ export default function TranslationLanguageField<T extends FieldValues>({
 	error,
 }: ControlledFieldProps<T>) {
 	const { data: profile } = useProfile()
-	const myLanguages = [
-		profile?.language_primary,
-		...(profile?.languages_spoken || []),
-	].filter((l) => !!l)
-
 	const [open, setOpen] = useState(false)
 
 	const myLanguages = useMemo(
 		() =>
-			[profile?.language_primary, ...(profile?.languages_spoken || [])].filter(
-				(l) => typeof l === 'string' && l.length
-			),
+			!profile ?
+				[]
+			:	[profile.language_primary, ...profile.languages_spoken].filter(
+					(l) => l.length === 3
+				),
 		[profile]
 	)
 

@@ -40,11 +40,14 @@ const useDeckMenuData = () => {
 }
 
 function NoDecks() {
+	const { setClosedMobile } = useSidebar()
 	return (
 		<Callout>
 			<p>It seems like you're not learning any languages yet! Get started.</p>
 			<Button className="mt-2 w-full" asChild>
-				<Link to="/learn/add-deck">Start Learning</Link>
+				<Link onClick={setClosedMobile} to="/learn/add-deck">
+					Start Learning
+				</Link>
 			</Button>
 		</Callout>
 	)
