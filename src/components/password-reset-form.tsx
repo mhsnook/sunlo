@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { ShowAndLogError } from '@/components/errors'
 import { PasswordField } from '@/components/fields'
 
@@ -52,7 +52,7 @@ export function PasswordResetForm() {
 	return (
 		<CardContent>
 			{changeMutation.isSuccess ?
-				<Callout Icon={() => <SuccessCheckmark className="bg-transparent" />}>
+				<Callout Icon={SuccessCheckmarkTrans}>
 					<p>Success!</p>
 					<p>You've changed your password.</p>
 					<p>

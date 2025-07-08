@@ -19,7 +19,7 @@ import { EmailField, PasswordField, UserRoleField } from '@/components/fields'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 import { UnderConstructionNotice } from '@/components/homepage/under-construction'
 
@@ -103,9 +103,7 @@ function SignUp() {
 				</CardHeader>
 				<CardContent>
 					{signupMutation.isSuccess ?
-						<Callout
-							Icon={() => <SuccessCheckmark className="bg-transparent" />}
-						>
+						<Callout Icon={SuccessCheckmarkTrans}>
 							<p>Almost done!</p>
 							<p>
 								Find the confirmation link in your email to activate your

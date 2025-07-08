@@ -1,6 +1,6 @@
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmark } from '@/components/success-checkmark'
 import {
 	useReviewActions,
 	useReviewStage,

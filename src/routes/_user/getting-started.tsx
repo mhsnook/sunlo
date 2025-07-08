@@ -2,7 +2,7 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useAuth } from '@/lib/hooks'
 import ProfileCreationForm from '@/components/profile-creation-form'
 import { useProfile } from '@/lib/use-profile'
-import SuccessCheckmark from '@/components/success-checkmark'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 
 type GettingStartedProps = {
@@ -36,7 +36,7 @@ function GettingStartedPage() {
 				<div className="my-4 space-y-4 text-center">
 					<h1 className="d1">Welcome to Sunlo</h1>
 					<div className="mx-auto flex max-w-sm flex-row items-center gap-4">
-						<SuccessCheckmark className="bg-transparent" />
+						<SuccessCheckmarkTrans />
 						<p className="text-muted-foreground text-2xl font-thin">
 							Thanks&nbsp;for&nbsp;confirming your email &ndash; let&apos;s
 							get&nbsp;you&nbsp;set&nbsp;up.
