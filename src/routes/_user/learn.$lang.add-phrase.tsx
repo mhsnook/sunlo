@@ -23,7 +23,7 @@ import {
 	TranslationLanguageField,
 	TranslationTextField,
 } from '@/components/fields'
-import { useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import { PhraseCardInsert } from '@/types/main'
 
 interface SearchParams {
@@ -53,6 +53,13 @@ function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
+	const searchPlusText = useCallback(
+		(search: SearchParams) => ({
+			...search,
+			text,
+		}),
+		[text]
+	)
 
 	const refocusRef = useRef(undefined)
 
@@ -161,10 +168,7 @@ function AddPhraseTab() {
 							<Link
 								to="/learn/$lang/search"
 								from={Route.fullPath}
-								search={(search: SearchParams) => ({
-									...search,
-									text,
-								})}
+								search={searchPlusText}
 							>
 								<Search />
 								Search for similar phrases
