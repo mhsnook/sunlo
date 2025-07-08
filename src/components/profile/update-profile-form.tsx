@@ -36,7 +36,7 @@ export default function UpdateProfileForm({
 }) {
 	const queryClient = useQueryClient()
 	const initialData: ProfileEditFormInputs = {
-		username: profile.username ?? '',
+		username: profile.username,
 		language_primary: profile.language_primary,
 		languages_spoken: profile.languages_spoken,
 		avatar_path: profile.avatar_path,

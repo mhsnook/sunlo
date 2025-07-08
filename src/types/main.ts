@@ -7,6 +7,7 @@ import {
 } from '@supabase/supabase-js'
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
+import { NonNullableFields } from './utils'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -191,8 +192,8 @@ export type PublicProfile = Tables<'public_profile'> & {
 export type ProfileRow = Tables<'user_profile'>
 export type ProfileInsert = TablesInsert<'user_profile'>
 export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
-export type ProfileFull = Tables<'user_profile'> & {
-	avatar_url: string | null
+export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
+	avatar_url: string
 	decksMap: DecksMap
 	deckLanguages: Array<string>
 	friendships?: Array<FriendshipRow>
