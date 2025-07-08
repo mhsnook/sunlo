@@ -33,7 +33,6 @@ import {
 } from '@/components/language-is-empty'
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
-import { ExplainTodaysReview } from '@/components/review/explain-todays-review'
 import { useAuth } from '@/lib/hooks'
 import { useReviewsToday } from '@/lib/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
@@ -177,7 +176,7 @@ function ReviewPageSetup() {
 		[freshCards, today_active]
 	)
 
-	const countSurplusOrDeficit = freshCards.length - countNeeded
+	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
@@ -262,24 +261,6 @@ function ReviewPageSetup() {
 			<CardHeader>
 				<CardTitle className="flex flex-row justify-between">
 					<div>Get Ready to review your {languages[lang]} cards</div>
-					<ExplainTodaysReview
-						today_active={today_active}
-						countNeeded={countNeeded}
-						freshCards={freshCards}
-						countSurplusOrDeficit={countSurplusOrDeficit}
-						cardsToCreate={cardsToCreate}
-						allCardsForToday={allCardsForToday}
-						friendRecsFiltered={friendRecsFiltered}
-						friendRecsSelected={friendRecsSelected}
-						countNeeded2={countNeeded2}
-						algoRecsFiltered={algoRecsFiltered}
-						algoRecsSelected={algoRecsSelected}
-						countNeeded3={countNeeded3}
-						pids={pids}
-						cardsUnreviewedActiveSelected={cardsUnreviewedActiveSelected}
-						countNeeded4={countNeeded4}
-						libraryPhrasesSelected={libraryPhrasesSelected}
-					/>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">

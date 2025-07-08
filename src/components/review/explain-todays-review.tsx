@@ -102,3 +102,25 @@ export function ExplainTodaysReview({
 		</ExtraInfo>
 	)
 }
+
+/*
+for $lang.review.index.tsx
+<ExplainTodaysReview
+	today_active={today_active}
+	countNeeded={countNeeded}
+	freshCards={freshCards}
+	countSurplusOrDeficit={countSurplusOrDeficit}
+	cardsToCreate={cardsToCreate}
+	allCardsForToday={allCardsForToday}
+	friendRecsFiltered={friendRecsFiltered}
+	friendRecsSelected={friendRecsSelected}
+	countNeeded2={countNeeded2}
+	algoRecsFiltered={algoRecsFiltered}
+	algoRecsSelected={algoRecsSelected}
+	countNeeded3={countNeeded3}
+	pids={pids}
+	cardsUnreviewedActiveSelected={cardsUnreviewedActiveSelected}
+	countNeeded4={countNeeded4}
+	libraryPhrasesSelected={libraryPhrasesSelected}
+/>
+*/
