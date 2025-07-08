@@ -27,8 +27,7 @@ const data = makeLinks([
 ])
 
 export function NavUser() {
-	const { isMobile, setOpenMobile } = useSidebar()
-	const closeSidebar = () => setOpenMobile(false)
+	const { isMobile, setClosedMobile } = useSidebar()
 	const { isAuth, userEmail } = useAuth()
 	const { data: profile } = useProfile()
 	const signOut = useSignOut()
@@ -77,7 +76,7 @@ export function NavUser() {
 						<DropdownMenuGroup>
 							{data?.map((item) => (
 								<DropdownMenuItem key={item.link.to} asChild>
-									<Link to={item.link.to} onClick={closeSidebar}>
+									<Link to={item.link.to} onClick={setClosedMobile}>
 										{item.Icon ?
 											<item.Icon />
 										:	null}

@@ -16,8 +16,7 @@ export default function OneSidebarMenu({
 	menu: Array<LinkType>
 	title: string
 }) {
-	const { setOpenMobile } = useSidebar()
-	const closeSidebar = () => setOpenMobile(false)
+	const { setClosedMobile } = useSidebar()
 
 	return (
 		<SidebarGroup>
@@ -30,7 +29,7 @@ export default function OneSidebarMenu({
 						<SidebarMenuButton asChild>
 							<Link
 								{...item.link}
-								onClick={closeSidebar}
+								onClick={setClosedMobile}
 								activeOptions={{ exact: true, includeSearch: false }}
 								activeProps={{
 									className: 'text-primary-foresoft',
