@@ -14,7 +14,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
-import { Button } from './ui/button'
+import { buttonVariants } from './ui/button-variants'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -154,9 +154,11 @@ export function CardStatusDropdown({
 			<DropdownMenu>
 				<DropdownMenuTrigger className={cn('group flex', className)}>
 					{button ?
-						<Button
-							variant="outline"
-							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
+						<span
+							className={cn(
+								buttonVariants({ variant: 'outline' }),
+								`group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white`
+							)}
 						>
 							{cardMutation.isSuccess ?
 								<CheckCircle className="size-4 text-green-500" />
@@ -164,7 +166,7 @@ export function CardStatusDropdown({
 							{cardMutation.data ?
 								statusStrings[choice].done
 							:	statusStrings[choice].long}
-						</Button>
+						</span>
 					:	<Badge
 							variant="outline"
 							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
