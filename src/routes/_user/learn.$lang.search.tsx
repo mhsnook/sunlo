@@ -60,7 +60,7 @@ function SearchTab() {
 		if (!filter?.trim()) return pids
 		return searchablePhrases
 			.filter((searchable: SearchablePhrase) => {
-				return searchable.text.toUpperCase().indexOf(filter.toUpperCase()) > -1
+				return searchable.text.toUpperCase().includes(filter.toUpperCase())
 			})
 			.map((s) => s.pid)
 	}, [filter, searchablePhrases, pids])

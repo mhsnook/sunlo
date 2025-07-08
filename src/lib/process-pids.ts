@@ -22,7 +22,7 @@ function splitTranslations(
 				:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
 		})
 	const translations_other = translations_incoming.filter(
-		(t) => translationLangs.indexOf(t.lang) === -1
+		(t) => !translationLangs.includes(t.lang)
 	)
 
 	return {

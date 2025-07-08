@@ -55,7 +55,7 @@ export function SelectPhrasesToAddToReview({
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
 		const updatedRecs =
-			algoRecsSelected.indexOf(pid1) === -1 ?
+			!algoRecsSelected.includes(pid1) ?
 				[...algoRecsSelected, pid1]
 			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
 		setAlgoRecsSelected(updatedRecs)
@@ -105,7 +105,7 @@ export function SelectPhrasesToAddToReview({
 								<div className="grid gap-3 @lg:grid-cols-2">
 									{algoRecsFiltered[s.key].length > 0 ?
 										algoRecsFiltered[s.key].map((pid) => {
-											const selected = algoRecsSelected.indexOf(pid) > -1
+											const selected = algoRecsSelected.includes(pid)
 											const phrase = phrasesMapFiltered[pid]
 											// console.log(`mapping the algo recs`, phrase)
 

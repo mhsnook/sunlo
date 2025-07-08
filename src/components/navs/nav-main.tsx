@@ -29,9 +29,7 @@ const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
-	const deckMenu = !lang ? null : makeLinks(deckLinks, lang)
-	const languageName = lang ? languages[lang] : null
-	const isDeckFound = profile && profile.deckLanguages.indexOf(lang) > -1
+	const isDeckFound = profile && profile.deckLanguages.includes(lang)
 
 	return (
 		<>
