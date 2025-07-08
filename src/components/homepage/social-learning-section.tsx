@@ -122,7 +122,7 @@ export function SocialLearningSection() {
 									to="/signup"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
-										'transform rounded-full bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600'
+										'transform bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600'
 									)}
 								>
 									Invite Your {isForFriends ? 'Friends' : 'Family'}
@@ -219,7 +219,7 @@ export function SocialLearningSection() {
 									to="/signup"
 									className={cn(
 										buttonVariants(),
-										'"transform hover:to-emerald-700" rounded-full border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700'
+										'border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700'
 									)}
 								>
 									Start Learning Free
@@ -231,7 +231,7 @@ export function SocialLearningSection() {
 									rel="noopener noreferrer"
 									className={cn(
 										buttonVariants({ variant: 'outline' }),
-										'rounded-full border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10'
+										'border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10'
 									)}
 								>
 									<Github />

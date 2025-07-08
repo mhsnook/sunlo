@@ -12,7 +12,7 @@ export default function UserAuthCard() {
 			<div className="flex flex-row gap-2">
 				<Input
 					type="text"
-					className="grow rounded border p-3"
+					className="grow"
 					value={userEmail ?? 'loading...'}
 					disabled
 				/>
@@ -25,12 +25,7 @@ export default function UserAuthCard() {
 			</div>
 			<Label>Your password</Label>
 			<div className="flex flex-row gap-2">
-				<Input
-					type="text"
-					className="grow rounded border p-3"
-					value="***************"
-					disabled
-				/>
+				<Input type="text" className="grow" value="***************" disabled />
 
 				<Link
 					to="/profile/change-password"
