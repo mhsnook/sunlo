@@ -17,6 +17,14 @@ export function AppNav() {
 	return <Nav matches={matches} />
 }
 
+const activeProps = {
+	className: 'border-primary text-primary-foresoft',
+} as const
+const activeOptions = { exact: true, includeSearch: false } as const
+const inactiveProps = {
+	className: 'border-transparent text-muted-foreground',
+} as const
+
 const Nav = memo(function Nav({
 	matches,
 }: {
@@ -48,13 +56,9 @@ const Nav = memo(function Nav({
 										<Link
 											{...l.link}
 											className="flex flex-row items-center justify-center gap-2 border-b-2 py-2"
-											activeProps={{
-												className: 'border-primary text-primary-foresoft',
-											}}
-											activeOptions={{ exact: true, includeSearch: false }}
-											inactiveProps={{
-												className: 'border-transparent text-muted-foreground',
-											}}
+											activeProps={activeProps}
+											activeOptions={activeOptions}
+											inactiveProps={inactiveProps}
 										>
 											{!l.Icon ? null : <l.Icon className="size-4" />}{' '}
 											<>{l.name}</>
