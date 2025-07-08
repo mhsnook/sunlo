@@ -106,7 +106,7 @@ export default function SearchProfiles() {
 		navigate({
 			search: (old) => ({
 				...old,
-				query: val ? val : undefined,
+				query: val || undefined,
 			}),
 			replace: true,
 			params: true,
@@ -126,7 +126,7 @@ export default function SearchProfiles() {
 	const prevResults = usePrevious(searchResults)
 	const resultsToShow =
 		!debouncedQuery ? [] : (searchResults ?? prevResults ?? [])
-	const showLoader = resultsToShow.length === 0 && isFetching ? true : false
+	const showLoader = resultsToShow.length === 0 && isFetching
 
 	return (
 		<Card className="min-h-[21rem]">

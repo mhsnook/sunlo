@@ -69,7 +69,7 @@ function Title({ matches }: { matches: MyMatch[] }) {
 		titleBar?.onBackClick === undefined ? goBack
 		: typeof titleBar.onBackClick === 'function' ? titleBar.onBackClick
 		: typeof titleBar.onBackClick === 'string' ?
-			() => navigate({ to: titleBar.onBackClick })
+			() => navigate({ to: String(titleBar.onBackClick) })
 		:	goBack
 	return (
 		<>

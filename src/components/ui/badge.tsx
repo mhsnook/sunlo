@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { BadgeProps, badgeVariants } from './badge-variants'
+import { OctagonMinus } from 'lucide-react'
 
 function Badge({ className, variant, ...props }: BadgeProps) {
 	return (
@@ -7,4 +8,10 @@ function Badge({ className, variant, ...props }: BadgeProps) {
 	)
 }
 
-export { Badge }
+const OctogonMinusDangerBadge = (
+	<Badge variant="destructive" className="p-2">
+		<OctagonMinus />
+	</Badge>
+)
+
+export { Badge, OctogonMinusDangerBadge }

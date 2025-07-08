@@ -73,7 +73,11 @@ function processDeckPidsAndRecs(
 			phrasesMap[pid2].count_cards! - phrasesMap[pid1].count_cards!
 	)
 	const newest = language_selectables.toSorted((pid1, pid2) =>
-		phrasesMap[pid2].created_at! === phrasesMap[pid1].created_at! ? 0
+		(
+			phrasesMap[pid2].created_at &&
+			phrasesMap[pid2].created_at === phrasesMap[pid1].created_at
+		) ?
+			0
 		: (
 			// prioritize HIGHER values
 			phrasesMap[pid2].created_at! > phrasesMap[pid1].created_at!
