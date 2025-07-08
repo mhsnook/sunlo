@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
 import { useProfile } from '@/lib/use-profile'
 import { LangOnlyComponentProps } from '@/types/main'
+import { useSidebar } from '../ui/sidebar'
 
 const deckLinks = [
 	'/learn/$lang',
@@ -29,13 +30,14 @@ const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
-	const isDeckFound = profile && profile.deckLanguages.includes(lang)
+	const deckMenu = makeLinks(deckLinks, lang)
+	const isDeckFound = profile && lang && profile.deckLanguages.includes(lang)
 
 	return (
 		<>
 			{!deckMenu || !lang ? null : (
 				<div className="bg-muted-foreground/10 pb-2">
-					{!languageName ?
+					{!(lang in languages) ?
 						<LanguageNotFound />
 					: !isDeckFound ?
 						<DeckNotFound lang={lang} />

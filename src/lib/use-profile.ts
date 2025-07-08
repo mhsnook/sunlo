@@ -55,10 +55,9 @@ export const searchPublicProfilesByUsername = async (
 		.neq('uid', uid)
 		.limit(10)
 		.throwOnError()
-	return data.map((row) => ({
-		...row,
-		avatar_url: avatarUrlify(row.avatar_path),
-	}))
+	return data.map((row) =>
+		Object.assign({}, row, { avatar_url: avatarUrlify(row.avatar_path) })
+	)
 }
 
 export const publicProfileQuery = (uid: uuid) =>
