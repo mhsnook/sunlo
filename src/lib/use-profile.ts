@@ -31,6 +31,9 @@ export const profileQuery = (userId: uuid | null) =>
 				.filter((d) => typeof d === 'string')
 			return {
 				...profile,
+				updated_at: profile.updated_at ?? '',
+				username: profile.username ?? '',
+				avatar_path: profile.avatar_path ?? '',
 				avatar_url: avatarUrlify(profile.avatar_path),
 				decksMap,
 				deckLanguages,
