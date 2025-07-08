@@ -140,6 +140,8 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 	)
 }
 
+const constFilter = { filter: 'language' } as const
+
 function Empty() {
 	const { lang } = Route.useParams()
 	return (
@@ -149,7 +151,7 @@ function Empty() {
 				className={buttonVariants({ variant: 'outline' })}
 				to="/learn/$lang/library"
 				params={{ lang }}
-				search={{ filter: 'language' }}
+				search={constFilter}
 			>
 				Clear filters
 			</Link>
@@ -168,9 +170,10 @@ function BadgeFilter({
 	filter: FilterEnum
 	count: number
 }) {
+	const constFilter = { filter: name } as const
 	const lang = Route.useParams({ select: (d) => d.lang })
 	return (
-		<Link to="/learn/$lang/library" params={{ lang }} search={{ filter: name }}>
+		<Link to="/learn/$lang/library" params={{ lang }} search={constFilter}>
 			<Badge variant="outline">
 				<label className="flex cursor-pointer gap-1">
 					<Checkbox checked={filter === name} /> {text} ({count})

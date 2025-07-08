@@ -27,6 +27,7 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 		</Callout>
 	)
 }
+const constFilter = { filter: 'language_no_translations' } as const
 
 export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 	return (
@@ -51,7 +52,7 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 					<Link
 						to="/learn/$lang/library"
 						params={{ lang }}
-						search={{ filter: 'language_no_translations' }}
+						search={constFilter}
 						className="s-link"
 					>
 						View existing phrases to add translations in one of your languages
