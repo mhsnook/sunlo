@@ -38,6 +38,7 @@ type SidebarContextType = {
 	setOpen: (open: boolean) => void
 	openMobile: boolean
 	setOpenMobile: (open: boolean) => void
+	setClosedMobile: () => void
 	isMobile: boolean
 	toggleSidebar: () => void
 }
@@ -120,6 +121,7 @@ const SidebarProvider = ({
 			isMobile,
 			openMobile,
 			setOpenMobile,
+			setClosedMobile: () => setOpenMobile(false),
 			toggleSidebar,
 		}),
 		[state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]

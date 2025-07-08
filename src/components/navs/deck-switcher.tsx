@@ -53,8 +53,7 @@ function NoDecks() {
 const sizeStyles = { height: 48, width: '100%' } as React.CSSProperties
 
 export function DeckSwitcher({ lang }: { lang?: string }) {
-	const { isMobile, setOpenMobile } = useSidebar()
-	const closeSidebar = () => setOpenMobile(false)
+	const { isMobile, setClosedMobile } = useSidebar()
 	const deckMenuData = useDeckMenuData()
 	const languageName = lang ? languages[lang] : null
 
@@ -100,7 +99,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 									<Link
 										to="/learn/$lang"
 										params={{ lang: deck.lang }}
-										onClick={closeSidebar}
+										onClick={setClosedMobile}
 									>
 										{deck.name}
 										<Badge variant="outline">{deck.badge} cards</Badge>
@@ -109,7 +108,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 							))}
 							<DropdownMenuSeparator />
 							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
-								<Link to="/learn/add-deck" onClick={closeSidebar}>
+								<Link to="/learn/add-deck" onClick={setClosedMobile}>
 									<div className="bg-background flex size-6 items-center justify-center rounded border">
 										<Plus className="size-4" />
 									</div>
