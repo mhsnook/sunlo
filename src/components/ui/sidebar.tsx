@@ -246,6 +246,13 @@ const SidebarTrigger = ({
 	...props
 }: React.ComponentProps<typeof Button>) => {
 	const { toggleSidebar } = useSidebar()
+	const onButtonClick = React.useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>) => {
+			onClick?.(event)
+			toggleSidebar()
+		},
+		[onClick, toggleSidebar]
+	)
 
 	return (
 		<Button
@@ -254,10 +261,7 @@ const SidebarTrigger = ({
 			variant="ghost"
 			size="icon"
 			className={cn('size-7', className)}
-			onClick={(event) => {
-				onClick?.(event)
-				toggleSidebar()
-			}}
+			onClick={onButtonClick}
 			{...props}
 		>
 			<PanelLeft />

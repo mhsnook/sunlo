@@ -13,6 +13,7 @@ import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useProfile } from '@/lib/use-profile'
+import { useMemo } from 'react'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -52,6 +53,10 @@ function PhraseAccordionItem({
 	card: CardFull | null
 }) {
 	const { data: profile } = useProfile()
+	const params = useMemo(
+		() => ({ lang: phrase.lang!, id: phrase.id! }),
+		[phrase.id, phrase.lang]
+	)
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
 			<div className="flex flex-row items-center gap-2">
@@ -85,7 +90,7 @@ function PhraseAccordionItem({
 						/>
 						<PermalinkButton
 							to="/learn/$lang/$id"
-							params={{ lang: phrase.lang!, id: phrase.id! }}
+							params={params}
 							variant="link"
 							className="text-xs"
 						/>
