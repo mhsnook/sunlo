@@ -7,7 +7,7 @@ type AvatarIconRowProps = PublicProfile & {
 }
 
 export function AvatarIconRow({
-	avatar_url,
+	avatarUrl,
 	username,
 	uid,
 	children,
@@ -15,9 +15,9 @@ export function AvatarIconRow({
 	return (
 		<div className="flex w-full flex-row items-center justify-between gap-4">
 			<Link to="/friends/$uid" params={{ uid }}>
-				{avatar_url ?
+				{avatarUrl ?
 					<img
-						src={avatar_url}
+						src={avatarUrl}
 						alt={`${username}'s avatar`}
 						className="size-8 rounded-full object-cover"
 					/>

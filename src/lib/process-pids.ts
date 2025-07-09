@@ -116,6 +116,7 @@ function processDeckPidsAndRecs(
 
 export function useDeckPidsAndRecs(lang: string) {
 	const { data: profile } = useProfile()
+	if (!profile) throw new Error('Profile is not present...')
 
 	// these two select from the same cache key
 	const { data: phrasesMap /*, isPending: isPending1 */ } =
@@ -128,7 +129,6 @@ export function useDeckPidsAndRecs(lang: string) {
 
 	// derived data requiring all all three results
 	return useMemo(() => {
-		if (!profile) throw new Error('Profile is not even present...')
 		if (!phrasesMap || !languagePids || !deckPids) {
 			throw new Error(
 				'Attempting to call useDeckPidsAndRecs in a situation where the required data is neither present nor pending.'
@@ -136,10 +136,10 @@ export function useDeckPidsAndRecs(lang: string) {
 		}
 		// Now `null` always means pending because we always throw errors.
 		return processDeckPidsAndRecs(
-			[profile.language_primary, ...profile.languages_spoken],
+			profile.languagesToShow,
 			phrasesMap,
 			languagePids,
 			deckPids
 		)
-	}, [languagePids, deckPids, phrasesMap, profile])
+	}, [languagePids, deckPids, phrasesMap, profile.languagesToShow])
 }

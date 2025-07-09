@@ -51,9 +51,9 @@ function ProfilePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-center">
 					<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-						{profile.avatar_url ?
+						{profile.avatarUrl ?
 							<img
-								src={profile.avatar_url}
+								src={profile.avatarUrl}
 								alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 								className="size-32 rounded-full object-cover"
 							/>
