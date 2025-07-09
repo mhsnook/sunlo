@@ -44,40 +44,40 @@ export const friendSummaryToRelative = (
 	return res
 }
 
-const getRelations = async (uid: uuid) => {
-	const { data } = await supabase
-		.from('friend_summary')
-		.select(
-			'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
-		)
-		.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
-		.throwOnError()
-
-	const cleanArray: Array<FriendSummaryRelative> = data.map((d) =>
-		friendSummaryToRelative(uid, d)
-	)
-
-	return {
-		relationsMap: mapArray(cleanArray, 'uidOther'),
-		uids: {
-			all: cleanArray.map((d) => d.uidOther),
-			friends: cleanArray
-				.filter((d) => d.status === 'friends')
-				.map((d) => d.uidOther),
-			invited: cleanArray
-				.filter((d) => d.status === 'pending' && d.isMostRecentByMe)
-				.map((d) => d.uidOther),
-			invitations: cleanArray
-				.filter((d) => d.status === 'pending' && !d.isMostRecentByMe)
-				.map((d) => d.uidOther),
-		},
-	} as FriendSummariesLoaded
-}
-
-export const relationsQuery = (uidMe: uuid) =>
+export const relationsQuery = (uidMe: uuid | null) =>
 	queryOptions({
-		queryKey: ['user', uidMe, 'relations'],
-		queryFn: () => getRelations(uidMe),
+		queryKey: ['user', uidMe ?? '', 'relations'],
+		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
+			if (!queryKey[1]) return null
+			const uid = queryKey[1]
+			const { data } = await supabase
+				.from('friend_summary')
+				.select(
+					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
+				)
+				.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
+				.throwOnError()
+
+			const cleanArray: Array<FriendSummaryRelative> = data.map((d) =>
+				friendSummaryToRelative(uid, d)
+			)
+
+			return {
+				relationsMap: mapArray(cleanArray, 'uidOther'),
+				uids: {
+					all: cleanArray.map((d) => d.uidOther),
+					friends: cleanArray
+						.filter((d) => d.status === 'friends')
+						.map((d) => d.uidOther),
+					invited: cleanArray
+						.filter((d) => d.status === 'pending' && d.isMostRecentByMe)
+						.map((d) => d.uidOther),
+					invitations: cleanArray
+						.filter((d) => d.status === 'pending' && !d.isMostRecentByMe)
+						.map((d) => d.uidOther),
+				},
+			} as FriendSummariesLoaded
+		},
 		enabled: !!uidMe,
 	})
 
