@@ -76,7 +76,6 @@ function SearchTab() {
 					<Label htmlFor="phrase">Phrase</Label>
 					<Input
 						placeholder="Enter a phrase to search or add"
-						autoFocus
 						onChange={(e) => {
 							void navigate({
 								to: '.',

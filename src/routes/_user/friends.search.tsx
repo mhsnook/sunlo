@@ -153,7 +153,6 @@ export default function SearchProfiles() {
 								onChange={(event) => {
 									void setQueryInputValue(event.target.value)
 								}}
-								autoFocus
 							/>
 						</div>
 						<Button disabled={isFetching}>

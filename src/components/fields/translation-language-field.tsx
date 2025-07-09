@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label'
 import { FieldValues, Path, useController } from 'react-hook-form'
 import { ErrorLabel, type ControlledFieldProps } from '.'
 import { useProfile } from '@/lib/use-profile'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import {
 	Popover,
 	PopoverContent,
@@ -42,6 +42,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 		control,
 	})
 
+	const id = useId()
 	return (
 		<div className="flex flex-col gap-1">
 			<Label htmlFor="lang" className={error ? 'text-destructive' : ''}>
@@ -52,6 +53,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 					<Button
 						variant="outline"
 						role="combobox"
+						aria-controls={id}
 						aria-expanded={open}
 						className={`bg-card placeholder:text-muted-foreground text-foreground justify-between font-normal ${error ? 'border-destructive' : ''}`}
 					>
@@ -63,7 +65,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 						<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="p-0">
+				<PopoverContent id={id} className="p-0">
 					<Command
 						filter={(value, search) => {
 							search = search.toLocaleLowerCase()

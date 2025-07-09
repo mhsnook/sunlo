@@ -87,7 +87,6 @@ function ForgotPasswordPage() {
 							<EmailField<FormInputs>
 								register={register}
 								error={errors.email}
-								autoFocus
 								tabIndex={1}
 							/>
 						</fieldset>
