@@ -11,9 +11,9 @@ export default function AvatarSection() {
 					className="bg-foreground/20 mx-auto mb-2 flex size-36 flex-row justify-center rounded-full shadow-lg"
 					htmlFor="single"
 				>
-					{profile?.avatar_url ?
+					{profile?.avatarUrl ?
 						<img
-							src={profile.avatar_url}
+							src={profile.avatarUrl}
 							alt={`${profile?.username ?? 'Someone'}'s profile pic`}
 							className="size-36 rounded-full object-cover"
 						/>

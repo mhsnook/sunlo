@@ -101,8 +101,8 @@ export function arrayDifference(
 	return arr1.filter((item) => !set2.has(item))
 }
 
-export function avatarUrlify(path?: string | null) {
-	return !path ? null : (
+export function avatarUrlify(path: string | null): string {
+	return !path ? '' : (
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
 		)
 }

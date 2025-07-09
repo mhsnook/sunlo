@@ -29,12 +29,19 @@ export const profileQuery = (userId: uuid | null) =>
 			const deckLanguages: Array<string> = decks_array
 				.map((d) => d.lang)
 				.filter((d) => typeof d === 'string')
+			const languagesToShow = [
+				profile.language_primary,
+				...profile.languages_spoken.filter(
+					(l) => l !== profile.language_primary
+				),
+			]
 			return {
 				...profile,
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
 				avatar_path: profile.avatar_path ?? '',
-				avatar_url: avatarUrlify(profile.avatar_path),
+				avatarUrl: avatarUrlify(profile.avatar_path),
+				languagesToShow,
 				decksMap,
 				deckLanguages,
 			} as ProfileFull
@@ -59,7 +66,7 @@ export const searchPublicProfilesByUsername = async (
 		.limit(10)
 		.throwOnError()
 	return data.map((row) =>
-		Object.assign({}, row, { avatar_url: avatarUrlify(row.avatar_path) })
+		Object.assign({}, row, { avatarUrl: avatarUrlify(row.avatar_path) })
 	)
 }
 
@@ -73,9 +80,9 @@ export const publicProfileQuery = (uid: uuid) =>
 				.eq('uid', uid)
 				.maybeSingle()
 				.throwOnError()
-			return {
+			return !data ? null : {
 				...data,
-				avatar_url: avatarUrlify(data?.avatar_path),
+				avatarUrl: avatarUrlify(data.avatar_path),
 			} as PublicProfile | null
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,

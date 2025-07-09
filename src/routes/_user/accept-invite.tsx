@@ -75,7 +75,7 @@ function AcceptInvitePage() {
 				{profile ?
 					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 						<img
-							src={profile.avatar_url}
+							src={profile.avatarUrl}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
 							alt={`Your avatar`}
@@ -84,7 +84,7 @@ function AcceptInvitePage() {
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={friend.avatar_url!}
+									src={friend.avatarUrl!}
 									className="mx-auto max-w-32 shrink rounded-xl"
 									alt={`${friend.username}'s avatar`}
 								/>

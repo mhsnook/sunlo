@@ -29,22 +29,12 @@ export default function TranslationLanguageField<T extends FieldValues>({
 	const { data: profile } = useProfile()
 	const [open, setOpen] = useState(false)
 
-	const myLanguages = useMemo(
-		() =>
-			!profile ?
-				[]
-			:	[profile.language_primary, ...profile.languages_spoken].filter(
-					(l) => l.length === 3
-				),
-		[profile]
-	)
-
 	const generalLanguageOptions = useMemo(
 		() =>
 			allLanguageOptions.filter(
-				(option) => !myLanguages.includes(option.value)
+				(option) => !profile?.languagesToShow.includes(option.value)
 			),
-		[myLanguages]
+		[profile?.languagesToShow]
 	)
 
 	const controller = useController({
@@ -94,34 +84,38 @@ export default function TranslationLanguageField<T extends FieldValues>({
 						<CommandList>
 							<CommandEmpty>No language found.</CommandEmpty>
 							<CommandGroup>
-								{myLanguages.map((lang) =>
-									lang === undefined ? null : (
-										<CommandItem
-											key={lang}
-											value={lang}
-											onSelect={(currentValue) => {
-												controller.field.onChange(
-													currentValue === controller.field.value ?
-														''
-													:	currentValue
-												)
-												setOpen(false)
-											}}
-										>
-											<Check
-												className={cn(
-													'mr-2 size-4',
-													controller.field.value === lang ?
-														'opacity-100'
-													:	'opacity-0'
-												)}
-											/>
-											{languages[lang]} ({lang})
-										</CommandItem>
+								{!profile ? null : (
+									profile.languagesToShow.map((lang) =>
+										lang === undefined ? null : (
+											<CommandItem
+												key={lang}
+												value={lang}
+												onSelect={(currentValue) => {
+													controller.field.onChange(
+														currentValue === controller.field.value ?
+															''
+														:	currentValue
+													)
+													setOpen(false)
+												}}
+											>
+												<Check
+													className={cn(
+														'mr-2 size-4',
+														controller.field.value === lang ?
+															'opacity-100'
+														:	'opacity-0'
+													)}
+												/>
+												{languages[lang]} ({lang})
+											</CommandItem>
+										)
 									)
 								)}
 							</CommandGroup>
-							{myLanguages.length === 0 ? null : <CommandSeparator />}
+							{!profile || profile.languagesToShow.length === 0 ? null : (
+								<CommandSeparator />
+							)}
 							<CommandGroup>
 								{generalLanguageOptions.map((language) => (
 									<CommandItem
