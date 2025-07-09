@@ -96,7 +96,6 @@ function NewDeckForm() {
 							</p>
 						}
 						<SelectOneLanguage
-							autoFocus
 							hasError={!!errors.lang}
 							value={controller.field.value}
 							setValue={controller.field.onChange}

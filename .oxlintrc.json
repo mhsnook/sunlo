@@ -27,6 +27,7 @@
 			"rules": {
 				"react-in-jsx-scope": "off",
 				"no-console": "off",
+				"tabindex-no-positive": "warn",
 				"for-direction": "error",
 				"no-async-promise-executor": "error",
 				"no-case-declarations": "error",

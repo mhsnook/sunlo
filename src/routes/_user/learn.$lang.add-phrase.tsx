@@ -23,7 +23,7 @@ import {
 	TranslationLanguageField,
 	TranslationTextField,
 } from '@/components/fields'
-import { useCallback, useRef } from 'react'
+import { useCallback } from 'react'
 import { PhraseCardInsert } from '@/types/main'
 
 interface SearchParams {
@@ -61,8 +61,6 @@ function AddPhraseTab() {
 		[text]
 	)
 
-	const refocusRef = useRef(undefined)
-
 	const searchPhrase = text || ''
 	const {
 		control,
@@ -90,7 +88,6 @@ function AddPhraseTab() {
 			)
 			console.log(`Success:`, data)
 			reset({ phrase_text: '', translation_text: '', translation_lang })
-			refocusRef?.current?.focus()
 		},
 		onError: (error) => {
 			toast.error(
@@ -128,8 +125,6 @@ function AddPhraseTab() {
 								<Textarea
 									{...field}
 									placeholder="The text of the phrase to learn"
-									autoFocus
-									ref={refocusRef}
 									onChange={(e) => {
 										field.onChange(e)
 										void navigate({

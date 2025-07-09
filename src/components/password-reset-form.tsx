@@ -74,7 +74,6 @@ export function PasswordResetForm() {
 						<PasswordField
 							register={register}
 							error={errors.password}
-							autoFocus
 							tabIndex={1}
 						/>
 					</fieldset>

@@ -7,7 +7,6 @@ export default function EmailField<T extends FieldValues>({
 	register,
 	error,
 	tabIndex = 1,
-	autoFocus = false,
 }: FieldProps<T>) {
 	return (
 		<div className="flex flex-col gap-1">
@@ -19,7 +18,6 @@ export default function EmailField<T extends FieldValues>({
 				inputMode="email"
 				aria-invalid={!!error}
 				tabIndex={tabIndex}
-				autoFocus={autoFocus}
 				type="email"
 				className={error ? 'bg-destructive/20' : ''}
 				placeholder="email@domain"

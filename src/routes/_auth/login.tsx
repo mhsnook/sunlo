@@ -91,7 +91,6 @@ export default function LoginForm() {
 						<EmailField<FormInputs>
 							register={register}
 							error={errors.email}
-							autoFocus
 							tabIndex={1}
 						/>
 						<PasswordField<FormInputs>

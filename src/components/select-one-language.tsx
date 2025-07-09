@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -16,9 +15,9 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import languages, { allLanguageOptions } from '@/lib/languages'
+import { useId, useState } from 'react'
 
 interface SelectOneLanguageProps {
-	autoFocus?: boolean
 	hasError?: boolean
 	value: string
 	setValue: (value: string) => void
@@ -27,22 +26,23 @@ interface SelectOneLanguageProps {
 }
 
 export function SelectOneLanguage({
-	autoFocus = false,
 	hasError = false,
 	value,
 	setValue,
 	disabled,
 	tabIndex,
 }: SelectOneLanguageProps) {
-	const [open, setOpen] = React.useState(false)
+	const [open, setOpen] = useState(false)
+	const id = useId()
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger autoFocus={autoFocus} asChild className="w-full">
+			<PopoverTrigger asChild className="w-full">
 				<Button
 					variant="outline"
 					tabIndex={tabIndex}
 					role="combobox"
 					aria-expanded={open}
+					aria-controls={id}
 					className={`placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
 				>
 					{value ?
@@ -52,7 +52,7 @@ export function SelectOneLanguage({
 					<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="p-0">
+			<PopoverContent id={id} className="p-0">
 				<Command
 					filter={(value, search) => {
 						search = search.toLocaleLowerCase()

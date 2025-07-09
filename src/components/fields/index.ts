@@ -19,7 +19,6 @@ import TranslationTextField from '@/components/fields/translation-text-field'
 type AnyFieldType = {
 	error?: FieldError
 	tabIndex?: number
-	autoFocus?: boolean
 }
 
 export type FieldProps<T extends FieldValues> = AnyFieldType & {
