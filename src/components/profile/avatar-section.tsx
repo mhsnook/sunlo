@@ -3,7 +3,6 @@ import { User } from 'lucide-react'
 
 export default function AvatarSection() {
 	const { data: profile } = useProfile()
-
 	return (
 		<header className="mx-auto my-4 max-w-sm text-center">
 			<div className="relative">
@@ -11,13 +10,14 @@ export default function AvatarSection() {
 					className="bg-foreground/20 mx-auto mb-2 flex size-36 flex-row justify-center rounded-full shadow-lg"
 					htmlFor="single"
 				>
-					{profile?.avatarUrl ?
-						<img
+					{profile === null || !profile.avatarUrl ?
+						<User size={144} />
+					:	<img
 							src={profile.avatarUrl}
-							alt={`${profile?.username ?? 'Someone'}'s profile pic`}
+							alt="Your profile pic"
 							className="size-36 rounded-full object-cover"
 						/>
-					:	<User size={144} />}
+					}
 				</label>
 			</div>
 			<div>

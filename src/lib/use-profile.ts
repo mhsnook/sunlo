@@ -65,25 +65,36 @@ export const searchPublicProfilesByUsername = async (
 		.neq('uid', uid)
 		.limit(10)
 		.throwOnError()
-	return data.map((row) =>
-		Object.assign({}, row, { avatarUrl: avatarUrlify(row.avatar_path) })
-	)
+	return !data || data.length === 0 ?
+			[]
+		:	data.map(
+				(row) =>
+					({
+						uid: row.uid!,
+						avatar_path: row.avatar_path ?? '',
+						username: row.username ?? '',
+						avatarUrl: avatarUrlify(row.avatar_path),
+					}) as PublicProfile
+			)
 }
 
 export const publicProfileQuery = (uid: uuid) =>
 	queryOptions({
 		queryKey: ['public', 'profile', uid],
-		queryFn: async () => {
+		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
 			const { data } = await supabase
 				.from('public_profile')
 				.select()
-				.eq('uid', uid)
+				.eq('uid', queryKey[2])
 				.maybeSingle()
 				.throwOnError()
-			return !data ? null : {
-				...data,
-				avatarUrl: avatarUrlify(data.avatar_path),
-			} as PublicProfile | null
+			return !data ? null : (
+					({
+						uid: data.uid!,
+						username: data.username ?? '',
+						avatarUrl: avatarUrlify(data.avatar_path),
+					} as PublicProfile | null)
+				)
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,
 	})
