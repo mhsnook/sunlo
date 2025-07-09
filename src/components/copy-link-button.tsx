@@ -2,6 +2,7 @@ import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import toast from 'react-hot-toast'
 import { ButtonProps } from '@/components/ui/button-variants'
+import { useCallback } from 'react'
 
 export default function CopyLinkButton({
 	url,
@@ -17,7 +18,7 @@ export default function CopyLinkButton({
 	size?: string
 	className?: string
 } & ButtonProps) {
-	const copyLink = () => {
+	const copyLink = useCallback(() => {
 		// @TODO this is not working on my laptop (anymore) idk why
 		if (!navigator?.clipboard) toast.error('Failed to copy link')
 		else
@@ -29,7 +30,8 @@ export default function CopyLinkButton({
 				.catch(() => {
 					toast.error('Failed to copy link')
 				})
-	}
+	}, [url])
+
 	return (
 		<Button
 			onClick={copyLink}

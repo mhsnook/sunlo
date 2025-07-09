@@ -57,20 +57,27 @@ export default function Navbar() {
 
 function Title({ matches }: { matches: MyMatch[] }) {
 	const navigate = useNavigate()
-	const goBack = useCallback(() => {
-		void navigate({ to: '..' })
-	}, [navigate])
 
 	const match = matches.findLast((m) => !!m?.loaderData?.titleBar)
 	const titleBar = match?.loaderData?.titleBar
+
+	const goBackOrToStringUrl = useCallback(() => {
+		void navigate({
+			to:
+				typeof titleBar?.onBackClick === 'string' ?
+					titleBar?.onBackClick
+				:	'..',
+		})
+	}, [navigate, titleBar?.onBackClick])
+
 	if (!titleBar) return null
-	const Icon = !titleBar ? null : titleBar.Icon
 	const onBackClickFn =
-		titleBar?.onBackClick === undefined ? goBack
-		: typeof titleBar.onBackClick === 'function' ? titleBar.onBackClick
-		: typeof titleBar.onBackClick === 'string' ?
-			() => navigate({ to: String(titleBar.onBackClick) })
-		:	goBack
+		typeof titleBar.onBackClick === 'function' ?
+			titleBar.onBackClick
+		:	goBackOrToStringUrl
+
+	const Icon = !titleBar ? null : titleBar.Icon
+
 	return (
 		<>
 			<Button variant="ghost" size="icon-sm" onClick={onBackClickFn}>
@@ -78,15 +85,13 @@ function Title({ matches }: { matches: MyMatch[] }) {
 				<span className="sr-only">Back</span>
 			</Button>
 			<Separator orientation="vertical" className="mx-2 h-6" />
-			<div className="flex flex-row items-center gap-[1cqw]">
+			<div className="flex flex-row items-center gap-[1cqw] rounded-2xl">
 				{Icon ?
-					<span className="rounded">
-						<Icon size="24" />
-					</span>
+					<Icon size="24" />
 				:	<>&nbsp;</>}
 				<div>
 					<h1 className="text-lg font-bold">{titleBar?.title}</h1>
-					<p className="text-sm">{titleBar?.subtitle}</p>
+					<p className="text-sm opacity-80">{titleBar?.subtitle}</p>
 				</div>
 			</div>
 		</>
@@ -95,6 +100,7 @@ function Title({ matches }: { matches: MyMatch[] }) {
 
 function ContextMenu({ matches }: { matches: MyMatch[] }) {
 	const [isOpen, setIsOpen] = useState(false)
+	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
 	const match = matches.findLast((m) => !!m?.loaderData?.contextMenu)
 	const links = useLinks(match?.loaderData?.contextMenu)
 	if (!links || !links.length) return null
@@ -113,7 +119,7 @@ function ContextMenu({ matches }: { matches: MyMatch[] }) {
 						<Link
 							{...link}
 							className="justify-content-center flex w-full flex-row gap-2"
-							onClick={() => setIsOpen(false)}
+							onClick={setClosed}
 						>
 							{!Icon ? null : <Icon className="size-[1.25rem]" />}
 							{name}
