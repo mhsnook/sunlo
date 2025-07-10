@@ -7,13 +7,12 @@ import {
 import supabase from './supabase-client'
 import {
 	FriendRequestActionInsert,
-	FriendSummary,
-	FriendSummaryFull,
+	FriendSummaryRaw,
 	FriendSummaryRelative,
 	uuid,
 } from '@/types/main'
 import { useAuth } from './hooks'
-import { mapArray } from './utils'
+import { avatarUrlify, mapArray } from './utils'
 import toast from 'react-hot-toast'
 
 type FriendSummariesLoaded = {
@@ -28,7 +27,7 @@ type FriendSummariesLoaded = {
 
 export const friendSummaryToRelative = (
 	uid: uuid,
-	d: FriendSummaryFull | FriendSummary
+	d: FriendSummaryRaw
 ): FriendSummaryRelative => {
 	let res: FriendSummaryRelative = {
 		most_recent_action_type: d.most_recent_action_type!,
@@ -39,8 +38,14 @@ export const friendSummaryToRelative = (
 		isMyUidMore: uid === d.uid_more,
 	}
 
-	if ('profile_less' in d && 'profile_more' in d)
-		res.profile = d.profile_less.uid === uid ? d.profile_more : d.profile_less
+	if (d.profile_less && d.profile_more) {
+		const pro = d.profile_less.uid === uid ? d.profile_more : d.profile_less
+		res.profile = {
+			uid: pro.uid ?? '',
+			username: pro.username ?? '',
+			avatarUrl: avatarUrlify(pro.avatar_path),
+		}
+	}
 	return res
 }
 
@@ -57,6 +62,8 @@ export const relationsQuery = (uidMe: uuid | null) =>
 				)
 				.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
 				.throwOnError()
+
+			if (!data) return null
 
 			const cleanArray: Array<FriendSummaryRelative> = data.map((d) =>
 				friendSummaryToRelative(uid, d)
@@ -84,17 +91,17 @@ export const relationsQuery = (uidMe: uuid | null) =>
 const oneRelationQuery = (uidMe: uuid, uidOther: uuid) =>
 	queryOptions({
 		...relationsQuery(uidMe),
-		select: (data) => data.relationsMap[uidOther],
+		select: (data) => (!data ? null : data.relationsMap[uidOther]),
 	})
 
 export const useRelations = () => {
 	const { userId } = useAuth()
-	return useQuery(relationsQuery(userId))
+	return useQuery({ ...relationsQuery(userId) })
 }
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
-	return useQuery(oneRelationQuery(userId, uidToUse))
+	return useQuery({ ...oneRelationQuery(userId, uidToUse) })
 }
 
 export const useFriendRequestAction = (uid_for: uuid) => {
