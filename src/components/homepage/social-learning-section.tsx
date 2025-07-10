@@ -132,7 +132,7 @@ export function SocialLearningSection() {
 
 						{/* Right side - Benefits */}
 						<div className="space-y-8">
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-rose-400/20">
 										<Heart className="h-6 w-6 text-rose-300" />
@@ -151,7 +151,7 @@ export function SocialLearningSection() {
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-400/20">
 										<Users className="h-6 w-6 text-orange-300" />
@@ -169,7 +169,7 @@ export function SocialLearningSection() {
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-pink-400/20">
 										<Gift className="h-6 w-6 text-pink-300" />

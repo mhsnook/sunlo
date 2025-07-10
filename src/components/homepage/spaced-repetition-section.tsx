@@ -109,7 +109,7 @@ export function SpacedRepetitionSection() {
 
 						{/* Right side - Benefits */}
 						<div className="space-y-8">
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-purple-400/20">
 										<Clock className="h-6 w-6 text-violet-300" />
@@ -127,7 +127,7 @@ export function SpacedRepetitionSection() {
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-violet-400/20">
 										<Target className="h-6 w-6 text-violet-300" />
@@ -145,7 +145,7 @@ export function SpacedRepetitionSection() {
 								</div>
 							</Card>
 
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-400/20">
 										<BarChart3 className="h-6 w-6 text-violet-300" />
@@ -163,7 +163,7 @@ export function SpacedRepetitionSection() {
 								</div>
 							</Card>
 
-							<Card className="tranion-300 border-white/20 bg-white/10 p-6 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-pink-400/20">
 										<Calendar className="h-6 w-6 text-violet-300" />

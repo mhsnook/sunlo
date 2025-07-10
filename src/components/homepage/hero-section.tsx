@@ -53,7 +53,7 @@ export function HeroSection() {
 					<div className="mb-16 text-center">
 						{/* Feature highlights */}
 						<div className="mx-auto mb-12 grid max-w-4xl gap-6 md:grid-cols-3">
-							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="moving-glass-card">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-700/70 dark:bg-green-400/30">
 										<BookOpen className="h-6 w-6 text-green-300 dark:text-green-200" />
@@ -67,7 +67,7 @@ export function HeroSection() {
 								</div>
 							</Card>
 
-							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="moving-glass-card">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-700/70 dark:bg-blue-400/30">
 										<Users className="h-6 w-6 text-blue-300 dark:text-blue-200" />
@@ -81,7 +81,7 @@ export function HeroSection() {
 								</div>
 							</Card>
 
-							<Card className="border-primary/30 bg-white/10 p-6 shadow-xl transition-all duration-300 hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10">
+							<Card className="moving-glass-card">
 								<div className="flex flex-col items-center text-center">
 									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-700/70 dark:bg-yellow-400/30">
 										<Heart className="h-6 w-6 text-yellow-300 dark:text-yellow-200" />
