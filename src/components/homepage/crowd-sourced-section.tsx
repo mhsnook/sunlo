@@ -46,7 +46,7 @@ export function CrowdSourcedSection() {
 					<div className="mb-16 grid items-center gap-12 lg:grid-cols-2">
 						{/* Left side - Benefits */}
 						<div className="space-y-8">
-							<Card className="border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-400/20">
 										<MessagesSquare className="h-6 w-6 text-green-300" />
@@ -63,7 +63,7 @@ export function CrowdSourcedSection() {
 								</div>
 							</Card>
 
-							<Card className="-sm border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-teal-400/20">
 										<CheckCircle className="h-6 w-6 text-amber-300" />
@@ -80,7 +80,7 @@ export function CrowdSourcedSection() {
 								</div>
 							</Card>
 
-							<Card className="-sm border-white/20 bg-white/10 p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-white/15">
+							<Card className="moving-glass-card">
 								<div className="flex items-start gap-4">
 									<div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-400/20">
 										<ChartColumnIncreasing className="h-6 w-6 text-sky-300" />
