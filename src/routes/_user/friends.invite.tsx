@@ -56,6 +56,7 @@ function ShareButtons() {
 					text="Copy link"
 					variant="secondary"
 					size="lg"
+					collapse={false}
 				/>
 				<a
 					className={buttonVariants({ size: 'lg', variant: 'secondary' })}

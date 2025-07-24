@@ -10,6 +10,7 @@ export default function CopyLinkButton({
 	variant = 'ghost',
 	size = 'badge',
 	className = '',
+	collapse = true,
 	...props
 }: {
 	url?: string
@@ -17,6 +18,7 @@ export default function CopyLinkButton({
 	variant?: string
 	size?: string
 	className?: string
+	collapse?: boolean
 } & ButtonProps) {
 	const copyLink = useCallback(() => {
 		// @TODO this is not working on my laptop (anymore) idk why
@@ -41,7 +43,7 @@ export default function CopyLinkButton({
 			{...props}
 		>
 			<Copy className="h-4 w-4" />
-			<span className="hidden @xl:block">{text}</span>
+			<span className={collapse ? 'hidden @xl:block' : ''}>{text}</span>
 		</Button>
 	)
 }
