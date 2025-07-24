@@ -49,7 +49,7 @@ function ShareButtons() {
 
 	return (
 		<div>
-			<div className="flex flex-col gap-2 @md:flex-row">
+			<div className="flex flex-col flex-wrap gap-2 @xl:flex-row">
 				<NativeShareButton shareData={shareData} />
 				<CopyLinkButton
 					url={signupUrl}
