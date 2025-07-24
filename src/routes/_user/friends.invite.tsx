@@ -12,6 +12,7 @@ import {
 import { useProfile } from '@/lib/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
+import { useMemo } from 'react'
 
 export const Route = createFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,
@@ -38,10 +39,13 @@ function InviteFriendPage() {
 function ShareButtons() {
 	const { data: profile } = useProfile()
 	const signupUrl = `${window.location.origin}/signup?referrer=${profile?.uid}`
-	const shareData = {
-		text: `Hello friend, I'm learning a language with Sunlo, a social language learning app. Will you join me? ${signupUrl}`,
-		title: `Invitation! Join ${profile?.username || 'your friend'} on Sunlo.app`,
-	}
+	const shareData = useMemo(
+		() => ({
+			text: `Hello friend, I'm learning a language with Sunlo, a social language learning app. Will you join me? ${signupUrl}`,
+			title: `Invitation! Join ${profile?.username || 'your friend'} on Sunlo.app`,
+		}),
+		[profile?.username, signupUrl]
+	)
 
 	return (
 		<div>
