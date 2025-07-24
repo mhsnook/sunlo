@@ -25,7 +25,8 @@ export function NativeShareButton({
 
 	return (
 		<Button size="lg" onClick={onClick}>
-			Share <Share />
+			<Share />
+			Share
 		</Button>
 	)
 }

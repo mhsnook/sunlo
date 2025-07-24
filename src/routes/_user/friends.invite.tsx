@@ -61,13 +61,15 @@ function ShareButtons() {
 					className={buttonVariants({ size: 'lg', variant: 'secondary' })}
 					href={`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text)}`}
 				>
-					Email <Mail />
+					<Mail />
+					Email
 				</a>
 				<a
 					className={buttonVariants({ size: 'lg', variant: 'secondary' })}
 					href={`whatsapp://send?text=${encodeURIComponent(shareData.text)}`}
 				>
-					WhatsApp <Phone className="rounded-full p-px outline" />
+					<Phone className="rounded-full p-px outline" />
+					WhatsApp
 				</a>
 			</div>
 		</div>
