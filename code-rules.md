@@ -44,7 +44,7 @@ Data fetching:
   - ['languages', lang] is the full data set of LanguageLoaded
   - ['user', lang, 'deck'] is the full data set of DeckLoaded
   - ['user', uid] is the ProfileFull
-  - ['user', 'friends', 'summaries'] is my own friends list
+  - ['user', uid, 'relations'] is my own friends list
   - ['public', 'profile', uid]
   - ['public_profile', queryFilters] search for a user
   - ['user', lang, 'search', queryFilters] search my own deck

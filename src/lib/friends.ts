@@ -131,7 +131,7 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 			if (variable === 'cancel') toast('Cancelled this invitation')
 			if (variable === 'remove') toast('You are no longer friends')
 			void queryClient.invalidateQueries({
-				queryKey: ['user', 'friends', 'summaries'],
+				queryKey: ['user', uid_by, 'relations'],
 			})
 			void queryClient.invalidateQueries({
 				queryKey: ['public_profile', 'search'],
