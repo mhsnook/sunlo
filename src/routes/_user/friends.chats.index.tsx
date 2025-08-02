@@ -7,7 +7,7 @@ export const Route = createFileRoute('/_user/friends/chats/')({
 
 function ChatsIndex() {
 	return (
-		<div className="bg-muted/40 flex h-full flex-col items-center justify-center gap-4 rounded-xl text-center">
+		<div className="bg-muted/30 flex h-full flex-col items-center justify-center gap-4 rounded border text-center">
 			<MessageSquare className="text-muted-foreground h-16 w-16" />
 			<h3 className="text-2xl font-bold tracking-tight">
 				Select a friend to start a conversation
