@@ -28,6 +28,10 @@ set
 set
 	row_security = off;
 
+create extension if not exists "pg_net"
+with
+	schema "extensions";
+
 create extension if not exists "pgsodium";
 
 alter schema "public" owner to "postgres";
@@ -1601,13 +1605,9 @@ grant all on function "public"."update_user_card_review" ("review_id" "uuid", "s
 
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "service_role";
 
-grant all on table "public"."friend_request_action" to "anon";
-
 grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
-
-grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
 
@@ -1624,8 +1624,6 @@ grant all on table "public"."phrase" to "anon";
 grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
-
-grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
 
@@ -1655,8 +1653,6 @@ grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
 
-grant all on table "public"."user_profile" to "anon";
-
 grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
@@ -1667,13 +1663,9 @@ grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
 
-grant all on table "public"."user_card" to "anon";
-
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
-
-grant all on table "public"."user_card_plus" to "anon";
 
 grant all on table "public"."user_card_plus" to "authenticated";
 
@@ -1685,13 +1677,9 @@ grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
 
-grant all on table "public"."user_deck_plus" to "anon";
-
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
-
-grant all on table "public"."user_deck_review_state" to "anon";
 
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
