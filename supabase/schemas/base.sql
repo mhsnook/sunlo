@@ -36,9 +36,15 @@ create extension if not exists "pgsodium";
 
 alter schema "public" owner to "postgres";
 
+comment on schema "public" is '@graphql({"inflect_names": true})';
+
 create extension if not exists "plv8"
 with
 	schema "pg_catalog";
+
+create extension if not exists "pg_graphql"
+with
+	schema "graphql";
 
 create extension if not exists "pg_stat_statements"
 with
@@ -66,6 +72,10 @@ alter type "public"."card_status" owner to "postgres";
 
 comment on
 type "public"."card_status" is 'card status is either active, learned or skipped';
+
+create type "public"."chat_message_type" as enum('recommendation', 'accepted');
+
+alter type "public"."chat_message_type" owner to "postgres";
 
 create type "public"."friend_request_response" as enum('accept', 'decline', 'cancel', 'remove', 'invite');
 
@@ -116,6 +126,22 @@ alter function "public"."add_phrase_translation_card" (
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
 ) owner to "postgres";
+
+create
+or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.friend_summary
+    WHERE
+      status = 'friends' AND
+      (
+        (uid_less = uid1 AND uid_more = uid2) OR
+        (uid_less = uid2 AND uid_more = uid1)
+      )
+  );
+$$;
+
+alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "postgres";
 
 create
 or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
@@ -456,6 +482,33 @@ return response
 $_$;
 
 alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
+
+create table if not exists
+	"public"."chat_message" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"sender_uid" "uuid" default "auth"."uid" () not null,
+		"recipient_uid" "uuid" not null,
+		"message_type" "public"."chat_message_type" not null,
+		"phrase_id" "uuid",
+		"related_message_id" "uuid",
+		"content" "jsonb",
+		constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
+	);
+
+alter table "public"."chat_message" owner to "postgres";
+
+comment on column "public"."chat_message"."sender_uid" is 'The user who sent the message.';
+
+comment on column "public"."chat_message"."recipient_uid" is 'The user who received the message.';
+
+comment on column "public"."chat_message"."message_type" is 'The type of message, e.g., a phrase recommendation.';
+
+comment on column "public"."chat_message"."phrase_id" is 'If it''s a recommendation, this links to the phrase.';
+
+comment on column "public"."chat_message"."related_message_id" is 'If this message is a reply/reaction to another (e.g. accepting a recommendation).';
+
+comment on column "public"."chat_message"."content" is 'Flexible JSONB for extra data, like the text of an accepted phrase.';
 
 create table if not exists
 	"public"."friend_request_action" (
@@ -949,6 +1002,9 @@ add constraint "card_translation_pkey" primary key ("id");
 alter table only "public"."phrase_translation"
 add constraint "card_translation_uuid_key" unique ("id");
 
+alter table only "public"."chat_message"
+add constraint "chat_message_pkey" primary key ("id");
+
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_pkey" primary key ("id");
 
@@ -993,6 +1049,10 @@ add constraint "user_deck_review_state_pkey" primary key ("lang", "uid", "day_se
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uuid_key" unique ("id");
+
+create index "chat_message_recipient_uid_sender_uid_created_at_idx" on "public"."chat_message" using "btree" ("recipient_uid", "sender_uid", "created_at" desc);
+
+create index "chat_message_sender_uid_recipient_uid_created_at_idx" on "public"."chat_message" using "btree" ("sender_uid", "recipient_uid", "created_at" desc);
 
 create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
 
@@ -1158,6 +1218,18 @@ select
 	) as "rank_newest"
 from
 	"results";
+
+alter table only "public"."chat_message"
+add constraint "chat_message_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete set null;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_recipient_uid_fkey" foreign key ("recipient_uid") references "public"."user_profile" ("uid") on delete cascade;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_related_message_id_fkey" foreign key ("related_message_id") references "public"."chat_message" ("id") on delete set null;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_sender_uid_fkey" foreign key ("sender_uid") references "public"."user_profile" ("uid") on delete cascade;
 
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_by_fkey" foreign key ("uid_by") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -1387,6 +1459,26 @@ create policy "User data only for this user" on "public"."user_deck" using (("au
 with
 	check (("auth"."uid" () = "uid"));
 
+create policy "Users can send messages to friends" on "public"."chat_message" for insert
+with
+	check (
+		(
+			("auth"."uid" () = "sender_uid")
+			and "public"."are_friends" ("sender_uid", "recipient_uid")
+		)
+	);
+
+create policy "Users can view their own chat messages" on "public"."chat_message" for
+select
+	using (
+		(
+			("auth"."uid" () = "sender_uid")
+			or ("auth"."uid" () = "recipient_uid")
+		)
+	);
+
+alter table "public"."chat_message" enable row level security;
+
 alter table "public"."friend_request_action" enable row level security;
 
 alter table "public"."language" enable row level security;
@@ -1447,6 +1539,12 @@ grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
 ) to "service_role";
+
+grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
+
+grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
+
+grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "service_role";
 
 grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";
 
@@ -1575,6 +1673,8 @@ grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
 
+grant all on table "public"."user_card_review" to "anon";
+
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
@@ -1605,9 +1705,19 @@ grant all on function "public"."update_user_card_review" ("review_id" "uuid", "s
 
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "service_role";
 
+grant all on table "public"."chat_message" to "anon";
+
+grant all on table "public"."chat_message" to "authenticated";
+
+grant all on table "public"."chat_message" to "service_role";
+
+grant all on table "public"."friend_request_action" to "anon";
+
 grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
+
+grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
 
@@ -1624,6 +1734,8 @@ grant all on table "public"."phrase" to "anon";
 grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
+
+grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
 
@@ -1653,6 +1765,8 @@ grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
 
+grant all on table "public"."user_profile" to "anon";
+
 grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
@@ -1663,9 +1777,13 @@ grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
 
+grant all on table "public"."user_card" to "anon";
+
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
+
+grant all on table "public"."user_card_plus" to "anon";
 
 grant all on table "public"."user_card_plus" to "authenticated";
 
@@ -1677,9 +1795,13 @@ grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
 
+grant all on table "public"."user_deck_plus" to "anon";
+
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
+
+grant all on table "public"."user_deck_review_state" to "anon";
 
 grant all on table "public"."user_deck_review_state" to "authenticated";
 

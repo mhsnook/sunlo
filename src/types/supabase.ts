@@ -9,6 +9,89 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_message: {
+        Row: {
+          content: Json | null
+          created_at: string
+          id: string
+          message_type: Database["public"]["Enums"]["chat_message_type"]
+          phrase_id: string | null
+          recipient_uid: string
+          related_message_id: string | null
+          sender_uid: string
+        }
+        Insert: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          message_type: Database["public"]["Enums"]["chat_message_type"]
+          phrase_id?: string | null
+          recipient_uid: string
+          related_message_id?: string | null
+          sender_uid?: string
+        }
+        Update: {
+          content?: Json | null
+          created_at?: string
+          id?: string
+          message_type?: Database["public"]["Enums"]["chat_message_type"]
+          phrase_id?: string | null
+          recipient_uid?: string
+          related_message_id?: string | null
+          sender_uid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_message_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_recipient_uid_fkey"
+            columns: ["recipient_uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "chat_message_recipient_uid_fkey"
+            columns: ["recipient_uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "chat_message_related_message_id_fkey"
+            columns: ["related_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_sender_uid_fkey"
+            columns: ["sender_uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "chat_message_sender_uid_fkey"
+            columns: ["sender_uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
       friend_request_action: {
         Row: {
           action_type:
@@ -951,6 +1034,10 @@ export type Database = {
         }
         Returns: string
       }
+      are_friends: {
+        Args: { uid1: string; uid2: string }
+        Returns: boolean
+      }
       fsrs_clamp_d: {
         Args: { difficulty: number }
         Returns: number
@@ -1056,6 +1143,7 @@ export type Database = {
     }
     Enums: {
       card_status: "active" | "learned" | "skipped"
+      chat_message_type: "recommendation" | "accepted"
       friend_request_response:
         | "accept"
         | "decline"
@@ -1483,6 +1571,7 @@ export const Constants = {
   public: {
     Enums: {
       card_status: ["active", "learned", "skipped"],
+      chat_message_type: ["recommendation", "accepted"],
       friend_request_response: [
         "accept",
         "decline",

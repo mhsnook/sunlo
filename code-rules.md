@@ -58,6 +58,12 @@ Use supabase-js version 2 to asynchronously fetch and post data, inside react-qu
   - ['user', userId] for profiles (same as query key)
   - ['user', 'friend_request_action', otherPerson.uid] for all friend request actions
 
+## Supabase/Postgres Conventions
+
+- Use uuid as the ID field for all tables, e.g. `"id" "uuid" default "gen_random_uuid" () not null`
+- Most tables get a `created_at` field like this `"created_at" timestamp with time zone default "now" () not null`
+- Tables get a singular name like "phrase" instead of "phrases"
+
 ## Managing User data:
 
 - Private tables always have a `uid` field, and the database uses RLS to make sure only the concerned user can read or write records there
