@@ -89,7 +89,7 @@ function UserLayout() {
 					:	null}
 					<div
 						id="app-sidebar-layout-outlet"
-						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container overflow-y-auto`}
+						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container overflow-y-auto @xl:block`}
 					>
 						<Outlet />
 					</div>

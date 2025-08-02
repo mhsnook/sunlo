@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Send } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
@@ -18,31 +17,35 @@ export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 const mockMessages = [
 	{
 		id: 1,
-		sender: 'friend',
+		sender: 'me',
 		type: 'recommendation',
 		phrase: {
 			id: 'mock-phrase-1',
 			text: '¿Cómo estás?',
+			status: 'learned',
 			lang: 'spa',
 			translation: 'How are you?',
+			nextReview: '1 year',
 		},
 		timestamp: '10:30 AM',
 	},
 	{
 		id: 2,
-		sender: 'me',
+		sender: 'friend',
 		type: 'recommendation',
 		phrase: {
 			id: 'mock-phrase-2',
 			text: 'Estoy bien, gracias.',
+			status: 'active',
 			lang: 'spa',
 			translation: "I'm fine, thank you.",
+			nextReview: '2 days',
 		},
 		timestamp: '10:32 AM',
 	},
 	{
 		id: 3,
-		sender: 'friend',
+		sender: 'me',
 		type: 'accepted',
 		phraseText: 'Estoy bien, gracias.',
 		timestamp: '10:35 AM',
@@ -53,6 +56,7 @@ const mockMessages = [
 		type: 'recommendation',
 		phrase: {
 			id: 'mock-phrase-3',
+			status: 'not_in_deck',
 			text: 'De nada.',
 			lang: 'spa',
 			translation: "You're welcome.",
@@ -65,41 +69,36 @@ const mockMessages = [
 function CardPreview({
 	phrase,
 }: {
-	phrase: { id: string; text: string; lang: string; translation: string }
+	phrase: {
+		id: string
+		text: string
+		lang: string
+		translation: string
+		status: string
+		nextReview: string
+	}
 }) {
-	// In a real implementation, this would use useDeckCard and useLanguagePhrase
-	const mockCardStatus = useMemo(() => {
-		const statuses = ['active', 'learned', 'not_in_deck']
-		const status = statuses[Math.floor(Math.random() * statuses.length)]
-		const nextReview =
-			status === 'active' ? `in ${Math.ceil(Math.random() * 10)} days` : null
-		return { status, nextReview }
-	}, [phrase.id])
-
 	return (
-		<Card className="bg-background/50 my-2">
+		<Card className="bg-background my-2">
 			<CardHeader className="p-4">
 				<CardTitle className="text-lg">{phrase.text}</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-2 p-4 pt-0">
 				<p className="text-muted-foreground">{phrase.translation}</p>
 				<div className="flex items-center gap-2 text-xs">
-					{mockCardStatus.status === 'active' && (
+					{phrase.status === 'active' && (
 						<Badge variant="secondary">In Deck</Badge>
 					)}
-					{mockCardStatus.status === 'learned' && (
+					{phrase.status === 'learned' && (
 						<Badge variant="outline">Learned</Badge>
 					)}
-					{mockCardStatus.status === 'not_in_deck' && (
-						<Badge variant="destructive">Not in Deck</Badge>
-					)}
-					{mockCardStatus.nextReview && (
+					{phrase.nextReview && (
 						<span className="text-muted-foreground">
-							Next review: {mockCardStatus.nextReview}
+							Next review: {phrase.nextReview}
 						</span>
 					)}
 				</div>
-				{mockCardStatus.status === 'not_in_deck' && (
+				{phrase.status === 'not_in_deck' && (
 					<Button size="sm" className="mt-2">
 						Add to my Deck
 					</Button>
@@ -137,7 +136,7 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-20rem)] p-4">
+				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
 					<div className="space-y-4">
 						{mockMessages.map((msg) => {
 							const isMe = msg.sender === 'me'
@@ -160,20 +159,27 @@ function ChatPage() {
 											</AvatarFallback>
 										</Avatar>
 									)}
-									<div
-										className={cn(
-											'max-w-xs rounded-lg p-3 lg:max-w-md',
-											isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
-										)}
-									>
+									<div>
 										{msg.type === 'recommendation' && msg.phrase ?
 											<CardPreview phrase={msg.phrase} />
 										:	null}
-										{msg.type === 'accepted' && (
-											<p className="text-sm italic">
-												You added "{msg.phraseText}" to your deck.
-											</p>
-										)}
+										<div
+											className={cn(
+												'max-w-xs rounded-lg p-3 lg:max-w-md',
+												isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
+											)}
+										>
+											{msg.type === 'recommendation' && (
+												<p className="text-sm italic">
+													Sent a phrase recommendation.
+												</p>
+											)}
+											{msg.type === 'accepted' && (
+												<p className="text-sm italic">
+													You added "{msg.phraseText}" to your deck.
+												</p>
+											)}
+										</div>
 									</div>
 								</div>
 							)
