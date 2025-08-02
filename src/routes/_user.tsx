@@ -71,19 +71,25 @@ function UserLayout() {
 	const matches = useMatches() as UserLayoutMatch[]
 	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
 	const SecondSidebar = match?.loaderData?.SecondSidebar
+	const sidebarExact = match?.id === matches.at(-1).id.slice(0, -1)
+	console.log(matches, matches.at(-1), match, sidebarExact)
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />
-			<SidebarInset className="w-full flex-1 flex-col">
+			<SidebarInset className="@container w-full flex-1 flex-col">
 				<Navbar />
 				<AppNav />
-				<div className="flex flex-row gap-2">
+				<div className="flex flex-1 flex-row gap-2 overflow-hidden px-2 py-2">
 					{SecondSidebar ?
-						<SecondSidebar />
+						<div
+							className={`${sidebarExact ? 'flex w-full' : 'hidden'} @xl:flex @xl:w-80`}
+						>
+							<SecondSidebar />
+						</div>
 					:	null}
 					<div
 						id="app-sidebar-layout-outlet"
-						className="w-app @container pe-2 pb-6"
+						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container overflow-y-auto`}
 					>
 						<Outlet />
 					</div>

@@ -27,12 +27,12 @@ export function ChatsSidebar() {
 		: -1
 	)
 	return (
-		<Card className="w-72">
-			<CardHeader>
+		<Card className="w-full">
+			<CardHeader className="sr-only">
 				<CardTitle>Chats</CardTitle>
 			</CardHeader>
-			<CardContent className="p-0">
-				<ScrollArea className="h-[calc(100vh-15rem)]">
+			<CardContent className="flex-1 p-0">
+				<ScrollArea className="">
 					<div className="flex flex-col gap-1 p-2">
 						{sortedFriends.length === 0 ?
 							<p className="text-muted-foreground p-4 text-sm">

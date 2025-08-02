@@ -44,7 +44,7 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 		<>
 			<div ref={ref}></div>
 			<div
-				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 mb-2`}
+				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0`}
 			>
 				<ScrollArea>
 					<NavigationMenu className="my-2">

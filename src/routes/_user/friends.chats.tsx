@@ -15,11 +15,5 @@ export const Route = createFileRoute('/_user/friends/chats')({
 })
 
 function ChatsLayout() {
-	return (
-		<div className="grid h-[calc(100vh-10rem)] grid-cols-1 gap-4">
-			<div className="flex h-full flex-col">
-				<Outlet />
-			</div>
-		</div>
-	)
+	return <Outlet />
 }

@@ -137,7 +137,7 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-22rem)] p-4">
+				<ScrollArea className="h-[calc(100vh-20rem)] p-4">
 					<div className="space-y-4">
 						{mockMessages.map((msg) => {
 							const isMe = msg.sender === 'me'
