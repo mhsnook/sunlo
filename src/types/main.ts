@@ -25,6 +25,9 @@ export type AuthState = {
 	userRole: RolesEnum
 }
 
+export type ChatMessageRow = Tables<'chat_message'>
+export type ChatMessageInsert = TablesInsert<'chat_message'>
+
 /*
 	0. not yet initialised
 	1. doing the first review
