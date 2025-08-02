@@ -79,17 +79,18 @@ function UserLayout() {
 			<SidebarInset className="@container w-full flex-1 flex-col">
 				<Navbar />
 				<AppNav />
-				<div className="flex flex-1 flex-row gap-2 overflow-hidden px-2 py-2">
+				<div className="flex flex-1 flex-row">
 					{SecondSidebar ?
 						<div
-							className={`${sidebarExact ? 'flex w-full' : 'hidden'} @xl:flex @xl:w-80`}
+							className={`${sidebarExact ? 'flex w-full' : 'hidden'} m-2 @xl:flex @xl:w-80`}
 						>
 							<SecondSidebar />
 						</div>
 					:	null}
+
 					<div
 						id="app-sidebar-layout-outlet"
-						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container overflow-y-auto @xl:block`}
+						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container m-2 @xl:block`}
 					>
 						<Outlet />
 					</div>
