@@ -37,6 +37,12 @@ set
 	row_security = off;
 
 --
+-- Data for Name: audit_log_entries; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: flow_state; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
 -- Data for Name: users; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 insert into
@@ -79,6 +85,42 @@ insert into
 values
 	(
 		'00000000-0000-0000-0000-000000000000',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'authenticated',
+		'authenticated',
+		'sunloapp+friend@gmail.com',
+		'$2a$10$HulXzOjX35MG0pOGEz4b/.R6xvTUr6XJH0RmGwUJ1Y1R9iD1cBoRq',
+		'2025-08-02 22:27:14.348857+00',
+		null,
+		'',
+		null,
+		'',
+		null,
+		'',
+		'',
+		null,
+		'2025-08-02 22:27:31.984793+00',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"email_verified": true}',
+		null,
+		'2025-08-02 22:27:14.346032+00',
+		'2025-08-02 22:27:31.985973+00',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		0,
+		null,
+		'',
+		null,
+		false,
+		null,
+		false
+	),
+	(
+		'00000000-0000-0000-0000-000000000000',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'authenticated',
 		'authenticated',
@@ -93,12 +135,12 @@ values
 		'',
 		'',
 		null,
-		'2025-04-21 21:17:39.4586+00',
+		'2025-08-02 21:34:42.639969+00',
 		'{"provider": "email", "providers": ["email"]}',
 		'{"sub": "cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18", "role": "learner", "email": "sunloapp@gmail.com", "email_verified": true, "phone_verified": false}',
 		null,
 		'2025-01-20 07:27:20.992634+00',
-		'2025-04-21 22:15:52.66563+00',
+		'2025-08-02 22:33:38.764599+00',
 		null,
 		null,
 		'',
@@ -138,56 +180,51 @@ values
 		'2025-01-20 07:27:20.999597+00',
 		'2025-01-20 07:27:20.999597+00',
 		'2afbf148-aaf2-4583-80fd-188cfc0410f3'
-	);
-
---
--- Data for Name: user_profile; Type: TABLE DATA; Schema: public; Owner: postgres
---
-insert into
-	"public"."user_profile" (
-		"uid",
-		"username",
-		"avatar_path",
-		"updated_at",
-		"created_at",
-		"languages_spoken",
-		"language_primary"
-	)
-values
+	),
 	(
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'GarlicFace',
-		'garlic-broccoli-friends-1a82b1.png',
-		null,
-		'2025-01-20 07:42:48.704054+00',
-		'{fra,fas}',
-		'eng'
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'{"sub": "7ad846a9-d55b-4035-8be2-dbcc70074f74", "email": "sunloapp+friend@gmail.com", "email_verified": false, "phone_verified": false}',
+		'email',
+		'2025-08-02 22:27:14.347041+00',
+		'2025-08-02 22:27:14.347092+00',
+		'2025-08-02 22:27:14.347092+00',
+		'4404ec5d-b62e-4a76-abb7-51a6a9f79695'
 	);
 
 --
--- Data for Name: friend_request_action; Type: TABLE DATA; Schema: public; Owner: postgres
+-- Data for Name: instances; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
-insert into
-	"public"."friend_request_action" (
-		"id",
-		"uid_by",
-		"uid_for",
-		"created_at",
-		"action_type",
-		"uid_less",
-		"uid_more"
-	)
-values
-	(
-		'e4fd8481-62e4-4a23-b179-953a896509fc',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'2025-01-22 09:05:39.780295+00',
-		'invite',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
-	);
-
+--
+-- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: mfa_amr_claims; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: mfa_factors; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: mfa_challenges; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: one_time_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: refresh_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: sso_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: saml_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: saml_relay_states; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: sso_domains; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
 --
 -- Data for Name: language; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -399,6 +436,39 @@ values
 	('Icelandic', 'ice', 'isl'),
 	('Bangla (Bengali)', 'ben', null),
 	('Model language', 'mod', null);
+
+--
+-- Data for Name: user_profile; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."user_profile" (
+		"uid",
+		"username",
+		"updated_at",
+		"created_at",
+		"languages_spoken",
+		"language_primary",
+		"avatar_path"
+	)
+values
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'GarlicFace',
+		null,
+		'2025-01-20 07:42:48.704054+00',
+		'{fra,fas}',
+		'eng',
+		'garlic-broccoli-friends-1a82b1.png'
+	),
+	(
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'Lexigrine',
+		null,
+		'2025-08-02 22:28:18.298824+00',
+		'{}',
+		'eng',
+		'cartoon-face-288-1ac43e.png'
+	);
 
 --
 -- Data for Name: phrase; Type: TABLE DATA; Schema: public; Owner: postgres
@@ -1518,6 +1588,42 @@ values
 		null,
 		'tam',
 		'2025-01-14 11:25:39.544716+00'
+	);
+
+--
+-- Data for Name: chat_message; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+--
+-- Data for Name: friend_request_action; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."friend_request_action" (
+		"id",
+		"uid_by",
+		"uid_for",
+		"created_at",
+		"action_type",
+		"uid_less",
+		"uid_more"
+	)
+values
+	(
+		'b4ff7858-00c6-4d8e-8dc5-0053b1e23ef7',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'2025-08-02 23:11:53.322167+00',
+		'invite',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'37e51055-991e-4559-b237-930c5e969b31',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'2025-08-02 23:12:06.309923+00',
+		'accept',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
 	);
 
 --
@@ -3763,7 +3869,7 @@ values
 	);
 
 --
--- Data for Name: prefixes; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
+-- Data for Name: user_client_event; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 --
 -- Data for Name: s3_multipart_uploads; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
@@ -3772,52 +3878,21 @@ values
 -- Data for Name: s3_multipart_uploads_parts; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 --
+-- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+--
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
 	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
 
 --
+-- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+select
+	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
+
+--
 -- PostgreSQL database dump complete
 --
-reset all;
-
-set
-	session_replication_role = replica;
-
---
--- PostgreSQL database dump
---
--- Dumped from database version 15.8
--- Dumped by pg_dump version 15.8
-set
-	statement_timeout = 0;
-
-set
-	lock_timeout = 0;
-
-set
-	idle_in_transaction_session_timeout = 0;
-
-set
-	client_encoding = 'UTF8';
-
-set
-	standard_conforming_strings = on;
-
-select
-	pg_catalog.set_config ('search_path', '', false);
-
-set
-	check_function_bodies = false;
-
-set
-	xmloption = content;
-
-set
-	client_min_messages = warning;
-
-set
-	row_security = off;
-
 reset all;
