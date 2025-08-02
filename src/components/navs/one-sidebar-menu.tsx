@@ -10,6 +10,7 @@ import { Link } from '@tanstack/react-router'
 import { LinkType } from '@/types/main'
 
 const activeOptions = { exact: true, includeSearch: false } as const
+const inexactOptions = { exact: false, includeSearch: false } as const
 const activeProps = {
 	className: 'text-primary-foresoft',
 } as const
@@ -35,7 +36,7 @@ export default function OneSidebarMenu({
 							<Link
 								{...item.link}
 								onClick={setClosedMobile}
-								activeOptions={activeOptions}
+								activeOptions={item.inexact ? inexactOptions : activeOptions}
 								activeProps={activeProps}
 							>
 								{!item.Icon ? null : <item.Icon />}

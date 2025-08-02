@@ -42,6 +42,7 @@ const links = (lang?: string): Record<string, LinkType> => ({
 		name: 'Chats',
 		title: 'Chats',
 		Icon: MessagesSquare,
+		inexact: true,
 		link: {
 			to: '/friends/chats',
 		},
