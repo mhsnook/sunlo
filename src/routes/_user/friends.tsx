@@ -13,7 +13,12 @@ export const Route = createFileRoute('/_user/friends')({
 				title: `Manage Friends and Contacts`,
 				Icon: HeartHandshake,
 			} as TitleBar,
-			appnav: ['/friends', '/friends/invite', '/friends/search'],
+			appnav: [
+				'/friends',
+				'/friends/chats',
+				'/friends/invite',
+				'/friends/search',
+			],
 		}
 	},
 })

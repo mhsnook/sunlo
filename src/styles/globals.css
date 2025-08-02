@@ -148,7 +148,7 @@
 }
 
 @utility w-app {
-	@apply mx-auto w-full max-w-[40rem];
+	@apply w-full max-w-[40rem];
 }
 
 @utility s-link {
