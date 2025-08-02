@@ -18,6 +18,7 @@ const deckLinks = [
 ]
 const friendsMenu = makeLinks([
 	'/friends',
+	'/friends/chats',
 	'/friends/search',
 	'/friends/invite',
 ])

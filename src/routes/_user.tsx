@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
@@ -7,6 +8,7 @@ import { TitleBar } from '@/types/main'
 import {
 	createFileRoute,
 	Outlet,
+	type RouteMatch,
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
@@ -59,9 +61,15 @@ export const Route = createFileRoute('/_user')({
 	pendingComponent: Loader,
 })
 
+type UserLayoutMatch = RouteMatch & {
+	loaderData?: {
+		SecondSidebar?: ComponentType
+	}
+}
+
 function UserLayout() {
-	const matches = useMatches()
-	const match = matches.findLast((m) => !!m?.loaderData?.SecondSidebar)
+	const matches = useMatches() as UserLayoutMatch[]
+	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
 	const SecondSidebar = match?.loaderData?.SecondSidebar
 	return (
 		<div className="flex h-screen w-full">

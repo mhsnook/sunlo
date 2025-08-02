@@ -1,4 +1,4 @@
-import { Link, useMatches } from '@tanstack/react-router'
+import { Link, type RouteMatch, useMatches } from '@tanstack/react-router'
 import {
 	NavigationMenu,
 	NavigationMenuItem,
@@ -11,8 +11,14 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 import { memo } from 'react'
 
+type AppNavMatch = RouteMatch & {
+	loaderData?: {
+		appnav?: string[]
+	}
+}
+
 export function AppNav() {
-	const matches = useMatches()
+	const matches = useMatches() as AppNavMatch[]
 	if (matches.some((match) => match.status === 'pending')) return null
 	return <Nav matches={matches} />
 }
@@ -25,12 +31,8 @@ const inactiveProps = {
 	className: 'border-transparent text-muted-foreground',
 } as const
 
-const Nav = memo(function Nav({
-	matches,
-}: {
-	matches: ReturnType<typeof useMatches>
-}) {
-	const match = matches.findLast((m) => !!m?.loaderData?.appnav)
+const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
+	const match = matches.findLast((m) => !!m.loaderData?.appnav)
 	const links = useLinks(match?.loaderData?.appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
