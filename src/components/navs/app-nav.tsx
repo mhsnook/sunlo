@@ -27,6 +27,7 @@ const activeProps = {
 	className: 'border-primary text-primary-foresoft',
 } as const
 const activeOptions = { exact: true, includeSearch: false } as const
+const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
 	className: 'border-transparent text-muted-foreground',
 } as const
@@ -59,7 +60,7 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 											{...l.link}
 											className="flex flex-row items-center justify-center gap-2 border-b-2 py-2"
 											activeProps={activeProps}
-											activeOptions={activeOptions}
+											activeOptions={l.inexact ? inexactOptions : activeOptions}
 											inactiveProps={inactiveProps}
 										>
 											{!l.Icon ? null : <l.Icon className="size-4" />}{' '}
