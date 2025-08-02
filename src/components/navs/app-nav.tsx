@@ -1,4 +1,4 @@
-import { Link, useMatches } from '@tanstack/react-router'
+import { Link, type RouteMatch, useMatches } from '@tanstack/react-router'
 import {
 	NavigationMenu,
 	NavigationMenuItem,
@@ -11,8 +11,14 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 import { memo } from 'react'
 
+type AppNavMatch = RouteMatch & {
+	loaderData?: {
+		appnav?: string[]
+	}
+}
+
 export function AppNav() {
-	const matches = useMatches()
+	const matches = useMatches() as AppNavMatch[]
 	if (matches.some((match) => match.status === 'pending')) return null
 	return <Nav matches={matches} />
 }
@@ -21,16 +27,13 @@ const activeProps = {
 	className: 'border-primary text-primary-foresoft',
 } as const
 const activeOptions = { exact: true, includeSearch: false } as const
+const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
 	className: 'border-transparent text-muted-foreground',
 } as const
 
-const Nav = memo(function Nav({
-	matches,
-}: {
-	matches: ReturnType<typeof useMatches>
-}) {
-	const match = matches.findLast((m) => !!m?.loaderData?.appnav)
+const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
+	const match = matches.findLast((m) => !!m.loaderData?.appnav)
 	const links = useLinks(match?.loaderData?.appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
@@ -42,7 +45,7 @@ const Nav = memo(function Nav({
 		<>
 			<div ref={ref}></div>
 			<div
-				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 mb-4`}
+				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0`}
 			>
 				<ScrollArea>
 					<NavigationMenu className="my-2">
@@ -57,7 +60,7 @@ const Nav = memo(function Nav({
 											{...l.link}
 											className="flex flex-row items-center justify-center gap-2 border-b-2 py-2"
 											activeProps={activeProps}
-											activeOptions={activeOptions}
+											activeOptions={l.inexact ? inexactOptions : activeOptions}
 											inactiveProps={inactiveProps}
 										>
 											{!l.Icon ? null : <l.Icon className="size-4" />}{' '}

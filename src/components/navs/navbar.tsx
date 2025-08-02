@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react'
-import { ChevronLeft, LucideIcon, MoreVertical } from 'lucide-react'
+import { ComponentType, useCallback, useState } from 'react'
+import { ChevronLeft, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -8,7 +8,6 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-	AnyRoute,
 	Link,
 	RouteMatch,
 	useMatches,
@@ -18,29 +17,21 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { useLinks } from '@/hooks/links'
 
-type TitleBarLoaderData = {
+type NavbarLoaderData = {
 	titleBar?: {
 		title?: string
 		subtitle?: string
 		onBackClick?: string | (() => void)
-		Icon?: LucideIcon
+		Icon?: ComponentType<{ size?: number | string; className?: string }>
 	}
-	contextMenu: string[]
+	contextMenu?: string[]
 }
-type MyMatch = RouteMatch<
-	AnyRoute,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown
-> & {
-	loaderData?: TitleBarLoaderData
+type NavbarMatch = RouteMatch & {
+	loaderData?: NavbarLoaderData
 }
 
 export default function Navbar() {
-	const matches = useMatches() as MyMatch[]
+	const matches = useMatches() as NavbarMatch[]
 	if (matches.some((match) => match.status === 'pending')) return null
 
 	return (
@@ -55,7 +46,7 @@ export default function Navbar() {
 	)
 }
 
-function Title({ matches }: { matches: MyMatch[] }) {
+function Title({ matches }: { matches: NavbarMatch[] }) {
 	const navigate = useNavigate()
 
 	const match = matches.findLast((m) => !!m?.loaderData?.titleBar)
@@ -98,7 +89,7 @@ function Title({ matches }: { matches: MyMatch[] }) {
 	)
 }
 
-function ContextMenu({ matches }: { matches: MyMatch[] }) {
+function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 	const [isOpen, setIsOpen] = useState(false)
 	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
 	const match = matches.findLast((m) => !!m?.loaderData?.contextMenu)

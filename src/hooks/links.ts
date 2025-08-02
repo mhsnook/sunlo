@@ -8,6 +8,7 @@ import {
 	LogIn,
 	Mail,
 	MessageSquarePlus,
+	MessagesSquare,
 	Rocket,
 	School,
 	Search,
@@ -35,6 +36,15 @@ const links = (lang?: string): Record<string, LinkType> => ({
 		Icon: HeartHandshake,
 		link: {
 			to: '/friends',
+		},
+	},
+	'/friends/chats': {
+		name: 'Chats',
+		title: 'Chats',
+		Icon: MessagesSquare,
+		inexact: true,
+		link: {
+			to: '/friends/chats',
 		},
 	},
 	'/friends/search': {

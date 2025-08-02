@@ -1,10 +1,17 @@
+import type { ComponentType } from 'react'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { profileQuery } from '@/lib/use-profile'
 import { TitleBar } from '@/types/main'
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import {
+	createFileRoute,
+	Outlet,
+	type RouteMatch,
+	redirect,
+	useMatches,
+} from '@tanstack/react-router'
 import { Home } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 
@@ -54,15 +61,36 @@ export const Route = createFileRoute('/_user')({
 	pendingComponent: Loader,
 })
 
+type UserLayoutMatch = RouteMatch & {
+	loaderData?: {
+		SecondSidebar?: ComponentType
+	}
+}
+
 function UserLayout() {
+	const matches = useMatches() as UserLayoutMatch[]
+	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
+	const SecondSidebar = match?.loaderData?.SecondSidebar
+	const sidebarExact = match?.id === matches.at(-1).id.slice(0, -1)
+	console.log(matches, matches.at(-1), match, sidebarExact)
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />
-			<SidebarInset className="w-full flex-1">
-				<div id="app-sidebar-layout-outlet" className="w-app @container pb-6">
-					<Navbar />
-					<AppNav />
-					<div className="px-2">
+			<SidebarInset className="@container w-full flex-1 flex-col">
+				<Navbar />
+				<AppNav />
+				<div className="flex flex-1 flex-row gap-2 overflow-hidden px-2 py-2">
+					{SecondSidebar ?
+						<div
+							className={`${sidebarExact ? 'flex w-full' : 'hidden'} @xl:flex @xl:w-80`}
+						>
+							<SecondSidebar />
+						</div>
+					:	null}
+					<div
+						id="app-sidebar-layout-outlet"
+						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container overflow-y-auto @xl:block`}
+					>
 						<Outlet />
 					</div>
 				</div>
