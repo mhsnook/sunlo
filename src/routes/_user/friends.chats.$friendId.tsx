@@ -1,119 +1,106 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useOneRelation } from '@/lib/friends'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import type { ChatMessageInsert, ChatMessageRow } from '@/types/main'
+import { useEffect, useRef } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { Send } from 'lucide-react'
+import supabase from '@/lib/supabase-client'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/lib/hooks'
+import { CardPreview } from '@/components/chat/card-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
 })
 
-// Mock data for chat messages
-const mockMessages = [
-	{
-		id: 1,
-		sender: 'me',
-		type: 'recommendation',
-		phrase: {
-			id: 'mock-phrase-1',
-			text: '¿Cómo estás?',
-			status: 'learned',
-			lang: 'spa',
-			translation: 'How are you?',
-			nextReview: '1 year',
-		},
-		timestamp: '10:30 AM',
-	},
-	{
-		id: 2,
-		sender: 'friend',
-		type: 'recommendation',
-		phrase: {
-			id: 'mock-phrase-2',
-			text: 'Estoy bien, gracias.',
-			status: 'active',
-			lang: 'spa',
-			translation: "I'm fine, thank you.",
-			nextReview: '2 days',
-		},
-		timestamp: '10:32 AM',
-	},
-	{
-		id: 3,
-		sender: 'me',
-		type: 'accepted',
-		phraseText: 'Estoy bien, gracias.',
-		timestamp: '10:35 AM',
-	},
-	{
-		id: 4,
-		sender: 'friend',
-		type: 'recommendation',
-		phrase: {
-			id: 'mock-phrase-3',
-			status: 'not_in_deck',
-			text: 'De nada.',
-			lang: 'spa',
-			translation: "You're welcome.",
-		},
-		timestamp: '10:36 AM',
-	},
-]
-
-// A simplified card preview for the mock-up
-function CardPreview({
-	phrase,
-}: {
-	phrase: {
-		id: string
-		text: string
-		lang: string
-		translation: string
-		status: string
-		nextReview: string
-	}
-}) {
-	return (
-		<Card className="bg-background my-2">
-			<CardHeader className="p-4">
-				<CardTitle className="text-lg">{phrase.text}</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-2 p-4 pt-0">
-				<p className="text-muted-foreground">{phrase.translation}</p>
-				<div className="flex items-center gap-2 text-xs">
-					{phrase.status === 'active' && (
-						<Badge variant="secondary">In Deck</Badge>
-					)}
-					{phrase.status === 'learned' && (
-						<Badge variant="outline">Learned</Badge>
-					)}
-					{phrase.nextReview && (
-						<span className="text-muted-foreground">
-							Next review: {phrase.nextReview}
-						</span>
-					)}
-				</div>
-				{phrase.status === 'not_in_deck' && (
-					<Button size="sm" className="mt-2">
-						Add to my Deck
-					</Button>
-				)}
-			</CardContent>
-		</Card>
-	)
-}
-
 function ChatPage() {
 	const { friendId } = Route.useParams()
 	const { data: relation } = useOneRelation(friendId)
+	const { userId } = useAuth()
+	const queryClient = useQueryClient()
+	const scrollAreaRef = useRef<HTMLDivElement>(null)
+	const navigate = useNavigate({ from: Route.fullPath })
 
-	if (!relation || !relation.profile) {
-		return <div>Loading chat...</div>
+	const messagesQuery = useQuery({
+		queryKey: ['chats', friendId, 'messages'],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from('chat_message')
+				.select('*')
+				.or(
+					`and(sender_uid.eq.${userId},recipient_uid.eq.${friendId}),and(sender_uid.eq.${friendId},recipient_uid.eq.${userId})`
+				)
+				.order('created_at', { ascending: true })
+
+			if (error) throw error
+			return data
+		},
+		enabled: !!userId && !!friendId,
+	})
+
+	useEffect(() => {
+		if (!userId || !friendId) return
+
+		// Sort UIDs to create a consistent channel name between two users
+		const channelName = `chat-${[userId, friendId].sort().join('-')}`
+
+		const channel = supabase
+			.channel(channelName)
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'chat_message',
+					// RLS on the server ensures we only get messages for this user.
+					// We also filter client-side to only update the current chat.
+					// We'll filter client-side to only update the current chat.
+				},
+				(payload) => {
+					const newMessage = payload.new as ChatMessageRow // Define ChatMessage type
+					if (
+						(newMessage.sender_uid === userId &&
+							newMessage.recipient_uid === friendId) ||
+						(newMessage.sender_uid === friendId &&
+							newMessage.recipient_uid === userId)
+					) {
+						queryClient.setQueryData(
+							['chats', friendId, 'messages'], // Use the same query key
+							(oldData: ChatMessageRow[] | undefined) => {
+								return oldData ? [...oldData, newMessage] : [newMessage]
+							}
+						)
+					}
+				}
+			)
+			.subscribe()
+
+		return () => {
+			void supabase.removeChannel(channel)
+		}
+	}, [friendId, userId, queryClient])
+
+	useEffect(() => {
+		// Scroll to bottom when new messages are added
+		if (scrollAreaRef.current) {
+			scrollAreaRef.current.scrollTo({
+				top: scrollAreaRef.current.scrollHeight,
+			})
+		}
+	}, [messagesQuery.data])
+
+	if (!relation?.profile || messagesQuery.isPending) {
+		return (
+			<Card className="flex h-full flex-col">
+				<CardHeader className="p-4">Loading chat...</CardHeader>
+			</Card>
+		)
 	}
 
 	return (
@@ -136,10 +123,13 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
+				<ScrollArea
+					ref={scrollAreaRef}
+					className="h-[calc(100vh-20rem-1px)] px-4"
+				>
 					<div className="space-y-4">
-						{mockMessages.map((msg) => {
-							const isMe = msg.sender === 'me'
+						{messagesQuery.data?.map((msg) => {
+							const isMe = msg.sender_uid === userId
 							return (
 								<div
 									key={msg.id}
@@ -160,24 +150,27 @@ function ChatPage() {
 										</Avatar>
 									)}
 									<div>
-										{msg.type === 'recommendation' && msg.phrase ?
-											<CardPreview phrase={msg.phrase} />
-										:	null}
+										{msg.phrase_id && (
+											<CardPreview pid={msg.phrase_id} lang={msg.lang} />
+										)}
 										<div
 											className={cn(
 												'max-w-xs rounded-lg p-3 lg:max-w-md',
 												isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
 											)}
 										>
-											{msg.type === 'recommendation' && (
+											{msg.message_type === 'recommendation' && (
 												<p className="text-sm italic">
 													Sent a phrase recommendation.
 												</p>
 											)}
-											{msg.type === 'accepted' && (
-												<p className="text-sm italic">
-													You added "{msg.phraseText}" to your deck.
-												</p>
+											{msg.message_type === 'accepted' && (
+												<div className="text-sm italic">
+													<p>
+														{isMe ? 'You' : relation.profile!.username} added
+														this to {isMe ? 'your' : 'their'} deck.
+													</p>
+												</div>
 											)}
 										</div>
 									</div>
@@ -189,23 +182,32 @@ function ChatPage() {
 			</CardContent>
 			<div className="border-t p-4">
 				<form className="relative">
-					<Input
-						placeholder="Send a phrase recommendation..."
-						disabled
-						// This would open a search/add phrase dialog
-					/>
-					<Button
-						type="submit"
-						size="icon"
-						className="absolute end-0 top-0"
-						disabled
-					>
-						<Send className="h-4 w-4" />
-					</Button>
+					<div className="flex items-center gap-2">
+						<Input
+							placeholder="Send a phrase recommendation..."
+							disabled
+							className="cursor-pointer"
+							onClick={() =>
+								navigate({
+									to: '/friends/chats/$friendId/recommend',
+									params: { friendId },
+								})
+							}
+						/>
+						<Button
+							type="button"
+							size="icon"
+							onClick={() =>
+								navigate({
+									to: '/friends/chats/$friendId/recommend',
+									params: { friendId },
+								})
+							}
+						>
+							<Send className="h-4 w-4" />
+						</Button>
+					</div>
 				</form>
-				<p className="text-muted-foreground pt-1 text-center text-xs">
-					Phrase sending is not yet implemented.
-				</p>
 			</div>
 		</Card>
 	)

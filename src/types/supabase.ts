@@ -14,8 +14,9 @@ export type Database = {
           content: Json | null
           created_at: string
           id: string
+          lang: string
           message_type: Database["public"]["Enums"]["chat_message_type"]
-          phrase_id: string | null
+          phrase_id: string
           recipient_uid: string
           related_message_id: string | null
           sender_uid: string
@@ -24,8 +25,9 @@ export type Database = {
           content?: Json | null
           created_at?: string
           id?: string
+          lang: string
           message_type: Database["public"]["Enums"]["chat_message_type"]
-          phrase_id?: string | null
+          phrase_id: string
           recipient_uid: string
           related_message_id?: string | null
           sender_uid?: string
@@ -34,8 +36,9 @@ export type Database = {
           content?: Json | null
           created_at?: string
           id?: string
+          lang?: string
           message_type?: Database["public"]["Enums"]["chat_message_type"]
-          phrase_id?: string | null
+          phrase_id?: string
           recipient_uid?: string
           related_message_id?: string | null
           sender_uid?: string
@@ -906,8 +909,10 @@ export type Database = {
           current_timestamp: string | null
           difficulty: number | null
           id: string | null
+          interval_from_last: number | null
           lang: string | null
           last_reviewed_at: string | null
+          next_due_at: string | null
           phrase_id: string | null
           retrievability_now: number | null
           stability: number | null
