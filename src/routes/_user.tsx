@@ -4,7 +4,12 @@ import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { profileQuery } from '@/lib/use-profile'
 import { TitleBar } from '@/types/main'
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useMatches,
+} from '@tanstack/react-router'
 import { Home } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 
@@ -55,14 +60,23 @@ export const Route = createFileRoute('/_user')({
 })
 
 function UserLayout() {
+	const matches = useMatches()
+	const match = matches.findLast((m) => !!m?.loaderData?.SecondSidebar)
+	const SecondSidebar = match?.loaderData?.SecondSidebar
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />
-			<SidebarInset className="w-full flex-1">
-				<div id="app-sidebar-layout-outlet" className="w-app @container pb-6">
-					<Navbar />
-					<AppNav />
-					<div className="px-2">
+			<SidebarInset className="w-full flex-1 flex-col">
+				<Navbar />
+				<AppNav />
+				<div className="flex flex-row gap-2">
+					{SecondSidebar ?
+						<SecondSidebar />
+					:	null}
+					<div
+						id="app-sidebar-layout-outlet"
+						className="w-app @container pe-2 pb-6"
+					>
 						<Outlet />
 					</div>
 				</div>
