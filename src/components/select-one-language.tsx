@@ -16,14 +16,7 @@ import {
 } from '@/components/ui/popover'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { useId, useState } from 'react'
-
-interface SelectOneLanguageProps {
-	hasError?: boolean
-	value: string
-	setValue: (value: string) => void
-	disabled?: string[]
-	tabIndex?: number
-}
+import { ControlledInputProps } from './fields'
 
 export function SelectOneLanguage({
 	hasError = false,
@@ -31,7 +24,7 @@ export function SelectOneLanguage({
 	setValue,
 	disabled,
 	tabIndex,
-}: SelectOneLanguageProps) {
+}: ControlledInputProps) {
 	const [open, setOpen] = useState(false)
 	const id = useId()
 	return (

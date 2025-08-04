@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/hooks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { SelectOneLanguage } from '@/components/select-one-language'
+import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { ScrollArea } from '@/components/ui/scroll-area'
 
 export const Route = createFileRoute(
@@ -101,7 +101,7 @@ function RouteComponent() {
 				<CardTitle className="text-base">Recommend a phrase</CardTitle>
 			</CardHeader>
 			<CardContent className="flex flex-1 flex-col gap-4 p-4">
-				<SelectOneLanguage value={language} setValue={setLanguage} />
+				<SelectOneOfYourLanguages value={language} setValue={setLanguage} />
 				<Input
 					placeholder="Search for a phrase to send..."
 					value={searchTerm}
