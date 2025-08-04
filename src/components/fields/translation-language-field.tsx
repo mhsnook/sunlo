@@ -137,7 +137,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 					</Command>
 				</PopoverContent>
 			</Popover>
-			<ErrorLabel error={error} />
+			<ErrorLabel {...error} />
 		</div>
 	)
 }
