@@ -1,8 +1,12 @@
-import type { ChatMessageInsert, ChatMessageRow } from '@/types/main'
+import type { ChatMessageRow } from '@/types/main'
 import { useEffect, useRef } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import {
+	createFileRoute,
+	Outlet,
+	useNavigate,
+	useMatchRoute,
+} from '@tanstack/react-router'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -14,6 +18,7 @@ import { useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
+import { Drawer, DrawerContent } from '@/components/ui/drawer'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -26,6 +31,12 @@ function ChatPage() {
 	const queryClient = useQueryClient()
 	const scrollAreaRef = useRef<HTMLDivElement>(null)
 	const navigate = useNavigate({ from: Route.fullPath })
+	const matchRoute = useMatchRoute()
+
+	const isRecommendRoute = !!matchRoute({
+		to: '/friends/chats/$friendId/recommend',
+		params: { friendId },
+	})
 
 	const messagesQuery = useQuery({
 		queryKey: ['chats', friendId, 'messages'],
@@ -181,33 +192,47 @@ function ChatPage() {
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
-				<form className="relative">
-					<div className="flex items-center gap-2">
-						<Input
-							placeholder="Send a phrase recommendation..."
-							disabled
-							className="cursor-pointer"
-							onClick={() =>
-								navigate({
-									to: '/friends/chats/$friendId/recommend',
-									params: { friendId },
-								})
-							}
-						/>
-						<Button
-							type="button"
-							size="icon"
-							onClick={() =>
-								navigate({
-									to: '/friends/chats/$friendId/recommend',
-									params: { friendId },
-								})
-							}
-						>
-							<Send className="h-4 w-4" />
-						</Button>
+				<Drawer
+					open={isRecommendRoute}
+					onOpenChange={(open) => {
+						if (!open) {
+							void navigate({
+								to: '/friends/chats/$friendId',
+								params: { friendId },
+							})
+						}
+					}}
+				>
+					<div className="relative">
+						<div className="flex items-center gap-2">
+							<Input
+								placeholder="Send a phrase recommendation..."
+								className="cursor-pointer"
+								onClick={() =>
+									void navigate({
+										to: '/friends/chats/$friendId/recommend',
+										params: { friendId },
+									})
+								}
+							/>
+							<Button
+								type="button"
+								size="icon"
+								onClick={() =>
+									void navigate({
+										to: '/friends/chats/$friendId/recommend',
+										params: { friendId },
+									})
+								}
+							>
+								<Send className="h-4 w-4" />
+							</Button>
+						</div>
 					</div>
-				</form>
+					<DrawerContent className="mx-2 min-h-[60%] px-2">
+						<Outlet />
+					</DrawerContent>
+				</Drawer>
 			</div>
 		</Card>
 	)
