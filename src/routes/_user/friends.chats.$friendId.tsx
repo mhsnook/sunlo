@@ -18,7 +18,6 @@ import { useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
-import { Drawer, DrawerContent } from '@/components/ui/drawer'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -192,48 +191,34 @@ function ChatPage() {
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
-				<Drawer
-					open={isRecommendRoute}
-					onOpenChange={(open) => {
-						if (!open) {
-							void navigate({
-								to: '/friends/chats/$friendId',
-								params: { friendId },
-							})
-						}
-					}}
-				>
-					<div className="relative">
-						<div className="flex items-center gap-2">
-							<Input
-								placeholder="Send a phrase recommendation..."
-								className="cursor-pointer"
-								onClick={() =>
-									void navigate({
-										to: '/friends/chats/$friendId/recommend',
-										params: { friendId },
-									})
-								}
-							/>
-							<Button
-								type="button"
-								size="icon"
-								onClick={() =>
-									void navigate({
-										to: '/friends/chats/$friendId/recommend',
-										params: { friendId },
-									})
-								}
-							>
-								<Send className="h-4 w-4" />
-							</Button>
-						</div>
+				<div className="relative">
+					<div className="flex items-center gap-2">
+						<Input
+							placeholder="Send a phrase recommendation..."
+							className="cursor-pointer"
+							onClick={() =>
+								void navigate({
+									to: '/friends/chats/$friendId/recommend',
+									params: { friendId },
+								})
+							}
+						/>
+						<Button
+							type="button"
+							size="icon"
+							onClick={() =>
+								void navigate({
+									to: '/friends/chats/$friendId/recommend',
+									params: { friendId },
+								})
+							}
+						>
+							<Send className="h-4 w-4" />
+						</Button>
 					</div>
-					<DrawerContent className="mx-2 min-h-[60%] px-2">
-						<Outlet />
-					</DrawerContent>
-				</Drawer>
+				</div>
 			</div>
+			<Outlet />
 		</Card>
 	)
 }
