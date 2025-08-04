@@ -2,7 +2,7 @@ import { Label } from '@/components/ui/label'
 import { FieldValues, Path, useController } from 'react-hook-form'
 import { ErrorLabel, type ControlledFieldProps } from '.'
 import { useProfile } from '@/lib/use-profile'
-import { useId, useMemo, useState } from 'react'
+import { useCallback, useId, useMemo, useState } from 'react'
 import {
 	Popover,
 	PopoverContent,
@@ -21,6 +21,18 @@ import {
 	CommandSeparator,
 } from '@/components/ui/command'
 import { CommandGroup } from 'cmdk'
+
+const filterFunction = (value: string, search: string) => {
+	search = search.toLocaleLowerCase()
+	return (
+		value === '' ? 1
+		: value === search ? 1
+		: value.startsWith(search) ? 0.9
+		: languages[value].toLowerCase().startsWith(search) ? 0.8
+		: `${value} ${languages[value]}`.toLowerCase().includes(search) ? 0.7
+		: 0
+	)
+}
 
 export default function TranslationLanguageField<T extends FieldValues>({
 	control,
@@ -41,6 +53,16 @@ export default function TranslationLanguageField<T extends FieldValues>({
 		name: 'translation_lang' as Path<T>,
 		control,
 	})
+
+	const onSelect = useCallback(
+		(currentValue: string) => {
+			controller.field.onChange(
+				currentValue === controller.field.value ? '' : currentValue
+			)
+			setOpen(false)
+		},
+		[controller.field, setOpen]
+	)
 
 	const id = useId()
 	return (
@@ -66,22 +88,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 					</Button>
 				</PopoverTrigger>
 				<PopoverContent id={id} className="p-0">
-					<Command
-						filter={(value, search) => {
-							search = search.toLocaleLowerCase()
-							return (
-								value === '' ? 1
-								: value === search ? 1
-								: value.startsWith(search) ? 0.9
-								: languages[value].toLowerCase().startsWith(search) ? 0.8
-								: (
-									`${value} ${languages[value]}`.toLowerCase().includes(search)
-								) ?
-									0.7
-								:	0
-							)
-						}}
-					>
+					<Command filter={filterFunction}>
 						<CommandInput placeholder="Search language..." className="my-1" />
 						<CommandList>
 							<CommandEmpty>No language found.</CommandEmpty>
@@ -89,18 +96,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 								{!profile ? null : (
 									profile.languagesToShow.map((lang) =>
 										lang === undefined ? null : (
-											<CommandItem
-												key={lang}
-												value={lang}
-												onSelect={(currentValue) => {
-													controller.field.onChange(
-														currentValue === controller.field.value ?
-															''
-														:	currentValue
-													)
-													setOpen(false)
-												}}
-											>
+											<CommandItem key={lang} value={lang} onSelect={onSelect}>
 												<Check
 													className={cn(
 														'mr-2 size-4',
@@ -123,14 +119,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 									<CommandItem
 										key={language.value}
 										value={language.value}
-										onSelect={(currentValue) => {
-											controller.field.onChange(
-												currentValue === controller.field.value ?
-													''
-												:	currentValue
-											)
-											setOpen(false)
-										}}
+										onSelect={onSelect}
 									>
 										<Check
 											className={cn(
