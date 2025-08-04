@@ -14,7 +14,7 @@ export default function AvatarEditorField<T extends FieldValues>({
 		<div className="flex flex-col gap-1">
 			<Label className={error ? 'text-destructive' : ''}>Profile picture</Label>
 			<AvatarEditor avatar_path={value} onUpload={onChange} />
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

@@ -22,7 +22,7 @@ export default function EmailField<T extends FieldValues>({
 				className={error ? 'bg-destructive/20' : ''}
 				placeholder="email@domain"
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

@@ -26,7 +26,7 @@ export default function LanguagePrimaryField<T extends FieldValues>({
 				setValue={controller.field.onChange}
 				hasError={!!error}
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

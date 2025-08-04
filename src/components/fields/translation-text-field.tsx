@@ -15,7 +15,7 @@ export default function TranslationTextField<T extends FieldValues>({
 				{...register('translation_text' as Path<T>)}
 				placeholder="Translation text"
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

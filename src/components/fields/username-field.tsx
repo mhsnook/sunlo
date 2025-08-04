@@ -21,7 +21,7 @@ export default function UsernameField<T extends FieldValues>({
 				aria-invalid={!!error}
 				className={error ? 'bg-destructive/20' : ''}
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }
