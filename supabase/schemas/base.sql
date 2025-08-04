@@ -493,6 +493,7 @@ create table if not exists
 		"phrase_id" "uuid",
 		"related_message_id" "uuid",
 		"content" "jsonb",
+		"lang" character varying not null,
 		constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
 	);
 
@@ -1218,6 +1219,9 @@ select
 	) as "rank_newest"
 from
 	"results";
+
+alter table only "public"."chat_message"
+add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
 alter table only "public"."chat_message"
 add constraint "chat_message_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete set null;
