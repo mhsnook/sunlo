@@ -22,7 +22,7 @@ export default function PasswordField<T extends FieldValues>({
 				type="password"
 				placeholder="* * * * * * * *"
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

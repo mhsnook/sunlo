@@ -101,7 +101,7 @@ function NewDeckForm() {
 							setValue={controller.field.onChange}
 							disabled={deckLanguages}
 						/>
-						<ErrorLabel {...errors.lang} />
+						<ErrorLabel error={errors.lang} />
 
 						<Button
 							type="submit"

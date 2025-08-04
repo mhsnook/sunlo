@@ -34,7 +34,7 @@ export default function LanguagesSpokenField<T extends FieldValues>({
 				always={primary ? languages[primary] : undefined}
 				placeholder="Select languages..."
 			/>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }

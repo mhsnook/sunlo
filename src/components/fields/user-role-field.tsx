@@ -58,7 +58,7 @@ export default function UserRoleField<T extends FieldValues>({
 					</Label>
 				</div>
 			</RadioGroup>
-			<ErrorLabel {...error} />
+			<ErrorLabel error={error} />
 		</div>
 	)
 }
