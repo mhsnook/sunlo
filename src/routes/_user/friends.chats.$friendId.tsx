@@ -165,7 +165,7 @@ function ChatPage() {
 										)}
 										<div
 											className={cn(
-												'max-w-xs rounded-lg p-3 lg:max-w-md',
+												'max-w-xs rounded-2xl p-3 lg:max-w-md',
 												isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
 											)}
 										>

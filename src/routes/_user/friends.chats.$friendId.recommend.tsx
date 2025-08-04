@@ -29,30 +29,24 @@ function RouteComponent() {
 	const { userId } = useAuth()
 	const navigate = useNavigate({ from: Route.fullPath })
 
-	const [language, setLanguage] = useState<string>('')
+	const [lang, setLang] = useState<string>('')
 	const [searchTerm, setSearchTerm] = useState('')
 	const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
 
 	const searchQuery = useMemo(() => {
-		return (debouncedSearchTerm ?? '')
-			.split(' ')
-			.filter(Boolean)
-			.map((s) => `'''${s}'''`)
-			.join(' & ')
+		return (debouncedSearchTerm ?? '').split(' ').filter(Boolean).join(' & ')
 	}, [debouncedSearchTerm])
 
 	const phrasesQuery = useQuery({
-		queryKey: ['phrases-search', searchQuery, language],
+		queryKey: ['phrases-search', searchQuery, lang],
 		queryFn: async () => {
-			if (!searchQuery || !language) return []
+			if (!searchQuery) return []
+			const match = lang ? { lang } : {}
 			const { data, error } = await supabase
 				.from('phrase')
 				.select('id, text')
-				.eq('lang', language)
-				.textSearch('text', searchQuery, {
-					type: 'websearch',
-					config: 'simple',
-				})
+				.match(match)
+				.ilike('text', `%${searchQuery}%`)
 				.limit(10)
 
 			if (error) {
@@ -61,7 +55,7 @@ function RouteComponent() {
 			}
 			return data
 		},
-		enabled: !!searchQuery && !!language,
+		enabled: !!searchQuery,
 	})
 
 	const sendMessageMutation = useMutation({
@@ -78,12 +72,12 @@ function RouteComponent() {
 	})
 
 	const handleRecommend = (phraseId: uuid) => {
-		if (!userId || !language) return
+		if (!userId || !lang) return
 		void sendMessageMutation.mutate({
 			sender_uid: userId,
 			recipient_uid: friendId,
 			phrase_id: phraseId,
-			lang: language,
+			lang,
 			message_type: 'recommendation',
 		})
 	}
@@ -105,12 +99,11 @@ function RouteComponent() {
 					<DialogTitle>Send a phrase</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-1 flex-col gap-4 py-4">
-					<SelectOneOfYourLanguages value={language} setValue={setLanguage} />
+					<SelectOneOfYourLanguages value={lang} setValue={setLang} />
 					<Input
 						placeholder="Search for a phrase to send..."
 						value={searchTerm}
 						onChange={(e) => setSearchTerm(e.target.value)}
-						disabled={!language}
 					/>
 					<ScrollArea className="flex-1">
 						<div className="space-y-2">
