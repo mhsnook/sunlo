@@ -105,7 +105,7 @@ function SearchTab() {
 					</Button>
 				</div>
 
-				{!searchResults?.length ?
+				{searchResults?.length ?
 					<LanguagePhrasesAccordionComponent lang={lang} pids={searchResults} />
 				:	<p className="text-muted-foreground mt-4 text-center">
 						No results found. Try searching for a phrase or add a new one.
