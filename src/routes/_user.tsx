@@ -72,7 +72,8 @@ function UserLayout() {
 	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
 	const SecondSidebar = match?.loaderData?.SecondSidebar
 	const sidebarExact = match?.id === matches.at(-1).id.slice(0, -1)
-	console.log(matches, matches.at(-1), match, sidebarExact)
+	// console.log(matches, matches.at(-1), match, sidebarExact)
+
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />

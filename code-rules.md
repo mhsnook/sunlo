@@ -61,6 +61,7 @@ Use supabase-js version 2 to asynchronously fetch and post data, inside react-qu
 ## Supabase/Postgres Conventions
 
 - Use uuid as the ID field for all tables, e.g. `"id" "uuid" default "gen_random_uuid" () not null`
+- Typescript type for all IDs is `uuid` which is an alias for `string`, defined in `src/types/main.ts`
 - Most tables get a `created_at` field like this `"created_at" timestamp with time zone default "now" () not null`
 - Tables get a singular name like "phrase" instead of "phrases"
 
@@ -71,3 +72,8 @@ Use supabase-js version 2 to asynchronously fetch and post data, inside react-qu
   the user about any of this publication, e.g. with the username and avatar.
 - Attach data to the Profile to personalise the interface, like preferred language / languages understood, username and avatar
 - Attach data to the `user.user_metadata` _only_ if it's required to present the correct UI; so far just the `user_role` field.
+
+## Misc conventions
+
+- when using a 3-letter language code, we almost always call this variable 'lang'
+- when using a phrase_id as its own variable or prop to pass, we almost always call this 'pid'
