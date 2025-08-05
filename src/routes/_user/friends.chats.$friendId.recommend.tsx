@@ -52,7 +52,7 @@ function RouteComponent() {
 			const match = lang ? { lang } : {}
 			const { data, error } = await supabase
 				.from('phrase')
-				.select('id, text')
+				.select('id, text, lang')
 				.match(match)
 				.ilike('text', `%${searchQuery}%`)
 				.limit(10)
@@ -79,8 +79,8 @@ function RouteComponent() {
 		},
 	})
 
-	const handleRecommend = (phraseId: uuid) => {
-		if (!userId || !lang) return
+	const handleRecommend = (phraseId: uuid, lang: string) => {
+		if (!userId) return
 		void sendMessageMutation.mutate({
 			sender_uid: userId,
 			recipient_uid: friendId,
@@ -130,7 +130,7 @@ function RouteComponent() {
 									<p className="flex-1">{phrase.text}</p>
 									<Button
 										size="sm"
-										onClick={() => handleRecommend(phrase.id)}
+										onClick={() => handleRecommend(phrase.id, phrase.lang)}
 										disabled={sendMessageMutation.isPending}
 									>
 										<Send className="mr-2 h-4 w-4" />
