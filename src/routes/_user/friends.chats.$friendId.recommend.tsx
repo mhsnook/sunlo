@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import type { ChatMessageInsert, uuid } from '@/types/main'
 import toast from 'react-hot-toast'
-import { ChevronLeft, Send } from 'lucide-react'
+import { Send } from 'lucide-react'
 import { useDebounce } from '@uidotdev/usehooks'
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
@@ -17,6 +17,10 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
+import { ShowError } from '@/components/errors'
+import { Loader } from '@/components/ui/loader'
+import Callout from '@/components/ui/callout'
+import { Label } from '@/components/ui/label'
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendId/recommend'
@@ -37,7 +41,11 @@ function RouteComponent() {
 		return (debouncedSearchTerm ?? '').split(' ').filter(Boolean).join(' & ')
 	}, [debouncedSearchTerm])
 
-	const phrasesQuery = useQuery({
+	const {
+		data: phrasesData,
+		error,
+		isFetching,
+	} = useQuery({
 		queryKey: ['phrases-search', searchQuery, lang],
 		queryFn: async () => {
 			if (!searchQuery) return []
@@ -94,21 +102,27 @@ function RouteComponent() {
 				}
 			}}
 		>
-			<DialogContent>
+			<DialogContent className="max-h-[95vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Send a phrase</DialogTitle>
 				</DialogHeader>
 				<div className="flex flex-1 flex-col gap-4 py-4">
-					<SelectOneOfYourLanguages value={lang} setValue={setLang} />
-					<Input
-						placeholder="Search for a phrase to send..."
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-					/>
+					<Label>
+						<p className="mb-2">Optional language filter</p>
+						<SelectOneOfYourLanguages value={lang} setValue={setLang} />
+					</Label>
+					<Label>
+						<p className="mb-2">Search terms *</p>
+						<Input
+							placeholder="Search for a phrase to send..."
+							value={searchTerm}
+							onChange={(e) => setSearchTerm(e.target.value)}
+						/>
+					</Label>
 					<ScrollArea className="flex-1">
-						<div className="space-y-2">
-							{phrasesQuery.isPending && <p>Loading...</p>}
-							{phrasesQuery.data?.map((phrase) => (
+						<div className="flex min-h-20 flex-1 flex-col place-content-center gap-2">
+							{isFetching && <Loader />}
+							{phrasesData?.map((phrase) => (
 								<div
 									key={phrase.id}
 									className="flex items-center justify-between rounded-md border p-2"
@@ -124,10 +138,19 @@ function RouteComponent() {
 									</Button>
 								</div>
 							))}
-							{phrasesQuery.data?.length === 0 && debouncedSearchTerm && (
-								<p className="text-muted-foreground text-center">
-									No phrases found.
-								</p>
+							{phrasesData?.length === 0 && debouncedSearchTerm && (
+								<Callout variant="ghost">No phrases found.</Callout>
+							)}
+							{!debouncedSearchTerm && (
+								<Callout variant="ghost">Enter search terms above</Callout>
+							)}
+							{error && (
+								<ShowError>
+									<p className="font-bold">
+										An error has occurred trying to complete your search
+									</p>
+									<p>{error.message}</p>
+								</ShowError>
 							)}
 						</div>
 					</ScrollArea>
