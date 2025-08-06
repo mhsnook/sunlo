@@ -21,18 +21,16 @@ import {
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { roundAndTrim } from '@/lib/utils'
-import { useProfile } from '@/lib/use-profile'
+
+const DestructiveOctagon = () => (
+	<Badge variant="destructive" className="p-2">
+		<OctagonMinus />
+	</Badge>
+)
 
 function PhraseNotFound() {
 	return (
-		<Callout
-			variant="problem"
-			Icon={() => (
-				<Badge variant="destructive" className="p-2">
-					<OctagonMinus />
-				</Badge>
-			)}
-		>
+		<Callout variant="problem" Icon={DestructiveOctagon}>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
 		</Callout>
 	)
@@ -105,7 +103,7 @@ function RouteComponent() {
 						<h3 className="mb-3 text-lg font-medium">Translations</h3>
 						<div className="space-y-3">
 							{translations_mine.map((translation) => (
-								<div key={translation.id} className="bg-muted rounded-lg p-3">
+								<div key={translation.id} className="bg-muted rounded p-3">
 									<div className="flex items-center justify-between">
 										<p className="text-md">{translation.text}</p>
 										<Badge variant="outline">
