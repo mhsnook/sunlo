@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useRelations } from '@/lib/friends'
 import { cn } from '@/lib/utils'
+import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {
 	className: 'bg-accent/20 text-accent-foreground',
@@ -57,10 +58,16 @@ export function ChatsSidebar() {
 									{friend.profile?.username?.charAt(0).toUpperCase()}
 								</AvatarFallback>
 							</Avatar>
-							<div className="line-clamp-3 flex-1">
+							<div className="flex-1 overflow-hidden">
 								<div className="font-semibold">{friend.profile?.username}</div>
-								<p className="text-muted-foreground text-xs">
-									48m ago • You: mock message... mock message...
+								<p className="text-muted-foreground line-clamp-2 text-xs">
+									{friend.most_recent_created_at ?
+										<>
+											{ago(friend.most_recent_created_at)} •{' '}
+											{friend.isMostRecentByMe ? 'You: ' : ''}
+											{friend.most_recent_message}
+										</>
+									:	'No messages yet'}
 								</p>
 							</div>
 						</Link>
