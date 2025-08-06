@@ -1,19 +1,18 @@
-import { CardFull, PhraseFiltered, pids } from '@/types/main'
+import { PhraseFiltered, pids } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
 } from '@/components/ui/accordion'
+
+import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { useMemo } from 'react'
 import { CardStatusDropdown } from './card-status-dropdown'
 import { AddTranslationsDialog } from './add-translations-dialog'
-import { useDeck } from '@/lib/use-deck'
-import PhraseExtraInfo from './phrase-extra-info'
 import PermalinkButton from './permalink-button'
 import SharePhraseButton from './share-phrase-button'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { useProfile } from '@/lib/use-profile'
-import { useMemo } from 'react'
+import PhraseExtraInfo from './phrase-extra-info'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -24,7 +23,6 @@ export function LanguagePhrasesAccordionComponent({
 	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
-	const { data: deck } = useDeck(lang)
 	// we are using filtered phrases but unfiltered pids
 	// because the user will manage filtering
 	const { phrasesMapFiltered, language: languagePids } =
@@ -35,24 +33,13 @@ export function LanguagePhrasesAccordionComponent({
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pidsToUse.map((pid) => (
-				<PhraseAccordionItem
-					key={pid}
-					phrase={phrasesMapFiltered[pid]}
-					card={deck?.cardsMap[pid] ?? null}
-				/>
+				<PhraseAccordionItem key={pid} phrase={phrasesMapFiltered[pid]} />
 			))}
 		</Accordion>
 	)
 }
 
-function PhraseAccordionItem({
-	phrase,
-	card,
-}: {
-	phrase: PhraseFiltered
-	card: CardFull | null
-}) {
-	const { data: profile } = useProfile()
+function PhraseAccordionItem({ phrase }: { phrase: PhraseFiltered }) {
 	const params = useMemo(
 		() => ({ lang: phrase.lang!, id: phrase.id! }),
 		[phrase.id, phrase.lang]
@@ -60,12 +47,7 @@ function PhraseAccordionItem({
 	return (
 		<AccordionItem value={phrase.id!} className="mb-2 rounded border px-2">
 			<div className="flex flex-row items-center gap-2">
-				<CardStatusDropdown
-					lang={phrase.lang!}
-					deckPresent={profile?.deckLanguages?.includes(phrase.lang!) ?? false}
-					pid={phrase.id!}
-					card={card}
-				/>
+				<CardStatusDropdown lang={phrase.lang!} pid={phrase.id!} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
