@@ -1,5 +1,5 @@
 import supabase from '@/lib/supabase-client'
-import { CardFull, CardRow, uuid } from '@/types/main'
+import { CardRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -14,13 +14,13 @@ import {
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
+import { useProfile } from '@/lib/use-profile'
+import { useDeckCard } from '@/lib/use-deck'
 import { buttonVariants } from './ui/button-variants'
 
 interface CardStatusDropdownProps {
 	pid: uuid
 	lang: string
-	deckPresent?: boolean
-	card?: CardFull | null
 	className?: string
 	button?: boolean
 }
@@ -67,7 +67,7 @@ const statusStrings = {
 		icon: () => <Plus className="size-4 text-gray-600" aria-label="Add card" />,
 	},
 	nodeck: {
-		short: '...',
+		short: '',
 		long: 'Not learning language',
 		action: 'Add deck',
 		actionSecond: 'Create a new deck to learn this phrase and more',
@@ -102,6 +102,10 @@ export function CardStatusDropdown({
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
+	const { data: profile } = useProfile()
+	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
+	const { data: card } = useDeckCard(pid, lang, deckPresent)
+
 	const cardMutation = useMutation<
 		CardRow,
 		PostgrestError,

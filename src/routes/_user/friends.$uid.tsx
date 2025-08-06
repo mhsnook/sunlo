@@ -10,10 +10,18 @@ import {
 import { useAuth } from '@/lib/hooks'
 import { publicProfileQuery } from '@/lib/use-profile'
 import { uuid } from '@/types/main'
-import { createFileRoute } from '@tanstack/react-router'
-import { ThumbsUp, User, UserCheck, UserMinus, X } from 'lucide-react'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import {
+	MessagesSquare,
+	ThumbsUp,
+	User,
+	UserCheck,
+	UserMinus,
+	X,
+} from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import { useQuery } from '@tanstack/react-query'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
@@ -70,7 +78,18 @@ function ProfilePage() {
 						<p className="text-muted-foreground mb-2 text-sm capitalize">
 							{relationship?.status ?? 'unconnected'}
 						</p>
-						<RelationshipActions uid_for={uid} />
+						<div className="flex flex-row items-center justify-center gap-2">
+							<RelationshipActions uid_for={uid} />
+							{relationship?.status === 'friends' && (
+								<Link
+									className={buttonVariants({ variant: 'outline' })}
+									to="/friends/chats/$friendId"
+									params={{ friendId: profile.uid }}
+								>
+									<MessagesSquare /> Message
+								</Link>
+							)}
+						</div>
 					</div>
 				</CardContent>
 			</Card>
