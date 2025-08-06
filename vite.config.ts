@@ -32,7 +32,12 @@ export default defineConfig(({ mode }) => {
 				:	undefined,
 			watch: {
 				// tell vite to ignore watching `src-tauri`
-				ignored: ['**/src-tauri/**', '**/supabase/**', '.oxlintrc.json'],
+				ignored: [
+					'**/src-tauri/**',
+					'**/supabase/**',
+					'.oxlintrc.json',
+					'**/*.md',
+				],
 			},
 		},
 	}
