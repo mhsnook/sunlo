@@ -1,6 +1,11 @@
-import type { ChatMessageRow } from '@/types/main'
+import type { ChatMessageRow, PublicProfileFull } from '@/types/main'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
+import {
+	createFileRoute,
+	Link,
+	Outlet,
+	useNavigate,
+} from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
@@ -13,6 +18,8 @@ import { useOneFriendChat, useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
+import { Loader } from '@/components/ui/loader'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -91,7 +98,7 @@ function ChatPage() {
 	if (!relation?.profile || messagesQuery.isPending) {
 		return (
 			<Card className="flex h-full flex-col">
-				<CardHeader className="p-4">Loading chat...</CardHeader>
+				<Loader />
 			</Card>
 		)
 	}
@@ -118,61 +125,65 @@ function ChatPage() {
 			<CardContent className="flex-1 p-0">
 				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
 					<div ref={messagesContainerRef} className="space-y-4 pt-4">
-						{messagesQuery.data?.map((msg) => {
-							const isMine = msg.sender_uid === userId
-							return (
-								<div
-									key={msg.id}
-									className={cn(
-										'flex items-end gap-2',
-										isMine ? 'justify-end' : 'justify-start'
-									)}
-								>
-									{!isMine && (
-										<Avatar className="h-8 w-8">
-											<AvatarImage
-												src={relation.profile?.avatarUrl}
-												alt={relation.profile?.username}
-											/>
-											<AvatarFallback>
-												{relation.profile?.username.charAt(0).toUpperCase()}
-											</AvatarFallback>
-										</Avatar>
-									)}
-									<div>
-										{msg.phrase_id && (
-											<CardPreview
-												pid={msg.phrase_id}
-												lang={msg.lang}
-												isMine={isMine}
-											/>
+						{!messagesQuery.data?.length ?
+							<EmptyChat profile={relation.profile} />
+						:	messagesQuery.data?.map((msg) => {
+								if (typeof msg === 'undefined') return null
+								const isMine = msg.sender_uid === userId
+								return (
+									<div
+										key={msg.id}
+										className={cn(
+											'flex items-end gap-2',
+											isMine ? 'justify-end' : 'justify-start'
 										)}
-										<div
-											className={cn(
-												'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
-												isMine ?
-													'bg-primary text-primary-foreground ms-6'
-												:	'bg-muted me-6'
+									>
+										{!isMine && (
+											<Avatar className="h-8 w-8">
+												<AvatarImage
+													src={relation.profile?.avatarUrl}
+													alt={relation.profile?.username}
+												/>
+												<AvatarFallback>
+													{relation.profile?.username.charAt(0).toUpperCase()}
+												</AvatarFallback>
+											</Avatar>
+										)}
+										<div>
+											{msg.phrase_id && (
+												<CardPreview
+													pid={msg.phrase_id}
+													lang={msg.lang}
+													isMine={isMine}
+												/>
 											)}
-										>
-											{msg.message_type === 'recommendation' && (
-												<p className="text-sm italic">
-													Sent a phrase recommendation.
-												</p>
-											)}
-											{msg.message_type === 'accepted' && (
-												<div className="text-sm italic">
-													<p>
-														{isMine ? 'You' : relation.profile!.username} added
-														this to {isMine ? 'your' : 'their'} deck.
+											<div
+												className={cn(
+													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
+													isMine ?
+														'bg-primary text-primary-foreground ms-6'
+													:	'bg-muted me-6'
+												)}
+											>
+												{msg.message_type === 'recommendation' && (
+													<p className="text-sm italic">
+														Sent a phrase recommendation.
 													</p>
-												</div>
-											)}
+												)}
+												{msg.message_type === 'accepted' && (
+													<div className="text-sm italic">
+														<p>
+															{isMine ? 'You' : relation.profile!.username}{' '}
+															added this to {isMine ? 'your' : 'their'} deck.
+														</p>
+													</div>
+												)}
+											</div>
 										</div>
 									</div>
-								</div>
-							)
-						})}
+								)
+							})
+						}
 					</div>
 					<div ref={bottomRef} />
 				</ScrollArea>
@@ -209,3 +220,30 @@ function ChatPage() {
 		</Card>
 	)
 }
+
+const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
+	<div className="flex flex-col items-center justify-center gap-6 py-10">
+		<p className="text-xl font-bold">{profile.username}</p>
+		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
+			{profile.avatarUrl ?
+				<img
+					src={profile.avatarUrl}
+					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
+					className="size-32 rounded-full object-cover"
+				/>
+			:	<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
+					{(profile.username ?? '').slice(0, 2)}
+				</span>
+			}
+		</div>
+		<p>
+			<Link
+				className={buttonVariants({ variant: 'secondary' })}
+				to="/friends/$uid"
+				params={{ uid: profile.uid }}
+			>
+				View profile
+			</Link>
+		</p>
+	</div>
+)

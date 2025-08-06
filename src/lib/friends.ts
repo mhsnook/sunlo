@@ -14,7 +14,7 @@ import {
 	uuid,
 } from '@/types/main'
 import { useAuth } from './hooks'
-import { avatarUrlify, mapArray } from './utils'
+import { avatarUrlify, mapArray, mapArrays } from './utils'
 import toast from 'react-hot-toast'
 
 type FriendSummariesLoaded = {
@@ -25,19 +25,6 @@ type FriendSummariesLoaded = {
 		invited: Array<uuid>
 		invitations: Array<uuid>
 	}
-}
-
-const mergeMessageArrays = (
-	first: Array<ChatMessageRow>,
-	second: Array<ChatMessageRow>
-) => {
-	let arr = [first, second].flat().filter(Boolean)
-
-	return arr.sort((a, b) =>
-		a.created_at === b.created_at ? 0
-		: a.created_at < b.created_at ? 1
-		: -1
-	)
 }
 
 export const friendSummaryToRelative = (
@@ -51,7 +38,6 @@ export const friendSummaryToRelative = (
 		uidOther: uid === d.uid_less ? d.uid_more! : d.uid_less!,
 		isMostRecentByMe: uid === d.most_recent_uid_by,
 		isMyUidMore: uid === d.uid_more,
-		chatHistory: mergeMessageArrays(d.chats_sent_by_me, d.chats_sent_by_them),
 	}
 
 	if (d.profile_less && d.profile_more) {
@@ -74,7 +60,7 @@ export const relationsQuery = (uidMe: uuid | null) =>
 			const { data } = await supabase
 				.from('friend_summary')
 				.select(
-					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*)'
+					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
 				)
 				.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
 				.throwOnError()
@@ -117,7 +103,7 @@ export const useRelations = () => {
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
-	return useQuery({ ...oneRelationQuery(userId, uidToUse) })
+	return useQuery({ ...oneRelationQuery(userId!, uidToUse), enabled: !!userId })
 }
 
 export const useFriendRequestAction = (uid_for: uuid) => {
@@ -165,7 +151,7 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 }
 
 export type ChatsMap = {
-	[key: uuid]: Array<ChatMessageRow>
+	[key: uuid]: Array<ChatMessageRelative>
 }
 
 const chatsQueryOptions = (uid: uuid) =>
@@ -187,7 +173,11 @@ const chatsQueryOptions = (uid: uuid) =>
 						:	message.sender_uid,
 				})
 			)
-			const chatsMap: ChatsMap = mapArray(chatsRelative, 'friendId')
+			const chatsMap: ChatsMap = mapArrays<ChatMessageRelative, 'friendId'>(
+				chatsRelative,
+				'friendId'
+			)
+			// console.log(`fetched chatsMap`, chatsMap)
 			return chatsMap
 		},
 	})
@@ -204,7 +194,11 @@ export const useOneFriendChat = (friendId: uuid) => {
 	const { userId } = useAuth()
 	return useQuery({
 		...chatsQueryOptions(userId!),
-		select: (data: ChatsMap) => data[friendId],
+		select: (data: ChatsMap) => {
+			// console.log(friendId, data)
+			if (!data[friendId]) throw Error("Couldn't find this friend!")
+			return data[friendId]
+		},
 		enabled: !!userId && !!friendId,
 	})
 }

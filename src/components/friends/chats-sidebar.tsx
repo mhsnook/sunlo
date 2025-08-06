@@ -11,7 +11,7 @@ const linkActiveProps = {
 
 export function ChatsSidebar() {
 	const { data: relations, isPending } = useRelations()
-	const { data: chats, isChatsPending } = useAllChats()
+	const { data: chats } = useAllChats()
 
 	const friends = relations?.uids.friends
 		.map((uid) => relations.relationsMap[uid])
@@ -40,39 +40,47 @@ export function ChatsSidebar() {
 					<p className="text-muted-foreground p-4 text-sm">
 						You have no friends to chat with yet.
 					</p>
-				:	sortedFriends.map((friend) => (
-						<Link
-							key={friend.uidOther}
-							to="/friends/chats/$friendId"
-							params={{ friendId: friend.uidOther }}
-							className={cn(
-								'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
-							)}
-							activeProps={linkActiveProps}
-						>
-							<Avatar className="h-8 w-8">
-								<AvatarImage
-									src={friend.profile?.avatarUrl}
-									alt={friend.profile?.username}
-								/>
-								<AvatarFallback>
-									{friend.profile?.username?.charAt(0).toUpperCase()}
-								</AvatarFallback>
-							</Avatar>
-							<div className="flex-1 overflow-hidden">
-								<div className="font-semibold">{friend.profile?.username}</div>
-								<p className="text-muted-foreground line-clamp-2 text-xs">
-									{friend.most_recent_created_at ?
-										<>
-											{ago(friend.most_recent_created_at)} •{' '}
-											{friend.isMostRecentByMe ? 'You: ' : ''}
-											{friend.most_recent_message}
-										</>
-									:	'No messages yet'}
-								</p>
-							</div>
-						</Link>
-					))
+				:	sortedFriends.map((friend) => {
+						const thisChatMessage =
+							!chats ? null : chats[friend.uidOther].at(-1)
+						return (
+							<Link
+								key={friend.uidOther}
+								to="/friends/chats/$friendId"
+								params={{ friendId: friend.uidOther }}
+								className={cn(
+									'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
+								)}
+								activeProps={linkActiveProps}
+							>
+								<Avatar className="h-8 w-8">
+									<AvatarImage
+										src={friend.profile?.avatarUrl}
+										alt={friend.profile?.username}
+									/>
+									<AvatarFallback>
+										{friend.profile?.username?.charAt(0).toUpperCase()}
+									</AvatarFallback>
+								</Avatar>
+								<div className="flex-1 overflow-hidden">
+									<div className="font-semibold">
+										{friend.profile?.username}
+									</div>
+									<p className="text-muted-foreground line-clamp-2 text-xs">
+										{thisChatMessage ?
+											<>
+												{ago(thisChatMessage.created_at)} •{' '}
+												{thisChatMessage.isMine ? 'You ' : 'They '}
+												{thisChatMessage.message_type === 'recommendation' ?
+													'sent a recommendation'
+												:	'accepted your recommendation'}
+											</>
+										:	'No messages yet'}
+									</p>
+								</div>
+							</Link>
+						)
+					})
 				}
 			</CardContent>
 		</Card>
