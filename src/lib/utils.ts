@@ -28,6 +28,26 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	)
 }
 
+export function mapArrays<
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	T extends Record<string, any>,
+	K extends keyof T,
+>(arr: Array<T>, key: K) {
+	if (!key) throw new Error('Must provide a key to map against')
+	if (!arr) return {} // uninitialized or null array returns empty object
+
+	return arr.reduce(
+		(result, item) => {
+			const itemKey = item[key]
+			if (typeof itemKey === 'string') {
+				result[itemKey] = [...(result[itemKey] ?? []), item]
+			}
+			return result
+		},
+		{} as Record<K, Array<T>>
+	)
+}
+
 function trimmedNumberString(num: number, places: number): string {
 	// We may end up with string like 5.1234.00 and that's okay
 	const content = num.toString() + '.' + '0'.repeat(places)
