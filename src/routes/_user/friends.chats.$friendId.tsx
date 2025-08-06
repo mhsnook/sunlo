@@ -1,5 +1,5 @@
 import type { ChatMessageRow } from '@/types/main'
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
@@ -23,7 +23,8 @@ function ChatPage() {
 	const { data: relation } = useOneRelation(friendId)
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
-	const scrollAreaRef = useRef<HTMLDivElement>(null)
+	const bottomRef = useRef<HTMLDivElement>(null)
+	const messagesContainerRef = useRef<HTMLDivElement>(null)
 	const navigate = useNavigate({ from: Route.fullPath })
 
 	const messagesQuery = useQuery({
@@ -85,13 +86,21 @@ function ChatPage() {
 		}
 	}, [friendId, userId, queryClient])
 
-	useEffect(() => {
-		// Scroll to bottom when new messages are added
-		if (scrollAreaRef.current) {
-			scrollAreaRef.current.scrollTo({
-				top: scrollAreaRef.current.scrollHeight,
-			})
+	useLayoutEffect(() => {
+		const container = messagesContainerRef.current
+		if (!container) return
+
+		const scrollToBottom = () => {
+			bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
 		}
+
+		// Scroll when new messages are added, or when content resizes (e.g. images load)
+		const resizeObserver = new ResizeObserver(scrollToBottom)
+		resizeObserver.observe(container)
+
+		// Initial scroll
+		scrollToBottom()
+		return () => resizeObserver.disconnect()
 	}, [messagesQuery.data])
 
 	if (!relation?.profile || messagesQuery.isPending) {
@@ -122,11 +131,8 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-0">
-				<ScrollArea
-					ref={scrollAreaRef}
-					className="h-[calc(100vh-20rem-1px)] px-4"
-				>
-					<div className="space-y-4">
+				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
+					<div ref={messagesContainerRef} className="space-y-4 pt-4">
 						{messagesQuery.data?.map((msg) => {
 							const isMine = msg.sender_uid === userId
 							return (
@@ -183,6 +189,7 @@ function ChatPage() {
 							)
 						})}
 					</div>
+					<div ref={bottomRef} />
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
