@@ -77,3 +77,4 @@ Use supabase-js version 2 to asynchronously fetch and post data, inside react-qu
 
 - when using a 3-letter language code, we almost always call this variable 'lang'
 - when using a phrase_id as its own variable or prop to pass, we almost always call this 'pid'
+- when displaying times and dates, default to the `ago` function and other helper functions in `dayjs.ts`
