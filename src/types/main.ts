@@ -26,6 +26,10 @@ export type AuthState = {
 }
 
 export type ChatMessageRow = Tables<'chat_message'>
+export type ChatMessageRelative = ChatMessageRow & {
+	isMine: boolean
+	friendId: uuid
+}
 export type ChatMessageInsert = TablesInsert<'chat_message'>
 
 /*
@@ -222,6 +226,8 @@ export type FriendRequestActionInsert = TablesInsert<'friend_request_action'>
 export type FriendSummaryRaw = FriendSummary & {
 	profile_more: Tables<'public_profile'> | null
 	profile_less: Tables<'public_profile'> | null
+	chats_sent_by_me: Array<ChatMessageRow>
+	chats_sent_by_them: Array<ChatMessageRow>
 }
 
 export type FriendSummaryRelative = {
@@ -232,6 +238,7 @@ export type FriendSummaryRelative = {
 	isMostRecentByMe: boolean
 	isMyUidMore: boolean
 	profile?: PublicProfile
+	chatHistory: Array<ChatMessageRow>
 }
 
 export type PublicProfileFull = PublicProfile & {

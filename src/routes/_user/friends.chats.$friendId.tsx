@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useMessages, useOneRelation } from '@/lib/friends'
+import { useOneFriendChat, useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
@@ -27,7 +27,7 @@ function ChatPage() {
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 	const navigate = useNavigate({ from: Route.fullPath })
 
-	const messagesQuery = useMessages(friendId)
+	const messagesQuery = useOneFriendChat(friendId)
 
 	useEffect(() => {
 		if (!userId || !friendId) return
