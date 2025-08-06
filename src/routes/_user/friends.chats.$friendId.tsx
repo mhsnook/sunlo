@@ -1,7 +1,7 @@
 import type { ChatMessageRow } from '@/types/main'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useOneRelation } from '@/lib/friends'
+import { useMessages, useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
@@ -27,22 +27,7 @@ function ChatPage() {
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 	const navigate = useNavigate({ from: Route.fullPath })
 
-	const messagesQuery = useQuery({
-		queryKey: ['chats', friendId, 'messages'],
-		queryFn: async () => {
-			const { data, error } = await supabase
-				.from('chat_message')
-				.select('*')
-				.or(
-					`and(sender_uid.eq.${userId},recipient_uid.eq.${friendId}),and(sender_uid.eq.${friendId},recipient_uid.eq.${userId})`
-				)
-				.order('created_at', { ascending: true })
-
-			if (error) throw error
-			return data
-		},
-		enabled: !!userId && !!friendId,
-	})
+	const messagesQuery = useMessages(friendId)
 
 	useEffect(() => {
 		if (!userId || !friendId) return

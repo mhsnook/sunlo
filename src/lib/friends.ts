@@ -147,3 +147,23 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 		},
 	})
 }
+
+export const useMessages = (friendId: uuid) => {
+	const { userId } = useAuth()
+	return useQuery({
+		queryKey: ['chats', friendId, 'messages'],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from('chat_message')
+				.select('*')
+				.or(
+					`and(sender_uid.eq.${userId},recipient_uid.eq.${friendId}),and(sender_uid.eq.${friendId},recipient_uid.eq.${userId})`
+				)
+				.order('created_at', { ascending: true })
+
+			if (error) throw error
+			return data
+		},
+		enabled: !!userId && !!friendId,
+	})
+}
