@@ -30,9 +30,7 @@ export function ShowError({
 			className={className}
 			variant="problem"
 			alert
-			Icon={() => (
-				<TriangleAlert className="text-destructive/50" aria-hidden={true} />
-			)}
+			Icon={DestructiveTriangle}
 		>
 			{children ?? `An unknown error has occurred (sorry)`}
 		</Callout>
@@ -50,6 +48,23 @@ export const ShowAndLogError = memo(function ShowAndLogError({
 	className?: string
 	values?: Record<string, string | null> | null
 }>) {
+	return (
+		<>
+			<ShowErrorDontLog error={error} text={text} className={className} />
+			{error && <Logger error={error} values={values} />}
+		</>
+	)
+})
+
+export const ShowErrorDontLog = memo(function ShowAndLogError({
+	error,
+	text,
+	className = '',
+}: PropsWithChildren<{
+	error: Error | PostgrestError | null
+	text?: string
+	className?: string
+}>) {
 	if (!error) return null
 
 	return (
@@ -57,11 +72,8 @@ export const ShowAndLogError = memo(function ShowAndLogError({
 			className={className}
 			variant="problem"
 			alert
-			Icon={() => (
-				<TriangleAlert className="text-destructive/50" aria-hidden={true} />
-			)}
+			Icon={DestructiveTriangle}
 		>
-			<Logger error={error} values={values} />
 			<strong>
 				{'status' in error ?
 					<> (Error {error.status}) </>
@@ -140,4 +152,8 @@ function Logger({
 	}, [error, values])
 
 	return null
+}
+
+function DestructiveTriangle() {
+	return <TriangleAlert className="text-destructive/50" aria-hidden={true} />
 }

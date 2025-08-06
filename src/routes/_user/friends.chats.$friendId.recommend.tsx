@@ -17,7 +17,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { ShowError } from '@/components/errors'
+import { ShowErrorDontLog } from '@/components/errors'
 import { Loader } from '@/components/ui/loader'
 import Callout from '@/components/ui/callout'
 import { Label } from '@/components/ui/label'
@@ -50,17 +50,14 @@ function RouteComponent() {
 		queryFn: async () => {
 			if (!searchQuery) return []
 			const match = lang ? { lang } : {}
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from('phrase')
 				.select('id, text, lang')
 				.match(match)
 				.ilike('text', `%${searchQuery}%`)
 				.limit(10)
+				.throwOnError()
 
-			if (error) {
-				toast.error(error.message)
-				throw error
-			}
 			return data
 		},
 		enabled: !!searchQuery,
@@ -73,6 +70,7 @@ function RouteComponent() {
 		},
 		onSuccess: () => {
 			void navigate({ to: '/friends/chats/$friendId', params: { friendId } })
+			toast.success('Phrase sent!')
 		},
 		onError: (error) => {
 			toast.error(`Failed to send recommendation: ${error.message}`)
@@ -145,12 +143,10 @@ function RouteComponent() {
 								<Callout variant="ghost">Enter search terms above</Callout>
 							)}
 							{error && (
-								<ShowError>
-									<p className="font-bold">
-										An error has occurred trying to complete your search
-									</p>
-									<p>{error.message}</p>
-								</ShowError>
+								<ShowErrorDontLog
+									error={error}
+									text="An error has occurred trying to complete your search"
+								/>
 							)}
 						</div>
 					</ScrollArea>
