@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useRelations } from '@/lib/friends'
+import { useAllChats, useRelations } from '@/lib/friends'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 
@@ -11,6 +11,7 @@ const linkActiveProps = {
 
 export function ChatsSidebar() {
 	const { data: relations, isPending } = useRelations()
+	const { data: chats, isChatsPending } = useAllChats()
 
 	const friends = relations?.uids.friends
 		.map((uid) => relations.relationsMap[uid])
@@ -18,7 +19,7 @@ export function ChatsSidebar() {
 
 	// Mock sorting by recent activity
 	const sortedFriends = friends?.sort((a, b) =>
-		a.most_recent_created_at == b.most_recent_created_at ? 0
+		a.most_recent_created_at === b.most_recent_created_at ? 0
 		: a.most_recent_created_at < b.most_recent_created_at ? 1
 		: -1
 	)

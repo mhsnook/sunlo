@@ -6,6 +6,8 @@ import {
 } from '@tanstack/react-query'
 import supabase from './supabase-client'
 import {
+	ChatMessageRelative,
+	ChatMessageRow,
 	FriendRequestActionInsert,
 	FriendSummaryRaw,
 	FriendSummaryRelative,
@@ -25,6 +27,19 @@ type FriendSummariesLoaded = {
 	}
 }
 
+const mergeMessageArrays = (
+	first: Array<ChatMessageRow>,
+	second: Array<ChatMessageRow>
+) => {
+	let arr = [first, second].flat().filter(Boolean)
+
+	return arr.sort((a, b) =>
+		a.created_at === b.created_at ? 0
+		: a.created_at < b.created_at ? 1
+		: -1
+	)
+}
+
 export const friendSummaryToRelative = (
 	uid: uuid,
 	d: FriendSummaryRaw
@@ -36,6 +51,7 @@ export const friendSummaryToRelative = (
 		uidOther: uid === d.uid_less ? d.uid_more! : d.uid_less!,
 		isMostRecentByMe: uid === d.most_recent_uid_by,
 		isMyUidMore: uid === d.uid_more,
+		chatHistory: mergeMessageArrays(d.chats_sent_by_me, d.chats_sent_by_them),
 	}
 
 	if (d.profile_less && d.profile_more) {
@@ -58,7 +74,7 @@ export const relationsQuery = (uidMe: uuid | null) =>
 			const { data } = await supabase
 				.from('friend_summary')
 				.select(
-					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
+					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*)'
 				)
 				.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
 				.throwOnError()
@@ -148,22 +164,47 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 	})
 }
 
-export const useMessages = (friendId: uuid) => {
-	const { userId } = useAuth()
-	return useQuery({
-		queryKey: ['chats', friendId, 'messages'],
+export type ChatsMap = {
+	[key: uuid]: Array<ChatMessageRow>
+}
+
+const chatsQueryOptions = (uid: uuid) =>
+	queryOptions({
+		queryKey: ['user', uid ?? '', 'chats'],
 		queryFn: async () => {
-			const { data, error } = await supabase
+			const { data } = await supabase
 				.from('chat_message')
 				.select('*')
-				.or(
-					`and(sender_uid.eq.${userId},recipient_uid.eq.${friendId}),and(sender_uid.eq.${friendId},recipient_uid.eq.${userId})`
-				)
 				.order('created_at', { ascending: true })
-
-			if (error) throw error
-			return data
+				.throwOnError()
+			const chatsRelative = data.map(
+				(message: ChatMessageRow): ChatMessageRelative => ({
+					...message,
+					isMine: message.sender_uid === uid,
+					friendId:
+						message.sender_uid === uid ?
+							message.recipient_uid
+						:	message.sender_uid,
+				})
+			)
+			const chatsMap: ChatsMap = mapArray(chatsRelative, 'friendId')
+			return chatsMap
 		},
+	})
+
+export const useAllChats = () => {
+	const { userId } = useAuth()
+	return useQuery({
+		...chatsQueryOptions(userId!),
+		enabled: !!userId,
+	})
+}
+
+export const useOneFriendChat = (friendId: uuid) => {
+	const { userId } = useAuth()
+	return useQuery({
+		...chatsQueryOptions(userId!),
+		select: (data: ChatsMap) => data[friendId],
 		enabled: !!userId && !!friendId,
 	})
 }
