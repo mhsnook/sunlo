@@ -44,7 +44,6 @@ function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const { data: phrase } = useLanguagePhrase(id, lang)
 	const { data: card } = useDeckCard(id, lang)
-	const { data: profile } = useProfile()
 	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -53,8 +52,6 @@ function RouteComponent() {
 	const translations_mine =
 		phrasesMapFiltered[id].translations_mine ?? phrase.translations
 	const translations_other = phrasesMapFiltered[id].translations_other ?? []
-
-	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
 
 	return (
 		<Card>
@@ -66,13 +63,7 @@ function RouteComponent() {
 							{languages[lang]}
 						</Badge>
 					</div>
-					<CardStatusDropdown
-						deckPresent={deckPresent}
-						card={card}
-						pid={id}
-						lang={lang}
-						button
-					/>
+					<CardStatusDropdown pid={id} lang={lang} button />
 				</div>
 				<div className="text-muted-foreground static mt-2 block items-center gap-2 text-sm">
 					{!card ?

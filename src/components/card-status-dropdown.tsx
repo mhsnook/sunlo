@@ -23,6 +23,7 @@ interface CardStatusDropdownProps {
 	lang: string
 	className?: string
 	button?: boolean
+	action?: boolean
 }
 
 // TODO check if we can get this from the supabase types?
@@ -31,11 +32,11 @@ type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
 const statusStrings = {
 	active: {
-		short: 'active',
-		long: 'Card active',
-		action: 'Activate card',
+		short: 'In deck',
+		long: 'Card is in your deck',
+		action: 'Add card to deck',
 		actionSecond: 'Add it to your active learning deck',
-		done: 'Card activated',
+		done: 'Card added',
 		icon: () => <Zap className="size-4 text-yellow-600" aria-label="Active" />,
 	},
 	learned: {
@@ -69,7 +70,7 @@ const statusStrings = {
 	nodeck: {
 		short: '',
 		long: 'Not learning language',
-		action: 'Add deck',
+		action: 'New language',
 		actionSecond: 'Create a new deck to learn this phrase and more',
 		done: 'Deck archived',
 		icon: () => (
@@ -95,10 +96,9 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 export function CardStatusDropdown({
 	pid,
 	lang,
-	card,
-	deckPresent,
 	className,
 	button = false,
+	action = false,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
@@ -156,11 +156,13 @@ export function CardStatusDropdown({
 	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (
 			<DropdownMenu>
-				<DropdownMenuTrigger className={cn('group flex', className)}>
+				<DropdownMenuTrigger
+					className={cn('group flex cursor-pointer', className)}
+				>
 					{button ?
 						<span
 							className={cn(
-								buttonVariants({ variant: 'outline' }),
+								buttonVariants({ variant: 'secondary' }),
 								`group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white`
 							)}
 						>
@@ -169,10 +171,12 @@ export function CardStatusDropdown({
 							:	statusStrings[choice].icon()}{' '}
 							{cardMutation.data ?
 								statusStrings[choice].done
+							: action ?
+								statusStrings[choice].action
 							:	statusStrings[choice].long}
 						</span>
 					:	<Badge
-							variant="outline"
+							variant="secondary"
 							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
 						>
 							{cardMutation.isSuccess ?
