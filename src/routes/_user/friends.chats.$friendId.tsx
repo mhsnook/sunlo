@@ -1,11 +1,6 @@
 import type { ChatMessageRow } from '@/types/main'
 import { useEffect, useRef } from 'react'
-import {
-	createFileRoute,
-	Outlet,
-	useNavigate,
-	useMatchRoute,
-} from '@tanstack/react-router'
+import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
@@ -30,12 +25,6 @@ function ChatPage() {
 	const queryClient = useQueryClient()
 	const scrollAreaRef = useRef<HTMLDivElement>(null)
 	const navigate = useNavigate({ from: Route.fullPath })
-	const matchRoute = useMatchRoute()
-
-	const isRecommendRoute = !!matchRoute({
-		to: '/friends/chats/$friendId/recommend',
-		params: { friendId },
-	})
 
 	const messagesQuery = useQuery({
 		queryKey: ['chats', friendId, 'messages'],
@@ -139,16 +128,16 @@ function ChatPage() {
 				>
 					<div className="space-y-4">
 						{messagesQuery.data?.map((msg) => {
-							const isMe = msg.sender_uid === userId
+							const isMine = msg.sender_uid === userId
 							return (
 								<div
 									key={msg.id}
 									className={cn(
 										'flex items-end gap-2',
-										isMe ? 'justify-end' : 'justify-start'
+										isMine ? 'justify-end' : 'justify-start'
 									)}
 								>
-									{!isMe && (
+									{!isMine && (
 										<Avatar className="h-8 w-8">
 											<AvatarImage
 												src={relation.profile?.avatarUrl}
@@ -161,12 +150,18 @@ function ChatPage() {
 									)}
 									<div>
 										{msg.phrase_id && (
-											<CardPreview pid={msg.phrase_id} lang={msg.lang} />
+											<CardPreview
+												pid={msg.phrase_id}
+												lang={msg.lang}
+												isMine={isMine}
+											/>
 										)}
 										<div
 											className={cn(
-												'max-w-xs rounded-2xl p-3 lg:max-w-md',
-												isMe ? 'bg-primary text-primary-foreground' : 'bg-muted'
+												'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
+												isMine ?
+													'bg-primary text-primary-foreground ms-6'
+												:	'bg-muted me-6'
 											)}
 										>
 											{msg.message_type === 'recommendation' && (
@@ -177,8 +172,8 @@ function ChatPage() {
 											{msg.message_type === 'accepted' && (
 												<div className="text-sm italic">
 													<p>
-														{isMe ? 'You' : relation.profile!.username} added
-														this to {isMe ? 'your' : 'their'} deck.
+														{isMine ? 'You' : relation.profile!.username} added
+														this to {isMine ? 'your' : 'their'} deck.
 													</p>
 												</div>
 											)}

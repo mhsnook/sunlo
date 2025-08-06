@@ -7,7 +7,15 @@ import { useDeckCard } from '@/lib/use-deck'
 import { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 
-export function CardPreview({ pid, lang }: { pid: uuid; lang: string }) {
+export function CardPreview({
+	pid,
+	lang,
+	isMine,
+}: {
+	pid: uuid
+	lang: string
+	isMine: boolean
+}) {
 	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
 	const { data: card } = useDeckCard(pid, lang)
 
@@ -15,7 +23,9 @@ export function CardPreview({ pid, lang }: { pid: uuid; lang: string }) {
 		isPending ? null
 		: !phrase ?
 			<Callout variant="problem">Can't seem to find that phrase...</Callout>
-		:	<Card className="bg-background my-2">
+		:	<Card
+				className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
+			>
 				<CardHeader className="p-4">
 					<CardTitle className="text-lg">{phrase.text}</CardTitle>
 				</CardHeader>
