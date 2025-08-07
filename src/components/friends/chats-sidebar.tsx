@@ -42,7 +42,9 @@ export function ChatsSidebar() {
 					</p>
 				:	sortedFriends.map((friend) => {
 						const thisChatMessage =
-							!chats ? null : chats[friend.uidOther].at(-1)
+							!chats || !chats[friend.uidOther] ?
+								null
+							:	chats[friend.uidOther].at(-1)
 						return (
 							<Link
 								key={friend.uidOther}

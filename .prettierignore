@@ -3,7 +3,7 @@ node_modules
 bun.lockb
 pnpm-lock.yaml
 src/supabase/.temp
-src/types/supabase.ts
+src/types/supabase.d.ts
 src/*.gen.ts
 out
 src-tauri/target
