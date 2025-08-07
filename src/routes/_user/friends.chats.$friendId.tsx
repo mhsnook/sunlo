@@ -150,7 +150,7 @@ function ChatPage() {
 											</Avatar>
 										)}
 										<div>
-											{msg.phrase_id && (
+											{msg.phrase_id && msg.lang && (
 												<CardPreview
 													pid={msg.phrase_id}
 													lang={msg.lang}

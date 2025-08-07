@@ -38,6 +38,7 @@ Use supabase-js version 2 to asynchronously fetch and post data, inside react-qu
 - to import the supabase client, use this syntax: `import supabase from '@/lib/supabase-client'`
 - to import components, use `from '@/components/[component-name-here].tsx`'
 - to import lib functions, use `from '@/lib/[file-name-here].tsx`'
+- for files that only contain typescript definitions, these don't operate at run-time, so name them with `*.d.ts` so they will be excluded from the Vite dev server's watch/refresh.
 
 ## Data fetching:
 
