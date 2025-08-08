@@ -6,6 +6,9 @@ import { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import { CardStatusDropdown } from '../card-status-dropdown'
 import { AddTranslationsDialog } from '../add-translations-dialog'
+import { Link } from '@tanstack/react-router'
+import { buttonVariants } from '../ui/button-variants'
+import { LinkIcon } from 'lucide-react'
 
 export function CardPreview({
 	pid,
@@ -18,6 +21,7 @@ export function CardPreview({
 }) {
 	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
 	const { data: card } = useDeckCard(pid, lang)
+	const chosenTranslation = phrase?.translations[0]
 
 	return (
 		isPending ? null
@@ -33,11 +37,11 @@ export function CardPreview({
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2 p-4 pt-0">
-					{phrase.translations[0] ?
+					{chosenTranslation ?
 						<p className="text-muted-foreground">
-							{phrase.translations[0].text}{' '}
+							{chosenTranslation.text}{' '}
 							<span className="text-sm font-normal">
-								[{phrase.translations[0].lang}]
+								[{chosenTranslation.lang}]
 							</span>
 						</p>
 					:	<p className="text-muted-foreground italic">
@@ -52,13 +56,26 @@ export function CardPreview({
 							</span>
 						)}
 					</div>
-					<div className="flex flex-row gap-2">
+					<div className="flex flex-row flex-wrap gap-2">
 						<CardStatusDropdown pid={pid} lang={lang} action />
-						<AddTranslationsDialog
-							size="badge"
-							variant="secondary"
-							phrase={phrase}
-						/>
+						{!chosenTranslation && (
+							<AddTranslationsDialog
+								size="badge"
+								variant="secondary"
+								phrase={phrase}
+							/>
+						)}
+						<Link
+							to={'/learn/$lang/$id'}
+							params={{ lang, id: pid }}
+							className={buttonVariants({
+								variant: 'secondary',
+								size: 'badge',
+							})}
+						>
+							<LinkIcon className="text-muted-foreground" />
+							View phrase
+						</Link>
 					</div>
 				</CardContent>
 			</Card>
