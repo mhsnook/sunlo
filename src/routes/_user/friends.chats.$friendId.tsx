@@ -1,9 +1,7 @@
-import type { ChatMessageRow, PublicProfileFull } from '@/types/main'
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import type { PublicProfileFull } from '@/types/main'
+import { useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
-import supabase from '@/lib/supabase-client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -23,54 +21,10 @@ function ChatPage() {
 	const { friendId } = Route.useParams()
 	const { data: relation } = useOneRelation(friendId)
 	const { userId } = useAuth()
-	const queryClient = useQueryClient()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
-	const navigate = useNavigate({ from: Route.fullPath })
 
 	const messagesQuery = useOneFriendChat(friendId)
-
-	useEffect(() => {
-		if (!userId || !friendId) return
-
-		// Sort UIDs to create a consistent channel name between two users
-		const channelName = `chat-${[userId, friendId].sort().join('-')}`
-
-		const channel = supabase
-			.channel(channelName)
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'chat_message',
-					// RLS on the server ensures we only get messages for this user.
-					// We also filter client-side to only update the current chat.
-					// We'll filter client-side to only update the current chat.
-				},
-				(payload) => {
-					const newMessage = payload.new as ChatMessageRow // Define ChatMessage type
-					if (
-						(newMessage.sender_uid === userId &&
-							newMessage.recipient_uid === friendId) ||
-						(newMessage.sender_uid === friendId &&
-							newMessage.recipient_uid === userId)
-					) {
-						queryClient.setQueryData(
-							['chats', friendId, 'messages'], // Use the same query key
-							(oldData: ChatMessageRow[] | undefined) => {
-								return oldData ? [...oldData, newMessage] : [newMessage]
-							}
-						)
-					}
-				}
-			)
-			.subscribe()
-
-		return () => {
-			void supabase.removeChannel(channel)
-		}
-	}, [friendId, userId, queryClient])
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current
