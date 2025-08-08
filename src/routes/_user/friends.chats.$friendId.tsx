@@ -12,6 +12,7 @@ import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/components/chat/card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { ago } from '@/lib/dayjs'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -82,12 +83,12 @@ function ChatPage() {
 									<div
 										key={msg.id}
 										className={cn(
-											'flex items-end gap-2',
+											'flex items-start gap-2',
 											isMine ? 'justify-end ps-[10%]' : 'justify-start pe-[10%]'
 										)}
 									>
 										{!isMine && (
-											<Avatar className="h-8 w-8">
+											<Avatar className="my-5 h-8 w-8">
 												<AvatarImage
 													src={relation.profile?.avatarUrl}
 													alt={relation.profile?.username}
@@ -98,6 +99,9 @@ function ChatPage() {
 											</Avatar>
 										)}
 										<div>
+											<p className="text-muted-foreground mx-0 mb-1 text-xs">
+												{ago(msg.created_at)}
+											</p>
 											{msg.phrase_id && msg.lang && (
 												<CardPreview
 													pid={msg.phrase_id}
