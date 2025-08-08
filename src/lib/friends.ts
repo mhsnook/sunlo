@@ -195,8 +195,6 @@ export const useOneFriendChat = (friendId: uuid) => {
 	return useQuery({
 		...chatsQueryOptions(userId!),
 		select: (data: ChatsMap) => {
-			// console.log(friendId, data)
-			if (!data[friendId]) throw Error("Couldn't find this friend!")
 			return data[friendId]
 		},
 		enabled: !!userId && !!friendId,
