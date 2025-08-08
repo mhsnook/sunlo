@@ -83,7 +83,7 @@ function ChatPage() {
 										key={msg.id}
 										className={cn(
 											'flex items-end gap-2',
-											isMine ? 'justify-end' : 'justify-start'
+											isMine ? 'justify-end ps-[10%]' : 'justify-start pe-[10%]'
 										)}
 									>
 										{!isMine && (
@@ -109,8 +109,8 @@ function ChatPage() {
 												className={cn(
 													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
 													isMine ?
-														'bg-primary text-primary-foreground ms-6'
-													:	'bg-muted me-6'
+														'bg-primary text-primary-foreground ms-6 place-self-end'
+													:	'bg-muted me-6 place-self-start'
 												)}
 											>
 												{msg.message_type === 'recommendation' && (
