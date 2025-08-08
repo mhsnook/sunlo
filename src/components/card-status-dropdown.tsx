@@ -4,7 +4,6 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { CheckCircle, CircleMinus, Plus, Sparkles, Zap } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -56,25 +55,33 @@ const statusStrings = {
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
 		icon: () => (
-			<CircleMinus className="size-4 text-gray-600" aria-label="Skipped" />
+			<CircleMinus
+				className="text-muted-foreground size-4"
+				aria-label="Skipped"
+			/>
 		),
 	},
 	nocard: {
-		short: 'add',
+		short: 'add card',
 		long: 'Not in deck',
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => <Plus className="size-4 text-gray-600" aria-label="Add card" />,
+		icon: () => (
+			<Plus className="text-muted-foreground size-4" aria-label="Add card" />
+		),
 	},
 	nodeck: {
-		short: '',
+		short: 'start deck',
 		long: 'Not learning language',
-		action: 'New language',
-		actionSecond: 'Create a new deck to learn this phrase and more',
+		action: 'Start new language',
+		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
 		icon: () => (
-			<Plus className="size-4 text-gray-600" aria-label="Start learning" />
+			<Plus
+				className="text-muted-foreground size-4"
+				aria-label="Start learning"
+			/>
 		),
 	},
 }
@@ -175,15 +182,19 @@ export function CardStatusDropdown({
 								statusStrings[choice].action
 							:	statusStrings[choice].long}
 						</span>
-					:	<Badge
-							variant="secondary"
-							className="group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white"
+					:	<span
+							className={cn(
+								buttonVariants({ variant: 'secondary', size: 'badge' }),
+								`group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white`
+							)}
 						>
 							{cardMutation.isSuccess ?
 								<CheckCircle className="size-4 text-green-500" />
 							:	statusStrings[choice].icon()}{' '}
-							{statusStrings[choice].short}
-						</Badge>
+							{action ?
+								statusStrings[choice].action
+							:	statusStrings[choice].short}
+						</span>
 					}
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">

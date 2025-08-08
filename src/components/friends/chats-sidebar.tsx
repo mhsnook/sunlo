@@ -72,7 +72,7 @@ export function ChatsSidebar() {
 										{thisChatMessage ?
 											<>
 												{ago(thisChatMessage.created_at)} •{' '}
-												{thisChatMessage.isMine ? 'You ' : 'They '}
+												{thisChatMessage.isMine ? 'you ' : 'they '}
 												{thisChatMessage.message_type === 'recommendation' ?
 													'sent a recommendation'
 												:	'accepted your recommendation'}

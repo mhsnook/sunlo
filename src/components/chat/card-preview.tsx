@@ -5,6 +5,7 @@ import { useDeckCard } from '@/lib/use-deck'
 import { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import { CardStatusDropdown } from '../card-status-dropdown'
+import { AddTranslationsDialog } from '../add-translations-dialog'
 
 export function CardPreview({
 	pid,
@@ -32,12 +33,18 @@ export function CardPreview({
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-2 p-4 pt-0">
-					<p className="text-muted-foreground">
-						{phrase.translations[0].text}{' '}
-						<span className="text-sm font-normal">
-							[{phrase.translations[0].lang}]
-						</span>
-					</p>
+					{phrase.translations[0] ?
+						<p className="text-muted-foreground">
+							{phrase.translations[0].text}{' '}
+							<span className="text-sm font-normal">
+								[{phrase.translations[0].lang}]
+							</span>
+						</p>
+					:	<p className="text-muted-foreground italic">
+							There are currently no translations for this phrase. You can help
+							by adding some.
+						</p>
+					}
 					<div className="flex items-center gap-2 text-xs">
 						{card?.next_due_at && (
 							<span className="text-muted-foreground">
@@ -45,7 +52,14 @@ export function CardPreview({
 							</span>
 						)}
 					</div>
-					<CardStatusDropdown pid={pid} lang={lang} action />
+					<div className="flex flex-row gap-2">
+						<CardStatusDropdown pid={pid} lang={lang} action />
+						<AddTranslationsDialog
+							size="badge"
+							variant="secondary"
+							phrase={phrase}
+						/>
+					</div>
 				</CardContent>
 			</Card>
 	)
