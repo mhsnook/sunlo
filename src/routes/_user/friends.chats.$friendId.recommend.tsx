@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
@@ -103,6 +104,9 @@ function RouteComponent() {
 			<DialogContent className="max-h-[95vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle>Send a phrase</DialogTitle>
+					<DialogDescription className="sr-only">
+						A form to search for phrases to send to your friend
+					</DialogDescription>
 				</DialogHeader>
 				<div className="flex flex-1 flex-col gap-4 py-4">
 					<Label>
