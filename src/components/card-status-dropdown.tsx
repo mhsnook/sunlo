@@ -31,15 +31,15 @@ type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
 const statusStrings = {
 	active: {
-		short: 'In deck',
+		short: 'Active card',
 		long: 'Card is in your deck',
-		action: 'Add card to deck',
+		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card added',
 		icon: () => <Zap className="size-4 text-yellow-600" aria-label="Active" />,
 	},
 	learned: {
-		short: 'learned',
+		short: 'Learned',
 		long: 'Inactive (learned)',
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
@@ -49,7 +49,7 @@ const statusStrings = {
 		),
 	},
 	skipped: {
-		short: 'skipped',
+		short: 'Skipped',
 		long: 'Inactive (skipped)',
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
@@ -62,7 +62,7 @@ const statusStrings = {
 		),
 	},
 	nocard: {
-		short: 'add card',
+		short: 'Add card',
 		long: 'Not in deck',
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
@@ -72,7 +72,7 @@ const statusStrings = {
 		),
 	},
 	nodeck: {
-		short: 'start deck',
+		short: 'Start deck',
 		long: 'Not learning language',
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',

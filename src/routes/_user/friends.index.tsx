@@ -12,6 +12,7 @@ import { useRelations } from '@/lib/friends'
 import { ShowError } from '@/components/errors'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import Flagged from '@/components/flagged'
+import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 
 export const Route = createFileRoute('/_user/friends/')({
 	component: FriendListPage,
@@ -19,7 +20,8 @@ export const Route = createFileRoute('/_user/friends/')({
 
 function FriendListPage() {
 	return (
-		<main className="flex flex-col gap-6">
+		<main className="flex flex-col gap-4">
+			<PendingInvitationsSection />
 			<FriendProfiles />
 			<Flagged name="friends_activity">
 				<FriendsActivity />
