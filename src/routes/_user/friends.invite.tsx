@@ -13,6 +13,7 @@ import { useProfile } from '@/lib/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { useMemo } from 'react'
+import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 
 export const Route = createFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,
@@ -20,7 +21,8 @@ export const Route = createFileRoute('/_user/friends/invite')({
 
 function InviteFriendPage() {
 	return (
-		<main className="flex flex-col gap-6">
+		<div className="space-y-4">
+			<PendingInvitationsSection />
 			<Card>
 				<CardHeader>
 					<CardTitle>Invite a Friend</CardTitle>
@@ -32,11 +34,11 @@ function InviteFriendPage() {
 					<ShareButtons />
 				</CardContent>
 			</Card>
-		</main>
+		</div>
 	)
 }
 
-function ShareButtons() {
+export function ShareButtons({ size = 'lg' }: { size?: string }) {
 	const { data: profile } = useProfile()
 	const signupUrl = `${window.location.origin}/signup?referrer=${profile?.uid}`
 	const shareData = useMemo(
@@ -55,18 +57,18 @@ function ShareButtons() {
 					url={signupUrl}
 					text="Copy link"
 					variant="secondary"
-					size="lg"
+					size={size}
 					collapse={false}
 				/>
 				<a
-					className={buttonVariants({ size: 'lg', variant: 'secondary' })}
+					className={buttonVariants({ size, variant: 'secondary' })}
 					href={`mailto:?subject=${encodeURIComponent(shareData.title)}&body=${encodeURIComponent(shareData.text)}`}
 				>
 					<Mail />
 					Email
 				</a>
 				<a
-					className={buttonVariants({ size: 'lg', variant: 'secondary' })}
+					className={buttonVariants({ size, variant: 'secondary' })}
 					href={`whatsapp://send?text=${encodeURIComponent(shareData.text)}`}
 				>
 					<Phone className="rounded-full p-px outline" />

@@ -1,18 +1,11 @@
-import {
-	createFileRoute,
-	Link,
-	Outlet,
-	useNavigate,
-} from '@tanstack/react-router'
+import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
 
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
-import { Contact, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
-
 import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
 import {
 	Card,
 	CardContent,
@@ -22,14 +15,14 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import Callout from '@/components/ui/callout'
-
-import { useRelations } from '@/lib/friends'
 import { ShowError } from '@/components/errors'
 import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import { searchPublicProfilesByUsername } from '@/lib/use-profile'
+import { ShareButtons } from './friends.invite'
+import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -49,52 +42,6 @@ function FriendRequestPage() {
 			<SearchProfiles />
 		</main>
 	)
-}
-
-function PendingInvitationsSection() {
-	const { data, isPending, error } = useRelations()
-
-	return !data?.uids.invitations?.length ?
-			<p
-				className={`text-muted-foreground mx-2 ${isPending ? 'invisible' : ''}`}
-			>
-				No friend requests pending for you.
-			</p>
-		:	<Card>
-				<CardHeader>
-					<CardTitle>
-						<div className="flex flex-row items-center justify-between">
-							<span>Invitations to connect</span>
-							<Link
-								to="/friends"
-								aria-disabled="true"
-								className={buttonVariants({
-									size: 'badge',
-									variant: 'outline',
-								})}
-							>
-								<Contact className="size-3" />{' '}
-								<span className="me-1">Friends list</span>
-							</Link>
-						</div>
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4">
-					{isPending ?
-						<Loader />
-					: error ?
-						<ShowError>{error.message}</ShowError>
-					:	data?.uids.invitations.map((uid) => (
-							<ProfileWithRelationship
-								key={uid}
-								// @TODO replace this with just passing the UID and have the
-								// component grab the relationship from a use-query+selector
-								profile={data?.relationsMap[uid].profile}
-							/>
-						))
-					}
-				</CardContent>
-			</Card>
 }
 
 export default function SearchProfiles() {
@@ -170,17 +117,11 @@ export default function SearchProfiles() {
 									<Loader />
 								</div>
 							: !(resultsToShow?.length > 0) ?
-								<Callout variant="ghost" Icon={() => <Garlic size={32} />}>
-									<p>No users match that search.</p>
+								<Callout variant="ghost" Icon={BigGarlic}>
 									<p>
-										<Link
-											className={buttonVariants({ variant: 'outline' })}
-											to="/friends/invite"
-											from={Route.fullPath}
-										>
-											Invite a friend to Sunlo
-										</Link>
+										No users match that search, but you can invite a friend!
 									</p>
+									<ShareButtons size="" />
 								</Callout>
 							:	<div className="my-6 space-y-2">
 									{resultsToShow.map((profile) => (
@@ -198,3 +139,7 @@ export default function SearchProfiles() {
 		</Card>
 	)
 }
+
+const BigGarlic = () => (
+	<Garlic className="bg-primary-foresoft/20 w-20 rounded-full p-3 @xl:p-4" />
+)

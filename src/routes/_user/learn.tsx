@@ -1,3 +1,4 @@
+import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
@@ -7,7 +8,7 @@ export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
 	loader: () => {
 		return {
-			appnav: ['/learn', '/learn/add-deck' /*'/learn/quick-search'*/],
+			appnav: ['/learn', '/friends', '/learn/add-deck'],
 			contextMenu: ['/learn/add-deck' /*'/learn/quick-search'*/],
 			titleBar: {
 				title: `Learning Home`,
@@ -19,5 +20,10 @@ export const Route = createFileRoute('/_user/learn')({
 })
 
 function LearnLayout() {
-	return <Outlet />
+	return (
+		<div className="space-y-4">
+			<PendingInvitationsSection shy />
+			<Outlet />
+		</div>
+	)
 }
