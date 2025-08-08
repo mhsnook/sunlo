@@ -1,18 +1,12 @@
 import type { ChatMessageRow, PublicProfileFull } from '@/types/main'
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import {
-	createFileRoute,
-	Link,
-	Outlet,
-	useNavigate,
-} from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { useQueryClient } from '@tanstack/react-query'
 import { Send } from 'lucide-react'
 import supabase from '@/lib/supabase-client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/lib/friends'
 import { cn } from '@/lib/utils'
@@ -190,30 +184,19 @@ function ChatPage() {
 			</CardContent>
 			<div className="border-t p-4">
 				<div className="relative">
-					<div className="flex items-center gap-2">
+					<Link
+						to="/friends/chats/$friendId/recommend"
+						params={{ friendId }}
+						className="flex items-center gap-2"
+					>
 						<Input
 							placeholder="Send a phrase recommendation..."
 							className="cursor-pointer"
-							onClick={() =>
-								void navigate({
-									to: '/friends/chats/$friendId/recommend',
-									params: { friendId },
-								})
-							}
 						/>
-						<Button
-							type="button"
-							size="icon"
-							onClick={() =>
-								void navigate({
-									to: '/friends/chats/$friendId/recommend',
-									params: { friendId },
-								})
-							}
-						>
+						<span className={buttonVariants({ size: 'icon' })}>
 							<Send className="h-4 w-4" />
-						</Button>
-					</div>
+						</span>
+					</Link>
 				</div>
 			</div>
 			<Outlet />
