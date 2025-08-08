@@ -88,7 +88,7 @@ export function AddTranslationsDialog({
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
 				<Button {...props}>
-					<Plus /> Add translation
+					<Plus className="text-muted-foreground size-4" /> Add translation
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="w-[92%] max-w-[425px]">

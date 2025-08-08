@@ -22,11 +22,11 @@ const buttonVariants = cva(
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-4 py-2 gap-2',
-				sm: 'h-9 rounded-xl px-3 gap-1 [&_svg]:size-3',
+				sm: 'h-9 rounded-2xl px-3 gap-1 [&_svg]:size-3',
 				lg: 'rounded-2xl px-8 py-4 text-xl font-medium gap-3 [&_svg]:size-6',
-				icon: 'size-10 rounded-full shrink-0',
+				icon: 'size-10 rounded-2xl shrink-0',
 				'icon-sm': 'size-6 rounded-full shrink-0',
-				badge: 'h-6 rounded-full font-sm px-2 gap-1 my-0',
+				badge: 'h-6 rounded-2xl font-sm px-2 gap-1 my-0',
 			},
 		},
 		defaultVariants: {
