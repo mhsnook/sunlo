@@ -65,7 +65,15 @@ export const Route = createFileRoute('/_user')({
 	pendingComponent: Loader,
 })
 
-type UserLayoutMatch = RouteMatch & {
+type UserLayoutMatch = RouteMatch<
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
+> & {
 	loaderData?: {
 		SecondSidebar?: ComponentType
 	}
@@ -75,7 +83,7 @@ function UserLayout() {
 	const matches = useMatches() as UserLayoutMatch[]
 	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
 	const SecondSidebar = match?.loaderData?.SecondSidebar
-	const sidebarExact = match?.id === matches.at(-1).id.slice(0, -1)
+	const sidebarExact = match && match?.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
 	const { userId } = useAuth()
 	useEffect(() => {
