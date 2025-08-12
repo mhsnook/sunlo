@@ -90,20 +90,18 @@ export const relationsQuery = (uidMe: uuid | null) =>
 		enabled: !!uidMe,
 	})
 
-const oneRelationQuery = (uidMe: uuid, uidOther: uuid) =>
-	queryOptions({
-		...relationsQuery(uidMe),
-		select: (data) => (!data ? null : data.relationsMap[uidOther]),
-	})
-
 export const useRelations = () => {
 	const { userId } = useAuth()
-	return useQuery({ ...relationsQuery(userId) })
+	return useQuery({ ...relationsQuery(userId), enabled: !!userId })
 }
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
-	return useQuery({ ...oneRelationQuery(userId!, uidToUse), enabled: !!userId })
+	return useQuery({
+		...relationsQuery(userId!),
+		select: (data) => (!data ? null : data.relationsMap[uidToUse]),
+		enabled: !!userId,
+	})
 }
 
 export const useFriendRequestAction = (uid_for: uuid) => {

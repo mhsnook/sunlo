@@ -224,6 +224,7 @@ export type FriendshipRow = {
 
 export type FriendSummary = Tables<'friend_summary'>
 export type FriendRequestActionInsert = TablesInsert<'friend_request_action'>
+export type FriendRequestActionRow = Tables<'friend_request_action'>
 export type FriendSummaryRaw = FriendSummary & {
 	profile_more: Tables<'public_profile'> | null
 	profile_less: Tables<'public_profile'> | null

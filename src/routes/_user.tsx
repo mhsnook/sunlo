@@ -1,10 +1,10 @@
-import type { ComponentType } from 'react'
+import { useEffect, type ComponentType } from 'react'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { profileQuery } from '@/lib/use-profile'
-import { TitleBar } from '@/types/main'
+import { FriendRequestActionRow, TitleBar } from '@/types/main'
 import {
 	createFileRoute,
 	Outlet,
@@ -14,6 +14,10 @@ import {
 } from '@tanstack/react-router'
 import { Home } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/lib/hooks'
+import supabase from '@/lib/supabase-client'
+import toast from 'react-hot-toast'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -72,7 +76,35 @@ function UserLayout() {
 	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
 	const SecondSidebar = match?.loaderData?.SecondSidebar
 	const sidebarExact = match?.id === matches.at(-1).id.slice(0, -1)
-	// console.log(matches, matches.at(-1), match, sidebarExact)
+	const queryClient = useQueryClient()
+	const { userId } = useAuth()
+	useEffect(() => {
+		if (!userId) return
+		const channel = supabase
+			.channel('friend-request-action-realtime')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'friend_request_action',
+					filter: `uid_for=eq.${userId}`,
+				},
+				(payload) => {
+					const newAction = payload.new as FriendRequestActionRow
+					if (newAction.action_type === 'accept')
+						toast.success('Friend request accepted')
+					// console.log(`new friend request action has come in`, payload)
+					void queryClient.invalidateQueries({
+						queryKey: ['user', userId, 'relations'],
+					})
+				}
+			)
+			.subscribe()
+		return () => {
+			void supabase.removeChannel(channel)
+		}
+	}, [userId, queryClient])
 
 	return (
 		<div className="flex h-screen w-full">
