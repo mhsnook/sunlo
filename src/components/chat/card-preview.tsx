@@ -57,7 +57,7 @@ export function CardPreview({
 						)}
 					</div>
 					<div className="flex flex-row flex-wrap gap-2">
-						<CardStatusDropdown pid={pid} lang={lang} action />
+						<CardStatusDropdown pid={pid} lang={lang} />
 						{!chosenTranslation && (
 							<AddTranslationsDialog
 								size="badge"

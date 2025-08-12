@@ -22,7 +22,6 @@ interface CardStatusDropdownProps {
 	lang: string
 	className?: string
 	button?: boolean
-	action?: boolean
 }
 
 // TODO check if we can get this from the supabase types?
@@ -31,7 +30,7 @@ type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
 const statusStrings = {
 	active: {
-		short: 'Active card',
+		short: 'Active',
 		long: 'Card is in your deck',
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
@@ -105,7 +104,6 @@ export function CardStatusDropdown({
 	lang,
 	className,
 	button = false,
-	action = false,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
@@ -178,8 +176,6 @@ export function CardStatusDropdown({
 							:	statusStrings[choice].icon()}{' '}
 							{cardMutation.data ?
 								statusStrings[choice].done
-							: action ?
-								statusStrings[choice].action
 							:	statusStrings[choice].long}
 						</span>
 					:	<span
@@ -191,9 +187,7 @@ export function CardStatusDropdown({
 							{cardMutation.isSuccess ?
 								<CheckCircle className="size-4 text-green-500" />
 							:	statusStrings[choice].icon()}{' '}
-							{action ?
-								statusStrings[choice].action
-							:	statusStrings[choice].short}
+							{statusStrings[choice].short}
 						</span>
 					}
 				</DropdownMenuTrigger>
