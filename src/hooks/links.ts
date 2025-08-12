@@ -21,6 +21,7 @@ import languages from '../lib/languages'
 import { useMemo } from 'react'
 import { LinkType } from '@/types/main'
 import { useParams } from '@tanstack/react-router'
+import { useRelations } from '@/lib/friends'
 
 const links = (lang?: string): Record<string, LinkType> => ({
 	'/': {
@@ -61,6 +62,9 @@ const links = (lang?: string): Record<string, LinkType> => ({
 		Icon: Send,
 		link: {
 			to: '/friends/invite',
+		},
+		useBadge: () => {
+			return useRelations()?.data?.attentionCount ?? null
 		},
 	},
 	'/learn': {

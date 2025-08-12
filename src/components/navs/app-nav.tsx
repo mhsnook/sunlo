@@ -10,6 +10,7 @@ import { useLinks } from '@/hooks/links'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 import { memo } from 'react'
+import { Badge } from '../ui/badge'
 
 type AppNavMatch = RouteMatch & {
 	loaderData?: {
@@ -65,6 +66,7 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 										>
 											{!l.Icon ? null : <l.Icon className="size-4" />}{' '}
 											<>{l.name}</>
+											{l.useBadge && <TinyBadge useContent={l.useBadge} />}
 										</Link>
 									</NavigationMenuLink>
 								</NavigationMenuItem>
@@ -77,3 +79,16 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 		</>
 	)
 })
+
+function TinyBadge({
+	useContent,
+}: {
+	useContent: () => string | number | null
+}) {
+	const content = useContent()
+	return content ?
+			<Badge variant="destructive" className="rounded-2xl">
+				{content}
+			</Badge>
+		:	null
+}

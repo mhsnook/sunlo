@@ -25,6 +25,7 @@ type FriendSummariesLoaded = {
 		invited: Array<uuid>
 		invitations: Array<uuid>
 	}
+	attentionCount: number
 }
 
 export const friendSummaryToRelative = (
@@ -51,7 +52,7 @@ export const friendSummaryToRelative = (
 	return res
 }
 
-export const relationsQuery = (uidMe: uuid | null) =>
+export const relationsQuery = (uidMe: uuid) =>
 	queryOptions({
 		queryKey: ['user', uidMe ?? '', 'relations'],
 		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
@@ -85,25 +86,26 @@ export const relationsQuery = (uidMe: uuid | null) =>
 						.filter((d) => d.status === 'pending' && !d.isMostRecentByMe)
 						.map((d) => d.uidOther),
 				},
+				attentionCount: data.filter(
+					(d) => d.status === 'pending' && d.most_recent_uid_by !== uid
+				).length,
 			} as FriendSummariesLoaded
 		},
 		enabled: !!uidMe,
 	})
 
-const oneRelationQuery = (uidMe: uuid, uidOther: uuid) =>
-	queryOptions({
-		...relationsQuery(uidMe),
-		select: (data) => (!data ? null : data.relationsMap[uidOther]),
-	})
-
 export const useRelations = () => {
 	const { userId } = useAuth()
-	return useQuery({ ...relationsQuery(userId) })
+	return useQuery({ ...relationsQuery(userId!), enabled: !!userId })
 }
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
-	return useQuery({ ...oneRelationQuery(userId!, uidToUse), enabled: !!userId })
+	return useQuery({
+		...relationsQuery(userId!),
+		select: (data) => (!data ? null : data.relationsMap[uidToUse]),
+		enabled: !!userId,
+	})
 }
 
 export const useFriendRequestAction = (uid_for: uuid) => {
