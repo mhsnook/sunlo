@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { BadgeProps, badgeVariants } from './badge-variants'
 import { OctagonMinus } from 'lucide-react'
 
-function Badge({ className, variant, size, ...props }: BadgeProps) {
+export function Badge({ className, variant, size, ...props }: BadgeProps) {
 	return (
 		<span
 			className={cn(badgeVariants({ variant, size }), className)}
@@ -11,10 +11,17 @@ function Badge({ className, variant, size, ...props }: BadgeProps) {
 	)
 }
 
-const OctogonMinusDangerBadge = (
+export const OctogonMinusDangerBadge = (
 	<Badge variant="destructive" className="p-2">
 		<OctagonMinus />
 	</Badge>
 )
 
-export { Badge, OctogonMinusDangerBadge }
+export function TinyBadge({
+	useBadge,
+}: {
+	useBadge: () => number | boolean | undefined | null
+}) {
+	const content = useBadge()
+	return content ? <Badge size="sm">{content}</Badge> : null
+}

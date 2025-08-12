@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Link } from '@tanstack/react-router'
 import { LinkType } from '@/types/main'
+import { TinyBadge } from '../ui/badge'
 
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
@@ -41,6 +42,9 @@ export default function OneSidebarMenu({
 							>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>
+								{item.useBadge ?
+									<TinyBadge useBadge={item.useBadge} />
+								:	null}
 							</Link>
 						</SidebarMenuButton>
 					</SidebarMenuItem>
