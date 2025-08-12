@@ -22,8 +22,9 @@ import languages from '../lib/languages'
 import { useMemo } from 'react'
 import { LinkType } from '@/types/main'
 import { useParams } from '@tanstack/react-router'
+import { useRelations } from '@/lib/friends'
 
-const links = (lang?: string): Record<string, LinkType> => ({
+const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 	'/': {
 		name: 'Home',
 		link: {
@@ -46,6 +47,7 @@ const links = (lang?: string): Record<string, LinkType> => ({
 		link: {
 			to: '/friends/requests',
 		},
+		useBadge: () => useRelations()?.data?.uids.invitations.length,
 	},
 	'/friends/chats': {
 		name: 'Chats',

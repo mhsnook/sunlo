@@ -6,8 +6,9 @@ import { cn } from '@/lib/utils'
 
 export function PendingRequestsHeader({ shy = false }) {
 	const { data, isPending } = useRelations()
+	const requestsCount = data?.uids.invitations?.length
 	return (
-		!data?.uids.invitations?.length ?
+		!requestsCount ?
 			shy ? null
 			:	<p
 					className={`text-muted-foreground mx-2 text-sm italic ${isPending ? 'invisible' : ''}`}
@@ -22,7 +23,8 @@ export function PendingRequestsHeader({ shy = false }) {
 					)}
 					to="/friends/requests"
 				>
-					<Badge>{data.uids.invitations.length}</Badge> pending friend requests
+					<Badge>{requestsCount}</Badge> pending friend{' '}
+					{requestsCount === 1 ? 'request' : 'requests'}
 				</Link>
 			</div>
 	)
