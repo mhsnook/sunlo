@@ -1,4 +1,4 @@
-import { PendingInvitationsSection } from '@/components/friends/pending-invites'
+import { PendingRequestsHeader } from '@/components/friends/pending-requests-header'
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_user/learn')({
 function LearnLayout() {
 	return (
 		<div className="space-y-4">
-			<PendingInvitationsSection shy />
+			<PendingRequestsHeader shy />
 			<Outlet />
 		</div>
 	)

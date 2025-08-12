@@ -13,7 +13,6 @@ import { useProfile } from '@/lib/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { useMemo } from 'react'
-import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 
 export const Route = createFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,
@@ -22,7 +21,6 @@ export const Route = createFileRoute('/_user/friends/invite')({
 function InviteFriendPage() {
 	return (
 		<div className="space-y-4">
-			<PendingInvitationsSection />
 			<Card>
 				<CardHeader>
 					<CardTitle>Invite a Friend</CardTitle>

@@ -22,7 +22,6 @@ import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import { searchPublicProfilesByUsername } from '@/lib/use-profile'
 import { ShareButtons } from './friends.invite'
-import { PendingInvitationsSection } from '@/components/friends/pending-invites'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -38,7 +37,6 @@ function FriendRequestPage() {
 	return (
 		<main className="flex flex-col gap-4">
 			<Outlet />
-			<PendingInvitationsSection />
 			<SearchProfiles />
 		</main>
 	)

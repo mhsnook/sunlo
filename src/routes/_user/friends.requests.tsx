@@ -1,28 +1,31 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { Link } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Contact } from 'lucide-react'
-import { Loader } from '../ui/loader'
-import { ShowError } from '../errors'
-import { ProfileWithRelationship } from '../profile-with-relationship'
+import { Loader } from '@/components/ui/loader'
+import { ShowError } from '@/components/errors'
+import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useRelations } from '@/lib/friends'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 
-export function PendingInvitationsSection({ shy = false }: { shy?: boolean }) {
+export const Route = createFileRoute('/_user/friends/requests')({
+	component: RouteComponent,
+})
+
+function RouteComponent() {
 	const { data, isPending, error } = useRelations()
 
-	return (
-		!data?.uids.invitations?.length ?
-			shy ? null
-			:	<p
-					className={`text-muted-foreground mx-2 text-sm italic ${isPending ? 'invisible' : ''}`}
-				>
-					No friend requests pending for you.
-				</p>
+	return !data?.uids.invitations?.length ?
+			<p
+				className={`text-muted-foreground mx-2 text-sm italic ${isPending ? 'invisible' : ''}`}
+			>
+				No friend requests pending for you.
+			</p>
 		:	<Card>
 				<CardHeader>
 					<CardTitle>
 						<div className="flex flex-row items-center justify-between">
-							<span>Invitations to connect</span>
+							<span>Requests to connect</span>
 							<Link
 								to="/friends"
 								aria-disabled="true"
@@ -53,5 +56,4 @@ export function PendingInvitationsSection({ shy = false }: { shy?: boolean }) {
 					}
 				</CardContent>
 			</Card>
-	)
 }

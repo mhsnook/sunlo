@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { useLanguage } from '@/lib/use-language'
+import { FriendProfiles } from './friends.index'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -48,62 +49,9 @@ function WelcomePage() {
 			:	<DeckOverview lang={lang} />}
 
 			<RecommendedPhrasesCard lang={lang} />
-			<Flagged name="friends_activity" className="hidden">
-				<FriendsSection lang={lang} />
-			</Flagged>
+			<FriendProfiles />
 			<DeckSettings lang={lang} />
 		</div>
-	)
-}
-
-// TODO the database doesn't have friendships yet so this is all mockup-y
-// and the type is also mocked
-function FriendsSection({ lang }: LangOnlyComponentProps) {
-	const profileQuery = useProfile()
-	if (profileQuery.data === null) return null
-
-	// const friendsThisLanguage =
-	// 	profileQuery.data?.friendships?.filter(
-	// 		(f: FriendshipRow) => f.helping_with.includes(lang)
-	// 	) || []
-
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Your Friends</CardTitle>
-				<CardDescription>
-					NB: This "your friends" section is mock content for wireframe purposes
-					only. The list below is not pulling from the database and doesn't
-					reflect your actual friends list or their activities.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<p>Recent activity in this deck</p>
-				<ul className="mb-4 ml-4 list-disc">
-					<li>somefriend (see recent activity or whatever)</li>
-					<li>a-money (you have a new phrase from them)</li>
-					<li>j-town (nothing special actually)</li>
-				</ul>
-				<div className="flex flex-row flex-wrap gap-2">
-					<Link
-						to="/friends/search"
-						search={{ lang }}
-						from={Route.fullPath}
-						className={buttonVariants({ variant: 'secondary' })}
-					>
-						<Search /> Find friends on Sunlo
-					</Link>
-					<Link
-						to="/friends/search"
-						search={{ lang }}
-						from={Route.fullPath}
-						className={buttonVariants({ variant: 'secondary' })}
-					>
-						<Send /> Invite new friends
-					</Link>
-				</div>
-			</CardContent>
-		</Card>
 	)
 }
 

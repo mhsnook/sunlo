@@ -2,6 +2,7 @@ import {
 	BookHeart,
 	ClipboardPlus,
 	FileText,
+	HandHeart,
 	HeartHandshake,
 	Home,
 	Lock,
@@ -31,11 +32,19 @@ const links = (lang?: string): Record<string, LinkType> => ({
 		Icon: Home,
 	},
 	'/friends': {
-		name: 'Contacts',
+		name: 'Friends',
 		title: 'Friends and contacts',
 		Icon: HeartHandshake,
 		link: {
 			to: '/friends',
+		},
+	},
+	'/friends/requests': {
+		name: 'Requests',
+		title: 'Friend requests',
+		Icon: HandHeart,
+		link: {
+			to: '/friends/requests',
 		},
 	},
 	'/friends/chats': {

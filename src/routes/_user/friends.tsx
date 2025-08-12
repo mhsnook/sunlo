@@ -16,6 +16,7 @@ export const Route = createFileRoute('/_user/friends')({
 			appnav: [
 				'/friends',
 				'/friends/chats',
+				'/friends/requests',
 				'/friends/invite',
 				'/friends/search',
 			],
