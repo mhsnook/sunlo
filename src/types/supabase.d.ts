@@ -14,7 +14,7 @@ export type Database = {
           content: Json | null
           created_at: string
           id: string
-          lang: string | null
+          lang: string
           message_type: Database["public"]["Enums"]["chat_message_type"]
           phrase_id: string | null
           recipient_uid: string
@@ -25,7 +25,7 @@ export type Database = {
           content?: Json | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang: string
           message_type: Database["public"]["Enums"]["chat_message_type"]
           phrase_id?: string | null
           recipient_uid: string
@@ -36,7 +36,7 @@ export type Database = {
           content?: Json | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang?: string
           message_type?: Database["public"]["Enums"]["chat_message_type"]
           phrase_id?: string | null
           recipient_uid?: string
@@ -340,6 +340,63 @@ export type Database = {
           },
         ]
       }
+      phrase_tag: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          phrase_id: string
+          tag_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          phrase_id: string
+          tag_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          phrase_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phrase_tag_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_tag_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_tag_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_tag_phrase_id_fkey"
+            columns: ["phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_tag_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tag"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       phrase_translation: {
         Row: {
           added_by: string | null
@@ -410,6 +467,59 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "phrase"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      tag: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          lang: string
+          name: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          lang: string
+          name: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          lang?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "tag_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "tag_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "tag_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
           },
         ]
       }
@@ -1051,6 +1161,10 @@ export type Database = {
         }
         Returns: string
       }
+      add_tags_to_phrase: {
+        Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
+        Returns: undefined
+      }
       are_friends: {
         Args: { uid1: string; uid2: string }
         Returns: boolean
@@ -1186,6 +1300,7 @@ export type Database = {
           owner: string | null
           owner_id: string | null
           public: boolean | null
+          type: Database["storage"]["Enums"]["buckettype"]
           updated_at: string | null
         }
         Insert: {
@@ -1198,6 +1313,7 @@ export type Database = {
           owner?: string | null
           owner_id?: string | null
           public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
           updated_at?: string | null
         }
         Update: {
@@ -1210,9 +1326,111 @@ export type Database = {
           owner?: string | null
           owner_id?: string | null
           public?: boolean | null
+          type?: Database["storage"]["Enums"]["buckettype"]
           updated_at?: string | null
         }
         Relationships: []
+      }
+      buckets_analytics: {
+        Row: {
+          created_at: string
+          format: string
+          id: string
+          type: Database["storage"]["Enums"]["buckettype"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          format?: string
+          id: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          format?: string
+          id?: string
+          type?: Database["storage"]["Enums"]["buckettype"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      iceberg_namespaces: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_namespaces_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_analytics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iceberg_tables: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          location: string
+          name: string
+          namespace_id: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          namespace_id: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          namespace_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iceberg_tables_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iceberg_tables_namespace_id_fkey"
+            columns: ["namespace_id"]
+            isOneToOne: false
+            referencedRelation: "iceberg_namespaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       migrations: {
         Row: {
@@ -1241,6 +1459,7 @@ export type Database = {
           created_at: string | null
           id: string
           last_accessed_at: string | null
+          level: number | null
           metadata: Json | null
           name: string | null
           owner: string | null
@@ -1255,6 +1474,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_accessed_at?: string | null
+          level?: number | null
           metadata?: Json | null
           name?: string | null
           owner?: string | null
@@ -1269,6 +1489,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           last_accessed_at?: string | null
+          level?: number | null
           metadata?: Json | null
           name?: string | null
           owner?: string | null
@@ -1281,6 +1502,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "objects_bucketId_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prefixes: {
+        Row: {
+          bucket_id: string
+          created_at: string | null
+          level: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string | null
+          level?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string | null
+          level?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prefixes_bucketId_fkey"
             columns: ["bucket_id"]
             isOneToOne: false
             referencedRelation: "buckets"
@@ -1391,9 +1644,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_prefixes: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: undefined
+      }
       can_insert_object: {
         Args: { bucketid: string; metadata: Json; name: string; owner: string }
         Returns: undefined
+      }
+      delete_prefix: {
+        Args: { _bucket_id: string; _name: string }
+        Returns: boolean
       }
       extension: {
         Args: { name: string }
@@ -1407,11 +1668,23 @@ export type Database = {
         Args: { name: string }
         Returns: string[]
       }
+      get_level: {
+        Args: { name: string }
+        Returns: number
+      }
+      get_prefix: {
+        Args: { name: string }
+        Returns: string
+      }
+      get_prefixes: {
+        Args: { name: string }
+        Returns: string[]
+      }
       get_size_by_bucket: {
         Args: Record<PropertyKey, never>
         Returns: {
-          size: number
           bucket_id: string
+          size: number
         }[]
       }
       list_multipart_uploads_with_delimiter: {
@@ -1424,9 +1697,9 @@ export type Database = {
           prefix_param: string
         }
         Returns: {
-          key: string
-          id: string
           created_at: string
+          id: string
+          key: string
         }[]
       }
       list_objects_with_delimiter: {
@@ -1439,9 +1712,9 @@ export type Database = {
           start_after?: string
         }
         Returns: {
-          name: string
           id: string
           metadata: Json
+          name: string
           updated_at: string
         }[]
       }
@@ -1461,17 +1734,74 @@ export type Database = {
           sortorder?: string
         }
         Returns: {
-          name: string
-          id: string
-          updated_at: string
           created_at: string
+          id: string
           last_accessed_at: string
           metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_legacy_v1: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v1_optimised: {
+        Args: {
+          bucketname: string
+          levels?: number
+          limits?: number
+          offsets?: number
+          prefix: string
+          search?: string
+          sortcolumn?: string
+          sortorder?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          last_accessed_at: string
+          metadata: Json
+          name: string
+          updated_at: string
+        }[]
+      }
+      search_v2: {
+        Args: {
+          bucket_name: string
+          levels?: number
+          limits?: number
+          prefix: string
+          start_after?: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+          key: string
+          metadata: Json
+          name: string
+          updated_at: string
         }[]
       }
     }
     Enums: {
-      [_ in never]: never
+      buckettype: "STANDARD" | "ANALYTICS"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1612,7 +1942,9 @@ export const Constants = {
     },
   },
   storage: {
-    Enums: {},
+    Enums: {
+      buckettype: ["STANDARD", "ANALYTICS"],
+    },
   },
 } as const
 

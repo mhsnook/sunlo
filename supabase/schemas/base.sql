@@ -128,6 +128,39 @@ alter function "public"."add_phrase_translation_card" (
 ) owner to "postgres";
 
 create
+or replace function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
+) returns "void" language "plpgsql" as $$
+DECLARE
+    tag_name text;
+    v_tag_id uuid;
+BEGIN
+    FOREACH tag_name IN ARRAY p_tags
+    LOOP
+        -- Upsert tag and get its ID
+        INSERT INTO public.tag (name, lang, added_by)
+        VALUES (tag_name, p_lang, auth.uid())
+        ON CONFLICT (name, lang) DO UPDATE
+        SET name = EXCLUDED.name -- This is a no-op to ensure RETURNING works
+        RETURNING id INTO v_tag_id;
+
+        -- Associate tag with phrase
+        INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
+        VALUES (p_phrase_id, v_tag_id, auth.uid())
+        ON CONFLICT (phrase_id, tag_id) DO NOTHING;
+    END LOOP;
+END;
+$$;
+
+alter function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
+) owner to "postgres";
+
+create
 or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
     SELECT 1
@@ -697,7 +730,8 @@ select
 	null::bigint as "rank_most_stable",
 	null::bigint as "rank_least_skipped",
 	null::bigint as "rank_most_learned",
-	null::bigint as "rank_newest";
+	null::bigint as "rank_newest",
+	null::"json" as "tags";
 
 alter table "public"."meta_phrase_info" owner to "postgres";
 
@@ -712,6 +746,16 @@ create table if not exists
 alter table "public"."phrase_relation" owner to "postgres";
 
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
+
+create table if not exists
+	"public"."phrase_tag" (
+		"phrase_id" "uuid" not null,
+		"tag_id" "uuid" not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."phrase_tag" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_translation" (
@@ -758,6 +802,17 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_card" (
@@ -1018,6 +1073,9 @@ add constraint "language_pkey" primary key ("lang");
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+
 alter table only "public"."user_profile"
 add constraint "profile_old_id_key" unique ("uid");
 
@@ -1026,6 +1084,12 @@ add constraint "profiles_pkey" primary key ("uid");
 
 alter table only "public"."user_profile"
 add constraint "profiles_username_key" unique ("username");
+
+alter table only "public"."tag"
+add constraint "tag_name_lang_key" unique ("name", "lang");
+
+alter table only "public"."tag"
+add constraint "tag_pkey" primary key ("id");
 
 alter table only "public"."user_card_review"
 add constraint "user_card_review_pkey" primary key ("id");
@@ -1134,11 +1198,23 @@ with
 					when ("c"."status" = 'skipped'::"public"."card_status") then 1
 					else 0
 				end
-			) as "count_skipped"
+			) as "count_skipped",
+			"json_agg" (
+				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
+			) filter (
+				where
+					("t"."id" is not null)
+			) as "tags"
 		from
 			(
-				"public"."phrase" "p"
-				left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
+				(
+					(
+						"public"."phrase" "p"
+						left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
+					)
+					left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
+				)
+				left join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
 			)
 		group by
 			"p"."id",
@@ -1216,7 +1292,8 @@ select
 			"results"."lang"
 		order by
 			"results"."created_at" desc
-	) as "rank_newest"
+	) as "rank_newest",
+	"results"."tags"
 from
 	"results";
 
@@ -1262,6 +1339,15 @@ add constraint "phrase_see_also_from_phrase_id_fkey" foreign key ("from_phrase_i
 alter table only "public"."phrase_relation"
 add constraint "phrase_see_also_to_phrase_id_fkey" foreign key ("to_phrase_id") references "public"."phrase" ("id");
 
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_tag_id_fkey" foreign key ("tag_id") references "public"."tag" ("id") on delete cascade;
+
 alter table only "public"."phrase_translation"
 add constraint "phrase_translation_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
 
@@ -1270,6 +1356,12 @@ add constraint "phrase_translation_lang_fkey" foreign key ("lang") references "p
 
 alter table only "public"."phrase_translation"
 add constraint "phrase_translation_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."tag"
+add constraint "tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."tag"
+add constraint "tag_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
 
 alter table only "public"."user_card"
 add constraint "user_card_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
@@ -1346,7 +1438,15 @@ create policy "Enable read access for all users" on "public"."phrase_relation" f
 select
 	using (true);
 
+create policy "Enable read access for all users" on "public"."phrase_tag" for
+select
+	using (true);
+
 create policy "Enable read access for all users" on "public"."phrase_translation" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."tag" for
 select
 	using (true);
 
@@ -1463,6 +1563,14 @@ create policy "User data only for this user" on "public"."user_deck" using (("au
 with
 	check (("auth"."uid" () = "uid"));
 
+create policy "Users can insert tags" on "public"."tag" for insert
+with
+	check (("auth"."role" () = 'authenticated'::"text"));
+
+create policy "Users can link tags to phrases" on "public"."phrase_tag" for insert
+with
+	check (("auth"."role" () = 'authenticated'::"text"));
+
 create policy "Users can send messages to friends" on "public"."chat_message" for insert
 with
 	check (
@@ -1491,7 +1599,11 @@ alter table "public"."phrase" enable row level security;
 
 alter table "public"."phrase_relation" enable row level security;
 
+alter table "public"."phrase_tag" enable row level security;
+
 alter table "public"."phrase_translation" enable row level security;
+
+alter table "public"."tag" enable row level security;
 
 alter table "public"."user_card" enable row level security;
 
@@ -1542,6 +1654,24 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
+) to "service_role";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
+) to "anon";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
+) to "authenticated";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
 ) to "service_role";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
@@ -1763,6 +1893,12 @@ grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
 
+grant all on table "public"."phrase_tag" to "anon";
+
+grant all on table "public"."phrase_tag" to "authenticated";
+
+grant all on table "public"."phrase_tag" to "service_role";
+
 grant all on table "public"."phrase_translation" to "anon";
 
 grant all on table "public"."phrase_translation" to "authenticated";
@@ -1780,6 +1916,12 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 
@@ -1846,5 +1988,121 @@ grant all on tables to "authenticated";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on tables to "service_role";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
+
+alter table only "public"."tag"
+add constraint "tag_pkey" primary key ("id");
+
+alter table only "public"."tag"
+add constraint "tag_name_lang_key" unique ("name", "lang");
+
+alter table only "public"."tag"
+add constraint "tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."tag"
+add constraint "tag_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
+
+alter table "public"."tag" enable row level security;
+
+create policy "Enable read access for all users" on "public"."tag" for
+select
+	using (true);
+
+create policy "Users can insert tags" on "public"."tag" for insert
+with
+	check (("auth"."role" () = 'authenticated'::"text"));
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
+
+create table if not exists
+	"public"."phrase_tag" (
+		"phrase_id" "uuid" not null,
+		"tag_id" "uuid" not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."phrase_tag" owner to "postgres";
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_tag_id_fkey" foreign key ("tag_id") references "public"."tag" ("id") on delete cascade;
+
+alter table only "public"."phrase_tag"
+add constraint "phrase_tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
+
+alter table "public"."phrase_tag" enable row level security;
+
+create policy "Enable read access for all users" on "public"."phrase_tag" for
+select
+	using (true);
+
+create policy "Users can link tags to phrases" on "public"."phrase_tag" for insert
+with
+	check (("auth"."role" () = 'authenticated'::"text"));
+
+grant all on table "public"."phrase_tag" to "anon";
+
+grant all on table "public"."phrase_tag" to "authenticated";
+
+grant all on table "public"."phrase_tag" to "service_role";
+
+create
+or replace function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text"[]
+) returns "void" language "plpgsql" as $body$
+DECLARE
+    tag_name text;
+    v_tag_id uuid;
+BEGIN
+    FOREACH tag_name IN ARRAY p_tags
+    LOOP
+        -- Upsert tag and get its ID
+        INSERT INTO public.tag (name, lang, added_by)
+        VALUES (tag_name, p_lang, auth.uid())
+        ON CONFLICT (name, lang) DO UPDATE
+        SET name = EXCLUDED.name -- This is a no-op to ensure RETURNING works
+        RETURNING id INTO v_tag_id;
+
+        -- Associate tag with phrase
+        INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
+        VALUES (p_phrase_id, v_tag_id, auth.uid())
+        ON CONFLICT (phrase_id, tag_id) DO NOTHING;
+    END LOOP;
+END;
+$body$;
+
+alter function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text"[]
+) owner to "postgres";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text"[]
+) to "authenticated";
 
 reset all;

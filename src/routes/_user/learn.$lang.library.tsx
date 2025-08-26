@@ -4,13 +4,17 @@ import languages from '@/lib/languages'
 import type { LangOnlyComponentProps } from '@/types/main'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import Callout from '@/components/ui/callout'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, SearchX } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
+import { useLanguage } from '@/lib/use-language'
 import { z } from 'zod'
+import { useMemo } from 'react'
 
 const filterEnum = z.enum([
 	'language_filtered',
@@ -21,7 +25,10 @@ const filterEnum = z.enum([
 	'language_no_translations',
 	'language',
 ])
-const SearchSchema = z.object({ filter: filterEnum.optional() })
+const SearchSchema = z.object({
+	filter: filterEnum.optional(),
+	tags: z.string().optional(),
+})
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
@@ -43,15 +50,38 @@ type FilterEnum = z.infer<typeof filterEnum>
 function DeckContents({ lang }: LangOnlyComponentProps) {
 	const pids = useDeckPidsAndRecs(lang)
 	const search = Route.useSearch()
+	const navigate = Route.useNavigate()
+	const { data: language } = useLanguage(lang)
 	const filter = search.filter || 'not_in_deck'
+	const tagsFilter = search.tags
+
+	const filteredPidsByStatus = pids[filter]
+
+	const filteredPids = useMemo(() => {
+		if (!tagsFilter) return filteredPidsByStatus
+		if (!language?.phrasesMap) return []
+
+		const selectedTags = tagsFilter.split(',').map((t) => t.trim())
+		if (selectedTags.length === 0) return filteredPidsByStatus
+
+		return filteredPidsByStatus.filter((pid) => {
+			const phrase = language.phrasesMap[pid]
+			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+			if (!phrase || !phrase.tags) return false
+			return selectedTags.every((selectedTag) =>
+				phrase.tags.some(
+					(phraseTag: { name: string }) => phraseTag.name === selectedTag
+				)
+			)
+		})
+	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
+
 	if (!pids) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recommended pids object'
 		)
 		return null
 	}
-
-	const filteredPids = pids[filter]
 
 	return (
 		<Card>
@@ -123,6 +153,25 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 						filter={filter}
 						text="No filters"
 						count={pids.language.length}
+					/>
+				</div>
+				<div className="mb-4">
+					<Label htmlFor="tags-filter">Filter by tags (comma-separated)</Label>
+					<Input
+						id="tags-filter"
+						placeholder="e.g. greeting, food"
+						defaultValue={tagsFilter}
+						onChange={(e) => {
+							// This should probably be debounced.
+							void navigate({
+								search: (prev) => ({
+									...prev,
+									tags: e.target.value || undefined,
+								}),
+								replace: true,
+								params: true,
+							})
+						}}
 					/>
 				</div>
 				{pids.language.length > 0 ?

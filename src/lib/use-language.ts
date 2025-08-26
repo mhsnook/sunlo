@@ -15,16 +15,12 @@ import type {
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
 
-const qs = {
-	phrase_full: () => `*, translations:phrase_translation(*)` as const,
-	language_full: () =>
-		`*, phrases:meta_phrase_info(${qs.phrase_full()})` as const,
-}
-
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
 		.from('language_plus')
-		.select(qs.language_full())
+		.select(
+			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*))`
+		)
 		.eq('lang', lang)
 		.maybeSingle()
 		.throwOnError()
