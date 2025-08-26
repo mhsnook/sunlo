@@ -1,4 +1,5 @@
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
+import { AddTags } from '@/components/add-tags'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import Flagged from '@/components/flagged'
 import CopyLinkButton from '@/components/copy-link-button'
@@ -52,6 +53,7 @@ function RouteComponent() {
 	const translations_mine =
 		phrasesMapFiltered[id].translations_mine ?? phrase.translations
 	const translations_other = phrasesMapFiltered[id].translations_other ?? []
+	const tags = phrase.tags ?? []
 
 	return (
 		<Card>
@@ -134,6 +136,20 @@ function RouteComponent() {
 							variant="outline"
 							className="mt-3"
 						/>
+					</div>
+
+					<Separator />
+
+					<div>
+						<h3 className="mb-3 text-lg font-medium">Tags</h3>
+						<div className="mb-2 flex flex-wrap gap-2">
+							{tags.map((tag: { id: string; name: string }) => (
+								<Badge key={tag.id} variant="secondary">
+									{tag.name}
+								</Badge>
+							))}
+						</div>
+						<AddTags phraseId={id} lang={lang} />
 					</div>
 
 					<Separator />

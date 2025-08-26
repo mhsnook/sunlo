@@ -46,11 +46,16 @@ function SearchTab() {
 	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
 		if (!pids || !phrasesMap) return []
 		return pids.map((pid: uuid) => {
+			const phrase = phrasesMap[pid]
+			const tagsText = (phrase.tags ?? [])
+				.map((t: { name: string }) => t.name)
+				.join(', ')
 			return {
 				pid,
 				text: [
-					phrasesMap[pid].text,
-					...phrasesMap[pid].translations.map((t) => t.text),
+					phrase.text,
+					...phrase.translations.map((t) => t.text),
+					tagsText,
 				].join(', '),
 			}
 		})
