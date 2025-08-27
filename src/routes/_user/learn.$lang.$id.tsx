@@ -61,41 +61,51 @@ function RouteComponent() {
 		<Card>
 			<CardHeader>
 				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-2">
+					<div className="flex flex-col items-start gap-2">
 						<CardTitle className="text-2xl">{phrase.text}</CardTitle>
-						<Badge variant="outline" className="ml-2">
-							{languages[lang]}
-						</Badge>
+						<div className="flex flex-row items-center gap-2">
+							<Badge variant="outline">{languages[lang]}</Badge>
+							<Badge variant="outline">
+								{!card ?
+									<span>Not in your deck</span>
+								: !card?.difficulty ?
+									<span>Never reviewed</span>
+								:	<>
+										<span>
+											Difficulty: {roundAndTrim(card.difficulty, 1)} / 10
+										</span>
+										<Flagged
+											className="flex flex-row items-center gap-1"
+											name="cards_schedule_metadata"
+										>
+											<span className="mx-2">•</span>
+											<Calendar className="h-4 w-4" />
+											<span>
+												Next review scheduled for{' '}
+												{card?.nextReview?.day ?? '"unknown"'} (in{' '}
+												{card?.nextReview?.daysFromNow ?? '4'} days)
+											</span>
+										</Flagged>
+									</>
+								}
+							</Badge>
+						</div>
 					</div>
 					<CardStatusDropdown pid={id} lang={lang} button />
-				</div>
-				<div className="text-muted-foreground static mt-2 block items-center gap-2 text-sm">
-					{!card ?
-						<span>This card is not in your deck</span>
-					: !card?.difficulty ?
-						<span>You haven't reviewed this card before</span>
-					:	<>
-							<span>Difficulty: {roundAndTrim(card.difficulty, 1)} / 10</span>
-							<Flagged
-								className="flex flex-row items-center gap-1"
-								name="cards_schedule_metadata"
-							>
-								<span className="mx-2">•</span>
-								<Calendar className="h-4 w-4" />
-								<span>
-									Next review scheduled for{' '}
-									{card?.nextReview?.day ?? '"unknown"'} (in{' '}
-									{card?.nextReview?.daysFromNow ?? '4'} days)
-								</span>
-							</Flagged>
-						</>
-					}
 				</div>
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-6">
 					<div>
-						<h3 className="mb-3 text-lg font-medium">Translations</h3>
+						<div className="mb-3 flex flex-row items-center gap-4">
+							<h3 className="text-lg font-medium">Translations</h3>
+							<AddTranslationsDialog
+								phrase={phrase}
+								variant="outline"
+								size="sm"
+								className=""
+							/>
+						</div>
 						<div className="space-y-3">
 							{translations_mine.map((translation) => (
 								<div key={translation.id} className="bg-muted rounded p-3">
@@ -133,11 +143,6 @@ function RouteComponent() {
 								</CollapsibleContent>
 							</Collapsible>
 						)}
-						<AddTranslationsDialog
-							phrase={phrase}
-							variant="outline"
-							className="mt-3"
-						/>
 					</div>
 
 					<Separator />
@@ -145,7 +150,7 @@ function RouteComponent() {
 					<div
 						className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
 					>
-						<div className="mb-3 flex flex-row items-center justify-between">
+						<div className="mb-3 flex flex-row items-center gap-4">
 							<h3 className="text-lg font-medium">Tags</h3>
 							<Button
 								variant="outline"
@@ -163,7 +168,7 @@ function RouteComponent() {
 									className={`${isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
 								>
 									<Pencil />
-									Edit tags
+									Add tags
 								</span>
 							</Button>
 						</div>
