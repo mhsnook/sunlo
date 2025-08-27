@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { uuid } from '@/types/main'
+import { LanguageLoaded, uuid } from '@/types/main'
 import { Save } from 'lucide-react'
 
 const addTagsSchema = z.object({
@@ -15,7 +15,15 @@ const addTagsSchema = z.object({
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
 
-export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
+export function AddTags({
+	phraseId,
+	lang,
+	onSuccess,
+}: {
+	phraseId: uuid
+	lang: string
+	onSuccess: () => void
+}) {
 	const queryClient = useQueryClient()
 	const {
 		register,
@@ -41,10 +49,29 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			})
 
 			if (error) throw error
+			return tagsArray
 		},
-		onSuccess: () => {
+		onSuccess: (data: string[]) => {
 			toast.success('Tags added!')
-			void queryClient.invalidateQueries({ queryKey: ['languages', lang] })
+			queryClient.setQueryData(
+				['language', lang],
+				(oldData: LanguageLoaded) => {
+					return {
+						...oldData,
+						phrasesMap: {
+							...oldData?.phrasesMap,
+							[phraseId]: {
+								...oldData?.phrasesMap[phraseId],
+								tags: [
+									...(oldData?.phrasesMap[phraseId]?.tags ?? []),
+									...data.map((d) => ({ id: d, name: d })),
+								],
+							},
+						},
+					}
+				}
+			)
+			onSuccess()
 			reset({ tags: '' })
 		},
 		onError: (error) => {
