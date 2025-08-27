@@ -174,7 +174,13 @@ function RouteComponent() {
 								</Badge>
 							))}
 						</div>
-						{isTagEditing && <AddTags phraseId={id} lang={lang} />}
+						{isTagEditing && (
+							<AddTags
+								onSuccess={() => setIsTagEditing(false)}
+								phraseId={id}
+								lang={lang}
+							/>
+						)}
 					</div>
 
 					<Separator />
