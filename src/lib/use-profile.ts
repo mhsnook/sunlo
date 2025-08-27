@@ -34,6 +34,7 @@ export const profileQuery = (userId: uuid | null) =>
 				...profile.languages_spoken.filter(
 					(l) => l !== profile.language_primary
 				),
+				...deckLanguages,
 			]
 			return {
 				...profile,
