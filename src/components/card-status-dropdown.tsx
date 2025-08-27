@@ -53,12 +53,7 @@ const statusStrings = {
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
-		icon: () => (
-			<CircleMinus
-				className="text-muted-foreground size-4"
-				aria-label="Skipped"
-			/>
-		),
+		icon: () => <CircleMinus className="size-4" aria-label="Skipped" />,
 	},
 	nocard: {
 		short: 'Add card',
@@ -66,9 +61,7 @@ const statusStrings = {
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => (
-			<Plus className="text-muted-foreground size-4" aria-label="Add card" />
-		),
+		icon: () => <Plus className="size-4" aria-label="Add card" />,
 	},
 	nodeck: {
 		short: 'Start deck',
@@ -76,12 +69,7 @@ const statusStrings = {
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
-		icon: () => (
-			<Plus
-				className="text-muted-foreground size-4"
-				aria-label="Start learning"
-			/>
-		),
+		icon: () => <Plus className="size-4" aria-label="Start learning" />,
 	},
 }
 
