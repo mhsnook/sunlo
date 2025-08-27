@@ -1,11 +1,9 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
 import type { LangOnlyComponentProps } from '@/types/main'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import Callout from '@/components/ui/callout'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Plus, SearchX } from 'lucide-react'
@@ -14,7 +12,10 @@ import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
 import { useLanguage } from '@/lib/use-language'
 import { z } from 'zod'
-import { useMemo } from 'react'
+import { useMemo, type SetStateAction } from 'react'
+import { FancyMultiSelect } from '@/components/ui/multi-select'
+import { useLanguageTags } from '@/lib/use-tags'
+import { Separator } from '@/components/ui/separator'
 
 const filterEnum = z.enum([
 	'language_filtered',
@@ -50,10 +51,34 @@ type FilterEnum = z.infer<typeof filterEnum>
 function DeckContents({ lang }: LangOnlyComponentProps) {
 	const pids = useDeckPidsAndRecs(lang)
 	const search = Route.useSearch()
-	const navigate = Route.useNavigate()
+	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: language } = useLanguage(lang)
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
+
+	const { data: allTags = [] } = useLanguageTags(lang)
+	const tagOptions = useMemo(
+		() => allTags.map((tag) => ({ value: tag.name, label: tag.name })),
+		[allTags]
+	)
+
+	const selectedTags = useMemo(
+		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
+		[tagsFilter]
+	)
+
+	const setSelectedTags = (value: SetStateAction<string[]>) => {
+		const newSelectedTags =
+			typeof value === 'function' ? value(selectedTags) : value
+		void navigate({
+			search: (prev) => ({
+				...prev,
+				tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
+			}),
+			replace: true,
+			params: true,
+		})
+	}
 
 	const filteredPidsByStatus = pids[filter]
 
@@ -69,7 +94,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
 			if (!phrase || !phrase.tags) return false
 			return selectedTags.every((selectedTag) =>
-				phrase.tags.some(
+				phrase.tags?.some(
 					(phraseTag: { name: string }) => phraseTag.name === selectedTag
 				)
 			)
@@ -156,24 +181,17 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 					/>
 				</div>
 				<div className="mb-4">
-					<Label htmlFor="tags-filter">Filter by tags (comma-separated)</Label>
-					<Input
-						id="tags-filter"
-						placeholder="e.g. greeting, food"
-						defaultValue={tagsFilter}
-						onChange={(e) => {
-							// This should probably be debounced.
-							void navigate({
-								search: (prev) => ({
-									...prev,
-									tags: e.target.value || undefined,
-								}),
-								replace: true,
-								params: true,
-							})
-						}}
+					<FancyMultiSelect
+						options={tagOptions}
+						selected={selectedTags}
+						setSelected={setSelectedTags}
+						placeholder="Filter by tags..."
 					/>
 				</div>
+				<Separator className="mt-6 mb-2" />
+				<p className="text-muted-foreground pb-2 text-right text-xs italic">
+					{filteredPids.length} of {pids.language.length} phrases
+				</p>
 				{pids.language.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						{filteredPids.length > 0 ?
