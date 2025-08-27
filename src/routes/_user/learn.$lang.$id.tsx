@@ -12,7 +12,7 @@ import languages from '@/lib/languages'
 import { useDeckCard } from '@/lib/use-deck'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Calendar, ChevronsUpDown, OctagonMinus } from 'lucide-react'
+import { Calendar, ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import {
 	Collapsible,
@@ -22,6 +22,7 @@ import {
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { roundAndTrim } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 const DestructiveOctagon = () => (
 	<Badge variant="destructive" className="p-2">
@@ -43,6 +44,7 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
+	const [isTagEditing, setIsTagEditing] = useState(false)
 	const { data: phrase } = useLanguagePhrase(id, lang)
 	const { data: card } = useDeckCard(id, lang)
 	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
@@ -140,8 +142,31 @@ function RouteComponent() {
 
 					<Separator />
 
-					<div>
-						<h3 className="mb-3 text-lg font-medium">Tags</h3>
+					<div
+						className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
+					>
+						<div className="mb-3 flex flex-row items-center justify-between">
+							<h3 className="text-lg font-medium">Tags</h3>
+							<Button
+								variant="outline"
+								size="sm"
+								className="grid grid-cols-1 grid-rows-1 place-items-center [grid-template-areas:'stack']"
+								onClick={() => setIsTagEditing(!isTagEditing)}
+							>
+								<span
+									className={`${!isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
+								>
+									<X />
+									Cancel
+								</span>
+								<span
+									className={`${isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
+								>
+									<Pencil />
+									Edit tags
+								</span>
+							</Button>
+						</div>
 						<div className="mb-2 flex flex-wrap gap-2">
 							{tags.map((tag: { id: string; name: string }) => (
 								<Badge key={tag.id} variant="secondary">
@@ -149,7 +174,7 @@ function RouteComponent() {
 								</Badge>
 							))}
 						</div>
-						<AddTags phraseId={id} lang={lang} />
+						{isTagEditing && <AddTags phraseId={id} lang={lang} />}
 					</div>
 
 					<Separator />

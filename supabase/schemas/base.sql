@@ -139,12 +139,19 @@ DECLARE
 BEGIN
     FOREACH tag_name IN ARRAY p_tags
     LOOP
-        -- Upsert tag and get its ID
-        INSERT INTO public.tag (name, lang, added_by)
-        VALUES (tag_name, p_lang, auth.uid())
-        ON CONFLICT (name, lang) DO UPDATE
-        SET name = EXCLUDED.name -- This is a no-op to ensure RETURNING works
-        RETURNING id INTO v_tag_id;
+        -- Upsert tag and get its ID, avoiding RLS issues with ON CONFLICT DO UPDATE
+        WITH new_tag AS (
+            INSERT INTO public.tag (name, lang, added_by)
+            VALUES (tag_name, p_lang, auth.uid())
+            ON CONFLICT (name, lang) DO NOTHING
+            RETURNING id
+        )
+        SELECT id INTO v_tag_id FROM new_tag;
+
+        -- If the insert did nothing (because the tag already existed), select the existing tag's ID.
+        IF v_tag_id IS NULL THEN
+            SELECT id INTO v_tag_id FROM public.tag WHERE name = tag_name AND lang = p_lang;
+        END IF;
 
         -- Associate tag with phrase
         INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
@@ -1988,121 +1995,5 @@ grant all on tables to "authenticated";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on tables to "service_role";
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
-
-alter table only "public"."tag"
-add constraint "tag_pkey" primary key ("id");
-
-alter table only "public"."tag"
-add constraint "tag_name_lang_key" unique ("name", "lang");
-
-alter table only "public"."tag"
-add constraint "tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
-
-alter table only "public"."tag"
-add constraint "tag_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
-
-alter table "public"."tag" enable row level security;
-
-create policy "Enable read access for all users" on "public"."tag" for
-select
-	using (true);
-
-create policy "Users can insert tags" on "public"."tag" for insert
-with
-	check (("auth"."role" () = 'authenticated'::"text"));
-
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
-
-create table if not exists
-	"public"."phrase_tag" (
-		"phrase_id" "uuid" not null,
-		"tag_id" "uuid" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."phrase_tag" owner to "postgres";
-
-alter table only "public"."phrase_tag"
-add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
-
-alter table only "public"."phrase_tag"
-add constraint "phrase_tag_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
-
-alter table only "public"."phrase_tag"
-add constraint "phrase_tag_tag_id_fkey" foreign key ("tag_id") references "public"."tag" ("id") on delete cascade;
-
-alter table only "public"."phrase_tag"
-add constraint "phrase_tag_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
-
-alter table "public"."phrase_tag" enable row level security;
-
-create policy "Enable read access for all users" on "public"."phrase_tag" for
-select
-	using (true);
-
-create policy "Users can link tags to phrases" on "public"."phrase_tag" for insert
-with
-	check (("auth"."role" () = 'authenticated'::"text"));
-
-grant all on table "public"."phrase_tag" to "anon";
-
-grant all on table "public"."phrase_tag" to "authenticated";
-
-grant all on table "public"."phrase_tag" to "service_role";
-
-create
-or replace function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text"[]
-) returns "void" language "plpgsql" as $body$
-DECLARE
-    tag_name text;
-    v_tag_id uuid;
-BEGIN
-    FOREACH tag_name IN ARRAY p_tags
-    LOOP
-        -- Upsert tag and get its ID
-        INSERT INTO public.tag (name, lang, added_by)
-        VALUES (tag_name, p_lang, auth.uid())
-        ON CONFLICT (name, lang) DO UPDATE
-        SET name = EXCLUDED.name -- This is a no-op to ensure RETURNING works
-        RETURNING id INTO v_tag_id;
-
-        -- Associate tag with phrase
-        INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
-        VALUES (p_phrase_id, v_tag_id, auth.uid())
-        ON CONFLICT (phrase_id, tag_id) DO NOTHING;
-    END LOOP;
-END;
-$body$;
-
-alter function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text"[]
-) owner to "postgres";
-
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text"[]
-) to "authenticated";
 
 reset all;

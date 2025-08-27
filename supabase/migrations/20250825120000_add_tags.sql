@@ -87,12 +87,19 @@ DECLARE
 BEGIN
     FOREACH tag_name IN ARRAY p_tags
     LOOP
-        -- Upsert tag and get its ID
-        INSERT INTO public.tag (name, lang, added_by)
-        VALUES (tag_name, p_lang, auth.uid())
-        ON CONFLICT (name, lang) DO UPDATE
-        SET name = EXCLUDED.name -- This is a no-op to ensure RETURNING works
-        RETURNING id INTO v_tag_id;
+        -- Upsert tag and get its ID, avoiding RLS issues with ON CONFLICT DO UPDATE
+        WITH new_tag AS (
+            INSERT INTO public.tag (name, lang, added_by)
+            VALUES (tag_name, p_lang, auth.uid())
+            ON CONFLICT (name, lang) DO NOTHING
+            RETURNING id
+        )
+        SELECT id INTO v_tag_id FROM new_tag;
+
+        -- If the insert did nothing (because the tag already existed), select the existing tag's ID.
+        IF v_tag_id IS NULL THEN
+            SELECT id INTO v_tag_id FROM public.tag WHERE name = tag_name AND lang = p_lang;
+        END IF;
 
         -- Associate tag with phrase
         INSERT INTO public.phrase_tag (phrase_id, tag_id, added_by)
