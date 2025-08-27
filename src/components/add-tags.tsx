@@ -7,7 +7,7 @@ import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { uuid } from '@/types/main'
-import { Plus } from 'lucide-react'
+import { Save } from 'lucide-react'
 
 const addTagsSchema = z.object({
 	tags: z.string().min(1, 'Enter at least one tag, comma-separated.'),
@@ -71,11 +71,10 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			</div>
 			<Button
 				type="submit"
-				size="icon"
 				variant="outline"
 				disabled={addTagsMutation.isPending}
 			>
-				<Plus />
+				<Save /> Add
 			</Button>
 		</form>
 	)
