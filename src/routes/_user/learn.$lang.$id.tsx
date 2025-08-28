@@ -179,13 +179,15 @@ function RouteComponent() {
 								</Badge>
 							))}
 						</div>
-						{isTagEditing && (
-							<AddTags
-								onSuccess={() => setIsTagEditing(false)}
-								phraseId={id}
-								lang={lang}
-							/>
-						)}
+						<div className={`${isTagEditing ? 'h-10' : 'h-0'} transition-all`}>
+							{isTagEditing && (
+								<AddTags
+									onSuccess={() => setIsTagEditing(false)}
+									phraseId={id}
+									lang={lang}
+								/>
+							)}
+						</div>
 					</div>
 
 					<Separator />
