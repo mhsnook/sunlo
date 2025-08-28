@@ -990,6 +990,7 @@ export type Database = {
           rank_most_learned: number | null
           rank_most_stable: number | null
           rank_newest: number | null
+          tags: Json | null
           text: string | null
         }
         Relationships: [
