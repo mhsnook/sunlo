@@ -84,7 +84,7 @@
 		"postcss": "^8.5.3",
 		"prettier": "3.3.3",
 		"prettier-plugin-tailwindcss": "^0.6.11",
-		"supabase": "^2.30.4",
+		"supabase": "^2.39.2",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss": "^4.1.8",
 		"typescript": "^5.8.3",
