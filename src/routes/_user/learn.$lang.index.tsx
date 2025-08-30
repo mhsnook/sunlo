@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
+dayjs.extend(isoWeek)
 import { ago } from '@/lib/dayjs'
 import { useDeck, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
@@ -29,7 +31,6 @@ import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { useLanguage } from '@/lib/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
-import { Separator } from '@radix-ui/react-separator'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -61,6 +62,25 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data: deckPids } = useDeckPids(lang)
 	const { data: deck } = useDeck(lang)
 	if (!deckMeta || !deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+
+	const routineStats = useMemo(() => {
+		if (!deck?.reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
+
+		const today = dayjs()
+		const mostRecentMonday = today.isoWeekday(1)
+		const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
+
+		let daysMet = 0
+		for (let i = 0; i < daysSoFar; i++) {
+			const dayToCheck = mostRecentMonday.add(i, 'day')
+			const dayKey = dayToCheck.format('YYYY-MM-DD')
+			const reviewsForDay = deck.reviewsDayMap[dayKey] || []
+			if (reviewsForDay.length >= 15) {
+				daysMet++
+			}
+		}
+		return { daysMet, daysSoFar }
+	}, [deck?.reviewsDayMap])
 
 	const activityChartData = useMemo(() => {
 		if (!deck?.reviewsDayMap) return []
@@ -115,9 +135,17 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
 				<p>Your last review was {ago(deckMeta.most_recent_review_at)}</p>
-				<Flagged name="routines_goals">
-					<p>You've kept up with your routine 4 out of 5 days this week</p>
-				</Flagged>
+				<p>
+					{(
+						routineStats.daysMet === routineStats.daysSoFar &&
+						routineStats.daysSoFar > 1
+					) ?
+						`You've kept up with your routine all ${routineStats.daysSoFar} days this week!`
+					:	`You've kept up with your routine ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+							routineStats.daysSoFar === 1 ? 'day' : 'days'
+						} this week.`
+					}
+				</p>
 				<p>
 					{deckPids?.today_active.length} active cards are scheduled for today,
 					along with 15 new ones
