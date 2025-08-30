@@ -100,7 +100,7 @@ export function FancyMultiSelect({
 										type="button"
 										onClick={() => handleUnselect(value)}
 									>
-										<X className="text-muted-foreground hover:text-foreground h-3 w-3" />
+										<X className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer" />
 									</button>
 								</Badge>
 							)
