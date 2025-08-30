@@ -158,6 +158,8 @@ export type DeckLoaded = {
 	meta: DeckMeta
 	pids: DeckPids
 	cardsMap: CardsMap
+	reviews: Array<ReviewRow>
+	reviewsDayMap: { [key: string]: Array<ReviewRow> }
 }
 
 export type CardRow = Tables<'user_card'>
