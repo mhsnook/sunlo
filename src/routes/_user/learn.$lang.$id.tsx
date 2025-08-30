@@ -4,15 +4,15 @@ import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import Flagged from '@/components/flagged'
 import CopyLinkButton from '@/components/copy-link-button'
 import SharePhraseButton from '@/components/share-phrase-button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, LangBadge } from '@/components/ui/badge'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
 import { useDeckCard } from '@/lib/use-deck'
 import { useLanguagePhrase } from '@/lib/use-language'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { Calendar, ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
+import { createFileRoute } from '@tanstack/react-router'
+import { ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import {
 	Collapsible,
@@ -58,100 +58,85 @@ function RouteComponent() {
 	const tags = phrase.tags ?? []
 
 	return (
-		<Card>
-			<CardHeader>
-				<div className="flex items-center justify-between">
-					<div className="flex flex-col items-start gap-2">
-						<CardTitle className="text-2xl">{phrase.text}</CardTitle>
-						<div className="flex flex-row items-center gap-2">
-							<Badge variant="outline">{languages[lang]}</Badge>
-							<Badge variant="outline">
-								{!card ?
-									<span>Not in your deck</span>
-								: !card?.difficulty ?
-									<span>Never reviewed</span>
-								:	<>
-										<span>
-											Difficulty: {roundAndTrim(card.difficulty, 1)} / 10
-										</span>
-										<Flagged
-											className="flex flex-row items-center gap-1"
-											name="cards_schedule_metadata"
-										>
-											<span className="mx-2">•</span>
-											<Calendar className="h-4 w-4" />
-											<span>
-												Next review scheduled for{' '}
-												{card?.nextReview?.day ?? '"unknown"'} (in{' '}
-												{card?.nextReview?.daysFromNow ?? '4'} days)
-											</span>
-										</Flagged>
-									</>
-								}
-							</Badge>
+		<div>
+			<Card>
+				<CardHeader>
+					<div className="flex items-center justify-between">
+						<div className="flex flex-col items-start gap-2">
+							<div className="flex flex-row items-center gap-2">
+								<LangBadge lang={lang} />
+								<CardStatusDropdown pid={id} lang={lang} />
+							</div>
+							<CardTitle className="space-x-1 text-2xl">
+								<span>&ldquo;{phrase.text}&rdquo;</span>
+							</CardTitle>
 						</div>
 					</div>
-					<CardStatusDropdown pid={id} lang={lang} button />
-				</div>
-			</CardHeader>
-			<CardContent>
-				<div className="space-y-6">
-					<div>
-						<div className="mb-3 flex flex-row items-center gap-4">
-							<h3 className="text-lg font-medium">Translations</h3>
-							<AddTranslationsDialog
-								phrase={phrase}
-								variant="outline"
-								size="sm"
-								className=""
-							/>
-						</div>
-						<div className="space-y-3">
-							{translations_mine.map((translation) => (
-								<div key={translation.id} className="bg-muted rounded p-3">
-									<div className="flex items-center justify-between">
+				</CardHeader>
+
+				<CardContent>
+					<div className="space-y-6">
+						<Separator />
+						<div>
+							<div className="space-y-3">
+								{translations_mine.map((translation) => (
+									<div
+										key={translation.id}
+										className="flex flex-row items-center justify-start gap-2 space-y-2 rounded"
+									>
+										<LangBadge lang={translation.lang} />
 										<p className="text-md">{translation.text}</p>
-										<Badge variant="outline">
-											{languages[translation.lang]}
-										</Badge>
 									</div>
-								</div>
-							))}
-						</div>
-						{translations_other.length === 0 ? null : (
-							<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-								<CollapsibleTrigger
-									className={buttonVariants({ variant: 'link', size: 'sm' })}
-								>
-									<ChevronsUpDown className="h-4 w-4" />
-									{isOpen ? 'Hide extra' : 'Show hidden'} translations
-								</CollapsibleTrigger>
-								<CollapsibleContent className="space-y-3">
-									{translations_other.map((translation) => (
-										<div
-											key={translation.id}
-											className="bg-muted rounded-lg p-3"
-										>
-											<div className="flex items-center justify-between">
-												<p className="text-md">{translation.text}</p>
-												<Badge variant="outline">
-													{languages[translation.lang]}
-												</Badge>
+								))}
+								<AddTranslationsDialog
+									phrase={phrase}
+									variant="outline"
+									size="sm"
+								/>
+							</div>
+							{translations_other.length === 0 ? null : (
+								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
+									<CollapsibleTrigger
+										className={buttonVariants({ variant: 'link', size: 'sm' })}
+									>
+										<ChevronsUpDown className="h-4 w-4" />
+										{isOpen ? 'Hide extra' : 'Show hidden'} translations
+									</CollapsibleTrigger>
+									<CollapsibleContent className="space-y-3">
+										{translations_other.map((translation) => (
+											<div
+												key={translation.id}
+												className="bg-muted rounded-lg p-3"
+											>
+												<div className="flex items-center justify-between">
+													<p className="text-md">{translation.text}</p>
+													<Badge variant="outline">
+														{languages[translation.lang]}
+													</Badge>
+												</div>
 											</div>
-										</div>
-									))}
-								</CollapsibleContent>
-							</Collapsible>
-						)}
-					</div>
+										))}
+									</CollapsibleContent>
+								</Collapsible>
+							)}
+						</div>
 
-					<Separator />
+						<Separator />
 
-					<div
-						className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
-					>
-						<div className="mb-3 flex flex-row items-center gap-4">
-							<h3 className="text-lg font-medium">Tags</h3>
+						<div
+							className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
+						>
+							<div className="mb-3 inline-flex flex-row flex-wrap items-center gap-2">
+								<h3 className="sr-only">Tags</h3>
+								{tags.map((tag: { id: string; name: string }) => (
+									<Badge key={tag.id} variant="secondary">
+										{tag.name}
+									</Badge>
+								))}
+								{!tags.length && (
+									<p className="text-muted-foreground italic">No tags</p>
+								)}
+							</div>
 							<Button
 								variant="outline"
 								size="sm"
@@ -171,46 +156,39 @@ function RouteComponent() {
 									Add tags
 								</span>
 							</Button>
-						</div>
-						<div className="mb-2 flex flex-wrap gap-2">
-							{tags.map((tag: { id: string; name: string }) => (
-								<Badge key={tag.id} variant="secondary">
-									{tag.name}
-								</Badge>
-							))}
-						</div>
-						<div className={`${isTagEditing ? 'h-10' : 'h-0'} transition-all`}>
-							{isTagEditing && (
-								<AddTags
-									onSuccess={() => setIsTagEditing(false)}
-									phraseId={id}
-									lang={lang}
-								/>
-							)}
+							<div className="mb-2 flex flex-wrap gap-2"></div>
+							<div
+								className={`${isTagEditing ? 'h-10' : 'h-0'} transition-all`}
+							>
+								{isTagEditing && (
+									<AddTags
+										onSuccess={() => setIsTagEditing(false)}
+										phraseId={id}
+										lang={lang}
+									/>
+								)}
+							</div>
 						</div>
 					</div>
+				</CardContent>
+			</Card>
+			<div className="grid w-full flex-grow grid-cols-2 justify-stretch gap-4 px-2 py-3">
+				<CopyLinkButton variant="outline" size="default" />
+				<SharePhraseButton
+					pid={id}
+					lang={lang}
+					variant="outline"
+					size="default"
+				/>
 
-					<Separator />
-
-					<div className="flex flex-wrap place-items-center justify-between">
-						<CopyLinkButton variant="outline" size="default" />
-						<SharePhraseButton
-							pid={id}
-							lang={lang}
-							variant="outline"
-							size="default"
-						/>
-
-						<Link
+				{/*<Link
 							to={`/learn/$lang/library`}
 							params={{ lang }}
 							className={buttonVariants({ variant: 'secondary' })}
 						>
 							Back to library
-						</Link>
-					</div>
-				</div>
-			</CardContent>
-		</Card>
+						</Link>*/}
+			</div>
+		</div>
 	)
 }
