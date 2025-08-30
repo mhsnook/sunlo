@@ -127,29 +127,51 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) owner to "postgres";
 
+set
+	default_tablespace = '';
+
+set
+	default_table_access_method = "heap";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
+
 create
 or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
-) returns "void" language "plpgsql" as $$
+) returns setof "public"."tag" language "plpgsql" as $$
 DECLARE
     tag_name text;
     v_tag_id uuid;
+    new_tag_record public.tag;
 BEGIN
     FOREACH tag_name IN ARRAY p_tags
     LOOP
-        -- Upsert tag and get its ID, avoiding RLS issues with ON CONFLICT DO UPDATE
+        -- Upsert tag and get its ID. If a new tag is created, it will be returned.
         WITH new_tag AS (
             INSERT INTO public.tag (name, lang, added_by)
             VALUES (tag_name, p_lang, auth.uid())
             ON CONFLICT (name, lang) DO NOTHING
-            RETURNING id
+            RETURNING *
         )
-        SELECT id INTO v_tag_id FROM new_tag;
+        SELECT * INTO new_tag_record FROM new_tag;
 
-        -- If the insert did nothing (because the tag already existed), select the existing tag's ID.
-        IF v_tag_id IS NULL THEN
+        -- If a new tag was created, add it to our return set and get its ID.
+        IF new_tag_record.id IS NOT NULL THEN
+            v_tag_id := new_tag_record.id;
+            RETURN NEXT new_tag_record;
+        ELSE
+            -- If the insert did nothing (because the tag already existed), select the existing tag's ID.
             SELECT id INTO v_tag_id FROM public.tag WHERE name = tag_name AND lang = p_lang;
         END IF;
 
@@ -333,12 +355,6 @@ alter function "public"."fsrs_stability" (
 	"review_time_retrievability" numeric,
 	"score" integer
 ) owner to "postgres";
-
-set
-	default_tablespace = '';
-
-set
-	default_table_access_method = "heap";
 
 create table if not exists
 	"public"."user_card_review" (
@@ -628,17 +644,6 @@ alter table "public"."phrase" owner to "postgres";
 comment on column "public"."phrase"."added_by" is 'User who added this card';
 
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_deck" (
@@ -1671,6 +1676,12 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) to "service_role";
 
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
+
 grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
@@ -1883,12 +1894,6 @@ grant all on table "public"."phrase" to "anon";
 grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
-
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_deck" to "anon";
 

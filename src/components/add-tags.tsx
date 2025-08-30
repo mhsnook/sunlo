@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { LanguageLoaded, uuid } from '@/types/main'
+import { LanguageLoaded, Tag, uuid } from '@/types/main'
 import { Save } from 'lucide-react'
 
 const addTagsSchema = z.object({
@@ -42,21 +42,27 @@ export function AddTags({
 				.filter(Boolean)
 			if (tagsArray.length === 0) return
 
-			const { error } = await supabase.rpc('add_tags_to_phrase', {
+			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
 				p_phrase_id: phraseId,
 				p_lang: lang,
 				p_tags: tagsArray,
 			})
 
 			if (error) throw error
-			return tagsArray
+			return { tagsToAddToPhrase: tagsArray, tagsAddedToLang: data }
 		},
-		onSuccess: (data: string[]) => {
+		onSuccess: ({
+			tagsToAddToPhrase,
+			tagsAddedToLang,
+		}: {
+			tagsToAddToPhrase: string[]
+			tagsAddedToLang: Tag[]
+		}) => {
 			toast.success('Tags added!')
 			queryClient.setQueryData(
 				['language', lang],
 				(oldData: LanguageLoaded) => {
-					return {
+					const newData = {
 						...oldData,
 						phrasesMap: {
 							...oldData?.phrasesMap,
@@ -64,11 +70,21 @@ export function AddTags({
 								...oldData?.phrasesMap[phraseId],
 								tags: [
 									...(oldData?.phrasesMap[phraseId]?.tags ?? []),
-									...data.map((d) => ({ id: d, name: d })),
+									...tagsToAddToPhrase.map((d) => ({ id: d, name: d })),
 								],
 							},
 						},
 					}
+
+					if (tagsAddedToLang.length) {
+						const newTagNames = tagsAddedToLang.map((t) => t.name)
+						newData.meta.tags = [
+							...(oldData.meta.tags ?? []),
+							...newTagNames,
+						].filter((t, i, a) => a.indexOf(t) === i)
+					}
+
+					return newData
 				}
 			)
 			onSuccess()
