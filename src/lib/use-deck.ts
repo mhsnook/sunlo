@@ -19,15 +19,10 @@ import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { inLastWeek } from './dayjs'
 
-const qs = {
-	card_full: `*, reviews:user_card_review(*)` as const,
-	deck_full: () => `*, cards:user_card_plus(${qs.card_full})` as const,
-}
-
 async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const { data } = await supabase
 		.from('user_deck_plus')
-		.select(qs.deck_full())
+		.select(`*, cards:user_card_plus(*, reviews:user_card_review(*))`)
 		.eq('lang', lang)
 		.eq('uid', uid)
 		.maybeSingle()
@@ -37,6 +32,9 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
 		)
 	const { cards: cardsArray, ...meta }: DeckFetched = data
+	const reviews = cardsArray.flatMap((c) => c.reviews)
+	const reviewsDayMap = mapArray(reviews, 'day_session')
+
 	const pids: DeckPids = {
 		all: cardsArray.map((c) => c.phrase_id!),
 		active: cardsArray
@@ -76,6 +74,8 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		meta,
 		pids,
 		cardsMap,
+		reviews,
+		reviewsDayMap,
 	}
 }
 
