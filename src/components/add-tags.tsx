@@ -71,7 +71,7 @@ export function AddTags({
 								tags: [
 									...(oldData?.phrasesMap[phraseId]?.tags ?? []),
 									...tagsToAddToPhrase.map((d) => ({ id: d, name: d })),
-								],
+								].filter((t, i, a) => a.indexOf(t) === i),
 							},
 						},
 					}
@@ -91,6 +91,7 @@ export function AddTags({
 			reset({ tags: '' })
 		},
 		onError: (error) => {
+			console.log(`Failed to add tags: ${error.message}`, error)
 			toast.error(`Failed to add tags: ${error.message}`)
 		},
 	})
