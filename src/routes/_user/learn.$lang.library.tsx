@@ -14,7 +14,7 @@ import { useLanguage } from '@/lib/use-language'
 import { z } from 'zod'
 import { useMemo, type SetStateAction } from 'react'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
-import { useLanguageTags } from '@/lib/use-tags'
+import { useLanguageTags } from '@/lib/use-language'
 import { Separator } from '@/components/ui/separator'
 
 const filterEnum = z.enum([
@@ -58,7 +58,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 
 	const { data: allTags = [] } = useLanguageTags(lang)
 	const tagOptions = useMemo(
-		() => allTags.map((tag) => ({ value: tag.name, label: tag.name })),
+		() => allTags?.map((tag) => ({ value: tag, label: tag })),
 		[allTags]
 	)
 

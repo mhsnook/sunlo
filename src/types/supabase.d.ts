@@ -968,6 +968,7 @@ export type Database = {
           name: string | null
           phrases_to_learn: number | null
           rank: number | null
+          tags: string[] | null
         }
         Relationships: []
       }

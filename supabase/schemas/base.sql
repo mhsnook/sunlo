@@ -630,6 +630,17 @@ comment on column "public"."phrase"."added_by" is 'User who added this card';
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
 create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
+
+create table if not exists
 	"public"."user_deck" (
 		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
 		"uid" "uuid" default "auth"."uid" () not null,
@@ -711,7 +722,15 @@ select
 		order by
 			"second"."display_score" desc,
 			"second"."name"
-	) as "display_order"
+	) as "display_order",
+	array (
+		select
+			"tag"."name"
+		from
+			"public"."tag"
+		where
+			(("tag"."lang")::"text" = ("second"."lang")::"text")
+	) as "tags"
 from
 	"second";
 
@@ -809,17 +828,6 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_card" (
@@ -1876,6 +1884,12 @@ grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
 
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
+
 grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
@@ -1923,12 +1937,6 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
-
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 

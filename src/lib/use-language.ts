@@ -71,3 +71,9 @@ export const useLanguagePhrase = (pid: uuid, lang: string) =>
 		...languageQueryOptions(lang),
 		select: (data: LanguageLoaded) => data.phrasesMap[pid],
 	}) as UseQueryResult<PhraseFull>
+
+export const useLanguageTags = (lang: string) =>
+	useQuery({
+		...languageQueryOptions(lang),
+		select: (data: LanguageLoaded) => data.meta.tags,
+	})

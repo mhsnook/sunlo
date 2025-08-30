@@ -17,7 +17,7 @@ import { useLanguagePhrasesMap, useLanguagePids } from '@/lib/use-language'
 import { useMemo, type SetStateAction } from 'react'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
-import { useLanguageTags } from '@/lib/use-tags'
+import { useLanguageTags } from '@/lib/use-language'
 import { Separator } from '@/components/ui/separator'
 
 interface SearchParams {
@@ -50,7 +50,7 @@ function SearchTab() {
 
 	const { data: allTags = [] } = useLanguageTags(lang)
 	const tagOptions = useMemo(
-		() => allTags.map((tag) => ({ value: tag.name, label: tag.name })),
+		() => allTags?.map((tag) => ({ value: tag, label: tag })),
 		[allTags]
 	)
 
