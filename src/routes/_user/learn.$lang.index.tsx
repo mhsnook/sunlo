@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-
+import { useMemo } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import type { LangOnlyComponentProps } from '@/types/main'
-import { useProfile } from '@/lib/use-profile'
 import {
 	Card,
 	CardContent,
@@ -18,9 +17,9 @@ import {
 	Library,
 	NotebookPen,
 	Search,
-	Send,
 } from 'lucide-react'
 import languages from '@/lib/languages'
+import dayjs from 'dayjs'
 import { ago } from '@/lib/dayjs'
 import { useDeck, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
@@ -29,6 +28,8 @@ import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { useLanguage } from '@/lib/use-language'
 import { FriendProfiles } from './friends.index'
+import { ActivityChart } from '@/components/activity-chart'
+import { Separator } from '@radix-ui/react-separator'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -58,7 +59,28 @@ function WelcomePage() {
 function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data: deckMeta } = useDeckMeta(lang)
 	const { data: deckPids } = useDeckPids(lang)
-	if (!deckMeta) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+	const { data: deck } = useDeck(lang)
+	if (!deckMeta || !deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+
+	const activityChartData = useMemo(() => {
+		if (!deck?.reviewsDayMap) return []
+		const today = dayjs()
+		// We generate 11 days of data: 9 past days, today, and one day in the future.
+		// The future day acts as a buffer to prevent the last data point from being clipped.
+		const data = Array.from({ length: 11 }).map((_, i) => {
+			const date = today.subtract(9 - i, 'day')
+			const dayKey = date.format('YYYY-MM-DD')
+			const reviewsForDay = deck.reviewsDayMap[dayKey] || []
+			const positiveReviews = reviewsForDay.filter((r) => r.score >= 2).length
+			return {
+				day: date.format('DD/MM'),
+				total: reviewsForDay.length,
+				positive: positiveReviews,
+			}
+		})
+		return data
+	}, [deck?.reviewsDayMap])
+
 	return (
 		<Card>
 			<CardHeader>
@@ -91,7 +113,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					</Badge>
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="text-sm">
+			<CardContent className="space-y-2 text-sm">
 				<p>Your last review was {ago(deckMeta.most_recent_review_at)}</p>
 				<Flagged name="routines_goals">
 					<p>You've kept up with your routine 4 out of 5 days this week</p>
@@ -100,6 +122,13 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					{deckPids?.today_active.length} active cards are scheduled for today,
 					along with 15 new ones
 				</p>
+
+				{activityChartData.length > 0 && (
+					<div className="my-4">
+						<h4 className="mb-2 font-semibold">Your Recent Reviews</h4>
+						<ActivityChart data={activityChartData} />
+					</div>
+				)}
 			</CardContent>
 			<CardFooter>
 				<div className="flex flex-row flex-wrap gap-2">

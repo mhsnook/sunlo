@@ -15,7 +15,7 @@ import type {
 	uuid,
 	DeckPids,
 } from '@/types/main'
-import { mapArray } from '@/lib/utils'
+import { mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { inLastWeek } from './dayjs'
 
@@ -33,7 +33,7 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		)
 	const { cards: cardsArray, ...meta }: DeckFetched = data
 	const reviews = cardsArray.flatMap((c) => c.reviews)
-	const reviewsDayMap = mapArray(reviews, 'day_session')
+	const reviewsDayMap = mapArrays(reviews, 'day_session')
 
 	const pids: DeckPids = {
 		all: cardsArray.map((c) => c.phrase_id!),
