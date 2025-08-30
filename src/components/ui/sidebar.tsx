@@ -260,7 +260,7 @@ const SidebarTrigger = ({
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
-			className={cn('size-7', className)}
+			className={className}
 			onClick={onButtonClick}
 			{...props}
 		>

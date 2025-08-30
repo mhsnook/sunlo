@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { SubmitHandler, useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Plus } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
 import {
@@ -88,7 +88,7 @@ export function AddTranslationsDialog({
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
 				<Button {...props}>
-					<Plus className="text-muted-foreground size-4" /> Add translation
+					<Pencil className="size-4" /> Add translation
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="w-[92%] max-w-[425px]">

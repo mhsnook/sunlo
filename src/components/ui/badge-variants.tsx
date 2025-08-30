@@ -2,20 +2,21 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const badgeVariants = cva(
-	'inline-flex items-center rounded border font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
+	'rounded inline-flex items-center rounded border gap-1.5 font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
 	{
 		variants: {
 			variant: {
 				default: 'border-transparent bg-primary text-primary-foreground',
 				secondary:
-					'border-transparent bg-secondary text-secondary-foreground border-white',
+					'border-secondary-foreground/10 bg-secondary/50 text-secondary-foreground/80',
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
 				outline: 'text-foreground font-normal border-muted-foresoft/30',
+				lang: 'text-accent-foreground bg-accent/50 border-accent-foreground/10 uppercase',
 			},
 			size: {
-				md: 'rounded px-2.5 py-0.5 text-xs',
-				sm: 'rounded-full px-1 py-0 text-[0.5rem]',
+				md: 'px-2.5 py-0.5 text-xs',
+				sm: 'px-1 py-0 text-[0.5rem]',
 			},
 		},
 		defaultVariants: {

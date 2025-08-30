@@ -43,7 +43,7 @@ export default function CopyLinkButton({
 			{...props}
 		>
 			<Copy className="h-4 w-4" />
-			<span className={collapse ? 'hidden @xl:block' : ''}>{text}</span>
+			<span className={collapse ? 'hidden @sm:block' : ''}>{text}</span>
 		</Button>
 	)
 }
