@@ -40,6 +40,9 @@
 	--sidebar-accent-foreground: hsl(240 6% 10%);
 	--sidebar-border: hsl(220 13% 91%);
 	--sidebar-ring: hsl(217 91% 60%);
+	--shadow-color-1: rgba(0, 0, 0, 0.05);
+	--shadow-color-2: rgba(0, 0, 0, 0.1);
+	--shadow-color-3: rgba(0, 0, 0, 0.25);
 }
 
 .dark {
@@ -76,6 +79,9 @@
 	--sidebar-accent-foreground: hsl(240 5% 96%);
 	--sidebar-border: hsl(240 4% 16%);
 	--sidebar-ring: hsl(217 91% 60%);
+	--shadow-color-1: rgba(255, 255, 255, 0.05);
+	--shadow-color-2: rgba(255, 255, 255, 0.1);
+	--shadow-color-3: rgba(255, 255, 255, 0.25);
 }
 
 @theme inline {
@@ -87,6 +93,17 @@
 	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
 		Oxygen-Sans, Cantarell, sans-serif;
 
+	--shadow-2xs: 0 1px var(--shadow-color-1);
+	--shadow-xs: 0 1px 2px 0 var(--shadow-color-1);
+	--shadow-sm: 0 1px 3px 0 var(--shadow-color-2),
+		0 1px 2px -1px var(--shadow-color-2);
+	--shadow-md: 0 4px 6px -1px var(--shadow-color-2),
+		0 2px 4px -2px var(--shadow-color-2);
+	--shadow-lg: 0 10px 15px -3px var(--shadow-color-2),
+		0 4px 6px -4px var(--shadow-color-2);
+	--shadow-xl: 0 20px 25px -5px var(--shadow-color-2),
+		0 8px 10px -6px var(--shadow-color-2);
+	--shadow-2xl: 0 25px 50px -12px var(--shadow-color-3);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 	--color-background: var(--background);
