@@ -3,7 +3,14 @@ import { CardRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { CheckCircle, CircleMinus, Plus, Sparkles, Zap } from 'lucide-react'
+import {
+	CheckCircle,
+	ChevronDown,
+	CircleMinus,
+	PlusCircle,
+	Sparkles,
+	Zap,
+} from 'lucide-react'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,6 +23,8 @@ import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/lib/use-profile'
 import { useDeckCard } from '@/lib/use-deck'
 import { buttonVariants } from './ui/button-variants'
+import { Badge } from './ui/badge'
+import { Separator } from './ui/separator'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -35,7 +44,9 @@ const statusStrings = {
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card added',
-		icon: () => <Zap className="size-4 text-yellow-600" aria-label="Active" />,
+		icon: (size = 16) => (
+			<Zap size={size} className="text-yellow-600" aria-label="Active" />
+		),
 	},
 	learned: {
 		short: 'Learned',
@@ -43,8 +54,8 @@ const statusStrings = {
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
-		icon: () => (
-			<Sparkles className="size-4 text-green-600" aria-label="Learned" />
+		icon: (size = 16) => (
+			<Sparkles size={size} className="text-green-600" aria-label="Learned" />
 		),
 	},
 	skipped: {
@@ -53,15 +64,17 @@ const statusStrings = {
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
-		icon: () => <CircleMinus className="size-4" aria-label="Skipped" />,
+		icon: (size = 16) => <CircleMinus size={size} aria-label="Skipped" />,
 	},
 	nocard: {
-		short: 'Add card',
-		long: 'Not in deck',
+		short: 'Not in deck',
+		long: 'Not in your deck',
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => <Plus className="size-4" aria-label="Add card" />,
+		icon: (size = 16) => (
+			<PlusCircle className="opacity-50" size={size} aria-label="Add card" />
+		),
 	},
 	nodeck: {
 		short: 'Start deck',
@@ -69,7 +82,7 @@ const statusStrings = {
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
-		icon: () => <Plus className="size-4" aria-label="Start learning" />,
+		icon: (size = 16) => <PlusCircle size={size} aria-label="Start learning" />,
 	},
 }
 
@@ -166,17 +179,17 @@ export function CardStatusDropdown({
 								statusStrings[choice].done
 							:	statusStrings[choice].long}
 						</span>
-					:	<span
-							className={cn(
-								buttonVariants({ variant: 'secondary', size: 'badge' }),
-								`group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white`
-							)}
+					:	<Badge
+							variant="secondary"
+							className={`group-data-[state=open]:bg-primary inset-shadow m-0 gap-1 px-1.5 shadow-sm transition-opacity group-data-[state=open]:text-white hover:opacity-60`}
 						>
 							{cardMutation.isSuccess ?
 								<CheckCircle className="size-4 text-green-500" />
 							:	statusStrings[choice].icon()}{' '}
 							{statusStrings[choice].short}
-						</span>
+							<Separator orientation="vertical" className="ms-1" />
+							<ChevronDown size="12" />
+						</Badge>
 					}
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">
