@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { BadgeProps, badgeVariants } from './badge-variants'
-import { OctagonMinus } from 'lucide-react'
+import { Globe, OctagonMinus } from 'lucide-react'
 
 export function Badge({ className, variant, size, ...props }: BadgeProps) {
 	return (
@@ -24,4 +24,12 @@ export function TinyBadge({
 }) {
 	const content = useBadge()
 	return content ? <Badge size="sm">{content}</Badge> : null
+}
+
+export function LangBadge({ lang }: { lang: string }) {
+	return (
+		<Badge className="my-0" variant="lang" size="md">
+			<Globe className="-ms-0.5" size="16" /> {lang}
+		</Badge>
+	)
 }

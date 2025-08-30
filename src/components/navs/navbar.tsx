@@ -71,7 +71,7 @@ function Title({ matches }: { matches: NavbarMatch[] }) {
 
 	return (
 		<>
-			<Button variant="ghost" size="icon-sm" onClick={onBackClickFn}>
+			<Button variant="ghost" size="icon" onClick={onBackClickFn}>
 				<ChevronLeft />
 				<span className="sr-only">Back</span>
 			</Button>

@@ -241,7 +241,7 @@ function BadgeFilter({
 	const lang = Route.useParams({ select: (d) => d.lang })
 	return (
 		<Link to="/learn/$lang/library" params={{ lang }} search={constFilter}>
-			<Badge variant="outline">
+			<Badge variant="outline" className="shadow-sm">
 				<label className="flex cursor-pointer gap-1">
 					<Checkbox checked={filter === name} /> {text} ({count})
 				</label>

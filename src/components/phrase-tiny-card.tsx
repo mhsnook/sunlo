@@ -9,7 +9,7 @@ export const PhraseTinyCard = ({ phrase }: PhraseTinyCardProps) => {
 	if (!phrase.translations || !(phrase?.translations.length > 0)) return null
 	return (
 		<Link
-			className="s-link hover:bg-primary/10 m-1 block justify-start rounded border p-3 no-underline decoration-2 transition-all hover:underline"
+			className="s-link hover:bg-primary/10 m-1 block justify-start rounded p-3 no-underline decoration-2 shadow-sm transition-all hover:underline"
 			to="/learn/$lang/$id"
 			params={{ lang: phrase.lang!, id: phrase.id! }}
 		>
