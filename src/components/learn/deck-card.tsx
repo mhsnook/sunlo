@@ -21,28 +21,30 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 				deck.archived ? 'opacity-80' : ''
 			}`}
 		>
-			<CardHeader className="from-primary bg-gradient-to-br to-violet-800 p-4 text-white">
-				<CardTitle className="flex flex-col text-xl">
-					<span>{deck.language}</span>
-					<span className="flex justify-between">
-						<Badge
-							variant="outline"
-							className="border-white/50 font-bold text-white/70 uppercase"
-						>
-							<span className="mt-px">{deck.lang}</span>
-						</Badge>
-						{deck.archived ?
+			<Link to="/learn/$lang" params={{ lang: deck.lang! }}>
+				<CardHeader className="from-primary bg-gradient-to-br to-violet-800 p-4 text-white">
+					<CardTitle className="flex flex-col text-xl">
+						<span>{deck.language}</span>
+						<span className="flex justify-between">
 							<Badge
 								variant="outline"
-								className="border-white/50 font-normal text-white/70"
+								className="border-white/50 font-bold text-white/70 uppercase"
 							>
-								<Archive className="mr-1 h-3 w-3" />
-								Archived
+								<span className="mt-px">{deck.lang}</span>
 							</Badge>
-						:	null}
-					</span>
-				</CardTitle>
-			</CardHeader>
+							{deck.archived ?
+								<Badge
+									variant="outline"
+									className="border-white/50 font-normal text-white/70"
+								>
+									<Archive className="mr-1 h-3 w-3" />
+									Archived
+								</Badge>
+							:	null}
+						</span>
+					</CardTitle>
+				</CardHeader>
+			</Link>
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
