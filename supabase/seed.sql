@@ -1862,6 +1862,72 @@ values
 	);
 
 --
+-- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."tag" ("id", "created_at", "name", "lang", "added_by")
+values
+	(
+		'11e1d399-1235-4dab-9a7a-f206cbbb99a0',
+		'2025-08-30 23:10:31.456245+00',
+		'sfdghj',
+		'tam',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'8a3d62c6-7f0d-4e96-8d59-b4f1d8d17224',
+		'2025-08-30 23:10:42.162138+00',
+		'greeting',
+		'tam',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'c2ed8619-b85f-4c8b-8395-16cfe4cdeb69',
+		'2025-08-30 23:10:42.162138+00',
+		'hello',
+		'tam',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'9b935ccd-58bd-4c1a-a05a-ff175e26d64d',
+		'2025-08-30 23:10:46.254222+00',
+		'easy',
+		'tam',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	);
+
+--
+-- Data for Name: phrase_tag; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."phrase_tag" ("phrase_id", "tag_id", "created_at", "added_by")
+values
+	(
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		'11e1d399-1235-4dab-9a7a-f206cbbb99a0',
+		'2025-08-30 23:10:31.456245+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		'8a3d62c6-7f0d-4e96-8d59-b4f1d8d17224',
+		'2025-08-30 23:10:42.162138+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		'c2ed8619-b85f-4c8b-8395-16cfe4cdeb69',
+		'2025-08-30 23:10:42.162138+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		'9b935ccd-58bd-4c1a-a05a-ff175e26d64d',
+		'2025-08-30 23:10:46.254222+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	);
+
+--
 -- Data for Name: phrase_translation; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
@@ -3317,263 +3383,263 @@ insert into
 		"uid",
 		"id",
 		"phrase_id",
-		"lang",
 		"updated_at",
 		"created_at",
-		"status"
+		"status",
+		"lang"
 	)
 values
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'0e379159-9bc3-4781-ab61-4d4c96f472b0',
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
-		'tam',
 		'2025-01-20 12:51:47.751066+00',
 		'2025-01-20 12:51:47.751066+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'1e78e62a-f20c-4532-b326-16027ccf1064',
 		'295fbba3-892c-43f9-84ba-85cf15fd28a5',
-		'tam',
 		'2025-01-20 12:51:49.968547+00',
 		'2025-01-20 12:51:49.968547+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ec8836e2-d1a7-4c44-ad30-0ba16f1903bf',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		'tam',
 		'2025-01-20 12:51:51.433933+00',
 		'2025-01-20 12:51:51.433933+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'9096824e-4aee-49d7-9d18-ca14a89127c2',
 		'12536684-0b35-4aff-80cd-f4ce56c866b6',
-		'tam',
 		'2025-01-20 12:51:53.619878+00',
 		'2025-01-20 12:51:53.619878+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'3e26c6bd-37af-45c4-ac37-d0e9c0ee99de',
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
-		'hin',
 		'2025-01-20 15:05:21.529249+00',
 		'2025-01-20 15:05:21.529249+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'5d01f16c-d980-4aee-85f7-06acb124977d',
 		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
-		'hin',
 		'2025-01-20 15:05:23.890215+00',
 		'2025-01-20 15:05:23.890215+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'326afe26-b402-4f99-8d00-70825108d3ea',
 		'90108f59-7968-457f-9744-2e3b44e980dd',
-		'hin',
 		'2025-01-20 15:05:26.505995+00',
 		'2025-01-20 15:05:26.505995+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'b211a041-abbc-4beb-a886-25042d053351',
 		'170f5fd4-58f8-4b05-aba4-23522f35800f',
-		'hin',
 		'2025-01-20 15:05:27.64607+00',
 		'2025-01-20 15:05:27.64607+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'3645d9ae-ac1d-42b9-9c5a-30b9df195912',
 		'f1f5234e-0426-44f5-a007-b67329a70a81',
-		'hin',
 		'2025-01-20 15:05:28.871047+00',
 		'2025-01-20 15:05:28.871047+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'df82c504-993d-4fe0-b363-edad3b9cc50a',
 		'5b5cc7ec-702e-4dc1-a568-0dcc660c25bb',
-		'hin',
 		'2025-01-20 15:05:25.308879+00',
 		'2025-01-20 15:05:25.308879+00',
-		'learned'
+		'learned',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'4396f3d7-4d63-41ae-bae1-dfa57862f9b5',
 		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
-		'hin',
 		'2025-01-22 09:03:46.190858+00',
 		'2025-01-22 09:03:46.190858+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'9df1baf5-e5d6-46b7-bfcc-33c7c593ef53',
 		'ded8028a-493f-438f-8b72-316c769a66b9',
-		'hin',
 		'2025-01-22 09:03:48.273463+00',
 		'2025-01-22 09:03:48.273463+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'2867c983-4698-46f7-94fc-19e3384c40eb',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		'tam',
 		'2025-01-22 09:03:55.525878+00',
 		'2025-01-22 09:03:55.525878+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'1bcaf19a-3596-4723-9fab-14d2fe97e3df',
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
-		'tam',
 		'2025-01-22 09:03:56.592911+00',
 		'2025-01-22 09:03:56.592911+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'bdb20ec0-11d9-4f11-aea8-5b1f434f5193',
 		'1f6bac22-b32a-4b77-9857-d2de02b538de',
-		'tam',
 		'2025-01-22 09:03:57.617755+00',
 		'2025-01-22 09:03:57.617755+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'd71741f6-2e9d-4c09-b685-ddb369a1f574',
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
-		'tam',
 		'2025-01-22 09:03:58.73123+00',
 		'2025-01-22 09:03:58.73123+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'374c8a92-0bf4-4a45-821d-a3c1dbc92474',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		'tam',
 		'2025-04-21 20:42:22.36906+00',
 		'2025-04-21 20:42:22.36906+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'2ec6d4be-6e08-48e2-9be4-d452b96fd795',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		'tam',
 		'2025-04-21 20:42:23.502993+00',
 		'2025-04-21 20:42:23.502993+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'2bd796a6-9c74-420d-b00c-72acb6e8aedd',
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
-		'tam',
 		'2025-04-21 20:42:24.965666+00',
 		'2025-04-21 20:42:24.965666+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'91edd7d5-932c-4963-b03b-48832138041c',
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
-		'tam',
 		'2025-04-21 20:42:26.446607+00',
 		'2025-04-21 20:42:26.446607+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'd9eadce9-e576-4e7b-a0dc-f2fb947a30df',
 		'f6b69f3b-09b9-41a7-a9f2-255da0697015',
-		'hin',
 		'2025-04-21 21:23:57.750689+00',
 		'2025-04-21 21:23:57.750689+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'4f0674aa-b14e-4807-89d4-25dd23116e89',
 		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
-		'hin',
 		'2025-04-21 21:23:59.949006+00',
 		'2025-04-21 21:23:59.949006+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'375b9dbd-6c83-4f25-b960-f97b12844301',
 		'43a760da-65af-400e-b3f0-fbed7a6b338e',
-		'hin',
 		'2025-04-21 21:24:05.18571+00',
 		'2025-04-21 21:24:05.18571+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'6b711281-c2d0-464d-b99a-bea57d73e4f8',
 		'0823546b-d240-4f14-9d51-8dfae5fcddc3',
-		'hin',
 		'2025-04-21 21:24:08.413945+00',
 		'2025-04-21 21:24:08.413945+00',
-		'active'
+		'active',
+		'hin'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'76de47db-2383-48d1-9da1-5bef74a3c23a',
 		'a2777e37-b02e-4d8b-9a39-1a9ad56af4f2',
-		'tam',
 		'2025-04-21 21:51:32.458926+00',
 		'2025-04-21 21:51:32.458926+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'e7cdf0dd-31ba-4181-8295-46e831f52e8e',
 		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
-		'tam',
 		'2025-04-21 21:51:33.828056+00',
 		'2025-04-21 21:51:33.828056+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'e61e7352-bc64-4971-aba7-9eee832751c2',
 		'ddd650c2-00e9-43f1-8624-5a97282087aa',
-		'tam',
 		'2025-04-21 21:51:35.373536+00',
 		'2025-04-21 21:51:35.373536+00',
-		'active'
+		'active',
+		'tam'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'08d46d01-2be4-4e8c-9117-9f446722033f',
 		'7aac8e8f-4de1-41a0-b910-a2c9b80e47f9',
-		'tam',
 		'2025-04-21 21:51:37.057771+00',
 		'2025-04-21 21:51:37.057771+00',
-		'active'
+		'active',
+		'tam'
 	);
 
 --
@@ -3878,10 +3944,19 @@ values
 -- Data for Name: s3_multipart_uploads_parts; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
 --
 --
+-- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+--
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
 	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
+
+--
+-- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+select
+	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
 
 --
 -- PostgreSQL database dump complete
