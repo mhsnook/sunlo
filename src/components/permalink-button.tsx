@@ -21,7 +21,7 @@ export default function PermalinkButton({
 				{...props}
 			>
 				<LinkIcon className="h-4 w-4" />
-				<span className="hidden @xl:block">{text}</span>
+				<span className="hidden @sm:block">{text}</span>
 			</Link>
 		)
 }
