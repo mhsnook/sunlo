@@ -14,10 +14,53 @@ import type {
 	CardFull,
 	uuid,
 	DeckPids,
+	ReviewsDayMap,
 } from '@/types/main'
 import { mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { inLastWeek } from './dayjs'
+import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
+
+dayjs.extend(isoWeek)
+
+const calcRoutineStats = (reviewsDayMap: ReviewsDayMap) => {
+	if (!reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
+
+	const today = dayjs()
+	const mostRecentMonday = today.isoWeekday(1)
+	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
+
+	let daysMet = 0
+	for (let i = 0; i < daysSoFar; i++) {
+		const dayToCheck = mostRecentMonday.add(i, 'day')
+		const dayKey = dayToCheck.format('YYYY-MM-DD')
+		const reviewsForDay = reviewsDayMap[dayKey] || []
+		if (reviewsForDay.length >= 15) {
+			daysMet++
+		}
+	}
+	return { daysMet, daysSoFar }
+}
+
+const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
+	if (!reviewsDayMap) return []
+	const today = dayjs()
+	// We generate 11 days of data: 9 past days, today, and one day in the future.
+	// The future day acts as a buffer to prevent the last data point from being clipped.
+	const data = Array.from({ length: 11 }).map((_, i) => {
+		const date = today.subtract(9 - i, 'day')
+		const dayKey = date.format('YYYY-MM-DD')
+		const reviewsForDay = reviewsDayMap[dayKey] || []
+		const positiveReviews = reviewsForDay.filter((r) => r.score >= 2).length
+		return {
+			day: date.format('DD/MM'),
+			total: reviewsForDay.length,
+			positive: positiveReviews,
+		}
+	})
+	return data
+}
 
 async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const { data } = await supabase
@@ -34,6 +77,9 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const { cards: cardsArray, ...meta }: DeckFetched = data
 	const reviews = cardsArray.flatMap((c) => c.reviews)
 	const reviewsDayMap = mapArrays(reviews, 'day_session')
+
+	const routineStats = calcRoutineStats(reviewsDayMap)
+	const activityChartData = calcActivityChartData(reviewsDayMap)
 
 	const pids: DeckPids = {
 		all: cardsArray.map((c) => c.phrase_id!),
@@ -70,12 +116,15 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 			.map((c) => c.phrase_id!),
 	}
 	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
+
 	return {
 		meta,
 		pids,
 		cardsMap,
 		reviews,
 		reviewsDayMap,
+		routineStats,
+		activityChartData,
 	}
 }
 

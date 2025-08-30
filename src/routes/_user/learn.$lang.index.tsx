@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMemo } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import type { LangOnlyComponentProps } from '@/types/main'
 import {
@@ -19,9 +18,6 @@ import {
 	Search,
 } from 'lucide-react'
 import languages from '@/lib/languages'
-import dayjs from 'dayjs'
-import isoWeek from 'dayjs/plugin/isoWeek'
-dayjs.extend(isoWeek)
 import { ago } from '@/lib/dayjs'
 import { useDeck, useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
@@ -63,44 +59,6 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data: deck } = useDeck(lang)
 	if (!deckMeta || !deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
-	const routineStats = useMemo(() => {
-		if (!deck?.reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
-
-		const today = dayjs()
-		const mostRecentMonday = today.isoWeekday(1)
-		const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
-
-		let daysMet = 0
-		for (let i = 0; i < daysSoFar; i++) {
-			const dayToCheck = mostRecentMonday.add(i, 'day')
-			const dayKey = dayToCheck.format('YYYY-MM-DD')
-			const reviewsForDay = deck.reviewsDayMap[dayKey] || []
-			if (reviewsForDay.length >= 15) {
-				daysMet++
-			}
-		}
-		return { daysMet, daysSoFar }
-	}, [deck?.reviewsDayMap])
-
-	const activityChartData = useMemo(() => {
-		if (!deck?.reviewsDayMap) return []
-		const today = dayjs()
-		// We generate 11 days of data: 9 past days, today, and one day in the future.
-		// The future day acts as a buffer to prevent the last data point from being clipped.
-		const data = Array.from({ length: 11 }).map((_, i) => {
-			const date = today.subtract(9 - i, 'day')
-			const dayKey = date.format('YYYY-MM-DD')
-			const reviewsForDay = deck.reviewsDayMap[dayKey] || []
-			const positiveReviews = reviewsForDay.filter((r) => r.score >= 2).length
-			return {
-				day: date.format('DD/MM'),
-				total: reviewsForDay.length,
-				positive: positiveReviews,
-			}
-		})
-		return data
-	}, [deck?.reviewsDayMap])
-
 	return (
 		<Card>
 			<CardHeader>
@@ -137,12 +95,12 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				<p>Your last review was {ago(deckMeta.most_recent_review_at)}</p>
 				<p>
 					{(
-						routineStats.daysMet === routineStats.daysSoFar &&
-						routineStats.daysSoFar > 1
+						deck.routineStats.daysMet === deck.routineStats.daysSoFar &&
+						deck.routineStats.daysSoFar > 1
 					) ?
-						`You've kept up with your routine all ${routineStats.daysSoFar} days this week!`
-					:	`You've kept up with your routine ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-							routineStats.daysSoFar === 1 ? 'day' : 'days'
+						`You've kept up with your routine all ${deck.routineStats.daysSoFar} days this week!`
+					:	`You've kept up with your routine ${deck.routineStats.daysMet} out of ${deck.routineStats.daysSoFar} ${
+							deck.routineStats.daysSoFar === 1 ? 'day' : 'days'
 						} this week.`
 					}
 				</p>
@@ -151,10 +109,10 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					along with 15 new ones
 				</p>
 
-				{activityChartData.length > 0 && (
+				{deck.activityChartData.length > 0 && (
 					<div className="my-4">
 						<h4 className="mb-2 font-semibold">Your Recent Reviews</h4>
-						<ActivityChart data={activityChartData} />
+						<ActivityChart data={deck.activityChartData} />
 					</div>
 				)}
 			</CardContent>
