@@ -61,9 +61,8 @@ function ReviewPageSetup() {
 
 	const today_active = pids.today_active
 
-	// 1. we have today's active cards plus we need x more
-	// const [countNeeded, setCountNeeded] = useState<number>(15)
-	const countNeeded = 15
+	// 1. we have today's active cards plus we need x more, based on user's goal
+	const countNeeded = meta.daily_review_goal ?? 15
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
