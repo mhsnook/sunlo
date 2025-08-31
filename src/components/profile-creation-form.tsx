@@ -37,7 +37,7 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 	} = useForm<FormData>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			languages_known: [{ lang: 'eng', level: 'native' }],
+			languages_known: [{ lang: 'eng', level: 'fluent' }],
 		},
 	})
 
@@ -78,8 +78,8 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 					error={errors.languages_known}
 				/>
 				<div className="flex flex-col gap-4 @xl:flex-row @xl:justify-between">
-					<Button type="submit" className="w-full @xl:w-auto">
-						Confirm
+					<Button type="submit" size="lg" className="w-full @xl:w-auto">
+						Save your profile
 					</Button>
 				</div>
 			</form>
