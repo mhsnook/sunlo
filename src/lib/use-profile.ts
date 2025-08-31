@@ -3,6 +3,7 @@ import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import type {
 	DeckMeta,
 	DecksMap,
+	LanguageKnown,
 	ProfileFull,
 	PublicProfile,
 	uuid,
@@ -29,18 +30,15 @@ export const profileQuery = (userId: uuid | null) =>
 			const deckLanguages: Array<string> = decks_array
 				.map((d) => d.lang)
 				.filter((d) => typeof d === 'string')
+			const languages_known =
+				(profile.languages_known as LanguageKnown[] | null) ?? []
 			const languagesToShow = [
-				profile.language_primary,
-				...profile.languages_spoken.filter(
-					(l) => l !== profile.language_primary
-				),
-				...deckLanguages,
+				...new Set([...languages_known.map((lk) => lk.lang), ...deckLanguages]),
 			]
 			return {
 				...profile,
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
-				avatar_path: profile.avatar_path ?? '',
 				avatarUrl: avatarUrlify(profile.avatar_path),
 				languagesToShow,
 				decksMap,

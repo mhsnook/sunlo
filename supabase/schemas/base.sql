@@ -81,6 +81,10 @@ create type "public"."friend_request_response" as enum('accept', 'decline', 'can
 
 alter type "public"."friend_request_response" owner to "postgres";
 
+create type "public"."language_proficiency" as enum('fluent', 'proficient', 'beginner');
+
+alter type "public"."language_proficiency" owner to "postgres";
+
 create type "public"."learning_goal" as enum('moving', 'family', 'visiting');
 
 alter type "public"."learning_goal" owner to "postgres";
@@ -815,9 +819,8 @@ create table if not exists
 		"username" "text",
 		"updated_at" timestamp with time zone,
 		"created_at" timestamp with time zone default "now" () not null,
-		"languages_spoken" character varying[] default '{}'::character varying[] not null,
-		"language_primary" "text" default 'EN'::"text" not null,
 		"avatar_path" "text",
+		"languages_known" "jsonb" default '[]'::"jsonb" not null,
 		constraint "username_length" check (("char_length" ("username") >= 3))
 	);
 
@@ -1642,6 +1645,9 @@ alter table "public"."user_deck_review_state" enable row level security;
 alter table "public"."user_profile" enable row level security;
 
 alter publication "supabase_realtime" owner to "postgres";
+
+alter publication "supabase_realtime"
+add table only "public"."chat_message";
 
 revoke USAGE on schema "public"
 from
