@@ -18,7 +18,15 @@ import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
-import { Briefcase, GraduationCap, Users } from 'lucide-react'
+import {
+	Briefcase,
+	Cat,
+	GraduationCap,
+	IceCreamBowl,
+	Rocket,
+	Salad,
+	Users,
+} from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -44,12 +52,14 @@ function DeckSettingsPage() {
 						/>
 					</>
 				:	null}
-				<div className="flex w-full flex-col justify-between p-2 @sm:flex-row">
-					<span className="h4">
-						{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
-					</span>
-					<ArchiveDeckButton lang={meta.lang!} archived={meta.archived!} />
-				</div>
+				<CardHeader className="rounded shadow">
+					<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
+						<span>
+							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
+						</span>
+						<ArchiveDeckButton lang={meta.lang!} archived={meta.archived!} />
+					</CardTitle>
+				</CardHeader>
 			</CardContent>
 		</Card>
 	)
@@ -67,20 +77,24 @@ type DailyGoalFormInputs = z.infer<typeof DailyGoalSchema>
 const dailyReviewGoalOptions: FancySelectOption[] = [
 	{
 		value: 10,
-		label: 'Casual',
+		label: '10 – Relaxed',
 		description:
-			'10 new cards daily, for casual learners; expect about 40 reviews daily',
+			'10 new cards daily, for casual learners; expect about 45 reviews daily',
+		Icon: Cat,
 	},
 	{
 		value: 15,
-		label: 'Standard',
+		label: '15 – Standard',
 		description:
-			'15 new cards daily, the default for most learners; expect 75 reviews daily',
+			'15 new cards daily, the default for most learners; expect 80 reviews daily',
+		Icon: IceCreamBowl,
 	},
 	{
 		value: 20,
-		label: 'Serious',
-		description: '20 new cards daily, for serious learners!',
+		label: '20 – Serious',
+		description:
+			'20 new cards daily, for serious learners! expect about 125 reviews daily',
+		Icon: Rocket,
 	},
 ]
 
@@ -129,7 +143,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 		},
 	})
 	return (
-		<Card>
+		<div className="rounded shadow">
 			<CardHeader className="pb-0">
 				<CardTitle>
 					<span className="h4">Your daily goal</span>
@@ -165,7 +179,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 					</div>
 				</form>
 			</CardContent>
-		</Card>
+		</div>
 	)
 }
 
@@ -244,7 +258,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	})
 
 	return (
-		<Card>
+		<div className="rounded shadow">
 			<CardHeader className="pb-0">
 				<CardTitle>
 					<span className="h4">Your learning goals</span>
@@ -280,6 +294,6 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 					</div>
 				</form>
 			</CardContent>
-		</Card>
+		</div>
 	)
 }
