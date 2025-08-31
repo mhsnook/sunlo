@@ -106,7 +106,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				</p>
 				<p>
 					{deckPids?.today_active.length} active cards are scheduled for today,
-					along with 15 new ones
+					along with {deckMeta.daily_review_goal ?? 15} new ones
 				</p>
 
 				{deck.activityChartData.length > 0 && (
