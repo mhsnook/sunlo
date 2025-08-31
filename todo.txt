@@ -60,7 +60,7 @@ MOCKS / Incompletes
 		✅ add the `learning_goal` field on user_deck
 		✅ add the "archive" form, and field on user_deck
 		✅ wire up the mutation
-		- perhaps add a mode for how aggro to be (10, 15, 20 new cards per review)
+		✅ perhaps add a mode for how aggro to be (10, 15, 20 new cards per review)
 1. find-a-friend may be accessed without a login, so we should make sure the status buttons
 		can react to that scenario and trigger a signup/login when needed
 
