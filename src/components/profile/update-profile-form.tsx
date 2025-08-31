@@ -15,7 +15,7 @@ import AvatarEditorField from '../fields/avatar-editor-field'
 
 const LanguageKnownSchema = z.object({
 	lang: z.string().length(3, { message: 'Please select a language' }),
-	level: z.enum(['native', 'fluent', 'conversational', 'beginner']),
+	level: z.enum(['fluent', 'proficient', 'beginner']),
 })
 
 const ProfileEditFormSchema = z.object({
@@ -90,9 +90,9 @@ export default function UpdateProfileForm({
 					error={errors.username}
 					register={register}
 				/>
-				<LanguagesKnownField<ProfileEditFormSchema>
-					control={control}
+				<LanguagesKnownField<ProfileEditFormInputs>
 					name="languages_known"
+					control={control}
 					error={errors.languages_known}
 				/>
 				<AvatarEditorField<ProfileEditFormInputs>
