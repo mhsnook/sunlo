@@ -11,7 +11,7 @@ import { LanguagesKnownField } from './fields/languages-known-field'
 
 const LanguageKnownSchema = z.object({
 	lang: z.string().length(3, { message: 'Please select a language' }),
-	level: z.enum(['native', 'fluent', 'conversational', 'beginner']),
+	level: z.enum(['fluent', 'proficient', 'beginner']),
 })
 
 const formSchema = z.object({
