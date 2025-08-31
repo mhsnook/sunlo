@@ -13,6 +13,10 @@ export default function UsernameField<T extends FieldValues>({
 			<Label htmlFor="username" className={error ? 'text-destructive' : ''}>
 				Your nickname
 			</Label>
+			<p className="text-muted-foreground text-sm italic">
+				Your username helps you find friends, and accompanies your contributions
+				to the library.
+			</p>
 			<Input
 				type="text"
 				placeholder="e.g. Learnie McLearnerson, Helpar1992"

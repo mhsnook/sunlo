@@ -38,7 +38,11 @@ export function LanguagesKnownField<T extends FieldValues>({
 
 	return (
 		<div className="space-y-2">
-			<Label>Languages I know</Label>
+			<Label>Languages You Know</Label>
+			<p className="text-muted-foreground text-sm italic">
+				This tells the app which translations to show you. It is visible to your
+				friends.
+			</p>
 			<div className="space-y-2">
 				{fields.map((field, index) => (
 					<div
@@ -114,8 +118,9 @@ export function LanguagesKnownField<T extends FieldValues>({
 			<Button
 				type="button"
 				variant="outline"
-				onClick={() => append({ lang: '', level: 'conversational' })}
-				className="mt-2"
+				size="sm"
+				onClick={() => append({ lang: '', level: 'proficient' })}
+				className="float-end mt-2"
 			>
 				Add Language
 			</Button>
