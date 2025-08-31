@@ -257,6 +257,10 @@ export type FriendSummaryRelative = {
 	profile?: PublicProfile
 }
 
+export type FriendSummaryFull = FriendSummaryRelative & {
+	profile: PublicProfile
+}
+
 export type PublicProfileFull = PublicProfile & {
 	friend_summary?: FriendSummaryRelative
 }
