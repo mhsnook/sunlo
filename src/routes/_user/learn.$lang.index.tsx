@@ -177,6 +177,10 @@ function DeckSettings({ lang }: LangOnlyComponentProps) {
 						<strong>{data?.archived ? 'Inactive' : 'Active'}</strong>
 					</li>
 					<li>
+						Your daily goal is{' '}
+						<strong>{data?.daily_review_goal} new cards</strong>
+					</li>
+					<li>
 						Your learning motivation is:{' '}
 						<strong>
 							{data?.learning_goal === 'family' ?
