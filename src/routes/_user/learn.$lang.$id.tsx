@@ -1,7 +1,6 @@
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { AddTags } from '@/components/add-tags'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
-import Flagged from '@/components/flagged'
 import CopyLinkButton from '@/components/copy-link-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import { Badge, LangBadge } from '@/components/ui/badge'
@@ -21,8 +20,8 @@ import {
 } from '@/components/ui/collapsible'
 import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { roundAndTrim } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 
 const DestructiveOctagon = () => (
 	<Badge variant="destructive" className="p-2">
@@ -46,7 +45,6 @@ function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const [isTagEditing, setIsTagEditing] = useState(false)
 	const { data: phrase } = useLanguagePhrase(id, lang)
-	const { data: card } = useDeckCard(id, lang)
 	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -172,7 +170,7 @@ function RouteComponent() {
 					</div>
 				</CardContent>
 			</Card>
-			<div className="grid w-full flex-grow grid-cols-2 justify-stretch gap-4 px-2 py-3">
+			<div className="grid w-full flex-grow grid-cols-3 justify-stretch gap-4 px-2 py-3">
 				<CopyLinkButton variant="outline" size="default" />
 				<SharePhraseButton
 					pid={id}
@@ -180,14 +178,12 @@ function RouteComponent() {
 					variant="outline"
 					size="default"
 				/>
-
-				{/*<Link
-							to={`/learn/$lang/library`}
-							params={{ lang }}
-							className={buttonVariants({ variant: 'secondary' })}
-						>
-							Back to library
-						</Link>*/}
+				<SendPhraseToFriendButton
+					pid={id}
+					lang={lang}
+					variant="outline"
+					size="default"
+				/>
 			</div>
 		</div>
 	)
