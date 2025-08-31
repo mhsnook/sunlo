@@ -13,11 +13,18 @@ type AnyFieldType = {
 export type FieldProps<T extends FieldValues> = AnyFieldType & {
 	register: UseFormRegister<T>
 }
+export type ArrayFieldProps<T extends ArrayFieldValues> = AnyFieldType & {
+	register: UseFormRegister<T>
+}
 
 // A field is a packaged-up set of an input, a label, and an error
 export type ControlledFieldProps<T extends FieldValues> = AnyFieldType & {
 	control: Control<T>
 }
+export type ControlledArrayFieldProps<T extends ArrayFieldValues> =
+	AnyFieldType & {
+		control: Control<T>
+	}
 
 export type ControlledInputProps = {
 	hasError?: boolean

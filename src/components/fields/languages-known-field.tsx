@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import ErrorLabel from './error-label'
-import { ControlledFieldProps } from './types'
+import { ControlledArrayFieldProps } from './types'
 
 const proficiencyLevels: { value: LanguageProficiency; label: string }[] = [
 	{ value: 'fluent', label: 'Fluent' },
@@ -28,7 +28,7 @@ const proficiencyLevels: { value: LanguageProficiency; label: string }[] = [
 export function LanguagesKnownField<T extends FieldValues>({
 	control,
 	error,
-}: ControlledFieldProps<T>) {
+}: ControlledArrayFieldProps<T>) {
 	const { fields, append, remove, move } = useFieldArray({
 		name: 'languages_known' as ArrayPath<T>,
 		control,

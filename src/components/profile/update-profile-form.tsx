@@ -91,7 +91,6 @@ export default function UpdateProfileForm({
 					register={register}
 				/>
 				<LanguagesKnownField<ProfileEditFormInputs>
-					name="languages_known"
 					control={control}
 					error={errors.languages_known}
 				/>
