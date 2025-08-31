@@ -24,7 +24,7 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 
 dayjs.extend(isoWeek)
 
-const calcRoutineStats = (reviewsDayMap: ReviewsDayMap) => {
+const calcRoutineStats = (reviewsDayMap: ReviewsDayMap, goal: number) => {
 	if (!reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
 
 	const today = dayjs()
@@ -36,7 +36,7 @@ const calcRoutineStats = (reviewsDayMap: ReviewsDayMap) => {
 		const dayToCheck = mostRecentMonday.add(i, 'day')
 		const dayKey = dayToCheck.format('YYYY-MM-DD')
 		const reviewsForDay = reviewsDayMap[dayKey] || []
-		if (reviewsForDay.length >= 15) {
+		if (reviewsForDay.length >= goal) {
 			daysMet++
 		}
 	}
@@ -78,7 +78,10 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const reviews = cardsArray.flatMap((c) => c.reviews)
 	const reviewsDayMap = mapArrays(reviews, 'day_session')
 
-	const routineStats = calcRoutineStats(reviewsDayMap)
+	const routineStats = calcRoutineStats(
+		reviewsDayMap,
+		meta.daily_review_goal ?? 15
+	)
 	const activityChartData = calcActivityChartData(reviewsDayMap)
 
 	const pids: DeckPids = {

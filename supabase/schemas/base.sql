@@ -652,7 +652,9 @@ create table if not exists
 		"lang" character varying not null,
 		"created_at" timestamp with time zone default "now" () not null,
 		"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
-		"archived" boolean default false not null
+		"archived" boolean default false not null,
+		"daily_review_goal" smallint default 15 not null,
+		constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
 	);
 
 alter table "public"."user_deck" owner to "postgres";
@@ -941,6 +943,7 @@ select
 	"d"."lang",
 	"d"."learning_goal",
 	"d"."archived",
+	"d"."daily_review_goal",
 	(
 		select
 			"l"."name"
@@ -974,7 +977,7 @@ select
 	) as "lang_total_phrases",
 	(
 		select
-			"max" ("c"."created_at") as "max"
+			"max" ("r"."created_at") as "max"
 		from
 			"public"."user_card_review" "r"
 		where
@@ -1029,6 +1032,7 @@ group by
 	"d"."lang",
 	"d"."learning_goal",
 	"d"."archived",
+	"d"."daily_review_goal",
 	"d"."created_at"
 order by
 	(

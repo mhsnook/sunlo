@@ -765,6 +765,7 @@ export type Database = {
         Row: {
           archived: boolean
           created_at: string
+          daily_review_goal: number
           id: string
           lang: string
           learning_goal: Database["public"]["Enums"]["learning_goal"]
@@ -773,6 +774,7 @@ export type Database = {
         Insert: {
           archived?: boolean
           created_at?: string
+          daily_review_goal?: number
           id?: string
           lang: string
           learning_goal?: Database["public"]["Enums"]["learning_goal"]
@@ -781,6 +783,7 @@ export type Database = {
         Update: {
           archived?: boolean
           created_at?: string
+          daily_review_goal?: number
           id?: string
           lang?: string
           learning_goal?: Database["public"]["Enums"]["learning_goal"]
@@ -1112,6 +1115,7 @@ export type Database = {
           count_reviews_7d: number | null
           count_reviews_7d_positive: number | null
           created_at: string | null
+          daily_review_goal: number | null
           lang: string | null
           lang_total_phrases: number | null
           language: string | null
