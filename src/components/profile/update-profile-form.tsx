@@ -1,4 +1,4 @@
-import type { ProfileFull, uuid } from '@/types/main'
+import type { LanguageKnown, ProfileFull, uuid } from '@/types/main'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type SubmitHandler, useForm } from 'react-hook-form'
@@ -9,21 +9,22 @@ import { toast } from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
-import {
-	AvatarEditorField,
-	LanguagePrimaryField,
-	LanguagesSpokenField,
-	UsernameField,
-} from '@/components/fields'
+import UsernameField from '../fields/username-field'
+import { LanguagesKnownField } from '../fields/languages-known-field'
+import AvatarEditorField from '../fields/avatar-editor-field'
+
+const LanguageKnownSchema = z.object({
+	lang: z.string().length(3, { message: 'Please select a language' }),
+	level: z.enum(['native', 'fluent', 'conversational', 'beginner']),
+})
 
 const ProfileEditFormSchema = z.object({
 	username: z
 		.string()
 		.min(3, { message: 'Username must be 3 letters or more' }),
-	language_primary: z
-		.string()
-		.length(3, { message: 'A primary language is required' }),
-	languages_spoken: z.array(z.string()),
+	languages_known: z
+		.array(LanguageKnownSchema)
+		.min(1, 'Please add at least one language you know.'),
 	avatar_path: z.string().nullable(),
 })
 
@@ -37,9 +38,8 @@ export default function UpdateProfileForm({
 	const queryClient = useQueryClient()
 	const initialData: ProfileEditFormInputs = {
 		username: profile.username,
-		language_primary: profile.language_primary,
-		languages_spoken: profile.languages_spoken,
 		avatar_path: profile.avatar_path,
+		languages_known: profile.languages_known,
 	}
 	const uid: uuid = profile.uid
 
@@ -58,9 +58,8 @@ export default function UpdateProfileForm({
 			toast.success(`Successfully updated your profile`)
 			reset({
 				username: data?.username ?? '',
-				language_primary: data?.language_primary ?? '',
-				languages_spoken: data?.languages_spoken ?? [],
 				avatar_path: data?.avatar_path ?? null,
+				languages_known: (data?.languages_known as LanguageKnown[]) ?? [],
 			})
 			void queryClient.invalidateQueries({ queryKey: ['user'] })
 		},
@@ -70,15 +69,12 @@ export default function UpdateProfileForm({
 		register,
 		control,
 		handleSubmit,
-		watch,
 		reset,
 		formState: { errors, isSubmitting, isValid, isDirty },
 	} = useForm<ProfileEditFormInputs>({
 		defaultValues: initialData,
 		resolver: zodResolver(ProfileEditFormSchema),
 	})
-
-	const watchPrimary = watch('language_primary')
 
 	return (
 		<form
@@ -94,15 +90,10 @@ export default function UpdateProfileForm({
 					error={errors.username}
 					register={register}
 				/>
-				<LanguagePrimaryField<ProfileEditFormInputs>
-					error={errors.language_primary}
+				<LanguagesKnownField<ProfileEditFormSchema>
 					control={control}
-				/>
-				<LanguagesSpokenField<ProfileEditFormInputs>
-					// @TODO the need for [0] coercion means we're not handling the array value nicely
-					error={errors.languages_spoken?.[0]}
-					control={control}
-					primary={watchPrimary}
+					name="languages_known"
+					error={errors.languages_known}
 				/>
 				<AvatarEditorField<ProfileEditFormInputs>
 					error={errors.avatar_path}
@@ -128,8 +119,9 @@ export default function UpdateProfileForm({
 					error={updateProfile.error}
 					values={{
 						...updateProfile.variables,
-						languages_spoken:
-							updateProfile.variables?.languages_spoken?.join(', ') ?? '',
+						languages_known: JSON.stringify(
+							updateProfile.variables?.languages_known
+						),
 					}}
 					text="Error trying to update your profile"
 				/>

@@ -2,20 +2,26 @@ import { type SubmitHandler, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
-import { ProfileInsert } from '@/types/main'
-import { LanguagePrimaryField, UsernameField } from '@/components/fields'
+import type { ProfileInsert } from '@/types/main'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
+import UsernameField from './fields/username-field'
+import { LanguagesKnownField } from './fields/languages-known-field'
+
+const LanguageKnownSchema = z.object({
+	lang: z.string().length(3, { message: 'Please select a language' }),
+	level: z.enum(['native', 'fluent', 'conversational', 'beginner']),
+})
 
 const formSchema = z.object({
 	username: z
 		.string()
 		.min(3, 'Username should be at least 3 characters')
 		.max(20, 'Username should be at most 20 characters'),
-	language_primary: z
-		.string()
-		.length(3, { message: 'Please select a language' }),
+	languages_known: z
+		.array(LanguageKnownSchema)
+		.min(1, 'Please add at least one language you know.'),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -30,6 +36,9 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 		formState: { errors },
 	} = useForm<FormData>({
 		resolver: zodResolver(formSchema),
+		defaultValues: {
+			languages_known: [{ lang: 'eng', level: 'native' }],
+		},
 	})
 
 	const mainForm = useMutation({
@@ -63,9 +72,10 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 				className="space-y-6"
 			>
 				<UsernameField register={register} error={errors.username} />
-				<LanguagePrimaryField
+				<LanguagesKnownField
 					control={control}
-					error={errors.language_primary}
+					name="languages_known"
+					error={errors.languages_known}
 				/>
 				<div className="flex flex-col gap-4 @xl:flex-row @xl:justify-between">
 					<Button type="submit" className="w-full @xl:w-auto">
