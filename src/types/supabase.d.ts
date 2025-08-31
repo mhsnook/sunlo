@@ -863,8 +863,7 @@ export type Database = {
         Row: {
           avatar_path: string | null
           created_at: string
-          language_primary: string
-          languages_spoken: string[]
+          languages_known: Json
           uid: string
           updated_at: string | null
           username: string | null
@@ -872,8 +871,7 @@ export type Database = {
         Insert: {
           avatar_path?: string | null
           created_at?: string
-          language_primary?: string
-          languages_spoken?: string[]
+          languages_known?: Json
           uid?: string
           updated_at?: string | null
           username?: string | null
@@ -881,8 +879,7 @@ export type Database = {
         Update: {
           avatar_path?: string | null
           created_at?: string
-          language_primary?: string
-          languages_spoken?: string[]
+          languages_known?: Json
           uid?: string
           updated_at?: string | null
           username?: string | null
@@ -1293,6 +1290,7 @@ export type Database = {
         | "cancel"
         | "remove"
         | "invite"
+      language_proficiency: "fluent" | "proficient" | "beginner"
       learning_goal: "moving" | "family" | "visiting"
     }
     CompositeTypes: {
@@ -1950,6 +1948,7 @@ export const Constants = {
         "remove",
         "invite",
       ],
+      language_proficiency: ["fluent", "proficient", "beginner"],
       learning_goal: ["moving", "family", "visiting"],
     },
   },

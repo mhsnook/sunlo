@@ -16,6 +16,9 @@ export type LangOnlyComponentProps = {
 	lang: string
 }
 
+export type LanguageProficiency = 'fluent' | 'proficient' | 'beginner'
+export type LanguageKnown = { lang: string; level: LanguageProficiency }
+
 export type RolesEnum = 'learner' | 'helper' | 'both' | null
 
 export type AuthState = {
@@ -217,7 +220,9 @@ export type PublicProfile = NonNullableFields<
 		avatarUrl: string
 	}
 >
-export type ProfileRow = Tables<'user_profile'>
+export type ProfileRow = Tables<'user_profile'> & {
+	languages_known: LanguageKnown[]
+}
 export type ProfileInsert = TablesInsert<'user_profile'>
 export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
 export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
