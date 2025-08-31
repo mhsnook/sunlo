@@ -12,7 +12,7 @@ import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { ShowAndLogError } from '@/components/errors'
-import { EmailField } from '@/components/fields'
+import EmailField from '@/components/fields/email-field'
 
 export const Route = createFileRoute('/_user/profile/change-email')({
 	component: ChangeEmailPage,

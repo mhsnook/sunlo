@@ -1,7 +1,8 @@
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { Label } from '@/components/ui/label'
 import { FieldValues, Path, useController } from 'react-hook-form'
-import { ErrorLabel, type ControlledFieldProps } from '.'
+import type { ControlledFieldProps } from './types'
+import ErrorLabel from './error-label'
 
 export default function LanguagePrimaryField<T extends FieldValues>({
 	control,

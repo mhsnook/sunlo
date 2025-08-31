@@ -6,11 +6,19 @@ import { type SubmitHandler, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 
+import {
+	Briefcase,
+	Cat,
+	GraduationCap,
+	IceCreamBowl,
+	Rocket,
+	Users,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { useDeckMeta } from '@/lib/use-deck'
 import { DeckRow } from '@/types/main'
+import { useDeckMeta } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { ArchiveDeckButton } from '@/components/learn/archive-deck-button'
@@ -18,15 +26,6 @@ import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
-import {
-	Briefcase,
-	Cat,
-	GraduationCap,
-	IceCreamBowl,
-	Rocket,
-	Salad,
-	Users,
-} from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,

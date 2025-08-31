@@ -1,4 +1,4 @@
-import type { FieldProps } from '.'
+import type { FieldProps } from './types'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import ErrorLabel from '@/components/fields/error-label'

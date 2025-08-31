@@ -12,7 +12,7 @@ import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { ShowAndLogError } from '@/components/errors'
-import { PasswordField } from '@/components/fields'
+import PasswordField from './fields/password-field'
 
 const FormSchema = z.object({
 	password: z.string().min(8, 'Password should be 8 characters at least'),

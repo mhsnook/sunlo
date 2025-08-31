@@ -1,7 +1,8 @@
 import { FieldValues, Path, useController } from 'react-hook-form'
+import type { ControlledFieldProps } from './types'
 import { Label } from '@/components/ui/label'
-import { ErrorLabel, type ControlledFieldProps } from '.'
 import AvatarEditor from '@/components/profile/avatar-editor'
+import ErrorLabel from './error-label'
 
 export default function AvatarEditorField<T extends FieldValues>({
 	control,

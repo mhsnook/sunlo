@@ -15,13 +15,15 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import { EmailField, PasswordField, UserRoleField } from '@/components/fields'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
 import { UnderConstructionNotice } from '@/components/homepage/under-construction'
+import EmailField from '@/components/fields/email-field'
+import PasswordField from '@/components/fields/password-field'
+import UserRoleField from '@/components/fields/user-role-field'
 
 type SignUpProps = {
 	referrer?: uuid

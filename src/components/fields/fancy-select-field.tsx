@@ -1,10 +1,10 @@
 import React from 'react'
 import { FieldValues, Path, useController } from 'react-hook-form'
+import type { ControlledFieldProps } from './types'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { ShowError } from '@/components/errors'
 import { cn } from '@/lib/utils'
-import { ControlledFieldProps } from '.'
+import ErrorLabel from './error-label'
 
 export type FancySelectOption = {
 	value: string | number
@@ -73,7 +73,7 @@ export function FancySelectField<T extends FieldValues>({
 					</React.Fragment>
 				))}
 			</RadioGroup>
-			<ShowError>{error?.message}</ShowError>
+			<ErrorLabel error={error} />
 		</div>
 	)
 }
