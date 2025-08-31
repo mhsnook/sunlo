@@ -1,7 +1,8 @@
-import { type FieldProps, ErrorLabel } from '.'
+import type { FieldProps } from './types'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { FieldValues, Path } from 'react-hook-form'
+import ErrorLabel from './error-label'
 
 export default function UsernameField<T extends FieldValues>({
 	register,

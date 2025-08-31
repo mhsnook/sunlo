@@ -11,7 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { ShowAndLogError } from '@/components/errors'
-import { EmailField, PasswordField } from '@/components/fields'
+import EmailField from '@/components/fields/email-field'
+import PasswordField from '@/components/fields/password-field'
 
 interface LoginSearchParams {
 	redirectedFrom?: string

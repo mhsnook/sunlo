@@ -1,7 +1,11 @@
-import { useProfile } from '@/lib/use-profile'
 import { useCallback, useId, useMemo, useState } from 'react'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
-import { Button } from '../ui/button'
+import type { ControlledInputProps } from './types'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
+import { Button } from '@/components/ui/button'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import {
@@ -14,7 +18,7 @@ import {
 	CommandSeparator,
 } from '../ui/command'
 import { cn } from '@/lib/utils'
-import { ControlledInputProps } from '.'
+import { useProfile } from '@/lib/use-profile'
 
 const filterFunction = (value: string, search: string) => {
 	search = search.toLocaleLowerCase()

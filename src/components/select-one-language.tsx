@@ -1,5 +1,7 @@
+import { useId, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
+import type { ControlledInputProps } from './fields/types'
 import { Button } from '@/components/ui/button'
 import {
 	Command,
@@ -15,8 +17,6 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import languages, { allLanguageOptions } from '@/lib/languages'
-import { useId, useState } from 'react'
-import { ControlledInputProps } from './fields'
 
 export function SelectOneLanguage({
 	hasError = false,

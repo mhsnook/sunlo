@@ -11,8 +11,8 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ShowAndLogError } from '@/components/errors'
-import { EmailField } from '@/components/fields'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
+import EmailField from '@/components/fields/email-field'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,

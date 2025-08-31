@@ -18,11 +18,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ButtonProps } from '@/components/ui/button-variants'
-import {
-	TranslationLanguageField,
-	TranslationTextField,
-} from '@/components/fields'
 import { useRef } from 'react'
+import TranslationLanguageField from './fields/translation-language-field'
+import TranslationTextField from './fields/translation-text-field'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),

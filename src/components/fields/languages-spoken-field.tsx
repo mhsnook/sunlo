@@ -1,8 +1,9 @@
+import type { ControlledFieldProps } from './types'
 import { Label } from '@/components/ui/label'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { FieldValues, Path, useController } from 'react-hook-form'
-import { ErrorLabel, ControlledFieldProps } from '.'
 import languages, { allLanguageOptions } from '@/lib/languages'
+import ErrorLabel from './error-label'
 
 export default function LanguagesSpokenField<T extends FieldValues>({
 	control,
