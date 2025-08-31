@@ -446,9 +446,8 @@ insert into
 		"username",
 		"updated_at",
 		"created_at",
-		"languages_spoken",
-		"language_primary",
-		"avatar_path"
+		"avatar_path",
+		"languages_known"
 	)
 values
 	(
@@ -456,18 +455,16 @@ values
 		'GarlicFace',
 		null,
 		'2025-01-20 07:42:48.704054+00',
-		'{fra,fas}',
-		'eng',
-		'garlic-broccoli-friends-1a82b1.png'
+		'garlic-broccoli-friends-1a82b1.png',
+		'[{"lang": "eng", "level": "fluent"}, {"lang": "fra", "level": "proficient"}, {"lang": "fas", "level": "proficient"}]'
 	),
 	(
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'Lexigrine',
 		null,
 		'2025-08-02 22:28:18.298824+00',
-		'{}',
-		'eng',
-		'cartoon-face-288-1ac43e.png'
+		'cartoon-face-288-1ac43e.png',
+		'[{"lang": "eng", "level": "fluent"}]'
 	);
 
 --
