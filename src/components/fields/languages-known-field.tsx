@@ -47,83 +47,91 @@ export function LanguagesKnownField<T extends FieldValues>({
 				{fields.map((field, index) => (
 					<div
 						key={field.id}
-						className="bg-card flex items-center gap-2 rounded-lg border p-2"
+						className="bg-card space-y-2 rounded-lg border p-2"
 					>
-						<div className="flex flex-col">
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								onClick={() => move(index, index - 1)}
-								disabled={index === 0}
-							>
-								<ArrowUp className="size-4" />
-							</Button>
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								onClick={() => move(index, index + 1)}
-								disabled={index === fields.length - 1}
-							>
-								<ArrowDown className="size-4" />
-							</Button>
-						</div>
-						<div className="flex-1">
+						<div className="flex items-center gap-2">
+							<div className="flex flex-col">
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									onClick={() => move(index, index - 1)}
+									disabled={index === 0}
+								>
+									<ArrowUp className="size-4" />
+								</Button>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									onClick={() => move(index, index + 1)}
+									disabled={index === fields.length - 1}
+								>
+									<ArrowDown className="size-4" />
+								</Button>
+							</div>
+							<div className="flex-1">
+								<Controller
+									control={control}
+									name={`languages_known.${index}.lang`}
+									render={({ field: langField }) => (
+										<SelectOneLanguage
+											value={langField.value}
+											setValue={langField.onChange}
+											disabled={knownLangs.filter((l) => l !== langField.value)}
+										/>
+									)}
+								/>
+							</div>
 							<Controller
 								control={control}
-								name={`languages_known.${index}.lang`}
-								render={({ field: langField }) => (
-									<SelectOneLanguage
-										value={langField.value}
-										setValue={langField.onChange}
-										disabled={knownLangs.filter((l) => l !== langField.value)}
-									/>
+								name={`languages_known.${index}.level`}
+								render={({ field: selectField }) => (
+									<Select
+										onValueChange={selectField.onChange}
+										defaultValue={selectField.value}
+									>
+										<SelectTrigger className="w-[180px]">
+											<SelectValue placeholder="Proficiency" />
+										</SelectTrigger>
+										<SelectContent>
+											{proficiencyLevels.map((level) => (
+												<SelectItem key={level.value} value={level.value}>
+													{level.label}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 								)}
 							/>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon"
+								onClick={() => remove(index)}
+							>
+								<Trash2 className="text-destructive size-4" />
+							</Button>
 						</div>
-						<Controller
-							control={control}
-							name={`languages_known.${index}.level`}
-							render={({ field: selectField }) => (
-								<Select
-									onValueChange={selectField.onChange}
-									defaultValue={selectField.value}
-								>
-									<SelectTrigger className="w-[180px]">
-										<SelectValue placeholder="Proficiency" />
-									</SelectTrigger>
-									<SelectContent>
-										{proficiencyLevels.map((level) => (
-											<SelectItem key={level.value} value={level.value}>
-												{level.label}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							)}
-						/>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							onClick={() => remove(index)}
-						>
-							<Trash2 className="text-destructive size-4" />
-						</Button>
+						<div>
+							<ErrorLabel error={error?.[String(index)]?.lang} />
+							<ErrorLabel error={error?.[String(index)]?.level} />
+						</div>
 					</div>
 				))}
 			</div>
 			<ErrorLabel error={error} />
-			<Button
-				type="button"
-				variant="outline"
-				size="sm"
-				onClick={() => append({ lang: '', level: 'proficient' })}
-				className="float-end mt-2"
-			>
-				Add Language
-			</Button>
+			<div className="flex w-full flex-row justify-end">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					onClick={() => append({ lang: '', level: 'proficient' })}
+					className="mt-0"
+				>
+					Add Language
+				</Button>
+			</div>
 		</div>
 	)
 }
