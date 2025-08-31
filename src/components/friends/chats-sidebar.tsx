@@ -13,9 +13,9 @@ export function ChatsSidebar() {
 	const { data: relations, isPending } = useRelations()
 	const { data: chats } = useAllChats()
 
-	const friends = relations?.uids.friends
-		.map((uid) => relations.relationsMap[uid])
-		.filter((f) => f.status === 'friends')
+	const friends = relations?.uids.friends.map(
+		(uid) => relations.relationsMap[uid]
+	)
 
 	// Mock sorting by recent activity
 	const sortedFriends = friends?.sort((a, b) =>

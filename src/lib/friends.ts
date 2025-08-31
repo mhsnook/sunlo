@@ -9,6 +9,7 @@ import {
 	ChatMessageRelative,
 	ChatMessageRow,
 	FriendRequestActionInsert,
+	FriendSummaryFull,
 	FriendSummaryRaw,
 	FriendSummaryRelative,
 	uuid,
@@ -18,7 +19,7 @@ import { avatarUrlify, mapArray, mapArrays } from './utils'
 import toast from 'react-hot-toast'
 
 type FriendSummariesLoaded = {
-	relationsMap: { [key: uuid]: FriendSummaryRelative }
+	relationsMap: { [key: uuid]: FriendSummaryFull }
 	uids: {
 		all: Array<uuid>
 		friends: Array<uuid>
@@ -67,9 +68,12 @@ export const relationsQuery = (uidMe: uuid | null) =>
 
 			if (!data) return null
 
-			const cleanArray: Array<FriendSummaryRelative> = data.map((d) =>
-				friendSummaryToRelative(uid, d)
-			)
+			const cleanArray = data
+				.map((d) => friendSummaryToRelative(uid, d))
+				.filter(
+					(d: FriendSummaryRelative): d is FriendSummaryFull =>
+						d.profile !== undefined
+				)
 
 			return {
 				relationsMap: mapArray(cleanArray, 'uidOther'),
