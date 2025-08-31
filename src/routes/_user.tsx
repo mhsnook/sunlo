@@ -4,7 +4,12 @@ import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { profileQuery } from '@/lib/use-profile'
-import { FriendRequestActionRow, TitleBar } from '@/types/main'
+import {
+	ChatMessageRelative,
+	ChatMessageRow,
+	FriendRequestActionRow,
+	TitleBar,
+} from '@/types/main'
 import {
 	createFileRoute,
 	Outlet,
@@ -18,6 +23,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/hooks'
 import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
+import { ChatsMap } from '@/lib/friends'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -106,6 +112,52 @@ function UserLayout() {
 					void queryClient.invalidateQueries({
 						queryKey: ['user', userId, 'relations'],
 					})
+				}
+			)
+			.subscribe()
+		return () => {
+			void supabase.removeChannel(channel)
+		}
+	}, [userId, queryClient])
+
+	useEffect(() => {
+		if (!userId) return
+
+		const channel = supabase
+			.channel('user-chats')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'chat_message',
+				},
+				(payload) => {
+					const newMessage = payload.new as ChatMessageRow
+
+					queryClient.setQueryData(
+						['user', userId, 'chats'],
+						(oldData: ChatsMap | undefined): ChatsMap => {
+							const friendId =
+								newMessage.sender_uid === userId ?
+									newMessage.recipient_uid
+								:	newMessage.sender_uid
+
+							const newChatMessageRelative: ChatMessageRelative = {
+								...newMessage,
+								isMine: newMessage.sender_uid === userId,
+								friendId: friendId,
+							}
+
+							const currentChats = oldData ?? {}
+							const friendChatHistory = currentChats[friendId] ?? []
+
+							return {
+								...currentChats,
+								[friendId]: [...friendChatHistory, newChatMessageRelative],
+							}
+						}
+					)
 				}
 			)
 			.subscribe()
