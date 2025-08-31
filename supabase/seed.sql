@@ -3938,25 +3938,10 @@ values
 -- Data for Name: user_client_event; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 --
--- Data for Name: s3_multipart_uploads; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
---
---
--- Data for Name: s3_multipart_uploads_parts; Type: TABLE DATA; Schema: storage; Owner: supabase_storage_admin
---
---
--- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
---
---
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
 	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
-
---
--- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
---
-select
-	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
 
 --
 -- PostgreSQL database dump complete
