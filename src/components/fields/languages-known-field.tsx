@@ -3,6 +3,7 @@ import {
 	Controller,
 	type FieldValues,
 	type ArrayPath,
+	type Path,
 } from 'react-hook-form'
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
 import type { LanguageKnown, LanguageProficiency } from '@/types/main'
@@ -73,7 +74,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 							<div className="flex-1">
 								<Controller
 									control={control}
-									name={`languages_known.${index}.lang`}
+									name={`languages_known.${index}.lang` as Path<T>}
 									render={({ field: langField }) => (
 										<SelectOneLanguage
 											value={langField.value}
@@ -85,7 +86,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 							</div>
 							<Controller
 								control={control}
-								name={`languages_known.${index}.level`}
+								name={`languages_known.${index}.level` as Path<T>}
 								render={({ field: selectField }) => (
 									<Select
 										onValueChange={selectField.onChange}
@@ -113,14 +114,15 @@ export function LanguagesKnownField<T extends FieldValues>({
 								<Trash2 className="text-destructive size-4" />
 							</Button>
 						</div>
-						<div>
-							<ErrorLabel error={error?.[String(index)]?.lang} />
-							<ErrorLabel error={error?.[String(index)]?.level} />
-						</div>
+						{error?.[index] && (
+							<div>
+								<ErrorLabel error={error[index]?.lang} />
+								<ErrorLabel error={error[index]?.level} />
+							</div>
+						)}
 					</div>
 				))}
 			</div>
-			<ErrorLabel error={error} />
 			<div className="flex w-full flex-row justify-end">
 				<Button
 					type="button"
