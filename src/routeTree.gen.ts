@@ -47,6 +47,7 @@ import { Route as UserLearnLangSearchImport } from './routes/_user/learn.$lang.s
 import { Route as UserLearnLangReviewImport } from './routes/_user/learn.$lang.review'
 import { Route as UserLearnLangLibraryImport } from './routes/_user/learn.$lang.library'
 import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn.$lang.deck-settings'
+import { Route as UserLearnLangBulkAddImport } from './routes/_user/learn.$lang.bulk-add'
 import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn.$lang.add-phrase'
 import { Route as UserLearnLangIdImport } from './routes/_user/learn.$lang.$id'
 import { Route as UserFriendsSearchUidImport } from './routes/_user/friends.search.$uid'
@@ -285,6 +286,12 @@ const UserLearnLangLibraryRoute = UserLearnLangLibraryImport.update({
 const UserLearnLangDeckSettingsRoute = UserLearnLangDeckSettingsImport.update({
   id: '/deck-settings',
   path: '/deck-settings',
+  getParentRoute: () => UserLearnLangRoute,
+} as any)
+
+const UserLearnLangBulkAddRoute = UserLearnLangBulkAddImport.update({
+  id: '/bulk-add',
+  path: '/bulk-add',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
 
@@ -580,6 +587,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangAddPhraseImport
       parentRoute: typeof UserLearnLangImport
     }
+    '/_user/learn/$lang/bulk-add': {
+      id: '/_user/learn/$lang/bulk-add'
+      path: '/bulk-add'
+      fullPath: '/learn/$lang/bulk-add'
+      preLoaderRoute: typeof UserLearnLangBulkAddImport
+      parentRoute: typeof UserLearnLangImport
+    }
     '/_user/learn/$lang/deck-settings': {
       id: '/_user/learn/$lang/deck-settings'
       path: '/deck-settings'
@@ -743,6 +757,7 @@ const UserLearnLangReviewRouteWithChildren =
 interface UserLearnLangRouteChildren {
   UserLearnLangIdRoute: typeof UserLearnLangIdRoute
   UserLearnLangAddPhraseRoute: typeof UserLearnLangAddPhraseRoute
+  UserLearnLangBulkAddRoute: typeof UserLearnLangBulkAddRoute
   UserLearnLangDeckSettingsRoute: typeof UserLearnLangDeckSettingsRoute
   UserLearnLangLibraryRoute: typeof UserLearnLangLibraryRoute
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
@@ -753,6 +768,7 @@ interface UserLearnLangRouteChildren {
 const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangIdRoute: UserLearnLangIdRoute,
   UserLearnLangAddPhraseRoute: UserLearnLangAddPhraseRoute,
+  UserLearnLangBulkAddRoute: UserLearnLangBulkAddRoute,
   UserLearnLangDeckSettingsRoute: UserLearnLangDeckSettingsRoute,
   UserLearnLangLibraryRoute: UserLearnLangLibraryRoute,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
@@ -855,6 +871,7 @@ export interface FileRoutesByFullPath {
   '/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
@@ -896,6 +913,7 @@ export interface FileRoutesByTo {
   '/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
@@ -943,6 +961,7 @@ export interface FileRoutesById {
   '/_user/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/_user/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/_user/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/_user/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
@@ -991,6 +1010,7 @@ export interface FileRouteTypes {
     | '/friends/search/$uid'
     | '/learn/$lang/$id'
     | '/learn/$lang/add-phrase'
+    | '/learn/$lang/bulk-add'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/library'
     | '/learn/$lang/review'
@@ -1031,6 +1051,7 @@ export interface FileRouteTypes {
     | '/friends/search/$uid'
     | '/learn/$lang/$id'
     | '/learn/$lang/add-phrase'
+    | '/learn/$lang/bulk-add'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/library'
     | '/learn/$lang/search'
@@ -1076,6 +1097,7 @@ export interface FileRouteTypes {
     | '/_user/friends/search/$uid'
     | '/_user/learn/$lang/$id'
     | '/_user/learn/$lang/add-phrase'
+    | '/_user/learn/$lang/bulk-add'
     | '/_user/learn/$lang/deck-settings'
     | '/_user/learn/$lang/library'
     | '/_user/learn/$lang/review'
@@ -1250,6 +1272,7 @@ export const routeTree = rootRoute
       "children": [
         "/_user/learn/$lang/$id",
         "/_user/learn/$lang/add-phrase",
+        "/_user/learn/$lang/bulk-add",
         "/_user/learn/$lang/deck-settings",
         "/_user/learn/$lang/library",
         "/_user/learn/$lang/review",
@@ -1310,6 +1333,10 @@ export const routeTree = rootRoute
     },
     "/_user/learn/$lang/add-phrase": {
       "filePath": "_user/learn.$lang.add-phrase.tsx",
+      "parent": "/_user/learn/$lang"
+    },
+    "/_user/learn/$lang/bulk-add": {
+      "filePath": "_user/learn.$lang.bulk-add.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/deck-settings": {

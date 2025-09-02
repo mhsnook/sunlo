@@ -92,6 +92,17 @@ alter type "public"."learning_goal" owner to "postgres";
 comment on
 type "public"."learning_goal" is 'why are you learning this language?';
 
+create type "public"."translation_input" as ("lang" character(3), "text" "text");
+
+alter type "public"."translation_input" owner to "postgres";
+
+create type "public"."phrase_with_translations_input" as (
+	"phrase_text" "text",
+	"translations" "public"."translation_input" []
+);
+
+alter type "public"."phrase_with_translations_input" owner to "postgres";
+
 create
 or replace function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
@@ -208,6 +219,41 @@ or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") return
 $$;
 
 alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "postgres";
+
+create
+or replace function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" []
+) returns "void" language "plpgsql" as $$
+declare
+    phrase_item public.phrase_with_translations_input;
+    translation_item public.translation_input;
+    new_phrase_id uuid;
+begin
+    foreach phrase_item in array p_phrases
+    loop
+        -- Insert the phrase and get its ID.
+        -- We could add logic here to check for existing phrases if we wanted.
+        insert into public.phrase (lang, text)
+        values (p_lang, phrase_item.phrase_text)
+        returning id into new_phrase_id;
+
+        -- Insert all translations for the new phrase
+        if array_length(phrase_item.translations, 1) > 0 then
+            foreach translation_item in array phrase_item.translations
+            loop
+                insert into public.phrase_translation (phrase_id, lang, text)
+                values (new_phrase_id, translation_item.lang, translation_item.text);
+            end loop;
+        end if;
+    end loop;
+end;
+$$;
+
+alter function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" []
+) owner to "postgres";
 
 create
 or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
@@ -1715,6 +1761,21 @@ grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "service_role";
+
+grant all on function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" []
+) to "anon";
+
+grant all on function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" []
+) to "authenticated";
+
+grant all on function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" []
+) to "service_role";
 
 grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";
 

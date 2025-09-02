@@ -23,6 +23,7 @@ import supabase from '@/lib/supabase-client'
 import { PhraseCardInsert } from '@/types/main'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 interface SearchParams {
 	text?: string
@@ -143,7 +144,7 @@ function AddPhraseTab() {
 						error={errors.translation_text}
 						register={register}
 					/>
-					<div className="flex flex-col gap-2 @xl:flex-row">
+					<div className="flex w-full flex-col justify-between gap-2 @xl:flex-row">
 						<Button
 							type="submit"
 							className={addPhraseMutation.isPending ? 'opacity-60' : ''}
@@ -154,16 +155,23 @@ function AddPhraseTab() {
 							:	<NotebookPen />}
 							Save and add another
 						</Button>
-						<Button variant="link" asChild>
-							<Link
-								to="/learn/$lang/search"
-								from={Route.fullPath}
-								search={searchPlusText}
-							>
-								<Search />
-								Search for similar phrases
-							</Link>
-						</Button>
+						<Link
+							to="/learn/$lang/search"
+							from={Route.fullPath}
+							search={searchPlusText}
+							className={buttonVariants({ variant: 'outline' })}
+						>
+							<Search size={16} />
+							Search phrases
+						</Link>
+
+						<Link
+							to="/learn/$lang/bulk-add"
+							params={{ lang }}
+							className={buttonVariants({ variant: 'outline' })}
+						>
+							Bulk add phrases
+						</Link>
 					</div>
 				</form>
 			</CardContent>
