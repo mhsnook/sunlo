@@ -1,13 +1,11 @@
 import { cn } from '@/lib/utils'
-import { ReactNode } from '@tanstack/react-router'
-import { LucideIcon } from 'lucide-react'
-import type { HTMLAttributes, PropsWithChildren } from 'react'
+import type { ComponentType, HTMLAttributes, PropsWithChildren } from 'react'
 
 type CalloutProps = PropsWithChildren & {
 	variant?: 'default' | 'problem' | 'ghost'
 	className?: string
 	alert?: boolean
-	Icon?: LucideIcon | (() => LucideIcon) | ReactNode
+	Icon?: ComponentType
 }
 
 const variants = {

@@ -1,9 +1,9 @@
-// import Image from 'next/image'
+import { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
-const shadowStyle = {
+const shadowStyle: CSSProperties = {
 	filter: 'drop-shadow(0px 0px 2px #fff)',
-} as React.CSSProperties
+}
 
 export const Garlic = ({ size = 50, className = '' }) => (
 	<img
