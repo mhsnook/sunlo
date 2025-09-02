@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { ChevronsUpDown, GalleryHorizontalEnd, Plus } from 'lucide-react'
 import {
 	DropdownMenu,
@@ -53,7 +54,7 @@ function NoDecks() {
 	)
 }
 
-const sizeStyles = { height: 48, width: '100%' } as React.CSSProperties
+const sizeStyles: CSSProperties = { height: 48, width: '100%' }
 
 export function DeckSwitcher({ lang }: { lang?: string }) {
 	const { isMobile, setClosedMobile } = useSidebar()

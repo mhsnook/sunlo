@@ -51,7 +51,7 @@ function CardSection({ card }: { card: CardFull }) {
 	const rev = reviews[0] || null
 	const retr =
 		card.last_reviewed_at && card.stability ?
-			retrievability(card.last_reviewed_at, card.stability!)
+			retrievability(card.last_reviewed_at, card.stability)
 		:	0
 	return (
 		<div className="block space-y-4">

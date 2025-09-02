@@ -26,12 +26,20 @@ type NavbarLoaderData = {
 	}
 	contextMenu?: string[]
 }
-type NavbarMatch = RouteMatch & {
+type NavbarMatch = RouteMatch<
+	string,
+	string,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
+> & {
 	loaderData?: NavbarLoaderData
 }
 
 export default function Navbar() {
-	const matches = useMatches() as NavbarMatch[]
+	const matches = useMatches()
 	if (matches.some((match) => match.status === 'pending')) return null
 
 	return (
@@ -78,8 +86,8 @@ function Title({ matches }: { matches: NavbarMatch[] }) {
 			<Separator orientation="vertical" className="mx-2 h-6" />
 			<div className="flex flex-row items-center gap-[1cqw] rounded-2xl">
 				{Icon ?
-					<Icon size="24" />
-				:	<>&nbsp;</>}
+					<Icon size={24} />
+				:	null}
 				<div>
 					<h1 className="text-lg font-bold">{titleBar?.title}</h1>
 					<p className="text-sm opacity-80">{titleBar?.subtitle}</p>
