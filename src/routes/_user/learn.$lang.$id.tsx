@@ -8,7 +8,6 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { useDeckCard } from '@/lib/use-deck'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
@@ -22,6 +21,7 @@ import { useState } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { cn } from '@/lib/utils'
 
 const DestructiveOctagon = () => (
 	<Badge variant="destructive" className="p-2">
@@ -95,7 +95,10 @@ function RouteComponent() {
 							{translations_other.length === 0 ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
-										className={buttonVariants({ variant: 'link', size: 'sm' })}
+										className={cn(
+											buttonVariants({ variant: 'outline', size: 'sm' }),
+											isOpen ? 'my-3' : 'mt-3'
+										)}
 									>
 										<ChevronsUpDown className="h-4 w-4" />
 										{isOpen ? 'Hide extra' : 'Show hidden'} translations

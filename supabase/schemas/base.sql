@@ -103,6 +103,19 @@ create type "public"."phrase_with_translations_input" as (
 
 alter type "public"."phrase_with_translations_input" owner to "postgres";
 
+create type "public"."translation_output" as ("id" "uuid", "lang" character(3), "text" "text");
+
+alter type "public"."translation_output" owner to "postgres";
+
+create type "public"."phrase_with_translations_output" as (
+	"id" "uuid",
+	"lang" character(3),
+	"text" "text",
+	"translations" "public"."translation_output" []
+);
+
+alter type "public"."phrase_with_translations_output" owner to "postgres";
+
 create
 or replace function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
@@ -224,28 +237,50 @@ create
 or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" []
-) returns "void" language "plpgsql" as $$
+) returns setof "public"."phrase_with_translations_output" language "plpgsql" as $$
 declare
     phrase_item public.phrase_with_translations_input;
     translation_item public.translation_input;
     new_phrase_id uuid;
+    new_translation_id uuid;
+    result public.phrase_with_translations_output;
+    translation_outputs public.translation_output[];
 begin
     foreach phrase_item in array p_phrases
     loop
         -- Insert the phrase and get its ID.
-        -- We could add logic here to check for existing phrases if we wanted.
         insert into public.phrase (lang, text)
         values (p_lang, phrase_item.phrase_text)
         returning id into new_phrase_id;
+
+        -- Reset translations array for this phrase
+        translation_outputs := '{}';
 
         -- Insert all translations for the new phrase
         if array_length(phrase_item.translations, 1) > 0 then
             foreach translation_item in array phrase_item.translations
             loop
                 insert into public.phrase_translation (phrase_id, lang, text)
-                values (new_phrase_id, translation_item.lang, translation_item.text);
+                values (new_phrase_id, translation_item.lang, translation_item.text)
+                returning id into new_translation_id;
+
+                -- Add the new translation to our output array
+                translation_outputs := array_append(
+                    translation_outputs,
+                    (new_translation_id, translation_item.lang, translation_item.text)::public.translation_output
+                );
             end loop;
         end if;
+
+        -- Construct the result for the current phrase
+        result := (
+            new_phrase_id,
+            p_lang,
+            phrase_item.phrase_text,
+            translation_outputs
+        )::public.phrase_with_translations_output;
+
+        return next result;
     end loop;
 end;
 $$;

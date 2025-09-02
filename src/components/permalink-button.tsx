@@ -21,7 +21,7 @@ export default function PermalinkButton({
 				{...props}
 			>
 				<LinkIcon className="h-4 w-4" />
-				<span className="hidden @sm:block">{text}</span>
+				{text !== '' && <span className="hidden @sm:block">{text}</span>}
 			</Link>
 		)
 }

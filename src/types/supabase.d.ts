@@ -1186,7 +1186,7 @@ export type Database = {
           p_lang: string
           p_phrases: Database["public"]["CompositeTypes"]["phrase_with_translations_input"][]
         }
-        Returns: undefined
+        Returns: Database["public"]["CompositeTypes"]["phrase_with_translations_output"][]
       }
       fsrs_clamp_d: {
         Args: { difficulty: number }
@@ -1304,6 +1304,12 @@ export type Database = {
       learning_goal: "moving" | "family" | "visiting"
     }
     CompositeTypes: {
+      phrase_with_translations_input: {
+        phrase_text: string | null
+        translations:
+          | Database["public"]["CompositeTypes"]["translation_input"][]
+          | null
+      }
       phrase_with_translations_output: {
         id: string | null
         lang: string | null
@@ -1312,18 +1318,12 @@ export type Database = {
           | Database["public"]["CompositeTypes"]["translation_output"][]
           | null
       }
-      phrase_with_translations_input: {
-        phrase_text: string | null
-        translations:
-          | Database["public"]["CompositeTypes"]["translation_input"][]
-          | null
-      }
-      translation_output: {
-        id: string | null
+      translation_input: {
         lang: string | null
         text: string | null
       }
-      translation_input: {
+      translation_output: {
+        id: string | null
         lang: string | null
         text: string | null
       }
