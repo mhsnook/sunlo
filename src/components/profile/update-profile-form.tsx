@@ -8,23 +8,17 @@ import { toast } from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
+import { LanguagesKnownSchema } from '@/lib/schemas'
 import { Button } from '@/components/ui/button'
 import UsernameField from '../fields/username-field'
 import { LanguagesKnownField } from '../fields/languages-known-field'
 import AvatarEditorField from '../fields/avatar-editor-field'
 
-const LanguageKnownSchema = z.object({
-	lang: z.string().length(3, { message: 'Please select a language' }),
-	level: z.enum(['fluent', 'proficient', 'beginner']),
-})
-
 const ProfileEditFormSchema = z.object({
 	username: z
 		.string()
 		.min(3, { message: 'Username must be 3 letters or more' }),
-	languages_known: z
-		.array(LanguageKnownSchema)
-		.min(1, 'Please add at least one language you know.'),
+	languages_known: LanguagesKnownSchema,
 	avatar_path: z.string().nullable().optional(),
 })
 

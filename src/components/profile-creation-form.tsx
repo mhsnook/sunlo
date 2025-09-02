@@ -6,22 +6,16 @@ import type { ProfileInsert } from '@/types/main'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
+import { LanguagesKnownSchema } from '@/lib/schemas'
 import UsernameField from './fields/username-field'
 import { LanguagesKnownField } from './fields/languages-known-field'
-
-const LanguageKnownSchema = z.object({
-	lang: z.string().length(3, { message: 'Please select a language' }),
-	level: z.enum(['fluent', 'proficient', 'beginner']),
-})
 
 const formSchema = z.object({
 	username: z
 		.string()
 		.min(3, 'Username should be at least 3 characters')
 		.max(20, 'Username should be at most 20 characters'),
-	languages_known: z
-		.array(LanguageKnownSchema)
-		.min(1, 'Please add at least one language you know.'),
+	languages_known: LanguagesKnownSchema,
 })
 
 type FormData = z.infer<typeof formSchema>
