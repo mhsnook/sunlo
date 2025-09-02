@@ -1,4 +1,4 @@
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -67,8 +67,7 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 		<div className="mx-auto max-w-sm space-y-8">
 			<form
 				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={handleSubmit(mainForm.mutate as SubmitHandler<FormData>)}
+				onSubmit={handleSubmit((data) => mainForm.mutate(data))}
 				className="space-y-6"
 			>
 				<UsernameField register={register} error={errors.username} />

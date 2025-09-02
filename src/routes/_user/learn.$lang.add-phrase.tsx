@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { Controller, SubmitHandler, useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
@@ -106,10 +106,7 @@ function AddPhraseTab() {
 			<CardContent>
 				<form
 					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit(
-						addPhraseMutation.mutate as SubmitHandler<AddPhraseFormValues>
-					)}
+					onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
 					className="mt-4 space-y-4"
 				>
 					<div>

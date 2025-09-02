@@ -90,8 +90,108 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - Attach data to the Profile to personalise the interface, like preferred language / languages understood, username and avatar
 - Attach data to the `user.user_metadata` _only_ if it's required to present the correct UI; so far just the `user_role` field.
 
+## Typescript Conventions
+
+- Prefer `Array<SomeType>` over `SomeType[]` because you can tell it's an array from the start of the line rather than waiting till the end (which can lead to mistakes especially for longer type definitions)
+
 ## Misc conventions
 
 - when using a 3-letter language code, we almost always call this variable 'lang'
 - when using a phrase_id as its own variable or prop to pass, we almost always call this 'pid'
 - when displaying times and dates, default to the `ago` function and other helper functions in `dayjs.ts`
+
+## Example Code for a Form with Validation and a Mutation
+
+```javascript
+const DeckGoalSchema = z.object({
+	learning_goal: z.enum(['visiting', 'family', 'moving']),
+	lang: z.string().min(3, { message: 'You must select a deck to modify' }),
+})
+
+type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
+
+function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
+	const queryClient = useQueryClient()
+	const { userId } = useAuth()
+	const {
+		control,
+		handleSubmit,
+		reset,
+		formState: { errors, isDirty },
+	} = useForm<DeckGoalFormInputs>({
+		resolver: zodResolver(DeckGoalSchema),
+		defaultValues: { learning_goal, lang },
+	})
+
+	const updateDeckGoalMutation = useMutation<
+		DeckRow,
+		PostgrestError,
+		DeckGoalFormInputs
+	>({
+		mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
+		mutationFn: async (values: DeckGoalFormInputs) => {
+			const { data } = await supabase
+				.from('user_deck')
+				.update(values)
+				.eq('lang', lang)
+				// using explicit uid check to make query planning faster
+				.eq('uid', userId!)
+				// we usually throw on error, when we can
+				.throwOnError()
+				.select()
+			return data[0]
+		},
+		onSuccess: (data) => {
+			// usually use a toast for user feedback
+			toast.success('Your deck settings have been updated.')
+			// we usually invalidate queries rather than optimistically updating
+			void queryClient.invalidateQueries({
+				queryKey: ['user', lang, 'deck'],
+			})
+		},
+		onError: () => {
+			toast.error(
+				'There was some issue and your deck settings were not updated.'
+			)
+		},
+	})
+
+	return (
+		{/* ... */}
+			<form
+				noValidate
+				onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutat(data))}
+				className="space-y-4"
+			>
+				{/* ... */}
+				<div className="space-x-2">
+					<Button
+						type="submit"
+						disabled={!isDirty || updateDeckGoalMutation.isPending}
+					>
+						Update your goal
+					</Button>
+					<Button
+						variant="secondary"
+						type="button"
+						onClick={() => reset()}
+						disabled={!isDirty}
+					>
+						Reset
+					</Button>
+				</div>
+			</form>
+		{/* ... */}
+	)
+}
+
+```
+
+This example shows a
+
+1. a Zod schema, how we will validate the form
+2. the input value type, derived from the schema
+3. the react-hook-form useForm and how we type it, using the input value type
+4. the useMutation and how we type it using the database return type and the input value type
+5. the onSuccess, which often fires a toast to let the user know of the successful operation, and which usually either invalidates a query or updates the query cache
+6. the button and how we disable it when there's nothing to submit or it's already submitting.

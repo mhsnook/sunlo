@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
 
@@ -151,9 +151,8 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit(
-						updateDailyGoalMutation.mutate as SubmitHandler<DailyGoalFormInputs>
+					onSubmit={handleSubmit((data) =>
+						updateDailyGoalMutation.mutate(data)
 					)}
 					className="space-y-4"
 				>
@@ -266,10 +265,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit(
-						updateDeckGoalMutation.mutate as SubmitHandler<DeckGoalFormInputs>
-					)}
+					onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutate(data))}
 					className="space-y-4"
 				>
 					<FancySelectField<DeckGoalFormInputs>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { SubmitHandler, useController, useForm } from 'react-hook-form'
+import { useController, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RouteIcon } from 'lucide-react'
@@ -70,10 +70,7 @@ function NewDeckForm() {
 					<form
 						name="new-deck"
 						noValidate
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit(
-							createNewDeck.mutate as SubmitHandler<FormValues>
-						)}
+						onSubmit={handleSubmit((data) => createNewDeck.mutate(data))}
 						className="space-y-6"
 					>
 						{showNewUserUI ?
