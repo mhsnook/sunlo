@@ -117,7 +117,7 @@ function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 					<DropdownMenuItem key={link.to}>
 						<Link
 							{...link}
-							className="justify-content-center flex w-full flex-row gap-2"
+							className="flex w-full flex-row items-center gap-2"
 							onClick={setClosed}
 						>
 							{!Icon ? null : <Icon className="size-[1.25rem]" />}

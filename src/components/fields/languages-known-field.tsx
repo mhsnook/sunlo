@@ -116,8 +116,8 @@ export function LanguagesKnownField<T extends FieldValues>({
 						</div>
 						{error?.[index] && (
 							<div>
-								<ErrorLabel error={error[index]?.lang} />
-								<ErrorLabel error={error[index]?.level} />
+								<ErrorLabel error={error[index].lang} />
+								<ErrorLabel error={error[index].level} />
 							</div>
 						)}
 					</div>
