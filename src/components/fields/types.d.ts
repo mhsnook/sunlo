@@ -10,8 +10,11 @@ type AnyFieldType = {
 	error?: FieldError
 	tabIndex?: number
 }
-type AnyArrayFieldType = {
-	error?: FieldError[]
+type AnyArrayFieldType<T> = {
+	error?: {
+		root?: FieldError
+		[x: number]: FieldError | Record<string, FieldError> | undefined
+	}
 }
 
 export type FieldProps<T extends FieldValues> = AnyFieldType & {

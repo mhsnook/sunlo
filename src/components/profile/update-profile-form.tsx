@@ -72,8 +72,8 @@ export default function UpdateProfileForm({
 		reset,
 		formState: { errors, isSubmitting, isValid, isDirty },
 	} = useForm<ProfileEditFormInputs>({
-		defaultValues: initialData,
 		resolver: zodResolver(ProfileEditFormSchema),
+		defaultValues: initialData,
 	})
 
 	return (
