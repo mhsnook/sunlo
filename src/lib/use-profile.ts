@@ -15,7 +15,7 @@ import { useAuth } from '@/lib/hooks'
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
 		queryKey: ['user', userId],
-		queryFn: async ({ queryKey }) => {
+		queryFn: async ({ queryKey }): Promise<ProfileFull | null> => {
 			if (!queryKey[1]) return null
 			const uid = queryKey[1] as uuid
 			const { data } = await supabase
@@ -25,13 +25,12 @@ export const profileQuery = (userId: uuid | null) =>
 				.maybeSingle()
 				.throwOnError()
 			if (data === null) return null
-			const { decks_array, ...profile } = data
+			const { decks_array, avatar_path, ...profile } = data
 			const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
 			const deckLanguages: Array<string> = decks_array
 				.map((d) => d.lang)
 				.filter((d) => typeof d === 'string')
-			const languages_known =
-				(profile.languages_known as LanguageKnown[] | null) ?? []
+			const languages_known = (profile.languages_known ?? []) as LanguageKnown[]
 			const languagesToShow = [
 				...new Set([...languages_known.map((lk) => lk.lang), ...deckLanguages]),
 			]
@@ -39,11 +38,12 @@ export const profileQuery = (userId: uuid | null) =>
 				...profile,
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
-				avatarUrl: avatarUrlify(profile.avatar_path),
+				avatarUrl: avatarUrlify(avatar_path),
 				languagesToShow,
+				languages_known: languages_known as LanguageKnown[],
 				decksMap,
 				deckLanguages,
-			} as ProfileFull
+			}
 		},
 	})
 

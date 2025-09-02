@@ -25,7 +25,7 @@ const ProfileEditFormSchema = z.object({
 	languages_known: z
 		.array(LanguageKnownSchema)
 		.min(1, 'Please add at least one language you know.'),
-	avatar_path: z.string().nullable(),
+	avatar_path: z.string().nullable().optional(),
 })
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
@@ -38,8 +38,8 @@ export default function UpdateProfileForm({
 	const queryClient = useQueryClient()
 	const initialData: ProfileEditFormInputs = {
 		username: profile.username,
-		avatar_path: profile.avatar_path,
-		languages_known: profile.languages_known,
+		avatar_path: profile.avatarUrl?.split('/').at(-1) || null,
+		languages_known: profile.languages_known as LanguageKnown[],
 	}
 	const uid: uuid = profile.uid
 
