@@ -30,8 +30,8 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 	const queryClient = useQueryClient()
 
 	const {
-		control,
 		register,
+		control,
 		handleSubmit,
 		formState: { errors },
 	} = useForm<FormData>({
@@ -71,11 +71,7 @@ export default function ProfileCreationForm({ userId }: { userId: string }) {
 				className="space-y-6"
 			>
 				<UsernameField register={register} error={errors.username} />
-				<LanguagesKnownField
-					control={control}
-					name="languages_known"
-					error={errors.languages_known}
-				/>
+				<LanguagesKnownField control={control} error={errors.languages_known} />
 				<div className="flex flex-col gap-4 @xl:flex-row @xl:justify-between">
 					<Button type="submit" size="lg" className="w-full @xl:w-auto">
 						Save your profile

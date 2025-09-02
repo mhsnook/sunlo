@@ -122,6 +122,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 						)}
 					</div>
 				))}
+				<ErrorLabel error={error?.root} />
 			</div>
 			<div className="flex w-full flex-row justify-end">
 				<Button
