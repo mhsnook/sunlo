@@ -70,7 +70,7 @@ export default function UpdateProfileForm({
 		control,
 		handleSubmit,
 		reset,
-		formState: { errors, isSubmitting, isValid, isDirty },
+		formState: { errors, isSubmitting, isDirty },
 	} = useForm<ProfileEditFormInputs>({
 		resolver: zodResolver(ProfileEditFormSchema),
 		defaultValues: initialData,
@@ -96,10 +96,7 @@ export default function UpdateProfileForm({
 					control={control}
 				/>
 				<div className="flex flex-row gap-2">
-					<Button
-						type="submit"
-						disabled={updateProfile.isPending || !isValid || !isDirty}
-					>
+					<Button type="submit" disabled={updateProfile.isPending || !isDirty}>
 						Save changes
 					</Button>
 					<Button
