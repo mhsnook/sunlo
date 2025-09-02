@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
@@ -225,9 +224,20 @@ function PhraseEntry({
 		<div className="bg-card space-y-4 rounded-lg border p-4">
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 space-y-2">
-					<Label htmlFor={`phrases.${phraseIndex}.phrase_text`}>
-						Phrase in {languages[lang]}
-					</Label>
+					<div className="flex items-center justify-between">
+						<Label htmlFor={`phrases.${phraseIndex}.phrase_text`}>
+							Phrase in {languages[lang]}
+						</Label>
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							onClick={() => removePhrase(phraseIndex)}
+							disabled={disableRemove}
+						>
+							<Trash2 className="text-destructive size-4" />
+						</Button>
+					</div>
 					<Textarea
 						id={`phrases.${phraseIndex}.phrase_text`}
 						{...register(`phrases.${phraseIndex}.phrase_text`)}
@@ -235,16 +245,6 @@ function PhraseEntry({
 					/>
 					<ErrorLabel error={errors?.phrase_text} />
 				</div>
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon"
-					onClick={() => removePhrase(phraseIndex)}
-					className="mt-6"
-					disabled={disableRemove}
-				>
-					<Trash2 className="text-destructive size-4" />
-				</Button>
 			</div>
 
 			<div className="ml-4 space-y-3 border-s-2 border-dashed pl-4">
@@ -252,9 +252,9 @@ function PhraseEntry({
 				{translationFields.map((translationField, translationIndex) => (
 					<div
 						key={translationField.id}
-						className="bg-background flex items-center gap-2 rounded p-2"
+						className="bg-background flex flex-col gap-2 rounded p-2"
 					>
-						<div className="w-40">
+						<div className="flex w-full flex-row items-center justify-between gap-2">
 							<Controller
 								control={control}
 								name={`phrases.${phraseIndex}.translations.${translationIndex}.lang`}
@@ -262,33 +262,36 @@ function PhraseEntry({
 									<SelectOneOfYourLanguages
 										value={field.value}
 										setValue={field.onChange}
+										className="w-40"
 									/>
 								)}
 							/>
-							<ErrorLabel
-								error={errors?.translations?.[translationIndex]?.lang}
-							/>
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								onClick={() => removeTranslation(translationIndex)}
+								disabled={translationFields.length === 1}
+							>
+								<Trash2 className="text-destructive size-4" />
+							</Button>
 						</div>
-						<div className="flex-1">
-							<Input
+						<div className="flex flex-1 flex-col">
+							<Textarea
 								{...register(
 									`phrases.${phraseIndex}.translations.${translationIndex}.text`
 								)}
 								placeholder="Translation text"
 							/>
-							<ErrorLabel
-								error={errors?.translations?.[translationIndex]?.text}
-							/>
+							<div className="ms-2">
+								<ErrorLabel
+									error={errors?.translations?.[translationIndex]?.text}
+								/>
+								<ErrorLabel
+									error={errors?.translations?.[translationIndex]?.lang}
+								/>
+							</div>
 						</div>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon-sm"
-							onClick={() => removeTranslation(translationIndex)}
-							disabled={translationFields.length === 1}
-						>
-							<Trash2 className="text-destructive size-4" />
-						</Button>
 					</div>
 				))}
 				<ErrorLabel error={errors?.translations?.root} />

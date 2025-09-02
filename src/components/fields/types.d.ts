@@ -39,4 +39,5 @@ export type ControlledInputProps = {
 	setValue: (value: string) => void
 	disabled?: string[]
 	tabIndex?: number
+	className?: string
 }
