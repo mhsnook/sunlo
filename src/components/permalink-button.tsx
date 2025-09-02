@@ -1,7 +1,8 @@
 import { LinkIcon } from 'lucide-react'
-import { ButtonProps, buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
 import { Link, LinkProps } from '@tanstack/react-router'
+import { VariantProps } from 'class-variance-authority'
 
 export default function PermalinkButton({
 	to,
@@ -9,9 +10,10 @@ export default function PermalinkButton({
 	text = 'Permalink',
 	variant = 'ghost',
 	size = 'badge',
-	className = '',
+	className,
 	...props
-}: { text?: string } & LinkProps & ButtonProps) {
+}: { text?: string; className?: string } & LinkProps &
+	VariantProps<typeof buttonVariants>) {
 	return !to ? null : (
 			<Link
 				to={to}
