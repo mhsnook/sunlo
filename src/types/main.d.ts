@@ -94,12 +94,18 @@ export type LanguageMeta = Tables<'language_plus'>
 export type LanguageFetched = LanguageMeta & {
 	phrases: Array<PhraseFull>
 }
-export type PhraseStub = {
-	lang: string
-	id: string
+
+export type PhraseStub = NonNullableFields<{
+	id: uuid
 	text: string
-	translation: Array<{ text: string; lang: string }>
-}
+	lang: string
+
+	translations: Array<{
+		id: uuid
+		text: string
+		lang: string
+	}>
+}>
 
 export type PhrasesMap = {
 	[key: uuid]: PhraseFiltered
@@ -114,6 +120,7 @@ export type PhraseRow = Tables<'phrase'>
 export type PhraseInsert = TablesInsert<'phrase'>
 export type PhraseCardInsert =
 	Database['public']['Functions']['add_phrase_translation_card']['Args']
+export type CardStatusEnum = Database['public']['Enums']['card_status']
 
 export type Translation = Tables<'phrase_translation'>
 export type TranslationRow = Tables<'phrase_translation'>

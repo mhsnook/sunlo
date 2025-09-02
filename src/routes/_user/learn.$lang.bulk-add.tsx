@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useFieldArray, useForm, Controller } from 'react-hook-form'
+import { useFieldArray, useForm, Controller, FieldError } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -21,13 +21,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
-import type { Database } from '@/types/supabase'
 import languages from '@/lib/languages'
 import { useProfile } from '@/lib/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
 import PermalinkButton from '@/components/permalink-button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { PhraseStub } from '@/types/main'
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -59,9 +59,7 @@ function BulkAddPhrasesPage() {
 	const { data: profile } = useProfile()
 
 	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
-		Array<
-			Database['public']['CompositeTypes']['phrase_with_translations_output']
-		>
+		Array<PhraseStub>
 	>([])
 
 	const {
@@ -90,9 +88,7 @@ function BulkAddPhrasesPage() {
 	})
 
 	const bulkAddMutation = useMutation<
-		Array<
-			Database['public']['CompositeTypes']['phrase_with_translations_output']
-		> | null,
+		Array<PhraseStub> | null,
 		Error,
 		BulkAddPhrasesFormValues
 	>({
@@ -195,7 +191,7 @@ const getEmptyPhrase = (lang: string = 'eng') => ({
 
 type PhraseEntryErrors =
 	| (z.infer<typeof PhraseWithTranslationsSchema> & {
-			root?: { message: string }
+			root?: FieldError
 	  })
 	| undefined
 
@@ -315,11 +311,7 @@ function PhraseEntry({
 	)
 }
 
-function AddedPhraseItem({
-	phrase,
-}: {
-	phrase: Database['public']['CompositeTypes']['phrase_with_translations_output']
-}) {
+function AddedPhraseItem({ phrase }: { phrase: PhraseStub }) {
 	if (!phrase.id || !phrase.lang) return null
 
 	return (
