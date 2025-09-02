@@ -1,7 +1,7 @@
 import { PhraseFull } from '@/types/main'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Pencil } from 'lucide-react'
@@ -110,10 +110,7 @@ export function AddTranslationsDialog({
 					</ol>
 				</div>
 				<form
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit(
-						addTranslation.mutate as SubmitHandler<AddTranslationsType>
-					)}
+					onSubmit={handleSubmit((data) => addTranslation.mutate(data))}
 					noValidate
 				>
 					<fieldset

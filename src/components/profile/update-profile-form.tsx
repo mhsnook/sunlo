@@ -1,7 +1,7 @@
 import type { LanguageKnown, ProfileFull, uuid } from '@/types/main'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
@@ -80,10 +80,7 @@ export default function UpdateProfileForm({
 		<form
 			noValidate
 			className="space-y-4"
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			onSubmit={handleSubmit(
-				updateProfile.mutate as SubmitHandler<ProfileEditFormInputs>
-			)}
+			onSubmit={handleSubmit((data) => updateProfile.mutate(data))}
 		>
 			<fieldset className="grid grid-cols-1 gap-4" disabled={isSubmitting}>
 				<UsernameField<ProfileEditFormInputs>

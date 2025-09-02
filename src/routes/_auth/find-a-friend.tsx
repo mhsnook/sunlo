@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
@@ -59,8 +59,7 @@ export function SearchProfilesComponent() {
 			<CardContent>
 				<form
 					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit(search as SubmitHandler<SearchFormData>)}
+					onSubmit={handleSubmit((data) => search(data))}
 					className="mb-6"
 				>
 					<div className="flex gap-2">

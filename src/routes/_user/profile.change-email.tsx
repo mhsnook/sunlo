@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
@@ -83,10 +83,7 @@ function ChangeEmailPage() {
 						role="form"
 						noValidate
 						className="space-y-4"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit(
-							changeMutation.mutate as SubmitHandler<FormInputs>
-						)}
+						onSubmit={handleSubmit((data) => changeMutation.mutate(data))}
 					>
 						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
 							<EmailField<FormInputs>

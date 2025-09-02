@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, type SubmitHandler } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
@@ -98,10 +98,7 @@ export function AddTags({
 
 	return (
 		<form
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			onSubmit={handleSubmit(
-				addTagsMutation.mutate as SubmitHandler<AddTagsFormValues>
-			)}
+			onSubmit={handleSubmit((data) => addTagsMutation.mutate(data))}
 			className="mt-3 flex items-start gap-2"
 		>
 			<div className="grow">

@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { type SubmitHandler, Controller, useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import toast from 'react-hot-toast'
 
 import { Send } from 'lucide-react'
@@ -45,12 +45,7 @@ export function InviteFriendForm() {
 	})
 
 	return (
-		<form
-			// eslint-disable-next-line @typescript-eslint/no-misused-promises
-			onSubmit={handleSubmit(
-				invite.mutate as SubmitHandler<InviteFriendValues>
-			)}
-		>
+		<form onSubmit={handleSubmit((data) => invite.mutate(data))}>
 			<fieldset
 				className="flex flex-row items-end gap-2"
 				disabled={invite.isPending}
