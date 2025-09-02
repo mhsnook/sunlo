@@ -23,10 +23,9 @@ import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
 import { useProfile } from '@/lib/use-profile'
 import { Separator } from '@/components/ui/separator'
-import { LangBadge } from '@/components/ui/badge'
-import PermalinkButton from '@/components/permalink-button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { PhraseStub } from '@/types/main'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -173,7 +172,7 @@ function BulkAddPhrasesPage() {
 						<div className="space-y-2">
 							{successfullyAddedPhrases.map((phrase) => (
 								// eslint-disable-next-line @typescript-eslint/no-use-before-define
-								<AddedPhraseItem key={phrase.id} phrase={phrase} />
+								<CardResultSimple key={phrase.id} phrase={phrase} />
 							))}
 						</div>
 					</div>
@@ -310,33 +309,6 @@ function PhraseEntry({
 				</Button>
 			</div>
 			<ErrorLabel error={errors?.root} />
-		</div>
-	)
-}
-
-function AddedPhraseItem({ phrase }: { phrase: PhraseStub }) {
-	if (!phrase.id || !phrase.lang) return null
-
-	return (
-		<div className="bg-card rounded-lg border p-4">
-			<div className="flex items-center justify-between">
-				<h4 className="font-semibold">{phrase.text}</h4>
-				<PermalinkButton
-					to="/learn/$lang/$id"
-					params={{ lang: phrase.lang, id: phrase.id }}
-					variant="ghost"
-					size="icon-sm"
-					text=""
-				/>
-			</div>
-			<ul className="mt-2 space-y-1">
-				{phrase.translations?.map((t) => (
-					<li key={t.id} className="flex items-center gap-2 text-sm">
-						<LangBadge lang={t.lang!} />
-						<span>{t.text}</span>
-					</li>
-				))}
-			</ul>
 		</div>
 	)
 }
