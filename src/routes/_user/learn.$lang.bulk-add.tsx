@@ -5,6 +5,7 @@ import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Plus, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
@@ -18,11 +19,15 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
-import { SelectOneLanguage } from '@/components/select-one-language'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
+import type { Database } from '@/types/supabase'
 import languages from '@/lib/languages'
 import { useProfile } from '@/lib/use-profile'
+import { Separator } from '@/components/ui/separator'
+import { LangBadge } from '@/components/ui/badge'
+import PermalinkButton from '@/components/permalink-button'
+import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -53,10 +58,17 @@ function BulkAddPhrasesPage() {
 	const queryClient = useQueryClient()
 	const { data: profile } = useProfile()
 
+	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
+		Array<
+			Database['public']['CompositeTypes']['phrase_with_translations_output']
+		>
+	>([])
+
 	const {
 		control,
 		handleSubmit,
 		register,
+		reset,
 		formState: { errors, isDirty, isSubmitting },
 	} = useForm<BulkAddPhrasesFormValues>({
 		resolver: zodResolver(BulkAddPhrasesSchema),
@@ -77,19 +89,32 @@ function BulkAddPhrasesPage() {
 		name: 'phrases',
 	})
 
-	const bulkAddMutation = useMutation({
+	const bulkAddMutation = useMutation<
+		Array<
+			Database['public']['CompositeTypes']['phrase_with_translations_output']
+		> | null,
+		Error,
+		BulkAddPhrasesFormValues
+	>({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
 			const payload = {
 				p_lang: lang,
 				p_phrases: values.phrases,
 			}
-			const { error } = await supabase.rpc('bulk_add_phrases', payload)
+			const { data, error } = await supabase.rpc('bulk_add_phrases', payload)
 			if (error) throw error
+			return data
 		},
-		onSuccess: () => {
-			toast.success('Phrases added successfully!')
+		onSuccess: (newlyAddedPhrases) => {
+			if (!newlyAddedPhrases) return
+			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
 			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
-			// Maybe reset the form or navigate away
+			setSuccessfullyAddedPhrases((prev) => [...newlyAddedPhrases, ...prev])
+			// Reset the form for the next batch
+			// eslint-disable-next-line @typescript-eslint/no-use-before-define
+			reset({
+				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
+			})
 		},
 		onError: (error) => {
 			toast.error(`Error adding phrases: ${error.message}`)
@@ -119,6 +144,7 @@ function BulkAddPhrasesPage() {
 								register={register}
 								removePhrase={remove}
 								errors={errors.phrases?.[phraseIndex]}
+								disableRemove={fields.length === 1}
 							/>
 						))}
 					</div>
@@ -128,10 +154,7 @@ function BulkAddPhrasesPage() {
 							type="button"
 							variant="outline"
 							onClick={() =>
-								append({
-									phrase_text: '',
-									translations: [{ lang: 'eng', text: '' }],
-								})
+								append(getEmptyPhrase(profile?.languages_known[0]?.lang))
 							}
 						>
 							<Plus className="mr-2 size-4" /> Add Another Phrase
@@ -148,10 +171,33 @@ function BulkAddPhrasesPage() {
 						text="There was an error submitting your phrases"
 					/>
 				</form>
+				{successfullyAddedPhrases.length > 0 && (
+					<div className="my-6">
+						<Separator className="my-6" />
+						<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
+						<div className="space-y-2">
+							{successfullyAddedPhrases.map((phrase) => (
+								// eslint-disable-next-line @typescript-eslint/no-use-before-define
+								<AddedPhraseItem key={phrase.id} phrase={phrase} />
+							))}
+						</div>
+					</div>
+				)}
 			</CardContent>
 		</Card>
 	)
 }
+
+const getEmptyPhrase = (lang: string = 'eng') => ({
+	phrase_text: '',
+	translations: [{ lang, text: '' }],
+})
+
+type PhraseEntryErrors =
+	| (z.infer<typeof PhraseWithTranslationsSchema> & {
+			root?: { message: string }
+	  })
+	| undefined
 
 function PhraseEntry({
 	phraseIndex,
@@ -159,12 +205,14 @@ function PhraseEntry({
 	register,
 	removePhrase,
 	errors,
+	disableRemove = false,
 }: {
 	phraseIndex: number
 	control: any
 	register: any
 	removePhrase: (index: number) => void
-	errors: any
+	errors: PhraseEntryErrors
+	disableRemove: boolean
 }) {
 	const { lang } = Route.useParams()
 	const {
@@ -175,9 +223,10 @@ function PhraseEntry({
 		control,
 		name: `phrases.${phraseIndex}.translations`,
 	})
+	const { data: profile } = useProfile()
 
 	return (
-		<div className="space-y-4 rounded-lg border bg-card p-4">
+		<div className="bg-card space-y-4 rounded-lg border p-4">
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 space-y-2">
 					<Label htmlFor={`phrases.${phraseIndex}.phrase_text`}>
@@ -196,6 +245,7 @@ function PhraseEntry({
 					size="icon"
 					onClick={() => removePhrase(phraseIndex)}
 					className="mt-6"
+					disabled={disableRemove}
 				>
 					<Trash2 className="text-destructive size-4" />
 				</Button>
@@ -206,14 +256,14 @@ function PhraseEntry({
 				{translationFields.map((translationField, translationIndex) => (
 					<div
 						key={translationField.id}
-						className="flex items-end gap-2 rounded bg-background p-2"
+						className="bg-background flex items-center gap-2 rounded p-2"
 					>
 						<div className="w-40">
 							<Controller
 								control={control}
 								name={`phrases.${phraseIndex}.translations.${translationIndex}.lang`}
 								render={({ field }) => (
-									<SelectOneLanguage
+									<SelectOneOfYourLanguages
 										value={field.value}
 										setValue={field.onChange}
 									/>
@@ -250,12 +300,48 @@ function PhraseEntry({
 					type="button"
 					variant="outline"
 					size="sm"
-					onClick={() => appendTranslation({ lang: 'eng', text: '' })}
+					onClick={() =>
+						appendTranslation({
+							lang: profile?.languages_known[0]?.lang,
+							text: '',
+						})
+					}
 				>
 					<Plus className="mr-2 size-4" /> Add Translation
 				</Button>
 			</div>
 			<ErrorLabel error={errors?.root} />
+		</div>
+	)
+}
+
+function AddedPhraseItem({
+	phrase,
+}: {
+	phrase: Database['public']['CompositeTypes']['phrase_with_translations_output']
+}) {
+	if (!phrase.id || !phrase.lang) return null
+
+	return (
+		<div className="bg-card rounded-lg border p-4">
+			<div className="flex items-center justify-between">
+				<h4 className="font-semibold">{phrase.text}</h4>
+				<PermalinkButton
+					to="/learn/$lang/$id"
+					params={{ lang: phrase.lang, id: phrase.id }}
+					variant="ghost"
+					size="icon-sm"
+					text=""
+				/>
+			</div>
+			<ul className="mt-2 space-y-1">
+				{phrase.translations?.map((t) => (
+					<li key={t.id} className="flex items-center gap-2 text-sm">
+						<LangBadge lang={t.lang!} />
+						<span>{t.text}</span>
+					</li>
+				))}
+			</ul>
 		</div>
 	)
 }
