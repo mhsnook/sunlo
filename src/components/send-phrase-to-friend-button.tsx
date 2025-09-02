@@ -12,21 +12,19 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { ButtonProps } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { useAuth } from '@/lib/hooks'
 import { SelectMultipleFriends } from '@/components/friends/select-multiple-friends'
+import { VariantProps } from 'class-variance-authority'
 
 export function SendPhraseToFriendButton({
 	pid,
 	lang,
-	variant,
-	size,
+	...props
 }: {
 	pid: uuid
 	lang: string
-	variant: ButtonProps['variant']
-	size: ButtonProps['size']
-}) {
+} & VariantProps<typeof buttonVariants>) {
 	const { userId } = useAuth()
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendPhraseToFriendMutation = useMutation({
@@ -53,7 +51,7 @@ export function SendPhraseToFriendButton({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button variant={variant} size={size}>
+				<Button {...props}>
 					<Send /> Send in chat
 				</Button>
 			</DialogTrigger>
