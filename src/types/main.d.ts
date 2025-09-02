@@ -124,6 +124,12 @@ export type CardStatusEnum = Database['public']['Enums']['card_status']
 
 export type Translation = Tables<'phrase_translation'>
 export type TranslationRow = Tables<'phrase_translation'>
+export type TranslationStub = Pick<
+	Tables<'phrase_translation'>,
+	'lang',
+	'text',
+	'id'
+>
 export type TranslationInsert = TablesInsert<'phrase_translation'>
 
 export type RelationRow = Tables<'phrase_relation'>

@@ -1,4 +1,12 @@
-import { DeckPids, PhrasesMap, pids, TranslationRow } from '@/types/main'
+import {
+	DeckPids,
+	PhraseFull,
+	PhrasesMap,
+	PhraseStub,
+	pids,
+	TranslationRow,
+	TranslationStub,
+} from '@/types/main'
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
@@ -9,7 +17,7 @@ export type ProcessedDeckAndPids = ReturnType<typeof processDeckPidsAndRecs>
 
 function splitTranslations(
 	translationLangs: Array<string>,
-	translations_incoming: Array<TranslationRow>
+	translations_incoming: Array<TranslationRow | TranslationStub>
 ): {
 	translations_mine: Array<TranslationRow>
 	translations_other: Array<TranslationRow>
@@ -30,27 +38,31 @@ function splitTranslations(
 		translations_other,
 	}
 }
+export function splitPhraseTranslations(
+	phrase: PhraseFull | PhraseStub,
+	languagesToShow: Array<string>
+): (PhraseFull | PhraseStub) & {
+	translations_mine: Array<TranslationRow | TranslationStub>
+	translations_other: Array<TranslationRow | TranslationStub>
+} {
+	const { translations_mine, translations_other } = splitTranslations(
+		languagesToShow,
+		phrase.translations
+	)
+
+	return { ...phrase, translations_mine, translations_other }
+}
 
 function processDeckPidsAndRecs(
-	translationLangs: Array<string>,
+	languagesToShow: Array<string>,
 	phrasesMap: PhrasesMap,
 	languagePids: pids,
 	deckPids: DeckPids
 ) {
 	// filter to only spoken languages, sort primary first
 	const phrasesArrayFiltered = languagePids
-		.map((pid) => {
-			let phrase = phrasesMap[pid]
-
-			const { translations_mine, translations_other } = splitTranslations(
-				translationLangs,
-				[...phrase.translations]
-			)
-			phrase.translations_mine = translations_mine
-			phrase.translations_other = translations_other
-
-			return phrase
-		})
+		.map((pid) => phrasesMap[pid])
+		.map((p) => splitPhraseTranslations(p, languagesToShow))
 		.filter((p) => p.id)
 
 	const languagePidsFiltered = phrasesArrayFiltered

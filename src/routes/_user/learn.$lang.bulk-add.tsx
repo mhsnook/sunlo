@@ -24,8 +24,10 @@ import languages from '@/lib/languages'
 import { useProfile } from '@/lib/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
-import { PhraseStub } from '@/types/main'
+import { LanguageLoaded, PhraseStub } from '@/types/main'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { mapArray } from '@/lib/utils'
+import { splitPhraseTranslations } from '@/lib/process-pids'
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -102,6 +104,24 @@ function BulkAddPhrasesPage() {
 		onSuccess: (newlyAddedPhrases) => {
 			if (!newlyAddedPhrases) return
 			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
+			const newPhraseaMap = mapArray(
+				newlyAddedPhrases.map((p) =>
+					splitPhraseTranslations(p, profile?.languagesToShow ?? [])
+				),
+				'id'
+			)
+			const newPids = newlyAddedPhrases.map((p) => p.id)
+			queryClient.setQueryData(
+				['language', lang],
+				(oldData: LanguageLoaded) => ({
+					meta: { ...oldData.meta },
+					phrasesMap: {
+						...oldData.phrasesMap,
+						...newPhraseaMap,
+					},
+					pids: [...oldData.pids, ...newPids],
+				})
+			)
 			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
 			setSuccessfullyAddedPhrases((prev) => [...newlyAddedPhrases, ...prev])
 			// Reset the form for the next batch

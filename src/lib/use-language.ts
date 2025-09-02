@@ -2,6 +2,7 @@ import {
 	type UseQueryResult,
 	queryOptions,
 	useQuery,
+	useSuspenseQuery,
 } from '@tanstack/react-query'
 import type {
 	LanguageFetched,
@@ -68,6 +69,12 @@ export const useLanguagePhrasesMap = (lang: string) =>
 
 export const useLanguagePhrase = (pid: uuid, lang: string) =>
 	useQuery({
+		...languageQueryOptions(lang),
+		select: (data: LanguageLoaded) => data.phrasesMap[pid],
+	}) as UseQueryResult<PhraseFull>
+
+export const useLanguagePhraseSuspense = (pid: uuid, lang: string) =>
+	useSuspenseQuery({
 		...languageQueryOptions(lang),
 		select: (data: LanguageLoaded) => data.phrasesMap[pid],
 	}) as UseQueryResult<PhraseFull>
