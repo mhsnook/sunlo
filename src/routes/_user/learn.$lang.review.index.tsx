@@ -1,4 +1,4 @@
-import { pids, uuid } from '@/types/main'
+import { CardStatusEnum, pids, uuid } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'
@@ -26,7 +26,6 @@ import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useDeckMeta } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
-import { Database } from '@/types/supabase'
 import {
 	LanguageIsEmpty,
 	LanguageFilteredIsEmpty,
@@ -186,7 +185,7 @@ function ReviewPageSetup() {
 						phrase_id: pid,
 						lang,
 						uid: userId!,
-						status: 'active' as Database['public']['Enums']['card_status'],
+						status: 'active' as CardStatusEnum,
 					}))
 				)
 				.select()
