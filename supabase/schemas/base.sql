@@ -848,7 +848,8 @@ create table if not exists
 		"phrase_id" "uuid" not null,
 		"added_by" "uuid" default "auth"."uid" (),
 		"lang" character varying not null,
-		"text_script" "text"
+		"text_script" "text",
+		"created_at" timestamp with time zone default "now" () not null
 	);
 
 alter table "public"."phrase_translation" owner to "postgres";
