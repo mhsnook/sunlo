@@ -110,12 +110,13 @@ export function LanguagesKnownField<T extends FieldValues>({
 								variant="ghost"
 								size="icon"
 								onClick={() => remove(index)}
+								disabled={fields.length === 1}
 							>
 								<Trash2 className="text-destructive size-4" />
 							</Button>
 						</div>
 						{error?.[index] && (
-							<div>
+							<div className="ms-12">
 								<ErrorLabel error={error[index].lang} />
 								<ErrorLabel error={error[index].level} />
 							</div>
