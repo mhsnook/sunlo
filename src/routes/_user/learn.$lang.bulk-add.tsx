@@ -138,7 +138,7 @@ function BulkAddPhrasesPage() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Bulk Add Phrases to {languages[lang]}</CardTitle>
+				<CardTitle>Bulk Add Phrases to the {languages[lang]} Library</CardTitle>
 				<CardDescription>
 					Add multiple phrases and their translations at once.
 				</CardDescription>
