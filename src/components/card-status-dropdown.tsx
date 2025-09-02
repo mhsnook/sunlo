@@ -144,7 +144,7 @@ export function CardStatusDropdown({
 		onSuccess: () => {
 			if (card) toast.success('Updated card status')
 			else toast.success('Added this phrase to your deck')
-			void queryClient.invalidateQueries({ queryKey: ['user', lang, 'deck'] })
+			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
 		},
 		onError: () => {
 			if (card) toast.error('There was an error updating this card')
