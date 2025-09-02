@@ -36,6 +36,7 @@ export function SelectOneOfYourLanguages({
 	value,
 	setValue,
 	hasError,
+	className,
 }: ControlledInputProps) {
 	const { data: profile } = useProfile()
 	const [open, setOpen] = useState(false)
@@ -59,7 +60,7 @@ export function SelectOneOfYourLanguages({
 	const id = useId()
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild className="w-full">
+			<PopoverTrigger asChild className={cn('w-full', className)}>
 				<Button
 					variant="outline"
 					role="combobox"
