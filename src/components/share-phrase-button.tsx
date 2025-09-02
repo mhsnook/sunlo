@@ -5,6 +5,7 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { useLanguagePhrase } from '@/lib/use-language'
 import languages from '@/lib/languages'
+import { useCallback } from 'react'
 
 export default function SharePhraseButton({
 	lang,
@@ -23,19 +24,20 @@ export default function SharePhraseButton({
 	className?: string
 } & ButtonProps) {
 	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
+
+	const sharePhrase = useCallback(() => {
+		navigator
+			.share({
+				title: `Sunlo: ${phrase!.text}`,
+				text: `Check out this phrase in ${languages[lang]}: ${phrase!.text}`,
+				url: `${window.location.origin}/learn/${lang}/${phrase!.id}`,
+			})
+			.catch(() => {
+				toast.error('Failed to share')
+			})
+	}, [phrase, lang])
+
 	if (isPending || !phrase || !navigator.share) return null
-
-	const shareContent = {
-		title: `Sunlo: ${phrase.text}`,
-		text: `Check out this phrase in ${languages[lang]}: ${phrase.text}`,
-		url: `${window.location.origin}/learn/${lang}/${phrase.id}`,
-	}
-
-	const sharePhrase = () => {
-		navigator.share(shareContent).catch(() => {
-			toast.error('Failed to share')
-		})
-	}
 	return (
 		<Button
 			onClick={sharePhrase}
