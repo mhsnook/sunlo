@@ -1,5 +1,9 @@
 import type { CSSProperties } from 'react'
+import { Link } from '@tanstack/react-router'
 import { ChevronsUpDown, GalleryHorizontalEnd, Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import Callout from '@/components/ui/callout'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -16,10 +20,6 @@ import {
 } from '@/components/ui/sidebar'
 import { useProfile } from '@/lib/use-profile'
 import languages from '@/lib/languages'
-import Callout from '@/components/ui/callout'
-import { Button } from '@/components/ui/button'
-import { Link } from '@tanstack/react-router'
-import { Badge } from '@/components/ui/badge'
 
 const useDeckMenuData = () => {
 	const { data } = useProfile()
