@@ -400,6 +400,7 @@ export type Database = {
       phrase_translation: {
         Row: {
           added_by: string | null
+          created_at: string
           id: string
           lang: string
           literal: string | null
@@ -409,6 +410,7 @@ export type Database = {
         }
         Insert: {
           added_by?: string | null
+          created_at?: string
           id?: string
           lang: string
           literal?: string | null
@@ -418,6 +420,7 @@ export type Database = {
         }
         Update: {
           added_by?: string | null
+          created_at?: string
           id?: string
           lang?: string
           literal?: string | null
