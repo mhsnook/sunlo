@@ -1,5 +1,5 @@
 import supabase from '@/lib/supabase-client'
-import { CardRow, uuid } from '@/types/main'
+import { CardRow, DeckLoaded, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -7,6 +7,7 @@ import {
 	CheckCircle,
 	ChevronDown,
 	CircleMinus,
+	Heart,
 	PlusCircle,
 	Sparkles,
 	Zap,
@@ -25,6 +26,7 @@ import { useDeckCard } from '@/lib/use-deck'
 import { buttonVariants } from './ui/button-variants'
 import { Badge } from './ui/badge'
 import { Separator } from './ui/separator'
+import { Button } from './ui/button'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -100,31 +102,19 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-export function CardStatusDropdown({
-	pid,
-	lang,
-	className,
-	button = false,
-}: CardStatusDropdownProps) {
+function useCardStatusMutation(pid: uuid, lang: string) {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
-	const { data: profile } = useProfile()
-	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
-	const { data: card } = useDeckCard(pid, lang, deckPresent)
-
-	const cardMutation = useMutation<
-		CardRow,
-		PostgrestError,
-		{ status: LearningStatus }
-	>({
+	const { data: card } = useDeckCard(pid, lang)
+	return useMutation<CardRow, PostgrestError, { status: LearningStatus }>({
 		mutationKey: ['upsert-card', pid],
-		mutationFn: async (variables: { status: LearningStatus }) => {
+		mutationFn: async ({ status }: { status: LearningStatus }) => {
 			const { data } =
 				card ?
 					await supabase
 						.from('user_card')
 						.update({
-							status: variables.status,
+							status,
 						})
 						.eq('phrase_id', pid)
 						.eq('uid', userId!)
@@ -135,22 +125,47 @@ export function CardStatusDropdown({
 						.insert({
 							lang,
 							phrase_id: pid,
-							status: variables.status,
+							status,
 						})
 						.select()
 						.throwOnError()
 			return data[0]
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
 			if (card) toast.success('Updated card status')
 			else toast.success('Added this phrase to your deck')
+			void queryClient.setQueryData(
+				['user', lang, 'deck'],
+				(oldData: DeckLoaded) => ({
+					...oldData,
+					cardsMap: {
+						...oldData.cardsMap,
+						[pid]: { ...data, reviews: oldData.cardsMap[pid]?.reviews ?? [] },
+					},
+				})
+			)
 			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
 		},
-		onError: () => {
+		onError: (error) => {
 			if (card) toast.error('There was an error updating this card')
 			else toast.error('There was an error adding this card to your deck')
+			console.log(`error upserting card`, error)
 		},
 	})
+}
+
+export function CardStatusDropdown({
+	pid,
+	lang,
+	className,
+	button = false,
+}: CardStatusDropdownProps) {
+	const { userId } = useAuth()
+	const { data: profile } = useProfile()
+	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
+	const { data: card } = useDeckCard(pid, lang)
+
+	const cardMutation = useCardStatusMutation(pid, lang)
 
 	// optimistic update not needed because we invalidate the query
 	// const cardPresent = cardMutation.data ?? card
@@ -241,4 +256,23 @@ export function CardStatusDropdown({
 				</DropdownMenuContent>
 			</DropdownMenu>
 		)
+}
+
+export function CardStatusHeart({ pid, lang }: { pid: uuid; lang: string }) {
+	const mutation = useCardStatusMutation(pid, lang)
+	const { data: card } = useDeckCard(pid, lang)
+	const status = card?.status === 'active' ? 'skipped' : 'active'
+
+	return (
+		<Button
+			variant="outline"
+			size="icon-sm"
+			className={card?.status === 'active' ? 'border-primary-foresoft/30' : ''}
+			onClick={() => mutation.mutate({ status })}
+		>
+			{card?.status === 'active' ?
+				<Heart className="fill-red-600 text-red-600" />
+			:	<Heart className="text-muted-foreground" />}
+		</Button>
+	)
 }

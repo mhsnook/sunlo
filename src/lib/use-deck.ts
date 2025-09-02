@@ -169,11 +169,11 @@ export const useDeckCardsMap = (lang: string) => {
 	}) as UseQueryResult<CardsMap>
 }
 
-export const useDeckCard = (pid: uuid, lang: string, enabled?: boolean) => {
+export const useDeckCard = (pid: uuid, lang: string) => {
 	const { userId } = useAuth()
 	return useQuery({
 		...deckQueryOptions(lang, userId),
 		select: (data: DeckLoaded) => data.cardsMap[pid],
-		enabled,
+		enabled: !!userId,
 	}) as UseQueryResult<CardFull>
 }
