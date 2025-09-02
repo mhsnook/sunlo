@@ -2,6 +2,7 @@ import {
 	UseFormRegister,
 	FieldError,
 	FieldValues,
+	ArrayFieldValues,
 	Control,
 } from 'react-hook-form'
 

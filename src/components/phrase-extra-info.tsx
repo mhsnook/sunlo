@@ -75,8 +75,9 @@ function CardSection({ card }: { card: CardFull }) {
 					<div className="flex flex-col">
 						<span className="font-semibold">Card current variables:</span>
 						<span>
-							Difficulty {roundAndTrim(rev.difficulty!)}, Stability{' '}
-							{roundAndTrim(rev.stability!)},{' '}
+							Difficulty{' '}
+							{rev?.difficulty ? roundAndTrim(rev.difficulty) : 'N/A'},
+							Stability {rev?.stability ? roundAndTrim(rev.stability) : 'N/A'},{' '}
 							{roundAndTrim(dateDiff(rev.created_at), 1)} days since last
 							review.
 						</span>
@@ -100,9 +101,19 @@ function CardSection({ card }: { card: CardFull }) {
 							<p className="text-muted-foreground font-semibold">
 								{ago(r.created_at)}
 							</p>
-							<p>Expected R: {roundAndTrim(r.review_time_retrievability!)}</p>
-							<p>Difficulty: {roundAndTrim(r.difficulty!)}</p>
-							<p>Stability: {roundAndTrim(r.stability!)} from </p>
+							<p>
+								Expected R:{' '}
+								{r.review_time_retrievability ?
+									roundAndTrim(r.review_time_retrievability)
+								:	'N/A'}
+							</p>
+							<p>
+								Difficulty: {r.difficulty ? roundAndTrim(r.difficulty) : 'N/A'}
+							</p>
+							<p>
+								Stability: {r.stability ? roundAndTrim(r.stability) : 'N/A'}{' '}
+								from{' '}
+							</p>
 							<span>
 								score: {r.score}
 								<Flagged name="client_side_fsrs_scheduling">
