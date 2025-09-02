@@ -8,7 +8,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { useLanguagePhrase } from '@/lib/use-language'
+import { useLanguagePhraseSuspense } from '@/lib/use-language'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
@@ -44,7 +44,7 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const [isTagEditing, setIsTagEditing] = useState(false)
-	const { data: phrase } = useLanguagePhrase(id, lang)
+	const { data: phrase } = useLanguagePhraseSuspense(id, lang)
 	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
 	const [isOpen, setIsOpen] = useState(false)
 
