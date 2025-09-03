@@ -10,14 +10,11 @@ import type {
 	LanguageMeta,
 	PhrasesMap,
 	PhraseFull,
-	PhraseFiltered,
 	pids,
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
-import { useProfile } from './use-profile'
-import { splitPhraseTranslations } from './process-pids'
 
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase

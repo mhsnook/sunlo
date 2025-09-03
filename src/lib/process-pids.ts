@@ -10,7 +10,7 @@ import {
 import { useMemo } from 'react'
 import { useDeckPids } from './use-deck'
 import { useLanguagePhrasesMap, useLanguagePids } from './use-language'
-import { arrayDifference, mapArray } from './utils'
+import { arrayDifference } from './utils'
 import { useProfile } from './use-profile'
 
 export type ProcessedDeckAndPids = ReturnType<typeof processDeckPidsAndRecs>
