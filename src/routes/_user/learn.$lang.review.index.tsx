@@ -1,4 +1,4 @@
-import { CardStatusEnum, pids, uuid } from '@/types/main'
+import type { CardStatusEnum, pids, uuid } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import languages from '@/lib/languages'

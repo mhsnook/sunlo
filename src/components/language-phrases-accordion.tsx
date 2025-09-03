@@ -1,4 +1,4 @@
-import { PhraseFiltered, pids } from '@/types/main'
+import type { pids } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
@@ -6,14 +6,13 @@ import {
 	AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useMemo } from 'react'
-import { CardStatusDropdown } from './card-status-dropdown'
-import { AddTranslationsDialog } from './add-translations-dialog'
-import PermalinkButton from './permalink-button'
-import SharePhraseButton from './share-phrase-button'
-import PhraseExtraInfo from './phrase-extra-info'
-import { Badge, LangBadge } from './ui/badge'
+import { CardStatusDropdown } from '@/components/card-status-dropdown'
+import PermalinkButton from '@/components/permalink-button'
+import SharePhraseButton from '@/components/share-phrase-button'
+import PhraseExtraInfo from '@/components/phrase-extra-info'
+import { Badge, LangBadge } from '@/components/ui/badge'
+import { usePhrase } from '@/lib/use-language'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -24,23 +23,21 @@ export function LanguagePhrasesAccordionComponent({
 	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
-	// we are using filtered phrases but unfiltered pids
-	// because the user will manage filtering
-	const { phrasesMapFiltered, language: languagePids } =
-		useDeckPidsAndRecs(lang)
-
-	const pidsToUse = pids ?? languagePids
+	if (!pids) return null
 
 	return (
 		<Accordion type="single" collapsible className="w-full">
-			{pidsToUse.map((pid) => (
-				<PhraseAccordionItem key={pid} phrase={phrasesMapFiltered[pid]} />
+			{pids.map((pid) => (
+				<PhraseAccordionItem key={pid} pid={pid} lang={lang} />
 			))}
 		</Accordion>
 	)
 }
 
-function PhraseAccordionItem({ phrase }: { phrase: PhraseFiltered }) {
+function PhraseAccordionItem({ pid, lang }: { pid: pids[0]; lang: string }) {
+	const { data: phrase } = usePhrase(pid, lang)
+	if (!phrase) return null // or a loading skeleton
+
 	const params = useMemo(
 		() => ({ lang: phrase.lang!, id: phrase.id! }),
 		[phrase.id, phrase.lang]

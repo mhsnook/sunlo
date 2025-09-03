@@ -8,10 +8,9 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { useLanguagePhraseSuspense } from '@/lib/use-language'
+import { useLanguagePhraseSuspense, usePhrase } from '@/lib/use-language'
 import { createFileRoute } from '@tanstack/react-router'
-import { ChevronsUpDown, OctagonMinus, Pencil, X } from 'lucide-react'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { ChevronsUpDown, OctagonMinus, Pencil, X, Loader } from 'lucide-react'
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -44,15 +43,14 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const [isTagEditing, setIsTagEditing] = useState(false)
-	const { data: phrase } = useLanguagePhraseSuspense(id, lang)
-	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
+	const { data: phrase, isPending } = usePhrase(id, lang)
+	const { data: rawPhrase } = useLanguagePhraseSuspense(id, lang)
 	const [isOpen, setIsOpen] = useState(false)
 
-	if (!phrase) return <PhraseNotFound />
+	if (isPending) return <Loader />
+	if (!phrase || !rawPhrase) return <PhraseNotFound />
 
-	const translations_mine =
-		phrasesMapFiltered[id].translations_mine ?? phrase.translations
-	const translations_other = phrasesMapFiltered[id].translations_other ?? []
+	const { translations_mine, translations_other } = phrase
 	const tags = phrase.tags ?? []
 
 	return (
@@ -87,12 +85,12 @@ function RouteComponent() {
 									</div>
 								))}
 								<AddTranslationsDialog
-									phrase={phrase}
+									phrase={rawPhrase}
 									variant="outline"
 									size="sm"
 								/>
 							</div>
-							{translations_other.length === 0 ? null : (
+							{!translations_other?.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(

@@ -3,11 +3,11 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
+import { Save } from 'lucide-react'
+import type { LanguageLoaded, Tag, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { LanguageLoaded, Tag, uuid } from '@/types/main'
-import { Save } from 'lucide-react'
 
 const addTagsSchema = z.object({
 	tags: z.string().min(1, 'Enter at least one tag, comma-separated.'),
