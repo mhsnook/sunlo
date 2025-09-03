@@ -104,7 +104,7 @@ function BulkAddPhrasesPage() {
 		onSuccess: (newlyAddedPhrases) => {
 			if (!newlyAddedPhrases) return
 			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
-			const newPhraseaMap = mapArray(
+			const newPhrasesMap = mapArray(
 				newlyAddedPhrases.map((p) =>
 					splitPhraseTranslations(p, profile?.languagesToShow ?? [])
 				),
@@ -114,10 +114,10 @@ function BulkAddPhrasesPage() {
 			queryClient.setQueryData(
 				['language', lang],
 				(oldData: LanguageLoaded) => ({
-					meta: { ...oldData.meta },
+					meta: oldData.meta,
 					phrasesMap: {
 						...oldData.phrasesMap,
-						...newPhraseaMap,
+						...newPhrasesMap,
 					},
 					pids: [...oldData.pids, ...newPids],
 				})
