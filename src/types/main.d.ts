@@ -171,6 +171,7 @@ export type CardsMap = {
 export type DeckPids = {
 	all: pids
 	active: pids
+	inactive: pids
 	reviewed: pids
 	reviewed_or_inactive: pids
 	reviewed_last_7d: pids

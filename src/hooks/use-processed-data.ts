@@ -1,0 +1,75 @@
+import { useMemo } from 'react'
+import { useDeckPids } from '@/lib/use-deck'
+import { useLanguagePids, useLanguagePhrasesMap } from '@/lib/use-language'
+import { arrayDifference } from '@/lib/utils'
+import { useProfile } from '@/lib/use-profile'
+import { splitPhraseTranslations } from '@/lib/process-pids'
+
+/**
+ * This hook computes the top recommended phrases for a user.
+ * It's one of the more expensive calculations, so it's isolated here.
+ * It depends on phrasesMap and profile, making it more costly than
+ * useDeckStatusPids.
+ */
+export function useRecommendations(lang: string) {
+	const { data: profile } = useProfile()
+	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	const { data: languagePids } = useLanguagePids(lang)
+	const { data: deckPids } = useDeckPids(lang)
+
+	return useMemo(() => {
+		if (!profile || !phrasesMap || !languagePids || !deckPids) {
+			return null
+		}
+
+		// First, filter phrases to only those with translations the user can see.
+		const language_filtered = Object.values(phrasesMap)
+			.filter(Boolean) // Ensure phrase exists
+			.map((p) => splitPhraseTranslations(p, profile.languagesToShow))
+			.filter((p) => p.translations_mine.length > 0)
+			.map((p) => p.id!)
+
+		const not_in_deck = arrayDifference(language_filtered, [deckPids.all])
+
+		// Then, get the pool of selectable phrases
+		const language_selectables = arrayDifference(language_filtered, [
+			deckPids.reviewed_or_inactive,
+		])
+
+		// Sort them in various ways
+		const easiest = language_selectables.toSorted(
+			(pid1, pid2) =>
+				(phrasesMap[pid1]?.avg_difficulty ?? 99) -
+				(phrasesMap[pid2]?.avg_difficulty ?? 99)
+		)
+		const popular = language_selectables.toSorted(
+			(pid1, pid2) =>
+				(phrasesMap[pid2]?.count_cards ?? 0) -
+				(phrasesMap[pid1]?.count_cards ?? 0)
+		)
+		const newest = language_selectables.toSorted((pid1, pid2) =>
+			(
+				(phrasesMap[pid2]?.created_at ?? '') >
+				(phrasesMap[pid1]?.created_at ?? '')
+			) ?
+				1
+			:	-1
+		)
+
+		// Pick the top 8, ensuring no overlaps
+		const popular8 = popular.slice(0, 8)
+		const easiest8 = arrayDifference(easiest, [popular8]).slice(0, 8)
+		const newest8 = arrayDifference(newest, [popular8, easiest8]).slice(0, 8)
+
+		return {
+			top8: {
+				easiest: easiest8,
+				popular: popular8,
+				newest: newest8,
+			},
+			language_selectables,
+			language_filtered,
+			not_in_deck,
+		}
+	}, [languagePids, deckPids, phrasesMap, profile?.languagesToShow])
+}

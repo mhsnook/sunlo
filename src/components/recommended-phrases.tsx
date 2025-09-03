@@ -1,6 +1,6 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
+import { useRecommendations } from '@/hooks/use-processed-data'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
@@ -37,31 +37,31 @@ const PhraseSection = ({
 }
 
 export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
-	const pids = useDeckPidsAndRecs(lang)
+	const recommendations = useRecommendations(lang)
 
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>Recommended For You</CardTitle>
 			</CardHeader>
-			{pids === null ?
+			{recommendations === null ?
 				<Loader />
 			:	<CardContent className="space-y-4">
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
-						pids={pids.top8.popular.slice(0, 4)}
+						pids={recommendations.top8.popular.slice(0, 4)}
 						lang={lang}
 						Icon={TrendingUp}
 					/>
 					<PhraseSection
 						description="Newly added"
-						pids={pids.top8.newest.slice(0, 4)}
+						pids={recommendations.top8.newest.slice(0, 4)}
 						lang={lang}
 						Icon={Brain}
 					/>
 					<PhraseSection
 						description="Broaden your vocabulary"
-						pids={pids.top8.easiest.slice(0, 4)}
+						pids={recommendations.top8.easiest.slice(0, 4)}
 						lang={lang}
 						Icon={Carrot}
 					/>

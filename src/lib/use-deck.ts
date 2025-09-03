@@ -16,7 +16,7 @@ import type {
 	DeckPids,
 	ReviewsDayMap,
 } from '@/types/main'
-import { mapArray, mapArrays } from '@/lib/utils'
+import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { inLastWeek } from './dayjs'
 import dayjs from 'dayjs'
@@ -83,12 +83,15 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		meta.daily_review_goal ?? 15
 	)
 	const activityChartData = calcActivityChartData(reviewsDayMap)
+	const all = cardsArray.map((c) => c.phrase_id!)
+	const active = cardsArray
+		.filter((c) => c.status === 'active')
+		.map((c) => c.phrase_id!)
 
 	const pids: DeckPids = {
-		all: cardsArray.map((c) => c.phrase_id!),
-		active: cardsArray
-			.filter((c) => c.status === 'active')
-			.map((c) => c.phrase_id!),
+		all,
+		active,
+		inactive: arrayDifference(all, [active]),
 		reviewed: cardsArray
 			.filter((c) => c.last_reviewed_at !== null)
 			.map((c) => c.phrase_id!),

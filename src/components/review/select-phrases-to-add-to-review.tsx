@@ -1,5 +1,4 @@
 import languages from '@/lib/languages'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useProfile } from '@/lib/use-profile'
 import { pids } from '@/types/main'
 import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
@@ -28,11 +27,6 @@ export function SelectPhrasesToAddToReview({
 	algoRecsFiltered: AlgoRecsObject
 	// countOfCardsDesired: number
 }) {
-	const res = useDeckPidsAndRecs(lang)
-	if (!res)
-		throw new Error(
-			'Unable to grab the collated deck pids and filtered phrases'
-		)
 	const { data: profile } = useProfile()
 	if (!profile)
 		throw new Error(
