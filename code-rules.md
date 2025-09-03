@@ -82,6 +82,15 @@ You are an expert in your craft, and you know how to spend less time on the smal
   - ['user', userId] for profiles (same as query key)
   - ['user', 'friend_request_action', otherPerson.uid] for all friend request actions
 
+### Composite Data Access
+
+When we need reactive hooks that return data derived from multiple queries, such as `usePhrase` (which compiles data from the `LanguageLoaded` cache, the `DeckLoaded` user cache, and the `ProfileFull` user cache), we have a few conventions about these advanced data-shaping situations:
+
+- We put them in `@/hooks/composite.ts`
+- We try to keep these as granular as possible so that they only compute when needed
+- When a component only needs data from one source, we use the standard query which pulls only from one data source, not a composite hook
+- We write tests for them (to a higher standard than the rest of the code in the react app)
+
 ## Supabase/Postgres Conventions
 
 - Use uuid as the ID field for all tables, e.g. `"id" "uuid" default "gen_random_uuid" () not null`

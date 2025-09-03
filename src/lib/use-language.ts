@@ -76,22 +76,6 @@ export const useLanguagePhrase = (pid: uuid, lang: string) =>
 		select: (data: LanguageLoaded) => data.phrasesMap[pid],
 	}) as UseQueryResult<PhraseFull>
 
-export const usePhrase = (pid: uuid, lang: string) => {
-	const { data: profile } = useProfile()
-	const { data: phrase } = useLanguagePhrase(pid, lang)
-
-	if (!profile || !phrase) {
-		return { data: null, isPending: true }
-	}
-
-	const phraseFiltered = splitPhraseTranslations(
-		phrase,
-		profile.languagesToShow
-	)
-
-	return { data: phraseFiltered as PhraseFiltered, isPending: false }
-}
-
 export const useLanguagePhraseSuspense = (pid: uuid, lang: string) =>
 	useSuspenseQuery({
 		...languageQueryOptions(lang),

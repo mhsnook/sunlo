@@ -2,28 +2,15 @@ import languages from '@/lib/languages'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { useProfile } from '@/lib/use-profile'
 import { pids } from '@/types/main'
-import {
-	Brain,
-	Carrot,
-	CheckCircle,
-	LucideIcon,
-	Sparkles,
-	TrendingUp,
-} from 'lucide-react'
+import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
 import {
 	DrawerContent,
 	DrawerDescription,
 	DrawerHeader,
 	DrawerTitle,
 } from '@/components/ui/drawer'
-import {
-	Card,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+
+import { TapCardToSelect } from '@/components/cards/tap-to-select'
 
 export type AlgoRecsFiltersEnum = 'popular' | 'easiest' | 'newest'
 export type AlgoRecsObject = Record<AlgoRecsFiltersEnum, pids>
@@ -46,7 +33,6 @@ export function SelectPhrasesToAddToReview({
 		throw new Error(
 			'Unable to grab the collated deck pids and filtered phrases'
 		)
-	const phrasesMapFiltered = res.phrasesMapFiltered
 	const { data: profile } = useProfile()
 	if (!profile)
 		throw new Error(
@@ -105,43 +91,14 @@ export function SelectPhrasesToAddToReview({
 								<div className="grid gap-3 @lg:grid-cols-2">
 									{algoRecsFiltered[s.key].length > 0 ?
 										algoRecsFiltered[s.key].map((pid) => {
-											const selected = algoRecsSelected.includes(pid)
-											const phrase = phrasesMapFiltered[pid]
-											// console.log(`mapping the algo recs`, phrase)
-
 											return (
-												<Card
-													onClick={() => toggleCardSelection(pid)}
+												<TapCardToSelect
 													key={pid}
-													className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${selected ? 'border-primary bg-primary/10' : ''}`}
-												>
-													<CardHeader className="p-3 pb-0">
-														<CardTitle className="text-base">
-															{phrase.text}
-														</CardTitle>
-														<CardDescription>
-															{phrase.translations[0].text}
-														</CardDescription>
-													</CardHeader>
-													<CardFooter className="flex justify-end p-3 pt-0">
-														<Badge
-															variant={selected ? 'default' : 'outline'}
-															className="grid grid-cols-1 grid-rows-1 place-items-center font-normal [grid-template-areas:'stack']"
-														>
-															<span
-																className={`flex flex-row items-center gap-1 [grid-area:stack] ${selected ? '' : 'invisible'}`}
-															>
-																<CheckCircle className="me-1 h-3 w-3" />
-																Selected
-															</span>
-															<span
-																className={`[grid-area:stack] ${selected ? 'invisible' : ''}`}
-															>
-																Tap to select
-															</span>
-														</Badge>
-													</CardFooter>
-												</Card>
+													toggleCardSelection={toggleCardSelection}
+													isSelected={algoRecsSelected.includes(pid)}
+													pid={pid}
+													lang={lang}
+												/>
 											)
 										})
 									:	<p className="text-muted-foreground">

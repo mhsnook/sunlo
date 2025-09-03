@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useDeckPidsAndRecs } from '@/lib/process-pids'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
-import { PhraseTinyCard } from '@/components/phrase-tiny-card'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { Loader } from '@/components/ui/loader'
 
 type PhraseSectionProps = {
@@ -19,21 +19,17 @@ const PhraseSection = ({
 	lang,
 	Icon,
 }: PhraseSectionProps) => {
-	const { phrasesMapFiltered } = useDeckPidsAndRecs(lang)
-	if (!phrasesMapFiltered) return null
 	return (
-		<div>
+		<div className="space-y-4 rounded p-4 shadow">
 			<p className="my-1 flex flex-row justify-between text-lg">
 				{description}
 				<Icon className="inline size-6" />
 			</p>
 			{pids?.length > 0 ?
 				<div className="grid grid-cols-1 gap-2 @xl:grid-cols-2">
-					{pids.map((pid) => {
-						return !(pid in phrasesMapFiltered) ? null : (
-								<PhraseTinyCard key={pid} phrase={phrasesMapFiltered[pid]} />
-							)
-					})}
+					{pids.map((pid) => (
+						<PhraseTinyCard key={pid} pid={pid} lang={lang} />
+					))}
 				</div>
 			:	<p className="text-muted-foreground">No phrases available</p>}
 		</div>
