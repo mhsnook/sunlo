@@ -10,11 +10,14 @@ import type {
 	LanguageMeta,
 	PhrasesMap,
 	PhraseFull,
+	PhraseFiltered,
 	pids,
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
+import { useProfile } from './use-profile'
+import { splitPhraseTranslations } from './process-pids'
 
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
@@ -72,6 +75,22 @@ export const useLanguagePhrase = (pid: uuid, lang: string) =>
 		...languageQueryOptions(lang),
 		select: (data: LanguageLoaded) => data.phrasesMap[pid],
 	}) as UseQueryResult<PhraseFull>
+
+export const usePhrase = (pid: uuid, lang: string) => {
+	const { data: profile } = useProfile()
+	const { data: phrase } = useLanguagePhrase(pid, lang)
+
+	if (!profile || !phrase) {
+		return { data: null, isPending: true }
+	}
+
+	const phraseFiltered = splitPhraseTranslations(
+		phrase,
+		profile.languagesToShow
+	)
+
+	return { data: phraseFiltered as PhraseFiltered, isPending: false }
+}
 
 export const useLanguagePhraseSuspense = (pid: uuid, lang: string) =>
 	useSuspenseQuery({
