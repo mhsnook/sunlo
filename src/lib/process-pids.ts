@@ -66,7 +66,7 @@ function processDeckPidsAndRecs(
 		.filter((p) => p.id)
 
 	const languagePidsFiltered = phrasesArrayFiltered
-		.filter((p) => p.translations.length > 0 && p.id !== null)
+		.filter((p) => p.translations_mine.length > 0 && p.id !== null)
 		.map((p) => p.id!)
 	const phrasesMapFiltered: PhrasesMap = mapArray(phrasesArrayFiltered, 'id')
 
