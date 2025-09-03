@@ -119,6 +119,13 @@ export function FancyMultiSelect({
 			</div>
 			<div className="relative mt-2">
 				<CommandList>
+					{open && selectables.length === 0 ?
+						<div className="bg-popover text-popover-foreground animate-in absolute top-0 z-10 w-full rounded-md border shadow-md outline-none">
+							<CommandGroup className="h-full overflow-auto">
+								<CommandItem>No options available</CommandItem>
+							</CommandGroup>
+						</div>
+					:	null}
 					{open && selectables.length > 0 ?
 						<div className="bg-popover text-popover-foreground animate-in absolute top-0 z-10 w-full rounded-md border shadow-md outline-none">
 							<CommandGroup className="h-full overflow-auto">
