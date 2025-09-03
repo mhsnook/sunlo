@@ -58,7 +58,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 
 	const { data: allTags = [] } = useLanguageTags(lang)
 	const tagOptions = useMemo(
-		() => allTags?.map((tag) => ({ value: tag, label: tag })),
+		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
 		[allTags]
 	)
 
