@@ -26,6 +26,8 @@ const filterEnum = z.enum([
 	'language_no_translations',
 	'language',
 ])
+type FilterEnum = z.infer<typeof filterEnum>
+
 const SearchSchema = z.object({
 	filter: filterEnum.optional(),
 	tags: z.string().optional(),
@@ -39,16 +41,6 @@ export const Route = createFileRoute('/_user/learn/$lang/library')({
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
 
-	return (
-		<div className="space-y-4">
-			<DeckContents lang={lang} />
-		</div>
-	)
-}
-
-type FilterEnum = z.infer<typeof filterEnum>
-
-function DeckContents({ lang }: LangOnlyComponentProps) {
 	const pids = useDeckPidsAndRecs(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
@@ -56,7 +48,7 @@ function DeckContents({ lang }: LangOnlyComponentProps) {
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
 
-	const { data: allTags = [] } = useLanguageTags(lang)
+	const allTags = language?.meta.tags ?? []
 	const tagOptions = useMemo(
 		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
 		[allTags]
