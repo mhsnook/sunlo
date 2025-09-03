@@ -68,7 +68,6 @@ function processDeckPidsAndRecs(
 	const languagePidsFiltered = phrasesArrayFiltered
 		.filter((p) => p.translations_mine.length > 0 && p.id !== null)
 		.map((p) => p.id!)
-	const phrasesMapFiltered: PhrasesMap = mapArray(phrasesArrayFiltered, 'id')
 
 	const language_selectables = arrayDifference(languagePidsFiltered, [
 		deckPids.reviewed_or_inactive,
@@ -122,7 +121,6 @@ function processDeckPidsAndRecs(
 			popular: popular8,
 			newest: newest8,
 		},
-		phrasesMapFiltered,
 	}
 }
 

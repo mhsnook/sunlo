@@ -8,7 +8,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { useLanguagePhraseSuspense, usePhrase } from '@/lib/use-language'
+import { usePhrase } from '@/hooks/composite'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronsUpDown, OctagonMinus, Pencil, X, Loader } from 'lucide-react'
 import {
@@ -21,6 +21,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 import { cn } from '@/lib/utils'
+import { TranslationStub } from '@/types/main'
 
 const DestructiveOctagon = () => (
 	<Badge variant="destructive" className="p-2">
@@ -43,14 +44,18 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
 	const [isTagEditing, setIsTagEditing] = useState(false)
-	const { data: phrase, isPending } = usePhrase(id, lang)
-	const { data: rawPhrase } = useLanguagePhraseSuspense(id, lang)
+	const { data: phrase, status } = usePhrase(id, lang)
 	const [isOpen, setIsOpen] = useState(false)
 
-	if (isPending) return <Loader />
-	if (!phrase || !rawPhrase) return <PhraseNotFound />
+	if (status === 'pending') return <Loader />
+	if (status === 'not-found' || !phrase) return <PhraseNotFound />
 
-	const { translations_mine, translations_other } = phrase
+	// Tell the component what to do with incomplete composite data.
+	const [trans, other] =
+		!phrase.translations_mine ?
+			[phrase.translations, []]
+		:	[phrase.translations_mine, phrase.translations_other ?? []]
+
 	const tags = phrase.tags ?? []
 
 	return (
@@ -75,7 +80,7 @@ function RouteComponent() {
 						<Separator />
 						<div>
 							<div className="space-y-3">
-								{translations_mine.map((translation) => (
+								{trans?.map((translation) => (
 									<div
 										key={translation.id}
 										className="flex flex-row items-center justify-start gap-2 space-y-2 rounded"
@@ -85,12 +90,12 @@ function RouteComponent() {
 									</div>
 								))}
 								<AddTranslationsDialog
-									phrase={rawPhrase}
+									phrase={phrase}
 									variant="outline"
 									size="sm"
 								/>
 							</div>
-							{!translations_other?.length ? null : (
+							{!other.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(
@@ -99,10 +104,11 @@ function RouteComponent() {
 										)}
 									>
 										<ChevronsUpDown className="h-4 w-4" />
-										{isOpen ? 'Hide extra' : 'Show hidden'} translations
+										{isOpen ? 'Hide extra' : `Show ${other.length} hidden`}{' '}
+										translation{other.length > 0 ? 's' : ''}
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
-										{translations_other.map((translation) => (
+										{other.map((translation: TranslationStub) => (
 											<div
 												key={translation.id}
 												className="bg-muted rounded-lg p-3"

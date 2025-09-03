@@ -16,6 +16,13 @@ export type LangOnlyComponentProps = {
 	lang: string
 }
 
+export type CompositeQueryResults<T> =
+	| {
+			data: T
+			status: 'partial' | 'complete'
+	  }
+	| { data: null; status: 'pending' | 'not-found' }
+
 export type LanguageProficiency = 'fluent' | 'proficient' | 'beginner'
 export type LanguageKnown = { lang: string; level: LanguageProficiency }
 
