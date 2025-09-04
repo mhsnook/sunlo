@@ -148,7 +148,6 @@ export type RelationInsert = TablesInsert<'phrase_relation'>
 export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
-	tags?: Array<Tag> | null
 }
 export type PhraseFiltered = PhraseFull & {
 	translations_mine?: Array<TranslationRow>
