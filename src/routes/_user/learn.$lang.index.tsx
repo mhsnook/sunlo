@@ -54,10 +54,8 @@ function WelcomePage() {
 }
 
 function DeckOverview({ lang }: LangOnlyComponentProps) {
-	const { data: deckMeta } = useDeckMeta(lang)
-	const { data: deckPids } = useDeckPids(lang)
 	const { data: deck } = useDeck(lang)
-	if (!deckMeta || !deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+	if (!deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
 	return (
 		<Card>
@@ -81,18 +79,18 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
 					<Badge variant="outline">
-						{deckMeta.lang_total_phrases} phrases total
+						{deck.meta.lang_total_phrases} phrases total
 					</Badge>
 					<Badge variant="outline">
-						{deckMeta.cards_active} cards in your deck
+						{deck.meta.cards_active} cards in your deck
 					</Badge>
 					<Badge variant="outline">
-						{deckMeta.count_reviews_7d} reviews last 7d
+						{deck.meta.count_reviews_7d} reviews last 7d
 					</Badge>
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				<p>Your last review was {ago(deckMeta.most_recent_review_at)}</p>
+				<p>Your last review was {ago(deck.meta.most_recent_review_at)}</p>
 				<p>
 					{(
 						deck.routineStats.daysMet === deck.routineStats.daysSoFar &&
@@ -105,8 +103,8 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					}
 				</p>
 				<p>
-					{deckPids?.today_active.length} active cards are scheduled for today,
-					along with {deckMeta.daily_review_goal ?? 15} new ones
+					{deck.pids.today_active.length} active cards are scheduled for today,
+					along with {deck.meta.daily_review_goal ?? 15} new ones
 				</p>
 
 				{deck.activityChartData.length > 0 && (
