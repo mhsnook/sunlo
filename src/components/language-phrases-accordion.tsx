@@ -1,4 +1,4 @@
-import type { pids } from '@/types/main'
+import type { OnePhraseComponentProps, pids } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
@@ -6,7 +6,6 @@ import {
 	AccordionTrigger,
 } from '@/components/ui/accordion'
 
-import { useMemo } from 'react'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
@@ -34,18 +33,14 @@ export function LanguagePhrasesAccordionComponent({
 	)
 }
 
-function PhraseAccordionItem({ pid, lang }: { pid: pids[0]; lang: string }) {
+function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 	const { data: phrase } = usePhrase(pid, lang)
 	if (!phrase) return null // or a loading skeleton
 
-	const params = useMemo(
-		() => ({ lang: phrase.lang!, id: phrase.id! }),
-		[phrase.id, phrase.lang]
-	)
 	return (
-		<AccordionItem value={phrase.id!} className="mb-2 rounded px-2 shadow-sm">
+		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
 			<div className="flex flex-row items-center gap-2">
-				<CardStatusDropdown lang={phrase.lang!} pid={phrase.id!} />
+				<CardStatusDropdown lang={lang} pid={pid!} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
@@ -70,21 +65,17 @@ function PhraseAccordionItem({ pid, lang }: { pid: pids[0]; lang: string }) {
 					<div className="my-4 flex flex-row gap-2">
 						<PermalinkButton
 							to="/learn/$lang/$id"
-							params={params}
+							params={{ lang, id: pid }}
 							variant="link"
 							className="text-xs"
 						/>
 						<SharePhraseButton
-							pid={phrase.id!}
-							lang={phrase.lang!}
+							pid={pid}
+							lang={lang}
 							variant="link"
 							className="text-xs"
 						/>
-						<PhraseExtraInfo
-							lang={phrase.lang!}
-							pid={phrase.id!}
-							className="ms-auto"
-						/>
+						<PhraseExtraInfo lang={lang} pid={pid} className="ms-auto" />
 					</div>
 				</div>
 			</AccordionContent>

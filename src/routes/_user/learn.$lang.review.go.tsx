@@ -51,6 +51,7 @@ function ReviewPage() {
 }
 
 function FlashCardReviewSession({ manifest }: { manifest: pids }) {
+	const { lang } = Route.useParams()
 	const currentCardIndex = useCardIndex()
 	const reviewStage = useReviewStage()
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
@@ -120,7 +121,7 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 							key={pid}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
 						>
-							<ReviewSingleCard pid={pid} />
+							<ReviewSingleCard pid={pid} lang={lang} />
 						</div>
 					))}
 				</div>

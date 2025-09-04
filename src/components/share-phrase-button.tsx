@@ -1,11 +1,11 @@
+import { useCallback } from 'react'
 import type { ButtonProps } from '@/components/ui/button-variants'
-import type { uuid } from '@/types/main'
+import type { OnePhraseComponentProps } from '@/types/main'
 import { Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { useLanguagePhrase } from '@/lib/use-language'
 import languages from '@/lib/languages'
-import { useCallback } from 'react'
 
 export default function SharePhraseButton({
 	lang,
@@ -15,9 +15,7 @@ export default function SharePhraseButton({
 	size = 'badge',
 	className = '',
 	...props
-}: {
-	lang: string
-	pid: uuid
+}: OnePhraseComponentProps & {
 	text?: string
 	variant?: string
 	size?: string
