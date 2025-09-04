@@ -3,19 +3,24 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Plus, SearchX } from 'lucide-react'
 
 import languages from '@/lib/languages'
-import { Badge } from '@/components/ui/badge'
-import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { FancyMultiSelect } from '@/components/ui/multi-select'
+import { FancyMultiSelect, ShowSelected } from '@/components/ui/multi-select'
 import { Separator } from '@/components/ui/separator'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { useLanguage } from '@/lib/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/lib/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
+import { Label } from '@/components/ui/label'
 
 type DeckOnlyFiltersEnum = 'active' | 'inactive' | 'reviewed_last_7d'
 type CompositeFiltersEnum = Exclude<FilterEnumType, DeckOnlyFiltersEnum>
@@ -66,6 +71,44 @@ function DeckLibraryPage() {
 		},
 		[navigate]
 	)
+
+	const filterOptions = useMemo(() => {
+		if (!deckPids || !recs) return []
+		return [
+			{
+				value: 'not_in_deck',
+				label: `Phrases not in deck (${recs.not_in_deck.length})`,
+			},
+			{
+				value: 'active',
+				label: `Active cards (${deckPids.active.length})`,
+			},
+			{
+				value: 'inactive',
+				label: `Inactive cards (${deckPids.inactive.length})`,
+			},
+			{
+				value: 'reviewed_last_7d',
+				label: `Reviewed past week (${deckPids.reviewed_last_7d.length})`,
+			},
+			{
+				value: 'language_filtered',
+				label: `All phrases (${recs.language_filtered.length})`,
+			},
+			{
+				value: 'language_no_translations',
+				label: `Needs translations (${recs.language_no_translations.length})`,
+			},
+			{ value: 'language', label: `No filters (${recs.language.length})` },
+		]
+	}, [deckPids, recs])
+
+	const handleFilterChange = (value: string) => {
+		void navigate({
+			search: (prev) => ({ ...prev, filter: value as FilterEnumType }),
+			replace: true,
+		})
+	}
 
 	const filteredPidsByStatus = useMemo(
 		() =>
@@ -122,64 +165,49 @@ function DeckLibraryPage() {
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<div className="text-muted-foreground mb-4 flex flex-row flex-wrap gap-2">
-					<span className="text-sm">Filters:</span>
-					<BadgeFilter
-						name="language_filtered"
-						filter={filter}
-						text="All phrases"
-						count={recs.language_filtered.length}
-					/>
-					<BadgeFilter
-						name="active"
-						filter={filter}
-						text="Active deck"
-						count={deckPids.active.length}
-					/>
-					<BadgeFilter
-						name="inactive"
-						filter={filter}
-						text="Inactive"
-						count={deckPids.inactive.length}
-					/>
-					{/*<BadgeFilter
-						name="recommended"
-						filter={filter}
-						text="Recommended"
-						count={pids.recommended.length}
-					/>*/}
-					<BadgeFilter
-						name="not_in_deck"
-						filter={filter}
-						text="Not in deck"
-						count={recs.not_in_deck.length}
-					/>
-					<BadgeFilter
-						name="reviewed_last_7d"
-						filter={filter}
-						text="Reviewed past week"
-						count={deckPids.reviewed_last_7d.length}
-					/>
-					<BadgeFilter
-						name="language_no_translations"
-						filter={filter}
-						text="Needs translations"
-						count={recs.language_no_translations.length}
-					/>
-					<BadgeFilter
-						name="language"
-						filter={filter}
-						text="No filters"
-						count={recs.language.length}
-					/>
+				<div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
+					<div>
+						<Label>Phrase Tags</Label>
+						<FancyMultiSelect
+							options={tagOptions}
+							selected={selectedTags}
+							setSelected={setSelectedTags}
+							placeholder="Filter by tags..."
+							showSelected={false}
+						/>
+					</div>
+					<div>
+						<Label>Card status</Label>
+						<Select onValueChange={handleFilterChange} value={filter}>
+							<SelectTrigger>
+								<SelectValue placeholder="Filter phrases..." />
+							</SelectTrigger>
+							<SelectContent>
+								{filterOptions.map((option) => (
+									<SelectItem key={option.value} value={option.value}>
+										{option.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 				</div>
-				<div className="mb-4">
-					<FancyMultiSelect
-						options={tagOptions}
-						selected={selectedTags}
-						setSelected={setSelectedTags}
-						placeholder="Filter by tags..."
-					/>
+				<div className="mt-2 flex flex-col items-center justify-between gap-2 @lg:flex-row">
+					<div className="flex flex-row flex-wrap gap-2">
+						<ShowSelected
+							options={tagOptions}
+							selected={selectedTags}
+							setSelected={setSelectedTags}
+						/>
+					</div>
+					<Link
+						className={buttonVariants({ variant: 'outline', size: 'sm' })}
+						to="/learn/$lang/library"
+						from={Route.fullPath}
+						search={{ filter: 'language' }}
+					>
+						Clear all filters
+					</Link>
 				</div>
 				<Separator className="mt-6 mb-2" />
 				<p className="text-muted-foreground pb-2 text-right text-xs italic">
@@ -201,46 +229,14 @@ function DeckLibraryPage() {
 	)
 }
 
-const constFilter = { filter: 'language' } as const
-
 function Empty() {
 	return (
-		<Callout variant="ghost" Icon={SearchX}>
-			<p>There are no phrases in the library that match this search.</p>
-			<Link
-				className={buttonVariants({ variant: 'outline' })}
-				to="/learn/$lang/library"
-				from={Route.fullPath}
-				search={constFilter}
-			>
-				Clear filters
-			</Link>
-		</Callout>
-	)
-}
-
-function BadgeFilter({
-	name,
-	text,
-	filter,
-	count = 0,
-}: {
-	name: FilterEnumType
-	text: string
-	filter: FilterEnumType
-	count: number
-}) {
-	return (
-		<Link
-			to="/learn/$lang/library"
-			from={Route.fullPath}
-			search={(search) => ({ ...search, filter: name })}
-		>
-			<Badge variant="outline" className="shadow-sm">
-				<label className="flex cursor-pointer gap-1">
-					<Checkbox checked={filter === name} /> {text} ({count})
-				</label>
-			</Badge>
-		</Link>
+		<div className="text-muted-foreground flex w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed py-12">
+			<SearchX className="size-12" />
+			<div className="text-center">
+				<p className="font-semibold">No phrases match your filters.</p>
+				<p className="text-sm">Try adjusting your search.</p>
+			</div>
+		</div>
 	)
 }
