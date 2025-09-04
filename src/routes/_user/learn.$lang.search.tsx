@@ -19,19 +19,10 @@ import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases
 import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { useLanguageTags } from '@/lib/use-language'
 import { Separator } from '@/components/ui/separator'
-
-interface SearchParams {
-	text?: string
-	tags?: string
-}
+import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/search')({
-	validateSearch: (search: Record<string, unknown>): SearchParams => {
-		return {
-			text: (search.text as string) || undefined,
-			tags: (search.tags as string) || undefined,
-		}
-	},
+	validateSearch: PhraseSearchSchema,
 	component: SearchTab,
 })
 
@@ -50,7 +41,7 @@ function SearchTab() {
 
 	const { data: allTags = [] } = useLanguageTags(lang)
 	const tagOptions = useMemo(
-		() => allTags?.map((tag) => ({ value: tag, label: tag })),
+		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
 		[allTags]
 	)
 
@@ -60,14 +51,16 @@ function SearchTab() {
 	)
 
 	const setSelectedTags = (value: SetStateAction<string[]>) => {
-		const newSelectedTags =
-			typeof value === 'function' ? value(selectedTags) : value
 		void navigate({
 			to: '.',
-			search: (prev) => ({
-				...prev,
-				tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
-			}),
+			search: (prev: PhraseSearchType) => {
+				const newSelectedTags =
+					typeof value === 'function' ? value(selectedTags) : value
+				return {
+					...prev,
+					tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
+				}
+			},
 			replace: true,
 			params: true,
 		})
@@ -112,7 +105,9 @@ function SearchTab() {
 			const phrase = phrasesMap[pid]
 			if (!phrase?.tags) return false
 			return selectedTagsFromFilter.every((selectedTag) =>
-				phrase.tags!.some((phraseTag) => phraseTag.name === selectedTag)
+				phrase
+					.tags!.filter(Boolean)
+					.some((phraseTag) => phraseTag.name === selectedTag)
 			)
 		})
 	}, [filter, searchablePhrases, pids, tagsFilter, phrasesMap])
@@ -132,7 +127,7 @@ function SearchTab() {
 							void navigate({
 								to: '.',
 								replace: true,
-								search: (search: SearchParams) => ({
+								search: (search: PhraseSearchType) => ({
 									...search,
 									text: e.target.value,
 								}),
@@ -155,7 +150,7 @@ function SearchTab() {
 						<Link
 							to="/learn/$lang/add-phrase"
 							from={Route.fullPath}
-							search={(search: SearchParams) => ({ ...search, text: filter })}
+							search={true}
 						>
 							<NotebookPen />
 							Add New Phrase

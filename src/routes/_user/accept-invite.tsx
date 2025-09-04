@@ -164,6 +164,7 @@ const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
 				<p>
 					<Link
 						to="/friends/$uid"
+						from={Route.fullPath}
 						params={{ uid: friend.uid! }}
 						className={buttonVariants({ variant: 'default' })}
 					>

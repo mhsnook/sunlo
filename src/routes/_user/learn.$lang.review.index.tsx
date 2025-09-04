@@ -250,7 +250,7 @@ function ReviewPageSetup() {
 		return (
 			manifestToRestore.stats.complete === manifestToRestore.stats.count ?
 				<WhenComplete />
-			: stage ? <Navigate to="/learn/$lang/review/go" params={{ lang }} />
+			: stage ? <Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
 			: <ContinueReview
 					lang={lang}
 					dayString={dayString}

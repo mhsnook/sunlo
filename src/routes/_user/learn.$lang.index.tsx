@@ -65,7 +65,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						<span>Deck Overview</span>
 						<Link
 							to="/learn/$lang/search"
-							params={{ lang }}
+							from={Route.fullPath}
 							aria-disabled="true"
 							className={buttonVariants({
 								size: 'badge',
@@ -118,7 +118,6 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				<div className="flex flex-row flex-wrap gap-2">
 					<Link
 						to="/learn/$lang/review"
-						params={{ lang }}
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'default' }),
@@ -129,7 +128,6 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					</Link>
 					<Link
 						to="/learn/$lang/library"
-						params={{ lang }}
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'secondary' }),
@@ -141,7 +139,6 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					</Link>
 					<Link
 						to="/learn/$lang/add-phrase"
-						params={{ lang }}
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'secondary' }),
@@ -196,7 +193,6 @@ function DeckSettings({ lang }: LangOnlyComponentProps) {
 				</ul>
 				<Link
 					to="/learn/$lang/deck-settings"
-					params={{ lang }}
 					from={Route.fullPath}
 					className={buttonVariants({ variant: 'secondary' })}
 				>
@@ -224,7 +220,7 @@ function Empty({ lang }: LangOnlyComponentProps) {
 				<div className="flex flex-col gap-2 @lg:flex-row">
 					<Link
 						to="/learn/$lang/library"
-						params={{ lang }}
+						from={Route.fullPath}
 						className={buttonVariants({ variant: 'secondary' })}
 					>
 						<Library /> Browse the {languages[lang]} library
@@ -241,7 +237,7 @@ function Empty({ lang }: LangOnlyComponentProps) {
 				</p>
 				<Link
 					to="/learn/$lang/add-phrase"
-					params={{ lang }}
+					from={Route.fullPath}
 					className={buttonVariants({ variant: 'secondary' })}
 				>
 					<NotebookPen /> Add a phrase
