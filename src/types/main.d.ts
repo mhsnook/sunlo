@@ -15,6 +15,10 @@ export type pids = Array<uuid>
 export type LangOnlyComponentProps = {
 	lang: string
 }
+export type OnePhraseComponentProps = {
+	lang: string
+	pid: uuid
+}
 
 export type CompositeQueryResults<T> =
 	| {

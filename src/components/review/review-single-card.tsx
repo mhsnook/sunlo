@@ -1,9 +1,5 @@
-import {
-	useReviewDayString,
-	useReviewLang,
-	useReviewStage,
-} from '@/lib/use-review-store'
-import { TranslationRow, uuid } from '@/types/main'
+import { useReviewDayString, useReviewStage } from '@/lib/use-review-store'
+import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -17,18 +13,13 @@ import { Play } from 'lucide-react'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/lib/use-reviews'
 
-interface ReviewSingleCardProps {
-	pid: uuid
-}
-
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
 	// In a real application, you would trigger audio playback here
 }
 
-export function ReviewSingleCard({ pid }: ReviewSingleCardProps) {
+export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	const dayString = useReviewDayString()
-	const lang = useReviewLang()
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(lang, dayString, pid)
 	const stage = useReviewStage()
@@ -48,10 +39,7 @@ export function ReviewSingleCard({ pid }: ReviewSingleCardProps) {
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
-				<PermalinkButton
-					to={'/learn/$lang/$id'}
-					params={{ lang: lang, id: pid }}
-				/>
+				<PermalinkButton to={'/learn/$lang/$id'} params={{ lang, id: pid }} />
 				<SharePhraseButton lang={lang} pid={pid} />
 				<PhraseExtraInfo lang={lang} pid={pid} />
 			</CardHeader>

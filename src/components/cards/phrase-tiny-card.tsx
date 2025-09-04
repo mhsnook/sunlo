@@ -1,14 +1,9 @@
-import type { uuid } from '@/types/main'
+import type { OnePhraseComponentProps } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
 
-type PhraseTinyCardProps = {
-	pid: uuid
-	lang: string
-}
-
-export const PhraseTinyCard = ({ pid, lang }: PhraseTinyCardProps) => {
+export const PhraseTinyCard = ({ pid, lang }: OnePhraseComponentProps) => {
 	const { data: phrase, status } = usePhrase(pid, lang)
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) {
@@ -23,7 +18,7 @@ export const PhraseTinyCard = ({ pid, lang }: PhraseTinyCardProps) => {
 		<Link
 			className="s-link hover:bg-primary/10 m-1 block justify-start rounded-2xl p-3 no-underline decoration-2 shadow-sm transition-all hover:underline"
 			to="/learn/$lang/$id"
-			params={{ lang: lang, id: pid }}
+			params={{ lang, id: pid }}
 		>
 			<p className="font-semibold">{phrase.text}</p>{' '}
 			<p className="text-muted-foreground text-sm">

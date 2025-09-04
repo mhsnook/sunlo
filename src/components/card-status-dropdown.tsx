@@ -1,5 +1,10 @@
 import supabase from '@/lib/supabase-client'
-import { CardRow, DeckLoaded, uuid } from '@/types/main'
+import {
+	CardRow,
+	DeckLoaded,
+	OnePhraseComponentProps,
+	uuid,
+} from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
@@ -258,7 +263,7 @@ export function CardStatusDropdown({
 		)
 }
 
-export function CardStatusHeart({ pid, lang }: { pid: uuid; lang: string }) {
+export function CardStatusHeart({ pid, lang }: OnePhraseComponentProps) {
 	const mutation = useCardStatusMutation(pid, lang)
 	const { data: card } = useDeckCard(pid, lang)
 	const status = card?.status === 'active' ? 'skipped' : 'active'
