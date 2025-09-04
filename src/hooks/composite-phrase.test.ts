@@ -72,11 +72,11 @@ describe('splitPhraseTranslations', () => {
 	it('should return the original phrase properties', () => {
 		const languagesToShow = ['eng']
 		const result = splitPhraseTranslations(basePhrase, languagesToShow)
-
-		expect(result.id).toBe(basePhrase.id)
-		expect(result.lang).toBe(basePhrase.lang)
-		expect(result.text).toBe(basePhrase.text)
-		expect(result.tags).toEqual(basePhrase.tags)
+		// Programmatically check that all properties from basePhrase
+		// are present and correct in the result.
+		;(Object.keys(basePhrase) as Array<keyof PhraseStub>).forEach((key) => {
+			expect(result[key]).toEqual(basePhrase[key])
+		})
 	})
 
 	it('should handle phrases with no translations', () => {
