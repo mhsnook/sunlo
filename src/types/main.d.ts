@@ -110,13 +110,12 @@ export type PhraseStub = NonNullableFields<{
 	id: uuid
 	text: string
 	lang: string
-
 	translations: Array<{
 		id: uuid
 		text: string
 		lang: string
 	}>
-}>
+}> & { tags?: Array<Tag> }
 
 export type PhrasesMap = {
 	[key: uuid]: PhraseFiltered
