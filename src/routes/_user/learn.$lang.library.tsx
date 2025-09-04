@@ -64,18 +64,24 @@ function DeckLibraryPage() {
 		[tagsFilter]
 	)
 
-	const setSelectedTags = (value: SetStateAction<string[]>) => {
-		const newSelectedTags =
-			typeof value === 'function' ? value(selectedTags) : value
-		void navigate({
-			search: (prev) => ({
-				...prev,
-				tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
-			}),
-			replace: true,
-			params: true,
-		})
-	}
+	const setSelectedTags = useCallback(
+		(value: SetStateAction<string[]>) => {
+			void navigate({
+				search: (prev) => {
+					const currentTags = prev.tags?.split(',').filter(Boolean) ?? []
+					const newTags =
+						typeof value === 'function' ? value(currentTags) : value
+					return {
+						...prev,
+						tags: newTags.length ? newTags.join(',') : undefined,
+					}
+				},
+				replace: true,
+				params: true,
+			})
+		},
+		[navigate]
+	)
 
 	const filteredPidsByStatus = useMemo(
 		() =>
