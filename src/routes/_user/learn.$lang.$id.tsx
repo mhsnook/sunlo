@@ -8,7 +8,7 @@ import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
-import { usePhrase } from '@/hooks/composite'
+import { usePhrase } from '@/hooks/composite-phrase'
 import { createFileRoute } from '@tanstack/react-router'
 import { ChevronsUpDown, OctagonMinus, Pencil, X, Loader } from 'lucide-react'
 import {
