@@ -27,7 +27,7 @@ import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your
 import { LanguageLoaded, PhraseStub } from '@/types/main'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { mapArray } from '@/lib/utils'
-import { splitPhraseTranslations } from '@/lib/process-pids'
+import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),

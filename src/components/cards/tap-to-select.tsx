@@ -1,4 +1,4 @@
-import { usePhrase } from '@/hooks/composite'
+import { usePhrase } from '@/hooks/composite-phrase'
 import {
 	Card,
 	CardDescription,

@@ -35,7 +35,7 @@ import { useAuth } from '@/lib/hooks'
 import { useReviewsToday } from '@/lib/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
-import { useCompositePids } from '@/hooks/use-processed-data'
+import { useCompositePids } from '@/hooks/composite-pids'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,

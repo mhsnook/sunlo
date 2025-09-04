@@ -1,5 +1,5 @@
 import type { uuid } from '@/types/main'
-import { usePhrase } from '@/hooks/composite'
+import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
 

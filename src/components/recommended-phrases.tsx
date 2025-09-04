@@ -1,6 +1,6 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCompositePids } from '@/hooks/use-processed-data'
+import { useCompositePids } from '@/hooks/composite-pids'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'

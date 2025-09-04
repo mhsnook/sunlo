@@ -3,13 +3,12 @@ import { useDeckPids } from '@/lib/use-deck'
 import { useLanguagePids, useLanguagePhrasesMap } from '@/lib/use-language'
 import { arrayDifference } from '@/lib/utils'
 import { useProfile } from '@/lib/use-profile'
-import { splitPhraseTranslations } from '@/lib/process-pids'
+import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
 /**
- * This hook computes the top recommended phrases for a user.
- * It's one of the more expensive calculations, so it's isolated here.
- * It depends on phrasesMap and profile, making it more costly than
- * useDeckStatusPids.
+ * This hook computes the top recommended phrases for a user, and other
+ * data points that require combining information from across deck, language,
+ * and profile.
  */
 export function useCompositePids(lang: string) {
 	const { data: profile } = useProfile()

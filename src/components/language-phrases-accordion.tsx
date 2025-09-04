@@ -12,7 +12,7 @@ import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { usePhrase } from '@/hooks/composite'
+import { usePhrase } from '@/hooks/composite-phrase'
 
 interface PhrasesWithOptionalOrder {
 	lang: string

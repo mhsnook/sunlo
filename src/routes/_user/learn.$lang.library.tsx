@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { useLanguage } from '@/lib/use-language'
-import { useCompositePids } from '@/hooks/use-processed-data'
+import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/lib/use-deck'
 
 const filterEnum = z.enum([
