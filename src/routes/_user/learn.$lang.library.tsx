@@ -1,4 +1,4 @@
-import { useMemo, type SetStateAction } from 'react'
+import { useCallback, useMemo, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { z } from 'zod'
 import { Plus, SearchX } from 'lucide-react'
@@ -9,7 +9,6 @@ import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Loader } from '@/components/ui/loader'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { Separator } from '@/components/ui/separator'
 import { LanguageIsEmpty } from '@/components/language-is-empty'
@@ -27,7 +26,10 @@ const filterEnum = z.enum([
 	'language_no_translations',
 	'language',
 ])
+
 type FilterEnum = z.infer<typeof filterEnum>
+type DeckOnlyFiltersEnum = 'active' | 'inactive' | 'reviewed_last_7d'
+type CompositeFiltersEnum = Exclude<FilterEnum, DeckOnlyFiltersEnum>
 
 const SearchSchema = z.object({
 	filter: filterEnum.optional(),
@@ -47,8 +49,6 @@ function DeckLibraryPage() {
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: language } = useLanguage(lang)
-
-	if (!recs || !deckPids || !language) return <Loader />
 
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
@@ -77,18 +77,17 @@ function DeckLibraryPage() {
 		})
 	}
 
-	const filteredPidsByStatus =
-		filter === 'language' ? recs['language']
-		: filter === 'language_filtered' ? recs['language_filtered']
-		: filter === 'language_no_translations' ? recs['language_no_translations']
-		: filter === 'not_in_deck' ? recs['not_in_deck']
-		: filter === 'active' ? deckPids['active']
-		: filter === 'inactive' ? deckPids['inactive']
-		: filter === 'reviewed_last_7d' ? deckPids['reviewed_last_7d']
-		: []
+	const filteredPidsByStatus = useMemo(
+		() =>
+			!deckPids || !recs ? []
+			: filter in deckPids ? deckPids[filter as DeckOnlyFiltersEnum]
+			: recs[filter as CompositeFiltersEnum],
+		[filter, recs, deckPids]
+	)
+
 	const filteredPids = useMemo(() => {
+		if (!language?.phrasesMap || filteredPidsByStatus.length === 0) return []
 		if (!tagsFilter) return filteredPidsByStatus
-		if (!language?.phrasesMap) return []
 
 		const selectedTags = tagsFilter.split(',').map((t) => t.trim())
 		if (selectedTags.length === 0) return filteredPidsByStatus
@@ -105,7 +104,7 @@ function DeckLibraryPage() {
 		})
 	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
 
-	if (!deckPids || !recs) {
+	if (!deckPids || !recs || !language) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
 		)
