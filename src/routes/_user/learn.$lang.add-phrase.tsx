@@ -167,7 +167,7 @@ function AddPhraseTab() {
 
 						<Link
 							to="/learn/$lang/bulk-add"
-							params={{ lang }}
+							from={Route.fullPath}
 							className={buttonVariants({ variant: 'outline' })}
 						>
 							Bulk add phrases

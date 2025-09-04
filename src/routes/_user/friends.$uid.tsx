@@ -84,6 +84,7 @@ function ProfilePage() {
 								<Link
 									className={buttonVariants({ variant: 'outline' })}
 									to="/friends/chats/$friendId"
+									from={Route.fullPath}
 									params={{ friendId: profile.uid }}
 								>
 									<MessagesSquare /> Message

@@ -1,6 +1,5 @@
 import { useCallback, useMemo, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { z } from 'zod'
 import { Plus, SearchX } from 'lucide-react'
 
 import languages from '@/lib/languages'
@@ -16,29 +15,14 @@ import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases
 import { useLanguage } from '@/lib/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/lib/use-deck'
+import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 
-const filterEnum = z.enum([
-	'language_filtered',
-	'active',
-	'inactive',
-	'reviewed_last_7d',
-	'not_in_deck',
-	'language_no_translations',
-	'language',
-])
-
-type FilterEnum = z.infer<typeof filterEnum>
 type DeckOnlyFiltersEnum = 'active' | 'inactive' | 'reviewed_last_7d'
-type CompositeFiltersEnum = Exclude<FilterEnum, DeckOnlyFiltersEnum>
-
-const SearchSchema = z.object({
-	filter: filterEnum.optional(),
-	tags: z.string().optional(),
-})
+type CompositeFiltersEnum = Exclude<FilterEnumType, DeckOnlyFiltersEnum>
 
 export const Route = createFileRoute('/_user/learn/$lang/library')({
 	component: DeckLibraryPage,
-	validateSearch: SearchSchema,
+	validateSearch: PhraseSearchSchema,
 })
 
 function DeckLibraryPage() {
@@ -125,7 +109,7 @@ function DeckLibraryPage() {
 						<span>Explore the {languages[lang]} Library</span>
 						<Link
 							to="/learn/$lang/add-phrase"
-							params={{ lang }}
+							from={Route.fullPath}
 							className={buttonVariants({
 								size: 'badge',
 								variant: 'outline',
@@ -220,14 +204,13 @@ function DeckLibraryPage() {
 const constFilter = { filter: 'language' } as const
 
 function Empty() {
-	const { lang } = Route.useParams()
 	return (
 		<Callout variant="ghost" Icon={SearchX}>
 			<p>There are no phrases in the library that match this search.</p>
 			<Link
 				className={buttonVariants({ variant: 'outline' })}
 				to="/learn/$lang/library"
-				params={{ lang }}
+				from={Route.fullPath}
 				search={constFilter}
 			>
 				Clear filters
@@ -242,15 +225,17 @@ function BadgeFilter({
 	filter,
 	count = 0,
 }: {
-	name: FilterEnum
+	name: FilterEnumType
 	text: string
-	filter: FilterEnum
+	filter: FilterEnumType
 	count: number
 }) {
-	const constFilter = { filter: name } as const
-	const lang = Route.useParams({ select: (d) => d.lang })
 	return (
-		<Link to="/learn/$lang/library" params={{ lang }} search={constFilter}>
+		<Link
+			to="/learn/$lang/library"
+			from={Route.fullPath}
+			search={(search) => ({ ...search, filter: name })}
+		>
 			<Badge variant="outline" className="shadow-sm">
 				<label className="flex cursor-pointer gap-1">
 					<Checkbox checked={filter === name} /> {text} ({count})

@@ -144,7 +144,7 @@ function ChatPage() {
 				<div className="relative">
 					<Link
 						to="/friends/chats/$friendId/recommend"
-						params={{ friendId }}
+						from={Route.fullPath}
 						className="flex items-center gap-2"
 					>
 						<Input
@@ -181,6 +181,7 @@ const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
 			<Link
 				className={buttonVariants({ variant: 'secondary' })}
 				to="/friends/$uid"
+				from={Route.fullPath}
 				params={{ uid: profile.uid }}
 			>
 				View profile
