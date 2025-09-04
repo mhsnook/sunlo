@@ -77,19 +77,19 @@ function DeckLibraryPage() {
 
 	const filteredPids = useMemo(() => {
 		if (!language?.phrasesMap || filteredPidsByStatus.length === 0) return []
-		if (!tagsFilter) return filteredPidsByStatus
+		if (!tagsFilter?.trim()) return filteredPidsByStatus
 
-		const selectedTags = tagsFilter.split(',').map((t) => t.trim())
+		const selectedTags = tagsFilter
+			.split(',')
+			.map((t) => t.trim())
+			.filter(Boolean)
 		if (selectedTags.length === 0) return filteredPidsByStatus
 
 		return filteredPidsByStatus.filter((pid) => {
 			const phrase = language.phrasesMap[pid]
-			// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-			if (!phrase || !phrase.tags) return false
+			const phraseTags = phrase?.tags?.map((t) => t.name) ?? []
 			return selectedTags.every((selectedTag) =>
-				phrase.tags?.some(
-					(phraseTag: { name: string }) => phraseTag.name === selectedTag
-				)
+				phraseTags.includes(selectedTag)
 			)
 		})
 	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
