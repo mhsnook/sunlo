@@ -256,7 +256,6 @@ export type ProfileFull = NonNullableFields<
 	languagesToShow: Array<string>
 	decksMap: DecksMap
 	deckLanguages: Array<string>
-	friendships?: Array<FriendshipRow>
 	languages_known: Array<LanguageKnown>
 }
 export type DecksMap = {

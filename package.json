@@ -18,7 +18,9 @@
 		"seeds:data": "supabase db dump --data-only --local > supabase/seed.sql",
 		"seeds:schema": "supabase db dump --local > supabase/schemas/base.sql",
 		"seeds:apply": "supabase db reset",
-		"prepare": "husky"
+		"prepare": "husky",
+		"test:cli": "vitest",
+		"test": "vitest --ui"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.10.0",

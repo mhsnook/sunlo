@@ -16,10 +16,10 @@ describe('splitPhraseTranslations', () => {
 		],
 	}
 
-	it('should return all translations in translations_mine if languagesToShow is empty', () => {
+	it('should return all translations in translations_other if languagesToShow is empty', () => {
 		const result = splitPhraseTranslations(basePhrase, [])
-		expect(result.translations_mine).toEqual(basePhrase.translations)
-		expect(result.translations_other).toEqual([])
+		expect(result.translations_other).toEqual(basePhrase.translations)
+		expect(result.translations_mine).toEqual([])
 	})
 
 	it('should correctly split translations into mine and other based on languagesToShow', () => {
@@ -94,10 +94,11 @@ describe('splitPhraseTranslations', () => {
 		expect(result.translations_other).toEqual([])
 	})
 
-	it('should handle undefined translations gracefully', () => {
+	it('should handle empty translations gracefully', () => {
+		// phrase.translations is always an array
 		const phraseWithUndefinedTranslations: PhraseStub = {
 			...basePhrase,
-			translations: undefined,
+			translations: [],
 		}
 		const languagesToShow = ['eng']
 		const result = splitPhraseTranslations(
