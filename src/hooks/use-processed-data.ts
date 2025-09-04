@@ -11,7 +11,7 @@ import { splitPhraseTranslations } from '@/lib/process-pids'
  * It depends on phrasesMap and profile, making it more costly than
  * useDeckStatusPids.
  */
-export function useRecommendations(lang: string) {
+export function useCompositePids(lang: string) {
 	const { data: profile } = useProfile()
 	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
 	const { data: languagePids } = useLanguagePids(lang)
@@ -67,9 +67,13 @@ export function useRecommendations(lang: string) {
 				popular: popular8,
 				newest: newest8,
 			},
+			language: languagePids,
 			language_selectables,
 			language_filtered,
 			not_in_deck,
+			language_no_translations: arrayDifference(languagePids, [
+				language_filtered,
+			]),
 		}
 	}, [languagePids, deckPids, phrasesMap, profile?.languagesToShow])
 }

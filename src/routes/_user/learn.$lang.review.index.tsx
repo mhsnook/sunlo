@@ -23,8 +23,7 @@ import {
 	useReviewStage,
 } from '@/lib/use-review-store'
 import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { useDeckMeta } from '@/lib/use-deck'
+import { useDeckMeta, useDeckPids } from '@/lib/use-deck'
 import supabase from '@/lib/supabase-client'
 import {
 	LanguageIsEmpty,
@@ -36,6 +35,7 @@ import { useAuth } from '@/lib/hooks'
 import { useReviewsToday } from '@/lib/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
+import { useCompositePids } from '@/hooks/use-processed-data'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -49,16 +49,17 @@ function ReviewPageSetup() {
 	const { queryClient } = Route.useRouteContext()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
-	const pids = useDeckPidsAndRecs(lang)
+	const recs = useCompositePids(lang)
+	const { data: deckPids } = useDeckPids(lang)
 	const initLocalReviewState = useInitialiseReviewStore()
 	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
-	if (pids === null)
-		throw new Error('Pids should not be null here :/, even once')
+	if (!deckPids || !recs)
+		throw new Error('Pids/recs should not be null here :/, even once')
 
-	const today_active = pids.today_active
+	const today_active = deckPids.today_active
 
 	// 1. we have today's active cards plus we need x more, based on user's goal
 	const countNeeded = meta.daily_review_goal ?? 15
@@ -68,8 +69,11 @@ function ReviewPageSetup() {
 	// const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
 	const friendRecsFiltered = useMemo(
 		() =>
-			arrayDifference([] /* friendRecsFromDB */, [pids.reviewed_or_inactive]),
-		[pids.reviewed_or_inactive /*, friendRecsFromDB */]
+			arrayDifference(
+				[] /* friendRecsFromDB */,
+				[deckPids.reviewed_or_inactive]
+			),
+		[deckPids.reviewed_or_inactive /*, friendRecsFromDB */]
 	)
 	/*const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
 		friendRecsFiltered.slice(0, countNeeded)
@@ -81,20 +85,20 @@ function ReviewPageSetup() {
 	// 3. algo recs set by user
 	const algoRecsFiltered = useMemo(
 		() => ({
-			popular: arrayDifference(pids.top8.popular, [
-				pids.reviewed_or_inactive,
+			popular: arrayDifference(recs.top8.popular, [
+				deckPids.reviewed_or_inactive,
 				friendRecsFiltered,
 			]),
-			easiest: arrayDifference(pids.top8.easiest, [
-				pids.reviewed_or_inactive,
+			easiest: arrayDifference(recs.top8.easiest, [
+				deckPids.reviewed_or_inactive,
 				friendRecsFiltered,
 			]),
-			newest: arrayDifference(pids.top8.newest, [
-				pids.reviewed_or_inactive,
+			newest: arrayDifference(recs.top8.newest, [
+				deckPids.reviewed_or_inactive,
 				friendRecsFiltered,
 			]),
 		}),
-		[pids.top8, pids.reviewed_or_inactive, friendRecsFiltered]
+		[recs.top8, deckPids.reviewed_or_inactive, friendRecsFiltered]
 	)
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
@@ -109,7 +113,7 @@ function ReviewPageSetup() {
 	// pull new unreviewed cards, excluding the friend recs we already got,
 	// and limiting to the number we need from the deck
 	const cardsUnreviewedActiveSelected = useMemo(() => {
-		return arrayDifference(pids.unreviewed_active, [
+		return arrayDifference(deckPids.unreviewed_active, [
 			friendRecsSelected,
 			algoRecsSelected,
 		]).slice(0, countNeeded3)
@@ -117,7 +121,7 @@ function ReviewPageSetup() {
 		countNeeded3,
 		friendRecsSelected,
 		algoRecsSelected,
-		pids.unreviewed_active,
+		deckPids.unreviewed_active,
 	])
 
 	// the user does not get to preview or select these.
@@ -131,7 +135,7 @@ function ReviewPageSetup() {
 	// sorting by pid is randomish, but stable
 	const libraryPhrasesSelected = useMemo(
 		() =>
-			arrayDifference(pids.language_selectables, [
+			arrayDifference(recs.language_selectables, [
 				friendRecsSelected,
 				algoRecsSelected,
 				cardsUnreviewedActiveSelected,
@@ -139,7 +143,7 @@ function ReviewPageSetup() {
 				.sort((a, b) => (a > b ? -1 : 1))
 				.slice(0, countNeeded4),
 		[
-			pids.language_selectables,
+			recs.language_selectables,
 			friendRecsSelected,
 			algoRecsSelected,
 			cardsUnreviewedActiveSelected,
@@ -165,8 +169,8 @@ function ReviewPageSetup() {
 	)
 
 	const cardsToCreate = useMemo(
-		() => arrayDifference(freshCards, [pids.deck]),
-		[pids.deck, freshCards]
+		() => arrayDifference(freshCards, [deckPids.all]),
+		[deckPids.all, freshCards]
 	)
 
 	const allCardsForToday = useMemo(
@@ -266,9 +270,9 @@ function ReviewPageSetup() {
 					Your personalized review session is prepared and waiting for you.
 					Here's what to expect...
 				</p>
-				{pids.language.length === 0 ?
+				{recs.language.length === 0 ?
 					<LanguageIsEmpty lang={lang} />
-				: pids.language_filtered.length === 0 ?
+				: recs.language_filtered.length === 0 ?
 					<LanguageFilteredIsEmpty lang={lang} />
 				:	<>
 						<div className="flex flex-row flex-wrap gap-4 text-sm">
@@ -295,7 +299,7 @@ function ReviewPageSetup() {
 								<CardContent>
 									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
 										<CalendarClock />
-										<span>{pids.today_active.length}</span>
+										<span>{deckPids.today_active.length}</span>
 									</p>
 									<p className="text-muted-foreground">
 										scheduled based on past reviews

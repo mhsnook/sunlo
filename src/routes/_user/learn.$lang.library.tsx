@@ -1,21 +1,22 @@
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import languages from '@/lib/languages'
-import type { LangOnlyComponentProps } from '@/types/main'
-import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
-import Callout from '@/components/ui/callout'
-import { Badge } from '@/components/ui/badge'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Plus, SearchX } from 'lucide-react'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { useDeckPidsAndRecs } from '@/lib/process-pids'
-import { LanguageIsEmpty } from '@/components/language-is-empty'
-import { useLanguage } from '@/lib/use-language'
-import { z } from 'zod'
 import { useMemo, type SetStateAction } from 'react'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { z } from 'zod'
+import { Plus, SearchX } from 'lucide-react'
+
+import languages from '@/lib/languages'
+import { Badge } from '@/components/ui/badge'
+import Callout from '@/components/ui/callout'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Loader } from '@/components/ui/loader'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
-import { useLanguageTags } from '@/lib/use-language'
 import { Separator } from '@/components/ui/separator'
+import { LanguageIsEmpty } from '@/components/language-is-empty'
+import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
+import { useLanguage } from '@/lib/use-language'
+import { useCompositePids } from '@/hooks/use-processed-data'
+import { useDeckPids } from '@/lib/use-deck'
 
 const filterEnum = z.enum([
 	'language_filtered',
@@ -41,10 +42,14 @@ export const Route = createFileRoute('/_user/learn/$lang/library')({
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
 
-	const pids = useDeckPidsAndRecs(lang)
+	const { data: deckPids } = useDeckPids(lang)
+	const recs = useCompositePids(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: language } = useLanguage(lang)
+
+	if (!recs || !deckPids || !language) return <Loader />
+
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
 
@@ -72,8 +77,15 @@ function DeckLibraryPage() {
 		})
 	}
 
-	const filteredPidsByStatus = pids[filter]
-
+	const filteredPidsByStatus =
+		filter === 'language' ? recs['language']
+		: filter === 'language_filtered' ? recs['language_filtered']
+		: filter === 'language_no_translations' ? recs['language_no_translations']
+		: filter === 'not_in_deck' ? recs['not_in_deck']
+		: filter === 'active' ? deckPids['active']
+		: filter === 'inactive' ? deckPids['inactive']
+		: filter === 'reviewed_last_7d' ? deckPids['reviewed_last_7d']
+		: []
 	const filteredPids = useMemo(() => {
 		if (!tagsFilter) return filteredPidsByStatus
 		if (!language?.phrasesMap) return []
@@ -93,9 +105,9 @@ function DeckLibraryPage() {
 		})
 	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
 
-	if (!pids) {
+	if (!deckPids || !recs) {
 		console.log(
-			'Trying to render DeckContents but not getting anything for the recommended pids object'
+			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
 		)
 		return null
 	}
@@ -127,19 +139,19 @@ function DeckLibraryPage() {
 						name="language_filtered"
 						filter={filter}
 						text="All phrases"
-						count={pids.language_filtered.length}
+						count={recs.language_filtered.length}
 					/>
 					<BadgeFilter
 						name="active"
 						filter={filter}
 						text="Active deck"
-						count={pids.active.length}
+						count={deckPids.active.length}
 					/>
 					<BadgeFilter
 						name="inactive"
 						filter={filter}
 						text="Inactive"
-						count={pids.inactive.length}
+						count={deckPids.inactive.length}
 					/>
 					{/*<BadgeFilter
 						name="recommended"
@@ -151,25 +163,25 @@ function DeckLibraryPage() {
 						name="not_in_deck"
 						filter={filter}
 						text="Not in deck"
-						count={pids.not_in_deck.length}
+						count={recs.not_in_deck.length}
 					/>
 					<BadgeFilter
 						name="reviewed_last_7d"
 						filter={filter}
 						text="Reviewed past week"
-						count={pids.reviewed_last_7d.length}
+						count={deckPids.reviewed_last_7d.length}
 					/>
 					<BadgeFilter
 						name="language_no_translations"
 						filter={filter}
 						text="Needs translations"
-						count={pids.language_no_translations.length}
+						count={recs.language_no_translations.length}
 					/>
 					<BadgeFilter
 						name="language"
 						filter={filter}
 						text="No filters"
-						count={pids.language.length}
+						count={recs.language.length}
 					/>
 				</div>
 				<div className="mb-4">
@@ -182,9 +194,10 @@ function DeckLibraryPage() {
 				</div>
 				<Separator className="mt-6 mb-2" />
 				<p className="text-muted-foreground pb-2 text-right text-xs italic">
-					{filteredPids.length} of {pids.language.length} phrases
+					{filteredPids.length} of
+					{recs.language.length} phrases
 				</p>
-				{pids.language.length > 0 ?
+				{recs.language.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
 						{filteredPids.length > 0 ?
 							<LanguagePhrasesAccordionComponent
