@@ -31,12 +31,14 @@ export function FancyMultiSelect({
 	selected,
 	setSelected,
 	placeholder = 'Select options...',
+	showSelected = true,
 }: {
 	options: Option[]
 	always?: string
 	selected: string[]
 	setSelected: Dispatch<SetStateAction<string[]>>
 	placeholder?: string
+	showSelected?: boolean
 }) {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [open, setOpen] = useState(false)
@@ -78,33 +80,14 @@ export function FancyMultiSelect({
 		>
 			<div className="group border-primary-foresoft/30 hover:border-primary ring-offset-background focus-within:ring-ring rounded-2xl border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
 				<div className="flex flex-wrap gap-1">
-					{always ?
-						<Badge variant="default">{always}</Badge>
-					:	null}
-					{selected.map((value) => {
-						const option = options.find((o) => o.value === value)
-						return !option ? null : (
-								<Badge key={value} variant="secondary">
-									{option.label}
-									<button
-										className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
-										onKeyDown={(e) => {
-											if (e.key === 'Enter') {
-												handleUnselect(value)
-											}
-										}}
-										onMouseDown={(e) => {
-											e.preventDefault()
-											e.stopPropagation()
-										}}
-										type="button"
-										onClick={() => handleUnselect(value)}
-									>
-										<X className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer" />
-									</button>
-								</Badge>
-							)
-					})}
+					{showSelected && (
+						<ShowSelected
+							always={always}
+							selected={selected}
+							options={options}
+							setSelected={setSelected}
+						/>
+					)}
 					{/* Avoid having the "Search" Icon */}
 					<CommandPrimitive.Input
 						ref={inputRef}
@@ -155,5 +138,55 @@ export function FancyMultiSelect({
 				</CommandList>
 			</div>
 		</Command>
+	)
+}
+
+export function ShowSelected({
+	always,
+	selected,
+	options,
+	setSelected,
+}: {
+	always?: string
+	selected: string[]
+	options: Option[]
+	setSelected: (value: string[]) => void
+}) {
+	const handleUnselect = useCallback(
+		(value: string) => {
+			setSelected(selected.filter((s) => s !== value))
+		},
+		[selected, setSelected]
+	)
+	return (
+		<>
+			{always ?
+				<Badge variant="default">{always}</Badge>
+			:	null}
+			{selected.map((value) => {
+				const option = options.find((o) => o.value === value)
+				return !option ? null : (
+						<Badge key={value} variant="secondary" className="rounded-2xl">
+							{option.label}
+							<button
+								className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										handleUnselect(value)
+									}
+								}}
+								onMouseDown={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+								}}
+								type="button"
+								onClick={() => handleUnselect(value)}
+							>
+								<X className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer" />
+							</button>
+						</Badge>
+					)
+			})}
+		</>
 	)
 }
