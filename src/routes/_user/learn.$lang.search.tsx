@@ -28,7 +28,7 @@ interface SearchParams {
 export const Route = createFileRoute('/_user/learn/$lang/search')({
 	validateSearch: (search: Record<string, unknown>): SearchParams => {
 		return {
-			text: (search.text as string) || '',
+			text: (search.text as string) || undefined,
 			tags: (search.tags as string) || undefined,
 		}
 	},
