@@ -118,7 +118,7 @@ export type PhraseStub = NonNullableFields<{
 }> & { tags?: Array<Tag> }
 
 export type PhrasesMap = {
-	[key: uuid]: PhraseFiltered
+	[key: uuid]: PhraseFull
 }
 export type LanguageLoaded = {
 	meta: LanguageMeta
