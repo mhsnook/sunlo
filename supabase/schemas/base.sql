@@ -1308,11 +1308,14 @@ with
 					else 0
 				end
 			) as "count_skipped",
-			"json_agg" (
-				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
-			) filter (
-				where
-					("t"."id" is not null)
+			coalesce(
+				"json_agg" (
+					distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
+				) filter (
+					where
+						("t"."id" is not null)
+				),
+				'[]'::json
 			) as "tags"
 		from
 			(

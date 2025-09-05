@@ -46,6 +46,8 @@ export default defineConfig(({ mode }) => {
 					'**/.github',
 					'**/dist',
 					'**/node_modules',
+					'**/*.test.ts',
+					'/src/test/**',
 				],
 			},
 		},

@@ -110,16 +110,15 @@ export type PhraseStub = NonNullableFields<{
 	id: uuid
 	text: string
 	lang: string
-
 	translations: Array<{
 		id: uuid
 		text: string
 		lang: string
 	}>
-}>
+}> & { tags?: Array<Tag> }
 
 export type PhrasesMap = {
-	[key: uuid]: PhraseFiltered
+	[key: uuid]: PhraseFull
 }
 export type LanguageLoaded = {
 	meta: LanguageMeta
@@ -149,7 +148,6 @@ export type RelationInsert = TablesInsert<'phrase_relation'>
 export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
-	tags?: Array<Tag> | null
 }
 export type PhraseFiltered = PhraseFull & {
 	translations_mine?: Array<TranslationRow>
@@ -257,7 +255,6 @@ export type ProfileFull = NonNullableFields<
 	languagesToShow: Array<string>
 	decksMap: DecksMap
 	deckLanguages: Array<string>
-	friendships?: Array<FriendshipRow>
 	languages_known: Array<LanguageKnown>
 }
 export type DecksMap = {
