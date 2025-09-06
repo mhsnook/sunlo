@@ -11,7 +11,7 @@ type CalloutProps = PropsWithChildren & {
 const variants = {
 	default: 'bg-primary/20 border-primary/50',
 	problem: 'bg-destructive/20 border-destructive/50',
-	ghost: 'bg-primary/20 border text-muted-foreground bg-muted',
+	ghost: 'border text-muted-foreground bg-muted',
 }
 
 export default function Callout({

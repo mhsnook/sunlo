@@ -48,9 +48,9 @@ select
 create
 or replace function "public"."fulfill_phrase_request" (
 	"request_id" "uuid",
-	"phrase_text" "text",
-	"translation_text" "text",
-	"translation_lang" character varying
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
 ) returns "uuid" language "plpgsql" as $$
 DECLARE
     v_requester_uid uuid;
@@ -73,12 +73,12 @@ BEGIN
 
     -- Insert the new phrase
     INSERT INTO public.phrase (text, lang, added_by)
-    VALUES (phrase_text, v_phrase_lang, fulfiller_uid)
+    VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid)
     RETURNING id INTO new_phrase_id;
 
     -- Insert the translation for the new phrase
     INSERT INTO public.phrase_translation (phrase_id, text, lang, added_by)
-    VALUES (new_phrase_id, translation_text, translation_lang, fulfiller_uid);
+    VALUES (new_phrase_id, p_translation_text, p_translation_lang, fulfiller_uid);
 
     -- Insert a new user_card for the requester
     INSERT INTO public.user_card (phrase_id, uid, lang, status)
@@ -96,16 +96,3 @@ BEGIN
     RETURN new_phrase_id;
 END;
 $$;
-
-alter function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"phrase_text" "text",
-	"translation_text" "text",
-	"translation_lang" character varying
-) owner to "postgres";
-
-grant
-execute on function "public"."fulfill_phrase_request" to "anon";
-
-grant
-execute on function "public"."fulfill_phrase_request" to "authenticated";

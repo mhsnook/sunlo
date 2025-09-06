@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -82,6 +82,7 @@ function FulfillRequestPage() {
 				request_id: id,
 				p_phrase_text: values.phrase_text,
 				p_translation_text: values.translation_text,
+				p_translation_lang: 'eng',
 			})
 			if (rpcError) throw rpcError
 			return true
@@ -103,8 +104,15 @@ function FulfillRequestPage() {
 		return (
 			<main className="w-app p-4">
 				<Callout Icon={SuccessCheckmarkTrans}>
-					<h2 className="h3">Request Fulfilled!</h2>
-					<p>This phrase request has already been fulfilled. Thank you!</p>
+					<h2 className="h3">Request Fulfilled</h2>
+					<p>This phrase request has been fulfilled. Thank you!</p>
+					<Link
+						className="s-link"
+						to="/learn/$lang/$id"
+						params={{ lang: request.lang, id: request.fulfilled_phrase_id! }}
+					>
+						View the new phrase (or suggest your own translation!)
+					</Link>
 				</Callout>
 			</main>
 		)

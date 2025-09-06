@@ -1345,10 +1345,10 @@ export type Database = {
       }
       fulfill_phrase_request: {
         Args: {
-          phrase_text: string
+          p_phrase_text: string
+          p_translation_lang: string
+          p_translation_text: string
           request_id: string
-          translation_lang: string
-          translation_text: string
         }
         Returns: string
       }
