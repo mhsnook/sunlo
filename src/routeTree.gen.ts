@@ -16,6 +16,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as UserImport } from './routes/_user'
 import { Route as AuthImport } from './routes/_auth'
 import { Route as IndexImport } from './routes/index'
+import { Route as RequestCardIdImport } from './routes/request-card.$id'
 import { Route as UserProfileImport } from './routes/_user/profile'
 import { Route as UserLearnImport } from './routes/_user/learn'
 import { Route as UserGettingStartedImport } from './routes/_user/getting-started'
@@ -61,6 +62,12 @@ import { Route as UserFriendsChatsFriendIdRecommendImport } from './routes/_user
 const RequestRemovalLazyImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyImport = createFileRoute('/privacy-policy')()
 const ComponentsLazyImport = createFileRoute('/components')()
+const UserLearnLangRequestsLazyImport = createFileRoute(
+  '/_user/learn/$lang/requests',
+)()
+const UserLearnLangRequestPhraseLazyImport = createFileRoute(
+  '/_user/learn/$lang/request-phrase',
+)()
 
 // Create/Update Routes
 
@@ -99,6 +106,12 @@ const AuthRoute = AuthImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const RequestCardIdRoute = RequestCardIdImport.update({
+  id: '/request-card/$id',
+  path: '/request-card/$id',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -264,6 +277,25 @@ const UserFriendsChatsIndexRoute = UserFriendsChatsIndexImport.update({
   path: '/',
   getParentRoute: () => UserFriendsChatsRoute,
 } as any)
+
+const UserLearnLangRequestsLazyRoute = UserLearnLangRequestsLazyImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => UserLearnLangRoute,
+} as any).lazy(() =>
+  import('./routes/_user/learn.$lang.requests.lazy').then((d) => d.Route),
+)
+
+const UserLearnLangRequestPhraseLazyRoute =
+  UserLearnLangRequestPhraseLazyImport.update({
+    id: '/request-phrase',
+    path: '/request-phrase',
+    getParentRoute: () => UserLearnLangRoute,
+  } as any).lazy(() =>
+    import('./routes/_user/learn.$lang.request-phrase.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 
 const UserLearnLangSearchRoute = UserLearnLangSearchImport.update({
   id: '/search',
@@ -454,6 +486,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserProfileImport
       parentRoute: typeof UserImport
     }
+    '/request-card/$id': {
+      id: '/request-card/$id'
+      path: '/request-card/$id'
+      fullPath: '/request-card/$id'
+      preLoaderRoute: typeof RequestCardIdImport
+      parentRoute: typeof rootRoute
+    }
     '/_user/friends/$uid': {
       id: '/_user/friends/$uid'
       path: '/$uid'
@@ -622,6 +661,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangSearchImport
       parentRoute: typeof UserLearnLangImport
     }
+    '/_user/learn/$lang/request-phrase': {
+      id: '/_user/learn/$lang/request-phrase'
+      path: '/request-phrase'
+      fullPath: '/learn/$lang/request-phrase'
+      preLoaderRoute: typeof UserLearnLangRequestPhraseLazyImport
+      parentRoute: typeof UserLearnLangImport
+    }
+    '/_user/learn/$lang/requests': {
+      id: '/_user/learn/$lang/requests'
+      path: '/requests'
+      fullPath: '/learn/$lang/requests'
+      preLoaderRoute: typeof UserLearnLangRequestsLazyImport
+      parentRoute: typeof UserLearnLangImport
+    }
     '/_user/friends/chats/': {
       id: '/_user/friends/chats/'
       path: '/'
@@ -762,6 +815,8 @@ interface UserLearnLangRouteChildren {
   UserLearnLangLibraryRoute: typeof UserLearnLangLibraryRoute
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
   UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
+  UserLearnLangRequestPhraseLazyRoute: typeof UserLearnLangRequestPhraseLazyRoute
+  UserLearnLangRequestsLazyRoute: typeof UserLearnLangRequestsLazyRoute
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
 }
 
@@ -773,6 +828,8 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangLibraryRoute: UserLearnLangLibraryRoute,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
   UserLearnLangSearchRoute: UserLearnLangSearchRoute,
+  UserLearnLangRequestPhraseLazyRoute: UserLearnLangRequestPhraseLazyRoute,
+  UserLearnLangRequestsLazyRoute: UserLearnLangRequestsLazyRoute,
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
 }
 
@@ -852,6 +909,7 @@ export interface FileRoutesByFullPath {
   '/getting-started': typeof UserGettingStartedRoute
   '/learn': typeof UserLearnRouteWithChildren
   '/profile': typeof UserProfileRouteWithChildren
+  '/request-card/$id': typeof RequestCardIdRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/friends/invite': typeof UserFriendsInviteRoute
@@ -876,6 +934,8 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/learn/$lang/request-phrase': typeof UserLearnLangRequestPhraseLazyRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsLazyRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
   '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
@@ -896,6 +956,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
   '/getting-started': typeof UserGettingStartedRoute
+  '/request-card/$id': typeof RequestCardIdRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/invite': typeof UserFriendsInviteRoute
   '/friends/requests': typeof UserFriendsRequestsRoute
@@ -917,6 +978,8 @@ export interface FileRoutesByTo {
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/learn/$lang/request-phrase': typeof UserLearnLangRequestPhraseLazyRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsLazyRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
   '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
@@ -942,6 +1005,7 @@ export interface FileRoutesById {
   '/_user/getting-started': typeof UserGettingStartedRoute
   '/_user/learn': typeof UserLearnRouteWithChildren
   '/_user/profile': typeof UserProfileRouteWithChildren
+  '/request-card/$id': typeof RequestCardIdRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/_user/friends/invite': typeof UserFriendsInviteRoute
@@ -966,6 +1030,8 @@ export interface FileRoutesById {
   '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/_user/learn/$lang/request-phrase': typeof UserLearnLangRequestPhraseLazyRoute
+  '/_user/learn/$lang/requests': typeof UserLearnLangRequestsLazyRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
   '/_user/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
@@ -991,6 +1057,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/learn'
     | '/profile'
+    | '/request-card/$id'
     | '/friends/$uid'
     | '/friends/chats'
     | '/friends/invite'
@@ -1015,6 +1082,8 @@ export interface FileRouteTypes {
     | '/learn/$lang/library'
     | '/learn/$lang/review'
     | '/learn/$lang/search'
+    | '/learn/$lang/request-phrase'
+    | '/learn/$lang/requests'
     | '/friends/chats/'
     | '/learn/$lang/'
     | '/friends/chats/$friendId/recommend'
@@ -1034,6 +1103,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/accept-invite'
     | '/getting-started'
+    | '/request-card/$id'
     | '/friends/$uid'
     | '/friends/invite'
     | '/friends/requests'
@@ -1055,6 +1125,8 @@ export interface FileRouteTypes {
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/library'
     | '/learn/$lang/search'
+    | '/learn/$lang/request-phrase'
+    | '/learn/$lang/requests'
     | '/friends/chats'
     | '/learn/$lang'
     | '/friends/chats/$friendId/recommend'
@@ -1078,6 +1150,7 @@ export interface FileRouteTypes {
     | '/_user/getting-started'
     | '/_user/learn'
     | '/_user/profile'
+    | '/request-card/$id'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
     | '/_user/friends/invite'
@@ -1102,6 +1175,8 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/library'
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
+    | '/_user/learn/$lang/request-phrase'
+    | '/_user/learn/$lang/requests'
     | '/_user/friends/chats/'
     | '/_user/learn/$lang/'
     | '/_user/friends/chats/$friendId/recommend'
@@ -1117,6 +1192,7 @@ export interface RootRouteChildren {
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
+  RequestCardIdRoute: typeof RequestCardIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1126,6 +1202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsLazyRoute: ComponentsLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
+  RequestCardIdRoute: RequestCardIdRoute,
 }
 
 export const routeTree = rootRoute
@@ -1143,7 +1220,8 @@ export const routeTree = rootRoute
         "/_user",
         "/components",
         "/privacy-policy",
-        "/request-removal"
+        "/request-removal",
+        "/request-card/$id"
       ]
     },
     "/": {
@@ -1239,6 +1317,9 @@ export const routeTree = rootRoute
         "/_user/profile/"
       ]
     },
+    "/request-card/$id": {
+      "filePath": "request-card.$id.tsx"
+    },
     "/_user/friends/$uid": {
       "filePath": "_user/friends.$uid.tsx",
       "parent": "/_user/friends"
@@ -1277,6 +1358,8 @@ export const routeTree = rootRoute
         "/_user/learn/$lang/library",
         "/_user/learn/$lang/review",
         "/_user/learn/$lang/search",
+        "/_user/learn/$lang/request-phrase",
+        "/_user/learn/$lang/requests",
         "/_user/learn/$lang/"
       ]
     },
@@ -1357,6 +1440,14 @@ export const routeTree = rootRoute
     },
     "/_user/learn/$lang/search": {
       "filePath": "_user/learn.$lang.search.tsx",
+      "parent": "/_user/learn/$lang"
+    },
+    "/_user/learn/$lang/request-phrase": {
+      "filePath": "_user/learn.$lang.request-phrase.lazy.tsx",
+      "parent": "/_user/learn/$lang"
+    },
+    "/_user/learn/$lang/requests": {
+      "filePath": "_user/learn.$lang.requests.lazy.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/friends/chats/": {

@@ -1,6 +1,7 @@
 import {
 	BookHeart,
 	ClipboardPlus,
+	FileQuestion,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -143,6 +144,24 @@ const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 			params: { lang },
 		},
 		Icon: MessageSquarePlus,
+	},
+	'/learn/$lang/requests': {
+		name: 'Requests',
+		title: 'My card requests',
+		link: {
+			to: '/learn/$lang/requests',
+			params: { lang },
+		},
+		Icon: FileQuestion,
+	},
+	'/learn/$lang/request-phrase': {
+		name: 'Request',
+		title: 'Request a new card',
+		link: {
+			to: '/learn/$lang/request-phrase',
+			params: { lang },
+		},
+		Icon: Send,
 	},
 	'/learn/quick-search': {
 		name: 'Search',

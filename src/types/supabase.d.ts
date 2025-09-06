@@ -340,6 +340,99 @@ export type Database = {
           },
         ]
       }
+      phrase_request: {
+        Row: {
+          created_at: string
+          fulfilled_at: string | null
+          fulfilled_by_uid: string | null
+          fulfilled_phrase_id: string | null
+          id: string
+          lang: string
+          prompt: string
+          requester_uid: string
+          status: Database["public"]["Enums"]["phrase_request_status"]
+        }
+        Insert: {
+          created_at?: string
+          fulfilled_at?: string | null
+          fulfilled_by_uid?: string | null
+          fulfilled_phrase_id?: string | null
+          id?: string
+          lang: string
+          prompt: string
+          requester_uid: string
+          status?: Database["public"]["Enums"]["phrase_request_status"]
+        }
+        Update: {
+          created_at?: string
+          fulfilled_at?: string | null
+          fulfilled_by_uid?: string | null
+          fulfilled_phrase_id?: string | null
+          id?: string
+          lang?: string
+          prompt?: string
+          requester_uid?: string
+          status?: Database["public"]["Enums"]["phrase_request_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phrase_request_fulfilled_by_uid_fkey"
+            columns: ["fulfilled_by_uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_request_fulfilled_by_uid_fkey"
+            columns: ["fulfilled_by_uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_request_fulfilled_phrase_id_fkey"
+            columns: ["fulfilled_phrase_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_info"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_request_fulfilled_phrase_id_fkey"
+            columns: ["fulfilled_phrase_id"]
+            isOneToOne: false
+            referencedRelation: "phrase"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_request_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_requester_uid_fkey"
+            columns: ["requester_uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_request_requester_uid_fkey"
+            columns: ["requester_uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
+        ]
+      }
       phrase_tag: {
         Row: {
           added_by: string | null
@@ -1250,6 +1343,15 @@ export type Database = {
         }
         Returns: number
       }
+      fulfill_phrase_request: {
+        Args: {
+          phrase_text: string
+          request_id: string
+          translation_lang: string
+          translation_text: string
+        }
+        Returns: string
+      }
       insert_user_card_review: {
         Args: {
           day_session: string
@@ -1302,6 +1404,7 @@ export type Database = {
         | "invite"
       language_proficiency: "fluent" | "proficient" | "beginner"
       learning_goal: "moving" | "family" | "visiting"
+      phrase_request_status: "pending" | "fulfilled" | "cancelled"
     }
     CompositeTypes: {
       phrase_with_translations_input: {
@@ -1766,6 +1869,7 @@ export const Constants = {
       ],
       language_proficiency: ["fluent", "proficient", "beginner"],
       learning_goal: ["moving", "family", "visiting"],
+      phrase_request_status: ["pending", "fulfilled", "cancelled"],
     },
   },
   storage: {
