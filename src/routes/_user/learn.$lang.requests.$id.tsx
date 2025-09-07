@@ -6,7 +6,6 @@ import { z } from 'zod'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
-import { Database } from '@/types/supabase'
 import {
 	Card,
 	CardContent,
@@ -30,8 +29,7 @@ import { Input } from '@/components/ui/input'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-
-type PhraseRequest = Database['public']['Tables']['phrase_request']['Row']
+import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 
 const phraseRequestQuery = (id: string) => ({
 	queryKey: ['phrase_request', id],
@@ -46,7 +44,7 @@ const phraseRequestQuery = (id: string) => ({
 	},
 })
 
-export const Route = createFileRoute('/request-card/$id')({
+export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
 	loader: ({ params: { id }, context: { queryClient } }) =>
 		queryClient.ensureQueryData(phraseRequestQuery(id)),
@@ -102,7 +100,7 @@ function FulfillRequestPage() {
 
 	if (request.status === 'fulfilled') {
 		return (
-			<main className="w-app p-4">
+			<main className="w-app space-y-4 p-4">
 				<Callout Icon={SuccessCheckmarkTrans}>
 					<h2 className="h3">Request Fulfilled</h2>
 					<p>This phrase request has been fulfilled. Thank you!</p>
@@ -114,6 +112,7 @@ function FulfillRequestPage() {
 						View the new phrase (or suggest your own translation!)
 					</Link>
 				</Callout>
+				<BigPhraseCard lang={request.lang} pid={request.fulfilled_phrase_id!} />
 			</main>
 		)
 	}
