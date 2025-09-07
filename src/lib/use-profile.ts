@@ -77,9 +77,9 @@ export const searchPublicProfilesByUsername = async (
 			)
 }
 
-export const publicProfileQuery = (uid: uuid) =>
+export const publicProfileQuery = (uid: uuid | null) =>
 	queryOptions({
-		queryKey: ['public', 'profile', uid],
+		queryKey: ['public', 'profile', uid!],
 		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
 			const { data } = await supabase
 				.from('public_profile')

@@ -67,10 +67,11 @@ export const useLanguagePhrasesMap = (lang: string) =>
 		select: (data: LanguageLoaded) => data.phrasesMap,
 	}) as UseQueryResult<PhrasesMap>
 
-export const useLanguagePhrase = (pid: uuid, lang: string) =>
+export const useLanguagePhrase = (pid: uuid | null, lang: string | null) =>
 	useQuery({
-		...languageQueryOptions(lang),
-		select: (data: LanguageLoaded) => data.phrasesMap[pid],
+		...languageQueryOptions(lang!),
+		select: (data: LanguageLoaded) => data.phrasesMap[pid!],
+		enabled: !!pid && !!lang,
 	}) as UseQueryResult<PhraseFull>
 
 export const useLanguagePhraseSuspense = (pid: uuid, lang: string) =>

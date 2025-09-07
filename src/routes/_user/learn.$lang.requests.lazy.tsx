@@ -12,11 +12,14 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { Database } from '@/types/supabase'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { publicProfileQuery } from '@/lib/use-profile'
+import { useLanguagePhrase } from '@/lib/use-language'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests')({
 	component: Page,
@@ -83,6 +86,16 @@ function Page() {
 
 function RequestItem({ request }: { request: PhraseRequest }) {
 	const shareUrl = `${window.location.origin}/request-card/${request.id}`
+	const { data: profile1 } = useQuery(
+		publicProfileQuery(request.requester_uid!)
+	)
+	const { data: profile2 } = useQuery(
+		publicProfileQuery(request.fulfilled_by_uid!)
+	)
+	const { data: phrase } = useLanguagePhrase(
+		request.fulfilled_phrase_id,
+		request.lang
+	)
 
 	const copyToClipboard = () => {
 		void navigator.clipboard.writeText(shareUrl)
@@ -92,16 +105,32 @@ function RequestItem({ request }: { request: PhraseRequest }) {
 	return (
 		<div className="flex flex-col gap-2 rounded-lg border p-4">
 			<div className="flex items-center justify-between">
-				<span className="text-muted-foreground text-sm">
-					{ago(request.created_at)}
-				</span>
+				<Link
+					to="/learn/$lang/requests/$id"
+					params={{ lang: request.lang, id: request.id }}
+					className="hover:s-link text-muted-foreground text-sm"
+				>
+					<span>Requested {ago(request.created_at)} </span>
+					{profile1 && <span>by {profile1.username}</span>}
+				</Link>
 				<Badge
 					variant={request.status === 'fulfilled' ? 'default' : 'secondary'}
 				>
 					{request.status}
 				</Badge>
 			</div>
-			<p className="text-lg">{request.prompt}</p>
+			<div className="flex flex-row items-center gap-2">
+				<LangBadge lang={request.lang} />
+				<p className="text-lg">{request.prompt}</p>
+			</div>
+			{request.status === 'fulfilled' && (
+				<div className="mt-4 space-y-2">
+					<p className="text-muted-foreground text-sm">
+						Answered {ago(request.fulfilled_at)} by {profile2?.username}
+					</p>
+					{phrase && <CardResultSimple phrase={phrase} />}
+				</div>
+			)}
 			{request.status === 'pending' && (
 				<div className="bg-muted flex items-center gap-2 rounded-md p-2">
 					<input

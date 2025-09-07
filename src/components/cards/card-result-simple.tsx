@@ -9,7 +9,7 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 	return (
 		<div className="bg-card rounded-lg border p-4">
 			<div className="flex items-center justify-between">
-				<h4 className="font-semibold">{phrase.text}</h4>
+				<h4 className="font-semibold">&ldquo;{phrase.text}&rdquo;</h4>
 				<div className="space-x-2">
 					<PermalinkButton
 						to="/learn/$lang/$id"
@@ -25,7 +25,7 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 				{phrase.translations?.map((t) => (
 					<li key={t.id} className="flex items-center gap-2 text-sm">
 						<LangBadge lang={t.lang!} />
-						<span>{t.text}</span>
+						<span>&ldquo;{t.text}&rdquo;</span>
 					</li>
 				))}
 			</ul>
