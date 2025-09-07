@@ -32,6 +32,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				'/learn/$lang',
 				'/learn/$lang/review',
 				'/learn/$lang/library',
+				'/learn/$lang/requests',
 				'/learn/$lang/search',
 				'/learn/$lang/add-phrase',
 			],

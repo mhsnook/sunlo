@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Copy } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { Database } from '@/types/supabase'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests')({
 	component: Page,
@@ -57,7 +58,18 @@ function Page() {
 				{isLoading ?
 					<p>Loading requests...</p>
 				: !requests || requests.length === 0 ?
-					<p>You haven't made any requests yet.</p>
+					<>
+						<p className="mb-4 text-lg italic">
+							You haven't made any requests yet.
+						</p>
+						<Link
+							className={buttonVariants({ variant: 'outline-primary' })}
+							to="/learn/$lang/request-card"
+							params={{ lang }}
+						>
+							Post a new card request
+						</Link>
+					</>
 				:	<div className="space-y-4">
 						{requests.map((request) => (
 							<RequestItem key={request.id} request={request} />

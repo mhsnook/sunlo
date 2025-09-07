@@ -27,7 +27,7 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
 
-export const Route = createLazyFileRoute('/_user/learn/$lang/request-phrase')({
+export const Route = createLazyFileRoute('/_user/learn/$lang/request-card')({
 	component: Page,
 })
 
