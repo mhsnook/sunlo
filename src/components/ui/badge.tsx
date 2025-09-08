@@ -11,7 +11,7 @@ export function Badge({ className, variant, size, ...props }: BadgeProps) {
 	)
 }
 
-export const OctogonMinusDangerBadge = (
+export const OctogonMinusDangerBadge = () => (
 	<Badge variant="destructive" className="p-2">
 		<OctagonMinus />
 	</Badge>

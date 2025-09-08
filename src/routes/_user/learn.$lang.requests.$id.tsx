@@ -1,5 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+	useSuspenseQuery,
+	useMutation,
+	useQueryClient,
+} from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -46,8 +50,8 @@ const phraseRequestQuery = (id: string) => ({
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
-	loader: ({ params: { id }, context: { queryClient } }) =>
-		queryClient.ensureQueryData(phraseRequestQuery(id)),
+	loader: async ({ params: { id }, context: { queryClient } }) =>
+		await queryClient.ensureQueryData(phraseRequestQuery(id)),
 })
 
 const FulfillRequestSchema = z.object({
@@ -59,8 +63,12 @@ type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
 
 function FulfillRequestPage() {
 	const { id } = Route.useParams()
-	const { data: request, error, isPending } = useQuery(phraseRequestQuery(id))
 	const queryClient = useQueryClient()
+	const {
+		data: request,
+		error,
+		isPending,
+	} = useSuspenseQuery(phraseRequestQuery(id))
 
 	const form = useForm<FulfillRequestFormInputs>({
 		resolver: zodResolver(FulfillRequestSchema),

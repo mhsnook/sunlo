@@ -154,11 +154,11 @@ const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 		},
 		Icon: FileQuestion,
 	},
-	'/learn/$lang/request-card': {
+	'/learn/$lang/requests/new': {
 		name: 'Request',
 		title: 'Request a new card',
 		link: {
-			to: '/learn/$lang/request-card',
+			to: '/learn/$lang/requests/new',
 			params: { lang },
 		},
 		Icon: Send,

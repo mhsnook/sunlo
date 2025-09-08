@@ -1,6 +1,6 @@
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Copy } from 'lucide-react'
+import { Copy, Plus } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
@@ -21,7 +21,7 @@ import { publicProfileQuery } from '@/lib/use-profile'
 import { useLanguagePhrase } from '@/lib/use-language'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 
-export const Route = createLazyFileRoute('/_user/learn/$lang/requests')({
+export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
 })
 
@@ -52,7 +52,22 @@ function Page() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>My Card Requests</CardTitle>
+				<CardTitle>
+					<div className="flex flex-row justify-between gap-2">
+						<span>My Card Requests</span>
+						<Link
+							to="/learn/$lang/requests/new"
+							params={{ lang }}
+							className={buttonVariants({
+								size: 'badge',
+								variant: 'outline',
+							})}
+						>
+							<Plus className="size-3" />
+							<span className="me-1">new request</span>
+						</Link>
+					</div>
+				</CardTitle>
 				<CardDescription>
 					Here are the card requests you've made for this language.
 				</CardDescription>
@@ -67,7 +82,7 @@ function Page() {
 						</p>
 						<Link
 							className={buttonVariants({ variant: 'outline-primary' })}
-							to="/learn/$lang/request-card"
+							to="/learn/$lang/requests/new"
 							params={{ lang }}
 						>
 							Post a new card request
@@ -85,7 +100,7 @@ function Page() {
 }
 
 function RequestItem({ request }: { request: PhraseRequest }) {
-	const shareUrl = `${window.location.origin}/request-card/${request.id}`
+	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	const { data: profile1 } = useQuery(
 		publicProfileQuery(request.requester_uid!)
 	)
