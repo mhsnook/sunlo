@@ -169,7 +169,7 @@
 }
 
 @utility s-link {
-	@apply decoration-primary-foresoft hover:decoration-primary-foresoft/50 text-primary-foresoft cursor-pointer underline decoration-2 underline-offset-2 transition-all hover:decoration-2 hover:underline-offset-1;
+	@apply decoration-primary-foresoft hover:decoration-primary-foresoft/50 text-primary-foresoft cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
 }
 @utility s-link-muted {
 	@apply decoration-primary-foresoft/50 text-primary-foresoft flex flex-row gap-0 text-sm underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
