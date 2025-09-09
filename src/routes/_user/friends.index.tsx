@@ -61,23 +61,15 @@ export function FriendProfiles() {
 						{isPending ?
 							<Loader />
 						: error ?
-							<></>
+							<ShowError>{error.message}</ShowError>
 						: !data?.uids.friends?.length ?
 							<p>
 								Your friends list is empty for now. Use{' '}
-								<Link
-									className="s-link"
-									from={Route.fullPath}
-									to="/friends/search"
-								>
+								<Link className="s-link" to="/friends/search">
 									the search screen
 								</Link>{' '}
 								to find friends on Sunlo or{' '}
-								<Link
-									className="s-link"
-									from={Route.fullPath}
-									to="/friends/invite"
-								>
+								<Link className="s-link" to="/friends/invite">
 									invite them to create an account
 								</Link>
 								.
