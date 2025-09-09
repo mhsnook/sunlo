@@ -10,18 +10,17 @@ import { Separator } from '@/components/ui/separator'
 import languages from '@/lib/languages'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { createFileRoute } from '@tanstack/react-router'
-import { ChevronsUpDown, OctagonMinus, Pencil, X, Loader } from 'lucide-react'
+import { ChevronsUpDown, OctagonMinus, Loader } from 'lucide-react'
 import {
 	Collapsible,
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { useState } from 'react'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { Button } from '@/components/ui/button'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 import { cn } from '@/lib/utils'
 import { TranslationStub } from '@/types/main'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 const DestructiveOctagon = () => (
 	<Badge variant="destructive" className="p-2">
@@ -43,7 +42,6 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 
 function RouteComponent() {
 	const { lang, id } = Route.useParams()
-	const [isTagEditing, setIsTagEditing] = useState(false)
 	const { data: phrase, status } = usePhrase(id, lang)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -128,50 +126,20 @@ function RouteComponent() {
 
 						<Separator />
 
-						<div
-							className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
-						>
-							<div className="mb-3 inline-flex flex-row flex-wrap items-center gap-2">
-								<h3 className="sr-only">Tags</h3>
-								{tags.map((tag: { id: string; name: string }) => (
-									<Badge key={tag.id} variant="secondary">
-										{tag.name}
-									</Badge>
-								))}
-								{!tags.length && (
-									<p className="text-muted-foreground italic">No tags</p>
-								)}
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								className="grid grid-cols-1 grid-rows-1 place-items-center [grid-template-areas:'stack']"
-								onClick={() => setIsTagEditing(!isTagEditing)}
-							>
-								<span
-									className={`${!isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
-								>
-									<X />
-									Cancel
-								</span>
-								<span
-									className={`${isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
-								>
-									<Pencil />
-									Add tags
-								</span>
-							</Button>
-							<div className="mb-2 flex flex-wrap gap-2"></div>
-							<div
-								className={`${isTagEditing ? 'h-10' : 'h-0'} transition-all`}
-							>
-								{isTagEditing && (
-									<AddTags
-										onSuccess={() => setIsTagEditing(false)}
-										phraseId={id}
-										lang={lang}
-									/>
-								)}
+						<div>
+							<div className="flex items-center justify-between">
+								<div className="inline-flex flex-row flex-wrap items-center gap-2">
+									<h3 className="text-lg font-semibold">Tags</h3>
+									{tags.map((tag: { id: string; name: string }) => (
+										<Badge key={tag.id} variant="secondary">
+											{tag.name}
+										</Badge>
+									))}
+									{!tags.length && (
+										<p className="text-muted-foreground italic">No tags</p>
+									)}
+								</div>
+								<AddTags phraseId={id} lang={lang} />
 							</div>
 						</div>
 					</div>
