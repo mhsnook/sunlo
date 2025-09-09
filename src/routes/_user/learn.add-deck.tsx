@@ -97,6 +97,7 @@ function NewDeckForm() {
 							value={controller.field.value}
 							setValue={controller.field.onChange}
 							disabled={deckLanguages}
+							size="lg"
 						/>
 						<ErrorLabel error={errors.lang} />
 						<div className="flex flex-row items-center justify-between">

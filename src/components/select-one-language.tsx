@@ -24,7 +24,8 @@ export function SelectOneLanguage({
 	setValue,
 	disabled,
 	tabIndex,
-}: ControlledInputProps) {
+	size = 'default',
+}: ControlledInputProps & { size: 'default' | 'lg' }) {
 	const [open, setOpen] = useState(false)
 	const id = useId()
 	return (
@@ -34,6 +35,7 @@ export function SelectOneLanguage({
 					variant="outline"
 					tabIndex={tabIndex}
 					role="combobox"
+					size={size}
 					aria-expanded={open}
 					aria-controls={id}
 					className={`placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
