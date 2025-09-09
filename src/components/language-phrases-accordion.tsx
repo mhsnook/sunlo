@@ -45,7 +45,9 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 			</div>
 			<AccordionContent>
 				<div className="space-y-1 pt-2 pl-6">
-					<p className="text-muted-foreground text-sm">Translations</p>
+					<p className="text-muted-foreground text-sm">
+						{phrase.translations?.length ? 'Translations' : 'No Translations'}
+					</p>
 					<ul className="space-y-1">
 						{phrase.translations_mine?.map((translation) => (
 							<li key={translation.id} className="flex items-center gap-2">
@@ -55,7 +57,9 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 						))}
 					</ul>
 					<div className="flex flex-row flex-wrap gap-2 py-2">
-						<span className="text-muted-foreground text-sm">Tags</span>
+						<span className="text-muted-foreground text-sm">
+							{phrase.tags?.length ? 'Tags' : 'No tags'}
+						</span>
 						{phrase.tags?.map((tag) => (
 							<Badge variant="outline" key={tag.id}>
 								{tag.name}
