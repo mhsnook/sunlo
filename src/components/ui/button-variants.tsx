@@ -20,7 +20,6 @@ const buttonVariants = cva(
 					'border border-transparent hover:border-primary-foresoft/30 bg-card hover:bg-primary/10 text-primary-foresoft',
 				'outline-primary':
 					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft bg-primary/10',
-				link: 's-link shadow-none',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-4 py-2 gap-2',

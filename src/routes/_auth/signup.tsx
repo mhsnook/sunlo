@@ -143,7 +143,7 @@ function SignUp() {
 								<Button disabled={signupMutation.isPending}>Sign Up</Button>
 								<Link
 									to="/login"
-									className={buttonVariants({ variant: 'link' })}
+									className={buttonVariants({ variant: 'secondary' })}
 								>
 									Already have an account?
 								</Link>

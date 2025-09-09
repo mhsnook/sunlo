@@ -89,7 +89,10 @@ function ForgotPasswordPage() {
 						</fieldset>
 						<div className="flex flex-row justify-between">
 							<Button disabled={recoveryMutation.isPending}>Submit</Button>
-							<Link to="/login" className={buttonVariants({ variant: 'link' })}>
+							<Link
+								to="/login"
+								className={buttonVariants({ variant: 'secondary' })}
+							>
 								Back to login
 							</Link>
 						</div>

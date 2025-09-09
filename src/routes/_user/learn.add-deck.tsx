@@ -99,24 +99,25 @@ function NewDeckForm() {
 							disabled={deckLanguages}
 						/>
 						<ErrorLabel error={errors.lang} />
-
-						<Button
-							type="submit"
-							variant="default"
-							size="lg"
-							className="my-4"
-							disabled={createNewDeck.isPending || !isValid}
-						>
-							{createNewDeck.isPending ? 'Starting...' : 'Start learning'}
-						</Button>
-						{showNewUserUI ?
-							<Link
-								to={`/friends/search`}
-								className={buttonVariants({ variant: 'link' })}
+						<div className="flex flex-row items-center justify-between">
+							<Button
+								type="submit"
+								variant="default"
+								size="lg"
+								className="my-4"
+								disabled={createNewDeck.isPending || !isValid}
 							>
-								View friend requests
-							</Link>
-						:	null}
+								{createNewDeck.isPending ? 'Starting...' : 'Start learning'}
+							</Button>
+							{showNewUserUI ?
+								<Link
+									to={`/friends/search`}
+									className={buttonVariants({ variant: 'secondary' })}
+								>
+									View friend requests
+								</Link>
+							:	null}
+						</div>
 					</form>
 					<ShowAndLogError
 						text="Problem creating new deck"

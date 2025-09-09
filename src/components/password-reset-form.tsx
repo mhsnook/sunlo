@@ -78,7 +78,10 @@ export function PasswordResetForm() {
 						<Button disabled={changeMutation.isPending || !isValid}>
 							Submit
 						</Button>
-						<Link to="/profile" className={buttonVariants({ variant: 'link' })}>
+						<Link
+							to="/profile"
+							className={buttonVariants({ variant: 'secondary' })}
+						>
 							Back to profile
 						</Link>
 					</div>
