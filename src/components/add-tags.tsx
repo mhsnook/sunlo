@@ -1,94 +1,68 @@
+import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
-import { Save } from 'lucide-react'
-import type { LanguageLoaded, Tag, uuid } from '@/types/main'
+import { Pencil } from 'lucide-react'
+import type { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog'
+import { useLanguagePhrase, useLanguageTags } from '@/lib/use-language'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from './ui/separator'
+import { MultiSelectCreatable } from './fields/multi-select-creatable'
 
 const addTagsSchema = z.object({
-	tags: z.string().min(1, 'Enter at least one tag, comma-separated.'),
+	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
 })
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
 
-export function AddTags({
-	phraseId,
-	lang,
-	onSuccess,
-}: {
-	phraseId: uuid
-	lang: string
-	onSuccess: () => void
-}) {
+export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
+	const [open, setOpen] = useState(false)
+	const { data: allLangTagsData } = useLanguageTags(lang)
+	const { data: phrase } = useLanguagePhrase(phraseId, lang)
 	const queryClient = useQueryClient()
 	const {
-		register,
+		control,
 		handleSubmit,
 		reset,
 		formState: { errors },
 	} = useForm<AddTagsFormValues>({
 		resolver: zodResolver(addTagsSchema),
+		defaultValues: {
+			tags: [],
+		},
 	})
 
 	const addTagsMutation = useMutation({
-		mutationFn: async ({ tags }: AddTagsFormValues) => {
-			const tagsArray = tags
-				.split(',')
-				.map((t) => t.trim())
-				.filter(Boolean)
-			if (tagsArray.length === 0) return
+		mutationFn: async (values: AddTagsFormValues) => {
+			if (values.tags.length === 0) return
 
 			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
 				p_phrase_id: phraseId,
 				p_lang: lang,
-				p_tags: tagsArray,
+				p_tags: values.tags,
 			})
 
 			if (error) throw error
-			return { tagsToAddToPhrase: tagsArray, tagsAddedToLang: data }
+			return data
 		},
-		onSuccess: ({
-			tagsToAddToPhrase,
-			tagsAddedToLang,
-		}: {
-			tagsToAddToPhrase: string[]
-			tagsAddedToLang: Tag[]
-		}) => {
+		onSuccess: () => {
 			toast.success('Tags added!')
-			queryClient.setQueryData(
-				['language', lang],
-				(oldData: LanguageLoaded) => {
-					const newData = {
-						...oldData,
-						phrasesMap: {
-							...oldData?.phrasesMap,
-							[phraseId]: {
-								...oldData?.phrasesMap[phraseId],
-								tags: [
-									...(oldData?.phrasesMap[phraseId]?.tags ?? []),
-									...tagsToAddToPhrase.map((d) => ({ id: d, name: d })),
-								].filter((t, i, a) => a.indexOf(t) === i),
-							},
-						},
-					}
-
-					if (tagsAddedToLang.length) {
-						const newTagNames = tagsAddedToLang.map((t) => t.name)
-						newData.meta.tags = [
-							...(oldData.meta.tags ?? []),
-							...newTagNames,
-						].filter((t, i, a) => a.indexOf(t) === i)
-					}
-
-					return newData
-				}
-			)
-			onSuccess()
-			reset({ tags: '' })
+			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
+			setOpen(false)
+			reset({ tags: [] })
 		},
 		onError: (error) => {
 			console.log(`Failed to add tags: ${error.message}`, error)
@@ -96,27 +70,81 @@ export function AddTags({
 		},
 	})
 
+	const phraseTags = phrase?.tags ?? []
+	const phraseTagNames = phraseTags.map((t) => t.name)
+	const allLangTags = allLangTagsData ?? []
+	const availableTags = allLangTags
+		.filter((t) => !phraseTagNames.includes(t))
+		.map((t) => ({ value: t, label: t }))
+
 	return (
-		<form
-			onSubmit={handleSubmit((data) => addTagsMutation.mutate(data))}
-			className="mt-3 flex items-start gap-2"
-		>
-			<div className="grow">
-				<Input
-					{...register('tags')}
-					placeholder="Add tags, separated by commas"
-				/>
-				{errors.tags && (
-					<p className="text-destructive mt-1 text-sm">{errors.tags.message}</p>
-				)}
-			</div>
-			<Button
-				type="submit"
-				variant="outline"
-				disabled={addTagsMutation.isPending}
-			>
-				<Save /> Add
-			</Button>
-		</form>
+		<Dialog open={open} onOpenChange={setOpen}>
+			<DialogTrigger asChild>
+				<Button variant="outline" size="sm">
+					<Pencil className="me-2 h-4 w-4" /> Edit tags
+				</Button>
+			</DialogTrigger>
+			<DialogContent className="sm:max-w-[425px]">
+				<DialogHeader>
+					<DialogTitle>Edit tags</DialogTitle>
+					<DialogDescription>
+						Add tags to this phrase to help categorize it.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="space-y-4">
+					<div>
+						<h4 className="text-sm font-medium">Current tags</h4>
+						<div className="mt-2 flex flex-wrap gap-1">
+							{phraseTags.length > 0 ?
+								phraseTags.map((tag) => (
+									<Badge key={tag.id} variant="secondary">
+										{tag.name}
+									</Badge>
+								))
+							:	<p className="text-muted-foreground text-sm italic">
+									No tags yet.
+								</p>
+							}
+						</div>
+					</div>
+					<Separator />
+					<form
+						id="add-tags-form"
+						onSubmit={handleSubmit((data) => addTagsMutation.mutate(data))}
+						className="space-y-4"
+					>
+						<div>
+							<h4 className="text-sm font-medium">Add tags</h4>
+							<Controller
+								control={control}
+								name="tags"
+								render={({ field }) => (
+									<MultiSelectCreatable
+										options={availableTags}
+										selected={field.value}
+										onChange={field.onChange}
+										className="mt-2"
+									/>
+								)}
+							/>
+							{errors.tags && (
+								<p className="text-destructive mt-1 text-sm">
+									{errors.tags.message}
+								</p>
+							)}
+						</div>
+					</form>
+				</div>
+				<DialogFooter>
+					<Button
+						type="submit"
+						form="add-tags-form"
+						disabled={addTagsMutation.isPending}
+					>
+						{addTagsMutation.isPending ? 'Saving...' : 'Save changes'}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	)
 }
