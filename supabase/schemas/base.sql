@@ -92,6 +92,10 @@ alter type "public"."learning_goal" owner to "postgres";
 comment on
 type "public"."learning_goal" is 'why are you learning this language?';
 
+create type "public"."phrase_request_status" as enum('pending', 'fulfilled', 'cancelled');
+
+alter type "public"."phrase_request_status" owner to "postgres";
+
 create type "public"."translation_input" as ("lang" character(3), "text" "text");
 
 alter type "public"."translation_input" owner to "postgres";
@@ -439,6 +443,68 @@ alter function "public"."fsrs_stability" (
 	"stability" numeric,
 	"review_time_retrievability" numeric,
 	"score" integer
+) owner to "postgres";
+
+create
+or replace function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
+) returns "json" language "plpgsql" as $$
+DECLARE
+    v_requester_uid uuid;
+    v_phrase_lang character varying;
+    fulfiller_uid uuid;
+    new_phrase public.phrase;
+    new_translation public.phrase_translation;
+BEGIN
+    -- Get the requester's UID and the phrase language from the request
+    SELECT requester_uid, lang
+    INTO v_requester_uid, v_phrase_lang
+    FROM public.phrase_request
+    WHERE id = request_id AND status = 'pending';
+
+    IF v_requester_uid IS NULL THEN
+        RAISE EXCEPTION 'Phrase request not found or already fulfilled';
+    END IF;
+
+    -- Get the UID of the user calling this function, if they are authenticated
+    fulfiller_uid := auth.uid();
+
+    -- Insert the new phrase and return the entire row
+    INSERT INTO public.phrase (text, lang, added_by)
+    VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid)
+    RETURNING * INTO new_phrase;
+
+    -- Insert the translation for the new phrase and return the entire row
+    INSERT INTO public.phrase_translation (phrase_id, text, lang, added_by)
+    VALUES (new_phrase.id, p_translation_text, p_translation_lang, fulfiller_uid)
+    RETURNING * INTO new_translation;
+
+    -- Insert a new user_card for the requester
+    INSERT INTO public.user_card (phrase_id, uid, lang, status)
+    VALUES (new_phrase.id, v_requester_uid, v_phrase_lang, 'active');
+
+    -- Update the phrase_request to mark it as fulfilled
+    UPDATE public.phrase_request
+    SET
+        status = 'fulfilled',
+        fulfilled_at = now(),
+        fulfilled_by_uid = fulfiller_uid,
+        fulfilled_phrase_id = new_phrase.id
+    WHERE id = request_id;
+
+    -- Return the created phrase and translation as a JSON object
+    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation));
+END;
+$$;
+
+alter function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
 ) owner to "postgres";
 
 create table if not exists
@@ -866,6 +932,21 @@ alter table "public"."phrase_relation" owner to "postgres";
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
 
 create table if not exists
+	"public"."phrase_request" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"requester_uid" "uuid" not null,
+		"lang" character varying not null,
+		"prompt" "text" not null,
+		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
+		"fulfilled_at" timestamp with time zone,
+		"fulfilled_by_uid" "uuid",
+		"fulfilled_phrase_id" "uuid"
+	);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists
 	"public"."phrase_tag" (
 		"phrase_id" "uuid" not null,
 		"tag_id" "uuid" not null,
@@ -1182,6 +1263,9 @@ add constraint "language_pkey" primary key ("lang");
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
+alter table only "public"."phrase_request"
+add constraint "phrase_request_pkey" primary key ("id");
+
 alter table only "public"."phrase_tag"
 add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
 
@@ -1439,6 +1523,18 @@ add constraint "phrase_added_by_fkey" foreign key ("added_by") references "publi
 alter table only "public"."phrase"
 add constraint "phrase_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
+alter table only "public"."phrase_request"
+add constraint "phrase_request_fulfilled_by_uid_fkey" foreign key ("fulfilled_by_uid") references "public"."user_profile" ("uid") on delete set null;
+
+alter table only "public"."phrase_request"
+add constraint "phrase_request_fulfilled_phrase_id_fkey" foreign key ("fulfilled_phrase_id") references "public"."phrase" ("id") on delete set null;
+
+alter table only "public"."phrase_request"
+add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;
+
+alter table only "public"."phrase_request"
+add constraint "phrase_request_requester_uid_fkey" foreign key ("requester_uid") references "public"."user_profile" ("uid") on delete cascade;
+
 alter table only "public"."phrase_relation"
 add constraint "phrase_see_also_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
 
@@ -1544,6 +1640,10 @@ select
 	using (true);
 
 create policy "Enable read access for all users" on "public"."phrase_relation" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."phrase_request" for
 select
 	using (true);
 
@@ -1672,6 +1772,15 @@ create policy "User data only for this user" on "public"."user_deck" using (("au
 with
 	check (("auth"."uid" () = "uid"));
 
+create policy "Users can cancel their own requests" on "public"."phrase_request" for
+update to "authenticated" using (("requester_uid" = "auth"."uid" ()))
+with
+	check (("requester_uid" = "auth"."uid" ()));
+
+create policy "Users can create their own requests" on "public"."phrase_request" for insert to "authenticated"
+with
+	check (("requester_uid" = "auth"."uid" ()));
+
 create policy "Users can insert tags" on "public"."tag" for insert
 with
 	check (("auth"."role" () = 'authenticated'::"text"));
@@ -1707,6 +1816,8 @@ alter table "public"."language" enable row level security;
 alter table "public"."phrase" enable row level security;
 
 alter table "public"."phrase_relation" enable row level security;
+
+alter table "public"."phrase_request" enable row level security;
 
 alter table "public"."phrase_tag" enable row level security;
 
@@ -1936,6 +2047,27 @@ grant all on function "public"."fsrs_stability" (
 	"score" integer
 ) to "service_role";
 
+grant all on function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
+) to "anon";
+
+grant all on function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
+) to "authenticated";
+
+grant all on function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
+) to "service_role";
+
 grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
@@ -2025,6 +2157,12 @@ grant all on table "public"."phrase_relation" to "anon";
 grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
+
+grant all on table "public"."phrase_request" to "anon";
+
+grant all on table "public"."phrase_request" to "authenticated";
+
+grant all on table "public"."phrase_request" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 

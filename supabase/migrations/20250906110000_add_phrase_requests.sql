@@ -51,12 +51,13 @@ or replace function "public"."fulfill_phrase_request" (
 	"p_phrase_text" "text",
 	"p_translation_text" "text",
 	"p_translation_lang" character varying
-) returns "uuid" language "plpgsql" as $$
+) returns json language "plpgsql" as $$
 DECLARE
     v_requester_uid uuid;
     v_phrase_lang character varying;
-    new_phrase_id uuid;
     fulfiller_uid uuid;
+    new_phrase public.phrase;
+    new_translation public.phrase_translation;
 BEGIN
     -- Get the requester's UID and the phrase language from the request
     SELECT requester_uid, lang
@@ -71,18 +72,19 @@ BEGIN
     -- Get the UID of the user calling this function, if they are authenticated
     fulfiller_uid := auth.uid();
 
-    -- Insert the new phrase
+    -- Insert the new phrase and return the entire row
     INSERT INTO public.phrase (text, lang, added_by)
     VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid)
-    RETURNING id INTO new_phrase_id;
+    RETURNING * INTO new_phrase;
 
-    -- Insert the translation for the new phrase
+    -- Insert the translation for the new phrase and return the entire row
     INSERT INTO public.phrase_translation (phrase_id, text, lang, added_by)
-    VALUES (new_phrase_id, p_translation_text, p_translation_lang, fulfiller_uid);
+    VALUES (new_phrase.id, p_translation_text, p_translation_lang, fulfiller_uid)
+    RETURNING * INTO new_translation;
 
     -- Insert a new user_card for the requester
     INSERT INTO public.user_card (phrase_id, uid, lang, status)
-    VALUES (new_phrase_id, v_requester_uid, v_phrase_lang, 'active');
+    VALUES (new_phrase.id, v_requester_uid, v_phrase_lang, 'active');
 
     -- Update the phrase_request to mark it as fulfilled
     UPDATE public.phrase_request
@@ -90,9 +92,10 @@ BEGIN
         status = 'fulfilled',
         fulfilled_at = now(),
         fulfilled_by_uid = fulfiller_uid,
-        fulfilled_phrase_id = new_phrase_id
+        fulfilled_phrase_id = new_phrase.id
     WHERE id = request_id;
 
-    RETURN new_phrase_id;
+    -- Return the created phrase and translation as a JSON object
+    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation));
 END;
 $$;
