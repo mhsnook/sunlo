@@ -1,7 +1,6 @@
 import {
 	BookHeart,
 	ClipboardPlus,
-	FileQuestion,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -10,6 +9,7 @@ import {
 	LogIn,
 	Mail,
 	MessageSquarePlus,
+	MessageSquareQuote,
 	MessagesSquare,
 	Rocket,
 	School,
@@ -152,7 +152,7 @@ const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 			to: '/learn/$lang/requests',
 			params: { lang },
 		},
-		Icon: FileQuestion,
+		Icon: MessageSquareQuote,
 	},
 	'/learn/$lang/requests/new': {
 		name: 'Request',

@@ -1,6 +1,6 @@
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { Copy, Plus } from 'lucide-react'
+import { Copy, MessageSquareQuote } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
@@ -58,13 +58,14 @@ function Page() {
 						<Link
 							to="/learn/$lang/requests/new"
 							params={{ lang }}
-							className={buttonVariants({
-								size: 'badge',
-								variant: 'outline',
-							})}
+							className={
+								` ${buttonVariants({
+									variant: 'outline',
+								})} -mt-2` as const
+							}
 						>
-							<Plus className="size-3" />
-							<span className="me-1">new request</span>
+							<MessageSquareQuote className="size-3" />
+							<span className="me-1">New request</span>
 						</Link>
 					</div>
 				</CardTitle>
