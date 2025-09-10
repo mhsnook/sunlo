@@ -25,7 +25,6 @@ export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
 })
 
-
 function usePhraseRequests(lang: string) {
 	const { userId } = useAuth()
 	return useQuery({

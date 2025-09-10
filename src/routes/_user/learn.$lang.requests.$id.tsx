@@ -34,6 +34,12 @@ import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { BigPhraseCard } from '@/components/cards/big-phrase-card'
+import type {
+	LanguageLoaded,
+	PhraseFull,
+	PhraseRow,
+	TranslationRow,
+} from '@/types/main'
 
 const phraseRequestQuery = (id: string) => ({
 	queryKey: ['phrase_request', id],
@@ -61,6 +67,11 @@ const FulfillRequestSchema = z.object({
 
 type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
 
+type FulfillRequestResponse = {
+	phrase: PhraseRow
+	translation: TranslationRow
+}
+
 function FulfillRequestPage() {
 	const { id } = Route.useParams()
 	const queryClient = useQueryClient()
@@ -78,26 +89,71 @@ function FulfillRequestPage() {
 		},
 	})
 
-	const fulfillMutation = useMutation({
+	const fulfillMutation = useMutation<
+		FulfillRequestResponse,
+		Error,
+		FulfillRequestFormInputs
+	>({
 		mutationFn: async (values: FulfillRequestFormInputs) => {
-			// TODO: Create and call an RPC function 'fulfill_phrase_request'
-			// This RPC would create the phrase, the translation, and update the request status.
-			// For now, we'll just simulate it.
-			console.log('Fulfilling request with:', { requestId: id, ...values })
-			const { error: rpcError } = await supabase.rpc('fulfill_phrase_request', {
-				request_id: id,
-				p_phrase_text: values.phrase_text,
-				p_translation_text: values.translation_text,
-				p_translation_lang: 'eng',
-			})
+			const { data: rpcData, error: rpcError } = await supabase.rpc(
+				'fulfill_phrase_request',
+				{
+					request_id: id,
+					p_phrase_text: values.phrase_text,
+					p_translation_text: values.translation_text,
+					p_translation_lang: 'eng',
+				}
+			)
 			if (rpcError) throw rpcError
-			return true
+			return rpcData as FulfillRequestResponse
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
 			toast.success('Thank you for your contribution!')
 			void queryClient.invalidateQueries({ queryKey: ['phrase_request', id] })
+
+			const lang = request.lang
+			queryClient.setQueryData(
+				['language', lang],
+				(oldData: LanguageLoaded | undefined) => {
+					if (!oldData) return oldData
+
+					const { phrase, translation } = data
+
+					const newPhrase: PhraseFull = {
+						id: phrase.id,
+						text: phrase.text,
+						lang: phrase.lang,
+						created_at: phrase.created_at,
+						translations: [translation],
+						tags: [],
+						avg_difficulty: null,
+						avg_stability: null,
+						count_active: 0,
+						count_cards: 0,
+						count_learned: 0,
+						count_skipped: 0,
+						percent_active: 0,
+						percent_learned: 0,
+						percent_skipped: 0,
+						rank_least_difficult: null,
+						rank_least_skipped: null,
+						rank_most_learned: null,
+						rank_most_stable: null,
+						rank_newest: null,
+					}
+
+					return {
+						...oldData,
+						pids: [...oldData.pids, phrase.id],
+						phrasesMap: {
+							...oldData.phrasesMap,
+							[phrase.id]: newPhrase,
+						},
+					}
+				}
+			)
 		},
-		onError: (err) => {
+		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)
 		},
 	})
