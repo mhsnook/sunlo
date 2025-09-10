@@ -297,3 +297,6 @@ export type FriendSummaryFull = FriendSummaryRelative & {
 export type PublicProfileFull = PublicProfile & {
 	friend_summary?: FriendSummaryRelative
 }
+
+export type PhraseRequest =
+	Database['public']['Tables']['phrase_request']['Row']

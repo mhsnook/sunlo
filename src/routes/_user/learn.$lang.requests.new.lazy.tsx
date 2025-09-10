@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
+import { PhraseRequest } from '@/types/main'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests/new')({
 	component: Page,
@@ -63,20 +64,25 @@ function Page() {
 		RequestPhraseFormInputs
 	>({
 		mutationFn: async ({ prompt }) => {
-			return supabase
-				.from('phrase_request')
-				.insert({
-					prompt,
-					lang,
-					requester_uid: userId!,
-				})
-				.throwOnError()
+			return (
+				await supabase
+					.from('phrase_request')
+					.insert({
+						prompt,
+						lang,
+						requester_uid: userId!,
+					})
+					.throwOnError()
+					.select()
+					.single()
+			).data!
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
 			toast.success('Your request has been created!')
-			void queryClient.invalidateQueries({
-				queryKey: ['phrase_requests', lang],
-			})
+			void queryClient.setQueryData(
+				['user', 'phrase_requests', lang],
+				(old: PhraseRequest[] | undefined) => (old ? [data, ...old] : [data])
+			)
 			void navigate({ to: '/learn/$lang/requests', params: { lang } })
 		},
 		onError: (error) => {

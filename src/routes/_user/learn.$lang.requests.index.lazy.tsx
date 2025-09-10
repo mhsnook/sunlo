@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Copy, MessageSquareQuote } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+import type { PhraseRequest } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import {
@@ -15,7 +16,6 @@ import {
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
-import { Database } from '@/types/supabase'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { publicProfileQuery } from '@/lib/use-profile'
 import { useLanguagePhrase } from '@/lib/use-language'
@@ -25,12 +25,11 @@ export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
 })
 
-type PhraseRequest = Database['public']['Tables']['phrase_request']['Row']
 
 function usePhraseRequests(lang: string) {
 	const { userId } = useAuth()
 	return useQuery({
-		queryKey: ['phrase_requests', lang, userId],
+		queryKey: ['user', 'phrase_requests', lang],
 		queryFn: async () => {
 			const { data, error } = await supabase
 				.from('phrase_request')
