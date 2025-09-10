@@ -40,13 +40,18 @@ import type {
 	PhraseRow,
 	TranslationRow,
 } from '@/types/main'
+import { ago } from '@/lib/dayjs'
+import UserPermalink from '@/components/user-permalink'
+import { avatarUrlify } from '@/lib/utils'
 
 const phraseRequestQuery = (id: string) => ({
 	queryKey: ['phrase_request', id],
 	queryFn: async () => {
 		const { data, error } = await supabase
 			.from('phrase_request')
-			.select('*')
+			.select(
+				'*, requester:public_profile!phrase_request_requester_uid_fkey(*)'
+			)
 			.eq('id', id)
 			.single()
 		if (error) throw error
@@ -162,12 +167,12 @@ function FulfillRequestPage() {
 	if (error) return <ShowError>{error.message}</ShowError>
 	if (!request) return <p>Request not found.</p>
 
-	if (request.status === 'fulfilled') {
-		return (
-			<main className="w-app space-y-4 p-4">
+	return (
+		<main className="w-app space-y-6">
+			{request.status === 'fulfilled' && (
 				<Callout Icon={SuccessCheckmarkTrans}>
 					<h2 className="h3">Request Fulfilled</h2>
-					<p>This phrase request has been fulfilled. Thank you!</p>
+					<p>This phrase request has been fulfilled.</p>
 					<Link
 						className="s-link"
 						to="/learn/$lang/$id"
@@ -176,68 +181,75 @@ function FulfillRequestPage() {
 						View the new phrase (or suggest your own translation!)
 					</Link>
 				</Callout>
-				<BigPhraseCard lang={request.lang} pid={request.fulfilled_phrase_id!} />
-			</main>
-		)
-	}
-
-	return (
-		<main className="w-app p-4">
+			)}
 			<Card>
 				<CardHeader>
-					<CardTitle>Help with a Phrase Request</CardTitle>
-					<CardDescription>
-						A friend is asking for help with the following prompt for the{' '}
-						<strong>{languages[request.lang]}</strong> language:
+					<CardTitle>
+						{request.status !== 'fulfilled' && <>Help with a</>} Phrase Request
+					</CardTitle>
+					<CardDescription className="text-base/9">
+						New phrase request made {ago(request.created_at)} by{' '}
+						<UserPermalink
+							uid={request.requester_uid}
+							username={request.requester?.username}
+							avatarUrl={avatarUrlify(request.requester?.avatar_path)}
+						/>
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<blockquote className="border-primary/50 bg-primary/10 border-l-4 p-4 italic">
+					<blockquote className="border-primary/50 bg-primary/10 mb-4 border-l-4 p-4 italic">
 						"{request.prompt}"
 					</blockquote>
-
-					<Form {...form}>
-						<form
-							onSubmit={form.handleSubmit((data) =>
-								fulfillMutation.mutate(data)
-							)}
-							className="mt-6 space-y-4"
-						>
-							<FormField
-								control={form.control}
-								name="phrase_text"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Phrase in {languages[request.lang]}</FormLabel>
-										<FormControl>
-											<Textarea
-												placeholder="e.g., C'est délicieux"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
+					{request.status === 'fulfilled' ?
+						<BigPhraseCard
+							lang={request.lang}
+							pid={request.fulfilled_phrase_id!}
+						/>
+					:	<Form {...form}>
+							<form
+								onSubmit={form.handleSubmit((data) =>
+									fulfillMutation.mutate(data)
 								)}
-							/>
-							<FormField
-								control={form.control}
-								name="translation_text"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Translation (in English)</FormLabel>
-										<FormControl>
-											<Input placeholder="e.g., It's delicious" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button type="submit" disabled={fulfillMutation.isPending}>
-								{fulfillMutation.isPending ? 'Submitting...' : 'Submit Phrase'}
-							</Button>
-							<ShowAndLogError error={fulfillMutation.error} />
-						</form>
-					</Form>
+								className="mt-6 space-y-4"
+							>
+								<FormField
+									control={form.control}
+									name="phrase_text"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Phrase in {languages[request.lang]}</FormLabel>
+											<FormControl>
+												<Textarea
+													placeholder="e.g., C'est délicieux"
+													{...field}
+												/>
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="translation_text"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Translation (in English)</FormLabel>
+											<FormControl>
+												<Input placeholder="e.g., It's delicious" {...field} />
+											</FormControl>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								<Button type="submit" disabled={fulfillMutation.isPending}>
+									{fulfillMutation.isPending ?
+										'Submitting...'
+									:	'Submit Phrase'}
+								</Button>
+								<ShowAndLogError error={fulfillMutation.error} />
+							</form>
+						</Form>
+					}
 				</CardContent>
 			</Card>
 		</main>

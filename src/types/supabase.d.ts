@@ -1350,7 +1350,7 @@ export type Database = {
           p_translation_text: string
           request_id: string
         }
-        Returns: string
+        Returns: Json
       }
       insert_user_card_review: {
         Args: {
