@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
 import {
 	useSuspenseQuery,
 	useMutation,
@@ -30,9 +31,6 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
-import Callout from '@/components/ui/callout'
-import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import type {
 	LanguageLoaded,
 	PhraseFull,
@@ -43,6 +41,12 @@ import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import { avatarUrlify } from '@/lib/utils'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
+import {
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
 
 const phraseRequestQuery = (id: string) => ({
 	queryKey: ['phrase_request', id],
@@ -50,7 +54,10 @@ const phraseRequestQuery = (id: string) => ({
 		const { data, error } = await supabase
 			.from('phrase_request')
 			.select(
-				'*, requester:public_profile!phrase_request_requester_uid_fkey(*)'
+				`*,
+				requester:public_profile!phrase_request_requester_uid_fkey(*),
+				phrases:phrase(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
+				`
 			)
 			.eq('id', id)
 			.single()
@@ -61,8 +68,9 @@ const phraseRequestQuery = (id: string) => ({
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
-	loader: async ({ params: { id }, context: { queryClient } }) =>
-		await queryClient.ensureQueryData(phraseRequestQuery(id)),
+	loader: async ({ params: { id }, context: { queryClient } }) => {
+		await queryClient.ensureQueryData(phraseRequestQuery(id))
+	},
 })
 
 const FulfillRequestSchema = z.object({
@@ -80,6 +88,7 @@ type FulfillRequestResponse = {
 
 function FulfillRequestPage() {
 	const { id } = Route.useParams()
+	const [isAnswering, setIsAnswering] = useState(false)
 	const queryClient = useQueryClient()
 	const {
 		data: request,
@@ -114,9 +123,34 @@ function FulfillRequestPage() {
 			if (rpcError) throw rpcError
 			return rpcData as FulfillRequestResponse
 		},
-		onSuccess: (data) => {
+		onSuccess: (data, variables) => {
 			toast.success('Thank you for your contribution!')
-			void queryClient.invalidateQueries({ queryKey: ['phrase_request', id] })
+			setIsAnswering(false)
+			form.reset({
+				phrase_text: '',
+				translation_text: '',
+				translation_lang: variables.translation_lang,
+			})
+
+			// Optimistically update the request data
+			queryClient.setQueryData(
+				phraseRequestQuery(id).queryKey,
+				(oldData: any) => {
+					if (!oldData) return oldData
+
+					const { phrase, translation } = data
+					const newPhrase = {
+						...phrase,
+						translations: [translation],
+					}
+
+					return {
+						...oldData,
+						status: 'fulfilled',
+						phrases: [...(oldData.phrases || []), newPhrase],
+					}
+				}
+			)
 
 			const lang = request.lang
 			queryClient.setQueryData(
@@ -171,19 +205,6 @@ function FulfillRequestPage() {
 
 	return (
 		<main className="w-app space-y-6">
-			{request.status === 'fulfilled' && (
-				<Callout Icon={SuccessCheckmarkTrans}>
-					<h2 className="h3">Request Fulfilled</h2>
-					<p>This phrase request has been fulfilled.</p>
-					<Link
-						className="s-link"
-						to="/learn/$lang/$id"
-						params={{ lang: request.lang, id: request.fulfilled_phrase_id! }}
-					>
-						View the new phrase (or suggest your own translation!)
-					</Link>
-				</Callout>
-			)}
 			<Card>
 				<CardHeader>
 					<CardTitle>
@@ -202,44 +223,59 @@ function FulfillRequestPage() {
 					<blockquote className="border-primary/50 bg-primary/10 mb-4 border-l-4 p-4 italic">
 						"{request.prompt}"
 					</blockquote>
-					{request.status === 'fulfilled' ?
-						<BigPhraseCard
-							lang={request.lang}
-							pid={request.fulfilled_phrase_id!}
-						/>
-					:	<Form {...form}>
-							<form
-								onSubmit={form.handleSubmit((data) =>
-									fulfillMutation.mutate(data)
-								)}
-								className="mt-6 space-y-4"
-							>
-								<FormField
-									control={form.control}
-									name="phrase_text"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Phrase in {languages[request.lang]}</FormLabel>
-											<FormControl>
-												<Textarea
-													placeholder="e.g., C'est délicieux"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
+
+					{request.phrases && request.phrases.length > 0 && (
+						<div className="mb-6 space-y-4">
+							<h3 className="h3">
+								{request.phrases.length} answer
+								{request.phrases.length > 1 && 's'} so far
+							</h3>
+							{request.phrases.map((phrase: any) => (
+								<div key={phrase.id} className="rounded-lg p-4 shadow">
+									<p className="text-muted-foreground mb-2 text-sm">
+										Added by{' '}
+										<UserPermalink
+											uid={phrase.added_by}
+											username={phrase.added_by_profile?.username}
+											avatarUrl={avatarUrlify(
+												phrase.added_by_profile?.avatar_path
+											)}
+										/>{' '}
+										<>{ago(phrase.created_at)}</>
+									</p>
+									<CardResultSimple phrase={phrase} />
+								</div>
+							))}
+						</div>
+					)}
+
+					<Collapsible open={isAnswering} onOpenChange={setIsAnswering}>
+						<CollapsibleTrigger asChild>
+							<Button variant="outline">
+								{request.phrases?.length > 0 ?
+									'Add an alternative answer'
+								:	'Add an answer'}
+							</Button>
+						</CollapsibleTrigger>
+						<CollapsibleContent className="mt-4 rounded px-4 pt-4 pb-4 shadow">
+							<Form {...form}>
+								<form
+									onSubmit={form.handleSubmit((data) =>
+										fulfillMutation.mutate(data)
 									)}
-								/>
-								<div className="grid grid-rows-2 gap-4">
+									className="space-y-4"
+								>
 									<FormField
 										control={form.control}
-										name="translation_text"
+										name="phrase_text"
 										render={({ field }) => (
-											<FormItem className="flex flex-col justify-stretch">
-												<FormLabel>Translation</FormLabel>
+											<FormItem>
+												<FormLabel>
+													Phrase in {languages[request.lang]}
+												</FormLabel>
 												<FormControl>
 													<Textarea
-														placeholder="e.g., It's delicious"
+														placeholder="e.g., C'est délicieux"
 														{...field}
 													/>
 												</FormControl>
@@ -247,20 +283,46 @@ function FulfillRequestPage() {
 											</FormItem>
 										)}
 									/>
-									<TranslationLanguageField
-										control={form.control}
-										error={form.formState.errors.translation_lang}
-									/>
-								</div>
-								<Button type="submit" disabled={fulfillMutation.isPending}>
-									{fulfillMutation.isPending ?
-										'Submitting...'
-									:	'Submit Phrase'}
-								</Button>
-								<ShowAndLogError error={fulfillMutation.error} />
-							</form>
-						</Form>
-					}
+									<div className="grid grid-rows-2 gap-4">
+										<FormField
+											control={form.control}
+											name="translation_text"
+											render={({ field }) => (
+												<FormItem className="col-span-2">
+													<FormLabel>Translation</FormLabel>
+													<FormControl>
+														<Textarea
+															placeholder="e.g., It's delicious"
+															{...field}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+										<TranslationLanguageField
+											control={form.control}
+											error={form.formState.errors.translation_lang}
+										/>
+									</div>
+									<div className="space-x-2">
+										<Button type="submit" disabled={fulfillMutation.isPending}>
+											{fulfillMutation.isPending ?
+												'Submitting...'
+											:	'Submit Phrase'}
+										</Button>
+										<Button
+											variant="secondary"
+											onClick={() => setIsAnswering(false)}
+										>
+											Cancel
+										</Button>
+									</div>
+									<ShowAndLogError error={fulfillMutation.error} />
+								</form>
+							</Form>
+						</CollapsibleContent>
+					</Collapsible>
 				</CardContent>
 			</Card>
 		</main>

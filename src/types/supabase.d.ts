@@ -226,6 +226,7 @@ export type Database = {
           created_at: string | null
           id: string
           lang: string
+          request_id: string | null
           text: string
           text_script: string | null
         }
@@ -234,6 +235,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           lang: string
+          request_id?: string | null
           text: string
           text_script?: string | null
         }
@@ -242,6 +244,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           lang?: string
+          request_id?: string | null
           text?: string
           text_script?: string | null
         }
@@ -273,6 +276,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "language_plus"
             referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "phrase_request"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -344,8 +354,6 @@ export type Database = {
         Row: {
           created_at: string
           fulfilled_at: string | null
-          fulfilled_by_uid: string | null
-          fulfilled_phrase_id: string | null
           id: string
           lang: string
           prompt: string
@@ -355,8 +363,6 @@ export type Database = {
         Insert: {
           created_at?: string
           fulfilled_at?: string | null
-          fulfilled_by_uid?: string | null
-          fulfilled_phrase_id?: string | null
           id?: string
           lang: string
           prompt: string
@@ -366,8 +372,6 @@ export type Database = {
         Update: {
           created_at?: string
           fulfilled_at?: string | null
-          fulfilled_by_uid?: string | null
-          fulfilled_phrase_id?: string | null
           id?: string
           lang?: string
           prompt?: string
@@ -375,34 +379,6 @@ export type Database = {
           status?: Database["public"]["Enums"]["phrase_request_status"]
         }
         Relationships: [
-          {
-            foreignKeyName: "phrase_request_fulfilled_by_uid_fkey"
-            columns: ["fulfilled_by_uid"]
-            isOneToOne: false
-            referencedRelation: "public_profile"
-            referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "phrase_request_fulfilled_by_uid_fkey"
-            columns: ["fulfilled_by_uid"]
-            isOneToOne: false
-            referencedRelation: "user_profile"
-            referencedColumns: ["uid"]
-          },
-          {
-            foreignKeyName: "phrase_request_fulfilled_phrase_id_fkey"
-            columns: ["fulfilled_phrase_id"]
-            isOneToOne: false
-            referencedRelation: "meta_phrase_info"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "phrase_request_fulfilled_phrase_id_fkey"
-            columns: ["fulfilled_phrase_id"]
-            isOneToOne: false
-            referencedRelation: "phrase"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "phrase_request_lang_fkey"
             columns: ["lang"]

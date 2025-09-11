@@ -455,26 +455,27 @@ or replace function "public"."fulfill_phrase_request" (
 DECLARE
     v_requester_uid uuid;
     v_phrase_lang character varying;
+    v_request_status public.phrase_request_status;
     fulfiller_uid uuid;
     new_phrase public.phrase;
     new_translation public.phrase_translation;
 BEGIN
     -- Get the requester's UID and the phrase language from the request
-    SELECT requester_uid, lang
-    INTO v_requester_uid, v_phrase_lang
+    SELECT requester_uid, lang, status
+    INTO v_requester_uid, v_phrase_lang, v_request_status
     FROM public.phrase_request
-    WHERE id = request_id AND status = 'pending';
+    WHERE id = request_id;
 
     IF v_requester_uid IS NULL THEN
-        RAISE EXCEPTION 'Phrase request not found or already fulfilled';
+        RAISE EXCEPTION 'Phrase request not found';
     END IF;
 
     -- Get the UID of the user calling this function, if they are authenticated
     fulfiller_uid := auth.uid();
 
     -- Insert the new phrase and return the entire row
-    INSERT INTO public.phrase (text, lang, added_by)
-    VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid)
+    INSERT INTO public.phrase (text, lang, added_by, request_id)
+    VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid, request_id)
     RETURNING * INTO new_phrase;
 
     -- Insert the translation for the new phrase and return the entire row
@@ -482,18 +483,16 @@ BEGIN
     VALUES (new_phrase.id, p_translation_text, p_translation_lang, fulfiller_uid)
     RETURNING * INTO new_translation;
 
-    -- Insert a new user_card for the requester
-    INSERT INTO public.user_card (phrase_id, uid, lang, status)
-    VALUES (new_phrase.id, v_requester_uid, v_phrase_lang, 'active');
+    -- If this is the first phrase for the request, create a card for the requester
+    IF v_request_status = 'pending' THEN
+        INSERT INTO public.user_card (phrase_id, uid, lang, status)
+        VALUES (new_phrase.id, v_requester_uid, v_phrase_lang, 'active');
 
-    -- Update the phrase_request to mark it as fulfilled
-    UPDATE public.phrase_request
-    SET
-        status = 'fulfilled',
-        fulfilled_at = now(),
-        fulfilled_by_uid = fulfiller_uid,
-        fulfilled_phrase_id = new_phrase.id
-    WHERE id = request_id;
+        -- Update the phrase_request to mark it as fulfilled
+        UPDATE public.phrase_request
+        SET status = 'fulfilled', fulfilled_at = now()
+        WHERE id = request_id;
+    END IF;
 
     -- Return the created phrase and translation as a JSON object
     RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation));
@@ -787,7 +786,8 @@ create table if not exists
 		"added_by" "uuid" default "auth"."uid" (),
 		"lang" character varying not null,
 		"created_at" timestamp with time zone default "now" (),
-		"text_script" "text"
+		"text_script" "text",
+		"request_id" "uuid"
 	);
 
 alter table "public"."phrase" owner to "postgres";
@@ -939,9 +939,7 @@ create table if not exists
 		"lang" character varying not null,
 		"prompt" "text" not null,
 		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"fulfilled_at" timestamp with time zone,
-		"fulfilled_by_uid" "uuid",
-		"fulfilled_phrase_id" "uuid"
+		"fulfilled_at" timestamp with time zone
 	);
 
 alter table "public"."phrase_request" owner to "postgres";
@@ -1523,11 +1521,8 @@ add constraint "phrase_added_by_fkey" foreign key ("added_by") references "publi
 alter table only "public"."phrase"
 add constraint "phrase_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
-alter table only "public"."phrase_request"
-add constraint "phrase_request_fulfilled_by_uid_fkey" foreign key ("fulfilled_by_uid") references "public"."user_profile" ("uid") on delete set null;
-
-alter table only "public"."phrase_request"
-add constraint "phrase_request_fulfilled_phrase_id_fkey" foreign key ("fulfilled_phrase_id") references "public"."phrase" ("id") on delete set null;
+alter table only "public"."phrase"
+add constraint "phrase_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete set null;
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;

@@ -16,7 +16,7 @@ export default function ({
 		<Link
 			to="/friends/$uid"
 			params={{ uid }}
-			className="s-link-hidden inline-flex flex-row place-items-baseline items-center gap-0.5"
+			className="hover:outline-primary/30 text-primary-foresoft inline-flex flex-row place-items-baseline items-center gap-1 rounded-2xl hover:outline"
 		>
 			{username ?
 				<span>{username}</span>
@@ -25,7 +25,7 @@ export default function ({
 				<img
 					src={avatarUrl}
 					alt={`${username}'s avatar`}
-					className="aspect-square w-5 object-cover"
+					className="aspect-square w-5 rounded-2xl object-cover"
 				/>
 			:	null}
 		</Link>
