@@ -1,9 +1,6 @@
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { MessageSquareQuote } from 'lucide-react'
 
-import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
 import {
 	Card,
 	CardContent,
@@ -13,32 +10,15 @@ import {
 } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RequestItem } from '@/components/requests/request-list-item'
+import { useAllMyPhraseRequests } from '@/lib/use-requests'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
 })
 
-function usePhraseRequests(lang: string) {
-	const { userId } = useAuth()
-	return useQuery({
-		queryKey: ['user', 'phrase_requests', lang],
-		queryFn: async () => {
-			const { data, error } = await supabase
-				.from('phrase_request')
-				.select('*')
-				.eq('requester_uid', userId!)
-				.eq('lang', lang)
-				.order('created_at', { ascending: false })
-			if (error) throw error
-			return data
-		},
-		enabled: !!userId,
-	})
-}
-
 function Page() {
 	const { lang } = Route.useParams()
-	const { data: requests, isLoading } = usePhraseRequests(lang)
+	const { data: requests, isLoading } = useAllMyPhraseRequests(lang)
 
 	return (
 		<Card>

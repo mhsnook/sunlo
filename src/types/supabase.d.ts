@@ -1046,6 +1046,7 @@ export type Database = {
       }
       meta_phrase_info: {
         Row: {
+          added_by: string | null
           avg_difficulty: number | null
           avg_stability: number | null
           count_active: number | null
@@ -1063,10 +1064,25 @@ export type Database = {
           rank_most_learned: number | null
           rank_most_stable: number | null
           rank_newest: number | null
+          request_id: string | null
           tags: Json | null
           text: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "phrase_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
+          },
           {
             foreignKeyName: "phrase_lang_fkey"
             columns: ["lang"]
@@ -1080,6 +1096,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "language_plus"
             referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "phrase_request"
+            referencedColumns: ["id"]
           },
         ]
       }

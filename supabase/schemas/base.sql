@@ -898,6 +898,8 @@ create or replace view
 	"public"."meta_phrase_info" as
 select
 	null::"uuid" as "id",
+	null::"uuid" as "added_by",
+	null::"uuid" as "request_id",
 	null::timestamp with time zone as "created_at",
 	null::character varying as "lang",
 	null::"text" as "text",
@@ -1329,7 +1331,7 @@ with
 			"r1"."difficulty",
 			"r1"."stability",
 			"r1"."review_time_retrievability",
-			"r1"."created_at",
+			"r1"."created_at" as "recentest_review_at",
 			"r1"."updated_at"
 		from
 			(
@@ -1351,7 +1353,7 @@ with
 			"c"."status",
 			"r"."difficulty",
 			"r"."stability",
-			"r"."created_at" as "recentest_review_at"
+			"r"."recentest_review_at"
 		from
 			(
 				"public"."user_card" "c"
@@ -1367,6 +1369,8 @@ with
 		select
 			"p"."id",
 			"p"."created_at",
+			"p"."added_by",
+			"p"."request_id",
 			"p"."lang",
 			"p"."text",
 			"avg" ("c"."difficulty") as "avg_difficulty",
@@ -1410,10 +1414,15 @@ with
 		group by
 			"p"."id",
 			"p"."lang",
-			"p"."text"
+			"p"."text",
+			"p"."created_at",
+			"p"."added_by",
+			"p"."request_id"
 	)
 select
 	"results"."id",
+	"results"."added_by",
+	"results"."request_id",
 	"results"."created_at",
 	"results"."lang",
 	"results"."text",
