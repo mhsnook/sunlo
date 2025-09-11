@@ -29,7 +29,6 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
@@ -43,6 +42,7 @@ import type {
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import { avatarUrlify } from '@/lib/utils'
+import TranslationLanguageField from '@/components/fields/translation-language-field'
 
 const phraseRequestQuery = (id: string) => ({
 	queryKey: ['phrase_request', id],
@@ -68,6 +68,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 const FulfillRequestSchema = z.object({
 	phrase_text: z.string().min(1, 'Please enter the phrase text.'),
 	translation_text: z.string().min(1, 'Please enter a translation.'),
+	translation_lang: z.string().length(3, 'Please select a language.'),
 })
 
 type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
@@ -91,6 +92,7 @@ function FulfillRequestPage() {
 		defaultValues: {
 			phrase_text: '',
 			translation_text: '',
+			translation_lang: 'eng',
 		},
 	})
 
@@ -106,7 +108,7 @@ function FulfillRequestPage() {
 					request_id: id,
 					p_phrase_text: values.phrase_text,
 					p_translation_text: values.translation_text,
-					p_translation_lang: 'eng',
+					p_translation_lang: values.translation_lang,
 				}
 			)
 			if (rpcError) throw rpcError
@@ -228,19 +230,28 @@ function FulfillRequestPage() {
 										</FormItem>
 									)}
 								/>
-								<FormField
-									control={form.control}
-									name="translation_text"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Translation (in English)</FormLabel>
-											<FormControl>
-												<Input placeholder="e.g., It's delicious" {...field} />
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
+								<div className="grid grid-rows-2 gap-4">
+									<FormField
+										control={form.control}
+										name="translation_text"
+										render={({ field }) => (
+											<FormItem className="flex flex-col justify-stretch">
+												<FormLabel>Translation</FormLabel>
+												<FormControl>
+													<Textarea
+														placeholder="e.g., It's delicious"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<TranslationLanguageField
+										control={form.control}
+										error={form.formState.errors.translation_lang}
+									/>
+								</div>
 								<Button type="submit" disabled={fulfillMutation.isPending}>
 									{fulfillMutation.isPending ?
 										'Submitting...'

@@ -16,7 +16,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 	return (
 		<div className="flex flex-col gap-1">
 			<Label htmlFor="lang" className={error ? 'text-destructive' : ''}>
-				Translation for
+				Translation language
 			</Label>
 			<SelectOneOfYourLanguages
 				value={controller.field.value}

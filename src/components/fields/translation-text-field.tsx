@@ -10,7 +10,7 @@ export default function TranslationTextField<T extends FieldValues>({
 }: FieldProps<T>) {
 	return (
 		<div>
-			<Label>Phrase meaning</Label>
+			<Label>Translation text</Label>
 			<Textarea
 				{...register('translation_text' as Path<T>)}
 				placeholder="Translation text"

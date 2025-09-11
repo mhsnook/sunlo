@@ -108,7 +108,7 @@ function AddPhraseTab() {
 				<form
 					noValidate
 					onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
-					className="mt-4 space-y-4"
+					className="mt-2 space-y-4"
 				>
 					<div>
 						<Label htmlFor="newPhrase">
@@ -136,15 +136,15 @@ function AddPhraseTab() {
 							)}
 						/>
 					</div>
-					<TranslationLanguageField<AddPhraseFormValues>
-						error={errors.translation_lang}
-						control={control}
-					/>
 					<TranslationTextField<AddPhraseFormValues>
 						error={errors.translation_text}
 						register={register}
 					/>
-					<div className="flex w-full flex-col justify-between gap-2 @xl:flex-row">
+					<TranslationLanguageField<AddPhraseFormValues>
+						error={errors.translation_lang}
+						control={control}
+					/>
+					<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
 						<Button
 							type="submit"
 							className={addPhraseMutation.isPending ? 'opacity-60' : ''}
