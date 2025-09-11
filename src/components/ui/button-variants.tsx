@@ -20,12 +20,14 @@ const buttonVariants = cva(
 					'border border-transparent hover:border-primary-foresoft/30 bg-card hover:bg-primary/10 text-primary-foresoft',
 				'outline-primary':
 					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft bg-primary/10',
+				'outline-accent':
+					'bg-accent text-accent-foreground hover:pointer hover:outline outline-accent-foreground/30',
 			},
 			size: {
-				default: 'h-10 rounded-2xl px-4 py-2 gap-2',
-				sm: 'h-9 rounded-2xl px-2 gap-1 [&_svg]:size-3',
+				default: 'h-10 rounded-2xl px-5 py-2 gap-2',
+				sm: 'h-8 rounded-2xl px-4 gap-1 [&_svg]:size-3',
 				lg: 'rounded-2xl px-8 py-4 text-xl font-medium gap-3 [&_svg]:size-6',
-				icon: 'size-10 rounded-2xl shrink-0',
+				icon: 'size-8 rounded-2xl shrink-0 aspect-square',
 				'icon-sm': 'size-6 rounded-full shrink-0',
 				badge: 'h-6 rounded-2xl font-sm px-2 gap-1 my-0',
 			},

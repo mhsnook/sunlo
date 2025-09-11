@@ -36,6 +36,7 @@ import type {
 	PhraseFull,
 	PhraseRow,
 	TranslationRow,
+	uuid,
 } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
@@ -48,23 +49,34 @@ import {
 } from '@/components/ui/collapsible'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 
-const phraseRequestQuery = (id: string) => ({
-	queryKey: ['phrase_request', id],
-	queryFn: async () => {
-		const { data, error } = await supabase
+const getOneFullPhraseRequest = async (id: uuid) =>
+	(
+		await supabase
 			.from('phrase_request')
 			.select(
 				`*,
 				requester:public_profile!phrase_request_requester_uid_fkey(*),
-				phrases:phrase(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
+				phrases:meta_phrase_info!request_id_fkey(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
 				`
 			)
 			.eq('id', id)
 			.single()
-		if (error) throw error
-		return data
-	},
+			.throwOnError()
+	)?.data
+
+export type PhraseRequestFull = Awaited<
+	ReturnType<typeof getOneFullPhraseRequest>
+>
+
+const phraseRequestQuery = (id: string) => ({
+	queryKey: ['phrase_request', id],
+	queryFn: async () => await getOneFullPhraseRequest(id),
 })
+
+type FulfillRequestResponse = {
+	phrase: PhraseRow
+	translation: TranslationRow
+}
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -80,11 +92,6 @@ const FulfillRequestSchema = z.object({
 })
 
 type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
-
-type FulfillRequestResponse = {
-	phrase: PhraseRow
-	translation: TranslationRow
-}
 
 function FulfillRequestPage() {
 	const { id } = Route.useParams()
