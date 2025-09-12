@@ -20,7 +20,7 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
 		.from('language_plus')
 		.select(
-			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*))`
+			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))`
 		)
 		.eq('lang', lang)
 		.maybeSingle()

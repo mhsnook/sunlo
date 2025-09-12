@@ -31,7 +31,12 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
-import type { LanguageLoaded, PhraseFull } from '@/types/main'
+import type {
+	LanguageLoaded,
+	PhraseFull,
+	PublicProfile,
+	Tag,
+} from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import { avatarUrlify } from '@/lib/utils'
@@ -42,6 +47,12 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import {
+	type FulfillRequestResponse,
+	type PhraseRequestFull,
+	phraseRequestQuery,
+} from '@/lib/use-requests'
+import { useProfile } from '@/lib/use-profile'
 import { Blockquote } from '@/components/ui/blockquote'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
@@ -68,6 +79,7 @@ function FulfillRequestPage() {
 		error,
 		isPending,
 	} = useSuspenseQuery(phraseRequestQuery(id))
+	const { data: profile } = useProfile()
 
 	const form = useForm<FulfillRequestFormInputs>({
 		resolver: zodResolver(FulfillRequestSchema),
@@ -104,63 +116,60 @@ function FulfillRequestPage() {
 				translation_text: '',
 				translation_lang: variables.translation_lang,
 			})
+			const { phrase, translation } = data
+			const newPhrase: PhraseFull = {
+				id: phrase.id,
+				text: phrase.text,
+				lang: phrase.lang,
+				created_at: phrase.created_at,
+				avg_difficulty: null,
+				avg_stability: null,
+				count_active: 0,
+				count_cards: 0,
+				count_learned: 0,
+				count_skipped: 0,
+				percent_active: 0,
+				percent_learned: 0,
+				percent_skipped: 0,
+				rank_least_difficult: null,
+				rank_least_skipped: null,
+				rank_most_learned: null,
+				rank_most_stable: null,
+				rank_newest: null,
+				request_id: id,
+				added_by: phrase.added_by,
+				added_by_profile: {
+					uid: profile!.uid,
+					username: profile!.username,
+					avatar_path: profile!.avatar_path,
+					avatarUrl: avatarUrlify(profile!.avatar_path),
+				} as PublicProfile,
+				translations: [translation],
+				tags: [] as Tag[],
+			}
+
+			const newRequest: PhraseRequestFull = {
+				...request,
+				phrases: [newPhrase],
+				status: 'fulfilled',
+			}
 
 			// Optimistically update the request data
+			queryClient.setQueryData(phraseRequestQuery(id).queryKey, newRequest)
+
 			queryClient.setQueryData(
-				phraseRequestQuery(id).queryKey,
-				(oldData: any) => {
-					if (!oldData) return oldData
-
-					const { phrase, translation } = data
-					const newPhrase = {
-						...phrase,
-						translations: [translation],
-					}
-
-					return {
-						...oldData,
-						status: 'fulfilled',
-						phrases: [...(oldData.phrases || []), newPhrase],
-					}
-				}
-			)
-
-			const lang = request!.lang
-			queryClient.setQueryData(
-				['language', lang],
+				['language', newPhrase.lang],
 				(oldData: LanguageLoaded | undefined) => {
-					if (!oldData) return oldData
-
-					const { phrase, translation } = data
-
-					const newPhrase: PhraseFull = {
-						id: phrase.id,
-						text: phrase.text,
-						lang: phrase.lang,
-						created_at: phrase.created_at,
-						translations: [translation],
-						tags: [],
-						avg_difficulty: null,
-						avg_stability: null,
-						count_active: 0,
-						count_cards: 0,
-						count_learned: 0,
-						count_skipped: 0,
-						percent_active: 0,
-						percent_learned: 0,
-						percent_skipped: 0,
-						rank_least_difficult: null,
-						rank_least_skipped: null,
-						rank_most_learned: null,
-						rank_most_stable: null,
-						rank_newest: null,
+					const prevData = oldData ?? {
+						pids: [],
+						phrasesMap: {},
 					}
 
 					return {
-						...oldData,
-						pids: [...oldData.pids, phrase.id],
+						...prevData,
+						pids: [...prevData.pids, phrase.id],
 						phrasesMap: {
-							...oldData.phrasesMap,
+							...prevData.phrasesMap,
 							[phrase.id]: newPhrase,
 						},
 					}

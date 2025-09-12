@@ -92,6 +92,7 @@ export const publicProfileQuery = (uid: uuid | null) =>
 					({
 						uid: data.uid!,
 						username: data.username ?? '',
+						avatar_path: data.avatar_path ?? '',
 						avatarUrl: avatarUrlify(data.avatar_path),
 					} as PublicProfile | null)
 				)

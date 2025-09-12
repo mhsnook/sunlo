@@ -149,7 +149,8 @@ export type RelationInsert = TablesInsert<'phrase_relation'>
 export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
-	tags?: Array<Tag> | null
+	added_by_profile: PublicProfile
+	tags?: Array<Tag>
 }
 export type PhraseFiltered = PhraseFull & {
 	translations_mine?: Array<TranslationRow>
@@ -240,11 +241,10 @@ type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids
 }
 
-export type PublicProfile = NonNullableFields<
-	Omit<Tables<'public_profile'>, 'avatar_path'> & {
-		avatarUrl: string
-	}
->
+export type PublicProfile = Tables<'public_profile'> & {
+	avatarUrl?: string
+}
+
 export type ProfileRow = Tables<'user_profile'> & {
 	languages_known: LanguageKnown[]
 }
