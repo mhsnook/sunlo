@@ -54,6 +54,8 @@ import {
 } from '@/lib/use-requests'
 import { useProfile } from '@/lib/use-profile'
 import { Blockquote } from '@/components/ui/blockquote'
+import Callout from '@/components/ui/callout'
+import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -183,7 +185,17 @@ function FulfillRequestPage() {
 
 	if (isPending) return <Loader />
 	if (error) return <ShowError>{error.message}</ShowError>
-	if (!request) return <p>Request not found.</p>
+	if (!request)
+		return (
+			<Callout variant="problem" Icon={DestructiveOctagon}>
+				<h1 className="h3">404 request not found</h1>
+				<p>
+					We're sorry, we could not locate that request. You might have typed in
+					the link incorrectly? Or it may have been deleted.
+				</p>
+			</Callout>
+		)
+
 	const noAnswers = request.phrases?.length === 0
 
 	return (

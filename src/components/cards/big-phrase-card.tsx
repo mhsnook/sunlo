@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronsUpDown, OctagonMinus, Pencil, X, Loader } from 'lucide-react'
+import { ChevronsUpDown, Pencil, X, Loader } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 import { cn } from '@/lib/utils'
+import { DestructiveOctagon } from '../ui/destructive-octagon-badge'
 
 export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 	const [isTagEditing, setIsTagEditing] = useState(false)
@@ -180,12 +181,6 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 		</div>
 	)
 }
-
-const DestructiveOctagon = () => (
-	<Badge variant="destructive" className="p-2">
-		<OctagonMinus />
-	</Badge>
-)
 
 function PhraseNotFound() {
 	return (
