@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import {
 	useSuspenseQuery,
 	useMutation,
@@ -42,7 +42,7 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { FulfillRequestResponse, phraseRequestQuery } from '@/lib/use-requests'
+import { Blockquote } from '@/components/ui/blockquote'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -125,7 +125,7 @@ function FulfillRequestPage() {
 				}
 			)
 
-			const lang = request.lang
+			const lang = request!.lang
 			queryClient.setQueryData(
 				['language', lang],
 				(oldData: LanguageLoaded | undefined) => {
@@ -175,6 +175,7 @@ function FulfillRequestPage() {
 	if (isPending) return <Loader />
 	if (error) return <ShowError>{error.message}</ShowError>
 	if (!request) return <p>Request not found.</p>
+	const noAnswers = request.phrases?.length === 0
 
 	return (
 		<main className="w-app space-y-6">
@@ -183,19 +184,20 @@ function FulfillRequestPage() {
 					<CardTitle>
 						{request.status !== 'fulfilled' && <>Help with a</>} Phrase Request
 					</CardTitle>
-					<CardDescription className="text-base/9">
-						New phrase request made {ago(request.created_at)} by{' '}
+					<CardDescription className="text-base/7">
+						Request from{' '}
 						<UserPermalink
 							uid={request.requester_uid}
 							username={request.requester?.username}
 							avatarUrl={avatarUrlify(request.requester?.avatar_path)}
+							className="px-1"
 						/>
+						{' • '}
+						{ago(request.created_at)}
 					</CardDescription>
 				</CardHeader>
 				<CardContent>
-					<blockquote className="border-primary/50 bg-primary/10 mb-4 border-l-4 p-4 italic">
-						"{request.prompt}"
-					</blockquote>
+					<Blockquote>&rdquo;{request.prompt}&ldquo;</Blockquote>
 
 					{request.phrases && request.phrases.length > 0 && (
 						<div className="mb-6 space-y-4">
@@ -206,15 +208,22 @@ function FulfillRequestPage() {
 							{request.phrases.map((phrase: any) => (
 								<div key={phrase.id} className="rounded-lg p-4 shadow">
 									<p className="text-muted-foreground mb-2 text-sm">
-										Added by{' '}
 										<UserPermalink
 											uid={phrase.added_by}
 											username={phrase.added_by_profile?.username}
 											avatarUrl={avatarUrlify(
 												phrase.added_by_profile?.avatar_path
 											)}
-										/>{' '}
-										<>{ago(phrase.created_at)}</>
+											className="px-1"
+										/>
+										{' • '}
+										<Link
+											to="/learn/$lang/$id"
+											params={{ lang: phrase.lang, id: phrase.id }}
+											className="s-link-hidden"
+										>
+											{ago(phrase.created_at)}
+										</Link>
 									</p>
 									<CardResultSimple phrase={phrase} />
 								</div>
@@ -222,12 +231,15 @@ function FulfillRequestPage() {
 						</div>
 					)}
 
-					<Collapsible open={isAnswering} onOpenChange={setIsAnswering}>
-						<CollapsibleTrigger asChild>
+					<Collapsible
+						open={isAnswering || noAnswers}
+						onOpenChange={setIsAnswering}
+					>
+						<CollapsibleTrigger asChild className={noAnswers ? 'hidden' : ''}>
 							<Button variant="outline">
 								{request.phrases?.length > 0 ?
-									'Add an alternative answer'
-								:	'Add an answer'}
+									'Submit another answer'
+								:	'Answer this request'}
 							</Button>
 						</CollapsibleTrigger>
 						<CollapsibleContent className="mt-4 rounded px-4 pt-4 pb-4 shadow">
@@ -256,7 +268,7 @@ function FulfillRequestPage() {
 											</FormItem>
 										)}
 									/>
-									<div className="grid grid-rows-2 gap-4">
+									<div className="mb-8 grid gap-4">
 										<FormField
 											control={form.control}
 											name="translation_text"
@@ -286,6 +298,7 @@ function FulfillRequestPage() {
 										</Button>
 										<Button
 											variant="secondary"
+											className={noAnswers ? 'hidden' : ''}
 											onClick={() => setIsAnswering(false)}
 										>
 											Cancel

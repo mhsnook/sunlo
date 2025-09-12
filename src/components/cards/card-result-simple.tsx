@@ -7,9 +7,12 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 	if (!phrase.id || !phrase.lang) return null
 
 	return (
-		<div className="bg-card rounded-lg border p-4">
+		<div className="bg-card space-y-4 rounded-lg border p-4">
 			<div className="flex items-center justify-between">
-				<h4 className="font-semibold">&ldquo;{phrase.text}&rdquo;</h4>
+				<h4 className="inline-flex gap-2 align-baseline font-semibold">
+					<LangBadge lang={phrase.lang} /> &ldquo;{phrase.text}&rdquo;
+				</h4>
+
 				<div className="space-x-2">
 					<PermalinkButton
 						to="/learn/$lang/$id"
