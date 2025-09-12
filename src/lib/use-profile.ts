@@ -25,7 +25,7 @@ export const profileQuery = (userId: uuid | null) =>
 				.maybeSingle()
 				.throwOnError()
 			if (data === null) return null
-			const { decks_array, avatar_path, ...profile } = data
+			const { decks_array, ...profile } = data
 			const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
 			const deckLanguages: Array<string> = decks_array
 				.map((d) => d.lang)
@@ -38,7 +38,8 @@ export const profileQuery = (userId: uuid | null) =>
 				...profile,
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
-				avatarUrl: avatarUrlify(avatar_path),
+				avatar_path: profile.avatar_path ?? '',
+				avatarUrl: avatarUrlify(profile.avatar_path),
 				languagesToShow,
 				languages_known: languages_known as LanguageKnown[],
 				decksMap,

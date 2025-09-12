@@ -4,9 +4,9 @@ import { useAuth } from '@/lib/hooks'
 import { PhraseRow, TranslationRow, uuid } from '@/types/main'
 
 const phraseRequestFragment = `*,
-				requester:public_profile!phrase_request_requester_uid_fkey(*),
-				phrases:meta_phrase_info(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
-				` as const
+	requester:public_profile!phrase_request_requester_uid_fkey(*),
+	phrases:meta_phrase_info(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
+` as const
 
 export function useAllMyPhraseRequests(lang: string) {
 	const { userId } = useAuth()

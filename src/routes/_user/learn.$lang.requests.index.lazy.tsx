@@ -18,7 +18,7 @@ export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 
 function Page() {
 	const { lang } = Route.useParams()
-	const { data: requests, isLoading } = useAllMyPhraseRequests(lang)
+	const { data: requests, isPending } = useAllMyPhraseRequests(lang)
 
 	return (
 		<Card>
@@ -45,7 +45,7 @@ function Page() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				{isLoading ?
+				{isPending ?
 					<p>Loading requests...</p>
 				: !requests || requests.length === 0 ?
 					<>

@@ -27,6 +27,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
 import { PhraseRequest } from '@/types/main'
+import { useProfile } from '@/lib/use-profile'
+import { PhraseRequestFull } from '@/lib/use-requests'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests/new')({
 	component: Page,
@@ -50,6 +52,7 @@ function Page() {
 	const { userId } = useAuth()
 	const queryClient = useQueryClient()
 	const navigate = useNavigate()
+	const { data: profile } = useProfile()
 
 	const form = useForm<RequestPhraseFormInputs>({
 		resolver: zodResolver(RequestPhraseSchema),
@@ -59,7 +62,7 @@ function Page() {
 	})
 
 	const createRequestMutation = useMutation<
-		unknown,
+		PhraseRequest,
 		PostgrestError,
 		RequestPhraseFormInputs
 	>({
@@ -79,9 +82,19 @@ function Page() {
 		},
 		onSuccess: (data) => {
 			toast.success('Your request has been created!')
+			const newRequest: PhraseRequestFull = {
+				...data,
+				phrases: [],
+				requester: {
+					username: profile!.username,
+					avatar_path: profile!.avatar_path,
+					uid: userId,
+				},
+			}
 			void queryClient.setQueryData(
 				['user', 'phrase_requests', lang],
-				(old: PhraseRequest[] | undefined) => (old ? [data, ...old] : [data])
+				(old: PhraseRequest[] | undefined) =>
+					old ? [newRequest, ...old] : [newRequest]
 			)
 			void navigate({ to: '/learn/$lang/requests', params: { lang } })
 		},
