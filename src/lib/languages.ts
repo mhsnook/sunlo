@@ -205,6 +205,8 @@ const languages: { [key: string]: string } = {
 	zul: 'Zulu',
 } as const
 
+export type LangKey = keyof typeof languages
+
 const allLanguageKeys = Array.from(
 	Object.keys(languages)
 ) as readonly (keyof typeof languages & string)[]

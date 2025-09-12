@@ -19,13 +19,13 @@ import {
 	UserPen,
 	UserPlus,
 } from 'lucide-react'
-import languages from '../lib/languages'
+import languages, { LangKey } from '../lib/languages'
 import { useMemo } from 'react'
 import { LinkType } from '@/types/main'
 import { useParams } from '@tanstack/react-router'
 import { useRelations } from '@/lib/friends'
 
-const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
+const links = (lang?: LangKey): Record<string, LinkType> => ({
 	'/': {
 		name: 'Home',
 		link: {
@@ -77,7 +77,7 @@ const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 	},
 	'/learn': {
 		name: 'Home',
-		title: 'Learning home',
+		title: 'All Decks',
 		Icon: Home,
 		link: {
 			to: '/learn',
@@ -85,7 +85,7 @@ const links = (lang?: keyof typeof languages): Record<string, LinkType> => ({
 	},
 	'/learn/add-deck': {
 		name: 'Deck',
-		title: 'Start a new language',
+		title: 'Start a new Deck',
 		Icon: ClipboardPlus,
 		link: {
 			to: '/learn/add-deck',
