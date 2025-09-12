@@ -894,30 +894,211 @@ from
 
 alter table "public"."language_plus" owner to "postgres";
 
+create table if not exists
+	"public"."phrase_tag" (
+		"phrase_id" "uuid" not null,
+		"tag_id" "uuid" not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."phrase_tag" owner to "postgres";
+
+create table if not exists
+	"public"."user_card" (
+		"uid" "uuid" default "auth"."uid" () not null,
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"phrase_id" "uuid" not null,
+		"updated_at" timestamp with time zone default "now" (),
+		"created_at" timestamp with time zone default "now" (),
+		"status" "public"."card_status" default 'active'::"public"."card_status",
+		"lang" character varying not null
+	);
+
+alter table "public"."user_card" owner to "postgres";
+
+comment on table "public"."user_card" is 'Which card is in which deck, and its status';
+
+comment on column "public"."user_card"."uid" is 'The owner user''s ID';
+
 create or replace view
 	"public"."meta_phrase_info" as
+with
+	"recent_review" as (
+		select
+			"r1"."id",
+			"r1"."uid",
+			"r1"."phrase_id",
+			"r1"."lang",
+			"r1"."score",
+			"r1"."difficulty",
+			"r1"."stability",
+			"r1"."review_time_retrievability",
+			"r1"."created_at" as "recentest_review_at",
+			"r1"."updated_at"
+		from
+			(
+				"public"."user_card_review" "r1"
+				left join "public"."user_card_review" "r2" on (
+					(
+						("r1"."uid" = "r2"."uid")
+						and ("r1"."phrase_id" = "r2"."phrase_id")
+						and ("r1"."created_at" < "r2"."created_at")
+					)
+				)
+			)
+		where
+			("r2"."created_at" is null)
+	),
+	"card_with_recentest_review" as (
+		select distinct
+			"c"."phrase_id",
+			"c"."status",
+			"r"."difficulty",
+			"r"."stability",
+			"r"."recentest_review_at"
+		from
+			(
+				"public"."user_card" "c"
+				join "recent_review" "r" on (
+					(
+						("c"."phrase_id" = "r"."phrase_id")
+						and ("c"."uid" = "r"."uid")
+					)
+				)
+			)
+	),
+	"results" as (
+		select
+			"p"."id",
+			"p"."created_at",
+			"p"."added_by",
+			"p"."request_id",
+			"p"."lang",
+			"p"."text",
+			"avg" ("c"."difficulty") as "avg_difficulty",
+			"avg" ("c"."stability") as "avg_stability",
+			"count" (distinct "c"."phrase_id") as "count_cards",
+			"sum" (
+				case
+					when ("c"."status" = 'active'::"public"."card_status") then 1
+					else 0
+				end
+			) as "count_active",
+			"sum" (
+				case
+					when ("c"."status" = 'learned'::"public"."card_status") then 1
+					else 0
+				end
+			) as "count_learned",
+			"sum" (
+				case
+					when ("c"."status" = 'skipped'::"public"."card_status") then 1
+					else 0
+				end
+			) as "count_skipped",
+			"json_agg" (
+				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
+			) filter (
+				where
+					("t"."id" is not null)
+			) as "tags"
+		from
+			(
+				(
+					(
+						"public"."phrase" "p"
+						left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
+					)
+					left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
+				)
+				left join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
+			)
+		group by
+			"p"."id",
+			"p"."lang",
+			"p"."text",
+			"p"."created_at",
+			"p"."added_by",
+			"p"."request_id"
+	)
 select
-	null::"uuid" as "id",
-	null::"uuid" as "added_by",
-	null::"uuid" as "request_id",
-	null::timestamp with time zone as "created_at",
-	null::character varying as "lang",
-	null::"text" as "text",
-	null::numeric as "avg_difficulty",
-	null::numeric as "avg_stability",
-	null::bigint as "count_cards",
-	null::bigint as "count_active",
-	null::bigint as "count_learned",
-	null::bigint as "count_skipped",
-	null::numeric as "percent_active",
-	null::numeric as "percent_learned",
-	null::numeric as "percent_skipped",
-	null::bigint as "rank_least_difficult",
-	null::bigint as "rank_most_stable",
-	null::bigint as "rank_least_skipped",
-	null::bigint as "rank_most_learned",
-	null::bigint as "rank_newest",
-	null::"json" as "tags";
+	"results"."id",
+	"results"."added_by",
+	"results"."request_id",
+	"results"."created_at",
+	"results"."lang",
+	"results"."text",
+	"results"."avg_difficulty",
+	"results"."avg_stability",
+	"results"."count_cards",
+	"results"."count_active",
+	"results"."count_learned",
+	"results"."count_skipped",
+	case
+		when ("results"."count_cards" = 0) then null::numeric
+		else "round" (
+			(("results"."count_active" / "results"."count_cards"))::numeric,
+			2
+		)
+	end as "percent_active",
+	case
+		when ("results"."count_cards" = 0) then null::numeric
+		else "round" (
+			(("results"."count_learned" / "results"."count_cards"))::numeric,
+			2
+		)
+	end as "percent_learned",
+	case
+		when ("results"."count_cards" = 0) then null::numeric
+		else "round" (
+			(("results"."count_skipped" / "results"."count_cards"))::numeric,
+			2
+		)
+	end as "percent_skipped",
+	"rank" () over (
+		partition by
+			"results"."lang"
+		order by
+			"results"."avg_difficulty"
+	) as "rank_least_difficult",
+	"rank" () over (
+		partition by
+			"results"."lang"
+		order by
+			"results"."avg_stability" desc nulls last
+	) as "rank_most_stable",
+	"rank" () over (
+		partition by
+			"results"."lang"
+		order by
+			case
+				when ("results"."count_cards" > 0) then (
+					("results"."count_skipped")::numeric / ("results"."count_cards")::numeric
+				)
+				else null::numeric
+			end
+	) as "rank_least_skipped",
+	"rank" () over (
+		partition by
+			"results"."lang"
+		order by
+			case
+				when ("results"."count_cards" > 0) then (
+					("results"."count_learned")::numeric / ("results"."count_cards")::numeric
+				)
+				else null::numeric
+			end desc nulls last
+	) as "rank_most_learned",
+	"rank" () over (
+		partition by
+			"results"."lang"
+		order by
+			"results"."created_at" desc
+	) as "rank_newest",
+	"results"."tags"
+from
+	"results";
 
 alter table "public"."meta_phrase_info" owner to "postgres";
 
@@ -945,16 +1126,6 @@ create table if not exists
 	);
 
 alter table "public"."phrase_request" owner to "postgres";
-
-create table if not exists
-	"public"."phrase_tag" (
-		"phrase_id" "uuid" not null,
-		"tag_id" "uuid" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."phrase_tag" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_translation" (
@@ -1001,23 +1172,6 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
-
-create table if not exists
-	"public"."user_card" (
-		"uid" "uuid" default "auth"."uid" () not null,
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"phrase_id" "uuid" not null,
-		"updated_at" timestamp with time zone default "now" (),
-		"created_at" timestamp with time zone default "now" (),
-		"status" "public"."card_status" default 'active'::"public"."card_status",
-		"lang" character varying not null
-	);
-
-alter table "public"."user_card" owner to "postgres";
-
-comment on table "public"."user_card" is 'Which card is in which deck, and its status';
-
-comment on column "public"."user_card"."uid" is 'The owner user''s ID';
 
 create or replace view
 	"public"."user_card_plus"
@@ -1317,185 +1471,6 @@ create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "ph
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
-
-create or replace view
-	"public"."meta_phrase_info" as
-with
-	"recent_review" as (
-		select
-			"r1"."id",
-			"r1"."uid",
-			"r1"."phrase_id",
-			"r1"."lang",
-			"r1"."score",
-			"r1"."difficulty",
-			"r1"."stability",
-			"r1"."review_time_retrievability",
-			"r1"."created_at" as "recentest_review_at",
-			"r1"."updated_at"
-		from
-			(
-				"public"."user_card_review" "r1"
-				left join "public"."user_card_review" "r2" on (
-					(
-						("r1"."uid" = "r2"."uid")
-						and ("r1"."phrase_id" = "r2"."phrase_id")
-						and ("r1"."created_at" < "r2"."created_at")
-					)
-				)
-			)
-		where
-			("r2"."created_at" is null)
-	),
-	"card_with_recentest_review" as (
-		select distinct
-			"c"."phrase_id",
-			"c"."status",
-			"r"."difficulty",
-			"r"."stability",
-			"r"."recentest_review_at"
-		from
-			(
-				"public"."user_card" "c"
-				join "recent_review" "r" on (
-					(
-						("c"."phrase_id" = "r"."phrase_id")
-						and ("c"."uid" = "r"."uid")
-					)
-				)
-			)
-	),
-	"results" as (
-		select
-			"p"."id",
-			"p"."created_at",
-			"p"."added_by",
-			"p"."request_id",
-			"p"."lang",
-			"p"."text",
-			"avg" ("c"."difficulty") as "avg_difficulty",
-			"avg" ("c"."stability") as "avg_stability",
-			"count" (distinct "c"."phrase_id") as "count_cards",
-			"sum" (
-				case
-					when ("c"."status" = 'active'::"public"."card_status") then 1
-					else 0
-				end
-			) as "count_active",
-			"sum" (
-				case
-					when ("c"."status" = 'learned'::"public"."card_status") then 1
-					else 0
-				end
-			) as "count_learned",
-			"sum" (
-				case
-					when ("c"."status" = 'skipped'::"public"."card_status") then 1
-					else 0
-				end
-			) as "count_skipped",
-			"json_agg" (
-				distinct "jsonb_build_object" ('id', "t"."id", 'name', "t"."name")
-			) filter (
-				where
-					("t"."id" is not null)
-			) as "tags"
-		from
-			(
-				(
-					(
-						"public"."phrase" "p"
-						left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
-					)
-					left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
-				)
-				left join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
-			)
-		group by
-			"p"."id",
-			"p"."lang",
-			"p"."text",
-			"p"."created_at",
-			"p"."added_by",
-			"p"."request_id"
-	)
-select
-	"results"."id",
-	"results"."added_by",
-	"results"."request_id",
-	"results"."created_at",
-	"results"."lang",
-	"results"."text",
-	"results"."avg_difficulty",
-	"results"."avg_stability",
-	"results"."count_cards",
-	"results"."count_active",
-	"results"."count_learned",
-	"results"."count_skipped",
-	case
-		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_active" / "results"."count_cards"))::numeric,
-			2
-		)
-	end as "percent_active",
-	case
-		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_learned" / "results"."count_cards"))::numeric,
-			2
-		)
-	end as "percent_learned",
-	case
-		when ("results"."count_cards" = 0) then null::numeric
-		else "round" (
-			(("results"."count_skipped" / "results"."count_cards"))::numeric,
-			2
-		)
-	end as "percent_skipped",
-	"rank" () over (
-		partition by
-			"results"."lang"
-		order by
-			"results"."avg_difficulty"
-	) as "rank_least_difficult",
-	"rank" () over (
-		partition by
-			"results"."lang"
-		order by
-			"results"."avg_stability" desc nulls last
-	) as "rank_most_stable",
-	"rank" () over (
-		partition by
-			"results"."lang"
-		order by
-			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_skipped")::numeric / ("results"."count_cards")::numeric
-				)
-				else null::numeric
-			end
-	) as "rank_least_skipped",
-	"rank" () over (
-		partition by
-			"results"."lang"
-		order by
-			case
-				when ("results"."count_cards" > 0) then (
-					("results"."count_learned")::numeric / ("results"."count_cards")::numeric
-				)
-				else null::numeric
-			end desc nulls last
-	) as "rank_most_learned",
-	"rank" () over (
-		partition by
-			"results"."lang"
-		order by
-			"results"."created_at" desc
-	) as "rank_newest",
-	"results"."tags"
-from
-	"results";
 
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
@@ -2150,6 +2125,18 @@ grant all on table "public"."language_plus" to "authenticated";
 
 grant all on table "public"."language_plus" to "service_role";
 
+grant all on table "public"."phrase_tag" to "anon";
+
+grant all on table "public"."phrase_tag" to "authenticated";
+
+grant all on table "public"."phrase_tag" to "service_role";
+
+grant all on table "public"."user_card" to "anon";
+
+grant all on table "public"."user_card" to "authenticated";
+
+grant all on table "public"."user_card" to "service_role";
+
 grant all on table "public"."meta_phrase_info" to "anon";
 
 grant all on table "public"."meta_phrase_info" to "authenticated";
@@ -2168,12 +2155,6 @@ grant all on table "public"."phrase_request" to "authenticated";
 
 grant all on table "public"."phrase_request" to "service_role";
 
-grant all on table "public"."phrase_tag" to "anon";
-
-grant all on table "public"."phrase_tag" to "authenticated";
-
-grant all on table "public"."phrase_tag" to "service_role";
-
 grant all on table "public"."phrase_translation" to "anon";
 
 grant all on table "public"."phrase_translation" to "authenticated";
@@ -2191,12 +2172,6 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
-
-grant all on table "public"."user_card" to "anon";
-
-grant all on table "public"."user_card" to "authenticated";
-
-grant all on table "public"."user_card" to "service_role";
 
 grant all on table "public"."user_card_plus" to "anon";
 
