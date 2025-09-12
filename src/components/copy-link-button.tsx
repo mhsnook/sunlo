@@ -4,6 +4,21 @@ import toast from 'react-hot-toast'
 import { ButtonProps } from '@/components/ui/button-variants'
 import { useCallback } from 'react'
 
+export function copyLink(url?: string, fallback = true) {
+	if (!navigator?.clipboard) toast.error('Failed to copy link')
+	if (!fallback && !url) {
+		throw new Error('No url to copy')
+	} else
+		navigator.clipboard
+			.writeText(url ?? window?.location?.href)
+			.then(() => {
+				toast.success('Link copied to clipboard')
+			})
+			.catch(() => {
+				toast.error('Failed to copy link')
+			})
+}
+
 export default function CopyLinkButton({
 	url,
 	text = 'Copy link',
@@ -20,23 +35,10 @@ export default function CopyLinkButton({
 	className?: string
 	collapse?: boolean
 } & ButtonProps) {
-	const copyLink = useCallback(() => {
-		// @TODO this is not working on my laptop (anymore) idk why
-		if (!navigator?.clipboard) toast.error('Failed to copy link')
-		else
-			navigator.clipboard
-				.writeText(url || window?.location?.href)
-				.then(() => {
-					toast.success('Link copied to clipboard')
-				})
-				.catch(() => {
-					toast.error('Failed to copy link')
-				})
-	}, [url])
-
+	const copy = useCallback(() => copyLink(url), [url])
 	return (
 		<Button
-			onClick={copyLink}
+			onClick={copy}
 			variant={variant}
 			size={size}
 			className={className}
