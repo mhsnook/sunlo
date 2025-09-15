@@ -5,7 +5,7 @@ import { PhraseRow, TranslationRow, uuid } from '@/types/main'
 
 const phraseRequestFragment = `*,
 	requester:public_profile!phrase_request_requester_uid_fkey(*),
-	phrases:meta_phrase_info(*, translations:phrase_translation(*), added_by_profile:public_profile!phrase_added_by_fkey(*))
+	phrases:meta_phrase_info(*, translations:phrase_translation(*))
 ` as const
 
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>

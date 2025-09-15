@@ -905,6 +905,32 @@ create table if not exists
 alter table "public"."phrase_tag" owner to "postgres";
 
 create table if not exists
+	"public"."user_profile" (
+		"uid" "uuid" default "auth"."uid" () not null,
+		"username" "text",
+		"updated_at" timestamp with time zone,
+		"created_at" timestamp with time zone default "now" () not null,
+		"avatar_path" "text",
+		"languages_known" "jsonb" default '[]'::"jsonb" not null,
+		constraint "username_length" check (("char_length" ("username") >= 3))
+	);
+
+alter table "public"."user_profile" owner to "postgres";
+
+comment on column "public"."user_profile"."uid" is 'Primary key (same as auth.users.id and uid())';
+
+create or replace view
+	"public"."public_profile" as
+select
+	"user_profile"."uid",
+	"user_profile"."username",
+	"user_profile"."avatar_path"
+from
+	"public"."user_profile";
+
+alter table "public"."public_profile" owner to "postgres";
+
+create table if not exists
 	"public"."user_card" (
 		"uid" "uuid" default "auth"."uid" () not null,
 		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -977,6 +1003,14 @@ with
 			"p"."lang",
 			"p"."text",
 			"avg" ("c"."difficulty") as "avg_difficulty",
+			"jsonb_build_object" (
+				'uid',
+				"pp"."uid",
+				'username',
+				"pp"."username",
+				'avatar_path',
+				"pp"."avatar_path"
+			) as "added_by_profile",
 			"avg" ("c"."stability") as "avg_stability",
 			"count" (distinct "c"."phrase_id") as "count_cards",
 			"sum" (
@@ -1007,14 +1041,20 @@ with
 			(
 				(
 					(
-						"public"."phrase" "p"
-						left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
+						(
+							"public"."phrase" "p"
+							left join "card_with_recentest_review" "c" on (("c"."phrase_id" = "p"."id"))
+						)
+						left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
 					)
-					left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
+					left join "public"."public_profile" "pp" on (("p"."added_by" = "pp"."uid"))
 				)
 				left join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
 			)
 		group by
+			"pp"."uid",
+			"pp"."username",
+			"pp"."avatar_path",
 			"p"."id",
 			"p"."lang",
 			"p"."text",
@@ -1029,6 +1069,7 @@ select
 	"results"."created_at",
 	"results"."lang",
 	"results"."text",
+	"results"."added_by_profile",
 	"results"."avg_difficulty",
 	"results"."avg_stability",
 	"results"."count_cards",
@@ -1146,32 +1187,6 @@ comment on table "public"."phrase_translation" is 'A translation of one phrase i
 comment on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-create table if not exists
-	"public"."user_profile" (
-		"uid" "uuid" default "auth"."uid" () not null,
-		"username" "text",
-		"updated_at" timestamp with time zone,
-		"created_at" timestamp with time zone default "now" () not null,
-		"avatar_path" "text",
-		"languages_known" "jsonb" default '[]'::"jsonb" not null,
-		constraint "username_length" check (("char_length" ("username") >= 3))
-	);
-
-alter table "public"."user_profile" owner to "postgres";
-
-comment on column "public"."user_profile"."uid" is 'Primary key (same as auth.users.id and uid())';
-
-create or replace view
-	"public"."public_profile" as
-select
-	"user_profile"."uid",
-	"user_profile"."username",
-	"user_profile"."avatar_path"
-from
-	"public"."user_profile";
-
-alter table "public"."public_profile" owner to "postgres";
 
 create or replace view
 	"public"."user_card_plus"
@@ -2131,6 +2146,18 @@ grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
 
+grant all on table "public"."user_profile" to "anon";
+
+grant all on table "public"."user_profile" to "authenticated";
+
+grant all on table "public"."user_profile" to "service_role";
+
+grant all on table "public"."public_profile" to "anon";
+
+grant all on table "public"."public_profile" to "authenticated";
+
+grant all on table "public"."public_profile" to "service_role";
+
 grant all on table "public"."user_card" to "anon";
 
 grant all on table "public"."user_card" to "authenticated";
@@ -2160,18 +2187,6 @@ grant all on table "public"."phrase_translation" to "anon";
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
-
-grant all on table "public"."user_profile" to "anon";
-
-grant all on table "public"."user_profile" to "authenticated";
-
-grant all on table "public"."user_profile" to "service_role";
-
-grant all on table "public"."public_profile" to "anon";
-
-grant all on table "public"."public_profile" to "authenticated";
-
-grant all on table "public"."public_profile" to "service_role";
 
 grant all on table "public"."user_card_plus" to "anon";
 
