@@ -281,6 +281,13 @@ export type Database = {
             foreignKeyName: "phrase_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
+            referencedRelation: "meta_phrase_request"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
             referencedRelation: "phrase_request"
             referencedColumns: ["id"]
           },
@@ -1047,6 +1054,7 @@ export type Database = {
       meta_phrase_info: {
         Row: {
           added_by: string | null
+          added_by_profile: Json | null
           avg_difficulty: number | null
           avg_stability: number | null
           count_active: number | null
@@ -1101,8 +1109,58 @@ export type Database = {
             foreignKeyName: "phrase_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
+            referencedRelation: "meta_phrase_request"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "phrase_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
             referencedRelation: "phrase_request"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_phrase_request: {
+        Row: {
+          created_at: string | null
+          fulfilled_at: string | null
+          id: string | null
+          lang: string | null
+          phrases: Json | null
+          prompt: string | null
+          requester: Json | null
+          requester_uid: string | null
+          status: Database["public"]["Enums"]["phrase_request_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "phrase_request_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_lang_fkey"
+            columns: ["lang"]
+            isOneToOne: false
+            referencedRelation: "language_plus"
+            referencedColumns: ["lang"]
+          },
+          {
+            foreignKeyName: "phrase_request_requester_uid_fkey"
+            columns: ["requester_uid"]
+            isOneToOne: false
+            referencedRelation: "public_profile"
+            referencedColumns: ["uid"]
+          },
+          {
+            foreignKeyName: "phrase_request_requester_uid_fkey"
+            columns: ["requester_uid"]
+            isOneToOne: false
+            referencedRelation: "user_profile"
+            referencedColumns: ["uid"]
           },
         ]
       }

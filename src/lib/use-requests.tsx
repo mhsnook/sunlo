@@ -3,18 +3,13 @@ import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { PhraseRow, TranslationRow, uuid } from '@/types/main'
 
-const phraseRequestFragment = `*,
-	requester:public_profile!phrase_request_requester_uid_fkey(*),
-	phrases:meta_phrase_info(*, translations:phrase_translation(*))
-` as const
-
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 	queryOptions({
 		queryKey: ['user', 'phrase_requests', lang],
 		queryFn: async ({ client }) => {
 			const { data } = await supabase
-				.from('phrase_request')
-				.select(phraseRequestFragment)
+				.from('meta_phrase_request')
+				.select()
 				.eq('requester_uid', userId!)
 				.eq('lang', lang)
 				.order('created_at', { ascending: false })
@@ -47,8 +42,8 @@ export async function getOneFullPhraseRequest(id: uuid) {
 	// @TODO would like to check the "my requests" cache but it is language-specific
 	// and we don't have a language here 🙄
 	const { data } = await supabase
-		.from('phrase_request')
-		.select(phraseRequestFragment)
+		.from('meta_phrase_request')
+		.select()
 		.eq('id', id)
 		.maybeSingle()
 		.throwOnError()
