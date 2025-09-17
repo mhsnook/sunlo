@@ -152,7 +152,10 @@ function FulfillRequestPage() {
 
 			const newRequest: PhraseRequestFull = {
 				...request,
-				phrases: [newPhrase],
+				phrases:
+					!Array.isArray(request?.phrases) ?
+						[newPhrase]
+					:	[newPhrase, ...request.phrases],
 				status: 'fulfilled',
 			}
 
