@@ -77,14 +77,15 @@ export function MultiSelectCreatable({
 							}}
 						/>
 						<CommandList>
-							<CommandEmpty>
-								{inputValue ?
-									<CommandItem onSelect={handleCreate}>
+							<CommandEmpty>No tags found.</CommandEmpty>
+							{inputValue && (
+								<CommandGroup>
+									<CommandItem onSelect={handleCreate} value={inputValue}>
 										<PlusCircle className="mr-2 h-4 w-4" />
 										Create "{inputValue}"
 									</CommandItem>
-								:	'No tags found.'}
-							</CommandEmpty>
+								</CommandGroup>
+							)}
 							<CommandGroup>
 								{filteredOptions.map((option) => (
 									<CommandItem
