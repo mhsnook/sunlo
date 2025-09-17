@@ -41,12 +41,20 @@ export function useAllMyPhraseRequests(lang: string) {
 export async function getOneFullPhraseRequest(id: uuid) {
 	// @TODO would like to check the "my requests" cache but it is language-specific
 	// and we don't have a language here 🙄
-	const { data } = await supabase
+	let { data } = await supabase
 		.from('meta_phrase_request')
-		.select()
+		.select('*, phrase(*, phrase_translation(*))')
 		.eq('id', id)
 		.maybeSingle()
 		.throwOnError()
+	if (!data) return null
+	if (Array.isArray(data.phrase) && Array.isArray(data.phrases)) {
+		data.phrase.forEach((phrase) => {
+			data.phrases!.find((p) => p.id === phrase.id).translations =
+				phrase.phrase_translation
+		})
+	}
+
 	return data
 }
 
