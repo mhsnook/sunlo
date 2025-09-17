@@ -19,6 +19,7 @@ export type Database = {
           phrase_id: string | null
           recipient_uid: string
           related_message_id: string | null
+          request_id: string | null
           sender_uid: string
         }
         Insert: {
@@ -30,6 +31,7 @@ export type Database = {
           phrase_id?: string | null
           recipient_uid: string
           related_message_id?: string | null
+          request_id?: string | null
           sender_uid?: string
         }
         Update: {
@@ -41,6 +43,7 @@ export type Database = {
           phrase_id?: string | null
           recipient_uid?: string
           related_message_id?: string | null
+          request_id?: string | null
           sender_uid?: string
         }
         Relationships: [
@@ -91,6 +94,20 @@ export type Database = {
             columns: ["related_message_id"]
             isOneToOne: false
             referencedRelation: "chat_message"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "meta_phrase_request"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_message_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "phrase_request"
             referencedColumns: ["id"]
           },
           {
@@ -1452,7 +1469,7 @@ export type Database = {
     }
     Enums: {
       card_status: "active" | "learned" | "skipped"
-      chat_message_type: "recommendation" | "accepted"
+      chat_message_type: "recommendation" | "accepted" | "request"
       friend_request_response:
         | "accept"
         | "decline"

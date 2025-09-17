@@ -13,6 +13,7 @@ import { CardPreview } from '@/components/chat/card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { ago } from '@/lib/dayjs'
+import { RequestPreview } from '@/components/chat/request-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -52,20 +53,18 @@ function ChatPage() {
 		)
 	}
 
+	const relUsername = relation?.profile.username ?? ''
+	const relAvatarUrl = relation?.profile.avatarUrl ?? ''
+
 	return (
 		<Card className="flex h-full flex-col">
 			<CardHeader className="flex flex-row items-center gap-4 border-b p-4">
 				<Avatar>
-					<AvatarImage
-						src={relation.profile.avatarUrl}
-						alt={relation.profile.username}
-					/>
-					<AvatarFallback>
-						{relation.profile.username.charAt(0).toUpperCase()}
-					</AvatarFallback>
+					<AvatarImage src={relAvatarUrl} alt={relUsername} />
+					<AvatarFallback>{relUsername.charAt(0).toUpperCase()}</AvatarFallback>
 				</Avatar>
 				<div className="flex-1">
-					<p className="font-semibold">{relation.profile.username}</p>
+					<p className="font-semibold">{relUsername}</p>
 					<p className="text-muted-foreground text-xs">
 						{relation.status === 'friends' ? 'Friends' : 'Pending'}
 					</p>
@@ -89,12 +88,9 @@ function ChatPage() {
 									>
 										{!isMine && (
 											<Avatar className="my-5 h-8 w-8">
-												<AvatarImage
-													src={relation.profile?.avatarUrl}
-													alt={relation.profile?.username}
-												/>
+												<AvatarImage src={relAvatarUrl} alt={relUsername} />
 												<AvatarFallback>
-													{relation.profile?.username.charAt(0).toUpperCase()}
+													{relUsername.charAt(0).toUpperCase()}
 												</AvatarFallback>
 											</Avatar>
 										)}
@@ -105,6 +101,13 @@ function ChatPage() {
 											{msg.phrase_id && msg.lang && (
 												<CardPreview
 													pid={msg.phrase_id}
+													lang={msg.lang}
+													isMine={isMine}
+												/>
+											)}
+											{msg.request_id && msg.lang && (
+												<RequestPreview
+													id={msg.request_id}
 													lang={msg.lang}
 													isMine={isMine}
 												/>
@@ -122,11 +125,14 @@ function ChatPage() {
 														Sent a phrase recommendation.
 													</p>
 												)}
+												{msg.message_type === 'request' && (
+													<p className="text-sm italic">Requested a phrase.</p>
+												)}
 												{msg.message_type === 'accepted' && (
 													<div className="text-sm italic">
 														<p>
-															{isMine ? 'You' : relation.profile!.username}{' '}
-															added this to {isMine ? 'your' : 'their'} deck.
+															{isMine ? 'You' : relUsername} added this to{' '}
+															{isMine ? 'your' : 'their'} deck.
 														</p>
 													</div>
 												)}

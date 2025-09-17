@@ -12,31 +12,30 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
 import { useAuth } from '@/lib/hooks'
 import { SelectMultipleFriends } from '@/components/friends/select-multiple-friends'
-import { VariantProps } from 'class-variance-authority'
 
-export function SendPhraseToFriendButton({
-	pid,
+export function SendRequestToFriendDialog({
 	lang,
-	...props
+	id,
+	children,
 }: {
-	pid: uuid
-	lang: string
-} & VariantProps<typeof buttonVariants>) {
+	lang: string | null
+	id: uuid | null
+	children: React.ReactNode
+}) {
 	const { userId } = useAuth()
 	const [uids, setUids] = useState<uuid[]>([])
-	const sendPhraseToFriendMutation = useMutation({
-		mutationKey: ['send-phrae-to-friend', lang, pid],
+	const sendRequestToFriendMutation = useMutation({
+		mutationKey: ['send-request-to-friend', lang, id],
 		mutationFn: async (friendUids: uuid[]) => {
 			if (!userId) throw new Error('User not logged in')
 			const messageInserts = friendUids.map((friendUid) => ({
 				sender_uid: userId,
 				recipient_uid: friendUid,
-				phrase_id: pid,
+				request_id: id,
 				lang,
-				message_type: 'recommendation' as const,
+				message_type: 'request' as const,
 			}))
 			const { data } = await supabase
 				.from('chat_message')
@@ -44,28 +43,26 @@ export function SendPhraseToFriendButton({
 				.throwOnError()
 			return data
 		},
-		onSuccess: () => toast.success('Phrase sent to friend'),
+		onSuccess: () => toast.success('Request sent to friend'),
 		onError: () => toast.error('Something went wrong'),
 	})
 
+	if (!lang || !id) return null
+
 	return (
 		<Dialog>
-			<DialogTrigger asChild>
-				<Button {...props}>
-					<Send /> Send in chat
-				</Button>
-			</DialogTrigger>
+			<DialogTrigger asChild>{children}</DialogTrigger>
 			<DialogContent>
-				<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>
+				<DialogTitle className="h3 font-bold">Share</DialogTitle>
 				<DialogDescription className="sr-only">
-					Select 1 or more friends from the list below to send this phrase to
+					Select 1 or more friends from the list below to send this request to
 					your in-app chat
 				</DialogDescription>
 				<SelectMultipleFriends uids={uids} setUids={setUids} />
 
 				<Button
 					disabled={!uids.length}
-					onClick={() => sendPhraseToFriendMutation.mutate(uids)}
+					onClick={() => sendRequestToFriendMutation.mutate(uids)}
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
 				</Button>
