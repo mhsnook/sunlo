@@ -73,7 +73,7 @@ alter type "public"."card_status" owner to "postgres";
 comment on
 type "public"."card_status" is 'card status is either active, learned or skipped';
 
-create type "public"."chat_message_type" as enum('recommendation', 'accepted');
+create type "public"."chat_message_type" as enum('recommendation', 'accepted', 'request');
 
 alter type "public"."chat_message_type" owner to "postgres";
 

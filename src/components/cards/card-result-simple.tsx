@@ -27,7 +27,7 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 			<ul className="mt-2 space-y-1">
 				{phrase.translations?.map((t) => (
 					<li key={t.id} className="flex items-center gap-2 text-sm">
-						<LangBadge lang={t.lang!} />
+						<LangBadge lang={t.lang} />
 						<span>&ldquo;{t.text}&rdquo;</span>
 					</li>
 				))}

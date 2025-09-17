@@ -75,6 +75,8 @@ export function ChatsSidebar() {
 												{thisChatMessage.isMine ? 'you ' : 'they '}
 												{thisChatMessage.message_type === 'recommendation' ?
 													'sent a recommendation'
+												: thisChatMessage.message_type === 'request' ?
+													'requested a card'
 												:	'accepted your recommendation'}
 											</>
 										:	'No messages yet'}

@@ -19,7 +19,7 @@ import SharePhraseButton from '@/components/share-phrase-button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { SendPhraseToFriendButton } from '@/components/friends/send-phrase-to-friend-button'
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '../ui/destructive-octagon-badge'
 

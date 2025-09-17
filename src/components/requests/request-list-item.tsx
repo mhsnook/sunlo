@@ -1,11 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import {
-	CheckCircle,
-	Clock,
-	ExternalLink,
-	Heart,
-	MessageSquare,
-} from 'lucide-react'
+import { CheckCircle, Clock, Heart, MessageSquare, Send } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -16,9 +10,12 @@ import CopyLinkButton from '@/components/copy-link-button'
 import { PhraseRequestFull } from '@/lib/use-requests'
 import Flagged from '@/components/flagged'
 import { Blockquote } from '../ui/blockquote'
+import { Button } from '../ui/button'
+import { SendRequestToFriendDialog } from '../friends/send-request-to-friend-dialog'
 
 export function RequestItem({ request }: { request: PhraseRequestFull }) {
 	if (!request) return null
+	const answers = Array.isArray(request.phrases) ? request.phrases : []
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	return (
 		<Card className="group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md">
@@ -65,8 +62,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					>
 						<MessageSquare className="h-4 w-4" />
 						<span>
-							{request.phrases?.length ?? 0}{' '}
-							{request.phrases?.length === 1 ? 'answer' : 'answers'}
+							{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
 						</span>
 					</Link>
 				</div>
@@ -87,13 +83,12 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
-						<Link
-							to="/learn/$lang/requests/$id"
-							params={{ lang: request.lang, id: request.id }}
-							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-						>
-							<ExternalLink className="h-4 w-4" />
-						</Link>
+
+						<SendRequestToFriendDialog lang={request.lang} id={request.id}>
+							<Button title="share in chat" size="icon" variant="ghost">
+								<Send />
+							</Button>
+						</SendRequestToFriendDialog>
 						<Link
 							to="/learn/$lang/requests/$id"
 							params={{ lang: request.lang, id: request.id }}
