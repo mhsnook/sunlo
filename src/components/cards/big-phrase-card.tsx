@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { ChevronsUpDown, Pencil, X, Loader } from 'lucide-react'
+import { ChevronsUpDown, Loader } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
 import {
@@ -25,7 +24,6 @@ import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '../ui/destructive-octagon-badge'
 
 export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
-	const [isTagEditing, setIsTagEditing] = useState(false)
 	const { data: phrase, status } = usePhrase(pid, lang)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -110,50 +108,20 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 
 						<Separator />
 
-						<div
-							className={`transition-all ${isTagEditing ? `bg-primary/5 rounded-2xl` : ''}`}
-						>
-							<div className="mb-3 inline-flex flex-row flex-wrap items-center gap-2">
-								<h3 className="sr-only">Tags</h3>
-								{tags.map((tag: { id: string; name: string }) => (
-									<Badge key={tag.id} variant="secondary">
-										{tag.name}
-									</Badge>
-								))}
-								{!tags.length && (
-									<p className="text-muted-foreground italic">No tags</p>
-								)}
-							</div>
-							<Button
-								variant="outline"
-								size="sm"
-								className="grid grid-cols-1 grid-rows-1 place-items-center [grid-template-areas:'stack']"
-								onClick={() => setIsTagEditing(!isTagEditing)}
-							>
-								<span
-									className={`${!isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
-								>
-									<X />
-									Cancel
-								</span>
-								<span
-									className={`${isTagEditing ? 'invisible' : ''} col-span-1 row-span-1 flex flex-row items-center gap-1 [grid-area:stack]`}
-								>
-									<Pencil />
-									Add tags
-								</span>
-							</Button>
-							<div className="mb-2 flex flex-wrap gap-2"></div>
-							<div
-								className={`${isTagEditing ? 'h-10' : 'h-0'} transition-all`}
-							>
-								{isTagEditing && (
-									<AddTags
-										onSuccess={() => setIsTagEditing(false)}
-										phraseId={pid}
-										lang={lang}
-									/>
-								)}
+						<div>
+							<div className="flex items-center justify-between">
+								<div className="inline-flex flex-row flex-wrap items-center gap-2">
+									<h3 className="text-lg font-semibold">Tags</h3>
+									{tags.map((tag: { id: string; name: string }) => (
+										<Badge key={tag.id} variant="secondary">
+											{tag.name}
+										</Badge>
+									))}
+									{!tags.length && (
+										<p className="text-muted-foreground italic">No tags</p>
+									)}
+								</div>
+								<AddTags phraseId={pid} lang={lang} />
 							</div>
 						</div>
 					</div>
