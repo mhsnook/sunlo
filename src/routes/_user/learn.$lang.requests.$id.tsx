@@ -56,6 +56,10 @@ import { useProfile } from '@/lib/use-profile'
 import { Blockquote } from '@/components/ui/blockquote'
 import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
+import CopyLinkButton from '@/components/copy-link-button'
+import ShareRequestButton from '@/components/share-request-button'
+import { Send } from 'lucide-react'
+import { SendRequestToFriendDialog } from '@/components/friends/send-request-to-friend-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -73,7 +77,7 @@ const FulfillRequestSchema = z.object({
 type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
 
 function FulfillRequestPage() {
-	const { id } = Route.useParams()
+	const { id, lang } = Route.useParams()
 	const [isAnswering, setIsAnswering] = useState(false)
 	const queryClient = useQueryClient()
 	const {
@@ -202,7 +206,7 @@ function FulfillRequestPage() {
 	const noAnswers = request.phrases?.length === 0
 
 	return (
-		<main className="w-app space-y-6">
+		<main>
 			<Card>
 				<CardHeader>
 					<CardTitle>
@@ -335,6 +339,25 @@ function FulfillRequestPage() {
 					</Collapsible>
 				</CardContent>
 			</Card>
+			<div className="grid w-full flex-grow grid-cols-3 justify-stretch gap-4 px-2 py-3">
+				<CopyLinkButton
+					url={`${window.location.host}/learn/${lang}/requests/${id}`}
+					variant="outline"
+					size="default"
+				/>
+				<ShareRequestButton
+					id={id}
+					lang={lang}
+					variant="outline"
+					size="default"
+				/>
+				<SendRequestToFriendDialog id={id} lang={lang}>
+					<Button variant="outline" size="default">
+						<Send />
+						Send in chat
+					</Button>
+				</SendRequestToFriendDialog>
+			</div>
 		</main>
 	)
 }

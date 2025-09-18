@@ -49,7 +49,7 @@ export function RequestPreview({
 							{/* <RequestHeartButton pid={id} lang={lang} /> */}
 
 							<Link
-								to={'/learn/$lang/$id'}
+								to={'/learn/$lang/requests/$id'}
 								params={{ lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',
