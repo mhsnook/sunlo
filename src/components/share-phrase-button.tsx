@@ -45,7 +45,7 @@ export default function SharePhraseButton({
 			{...props}
 		>
 			<Share2 className="h-4 w-4" />
-			<span className="hidden @sm:block">{text}</span>
+			{size !== 'icon' && <span className="hidden @sm:block">{text}</span>}
 		</Button>
 	)
 }

@@ -12,6 +12,7 @@ import Flagged from '@/components/flagged'
 import { Blockquote } from '@/components/ui/blockquote'
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '../friends/send-request-to-friend-dialog'
+import ShareRequestButton from '../share-request-button'
 
 export function RequestItem({ request }: { request: PhraseRequestFull }) {
 	if (!request) return null
@@ -83,6 +84,12 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
+						<ShareRequestButton
+							id={request.id}
+							lang={request.lang}
+							variant="ghost"
+							size="icon"
+						/>
 						<SendRequestToFriendDialog lang={request.lang} id={request.id}>
 							<Button title="share in chat" size="icon" variant="ghost">
 								<Send />
