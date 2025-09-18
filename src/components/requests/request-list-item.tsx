@@ -9,8 +9,8 @@ import UserPermalink from '@/components/user-permalink'
 import CopyLinkButton from '@/components/copy-link-button'
 import { PhraseRequestFull } from '@/lib/use-requests'
 import Flagged from '@/components/flagged'
-import { Blockquote } from '../ui/blockquote'
-import { Button } from '../ui/button'
+import { Blockquote } from '@/components/ui/blockquote'
+import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '../friends/send-request-to-friend-dialog'
 
 export function RequestItem({ request }: { request: PhraseRequestFull }) {
@@ -83,7 +83,6 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
-
 						<SendRequestToFriendDialog lang={request.lang} id={request.id}>
 							<Button title="share in chat" size="icon" variant="ghost">
 								<Send />
