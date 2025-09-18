@@ -25,6 +25,7 @@ export function SendRequestToFriendDialog({
 	children: React.ReactNode
 }) {
 	const { userId } = useAuth()
+	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendRequestToFriendMutation = useMutation({
 		mutationKey: ['send-request-to-friend', lang, id],
@@ -34,7 +35,7 @@ export function SendRequestToFriendDialog({
 				sender_uid: userId,
 				recipient_uid: friendUid,
 				request_id: id,
-				lang,
+				lang: lang ?? '',
 				message_type: 'request' as const,
 			}))
 			const { data } = await supabase
@@ -43,14 +44,18 @@ export function SendRequestToFriendDialog({
 				.throwOnError()
 			return data
 		},
-		onSuccess: () => toast.success('Request sent to friend'),
+		onSuccess: () => {
+			toast.success('Request sent to friend')
+			setOpen(false)
+			setUids([])
+		},
 		onError: () => toast.error('Something went wrong'),
 	})
 
 	if (!lang || !id) return null
 
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
 			<DialogContent>
 				<DialogTitle className="h3 font-bold">Share</DialogTitle>
