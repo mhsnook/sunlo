@@ -26,6 +26,7 @@ export function SendPhraseToFriendButton({
 	lang: string
 } & VariantProps<typeof buttonVariants>) {
 	const { userId } = useAuth()
+	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendPhraseToFriendMutation = useMutation({
 		mutationKey: ['send-phrase-to-friend', lang, pid],
@@ -44,12 +45,16 @@ export function SendPhraseToFriendButton({
 				.throwOnError()
 			return data
 		},
-		onSuccess: () => toast.success('Phrase sent to friend'),
+		onSuccess: () => {
+			toast.success('Phrase sent to friend')
+			setOpen(false)
+			setUids([])
+		},
 		onError: () => toast.error('Something went wrong'),
 	})
 
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button {...props}>
 					<Send /> Send in chat
