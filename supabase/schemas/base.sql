@@ -700,6 +700,7 @@ create table if not exists
 		"related_message_id" "uuid",
 		"content" "jsonb",
 		"lang" character varying not null,
+		"request_id" "uuid",
 		constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
 	);
 
@@ -1143,6 +1144,31 @@ from
 
 alter table "public"."meta_phrase_info" owner to "postgres";
 
+create table if not exists
+	"public"."phrase_relation" (
+		"from_phrase_id" "uuid",
+		"to_phrase_id" "uuid",
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."phrase_relation" owner to "postgres";
+
+comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
+
+create table if not exists
+	"public"."phrase_request" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"requester_uid" "uuid" not null,
+		"lang" character varying not null,
+		"prompt" "text" not null,
+		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
+		"fulfilled_at" timestamp with time zone
+	);
+
+alter table "public"."phrase_request" owner to "postgres";
+
 create or replace view
 	"public"."meta_phrase_request" as
 select
@@ -1175,34 +1201,15 @@ from
 	)
 group by
 	"pr"."id",
+	"pr"."created_at",
+	"pr"."requester_uid",
+	"pr"."lang",
+	"pr"."prompt",
+	"pr"."status",
+	"pr"."fulfilled_at",
 	"pp"."uid",
 	"pp"."username",
 	"pp"."avatar_path";
-
-create table if not exists
-	"public"."phrase_relation" (
-		"from_phrase_id" "uuid",
-		"to_phrase_id" "uuid",
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."phrase_relation" owner to "postgres";
-
-comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
-
-create table if not exists
-	"public"."phrase_request" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"requester_uid" "uuid" not null,
-		"lang" character varying not null,
-		"prompt" "text" not null,
-		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"fulfilled_at" timestamp with time zone
-	);
-
-alter table "public"."phrase_request" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_translation" (
@@ -1525,6 +1532,9 @@ create unique index "unique_text_phrase_lang" on "public"."phrase_translation" u
 
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete set null;
 
 alter table only "public"."chat_message"
 add constraint "chat_message_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete set null;
