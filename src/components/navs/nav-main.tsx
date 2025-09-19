@@ -39,7 +39,7 @@ export function NavMain({ lang }: { lang?: string }) {
 	return (
 		<>
 			{!deckMenu || !lang ? null : (
-				<div className="bg-muted-foreground/10 pb-2">
+				<div className="bg-primary/10 mx-2 rounded-2xl pb-2">
 					{!(lang in languages) ?
 						<LanguageNotFound />
 					: !isDeckFound ?
@@ -47,7 +47,11 @@ export function NavMain({ lang }: { lang?: string }) {
 					:	<OneSidebarMenu menu={deckMenu} title="" />}
 				</div>
 			)}
-			<OneSidebarMenu menu={learnMenu} title="Learning center" />
+			<OneSidebarMenu
+				className="border-muted-primary border-t"
+				menu={learnMenu}
+				title="Learning center"
+			/>
 			<OneSidebarMenu menu={friendsMenu} title="Friends & contacts" />
 			<OneSidebarMenu menu={siteMenu} title="Site" />
 		</>

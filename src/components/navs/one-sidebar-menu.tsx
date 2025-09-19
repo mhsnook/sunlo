@@ -19,14 +19,16 @@ const activeProps = {
 export default function OneSidebarMenu({
 	menu,
 	title,
+	className,
 }: {
 	menu: Array<LinkType>
 	title: string
+	className?: string
 }) {
 	const { setClosedMobile } = useSidebar()
 
 	return (
-		<SidebarGroup>
+		<SidebarGroup className={className}>
 			<SidebarGroupLabel className={!title ? 'sr-only' : ''}>
 				{title}
 			</SidebarGroupLabel>
@@ -39,6 +41,7 @@ export default function OneSidebarMenu({
 								onClick={setClosedMobile}
 								activeOptions={item.inexact ? inexactOptions : activeOptions}
 								activeProps={activeProps}
+								className="flex flex-row"
 							>
 								{!item.Icon ? null : <item.Icon />}
 								<span>{item.title ?? item.name}</span>

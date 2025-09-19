@@ -62,7 +62,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 	const languageName = lang ? languages[lang] : null
 
 	return (
-		<SidebarMenu>
+		<SidebarMenu className="rounded-2xl shadow">
 			<SidebarMenuItem>
 				{deckMenuData === undefined ?
 					<div style={sizeStyles} />

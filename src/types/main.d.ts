@@ -81,7 +81,7 @@ export type LinkType = {
 	}
 	// TODO enum these for the caller
 	Icon?: LucideIcon
-	useBadge?: () => number | boolean | undefined | null
+	useBadge?: () => number | string | boolean | undefined | null
 }
 export type MenuType = LinkType & {
 	items: Array<LinkType>
