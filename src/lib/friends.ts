@@ -17,6 +17,7 @@ import {
 import { useAuth } from './hooks'
 import { avatarUrlify, mapArray, mapArrays } from './utils'
 import toast from 'react-hot-toast'
+import { useCallback } from 'react'
 
 type FriendSummariesLoaded = {
 	relationsMap: { [key: uuid]: FriendSummaryFull }
@@ -102,9 +103,14 @@ export const useRelations = () => {
 
 export const useOneRelation = (uidToUse: uuid) => {
 	const { userId } = useAuth()
+	const selectRelation = useCallback(
+		(data: FriendSummariesLoaded | null) =>
+			data?.relationsMap[uidToUse] ?? null,
+		[uidToUse]
+	)
 	return useQuery({
 		...relationsQuery(userId!),
-		select: (data) => (!data ? null : data.relationsMap[uidToUse]),
+		select: selectRelation,
 		enabled: !!userId,
 	})
 }
@@ -195,11 +201,10 @@ export const useAllChats = () => {
 
 export const useOneFriendChat = (friendId: uuid) => {
 	const { userId } = useAuth()
+	const selectChat = useCallback((data: ChatsMap) => data[friendId], [friendId])
 	return useQuery({
 		...chatsQueryOptions(userId!),
-		select: (data: ChatsMap) => {
-			return data[friendId]
-		},
+		select: selectChat,
 		enabled: !!userId && !!friendId,
 	})
 }
