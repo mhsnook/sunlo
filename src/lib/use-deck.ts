@@ -9,14 +9,10 @@ import {
 import type {
 	CardsMap,
 	DeckFetched,
-	DeckMeta,
 	DeckLoaded,
-	CardFull,
 	uuid,
 	DeckPids,
 	ReviewsDayMap,
-	RoutineStats,
-	ActivityChartData,
 } from '@/types/main'
 import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
@@ -131,64 +127,63 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 
 export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 	queryOptions({
-		queryKey: ['user', lang, 'deck'],
-		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1], userId!),
+		queryKey: ['user', lang, 'deck'] as const,
+		queryFn: async () => fetchDeck(lang, userId!),
 		enabled: !!userId && !!lang,
 	})
 
 export const useDeckMeta = (lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useSuspenseQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => data.meta,
-	}) as UseQueryResult<DeckMeta>
+		...options,
+		select: (data) => data.meta,
+	})
 }
 
 // @TODO replace this with a memoized select on data.cards
 export const useDeckPids = (lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => data.pids,
-	}) as UseQueryResult<DeckPids>
+		...options,
+		select: (data) => data.pids,
+	})
 }
 
 export const useDeckRoutineStats = (lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => {
-			return calcRoutineStats(
-				data.reviewsDayMap,
-				data.meta.daily_review_goal ?? 15
-			)
-		},
-	}) as UseQueryResult<RoutineStats>
+		...options,
+		select: (data) =>
+			calcRoutineStats(data.reviewsDayMap, data.meta.daily_review_goal ?? 15),
+	})
 }
 
 export const useDeckActivityChartData = (lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => {
-			return calcActivityChartData(data.reviewsDayMap)
-		},
-	}) as UseQueryResult<ActivityChartData>
+		...options,
+		select: (data) => calcActivityChartData(data.reviewsDayMap),
+	})
 }
 
 export const useDeckCardsMap = (lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => data.cardsMap,
-	}) as UseQueryResult<CardsMap>
+		...options,
+		select: (data) => data.cardsMap,
+	})
 }
 
 export const useDeckCard = (pid: uuid, lang: string) => {
 	const { userId } = useAuth()
+	const options = deckQueryOptions(lang, userId)
 	return useQuery({
-		...deckQueryOptions(lang, userId),
-		select: (data: DeckLoaded) => data.cardsMap[pid],
-		enabled: !!userId,
-	}) as UseQueryResult<CardFull>
+		...options,
+		select: (data) => data.cardsMap[pid],
+	})
 }

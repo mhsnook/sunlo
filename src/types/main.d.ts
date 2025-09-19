@@ -190,12 +190,6 @@ export type DeckLoaded = {
 	reviewsDayMap: ReviewsDayMap
 }
 export type ReviewsDayMap = { [key: string]: Array<ReviewRow> }
-export type RoutineStats = { daysMet: number; daysSoFar: number }
-export type ActivityChartData = {
-	day: string
-	total: number
-	positive: number
-}[]
 
 export type CardRow = Tables<'user_card'>
 export type CardMeta = Tables<'user_card_plus'>
