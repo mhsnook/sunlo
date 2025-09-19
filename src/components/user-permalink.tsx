@@ -7,11 +7,13 @@ export default function ({
 	username,
 	avatarUrl,
 	className,
+	round = false,
 }: {
 	uid: uuid | null
 	username: string | null
 	avatarUrl: string | null
 	className?: string
+	round?: boolean
 }) {
 	if (!uid) return null
 
@@ -20,7 +22,10 @@ export default function ({
 			to="/friends/$uid"
 			params={{ uid }}
 			className={cn(
-				`hover:outline-primary/30 text-primary-foresoft inline-flex flex-row place-items-baseline items-center gap-1 rounded-2xl hover:outline`,
+				round ?
+					`hover:outline-primary/30 rounded-2xl hover:outline`
+				:	`s-link-hidden text-primary-foresoft`,
+				`text-primary-foresoft inline-flex flex-row place-items-baseline items-center gap-1`,
 				className
 			)}
 		>

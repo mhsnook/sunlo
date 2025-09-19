@@ -33,23 +33,20 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					</Badge>
 				</div>
 				<div className="text-muted-foreground mt-2 flex min-w-0 items-center gap-2 text-sm">
-					<span className="font-medium">
-						<UserPermalink
-							username={request.requester?.username ?? ''}
-							avatarUrl={avatarUrlify(request.requester?.avatar_path) ?? ''}
-							uid={request.requester_uid}
-							className="text-muted-foreground"
-						/>
-					</span>
-					<span>•</span>
-
 					<Link
 						to="/learn/$lang/requests/$id"
 						params={{ lang: request.lang, id: request.id }}
-						className="s-link-hidden"
+						className="s-link-hidden text-primary-foresoft"
 					>
 						{ago(request.created_at)}
 					</Link>
+					requested by{' '}
+					<UserPermalink
+						username={request.requester?.username ?? ''}
+						avatarUrl={avatarUrlify(request.requester?.avatar_path) ?? ''}
+						uid={request.requester_uid}
+						className="text-muted-foreground"
+					/>
 				</div>
 			</CardHeader>
 			<CardContent>
