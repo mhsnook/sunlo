@@ -15,6 +15,8 @@ import type {
 	uuid,
 	DeckPids,
 	ReviewsDayMap,
+	RoutineStats,
+	ActivityChartData,
 } from '@/types/main'
 import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
@@ -78,11 +80,6 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const reviews = cardsArray.flatMap((c) => c.reviews)
 	const reviewsDayMap = mapArrays(reviews, 'day_session')
 
-	const routineStats = calcRoutineStats(
-		reviewsDayMap,
-		meta.daily_review_goal ?? 15
-	)
-	const activityChartData = calcActivityChartData(reviewsDayMap)
 	const all = cardsArray.map((c) => c.phrase_id!)
 	const active = cardsArray
 		.filter((c) => c.status === 'active')
@@ -129,8 +126,6 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		cardsMap,
 		reviews,
 		reviewsDayMap,
-		routineStats,
-		activityChartData,
 	}
 }
 
@@ -140,12 +135,6 @@ export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 		queryFn: async ({ queryKey }) => fetchDeck(queryKey[1], userId!),
 		enabled: !!userId && !!lang,
 	})
-export const useDeck = (lang: string) => {
-	const { userId } = useAuth()
-	return useQuery({
-		...deckQueryOptions(lang, userId),
-	}) as UseQueryResult<DeckLoaded>
-}
 
 export const useDeckMeta = (lang: string) => {
 	const { userId } = useAuth()
@@ -162,6 +151,29 @@ export const useDeckPids = (lang: string) => {
 		...deckQueryOptions(lang, userId),
 		select: (data: DeckLoaded) => data.pids,
 	}) as UseQueryResult<DeckPids>
+}
+
+export const useDeckRoutineStats = (lang: string) => {
+	const { userId } = useAuth()
+	return useQuery({
+		...deckQueryOptions(lang, userId),
+		select: (data: DeckLoaded) => {
+			return calcRoutineStats(
+				data.reviewsDayMap,
+				data.meta.daily_review_goal ?? 15
+			)
+		},
+	}) as UseQueryResult<RoutineStats>
+}
+
+export const useDeckActivityChartData = (lang: string) => {
+	const { userId } = useAuth()
+	return useQuery({
+		...deckQueryOptions(lang, userId),
+		select: (data: DeckLoaded) => {
+			return calcActivityChartData(data.reviewsDayMap)
+		},
+	}) as UseQueryResult<ActivityChartData>
 }
 
 export const useDeckCardsMap = (lang: string) => {

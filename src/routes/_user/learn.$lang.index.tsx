@@ -19,7 +19,12 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
-import { useDeck, useDeckMeta, useDeckPids } from '@/lib/use-deck'
+import {
+	useDeckActivityChartData,
+	useDeckMeta,
+	useDeckPids,
+	useDeckRoutineStats,
+} from '@/lib/use-deck'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
@@ -34,12 +39,12 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const { data: deck } = useDeck(lang)
+	const { data: pids } = useDeckPids(lang)
 	const { data: language } = useLanguage(lang)
 	if (!language) throw new Error("Could not load this language's data")
-	if (!deck) throw new Error("Could not load this deck's data")
+	if (!pids) throw new Error("Could not load this deck's data")
 
-	const deckIsNew = !(deck.pids.all.length > 0)
+	const deckIsNew = !(pids.all.length > 0)
 	return (
 		<div className="space-y-8">
 			{deckIsNew ?
@@ -54,8 +59,12 @@ function WelcomePage() {
 }
 
 function DeckOverview({ lang }: LangOnlyComponentProps) {
-	const { data: deck } = useDeck(lang)
-	if (!deck) throw Error('This deck does not exist, sorry 🧄☹️🥦')
+	const { data: meta } = useDeckMeta(lang)
+	const { data: pids } = useDeckPids(lang)
+	const { data: routineStats } = useDeckRoutineStats(lang)
+	const { data: activityChartData } = useDeckActivityChartData(lang)
+	if (!meta || !pids || !routineStats || !activityChartData)
+		throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
 	return (
 		<Card>
@@ -78,38 +87,38 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
 					<Badge variant="outline">
-						{deck.meta.lang_total_phrases} phrases total
+						{meta.lang_total_phrases} phrases total
 					</Badge>
 					<Badge variant="outline">
-						{deck.meta.cards_active} cards in your deck
+						{meta.cards_active} cards in your deck
 					</Badge>
 					<Badge variant="outline">
-						{deck.meta.count_reviews_7d} reviews last 7d
+						{meta.count_reviews_7d} reviews last 7d
 					</Badge>
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				<p>Your last review was {ago(deck.meta.most_recent_review_at)}</p>
+				<p>Your last review was {ago(meta.most_recent_review_at)}</p>
 				<p>
 					{(
-						deck.routineStats.daysMet === deck.routineStats.daysSoFar &&
-						deck.routineStats.daysSoFar > 1
+						routineStats.daysMet === routineStats.daysSoFar &&
+						routineStats.daysSoFar > 1
 					) ?
-						`You've kept up with your routine all ${deck.routineStats.daysSoFar} days this week!`
-					:	`You've kept up with your routine ${deck.routineStats.daysMet} out of ${deck.routineStats.daysSoFar} ${
-							deck.routineStats.daysSoFar === 1 ? 'day' : 'days'
+						`You've kept up with your routine all ${routineStats.daysSoFar} days this week!`
+					:	`You've kept up with your routine ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+							routineStats.daysSoFar === 1 ? 'day' : 'days'
 						} this week.`
 					}
 				</p>
 				<p>
-					{deck.pids.today_active.length} active cards are scheduled for today,
-					along with {deck.meta.daily_review_goal ?? 15} new ones
+					{pids.today_active.length} active cards are scheduled for today, along
+					with {meta.daily_review_goal ?? 15} new ones
 				</p>
 
-				{deck.activityChartData.length > 0 && (
+				{activityChartData.length > 0 && (
 					<div className="my-4">
 						<h4 className="mb-2 font-semibold">Your Recent Reviews</h4>
-						<ActivityChart data={deck.activityChartData} />
+						<ActivityChart data={activityChartData} />
 					</div>
 				)}
 			</CardContent>
