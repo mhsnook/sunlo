@@ -1,7 +1,6 @@
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { relationsQuery } from '@/lib/friends'
-import { HeartHandshake } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/friends')({
 	component: FriendsPage,
@@ -10,8 +9,7 @@ export const Route = createFileRoute('/_user/friends')({
 		await queryClient.ensureQueryData(relationsQuery(userId))
 		return {
 			titleBar: {
-				title: `Manage Friends and Contacts`,
-				Icon: HeartHandshake,
+				title: `Friends and Contacts`,
 			} as TitleBar,
 			appnav: [
 				'/friends',

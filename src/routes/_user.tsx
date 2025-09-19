@@ -17,7 +17,6 @@ import {
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
-import { Home } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/lib/hooks'
@@ -63,7 +62,6 @@ export const Route = createFileRoute('/_user')({
 			titleBar: {
 				title: `Learning Home`,
 				subtitle: `Which deck are we studying today?`,
-				Icon: Home,
 			} as TitleBar,
 		}
 	},

@@ -14,7 +14,6 @@ import {
 	useNavigate,
 } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { Separator } from '@/components/ui/separator'
 import { useLinks } from '@/hooks/links'
 
 type NavbarLoaderData = {
@@ -22,7 +21,6 @@ type NavbarLoaderData = {
 		title?: string
 		subtitle?: string
 		onBackClick?: string | (() => void)
-		Icon?: ComponentType<{ size?: number | string; className?: string }>
 	}
 	contextMenu?: string[]
 }
@@ -44,7 +42,7 @@ export default function Navbar() {
 
 	return (
 		<nav className="flex items-center justify-between border-b px-[1cqw] py-3">
-			<div className="flex h-12 items-center gap-[1cqw]">
+			<div className="flex h-12 items-center gap-1.5">
 				<SidebarTrigger />
 				<Title matches={matches} />
 			</div>
@@ -75,25 +73,20 @@ function Title({ matches }: { matches: NavbarMatch[] }) {
 			titleBar.onBackClick
 		:	goBackOrToStringUrl
 
-	const Icon = !titleBar ? null : titleBar.Icon
-
 	return (
-		<>
+		<div className="ms-1.5 flex flex-row items-center gap-3">
 			<Button variant="ghost" size="icon" onClick={onBackClickFn}>
 				<ChevronLeft />
 				<span className="sr-only">Back</span>
 			</Button>
-			<Separator orientation="vertical" className="mx-2 h-6" />
+
 			<div className="flex flex-row items-center gap-[1cqw] rounded-2xl">
-				{Icon ?
-					<Icon size={24} />
-				:	null}
 				<div>
 					<h1 className="text-lg font-bold">{titleBar?.title}</h1>
 					<p className="text-sm opacity-80">{titleBar?.subtitle}</p>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 
