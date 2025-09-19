@@ -18,6 +18,7 @@ import {
 	ReviewUpdate,
 	uuid,
 } from '@/types/main'
+import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import {
 	getIndexOfNextAgainCard,
@@ -136,23 +137,22 @@ export function useReviewsToday(lang: string, day_session: string) {
 	})
 }
 
+const selectStats = (data: DailyReviewStateLoaded | null) => data?.stats ?? null
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const { userId: uid } = useAuth()
-	return useSuspenseQuery<
-		DailyReviewStateLoaded | null,
-		Error,
-		ReviewStats | null
-	>({
+	return useSuspenseQuery({
 		...reviewsQuery(uid!, lang, day_session),
-		select: (data) => data?.stats ?? null,
+		select: selectStats,
 	})
 }
 
+const selectManifest = (data: DailyReviewStateLoaded | null) =>
+	(data?.manifest as pids) ?? null
 export function useManifest(lang: string, day_session: string) {
 	const { userId: uid } = useAuth()
-	return useSuspenseQuery<DailyReviewStateLoaded | null, Error, pids>({
+	return useSuspenseQuery({
 		...reviewsQuery(uid!, lang, day_session),
-		select: (data) => (data?.manifest as pids) ?? null,
+		select: selectManifest,
 	})
 }
 
@@ -162,10 +162,14 @@ export function useOneReviewToday(
 	pid: uuid
 ) {
 	const { userId } = useAuth()
-	return useQuery<DailyReviewStateLoaded | null, Error, ReviewRow | null>({
+	const selectReview = useCallback(
+		(data: DailyReviewStateLoaded | null) => data?.reviewsMap[pid] ?? null,
+		[pid]
+	)
+	return useQuery({
 		...reviewsQuery(userId!, lang, day_session),
 		enabled: !!userId && !!pid,
-		select: (data) => data?.reviewsMap[pid] ?? null,
+		select: selectReview,
 	})
 }
 

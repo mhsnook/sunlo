@@ -1,10 +1,5 @@
 import supabase from '@/lib/supabase-client'
-import {
-	type UseQueryResult,
-	queryOptions,
-	useQuery,
-	useSuspenseQuery,
-} from '@tanstack/react-query'
+import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 
 import type {
 	CardsMap,
@@ -16,6 +11,7 @@ import type {
 } from '@/types/main'
 import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
+import { useCallback } from 'react'
 import { inLastWeek } from './dayjs'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -132,58 +128,68 @@ export const deckQueryOptions = (lang: string, userId: uuid | null) =>
 		enabled: !!userId && !!lang,
 	})
 
+const selectDeckMeta = (data: DeckLoaded) => data.meta
 export const useDeckMeta = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useSuspenseQuery({
 		...options,
-		select: (data) => data.meta,
+		select: selectDeckMeta,
 	})
 }
 
 // @TODO replace this with a memoized select on data.cards
+const selectDeckPids = (data: DeckLoaded) => data.pids
 export const useDeckPids = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useQuery({
 		...options,
-		select: (data) => data.pids,
+		select: selectDeckPids,
 	})
 }
 
+const selectRoutineStats = (data: DeckLoaded) =>
+	calcRoutineStats(data.reviewsDayMap, data.meta.daily_review_goal ?? 15)
 export const useDeckRoutineStats = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useQuery({
 		...options,
-		select: (data) =>
-			calcRoutineStats(data.reviewsDayMap, data.meta.daily_review_goal ?? 15),
+		select: selectRoutineStats,
 	})
 }
 
+const selectActivityChartData = (data: DeckLoaded) =>
+	calcActivityChartData(data.reviewsDayMap)
 export const useDeckActivityChartData = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useQuery({
 		...options,
-		select: (data) => calcActivityChartData(data.reviewsDayMap),
+		select: selectActivityChartData,
 	})
 }
 
+const selectCardsMap = (data: DeckLoaded) => data.cardsMap
 export const useDeckCardsMap = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useQuery({
 		...options,
-		select: (data) => data.cardsMap,
+		select: selectCardsMap,
 	})
 }
 
 export const useDeckCard = (pid: uuid, lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
+	const selectCard = useCallback(
+		(data: DeckLoaded) => data.cardsMap[pid],
+		[pid]
+	)
 	return useQuery({
 		...options,
-		select: (data) => data.cardsMap[pid],
+		select: selectCard,
 	})
 }
