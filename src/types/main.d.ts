@@ -188,8 +188,6 @@ export type DeckLoaded = {
 	cardsMap: CardsMap
 	reviews: Array<ReviewRow>
 	reviewsDayMap: ReviewsDayMap
-	routineStats: RoutineStats
-	activityChartData: ActivityChartData
 }
 export type ReviewsDayMap = { [key: string]: Array<ReviewRow> }
 export type RoutineStats = { daysMet: number; daysSoFar: number }
