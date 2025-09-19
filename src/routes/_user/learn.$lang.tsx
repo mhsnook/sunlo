@@ -3,7 +3,6 @@ import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/lib/use-language'
 import { deckQueryOptions } from '@/lib/use-deck'
-import { BookHeart } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -43,7 +42,6 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			],
 			titleBar: {
 				title: `${languages[lang]} Deck`,
-				Icon: BookHeart,
 			} as TitleBar,
 		}
 	},

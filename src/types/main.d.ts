@@ -90,7 +90,6 @@ export type MenuType = LinkType & {
 export type TitleBar = {
 	title: string
 	subtitle?: string
-	Icon?: LucideIcon
 	onBackClick?: string | (() => void)
 }
 

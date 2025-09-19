@@ -2,8 +2,6 @@ import { PendingRequestsHeader } from '@/components/friends/pending-requests-hea
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
-import { Home } from 'lucide-react'
-
 export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
 	loader: () => {
@@ -13,7 +11,6 @@ export const Route = createFileRoute('/_user/learn')({
 			titleBar: {
 				title: `Learning Home`,
 				subtitle: `Which deck are we studying today?`,
-				Icon: Home,
 			} as TitleBar,
 		}
 	},

@@ -1,7 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
-import { BookHeart } from 'lucide-react'
 import { todayString } from '@/lib/utils'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 import { useState } from 'react'
@@ -17,7 +16,6 @@ export const Route = createFileRoute('/_user/learn/$lang/review')({
 			],
 			titleBar: {
 				title: `Review ${languages[lang]} cards`,
-				Icon: BookHeart,
 				onBackClick: '/learn/$lang',
 			} as TitleBar,
 		}

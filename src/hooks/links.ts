@@ -1,10 +1,10 @@
 import {
-	BookHeart,
 	ClipboardPlus,
 	FileText,
 	HandHeart,
 	HeartHandshake,
 	Home,
+	HouseHeart,
 	Lock,
 	LogIn,
 	Mail,
@@ -93,8 +93,8 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang': {
 		name: languages[lang],
-		title: `${languages[lang]} deck`,
-		Icon: BookHeart,
+		title: `${languages[lang]} home`,
+		Icon: HouseHeart,
 		link: {
 			to: '/learn/$lang',
 			params: { lang },
