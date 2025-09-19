@@ -39,12 +39,12 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 
 	return (
 		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
-			<div className="flex flex-row items-center gap-2">
+			<div className="ms-3 flex flex-row items-center gap-2">
 				<CardStatusDropdown lang={lang} pid={pid!} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
-				<div className="space-y-1 pt-2 pl-6">
+				<div className="space-y-1 pt-2 pl-4">
 					<p className="text-muted-foreground text-sm">
 						{phrase.translations?.length ? 'Translations' : 'No Translations'}
 					</p>
@@ -66,11 +66,12 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 							</Badge>
 						))}
 					</div>
-					<div className="my-4 flex flex-row gap-2">
+					<div className="my-4 flex flex-row items-center gap-2">
 						<PermalinkButton
 							to="/learn/$lang/$id"
 							params={{ lang, id: pid }}
 							variant="outline-accent"
+							text="View details"
 						/>
 						<SharePhraseButton pid={pid} lang={lang} variant="outline-accent" />
 						<PhraseExtraInfo lang={lang} pid={pid} />
