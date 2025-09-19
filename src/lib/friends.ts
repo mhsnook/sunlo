@@ -46,6 +46,7 @@ export const friendSummaryToRelative = (
 		res.profile = {
 			uid: pro.uid ?? '',
 			username: pro.username ?? '',
+			avatar_path: pro.avatar_path ?? '',
 			avatarUrl: avatarUrlify(pro.avatar_path),
 		}
 	}
