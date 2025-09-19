@@ -32,7 +32,7 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { useAuth } from '@/lib/hooks'
-import { useReviewsToday } from '@/lib/use-reviews'
+import { useReviewsTodayStats } from '@/lib/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
@@ -52,7 +52,7 @@ function ReviewPageSetup() {
 	const recs = useCompositePids(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const initLocalReviewState = useInitialiseReviewStore()
-	const { data: manifestToRestore } = useReviewsToday(lang, dayString)
+	const { data: stats } = useReviewsTodayStats(lang, dayString)
 
 	if (meta?.lang !== lang)
 		throw new Error("Attempted to build a review but we can't find the deck")
@@ -246,16 +246,11 @@ function ReviewPageSetup() {
 	})
 
 	// when the manifest is present, skip this page, go to a better one
-	if (manifestToRestore?.stats.count)
+	if (stats?.count)
 		return (
-			manifestToRestore.stats.complete === manifestToRestore.stats.count ?
-				<WhenComplete />
+			stats?.complete === stats?.count ? <WhenComplete />
 			: stage ? <Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
-			: <ContinueReview
-					lang={lang}
-					dayString={dayString}
-					reviewStats={manifestToRestore.stats}
-				/>
+			: <ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
 		)
 
 	return (
