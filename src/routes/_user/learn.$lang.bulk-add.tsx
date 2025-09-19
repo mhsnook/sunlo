@@ -317,7 +317,6 @@ function PhraseEntry({
 				<Button
 					type="button"
 					variant="outline"
-					size="sm"
 					onClick={() =>
 						appendTranslation({
 							lang: profile?.languages_known[0]?.lang,

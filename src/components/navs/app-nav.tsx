@@ -53,13 +53,13 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 						<NavigationMenuList className="flex w-full flex-row">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
-									className="hover:bg-primary/20 rounded-2xl px-4"
+									className="hover:bg-primary/20 rounded-xl px-3"
 									key={l.link.to}
 								>
 									<NavigationMenuLink asChild>
 										<Link
 											{...l.link}
-											className="flex flex-row items-center justify-center gap-2 border-b-2 py-2"
+											className="flex flex-row items-center justify-center gap-2 border-b-2 py-1.5 text-sm"
 											activeProps={activeProps}
 											activeOptions={l.inexact ? inexactOptions : activeOptions}
 											inactiveProps={inactiveProps}
