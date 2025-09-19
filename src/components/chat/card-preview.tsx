@@ -65,7 +65,7 @@ export function CardPreview({
 							<CardStatusDropdown pid={pid} lang={lang} />
 							{!chosenTranslation && (
 								<AddTranslationsDialog
-									size="badge"
+									size="sm"
 									variant="secondary"
 									phrase={phrase}
 								/>
@@ -75,7 +75,7 @@ export function CardPreview({
 								params={{ lang, id: pid }}
 								className={buttonVariants({
 									variant: 'secondary',
-									size: 'badge',
+									size: 'sm',
 								})}
 							>
 								<LinkIcon className="text-muted-foreground" />

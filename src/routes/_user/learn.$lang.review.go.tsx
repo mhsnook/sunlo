@@ -66,7 +66,7 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 					{!atTheEnd && reviewStage === 1 ?
 						<>
 							<Button
-								size="icon-sm"
+								size="icon"
 								variant="default"
 								onClick={gotoPrevious}
 								disabled={currentCardIndex === 0}
@@ -78,7 +78,7 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 								Card {currentCardIndex + 1} of {manifest.length}
 							</div>
 							<Button
-								size="icon-sm"
+								size="icon"
 								variant="default"
 								onClick={gotoNext}
 								disabled={atTheEnd}

@@ -271,7 +271,7 @@ export function CardStatusHeart({ pid, lang }: OnePhraseComponentProps) {
 	return (
 		<Button
 			variant="outline"
-			size="icon-sm"
+			size="icon"
 			className={card?.status === 'active' ? 'border-primary-foresoft/30' : ''}
 			onClick={() => mutation.mutate({ status })}
 		>

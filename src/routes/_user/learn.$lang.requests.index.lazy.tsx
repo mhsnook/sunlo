@@ -30,7 +30,7 @@ function Page() {
 							to="/learn/$lang/requests/new"
 							params={{ lang }}
 							className={
-								` ${buttonVariants({
+								`${buttonVariants({
 									variant: 'outline',
 								})} -mt-2` as const
 							}

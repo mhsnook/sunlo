@@ -12,7 +12,7 @@ export default function SharePhraseButton({
 	pid,
 	text = 'Share phrase',
 	variant = 'ghost',
-	size = 'badge',
+	size = 'sm',
 	className = '',
 	...props
 }: OnePhraseComponentProps & {

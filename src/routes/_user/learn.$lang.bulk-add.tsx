@@ -288,7 +288,7 @@ function PhraseEntry({
 							<Button
 								type="button"
 								variant="ghost"
-								size="icon-sm"
+								size="icon"
 								onClick={() => removeTranslation(translationIndex)}
 								disabled={translationFields.length === 1}
 							>

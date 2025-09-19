@@ -25,11 +25,10 @@ const buttonVariants = cva(
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2',
-				sm: 'h-8 rounded-2xl px-4 gap-1 [&_svg]:size-3',
+				sm: 'h-8 rounded-xl px-4 gap-1 [&_svg]:size-3',
 				lg: 'rounded-2xl px-8 py-4 text-xl font-medium gap-3 [&_svg]:size-6',
-				icon: 'size-8 rounded-2xl shrink-0 aspect-square',
-				'icon-sm': 'size-6 rounded-full shrink-0',
-				badge: 'h-6 rounded-2xl font-sm px-2 gap-1 my-0',
+				icon: 'size-8 rounded-xl shrink-0 aspect-square',
+
 			},
 		},
 		defaultVariants: {

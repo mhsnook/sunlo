@@ -13,7 +13,7 @@ export default function ShareRequestButton({
 	id,
 	text = 'Share request',
 	variant = 'ghost',
-	size = 'badge',
+	size = 'sm',
 	className = '',
 	...props
 }: {

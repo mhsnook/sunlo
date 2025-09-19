@@ -67,10 +67,9 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 							to="/learn/$lang/search"
 							from={Route.fullPath}
 							aria-disabled="true"
-							className={buttonVariants({
-								size: 'badge',
+							className={`${buttonVariants({
 								variant: 'outline',
-							})}
+							})} -mt-2`}
 						>
 							<Search className="size-3" />
 							<span className="me-1">quick search</span>

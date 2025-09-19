@@ -46,7 +46,7 @@ export function WhenComplete() {
 						</Button>
 						<Button
 							size="lg"
-							variant="link"
+							variant="secondary"
 							onClick={actions.skipReviewUnreviewed}
 						>
 							Skip step 2
@@ -90,7 +90,11 @@ export function WhenComplete() {
 							&ndash; and as always, don't forget to say the phrase outloud! Use
 							as many senses as you can.
 						</p>
-						<Button variant="link" size="lg" onClick={actions.skipReviewAgains}>
+						<Button
+							variant="secondary"
+							size="lg"
+							onClick={actions.skipReviewAgains}
+						>
 							Skip step 3
 						</Button>
 					</>

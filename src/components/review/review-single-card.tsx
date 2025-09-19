@@ -69,7 +69,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 								<div className="me-2 text-xl">{trans.text}</div>
 								<Flagged name="text_to_speech">
 									<Button
-										size="icon-sm"
+										size="icon"
 										variant="secondary"
 										onClick={() => playAudio(trans.text)}
 										aria-label="Play translation"
