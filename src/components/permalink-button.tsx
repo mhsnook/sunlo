@@ -9,7 +9,7 @@ export default function PermalinkButton({
 	params,
 	text = 'Permalink',
 	variant = 'ghost',
-	size = 'badge',
+	size = 'sm',
 	className,
 	...props
 }: { text?: string; className?: string } & LinkProps &

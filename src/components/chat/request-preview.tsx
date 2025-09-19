@@ -53,7 +53,7 @@ export function RequestPreview({
 								params={{ lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',
-									size: 'badge',
+									size: 'sm',
 								})}
 							>
 								<LinkIcon className="text-muted-foreground" />

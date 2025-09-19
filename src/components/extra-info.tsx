@@ -24,7 +24,7 @@ export default function ExtraInfo({
 	return (
 		<Dialog>
 			<DialogTrigger className={className} asChild>
-				<Button variant="ghost" size="icon-sm">
+				<Button variant="ghost" size="icon">
 					<Ellipsis className="size-4" />
 					<span className="sr-only">Show more</span>
 				</Button>

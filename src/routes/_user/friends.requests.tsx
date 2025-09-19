@@ -30,7 +30,7 @@ function RouteComponent() {
 								to="/friends"
 								aria-disabled="true"
 								className={buttonVariants({
-									size: 'badge',
+									size: 'sm',
 									variant: 'outline',
 								})}
 							>

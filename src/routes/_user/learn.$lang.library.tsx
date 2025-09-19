@@ -153,10 +153,9 @@ function DeckLibraryPage() {
 						<Link
 							to="/learn/$lang/add-phrase"
 							from={Route.fullPath}
-							className={buttonVariants({
-								size: 'badge',
+							className={`${buttonVariants({
 								variant: 'outline',
-							})}
+							})} -mt-2`}
 						>
 							<Plus className="size-3" />
 							<span className="me-1">new phrase</span>

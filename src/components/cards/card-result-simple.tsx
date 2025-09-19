@@ -18,7 +18,7 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 						to="/learn/$lang/$id"
 						params={{ lang: phrase.lang, id: phrase.id }}
 						variant="ghost"
-						size="icon-sm"
+						size="icon"
 						text=""
 					/>
 					<CardStatusHeart pid={phrase.id} lang={phrase.lang} />

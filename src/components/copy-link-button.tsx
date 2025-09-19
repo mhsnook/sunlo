@@ -23,7 +23,7 @@ export default function CopyLinkButton({
 	url,
 	text = 'Copy link',
 	variant = 'ghost',
-	size = 'badge',
+	size = 'sm',
 	className = '',
 	collapse = true,
 	...props

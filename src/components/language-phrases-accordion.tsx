@@ -70,16 +70,10 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 						<PermalinkButton
 							to="/learn/$lang/$id"
 							params={{ lang, id: pid }}
-							variant="link"
-							className="text-xs"
+							variant="outline-accent"
 						/>
-						<SharePhraseButton
-							pid={pid}
-							lang={lang}
-							variant="link"
-							className="text-xs"
-						/>
-						<PhraseExtraInfo lang={lang} pid={pid} className="ms-auto" />
+						<SharePhraseButton pid={pid} lang={lang} variant="outline-accent" />
+						<PhraseExtraInfo lang={lang} pid={pid} />
 					</div>
 				</div>
 			</AccordionContent>
