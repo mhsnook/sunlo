@@ -126,6 +126,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 			params: { lang },
 		},
 		Icon: Rocket,
+		useBadge: () => 'star',
 	},
 	'/learn/$lang/library': {
 		name: `Library`,
