@@ -213,7 +213,6 @@ export type DailyReviewStateFetched =
 	  })
 export type DailyReviewStateLoaded = ReviewStateManifestRow & {
 	reviewsMap: ReviewsMap
-	stats: ReviewStats
 }
 export type ReviewStats = {
 	reviewed: number

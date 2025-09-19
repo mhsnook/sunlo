@@ -123,7 +123,6 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 			return {
 				...reviewStateRow,
 				reviewsMap,
-				stats: mapToStats(reviewsMap, data.manifest),
 			} as DailyReviewStateLoaded
 		},
 	}
@@ -137,7 +136,9 @@ export function useReviewsToday(lang: string, day_session: string) {
 	})
 }
 
-const selectStats = (data: DailyReviewStateLoaded | null) => data?.stats ?? null
+const selectStats = (data: DailyReviewStateLoaded | null) =>
+	!data ? null : mapToStats(data.reviewsMap, data.manifest)
+
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const { userId: uid } = useAuth()
 	return useSuspenseQuery({
@@ -230,7 +231,6 @@ export function useReviewMutation(
 					return {
 						...oldData,
 						reviewsMap: newMap,
-						stats: mapToStats(newMap, manifest),
 					}
 				}
 			)
