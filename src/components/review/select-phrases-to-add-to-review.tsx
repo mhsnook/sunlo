@@ -1,7 +1,7 @@
 import languages from '@/lib/languages'
 import { useProfile } from '@/hooks/use-profile'
 import { pids } from '@/types/main'
-import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
+import { Brain, Carrot, LucideIcon, Sparkles, ChartSpline } from 'lucide-react'
 import {
 	DrawerContent,
 	DrawerDescription,
@@ -48,7 +48,7 @@ export function SelectPhrasesToAddToReview({
 		{
 			key: 'popular',
 			description: `Popular among all ${languages[lang]} learners`,
-			Icon: TrendingUp,
+			Icon: ChartSpline,
 		},
 		{
 			key: 'easiest',

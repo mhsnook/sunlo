@@ -1,7 +1,7 @@
 import languages from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+import { Brain, Carrot, LucideIcon, ChartSpline } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { Loader } from '@/components/ui/loader'
@@ -51,7 +51,7 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 						description={`Popular among all ${languages[lang]} learners`}
 						pids={recommendations.top8.popular.slice(0, 4)}
 						lang={lang}
-						Icon={TrendingUp}
+						Icon={ChartSpline}
 					/>
 					<PhraseSection
 						description="Newly added"
