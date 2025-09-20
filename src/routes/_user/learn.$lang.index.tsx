@@ -62,7 +62,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 			<CardHeader>
 				<CardTitle>
 					<div className="flex flex-row items-center justify-between">
-						<span>Deck Overview</span>
+						<span>Deck Home</span>
 						<Link
 							to="/learn/$lang/search"
 							from={Route.fullPath}

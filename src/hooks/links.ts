@@ -1,8 +1,8 @@
 import {
-	ClipboardPlus,
 	FileText,
 	HandHeart,
 	HeartHandshake,
+	HeartPlus,
 	Home,
 	HouseHeart,
 	Lock,
@@ -86,7 +86,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	'/learn/add-deck': {
 		name: 'Deck',
 		title: 'Start a new Deck',
-		Icon: ClipboardPlus,
+		Icon: HeartPlus,
 		link: {
 			to: '/learn/add-deck',
 		},
@@ -148,7 +148,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/requests': {
 		name: 'Requests',
-		title: 'My card requests',
+		title: 'Card requests',
 		link: {
 			to: '/learn/$lang/requests',
 			params: { lang },
