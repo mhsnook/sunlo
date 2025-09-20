@@ -16,6 +16,7 @@ const badgeVariants = cva(
 				lang: 'text-accent-foreground bg-accent/50 border-accent-foreground/10 uppercase',
 			},
 			size: {
+				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
 				md: 'px-2.5 py-0.5 text-xs gap-1.5 [&>svg]:h-4 [&>svg]:w-4',
 				sm: 'px-1 py-0 text-[0.5rem] gap-1 [&>svg]:h-3 [&>svg]:w-3',
 			},

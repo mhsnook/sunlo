@@ -17,6 +17,7 @@ import {
 	CommandItem,
 	CommandList,
 } from '@/components/ui/command'
+import { Button } from './button'
 
 type Option = Record<'value' | 'label', string>
 
@@ -166,10 +167,11 @@ export function ShowSelected({
 			{selected.map((value) => {
 				const option = options.find((o) => o.value === value)
 				return !option ? null : (
-						<Badge key={value} variant="secondary" className="rounded-2xl">
+						<Badge key={value} size="lg" variant="outline" className="pe-1.5">
 							{option.label}
-							<button
-								className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+							<Button
+								size="icon"
+								variant="badge-outline"
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
 										handleUnselect(value)
@@ -182,8 +184,8 @@ export function ShowSelected({
 								type="button"
 								onClick={() => handleUnselect(value)}
 							>
-								<X className="text-muted-foreground hover:text-foreground h-3 w-3 cursor-pointer" />
-							</button>
+								<X />
+							</Button>
 						</Badge>
 					)
 			})}
