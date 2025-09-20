@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
 import { uuid } from '@/types/main'
 import { useLanguagePhrasesMap, useLanguagePids } from '@/hooks/use-language'
-import { useMemo, type SetStateAction } from 'react'
+import { useCallback, useMemo, type SetStateAction } from 'react'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { useLanguageTags } from '@/hooks/use-language'
@@ -50,21 +50,25 @@ function SearchTab() {
 		[tagsFilter]
 	)
 
-	const setSelectedTags = (value: SetStateAction<string[]>) => {
-		void navigate({
-			to: '.',
-			search: (prev: PhraseSearchType) => {
-				const newSelectedTags =
-					typeof value === 'function' ? value(selectedTags) : value
-				return {
-					...prev,
-					tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
-				}
-			},
-			replace: true,
-			params: true,
-		})
-	}
+	const setSelectedTags = useCallback(
+		(value: SetStateAction<string[]>) => {
+			void navigate({
+				to: '.',
+				search: (prev: PhraseSearchType) => {
+					const newSelectedTags =
+						typeof value === 'function' ? value(selectedTags) : value
+					return {
+						...prev,
+						tags:
+							newSelectedTags.length ? newSelectedTags.join(',') : undefined,
+					}
+				},
+				replace: true,
+				params: true,
+			})
+		},
+		[navigate]
+	)
 
 	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
 		if (!pids || !phrasesMap) return []
