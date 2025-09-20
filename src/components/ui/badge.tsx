@@ -34,7 +34,7 @@ export function TinyBadge({
 
 export function LangBadge({ lang }: { lang: string | null }) {
 	return lang === null ? null : (
-			<Badge className="my-0" variant="lang" size="md">
+			<Badge className="my-0" variant="lang">
 				<Globe className="-ms-0.5" size="16" /> {lang}
 			</Badge>
 		)

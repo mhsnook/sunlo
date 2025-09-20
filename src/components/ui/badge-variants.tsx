@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 const badgeVariants = cva(
-	'rounded inline-flex items-center rounded border gap-1.5 font-semibold transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
+	'rounded inline-flex items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
 	{
 		variants: {
 			variant: {
@@ -12,12 +12,12 @@ const badgeVariants = cva(
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
 				success: 'border-transparent bg-green-600 text-green-100 hover:shadow',
-				outline: 'text-foreground font-normal border-muted-foresoft/30',
+				outline: 'text-foreground/80 bg-foreground/5',
 				lang: 'text-accent-foreground bg-accent/50 border-accent-foreground/10 uppercase',
 			},
 			size: {
-				md: 'px-2.5 py-0.5 text-xs',
-				sm: 'px-1 py-0 text-[0.5rem]',
+				md: 'px-2.5 py-0.5 text-xs gap-1.5 [&>svg]:h-4 [&>svg]:w-4',
+				sm: 'px-1 py-0 text-[0.5rem] gap-1 [&>svg]:h-3 [&>svg]:w-3',
 			},
 		},
 		defaultVariants: {
