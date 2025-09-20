@@ -6,9 +6,16 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	return {
-		plugins: [tsconfigPaths(), TanStackRouterVite(), react()],
+		plugins: [
+			tsconfigPaths(),
+			TanStackRouterVite({
+				autoCodeSplitting: true,
+			}),
+			react(),
+		],
+
 		build: {
-			chunkSizeWarningLimit: 550,
+			chunkSizeWarningLimit: 750,
 			// Tauri uses Chromium on Windows and WebKit on macOS and Linux
 			target:
 				process.env.TAURI_ENV_PLATFORM === 'windows' ? 'chrome105' : 'safari13',
