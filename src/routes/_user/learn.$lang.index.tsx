@@ -69,10 +69,10 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 							aria-disabled="true"
 							className={`${buttonVariants({
 								variant: 'outline',
-							})} -mt-2`}
+							})} -mt-2 aspect-square @max-lg:px-2`}
 						>
 							<Search className="size-3" />
-							<span className="me-1">quick search</span>
+							<span className="hidden @lg:block">Quick Search</span>
 						</Link>
 					</div>
 				</CardTitle>
