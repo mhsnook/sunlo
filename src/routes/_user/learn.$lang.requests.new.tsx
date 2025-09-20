@@ -1,4 +1,4 @@
-import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -30,7 +30,7 @@ import { PhraseRequest } from '@/types/main'
 import { useProfile } from '@/hooks/use-profile'
 import type { PhraseRequestFull } from '@/hooks/use-requests'
 
-export const Route = createLazyFileRoute('/_user/learn/$lang/requests/new')({
+export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: Page,
 })
 
