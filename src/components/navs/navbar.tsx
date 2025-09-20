@@ -1,5 +1,5 @@
 import { ComponentType, useCallback, useState } from 'react'
-import { ChevronLeft, MoreVertical } from 'lucide-react'
+import { ChevronLeft, MoreVertical, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -15,6 +15,14 @@ import {
 } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useLinks } from '@/hooks/links'
+import { LinkType } from '@/types/main'
+import { Dialog, DialogContent, DialogTrigger } from '../ui/dialog'
+
+type SearchResult = {
+	title: string
+	description: string
+	link: LinkType
+}
 
 type NavbarLoaderData = {
 	titleBar?: {
@@ -22,6 +30,7 @@ type NavbarLoaderData = {
 		subtitle?: string
 		onBackClick?: string | (() => void)
 	}
+	searchFn: (query: string) => SearchResult
 	contextMenu?: string[]
 }
 type NavbarMatch = RouteMatch<
@@ -46,8 +55,10 @@ export default function Navbar() {
 				<SidebarTrigger />
 				<Title matches={matches} />
 			</div>
-
-			<ContextMenu matches={matches} />
+			<div className="flex flex-row items-center gap-3">
+				<SearchFlyout matches={matches} />
+				<ContextMenu matches={matches} />
+			</div>
 		</nav>
 	)
 }
@@ -122,5 +133,25 @@ function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
+	)
+}
+
+function SearchFlyout({ matches }: { matches: NavbarMatch[] }) {
+	const [isOpen, setIsOpen] = useState(false)
+	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
+	const match = matches.findLast((m) => !!m?.loaderData?.searchFn)
+	// if (!match) return null
+	// const searchFn = match.loaderData?.searchFn
+	// if (!searchFn) return null
+
+	return (
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button size="icon" variant="ghost">
+					<Search />
+				</Button>
+			</DialogTrigger>
+			<DialogContent>hihi</DialogContent>
+		</Dialog>
 	)
 }
