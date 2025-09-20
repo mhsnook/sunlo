@@ -13,11 +13,13 @@ import { Blockquote } from '@/components/ui/blockquote'
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '../friends/send-request-to-friend-dialog'
 import ShareRequestButton from '../share-request-button'
+import { PublicProfile } from '@/types/main'
 
 export function RequestItem({ request }: { request: PhraseRequestFull }) {
 	if (!request) return null
 	const answers = Array.isArray(request.phrases) ? request.phrases : []
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
+	const requester = (request.requester as PublicProfile) ?? null
 	return (
 		<Card className="group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md">
 			<CardHeader>
@@ -32,18 +34,19 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 						<span className="capitalize">{request.status}</span>
 					</Badge>
 				</div>
-				<div className="text-muted-foreground mt-2 flex min-w-0 items-center gap-2 text-sm">
+				<div className="text-muted-foreground mt-2 inline-flex min-w-0 items-center gap-1 text-sm">
+					Requested{' '}
 					<Link
 						to="/learn/$lang/requests/$id"
 						params={{ lang: request.lang, id: request.id }}
 						className="s-link-hidden text-primary-foresoft"
 					>
 						{ago(request.created_at)}
-					</Link>
-					requested by{' '}
+					</Link>{' '}
+					by{' '}
 					<UserPermalink
-						username={request.requester?.username ?? ''}
-						avatarUrl={avatarUrlify(request.requester?.avatar_path) ?? ''}
+						username={requester?.username ?? ''}
+						avatarUrl={avatarUrlify(requester?.avatar_path) ?? ''}
 						uid={request.requester_uid}
 						className="text-muted-foreground"
 					/>
@@ -82,8 +85,8 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
 						<ShareRequestButton
-							id={request.id}
-							lang={request.lang}
+							id={request.id!}
+							lang={request.lang!}
 							variant="ghost"
 							size="icon"
 						/>

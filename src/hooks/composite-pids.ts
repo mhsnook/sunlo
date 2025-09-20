@@ -17,7 +17,12 @@ export function useCompositePids(lang: string) {
 	const { data: deckPids } = useDeckPids(lang)
 
 	return useMemo(() => {
-		if (!profile || !phrasesMap || !languagePids || !deckPids) {
+		if (
+			!profile?.languagesToShow ||
+			!phrasesMap ||
+			!languagePids ||
+			!deckPids
+		) {
 			return null
 		}
 

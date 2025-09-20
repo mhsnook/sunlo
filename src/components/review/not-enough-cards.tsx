@@ -18,10 +18,11 @@ export function NotEnoughCards({
 	return (
 		<Callout variant="ghost" Icon={MessageCircleWarningIcon}>
 			<p>
-				It looks like you don't have {noCards ? 'any' : 'enough new'} cards
+				It looks like you don't have {noCards ? 'any ' : 'enough new '} cards
 				{noCards ?
 					" to review. You'll have to add at least a few before you can proceed"
 				:	<>
+						{' '}
 						in your deck to meet your goal of{' '}
 						<strong className="italic">{countNeeded} new cards a day</strong>
 					</>

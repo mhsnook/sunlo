@@ -1,7 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { PhraseRow, TranslationRow, uuid } from '@/types/main'
+import { PhraseRow, PublicProfile, TranslationRow, uuid } from '@/types/main'
 
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 	queryOptions({
@@ -20,7 +20,11 @@ export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 				data.forEach((request) => {
 					if (request.requester)
 						client.setQueryData(
-							['public', 'profile', request.requester.uid],
+							[
+								'public',
+								'profile',
+								() => (request.requester as PublicProfile).uid,
+							],
 							request.requester
 						)
 				})
