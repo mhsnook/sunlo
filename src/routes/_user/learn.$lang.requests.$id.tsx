@@ -203,7 +203,9 @@ function FulfillRequestPage() {
 			</Callout>
 		)
 
-	const noAnswers = request.phrases?.length === 0
+	const requestPhrases = (request.phrases ?? []) as PhraseFull[]
+	const noAnswers = requestPhrases?.length === 0
+	const requester = request.requester as PublicProfile
 
 	return (
 		<main>
@@ -216,8 +218,8 @@ function FulfillRequestPage() {
 						Request from{' '}
 						<UserPermalink
 							uid={request.requester_uid}
-							username={request.requester?.username}
-							avatarUrl={avatarUrlify(request.requester?.avatar_path)}
+							username={requester.username}
+							avatarUrl={avatarUrlify(requester.avatar_path)}
 							className="px-1"
 						/>
 						{' • '}
@@ -227,13 +229,13 @@ function FulfillRequestPage() {
 				<CardContent>
 					<Blockquote>&rdquo;{request.prompt}&ldquo;</Blockquote>
 
-					{request.phrases && request.phrases.length > 0 && (
+					{requestPhrases.length > 0 && (
 						<div className="mb-6 space-y-4">
 							<h3 className="h3">
-								{request.phrases.length} answer
-								{request.phrases.length > 1 && 's'} so far
+								{requestPhrases.length} answer
+								{requestPhrases.length > 1 && 's'} so far
 							</h3>
-							{request.phrases.map((phrase: any) => (
+							{requestPhrases.map((phrase) => (
 								<div key={phrase.id} className="rounded-lg p-4 shadow">
 									<p className="text-muted-foreground mb-2 text-sm">
 										<UserPermalink
