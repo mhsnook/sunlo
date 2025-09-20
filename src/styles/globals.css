@@ -8,7 +8,7 @@
 
 :root {
 	--background: hsl(263 83% 94%);
-	--foreground: hsl(224 71% 10%);
+	--foreground: hsl(224 51% 20%);
 	--card: hsl(0 0% 100%);
 	--card-foreground: hsl(224 71% 4%);
 	--popover: hsl(0 0% 100%);
@@ -21,7 +21,7 @@
 	--muted: hsl(220 14% 96%);
 	--muted-foreground: hsl(220 9% 43%);
 	--accent: hsl(174 42% 90%);
-	--accent-foreground: hsl(174 100% 30%);
+	--accent-foreground: hsl(174 90% 28%);
 	--destructive: hsl(0 84% 60%);
 	--destructive-foreground: hsl(210 20% 98%);
 	--border: hsl(263 37% 81%);
@@ -47,7 +47,7 @@
 
 .dark {
 	--background: hsl(263 83% 13%);
-	--foreground: hsl(263 83% 88%);
+	--foreground: hsl(263 83% 84%);
 	--card: hsl(224 71% 12%);
 	--card-foreground: hsl(263 83% 88%);
 	--popover: hsl(224 71% 4%);
