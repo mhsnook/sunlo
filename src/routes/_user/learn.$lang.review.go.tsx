@@ -6,9 +6,9 @@ import {
 	useReviewDayString,
 	useReviewLang,
 	useReviewStage,
-} from '@/lib/use-review-store'
+} from '@/hooks/use-review-store'
 import { todayString } from '@/lib/utils'
-import { reviewsQuery, useManifest } from '@/lib/use-reviews'
+import { reviewsQuery, useManifest } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'

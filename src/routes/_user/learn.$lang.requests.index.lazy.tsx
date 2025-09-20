@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RequestItem } from '@/components/requests/request-list-item'
-import { useAllMyPhraseRequests } from '@/lib/use-requests'
+import { useAllMyPhraseRequests } from '@/hooks/use-requests'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,

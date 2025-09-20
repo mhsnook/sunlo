@@ -24,12 +24,12 @@ import {
 	useDeckMeta,
 	useDeckPids,
 	useDeckRoutineStats,
-} from '@/lib/use-deck'
+} from '@/hooks/use-deck'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { useLanguage } from '@/lib/use-language'
+import { useLanguage } from '@/hooks/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
 

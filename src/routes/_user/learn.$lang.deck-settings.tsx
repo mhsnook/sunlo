@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { DeckRow } from '@/types/main'
-import { useDeckMeta } from '@/lib/use-deck'
+import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { ArchiveDeckButton } from '@/components/learn/archive-deck-button'

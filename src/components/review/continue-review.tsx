@@ -1,4 +1,4 @@
-import { useInitialiseReviewStore } from '@/lib/use-review-store'
+import { useInitialiseReviewStore } from '@/hooks/use-review-store'
 import { ReviewStats } from '@/types/main'
 import {
 	Card,

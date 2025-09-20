@@ -13,7 +13,7 @@ import {
 import { useAuth } from '@/lib/hooks'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
-import { useProfile, publicProfileQuery } from '@/lib/use-profile'
+import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
 import { useMutation, useQuery } from '@tanstack/react-query'
 
 import { createFileRoute, Link } from '@tanstack/react-router'

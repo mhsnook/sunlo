@@ -1,4 +1,4 @@
-import { useReviewDayString, useReviewStage } from '@/lib/use-review-store'
+import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
@@ -10,8 +10,8 @@ import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import { Play } from 'lucide-react'
-import { useLanguagePhrase } from '@/lib/use-language'
-import { useOneReviewToday, useReviewMutation } from '@/lib/use-reviews'
+import { useLanguagePhrase } from '@/hooks/use-language'
+import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)

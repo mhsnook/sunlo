@@ -4,7 +4,7 @@ import {
 	createReviewStore,
 	ReviewState,
 	ReviewStore,
-} from '@/lib/use-review-store'
+} from '@/hooks/use-review-store'
 
 const ReviewStoreContext = createContext<ReviewStore | null>(null)
 

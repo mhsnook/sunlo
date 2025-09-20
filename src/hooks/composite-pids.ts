@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { useDeckPids } from '@/lib/use-deck'
-import { useLanguagePids, useLanguagePhrasesMap } from '@/lib/use-language'
+import { useDeckPids } from '@/hooks/use-deck'
+import { useLanguagePids, useLanguagePhrasesMap } from '@/hooks/use-language'
 import { arrayDifference } from '@/lib/utils'
-import { useProfile } from '@/lib/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
 /**

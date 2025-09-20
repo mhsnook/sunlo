@@ -17,7 +17,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { searchPublicProfilesByUsername } from '@/lib/use-profile'
+import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
 
 export const Route = createFileRoute('/_auth/find-a-friend')({
 	component: SearchProfilesComponent,

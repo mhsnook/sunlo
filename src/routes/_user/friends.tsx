@@ -1,6 +1,6 @@
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { relationsQuery } from '@/lib/friends'
+import { relationsQuery } from '@/hooks/use-friends'
 
 export const Route = createFileRoute('/_user/friends')({
 	component: FriendsPage,

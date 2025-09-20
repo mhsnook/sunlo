@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useAllChats, useRelations } from '@/lib/friends'
+import { useAllChats, useRelations } from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 

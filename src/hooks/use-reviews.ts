@@ -4,8 +4,8 @@ import {
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import supabase from './supabase-client'
-import { useAuth } from './hooks'
+import supabase from '../lib/supabase-client'
+import { useAuth } from '../lib/hooks'
 import {
 	DailyReviewStateFetched,
 	DailyReviewStateLoaded,
@@ -29,7 +29,7 @@ import {
 	useReviewStage,
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
-import { mapArray } from './utils'
+import { mapArray } from '../lib/utils'
 
 const postReview = async (submitData: ReviewInsert) => {
 	const { data } = await supabase

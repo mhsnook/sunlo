@@ -6,8 +6,8 @@ import {
 	useReviewStage,
 	useReviewLang,
 	useReviewDayString,
-} from '@/lib/use-review-store'
-import { useReviewsTodayStats } from '@/lib/use-reviews'
+} from '@/hooks/use-review-store'
+import { useReviewsTodayStats } from '@/hooks/use-reviews'
 
 export function WhenComplete() {
 	const lang = useReviewLang()

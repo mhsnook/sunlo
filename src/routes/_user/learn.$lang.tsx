@@ -1,8 +1,8 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
-import { languageQueryOptions } from '@/lib/use-language'
-import { deckQueryOptions } from '@/lib/use-deck'
+import { languageQueryOptions } from '@/hooks/use-language'
+import { deckQueryOptions } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,

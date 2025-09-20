@@ -12,7 +12,7 @@ import type {
 import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { useCallback } from 'react'
-import { inLastWeek } from './dayjs'
+import { inLastWeek } from '../lib/dayjs'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 

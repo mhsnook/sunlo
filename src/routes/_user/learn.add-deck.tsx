@@ -11,7 +11,7 @@ import Callout from '@/components/ui/callout'
 import { ShowAndLogError } from '@/components/errors'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { useNewDeckMutation } from '@/lib/mutate-deck'
-import { useProfile } from '@/lib/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import ErrorLabel from '@/components/fields/error-label'
 

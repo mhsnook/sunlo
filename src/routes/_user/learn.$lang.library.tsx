@@ -16,9 +16,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguage } from '@/lib/use-language'
+import { useLanguage } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { useDeckPids } from '@/lib/use-deck'
+import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
 

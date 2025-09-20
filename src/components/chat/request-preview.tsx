@@ -6,7 +6,7 @@ import { buttonVariants } from '../ui/button-variants'
 import { LinkIcon } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import { useQuery } from '@tanstack/react-query'
-import { phraseRequestQuery } from '@/lib/use-requests'
+import { phraseRequestQuery } from '@/hooks/use-requests'
 import { LangBadge } from '../ui/badge'
 
 export function RequestPreview({

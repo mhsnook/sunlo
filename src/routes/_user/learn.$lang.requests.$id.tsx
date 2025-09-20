@@ -51,8 +51,8 @@ import {
 	type FulfillRequestResponse,
 	type PhraseRequestFull,
 	phraseRequestQuery,
-} from '@/lib/use-requests'
-import { useProfile } from '@/lib/use-profile'
+} from '@/hooks/use-requests'
+import { useProfile } from '@/hooks/use-profile'
 import { Blockquote } from '@/components/ui/blockquote'
 import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
