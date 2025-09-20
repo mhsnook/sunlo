@@ -58,7 +58,7 @@ import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
 import ShareRequestButton from '@/components/share-request-button'
-import { Send } from 'lucide-react'
+import { MessageSquarePlus, Send } from 'lucide-react'
 import { SendRequestToFriendDialog } from '@/components/friends/send-request-to-friend-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
@@ -264,8 +264,9 @@ function FulfillRequestPage() {
 						onOpenChange={setIsAnswering}
 					>
 						<CollapsibleTrigger asChild className={noAnswers ? 'hidden' : ''}>
-							<Button variant="outline">
-								{request.phrases?.length > 0 ?
+							<Button>
+								<MessageSquarePlus />{' '}
+								{Array.isArray(request.phrases) && request.phrases.length > 0 ?
 									'Submit another answer'
 								:	'Answer this request'}
 							</Button>

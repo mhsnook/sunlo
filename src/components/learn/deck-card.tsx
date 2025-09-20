@@ -8,7 +8,15 @@ import {
 } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { ago } from '@/lib/dayjs'
-import { Archive, Rocket, Clock, TrendingUp, Sprout } from 'lucide-react'
+import {
+	Archive,
+	Rocket,
+	Sprout,
+	TriangleAlert,
+	BookOpenCheck,
+	WalletCards,
+	ChartSpline,
+} from 'lucide-react'
 import { ArchiveDeckButton } from './archive-deck-button'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '../ui/button-variants'
@@ -48,34 +56,25 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
-					<Badge
-						variant={deck.cards_active ? 'outline' : 'secondary'}
-						className="border-primary bg-primary/10 flex items-center gap-1"
-					>
-						<span className="font-semibold">{deck.cards_active}</span>
-						<span className="text-xs opacity-80">active cards</span>
-					</Badge>
-
-					<Badge
-						variant="outline"
-						className="bg-foreground/5 flex items-center gap-1"
-					>
-						<Clock className="h-3 w-3" />
-						<span className="font-medium">
-							{ago(deck.most_recent_review_at)}
-						</span>
-					</Badge>
-
 					{deck.count_reviews_7d ?
-						<Badge
-							variant="outline"
-							className="border-accent text-accent-foreground bg-accent/10 flex items-center gap-1"
-						>
-							<TrendingUp className="h-3 w-3" />
-							<span className="font-medium">{deck.count_reviews_7d}</span>
-							<span className="text-xs opacity-70">this week</span>
+						<Badge variant="outline">
+							<ChartSpline />
+							<span>{deck.count_reviews_7d} reviews this week</span>
 						</Badge>
-					:	null}
+					:	<Badge variant="outline">
+							<TriangleAlert />
+							<span>No reviews this week</span>
+						</Badge>
+					}
+					<Badge variant="outline">
+						<WalletCards />
+						<span>{deck.cards_active} active cards</span>
+					</Badge>
+
+					<Badge variant="outline">
+						<BookOpenCheck />
+						<span>{ago(deck.most_recent_review_at)}</span>
+					</Badge>
 				</div>
 			</CardContent>
 			<CardFooter className="block w-full space-y-4 p-4 pt-0">
@@ -90,8 +89,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 								)}
 								params={{ lang: deck.lang! }}
 							>
-								Study now
 								<Rocket />
+								Study now
 							</Link>
 						:	<Link
 								to="/learn/$lang/library"
@@ -101,8 +100,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 								)}
 								params={{ lang: deck.lang! }}
 							>
-								Build your deck
 								<Rocket />
+								Build your deck
 							</Link>
 
 					:	null}
@@ -121,8 +120,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 							)}
 							params={{ lang: deck.lang! }}
 						>
-							Manage deck
 							<Sprout />
+							Manage deck
 						</Link>
 					}
 				</div>
