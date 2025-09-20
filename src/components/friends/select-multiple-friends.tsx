@@ -1,9 +1,9 @@
-import { useRelations } from '@/lib/friends'
+import type { Dispatch, SetStateAction } from 'react'
+import { useRelations } from '@/hooks/use-friends'
 import { Loader } from '../ui/loader'
 import { uuid } from '@/types/main'
 import { Checkbox } from '../ui/checkbox'
 import { User } from 'lucide-react'
-import { Dispatch, SetStateAction } from 'react'
 
 export function SelectMultipleFriends({
 	uids = [],

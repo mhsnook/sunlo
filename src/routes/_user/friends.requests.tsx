@@ -5,7 +5,7 @@ import { Contact } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import { ShowError } from '@/components/errors'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useRelations } from '@/lib/friends'
+import { useRelations } from '@/hooks/use-friends'
 import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createFileRoute('/_user/friends/requests')({

@@ -4,7 +4,7 @@ import type { PublicProfile, PublicProfileFull } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { AvatarIconRow } from '@/components/ui/avatar-icon'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
-import { useFriendRequestAction, useOneRelation } from '@/lib/friends'
+import { useFriendRequestAction, useOneRelation } from '@/hooks/use-friends'
 import { Loader } from '@/components/ui/loader'
 
 export function ProfileWithRelationship({

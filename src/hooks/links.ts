@@ -23,7 +23,7 @@ import languages, { LangKey } from '../lib/languages'
 import { useMemo } from 'react'
 import { LinkType } from '@/types/main'
 import { useParams } from '@tanstack/react-router'
-import { useRelations } from '@/lib/friends'
+import { useRelations } from '@/hooks/use-friends'
 
 const links = (lang?: LangKey): Record<string, LinkType> => ({
 	'/': {

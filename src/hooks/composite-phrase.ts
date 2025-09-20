@@ -4,8 +4,8 @@ import {
 	TranslationRow,
 	TranslationStub,
 } from '@/types/main'
-import { useLanguagePhrase } from '@/lib/use-language'
-import { useProfile } from '@/lib/use-profile'
+import { useLanguagePhrase } from '@/hooks/use-language'
+import { useProfile } from '@/hooks/use-profile'
 import type { CompositeQueryResults, PhraseFiltered, uuid } from '@/types/main'
 
 export const usePhrase = (

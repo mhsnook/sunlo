@@ -27,8 +27,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
 import { PhraseRequest } from '@/types/main'
-import { useProfile } from '@/lib/use-profile'
-import { PhraseRequestFull } from '@/lib/use-requests'
+import { useProfile } from '@/hooks/use-profile'
+import type { PhraseRequestFull } from '@/hooks/use-requests'
 
 export const Route = createLazyFileRoute('/_user/learn/$lang/requests/new')({
 	component: Page,

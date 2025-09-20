@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
-import { useRelations } from '@/lib/friends'
+import { useRelations } from '@/hooks/use-friends'
 import { ShowError } from '@/components/errors'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { PendingRequestsHeader } from '@/components/friends/pending-requests-header'

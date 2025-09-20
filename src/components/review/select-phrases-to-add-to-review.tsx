@@ -1,5 +1,5 @@
 import languages from '@/lib/languages'
-import { useProfile } from '@/lib/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { pids } from '@/types/main'
 import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
 import {

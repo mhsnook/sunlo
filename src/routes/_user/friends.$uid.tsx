@@ -6,9 +6,9 @@ import {
 	useFriendRequestAction,
 	useOneRelation,
 	useRelations,
-} from '@/lib/friends'
+} from '@/hooks/use-friends'
 import { useAuth } from '@/lib/hooks'
-import { publicProfileQuery } from '@/lib/use-profile'
+import { publicProfileQuery } from '@/hooks/use-profile'
 import { uuid } from '@/types/main'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {

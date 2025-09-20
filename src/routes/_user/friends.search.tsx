@@ -20,7 +20,7 @@ import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
-import { searchPublicProfilesByUsername } from '@/lib/use-profile'
+import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
 import { ShareButtons } from './friends.invite'
 
 const SearchSchema = z.object({

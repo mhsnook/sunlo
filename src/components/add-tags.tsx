@@ -17,7 +17,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { useLanguagePhrase, useLanguageTags } from '@/lib/use-language'
+import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from './ui/separator'
 import { MultiSelectCreatable } from './fields/multi-select-creatable'

@@ -4,7 +4,7 @@ import {
 	useQuery,
 	useQueryClient,
 } from '@tanstack/react-query'
-import supabase from './supabase-client'
+import supabase from '../lib/supabase-client'
 import {
 	ChatMessageRelative,
 	ChatMessageRow,
@@ -14,8 +14,8 @@ import {
 	FriendSummaryRelative,
 	uuid,
 } from '@/types/main'
-import { useAuth } from './hooks'
-import { avatarUrlify, mapArray, mapArrays } from './utils'
+import { useAuth } from '../lib/hooks'
+import { avatarUrlify, mapArray, mapArrays } from '../lib/utils'
 import toast from 'react-hot-toast'
 import { useCallback } from 'react'
 

@@ -1,6 +1,6 @@
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import Callout from '@/components/ui/callout'
-import { publicProfileQuery, useProfile } from '@/lib/use-profile'
+import { publicProfileQuery, useProfile } from '@/hooks/use-profile'
 import { uuid } from '@/types/main'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'

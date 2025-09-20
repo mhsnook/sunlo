@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
 import { useQuery } from '@tanstack/react-query'
-import { phraseRequestQuery } from '@/lib/use-requests'
+import { phraseRequestQuery } from '@/hooks/use-requests'
 
 export default function ShareRequestButton({
 	lang,

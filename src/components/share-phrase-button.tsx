@@ -4,7 +4,7 @@ import type { OnePhraseComponentProps } from '@/types/main'
 import { Share2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/lib/use-language'
+import { useLanguagePhrase } from '@/hooks/use-language'
 import languages from '@/lib/languages'
 
 export default function SharePhraseButton({

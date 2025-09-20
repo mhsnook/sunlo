@@ -4,7 +4,7 @@ import Callout from '@/components/ui/callout'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { useProfile } from '@/lib/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { LangOnlyComponentProps } from '@/types/main'
 import { useSidebar } from '../ui/sidebar'
 

@@ -21,9 +21,9 @@ import {
 	useInitialiseReviewStore,
 	useReviewDayString,
 	useReviewStage,
-} from '@/lib/use-review-store'
+} from '@/hooks/use-review-store'
 import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
-import { useDeckMeta, useDeckPids } from '@/lib/use-deck'
+import { useDeckMeta, useDeckPids } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
 import {
 	LanguageIsEmpty,
@@ -32,7 +32,7 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { useAuth } from '@/lib/hooks'
-import { useReviewsTodayStats } from '@/lib/use-reviews'
+import { useReviewsTodayStats } from '@/hooks/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'

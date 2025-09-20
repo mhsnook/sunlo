@@ -1,4 +1,4 @@
-import { useProfile } from '@/lib/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { User } from 'lucide-react'
 
 export default function AvatarSection() {

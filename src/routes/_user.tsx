@@ -1,15 +1,7 @@
 import { useEffect, type ComponentType } from 'react'
-import { SidebarInset } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/navs/app-sidebar'
-import Navbar from '@/components/navs/navbar'
-import { AppNav } from '@/components/navs/app-nav'
-import { profileQuery } from '@/lib/use-profile'
-import {
-	ChatMessageRelative,
-	ChatMessageRow,
-	FriendRequestActionRow,
-	TitleBar,
-} from '@/types/main'
+import { useQueryClient } from '@tanstack/react-query'
+import supabase from '@/lib/supabase-client'
+import toast from 'react-hot-toast'
 import {
 	createFileRoute,
 	Outlet,
@@ -17,12 +9,20 @@ import {
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
+import {
+	ChatMessageRelative,
+	ChatMessageRow,
+	FriendRequestActionRow,
+	TitleBar,
+} from '@/types/main'
+import type { ChatsMap } from '@/hooks/use-friends'
+import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
-import { useQueryClient } from '@tanstack/react-query'
+import { AppSidebar } from '@/components/navs/app-sidebar'
+import Navbar from '@/components/navs/navbar'
+import { AppNav } from '@/components/navs/app-nav'
+import { profileQuery } from '@/hooks/use-profile'
 import { useAuth } from '@/lib/hooks'
-import supabase from '@/lib/supabase-client'
-import toast from 'react-hot-toast'
-import { ChatsMap } from '@/lib/friends'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
