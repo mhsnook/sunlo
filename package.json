@@ -93,15 +93,5 @@
 		"vite": "^6.3.5",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
-	"lint-staged": {
-		"*.{js,jsx,ts,tsx,json,css,md}": [
-			"prettier --write",
-			"oxlint --fix"
-		],
-		"*.{ts,tsx}": [
-			"eslint --fix",
-			"tsc --noEmit"
-		]
-	},
 	"packageManager": "pnpm@10.17.0"
 }
