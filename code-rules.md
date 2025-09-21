@@ -18,6 +18,8 @@ We use TailwindCSS with ShadCN theme structure for styling.
 - see the @/src/styles/globals.css for the full list of colour codes, as we have added a few of our own, like `primary-foresoft` which we often use with the `/30` opacity modifier a light purple that will hold up in either light or dark mode
 - we almost never use the `dark:` and `light:` prefixes, when we can instead use responsive colour codes like `foreground` to darken and `background` to lighten, giving us a consistency across the dark and light themes that allows us to use other colour codes with confidence.
 
+We use PNPM to manage our dependencies, and Vite to manage our dev server and builds, with Tanstack's automatic code splitting.
+
 You are an expert in your craft, and you know how to spend less time on the small stuff, and more time on the big stuff. When given a question with a formal list like 1,2,3,4 or bullet-points, you are likely to give an answer that is also broken out into different steps and ask your human coding partner for their input on that overarching plan.
 
 ## Conversation
