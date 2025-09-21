@@ -26,6 +26,7 @@ import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
+import { useCallback } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -151,9 +152,9 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={handleSubmit((data) =>
-						updateDailyGoalMutation.mutate(data)
-					)}
+					onSubmit={
+						void handleSubmit((data) => updateDailyGoalMutation.mutate(data))
+					}
 					className="space-y-4"
 				>
 					<FancySelectField<DailyGoalFormInputs>
@@ -265,7 +266,9 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutate(data))}
+					onSubmit={
+						void handleSubmit((data) => updateDeckGoalMutation.mutate(data))
+					}
 					className="space-y-4"
 				>
 					<FancySelectField<DeckGoalFormInputs>
@@ -281,7 +284,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 						<Button
 							variant="secondary"
 							type="button"
-							onClick={() => reset()}
+							onClick={useCallback(() => reset(), [reset])}
 							disabled={!isDirty}
 						>
 							Reset
