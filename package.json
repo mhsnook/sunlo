@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host",
-		"scan": "vite --host & npx react-scan@latest localhost:5173",
+		"scan": "vite --host & pnpx react-scan@latest localhost:5173",
 		"build": "vite build",
 		"lint": "time oxlint . ; time eslint .",
 		"preview": "vite preview",
