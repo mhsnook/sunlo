@@ -14,6 +14,7 @@ import { useNewDeckMutation } from '@/lib/mutate-deck'
 import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import ErrorLabel from '@/components/fields/error-label'
+import { Loader } from '@/components/ui/loader'
 
 const SearchSchema = z.object({
 	lang: z.string().optional(),
@@ -39,6 +40,8 @@ const NewDeckSchema = z.object({
 
 type FormValues = z.infer<typeof NewDeckSchema>
 
+const HelloIcon = () => <span className="text-2xl">👋</span>
+
 function NewDeckForm() {
 	const createNewDeck = useNewDeckMutation()
 	const { data } = useProfile()
@@ -52,12 +55,10 @@ function NewDeckForm() {
 		defaultValues: { lang: search.lang },
 	})
 	const controller = useController({ name: 'lang', control })
-
-	const deckLanguages = data?.deckLanguages ?? []
-	const showNewUserUI = data !== undefined && deckLanguages.length === 0
+	if (data === undefined) return <Loader />
 
 	return (
-		<main className="w-app space-y-4 px-3 py-4">
+		<main>
 			<Card>
 				<CardHeader>
 					<CardTitle>
@@ -68,22 +69,23 @@ function NewDeckForm() {
 					<form
 						name="new-deck"
 						noValidate
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={handleSubmit((data) => createNewDeck.mutate(data))}
 						className="space-y-6"
 					>
-						{showNewUserUI ?
-							<Callout Icon={() => <span>👋</span>}>
-								<p>
+						{data?.deckLanguages?.length === 0 ?
+							<Callout Icon={HelloIcon}>
+								<p className="text-primary-foresoft text-2xl font-bold">
 									Welcome <em>{data?.username}</em>!
 								</p>
 								<p>
-									Create a new deck to start learning, or go to your profile to
-									check for friend requests.
+									Create a new deck to start learning, or click the "friends"
+									link to look for your people.
 								</p>
 							</Callout>
 						:	<p>
 								You're currently learning{' '}
-								{deckLanguages.map((l) => (
+								{(data?.deckLanguages ?? []).map((l) => (
 									<Badge key={l} className="mx-1">
 										{languages[l]}
 									</Badge>
@@ -94,11 +96,11 @@ function NewDeckForm() {
 							hasError={!!errors.lang}
 							value={controller.field.value}
 							setValue={controller.field.onChange}
-							disabled={deckLanguages}
+							disabled={data?.deckLanguages}
 							size="lg"
 						/>
 						<ErrorLabel error={errors.lang} />
-						<div className="flex flex-row items-center justify-between">
+						<div className="flex flex-col items-center justify-between @lg:flex-row">
 							<Button
 								type="submit"
 								variant="default"
@@ -106,16 +108,17 @@ function NewDeckForm() {
 								className="my-4"
 								disabled={createNewDeck.isPending || !isValid}
 							>
-								{createNewDeck.isPending ? 'Starting...' : 'Start learning'}
+								{createNewDeck.isPending ? 'Starting ' : 'Start learning '}
+								{search.lang ? languages[search.lang] : ''}
+								{createNewDeck.isPending ? '...' : ''}
 							</Button>
-							{showNewUserUI ?
-								<Link
-									to={`/friends/search`}
-									className={buttonVariants({ variant: 'secondary' })}
-								>
-									View friend requests
-								</Link>
-							:	null}
+
+							<Link
+								to={`/friends/search`}
+								className={buttonVariants({ variant: 'secondary' })}
+							>
+								Find your friends and contacts
+							</Link>
 						</div>
 					</form>
 					<ShowAndLogError
