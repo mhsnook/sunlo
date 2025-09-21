@@ -1,12 +1,13 @@
+import type { QueryClient } from '@tanstack/react-query'
+import type { AuthState } from '@/types/main'
+
 import {
 	createRootRouteWithContext,
 	Link,
 	Outlet,
 	useNavigate,
 } from '@tanstack/react-router'
-import type { QueryClient } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
-import { AuthState } from '@/types/main'
 import { SidebarProvider } from '@/components/ui/sidebar'
 
 import Callout from '@/components/ui/callout'
@@ -15,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import { useCallback } from 'react'
 import { OctogonMinusDangerBadge } from '@/components/ui/badge'
 
-interface MyRouterContext {
+export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
 }

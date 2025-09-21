@@ -14,7 +14,7 @@ import { ShowAndLogError } from '@/components/errors'
 import EmailField from '@/components/fields/email-field'
 import PasswordField from '@/components/fields/password-field'
 
-interface LoginSearchParams {
+export interface LoginSearchParams {
 	redirectedFrom?: string
 }
 
@@ -83,7 +83,7 @@ export default function LoginForm() {
 					role="form"
 					noValidate
 					className="space-y-4"
-					onSubmit={handleSubmit((data) => loginMutation.mutate(data))}
+					onSubmit={void handleSubmit((data) => loginMutation.mutate(data))}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
 						<EmailField<FormInputs>

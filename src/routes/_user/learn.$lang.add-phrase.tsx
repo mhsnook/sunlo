@@ -25,7 +25,7 @@ import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button-variants'
 
-interface SearchParams {
+export interface SearchParams {
 	text?: string
 }
 
@@ -107,7 +107,7 @@ function AddPhraseTab() {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
+					onSubmit={void handleSubmit((data) => addPhraseMutation.mutate(data))}
 					className="mt-2 space-y-4"
 				>
 					<div>
