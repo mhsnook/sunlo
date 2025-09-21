@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 
-export default function ({
+export default function UserPermalink({
 	uid,
 	username,
 	avatarUrl,
