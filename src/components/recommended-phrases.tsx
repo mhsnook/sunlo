@@ -31,7 +31,7 @@ const PhraseSection = ({
 						<PhraseTinyCard key={pid} pid={pid} lang={lang} />
 					))}
 				</div>
-			:	<p className="text-muted-foreground">No phrases available</p>}
+			:	<p className="text-muted-foreground">No recommendations available</p>}
 		</div>
 	)
 }
