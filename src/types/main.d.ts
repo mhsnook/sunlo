@@ -39,6 +39,12 @@ export type AuthState = {
 	userRole: RolesEnum
 }
 
+export type SearchResult = {
+	title: string
+	description: string
+	link: LinkType['link']
+}
+
 export type ChatMessageRow = Tables<'chat_message'>
 export type ChatMessageRelative = ChatMessageRow & {
 	isMine: boolean

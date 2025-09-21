@@ -3,6 +3,7 @@ import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/hooks/use-language'
 import { deckQueryOptions } from '@/hooks/use-deck'
+import supabase from '@/lib/supabase-client'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -40,6 +41,27 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				'/learn/$lang/add-phrase',
 				'/learn/$lang/deck-settings',
 			],
+			quickSearch: {
+				labelText: 'Search for a phrase',
+				searchFn: async ({ query }: { query: string }) => {
+					console.log(`query`, typeof query, query)
+					const { data } = await supabase
+						.from('meta_phrase_info')
+						.select()
+						.ilikeAnyOf('text', String(query).split(' '))
+						.throwOnError()
+					return data.map((phrase) => {
+						return {
+							title: phrase.text,
+							description: '',
+							link: {
+								to: '/learn/$lang/$id',
+								params: { id: phrase.id, lang: phrase.lang },
+							},
+						}
+					})
+				},
+			},
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			} as TitleBar,
