@@ -45,6 +45,7 @@ export function InviteFriendForm() {
 	})
 
 	return (
+		// eslint-disable-next-line @typescript-eslint/no-misused-promises
 		<form onSubmit={handleSubmit((data) => invite.mutate(data))}>
 			<fieldset
 				className="flex flex-row items-end gap-2"
@@ -55,6 +56,7 @@ export function InviteFriendForm() {
 					<Controller
 						name="email"
 						control={control}
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						render={({ field }) => (
 							<Input
 								{...field}

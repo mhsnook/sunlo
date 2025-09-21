@@ -74,6 +74,7 @@ export default function UpdateProfileForm({
 		<form
 			noValidate
 			className="space-y-4"
+			// eslint-disable-next-line @typescript-eslint/no-misused-promises
 			onSubmit={handleSubmit((data) => updateProfile.mutate(data))}
 		>
 			<fieldset className="grid grid-cols-1 gap-4" disabled={isSubmitting}>
@@ -95,6 +96,7 @@ export default function UpdateProfileForm({
 					</Button>
 					<Button
 						type="button"
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => reset()}
 						variant="secondary"
 						disabled={updateProfile.isPending || !isDirty}
@@ -104,6 +106,7 @@ export default function UpdateProfileForm({
 				</div>
 				<ShowAndLogError
 					error={updateProfile.error}
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					values={{
 						...updateProfile.variables,
 						languages_known: JSON.stringify(

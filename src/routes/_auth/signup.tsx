@@ -117,6 +117,7 @@ function SignUp() {
 							role="form"
 							noValidate
 							className="space-y-4"
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
 							onSubmit={handleSubmit((data) => signupMutation.mutate(data))}
 						>
 							<fieldset
@@ -126,16 +127,19 @@ function SignUp() {
 								<EmailField<FormInputs>
 									register={register}
 									error={errors.email}
+									// oxlint-disable-next-line tabindex-no-positive
 									tabIndex={1}
 								/>
 								<PasswordField<FormInputs>
 									register={register}
 									error={errors.password}
+									// oxlint-disable-next-line tabindex-no-positive
 									tabIndex={2}
 								/>
 								<UserRoleField<FormInputs>
 									control={control}
 									error={errors.user_role}
+									// oxlint-disable-next-line tabindex-no-positive
 									tabIndex={3}
 								/>
 							</fieldset>
