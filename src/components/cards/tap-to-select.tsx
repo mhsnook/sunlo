@@ -27,6 +27,7 @@ export function TapCardToSelect({
 	if (!phrase) return null
 	return (
 		<Card
+			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => toggleCardSelection(pid)}
 			key={pid}
 			className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${isSelected ? 'border-primary bg-primary/10' : ''}`}

@@ -70,6 +70,7 @@ export function SendPhraseToFriendButton({
 
 				<Button
 					disabled={!uids.length}
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendPhraseToFriendMutation.mutate(uids)}
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
