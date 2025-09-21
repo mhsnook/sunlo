@@ -43,7 +43,11 @@ const router = createRouter({
 	defaultErrorComponent: ({ error, reset }) => (
 		<ShowError show={!!error}>
 			<p>Error: {error?.message}</p>
-			<Button variant="destructive-outline" onClick={() => reset()}>
+			<Button
+				variant="destructive-outline"
+				// oxlint-disable-next-line jsx-no-new-function-as-prop
+				onClick={() => reset()}
+			>
 				Refresh the page
 			</Button>
 		</ShowError>
