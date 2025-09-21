@@ -92,6 +92,7 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => gotoIndex(nextValidIndex)}
 							className="ps-4 pe-2"
 						>

@@ -192,6 +192,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 					<Button
 						variant="secondary"
 						type="button"
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => reset()}
 						disabled={!isDirty}
 					>

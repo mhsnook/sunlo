@@ -13,10 +13,14 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
+import { useCallback } from 'react'
 
 export function ModeToggle() {
 	const { theme, setTheme } = useTheme()
 	const { isMobile } = useSidebar()
+	const setLight = useCallback(() => setTheme('light'), [setTheme])
+	const setDark = useCallback(() => setTheme('dark'), [setTheme])
+	const setSystem = useCallback(() => setTheme('system'), [setTheme])
 
 	return (
 		<SidebarMenu>
@@ -44,7 +48,7 @@ export function ModeToggle() {
 					>
 						<DropdownMenuItem
 							className={theme === 'light' ? 'bg-primary/10' : ''}
-							onClick={() => setTheme('light')}
+							onClick={setLight}
 						>
 							{theme === 'light' ?
 								<Check className="mr-2 size-4" />
@@ -53,7 +57,7 @@ export function ModeToggle() {
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							className={theme === 'dark' ? 'bg-primary/10' : ''}
-							onClick={() => setTheme('dark')}
+							onClick={setDark}
 						>
 							{theme === 'dark' ?
 								<Check className="mr-2 size-4" />
@@ -62,7 +66,7 @@ export function ModeToggle() {
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							className={theme === 'system' ? 'bg-primary/10' : ''}
-							onClick={() => setTheme('system')}
+							onClick={setSystem}
 						>
 							{theme === 'system' ?
 								<Check className="mr-2 size-4" />
