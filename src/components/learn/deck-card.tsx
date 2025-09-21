@@ -6,22 +6,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '../ui/card'
-import { Badge, LangBadge } from '../ui/badge'
-import { ago } from '@/lib/dayjs'
-import {
-	Archive,
-	Rocket,
-	TriangleAlert,
-	BookOpenCheck,
-	WalletCards,
-	ChartSpline,
-	HouseHeart,
-	BookOpenText,
-} from 'lucide-react'
+import { Badge } from '../ui/badge'
+import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
 import { ArchiveDeckButton } from './archive-deck-button'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '../ui/button-variants'
 import { cn } from '@/lib/utils'
+import { StatsBadges } from '../stats-badges'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	return (
@@ -51,26 +42,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
-					<LangBadge lang={deck.lang}></LangBadge>
-					{deck.count_reviews_7d ?
-						<Badge variant="outline">
-							<ChartSpline />
-							<span>{deck.count_reviews_7d} reviews this week</span>
-						</Badge>
-					:	<Badge variant="outline">
-							<TriangleAlert />
-							<span>No reviews this week</span>
-						</Badge>
-					}
-					<Badge variant="outline">
-						<WalletCards />
-						<span>{deck.cards_active} active cards</span>
-					</Badge>
-
-					<Badge variant="outline">
-						<BookOpenCheck />
-						<span>{ago(deck.most_recent_review_at)}</span>
-					</Badge>
+					<StatsBadges deckMeta={deck} />
 				</div>
 			</CardContent>
 			<CardFooter className="block w-full space-y-4 p-4 pt-0">

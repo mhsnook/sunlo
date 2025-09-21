@@ -28,12 +28,12 @@ import {
 	useDeckRoutineStats,
 } from '@/hooks/use-deck'
 import { cn } from '@/lib/utils'
-import { Badge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { useLanguage } from '@/hooks/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
+import { StatsBadges } from '@/components/stats-badges'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -67,7 +67,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data: activityChartData } = useDeckActivityChartData(lang)
 	if (!meta || !pids || !routineStats || !activityChartData)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
-
+	const totalToday = pids.today_active.length + (meta.daily_review_goal ?? 15)
 	return (
 		<Card>
 			<CardHeader>
@@ -88,38 +88,41 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					</div>
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
-					<Badge variant="outline">
-						{meta.lang_total_phrases} phrases total
-					</Badge>
-					<Badge variant="outline">
-						{meta.cards_active} cards in your deck
-					</Badge>
-					<Badge variant="outline">
-						{meta.count_reviews_7d} reviews last 7d
-					</Badge>
+					<StatsBadges deckMeta={meta} />
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				<p>Your last review was {ago(meta.most_recent_review_at)}</p>
 				<p>
-					{(
-						routineStats.daysMet === routineStats.daysSoFar &&
-						routineStats.daysSoFar > 1
-					) ?
-						`You've kept up with your routine all ${routineStats.daysSoFar} days this week!`
-					:	`You've kept up with your routine ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-							routineStats.daysSoFar === 1 ? 'day' : 'days'
-						} this week.`
-					}
+					Your last review was{' '}
+					<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
 				</p>
 				<p>
-					{pids.today_active.length} active cards are scheduled for today, along
-					with {meta.daily_review_goal ?? 15} new ones
+					You've kept up with your routine
+					<span className="font-bold">
+						{(
+							routineStats.daysMet === routineStats.daysSoFar &&
+							routineStats.daysSoFar > 1
+						) ?
+							` all ${routineStats.daysSoFar} days this week!`
+						:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+								routineStats.daysSoFar === 1 ? 'day' : 'days'
+							}`
+						}
+					</span>{' '}
+					this week.
+				</p>
+				<p>
+					You have{' '}
+					<span className="font-bold">{totalToday} cards to review today</span>:{' '}
+					{pids.today_active.length} scheduled from prior reviews, along with{' '}
+					{meta.daily_review_goal ?? 15} new ones
 				</p>
 
 				{activityChartData.length > 0 && (
 					<div className="my-4">
-						<h4 className="mb-2 font-semibold">Your Recent Reviews</h4>
+						<h4 className="text-muted-foreground mb-2 text-center font-semibold">
+							Your Recent Reviews
+						</h4>
 						<ActivityChart data={activityChartData} />
 					</div>
 				)}
