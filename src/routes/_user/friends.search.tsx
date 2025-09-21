@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
+import { useCallback } from 'react'
 
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
@@ -22,6 +23,7 @@ import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
 import { ShareButtons } from './friends.invite'
+import { nullSubmit } from '@/lib/utils'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -47,15 +49,18 @@ export default function SearchProfiles() {
 	const { userId } = useAuth()
 	const debouncedQuery = useDebounce(query, 500)
 	const navigate = useNavigate({ from: Route.fullPath })
-	const setQueryInputValue = (val: string) =>
-		navigate({
-			search: (old) => ({
-				...old,
-				query: val || undefined,
+	const setQueryInputValue = useCallback(
+		(event: React.ChangeEvent<HTMLInputElement>) =>
+			navigate({
+				search: (old) => ({
+					...old,
+					query: event.target.value || undefined,
+				}),
+				replace: true,
+				params: true,
 			}),
-			replace: true,
-			params: true,
-		})
+		[navigate]
+	)
 
 	const {
 		data: searchResults,
@@ -83,21 +88,13 @@ export default function SearchProfiles() {
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<form
-						className="flex flex-row items-end gap-2"
-						onSubmit={(e) => {
-							e.preventDefault()
-							e.stopPropagation()
-						}}
-					>
+					<form className="flex flex-row items-end gap-2" onSubmit={nullSubmit}>
 						<div className="w-full">
 							<Label>Username</Label>
 							<Input
 								placeholder="Search by username"
 								value={query || ''}
-								onChange={(event) => {
-									void setQueryInputValue(event.target.value)
-								}}
+								onChange={setQueryInputValue}
 							/>
 						</div>
 						<Button disabled={isFetching}>

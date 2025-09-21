@@ -38,7 +38,6 @@ export default defineConfig(({ mode }) => {
 					'.oxlintrc.json',
 					'**/*.md',
 					'**/*.txt',
-					'**/*.d.ts',
 					'**/*.sql',
 					'**/.prettierignore',
 					'**/.vscode',
