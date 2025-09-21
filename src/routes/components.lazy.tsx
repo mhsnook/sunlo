@@ -67,6 +67,7 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { Separator } from '@/components/ui/separator'
 
 export const Route = createLazyFileRoute('/components')({
 	component: ComponentsPage,
@@ -130,9 +131,24 @@ function ComponentsPage() {
 							<Button>Default</Button>
 							<Button variant="secondary">Secondary</Button>
 							<Button variant="ghost">Ghost</Button>
+							<Button variant="shadow">Shadow</Button>
 							<Button variant="outline">Outline</Button>
 							<Button variant="destructive">Destructive</Button>
-							<Button variant="destructive-outline">Dest Outl</Button>
+						</div>
+						<Separator className="my-4" />
+						<div className="flex flex-wrap gap-2">
+							<Button variant="outline" flavour="sunlo">
+								Sunlo Outl
+							</Button>
+							<Button variant="outline" flavour="accent">
+								Accent Outl
+							</Button>
+							<Button variant="outline" flavour="warm">
+								Warm Outl
+							</Button>
+							<Button variant="outline" flavour="destructive">
+								Dest Outl
+							</Button>
 						</div>
 					</CardContent>
 				</Card>

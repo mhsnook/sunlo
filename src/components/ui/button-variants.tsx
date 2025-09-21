@@ -12,17 +12,12 @@ const buttonVariants = cva(
 					'bg-secondary text-secondary-foreground/80 hover:bg-accent/30 border-secondary-foreground/10',
 				destructive:
 					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				'destructive-outline':
-					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
 				ghost:
 					'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
-				outline:
+				shadow:
 					'border border-transparent hover:border-primary-foresoft/30 bg-card hover:bg-primary/10 text-primary-foresoft',
-				'outline-primary':
-					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft bg-primary/10',
-				'outline-accent':
-					'bg-accent text-accent-foreground hover:pointer hover:outline outline-accent-foreground/30',
-				'badge-outline':
+				outline: 'border hover:pointer outline outline-white transition-colors',
+				badge:
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
 			},
 			size: {
@@ -31,10 +26,21 @@ const buttonVariants = cva(
 				lg: 'rounded-2xl px-8 py-4 text-xl font-medium gap-3 [&_svg]:size-6',
 				icon: 'size-8 rounded-xl shrink-0 aspect-square',
 			},
+			flavour: {
+				none: '',
+				sunlo:
+					'bg-sunlo/30 hover:bg-sunlo/70 text-sunlo-foreground hover:border-sunlo-foreground/30 hover:outline-sunlo',
+				warm: 'bg-accent/30 hover:bg-warm text-warm-foreground outline-warm',
+				accent:
+					'bg-accent/30 hover:bg-accent text-accent-foreground outline-accent',
+				destructive:
+					'bg-destructive/30 hover:bg-destructive text-destructive-foreground outline-destructive',
+			},
 		},
 		defaultVariants: {
 			variant: 'default',
 			size: 'default',
+			flavour: 'none',
 		},
 	}
 )

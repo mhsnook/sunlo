@@ -22,6 +22,10 @@
 	--muted-foreground: hsl(220 9% 43%);
 	--accent: hsl(174 42% 90%);
 	--accent-foreground: hsl(174 90% 28%);
+	--sunlo: hsl(263 42% 90%);
+	--sunlo-foreground: hsl(263 90% 28%);
+	--warm: hsl(74 42% 90%);
+	--warm-foreground: hsl(74 90% 28%);
 	--destructive: hsl(0 84% 60%);
 	--destructive-foreground: hsl(210 20% 98%);
 	--border: hsl(263 37% 81%);
@@ -61,6 +65,10 @@
 	--muted-foreground: hsl(218 11% 65%);
 	--accent: hsl(174 42% 30%);
 	--accent-foreground: hsl(174 92% 60%);
+	--sunlo: hsl(263 42% 30%);
+	--sunlo-foreground: hsl(263 92% 60%);
+	--warm: hsl(174 42% 30%);
+	--warm-foreground: hsl(174 92% 60%);
 	--destructive: hsl(0 63% 31%);
 	--destructive-foreground: hsl(210 20% 98%);
 	--border: hsl(263 37% 37%);
@@ -119,6 +127,10 @@
 	--color-muted-foreground: var(--muted-foreground);
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
+	--color-sunlo: var(--sunlo);
+	--color-sunlo-foreground: var(--sunlo-foreground);
+	--color-warm: var(--warm);
+	--color-warm-foreground: var(--color-warm-foreground);
 	--color-popover: var(--popover);
 	--color-popover-foreground: var(--popover-foreground);
 	--color-card: var(--card);
