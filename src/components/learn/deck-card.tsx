@@ -12,7 +12,7 @@ import { ArchiveDeckButton } from './archive-deck-button'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '../ui/button-variants'
 import { cn } from '@/lib/utils'
-import { StatsBadges } from '../stats-badges'
+import { DeckStatsBadges } from '../stats-badges'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	return (
@@ -42,7 +42,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
-					<StatsBadges deckMeta={deck} />
+					<DeckStatsBadges deckMeta={deck} />
 				</div>
 			</CardContent>
 			<CardFooter className="block w-full space-y-4 p-4 pt-0">

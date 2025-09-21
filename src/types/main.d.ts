@@ -163,7 +163,9 @@ export type PhraseFullInsert = PhraseInsert & {
 export type DeckRow = Tables<'user_deck'>
 export type DeckStub = Tables<'user_deck'>
 export type DeckInsert = TablesInsert<'user_deck'>
-export type DeckMeta = Tables<'user_deck_plus'>
+export type DeckMeta = Tables<'user_deck_plus'> & {
+	cardsScheduledForToday: number
+}
 export type DeckFetched = DeckMeta & {
 	cards: Array<CardFull>
 }

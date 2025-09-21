@@ -113,7 +113,7 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
 
 	return {
-		meta,
+		meta: { ...meta, cardsScheduledForToday: pids.today_active.length },
 		pids,
 		cardsMap,
 		reviews,
