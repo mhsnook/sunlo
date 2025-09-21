@@ -1,4 +1,5 @@
-import { uuid } from '@/types/main'
+import type { FormEvent } from 'react'
+import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import supabase from './supabase-client'
@@ -125,4 +126,9 @@ export function avatarUrlify(path: string | null): string {
 	return !path ? '' : (
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
 		)
+}
+
+export function nullSubmit(event: FormEvent<HTMLFormElement>): void {
+	event.preventDefault()
+	event.stopPropagation()
 }
