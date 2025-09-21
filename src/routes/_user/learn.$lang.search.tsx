@@ -67,7 +67,7 @@ function SearchTab() {
 				params: true,
 			})
 		},
-		[navigate]
+		[navigate, selectedTags]
 	)
 
 	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
@@ -110,7 +110,7 @@ function SearchTab() {
 			if (!phrase?.tags) return false
 			return selectedTagsFromFilter.every((selectedTag) =>
 				phrase
-					.tags!.filter(Boolean)
+					.tags.filter(Boolean)
 					.some((phraseTag) => phraseTag.name === selectedTag)
 			)
 		})
@@ -127,6 +127,7 @@ function SearchTab() {
 					<Label htmlFor="phrase">Phrase</Label>
 					<Input
 						placeholder="Enter a phrase to search or add"
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onChange={(e) => {
 							void navigate({
 								to: '.',
