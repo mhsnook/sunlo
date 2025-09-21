@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/drawer'
 
 import { TapCardToSelect } from '@/components/cards/tap-to-select'
+import { useCallback } from 'react'
 
 export type AlgoRecsFiltersEnum = 'popular' | 'easiest' | 'newest'
 export type AlgoRecsObject = Record<AlgoRecsFiltersEnum, pids>
@@ -33,13 +34,16 @@ export function SelectPhrasesToAddToReview({
 			'Profile should be here on first render, but it is not showing up'
 		)
 	// Toggle card selection
-	const toggleCardSelection = (pid1: string) => {
-		const updatedRecs =
-			!algoRecsSelected.includes(pid1) ?
-				[...algoRecsSelected, pid1]
-			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
-		setAlgoRecsSelected(updatedRecs)
-	}
+	const toggleCardSelection = useCallback(
+		(pid1: string) => {
+			const updatedRecs =
+				!algoRecsSelected.includes(pid1) ?
+					[...algoRecsSelected, pid1]
+				:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
+			setAlgoRecsSelected(updatedRecs)
+		},
+		[algoRecsSelected, setAlgoRecsSelected]
+	)
 	const sections: {
 		key: AlgoRecsFiltersEnum
 		description: string
