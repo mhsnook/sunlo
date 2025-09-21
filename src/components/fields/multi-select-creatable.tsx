@@ -14,7 +14,7 @@ import {
 import { Check, ChevronsUpDown, PlusCircle, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 
@@ -32,20 +32,23 @@ export function MultiSelectCreatable({
 	const [open, setOpen] = useState(false)
 	const [inputValue, setInputValue] = useState('')
 
-	const handleSelect = (value: string) => {
-		onChange([...selected, value])
-		setInputValue('')
-	}
+	const handleSelect = useCallback(
+		(value: string) => {
+			onChange([...selected, value])
+			setInputValue('')
+		},
+		[onChange, selected]
+	)
 
 	const handleRemove = (value: string) => {
 		onChange(selected.filter((s) => s !== value))
 	}
 
-	const handleCreate = () => {
+	const handleCreate = useCallback(() => {
 		if (inputValue && !selected.includes(inputValue)) {
 			handleSelect(inputValue)
 		}
-	}
+	}, [inputValue, selected, handleSelect])
 
 	const filteredOptions = options.filter((o) => !selected.includes(o.value))
 
@@ -57,18 +60,23 @@ export function MultiSelectCreatable({
 						variant="outline"
 						role="combobox"
 						aria-expanded={open}
+						aria-controls="popover-content"
 						className="w-full justify-between"
 					>
 						Select tags...
 						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+				<PopoverContent
+					id="popover-content"
+					className="w-[--radix-popover-trigger-width] p-0"
+				>
 					<Command>
 						<CommandInput
 							placeholder="Search or create tag..."
 							value={inputValue}
 							onValueChange={setInputValue}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onKeyDown={(e) => {
 								if (e.key === 'Enter') {
 									e.preventDefault()
@@ -91,6 +99,7 @@ export function MultiSelectCreatable({
 									<CommandItem
 										key={option.value}
 										value={option.value}
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onSelect={() => handleSelect(option.value)}
 									>
 										<Check
@@ -116,6 +125,7 @@ export function MultiSelectCreatable({
 						<button
 							type="button"
 							className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => handleRemove(value)}
 						>
 							<X className="text-muted-foreground hover:text-foreground h-3 w-3" />
