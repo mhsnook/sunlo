@@ -11,7 +11,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { AuthState, RolesEnum } from '@/types/main'
 
-export const AuthContext = createContext<AuthState | undefined>(undefined)
+export const AuthContext = createContext<AuthState>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
