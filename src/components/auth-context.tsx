@@ -3,6 +3,7 @@ import {
 	createContext,
 	useState,
 	useEffect,
+	useMemo,
 } from 'react'
 
 import type { Session } from '@supabase/supabase-js'
@@ -10,7 +11,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { AuthState, RolesEnum } from '@/types/main'
 
-export const AuthContext = createContext<AuthState>(undefined)
+export const AuthContext = createContext<AuthState | undefined>(undefined)
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
@@ -52,12 +53,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [queryClient])
 
-	const value = {
-		isAuth: sessionState?.user.role === 'authenticated',
-		userId: sessionState?.user.id ?? null,
-		userEmail: sessionState?.user.email ?? null,
-		userRole: (sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-	}
+	const value = useMemo(
+		() => ({
+			isAuth: sessionState?.user.role === 'authenticated',
+			userId: sessionState?.user.id ?? null,
+			userEmail: sessionState?.user.email ?? null,
+			userRole: (sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+		}),
+		[sessionState]
+	)
 
 	return (
 		<AuthContext.Provider value={value}>
