@@ -17,28 +17,34 @@ import { DeckStatsBadges } from '../stats-badges'
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	return (
 		<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
-			<Link to="/learn/$lang" params={{ lang: deck.lang! }}>
-				<CardHeader className="from-primary/10 to-primary-foresoft/30 bg-gradient-to-br p-4 text-white">
+			<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
+				<Link
+					className="grow"
+					to="/learn/$lang"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ lang: deck.lang! }}
+				>
 					<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
 						<span>{deck.language}</span>
-						<span className="flex items-center justify-between gap-2">
-							{deck.archived ?
-								<Badge variant="secondary">
-									<Archive />
-									Archived
-								</Badge>
-							:	<Link
-									to="/learn/$lang/review"
-									className={buttonVariants({ size: 'icon' })}
-									params={{ lang: deck.lang! }}
-								>
-									<Rocket />
-								</Link>
-							}
-						</span>
 					</CardTitle>
-				</CardHeader>
-			</Link>
+				</Link>
+				<span className="flex items-center justify-between gap-2">
+					{deck.archived ?
+						<Badge variant="secondary">
+							<Archive />
+							Archived
+						</Badge>
+					:	<Link
+							to="/learn/$lang/review"
+							className={buttonVariants({ size: 'icon' })}
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: deck.lang! }}
+						>
+							<Rocket />
+						</Link>
+					}
+				</span>
+			</CardHeader>
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
@@ -59,6 +65,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 								buttonVariants({ variant: 'secondary' }),
 								'grow basis-40'
 							)}
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang: deck.lang! }}
 						>
 							<HouseHeart />
@@ -72,6 +79,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 								buttonVariants({ variant: 'secondary' }),
 								`grow basis-60`
 							)}
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang: deck.lang! }}
 						>
 							<BookOpenText />
@@ -85,8 +93,8 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 					{!deck.cards_learned ?
 						`0 mastered`
 					:	`${(
-							(100 * deck.cards_learned!) /
-							(deck.cards_learned! + deck.cards_active!)
+							(100 * deck.cards_learned) /
+							(deck.cards_learned + deck.cards_active!)
 						).toFixed(0)} % mastered`
 					}
 				</div>
