@@ -1,4 +1,4 @@
-pnpm format:check
+pnpm format:check && pnpx lint-staged
 # pnpm run lint
 
 echo '\n✅✅✅✅ Everything looks good! I am committing this now. ✅✅✅✅\n'
