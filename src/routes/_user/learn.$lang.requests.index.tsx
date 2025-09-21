@@ -1,4 +1,4 @@
-import { createLazyFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { MessageSquareQuote } from 'lucide-react'
 
 import {
@@ -12,13 +12,13 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { RequestItem } from '@/components/requests/request-list-item'
 import { useAllMyPhraseRequests } from '@/hooks/use-requests'
 
-export const Route = createLazyFileRoute('/_user/learn/$lang/requests/')({
+export const Route = createFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
 })
 
 function Page() {
-	const { lang } = Route.useParams()
-	const { data: requests, isPending } = useAllMyPhraseRequests(lang)
+	const params = Route.useParams()
+	const { data: requests, isPending } = useAllMyPhraseRequests(params.lang)
 
 	return (
 		<Card>
@@ -28,7 +28,7 @@ function Page() {
 						<span>My Card Requests</span>
 						<Link
 							to="/learn/$lang/requests/new"
-							params={{ lang }}
+							from={Route.fullPath}
 							className={
 								`${buttonVariants({
 									variant: 'outline',
@@ -55,7 +55,7 @@ function Page() {
 						<Link
 							className={buttonVariants({ variant: 'outline-primary' })}
 							to="/learn/$lang/requests/new"
-							params={{ lang }}
+							from={Route.fullPath}
 						>
 							Post a new card request
 						</Link>
