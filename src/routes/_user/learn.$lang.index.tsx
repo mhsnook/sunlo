@@ -133,7 +133,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						to="/learn/$lang/review"
 						from={Route.fullPath}
 						className={cn(
-							buttonVariants({ variant: 'default' }),
+							buttonVariants({ variant: 'default', size: 'lg' }),
 							'grow basis-120'
 						)}
 					>
