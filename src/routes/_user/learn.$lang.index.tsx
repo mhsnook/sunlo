@@ -33,7 +33,7 @@ import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { useLanguage } from '@/hooks/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
-import { StatsBadges } from '@/components/stats-badges'
+import { DeckStatsBadges } from '@/components/stats-badges'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -67,7 +67,9 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 	const { data: activityChartData } = useDeckActivityChartData(lang)
 	if (!meta || !pids || !routineStats || !activityChartData)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
-	const totalToday = pids.today_active.length + (meta.daily_review_goal ?? 15)
+
+	const totalToday =
+		meta.cardsScheduledForToday + (meta.daily_review_goal ?? 15)
 	return (
 		<Card>
 			<CardHeader>
@@ -88,7 +90,7 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 					</div>
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
-					<StatsBadges deckMeta={meta} />
+					<DeckStatsBadges deckMeta={meta} />
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">

@@ -26,7 +26,10 @@ export const profileQuery = (userId: uuid | null) =>
 				.throwOnError()
 			if (data === null) return null
 			const { decks_array, ...profile } = data
-			const decksMap: DecksMap = mapArray<DeckMeta, 'lang'>(decks_array, 'lang')
+			const decksMap: Omit<DecksMap, 'cardsScheduledForToday'> = mapArray<
+				Omit<DeckMeta, 'cardsScheduledForToday'>,
+				'lang'
+			>(decks_array, 'lang')
 			const deckLanguages: Array<string> = decks_array
 				.map((d) => d.lang)
 				.filter((d) => typeof d === 'string')

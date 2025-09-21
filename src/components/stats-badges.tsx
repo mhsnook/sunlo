@@ -2,15 +2,23 @@ import type { DeckMeta } from '@/types/main'
 import {
 	BookOpenCheck,
 	ChartSpline,
+	Hourglass,
 	TriangleAlert,
 	WalletCards,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ago } from '@/lib/dayjs'
 
-export function StatsBadges({ deckMeta }: { deckMeta: DeckMeta }) {
+export function DeckStatsBadges({ deckMeta }: { deckMeta: DeckMeta }) {
 	return (
 		<>
+			{deckMeta.cardsScheduledForToday ?
+				<Badge variant="outline">
+					<Hourglass />{' '}
+					{deckMeta.cardsScheduledForToday + (deckMeta.daily_review_goal ?? 0)}{' '}
+					cards for today
+				</Badge>
+			:	null}
 			{deckMeta.count_reviews_7d ?
 				<Badge variant="outline">
 					<ChartSpline />
