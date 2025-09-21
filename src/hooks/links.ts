@@ -1,4 +1,5 @@
 import {
+	BookOpenText,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -12,7 +13,6 @@ import {
 	MessageSquareQuote,
 	MessagesSquare,
 	Rocket,
-	School,
 	Search,
 	Send,
 	Settings,
@@ -135,7 +135,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 			to: '/learn/$lang/library',
 			params: { lang },
 		},
-		Icon: School,
+		Icon: BookOpenText,
 	},
 	'/learn/$lang/add-phrase': {
 		name: 'Phrase',

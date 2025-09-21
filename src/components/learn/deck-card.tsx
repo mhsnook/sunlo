@@ -6,16 +6,17 @@ import {
 	CardHeader,
 	CardTitle,
 } from '../ui/card'
-import { Badge } from '../ui/badge'
+import { Badge, LangBadge } from '../ui/badge'
 import { ago } from '@/lib/dayjs'
 import {
 	Archive,
 	Rocket,
-	Sprout,
 	TriangleAlert,
 	BookOpenCheck,
 	WalletCards,
 	ChartSpline,
+	HouseHeart,
+	BookOpenText,
 } from 'lucide-react'
 import { ArchiveDeckButton } from './archive-deck-button'
 import { Link } from '@tanstack/react-router'
@@ -24,31 +25,25 @@ import { cn } from '@/lib/utils'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	return (
-		<Card
-			className={`@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5 ${
-				deck.archived ? 'opacity-80' : ''
-			}`}
-		>
+		<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
 			<Link to="/learn/$lang" params={{ lang: deck.lang! }}>
-				<CardHeader className="from-primary bg-gradient-to-br to-violet-800 p-4 text-white">
-					<CardTitle className="flex flex-col text-xl">
+				<CardHeader className="from-primary/10 to-primary-foresoft/30 bg-gradient-to-br p-4 text-white">
+					<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
 						<span>{deck.language}</span>
-						<span className="flex justify-between">
-							<Badge
-								variant="outline"
-								className="border-white/50 font-bold text-white/70 uppercase"
-							>
-								<span className="mt-px">{deck.lang}</span>
-							</Badge>
+						<span className="flex items-center justify-between gap-2">
 							{deck.archived ?
-								<Badge
-									variant="outline"
-									className="border-white/50 font-normal text-white/70"
-								>
-									<Archive className="mr-1 h-3 w-3" />
+								<Badge variant="secondary">
+									<Archive />
 									Archived
 								</Badge>
-							:	null}
+							:	<Link
+									to="/learn/$lang/review"
+									className={buttonVariants({ size: 'icon' })}
+									params={{ lang: deck.lang! }}
+								>
+									<Rocket />
+								</Link>
+							}
 						</span>
 					</CardTitle>
 				</CardHeader>
@@ -56,6 +51,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 			<CardContent className="space-y-2 p-4">
 				<div className="flex flex-wrap gap-2">
+					<LangBadge lang={deck.lang}></LangBadge>
 					{deck.count_reviews_7d ?
 						<Badge variant="outline">
 							<ChartSpline />
@@ -79,33 +75,6 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 			</CardContent>
 			<CardFooter className="block w-full space-y-4 p-4 pt-0">
 				<div className="flex flex-row flex-wrap gap-2">
-					{!deck.archived ?
-						deck.cards_active ?
-							<Link
-								to="/learn/$lang/review"
-								className={cn(
-									buttonVariants({ variant: 'outline-primary' }),
-									`grow basis-60`
-								)}
-								params={{ lang: deck.lang! }}
-							>
-								<Rocket />
-								Study now
-							</Link>
-						:	<Link
-								to="/learn/$lang/library"
-								className={cn(
-									buttonVariants({ variant: 'outline-primary' }),
-									`grow basis-60`
-								)}
-								params={{ lang: deck.lang! }}
-							>
-								<Rocket />
-								Build your deck
-							</Link>
-
-					:	null}
-
 					{deck.archived ?
 						<ArchiveDeckButton
 							className="w-full grow basis-60"
@@ -120,10 +89,23 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 							)}
 							params={{ lang: deck.lang! }}
 						>
-							<Sprout />
-							Manage deck
+							<HouseHeart />
+							Deck Home
 						</Link>
 					}
+					{!deck.archived ?
+						<Link
+							to="/learn/$lang/library"
+							className={cn(
+								buttonVariants({ variant: 'secondary' }),
+								`grow basis-60`
+							)}
+							params={{ lang: deck.lang! }}
+						>
+							<BookOpenText />
+							Explore Library
+						</Link>
+					:	null}
 				</div>
 				{/* Subtle stats footer */}
 				<div className="text-muted-foreground border-t pt-2 text-xs">
