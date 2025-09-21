@@ -39,7 +39,11 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardHeader className="flex flex-row items-center justify-end gap-2">
-				<PermalinkButton to={'/learn/$lang/$id'} params={{ lang, id: pid }} />
+				<PermalinkButton
+					to={'/learn/$lang/$id'}
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ lang, id: pid }}
+				/>
 				<SharePhraseButton lang={lang} pid={pid} />
 				<PhraseExtraInfo lang={lang} pid={pid} />
 			</CardHeader>
@@ -52,6 +56,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 						<Button
 							size="icon"
 							variant="secondary"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => playAudio(phrase.text!)}
 							aria-label="Play original phrase"
 						>
@@ -71,6 +76,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 									<Button
 										size="icon"
 										variant="secondary"
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onClick={() => playAudio(trans.text)}
 										aria-label="Play translation"
 									>
@@ -84,12 +90,17 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
-					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
+					<Button
+						className="mb-3 w-full"
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
+						onClick={() => setRevealCard(true)}
+					>
 						Show Translation
 					</Button>
 				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
 						<Button
 							variant="destructive"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={
@@ -102,6 +113,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 						</Button>
 						<Button
 							variant="secondary"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={
@@ -112,6 +124,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 						</Button>
 						<Button
 							variant="default"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
@@ -127,6 +140,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 								'bg-blue-500 hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 4 })}
 							disabled={isPending}
 						>
