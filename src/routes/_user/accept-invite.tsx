@@ -84,7 +84,7 @@ function AcceptInvitePage() {
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={friend.avatarUrl!}
+									src={friend.avatarUrl}
 									className="mx-auto max-w-32 shrink rounded-xl"
 									alt={`${friend.username}'s avatar`}
 								/>
