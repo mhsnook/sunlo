@@ -13,7 +13,7 @@
 		"check": "tsc -b",
 		"format:check": "prettier --check .",
 		"migrate": "supabase db diff -f new_migration",
-		"types": "supabase gen types typescript --local > ./src/types/supabase.d.ts",
+		"types": "supabase gen types typescript --local > ./src/types/supabase.ts",
 		"types:production": "supabase gen types typescript --project-id hepudeougzlgnuqvybrj > ./src/types/supabase.ts",
 		"seeds:data": "supabase db dump --data-only --local > supabase/seed.sql",
 		"seeds:schema": "supabase db dump --local > supabase/schemas/base.sql",
@@ -94,6 +94,10 @@
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"lint-staged": {
+		"*.{js,jsx,ts,tsx,json,css,md}": [
+			"prettier --write",
+			"oxlint --fix"
+		],
 		"*.{ts,tsx}": [
 			"eslint --fix",
 			"tsc --noEmit"

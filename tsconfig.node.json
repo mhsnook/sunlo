@@ -1,5 +1,6 @@
 {
 	"compilerOptions": {
+		"composite": true,
 		"target": "ES2022",
 		"lib": ["ES2023"],
 		"module": "ESNext",
@@ -8,6 +9,7 @@
 		/* Bundler mode */
 		"moduleResolution": "bundler",
 		"allowImportingTsExtensions": true,
+		"esModuleInterop": true,
 		"isolatedModules": true,
 		"moduleDetection": "force",
 		"noEmit": true,
@@ -18,5 +20,5 @@
 		"noUnusedParameters": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["vite.config.ts"]
+	"include": ["vite.config.ts", "postcss.config.js", "tailwind.config.js"]
 }

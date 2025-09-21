@@ -6,16 +6,16 @@ Use @tanstack/react-query version 5 to manage asynchronous state and mutations.
 
 Use supabase-js version 2 to asynchronously fetch and post data, inside react-query queryFn's and mutationFns.
 
-- our typescript types are auto-generated from the supabase cli into @/src/types/supabase.d.ts, but we have our own types in @/src/types/main.ts that often wrap these types, name them nicely, or combine them with others to form a fuller "shape" such as ProfileFull and CardFull.
+- our typescript types are auto-generated from the supabase cli into `@/src/types/supabase.ts`, but we have our own types in `@/src/types/main.ts` that often wrap these types, name them nicely, or combine them with others to form a fuller "shape" such as ProfileFull and CardFull.
 
-Use @tanstack/react-router for routes, navigation, file-based routing, dynamic routes, page parameter validation, and nested layouts.
+Use `@tanstack/react-router` for routes, navigation, file-based routing, dynamic routes, page parameter validation, and nested layouts.
 
 - the loader functions of our routes and layouts are handy places to prefetch or ensure certain query data be present in the react-query cache.
 - we also use the loader functions to return the data that's used to fill out the Navbar's title and icons, and to pass the list of links for the app-nav and context menu, and to directly pass the second sidebar if it is required
 
 We use TailwindCSS with ShadCN theme structure for styling.
 
-- see the @/src/styles/globals.css for the full list of colour codes, as we have added a few of our own, like `primary-foresoft` which we often use with the `/30` opacity modifier a light purple that will hold up in either light or dark mode
+- see the `@/src/styles/globals.css` for the full list of colour codes, as we have added a few of our own, like `primary-foresoft` which we often use with the `/30` opacity modifier a light purple that will hold up in either light or dark mode
 - we almost never use the `dark:` and `light:` prefixes, when we can instead use responsive colour codes like `foreground` to darken and `background` to lighten, giving us a consistency across the dark and light themes that allows us to use other colour codes with confidence.
 
 We use PNPM to manage our dependencies, and Vite to manage our dev server and builds, with Tanstack's automatic code splitting.

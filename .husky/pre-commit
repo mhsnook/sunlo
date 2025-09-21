@@ -1,4 +1,8 @@
-pnpm format:check && pnpx lint-staged
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+pnpx lint-staged
+#pnpm format:check && pnpx lint-staged
 # pnpm run lint
 
-echo '\n✅✅✅✅ Everything looks good! I am committing this now. ✅✅✅✅\n'
+#echo '\n✅✅✅✅ Everything looks good! I am committing this now. ✅✅✅✅\n'
