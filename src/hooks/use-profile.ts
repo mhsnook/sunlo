@@ -44,7 +44,7 @@ export const profileQuery = (userId: uuid | null) =>
 				avatar_path: profile.avatar_path ?? '',
 				avatarUrl: avatarUrlify(profile.avatar_path),
 				languagesToShow,
-				languages_known: languages_known as LanguageKnown[],
+				languages_known: languages_known,
 				decksMap,
 				deckLanguages,
 			}
