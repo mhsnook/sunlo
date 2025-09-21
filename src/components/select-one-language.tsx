@@ -49,6 +49,7 @@ export function SelectOneLanguage({
 			</PopoverTrigger>
 			<PopoverContent id={id} className="p-0">
 				<Command
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					filter={(value, search) => {
 						search = search.toLocaleLowerCase()
 						return (
@@ -70,6 +71,7 @@ export function SelectOneLanguage({
 								<CommandItem
 									key={language.value}
 									value={language.value}
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onSelect={(currentValue) => {
 										setValue(currentValue === value ? '' : currentValue)
 										setOpen(false)

@@ -78,12 +78,14 @@ function ForgotPasswordPage() {
 						role="form"
 						noValidate
 						className="space-y-4"
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={handleSubmit((data) => recoveryMutation.mutate(data))}
 					>
 						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
 							<EmailField<FormInputs>
 								register={register}
 								error={errors.email}
+								// oxlint-disable-next-line tabindex-no-positive
 								tabIndex={1}
 							/>
 						</fieldset>

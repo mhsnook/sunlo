@@ -71,8 +71,10 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 	})
 
 	const phraseTags = phrase?.tags ?? []
+	// oxlint-disable-next-line prefer-set-has
 	const phraseTagNames = phraseTags.map((t) => t.name)
 	const allLangTags = allLangTagsData ?? []
+	// oxlint-disable-next-line jsx-no-new-array-as-prop
 	const availableTags = allLangTags
 		.filter((t) => !phraseTagNames.includes(t))
 		.map((t) => ({ value: t, label: t }))
@@ -110,6 +112,7 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 					<Separator />
 					<form
 						id="add-tags-form"
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={handleSubmit((data) => addTagsMutation.mutate(data))}
 						className="space-y-4"
 					>
@@ -118,6 +121,7 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 							<Controller
 								control={control}
 								name="tags"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								render={({ field }) => (
 									<MultiSelectCreatable
 										options={availableTags}

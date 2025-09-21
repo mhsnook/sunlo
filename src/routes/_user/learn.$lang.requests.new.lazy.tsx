@@ -82,6 +82,7 @@ function Page() {
 		},
 		onSuccess: (data) => {
 			toast.success('Your request has been created!')
+			// @ts-expect-error: We have something wonky in the JSON types
 			const newRequest: PhraseRequestFull = {
 				...data,
 				phrases: [],
@@ -116,6 +117,7 @@ function Page() {
 			<CardContent>
 				<Form {...form}>
 					<form
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={form.handleSubmit((data) =>
 							createRequestMutation.mutate(data)
 						)}
@@ -124,6 +126,7 @@ function Page() {
 						<FormField
 							control={form.control}
 							name="prompt"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>What phrase do you need?</FormLabel>

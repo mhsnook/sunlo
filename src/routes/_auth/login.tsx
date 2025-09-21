@@ -83,17 +83,20 @@ export default function LoginForm() {
 					role="form"
 					noValidate
 					className="space-y-4"
-					onSubmit={void handleSubmit((data) => loginMutation.mutate(data))}
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					onSubmit={handleSubmit((data) => loginMutation.mutate(data))}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
 						<EmailField<FormInputs>
 							register={register}
 							error={errors.email}
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={1}
 						/>
 						<PasswordField<FormInputs>
 							register={register}
 							error={errors.password}
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={2}
 						/>
 					</fieldset>
@@ -106,6 +109,7 @@ export default function LoginForm() {
 							to="/signup"
 							from={Route.fullPath}
 							className={buttonVariants({ variant: 'secondary' })}
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={4}
 						>
 							Create account
@@ -121,6 +125,7 @@ export default function LoginForm() {
 							to="/forgot-password"
 							from={Route.fullPath}
 							className="s-link text-sm"
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={5}
 						>
 							Forgot password?

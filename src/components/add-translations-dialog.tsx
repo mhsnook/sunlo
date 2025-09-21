@@ -110,6 +110,7 @@ export function AddTranslationsDialog({
 					</ol>
 				</div>
 				<form
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					onSubmit={handleSubmit((data) => addTranslation.mutate(data))}
 					noValidate
 				>
@@ -120,6 +121,7 @@ export function AddTranslationsDialog({
 						<TranslationLanguageField
 							control={control}
 							error={errors.translation_lang}
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={1}
 						/>
 						<TranslationTextField

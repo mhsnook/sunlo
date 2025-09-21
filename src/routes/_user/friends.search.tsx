@@ -1,7 +1,7 @@
+import { type ChangeEvent, useCallback } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
-import { useCallback } from 'react'
 
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
@@ -50,8 +50,8 @@ export default function SearchProfiles() {
 	const debouncedQuery = useDebounce(query, 500)
 	const navigate = useNavigate({ from: Route.fullPath })
 	const setQueryInputValue = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) =>
-			navigate({
+		(event: ChangeEvent<HTMLInputElement>) =>
+			void navigate({
 				search: (old) => ({
 					...old,
 					query: event.target.value || undefined,
@@ -88,7 +88,11 @@ export default function SearchProfiles() {
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<form className="flex flex-row items-end gap-2" onSubmit={nullSubmit}>
+					<form
+						className="flex flex-row items-end gap-2"
+						 
+						onSubmit={nullSubmit}
+					>
 						<div className="w-full">
 							<Label>Username</Label>
 							<Input
@@ -102,7 +106,6 @@ export default function SearchProfiles() {
 							<span className="hidden @md:block">Search</span>
 						</Button>
 					</form>
-
 					{debouncedQuery === undefined ?
 						<p className="py-[1.75rem] italic opacity-60">Search results...</p>
 					:	<div className="space-y-2">

@@ -65,12 +65,14 @@ export function PasswordResetForm() {
 					role="form"
 					noValidate
 					className="space-y-4"
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					onSubmit={handleSubmit((data) => changeMutation.mutate(data))}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
 						<PasswordField
 							register={register}
 							error={errors.password}
+							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={1}
 						/>
 					</fieldset>

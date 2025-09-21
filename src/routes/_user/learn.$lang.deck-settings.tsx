@@ -152,9 +152,10 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={
-						void handleSubmit((data) => updateDailyGoalMutation.mutate(data))
-					}
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					onSubmit={handleSubmit((data) =>
+						updateDailyGoalMutation.mutate(data)
+					)}
 					className="space-y-4"
 				>
 					<FancySelectField<DailyGoalFormInputs>
@@ -170,6 +171,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 						<Button
 							variant="secondary"
 							type="button"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => reset()}
 							disabled={!isDirty}
 						>
@@ -266,9 +268,8 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={
-						void handleSubmit((data) => updateDeckGoalMutation.mutate(data))
-					}
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutate(data))}
 					className="space-y-4"
 				>
 					<FancySelectField<DeckGoalFormInputs>

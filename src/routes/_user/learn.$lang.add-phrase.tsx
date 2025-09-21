@@ -107,7 +107,8 @@ function AddPhraseTab() {
 			<CardContent>
 				<form
 					noValidate
-					onSubmit={void handleSubmit((data) => addPhraseMutation.mutate(data))}
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
 					className="mt-2 space-y-4"
 				>
 					<div>
@@ -117,10 +118,12 @@ function AddPhraseTab() {
 						<Controller
 							name="phrase_text"
 							control={control}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							render={({ field }) => (
 								<Textarea
 									{...field}
 									placeholder="The text of the phrase to learn"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onChange={(e) => {
 										field.onChange(e)
 										void navigate({
