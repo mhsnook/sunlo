@@ -34,11 +34,13 @@ export function SocialLearningSection() {
 					<div className="mb-16 text-center">
 						<div className="mb-6 flex justify-center">
 							<div className="flex h-16 w-16 items-center justify-center rounded-full bg-rose-400/20">
-								<Heart
-									role="button"
-									onClick={() => setIsForFriends((val) => !val)}
-									className="h-8 w-8 text-rose-300"
-								/>
+								<button className="cursor-pointer">
+									<Heart
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
+										onClick={() => setIsForFriends((val) => !val)}
+										className="h-8 w-8 text-rose-300"
+									/>
+								</button>
 							</div>
 						</div>
 						<h2 className="mb-6 text-5xl font-bold text-white md:text-6xl">
