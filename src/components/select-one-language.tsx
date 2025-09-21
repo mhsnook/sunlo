@@ -25,7 +25,7 @@ export function SelectOneLanguage({
 	disabled,
 	tabIndex,
 	size = 'default',
-}: ControlledInputProps & { size: 'default' | 'lg' }) {
+}: ControlledInputProps & { size?: 'default' | 'lg' }) {
 	const [open, setOpen] = useState(false)
 	const id = useId()
 	return (
