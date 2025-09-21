@@ -1,5 +1,5 @@
-import { ComponentType, useCallback, useState } from 'react'
-import { ChevronLeft, MoreVertical } from 'lucide-react'
+import { type FormEvent, useCallback, useState } from 'react'
+import { ChevronLeft, MoreVertical, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -15,12 +15,28 @@ import {
 } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useLinks } from '@/hooks/links'
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTrigger,
+	DialogTitle,
+	DialogDescription,
+} from '../ui/dialog'
+import { SearchResult } from '@/types/main'
+import { Input } from '../ui/input'
+import { useMutation } from '@tanstack/react-query'
+import { PostgrestError } from '@supabase/supabase-js'
 
 type NavbarLoaderData = {
 	titleBar?: {
 		title?: string
 		subtitle?: string
 		onBackClick?: string | (() => void)
+	}
+	quickSearch: {
+		labelText: string
+		searchFn: ({ query }: { query: string }) => Promise<SearchResult[]>
 	}
 	contextMenu?: string[]
 }
@@ -46,8 +62,10 @@ export default function Navbar() {
 				<SidebarTrigger />
 				<Title matches={matches} />
 			</div>
-
-			<ContextMenu matches={matches} />
+			<div className="flex flex-row items-center gap-3">
+				<SearchFlyout matches={matches} />
+				<ContextMenu matches={matches} />
+			</div>
 		</nav>
 	)
 }
@@ -122,5 +140,96 @@ function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
+	)
+}
+
+function SearchFlyout({ matches }: { matches: NavbarMatch[] }) {
+	const quickSearch = matches.findLast((m) => !!m?.loaderData?.quickSearch)
+		?.loaderData?.quickSearch
+	if (!quickSearch) return null
+	return (
+		<Dialog>
+			<DialogTrigger asChild>
+				<Button size="icon" variant="ghost">
+					<Search />
+				</Button>
+			</DialogTrigger>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>{quickSearch.labelText}</DialogTitle>
+					<DialogDescription className="sr-only">
+						Use the input below to search
+					</DialogDescription>
+				</DialogHeader>
+				<SearchForm quickSearch={quickSearch} />
+			</DialogContent>
+		</Dialog>
+	)
+}
+
+function SearchForm({
+	quickSearch,
+}: {
+	quickSearch: NavbarLoaderData['quickSearch']
+}) {
+	const searchMutation = useMutation<
+		SearchResult[],
+		PostgrestError,
+		{ query: string }
+	>({
+		// We use a more specific mutation key to avoid conflicts
+		mutationKey: ['quick-search', quickSearch.labelText, 'form-submit'],
+		mutationFn: quickSearch.searchFn,
+		onSuccess: (data) => console.log(data),
+		onError: (error) => console.log(`Error searching`, error),
+	})
+
+	const handleSubmit = useCallback(
+		(e: FormEvent<HTMLFormElement>) => {
+			e.preventDefault()
+			e.stopPropagation()
+			const formData = new FormData(e.currentTarget)
+			const query = formData.get('quick_search_query') as string
+			searchMutation.mutate({ query: query ?? '' })
+		},
+		[searchMutation]
+	)
+
+	return (
+		<>
+			<form className="flex flex-row items-end gap-2" onSubmit={handleSubmit}>
+				<div className="w-full">
+					<Input placeholder="Quick search" name="quick_search_query" />
+				</div>
+				<Button disabled={searchMutation.isPending}>
+					<Search />
+					<span className="hidden @md:block">Search</span>
+				</Button>
+			</form>
+			<p className="text-muted-foreground text-sm italic">
+				{searchMutation.data?.length ?? 0} results
+			</p>
+			<div className="flex flex-col gap-2">
+				{searchMutation.data?.map((result) => (
+					<SearchResultListItem
+						key={JSON.stringify(result.link.params)}
+						result={result}
+					/>
+				))}
+			</div>
+		</>
+	)
+}
+
+function SearchResultListItem({ result }: { result: SearchResult }) {
+	return (
+		<Link
+			to={result.link.to}
+			params={result.link.params}
+			className="bg-card rounded-xl px-3 py-2 shadow"
+		>
+			<h3>{result.title}</h3>
+			<p>{result.description}</p>
+		</Link>
 	)
 }
