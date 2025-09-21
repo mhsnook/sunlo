@@ -61,7 +61,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/friends/search': {
 		name: 'Search',
-		title: 'Search profiles',
+		title: 'Search Profiles',
 		Icon: Search,
 		link: {
 			to: '/friends/search',
@@ -85,7 +85,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/add-deck': {
 		name: 'Deck',
-		title: 'Start a new Deck',
+		title: 'Start a New Deck',
 		Icon: HeartPlus,
 		link: {
 			to: '/learn/add-deck',
@@ -93,7 +93,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang': {
 		name: languages[lang],
-		title: `${languages[lang]} home`,
+		title: `${languages[lang]} Deck`,
 		Icon: HouseHeart,
 		link: {
 			to: '/learn/$lang',
@@ -102,7 +102,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/search': {
 		name: `Search`,
-		title: `Quick search ${languages[lang]}`,
+		title: `Quick Search ${languages[lang]}`,
 		link: {
 			to: '/learn/$lang/search',
 			params: { lang },
@@ -111,7 +111,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/deck-settings': {
 		name: 'Settings',
-		title: 'Deck settings',
+		title: 'Deck Settings',
 		link: {
 			to: '/learn/$lang/deck-settings',
 			params: { lang },
@@ -120,7 +120,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/review': {
 		name: 'Review',
-		title: 'Start a review',
+		title: 'Start a Review',
 		link: {
 			to: '/learn/$lang/review',
 			params: { lang },
@@ -130,7 +130,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/library': {
 		name: `Library`,
-		title: `Browse ${languages[lang]} library`,
+		title: `Browse ${languages[lang]} Library`,
 		link: {
 			to: '/learn/$lang/library',
 			params: { lang },
@@ -139,7 +139,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/add-phrase': {
 		name: 'Phrase',
-		title: 'Add a phrase',
+		title: 'Add Phrase',
 		link: {
 			to: '/learn/$lang/add-phrase',
 			params: { lang },
@@ -148,7 +148,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/requests': {
 		name: 'Requests',
-		title: 'Card requests',
+		title: 'Card Requests',
 		link: {
 			to: '/learn/$lang/requests',
 			params: { lang },
@@ -157,7 +157,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/requests/new': {
 		name: 'Request',
-		title: 'Request a new card',
+		title: 'Request a Phrase',
 		link: {
 			to: '/learn/$lang/requests/new',
 			params: { lang },
@@ -166,7 +166,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/quick-search': {
 		name: 'Search',
-		title: 'Quick search',
+		title: 'Quick Search',
 		link: {
 			to: '/learn/quick-search',
 		},
@@ -180,7 +180,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 		Icon: LogIn,
 	},
 	'/privacy-policy': {
-		name: 'Privacy policy',
+		name: 'Privacy Policy',
 		link: {
 			to: '/privacy-policy',
 		},
@@ -188,23 +188,23 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/profile': {
 		name: 'Profile',
-		title: 'View profile',
+		title: 'View Profile',
 		Icon: UserPen,
 		link: {
 			to: '/profile',
 		},
 	},
 	'/profile/change-email': {
-		name: 'Update email',
-		title: 'Update account email',
+		name: 'Update Email',
+		title: 'Update Account Email',
 		Icon: Mail,
 		link: {
 			to: '/profile/change-email',
 		},
 	},
 	'/profile/change-password': {
-		name: `Update password`,
-		title: 'Update password',
+		name: `Update Password`,
+		title: 'Update Password',
 		Icon: Lock,
 		link: {
 			to: '/profile/change-password',
