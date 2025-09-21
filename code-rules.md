@@ -178,6 +178,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 		{/* ... */}
 			<form
 				noValidate
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
 				onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutat(data))}
 				className="space-y-4"
 			>
