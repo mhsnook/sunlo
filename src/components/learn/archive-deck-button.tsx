@@ -35,7 +35,7 @@ export function ArchiveDeckButton({
 			await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
-				.eq('lang', lang!)
+				.eq('lang', lang)
 				.eq('uid', userId!)
 				.throwOnError()
 		},
@@ -87,11 +87,15 @@ export function ArchiveDeckButton({
 						Cancel
 					</AlertDialogCancel>
 					{archived ?
-						<AlertDialogAction onClick={() => mutation.mutate()}>
+						<AlertDialogAction
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
+							onClick={() => mutation.mutate()}
+						>
 							Restore
 						</AlertDialogAction>
 					:	<AlertDialogAction
 							className={buttonVariants({ variant: 'destructive' })}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutation.mutate()}
 						>
 							Archive

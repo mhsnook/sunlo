@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { uuid } from '@/types/main'
@@ -22,7 +22,7 @@ export function SendRequestToFriendDialog({
 }: {
 	lang: string | null
 	id: uuid | null
-	children: React.ReactNode
+	children: ReactNode
 }) {
 	const { userId } = useAuth()
 	const [open, setOpen] = useState(false)
@@ -67,6 +67,7 @@ export function SendRequestToFriendDialog({
 
 				<Button
 					disabled={!uids.length}
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendRequestToFriendMutation.mutate(uids)}
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
