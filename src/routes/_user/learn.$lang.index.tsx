@@ -10,11 +10,13 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import {
-	BookCopy,
+	BookOpenText,
 	Contact,
-	Dumbbell,
 	Library,
+	MessageSquarePlus,
+	MessageSquareQuote,
 	NotebookPen,
+	Rocket,
 	Search,
 } from 'lucide-react'
 import languages from '@/lib/languages'
@@ -132,17 +134,17 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 							'grow basis-120'
 						)}
 					>
-						<Dumbbell /> Review my {languages[lang]} flashcards
+						<Rocket /> Review my {languages[lang]} flashcards
 					</Link>
 					<Link
 						to="/learn/$lang/library"
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'secondary' }),
-							'grow basis-60'
+							'grow basis-40'
 						)}
 					>
-						<BookCopy />
+						<BookOpenText />
 						Browse the {languages[lang]} library
 					</Link>
 					<Link
@@ -150,11 +152,22 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'secondary' }),
-							'grow basis-60'
+							'grow basis-40'
 						)}
 					>
-						<NotebookPen />
+						<MessageSquarePlus />
 						Add a new phrase
+					</Link>
+					<Link
+						to="/learn/$lang/add-phrase"
+						from={Route.fullPath}
+						className={cn(
+							buttonVariants({ variant: 'secondary' }),
+							'grow basis-40'
+						)}
+					>
+						<MessageSquareQuote />
+						Request a phrase
 					</Link>
 				</div>
 			</CardFooter>
