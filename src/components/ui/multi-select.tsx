@@ -44,6 +44,8 @@ export function FancyMultiSelect({
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [open, setOpen] = useState(false)
 	const [inputValue, setInputValue] = useState('')
+	const setItClosed = useCallback(() => setOpen(false), [setOpen])
+	const setItOpen = useCallback(() => setOpen(true), [setOpen])
 
 	const handleUnselect = useCallback(
 		(value: string) => {
@@ -94,8 +96,8 @@ export function FancyMultiSelect({
 						ref={inputRef}
 						value={inputValue}
 						onValueChange={setInputValue}
-						onBlur={() => setOpen(false)}
-						onFocus={() => setOpen(true)}
+						onBlur={setItClosed}
+						onFocus={setItOpen}
 						placeholder={placeholder}
 						className="placeholder:text-muted-foreground ml-2 flex-1 bg-transparent outline-none"
 					/>
@@ -118,10 +120,12 @@ export function FancyMultiSelect({
 										null
 									:	<CommandItem
 											key={option.value}
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onMouseDown={(e) => {
 												e.preventDefault()
 												e.stopPropagation()
 											}}
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onSelect={() => {
 												setInputValue('')
 												setSelected(
@@ -172,16 +176,19 @@ export function ShowSelected({
 							<Button
 								size="icon"
 								variant="badge-outline"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
 										handleUnselect(value)
 									}
 								}}
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onMouseDown={(e) => {
 									e.preventDefault()
 									e.stopPropagation()
 								}}
 								type="button"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => handleUnselect(value)}
 							>
 								<X />
