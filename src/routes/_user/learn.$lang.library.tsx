@@ -30,6 +30,10 @@ export const Route = createFileRoute('/_user/learn/$lang/library')({
 	validateSearch: PhraseSearchSchema,
 })
 
+const filterLanguage = {
+	filter: 'language' as const,
+}
+
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
 
@@ -42,10 +46,11 @@ function DeckLibraryPage() {
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
 
-	const allTags = language?.meta.tags ?? []
 	const tagOptions = useMemo(
-		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
-		[allTags]
+		() =>
+			(language?.meta.tags ?? []).map((tag) => ({ value: tag, label: tag })) ??
+			[],
+		[language?.meta.tags]
 	)
 
 	const selectedTags = useMemo(
@@ -103,12 +108,15 @@ function DeckLibraryPage() {
 		]
 	}, [deckPids, recs])
 
-	const handleFilterChange = (value: string) => {
-		void navigate({
-			search: (prev) => ({ ...prev, filter: value as FilterEnumType }),
-			replace: true,
-		})
-	}
+	const handleFilterChange = useCallback(
+		(value: string) => {
+			void navigate({
+				search: (prev) => ({ ...prev, filter: value as FilterEnumType }),
+				replace: true,
+			})
+		},
+		[navigate]
+	)
 
 	const filteredPidsByStatus = useMemo(
 		() =>
@@ -203,7 +211,7 @@ function DeckLibraryPage() {
 						className={buttonVariants({ variant: 'outline', size: 'sm' })}
 						to="/learn/$lang/library"
 						from={Route.fullPath}
-						search={{ filter: 'language' }}
+						search={filterLanguage}
 					>
 						Clear all filters
 					</Link>
