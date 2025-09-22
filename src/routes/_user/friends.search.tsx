@@ -22,7 +22,6 @@ import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
-import { ShareButtons } from './friends.invite'
 import { nullSubmit } from '@/lib/utils'
 
 const SearchSchema = z.object({
@@ -88,11 +87,7 @@ export default function SearchProfiles() {
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<form
-						className="flex flex-row items-end gap-2"
-						 
-						onSubmit={nullSubmit}
-					>
+					<form className="flex flex-row items-end gap-2" onSubmit={nullSubmit}>
 						<div className="w-full">
 							<Label>Username</Label>
 							<Input
@@ -119,7 +114,6 @@ export default function SearchProfiles() {
 									<p>
 										No users match that search, but you can invite a friend!
 									</p>
-									<ShareButtons size="" />
 								</Callout>
 							:	<div className="my-6 space-y-2">
 									{resultsToShow.map((profile) => (

@@ -5,8 +5,10 @@ import { useCallback } from 'react'
 
 export function NativeShareButton({
 	shareData,
+	className,
 }: {
 	shareData: { text: string; title: string }
+	className?: string
 }) {
 	const canShare = typeof navigator?.share === 'function'
 
@@ -24,7 +26,7 @@ export function NativeShareButton({
 	if (!canShare) return null
 
 	return (
-		<Button size="lg" onClick={onClick}>
+		<Button className={className} size="lg" onClick={onClick}>
 			<Share />
 			Share
 		</Button>
