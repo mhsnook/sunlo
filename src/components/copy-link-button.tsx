@@ -21,7 +21,7 @@ export function copyLink(url?: string, fallback = true) {
 
 export default function CopyLinkButton({
 	url,
-	text = 'Copy link',
+	text = 'Copy Link',
 	variant = 'ghost',
 	size = 'sm',
 	className = '',
