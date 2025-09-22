@@ -26,7 +26,7 @@ export default function Page() {
 						))}
 					</div>
 					<Link
-						className="s-link-muted items-center gap-1"
+						className="s-link-muted flex flex-row items-center gap-1 text-sm"
 						to="/learn/archived"
 					>
 						<Archive size={14} />
