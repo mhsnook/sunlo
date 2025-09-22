@@ -141,12 +141,15 @@ function Page() {
 							)}
 						/>
 
-						{createRequestMutation.isError && (
-							<Callout variant="problem">
-								<p className="font-bold">Error</p>
-								<p>{createRequestMutation.error.message}</p>
-							</Callout>
-						)}
+						{
+							// @TODO replace this with one of our many Error components
+							createRequestMutation.isError && (
+								<Callout size="sm" variant="problem">
+									<p className="font-bold">Error</p>
+									<p>{createRequestMutation.error.message}</p>
+								</Callout>
+							)
+						}
 
 						<Button type="submit" disabled={createRequestMutation.isPending}>
 							{createRequestMutation.isPending ?
