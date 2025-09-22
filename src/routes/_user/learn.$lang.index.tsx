@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { buttonVariants } from '@/components/ui/button-variants'
-import type { LangOnlyComponentProps } from '@/types/main'
 import {
 	Card,
 	CardContent,
@@ -22,6 +21,7 @@ import {
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import {
+	deckQueryOptions,
 	useDeckActivityChartData,
 	useDeckMeta,
 	useDeckPids,
@@ -30,7 +30,7 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { useLanguageMeta } from '@/hooks/use-language'
+import { languageQueryOptions, useLanguageMeta } from '@/hooks/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
@@ -38,6 +38,18 @@ import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
+	loader: async ({
+		params: { lang },
+		context: {
+			queryClient,
+			auth: { userId },
+		},
+	}) => {
+		await Promise.all([
+			queryClient.prefetchQuery(languageQueryOptions(lang)),
+			queryClient.prefetchQuery(deckQueryOptions(lang, userId)),
+		])
+	},
 })
 
 function WelcomePage() {
@@ -50,16 +62,17 @@ function WelcomePage() {
 		<div className="space-y-8">
 			{deckIsNew ?
 				<Empty />
-			:	<DeckOverview lang={lang} />}
+			:	<DeckOverview />}
 
 			<RecommendedPhrasesCard lang={lang} />
 			<FriendProfiles />
-			<DeckSettings lang={lang} />
+			<DeckSettings />
 		</div>
 	)
 }
 
-function DeckOverview({ lang }: LangOnlyComponentProps) {
+function DeckOverview() {
+	const { lang } = Route.useParams()
 	const { data: meta } = useDeckMeta(lang)
 	const { data: pids } = useDeckPids(lang)
 	const { data: routineStats } = useDeckRoutineStats(lang)
@@ -179,7 +192,8 @@ function DeckOverview({ lang }: LangOnlyComponentProps) {
 	)
 }
 
-function DeckSettings({ lang }: LangOnlyComponentProps) {
+function DeckSettings() {
+	const { lang } = Route.useParams()
 	const { data } = useDeckMeta(lang)
 
 	return (
