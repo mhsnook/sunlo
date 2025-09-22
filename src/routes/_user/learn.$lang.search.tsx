@@ -1,4 +1,12 @@
-import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import {
+	useCallback,
+	useEffect,
+	useMemo,
+	useState,
+	type SetStateAction,
+} from 'react'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useDebounce } from '@uidotdev/usehooks'
 
 import { NotebookPen, Search } from 'lucide-react'
 import {
@@ -12,9 +20,8 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { useLanguagePhrasesMap, useLanguagePids } from '@/hooks/use-language'
-import { useCallback, useMemo, type SetStateAction } from 'react'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
 import { useLanguageTags } from '@/hooks/use-language'
@@ -32,9 +39,17 @@ type SearchablePhrase = {
 }
 
 function SearchTab() {
-	const { navigate } = useRouter()
+	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
 	const { text: filter, tags: tagsFilter } = Route.useSearch()
+	const [text, setText] = useState(filter)
+	const debouncedText = useDebounce(text, 300)
+
+	useEffect(() => {
+		if (debouncedText !== filter) {
+			void navigate({ search: (prev) => ({ ...prev, text: debouncedText }) })
+		}
+	}, [debouncedText, filter, navigate])
 
 	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
 	const { data: pids } = useLanguagePids(lang)
@@ -53,7 +68,6 @@ function SearchTab() {
 	const setSelectedTags = useCallback(
 		(value: SetStateAction<string[]>) => {
 			void navigate({
-				to: '.',
 				search: (prev: PhraseSearchType) => {
 					const newSelectedTags =
 						typeof value === 'function' ? value(selectedTags) : value
@@ -100,19 +114,21 @@ function SearchTab() {
 
 		if (!textFilteredPids) return []
 		if (!tagsFilter) return textFilteredPids
-		if (!phrasesMap) return []
+		if (phrasesMap === undefined) return []
 
-		const selectedTagsFromFilter = tagsFilter.split(',').filter(Boolean)
-		if (selectedTagsFromFilter.length === 0) return textFilteredPids
+		if (tagsFilter.length === 0) return textFilteredPids
 
 		return textFilteredPids.filter((pid) => {
 			const phrase = phrasesMap[pid]
 			if (!phrase?.tags) return false
-			return selectedTagsFromFilter.every((selectedTag) =>
-				phrase
-					.tags.filter(Boolean)
-					.some((phraseTag) => phraseTag.name === selectedTag)
-			)
+			return tagsFilter
+				.split(',')
+				.filter(Boolean)
+				.every((selectedTag) =>
+					phrase.tags
+						.filter(Boolean)
+						.some((phraseTag) => phraseTag?.name === selectedTag)
+				)
 		})
 	}, [filter, searchablePhrases, pids, tagsFilter, phrasesMap])
 
@@ -128,16 +144,7 @@ function SearchTab() {
 					<Input
 						placeholder="Enter a phrase to search or add"
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onChange={(e) => {
-							void navigate({
-								to: '.',
-								replace: true,
-								search: (search: PhraseSearchType) => ({
-									...search,
-									text: e.target.value,
-								}),
-							})
-						}}
+						onChange={(e) => setText(e.target.value)}
 						defaultValue={filter}
 					/>
 				</div>

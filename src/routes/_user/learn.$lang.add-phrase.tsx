@@ -1,10 +1,11 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
+import { useDebounce } from '@uidotdev/usehooks'
 
 import {
 	Card,
@@ -65,12 +66,29 @@ function AddPhraseTab() {
 		control,
 		register,
 		handleSubmit,
+		watch,
 		reset,
 		formState: { errors },
 	} = useForm<AddPhraseFormValues>({
 		resolver: zodResolver(addPhraseSchema),
 		defaultValues: { phrase_text: searchPhrase },
 	})
+
+	const phraseText = watch('phrase_text')
+	const debouncedText = useDebounce(phraseText, 300)
+
+	useEffect(() => {
+		if (debouncedText !== text) {
+			void navigate({
+				replace: true,
+				search: (search: SearchParams) => ({
+					...search,
+					text: debouncedText || undefined,
+				}),
+				params: true,
+			})
+		}
+	}, [text, debouncedText, navigate])
 
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
@@ -123,18 +141,6 @@ function AddPhraseTab() {
 								<Textarea
 									{...field}
 									placeholder="The text of the phrase to learn"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
-									onChange={(e) => {
-										field.onChange(e)
-										void navigate({
-											to: '.',
-											replace: true,
-											search: (search: SearchParams) => ({
-												...search,
-												text: e.target.value,
-											}),
-										})
-									}}
 								/>
 							)}
 						/>
