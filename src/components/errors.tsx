@@ -29,6 +29,7 @@ export function ShowError({
 		<Callout
 			className={className}
 			variant="problem"
+			size="sm"
 			alert
 			Icon={DestructiveTriangle}
 		>
@@ -71,6 +72,7 @@ export const ShowErrorDontLog = memo(function ShowAndLogError({
 		<Callout
 			className={className}
 			variant="problem"
+			size="sm"
 			alert
 			Icon={DestructiveTriangle}
 		>
