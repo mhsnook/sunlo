@@ -1,6 +1,5 @@
 import { makeLinks } from '@/hooks/links'
 import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
-import Callout from '@/components/ui/callout'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
@@ -38,11 +37,9 @@ export function NavMain({ lang }: { lang?: string }) {
 
 	return (
 		<>
-			{!deckMenu || !lang ? null : (
+			{!deckMenu || !lang || !(lang in languages) ? null : (
 				<div className="bg-primary/10 mx-2 rounded-2xl pb-2">
-					{!(lang in languages) ?
-						<LanguageNotFound />
-					: !isDeckFound ?
+					{!isDeckFound ?
 						<DeckNotFound lang={lang} />
 					:	<OneSidebarMenu menu={deckMenu} title="" />}
 				</div>
@@ -58,30 +55,20 @@ export function NavMain({ lang }: { lang?: string }) {
 	)
 }
 
-function LanguageNotFound() {
-	return (
-		<Callout className="m-2">
-			<p>
-				This language doesn't seem to exist. Please check your URL and try
-				again.
-			</p>
-		</Callout>
-	)
-}
-
-function DeckNotFound({ lang }: LangOnlyComponentProps) {
+function DeckNotFound(props: LangOnlyComponentProps) {
 	const { setClosedMobile } = useSidebar()
 	return (
-		<Callout className="m-2">
+		<div className="p-4 pb-2">
 			<p>
-				It seems like you're not studying {languages[lang]} (yet). Would you
-				like to start working on a new deck?
+				Start work on a new deck of{' '}
+				<span className="s-language-name">{languages[props.lang]}</span> flash
+				cards?
 			</p>
-			<Button className="mt-2 w-full" asChild>
-				<Link to="/learn/add-deck" onClick={setClosedMobile} search={{ lang }}>
+			<Button className="mt-2 w-full" asChild size="sm">
+				<Link to="/learn/add-deck" onClick={setClosedMobile} search={props}>
 					Start Learning
 				</Link>
 			</Button>
-		</Callout>
+		</div>
 	)
 }
