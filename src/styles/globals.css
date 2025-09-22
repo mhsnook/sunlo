@@ -172,7 +172,7 @@
 	@apply decoration-primary-foresoft hover:decoration-primary-foresoft/50 text-primary-foresoft cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
 }
 @utility s-link-muted {
-	@apply decoration-primary-foresoft/50 text-primary-foresoft flex flex-row gap-0 text-sm underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
+	@apply decoration-primary-foresoft/50 text-primary-foresoft underline underline-offset-2 opacity-70 transition-all hover:gap-1 hover:underline-offset-3 hover:opacity-90;
 }
 @utility s-link-hidden {
 	@apply decoration-primary/30 flex-shrink-0 underline-offset-4 hover:underline;
@@ -209,6 +209,9 @@
 }
 @utility h5 {
 	@apply my-2 text-lg font-bold;
+}
+@utility s-language-name {
+	@apply text-accent-foreground font-semibold italic;
 }
 
 @layer base {
