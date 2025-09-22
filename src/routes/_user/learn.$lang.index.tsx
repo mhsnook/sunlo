@@ -11,11 +11,11 @@ import {
 } from '@/components/ui/card'
 import {
 	BookOpenText,
+	Construction,
 	Contact,
 	Library,
 	MessageSquarePlus,
 	MessageSquareQuote,
-	NotebookPen,
 	Rocket,
 	Search,
 } from 'lucide-react'
@@ -30,10 +30,11 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { useLanguage } from '@/hooks/use-language'
+import { useLanguageMeta } from '@/hooks/use-language'
 import { FriendProfiles } from './friends.index'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
+import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -42,15 +43,13 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 function WelcomePage() {
 	const { lang } = Route.useParams()
 	const { data: pids } = useDeckPids(lang)
-	const { data: language } = useLanguage(lang)
-	if (!language) throw new Error("Could not load this language's data")
 	if (!pids) throw new Error("Could not load this deck's data")
 
 	const deckIsNew = !(pids.all.length > 0)
 	return (
 		<div className="space-y-8">
 			{deckIsNew ?
-				<Empty lang={lang} />
+				<Empty />
 			:	<DeckOverview lang={lang} />}
 
 			<RecommendedPhrasesCard lang={lang} />
@@ -229,21 +228,84 @@ function DeckSettings({ lang }: LangOnlyComponentProps) {
 	)
 }
 
-function Empty({ lang }: LangOnlyComponentProps) {
+const Icon = () => (
+	<Construction className="bg-accent text-accent-foreground h-12 w-12 rounded-full border border-white p-2" />
+)
+
+function NewLang() {
+	const { lang } = Route.useParams()
+
+	return (
+		<Callout Icon={Icon}>
+			<div className="flex flex-col gap-2">
+				<p className="h3 text-primary-foresoft font-bold">
+					It looks like this is a brand new language!
+				</p>
+				<p>
+					You are going to have to do a bit of extra prep. Here are some tips to
+					get you started:
+				</p>
+				<ul className="ml-4 list-disc space-y-2">
+					<li>
+						Recruit a friend! Your best best in the world is a native-speaker
+						whose face lights up with joy when they get to tell you something
+						new about their culture.{' '}
+						<Link from={Route.fullPath} className="s-link">
+							Ask them to sign up and help you build your flashcard deck.
+						</Link>
+					</li>
+					<li>
+						Think of phrases you will find immediately useful, or a situation in
+						the last 48 hours where you wanted to communicate something, but
+						didn't know how. Then text a friend and ask them, and{' '}
+						<Link
+							from={Route.fullPath}
+							to="/learn/$lang/add-phrase"
+							className="s-link"
+						>
+							make a flash card out of their response
+						</Link>
+						.
+					</li>
+					<li>
+						Or, if you have a good example you want to ask about,
+						<Link
+							from={Route.fullPath}
+							to="/learn/$lang/requests/new"
+							className="s-link"
+						>
+							make a Phrase Request share the link with your friends
+						</Link>
+						, so they can answer your request and help build the library for
+						everyone else who comes after you wanting to learn {languages[lang]}
+						.
+					</li>
+					{/*<li>?? join our discord community?? with other learners?? </li>*/}
+				</ul>
+			</div>
+		</Callout>
+	)
+}
+
+function Empty() {
+	const { lang } = Route.useParams()
+
+	const { data: languageMeta } = useLanguageMeta(lang)
 	return (
 		<Card>
 			<CardHeader>
 				<CardTitle>
-					<p className="mb-6 text-3xl font-bold">Welcome to Your New Deck!</p>
+					<p className="text-3xl font-bold">Welcome to Your New Deck!</p>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
+				{!((languageMeta?.phrases_to_learn ?? 0) > 15) && <NewLang />}
 				<p className="text-lg">
 					Let's get started by setting up your learning experience. Do you want
 					to start by browsing the public deck of flash cards, or invite a
 					friend to help you out?
 				</p>
-				<div className="flex flex-col gap-2 @lg:flex-row">
+				<div className="flex flex-col gap-4 @lg:flex-row">
 					<Link
 						to="/learn/$lang/library"
 						from={Route.fullPath}
@@ -261,13 +323,22 @@ function Empty({ lang }: LangOnlyComponentProps) {
 				<p className="text-lg">
 					Or, do you already have a phrase in mind you'd like to add?
 				</p>
-				<Link
-					to="/learn/$lang/add-phrase"
-					from={Route.fullPath}
-					className={buttonVariants({ variant: 'secondary' })}
-				>
-					<NotebookPen /> Add a phrase
-				</Link>
+				<div className="flex gap-4">
+					<Link
+						to="/learn/$lang/add-phrase"
+						from={Route.fullPath}
+						className={buttonVariants({ variant: 'secondary' })}
+					>
+						<MessageSquarePlus /> Add a Phrase
+					</Link>
+					<Link
+						to="/learn/$lang/requests/new"
+						from={Route.fullPath}
+						className={buttonVariants({ variant: 'secondary' })}
+					>
+						<MessageSquareQuote /> Request a Phrase
+					</Link>
+				</div>
 			</CardContent>
 		</Card>
 	)
