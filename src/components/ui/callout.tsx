@@ -3,6 +3,7 @@ import type { ComponentType, HTMLAttributes, PropsWithChildren } from 'react'
 
 type CalloutProps = PropsWithChildren & {
 	variant?: 'default' | 'problem' | 'ghost'
+	size?: 'default' | 'sm'
 	className?: string
 	alert?: boolean
 	Icon?: ComponentType
@@ -14,8 +15,14 @@ const variants = {
 	ghost: 'border text-muted-foreground bg-muted',
 }
 
+const sizes = {
+	default: 'py-[5%]',
+	sm: 'py-[5%] @lg:py-[3%]',
+}
+
 export default function Callout({
 	variant = 'default',
+	size = 'default',
 	alert = false,
 	Icon,
 	className,
@@ -27,13 +34,14 @@ export default function Callout({
 		<div
 			{...props}
 			className={cn(
-				'flex flex-col items-center gap-4 rounded border px-[5%] py-[5%] @lg:flex-row @lg:py-[3%]',
+				'@container flex flex-col items-start gap-4 rounded border px-[5%] @lg:flex-row',
 				variants[variant],
+				sizes[size],
 				className
 			)}
 		>
 			{!Icon ? null : (
-				<div className="min-w-4vh aspect-square">
+				<div className="w-6cqw aspect-square">
 					<Icon />
 				</div>
 			)}
