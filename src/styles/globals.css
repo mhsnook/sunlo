@@ -10,6 +10,16 @@
 	--hue: 260;
 	--hue-off: 220;
 	--hue-accent: 160;
+	--s-high: 83%;
+	--s-low: 20%;
+	--l-1: 28%;
+	--l-2: 38%;
+	--l-3: 58%;
+	--l-4: 88%;
+	--s-sec: 14%;
+	--l-sec: 96%;
+	--s-sec-f: 39%;
+	--l-sec-f: 11%;
 
 	--background: hsl(var(--hue) 63% 94%);
 	--foreground: hsl(var(--hue) 51% 20%);
@@ -17,19 +27,10 @@
 	--card-foreground: hsl(var(--hue-off) 71% 4%);
 	--popover: hsl(var(--hue-off) 0% 100%);
 	--popover-foreground: hsl(var(--hue-off) 71% 4%);
-	--primary: hsl(var(--hue) 83% 58%);
-	--primary-foreground: hsl(var(--hue) 20% 28%);
-	--primary-foresoft: hsl(var(--hue) 83% 38%);
-	--primary-invert: hsl(var(--hue) 83% 88%);
-	--accent: hsl(var(--hue-accent) 83% 58%);
-	--accent-foreground: hsl(var(--hue-accent) 20% 28%);
-	--accent-foresoft: hsl(var(--hue-accent) 83% 38%);
-	--accent-invert: hsl(var(--hue-accent) 83% 88%);
 	--secondary: hsl(var(--hue-off) 14% 96%);
 	--secondary-foreground: hsl(var(--hue-off) 39% 11%);
 	--muted: hsl(var(--hue-off) 14% 96%);
 	--muted-foreground: hsl(var(--hue-off) 9% 43%);
-
 	--destructive: hsl(0 84% 60%);
 	--destructive-foreground: hsl(210 20% 98%);
 	--border: hsl(var(--hue) 37% 81%);
@@ -54,20 +55,22 @@
 }
 
 .dark {
+	--s-high: 60%;
+	--s-low: 20%;
+	--l-1: 98%;
+	--l-2: 80%;
+	--l-3: 40%;
+	--l-4: 20%;
+	--s-sec: 28%;
+	--s-sec-f: 17%;
+	--l-sec: 20%;
+	--l-sec-f: 98%;
 	--background: hsl(var(--hue) 23% 12%);
 	--foreground: hsl(var(--hue) 83% 84%);
 	--card: hsl(var(--hue-off) 61% 10%);
 	--card-foreground: hsl(var(--hue) 83% 88%);
 	--popover: hsl(var(--hue-off) 71% 4%);
 	--popover-foreground: hsl(var(--hue-off) 20% 98%);
-	--primary: hsl(var(--hue) 60% 40%);
-	--primary-foreground: hsl(var(--hue) 20% 98%);
-	--primary-foresoft: hsl(var(--hue) 70% 80%);
-	--primary-invert: hsl(var(--hue) 70% 20%);
-	--accent: hsl(var(--hue-accent) 60% 40%);
-	--accent-foreground: hsl(var(--hue-accent) 20% 98%);
-	--accent-foresoft: hsl(var(--hue-accent) 70% 80%);
-	--accent-invert: hsl(var(--hue-accent) 70% 20%);
 	--secondary: hsl(var(--hue-off) 28% 17%);
 	--secondary-foreground: hsl(var(--hue-off) 20% 98%);
 	--muted: hsl(var(--hue-off) 28% 17%);
@@ -119,17 +122,18 @@
 	--color-ring: var(--ring);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
-	--color-primary-foresoft: var(--primary-foresoft);
-	--color-primary-invert: var(--primary-invert);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
-	--color-accent-foresoft: var(--accent-foresoft);
-	--color-accent-invert: var(--accent-invert);
-
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
+	--color-primary-foreground: hsl(var(--hue) var(--s-low) var(--l-1));
+	--color-primary-foresoft: hsl(var(--hue) var(--s-high) var(--l-2));
+	--color-primary: hsl(var(--hue) var(--s-high) var(--l-3));
+	--color-primary-invert: hsl(var(--hue) var(--s-high) var(--l-4));
+	--color-accent-foreground: hsl(var(--hue-accent) var(--s-low) var(--l-1));
+	--color-accent-foresoft: hsl(var(--hue-accent) var(--s-high) var(--l-2));
+	--color-accent: hsl(var(--hue-accent) var(--s-high) var(--l-3));
+	--color-accent-invert: hsl(var(--hue-accent) var(--s-high) var(--l-4));
+	--color-secondary: hsl(var(--hue-off) var(--s-sec) var(--l-sec));
+	--color-secondary-foreground: hsl(
+		var(--hue-off) var(--s-sec-f) var(--l-sec-f)
+	);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
 	--color-muted: var(--muted);

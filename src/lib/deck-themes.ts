@@ -6,7 +6,7 @@ export type ThemeType = {
 }
 
 const themes: ThemeType[] = [
-	{ name: 'purple', hue: 260, hueOff: 220, hueAccent: 160 },
+	//	{ name: 'purple', hue: 260, hueOff: 220, hueAccent: 160 },
 	{ name: 'pink', hue: 310, hueOff: 270, hueAccent: 210 },
 	{ name: 'red', hue: 0, hueOff: 320, hueAccent: 290 },
 	{ name: 'gold', hue: 50, hueOff: 30, hueAccent: 320 },
