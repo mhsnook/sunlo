@@ -7,9 +7,9 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default:
-					'bg-primary-foresoft dark:bg-primary text-white hover:bg-primary/90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
+					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
 				accent:
-					'bg-accent-foresoft dark:bg-accent text-white hover:bg-accent/90 aria-expanded:bg-accent-foresoft/60 border border-background dark:text-white hover:border-accent-foresoft',
+					'bg-accent-foresoft dark:bg-accent text-white hover:opacity-90 aria-expanded:bg-accent-foresoft/60 border border-background dark:text-white hover:border-accent-foresoft',
 				secondary:
 					'bg-secondary text-secondary-foreground/80 hover:bg-primary-invert/50 border border-secondary-foreground/5',
 				destructive:

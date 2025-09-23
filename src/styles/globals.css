@@ -6,37 +6,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-.purple {
-	--hue: 260;
-	--hue-off: 220;
-	--hue-accent: 160;
-}
-.pink {
-	--hue: 310;
-	--hue-off: 270;
-	--hue-accent: 210;
-}
-.red {
-	--hue: 0;
-	--hue-off: 320;
-	--hue-accent: 260;
-}
-.gold {
-	--hue: 60;
-	--hue-off: 40;
-	--hue-accent: 320;
-}
-.green {
-	--hue: 160;
-	--hue-off: 140;
-	--hue-accent: 60;
-}
-.blue {
-	--hue: 210;
-	--hue-off: 230;
-	--hue-accent: 110;
-}
-
 :root {
 	--hue: 260;
 	--hue-off: 220;
@@ -85,9 +54,9 @@
 }
 
 .dark {
-	--background: hsl(var(--hue) 43% 13%);
+	--background: hsl(var(--hue) 23% 12%);
 	--foreground: hsl(var(--hue) 83% 84%);
-	--card: hsl(var(--hue-off) 71% 12%);
+	--card: hsl(var(--hue-off) 61% 10%);
 	--card-foreground: hsl(var(--hue) 83% 88%);
 	--popover: hsl(var(--hue-off) 71% 4%);
 	--popover-foreground: hsl(var(--hue-off) 20% 98%);
