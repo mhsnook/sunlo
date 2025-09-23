@@ -8,6 +8,7 @@ import {
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
+import { ThemeType } from '@/lib/deck-themes'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -165,6 +166,7 @@ export type DeckStub = Tables<'user_deck'>
 export type DeckInsert = TablesInsert<'user_deck'>
 export type DeckMeta = Tables<'user_deck_plus'> & {
 	cardsScheduledForToday: number
+	theme?: ThemeType
 }
 export type DeckFetched = DeckMeta & {
 	cards: Array<CardFull>
