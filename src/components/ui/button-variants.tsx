@@ -7,9 +7,11 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default:
-					'bg-primary text-primary-foreground hover:bg-primary/90 aria-expanded:bg-primary/60',
+					'bg-primary-foresoft dark:bg-primary text-white hover:bg-primary/90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
+				accent:
+					'bg-accent-foresoft dark:bg-accent text-white hover:bg-accent/90 aria-expanded:bg-accent-foresoft/60 border border-background dark:text-white hover:border-accent-foresoft',
 				secondary:
-					'bg-secondary text-secondary-foreground/80 hover:bg-accent/30 border-secondary-foreground/10',
+					'bg-secondary text-secondary-foreground/80 hover:bg-primary-invert/50 border border-secondary-foreground/5',
 				destructive:
 					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 				'destructive-outline':
@@ -19,9 +21,9 @@ const buttonVariants = cva(
 				outline:
 					'border border-transparent hover:border-primary-foresoft/30 bg-card hover:bg-primary/10 text-primary-foresoft',
 				'outline-primary':
-					'border border-primary bg-card hover:bg-primary/20 text-primary-foresoft bg-primary/10',
+					'border border-primary/20 hover:bg-primary/20 text-primary-foreground hover:text-primary-foresoft bg-primary-invert/40 hover:bg-primary-invert/60',
 				'outline-accent':
-					'bg-accent text-accent-foreground hover:pointer hover:outline outline-accent-foreground/30',
+					'border border-accent/20 hover:bg-accent/20 text-accent-foreground hover:text-accent-foresoft bg-accent-invert/40 hover:bg-accent-invert/60',
 				'badge-outline':
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
 			},

@@ -6,79 +6,121 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.purple {
+	--hue: 260;
+	--hue-off: 220;
+	--hue-accent: 160;
+}
+.pink {
+	--hue: 310;
+	--hue-off: 270;
+	--hue-accent: 210;
+}
+.red {
+	--hue: 0;
+	--hue-off: 320;
+	--hue-accent: 260;
+}
+.gold {
+	--hue: 60;
+	--hue-off: 40;
+	--hue-accent: 320;
+}
+.green {
+	--hue: 160;
+	--hue-off: 140;
+	--hue-accent: 60;
+}
+.blue {
+	--hue: 210;
+	--hue-off: 230;
+	--hue-accent: 110;
+}
+
 :root {
-	--background: hsl(263 83% 94%);
-	--foreground: hsl(224 51% 20%);
-	--card: hsl(0 0% 100%);
-	--card-foreground: hsl(224 71% 4%);
-	--popover: hsl(0 0% 100%);
-	--popover-foreground: hsl(224 71% 4%);
-	--primary: hsl(263 83% 58%);
-	--primary-foreground: hsl(210 20% 98%);
-	--primary-foresoft: hsl(262 83% 38%);
-	--secondary: hsl(220 14% 96%);
-	--secondary-foreground: hsl(221 39% 11%);
-	--muted: hsl(220 14% 96%);
-	--muted-foreground: hsl(220 9% 43%);
-	--accent: hsl(174 42% 90%);
-	--accent-foreground: hsl(174 90% 28%);
+	--hue: 260;
+	--hue-off: 220;
+	--hue-accent: 160;
+
+	--background: hsl(var(--hue) 63% 94%);
+	--foreground: hsl(var(--hue) 51% 20%);
+	--card: hsl(var(--hue-off) 0% 100%);
+	--card-foreground: hsl(var(--hue-off) 71% 4%);
+	--popover: hsl(var(--hue-off) 0% 100%);
+	--popover-foreground: hsl(var(--hue-off) 71% 4%);
+	--primary: hsl(var(--hue) 83% 58%);
+	--primary-foreground: hsl(var(--hue) 20% 28%);
+	--primary-foresoft: hsl(var(--hue) 83% 38%);
+	--primary-invert: hsl(var(--hue) 83% 88%);
+	--accent: hsl(var(--hue-accent) 83% 58%);
+	--accent-foreground: hsl(var(--hue-accent) 20% 28%);
+	--accent-foresoft: hsl(var(--hue-accent) 83% 38%);
+	--accent-invert: hsl(var(--hue-accent) 83% 88%);
+	--secondary: hsl(var(--hue-off) 14% 96%);
+	--secondary-foreground: hsl(var(--hue-off) 39% 11%);
+	--muted: hsl(var(--hue-off) 14% 96%);
+	--muted-foreground: hsl(var(--hue-off) 9% 43%);
+
 	--destructive: hsl(0 84% 60%);
 	--destructive-foreground: hsl(210 20% 98%);
-	--border: hsl(263 37% 81%);
-	--input: hsl(220 13% 91%);
-	--ring: hsl(262 83.3% 58%);
+	--border: hsl(var(--hue) 37% 81%);
+	--input: hsl(var(--hue-off) 13% 91%);
+	--ring: hsl(var(--hue) 83.3% 58%);
 	--chart-1: hsl(263 83% 58%);
 	--chart-2: hsl(173 58% 39%);
 	--chart-3: hsl(197 37% 24%);
 	--chart-4: hsl(43 74% 66%);
 	--chart-5: hsl(27 87% 67%);
-	--sidebar-background: hsl(0 0% 98%);
-	--sidebar-foreground: hsl(240 5% 26%);
-	--sidebar-primary: hsl(240 6% 10%);
-	--sidebar-primary-foreground: hsl(0 0% 98%);
-	--sidebar-accent: hsl(240 5% 96%);
+	--sidebar-background: hsl(var(--hue-off) 0% 98%);
+	--sidebar-foreground: hsl(var(--hue-off) 5% 26%);
+	--sidebar-primary: hsl(var(--hue-off) 6% 10%);
+	--sidebar-primary-foreground: hsl(var(--hue-off) 0% 98%);
+	--sidebar-accent: hsl(var(--hue-accent) 5% 96%);
 	--sidebar-accent-foreground: hsl(240 6% 10%);
-	--sidebar-border: hsl(220 13% 91%);
-	--sidebar-ring: hsl(217 91% 60%);
+	--sidebar-border: hsl(var(--hue-off) 13% 91%);
+	--sidebar-ring: hsl(var(--hue-off) 91% 60%);
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
 }
 
 .dark {
-	--background: hsl(263 83% 13%);
-	--foreground: hsl(263 83% 84%);
-	--card: hsl(224 71% 12%);
-	--card-foreground: hsl(263 83% 88%);
-	--popover: hsl(224 71% 4%);
-	--popover-foreground: hsl(210 20% 98%);
-	--primary: hsl(263 70% 50%);
-	--primary-foreground: hsl(210 20% 98%);
-	--primary-foresoft: hsl(263 70% 80%);
-	--secondary: hsl(215 28% 17%);
-	--secondary-foreground: hsl(210 20% 98%);
-	--muted: hsl(215 28% 17%);
-	--muted-foreground: hsl(218 11% 65%);
-	--accent: hsl(174 42% 30%);
-	--accent-foreground: hsl(174 92% 60%);
+	--background: hsl(var(--hue) 43% 13%);
+	--foreground: hsl(var(--hue) 83% 84%);
+	--card: hsl(var(--hue-off) 71% 12%);
+	--card-foreground: hsl(var(--hue) 83% 88%);
+	--popover: hsl(var(--hue-off) 71% 4%);
+	--popover-foreground: hsl(var(--hue-off) 20% 98%);
+	--primary: hsl(var(--hue) 60% 40%);
+	--primary-foreground: hsl(var(--hue) 20% 98%);
+	--primary-foresoft: hsl(var(--hue) 70% 80%);
+	--primary-invert: hsl(var(--hue) 70% 20%);
+	--accent: hsl(var(--hue-accent) 60% 40%);
+	--accent-foreground: hsl(var(--hue-accent) 20% 98%);
+	--accent-foresoft: hsl(var(--hue-accent) 70% 80%);
+	--accent-invert: hsl(var(--hue-accent) 70% 20%);
+	--secondary: hsl(var(--hue-off) 28% 17%);
+	--secondary-foreground: hsl(var(--hue-off) 20% 98%);
+	--muted: hsl(var(--hue-off) 28% 17%);
+	--muted-foreground: hsl(var(--hue-off) 11% 65%);
 	--destructive: hsl(0 63% 31%);
 	--destructive-foreground: hsl(210 20% 98%);
-	--border: hsl(263 37% 37%);
-	--input: hsl(215 28% 17%);
-	--ring: hsl(263 70% 50%);
+	--border: hsl(var(--hue) 37% 37%);
+	--input: hsl(var(--hue-off) 28% 17%);
+	--ring: hsl(var(--hue) 70% 50%);
 	--chart-1: hsl(263 70% 50%);
 	--chart-2: hsl(160 60% 45%);
 	--chart-3: hsl(30 80% 55%);
 	--chart-4: hsl(280 65% 60%);
 	--chart-5: hsl(340 75% 55%);
-	--sidebar-background: hsl(240 6% 10%);
-	--sidebar-foreground: hsl(240 5% 96%);
-	--sidebar-primary: hsl(224 76% 48%);
-	--sidebar-primary-foreground: hsl(0 0% 100%);
-	--sidebar-accent: hsl(240 4% 16%);
-	--sidebar-accent-foreground: hsl(240 5% 96%);
-	--sidebar-border: hsl(240 4% 16%);
-	--sidebar-ring: hsl(217 91% 60%);
+	--sidebar-background: hsl(var(--hue-off) 6% 10%);
+	--sidebar-foreground: hsl(var(--hue-off) 5% 96%);
+	--sidebar-primary: hsl(var(--hue-off) 76% 48%);
+	--sidebar-primary-foreground: hsl(var(--hue-off) 0% 100%);
+	--sidebar-accent: hsl(var(--hue-accent) 4% 16%);
+	--sidebar-accent-foreground: hsl(var(--hue-accent) 5% 96%);
+	--sidebar-border: hsl(var(--hue) 4% 16%);
+	--sidebar-ring: hsl(var(--hue-off) 91% 60%);
 	--shadow-color-1: rgba(255, 255, 255, 0.05);
 	--shadow-color-2: rgba(255, 255, 255, 0.1);
 	--shadow-color-3: rgba(255, 255, 255, 0.25);
@@ -111,14 +153,18 @@
 	--color-primary: var(--primary);
 	--color-primary-foreground: var(--primary-foreground);
 	--color-primary-foresoft: var(--primary-foresoft);
+	--color-primary-invert: var(--primary-invert);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-accent-foresoft: var(--accent-foresoft);
+	--color-accent-invert: var(--accent-invert);
+
 	--color-secondary: var(--secondary);
 	--color-secondary-foreground: var(--secondary-foreground);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
 	--color-muted: var(--muted);
 	--color-muted-foreground: var(--muted-foreground);
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
 	--color-popover: var(--popover);
 	--color-popover-foreground: var(--popover-foreground);
 	--color-card: var(--card);
