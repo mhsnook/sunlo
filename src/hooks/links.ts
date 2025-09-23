@@ -16,6 +16,7 @@ import {
 	Search,
 	Send,
 	Settings,
+	Share,
 	UserPen,
 	UserPlus,
 } from 'lucide-react'
@@ -34,8 +35,8 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 		Icon: Home,
 	},
 	'/friends': {
-		name: 'Friends',
-		title: 'Friends and contacts',
+		name: 'Contacts',
+		title: 'Contacts',
 		Icon: HeartHandshake,
 		link: {
 			to: '/friends',
@@ -43,7 +44,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/friends/requests': {
 		name: 'Requests',
-		title: 'Friend requests',
+		title: 'Friend Requests',
 		Icon: HandHeart,
 		link: {
 			to: '/friends/requests',
@@ -70,7 +71,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	'/friends/invite': {
 		name: 'Invite',
 		title: 'Invite to Sunlo',
-		Icon: Send,
+		Icon: Share,
 		link: {
 			to: '/friends/invite',
 		},
@@ -139,7 +140,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 	},
 	'/learn/$lang/add-phrase': {
 		name: 'Phrase',
-		title: 'Add Phrase',
+		title: 'Add a Phrase',
 		link: {
 			to: '/learn/$lang/add-phrase',
 			params: { lang },

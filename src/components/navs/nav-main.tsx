@@ -49,7 +49,7 @@ export function NavMain({ lang }: { lang?: string }) {
 				menu={learnMenu}
 				title="Learning center"
 			/>
-			<OneSidebarMenu menu={friendsMenu} title="Friends & contacts" />
+			<OneSidebarMenu menu={friendsMenu} title="Network" />
 			<OneSidebarMenu menu={siteMenu} title="Site" />
 		</>
 	)
