@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import type { ButtonProps } from '@/components/ui/button-variants'
 import type { uuid } from '@/types/main'
-import { Share2 } from 'lucide-react'
+import { Share } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
@@ -47,7 +47,7 @@ export default function ShareRequestButton({
 			className={className}
 			{...props}
 		>
-			<Share2 className="h-4 w-4" />
+			<Share className="h-4 w-4" />
 			{size !== 'icon' && <span className="hidden @sm:block">{text}</span>}
 		</Button>
 	)
