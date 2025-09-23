@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Share2, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
+import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { useProfile } from '@/hooks/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'
@@ -21,8 +21,8 @@ function InviteFriendPage() {
 		[profile?.username, signupUrl]
 	)
 	return (
-		<main className="mx-auto max-w-4xl px-4 py-12 @lg:px-6 @xl:px-8">
-			<div className="mb-12 text-center">
+		<main className="mx-auto max-w-4xl space-y-12 px-4 py-8 @lg:px-6 @xl:px-8">
+			<div className="text-center">
 				<div className="bg-primary/10 text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
 					<Sparkles className="h-4 w-4" />
 					<span>Grow your learning network</span>
@@ -31,20 +31,20 @@ function InviteFriendPage() {
 					Invite a Friend to Help
 				</h1>
 				<p className="text-muted-foreground mx-auto max-w-2xl text-xl text-pretty">
-					Or someone who's learning the same language as you. Share knowledge,
-					learn together, and achieve your goals faster with collaborative
-					learning
+					Or invite someone who's learning the same language as you. Discover,
+					create and share useful phrases to build your deck and reach your
+					goals.
 				</p>
 			</div>
 
 			{/* Invite Options */}
-			<div className="mb-12 grid grid-cols-1 gap-6 @xl:grid-cols-2">
+			<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
 				{/* Quick Share */}
 				<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 					<CardContent className="p-8">
 						<div className="mb-6 flex items-center space-x-3">
-							<div className="bg-primary/10 group-hover:bg-primary/20 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
-								<Share2 className="text-primary h-6 w-6" />
+							<div className="bg-primary/10 group-hover:bg-primary/20 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+								<Share className="text-primary h-6 w-6" />
 							</div>
 							<div>
 								<h3 className="text-foreground text-lg font-semibold">
@@ -63,7 +63,7 @@ function InviteFriendPage() {
 				<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 					<CardContent className="p-8">
 						<div className="mb-6 flex items-center space-x-3">
-							<div className="bg-accent/50 group-hover:bg-accent flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+							<div className="bg-accent/50 group-hover:bg-accent flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 								<Copy className="text-accent-foreground h-6 w-6" />
 							</div>
 							<div>
@@ -121,14 +121,14 @@ function InviteFriendPage() {
 						{/* WhatsApp */}
 						<a
 							href={`whatsapp://send?text=${encodeURIComponent(shareData.text)}`}
-							className="group border-border/50 rounded-xl border p-6 text-left transition-all duration-200 hover:border-green-300 hover:bg-green-50 dark:hover:bg-green-950/20"
+							className="group border-border/50 rounded-xl border p-6 text-left transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/20"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 transition-colors group-hover:bg-green-100 dark:bg-green-950/50 dark:group-hover:bg-green-900/50">
-									<MessageSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
+								<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 transition-colors group-hover:bg-emerald-100 dark:bg-emerald-950/50 dark:group-hover:bg-emerald-900/50">
+									<MessageSquare className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
 								</div>
 								<div>
-									<h3 className="text-foreground font-semibold transition-colors group-hover:text-green-600 dark:group-hover:text-green-400">
+									<h3 className="text-foreground font-semibold transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
 										WhatsApp
 									</h3>
 									<p className="text-muted-foreground text-sm">

@@ -4,7 +4,7 @@ import {
 	Users,
 	MessageCircle,
 	Gift,
-	Share2,
+	Share,
 	Github,
 	Sparkles,
 	InfinityIcon,
@@ -114,7 +114,7 @@ export function SocialLearningSection() {
 												:	'"These folk songs are super catchy!"'}
 											</div>
 										</div>
-										<Share2 className="h-4 w-4 text-pink-300" />
+										<Share className="h-4 w-4 text-pink-300" />
 									</div>
 								</div>
 							</Card>
