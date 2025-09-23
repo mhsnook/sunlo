@@ -127,7 +127,14 @@ function ComponentsPage() {
 					</CardHeader>
 					<CardContent>
 						<div className="flex flex-wrap gap-2">
-							<Button>Default</Button>
+							<Button size="lg" className="w-full">
+								Primary Button
+							</Button>
+							<Button size="lg" variant="accent" className="w-full">
+								Accent Button
+							</Button>
+							<Button variant="outline-primary">Primary soft</Button>
+							<Button variant="outline-accent">Accent soft</Button>
 							<Button variant="secondary">Secondary</Button>
 							<Button variant="ghost">Ghost</Button>
 							<Button variant="outline">Outline</Button>

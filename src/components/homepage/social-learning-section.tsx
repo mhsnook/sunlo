@@ -124,7 +124,7 @@ export function SocialLearningSection() {
 									to="/signup"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
-										'transform bg-rose-500 font-semibold transition-all duration-300 hover:scale-105 hover:bg-rose-600'
+										'transform bg-rose-700 font-semibold text-white/90 transition-all duration-300 hover:scale-105 hover:bg-rose-800'
 									)}
 								>
 									Invite Your {isForFriends ? 'Friends' : 'Family'}

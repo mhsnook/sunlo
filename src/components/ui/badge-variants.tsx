@@ -6,14 +6,14 @@ const badgeVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: 'border-transparent bg-primary text-primary-foreground',
+				default: 'border-transparent bg-primary text-white',
 				secondary:
 					'border-secondary-foreground/10 bg-secondary/50 text-secondary-foreground/80',
 				destructive:
 					'border-transparent bg-destructive text-destructive-foreground',
-				success: 'border-transparent bg-green-600 text-green-100 hover:shadow',
+				success: 'border-transparent bg-green-600 text-green-100',
 				outline: 'text-foreground/80 bg-foreground/5',
-				lang: 'text-accent-foreground bg-accent/50 border-accent-foreground/10 uppercase',
+				lang: 'text-accent-foreground bg-accent-invert border-accent-foreground/20 uppercase',
 			},
 			size: {
 				lg: 'px-3 py-1 gap-2 [&>svg]:h-4 [&>svg]:w-4 [&>button]:h-5 [&>button]:w-5',
