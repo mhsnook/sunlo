@@ -115,7 +115,7 @@ export default function SearchProfiles() {
 										No users match that search, but you can invite a friend!
 									</p>
 								</Callout>
-							:	<div className="my-6 space-y-2">
+							:	<div className="my-6 space-y-2 rounded border border-transparent p-4 shadow">
 									{resultsToShow.map((profile) => (
 										<ProfileWithRelationship
 											key={profile.uid}
