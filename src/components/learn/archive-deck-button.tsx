@@ -10,6 +10,7 @@ import {
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useAuth } from '@/lib/hooks'
+import { produce } from 'immer'
 import supabase from '@/lib/supabase-client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
@@ -45,32 +46,27 @@ export function ArchiveDeckButton({
 		},
 		onSuccess: (data) => {
 			if (data) {
-				void queryClient.setQueryData(
-					['user', lang, 'deck'],
-					(old: DeckLoaded) => ({
-						...old,
-						meta: {
-							...old.meta,
-							archived: data.archived,
-						},
-					})
+				queryClient.setQueryData<DeckLoaded>(['user', lang, 'deck'], (old) =>
+					old ?
+						produce(old, (draft) => {
+							draft.meta.archived = data.archived
+						})
+					:	old
 				)
-				void queryClient.setQueryData(['user', userId], (old: ProfileFull) => ({
-					...old,
-					decksMap: {
-						...old.decksMap,
-						[lang]: {
-							...old.decksMap[lang],
-							archived: data.archived,
-						},
-					},
-				}))
+				queryClient.setQueryData<ProfileFull>(['user', userId], (old) =>
+					old ?
+						produce(old, (draft) => {
+							if (draft.decksMap?.[lang])
+								draft.decksMap[lang].archived = data.archived
+						})
+					:	old
+				)
 			}
-			if (data?.archived) toast.success('The deck has been re-activated!')
-			else
-				toast.success(
-					'The deck has been archived and hidden from your active decks.'
-				)
+			toast.success(
+				data?.archived ?
+					'The deck has been re-activated!'
+				:	'The deck has been archived and hidden from your active decks.'
+			)
 			setOpen(false)
 		},
 		onError: () => {
