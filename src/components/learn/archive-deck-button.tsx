@@ -17,6 +17,7 @@ import toast from 'react-hot-toast'
 import { Button } from '../ui/button'
 import { buttonVariants } from '../ui/button-variants'
 import { Archive, ArchiveRestore } from 'lucide-react'
+import { DeckLoaded, ProfileFull } from '@/types/main'
 
 export function ArchiveDeckButton({
 	lang,
@@ -32,16 +33,40 @@ export function ArchiveDeckButton({
 	const { userId } = useAuth()
 	const mutation = useMutation({
 		mutationFn: async () => {
-			await supabase
+			const { data } = await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
 				.eq('lang', lang)
 				.eq('uid', userId!)
+				.select()
+				.maybeSingle()
 				.throwOnError()
+			return data
 		},
-		onSuccess: () => {
-			void queryClient.invalidateQueries({ queryKey: ['user', lang, 'deck'] })
-			if (archived) toast.success('The deck has been re-activated!')
+		onSuccess: (data) => {
+			if (data) {
+				void queryClient.setQueryData(
+					['user', lang, 'deck'],
+					(old: DeckLoaded) => ({
+						...old,
+						meta: {
+							...old.meta,
+							archived: data.archived,
+						},
+					})
+				)
+				void queryClient.setQueryData(['user', userId], (old: ProfileFull) => ({
+					...old,
+					decksMap: {
+						...old.decksMap,
+						[lang]: {
+							...old.decksMap[lang],
+							archived: data.archived,
+						},
+					},
+				}))
+			}
+			if (data?.archived) toast.success('The deck has been re-activated!')
 			else
 				toast.success(
 					'The deck has been archived and hidden from your active decks.'
