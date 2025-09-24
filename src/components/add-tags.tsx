@@ -69,14 +69,7 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 				void queryClient.setQueryData<LanguageLoaded>(
 					['language', lang],
 					(old) => {
-						if (!old) {
-							void queryClient.invalidateQueries({
-								queryKey: ['language', lang],
-							})
-							return
-						}
-
-						return produce(old, (draft) => {
+						return produce(old!, (draft) => {
 							if (Array.isArray(draft.phrasesMap[phraseId].tags))
 								draft.phrasesMap[phraseId].tags.push(newTags)
 							else draft.phrasesMap[phraseId].tags = newTags
