@@ -3,6 +3,9 @@ import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/hooks/use-language'
 import { deckQueryOptions } from '@/hooks/use-deck'
+import { profileQuery } from '@/hooks/use-profile'
+import { useEffect } from 'react'
+import { setTheme } from '@/lib/deck-themes'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -19,6 +22,8 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		const deckLoader = queryClient.ensureQueryData(
 			deckQueryOptions(lang, userId)
 		)
+		const profile = await queryClient.ensureQueryData(profileQuery(userId))
+		const theme = profile?.decksMap?.[lang]?.theme
 
 		const data = {
 			language: await languageLoader,
@@ -43,10 +48,18 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			} as TitleBar,
+			theme,
 		}
 	},
 })
 
 function LanguageLayout() {
+	const { theme } = Route.useLoaderData()
+	useEffect(() => {
+		if (theme) setTheme(document.documentElement, theme)
+		return () => {
+			setTheme(document.documentElement)
+		}
+	}, [theme])
 	return <Outlet />
 }

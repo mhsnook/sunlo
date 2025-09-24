@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { PostgrestError } from '@supabase/supabase-js'
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
 import type {
@@ -37,10 +38,18 @@ export const profileQuery = (userId: uuid | null) =>
 						: a.created_at! > b.created_at! ? 1
 						: -1
 					)
-					.map((d, i) => ({
-						...d,
-						theme: themes[i % decks_array.length],
-					})),
+					.map((d, i) => {
+						const theme = themes[i % themes.length]
+						return {
+							...d,
+							theme,
+							themeCss: {
+								'--hue': theme?.hue,
+								'--hue-off': theme?.hueOff,
+								'--hue-accent': theme?.hueAccent,
+							} as CSSProperties,
+						}
+					}),
 				'lang'
 			)
 

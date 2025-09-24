@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 
 const shadowStyle: CSSProperties = {
