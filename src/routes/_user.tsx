@@ -84,10 +84,14 @@ type UserLayoutMatch = RouteMatch<
 }
 
 function UserLayout() {
-	const matches = useMatches() as UserLayoutMatch[]
-	const match = matches.findLast((m) => !!m.loaderData?.SecondSidebar)
-	const SecondSidebar = match?.loaderData?.SecondSidebar
-	const sidebarExact = match && match?.id === matches.at(-1)?.id.slice(0, -1)
+	const matches = useMatches()
+	const matchWithSidebar = matches.findLast(
+		(m) => !!(m as UserLayoutMatch)?.loaderData?.SecondSidebar
+	) as UserLayoutMatch | undefined
+	 
+	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
+	const sidebarExact =
+		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
 	const { userId } = useAuth()
 	useEffect(() => {
@@ -100,12 +104,16 @@ function UserLayout() {
 					event: 'INSERT',
 					schema: 'public',
 					table: 'friend_request_action',
-					filter: `uid_for=eq.${userId}`,
 				},
 				(payload) => {
 					const newAction = payload.new as FriendRequestActionRow
-					if (newAction.action_type === 'accept')
+					if (
+						newAction.action_type === 'accept' &&
+						newAction.uid_for === userId
+					)
 						toast.success('Friend request accepted')
+					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
+						toast.success('You are now connected')
 					// console.log(`new friend request action has come in`, payload)
 					void queryClient.invalidateQueries({
 						queryKey: ['user', userId, 'relations'],
