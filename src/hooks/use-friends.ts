@@ -1,9 +1,4 @@
-import {
-	queryOptions,
-	useMutation,
-	useQuery,
-	useQueryClient,
-} from '@tanstack/react-query'
+import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
 import supabase from '../lib/supabase-client'
 import {
 	ChatMessageRelative,
@@ -54,24 +49,22 @@ export const friendSummaryToRelative = (
 	return res
 }
 
-export const relationsQuery = (uidMe: uuid | null) =>
+export const relationsQuery = (uidMe: uuid) =>
 	queryOptions({
-		queryKey: ['user', uidMe ?? '', 'relations'],
-		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
-			if (!queryKey[1]) return null
-			const uid = queryKey[1]
+		queryKey: ['user', uidMe, 'relations'],
+		queryFn: async () => {
 			const { data } = await supabase
 				.from('friend_summary')
 				.select(
 					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
 				)
-				.or(`uid_less.eq.${uid},uid_more.eq.${uid}`)
+				.or(`uid_less.eq.${uidMe},uid_more.eq.${uidMe}`)
 				.throwOnError()
 
 			if (!data) return null
 
 			const cleanArray = data
-				.map((d) => friendSummaryToRelative(uid, d))
+				.map((d) => friendSummaryToRelative(uidMe, d))
 				.filter(
 					(d: FriendSummaryRelative): d is FriendSummaryFull =>
 						d.profile !== undefined
@@ -98,7 +91,7 @@ export const relationsQuery = (uidMe: uuid | null) =>
 
 export const useRelations = () => {
 	const { userId } = useAuth()
-	return useQuery({ ...relationsQuery(userId), enabled: !!userId })
+	return useQuery({ ...relationsQuery(userId!), enabled: !!userId })
 }
 
 export const useOneRelation = (uidToUse: uuid) => {
@@ -118,7 +111,6 @@ export const useOneRelation = (uidToUse: uuid) => {
 export const useFriendRequestAction = (uid_for: uuid) => {
 	const { userId: uid_by } = useAuth()
 	const [uid_less, uid_more] = [uid_by, uid_for].sort()
-	const queryClient = useQueryClient()
 
 	return useMutation({
 		mutationKey: ['user', uid_by, 'friend_request_action', uid_for],
@@ -136,17 +128,11 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 		},
 		onSuccess: (_, variable) => {
 			if (variable === 'invite') toast.success('Friend request sent 👍')
-			if (variable === 'accept')
-				toast.success('Accepted invitation. You are now connected 👍')
+			//if (variable === 'accept')
+			//	toast.success('Accepted invitation. You are now connected 👍')
 			if (variable === 'decline') toast('Declined this invitation')
 			if (variable === 'cancel') toast('Cancelled this invitation')
 			if (variable === 'remove') toast('You are no longer friends')
-			void queryClient.invalidateQueries({
-				queryKey: ['user', uid_by, 'relations'],
-			})
-			void queryClient.invalidateQueries({
-				queryKey: ['public_profile', 'search'],
-			})
 		},
 		onError: (error, variables) => {
 			console.log(
