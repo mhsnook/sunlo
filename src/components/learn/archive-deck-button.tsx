@@ -45,34 +45,53 @@ export function ArchiveDeckButton({
 			return data
 		},
 		onSuccess: (data) => {
-			if (data) {
-				queryClient.setQueryData<DeckLoaded>(['user', lang, 'deck'], (old) =>
-					old ?
-						produce(old, (draft) => {
+			setOpen(false)
+			if (!data) return null
+
+			queryClient.setQueryData(
+				['user', lang, 'deck'],
+				(old: DeckLoaded | undefined) => {
+					if (old) {
+						return produce<DeckLoaded>(old, (draft) => {
 							draft.meta.archived = data.archived
 						})
-					:	old
-				)
-				queryClient.setQueryData<ProfileFull>(['user', userId], (old) =>
-					old ?
-						produce(old, (draft) => {
-							if (draft.decksMap?.[lang])
-								draft.decksMap[lang].archived = data.archived
-						})
-					:	old
-				)
-			}
+					}
+					void queryClient.invalidateQueries({
+						queryKey: ['user', lang, 'deck'],
+					})
+					return
+				}
+			)
+			queryClient.setQueryData<ProfileFull>(['user', userId], (old) => {
+				if (old) {
+					return produce(old, (draft) => {
+						if (draft.decksMap?.[lang])
+							draft.decksMap[lang].archived = data.archived
+					})
+				}
+				void queryClient.invalidateQueries({ queryKey: ['user', userId] })
+				return old
+			})
+
 			toast.success(
-				data?.archived ?
+				data.archived ?
 					'The deck has been re-activated!'
 				:	'The deck has been archived and hidden from your active decks.'
 			)
-			setOpen(false)
 		},
-		onError: () => {
-			toast.error(`Failed to update deck status`)
+		onError: (error) => {
+			if (error) {
+				toast.error(
+					`Failed to update deck status, we'll just try refreshing the page...`
+				)
+				console.log(error)
+			}
+			setTimeout(() => {
+				window.location.reload()
+			}, 1500)
 		},
 	})
+
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogTrigger asChild className={className}>
