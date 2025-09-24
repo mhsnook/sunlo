@@ -4,9 +4,11 @@ import { Controller, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
-import { Pencil } from 'lucide-react'
-import type { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
+import { produce } from 'immer'
+import { Pencil } from 'lucide-react'
+
+import type { LanguageLoaded, uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -19,8 +21,8 @@ import {
 } from '@/components/ui/dialog'
 import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from './ui/separator'
-import { MultiSelectCreatable } from './fields/multi-select-creatable'
+import { Separator } from '@/components/ui/separator'
+import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
@@ -58,9 +60,30 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			if (error) throw error
 			return data
 		},
-		onSuccess: () => {
+		onSuccess: (_, values: AddTagsFormValues) => {
 			toast.success('Tags added!')
-			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
+			if (values.tags) {
+				// this is an inexact copy! it is not a replacement for returning the actual
+				// added rows, the UI just doesn't really care about the extra info rn 🤷
+				const newTags = values.tags.map((t) => ({ name: t, id: t })) ?? []
+				void queryClient.setQueryData<LanguageLoaded>(
+					['language', lang],
+					(old) => {
+						if (!old) {
+							void queryClient.invalidateQueries({
+								queryKey: ['language', lang],
+							})
+							return
+						}
+
+						return produce(old, (draft) => {
+							if (Array.isArray(draft.phrasesMap[phraseId].tags))
+								draft.phrasesMap[phraseId].tags.push(newTags)
+							else draft.phrasesMap[phraseId].tags = newTags
+						})
+					}
+				)
+			}
 			setOpen(false)
 			reset({ tags: [] })
 		},
