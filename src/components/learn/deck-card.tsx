@@ -13,24 +13,13 @@ import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '../ui/button-variants'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '../stats-badges'
-import { useEffect, useRef } from 'react'
-import { useProfile } from '@/hooks/use-profile'
+import { useRef } from 'react'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	const ref = useRef<HTMLDivElement | null>(null)
-	const { data: profile } = useProfile()
-	useEffect(() => {
-		const theme = profile?.decksMap?.[deck.lang!].theme
-		console.log(`running effect`, theme)
-		if (theme && ref.current) {
-			ref.current?.style.setProperty('--hue', String(theme.hue))
-			ref.current?.style.setProperty('--hue-off', String(theme.hueOff))
-			ref.current?.style.setProperty('--hue-accent', String(theme.hueAccent))
-		}
-	}, [profile, deck])
 
 	return (
-		<div ref={ref}>
+		<div style={deck.themeCss} ref={ref}>
 			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
 				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
 					<Link
