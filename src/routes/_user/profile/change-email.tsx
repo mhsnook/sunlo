@@ -8,7 +8,7 @@ import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { ShowAndLogError } from '@/components/errors'
@@ -62,7 +62,7 @@ function ChangeEmailPage() {
 	})
 
 	return (
-		<>
+		<Card className="mt-6 max-w-100">
 			<CardHeader>
 				<CardTitle>Change your registered email</CardTitle>
 			</CardHeader>
@@ -112,6 +112,6 @@ function ChangeEmailPage() {
 					</form>
 				}
 			</CardContent>
-		</>
+		</Card>
 	)
 }

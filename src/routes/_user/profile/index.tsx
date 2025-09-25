@@ -9,7 +9,7 @@ import {
 import AvatarSection from '@/components/profile/avatar-section'
 import UserAuthCard from '@/components/profile/user-auth-card'
 import { useProfile } from '@/hooks/use-profile'
-import { UpdateProfileForm } from '../profile/-update-profile-form'
+import { UpdateProfileForm } from './-update-profile-form'
 
 export const Route = createFileRoute('/_user/profile/')({
 	component: ProfilePage,
