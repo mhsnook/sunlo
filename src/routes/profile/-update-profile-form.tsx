@@ -5,16 +5,16 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
+import { produce } from 'immer'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { LanguagesKnownSchema } from '@/lib/schemas'
 import { Button } from '@/components/ui/button'
-import UsernameField from '../fields/username-field'
-import { LanguagesKnownField } from '../fields/languages-known-field'
-import AvatarEditorField from '../fields/avatar-editor-field'
+import UsernameField from '@/components/fields/username-field'
+import { LanguagesKnownField } from '@/components/fields/languages-known-field'
+import AvatarEditorField from '@/components/fields/avatar-editor-field'
 import { avatarUrlify } from '@/lib/utils'
-import { produce } from 'immer'
 
 const ProfileEditFormSchema = z.object({
 	username: z
@@ -26,15 +26,11 @@ const ProfileEditFormSchema = z.object({
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
 
-export default function UpdateProfileForm({
-	profile,
-}: {
-	profile: ProfileFull
-}) {
+export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 	const queryClient = useQueryClient()
 	const initialData: ProfileEditFormInputs = {
 		username: profile.username,
-		avatar_path: profile.avatarUrl?.split('/').at(-1) || null,
+		avatar_path: profile.avatar_path,
 		languages_known: profile.languages_known as LanguageKnown[],
 	}
 	const uid: uuid = profile.uid

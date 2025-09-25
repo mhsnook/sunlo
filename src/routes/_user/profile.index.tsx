@@ -1,3 +1,4 @@
+import { createFileRoute, Navigate } from '@tanstack/react-router'
 import {
 	Card,
 	CardContent,
@@ -5,11 +6,10 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { createFileRoute, Navigate } from '@tanstack/react-router'
 import AvatarSection from '@/components/profile/avatar-section'
-import UpdateProfileForm from '@/components/profile/update-profile-form'
 import UserAuthCard from '@/components/profile/user-auth-card'
 import { useProfile } from '@/hooks/use-profile'
+import { UpdateProfileForm } from '../profile/-update-profile-form'
 
 export const Route = createFileRoute('/_user/profile/')({
 	component: ProfilePage,
