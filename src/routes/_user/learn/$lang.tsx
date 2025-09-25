@@ -1,10 +1,12 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { TitleBar } from '@/types/main'
+
+import { useEffect } from 'react'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
+
 import languages from '@/lib/languages'
 import { languageQueryOptions } from '@/hooks/use-language'
 import { deckQueryOptions } from '@/hooks/use-deck'
 import { profileQuery } from '@/hooks/use-profile'
-import { useEffect } from 'react'
 import { setTheme } from '@/lib/deck-themes'
 
 export const Route = createFileRoute('/_user/learn/$lang')({

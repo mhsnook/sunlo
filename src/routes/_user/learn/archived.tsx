@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Archive } from 'lucide-react'
 
 import { useProfile } from '@/hooks/use-profile'
-import { DeckCard } from '@/components/learn/deck-card'
+import { DeckCard } from './-deck-card'
 import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/archived')({

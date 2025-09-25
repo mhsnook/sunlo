@@ -27,37 +27,37 @@ import { Route as AuthLoginImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordImport } from './routes/_auth/forgot-password'
 import { Route as AuthFindAFriendImport } from './routes/_auth/find-a-friend'
 import { Route as UserProfileIndexImport } from './routes/_user/profile/index'
-import { Route as UserLearnIndexImport } from './routes/_user/learn.index'
+import { Route as UserLearnIndexImport } from './routes/_user/learn/index'
 import { Route as UserFriendsIndexImport } from './routes/_user/friends.index'
 import { Route as UserProfileChangePasswordImport } from './routes/_user/profile/change-password'
 import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile/change-email-confirm'
 import { Route as UserProfileChangeEmailImport } from './routes/_user/profile/change-email'
-import { Route as UserLearnQuickSearchImport } from './routes/_user/learn.quick-search'
-import { Route as UserLearnArchivedImport } from './routes/_user/learn.archived'
-import { Route as UserLearnAddDeckImport } from './routes/_user/learn.add-deck'
-import { Route as UserLearnLangImport } from './routes/_user/learn.$lang'
+import { Route as UserLearnQuickSearchImport } from './routes/_user/learn/quick-search'
+import { Route as UserLearnArchivedImport } from './routes/_user/learn/archived'
+import { Route as UserLearnAddDeckImport } from './routes/_user/learn/add-deck'
+import { Route as UserLearnLangImport } from './routes/_user/learn/$lang'
 import { Route as UserFriendsSearchImport } from './routes/_user/friends.search'
 import { Route as UserFriendsRequestsImport } from './routes/_user/friends.requests'
 import { Route as UserFriendsInviteImport } from './routes/_user/friends.invite'
 import { Route as UserFriendsChatsImport } from './routes/_user/friends.chats'
 import { Route as UserFriendsUidImport } from './routes/_user/friends.$uid'
-import { Route as UserLearnLangIndexImport } from './routes/_user/learn.$lang.index'
+import { Route as UserLearnLangIndexImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexImport } from './routes/_user/friends.chats.index'
-import { Route as UserLearnLangSearchImport } from './routes/_user/learn.$lang.search'
-import { Route as UserLearnLangReviewImport } from './routes/_user/learn.$lang.review'
-import { Route as UserLearnLangRequestsImport } from './routes/_user/learn.$lang.requests'
-import { Route as UserLearnLangLibraryImport } from './routes/_user/learn.$lang.library'
-import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn.$lang.deck-settings'
-import { Route as UserLearnLangBulkAddImport } from './routes/_user/learn.$lang.bulk-add'
-import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn.$lang.add-phrase'
-import { Route as UserLearnLangIdImport } from './routes/_user/learn.$lang.$id'
+import { Route as UserLearnLangSearchImport } from './routes/_user/learn/$lang.search'
+import { Route as UserLearnLangReviewImport } from './routes/_user/learn/$lang.review'
+import { Route as UserLearnLangRequestsImport } from './routes/_user/learn/$lang.requests'
+import { Route as UserLearnLangLibraryImport } from './routes/_user/learn/$lang.library'
+import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn/$lang.deck-settings'
+import { Route as UserLearnLangBulkAddImport } from './routes/_user/learn/$lang.bulk-add'
+import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn/$lang.add-phrase'
+import { Route as UserLearnLangIdImport } from './routes/_user/learn/$lang.$id'
 import { Route as UserFriendsSearchUidImport } from './routes/_user/friends.search.$uid'
 import { Route as UserFriendsChatsFriendIdImport } from './routes/_user/friends.chats.$friendId'
-import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn.$lang.review.index'
-import { Route as UserLearnLangRequestsIndexImport } from './routes/_user/learn.$lang.requests.index'
-import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn.$lang.review.go'
-import { Route as UserLearnLangRequestsNewImport } from './routes/_user/learn.$lang.requests.new'
-import { Route as UserLearnLangRequestsIdImport } from './routes/_user/learn.$lang.requests.$id'
+import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn/$lang.review.index'
+import { Route as UserLearnLangRequestsIndexImport } from './routes/_user/learn/$lang.requests.index'
+import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn/$lang.review.go'
+import { Route as UserLearnLangRequestsNewImport } from './routes/_user/learn/$lang.requests.new'
+import { Route as UserLearnLangRequestsIdImport } from './routes/_user/learn/$lang.requests.$id'
 import { Route as UserFriendsChatsFriendIdRecommendImport } from './routes/_user/friends.chats.$friendId.recommend'
 
 // Create Virtual Routes
@@ -1366,7 +1366,7 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/learn/$lang": {
-      "filePath": "_user/learn.$lang.tsx",
+      "filePath": "_user/learn/$lang.tsx",
       "parent": "/_user/learn",
       "children": [
         "/_user/learn/$lang/$id",
@@ -1381,15 +1381,15 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/learn/add-deck": {
-      "filePath": "_user/learn.add-deck.tsx",
+      "filePath": "_user/learn/add-deck.tsx",
       "parent": "/_user/learn"
     },
     "/_user/learn/archived": {
-      "filePath": "_user/learn.archived.tsx",
+      "filePath": "_user/learn/archived.tsx",
       "parent": "/_user/learn"
     },
     "/_user/learn/quick-search": {
-      "filePath": "_user/learn.quick-search.tsx",
+      "filePath": "_user/learn/quick-search.tsx",
       "parent": "/_user/learn"
     },
     "/_user/profile/change-email": {
@@ -1409,7 +1409,7 @@ export const routeTree = rootRoute
       "parent": "/_user/friends"
     },
     "/_user/learn/": {
-      "filePath": "_user/learn.index.tsx",
+      "filePath": "_user/learn/index.tsx",
       "parent": "/_user/learn"
     },
     "/_user/profile/": {
@@ -1428,27 +1428,27 @@ export const routeTree = rootRoute
       "parent": "/_user/friends/search"
     },
     "/_user/learn/$lang/$id": {
-      "filePath": "_user/learn.$lang.$id.tsx",
+      "filePath": "_user/learn/$lang.$id.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/add-phrase": {
-      "filePath": "_user/learn.$lang.add-phrase.tsx",
+      "filePath": "_user/learn/$lang.add-phrase.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/bulk-add": {
-      "filePath": "_user/learn.$lang.bulk-add.tsx",
+      "filePath": "_user/learn/$lang.bulk-add.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/deck-settings": {
-      "filePath": "_user/learn.$lang.deck-settings.tsx",
+      "filePath": "_user/learn/$lang.deck-settings.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/library": {
-      "filePath": "_user/learn.$lang.library.tsx",
+      "filePath": "_user/learn/$lang.library.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/learn/$lang/requests": {
-      "filePath": "_user/learn.$lang.requests.tsx",
+      "filePath": "_user/learn/$lang.requests.tsx",
       "parent": "/_user/learn/$lang",
       "children": [
         "/_user/learn/$lang/requests/$id",
@@ -1457,7 +1457,7 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/learn/$lang/review": {
-      "filePath": "_user/learn.$lang.review.tsx",
+      "filePath": "_user/learn/$lang.review.tsx",
       "parent": "/_user/learn/$lang",
       "children": [
         "/_user/learn/$lang/review/go",
@@ -1465,7 +1465,7 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/learn/$lang/search": {
-      "filePath": "_user/learn.$lang.search.tsx",
+      "filePath": "_user/learn/$lang.search.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/friends/chats/": {
@@ -1473,7 +1473,7 @@ export const routeTree = rootRoute
       "parent": "/_user/friends/chats"
     },
     "/_user/learn/$lang/": {
-      "filePath": "_user/learn.$lang.index.tsx",
+      "filePath": "_user/learn/$lang.index.tsx",
       "parent": "/_user/learn/$lang"
     },
     "/_user/friends/chats/$friendId/recommend": {
@@ -1481,23 +1481,23 @@ export const routeTree = rootRoute
       "parent": "/_user/friends/chats/$friendId"
     },
     "/_user/learn/$lang/requests/$id": {
-      "filePath": "_user/learn.$lang.requests.$id.tsx",
+      "filePath": "_user/learn/$lang.requests.$id.tsx",
       "parent": "/_user/learn/$lang/requests"
     },
     "/_user/learn/$lang/requests/new": {
-      "filePath": "_user/learn.$lang.requests.new.tsx",
+      "filePath": "_user/learn/$lang.requests.new.tsx",
       "parent": "/_user/learn/$lang/requests"
     },
     "/_user/learn/$lang/review/go": {
-      "filePath": "_user/learn.$lang.review.go.tsx",
+      "filePath": "_user/learn/$lang.review.go.tsx",
       "parent": "/_user/learn/$lang/review"
     },
     "/_user/learn/$lang/requests/": {
-      "filePath": "_user/learn.$lang.requests.index.tsx",
+      "filePath": "_user/learn/$lang.requests.index.tsx",
       "parent": "/_user/learn/$lang/requests"
     },
     "/_user/learn/$lang/review/": {
-      "filePath": "_user/learn.$lang.review.index.tsx",
+      "filePath": "_user/learn/$lang.review.index.tsx",
       "parent": "/_user/learn/$lang/review"
     }
   }

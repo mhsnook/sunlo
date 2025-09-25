@@ -1,5 +1,5 @@
-import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import { createFileRoute } from '@tanstack/react-router'
+import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 
 export const Route = createFileRoute('/_user/learn/$lang/$id')({
 	component: RouteComponent,

@@ -1,3 +1,5 @@
+import type { uuid } from '@/types/main'
+
 import {
 	useCallback,
 	useEffect,
@@ -20,7 +22,6 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import type { uuid } from '@/types/main'
 import { useLanguagePhrasesMap, useLanguagePids } from '@/hooks/use-language'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'

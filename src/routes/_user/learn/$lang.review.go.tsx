@@ -1,4 +1,7 @@
+import { pids } from '@/types/main'
+
 import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
 	useCardIndex,
 	useNextValid,
@@ -10,11 +13,9 @@ import {
 import { todayString } from '@/lib/utils'
 import { reviewsQuery, useManifest } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
-import { pids } from '@/types/main'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,

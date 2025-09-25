@@ -88,7 +88,6 @@ function UserLayout() {
 	const matchWithSidebar = matches.findLast(
 		(m) => !!(m as UserLayoutMatch)?.loaderData?.SecondSidebar
 	) as UserLayoutMatch | undefined
-	 
 	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
