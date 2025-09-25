@@ -26,12 +26,12 @@ import { Route as AuthSetNewPasswordImport } from './routes/_auth/set-new-passwo
 import { Route as AuthLoginImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordImport } from './routes/_auth/forgot-password'
 import { Route as AuthFindAFriendImport } from './routes/_auth/find-a-friend'
-import { Route as UserProfileIndexImport } from './routes/_user/profile.index'
+import { Route as UserProfileIndexImport } from './routes/_user/profile/index'
 import { Route as UserLearnIndexImport } from './routes/_user/learn.index'
 import { Route as UserFriendsIndexImport } from './routes/_user/friends.index'
-import { Route as UserProfileChangePasswordImport } from './routes/_user/profile.change-password'
-import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile.change-email-confirm'
-import { Route as UserProfileChangeEmailImport } from './routes/_user/profile.change-email'
+import { Route as UserProfileChangePasswordImport } from './routes/_user/profile/change-password'
+import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile/change-email-confirm'
+import { Route as UserProfileChangeEmailImport } from './routes/_user/profile/change-email'
 import { Route as UserLearnQuickSearchImport } from './routes/_user/learn.quick-search'
 import { Route as UserLearnArchivedImport } from './routes/_user/learn.archived'
 import { Route as UserLearnAddDeckImport } from './routes/_user/learn.add-deck'
@@ -1393,15 +1393,15 @@ export const routeTree = rootRoute
       "parent": "/_user/learn"
     },
     "/_user/profile/change-email": {
-      "filePath": "_user/profile.change-email.tsx",
+      "filePath": "_user/profile/change-email.tsx",
       "parent": "/_user/profile"
     },
     "/_user/profile/change-email-confirm": {
-      "filePath": "_user/profile.change-email-confirm.tsx",
+      "filePath": "_user/profile/change-email-confirm.tsx",
       "parent": "/_user/profile"
     },
     "/_user/profile/change-password": {
-      "filePath": "_user/profile.change-password.tsx",
+      "filePath": "_user/profile/change-password.tsx",
       "parent": "/_user/profile"
     },
     "/_user/friends/": {
@@ -1413,7 +1413,7 @@ export const routeTree = rootRoute
       "parent": "/_user/learn"
     },
     "/_user/profile/": {
-      "filePath": "_user/profile.index.tsx",
+      "filePath": "_user/profile/index.tsx",
       "parent": "/_user/profile"
     },
     "/_user/friends/chats/$friendId": {

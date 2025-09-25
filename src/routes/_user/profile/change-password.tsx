@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle } from '@/components/ui/card'
 import { PasswordResetForm } from '@/components/password-reset-form'
 
 export const Route = createFileRoute('/_user/profile/change-password')({
@@ -8,11 +8,11 @@ export const Route = createFileRoute('/_user/profile/change-password')({
 
 function ChangePasswordPage() {
 	return (
-		<>
+		<Card className="mt-6 max-w-100">
 			<CardHeader>
 				<CardTitle>Change your password</CardTitle>
 			</CardHeader>
 			<PasswordResetForm />
-		</>
+		</Card>
 	)
 }
