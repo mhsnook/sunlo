@@ -116,7 +116,7 @@ function ChatPage() {
 												className={cn(
 													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
 													isMine ?
-														'bg-primary text-primary-foreground ms-6 place-self-end'
+														'bg-primary ms-6 place-self-end text-white/70'
 													:	'bg-muted me-6 place-self-start'
 												)}
 											>
