@@ -6,8 +6,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import AvatarSection from '@/components/profile/avatar-section'
-import UserAuthCard from '@/components/profile/user-auth-card'
+import AvatarSection from '@/routes/_user/profile/-avatar-section'
+import UserAuthCard from '@/routes/_user/profile/-user-auth-card'
 import { useProfile } from '@/hooks/use-profile'
 import { UpdateProfileForm } from './-update-profile-form'
 

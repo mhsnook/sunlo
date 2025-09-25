@@ -1,12 +1,31 @@
 import type { ChangeEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
+import { FieldValues, Path, useController } from 'react-hook-form'
 import { toast } from 'react-hot-toast'
+import type { ControlledFieldProps } from '@/components/fields/types'
+import { Label } from '@/components/ui/label'
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
-import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
 import { avatarUrlify, cn } from '@/lib/utils'
+import ErrorLabel from '@/components/fields/error-label'
+
+export function AvatarEditorField<T extends FieldValues>({
+	control,
+	error,
+}: ControlledFieldProps<T>) {
+	const {
+		field: { value, onChange },
+	} = useController({ name: 'avatar_path' as Path<T>, control })
+	return (
+		<div className="flex flex-col gap-1">
+			<Label className={error ? 'text-destructive' : ''}>Profile picture</Label>
+			<AvatarEditor avatar_path={value} onUpload={onChange} />
+			<ErrorLabel error={error} />
+		</div>
+	)
+}
 
 const filenameFromFile = (file: File) => {
 	// returns a string like pic-of-my-cat-1a4d06.jpg
@@ -30,10 +49,7 @@ interface AvatarEditorProps {
 	onUpload: (url: string) => void
 }
 
-export default function AvatarEditor({
-	avatar_path,
-	onUpload,
-}: AvatarEditorProps) {
+function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 	const sendImage = useMutation({
 		mutationFn: async (event: ChangeEvent<HTMLInputElement>) => {
 			event.preventDefault()

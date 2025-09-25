@@ -1,5 +1,4 @@
 import type { LanguageKnown, ProfileFull, uuid } from '@/types/main'
-
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,7 +12,7 @@ import { LanguagesKnownSchema } from '@/lib/schemas'
 import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
-import AvatarEditorField from '@/components/fields/avatar-editor-field'
+import { AvatarEditorField } from '@/routes/_user/profile/-avatar-editor-field'
 import { avatarUrlify } from '@/lib/utils'
 
 const ProfileEditFormSchema = z.object({
