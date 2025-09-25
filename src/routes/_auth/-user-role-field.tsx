@@ -1,8 +1,8 @@
+import { FieldValues, Path, useController } from 'react-hook-form'
 import { BookOpen, Handshake, LifeBuoy } from 'lucide-react'
 import type { ControlledFieldProps } from '@/components/fields/types'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
-import { FieldValues, Path, useController } from 'react-hook-form'
 import ErrorLabel from '@/components/fields/error-label'
 
 const outer = 'flex flex-row gap-2 items-center',
