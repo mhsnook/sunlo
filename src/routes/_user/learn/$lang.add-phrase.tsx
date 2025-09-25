@@ -1,3 +1,5 @@
+import { PhraseCardInsert } from '@/types/main'
+
 import { useCallback, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -21,7 +23,6 @@ import { NotebookPen, Search } from 'lucide-react'
 import languages from '@/lib/languages'
 import { Loader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
-import { PhraseCardInsert } from '@/types/main'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button-variants'

@@ -1,3 +1,10 @@
+import type {
+	LanguageLoaded,
+	PhraseFull,
+	PublicProfile,
+	Tag,
+} from '@/types/main'
+
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
@@ -9,6 +16,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import toast from 'react-hot-toast'
+import { MessageSquarePlus, Send } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
 import {
@@ -31,12 +39,6 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
-import type {
-	LanguageLoaded,
-	PhraseFull,
-	PublicProfile,
-	Tag,
-} from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import { avatarUrlify } from '@/lib/utils'
@@ -58,7 +60,6 @@ import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
 import ShareRequestButton from '@/components/share-request-button'
-import { MessageSquarePlus, Send } from 'lucide-react'
 import { SendRequestToFriendDialog } from '@/components/friends/send-request-to-friend-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
@@ -156,10 +157,9 @@ function FulfillRequestPage() {
 
 			const newRequest: PhraseRequestFull = {
 				...request,
-				phrases:
-					!Array.isArray(request?.phrases) ?
-						[newPhrase]
-					:	[newPhrase, ...request.phrases],
+				phrases: (!Array.isArray(request?.phrases) ?
+					[newPhrase]
+				:	[newPhrase, ...request.phrases]) as PhraseFull[],
 				status: 'fulfilled',
 			}
 
@@ -233,7 +233,7 @@ function FulfillRequestPage() {
 								{request.phrases.length} answer
 								{request.phrases.length > 1 && 's'} so far
 							</h3>
-							{request.phrases.map((phrase: any) => (
+							{request.phrases.map((phrase: PhraseFull) => (
 								<div key={phrase.id} className="rounded-lg p-4 shadow">
 									<p className="text-muted-foreground mb-2 text-sm">
 										<UserPermalink
@@ -247,6 +247,7 @@ function FulfillRequestPage() {
 										{' • '}
 										<Link
 											to="/learn/$lang/$id"
+											// oxlint-disable-next-line jsx-no-new-object-as-prop
 											params={{ lang: phrase.lang, id: phrase.id }}
 											className="s-link-hidden"
 										>
@@ -274,6 +275,7 @@ function FulfillRequestPage() {
 						<CollapsibleContent className="mt-4 rounded px-4 pt-4 pb-4 shadow">
 							<Form {...form}>
 								<form
+									// eslint-disable-next-line @typescript-eslint/no-misused-promises
 									onSubmit={form.handleSubmit((data) =>
 										fulfillMutation.mutate(data)
 									)}
@@ -282,6 +284,7 @@ function FulfillRequestPage() {
 									<FormField
 										control={form.control}
 										name="phrase_text"
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										render={({ field }) => (
 											<FormItem>
 												<FormLabel>
@@ -301,6 +304,7 @@ function FulfillRequestPage() {
 										<FormField
 											control={form.control}
 											name="translation_text"
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											render={({ field }) => (
 												<FormItem className="col-span-2">
 													<FormLabel>Translation</FormLabel>
@@ -328,6 +332,7 @@ function FulfillRequestPage() {
 										<Button
 											variant="secondary"
 											className={noAnswers ? 'hidden' : ''}
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onClick={() => setIsAnswering(false)}
 										>
 											Cancel

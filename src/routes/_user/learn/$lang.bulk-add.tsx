@@ -1,11 +1,13 @@
+import { LanguageLoaded, PhraseStub } from '@/types/main'
+
+import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useFieldArray, useForm, Controller, FieldError } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Plus, Trash2 } from 'lucide-react'
-import { useState } from 'react'
 
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
@@ -24,7 +26,6 @@ import languages from '@/lib/languages'
 import { useProfile } from '@/hooks/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
-import { LanguageLoaded, PhraseStub } from '@/types/main'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { mapArray } from '@/lib/utils'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
@@ -146,6 +147,7 @@ function BulkAddPhrasesPage() {
 			<CardContent>
 				<form
 					noValidate
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					onSubmit={handleSubmit((data) => bulkAddMutation.mutate(data))}
 					className="space-y-6"
 				>
@@ -167,6 +169,7 @@ function BulkAddPhrasesPage() {
 						<Button
 							type="button"
 							variant="outline"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() =>
 								append(getEmptyPhrase(profile?.languages_known[0]?.lang))
 							}
@@ -222,8 +225,8 @@ function PhraseEntry({
 	disableRemove = false,
 }: {
 	phraseIndex: number
-	control: any
-	register: any
+	control: unknown
+	register: unknown
 	removePhrase: (index: number) => void
 	errors: PhraseEntryErrors
 	disableRemove: boolean
@@ -251,6 +254,7 @@ function PhraseEntry({
 							type="button"
 							variant="ghost"
 							size="icon"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => removePhrase(phraseIndex)}
 							disabled={disableRemove}
 						>
@@ -277,6 +281,7 @@ function PhraseEntry({
 							<Controller
 								control={control}
 								name={`phrases.${phraseIndex}.translations.${translationIndex}.lang`}
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								render={({ field }) => (
 									<SelectOneOfYourLanguages
 										value={field.value}
@@ -289,6 +294,7 @@ function PhraseEntry({
 								type="button"
 								variant="ghost"
 								size="icon"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => removeTranslation(translationIndex)}
 								disabled={translationFields.length === 1}
 							>
@@ -317,6 +323,7 @@ function PhraseEntry({
 				<Button
 					type="button"
 					variant="outline"
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() =>
 						appendTranslation({
 							lang: profile?.languages_known[0]?.lang,

@@ -1,8 +1,10 @@
+import type { TitleBar } from '@/types/main'
+
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useController, useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { TitleBar } from '@/types/main'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'

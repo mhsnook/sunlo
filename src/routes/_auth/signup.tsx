@@ -23,7 +23,7 @@ import { uuid } from '@/types/main'
 import { UnderConstructionNotice } from '@/components/homepage/under-construction'
 import EmailField from '@/components/fields/email-field'
 import PasswordField from '@/components/fields/password-field'
-import UserRoleField from '@/components/fields/user-role-field'
+import { UserRoleField } from './-user-role-field'
 
 type SignUpProps = {
 	referrer?: uuid

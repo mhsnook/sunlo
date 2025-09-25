@@ -1,6 +1,5 @@
 import { Card } from '@/components/ui/card'
 import { Users, BookOpen, Heart, Star, ArrowRight } from 'lucide-react'
-import { ThemeToggle } from '@/components/homepage/theme-toggle'
 import { UnderConstructionNotice } from './under-construction'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -9,9 +8,6 @@ import { buttonVariants } from '../ui/button-variants'
 export function HeroSection() {
 	return (
 		<header className="dark:from-background dark:to-muted from-primary/30 via-background to-foresoft relative min-h-screen overflow-hidden bg-gradient-to-br dark:via-slate-800">
-			{/* Theme Toggle */}
-			<ThemeToggle />
-
 			{/* Subtle background pattern */}
 			<div className="absolute inset-0 opacity-20 dark:opacity-30">
 				<div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(0,0,0,0.5)_1px,_transparent_1px)] bg-[length:24px_24px] dark:bg-[radial-gradient(circle,_rgba(255,255,255,0.3)_1px,_transparent_1px)]"></div>

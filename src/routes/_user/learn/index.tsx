@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
 
 import { useProfile } from '@/hooks/use-profile'
-import { DeckCard } from '@/components/learn/deck-card'
+import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
 

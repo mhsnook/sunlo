@@ -1,7 +1,9 @@
 import type { CardStatusEnum, pids, uuid } from '@/types/main'
+
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import languages from '@/lib/languages'
+import { useMemo, useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import {
 	BookOpen,
 	CalendarClock,
@@ -10,13 +12,13 @@ import {
 	Rocket,
 	Sparkles,
 } from 'lucide-react'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import languages from '@/lib/languages'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { useMemo, useState } from 'react'
 import { Drawer, DrawerTrigger } from '@/components/ui/drawer'
 import Flagged from '@/components/flagged'
-import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
 import {
 	useInitialiseReviewStore,
 	useReviewDayString,
@@ -384,6 +386,7 @@ function ReviewPageSetup() {
 								/>
 							</Drawer>
 							<Button
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={(e) => {
 									e.preventDefault()
 									e.stopPropagation()

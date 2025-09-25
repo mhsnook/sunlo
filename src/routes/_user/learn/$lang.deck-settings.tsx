@@ -1,3 +1,6 @@
+import { DeckRow } from '@/types/main'
+
+import { useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -17,16 +20,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
-import { DeckRow } from '@/types/main'
 import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { ArchiveDeckButton } from '@/components/learn/archive-deck-button'
+import { ArchiveDeckButton } from './-archive-deck-button'
 import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
-import { useCallback } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,

@@ -33,6 +33,7 @@ const CardTitle = ({
 	className,
 	...props
 }: React.HTMLAttributes<HTMLHeadingElement>) => (
+	// oxlint-disable-next-line heading-has-content
 	<h3
 		data-slot="card-title"
 		className={cn(

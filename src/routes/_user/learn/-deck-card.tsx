@@ -1,19 +1,20 @@
 import { DeckMeta } from '@/types/main'
+
+import { useRef } from 'react'
+import { Link } from '@tanstack/react-router'
+import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
 import {
 	Card,
 	CardContent,
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from '../ui/card'
-import { Badge } from '../ui/badge'
-import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
-import { ArchiveDeckButton } from './archive-deck-button'
-import { Link } from '@tanstack/react-router'
-import { buttonVariants } from '../ui/button-variants'
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
-import { DeckStatsBadges } from '../stats-badges'
-import { useRef } from 'react'
+import { DeckStatsBadges } from '@/components/stats-badges'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	const ref = useRef<HTMLDivElement | null>(null)

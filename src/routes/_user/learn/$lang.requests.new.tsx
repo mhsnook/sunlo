@@ -1,3 +1,5 @@
+import { PhraseRequest } from '@/types/main'
+
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -26,7 +28,6 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
-import { PhraseRequest } from '@/types/main'
 import { useProfile } from '@/hooks/use-profile'
 import type { PhraseRequestFull } from '@/hooks/use-requests'
 
