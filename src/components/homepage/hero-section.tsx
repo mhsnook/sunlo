@@ -100,10 +100,10 @@ export function HeroSection() {
 								to="/signup"
 								className={cn(
 									buttonVariants({ size: 'lg' }),
-									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
+									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
 								)}
 							>
-								Start Learning Free
+								Start Learning
 								<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
 							</Link>
 							<Link

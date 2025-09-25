@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { PostgrestError } from '@supabase/supabase-js'
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import type {
 	DeckMeta,
 	DecksMap,
@@ -77,6 +77,11 @@ export const profileQuery = (userId: uuid | null) =>
 export const useProfile = () => {
 	const { userId } = useAuth()
 	return useSuspenseQuery({ ...profileQuery(userId) })
+}
+
+export const useProfileLazy = () => {
+	const { userId } = useAuth()
+	return useQuery({ ...profileQuery(userId) })
 }
 
 export const searchPublicProfilesByUsername = async (
