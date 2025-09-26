@@ -75,6 +75,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 		},
 	})
 	const url = avatarUrlify(avatar_path)
+	console.log(url)
 	return (
 		<div className="flex flex-col gap-2">
 			<Label
@@ -86,12 +87,12 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 						<img
 							src={url}
 							alt="Your profile pic, or avatar"
-							className="h-36 rounded-full object-cover"
+							className="h-36 w-36 rounded-full object-cover"
 						/>
 					</div>
 				)}
 				<Input
-					className="absolute z-50 h-full place-items-stretch justify-center opacity-0"
+					className="absolute z-50 h-full cursor-pointer place-items-stretch justify-center opacity-0"
 					type="file"
 					id="avatarUploadInput"
 					name="files[]"
@@ -101,8 +102,8 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 				/>
 				<div
 					className={cn(
-						!url ? 'opacity-100' : '',
-						'bg-background/80 absolute inset-0 z-30 flex flex-col justify-center rounded-2xl opacity-0 group-hover:opacity-100'
+						!url ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+						'absolute inset-0 z-30 flex flex-col justify-center rounded-2xl'
 					)}
 				>
 					{sendImage.isPending ?
