@@ -87,14 +87,12 @@ export function NavUser() {
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={(event) => {
-								event.preventDefault()
-								signOut.mutate()
-							}}
-							disabled={signOut.isPending || !isAuth}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
+							onClick={() => signOut.mutate()}
+							disabled={!isAuth || signOut.isPending}
 						>
 							<LogOut />
-							Sign out
+							{signOut.isPending ? 'Signing out...' : 'Sign out'}
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
