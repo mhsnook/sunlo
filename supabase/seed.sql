@@ -571,7 +571,7 @@ values
 		'Work Andy',
 		null,
 		now() - interval '2 days',
-		null,
+		'pc-background-1ad6b1.jpg',
 		'[{"lang": "tam", "level": "fluent"}, {"lang": "hin", "level": "fluent"}, {"lang": "kan", "level": "proficient"}, {"lang": "eng", "level": "fluent"}, {"lang": "deu", "level": "proficient"}]'
 	);
 
@@ -597,6 +597,24 @@ values
 		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
 		'pending',
 		null
+	),
+	(
+		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
+		now() - interval '5 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'tam',
+		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.',
+		'pending',
+		null
+	),
+	(
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		now() - interval '3 days',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'hin',
+		'How do I say "I''d like a cheeseburger?"',
+		'fulfilled',
+		now() - interval '2 days'
 	);
 
 --
@@ -2043,11 +2061,95 @@ values
 		now() - interval '60 days',
 		null,
 		null
+	),
+	(
+		'[mujhe] ek cheeseburger chahiye',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'hin',
+		now() - interval '2 days',
+		null,
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986'
 	);
 
 --
 -- Data for Name: chat_message; Type: TABLE DATA; Schema: public; Owner: postgres
 --
+insert into
+	"public"."chat_message" (
+		"id",
+		"created_at",
+		"sender_uid",
+		"recipient_uid",
+		"message_type",
+		"phrase_id",
+		"related_message_id",
+		"content",
+		"lang",
+		"request_id"
+	)
+values
+	(
+		'9d88502f-9769-4e2d-86d1-ed948588fbbb',
+		now() - interval '48 hours',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'recommendation',
+		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
+		null,
+		null,
+		'tam',
+		null
+	),
+	(
+		'6cdc91b7-a7e6-4e7d-9769-868f16ae7361',
+		now() - interval '47 hours',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'request',
+		null,
+		null,
+		null,
+		'tam',
+		'bc2e2811-1a9b-4131-981d-f2d7d7b26411'
+	),
+	(
+		'628f6f87-02d8-4f34-aeea-34b762bb6911',
+		now() - interval '46 hours',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'recommendation',
+		'e24dd614-0033-4c9c-a72a-475f96dcfca6',
+		null,
+		null,
+		'hin',
+		null
+	),
+	(
+		'ad6409d7-0853-43ba-925d-daaa754de1b4',
+		now() - interval '45 hours',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'request',
+		null,
+		null,
+		null,
+		'hin',
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	),
+	(
+		'208016d6-b27b-4c20-a4ed-ca6e9e9972e6',
+		now() - interval '44 hours',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'request',
+		null,
+		null,
+		null,
+		'hin',
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	);
+
 --
 -- Data for Name: friend_request_action; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -2106,6 +2208,69 @@ values
 		'accept',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21'
+	),
+	(
+		'104f367e-058c-4e50-bfd1-e35827dda31b',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		now() - interval '55 days',
+		'accept',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'4a29d11e-29f9-475f-a539-071bcc79f7ff',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		now() - interval '54 days',
+		'invite',
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'776e2fae-e83b-4fc8-88b9-a16ceb666045',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		now() - interval '53 days',
+		'cancel',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'39b369c7-b6cb-4809-be89-60eb623ff5ba',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		now() - interval '52 days',
+		'invite',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'23ff23c0-3d51-42bd-a4c9-28b9f00d607c',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		now() - interval '51 days',
+		'accept',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'9335fd17-7943-4989-9058-e69671559bf1',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		now() - interval '50 days',
+		'accept',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+	),
+	(
+		'4abd67bc-9b85-4ebd-b4ec-be7fc0e53e83',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		now() - interval '49 days',
+		'accept',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
 	);
 
 --
@@ -4184,7 +4349,27 @@ Meaning: To be used in a manner in which "Oh shit" or "Oh fuck" is used.',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
 		null,
-		now() - interval '60 days'
+		now() - interval '15 days'
+	),
+	(
+		'I want one cheeseburger',
+		null,
+		'80fc1f0c-e59e-4678-8988-e8d98482f971',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'eng',
+		null,
+		now() - interval '2 days'
+	),
+	(
+		'Je voudrais un cheeseburger',
+		null,
+		'642e0bc5-9d2d-4f63-bdfd-4f27138d6eb2',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'fra',
+		null,
+		now() - interval '2 days'
 	);
 
 --
@@ -4250,6 +4435,24 @@ values
 		'7df47220-4003-43ad-99ba-0e9de75ace0b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ibo',
+		now() - interval '30 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'c7053b11-4f34-4153-ad5a-9278d452949c',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'tam',
+		now() - interval '30 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'e9259fbf-a94f-48f9-b8e6-5edfefc9c878',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'hin',
 		now() - interval '30 days',
 		'moving',
 		false,
@@ -4557,6 +4760,150 @@ values
 		now() - interval '14 days',
 		'active',
 		'hin'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'f7c8afa2-1c9c-4c01-bca5-ad36f0404361',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		now() - interval '14 days',
+		now() - interval '14 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'67e205eb-92e0-4a21-bba4-ea042939f96f',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		now() - interval '13 days',
+		now() - interval '13 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'd9122d48-bdb7-4051-a664-41cfb40c97e6',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		now() - interval '13 days',
+		now() - interval '13 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'9ee86f88-2592-40d0-b20a-a131bf25e9f0',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		now() - interval '13 days',
+		now() - interval '13 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'67273551-7e60-45d5-a1f6-942204572189',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		now() - interval '12 days',
+		now() - interval '12 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'c6b56b0b-b7f5-46a5-858b-23afbe541147',
+		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
+		now() - interval '12 days',
+		now() - interval '12 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'16f9635e-1ab4-485c-ac63-74fe75ec26af',
+		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
+		now() - interval '12 days',
+		now() - interval '12 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'8e00d18c-69e0-4904-a215-1c78bc6489a8',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		now() - interval '12 days',
+		now() - interval '12 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'd144c388-d91a-4fa2-b6d4-1b75f883fdcf',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		now() - interval '11 days',
+		now() - interval '11 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'022d6520-f0e7-4e18-850f-17cbaa69c955',
+		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
+		now() - interval '11 days',
+		now() - interval '11 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'9f3043a9-76cb-42e1-8be1-a9a8c4e9a7cf',
+		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
+		now() - interval '11 days',
+		now() - interval '11 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'cf931635-9ee9-4c0d-8121-2e45f689f070',
+		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
+		now() - interval '11 days',
+		now() - interval '11 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'36f4a25e-9c83-4097-92f8-eedcd257dc6e',
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'dcb85422-64a0-4259-8045-f762dec33eb2',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'50268ee8-93d7-432e-81f6-757707c062a7',
+		'44bcd224-b4b3-46ce-b260-2136712b0907',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'tam'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'b52272b7-0f3d-46d6-b28f-917ee538a829',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'hin'
 	);
 
 --
@@ -4571,6 +4918,13 @@ values
 		(current_date - 4 + interval '30 minute' - interval '4 hour')::date,
 		current_date - 4 + interval '30 minute',
 		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471", "1395ae94-46d9-4a54-92f5-fb8b76db896b", "43a760da-65af-400e-b3f0-fbed7a6b338e", "0823546b-d240-4f14-9d51-8dfae5fcddc3", "f1f5234e-0426-44f5-a007-b67329a70a81", "8167b776-fc93-4e3f-b06e-5fa5818f2d3b", "ded8028a-493f-438f-8b72-316c769a66b9", "235ce61c-be21-4697-815d-d5aa1a4ff121", "f6b69f3b-09b9-41a7-a9f2-255da0697015", "90108f59-7968-457f-9744-2e3b44e980dd", "170f5fd4-58f8-4b05-aba4-23522f35800f", "ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30", "fdd62764-2438-42bb-af7f-9eb378082899", "fae20b24-42dc-4b9e-aebc-22afcdfc4689", "f878e60f-9647-4728-a368-fc8681b0acbb"]'
+	),
+	(
+		'tam',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		(current_date - 4 + interval '30 hour' - interval '4 hour')::date,
+		current_date - 4 + interval '30 hour',
+		'["fd535752-d602-4ab8-8656-9e11692f30fc", "163d7f57-a76f-4e5b-9346-1de5cfeba7d8", "93d5d050-e9af-4652-9c76-9dc2a232640a", "fa26ba78-a7a3-49f8-8516-034424477dec", "c3c81fa4-9c63-4569-b9b6-9c931ee3154f", "ed70550e-da8a-44dc-8bfd-69965375b7f9", "c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9", "b2736292-1137-41db-a453-ad203726d8c5", "a875f6e4-a8cc-4f68-baf3-ca2aea273568", "a00febfd-e6d6-40bc-a3b8-e31563410db8", "97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68", "4b7b3741-16ce-4ce8-a9b8-70556451a8e5", "49066ea2-e608-42ab-8817-1f20b0eada03", "4677f15a-1cd9-40a3-876c-30662c5eec3f", "44bcd224-b4b3-46ce-b260-2136712b0907"]'
 	);
 
 --
@@ -4885,10 +5239,241 @@ values
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
 		true
+	),
+	(
+		'0a73db77-687d-4987-9d8f-af9a22b478a1',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		true
+	),
+	(
+		'9c97bcd0-c5c9-40bb-aff1-78ce3b1d024d',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		true
+	),
+	(
+		'2e4f7ec0-b795-4080-aa90-45cdbce470dc',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		true
+	),
+	(
+		'cafb615a-19fb-4055-995d-746bd31b86f5',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		true
+	),
+	(
+		'5f34841d-77fa-4511-986b-313031a8002d',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		true
+	),
+	(
+		'eb144ddf-65ff-47ad-90ec-01c9d9b0fa8b',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
+		true
+	),
+	(
+		'46089470-856a-4b47-b797-fd93cc81d999',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
+		true
+	),
+	(
+		'61032c94-65e0-45ab-a60a-79ab00693dd9',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		true
+	),
+	(
+		'a8c23998-bbbc-4b3f-9401-72e9e1e00374',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		true
+	),
+	(
+		'4ca014e2-87c6-4939-a358-476ea8f57781',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
+		true
+	),
+	(
+		'43881316-0867-43fd-a4df-f8a7c315066b',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
+		true
+	),
+	(
+		'15101dbe-876f-42a2-8771-0a98c17819ad',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
+		true
+	),
+	(
+		'34eb7ece-d6e1-4e8f-a677-225019cf942b',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		true
+	),
+	(
+		'55e9dde7-43a1-40c3-b898-d035b8e92134',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		true
+	),
+	(
+		'b96b1427-1172-4548-a78f-80a5eba33c25',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '29 hour',
+		current_date - 4 + interval '29 hour',
+		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
+		'tam',
+		'44bcd224-b4b3-46ce-b260-2136712b0907',
+		true
 	);
 
 --
 -- Data for Name: user_client_event; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."user_client_event" ("id", "created_at", "uid", "message", "context", "url")
+values
+	(
+		'a1441c46-2916-452e-9346-747b38154f45',
+		'2025-09-26 16:53:08.763577+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'new row violates row-level security policy for table "user_card"',
+		'{"code": "42501", "message": "new row violates row-level security policy for table \"user_card\""}',
+		'http://localhost:5173/learn/hin/requests/e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	),
+	(
+		'41b1f0e3-cb7d-4dd6-bb51-8d04bcf47cad',
+		'2025-09-26 16:53:08.763568+00',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'new row violates row-level security policy for table "user_card"',
+		'{"code": "42501", "message": "new row violates row-level security policy for table \"user_card\""}',
+		'http://localhost:5173/learn/hin/requests/e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	);
+
 --
 --
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin

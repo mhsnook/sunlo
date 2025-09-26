@@ -75,7 +75,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 		},
 	})
 	const url = avatarUrlify(avatar_path)
-	console.log(url)
+
 	return (
 		<div className="flex flex-col gap-2">
 			<Label
