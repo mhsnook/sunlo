@@ -1,13 +1,14 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Callout from '../ui/callout'
-import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
-import { buttonVariants } from '../ui/button-variants'
-import { LinkIcon } from 'lucide-react'
-import { Loader } from '@/components/ui/loader'
 import { useQuery } from '@tanstack/react-query'
+import { LinkIcon } from 'lucide-react'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Callout from '@/components/ui/callout'
+import { uuid } from '@/types/main'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { Loader } from '@/components/ui/loader'
 import { phraseRequestQuery } from '@/hooks/use-requests'
-import { LangBadge } from '../ui/badge'
+import { LangBadge } from '@/components/ui/badge'
 
 export function RequestPreview({
 	id,
@@ -50,6 +51,7 @@ export function RequestPreview({
 
 							<Link
 								to={'/learn/$lang/requests/$id'}
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',

@@ -12,7 +12,7 @@ import {
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export function SocialLearningSection() {
 	const [isForFriends, setIsForFriends] = useState(false)

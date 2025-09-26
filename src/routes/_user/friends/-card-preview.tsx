@@ -1,13 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguagePhrase } from '@/hooks/use-language'
-import Callout from '../ui/callout'
+import Callout from '@/components/ui/callout'
 import { useDeckCard } from '@/hooks/use-deck'
 import { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
-import { CardStatusDropdown } from '../card-status-dropdown'
-import { AddTranslationsDialog } from '../add-translations-dialog'
+import { CardStatusDropdown } from '@/components/card-status-dropdown'
+import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { Link } from '@tanstack/react-router'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { LinkIcon } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 
@@ -72,6 +72,7 @@ export function CardPreview({
 							)}
 							<Link
 								to={'/learn/$lang/$id'}
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang, id: pid }}
 								className={buttonVariants({
 									variant: 'secondary',

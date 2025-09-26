@@ -1,3 +1,8 @@
+import { useMemo } from 'react'
+import { useParams } from '@tanstack/react-router'
+import { useRelations } from '@/hooks/use-friends'
+
+import { LinkType } from '@/types/main'
 import {
 	BookOpenText,
 	FileText,
@@ -20,11 +25,7 @@ import {
 	UserPen,
 	UserPlus,
 } from 'lucide-react'
-import languages, { LangKey } from '../lib/languages'
-import { useMemo } from 'react'
-import { LinkType } from '@/types/main'
-import { useParams } from '@tanstack/react-router'
-import { useRelations } from '@/hooks/use-friends'
+import languages, { LangKey } from '@/lib/languages'
 
 const links = (lang?: LangKey): Record<string, LinkType> => ({
 	'/': {

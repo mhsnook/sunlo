@@ -31,10 +31,10 @@ import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
 import { languageQueryOptions, useLanguageMeta } from '@/hooks/use-language'
-import { FriendProfiles } from '../friends.index'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import Callout from '@/components/ui/callout'
+import { FriendProfiles } from '@/components/friend-profiles'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -243,7 +243,7 @@ function DeckSettings() {
 }
 
 const Icon = () => (
-	<Construction className="bg-accent text-accent-foreground h-12 w-12 rounded-full border border-white p-2" />
+	<Construction className="bg-accent text-white/80 h-12 w-12 rounded-full border border-white p-2" />
 )
 
 function NewLang() {

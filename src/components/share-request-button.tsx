@@ -1,14 +1,15 @@
 import { useCallback } from 'react'
-import type { ButtonProps } from '@/components/ui/button-variants'
-import type { uuid } from '@/types/main'
-import { Share } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { Share } from 'lucide-react'
+
+import type { uuid } from '@/types/main'
+import type { ButtonProps } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { useQuery } from '@tanstack/react-query'
 import { phraseRequestQuery } from '@/hooks/use-requests'
 
-export default function ShareRequestButton({
+export function ShareRequestButton({
 	lang,
 	id,
 	text = 'Share request',

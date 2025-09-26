@@ -3,7 +3,7 @@ import { Users, BookOpen, Heart, Star, ArrowRight } from 'lucide-react'
 import { UnderConstructionNotice } from './under-construction'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export function HeroSection() {
 	return (

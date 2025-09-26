@@ -1,5 +1,7 @@
+import { useCallback } from 'react'
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
-import supabase from '../lib/supabase-client'
+import toast from 'react-hot-toast'
+
 import {
 	ChatMessageRelative,
 	ChatMessageRow,
@@ -8,11 +10,10 @@ import {
 	FriendSummaryRaw,
 	FriendSummaryRelative,
 	uuid,
-} from '@/types/main'
-import { useAuth } from '../lib/hooks'
-import { avatarUrlify, mapArray, mapArrays } from '../lib/utils'
-import toast from 'react-hot-toast'
-import { useCallback } from 'react'
+} from '@/routes/_user/friends/-types'
+import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/hooks'
+import { avatarUrlify, mapArray, mapArrays } from '@/lib/utils'
 
 type FriendSummariesLoaded = {
 	relationsMap: { [key: uuid]: FriendSummaryFull }

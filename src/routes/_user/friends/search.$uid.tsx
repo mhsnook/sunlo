@@ -1,9 +1,10 @@
-import { ProfileWithRelationship } from '@/components/profile-with-relationship'
+import { createFileRoute } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+
+import { uuid } from './-types'
 import Callout from '@/components/ui/callout'
 import { publicProfileQuery, useProfile } from '@/hooks/use-profile'
-import { uuid } from '@/types/main'
-import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 
 type FriendsSearchParams = {
 	uid: uuid

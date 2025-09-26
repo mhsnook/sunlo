@@ -5,7 +5,7 @@ import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
 import { useProfile } from '@/hooks/use-profile'
 import { LangOnlyComponentProps } from '@/types/main'
-import { useSidebar } from '../ui/sidebar'
+import { useSidebar } from '@/components/ui/sidebar'
 
 const deckLinks = [
 	'/learn/$lang',

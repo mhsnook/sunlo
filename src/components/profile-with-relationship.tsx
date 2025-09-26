@@ -1,6 +1,9 @@
 import { Check, Send, ThumbsUp, UserCheck, X } from 'lucide-react'
 
-import type { PublicProfile, PublicProfileFull } from '@/types/main'
+import type {
+	PublicProfile,
+	PublicProfileFull,
+} from '@/routes/_user/friends/-types'
 import { Button } from '@/components/ui/button'
 import { AvatarIconRow } from '@/components/ui/avatar-icon'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'

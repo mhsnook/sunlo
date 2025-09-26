@@ -1,6 +1,5 @@
 import { useEffect, type ComponentType } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 import {
 	createFileRoute,
@@ -9,12 +8,14 @@ import {
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
+
+import { TitleBar } from '@/types/main'
 import {
 	ChatMessageRelative,
 	ChatMessageRow,
 	FriendRequestActionRow,
-	TitleBar,
-} from '@/types/main'
+} from '@/routes/_user/friends/-types'
+import supabase from '@/lib/supabase-client'
 import type { ChatsMap } from '@/hooks/use-friends'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'

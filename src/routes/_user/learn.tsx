@@ -1,6 +1,6 @@
-import { PendingRequestsHeader } from '@/components/friends/pending-requests-header'
-import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { TitleBar } from '@/types/main'
+import { PendingRequestsHeader } from './friends/-pending-requests-header'
 
 export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
