@@ -565,11 +565,40 @@ values
 		now() - interval '2 days',
 		'red-bowl-1ad6ab.jpeg',
 		'[{"lang": "eng", "level": "fluent"}, {"lang": "fra", "level": "beginner"}, {"lang": "hin", "level": "beginner"}]'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'Work Andy',
+		null,
+		now() - interval '2 days',
+		null,
+		'[{"lang": "tam", "level": "fluent"}, {"lang": "hin", "level": "fluent"}, {"lang": "kan", "level": "proficient"}, {"lang": "eng", "level": "fluent"}, {"lang": "deu", "level": "proficient"}]'
 	);
 
 --
 -- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
 --
+insert into
+	"public"."phrase_request" (
+		"id",
+		"created_at",
+		"requester_uid",
+		"lang",
+		"prompt",
+		"status",
+		"fulfilled_at"
+	)
+values
+	(
+		'26fc0561-2b17-4663-a017-b88257702e25',
+		now() - interval '10 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ibo',
+		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
+		'pending',
+		null
+	);
+
 --
 -- Data for Name: phrase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4216,6 +4245,15 @@ values
 		'moving',
 		false,
 		15
+	),
+	(
+		'7df47220-4003-43ad-99ba-0e9de75ace0b',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ibo',
+		now() - interval '30 days',
+		'moving',
+		false,
+		15
 	);
 
 --
@@ -4483,11 +4521,58 @@ values
 		now() - interval '16 days',
 		'active',
 		'tam'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'2384890a-0cbd-41b3-a584-e838968a7ab6',
+		'ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30',
+		now() - interval '15 days',
+		now() - interval '15 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'6cf926f6-7e59-4781-9d70-f2dcbad32ddf',
+		'fdd62764-2438-42bb-af7f-9eb378082899',
+		now() - interval '15 days',
+		now() - interval '15 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'1ca79915-0355-4b49-9c20-bea40dec1fee',
+		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
+		now() - interval '14 days',
+		now() - interval '14 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'917f667f-686d-4d29-9619-4f80bdd8f462',
+		'f878e60f-9647-4728-a368-fc8681b0acbb',
+		now() - interval '14 days',
+		now() - interval '14 days',
+		'active',
+		'hin'
 	);
 
 --
 -- Data for Name: user_deck_review_state; Type: TABLE DATA; Schema: public; Owner: postgres
 --
+insert into
+	"public"."user_deck_review_state" ("lang", "uid", "day_session", "created_at", "manifest")
+values
+	(
+		'hin',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		(current_date - 4 + interval '30 minute' - interval '4 hour')::date,
+		current_date - 4 + interval '30 minute',
+		'["9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471", "1395ae94-46d9-4a54-92f5-fb8b76db896b", "43a760da-65af-400e-b3f0-fbed7a6b338e", "0823546b-d240-4f14-9d51-8dfae5fcddc3", "f1f5234e-0426-44f5-a007-b67329a70a81", "8167b776-fc93-4e3f-b06e-5fa5818f2d3b", "ded8028a-493f-438f-8b72-316c769a66b9", "235ce61c-be21-4697-815d-d5aa1a4ff121", "f6b69f3b-09b9-41a7-a9f2-255da0697015", "90108f59-7968-457f-9744-2e3b44e980dd", "170f5fd4-58f8-4b05-aba4-23522f35800f", "ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30", "fdd62764-2438-42bb-af7f-9eb378082899", "fae20b24-42dc-4b9e-aebc-22afcdfc4689", "f878e60f-9647-4728-a368-fc8681b0acbb"]'
+	);
+
 --
 -- Data for Name: user_card_review; Type: TABLE DATA; Schema: public; Owner: postgres
 --
