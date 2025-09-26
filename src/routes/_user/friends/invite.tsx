@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useProfile } from '@/hooks/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'

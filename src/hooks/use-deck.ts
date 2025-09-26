@@ -1,5 +1,8 @@
+import { useCallback } from 'react'
 import supabase from '@/lib/supabase-client'
 import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type {
 	CardsMap,
@@ -11,10 +14,7 @@ import type {
 } from '@/types/main'
 import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
-import { useCallback } from 'react'
-import { inLastWeek } from '../lib/dayjs'
-import dayjs from 'dayjs'
-import isoWeek from 'dayjs/plugin/isoWeek'
+import { inLastWeek } from '@/lib/dayjs'
 
 dayjs.extend(isoWeek)
 

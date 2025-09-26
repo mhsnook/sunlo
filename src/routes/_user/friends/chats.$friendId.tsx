@@ -1,7 +1,8 @@
-import type { PublicProfileFull } from '@/types/main'
 import { useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
+
+import type { PublicProfileFull } from './-types'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -9,11 +10,11 @@ import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
-import { CardPreview } from '@/components/chat/card-preview'
+import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { ago } from '@/lib/dayjs'
-import { RequestPreview } from '@/components/chat/request-preview'
+import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendId')({
 	component: ChatPage,
@@ -188,6 +189,7 @@ const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
 				className={buttonVariants({ variant: 'secondary' })}
 				to="/friends/$uid"
 				from={Route.fullPath}
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				params={{ uid: profile.uid }}
 			>
 				View profile

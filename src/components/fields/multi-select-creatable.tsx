@@ -15,8 +15,8 @@ import { Check, ChevronsUpDown, PlusCircle, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { useCallback, useState } from 'react'
-import { Button } from '../ui/button'
-import { Badge } from '../ui/badge'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 export function MultiSelectCreatable({
 	options,

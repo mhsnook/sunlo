@@ -1,7 +1,7 @@
 import { PhraseStub } from '@/types/main'
-import PermalinkButton from '../permalink-button'
-import { LangBadge } from '../ui/badge'
-import { CardStatusHeart } from '../card-status-dropdown'
+import PermalinkButton from '@/components/permalink-button'
+import { LangBadge } from '@/components/ui/badge'
+import { CardStatusHeart } from '@/components/card-status-dropdown'
 
 export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 	if (!phrase.id || !phrase.lang) return null
@@ -16,6 +16,7 @@ export function CardResultSimple({ phrase }: { phrase: PhraseStub }) {
 				<div className="space-x-2">
 					<PermalinkButton
 						to="/learn/$lang/$id"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: phrase.lang, id: phrase.id }}
 						variant="ghost"
 						size="icon"

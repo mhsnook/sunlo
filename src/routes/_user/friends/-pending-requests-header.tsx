@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useRelations } from '@/hooks/use-friends'
-import { buttonVariants } from '../ui/button-variants'
-import { Badge } from '../ui/badge'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 export function PendingRequestsHeader({ shy = false }) {

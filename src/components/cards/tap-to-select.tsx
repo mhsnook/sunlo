@@ -5,8 +5,8 @@ import {
 	CardFooter,
 	CardHeader,
 	CardTitle,
-} from '../ui/card'
-import { Badge } from '../ui/badge'
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { CheckCircle } from 'lucide-react'
 import { uuid } from '@/types/main'
 

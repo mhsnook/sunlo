@@ -28,7 +28,7 @@ import { Route as AuthForgotPasswordImport } from './routes/_auth/forgot-passwor
 import { Route as AuthFindAFriendImport } from './routes/_auth/find-a-friend'
 import { Route as UserProfileIndexImport } from './routes/_user/profile/index'
 import { Route as UserLearnIndexImport } from './routes/_user/learn/index'
-import { Route as UserFriendsIndexImport } from './routes/_user/friends.index'
+import { Route as UserFriendsIndexImport } from './routes/_user/friends/index'
 import { Route as UserProfileChangePasswordImport } from './routes/_user/profile/change-password'
 import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile/change-email-confirm'
 import { Route as UserProfileChangeEmailImport } from './routes/_user/profile/change-email'
@@ -36,13 +36,13 @@ import { Route as UserLearnQuickSearchImport } from './routes/_user/learn/quick-
 import { Route as UserLearnArchivedImport } from './routes/_user/learn/archived'
 import { Route as UserLearnAddDeckImport } from './routes/_user/learn/add-deck'
 import { Route as UserLearnLangImport } from './routes/_user/learn/$lang'
-import { Route as UserFriendsSearchImport } from './routes/_user/friends.search'
-import { Route as UserFriendsRequestsImport } from './routes/_user/friends.requests'
-import { Route as UserFriendsInviteImport } from './routes/_user/friends.invite'
-import { Route as UserFriendsChatsImport } from './routes/_user/friends.chats'
-import { Route as UserFriendsUidImport } from './routes/_user/friends.$uid'
+import { Route as UserFriendsSearchImport } from './routes/_user/friends/search'
+import { Route as UserFriendsRequestsImport } from './routes/_user/friends/requests'
+import { Route as UserFriendsInviteImport } from './routes/_user/friends/invite'
+import { Route as UserFriendsChatsImport } from './routes/_user/friends/chats'
+import { Route as UserFriendsUidImport } from './routes/_user/friends/$uid'
 import { Route as UserLearnLangIndexImport } from './routes/_user/learn/$lang.index'
-import { Route as UserFriendsChatsIndexImport } from './routes/_user/friends.chats.index'
+import { Route as UserFriendsChatsIndexImport } from './routes/_user/friends/chats.index'
 import { Route as UserLearnLangSearchImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewImport } from './routes/_user/learn/$lang.review'
 import { Route as UserLearnLangRequestsImport } from './routes/_user/learn/$lang.requests'
@@ -51,14 +51,14 @@ import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn/$
 import { Route as UserLearnLangBulkAddImport } from './routes/_user/learn/$lang.bulk-add'
 import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn/$lang.add-phrase'
 import { Route as UserLearnLangIdImport } from './routes/_user/learn/$lang.$id'
-import { Route as UserFriendsSearchUidImport } from './routes/_user/friends.search.$uid'
-import { Route as UserFriendsChatsFriendIdImport } from './routes/_user/friends.chats.$friendId'
+import { Route as UserFriendsSearchUidImport } from './routes/_user/friends/search.$uid'
+import { Route as UserFriendsChatsFriendIdImport } from './routes/_user/friends/chats.$friendId'
 import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn/$lang.review.index'
 import { Route as UserLearnLangRequestsIndexImport } from './routes/_user/learn/$lang.requests.index'
 import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn/$lang.review.go'
 import { Route as UserLearnLangRequestsNewImport } from './routes/_user/learn/$lang.requests.new'
 import { Route as UserLearnLangRequestsIdImport } from './routes/_user/learn/$lang.requests.$id'
-import { Route as UserFriendsChatsFriendIdRecommendImport } from './routes/_user/friends.chats.$friendId.recommend'
+import { Route as UserFriendsChatsFriendIdRecommendImport } from './routes/_user/friends/chats.$friendId.recommend'
 
 // Create Virtual Routes
 
@@ -1339,11 +1339,11 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/friends/$uid": {
-      "filePath": "_user/friends.$uid.tsx",
+      "filePath": "_user/friends/$uid.tsx",
       "parent": "/_user/friends"
     },
     "/_user/friends/chats": {
-      "filePath": "_user/friends.chats.tsx",
+      "filePath": "_user/friends/chats.tsx",
       "parent": "/_user/friends",
       "children": [
         "/_user/friends/chats/$friendId",
@@ -1351,15 +1351,15 @@ export const routeTree = rootRoute
       ]
     },
     "/_user/friends/invite": {
-      "filePath": "_user/friends.invite.tsx",
+      "filePath": "_user/friends/invite.tsx",
       "parent": "/_user/friends"
     },
     "/_user/friends/requests": {
-      "filePath": "_user/friends.requests.tsx",
+      "filePath": "_user/friends/requests.tsx",
       "parent": "/_user/friends"
     },
     "/_user/friends/search": {
-      "filePath": "_user/friends.search.tsx",
+      "filePath": "_user/friends/search.tsx",
       "parent": "/_user/friends",
       "children": [
         "/_user/friends/search/$uid"
@@ -1405,7 +1405,7 @@ export const routeTree = rootRoute
       "parent": "/_user/profile"
     },
     "/_user/friends/": {
-      "filePath": "_user/friends.index.tsx",
+      "filePath": "_user/friends/index.tsx",
       "parent": "/_user/friends"
     },
     "/_user/learn/": {
@@ -1417,14 +1417,14 @@ export const routeTree = rootRoute
       "parent": "/_user/profile"
     },
     "/_user/friends/chats/$friendId": {
-      "filePath": "_user/friends.chats.$friendId.tsx",
+      "filePath": "_user/friends/chats.$friendId.tsx",
       "parent": "/_user/friends/chats",
       "children": [
         "/_user/friends/chats/$friendId/recommend"
       ]
     },
     "/_user/friends/search/$uid": {
-      "filePath": "_user/friends.search.$uid.tsx",
+      "filePath": "_user/friends/search.$uid.tsx",
       "parent": "/_user/friends/search"
     },
     "/_user/learn/$lang/$id": {
@@ -1469,7 +1469,7 @@ export const routeTree = rootRoute
       "parent": "/_user/learn/$lang"
     },
     "/_user/friends/chats/": {
-      "filePath": "_user/friends.chats.index.tsx",
+      "filePath": "_user/friends/chats.index.tsx",
       "parent": "/_user/friends/chats"
     },
     "/_user/learn/$lang/": {
@@ -1477,7 +1477,7 @@ export const routeTree = rootRoute
       "parent": "/_user/learn/$lang"
     },
     "/_user/friends/chats/$friendId/recommend": {
-      "filePath": "_user/friends.chats.$friendId.recommend.tsx",
+      "filePath": "_user/friends/chats.$friendId.recommend.tsx",
       "parent": "/_user/friends/chats/$friendId"
     },
     "/_user/learn/$lang/requests/$id": {

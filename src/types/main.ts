@@ -1,4 +1,4 @@
-import { Database, Enums, Tables, TablesInsert } from './supabase'
+import { Database, Tables, TablesInsert } from './supabase'
 import { UseMutationResult, UseQueryResult } from '@tanstack/react-query'
 import {
 	PostgrestError,
@@ -9,6 +9,7 @@ import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
 import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
+import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -39,13 +40,6 @@ export type AuthState = {
 	userEmail: string | null
 	userRole: RolesEnum
 }
-
-export type ChatMessageRow = Tables<'chat_message'>
-export type ChatMessageRelative = ChatMessageRow & {
-	isMine: boolean
-	friendId: uuid
-}
-export type ChatMessageInsert = TablesInsert<'chat_message'>
 
 export type Tag = {
 	id: uuid
@@ -127,7 +121,7 @@ export type LanguageLoaded = {
 	phrasesMap: PhrasesMap
 }
 
-export type PhraseRow = Tables<'phrase'>
+export type PhraseRow = Tables<'phrase'> & { created_at: string }
 export type PhraseInsert = TablesInsert<'phrase'>
 export type PhraseCardInsert =
 	Database['public']['Functions']['add_phrase_translation_card']['Args']
@@ -137,14 +131,9 @@ export type Translation = Tables<'phrase_translation'>
 export type TranslationRow = Tables<'phrase_translation'>
 export type TranslationStub = Pick<
 	Tables<'phrase_translation'>,
-	'lang',
-	'text',
-	'id'
+	'lang' | 'text' | 'id'
 >
 export type TranslationInsert = TablesInsert<'phrase_translation'>
-
-export type RelationRow = Tables<'phrase_relation'>
-export type RelationInsert = TablesInsert<'phrase_relation'>
 
 export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
@@ -236,10 +225,6 @@ type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids
 }
 
-export type PublicProfile = Tables<'public_profile'> & {
-	avatarUrl?: string
-}
-
 export type ProfileRow = Tables<'user_profile'> & {
 	languages_known: LanguageKnown[]
 }
@@ -255,40 +240,6 @@ export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
 }
 export type DecksMap = {
 	[key: string]: DeckMeta
-}
-
-export type FriendshipRow = {
-	uid: uuid
-	friend_uuid: uuid
-	helping_with: Array<string>
-	created_at: string
-	updated_at: string
-}
-
-export type FriendSummary = Tables<'friend_summary'>
-export type FriendRequestActionInsert = TablesInsert<'friend_request_action'>
-export type FriendRequestActionRow = Tables<'friend_request_action'>
-export type FriendSummaryRaw = FriendSummary & {
-	profile_more: Tables<'public_profile'> | null
-	profile_less: Tables<'public_profile'> | null
-}
-
-export type FriendSummaryRelative = {
-	most_recent_action_type: Enums<'friend_request_response'>
-	most_recent_created_at: string
-	status: string
-	uidOther: uuid
-	isMostRecentByMe: boolean
-	isMyUidMore: boolean
-	profile?: PublicProfile
-}
-
-export type FriendSummaryFull = FriendSummaryRelative & {
-	profile: PublicProfile
-}
-
-export type PublicProfileFull = PublicProfile & {
-	friend_summary?: FriendSummaryRelative
 }
 
 export type PhraseRequest =

@@ -1,6 +1,6 @@
-import { ChatsSidebar } from '@/components/friends/chats-sidebar'
-import { TitleBar } from '@/types/main'
 import { createFileRoute } from '@tanstack/react-router'
+import { ChatsSidebar } from './-chats-sidebar'
+import { TitleBar } from '@/types/main'
 
 export const Route = createFileRoute('/_user/friends/chats')({
 	loader: () => ({

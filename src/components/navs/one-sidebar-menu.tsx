@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/sidebar'
 import { Link } from '@tanstack/react-router'
 import { LinkType } from '@/types/main'
-import { TinyBadge } from '../ui/badge'
+import { TinyBadge } from '@/components/ui/badge'
 
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const

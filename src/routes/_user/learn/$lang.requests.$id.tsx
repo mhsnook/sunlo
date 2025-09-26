@@ -59,8 +59,8 @@ import { Blockquote } from '@/components/ui/blockquote'
 import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
-import ShareRequestButton from '@/components/share-request-button'
-import { SendRequestToFriendDialog } from '@/components/friends/send-request-to-friend-dialog'
+import { ShareRequestButton } from '@/components/share-request-button'
+import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,

@@ -16,7 +16,7 @@ import {
 	CommandItem,
 	CommandList,
 	CommandSeparator,
-} from '../ui/command'
+} from '@/components/ui/command'
 import { cn } from '@/lib/utils'
 import { useProfile } from '@/hooks/use-profile'
 

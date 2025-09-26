@@ -1,11 +1,4 @@
-import supabase from '@/lib/supabase-client'
-import {
-	CardRow,
-	DeckLoaded,
-	OnePhraseComponentProps,
-	uuid,
-} from '@/types/main'
-import { PostgrestError } from '@supabase/supabase-js'
+import { Link } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -17,21 +10,30 @@ import {
 	Sparkles,
 	Zap,
 } from 'lucide-react'
+
+import supabase from '@/lib/supabase-client'
+import {
+	CardRow,
+	DeckLoaded,
+	OnePhraseComponentProps,
+	uuid,
+} from '@/types/main'
+import { PostgrestError } from '@supabase/supabase-js'
+
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
 import { useDeckCard } from '@/hooks/use-deck'
-import { buttonVariants } from './ui/button-variants'
-import { Badge } from './ui/badge'
-import { Separator } from './ui/separator'
-import { Button } from './ui/button'
+import { buttonVariants } from '@/components/ui/button-variants'
+import { Badge } from '@/components/ui/badge'
+import { Separator } from '@/components/ui/separator'
+import { Button } from '@/components/ui/button'
 
 interface CardStatusDropdownProps {
 	pid: uuid

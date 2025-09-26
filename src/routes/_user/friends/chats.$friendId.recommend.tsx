@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
-import type { ChatMessageInsert, uuid } from '@/types/main'
 import toast from 'react-hot-toast'
 import { Send } from 'lucide-react'
 import { useDebounce } from '@uidotdev/usehooks'
+
+import type { ChatMessageInsert, uuid } from './-types'
 import supabase from '@/lib/supabase-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,6 +93,7 @@ function RouteComponent() {
 	return (
 		<Dialog
 			open={true}
+			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onOpenChange={(open) => {
 				if (!open) {
 					void navigate({
@@ -118,6 +120,7 @@ function RouteComponent() {
 						<Input
 							placeholder="Search for a phrase to send..."
 							value={searchTerm}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
 					</Label>
@@ -132,6 +135,7 @@ function RouteComponent() {
 									<p className="flex-1">{phrase.text}</p>
 									<Button
 										size="sm"
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onClick={() => handleRecommend(phrase.id, phrase.lang)}
 										disabled={sendMessageMutation.isPending}
 									>

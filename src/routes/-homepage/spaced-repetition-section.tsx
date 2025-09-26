@@ -1,8 +1,8 @@
-import { Card } from '@/components/ui/card'
-import { Brain, Clock, Target, BarChart3, Calendar, Zap } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
+import { Brain, Clock, Target, BarChart3, Calendar, Zap } from 'lucide-react'
+import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export function SpacedRepetitionSection() {
 	return (

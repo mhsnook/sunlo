@@ -1,11 +1,12 @@
+import { useCallback } from 'react'
 import {
 	useMutation,
 	useQuery,
 	useQueryClient,
 	useSuspenseQuery,
 } from '@tanstack/react-query'
-import supabase from '../lib/supabase-client'
-import { useAuth } from '../lib/hooks'
+import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/hooks'
 import {
 	DailyReviewStateFetched,
 	DailyReviewStateLoaded,
@@ -18,7 +19,6 @@ import {
 	ReviewUpdate,
 	uuid,
 } from '@/types/main'
-import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import {
 	getIndexOfNextAgainCard,
@@ -29,7 +29,7 @@ import {
 	useReviewStage,
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
-import { mapArray } from '../lib/utils'
+import { mapArray } from '@/lib/utils'
 
 const postReview = async (submitData: ReviewInsert) => {
 	const { data } = await supabase
