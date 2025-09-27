@@ -35,8 +35,6 @@ export function LanguagesKnownField<T extends FieldValues>({
 		control,
 	})
 
-	const knownLangs = fields.map((f) => (f as LanguageKnown).lang)
-
 	return (
 		<div className="space-y-2">
 			<Label>Languages You Know</Label>
@@ -56,6 +54,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 									type="button"
 									variant="ghost"
 									size="icon"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => move(index, index - 1)}
 									disabled={index === 0}
 								>
@@ -65,6 +64,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 									type="button"
 									variant="ghost"
 									size="icon"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => move(index, index + 1)}
 									disabled={index === fields.length - 1}
 								>
@@ -75,11 +75,15 @@ export function LanguagesKnownField<T extends FieldValues>({
 								<Controller
 									control={control}
 									name={`languages_known.${index}.lang` as Path<T>}
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									render={({ field: langField }) => (
 										<SelectOneLanguage
 											value={langField.value}
 											setValue={langField.onChange}
-											disabled={knownLangs.filter((l) => l !== langField.value)}
+											// oxlint-disable-next-line jsx-no-new-array-as-prop
+											disabled={fields
+												.map((f) => (f as LanguageKnown).lang)
+												.filter((l) => l !== langField.value)}
 										/>
 									)}
 								/>
@@ -87,6 +91,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 							<Controller
 								control={control}
 								name={`languages_known.${index}.level` as Path<T>}
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								render={({ field: selectField }) => (
 									<Select
 										onValueChange={selectField.onChange}
@@ -109,6 +114,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 								type="button"
 								variant="ghost"
 								size="icon"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => remove(index)}
 								disabled={fields.length === 1}
 							>
@@ -130,6 +136,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 					type="button"
 					variant="outline"
 					size="sm"
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => append({ lang: '', level: 'proficient' })}
 					className="mt-0"
 				>
