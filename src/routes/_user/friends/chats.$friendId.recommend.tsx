@@ -23,6 +23,8 @@ import { ShowErrorDontLog } from '@/components/errors'
 import { Loader } from '@/components/ui/loader'
 import Callout from '@/components/ui/callout'
 import { Label } from '@/components/ui/label'
+import { LangBadge } from '@/components/ui/badge'
+import PermalinkButton from '@/components/permalink-button'
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendId/recommend'
@@ -130,17 +132,26 @@ function RouteComponent() {
 							{phrasesData?.map((phrase) => (
 								<div
 									key={phrase.id}
-									className="flex items-center justify-between rounded-md border p-2"
+									className="flex items-start justify-between gap-2 rounded-md border p-2"
 								>
-									<p className="flex-1">{phrase.text}</p>
+									<LangBadge lang={phrase.lang} className="my-1" />
+									<p className="my-0.5 flex-1">
+										{phrase.text} {phrase.text} {phrase.text}
+									</p>
+									<PermalinkButton
+										size="icon"
+										from={Route.fullPath}
+										text=""
+										to="/learn/$lang/$id"
+										params={{ lang: phrase.lang, id: phrase.id }}
+									/>
 									<Button
-										size="sm"
+										size="icon"
 										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onClick={() => handleRecommend(phrase.id, phrase.lang)}
 										disabled={sendMessageMutation.isPending}
 									>
-										<Send className="mr-2 h-4 w-4" />
-										Send
+										<Send className="-ms-0.5 mt-0.5" />
 									</Button>
 								</div>
 							))}

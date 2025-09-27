@@ -2,9 +2,10 @@ import { type ChangeEvent, useCallback } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { z } from 'zod'
-
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
+
+import { PublicProfile } from './-types'
 import { Loader } from '@/components/ui/loader'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +24,7 @@ import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
 import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
 import { nullSubmit } from '@/lib/utils'
+import { Separator } from '@/components/ui/separator'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -46,7 +48,7 @@ function FriendRequestPage() {
 export default function SearchProfiles() {
 	const { query } = Route.useSearch()
 	const { userId } = useAuth()
-	const debouncedQuery = useDebounce(query, 500)
+	const debouncedQuery = useDebounce(query, 500) ?? ''
 	const navigate = useNavigate({ from: Route.fullPath })
 	const setQueryInputValue = useCallback(
 		(event: ChangeEvent<HTMLInputElement>) =>
@@ -66,19 +68,21 @@ export default function SearchProfiles() {
 		error,
 		isFetching,
 	} = useQuery({
-		queryKey: ['public_profile', 'search', debouncedQuery as string],
-		queryFn: async ({ queryKey }) =>
-			searchPublicProfilesByUsername(queryKey[2], userId!),
+		queryKey: ['public_profile', 'search', debouncedQuery],
+		queryFn: async () =>
+			searchPublicProfilesByUsername(debouncedQuery, userId!),
 		enabled: !!debouncedQuery?.length && !!userId,
 	})
 
 	const prevResults = usePrevious(searchResults)
 	const resultsToShow =
-		!debouncedQuery ? [] : (searchResults ?? prevResults ?? [])
+		!debouncedQuery ?
+			[]
+		:	((searchResults ?? prevResults ?? []) as PublicProfile[])
 	const showLoader = resultsToShow.length === 0 && isFetching
 
 	return (
-		<Card className="min-h-[21rem]">
+		<Card>
 			<CardHeader>
 				<CardTitle>Search for friends</CardTitle>
 				<CardDescription>
@@ -101,8 +105,9 @@ export default function SearchProfiles() {
 							<span className="hidden @md:block">Search</span>
 						</Button>
 					</form>
+					<Separator className="my-8" />
 					{debouncedQuery === undefined ?
-						<p className="py-[1.75rem] italic opacity-60">Search results...</p>
+						<p className="my-8 italic opacity-60">Search results...</p>
 					:	<div className="space-y-2">
 							<ShowError>{error?.message}</ShowError>
 							{showLoader ?
@@ -115,12 +120,15 @@ export default function SearchProfiles() {
 										No users match that search, but you can invite a friend!
 									</p>
 								</Callout>
-							:	<div className="my-6 space-y-2 rounded border border-transparent p-4 shadow">
-									{resultsToShow.map((profile) => (
-										<ProfileWithRelationship
-											key={profile.uid}
-											profile={profile}
-										/>
+							:	<div className="my-6 space-y-4">
+									<p className="text-muted-foreground ms-4 italic">
+										{resultsToShow.length} result
+										{resultsToShow.length === 1 ? '' : 's'}
+									</p>
+									{resultsToShow.map((profile: PublicProfile) => (
+										<div key={profile.uid} className="rounded p-2 pe-4 shadow">
+											<ProfileWithRelationship profile={profile} />
+										</div>
 									))}
 								</div>
 							}
