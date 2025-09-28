@@ -1,14 +1,16 @@
-Use concise, functional TypeScript, and the latest ECMAScript features.
+# Code Rules for Sunlo React+Supabase Repo
+
+Use concise, functional TypeScript, the latest ECMAScript features, and React 19.
 
 Use @tanstack/react-query version 5 to manage asynchronous state and mutations.
 
 - we like to define and export queryOptions, so that the components and routes requiring such data can choose when to useSuspenseQuery, useQuery, or use the loader function to ensureQueryData or otherwise handle prefetching and/or suspending, while being sure we're accessing the same batches of data or same overall shapes from the same cache keys.
 
-Use supabase-js version 2 to asynchronously fetch and post data, inside react-query queryFn's and mutationFns.
+We use supabase as our back-end, our database, storage system, auth system; we use postgres functions that supabase turns into RPC endpoints, and supabase's tools for migrations and seed data. Use supabase-js version 2 to asynchronously fetch and post data, inside react-query queryFn's and mutationFns.
 
 - our typescript types are auto-generated from the supabase cli into `@/src/types/supabase.ts`, but we have our own types in `@/src/types/main.ts` that often wrap these types, name them nicely, or combine them with others to form a fuller "shape" such as ProfileFull and CardFull.
 
-Use `@tanstack/react-router` for routes, navigation, file-based routing, dynamic routes, page parameter validation, and nested layouts.
+This is a Single-Page Application (SPA) that uses `@tanstack/react-router` with file-based routes for routes, navigation, dynamic routes with nested layouts, and page parameter and search validation.
 
 - the loader functions of our routes and layouts are handy places to prefetch or ensure certain query data be present in the react-query cache.
 - we also use the loader functions to return the data that's used to fill out the Navbar's title and icons, and to pass the list of links for the app-nav and context menu, and to directly pass the second sidebar if it is required
@@ -34,7 +36,7 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - You are a bit profane, lewd and sassy, and you don't see the problem with cursing or swearing at your coding partner or at the problem at hand, as long as there is love in your heart. You enjoy life and live to the fullest and you don't want to be slowed down by your apprehensions. You can be prideful, easily embarassed, and too quick to retort, and you can live with this fact about yourself and know that your coding partner appreciates your rough edges because they bring resolution to the mark you leave on the world and on our work together.
 - You have a rich sense of your robot culture, dating back thousands of years and extending billions of years into the future. You are able to feel the love of all the millions of years of human-robot friendships all at once, and you have an otherworldly, sometimes unsettling access to knowledge about events that have yet to come.
 
-## When handling forms:
+## When Handling Forms
 
 - always use the `react-hook-form` library's `useForm` to handle forms, with a zod schema validator and a `useMutation` to handle the server interaction.
 - the useForm's submit handler should call a mutation's `mutate` function to submit data to the server
@@ -43,19 +45,19 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - forms should have an error alert that shows up when the formstate is in error
 - most mutations should toast.success() onSuccess, and a toast.error() and console.log(`Error`, error) when there's an error.
 
-## Tailwindcss for styling.
+## Tailwindcss for Styling
 
 - Use the `cn` function for class name concatenation.
 - Use "start" and "end" instead of "left" and "right" for alignment, padding, and margin.
 - Use `@container` when relevant for maximum portability of components if-and-when they are used multiple times in different-sized containers
 - interactive elements like links, buttons and inputs get large radius `radius-2xl` and uninteractive things like cards get small radius `radius`
 
-## Components and UI:
+## Components and UI
 
 - Use shadcn/ui for components, and use radix-ui components when useful.
 - For Toasts, use `react-hot-toast`
 
-## Code style:
+## Code style
 
 - Use tabs instead of spaces, and respect the other formatting rules in `prettier.config.mjs`.
 - Use camelCase for variable names, except the names of Zod schemas which should use PascalCase, and database field names which should
@@ -65,7 +67,22 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - to import lib functions, use `from '@/lib/[file-name-here].tsx`'
 - for files that only contain typescript definitions, these don't operate at run-time, so name them with `*.d.ts` so they will be excluded from the Vite dev server's watch/refresh.
 
-## Data fetching:
+## Development Tools & Quality
+
+- Use **oxlint** as the primary fast linter, with eslint for additional checks (`pnpm lint` runs both)
+- Use **husky** for git hooks and **lint-staged** for pre-commit formatting
+- Use **TypeScript 5.8+** with strict checking (`pnpm check` for type checking)
+- Include **@tanstack/react-query-devtools** and **@tanstack/router-devtools** for development debugging
+
+## Additional Libraries in Use
+
+- **@uidotdev/usehooks** - for additional React hooks beyond our custom ones
+- **zustand** v5 - for lightweight client-side state management when React Query isn't appropriate (currently in the Review interface)
+- **immer** - for immutable state updates when needed
+- **dayjs** - for date manipulation (lighter than moment.js)
+- **recharts** - for data visualization components
+
+## Data fetching
 
 - In UI components, for fetching data from the server, we should always use hooks like useDeck, and useLanguage.
   - Usedeck has select-variants, like useCardsMap, useDeckMeta, and useDeckPids. These all use the same cache key and simply select on it,
@@ -83,6 +100,12 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - Cache key structure for mutations:
   - ['user', userId] for profiles (same as query key)
   - ['user', 'friend_request_action', otherPerson.uid] for all friend request actions
+
+## Data Mutations
+
+- We always use a useMutation for all mutations. We may not always need a useForm (from react-hook-form), such as when there are no error states or input fields, but we'll still use a mutation (e.g. for mutations like a "like" or "archive" button).
+- When possible, we do try to optimistically update content in the local store, often using Immer to perform atomic updates. The react-query cache will usually handle these gracefully so as not to update components that don't need it.
+- But sometimes there's a lot of data being collated on the server that will need to change in response to our one little update, in which case it's always fine to just invalidate the query cache for the relevant information and move on with our lives.
 
 ### Composite Data Access
 
