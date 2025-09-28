@@ -1,7 +1,9 @@
-import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
-import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Play } from 'lucide-react'
+
+import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
+import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
@@ -9,9 +11,10 @@ import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
-import { Play } from 'lucide-react'
 import { useLanguagePhrase } from '@/hooks/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
+import { Separator } from '@/components/ui/separator'
+import { LangBadge } from '@/components/ui/badge'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
@@ -47,9 +50,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 				<SharePhraseButton lang={lang} pid={pid} />
 				<PhraseExtraInfo lang={lang} pid={pid} />
 			</CardHeader>
-			<CardContent
-				className={`flex grow flex-col items-center justify-center px-[10%] pt-0`}
-			>
+			<CardContent className="flex grow flex-col items-center justify-center pt-0">
 				<div className="mb-4 flex items-center justify-center">
 					<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
 					<Flagged name="text_to_speech">
@@ -64,13 +65,15 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 						</Button>
 					</Flagged>
 				</div>
-				<div>
-					{!showAnswers ? null : (
-						phrase.translations.map((trans: TranslationRow) => (
-							<div key={trans.id} className="mt-4 flex items-center">
-								<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
-									{trans.lang}
-								</span>
+				<Separator />
+				{!showAnswers ? null : (
+					<div className="w-full space-y-2">
+						{phrase.translations.map((trans: TranslationRow) => (
+							<div
+								key={trans.id}
+								className="mt-4 flex items-center justify-center gap-2"
+							>
+								<LangBadge lang={trans.lang} />
 								<div className="me-2 text-xl">{trans.text}</div>
 								<Flagged name="text_to_speech">
 									<Button
@@ -84,9 +87,9 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 									</Button>
 								</Flagged>
 							</div>
-						))
-					)}
-				</div>
+						))}
+					</div>
+				)}
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
