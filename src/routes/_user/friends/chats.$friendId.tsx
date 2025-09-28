@@ -148,21 +148,26 @@ function ChatPage() {
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
-				<div className="relative">
-					<Link
-						to="/friends/chats/$friendId/recommend"
-						from={Route.fullPath}
-						className="flex items-center gap-2"
-					>
-						<Input
-							placeholder="Send a phrase recommendation..."
-							className="cursor-pointer"
-						/>
-						<span className={buttonVariants({ size: 'icon' })}>
-							<Send className="h-4 w-4" />
-						</span>
-					</Link>
-				</div>
+				{relation.status !== 'friends' ?
+					<div className="relative">
+						<Link
+							to="/friends/chats/$friendId/recommend"
+							from={Route.fullPath}
+							className="flex items-center gap-2"
+						>
+							<Input
+								placeholder="Send a phrase recommendation..."
+								className="cursor-pointer"
+							/>
+							<span className={buttonVariants({ size: 'icon' })}>
+								<Send className="h-4 w-4" />
+							</span>
+						</Link>
+					</div>
+				:	<p className="text-muted-foreground p-2 text-center italic">
+						You must be friends to chat.
+					</p>
+				}
 			</div>
 			<Outlet />
 		</Card>
