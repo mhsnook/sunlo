@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
-import { ChevronsUpDown, GalleryHorizontalEnd, Plus } from 'lucide-react'
+import { ChevronsUpDown, GalleryHorizontalEnd, Home, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
@@ -102,6 +102,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 								>
 									<Link
 										to="/learn/$lang"
+										// oxlint-disable-next-line jsx-no-new-object-as-prop
 										params={{ lang: deck.lang }}
 										onClick={setClosedMobile}
 									>
@@ -112,9 +113,19 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 							))}
 							<DropdownMenuSeparator />
 							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
+								<Link to="/learn" onClick={setClosedMobile}>
+									<div className="bg-background flex size-6 items-center justify-center rounded border">
+										<Home />
+									</div>
+									<div className="text-muted-foreground font-medium">
+										All decks
+									</div>
+								</Link>
+							</DropdownMenuItem>
+							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
 								<Link to="/learn/add-deck" onClick={setClosedMobile}>
 									<div className="bg-background flex size-6 items-center justify-center rounded border">
-										<Plus className="size-4" />
+										<Plus />
 									</div>
 									<div className="text-muted-foreground font-medium">
 										New deck
