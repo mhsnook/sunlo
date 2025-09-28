@@ -17,6 +17,7 @@ import {
 	MessageSquarePlus,
 	MessageSquareQuote,
 	MessagesSquare,
+	Newspaper,
 	Rocket,
 	Search,
 	Send,
@@ -33,7 +34,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => ({
 		link: {
 			to: '/',
 		},
-		Icon: Home,
+		Icon: Newspaper,
 	},
 	'/friends': {
 		name: 'Contacts',

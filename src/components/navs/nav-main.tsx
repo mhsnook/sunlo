@@ -29,6 +29,7 @@ const learnMenu = makeLinks([
 	'/learn/add-deck',
 ])
 const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
+const siteMenuLoggedIn = makeLinks(['/', '/profile', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
@@ -50,7 +51,10 @@ export function NavMain({ lang }: { lang?: string }) {
 				title="Learning center"
 			/>
 			<OneSidebarMenu menu={friendsMenu} title="Network" />
-			<OneSidebarMenu menu={siteMenu} title="Site" />
+			<OneSidebarMenu
+				menu={profile ? siteMenuLoggedIn : siteMenu}
+				title="Site"
+			/>
 		</>
 	)
 }
