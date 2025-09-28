@@ -97,7 +97,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 										onValueChange={selectField.onChange}
 										defaultValue={selectField.value}
 									>
-										<SelectTrigger className="w-[180px]">
+										<SelectTrigger className="w-[120px]">
 											<SelectValue placeholder="Proficiency" />
 										</SelectTrigger>
 										<SelectContent>
