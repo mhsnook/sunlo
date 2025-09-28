@@ -66,30 +66,31 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 					</Flagged>
 				</div>
 				<Separator />
-				{!showAnswers ? null : (
-					<div className="w-full space-y-2">
-						{phrase.translations.map((trans: TranslationRow) => (
-							<div
-								key={trans.id}
-								className="mt-4 flex items-center justify-center gap-2"
-							>
-								<LangBadge lang={trans.lang} />
-								<div className="me-2 text-xl">{trans.text}</div>
-								<Flagged name="text_to_speech">
-									<Button
-										size="icon"
-										variant="secondary"
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
-										onClick={() => playAudio(trans.text)}
-										aria-label="Play translation"
-									>
-										<Play className="size-4" />
-									</Button>
-								</Flagged>
-							</div>
-						))}
-					</div>
-				)}
+
+				<div
+					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
+				>
+					{phrase.translations.map((trans: TranslationRow) => (
+						<div
+							key={trans.id}
+							className="mt-4 flex items-center justify-center gap-2"
+						>
+							<LangBadge lang={trans.lang} />
+							<div className="me-2 text-xl">{trans.text}</div>
+							<Flagged name="text_to_speech">
+								<Button
+									size="icon"
+									variant="secondary"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onClick={() => playAudio(trans.text)}
+									aria-label="Play translation"
+								>
+									<Play className="size-4" />
+								</Button>
+							</Flagged>
+						</div>
+					))}
+				</div>
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
