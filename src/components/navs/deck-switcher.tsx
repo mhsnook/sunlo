@@ -2,8 +2,6 @@ import type { CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ChevronsUpDown, GalleryHorizontalEnd, Home, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import Callout from '@/components/ui/callout'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -40,20 +38,6 @@ const useDeckMenuData = () => {
 		})
 }
 
-function NoDecks() {
-	const { setClosedMobile } = useSidebar()
-	return (
-		<Callout size="sm">
-			<p>It seems like you're not learning any languages yet! Get started.</p>
-			<Button className="mt-2 w-full" asChild>
-				<Link onClick={setClosedMobile} to="/learn/add-deck">
-					Start Learning
-				</Link>
-			</Button>
-		</Callout>
-	)
-}
-
 const sizeStyles: CSSProperties = { height: 48, width: '100%' }
 
 export function DeckSwitcher({ lang }: { lang?: string }) {
@@ -66,8 +50,6 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 			<SidebarMenuItem>
 				{deckMenuData === undefined ?
 					<div style={sizeStyles} />
-				: deckMenuData === null ?
-					<NoDecks />
 				:	<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<SidebarMenuButton
