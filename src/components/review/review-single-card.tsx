@@ -1,13 +1,12 @@
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Play } from 'lucide-react'
+import { MoreVertical, Play } from 'lucide-react'
 
 import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
 import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
-import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
@@ -15,6 +14,13 @@ import { useLanguagePhrase } from '@/hooks/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '../ui/dropdown-menu'
+import { SendPhraseToFriendButton } from '../send-phrase-to-friend-button'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
@@ -41,16 +47,8 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	const showAnswers = prevData && stage === 1 ? true : revealCard
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
-			<CardHeader className="flex flex-row items-center justify-end gap-2">
-				<PermalinkButton
-					to={'/learn/$lang/$id'}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					params={{ lang, id: pid }}
-				/>
-				<SharePhraseButton lang={lang} pid={pid} />
-				<PhraseExtraInfo lang={lang} pid={pid} />
-			</CardHeader>
-			<CardContent className="flex grow flex-col items-center justify-center pt-0">
+			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
+				<ContextMenu lang={lang} pid={pid} />
 				<div className="mb-4 flex items-center justify-center">
 					<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
 					<Flagged name="text_to_speech">
@@ -154,5 +152,35 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 				}
 			</CardFooter>
 		</Card>
+	)
+}
+
+function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
+	const [isOpen, setIsOpen] = useState(false)
+	return (
+		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+			<DropdownMenuTrigger asChild>
+				<Button variant="ghost" size="icon" className="absolute top-4 right-4">
+					<MoreVertical />
+					<span className="sr-only">Open menu</span>
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-56">
+				<DropdownMenuItem>
+					<PermalinkButton
+						to={'/learn/$lang/$id'}
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang, id: pid }}
+						link
+					/>
+				</DropdownMenuItem>
+				<DropdownMenuItem>
+					<SendPhraseToFriendButton lang={lang} pid={pid} link />
+				</DropdownMenuItem>
+				<DropdownMenuItem>
+					<PhraseExtraInfo lang={lang} pid={pid} link />
+				</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	)
 }

@@ -10,10 +10,12 @@ export default function PhraseExtraInfo({
 	pid,
 	lang,
 	className,
+	link,
 }: {
 	pid: uuid
 	lang: string
 	className?: string
+	link?: boolean
 }) {
 	const phrase = useLanguagePhrase(pid, lang)
 	const card = useDeckCard(pid, lang)
@@ -23,6 +25,7 @@ export default function PhraseExtraInfo({
 				title="User card details"
 				description={`“${phrase.data.text}”`}
 				className={className}
+				link={link}
 			>
 				<div className="block space-y-4">
 					<div className="flex flex-col">

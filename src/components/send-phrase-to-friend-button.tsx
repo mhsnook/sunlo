@@ -14,16 +14,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useAuth } from '@/lib/hooks'
-import { SelectMultipleFriends } from '@/routes/_user/friends/-select-multiple-friends'
+import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
 
 export function SendPhraseToFriendButton({
 	pid,
 	lang,
+	link,
 	...props
 }: {
 	pid: uuid
 	lang: string
+	link?: boolean
 } & VariantProps<typeof buttonVariants>) {
 	const { userId } = useAuth()
 	const [open, setOpen] = useState(false)
@@ -55,10 +57,15 @@ export function SendPhraseToFriendButton({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<Button {...props}>
-					<Send /> Send in chat
-				</Button>
+			<DialogTrigger asChild={!link}>
+				{link ?
+					<span className="inline-flex items-center gap-2">
+						<Send /> Send in chat
+					</span>
+				:	<Button {...props}>
+						<Send /> <span className="hidden @md:inline">Send in chat</span>
+					</Button>
+				}
 			</DialogTrigger>
 			<DialogContent>
 				<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>

@@ -19,19 +19,15 @@ import {
 	uuid,
 } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
-
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
 import { useDeckCard } from '@/hooks/use-deck'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 
@@ -39,7 +35,6 @@ interface CardStatusDropdownProps {
 	pid: uuid
 	lang: string
 	className?: string
-	button?: boolean
 }
 
 // TODO check if we can get this from the supabase types?
@@ -165,7 +160,6 @@ export function CardStatusDropdown({
 	pid,
 	lang,
 	className,
-	button = false,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const { data: profile } = useProfile()
@@ -184,35 +178,18 @@ export function CardStatusDropdown({
 	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (
 			<DropdownMenu>
-				<DropdownMenuTrigger
-					className={cn('group flex cursor-pointer', className)}
-				>
-					{button ?
-						<span
-							className={cn(
-								buttonVariants({ variant: 'secondary' }),
-								`group-data-[state=open]:bg-primary m-0 gap-1 group-data-[state=open]:text-white`
-							)}
-						>
-							{cardMutation.isSuccess ?
-								<CheckCircle className="size-4 text-green-500" />
-							:	statusStrings[choice].icon()}{' '}
-							{cardMutation.data ?
-								statusStrings[choice].done
-							:	statusStrings[choice].long}
-						</span>
-					:	<Badge
-							variant="secondary"
-							className={`group-data-[state=open]:bg-primary inset-shadow m-0 gap-1 px-1.5 shadow-sm transition-opacity group-data-[state=open]:text-white hover:opacity-60`}
-						>
-							{cardMutation.isSuccess ?
-								<CheckCircle className="size-4 text-green-500" />
-							:	statusStrings[choice].icon()}{' '}
-							{statusStrings[choice].short}
-							<Separator orientation="vertical" className="ms-1" />
-							<ChevronDown size="12" />
-						</Badge>
-					}
+				<DropdownMenuTrigger className={className} asChild>
+					<Button variant="secondary" size="sm" className="m-0 gap-1 px-1.5">
+						{cardMutation.isSuccess ?
+							<CheckCircle className="size-4 text-green-500" />
+						:	statusStrings[choice].icon()}{' '}
+						{statusStrings[choice].short}
+						<Separator
+							orientation="vertical"
+							className="bg-secondary-foreground/10 ms-1"
+						/>
+						<ChevronDown size="12" />
+					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">
 					{!deckPresent ?

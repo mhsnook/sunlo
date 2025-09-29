@@ -35,7 +35,7 @@ export function SelectMultipleFriends({
 				.map((f) => (
 					<label
 						key={f.profile.uid}
-						className={`${uids.includes(f.profile.uid!) ? 'bg-primary/10 outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
+						className={`${uids.includes(f.profile.uid) ? 'bg-primary/10 outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
 					>
 						<div className="flex flex-row items-center gap-2">
 							{f.profile.avatarUrl ?
@@ -49,9 +49,9 @@ export function SelectMultipleFriends({
 						</div>
 						<Checkbox
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							checked={uids.includes(f.profile.uid!)}
+							checked={uids.includes(f.profile.uid)}
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => handleClick(f.profile.uid!)}
+							onClick={() => handleClick(f.profile.uid)}
 						/>
 					</label>
 				))}
