@@ -13,13 +13,11 @@ export default function SharePhraseButton({
 	text = 'Share phrase',
 	variant = 'ghost',
 	size = 'sm',
-	className = '',
 	...props
 }: OnePhraseComponentProps & {
 	text?: string
 	variant?: string
 	size?: string
-	className?: string
 } & ButtonProps) {
 	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
 
@@ -37,15 +35,9 @@ export default function SharePhraseButton({
 
 	if (isPending || !phrase || !navigator.share) return null
 	return (
-		<Button
-			onClick={sharePhrase}
-			variant={variant}
-			size={size}
-			className={className}
-			{...props}
-		>
+		<Button onClick={sharePhrase} variant={variant} size={size} {...props}>
 			<Share className="h-4 w-4" />
-			{size !== 'icon' && <span className="hidden @sm:block">{text}</span>}
+			{size !== 'icon' && <span className="hidden @md:block">{text}</span>}
 		</Button>
 	)
 }
