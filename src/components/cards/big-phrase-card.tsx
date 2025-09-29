@@ -20,8 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
-import { cn } from '@/lib/utils'
+import { avatarUrlify, cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
+import UserPermalink from '../user-permalink'
+import { ago } from '@/lib/dayjs'
 
 export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 	const { data: phrase, status } = usePhrase(pid, lang)
@@ -40,18 +42,28 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 
 	return (
 		<div>
-			<Card>
+			{phrase.added_by ?
+				<div className="mb-3 flex flex-row gap-1 px-2">
+					Phrase by{' '}
+					<UserPermalink
+						uid={phrase.added_by}
+						username={phrase.added_by_profile.username}
+						avatarUrl={avatarUrlify(phrase.added_by_profile.avatar_path)}
+					/>
+					{' • '}
+					{ago(phrase.created_at)}
+				</div>
+			:	null}
+			<Card className="@container">
 				<CardHeader>
-					<div className="flex items-center justify-between">
-						<div className="flex flex-col items-start gap-2">
-							<div className="flex flex-row items-center gap-2">
-								<LangBadge lang={lang} />
-								<CardStatusDropdown pid={pid} lang={lang} />
-							</div>
-							<CardTitle className="space-x-1 text-2xl">
-								<span>&ldquo;{phrase.text}&rdquo;</span>
-							</CardTitle>
+					<div className="flex flex-col items-start gap-2">
+						<div className="flex w-full flex-row items-start justify-between gap-2">
+							<LangBadge lang={lang} />
+							<CardStatusDropdown pid={pid} lang={lang} />
 						</div>
+						<CardTitle className="space-x-1 text-2xl">
+							<span>&ldquo;{phrase.text}&rdquo;</span>
+						</CardTitle>
 					</div>
 				</CardHeader>
 
