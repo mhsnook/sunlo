@@ -15,19 +15,27 @@ export default function ExtraInfo({
 	description,
 	className,
 	children,
+	link,
 }: {
 	title?: string
 	description?: string
 	children: ReactNode
 	className?: string
+	link?: boolean
 }) {
 	return (
 		<Dialog>
-			<DialogTrigger className={className} asChild>
-				<Button variant="ghost" size="icon">
-					<Ellipsis className="size-4" />
-					<span className="sr-only">Show more</span>
-				</Button>
+			<DialogTrigger className={className} asChild={!link}>
+				{link ?
+					<span className="inline-flex items-center gap-2">
+						<Ellipsis className="size-4" />
+						Show details
+					</span>
+				:	<Button variant="ghost" size="icon">
+						<Ellipsis className="size-4" />
+						<span className="sr-only">Show more</span>
+					</Button>
+				}
 			</DialogTrigger>
 
 			<DialogContent className="w-app max-h-[90vh] overflow-y-auto">

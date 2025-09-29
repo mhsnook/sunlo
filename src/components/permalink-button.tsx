@@ -11,19 +11,30 @@ export default function PermalinkButton({
 	variant = 'ghost',
 	size = 'sm',
 	className,
+	link,
 	...props
-}: { text?: string; className?: string } & LinkProps &
+}: { text?: string; className?: string; link?: boolean } & LinkProps &
 	VariantProps<typeof buttonVariants>) {
 	return !to ? null : (
 			<Link
 				to={to}
 				params={params}
-				className={cn(buttonVariants({ variant, size }), className)}
+				className={cn(link ? '' : buttonVariants({ variant, size }), className)}
 				preload="intent"
 				{...props}
 			>
-				<LinkIcon className="h-4 w-4" />
-				{text !== '' && <span className="hidden @sm:block">{text}</span>}
+				{text === '' ?
+					<LinkIcon className="h-4 w-4" />
+				: link ?
+					<span className="inline-flex items-center gap-2">
+						<LinkIcon className="h-4 w-4" />
+						{text}
+					</span>
+				:	<span className="inline-flex items-center gap-2">
+						<LinkIcon className="h-4 w-4" />
+						<span className="hidden @sm:block">{text}</span>
+					</span>
+				}
 			</Link>
 		)
 }

@@ -20,10 +20,12 @@ import { VariantProps } from 'class-variance-authority'
 export function SendPhraseToFriendButton({
 	pid,
 	lang,
+	link,
 	...props
 }: {
 	pid: uuid
 	lang: string
+	link?: boolean
 } & VariantProps<typeof buttonVariants>) {
 	const { userId } = useAuth()
 	const [open, setOpen] = useState(false)
@@ -55,10 +57,15 @@ export function SendPhraseToFriendButton({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<Button {...props}>
-					<Send /> <span className="hidden @md:inline">Send in chat</span>
-				</Button>
+			<DialogTrigger asChild={!link}>
+				{link ?
+					<span className="inline-flex items-center gap-2">
+						<Send /> Send in chat
+					</span>
+				:	<Button {...props}>
+						<Send /> <span className="hidden @md:inline">Send in chat</span>
+					</Button>
+				}
 			</DialogTrigger>
 			<DialogContent>
 				<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>
