@@ -60,10 +60,18 @@ function ChatPage() {
 	return (
 		<Card className="flex h-full flex-col">
 			<CardHeader className="flex flex-row items-center gap-4 border-b p-4">
-				<Avatar>
-					<AvatarImage src={relAvatarUrl} alt={relUsername} />
-					<AvatarFallback>{relUsername.charAt(0).toUpperCase()}</AvatarFallback>
-				</Avatar>
+				<Link
+					to="/friends/$uid"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid: friendId }}
+				>
+					<Avatar>
+						<AvatarImage src={relAvatarUrl} alt={relUsername} />
+						<AvatarFallback>
+							{relUsername.charAt(0).toUpperCase()}
+						</AvatarFallback>
+					</Avatar>
+				</Link>
 				<div className="flex-1">
 					<p className="font-semibold">{relUsername}</p>
 					<p className="text-muted-foreground text-xs">
