@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useAuth } from '@/lib/hooks'
-import { SelectMultipleFriends } from '@/routes/_user/friends/-select-multiple-friends'
+import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
 
 export function SendPhraseToFriendButton({
