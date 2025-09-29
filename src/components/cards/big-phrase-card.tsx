@@ -151,7 +151,7 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 					</div>
 				</CardContent>
 			</Card>
-			<div className="grid w-full flex-grow grid-cols-3 justify-stretch gap-4 px-2 py-3">
+			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${lang}/${pid}`}
 					variant="outline"

@@ -57,7 +57,7 @@ export function SendPhraseToFriendButton({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button {...props}>
-					<Send /> Send in chat
+					<Send /> <span className="hidden @md:inline">Send in chat</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent>
