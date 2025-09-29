@@ -60,20 +60,30 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 						<Separator />
 						<div>
 							<div className="space-y-3">
+								<div className="flex flex-row items-center justify-between">
+									<div className="flex flex-row items-baseline gap-2">
+										<h3 className="text-lg font-semibold">Translations</h3>
+										{trans.length ? null : (
+											<span className="text-muted-foreground italic">
+												No tags
+											</span>
+										)}
+									</div>
+									<AddTranslationsDialog
+										phrase={phrase}
+										variant="outline"
+										size="sm"
+									/>
+								</div>
 								{trans?.map((translation) => (
 									<div
 										key={translation.id}
-										className="flex flex-row items-center justify-start gap-2 space-y-2 rounded"
+										className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
 									>
 										<LangBadge lang={translation.lang} />
 										<p className="text-md">{translation.text}</p>
 									</div>
 								))}
-								<AddTranslationsDialog
-									phrase={phrase}
-									variant="outline"
-									size="sm"
-								/>
 							</div>
 							{!other.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
@@ -110,7 +120,7 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 
 						<div>
 							<div className="flex items-center justify-between">
-								<div className="inline-flex flex-row flex-wrap items-center gap-2">
+								<div className="inline-flex flex-row flex-wrap items-baseline gap-2">
 									<h3 className="text-lg font-semibold">Tags</h3>
 									{tags.map((tag: { id: string; name: string }) => (
 										<Badge key={tag.id} variant="secondary">
@@ -118,7 +128,9 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 										</Badge>
 									))}
 									{!tags.length && (
-										<p className="text-muted-foreground italic">No tags</p>
+										<span className="text-muted-foreground italic">
+											No tags
+										</span>
 									)}
 								</div>
 								<AddTags phraseId={pid} lang={lang} />
