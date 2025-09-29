@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/hooks'
-import { SelectMultipleFriends } from '@/routes/_user/friends/-select-multiple-friends'
+import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 
 export function SendRequestToFriendDialog({
 	lang,
