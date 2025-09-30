@@ -28,3 +28,51 @@ export const PhraseSearchSchema = z.object({
 })
 
 export type PhraseSearchType = z.infer<typeof PhraseSearchSchema>
+
+export const PublicProfileSchema = z.object({
+	uid: z.string().uuid(),
+	username: z.string().default(''),
+	avatar_path: z.string().default(''),
+})
+
+export const PhraseTagSchema = z.object({
+	id: z.string().uuid(),
+	name: z.string(),
+})
+
+export const TranslationSchema = z.object({
+	id: z.string().uuid(),
+	text: z.string(),
+	lang: z.string().length(3),
+	phrase_id: z.string().uuid(),
+	added_by: z.string().uuid(),
+	created_at: z.string().datetime(),
+})
+
+export const PhraseFullSchema = z.object({
+	id: z.string().uuid(),
+	text: z.string(),
+	lang: z.string().length(3),
+	added_by: z.string().uuid(),
+	added_by_profile: PublicProfileSchema.optional(),
+	avg_difficulty: z.number().nullable().default(null),
+	avg_stability: z.number().nullable().default(null),
+	count_active: z.number().nullable().default(null),
+	count_cards: z.number().nullable().default(null),
+	count_learned: z.number().nullable().default(null),
+	count_skipped: z.number().nullable().default(null),
+	created_at: z.string().datetime(),
+	percent_active: z.number().nullable().default(null),
+	percent_learned: z.number().nullable().default(null),
+	percent_skipped: z.number().nullable().default(null),
+	rank_least_difficult: z.number().nullable().default(null),
+	rank_least_skipped: z.number().nullable().default(null),
+	rank_most_learned: z.number().nullable().default(null),
+	rank_most_stable: z.number().nullable().default(null),
+	rank_newest: z.number().nullable().default(null),
+	request_id: z.string().uuid().nullable().default(null),
+	tags: z.array(PhraseTagSchema).default([]),
+	translations: z.array(TranslationSchema).default([]),
+})
+
+export type PhraseFullType = z.infer<typeof PhraseFullSchema>

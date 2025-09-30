@@ -1,21 +1,25 @@
-import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import type {
-	LanguageFetched,
-	LanguageLoaded,
-	PhrasesMap,
-	pids,
-	uuid,
-} from '@/types/main'
+import {
+	queryOptions,
+	useQuery,
+	useQueryClient,
+	useSuspenseQuery,
+	type QueryClient,
+} from '@tanstack/react-query'
+import type { LanguageLoaded, pids, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { useCallback } from 'react'
-import { mapArray } from '@/lib/utils'
 
-export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
+import { PhraseFullSchema, PhraseFullType } from '@/lib/schemas'
+
+const phraseQuery =
+	`*, translations:phrase_translation(*), phrase_request(*)` as const
+
+export async function fetchLanguage(
+	lang: string,
+	queryClient: QueryClient
+): Promise<LanguageLoaded> {
 	const { data } = await supabase
 		.from('language_plus')
-		.select(
-			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*))`
-		)
+		.select(`*, phrases:meta_phrase_info(${phraseQuery})`)
 		.eq('lang', lang)
 		.maybeSingle()
 		.throwOnError()
@@ -23,73 +27,92 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 		throw Error(
 			`This language was not found in the database. Please double check the language code in your URL or report a bug to an admin. (The language code provided: ${lang}. This should be a 3-character string like "eng" or "hin".) ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
 		)
-	const { phrases: phrasesArray, ...meta }: LanguageFetched = data
-	const pids: pids = phrasesArray?.map((p) => p.id!)
-	const phrasesMap: PhrasesMap = mapArray(phrasesArray, 'id')
+	const { phrases, ...meta } = data
+	// Normalize the cache: store each phrase individually.
+	phrases?.forEach((phrase) => {
+		if (phrase.id) {
+			queryClient.setQueryData(
+				['phrase', phrase.id],
+				PhraseFullSchema.parse(phrase)
+			)
+		}
+	})
+
+	const pids: pids = phrases?.map((p) => p.id!) ?? []
 	return {
 		meta,
 		pids,
-		phrasesMap,
 	}
 }
 
-export const languageQueryOptions = (lang: string) =>
+export async function fetchPhrase(pid: uuid) {
+	const { data } = await supabase
+		.from('meta_phrase_info')
+		.select(phraseQuery)
+		.eq('id', pid)
+		.maybeSingle()
+		.throwOnError()
+	if (!data) return null
+	return PhraseFullSchema.parse(data)
+}
+
+export const languageQueryOptions = (lang: string, queryClient: QueryClient) =>
 	queryOptions({
 		queryKey: ['language', lang],
-		queryFn: async ({ queryKey }) => fetchLanguage(queryKey[1]),
+		queryFn: async (): Promise<LanguageLoaded> =>
+			fetchLanguage(lang, queryClient),
 		enabled: lang.length === 3,
+		staleTime: 1000 * 60 * 5, // 5 minutes
 	})
 
-export const useLanguage = (lang: string) =>
-	useQuery({ ...languageQueryOptions(lang) })
+export const phraseQueryOptions = (pid: uuid) =>
+	queryOptions({
+		queryKey: ['phrase', pid],
+		queryFn: async (): Promise<PhraseFullType | null> => await fetchPhrase(pid),
+		staleTime: 1000 * 60 * 60, // 1 hour
+	})
+
+export const useLanguage = (lang: string) => {
+	const queryClient = useQueryClient()
+	useQuery({ ...languageQueryOptions(lang, queryClient) })
+}
 
 const selectMeta = (data: LanguageLoaded) => data.meta
-export const useLanguageMeta = (lang: string) =>
-	useQuery({
-		...languageQueryOptions(lang),
-		select: selectMeta,
-	})
 
-const selectPids = (data: LanguageLoaded) => data.pids
-export const useLanguagePids = (lang: string) =>
-	useQuery({
-		...languageQueryOptions(lang),
-		select: selectPids,
-	})
+export const useLanguageMeta = (lang: string) => {
+	const queryClient = useQueryClient()
 
-const selectPhrasesMap = (data: LanguageLoaded) => data.phrasesMap
-export const useLanguagePhrasesMap = (lang: string) =>
-	useQuery({
-		...languageQueryOptions(lang),
-		select: selectPhrasesMap,
-	})
-
-export const useLanguagePhrase = (pid: uuid | null, lang: string | null) => {
-	const selectPhrase = useCallback(
-		(data: LanguageLoaded) => data.phrasesMap[pid!],
-		[pid]
-	)
 	return useQuery({
-		...languageQueryOptions(lang!),
-		select: selectPhrase,
-		enabled: !!pid && !!lang,
+		...languageQueryOptions(lang, queryClient),
+		select: selectMeta,
 	})
 }
 
-export const useLanguagePhraseSuspense = (pid: uuid, lang: string) => {
-	const selectPhrase = useCallback(
-		(data: LanguageLoaded) => data.phrasesMap[pid],
-		[pid]
-	)
-	return useSuspenseQuery({
-		...languageQueryOptions(lang),
-		select: selectPhrase,
+const selectPids = (data: LanguageLoaded) => data.pids
+
+export const useLanguagePids = (lang: string) => {
+	const queryClient = useQueryClient()
+	return useQuery({
+		...languageQueryOptions(lang, queryClient),
+		select: selectPids,
 	})
 }
 
 const selectTags = (data: LanguageLoaded) => data.meta.tags
-export const useLanguageTags = (lang: string) =>
-	useQuery({
-		...languageQueryOptions(lang),
+
+export const useLanguageTags = (lang: string) => {
+	const queryClient = useQueryClient()
+	return useQuery({
+		...languageQueryOptions(lang, queryClient),
 		select: selectTags,
 	})
+}
+
+export const usePhraseOnly = (pid: uuid | null) =>
+	useQuery({
+		...phraseQueryOptions(pid!),
+		enabled: !!pid,
+	})
+
+export const usePhraseSuspense = (pid: uuid) =>
+	useSuspenseQuery({ ...phraseQueryOptions(pid) })

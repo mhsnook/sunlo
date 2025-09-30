@@ -4,7 +4,7 @@ import type { OnePhraseComponentProps } from '@/types/main'
 import { Share } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/hooks/use-language'
+import { usePhrase } from '@/hooks/use-language'
 import languages from '@/lib/languages'
 
 export default function SharePhraseButton({
@@ -21,7 +21,7 @@ export default function SharePhraseButton({
 	size?: string
 	className?: string
 } & ButtonProps) {
-	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
+	const { data: phrase, isPending } = usePhrase(pid)
 
 	const sharePhrase = useCallback(() => {
 		navigator

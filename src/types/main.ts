@@ -118,7 +118,6 @@ export type PhrasesMap = {
 export type LanguageLoaded = {
 	meta: LanguageMeta
 	pids: pids
-	phrasesMap: PhrasesMap
 }
 
 export type PhraseRow = Tables<'phrase'> & { created_at: string }
@@ -127,7 +126,6 @@ export type PhraseCardInsert =
 	Database['public']['Functions']['add_phrase_translation_card']['Args']
 export type CardStatusEnum = Database['public']['Enums']['card_status']
 
-export type Translation = Tables<'phrase_translation'>
 export type TranslationRow = Tables<'phrase_translation'>
 export type TranslationStub = Pick<
 	Tables<'phrase_translation'>,
