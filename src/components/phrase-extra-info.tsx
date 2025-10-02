@@ -1,6 +1,6 @@
 import { CardFull, uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
-import { useLanguagePhrase } from '@/hooks/use-language'
+import { usePhrase } from '@/hooks/use-language'
 import { useDeckCard } from '@/hooks/use-deck'
 import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
@@ -15,7 +15,7 @@ export default function PhraseExtraInfo({
 	lang: string
 	className?: string
 }) {
-	const phrase = useLanguagePhrase(pid, lang)
+	const phrase = usePhrase(pid)
 	const card = useDeckCard(pid, lang)
 
 	return !phrase.data ? null : (

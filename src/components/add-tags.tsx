@@ -19,7 +19,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
+import { usePhrase, useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
@@ -33,7 +33,7 @@ type AddTagsFormValues = z.infer<typeof addTagsSchema>
 export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 	const [open, setOpen] = useState(false)
 	const { data: allLangTagsData } = useLanguageTags(lang)
-	const { data: phrase } = useLanguagePhrase(phraseId, lang)
+	const { data: phrase } = usePhrase(phraseId)
 	const queryClient = useQueryClient()
 	const {
 		control,

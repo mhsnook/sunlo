@@ -122,6 +122,14 @@ export function arrayDifference(
 	return arr1.filter((item) => !set2.has(item))
 }
 
+export function arrayOverlap(
+	arr1: Array<uuid>,
+	arr2: Array<uuid>
+): Array<uuid> {
+	const set2 = new Set(arr2)
+	return arr1.filter((item) => set2.has(item))
+}
+
 export function avatarUrlify(path: string | null): string {
 	return !path ? '' : (
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl

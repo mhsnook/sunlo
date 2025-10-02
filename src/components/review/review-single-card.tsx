@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Play } from 'lucide-react'
 
-import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
+import { OnePhraseComponentProps } from '@/types/main'
 import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
@@ -11,7 +11,7 @@ import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/hooks/use-language'
+import { usePhrase } from '@/hooks/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
@@ -34,7 +34,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 		closeCard
 	)
 
-	const { data: phrase } = useLanguagePhrase(pid, lang)
+	const { data: phrase } = usePhrase(pid, lang)
 
 	if (!phrase) return null
 
@@ -70,7 +70,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 				<div
 					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
-					{phrase.translations.map((trans: TranslationRow) => (
+					{phrase.translations.map((trans) => (
 						<div
 							key={trans.id}
 							className="mt-4 flex items-center justify-center gap-2"

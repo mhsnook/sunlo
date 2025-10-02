@@ -1,22 +1,12 @@
-import {
-	PhraseFull,
-	PhraseStub,
-	TranslationRow,
-	TranslationStub,
-} from '@/types/main'
-import { useLanguagePhrase } from '@/hooks/use-language'
+import { PhraseStub, TranslationRow, TranslationStub } from '@/types/main'
+import { usePhraseOnly } from '@/hooks/use-language'
 import { useProfile } from '@/hooks/use-profile'
 import type { CompositeQueryResults, PhraseFiltered, uuid } from '@/types/main'
+import { PhraseFullType } from '@/lib/schemas'
 
-export const usePhrase = (
-	pid: uuid,
-	lang: string
-): CompositeQueryResults<PhraseFiltered> => {
+export const usePhrase = (pid: uuid): CompositeQueryResults<PhraseFiltered> => {
 	const { data: profile, isPending: isProfilePending } = useProfile()
-	const { data: phrase, isPending: isPhrasePending } = useLanguagePhrase(
-		pid,
-		lang
-	)
+	const { data: phrase, isPending: isPhrasePending } = usePhraseOnly(pid)
 
 	if (isPhrasePending) return { data: null, status: 'pending' }
 	if (!phrase) return { data: null, status: 'not-found' }
@@ -55,9 +45,9 @@ function splitTranslations(
 	}
 }
 export function splitPhraseTranslations(
-	phrase: PhraseFull | PhraseStub,
+	phrase: PhraseFullType | PhraseStub,
 	languagesToShow: Array<string>
-): (PhraseFull | PhraseStub) & {
+): (PhraseFullType | PhraseStub) & {
 	translations_mine: Array<TranslationRow | TranslationStub>
 	translations_other: Array<TranslationRow | TranslationStub>
 } {
