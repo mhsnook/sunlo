@@ -9,7 +9,8 @@ import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
 import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
-import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
+import { FriendshipRow } from '@/routes/_user/friends/-types'
+import { PhraseFullType } from '@/lib/schemas'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -97,7 +98,7 @@ export type SBMutation<T> = Promise<PostgrestResponse<T>>
 export type LanguageRow = Omit<Tables<'language'>, 'alias_of'>
 export type LanguageMeta = Tables<'language_plus'>
 export type LanguageFetched = LanguageMeta & {
-	phrases: Array<PhraseFull>
+	phrases: Array<PhraseFullType>
 }
 
 export type PhraseStub = NonNullableFields<{
@@ -118,6 +119,7 @@ export type PhrasesMap = {
 export type LanguageLoaded = {
 	meta: LanguageMeta
 	pids: pids
+	phrases: PhraseFullType[]
 }
 
 export type PhraseRow = Tables<'phrase'> & { created_at: string }
@@ -134,18 +136,14 @@ export type TranslationStub = Pick<
 export type TranslationInsert = TablesInsert<'phrase_translation'>
 
 export type PhraseMeta = Tables<'meta_phrase_info'>
-export type PhraseFull = PhraseMeta & {
-	translations: Array<TranslationRow>
-	added_by_profile: PublicProfile
-	tags?: Array<Tag>
-}
-export type PhraseFiltered = PhraseFull & {
+
+export type PhraseFiltered = PhraseFullType & {
 	translations_mine?: Array<TranslationRow>
 	translations_other?: Array<TranslationRow>
 }
+
 export type PhraseFullInsert = PhraseInsert & {
 	translations: Array<TranslationInsert>
-	relation_pids?: pids
 }
 
 export type DeckRow = Tables<'user_deck'>

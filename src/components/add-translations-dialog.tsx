@@ -1,4 +1,3 @@
-import { PhraseFull } from '@/types/main'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -21,6 +20,7 @@ import { ButtonProps } from '@/components/ui/button-variants'
 import { useRef } from 'react'
 import TranslationLanguageField from './fields/translation-language-field'
 import TranslationTextField from './fields/translation-text-field'
+import { PhraseFullType } from '@/lib/schemas'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -32,7 +32,7 @@ export function AddTranslationsDialog({
 	phrase,
 	...props
 }: ButtonProps & {
-	phrase: PhraseFull
+	phrase: PhraseFullType
 }) {
 	const {
 		handleSubmit,

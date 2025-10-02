@@ -10,7 +10,7 @@ import supabase from '@/lib/supabase-client'
 
 import { PhraseFullSchema, PhraseFullType } from '@/lib/schemas'
 
-const phraseQuery =
+export const phraseQuery =
 	`*, translations:phrase_translation(*), phrase_request(*)` as const
 
 export async function fetchLanguage(
@@ -29,12 +29,10 @@ export async function fetchLanguage(
 		)
 	const { phrases, ...meta } = data
 	// Normalize the cache: store each phrase individually.
-	phrases?.forEach((phrase) => {
+	const phrasesResult = phrases.map((p) => PhraseFullSchema.parse(p))
+	phrasesResult?.forEach((phrase) => {
 		if (phrase.id) {
-			queryClient.setQueryData(
-				['phrase', phrase.id],
-				PhraseFullSchema.parse(phrase)
-			)
+			queryClient.setQueryData(['phrase', phrase.id], phrase)
 		}
 	})
 
@@ -42,6 +40,7 @@ export async function fetchLanguage(
 	return {
 		meta,
 		pids,
+		phrases: phrasesResult,
 	}
 }
 
@@ -85,6 +84,17 @@ export const useLanguageMeta = (lang: string) => {
 	return useQuery({
 		...languageQueryOptions(lang, queryClient),
 		select: selectMeta,
+	})
+}
+
+const selectArray = (data: LanguageLoaded) => data.phrases
+
+export const useLanguagePhrasesArray = (lang: string) => {
+	const queryClient = useQueryClient()
+
+	return useQuery({
+		...languageQueryOptions(lang, queryClient),
+		select: selectArray,
 	})
 }
 

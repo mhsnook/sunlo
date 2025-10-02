@@ -35,6 +35,8 @@ export const PublicProfileSchema = z.object({
 	avatar_path: z.string().default(''),
 })
 
+export type PublicProfileType = z.infer<typeof PublicProfileSchema>
+
 export const PhraseTagSchema = z.object({
 	id: z.string().uuid(),
 	name: z.string(),
@@ -45,15 +47,17 @@ export const TranslationSchema = z.object({
 	text: z.string(),
 	lang: z.string().length(3),
 	phrase_id: z.string().uuid(),
-	added_by: z.string().uuid(),
+	added_by: z.string().uuid().nullable(),
 	created_at: z.string().datetime(),
 })
+
+export type TranslationType = z.infer<typeof TranslationSchema>
 
 export const PhraseFullSchema = z.object({
 	id: z.string().uuid(),
 	text: z.string(),
 	lang: z.string().length(3),
-	added_by: z.string().uuid(),
+	added_by: z.string().uuid().nullable(),
 	added_by_profile: PublicProfileSchema.optional(),
 	avg_difficulty: z.number().nullable().default(null),
 	avg_stability: z.number().nullable().default(null),

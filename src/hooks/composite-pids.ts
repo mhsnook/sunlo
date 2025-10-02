@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useDeckPids } from '@/hooks/use-deck'
-import { useLanguagePids, useLanguagePhrasesMap } from '@/hooks/use-language'
-import { arrayDifference } from '@/lib/utils'
+import { useLanguagePhrasesArray, useLanguagePids } from '@/hooks/use-language'
+import { arrayDifference, arrayOverlap } from '@/lib/utils'
 import { useProfile } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
@@ -12,23 +12,17 @@ import { splitPhraseTranslations } from '@/hooks/composite-phrase'
  */
 export function useCompositePids(lang: string) {
 	const { data: profile } = useProfile()
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
+	const { data: phrases } = useLanguagePhrasesArray(lang)
 	const { data: languagePids } = useLanguagePids(lang)
 	const { data: deckPids } = useDeckPids(lang)
 
 	return useMemo(() => {
-		if (
-			!profile?.languagesToShow ||
-			!phrasesMap ||
-			!languagePids ||
-			!deckPids
-		) {
+		if (!profile?.languagesToShow || !phrases || !languagePids || !deckPids) {
 			return null
 		}
 
 		// First, filter phrases to only those with translations the user can see.
-		const language_filtered = Object.values(phrasesMap)
-			.filter(Boolean) // Ensure phrase exists
+		const language_filtered = phrases
 			.map((p) => splitPhraseTranslations(p, profile.languagesToShow))
 			.filter((p) => p.translations_mine.length > 0)
 			.map((p) => p.id!)
@@ -41,23 +35,29 @@ export function useCompositePids(lang: string) {
 		])
 
 		// Sort them in various ways
-		const easiest = language_selectables.toSorted(
-			(pid1, pid2) =>
-				(phrasesMap[pid1]?.avg_difficulty ?? 99) -
-				(phrasesMap[pid2]?.avg_difficulty ?? 99)
+		const easiest = arrayOverlap(
+			phrases
+				.toSorted(
+					(p1, p2) => (p1.avg_difficulty ?? 99) - (p2.avg_difficulty ?? 99)
+				)
+				.map((p) => p.id!),
+			language_selectables
 		)
-		const popular = language_selectables.toSorted(
-			(pid1, pid2) =>
-				(phrasesMap[pid2]?.count_cards ?? 0) -
-				(phrasesMap[pid1]?.count_cards ?? 0)
+
+		const popular = arrayOverlap(
+			phrases
+				.toSorted((p1, p2) => (p2.count_cards ?? 0) - (p1.count_cards ?? 0))
+				.map((p) => p.id!),
+			language_selectables
 		)
-		const newest = language_selectables.toSorted((pid1, pid2) =>
-			(
-				(phrasesMap[pid2]?.created_at ?? '') >
-				(phrasesMap[pid1]?.created_at ?? '')
-			) ?
-				1
-			:	-1
+
+		const newest = arrayOverlap(
+			phrases
+				.toSorted((p1, p2) =>
+					(p2.created_at ?? '') > (p1.created_at ?? '') ? 1 : -1
+				)
+				.map((p) => p.id),
+			language_selectables
 		)
 
 		// Pick the top 8, ensuring no overlaps
@@ -79,5 +79,5 @@ export function useCompositePids(lang: string) {
 				language_filtered,
 			]),
 		}
-	}, [languagePids, deckPids, phrasesMap, profile?.languagesToShow])
+	}, [languagePids, deckPids, phrases, profile?.languagesToShow])
 }

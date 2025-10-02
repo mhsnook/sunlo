@@ -1,9 +1,4 @@
-import type {
-	LanguageLoaded,
-	PhraseFull,
-	PublicProfile,
-	Tag,
-} from '@/types/main'
+import type { LanguageLoaded, Tag } from '@/types/main'
 
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
@@ -61,6 +56,7 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from '@/components/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
+import { PhraseFullType, PublicProfileType } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -124,7 +120,7 @@ function FulfillRequestPage() {
 				translation_lang: variables.translation_lang,
 			})
 			const { phrase, translation } = data
-			const newPhrase: PhraseFull = {
+			const newPhrase: PhraseFullType = {
 				id: phrase.id,
 				text: phrase.text,
 				lang: phrase.lang,
@@ -150,7 +146,7 @@ function FulfillRequestPage() {
 					username: profile!.username,
 					avatar_path: profile!.avatar_path,
 					avatarUrl: avatarUrlify(profile!.avatar_path),
-				} as PublicProfile,
+				} as PublicProfileType,
 				translations: [translation],
 				tags: [] as Tag[],
 			}
@@ -159,7 +155,7 @@ function FulfillRequestPage() {
 				...request,
 				phrases: (!Array.isArray(request?.phrases) ?
 					[newPhrase]
-				:	[newPhrase, ...request.phrases]) as PhraseFull[],
+				:	[newPhrase, ...request.phrases]) as PhraseFullType[],
 				status: 'fulfilled',
 			}
 
@@ -176,11 +172,8 @@ function FulfillRequestPage() {
 
 					return {
 						...prevData,
-						pids: [...prevData.pids, phrase.id],
-						phrasesMap: {
-							...prevData.phrasesMap,
-							[phrase.id]: newPhrase,
-						},
+						pids: [phrase.id, ...prevData.pids],
+						phrases: [newPhrase, ...prevData.phrases],
 					}
 				}
 			)
@@ -233,7 +226,7 @@ function FulfillRequestPage() {
 								{request.phrases.length} answer
 								{request.phrases.length > 1 && 's'} so far
 							</h3>
-							{request.phrases.map((phrase: PhraseFull) => (
+							{request.phrases.map((phrase: PhraseFullType) => (
 								<div key={phrase.id} className="rounded-lg p-4 shadow">
 									<p className="text-muted-foreground mb-2 text-sm">
 										<UserPermalink
