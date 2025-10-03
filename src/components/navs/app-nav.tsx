@@ -27,7 +27,7 @@ type AppNavMatch = RouteMatch<
 }
 
 export function AppNav() {
-	const matches = useMatches() as AppNavMatch[]
+	const matches: AppNavMatch[] = useMatches()
 	if (matches.some((match) => match.status === 'pending')) return null
 	return <Nav matches={matches} />
 }
