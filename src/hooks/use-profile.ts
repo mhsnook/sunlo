@@ -28,18 +28,25 @@ export const profileQuery = (userId: uuid | null) =>
 				.throwOnError()
 			if (data === null) return null
 			const { decks_array, ...profile } = data
-			const decksWithTheme = decks_array.map((d, i) => {
-				const theme = themes[i % themes.length]
-				return {
-					...d,
-					theme,
-					themeCss: {
-						'--hue': theme?.hue,
-						'--hue-off': theme?.hueOff,
-						'--hue-accent': theme?.hueAccent,
-					} as CSSProperties,
-				}
-			})
+			const decksWithTheme = decks_array
+				.map((d, i) => {
+					const theme = themes[i % themes.length]
+					return {
+						...d,
+						theme,
+						themeCss: {
+							'--hue': theme?.hue,
+							'--hue-off': theme?.hueOff,
+							'--hue-accent': theme?.hueAccent,
+						} as CSSProperties,
+					}
+				})
+				.toSorted((a, b) =>
+					a.created_at! > b.created_at! ? -1
+					: a.created_at! < b.created_at! ? 1
+					: a.lang! > b.lang! ? -1
+					: 1
+				)
 			const decksSorted = decksWithTheme.toSorted((a, b) =>
 				(
 					(a.most_recent_review_at || a.created_at) ===
