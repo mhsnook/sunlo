@@ -45,7 +45,10 @@ const ChartContainer = React.forwardRef<
 	const chartId = `chart-${id || uniqueId.replace(/:/g, '')}`
 
 	return (
-		<ChartContext.Provider value={{ config }}>
+		<ChartContext.Provider
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			value={{ config }}
+		>
 			<div
 				data-chart={chartId}
 				ref={ref}
@@ -76,6 +79,7 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
 
 	return (
 		<style
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			dangerouslySetInnerHTML={{
 				__html: Object.entries(THEMES)
 					.map(
@@ -214,6 +218,7 @@ const ChartTooltipContent = React.forwardRef<
 														}
 													)}
 													style={
+														// oxlint-disable-next-line jsx-no-new-object-as-prop
 														{
 															'--color-bg': indicatorColor,
 															'--color-border': indicatorColor,
@@ -296,6 +301,7 @@ const ChartLegendContent = React.forwardRef<
 								<itemConfig.icon />
 							:	<div
 									className="h-2 w-2 shrink-0 rounded-[2px]"
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									style={{
 										backgroundColor: item.color,
 									}}

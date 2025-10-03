@@ -18,6 +18,7 @@ export const PhraseTinyCard = ({ pid, lang }: OnePhraseComponentProps) => {
 		<Link
 			className="s-link hover:bg-primary/10 m-1 block justify-start rounded-2xl p-3 no-underline decoration-2 shadow-sm transition-all hover:underline"
 			to="/learn/$lang/$id"
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang, id: pid }}
 		>
 			<p className="font-semibold">{phrase.text}</p>{' '}

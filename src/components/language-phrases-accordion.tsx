@@ -69,6 +69,7 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 					<div className="my-4 flex flex-row items-center gap-2">
 						<PermalinkButton
 							to="/learn/$lang/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang, id: pid }}
 							variant="outline-accent"
 							text="View details"

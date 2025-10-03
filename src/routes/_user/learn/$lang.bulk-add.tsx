@@ -126,7 +126,6 @@ function BulkAddPhrasesPage() {
 			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
 			setSuccessfullyAddedPhrases((prev) => [...newlyAddedPhrases, ...prev])
 			// Reset the form for the next batch
-			// eslint-disable-next-line @typescript-eslint/no-use-before-define
 			reset({
 				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
 			})
@@ -194,7 +193,6 @@ function BulkAddPhrasesPage() {
 						<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
 						<div className="space-y-2">
 							{successfullyAddedPhrases.map((phrase) => (
-								// eslint-disable-next-line @typescript-eslint/no-use-before-define
 								<CardResultSimple key={phrase.id} phrase={phrase} />
 							))}
 						</div>

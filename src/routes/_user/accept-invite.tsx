@@ -21,7 +21,7 @@ import { ArrowRightLeft } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
-import { PublicProfile } from '@/types/main'
+import { PublicProfile } from './friends/-types'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
