@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react'
 import { PublicProfile } from '@/routes/_user/friends/-types'
-import { Link, ReactNode } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { User } from 'lucide-react'
 
 type AvatarIconRowProps = PublicProfile & {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +9,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Ellipsis } from 'lucide-react'
-import { ReactNode } from '@tanstack/react-router'
 
 export default function ExtraInfo({
 	title,
