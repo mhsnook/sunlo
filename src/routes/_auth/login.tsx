@@ -101,7 +101,12 @@ export default function LoginForm() {
 						/>
 					</fieldset>
 					<div className="flex flex-row justify-between">
-						<Button type="submit" disabled={isSubmitting} tabIndex={3}>
+						<Button
+							type="submit"
+							disabled={isSubmitting}
+							// oxlint-disable-next-line tabindex-no-positive
+							tabIndex={3}
+						>
 							Log in
 						</Button>
 

@@ -19,6 +19,7 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 			<Link
 				className={buttonVariants({ size: 'lg' })}
 				to="/learn/$lang/add-phrase"
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				params={{ lang }}
 			>
 				<MessageSquarePlus size="48" className="h-12 w-12 grow" />
@@ -42,6 +43,7 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 				<li>
 					<Link
 						to="/learn/$lang/add-phrase"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang }}
 						className="s-link"
 					>
@@ -51,6 +53,7 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 				<li>
 					<Link
 						to="/learn/$lang/library"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang }}
 						search={constFilter}
 						className="s-link"

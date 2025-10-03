@@ -48,9 +48,13 @@ export function ActivityChart({ data }: ActivityChartProps) {
 				/>
 				<ChartTooltip
 					cursor={false}
+					// oxlint-disable-next-line jsx-no-jsx-as-prop
 					content={<ChartTooltipContent indicator="dot" />}
 				/>
-				<ChartLegend content={<ChartLegendContent />} />
+				<ChartLegend
+					// oxlint-disable-next-line jsx-no-jsx-as-prop
+					content={<ChartLegendContent />}
+				/>
 				<Area
 					dataKey="total"
 					type="step"

@@ -21,7 +21,7 @@ import { ArrowRightLeft } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
 import toast from 'react-hot-toast'
 import { z } from 'zod'
-import { PublicProfile } from '@/types/main'
+import { PublicProfile } from './friends/-types'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -168,7 +168,7 @@ const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
 						to="/friends/$uid"
 						from={Route.fullPath}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ uid: friend.uid! }}
+						params={{ uid: friend.uid }}
 						className={buttonVariants({ variant: 'default' })}
 					>
 						Check out their profile

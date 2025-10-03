@@ -6,13 +6,13 @@ import type {
 	DecksMap,
 	LanguageKnown,
 	ProfileFull,
-	PublicProfile,
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { avatarUrlify, mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { themes } from '@/lib/deck-themes'
+import { PublicProfile } from '@/routes/_user/friends/-types'
 
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
@@ -28,32 +28,45 @@ export const profileQuery = (userId: uuid | null) =>
 				.throwOnError()
 			if (data === null) return null
 			const { decks_array, ...profile } = data
+			const decksWithTheme = decks_array
+				.map((d, i) => {
+					const theme = themes[i % themes.length]
+					return {
+						...d,
+						theme,
+						themeCss: {
+							'--hue': theme?.hue,
+							'--hue-off': theme?.hueOff,
+							'--hue-accent': theme?.hueAccent,
+						} as CSSProperties,
+					}
+				})
+				.toSorted((a, b) =>
+					a.created_at! > b.created_at! ? -1
+					: a.created_at! < b.created_at! ? 1
+					: a.lang! > b.lang! ? -1
+					: 1
+				)
+			const decksSorted = decksWithTheme.toSorted((a, b) =>
+				(
+					(a.most_recent_review_at || a.created_at) ===
+					(b.most_recent_review_at || b.created_at)
+				) ?
+					0
+				: (
+					(a.most_recent_review_at || a.created_at!) >
+					(b.most_recent_review_at || b.created_at!)
+				) ?
+					-1
+				:	1
+			)
+
 			const decksMap: Omit<DecksMap, 'cardsScheduledForToday'> = mapArray<
 				Omit<DeckMeta, 'cardsScheduledForToday'>,
 				'lang'
-			>(
-				decks_array
-					.sort((a, b) =>
-						a.created_at === b.created_at ? 0
-						: a.created_at! > b.created_at! ? 1
-						: -1
-					)
-					.map((d, i) => {
-						const theme = themes[i % themes.length]
-						return {
-							...d,
-							theme,
-							themeCss: {
-								'--hue': theme?.hue,
-								'--hue-off': theme?.hueOff,
-								'--hue-accent': theme?.hueAccent,
-							} as CSSProperties,
-						}
-					}),
-				'lang'
-			)
+			>(decksSorted, 'lang')
 
-			const deckLanguages: Array<string> = decks_array
+			const deckLanguages: Array<string> = decksSorted
 				.map((d) => d.lang)
 				.filter((d) => typeof d === 'string')
 			const languages_known = (profile.languages_known ?? []) as LanguageKnown[]

@@ -1,4 +1,4 @@
-import { ComponentType, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { ChevronLeft, MoreVertical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {

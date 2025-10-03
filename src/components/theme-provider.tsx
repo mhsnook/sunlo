@@ -1,4 +1,4 @@
-import { ReactNode } from '@tanstack/react-router'
+import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
 type Theme = 'dark' | 'light' | 'system'

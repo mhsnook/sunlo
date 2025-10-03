@@ -1,7 +1,8 @@
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { PhraseRow, PublicProfile, TranslationRow, uuid } from '@/types/main'
+import { PhraseRow, TranslationRow, uuid } from '@/types/main'
+import { PublicProfile } from '@/routes/_user/friends/-types'
 
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 	queryOptions({
@@ -10,7 +11,7 @@ export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 			const { data } = await supabase
 				.from('meta_phrase_request')
 				.select()
-				.eq('requester_uid', userId!)
+				.eq('requester_uid', userId)
 				.eq('lang', lang)
 				.order('created_at', { ascending: false })
 				.throwOnError()

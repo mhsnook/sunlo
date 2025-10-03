@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import { flags } from '@/lib/flags'
 import { cn } from '@/lib/utils'
-import { ReactNode } from '@tanstack/react-router'
 
 export default function Flagged({
 	name,

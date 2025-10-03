@@ -20,6 +20,7 @@ export default function UserPermalink({
 	return (
 		<Link
 			to="/friends/$uid"
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ uid }}
 			className={cn(
 				round ?

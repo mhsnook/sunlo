@@ -11,6 +11,7 @@ type RouterContext = {
 export default function Routes({ router }: Register) {
 	const auth = useAuth()
 	const queryClient = useQueryClient()
+	// oxlint-disable-next-line jsx-no-new-object-as-prop
 	const context: RouterContext = { auth, queryClient }
 	return <RouterProvider router={router} context={context} />
 }
