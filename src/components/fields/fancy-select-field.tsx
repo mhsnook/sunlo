@@ -1,4 +1,4 @@
-import { Fragment, type ElementType } from 'react'
+import { useCallback, Fragment, type ElementType } from 'react'
 import { FieldValues, Path, useController } from 'react-hook-form'
 import type { ControlledFieldProps } from './types'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
@@ -29,9 +29,12 @@ export function FancySelectField<T extends FieldValues>({
 	} = useController({ name, control })
 
 	const isNumeric = typeof options[0]?.value === 'number'
-	const handleChange = (newValue: string) => {
-		onChange(isNumeric ? parseInt(newValue, 10) : newValue)
-	}
+	const handleChange = useCallback(
+		(newValue: string) => {
+			onChange(isNumeric ? parseInt(newValue, 10) : newValue)
+		},
+		[onChange, isNumeric]
+	)
 
 	return (
 		<div>
