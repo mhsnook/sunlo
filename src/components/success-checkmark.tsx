@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils'
-import { ReactNode } from '@tanstack/react-router'
 
-const SuccessCheckmark = ({ className = '' }): ReactNode => (
+const SuccessCheckmark = ({ className = '' }) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		className={cn('bg-background text-primary size-16 rounded-full', className)}
@@ -16,7 +15,7 @@ const SuccessCheckmark = ({ className = '' }): ReactNode => (
 	</svg>
 )
 
-const SuccessCheckmarkTrans = ({ className = '' }): ReactNode => (
+const SuccessCheckmarkTrans = ({ className = '' }) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		className={cn(

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -9,7 +10,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { ReactNode } from '@tanstack/react-router'
 
 export function ConfirmDestructiveActionDialog({
 	title,
