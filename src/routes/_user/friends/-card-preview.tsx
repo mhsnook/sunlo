@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useLanguagePhrase } from '@/hooks/use-language'
 import Callout from '@/components/ui/callout'
-import { useDeckCard } from '@/hooks/use-deck'
+// import { useDeckCard } from '@/hooks/use-deck'
 import { uuid } from '@/types/main'
-import { ago } from '@/lib/dayjs'
+// import { ago } from '@/lib/dayjs'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { Link } from '@tanstack/react-router'
@@ -21,7 +21,7 @@ export function CardPreview({
 	isMine: boolean
 }) {
 	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
-	const { data: card } = useDeckCard(pid, lang)
+	// const { data: card } = useDeckCard(pid, lang)
 	const chosenTranslation = phrase?.translations[0]
 
 	if (!isPending && !phrase)
@@ -55,11 +55,11 @@ export function CardPreview({
 							</p>
 						}
 						<div className="flex items-center gap-2 text-xs">
-							{card?.next_due_at && (
+							{/*card?.next_due_at && (
 								<span className="text-muted-foreground">
 									Next review: {ago(card.next_due_at)}
 								</span>
-							)}
+							)*/}
 						</div>
 						<div className="flex flex-row flex-wrap gap-2">
 							<CardStatusDropdown pid={pid} lang={lang} />
