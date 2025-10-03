@@ -76,9 +76,7 @@ export default function SearchProfiles() {
 
 	const prevResults = usePrevious(searchResults)
 	const resultsToShow =
-		!debouncedQuery ?
-			[]
-		:	((searchResults ?? prevResults ?? []) as PublicProfile[])
+		!debouncedQuery ? [] : (searchResults ?? prevResults ?? [])
 	const showLoader = resultsToShow.length === 0 && isFetching
 
 	return (
