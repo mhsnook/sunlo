@@ -10,9 +10,17 @@ import { useLinks } from '@/hooks/links'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 import { memo } from 'react'
-import { Badge, TinyBadge } from '@/components/ui/badge'
+import { TinyBadge } from '@/components/ui/badge'
 
-type AppNavMatch = RouteMatch & {
+type AppNavMatch = RouteMatch<
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown,
+	unknown
+> & {
 	loaderData?: {
 		appnav?: string[]
 	}

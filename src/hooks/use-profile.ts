@@ -6,13 +6,13 @@ import type {
 	DecksMap,
 	LanguageKnown,
 	ProfileFull,
-	PublicProfile,
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { avatarUrlify, mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { themes } from '@/lib/deck-themes'
+import { PublicProfile } from '@/routes/_user/friends/-types'
 
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
