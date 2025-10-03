@@ -139,7 +139,7 @@ export type PhraseMeta = Tables<'meta_phrase_info'>
 export type PhraseFull = PhraseMeta & {
 	translations: Array<TranslationRow>
 	added_by_profile: PublicProfile
-	tags?: Array<Tag>
+	tags?: Array<Tag> | null
 }
 export type PhraseFiltered = PhraseFull & {
 	translations_mine?: Array<TranslationRow>

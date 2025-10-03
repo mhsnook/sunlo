@@ -168,7 +168,7 @@ const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
 						to="/friends/$uid"
 						from={Route.fullPath}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ uid: friend.uid! }}
+						params={{ uid: friend.uid }}
 						className={buttonVariants({ variant: 'default' })}
 					>
 						Check out their profile

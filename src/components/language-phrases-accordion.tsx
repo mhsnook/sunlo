@@ -5,12 +5,11 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from '@/components/ui/accordion'
-
+import { Badge, LangBadge } from '@/components/ui/badge'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
-import { Badge, LangBadge } from '@/components/ui/badge'
 import { usePhrase } from '@/hooks/composite-phrase'
 
 interface PhrasesWithOptionalOrder {
@@ -40,7 +39,7 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 	return (
 		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
-				<CardStatusDropdown lang={lang} pid={pid!} />
+				<CardStatusDropdown lang={lang} pid={pid} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
