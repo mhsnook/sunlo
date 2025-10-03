@@ -784,9 +784,9 @@ create table if not exists
 	"public"."phrase" (
 		"text" "text" not null,
 		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" (),
+		"added_by" "uuid" default "auth"."uid" () not null,
 		"lang" character varying not null,
-		"created_at" timestamp with time zone default "now" (),
+		"created_at" timestamp with time zone default "now" () not null,
 		"text_script" "text",
 		"request_id" "uuid"
 	);
@@ -900,7 +900,7 @@ create table if not exists
 		"phrase_id" "uuid" not null,
 		"tag_id" "uuid" not null,
 		"created_at" timestamp with time zone default "now" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
+		"added_by" "uuid" default "auth"."uid" () not null
 	);
 
 alter table "public"."phrase_tag" owner to "postgres";
@@ -1145,18 +1145,6 @@ from
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
-	"public"."phrase_relation" (
-		"from_phrase_id" "uuid",
-		"to_phrase_id" "uuid",
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."phrase_relation" owner to "postgres";
-
-comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
-
-create table if not exists
 	"public"."phrase_request" (
 		"id" "uuid" default "gen_random_uuid" () not null,
 		"created_at" timestamp with time zone default "now" () not null,
@@ -1211,13 +1199,27 @@ group by
 	"pp"."username",
 	"pp"."avatar_path";
 
+alter table "public"."meta_phrase_request" owner to "postgres";
+
+create table if not exists
+	"public"."phrase_relation" (
+		"from_phrase_id" "uuid",
+		"to_phrase_id" "uuid",
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"added_by" "uuid" default "auth"."uid" () not null
+	);
+
+alter table "public"."phrase_relation" owner to "postgres";
+
+comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
+
 create table if not exists
 	"public"."phrase_translation" (
 		"text" "text" not null,
 		"literal" "text",
 		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
 		"phrase_id" "uuid" not null,
-		"added_by" "uuid" default "auth"."uid" (),
+		"added_by" "uuid" default "auth"."uid" () not null,
 		"lang" character varying not null,
 		"text_script" "text",
 		"created_at" timestamp with time zone default "now" () not null
@@ -1534,9 +1536,6 @@ alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
 alter table only "public"."chat_message"
-add constraint "chat_message_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete set null;
-
-alter table only "public"."chat_message"
 add constraint "chat_message_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete set null;
 
 alter table only "public"."chat_message"
@@ -1544,6 +1543,9 @@ add constraint "chat_message_recipient_uid_fkey" foreign key ("recipient_uid") r
 
 alter table only "public"."chat_message"
 add constraint "chat_message_related_message_id_fkey" foreign key ("related_message_id") references "public"."chat_message" ("id") on delete set null;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete set null;
 
 alter table only "public"."chat_message"
 add constraint "chat_message_sender_uid_fkey" foreign key ("sender_uid") references "public"."user_profile" ("uid") on delete cascade;
@@ -2216,17 +2218,23 @@ grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
 
-grant all on table "public"."phrase_relation" to "anon";
-
-grant all on table "public"."phrase_relation" to "authenticated";
-
-grant all on table "public"."phrase_relation" to "service_role";
-
 grant all on table "public"."phrase_request" to "anon";
 
 grant all on table "public"."phrase_request" to "authenticated";
 
 grant all on table "public"."phrase_request" to "service_role";
+
+grant all on table "public"."meta_phrase_request" to "anon";
+
+grant all on table "public"."meta_phrase_request" to "authenticated";
+
+grant all on table "public"."meta_phrase_request" to "service_role";
+
+grant all on table "public"."phrase_relation" to "anon";
+
+grant all on table "public"."phrase_relation" to "authenticated";
+
+grant all on table "public"."phrase_relation" to "service_role";
 
 grant all on table "public"."phrase_translation" to "anon";
 

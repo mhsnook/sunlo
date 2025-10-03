@@ -1,6 +1,8 @@
+packages:
+  - .
+
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+  - supabase
   - unrs-resolver
-packages:
-  - .

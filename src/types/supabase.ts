@@ -239,8 +239,8 @@ export type Database = {
 			}
 			phrase: {
 				Row: {
-					added_by: string | null
-					created_at: string | null
+					added_by: string
+					created_at: string
 					id: string
 					lang: string
 					request_id: string | null
@@ -248,8 +248,8 @@ export type Database = {
 					text_script: string | null
 				}
 				Insert: {
-					added_by?: string | null
-					created_at?: string | null
+					added_by?: string
+					created_at?: string
 					id?: string
 					lang: string
 					request_id?: string | null
@@ -257,8 +257,8 @@ export type Database = {
 					text_script?: string | null
 				}
 				Update: {
-					added_by?: string | null
-					created_at?: string | null
+					added_by?: string
+					created_at?: string
 					id?: string
 					lang?: string
 					request_id?: string | null
@@ -312,19 +312,19 @@ export type Database = {
 			}
 			phrase_relation: {
 				Row: {
-					added_by: string | null
+					added_by: string
 					from_phrase_id: string | null
 					id: string
 					to_phrase_id: string | null
 				}
 				Insert: {
-					added_by?: string | null
+					added_by?: string
 					from_phrase_id?: string | null
 					id?: string
 					to_phrase_id?: string | null
 				}
 				Update: {
-					added_by?: string | null
+					added_by?: string
 					from_phrase_id?: string | null
 					id?: string
 					to_phrase_id?: string | null
@@ -435,19 +435,19 @@ export type Database = {
 			}
 			phrase_tag: {
 				Row: {
-					added_by: string | null
+					added_by: string
 					created_at: string
 					phrase_id: string
 					tag_id: string
 				}
 				Insert: {
-					added_by?: string | null
+					added_by?: string
 					created_at?: string
 					phrase_id: string
 					tag_id: string
 				}
 				Update: {
-					added_by?: string | null
+					added_by?: string
 					created_at?: string
 					phrase_id?: string
 					tag_id?: string
@@ -492,7 +492,7 @@ export type Database = {
 			}
 			phrase_translation: {
 				Row: {
-					added_by: string | null
+					added_by: string
 					created_at: string
 					id: string
 					lang: string
@@ -502,7 +502,7 @@ export type Database = {
 					text_script: string | null
 				}
 				Insert: {
-					added_by?: string | null
+					added_by?: string
 					created_at?: string
 					id?: string
 					lang: string
@@ -512,7 +512,7 @@ export type Database = {
 					text_script?: string | null
 				}
 				Update: {
-					added_by?: string | null
+					added_by?: string
 					created_at?: string
 					id?: string
 					lang?: string
