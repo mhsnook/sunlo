@@ -28,7 +28,7 @@ import {
 } from 'lucide-react'
 import languages, { LangKey } from '@/lib/languages'
 
-const links = (lang?: LangKey): Record<string, LinkType | undefined> => {
+const links = (lang?: LangKey): Record<string, LinkType> => {
 	const constantLinks = {
 		'/': {
 			name: 'Home',
@@ -149,85 +149,83 @@ const links = (lang?: LangKey): Record<string, LinkType | undefined> => {
 			Icon: UserPlus,
 		},
 	}
+	if (!lang) return constantLinks
 
-	const languageLinks =
-		!lang ?
-			{}
-		:	{
-				'/learn/$lang': {
-					name: languages[lang],
-					title: `${languages[lang]} Deck`,
-					Icon: HouseHeart,
-					link: {
-						to: '/learn/$lang',
-						params: { lang },
-					},
-				},
-				'/learn/$lang/search': {
-					name: `Search`,
-					title: `Quick Search ${languages[lang]}`,
-					link: {
-						to: '/learn/$lang/search',
-						params: { lang },
-					},
-					Icon: Search,
-				},
-				'/learn/$lang/deck-settings': {
-					name: 'Settings',
-					title: 'Deck Settings',
-					link: {
-						to: '/learn/$lang/deck-settings',
-						params: { lang },
-					},
-					Icon: Settings,
-				},
-				'/learn/$lang/review': {
-					name: 'Review',
-					title: 'Start a Review',
-					link: {
-						to: '/learn/$lang/review',
-						params: { lang },
-					},
-					Icon: Rocket,
-					useBadge: () => 'star',
-				},
-				'/learn/$lang/library': {
-					name: `Library`,
-					title: `Browse ${languages[lang]} Library`,
-					link: {
-						to: '/learn/$lang/library',
-						params: { lang },
-					},
-					Icon: BookOpenText,
-				},
-				'/learn/$lang/add-phrase': {
-					name: 'Phrase',
-					title: 'Add a Phrase',
-					link: {
-						to: '/learn/$lang/add-phrase',
-						params: { lang },
-					},
-					Icon: MessageSquarePlus,
-				},
-				'/learn/$lang/requests': {
-					name: 'Requests',
-					title: 'Card Requests',
-					link: {
-						to: '/learn/$lang/requests',
-						params: { lang },
-					},
-					Icon: MessageSquareQuote,
-				},
-				'/learn/$lang/requests/new': {
-					name: 'Request',
-					title: 'Request a Phrase',
-					link: {
-						to: '/learn/$lang/requests/new',
-						params: { lang },
-					},
-					Icon: Send,
-				},
-			}
+	const languageLinks = {
+		'/learn/$lang': {
+			name: languages[lang],
+			title: `${languages[lang]} Deck`,
+			Icon: HouseHeart,
+			link: {
+				to: '/learn/$lang',
+				params: { lang },
+			},
+		},
+		'/learn/$lang/search': {
+			name: `Search`,
+			title: `Quick Search ${languages[lang]}`,
+			link: {
+				to: '/learn/$lang/search',
+				params: { lang },
+			},
+			Icon: Search,
+		},
+		'/learn/$lang/deck-settings': {
+			name: 'Settings',
+			title: 'Deck Settings',
+			link: {
+				to: '/learn/$lang/deck-settings',
+				params: { lang },
+			},
+			Icon: Settings,
+		},
+		'/learn/$lang/review': {
+			name: 'Review',
+			title: 'Start a Review',
+			link: {
+				to: '/learn/$lang/review',
+				params: { lang },
+			},
+			Icon: Rocket,
+			useBadge: () => 'star',
+		},
+		'/learn/$lang/library': {
+			name: `Library`,
+			title: `Browse ${languages[lang]} Library`,
+			link: {
+				to: '/learn/$lang/library',
+				params: { lang },
+			},
+			Icon: BookOpenText,
+		},
+		'/learn/$lang/add-phrase': {
+			name: 'Phrase',
+			title: 'Add a Phrase',
+			link: {
+				to: '/learn/$lang/add-phrase',
+				params: { lang },
+			},
+			Icon: MessageSquarePlus,
+		},
+		'/learn/$lang/requests': {
+			name: 'Requests',
+			title: 'Card Requests',
+			link: {
+				to: '/learn/$lang/requests',
+				params: { lang },
+			},
+			Icon: MessageSquareQuote,
+		},
+		'/learn/$lang/requests/new': {
+			name: 'Request',
+			title: 'Request a Phrase',
+			link: {
+				to: '/learn/$lang/requests/new',
+				params: { lang },
+			},
+			Icon: Send,
+		},
+	}
 
 	return { ...constantLinks, ...languageLinks }
 }
