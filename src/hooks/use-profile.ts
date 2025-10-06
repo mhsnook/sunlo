@@ -29,6 +29,12 @@ export const profileQuery = (userId: uuid | null) =>
 			if (data === null) return null
 			const { decks_array, ...profile } = data
 			const decksWithTheme = decks_array
+				.toSorted((a, b) =>
+					a.created_at! > b.created_at! ? -1
+					: a.created_at! < b.created_at! ? 1
+					: a.lang! > b.lang! ? -1
+					: 1
+				)
 				.map((d, i) => {
 					const theme = themes[i % themes.length]
 					return {
@@ -41,12 +47,7 @@ export const profileQuery = (userId: uuid | null) =>
 						} as CSSProperties,
 					}
 				})
-				.toSorted((a, b) =>
-					a.created_at! > b.created_at! ? -1
-					: a.created_at! < b.created_at! ? 1
-					: a.lang! > b.lang! ? -1
-					: 1
-				)
+
 			const decksSorted = decksWithTheme.toSorted((a, b) =>
 				(
 					(a.most_recent_review_at || a.created_at) ===
