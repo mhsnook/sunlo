@@ -1,13 +1,13 @@
-import { useCallback } from 'react'
+import { useMemo } from 'react'
 import supabase from '@/lib/supabase-client'
 import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type {
-	CardsMap,
+	CardFull,
+	DeckMeta,
 	DeckFetched,
-	DeckLoaded,
 	uuid,
 	DeckPids,
 	ReviewsDayMap,
@@ -18,7 +18,10 @@ import { inLastWeek } from '@/lib/dayjs'
 
 dayjs.extend(isoWeek)
 
-const calcRoutineStats = (reviewsDayMap: ReviewsDayMap, goal: number) => {
+const calcRoutineStats = (
+	reviewsDayMap: ReviewsDayMap | null,
+	goal: number
+) => {
 	if (!reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
 
 	const today = dayjs()
@@ -37,7 +40,7 @@ const calcRoutineStats = (reviewsDayMap: ReviewsDayMap, goal: number) => {
 	return { daysMet, daysSoFar }
 }
 
-const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
+const calcActivityChartData = (reviewsDayMap: ReviewsDayMap | null) => {
 	if (!reviewsDayMap) return []
 	const today = dayjs()
 	// We generate 11 days of data: 9 past days, today, and one day in the future.
@@ -56,7 +59,7 @@ const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
 	return data
 }
 
-async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
+async function fetchDeck(lang: string, uid: uuid): Promise<DeckFetched | null> {
 	const { data } = await supabase
 		.from('user_deck_plus')
 		.select(`*, cards:user_card_plus(*, reviews:user_card_review(*))`)
@@ -65,19 +68,38 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		.maybeSingle()
 		.throwOnError()
 	if (!data)
-		throw Error(
-			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
-		)
-	const { cards: cardsArray, ...meta }: DeckFetched = data
-	const reviews = cardsArray.flatMap((c) => c.reviews)
-	const reviewsDayMap = mapArrays(reviews, 'day_session')
+		// throw Error(
+		// 	`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
+		// )
+		// returning null instead of throwing, so that we can show a nicer message in the UI
+		return null
+	return data
+}
 
+export const deckQueryOptions = (lang: string, userId: uuid | null) =>
+	queryOptions({
+		queryKey: ['user', lang, 'deck'] as const,
+		queryFn: async () => fetchDeck(lang, userId!),
+		enabled: !!userId && !!lang,
+	})
+
+const selectPids = (data: DeckFetched | null): DeckPids | null => {
+	if (!data) return null
+	const cardsArray = data.cards
 	const all = cardsArray.map((c) => c.phrase_id!)
 	const active = cardsArray
 		.filter((c) => c.status === 'active')
 		.map((c) => c.phrase_id!)
-
-	const pids: DeckPids = {
+	const today_active = cardsArray
+		.filter(
+			(c) =>
+				c.last_reviewed_at !== null &&
+				typeof c.retrievability_now === 'number' &&
+				c.retrievability_now <= 0.9 &&
+				c.status === 'active'
+		)
+		.map((c) => c.phrase_id!)
+	return {
 		all,
 		active,
 		inactive: arrayDifference(all, [active]),
@@ -100,57 +122,51 @@ async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
 		unreviewed_active: cardsArray
 			.filter((c) => c.last_reviewed_at === null && c.status === 'active')
 			.map((c) => c.phrase_id!),
-		today_active: cardsArray
-			.filter(
-				(c) =>
-					c.last_reviewed_at !== null &&
-					typeof c.retrievability_now === 'number' &&
-					c.retrievability_now <= 0.9 &&
-					c.status === 'active'
-			)
-			.map((c) => c.phrase_id!),
-	}
-	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
-
-	return {
-		meta: { ...meta, cardsScheduledForToday: pids.today_active.length },
-		pids,
-		cardsMap,
-		reviews,
-		reviewsDayMap,
+		today_active,
 	}
 }
 
-export const deckQueryOptions = (lang: string, userId: uuid | null) =>
-	queryOptions({
-		queryKey: ['user', lang, 'deck'] as const,
-		queryFn: async () => fetchDeck(lang, userId!),
-		enabled: !!userId && !!lang,
-	})
+const selectDeckMeta = (data: DeckFetched | null): DeckMeta | null => {
+	if (!data) return null
+	const { cards: _, ...meta } = data
+	const pids = selectPids(data)
+	return { ...meta, cardsScheduledForToday: pids?.today_active.length ?? 0 }
+}
 
-const selectDeckMeta = (data: DeckLoaded) => data.meta
 export const useDeckMeta = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
-	return useSuspenseQuery({
+	const { data, ...rest } = useSuspenseQuery({
 		...options,
 		select: selectDeckMeta,
 	})
+	if (!data)
+		throw new Error(
+			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
+		)
+	return { data, ...rest }
 }
 
-// @TODO replace this with a memoized select on data.cards
-const selectDeckPids = (data: DeckLoaded) => data.pids
 export const useDeckPids = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
 	return useQuery({
 		...options,
-		select: selectDeckPids,
+		select: selectPids,
 	})
 }
 
-const selectRoutineStats = (data: DeckLoaded) =>
-	calcRoutineStats(data.reviewsDayMap, data.meta.daily_review_goal ?? 15)
+const selectReviewsDayMap = (data: DeckFetched | null) => {
+	if (!data) return null
+	const reviews = data.cards.flatMap((c) => c.reviews)
+	return mapArrays(reviews, 'day_session')
+}
+
+const selectRoutineStats = (data: DeckFetched | null) => {
+	if (!data) return { daysMet: 0, daysSoFar: 1 }
+	const reviewsDayMap = selectReviewsDayMap(data)
+	return calcRoutineStats(reviewsDayMap, data.daily_review_goal ?? 15)
+}
 export const useDeckRoutineStats = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
@@ -160,8 +176,11 @@ export const useDeckRoutineStats = (lang: string) => {
 	})
 }
 
-const selectActivityChartData = (data: DeckLoaded) =>
-	calcActivityChartData(data.reviewsDayMap)
+const selectActivityChartData = (data: DeckFetched | null) => {
+	if (!data) return []
+	const reviewsDayMap = selectReviewsDayMap(data)
+	return calcActivityChartData(reviewsDayMap)
+}
 export const useDeckActivityChartData = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
@@ -171,7 +190,11 @@ export const useDeckActivityChartData = (lang: string) => {
 	})
 }
 
-const selectCardsMap = (data: DeckLoaded) => data.cardsMap
+const selectCardsMap = (data: DeckFetched | null) => {
+	if (!data) return null
+	return mapArray<CardFull, 'phrase_id'>(data.cards, 'phrase_id')
+}
+
 export const useDeckCardsMap = (lang: string) => {
 	const { userId } = useAuth()
 	const options = deckQueryOptions(lang, userId)
@@ -183,13 +206,14 @@ export const useDeckCardsMap = (lang: string) => {
 
 export const useDeckCard = (pid: uuid, lang: string) => {
 	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	const selectCard = useCallback(
-		(data: DeckLoaded) => data.cardsMap[pid],
-		[pid]
-	)
+	const selectCard = useMemo(() => {
+		return (data: DeckFetched | null) => {
+			if (!data) return undefined
+			return data.cards.find((c) => c.phrase_id === pid)
+		}
+	}, [pid])
 	return useQuery({
-		...options,
+		...deckQueryOptions(lang, userId),
 		select: selectCard,
 	})
 }
