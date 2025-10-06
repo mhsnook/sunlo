@@ -156,7 +156,7 @@ function ChatPage() {
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
-				{relation.status !== 'friends' ?
+				{relation.status === 'friends' ?
 					<div className="relative">
 						<Link
 							to="/friends/chats/$friendId/recommend"
