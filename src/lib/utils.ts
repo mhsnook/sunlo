@@ -9,7 +9,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // this is type-funky bc we're using dynamic keys (TODO consider Map)
- 
 export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	arr: Array<T>,
 	key: K
@@ -29,11 +28,10 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	)
 }
 
-export function mapArrays<
-	 
-	T extends Record<string, any>,
-	K extends keyof T,
->(arr: Array<T>, key: K) {
+export function mapArrays<T extends Record<string, any>, K extends keyof T>(
+	arr: Array<T>,
+	key: K
+) {
 	if (!key) throw new Error('Must provide a key to map against')
 	if (!arr) return {} // uninitialized or null array returns empty object
 
@@ -135,3 +133,10 @@ export function nullSubmit(event: FormEvent<HTMLFormElement>): void {
 
 export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
 	e.preventDefault()
+
+export function isNativeAppUserAgent() {
+	return (
+		('standalone' in window.navigator && window.navigator?.standalone) ||
+		window.matchMedia('(display-mode: standalone)').matches
+	)
+}
