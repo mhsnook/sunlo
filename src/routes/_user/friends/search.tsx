@@ -1,7 +1,7 @@
 import { type ChangeEvent, useCallback } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { z } from 'zod'
+import * as z from 'zod'
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
 

@@ -1,3 +1,9 @@
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { useMutation, useQuery } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
+import * as z from 'zod'
+import { ArrowRightLeft } from 'lucide-react'
+
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button } from '@/components/ui/button'
@@ -14,14 +20,8 @@ import { useAuth } from '@/lib/hooks'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
-import { useMutation, useQuery } from '@tanstack/react-query'
-
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowRightLeft } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
-import toast from 'react-hot-toast'
-import { z } from 'zod'
-import { PublicProfile } from './friends/-types'
+import type { PublicProfile } from './friends/-types'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),

@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import * as z from 'zod'
 import toast from 'react-hot-toast'
 
 import {
