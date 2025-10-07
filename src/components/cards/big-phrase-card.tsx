@@ -22,7 +22,7 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 import { avatarUrlify, cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import UserPermalink from '../user-permalink'
+import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
 
 export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {

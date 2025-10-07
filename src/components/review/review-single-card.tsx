@@ -19,8 +19,8 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { SendPhraseToFriendButton } from '../send-phrase-to-friend-button'
+} from '@/components/ui/dropdown-menu'
+import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
