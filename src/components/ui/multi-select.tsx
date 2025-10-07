@@ -18,6 +18,7 @@ import {
 	CommandList,
 } from '@/components/ui/command'
 import { Button } from './button'
+import { nullSubmit } from '@/lib/utils'
 
 type Option = Record<'value' | 'label', string>
 
@@ -121,10 +122,7 @@ export function FancyMultiSelect({
 									:	<CommandItem
 											key={option.value}
 											// oxlint-disable-next-line jsx-no-new-function-as-prop
-											onMouseDown={(e) => {
-												e.preventDefault()
-												e.stopPropagation()
-											}}
+											onMouseDown={nullSubmit}
 											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onSelect={() => {
 												setInputValue('')
@@ -183,10 +181,7 @@ export function ShowSelected({
 									}
 								}}
 								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onMouseDown={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-								}}
+								onMouseDown={nullSubmit}
 								type="button"
 								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => handleUnselect(value)}
