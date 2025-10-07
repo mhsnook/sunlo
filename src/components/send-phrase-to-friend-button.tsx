@@ -21,11 +21,13 @@ export function SendPhraseToFriendButton({
 	pid,
 	lang,
 	link,
+	className,
 	...props
 }: {
 	pid: uuid
 	lang: string
 	link?: boolean
+	className?: string
 } & VariantProps<typeof buttonVariants>) {
 	const { userId } = useAuth()
 	const [open, setOpen] = useState(false)
@@ -57,9 +59,11 @@ export function SendPhraseToFriendButton({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild={!link}>
+			<DialogTrigger asChild={!link} className={link ? 'w-full' : ''}>
 				{link ?
-					<span className="inline-flex items-center gap-2">
+					<span
+						className={`inline-flex cursor-pointer items-center gap-2 ${className}`}
+					>
 						<Send /> Send in chat
 					</span>
 				:	<Button {...props}>

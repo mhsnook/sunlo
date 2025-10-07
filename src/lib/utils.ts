@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // this is type-funky bc we're using dynamic keys (TODO consider Map)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	arr: Array<T>,
 	key: K
@@ -30,7 +30,7 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 }
 
 export function mapArrays<
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	 
 	T extends Record<string, any>,
 	K extends keyof T,
 >(arr: Array<T>, key: K) {
@@ -132,3 +132,6 @@ export function nullSubmit(event: FormEvent<HTMLFormElement>): void {
 	event.preventDefault()
 	event.stopPropagation()
 }
+
+export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
+	e.preventDefault()

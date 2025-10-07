@@ -5,7 +5,7 @@ import { MoreVertical, Play } from 'lucide-react'
 import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
 import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { cn, preventDefaultCallback } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
@@ -166,19 +166,30 @@ function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
-				<DropdownMenuItem>
+				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<PermalinkButton
 						to={'/learn/$lang/$id'}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang, id: pid }}
+						className="w-full px-2 py-1.5"
 						link
 					/>
 				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<SendPhraseToFriendButton lang={lang} pid={pid} link />
+				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
+					<SendPhraseToFriendButton
+						lang={lang}
+						pid={pid}
+						link
+						className="w-full px-2 py-1.5"
+					/>
 				</DropdownMenuItem>
-				<DropdownMenuItem>
-					<PhraseExtraInfo lang={lang} pid={pid} link />
+				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
+					<PhraseExtraInfo
+						lang={lang}
+						pid={pid}
+						link
+						className="w-full px-2 py-1.5"
+					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
