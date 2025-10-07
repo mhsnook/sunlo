@@ -27,7 +27,7 @@ export default function ExtraInfo({
 		<Dialog>
 			<DialogTrigger className={className} asChild={!link}>
 				{link ?
-					<span className="inline-flex items-center gap-2">
+					<span className="inline-flex w-full cursor-pointer items-center gap-2">
 						<Ellipsis className="size-4" />
 						Show details
 					</span>
