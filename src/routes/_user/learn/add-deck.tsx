@@ -2,7 +2,7 @@ import type { TitleBar } from '@/types/main'
 
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useController, useForm } from 'react-hook-form'
-import { z } from 'zod'
+import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { Badge } from '@/components/ui/badge'

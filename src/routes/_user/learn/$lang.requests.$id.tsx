@@ -1,7 +1,6 @@
 import type {
 	LanguageLoaded,
 	PhraseFull,
-	PublicProfile,
 	Tag,
 } from '@/types/main'
 
@@ -14,10 +13,11 @@ import {
 } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
+import * as z from 'zod'
 import toast from 'react-hot-toast'
 import { MessageSquarePlus, Send } from 'lucide-react'
 
+import { PublicProfile } from '../friends/-types'
 import supabase from '@/lib/supabase-client'
 import {
 	Card,

@@ -1,5 +1,5 @@
 import { PhraseFull } from '@/types/main'
-import { z } from 'zod'
+import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
