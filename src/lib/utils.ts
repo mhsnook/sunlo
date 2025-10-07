@@ -1,4 +1,3 @@
-import type { FormEvent } from 'react'
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -126,7 +125,10 @@ export function avatarUrlify(path: string | null): string {
 		)
 }
 
-export function nullSubmit(event: FormEvent<HTMLFormElement>): void {
+export function nullSubmit(event: {
+	preventDefault: () => void
+	stopPropagation: () => void
+}) {
 	event.preventDefault()
 	event.stopPropagation()
 }
