@@ -4,7 +4,7 @@ import { useCompositePids } from '@/hooks/composite-pids'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 import { LangOnlyComponentProps, pids } from '@/types/main'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
-import { Loader } from '@/components/ui/loader'
+import { Link } from '@tanstack/react-router'
 
 type PhraseSectionProps = {
 	description: string
@@ -39,14 +39,28 @@ const PhraseSection = ({
 export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 	const recommendations = useCompositePids(lang)
 
-	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Recommended For You</CardTitle>
-			</CardHeader>
-			{recommendations === null ?
-				<Loader />
-			:	<CardContent className="space-y-4">
+	//if (!recommendations) return null
+
+	const hasRecommendations =
+		recommendations.top8.popular.length > 0 ||
+		recommendations.top8.newest.length > 0 ||
+		recommendations.top8.easiest.length > 0
+
+	return !hasRecommendations ?
+			<p className="text-muted-foreground text-sm italic">
+				There are no smart recommendations for you at this time. Check back
+				later or consider{' '}
+				<Link className="s-link-muted" to="/learn/$lang/requests/new">
+					requesting a phrase
+				</Link>
+				.
+			</p>
+		:	<Card>
+				<CardHeader>
+					<CardTitle>Recommended For You</CardTitle>
+				</CardHeader>
+
+				<CardContent className="space-y-4">
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
 						pids={recommendations.top8.popular.slice(0, 4)}
@@ -66,7 +80,5 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 						Icon={Carrot}
 					/>
 				</CardContent>
-			}
-		</Card>
-	)
+			</Card>
 }

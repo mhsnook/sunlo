@@ -81,7 +81,7 @@ function DeckOverview() {
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
 	const totalToday =
-		meta.cardsScheduledForToday + (meta.daily_review_goal ?? 15)
+		(meta.cardsScheduledForToday ?? 0) + (meta.daily_review_goal ?? 15)
 	return (
 		<Card>
 			<CardHeader>
@@ -243,7 +243,7 @@ function DeckSettings() {
 }
 
 const Icon = () => (
-	<Construction className="bg-accent text-white/80 h-12 w-12 rounded-full border border-white p-2" />
+	<Construction className="bg-accent h-12 w-12 rounded-full border border-white p-2 text-white/80" />
 )
 
 function NewLang() {
