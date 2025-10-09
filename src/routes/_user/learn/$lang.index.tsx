@@ -34,7 +34,6 @@ import { languageQueryOptions, useLanguageMeta } from '@/hooks/use-language'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import Callout from '@/components/ui/callout'
-import { FriendProfiles } from '@/components/friend-profiles'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
@@ -65,7 +64,6 @@ function WelcomePage() {
 			:	<DeckOverview />}
 
 			<RecommendedPhrasesCard lang={lang} />
-			<FriendProfiles />
 			<DeckSettings />
 		</div>
 	)

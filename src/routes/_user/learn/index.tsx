@@ -5,6 +5,7 @@ import { useProfile } from '@/hooks/use-profile'
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
+import { FriendProfiles } from '@/components/friend-profiles'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
@@ -40,6 +41,7 @@ export default function Page() {
 					:	<NoDecks />}
 				</div>
 			}
+			<FriendProfiles />
 		</main>
 	)
 }
