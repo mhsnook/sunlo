@@ -37,7 +37,7 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>
 
-export default function LoginForm() {
+function LoginForm() {
 	// we use this hook instead of loader data so it reacts to the login event
 	const { isAuth } = useAuth()
 	const { redirectedFrom } = Route.useSearch()

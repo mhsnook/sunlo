@@ -9,7 +9,7 @@ export const Route = createFileRoute('/_user/learn/archived')({
 	component: Page,
 })
 
-export default function Page() {
+function Page() {
 	const { data: profile } = useProfile()
 	if (!profile) return null
 	const { decksMap, deckLanguages } = profile

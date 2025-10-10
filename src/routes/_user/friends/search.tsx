@@ -45,7 +45,7 @@ function FriendRequestPage() {
 	)
 }
 
-export default function SearchProfiles() {
+function SearchProfiles() {
 	const { query } = Route.useSearch()
 	const { userId } = useAuth()
 	const debouncedQuery = useDebounce(query, 500) ?? ''
