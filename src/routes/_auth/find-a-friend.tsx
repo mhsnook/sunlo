@@ -29,7 +29,7 @@ const SearchSchema = z.object({
 
 type SearchFormData = z.infer<typeof SearchSchema>
 
-export function SearchProfilesComponent() {
+function SearchProfilesComponent() {
 	const {
 		register,
 		handleSubmit,

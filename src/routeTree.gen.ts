@@ -10,715 +10,958 @@
 
 import { createFileRoute } from '@tanstack/react-router'
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as UserRouteImport } from './routes/_user'
+import { Route as AuthRouteImport } from './routes/_auth'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserProfileRouteImport } from './routes/_user/profile'
+import { Route as UserLearnRouteImport } from './routes/_user/learn'
+import { Route as UserGettingStartedRouteImport } from './routes/_user/getting-started'
+import { Route as UserFriendsRouteImport } from './routes/_user/friends'
+import { Route as UserAcceptInviteRouteImport } from './routes/_user/accept-invite'
+import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
+import { Route as AuthSetNewPasswordRouteImport } from './routes/_auth/set-new-password'
+import { Route as AuthLoginRouteImport } from './routes/_auth/login'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as AuthFindAFriendRouteImport } from './routes/_auth/find-a-friend'
+import { Route as UserProfileIndexRouteImport } from './routes/_user/profile/index'
+import { Route as UserLearnIndexRouteImport } from './routes/_user/learn/index'
+import { Route as UserFriendsIndexRouteImport } from './routes/_user/friends/index'
+import { Route as UserProfileChangePasswordRouteImport } from './routes/_user/profile/change-password'
+import { Route as UserProfileChangeEmailConfirmRouteImport } from './routes/_user/profile/change-email-confirm'
+import { Route as UserProfileChangeEmailRouteImport } from './routes/_user/profile/change-email'
+import { Route as UserLearnQuickSearchRouteImport } from './routes/_user/learn/quick-search'
+import { Route as UserLearnArchivedRouteImport } from './routes/_user/learn/archived'
+import { Route as UserLearnAddDeckRouteImport } from './routes/_user/learn/add-deck'
+import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
+import { Route as UserFriendsSearchRouteImport } from './routes/_user/friends/search'
+import { Route as UserFriendsRequestsRouteImport } from './routes/_user/friends/requests'
+import { Route as UserFriendsInviteRouteImport } from './routes/_user/friends/invite'
+import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
+import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
+import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
+import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
+import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
+import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
+import { Route as UserLearnLangRequestsRouteImport } from './routes/_user/learn/$lang.requests'
+import { Route as UserLearnLangLibraryRouteImport } from './routes/_user/learn/$lang.library'
+import { Route as UserLearnLangDeckSettingsRouteImport } from './routes/_user/learn/$lang.deck-settings'
+import { Route as UserLearnLangBulkAddRouteImport } from './routes/_user/learn/$lang.bulk-add'
+import { Route as UserLearnLangAddPhraseRouteImport } from './routes/_user/learn/$lang.add-phrase'
+import { Route as UserLearnLangIdRouteImport } from './routes/_user/learn/$lang.$id'
+import { Route as UserFriendsSearchUidRouteImport } from './routes/_user/friends/search.$uid'
+import { Route as UserFriendsChatsFriendIdRouteImport } from './routes/_user/friends/chats.$friendId'
+import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
+import { Route as UserLearnLangRequestsIndexRouteImport } from './routes/_user/learn/$lang.requests.index'
+import { Route as UserLearnLangReviewGoRouteImport } from './routes/_user/learn/$lang.review.go'
+import { Route as UserLearnLangRequestsNewRouteImport } from './routes/_user/learn/$lang.requests.new'
+import { Route as UserLearnLangRequestsIdRouteImport } from './routes/_user/learn/$lang.requests.$id'
+import { Route as UserFriendsChatsFriendIdRecommendRouteImport } from './routes/_user/friends/chats.$friendId.recommend'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as UserImport } from './routes/_user'
-import { Route as AuthImport } from './routes/_auth'
-import { Route as IndexImport } from './routes/index'
-import { Route as UserProfileImport } from './routes/_user/profile'
-import { Route as UserLearnImport } from './routes/_user/learn'
-import { Route as UserGettingStartedImport } from './routes/_user/getting-started'
-import { Route as UserFriendsImport } from './routes/_user/friends'
-import { Route as UserAcceptInviteImport } from './routes/_user/accept-invite'
-import { Route as AuthSignupImport } from './routes/_auth/signup'
-import { Route as AuthSetNewPasswordImport } from './routes/_auth/set-new-password'
-import { Route as AuthLoginImport } from './routes/_auth/login'
-import { Route as AuthForgotPasswordImport } from './routes/_auth/forgot-password'
-import { Route as AuthFindAFriendImport } from './routes/_auth/find-a-friend'
-import { Route as UserProfileIndexImport } from './routes/_user/profile/index'
-import { Route as UserLearnIndexImport } from './routes/_user/learn/index'
-import { Route as UserFriendsIndexImport } from './routes/_user/friends/index'
-import { Route as UserProfileChangePasswordImport } from './routes/_user/profile/change-password'
-import { Route as UserProfileChangeEmailConfirmImport } from './routes/_user/profile/change-email-confirm'
-import { Route as UserProfileChangeEmailImport } from './routes/_user/profile/change-email'
-import { Route as UserLearnQuickSearchImport } from './routes/_user/learn/quick-search'
-import { Route as UserLearnArchivedImport } from './routes/_user/learn/archived'
-import { Route as UserLearnAddDeckImport } from './routes/_user/learn/add-deck'
-import { Route as UserLearnLangImport } from './routes/_user/learn/$lang'
-import { Route as UserFriendsSearchImport } from './routes/_user/friends/search'
-import { Route as UserFriendsRequestsImport } from './routes/_user/friends/requests'
-import { Route as UserFriendsInviteImport } from './routes/_user/friends/invite'
-import { Route as UserFriendsChatsImport } from './routes/_user/friends/chats'
-import { Route as UserFriendsUidImport } from './routes/_user/friends/$uid'
-import { Route as UserLearnLangIndexImport } from './routes/_user/learn/$lang.index'
-import { Route as UserFriendsChatsIndexImport } from './routes/_user/friends/chats.index'
-import { Route as UserLearnLangSearchImport } from './routes/_user/learn/$lang.search'
-import { Route as UserLearnLangReviewImport } from './routes/_user/learn/$lang.review'
-import { Route as UserLearnLangRequestsImport } from './routes/_user/learn/$lang.requests'
-import { Route as UserLearnLangLibraryImport } from './routes/_user/learn/$lang.library'
-import { Route as UserLearnLangDeckSettingsImport } from './routes/_user/learn/$lang.deck-settings'
-import { Route as UserLearnLangBulkAddImport } from './routes/_user/learn/$lang.bulk-add'
-import { Route as UserLearnLangAddPhraseImport } from './routes/_user/learn/$lang.add-phrase'
-import { Route as UserLearnLangIdImport } from './routes/_user/learn/$lang.$id'
-import { Route as UserFriendsSearchUidImport } from './routes/_user/friends/search.$uid'
-import { Route as UserFriendsChatsFriendIdImport } from './routes/_user/friends/chats.$friendId'
-import { Route as UserLearnLangReviewIndexImport } from './routes/_user/learn/$lang.review.index'
-import { Route as UserLearnLangRequestsIndexImport } from './routes/_user/learn/$lang.requests.index'
-import { Route as UserLearnLangReviewGoImport } from './routes/_user/learn/$lang.review.go'
-import { Route as UserLearnLangRequestsNewImport } from './routes/_user/learn/$lang.requests.new'
-import { Route as UserLearnLangRequestsIdImport } from './routes/_user/learn/$lang.requests.$id'
-import { Route as UserFriendsChatsFriendIdRecommendImport } from './routes/_user/friends/chats.$friendId.recommend'
+const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
+const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
+const ComponentsLazyRouteImport = createFileRoute('/components')()
 
-// Create Virtual Routes
-
-const RequestRemovalLazyImport = createFileRoute('/request-removal')()
-const PrivacyPolicyLazyImport = createFileRoute('/privacy-policy')()
-const ComponentsLazyImport = createFileRoute('/components')()
-
-// Create/Update Routes
-
-const RequestRemovalLazyRoute = RequestRemovalLazyImport.update({
+const RequestRemovalLazyRoute = RequestRemovalLazyRouteImport.update({
   id: '/request-removal',
   path: '/request-removal',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/request-removal.lazy').then((d) => d.Route),
 )
-
-const PrivacyPolicyLazyRoute = PrivacyPolicyLazyImport.update({
+const PrivacyPolicyLazyRoute = PrivacyPolicyLazyRouteImport.update({
   id: '/privacy-policy',
   path: '/privacy-policy',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() =>
   import('./routes/privacy-policy.lazy').then((d) => d.Route),
 )
-
-const ComponentsLazyRoute = ComponentsLazyImport.update({
+const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   id: '/components',
   path: '/components',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/components.lazy').then((d) => d.Route))
-
-const UserRoute = UserImport.update({
+const UserRoute = UserRouteImport.update({
   id: '/_user',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AuthRoute = AuthImport.update({
+const AuthRoute = AuthRouteImport.update({
   id: '/_auth',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const IndexRoute = IndexImport.update({
+const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const UserProfileRoute = UserProfileImport.update({
+const UserProfileRoute = UserProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => UserRoute,
 } as any)
-
-const UserLearnRoute = UserLearnImport.update({
+const UserLearnRoute = UserLearnRouteImport.update({
   id: '/learn',
   path: '/learn',
   getParentRoute: () => UserRoute,
 } as any)
-
-const UserGettingStartedRoute = UserGettingStartedImport.update({
+const UserGettingStartedRoute = UserGettingStartedRouteImport.update({
   id: '/getting-started',
   path: '/getting-started',
   getParentRoute: () => UserRoute,
 } as any)
-
-const UserFriendsRoute = UserFriendsImport.update({
+const UserFriendsRoute = UserFriendsRouteImport.update({
   id: '/friends',
   path: '/friends',
   getParentRoute: () => UserRoute,
 } as any)
-
-const UserAcceptInviteRoute = UserAcceptInviteImport.update({
+const UserAcceptInviteRoute = UserAcceptInviteRouteImport.update({
   id: '/accept-invite',
   path: '/accept-invite',
   getParentRoute: () => UserRoute,
 } as any)
-
-const AuthSignupRoute = AuthSignupImport.update({
+const AuthSignupRoute = AuthSignupRouteImport.update({
   id: '/signup',
   path: '/signup',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthSetNewPasswordRoute = AuthSetNewPasswordImport.update({
+const AuthSetNewPasswordRoute = AuthSetNewPasswordRouteImport.update({
   id: '/set-new-password',
   path: '/set-new-password',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthLoginRoute = AuthLoginImport.update({
+const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthForgotPasswordRoute = AuthForgotPasswordImport.update({
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const AuthFindAFriendRoute = AuthFindAFriendImport.update({
+const AuthFindAFriendRoute = AuthFindAFriendRouteImport.update({
   id: '/find-a-friend',
   path: '/find-a-friend',
   getParentRoute: () => AuthRoute,
 } as any)
-
-const UserProfileIndexRoute = UserProfileIndexImport.update({
+const UserProfileIndexRoute = UserProfileIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserProfileRoute,
 } as any)
-
-const UserLearnIndexRoute = UserLearnIndexImport.update({
+const UserLearnIndexRoute = UserLearnIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserLearnRoute,
 } as any)
-
-const UserFriendsIndexRoute = UserFriendsIndexImport.update({
+const UserFriendsIndexRoute = UserFriendsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserProfileChangePasswordRoute = UserProfileChangePasswordImport.update({
-  id: '/change-password',
-  path: '/change-password',
-  getParentRoute: () => UserProfileRoute,
-} as any)
-
+const UserProfileChangePasswordRoute =
+  UserProfileChangePasswordRouteImport.update({
+    id: '/change-password',
+    path: '/change-password',
+    getParentRoute: () => UserProfileRoute,
+  } as any)
 const UserProfileChangeEmailConfirmRoute =
-  UserProfileChangeEmailConfirmImport.update({
+  UserProfileChangeEmailConfirmRouteImport.update({
     id: '/change-email-confirm',
     path: '/change-email-confirm',
     getParentRoute: () => UserProfileRoute,
   } as any)
-
-const UserProfileChangeEmailRoute = UserProfileChangeEmailImport.update({
+const UserProfileChangeEmailRoute = UserProfileChangeEmailRouteImport.update({
   id: '/change-email',
   path: '/change-email',
   getParentRoute: () => UserProfileRoute,
 } as any)
-
-const UserLearnQuickSearchRoute = UserLearnQuickSearchImport.update({
+const UserLearnQuickSearchRoute = UserLearnQuickSearchRouteImport.update({
   id: '/quick-search',
   path: '/quick-search',
   getParentRoute: () => UserLearnRoute,
 } as any)
-
-const UserLearnArchivedRoute = UserLearnArchivedImport.update({
+const UserLearnArchivedRoute = UserLearnArchivedRouteImport.update({
   id: '/archived',
   path: '/archived',
   getParentRoute: () => UserLearnRoute,
 } as any)
-
-const UserLearnAddDeckRoute = UserLearnAddDeckImport.update({
+const UserLearnAddDeckRoute = UserLearnAddDeckRouteImport.update({
   id: '/add-deck',
   path: '/add-deck',
   getParentRoute: () => UserLearnRoute,
 } as any)
-
-const UserLearnLangRoute = UserLearnLangImport.update({
+const UserLearnLangRoute = UserLearnLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
   getParentRoute: () => UserLearnRoute,
 } as any)
-
-const UserFriendsSearchRoute = UserFriendsSearchImport.update({
+const UserFriendsSearchRoute = UserFriendsSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserFriendsRequestsRoute = UserFriendsRequestsImport.update({
+const UserFriendsRequestsRoute = UserFriendsRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserFriendsInviteRoute = UserFriendsInviteImport.update({
+const UserFriendsInviteRoute = UserFriendsInviteRouteImport.update({
   id: '/invite',
   path: '/invite',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserFriendsChatsRoute = UserFriendsChatsImport.update({
+const UserFriendsChatsRoute = UserFriendsChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserFriendsUidRoute = UserFriendsUidImport.update({
+const UserFriendsUidRoute = UserFriendsUidRouteImport.update({
   id: '/$uid',
   path: '/$uid',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-
-const UserLearnLangIndexRoute = UserLearnLangIndexImport.update({
+const UserLearnLangIndexRoute = UserLearnLangIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserFriendsChatsIndexRoute = UserFriendsChatsIndexImport.update({
+const UserFriendsChatsIndexRoute = UserFriendsChatsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserFriendsChatsRoute,
 } as any)
-
-const UserLearnLangSearchRoute = UserLearnLangSearchImport.update({
+const UserLearnLangSearchRoute = UserLearnLangSearchRouteImport.update({
   id: '/search',
   path: '/search',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangReviewRoute = UserLearnLangReviewImport.update({
+const UserLearnLangReviewRoute = UserLearnLangReviewRouteImport.update({
   id: '/review',
   path: '/review',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangRequestsRoute = UserLearnLangRequestsImport.update({
+const UserLearnLangRequestsRoute = UserLearnLangRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangLibraryRoute = UserLearnLangLibraryImport.update({
+const UserLearnLangLibraryRoute = UserLearnLangLibraryRouteImport.update({
   id: '/library',
   path: '/library',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangDeckSettingsRoute = UserLearnLangDeckSettingsImport.update({
-  id: '/deck-settings',
-  path: '/deck-settings',
-  getParentRoute: () => UserLearnLangRoute,
-} as any)
-
-const UserLearnLangBulkAddRoute = UserLearnLangBulkAddImport.update({
+const UserLearnLangDeckSettingsRoute =
+  UserLearnLangDeckSettingsRouteImport.update({
+    id: '/deck-settings',
+    path: '/deck-settings',
+    getParentRoute: () => UserLearnLangRoute,
+  } as any)
+const UserLearnLangBulkAddRoute = UserLearnLangBulkAddRouteImport.update({
   id: '/bulk-add',
   path: '/bulk-add',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangAddPhraseRoute = UserLearnLangAddPhraseImport.update({
+const UserLearnLangAddPhraseRoute = UserLearnLangAddPhraseRouteImport.update({
   id: '/add-phrase',
   path: '/add-phrase',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserLearnLangIdRoute = UserLearnLangIdImport.update({
+const UserLearnLangIdRoute = UserLearnLangIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-
-const UserFriendsSearchUidRoute = UserFriendsSearchUidImport.update({
+const UserFriendsSearchUidRoute = UserFriendsSearchUidRouteImport.update({
   id: '/$uid',
   path: '/$uid',
   getParentRoute: () => UserFriendsSearchRoute,
 } as any)
-
-const UserFriendsChatsFriendIdRoute = UserFriendsChatsFriendIdImport.update({
-  id: '/$friendId',
-  path: '/$friendId',
-  getParentRoute: () => UserFriendsChatsRoute,
-} as any)
-
-const UserLearnLangReviewIndexRoute = UserLearnLangReviewIndexImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => UserLearnLangReviewRoute,
-} as any)
-
-const UserLearnLangRequestsIndexRoute = UserLearnLangRequestsIndexImport.update(
-  {
+const UserFriendsChatsFriendIdRoute =
+  UserFriendsChatsFriendIdRouteImport.update({
+    id: '/$friendId',
+    path: '/$friendId',
+    getParentRoute: () => UserFriendsChatsRoute,
+  } as any)
+const UserLearnLangReviewIndexRoute =
+  UserLearnLangReviewIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => UserLearnLangReviewRoute,
+  } as any)
+const UserLearnLangRequestsIndexRoute =
+  UserLearnLangRequestsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => UserLearnLangRequestsRoute,
-  } as any,
-)
-
-const UserLearnLangReviewGoRoute = UserLearnLangReviewGoImport.update({
+  } as any)
+const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
   id: '/go',
   path: '/go',
   getParentRoute: () => UserLearnLangReviewRoute,
 } as any)
-
-const UserLearnLangRequestsNewRoute = UserLearnLangRequestsNewImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => UserLearnLangRequestsRoute,
-} as any)
-
-const UserLearnLangRequestsIdRoute = UserLearnLangRequestsIdImport.update({
+const UserLearnLangRequestsNewRoute =
+  UserLearnLangRequestsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => UserLearnLangRequestsRoute,
+  } as any)
+const UserLearnLangRequestsIdRoute = UserLearnLangRequestsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => UserLearnLangRequestsRoute,
 } as any)
-
 const UserFriendsChatsFriendIdRecommendRoute =
-  UserFriendsChatsFriendIdRecommendImport.update({
+  UserFriendsChatsFriendIdRecommendRouteImport.update({
     id: '/recommend',
     path: '/recommend',
     getParentRoute: () => UserFriendsChatsFriendIdRoute,
   } as any)
 
-// Populate the FileRoutesByPath interface
+export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
+  '/components': typeof ComponentsLazyRoute
+  '/privacy-policy': typeof PrivacyPolicyLazyRoute
+  '/request-removal': typeof RequestRemovalLazyRoute
+  '/find-a-friend': typeof AuthFindAFriendRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/set-new-password': typeof AuthSetNewPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/accept-invite': typeof UserAcceptInviteRoute
+  '/friends': typeof UserFriendsRouteWithChildren
+  '/getting-started': typeof UserGettingStartedRoute
+  '/learn': typeof UserLearnRouteWithChildren
+  '/profile': typeof UserProfileRouteWithChildren
+  '/friends/$uid': typeof UserFriendsUidRoute
+  '/friends/chats': typeof UserFriendsChatsRouteWithChildren
+  '/friends/invite': typeof UserFriendsInviteRoute
+  '/friends/requests': typeof UserFriendsRequestsRoute
+  '/friends/search': typeof UserFriendsSearchRouteWithChildren
+  '/learn/$lang': typeof UserLearnLangRouteWithChildren
+  '/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/learn/archived': typeof UserLearnArchivedRoute
+  '/learn/quick-search': typeof UserLearnQuickSearchRoute
+  '/profile/change-email': typeof UserProfileChangeEmailRoute
+  '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
+  '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/friends/': typeof UserFriendsIndexRoute
+  '/learn/': typeof UserLearnIndexRoute
+  '/profile/': typeof UserProfileIndexRoute
+  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/friends/search/$uid': typeof UserFriendsSearchUidRoute
+  '/learn/$lang/$id': typeof UserLearnLangIdRoute
+  '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
+  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
+  '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
+  '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/friends/chats/': typeof UserFriendsChatsIndexRoute
+  '/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
+  '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
+  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
+  '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
+}
+export interface FileRoutesByTo {
+  '/': typeof IndexRoute
+  '/components': typeof ComponentsLazyRoute
+  '/privacy-policy': typeof PrivacyPolicyLazyRoute
+  '/request-removal': typeof RequestRemovalLazyRoute
+  '/find-a-friend': typeof AuthFindAFriendRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/login': typeof AuthLoginRoute
+  '/set-new-password': typeof AuthSetNewPasswordRoute
+  '/signup': typeof AuthSignupRoute
+  '/accept-invite': typeof UserAcceptInviteRoute
+  '/getting-started': typeof UserGettingStartedRoute
+  '/friends/$uid': typeof UserFriendsUidRoute
+  '/friends/invite': typeof UserFriendsInviteRoute
+  '/friends/requests': typeof UserFriendsRequestsRoute
+  '/friends/search': typeof UserFriendsSearchRouteWithChildren
+  '/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/learn/archived': typeof UserLearnArchivedRoute
+  '/learn/quick-search': typeof UserLearnQuickSearchRoute
+  '/profile/change-email': typeof UserProfileChangeEmailRoute
+  '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
+  '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/friends': typeof UserFriendsIndexRoute
+  '/learn': typeof UserLearnIndexRoute
+  '/profile': typeof UserProfileIndexRoute
+  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/friends/search/$uid': typeof UserFriendsSearchUidRoute
+  '/learn/$lang/$id': typeof UserLearnLangIdRoute
+  '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
+  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
+  '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/friends/chats': typeof UserFriendsChatsIndexRoute
+  '/learn/$lang': typeof UserLearnLangIndexRoute
+  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
+  '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
+  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
+  '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
+}
+export interface FileRoutesById {
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/_user': typeof UserRouteWithChildren
+  '/components': typeof ComponentsLazyRoute
+  '/privacy-policy': typeof PrivacyPolicyLazyRoute
+  '/request-removal': typeof RequestRemovalLazyRoute
+  '/_auth/find-a-friend': typeof AuthFindAFriendRoute
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/login': typeof AuthLoginRoute
+  '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
+  '/_auth/signup': typeof AuthSignupRoute
+  '/_user/accept-invite': typeof UserAcceptInviteRoute
+  '/_user/friends': typeof UserFriendsRouteWithChildren
+  '/_user/getting-started': typeof UserGettingStartedRoute
+  '/_user/learn': typeof UserLearnRouteWithChildren
+  '/_user/profile': typeof UserProfileRouteWithChildren
+  '/_user/friends/$uid': typeof UserFriendsUidRoute
+  '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
+  '/_user/friends/invite': typeof UserFriendsInviteRoute
+  '/_user/friends/requests': typeof UserFriendsRequestsRoute
+  '/_user/friends/search': typeof UserFriendsSearchRouteWithChildren
+  '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
+  '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
+  '/_user/learn/archived': typeof UserLearnArchivedRoute
+  '/_user/learn/quick-search': typeof UserLearnQuickSearchRoute
+  '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
+  '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
+  '/_user/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/_user/friends/': typeof UserFriendsIndexRoute
+  '/_user/learn/': typeof UserLearnIndexRoute
+  '/_user/profile/': typeof UserProfileIndexRoute
+  '/_user/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/_user/friends/search/$uid': typeof UserFriendsSearchUidRoute
+  '/_user/learn/$lang/$id': typeof UserLearnLangIdRoute
+  '/_user/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
+  '/_user/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
+  '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
+  '/_user/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
+  '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
+  '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
+  '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/_user/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/_user/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
+  '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
+  '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
+  '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
+}
+export interface FileRouteTypes {
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths:
+    | '/'
+    | '/components'
+    | '/privacy-policy'
+    | '/request-removal'
+    | '/find-a-friend'
+    | '/forgot-password'
+    | '/login'
+    | '/set-new-password'
+    | '/signup'
+    | '/accept-invite'
+    | '/friends'
+    | '/getting-started'
+    | '/learn'
+    | '/profile'
+    | '/friends/$uid'
+    | '/friends/chats'
+    | '/friends/invite'
+    | '/friends/requests'
+    | '/friends/search'
+    | '/learn/$lang'
+    | '/learn/add-deck'
+    | '/learn/archived'
+    | '/learn/quick-search'
+    | '/profile/change-email'
+    | '/profile/change-email-confirm'
+    | '/profile/change-password'
+    | '/friends/'
+    | '/learn/'
+    | '/profile/'
+    | '/friends/chats/$friendId'
+    | '/friends/search/$uid'
+    | '/learn/$lang/$id'
+    | '/learn/$lang/add-phrase'
+    | '/learn/$lang/bulk-add'
+    | '/learn/$lang/deck-settings'
+    | '/learn/$lang/library'
+    | '/learn/$lang/requests'
+    | '/learn/$lang/review'
+    | '/learn/$lang/search'
+    | '/friends/chats/'
+    | '/learn/$lang/'
+    | '/friends/chats/$friendId/recommend'
+    | '/learn/$lang/requests/$id'
+    | '/learn/$lang/requests/new'
+    | '/learn/$lang/review/go'
+    | '/learn/$lang/requests/'
+    | '/learn/$lang/review/'
+  fileRoutesByTo: FileRoutesByTo
+  to:
+    | '/'
+    | '/components'
+    | '/privacy-policy'
+    | '/request-removal'
+    | '/find-a-friend'
+    | '/forgot-password'
+    | '/login'
+    | '/set-new-password'
+    | '/signup'
+    | '/accept-invite'
+    | '/getting-started'
+    | '/friends/$uid'
+    | '/friends/invite'
+    | '/friends/requests'
+    | '/friends/search'
+    | '/learn/add-deck'
+    | '/learn/archived'
+    | '/learn/quick-search'
+    | '/profile/change-email'
+    | '/profile/change-email-confirm'
+    | '/profile/change-password'
+    | '/friends'
+    | '/learn'
+    | '/profile'
+    | '/friends/chats/$friendId'
+    | '/friends/search/$uid'
+    | '/learn/$lang/$id'
+    | '/learn/$lang/add-phrase'
+    | '/learn/$lang/bulk-add'
+    | '/learn/$lang/deck-settings'
+    | '/learn/$lang/library'
+    | '/learn/$lang/search'
+    | '/friends/chats'
+    | '/learn/$lang'
+    | '/friends/chats/$friendId/recommend'
+    | '/learn/$lang/requests/$id'
+    | '/learn/$lang/requests/new'
+    | '/learn/$lang/review/go'
+    | '/learn/$lang/requests'
+    | '/learn/$lang/review'
+  id:
+    | '__root__'
+    | '/'
+    | '/_auth'
+    | '/_user'
+    | '/components'
+    | '/privacy-policy'
+    | '/request-removal'
+    | '/_auth/find-a-friend'
+    | '/_auth/forgot-password'
+    | '/_auth/login'
+    | '/_auth/set-new-password'
+    | '/_auth/signup'
+    | '/_user/accept-invite'
+    | '/_user/friends'
+    | '/_user/getting-started'
+    | '/_user/learn'
+    | '/_user/profile'
+    | '/_user/friends/$uid'
+    | '/_user/friends/chats'
+    | '/_user/friends/invite'
+    | '/_user/friends/requests'
+    | '/_user/friends/search'
+    | '/_user/learn/$lang'
+    | '/_user/learn/add-deck'
+    | '/_user/learn/archived'
+    | '/_user/learn/quick-search'
+    | '/_user/profile/change-email'
+    | '/_user/profile/change-email-confirm'
+    | '/_user/profile/change-password'
+    | '/_user/friends/'
+    | '/_user/learn/'
+    | '/_user/profile/'
+    | '/_user/friends/chats/$friendId'
+    | '/_user/friends/search/$uid'
+    | '/_user/learn/$lang/$id'
+    | '/_user/learn/$lang/add-phrase'
+    | '/_user/learn/$lang/bulk-add'
+    | '/_user/learn/$lang/deck-settings'
+    | '/_user/learn/$lang/library'
+    | '/_user/learn/$lang/requests'
+    | '/_user/learn/$lang/review'
+    | '/_user/learn/$lang/search'
+    | '/_user/friends/chats/'
+    | '/_user/learn/$lang/'
+    | '/_user/friends/chats/$friendId/recommend'
+    | '/_user/learn/$lang/requests/$id'
+    | '/_user/learn/$lang/requests/new'
+    | '/_user/learn/$lang/review/go'
+    | '/_user/learn/$lang/requests/'
+    | '/_user/learn/$lang/review/'
+  fileRoutesById: FileRoutesById
+}
+export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  UserRoute: typeof UserRouteWithChildren
+  ComponentsLazyRoute: typeof ComponentsLazyRoute
+  PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
+  RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
+}
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexImport
-      parentRoute: typeof rootRoute
-    }
-    '/_auth': {
-      id: '/_auth'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthImport
-      parentRoute: typeof rootRoute
-    }
-    '/_user': {
-      id: '/_user'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof UserImport
-      parentRoute: typeof rootRoute
-    }
-    '/components': {
-      id: '/components'
-      path: '/components'
-      fullPath: '/components'
-      preLoaderRoute: typeof ComponentsLazyImport
-      parentRoute: typeof rootRoute
+    '/request-removal': {
+      id: '/request-removal'
+      path: '/request-removal'
+      fullPath: '/request-removal'
+      preLoaderRoute: typeof RequestRemovalLazyRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/privacy-policy': {
       id: '/privacy-policy'
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyLazyImport
-      parentRoute: typeof rootRoute
+      preLoaderRoute: typeof PrivacyPolicyLazyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/request-removal': {
-      id: '/request-removal'
-      path: '/request-removal'
-      fullPath: '/request-removal'
-      preLoaderRoute: typeof RequestRemovalLazyImport
-      parentRoute: typeof rootRoute
+    '/components': {
+      id: '/components'
+      path: '/components'
+      fullPath: '/components'
+      preLoaderRoute: typeof ComponentsLazyRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_auth/find-a-friend': {
-      id: '/_auth/find-a-friend'
-      path: '/find-a-friend'
-      fullPath: '/find-a-friend'
-      preLoaderRoute: typeof AuthFindAFriendImport
-      parentRoute: typeof AuthImport
+    '/_user': {
+      id: '/_user'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof UserRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_auth/forgot-password': {
-      id: '/_auth/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordImport
-      parentRoute: typeof AuthImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: ''
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_auth/login': {
-      id: '/_auth/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof AuthLoginImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/set-new-password': {
-      id: '/_auth/set-new-password'
-      path: '/set-new-password'
-      fullPath: '/set-new-password'
-      preLoaderRoute: typeof AuthSetNewPasswordImport
-      parentRoute: typeof AuthImport
-    }
-    '/_auth/signup': {
-      id: '/_auth/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof AuthSignupImport
-      parentRoute: typeof AuthImport
-    }
-    '/_user/accept-invite': {
-      id: '/_user/accept-invite'
-      path: '/accept-invite'
-      fullPath: '/accept-invite'
-      preLoaderRoute: typeof UserAcceptInviteImport
-      parentRoute: typeof UserImport
-    }
-    '/_user/friends': {
-      id: '/_user/friends'
-      path: '/friends'
-      fullPath: '/friends'
-      preLoaderRoute: typeof UserFriendsImport
-      parentRoute: typeof UserImport
-    }
-    '/_user/getting-started': {
-      id: '/_user/getting-started'
-      path: '/getting-started'
-      fullPath: '/getting-started'
-      preLoaderRoute: typeof UserGettingStartedImport
-      parentRoute: typeof UserImport
-    }
-    '/_user/learn': {
-      id: '/_user/learn'
-      path: '/learn'
-      fullPath: '/learn'
-      preLoaderRoute: typeof UserLearnImport
-      parentRoute: typeof UserImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_user/profile': {
       id: '/_user/profile'
       path: '/profile'
       fullPath: '/profile'
-      preLoaderRoute: typeof UserProfileImport
-      parentRoute: typeof UserImport
+      preLoaderRoute: typeof UserProfileRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_user/friends/$uid': {
-      id: '/_user/friends/$uid'
-      path: '/$uid'
-      fullPath: '/friends/$uid'
-      preLoaderRoute: typeof UserFriendsUidImport
-      parentRoute: typeof UserFriendsImport
+    '/_user/learn': {
+      id: '/_user/learn'
+      path: '/learn'
+      fullPath: '/learn'
+      preLoaderRoute: typeof UserLearnRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_user/friends/chats': {
-      id: '/_user/friends/chats'
-      path: '/chats'
-      fullPath: '/friends/chats'
-      preLoaderRoute: typeof UserFriendsChatsImport
-      parentRoute: typeof UserFriendsImport
+    '/_user/getting-started': {
+      id: '/_user/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof UserGettingStartedRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_user/friends/invite': {
-      id: '/_user/friends/invite'
-      path: '/invite'
-      fullPath: '/friends/invite'
-      preLoaderRoute: typeof UserFriendsInviteImport
-      parentRoute: typeof UserFriendsImport
+    '/_user/friends': {
+      id: '/_user/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof UserFriendsRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_user/friends/requests': {
-      id: '/_user/friends/requests'
-      path: '/requests'
-      fullPath: '/friends/requests'
-      preLoaderRoute: typeof UserFriendsRequestsImport
-      parentRoute: typeof UserFriendsImport
+    '/_user/accept-invite': {
+      id: '/_user/accept-invite'
+      path: '/accept-invite'
+      fullPath: '/accept-invite'
+      preLoaderRoute: typeof UserAcceptInviteRouteImport
+      parentRoute: typeof UserRoute
     }
-    '/_user/friends/search': {
-      id: '/_user/friends/search'
-      path: '/search'
-      fullPath: '/friends/search'
-      preLoaderRoute: typeof UserFriendsSearchImport
-      parentRoute: typeof UserFriendsImport
+    '/_auth/signup': {
+      id: '/_auth/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof AuthSignupRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_user/learn/$lang': {
-      id: '/_user/learn/$lang'
-      path: '/$lang'
-      fullPath: '/learn/$lang'
-      preLoaderRoute: typeof UserLearnLangImport
-      parentRoute: typeof UserLearnImport
+    '/_auth/set-new-password': {
+      id: '/_auth/set-new-password'
+      path: '/set-new-password'
+      fullPath: '/set-new-password'
+      preLoaderRoute: typeof AuthSetNewPasswordRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_user/learn/add-deck': {
-      id: '/_user/learn/add-deck'
-      path: '/add-deck'
-      fullPath: '/learn/add-deck'
-      preLoaderRoute: typeof UserLearnAddDeckImport
-      parentRoute: typeof UserLearnImport
+    '/_auth/login': {
+      id: '/_auth/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_user/learn/archived': {
-      id: '/_user/learn/archived'
-      path: '/archived'
-      fullPath: '/learn/archived'
-      preLoaderRoute: typeof UserLearnArchivedImport
-      parentRoute: typeof UserLearnImport
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_user/learn/quick-search': {
-      id: '/_user/learn/quick-search'
-      path: '/quick-search'
-      fullPath: '/learn/quick-search'
-      preLoaderRoute: typeof UserLearnQuickSearchImport
-      parentRoute: typeof UserLearnImport
-    }
-    '/_user/profile/change-email': {
-      id: '/_user/profile/change-email'
-      path: '/change-email'
-      fullPath: '/profile/change-email'
-      preLoaderRoute: typeof UserProfileChangeEmailImport
-      parentRoute: typeof UserProfileImport
-    }
-    '/_user/profile/change-email-confirm': {
-      id: '/_user/profile/change-email-confirm'
-      path: '/change-email-confirm'
-      fullPath: '/profile/change-email-confirm'
-      preLoaderRoute: typeof UserProfileChangeEmailConfirmImport
-      parentRoute: typeof UserProfileImport
-    }
-    '/_user/profile/change-password': {
-      id: '/_user/profile/change-password'
-      path: '/change-password'
-      fullPath: '/profile/change-password'
-      preLoaderRoute: typeof UserProfileChangePasswordImport
-      parentRoute: typeof UserProfileImport
-    }
-    '/_user/friends/': {
-      id: '/_user/friends/'
-      path: '/'
-      fullPath: '/friends/'
-      preLoaderRoute: typeof UserFriendsIndexImport
-      parentRoute: typeof UserFriendsImport
-    }
-    '/_user/learn/': {
-      id: '/_user/learn/'
-      path: '/'
-      fullPath: '/learn/'
-      preLoaderRoute: typeof UserLearnIndexImport
-      parentRoute: typeof UserLearnImport
+    '/_auth/find-a-friend': {
+      id: '/_auth/find-a-friend'
+      path: '/find-a-friend'
+      fullPath: '/find-a-friend'
+      preLoaderRoute: typeof AuthFindAFriendRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/_user/profile/': {
       id: '/_user/profile/'
       path: '/'
       fullPath: '/profile/'
-      preLoaderRoute: typeof UserProfileIndexImport
-      parentRoute: typeof UserProfileImport
+      preLoaderRoute: typeof UserProfileIndexRouteImport
+      parentRoute: typeof UserProfileRoute
     }
-    '/_user/friends/chats/$friendId': {
-      id: '/_user/friends/chats/$friendId'
-      path: '/$friendId'
-      fullPath: '/friends/chats/$friendId'
-      preLoaderRoute: typeof UserFriendsChatsFriendIdImport
-      parentRoute: typeof UserFriendsChatsImport
-    }
-    '/_user/friends/search/$uid': {
-      id: '/_user/friends/search/$uid'
-      path: '/$uid'
-      fullPath: '/friends/search/$uid'
-      preLoaderRoute: typeof UserFriendsSearchUidImport
-      parentRoute: typeof UserFriendsSearchImport
-    }
-    '/_user/learn/$lang/$id': {
-      id: '/_user/learn/$lang/$id'
-      path: '/$id'
-      fullPath: '/learn/$lang/$id'
-      preLoaderRoute: typeof UserLearnLangIdImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/add-phrase': {
-      id: '/_user/learn/$lang/add-phrase'
-      path: '/add-phrase'
-      fullPath: '/learn/$lang/add-phrase'
-      preLoaderRoute: typeof UserLearnLangAddPhraseImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/bulk-add': {
-      id: '/_user/learn/$lang/bulk-add'
-      path: '/bulk-add'
-      fullPath: '/learn/$lang/bulk-add'
-      preLoaderRoute: typeof UserLearnLangBulkAddImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/deck-settings': {
-      id: '/_user/learn/$lang/deck-settings'
-      path: '/deck-settings'
-      fullPath: '/learn/$lang/deck-settings'
-      preLoaderRoute: typeof UserLearnLangDeckSettingsImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/library': {
-      id: '/_user/learn/$lang/library'
-      path: '/library'
-      fullPath: '/learn/$lang/library'
-      preLoaderRoute: typeof UserLearnLangLibraryImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/requests': {
-      id: '/_user/learn/$lang/requests'
-      path: '/requests'
-      fullPath: '/learn/$lang/requests'
-      preLoaderRoute: typeof UserLearnLangRequestsImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/review': {
-      id: '/_user/learn/$lang/review'
-      path: '/review'
-      fullPath: '/learn/$lang/review'
-      preLoaderRoute: typeof UserLearnLangReviewImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/learn/$lang/search': {
-      id: '/_user/learn/$lang/search'
-      path: '/search'
-      fullPath: '/learn/$lang/search'
-      preLoaderRoute: typeof UserLearnLangSearchImport
-      parentRoute: typeof UserLearnLangImport
-    }
-    '/_user/friends/chats/': {
-      id: '/_user/friends/chats/'
+    '/_user/learn/': {
+      id: '/_user/learn/'
       path: '/'
-      fullPath: '/friends/chats/'
-      preLoaderRoute: typeof UserFriendsChatsIndexImport
-      parentRoute: typeof UserFriendsChatsImport
+      fullPath: '/learn/'
+      preLoaderRoute: typeof UserLearnIndexRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/friends/': {
+      id: '/_user/friends/'
+      path: '/'
+      fullPath: '/friends/'
+      preLoaderRoute: typeof UserFriendsIndexRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/profile/change-password': {
+      id: '/_user/profile/change-password'
+      path: '/change-password'
+      fullPath: '/profile/change-password'
+      preLoaderRoute: typeof UserProfileChangePasswordRouteImport
+      parentRoute: typeof UserProfileRoute
+    }
+    '/_user/profile/change-email-confirm': {
+      id: '/_user/profile/change-email-confirm'
+      path: '/change-email-confirm'
+      fullPath: '/profile/change-email-confirm'
+      preLoaderRoute: typeof UserProfileChangeEmailConfirmRouteImport
+      parentRoute: typeof UserProfileRoute
+    }
+    '/_user/profile/change-email': {
+      id: '/_user/profile/change-email'
+      path: '/change-email'
+      fullPath: '/profile/change-email'
+      preLoaderRoute: typeof UserProfileChangeEmailRouteImport
+      parentRoute: typeof UserProfileRoute
+    }
+    '/_user/learn/quick-search': {
+      id: '/_user/learn/quick-search'
+      path: '/quick-search'
+      fullPath: '/learn/quick-search'
+      preLoaderRoute: typeof UserLearnQuickSearchRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/learn/archived': {
+      id: '/_user/learn/archived'
+      path: '/archived'
+      fullPath: '/learn/archived'
+      preLoaderRoute: typeof UserLearnArchivedRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/learn/add-deck': {
+      id: '/_user/learn/add-deck'
+      path: '/add-deck'
+      fullPath: '/learn/add-deck'
+      preLoaderRoute: typeof UserLearnAddDeckRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/learn/$lang': {
+      id: '/_user/learn/$lang'
+      path: '/$lang'
+      fullPath: '/learn/$lang'
+      preLoaderRoute: typeof UserLearnLangRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/friends/search': {
+      id: '/_user/friends/search'
+      path: '/search'
+      fullPath: '/friends/search'
+      preLoaderRoute: typeof UserFriendsSearchRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/friends/requests': {
+      id: '/_user/friends/requests'
+      path: '/requests'
+      fullPath: '/friends/requests'
+      preLoaderRoute: typeof UserFriendsRequestsRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/friends/invite': {
+      id: '/_user/friends/invite'
+      path: '/invite'
+      fullPath: '/friends/invite'
+      preLoaderRoute: typeof UserFriendsInviteRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/friends/chats': {
+      id: '/_user/friends/chats'
+      path: '/chats'
+      fullPath: '/friends/chats'
+      preLoaderRoute: typeof UserFriendsChatsRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/friends/$uid': {
+      id: '/_user/friends/$uid'
+      path: '/$uid'
+      fullPath: '/friends/$uid'
+      preLoaderRoute: typeof UserFriendsUidRouteImport
+      parentRoute: typeof UserFriendsRoute
     }
     '/_user/learn/$lang/': {
       id: '/_user/learn/$lang/'
       path: '/'
       fullPath: '/learn/$lang/'
-      preLoaderRoute: typeof UserLearnLangIndexImport
-      parentRoute: typeof UserLearnLangImport
+      preLoaderRoute: typeof UserLearnLangIndexRouteImport
+      parentRoute: typeof UserLearnLangRoute
     }
-    '/_user/friends/chats/$friendId/recommend': {
-      id: '/_user/friends/chats/$friendId/recommend'
-      path: '/recommend'
-      fullPath: '/friends/chats/$friendId/recommend'
-      preLoaderRoute: typeof UserFriendsChatsFriendIdRecommendImport
-      parentRoute: typeof UserFriendsChatsFriendIdImport
-    }
-    '/_user/learn/$lang/requests/$id': {
-      id: '/_user/learn/$lang/requests/$id'
-      path: '/$id'
-      fullPath: '/learn/$lang/requests/$id'
-      preLoaderRoute: typeof UserLearnLangRequestsIdImport
-      parentRoute: typeof UserLearnLangRequestsImport
-    }
-    '/_user/learn/$lang/requests/new': {
-      id: '/_user/learn/$lang/requests/new'
-      path: '/new'
-      fullPath: '/learn/$lang/requests/new'
-      preLoaderRoute: typeof UserLearnLangRequestsNewImport
-      parentRoute: typeof UserLearnLangRequestsImport
-    }
-    '/_user/learn/$lang/review/go': {
-      id: '/_user/learn/$lang/review/go'
-      path: '/go'
-      fullPath: '/learn/$lang/review/go'
-      preLoaderRoute: typeof UserLearnLangReviewGoImport
-      parentRoute: typeof UserLearnLangReviewImport
-    }
-    '/_user/learn/$lang/requests/': {
-      id: '/_user/learn/$lang/requests/'
+    '/_user/friends/chats/': {
+      id: '/_user/friends/chats/'
       path: '/'
-      fullPath: '/learn/$lang/requests/'
-      preLoaderRoute: typeof UserLearnLangRequestsIndexImport
-      parentRoute: typeof UserLearnLangRequestsImport
+      fullPath: '/friends/chats/'
+      preLoaderRoute: typeof UserFriendsChatsIndexRouteImport
+      parentRoute: typeof UserFriendsChatsRoute
+    }
+    '/_user/learn/$lang/search': {
+      id: '/_user/learn/$lang/search'
+      path: '/search'
+      fullPath: '/learn/$lang/search'
+      preLoaderRoute: typeof UserLearnLangSearchRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/review': {
+      id: '/_user/learn/$lang/review'
+      path: '/review'
+      fullPath: '/learn/$lang/review'
+      preLoaderRoute: typeof UserLearnLangReviewRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/requests': {
+      id: '/_user/learn/$lang/requests'
+      path: '/requests'
+      fullPath: '/learn/$lang/requests'
+      preLoaderRoute: typeof UserLearnLangRequestsRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/library': {
+      id: '/_user/learn/$lang/library'
+      path: '/library'
+      fullPath: '/learn/$lang/library'
+      preLoaderRoute: typeof UserLearnLangLibraryRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/deck-settings': {
+      id: '/_user/learn/$lang/deck-settings'
+      path: '/deck-settings'
+      fullPath: '/learn/$lang/deck-settings'
+      preLoaderRoute: typeof UserLearnLangDeckSettingsRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/bulk-add': {
+      id: '/_user/learn/$lang/bulk-add'
+      path: '/bulk-add'
+      fullPath: '/learn/$lang/bulk-add'
+      preLoaderRoute: typeof UserLearnLangBulkAddRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/add-phrase': {
+      id: '/_user/learn/$lang/add-phrase'
+      path: '/add-phrase'
+      fullPath: '/learn/$lang/add-phrase'
+      preLoaderRoute: typeof UserLearnLangAddPhraseRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/$id': {
+      id: '/_user/learn/$lang/$id'
+      path: '/$id'
+      fullPath: '/learn/$lang/$id'
+      preLoaderRoute: typeof UserLearnLangIdRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/friends/search/$uid': {
+      id: '/_user/friends/search/$uid'
+      path: '/$uid'
+      fullPath: '/friends/search/$uid'
+      preLoaderRoute: typeof UserFriendsSearchUidRouteImport
+      parentRoute: typeof UserFriendsSearchRoute
+    }
+    '/_user/friends/chats/$friendId': {
+      id: '/_user/friends/chats/$friendId'
+      path: '/$friendId'
+      fullPath: '/friends/chats/$friendId'
+      preLoaderRoute: typeof UserFriendsChatsFriendIdRouteImport
+      parentRoute: typeof UserFriendsChatsRoute
     }
     '/_user/learn/$lang/review/': {
       id: '/_user/learn/$lang/review/'
       path: '/'
       fullPath: '/learn/$lang/review/'
-      preLoaderRoute: typeof UserLearnLangReviewIndexImport
-      parentRoute: typeof UserLearnLangReviewImport
+      preLoaderRoute: typeof UserLearnLangReviewIndexRouteImport
+      parentRoute: typeof UserLearnLangReviewRoute
+    }
+    '/_user/learn/$lang/requests/': {
+      id: '/_user/learn/$lang/requests/'
+      path: '/'
+      fullPath: '/learn/$lang/requests/'
+      preLoaderRoute: typeof UserLearnLangRequestsIndexRouteImport
+      parentRoute: typeof UserLearnLangRequestsRoute
+    }
+    '/_user/learn/$lang/review/go': {
+      id: '/_user/learn/$lang/review/go'
+      path: '/go'
+      fullPath: '/learn/$lang/review/go'
+      preLoaderRoute: typeof UserLearnLangReviewGoRouteImport
+      parentRoute: typeof UserLearnLangReviewRoute
+    }
+    '/_user/learn/$lang/requests/new': {
+      id: '/_user/learn/$lang/requests/new'
+      path: '/new'
+      fullPath: '/learn/$lang/requests/new'
+      preLoaderRoute: typeof UserLearnLangRequestsNewRouteImport
+      parentRoute: typeof UserLearnLangRequestsRoute
+    }
+    '/_user/learn/$lang/requests/$id': {
+      id: '/_user/learn/$lang/requests/$id'
+      path: '/$id'
+      fullPath: '/learn/$lang/requests/$id'
+      preLoaderRoute: typeof UserLearnLangRequestsIdRouteImport
+      parentRoute: typeof UserLearnLangRequestsRoute
+    }
+    '/_user/friends/chats/$friendId/recommend': {
+      id: '/_user/friends/chats/$friendId/recommend'
+      path: '/recommend'
+      fullPath: '/friends/chats/$friendId/recommend'
+      preLoaderRoute: typeof UserFriendsChatsFriendIdRecommendRouteImport
+      parentRoute: typeof UserFriendsChatsFriendIdRoute
     }
   }
 }
-
-// Create and export the route tree
 
 interface AuthRouteChildren {
   AuthFindAFriendRoute: typeof AuthFindAFriendRoute
@@ -913,311 +1156,6 @@ const UserRouteChildren: UserRouteChildren = {
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
 
-export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '': typeof UserRouteWithChildren
-  '/components': typeof ComponentsLazyRoute
-  '/privacy-policy': typeof PrivacyPolicyLazyRoute
-  '/request-removal': typeof RequestRemovalLazyRoute
-  '/find-a-friend': typeof AuthFindAFriendRoute
-  '/forgot-password': typeof AuthForgotPasswordRoute
-  '/login': typeof AuthLoginRoute
-  '/set-new-password': typeof AuthSetNewPasswordRoute
-  '/signup': typeof AuthSignupRoute
-  '/accept-invite': typeof UserAcceptInviteRoute
-  '/friends': typeof UserFriendsRouteWithChildren
-  '/getting-started': typeof UserGettingStartedRoute
-  '/learn': typeof UserLearnRouteWithChildren
-  '/profile': typeof UserProfileRouteWithChildren
-  '/friends/$uid': typeof UserFriendsUidRoute
-  '/friends/chats': typeof UserFriendsChatsRouteWithChildren
-  '/friends/invite': typeof UserFriendsInviteRoute
-  '/friends/requests': typeof UserFriendsRequestsRoute
-  '/friends/search': typeof UserFriendsSearchRouteWithChildren
-  '/learn/$lang': typeof UserLearnLangRouteWithChildren
-  '/learn/add-deck': typeof UserLearnAddDeckRoute
-  '/learn/archived': typeof UserLearnArchivedRoute
-  '/learn/quick-search': typeof UserLearnQuickSearchRoute
-  '/profile/change-email': typeof UserProfileChangeEmailRoute
-  '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
-  '/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/friends/': typeof UserFriendsIndexRoute
-  '/learn/': typeof UserLearnIndexRoute
-  '/profile/': typeof UserProfileIndexRoute
-  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
-  '/friends/search/$uid': typeof UserFriendsSearchUidRoute
-  '/learn/$lang/$id': typeof UserLearnLangIdRoute
-  '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
-  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
-  '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
-  '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
-  '/learn/$lang/search': typeof UserLearnLangSearchRoute
-  '/friends/chats/': typeof UserFriendsChatsIndexRoute
-  '/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
-  '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
-  '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
-  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
-  '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
-}
-
-export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '': typeof UserRouteWithChildren
-  '/components': typeof ComponentsLazyRoute
-  '/privacy-policy': typeof PrivacyPolicyLazyRoute
-  '/request-removal': typeof RequestRemovalLazyRoute
-  '/find-a-friend': typeof AuthFindAFriendRoute
-  '/forgot-password': typeof AuthForgotPasswordRoute
-  '/login': typeof AuthLoginRoute
-  '/set-new-password': typeof AuthSetNewPasswordRoute
-  '/signup': typeof AuthSignupRoute
-  '/accept-invite': typeof UserAcceptInviteRoute
-  '/getting-started': typeof UserGettingStartedRoute
-  '/friends/$uid': typeof UserFriendsUidRoute
-  '/friends/invite': typeof UserFriendsInviteRoute
-  '/friends/requests': typeof UserFriendsRequestsRoute
-  '/friends/search': typeof UserFriendsSearchRouteWithChildren
-  '/learn/add-deck': typeof UserLearnAddDeckRoute
-  '/learn/archived': typeof UserLearnArchivedRoute
-  '/learn/quick-search': typeof UserLearnQuickSearchRoute
-  '/profile/change-email': typeof UserProfileChangeEmailRoute
-  '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
-  '/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/friends': typeof UserFriendsIndexRoute
-  '/learn': typeof UserLearnIndexRoute
-  '/profile': typeof UserProfileIndexRoute
-  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
-  '/friends/search/$uid': typeof UserFriendsSearchUidRoute
-  '/learn/$lang/$id': typeof UserLearnLangIdRoute
-  '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
-  '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
-  '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/learn/$lang/search': typeof UserLearnLangSearchRoute
-  '/friends/chats': typeof UserFriendsChatsIndexRoute
-  '/learn/$lang': typeof UserLearnLangIndexRoute
-  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
-  '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
-  '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
-  '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
-  '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
-}
-
-export interface FileRoutesById {
-  __root__: typeof rootRoute
-  '/': typeof IndexRoute
-  '/_auth': typeof AuthRouteWithChildren
-  '/_user': typeof UserRouteWithChildren
-  '/components': typeof ComponentsLazyRoute
-  '/privacy-policy': typeof PrivacyPolicyLazyRoute
-  '/request-removal': typeof RequestRemovalLazyRoute
-  '/_auth/find-a-friend': typeof AuthFindAFriendRoute
-  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
-  '/_auth/login': typeof AuthLoginRoute
-  '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
-  '/_auth/signup': typeof AuthSignupRoute
-  '/_user/accept-invite': typeof UserAcceptInviteRoute
-  '/_user/friends': typeof UserFriendsRouteWithChildren
-  '/_user/getting-started': typeof UserGettingStartedRoute
-  '/_user/learn': typeof UserLearnRouteWithChildren
-  '/_user/profile': typeof UserProfileRouteWithChildren
-  '/_user/friends/$uid': typeof UserFriendsUidRoute
-  '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
-  '/_user/friends/invite': typeof UserFriendsInviteRoute
-  '/_user/friends/requests': typeof UserFriendsRequestsRoute
-  '/_user/friends/search': typeof UserFriendsSearchRouteWithChildren
-  '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
-  '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
-  '/_user/learn/archived': typeof UserLearnArchivedRoute
-  '/_user/learn/quick-search': typeof UserLearnQuickSearchRoute
-  '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
-  '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
-  '/_user/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/_user/friends/': typeof UserFriendsIndexRoute
-  '/_user/learn/': typeof UserLearnIndexRoute
-  '/_user/profile/': typeof UserProfileIndexRoute
-  '/_user/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
-  '/_user/friends/search/$uid': typeof UserFriendsSearchUidRoute
-  '/_user/learn/$lang/$id': typeof UserLearnLangIdRoute
-  '/_user/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
-  '/_user/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
-  '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/_user/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
-  '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
-  '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
-  '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
-  '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/_user/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
-  '/_user/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
-  '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
-  '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
-  '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
-}
-
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | ''
-    | '/components'
-    | '/privacy-policy'
-    | '/request-removal'
-    | '/find-a-friend'
-    | '/forgot-password'
-    | '/login'
-    | '/set-new-password'
-    | '/signup'
-    | '/accept-invite'
-    | '/friends'
-    | '/getting-started'
-    | '/learn'
-    | '/profile'
-    | '/friends/$uid'
-    | '/friends/chats'
-    | '/friends/invite'
-    | '/friends/requests'
-    | '/friends/search'
-    | '/learn/$lang'
-    | '/learn/add-deck'
-    | '/learn/archived'
-    | '/learn/quick-search'
-    | '/profile/change-email'
-    | '/profile/change-email-confirm'
-    | '/profile/change-password'
-    | '/friends/'
-    | '/learn/'
-    | '/profile/'
-    | '/friends/chats/$friendId'
-    | '/friends/search/$uid'
-    | '/learn/$lang/$id'
-    | '/learn/$lang/add-phrase'
-    | '/learn/$lang/bulk-add'
-    | '/learn/$lang/deck-settings'
-    | '/learn/$lang/library'
-    | '/learn/$lang/requests'
-    | '/learn/$lang/review'
-    | '/learn/$lang/search'
-    | '/friends/chats/'
-    | '/learn/$lang/'
-    | '/friends/chats/$friendId/recommend'
-    | '/learn/$lang/requests/$id'
-    | '/learn/$lang/requests/new'
-    | '/learn/$lang/review/go'
-    | '/learn/$lang/requests/'
-    | '/learn/$lang/review/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | ''
-    | '/components'
-    | '/privacy-policy'
-    | '/request-removal'
-    | '/find-a-friend'
-    | '/forgot-password'
-    | '/login'
-    | '/set-new-password'
-    | '/signup'
-    | '/accept-invite'
-    | '/getting-started'
-    | '/friends/$uid'
-    | '/friends/invite'
-    | '/friends/requests'
-    | '/friends/search'
-    | '/learn/add-deck'
-    | '/learn/archived'
-    | '/learn/quick-search'
-    | '/profile/change-email'
-    | '/profile/change-email-confirm'
-    | '/profile/change-password'
-    | '/friends'
-    | '/learn'
-    | '/profile'
-    | '/friends/chats/$friendId'
-    | '/friends/search/$uid'
-    | '/learn/$lang/$id'
-    | '/learn/$lang/add-phrase'
-    | '/learn/$lang/bulk-add'
-    | '/learn/$lang/deck-settings'
-    | '/learn/$lang/library'
-    | '/learn/$lang/search'
-    | '/friends/chats'
-    | '/learn/$lang'
-    | '/friends/chats/$friendId/recommend'
-    | '/learn/$lang/requests/$id'
-    | '/learn/$lang/requests/new'
-    | '/learn/$lang/review/go'
-    | '/learn/$lang/requests'
-    | '/learn/$lang/review'
-  id:
-    | '__root__'
-    | '/'
-    | '/_auth'
-    | '/_user'
-    | '/components'
-    | '/privacy-policy'
-    | '/request-removal'
-    | '/_auth/find-a-friend'
-    | '/_auth/forgot-password'
-    | '/_auth/login'
-    | '/_auth/set-new-password'
-    | '/_auth/signup'
-    | '/_user/accept-invite'
-    | '/_user/friends'
-    | '/_user/getting-started'
-    | '/_user/learn'
-    | '/_user/profile'
-    | '/_user/friends/$uid'
-    | '/_user/friends/chats'
-    | '/_user/friends/invite'
-    | '/_user/friends/requests'
-    | '/_user/friends/search'
-    | '/_user/learn/$lang'
-    | '/_user/learn/add-deck'
-    | '/_user/learn/archived'
-    | '/_user/learn/quick-search'
-    | '/_user/profile/change-email'
-    | '/_user/profile/change-email-confirm'
-    | '/_user/profile/change-password'
-    | '/_user/friends/'
-    | '/_user/learn/'
-    | '/_user/profile/'
-    | '/_user/friends/chats/$friendId'
-    | '/_user/friends/search/$uid'
-    | '/_user/learn/$lang/$id'
-    | '/_user/learn/$lang/add-phrase'
-    | '/_user/learn/$lang/bulk-add'
-    | '/_user/learn/$lang/deck-settings'
-    | '/_user/learn/$lang/library'
-    | '/_user/learn/$lang/requests'
-    | '/_user/learn/$lang/review'
-    | '/_user/learn/$lang/search'
-    | '/_user/friends/chats/'
-    | '/_user/learn/$lang/'
-    | '/_user/friends/chats/$friendId/recommend'
-    | '/_user/learn/$lang/requests/$id'
-    | '/_user/learn/$lang/requests/new'
-    | '/_user/learn/$lang/review/go'
-    | '/_user/learn/$lang/requests/'
-    | '/_user/learn/$lang/review/'
-  fileRoutesById: FileRoutesById
-}
-
-export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  AuthRoute: typeof AuthRouteWithChildren
-  UserRoute: typeof UserRouteWithChildren
-  ComponentsLazyRoute: typeof ComponentsLazyRoute
-  PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
-  RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
-}
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
@@ -1226,280 +1164,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/",
-        "/_auth",
-        "/_user",
-        "/components",
-        "/privacy-policy",
-        "/request-removal"
-      ]
-    },
-    "/": {
-      "filePath": "index.tsx"
-    },
-    "/_auth": {
-      "filePath": "_auth.tsx",
-      "children": [
-        "/_auth/find-a-friend",
-        "/_auth/forgot-password",
-        "/_auth/login",
-        "/_auth/set-new-password",
-        "/_auth/signup"
-      ]
-    },
-    "/_user": {
-      "filePath": "_user.tsx",
-      "children": [
-        "/_user/accept-invite",
-        "/_user/friends",
-        "/_user/getting-started",
-        "/_user/learn",
-        "/_user/profile"
-      ]
-    },
-    "/components": {
-      "filePath": "components.lazy.tsx"
-    },
-    "/privacy-policy": {
-      "filePath": "privacy-policy.lazy.tsx"
-    },
-    "/request-removal": {
-      "filePath": "request-removal.lazy.tsx"
-    },
-    "/_auth/find-a-friend": {
-      "filePath": "_auth/find-a-friend.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/forgot-password": {
-      "filePath": "_auth/forgot-password.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/login": {
-      "filePath": "_auth/login.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/set-new-password": {
-      "filePath": "_auth/set-new-password.tsx",
-      "parent": "/_auth"
-    },
-    "/_auth/signup": {
-      "filePath": "_auth/signup.tsx",
-      "parent": "/_auth"
-    },
-    "/_user/accept-invite": {
-      "filePath": "_user/accept-invite.tsx",
-      "parent": "/_user"
-    },
-    "/_user/friends": {
-      "filePath": "_user/friends.tsx",
-      "parent": "/_user",
-      "children": [
-        "/_user/friends/$uid",
-        "/_user/friends/chats",
-        "/_user/friends/invite",
-        "/_user/friends/requests",
-        "/_user/friends/search",
-        "/_user/friends/"
-      ]
-    },
-    "/_user/getting-started": {
-      "filePath": "_user/getting-started.tsx",
-      "parent": "/_user"
-    },
-    "/_user/learn": {
-      "filePath": "_user/learn.tsx",
-      "parent": "/_user",
-      "children": [
-        "/_user/learn/$lang",
-        "/_user/learn/add-deck",
-        "/_user/learn/archived",
-        "/_user/learn/quick-search",
-        "/_user/learn/"
-      ]
-    },
-    "/_user/profile": {
-      "filePath": "_user/profile.tsx",
-      "parent": "/_user",
-      "children": [
-        "/_user/profile/change-email",
-        "/_user/profile/change-email-confirm",
-        "/_user/profile/change-password",
-        "/_user/profile/"
-      ]
-    },
-    "/_user/friends/$uid": {
-      "filePath": "_user/friends/$uid.tsx",
-      "parent": "/_user/friends"
-    },
-    "/_user/friends/chats": {
-      "filePath": "_user/friends/chats.tsx",
-      "parent": "/_user/friends",
-      "children": [
-        "/_user/friends/chats/$friendId",
-        "/_user/friends/chats/"
-      ]
-    },
-    "/_user/friends/invite": {
-      "filePath": "_user/friends/invite.tsx",
-      "parent": "/_user/friends"
-    },
-    "/_user/friends/requests": {
-      "filePath": "_user/friends/requests.tsx",
-      "parent": "/_user/friends"
-    },
-    "/_user/friends/search": {
-      "filePath": "_user/friends/search.tsx",
-      "parent": "/_user/friends",
-      "children": [
-        "/_user/friends/search/$uid"
-      ]
-    },
-    "/_user/learn/$lang": {
-      "filePath": "_user/learn/$lang.tsx",
-      "parent": "/_user/learn",
-      "children": [
-        "/_user/learn/$lang/$id",
-        "/_user/learn/$lang/add-phrase",
-        "/_user/learn/$lang/bulk-add",
-        "/_user/learn/$lang/deck-settings",
-        "/_user/learn/$lang/library",
-        "/_user/learn/$lang/requests",
-        "/_user/learn/$lang/review",
-        "/_user/learn/$lang/search",
-        "/_user/learn/$lang/"
-      ]
-    },
-    "/_user/learn/add-deck": {
-      "filePath": "_user/learn/add-deck.tsx",
-      "parent": "/_user/learn"
-    },
-    "/_user/learn/archived": {
-      "filePath": "_user/learn/archived.tsx",
-      "parent": "/_user/learn"
-    },
-    "/_user/learn/quick-search": {
-      "filePath": "_user/learn/quick-search.tsx",
-      "parent": "/_user/learn"
-    },
-    "/_user/profile/change-email": {
-      "filePath": "_user/profile/change-email.tsx",
-      "parent": "/_user/profile"
-    },
-    "/_user/profile/change-email-confirm": {
-      "filePath": "_user/profile/change-email-confirm.tsx",
-      "parent": "/_user/profile"
-    },
-    "/_user/profile/change-password": {
-      "filePath": "_user/profile/change-password.tsx",
-      "parent": "/_user/profile"
-    },
-    "/_user/friends/": {
-      "filePath": "_user/friends/index.tsx",
-      "parent": "/_user/friends"
-    },
-    "/_user/learn/": {
-      "filePath": "_user/learn/index.tsx",
-      "parent": "/_user/learn"
-    },
-    "/_user/profile/": {
-      "filePath": "_user/profile/index.tsx",
-      "parent": "/_user/profile"
-    },
-    "/_user/friends/chats/$friendId": {
-      "filePath": "_user/friends/chats.$friendId.tsx",
-      "parent": "/_user/friends/chats",
-      "children": [
-        "/_user/friends/chats/$friendId/recommend"
-      ]
-    },
-    "/_user/friends/search/$uid": {
-      "filePath": "_user/friends/search.$uid.tsx",
-      "parent": "/_user/friends/search"
-    },
-    "/_user/learn/$lang/$id": {
-      "filePath": "_user/learn/$lang.$id.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/add-phrase": {
-      "filePath": "_user/learn/$lang.add-phrase.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/bulk-add": {
-      "filePath": "_user/learn/$lang.bulk-add.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/deck-settings": {
-      "filePath": "_user/learn/$lang.deck-settings.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/library": {
-      "filePath": "_user/learn/$lang.library.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/learn/$lang/requests": {
-      "filePath": "_user/learn/$lang.requests.tsx",
-      "parent": "/_user/learn/$lang",
-      "children": [
-        "/_user/learn/$lang/requests/$id",
-        "/_user/learn/$lang/requests/new",
-        "/_user/learn/$lang/requests/"
-      ]
-    },
-    "/_user/learn/$lang/review": {
-      "filePath": "_user/learn/$lang.review.tsx",
-      "parent": "/_user/learn/$lang",
-      "children": [
-        "/_user/learn/$lang/review/go",
-        "/_user/learn/$lang/review/"
-      ]
-    },
-    "/_user/learn/$lang/search": {
-      "filePath": "_user/learn/$lang.search.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/friends/chats/": {
-      "filePath": "_user/friends/chats.index.tsx",
-      "parent": "/_user/friends/chats"
-    },
-    "/_user/learn/$lang/": {
-      "filePath": "_user/learn/$lang.index.tsx",
-      "parent": "/_user/learn/$lang"
-    },
-    "/_user/friends/chats/$friendId/recommend": {
-      "filePath": "_user/friends/chats.$friendId.recommend.tsx",
-      "parent": "/_user/friends/chats/$friendId"
-    },
-    "/_user/learn/$lang/requests/$id": {
-      "filePath": "_user/learn/$lang.requests.$id.tsx",
-      "parent": "/_user/learn/$lang/requests"
-    },
-    "/_user/learn/$lang/requests/new": {
-      "filePath": "_user/learn/$lang.requests.new.tsx",
-      "parent": "/_user/learn/$lang/requests"
-    },
-    "/_user/learn/$lang/review/go": {
-      "filePath": "_user/learn/$lang.review.go.tsx",
-      "parent": "/_user/learn/$lang/review"
-    },
-    "/_user/learn/$lang/requests/": {
-      "filePath": "_user/learn/$lang.requests.index.tsx",
-      "parent": "/_user/learn/$lang/requests"
-    },
-    "/_user/learn/$lang/review/": {
-      "filePath": "_user/learn/$lang.review.index.tsx",
-      "parent": "/_user/learn/$lang/review"
-    }
-  }
-}
-ROUTE_MANIFEST_END */

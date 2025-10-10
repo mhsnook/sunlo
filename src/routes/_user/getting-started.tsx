@@ -66,7 +66,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-export default function ProfileCreationForm({ userId }: { userId: string }) {
+function ProfileCreationForm({ userId }: { userId: string }) {
 	const queryClient = useQueryClient()
 
 	const {
