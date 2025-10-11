@@ -10,6 +10,7 @@ import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
 import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
 import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
+import { PhraseFullType, PublicProfileType } from '@/lib/schemas'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -96,9 +97,6 @@ export type SBMutation<T> = Promise<PostgrestResponse<T>>
 
 export type LanguageRow = Omit<Tables<'language'>, 'alias_of'>
 export type LanguageMeta = Tables<'language_plus'>
-export type LanguageFetched = LanguageMeta & {
-	phrases: Array<PhraseFull>
-}
 
 export type PhraseStub = NonNullableFields<{
 	id: uuid
@@ -118,7 +116,8 @@ export type PhrasesMap = {
 export type LanguageLoaded = {
 	meta: LanguageMeta
 	pids: pids
-	phrasesMap: PhrasesMap
+	phrases: PhraseFullType[]
+	profiles: PublicProfileType[]
 }
 
 export type PhraseRow = Tables<'phrase'> & { created_at: string }

@@ -58,7 +58,7 @@ export const PhraseFullSchema = z.object({
 	text: z.string(),
 	lang: z.string().length(3),
 	added_by: z.string().uuid().nullable(),
-	added_by_profile: PublicProfileSchema.optional(),
+	// added_by_profile: PublicProfileSchema.optional(),
 	avg_difficulty: z.number().nullable().default(null),
 	avg_stability: z.number().nullable().default(null),
 	count_active: z.number().nullable().default(null),
@@ -76,7 +76,7 @@ export const PhraseFullSchema = z.object({
 	rank_newest: z.number().nullable().default(null),
 	request_id: z.string().uuid().nullable().default(null),
 	tags: z.array(PhraseTagSchema).default([]),
-	// translations: z.array(TranslationSchema).default([]),
+	translations: z.array(TranslationSchema).default([]),
 })
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
@@ -90,3 +90,5 @@ export const PhraseRequestSchema = z.object({
 	status: z.enum(['pending', 'fulfilled', 'cancelled']),
 	fullfilled_at: z.string().datetime().nullable(),
 })
+
+export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>

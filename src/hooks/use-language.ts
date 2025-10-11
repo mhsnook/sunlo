@@ -1,15 +1,15 @@
-import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import type {
-	LanguageFetched,
-	LanguageLoaded,
-	PhrasesMap,
-	pids,
-	uuid,
-} from '@/types/main'
+import { queryOptions, useQuery } from '@tanstack/react-query'
+import { useLiveQuery } from '@tanstack/react-db'
+import { eq } from '@tanstack/react-db'
+import type { LanguageLoaded, pids, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { useCallback } from 'react'
-import { mapArray } from '@/lib/utils'
+import { phrasesCollection, publicProfilesCollection } from '@/lib/collections'
+import { PhraseFullType, PublicProfileSchema } from '@/lib/schemas'
 
+/**
+ * Fetches the language metadata and all its associated phrases from the database.
+ * This is the raw data loading function.
+ */
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
 		.from('language_plus')
@@ -23,25 +23,46 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 		throw Error(
 			`This language was not found in the database. Please double check the language code in your URL or report a bug to an admin. (The language code provided: ${lang}. This should be a 3-character string like "eng" or "hin".) ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
 		)
-	const { phrases: phrasesArray, ...meta }: LanguageFetched = data
-	const pids: pids = phrasesArray?.map((p) => p.id!)
-	const phrasesMap: PhrasesMap = mapArray(phrasesArray, 'id')
+	const { phrases: phrasesRaw, ...meta } = data
+	const pids: pids = phrasesRaw?.map((p) => p.id!) ?? []
+
+	const profiles = (phrasesRaw ?? []).map((p) =>
+		PublicProfileSchema.parse(p.added_by_profile)
+	)
+
 	return {
 		meta,
 		pids,
-		phrasesMap,
+		profiles,
+		phrases: phrasesRaw,
 	}
 }
 
 export const languageQueryOptions = (lang: string) =>
 	queryOptions({
 		queryKey: ['language', lang],
-		queryFn: async ({ queryKey }) => fetchLanguage(queryKey[1]),
+		queryFn: async () => {
+			const loaded = await fetchLanguage(lang)
+			// Imperatively populate the collections
+			if (loaded.phrases.length > 0) {
+				phrasesCollection.upsert(loaded.phrases)
+			}
+			if (loaded.profiles.length > 0) {
+				publicProfilesCollection.upsert(loaded.profiles)
+			}
+			return { meta: loaded.meta, pids: loaded.pids }
+		},
 		enabled: lang.length === 3,
+		// The data is now normalized in the collection, so we can treat this as stable
+		staleTime: Infinity,
 	})
 
-export const useLanguage = (lang: string) =>
-	useQuery({ ...languageQueryOptions(lang) })
+/**
+ * This is the main hook for loading a language's data.
+ * It fetches metadata and populates the global phrasesCollection.
+ */
+export const useLanguageLoader = (lang: string) =>
+	useQuery(languageQueryOptions(lang))
 
 const selectMeta = (data: LanguageLoaded) => data.meta
 export const useLanguageMeta = (lang: string) =>
@@ -57,34 +78,18 @@ export const useLanguagePids = (lang: string) =>
 		select: selectPids,
 	})
 
-const selectPhrasesMap = (data: LanguageLoaded) => data.phrasesMap
-export const useLanguagePhrasesMap = (lang: string) =>
-	useQuery({
-		...languageQueryOptions(lang),
-		select: selectPhrasesMap,
-	})
-
-export const useLanguagePhrase = (pid: uuid | null, lang: string | null) => {
-	const selectPhrase = useCallback(
-		(data: LanguageLoaded) => data.phrasesMap[pid!],
-		[pid]
+/**
+ * Gets a single phrase directly from the reactive phrasesCollection.
+ */
+export const useLanguagePhrase = (pid: uuid | null) => {
+	const { data } = useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesCollection })
+				.where(({ phrase }) => eq(phrase.id, pid!)),
+		{ enabled: !!pid }
 	)
-	return useQuery({
-		...languageQueryOptions(lang!),
-		select: selectPhrase,
-		enabled: !!pid && !!lang,
-	})
-}
-
-export const useLanguagePhraseSuspense = (pid: uuid, lang: string) => {
-	const selectPhrase = useCallback(
-		(data: LanguageLoaded) => data.phrasesMap[pid],
-		[pid]
-	)
-	return useSuspenseQuery({
-		...languageQueryOptions(lang),
-		select: selectPhrase,
-	})
+	return data?.[0] as PhraseFullType | undefined
 }
 
 const selectTags = (data: LanguageLoaded) => data.meta.tags
