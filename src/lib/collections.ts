@@ -2,9 +2,19 @@ import { createCollection } from '@tanstack/react-db'
 import { localOnlyCollectionOptions } from '@tanstack/react-db'
 import {
 	PhraseFullSchema,
+	type PhraseFullType,
 	PublicProfileSchema,
 	type PublicProfileType,
-	type PhraseFullType,
+	PhraseRequestSchema,
+	type PhraseRequestType,
+	LanguageSchema,
+	type LanguageType,
+	DeckMetaSchema,
+	type DeckMetaType,
+	CardMetaSchema,
+	type CardMetaType,
+	CardReviewSchema,
+	type CardReviewType,
 } from './schemas'
 
 export const publicProfilesCollection = createCollection(
@@ -15,7 +25,13 @@ export const publicProfilesCollection = createCollection(
 	})
 )
 
-export const phraseRequestsCollection = createCollection()
+export const phraseRequestsCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'phrase_requests',
+		getKey: (item: PhraseRequestType) => item.id,
+		schema: PhraseRequestSchema,
+	})
+)
 
 export const phrasesCollection = createCollection(
 	localOnlyCollectionOptions({
@@ -30,3 +46,35 @@ export const collections = {
 	phraseRequests: phraseRequestsCollection,
 	phrases: phrasesCollection,
 }
+
+export const languagesCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'language_meta',
+		getKey: (item: LanguageType) => item.lang,
+		schema: LanguageSchema,
+	})
+)
+
+export const decksCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'deck_meta',
+		getKey: (item: DeckMetaType) => item.lang,
+		schema: DeckMetaSchema,
+	})
+)
+
+export const cardsCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'card_meta',
+		getKey: (item: CardMetaType) => item.phrase_id,
+		schema: CardMetaSchema,
+	})
+)
+
+export const reviewsCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'card_review',
+		getKey: (item: CardReviewType) => item.id,
+		schema: CardReviewSchema,
+	})
+)

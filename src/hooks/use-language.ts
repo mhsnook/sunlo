@@ -1,10 +1,23 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import { useLiveQuery } from '@tanstack/react-db'
 import { eq } from '@tanstack/react-db'
 import type { LanguageLoaded, pids, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { phrasesCollection, publicProfilesCollection } from '@/lib/collections'
-import { PhraseFullType, PublicProfileSchema } from '@/lib/schemas'
+import {
+	languagesCollection,
+	phraseRequestsCollection,
+	phrasesCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
+import {
+	LanguageSchema,
+	PhraseFullSchema,
+	PhraseFullType,
+	PhraseRequestSchema,
+	PublicProfileSchema,
+} from '@/lib/schemas'
+import { mapArray } from '@/lib/utils'
+import { useCallback } from 'react'
 
 /**
  * Fetches the language metadata and all its associated phrases from the database.
@@ -14,7 +27,7 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
 		.from('language_plus')
 		.select(
-			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*))`
+			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*)), requests:meta_phrase_request(*)`
 		)
 		.eq('lang', lang)
 		.maybeSingle()
@@ -23,18 +36,22 @@ export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 		throw Error(
 			`This language was not found in the database. Please double check the language code in your URL or report a bug to an admin. (The language code provided: ${lang}. This should be a 3-character string like "eng" or "hin".) ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
 		)
-	const { phrases: phrasesRaw, ...meta } = data
+	const { phrases: phrasesRaw, requests: requestsRaw, ...meta } = data
 	const pids: pids = phrasesRaw?.map((p) => p.id!) ?? []
 
-	const profiles = (phrasesRaw ?? []).map((p) =>
-		PublicProfileSchema.parse(p.added_by_profile)
-	)
-
+	const profiles1 = (phrasesRaw ?? []).map((p) => p.added_by_profile)
+	const profiles2 = (requestsRaw ?? []).map((r) => r.requester)
+	const phrasesArray = phrasesRaw.map((i) => PhraseFullSchema.parse(i))
+	const phrasesMap = mapArray<PhraseFullType, 'id'>(phrasesArray, 'id')
 	return {
-		meta,
+		meta: LanguageSchema.parse(meta),
 		pids,
-		profiles,
-		phrases: phrasesRaw,
+		profiles: [...profiles1, ...profiles2].map((i) =>
+			PublicProfileSchema.parse(i)
+		),
+		requests: requestsRaw.map((i) => PhraseRequestSchema.parse(i)),
+		phrases: phrasesArray,
+		phrasesMap,
 	}
 }
 
@@ -43,14 +60,24 @@ export const languageQueryOptions = (lang: string) =>
 		queryKey: ['language', lang],
 		queryFn: async () => {
 			const loaded = await fetchLanguage(lang)
+			if (!loaded) return null
 			// Imperatively populate the collections
 			if (loaded.phrases.length > 0) {
-				phrasesCollection.upsert(loaded.phrases)
+				phrasesCollection.insert(loaded.phrases)
+			}
+			if (loaded.requests.length > 0) {
+				phraseRequestsCollection.insert(loaded.requests)
 			}
 			if (loaded.profiles.length > 0) {
-				publicProfilesCollection.upsert(loaded.profiles)
+				publicProfilesCollection.insert(loaded.profiles)
 			}
-			return { meta: loaded.meta, pids: loaded.pids }
+			languagesCollection.insert(LanguageSchema.parse(loaded.meta))
+
+			return {
+				meta: loaded.meta,
+				pids: loaded.pids,
+				phrasesMap: loaded.phrasesMap,
+			}
 		},
 		enabled: lang.length === 3,
 		// The data is now normalized in the collection, so we can treat this as stable
@@ -78,18 +105,10 @@ export const useLanguagePids = (lang: string) =>
 		select: selectPids,
 	})
 
-/**
- * Gets a single phrase directly from the reactive phrasesCollection.
- */
-export const useLanguagePhrase = (pid: uuid | null) => {
-	const { data } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.id, pid!)),
-		{ enabled: !!pid }
-	)
-	return data?.[0] as PhraseFullType | undefined
+const selectMap = (data: LanguageLoaded) => data.phrasesMap
+export const useLanguagePhrasesMap = (lang: string) =>
+	useQuery({ ...languageQueryOptions(lang), select: selectMap })
+
 }
 
 const selectTags = (data: LanguageLoaded) => data.meta.tags

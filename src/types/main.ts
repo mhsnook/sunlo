@@ -117,7 +117,9 @@ export type LanguageLoaded = {
 	meta: LanguageMeta
 	pids: pids
 	phrases: PhraseFullType[]
+	requests: PhraseRequestType[]
 	profiles: PublicProfileType[]
+	phrasesMap: PhrasesMap
 }
 
 export type PhraseRow = Tables<'phrase'> & { created_at: string }
