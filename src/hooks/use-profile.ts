@@ -16,10 +16,10 @@ import { PublicProfile } from '@/routes/_user/friends/-types'
 
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
-		queryKey: ['user', userId],
+		queryKey: ['user', userId, 'profile'],
 		queryFn: async ({ queryKey }): Promise<ProfileFull | null> => {
-			if (!queryKey[1]) return null
-			const uid = queryKey[1] as uuid
+			const uid = queryKey[1]
+			if (typeof uid !== 'string') return null
 			const { data } = await supabase
 				.from('user_profile')
 				.select(`*, decks_array:user_deck_plus(*)`)
@@ -125,12 +125,12 @@ export const searchPublicProfilesByUsername = async (
 
 export const publicProfileQuery = (uid: uuid | null) =>
 	queryOptions({
-		queryKey: ['public', 'profile', uid!],
-		queryFn: async ({ queryKey }: { queryKey: Array<string> }) => {
+		queryKey: ['public', 'profile', uid],
+		queryFn: async () => {
 			const { data } = await supabase
 				.from('public_profile')
 				.select()
-				.eq('uid', queryKey[2])
+				.eq('uid', uid!)
 				.maybeSingle()
 				.throwOnError()
 			return !data ? null : (
@@ -139,7 +139,7 @@ export const publicProfileQuery = (uid: uuid | null) =>
 						username: data.username ?? '',
 						avatar_path: data.avatar_path ?? '',
 						avatarUrl: avatarUrlify(data.avatar_path),
-					} as PublicProfile | null)
+					} as PublicProfile)
 				)
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,
