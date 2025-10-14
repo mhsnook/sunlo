@@ -27,13 +27,9 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		const profile = await queryClient.ensureQueryData(profileQuery(userId))
 		const theme = profile?.decksMap?.[lang]?.theme
 
-		const data = {
+		return {
 			language: await languageLoader,
 			deck: await deckLoader,
-		}
-		return {
-			language: data.language,
-			deck: data.deck,
 			appnav: [
 				'/learn/$lang',
 				'/learn/$lang/review',
