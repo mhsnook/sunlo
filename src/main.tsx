@@ -31,6 +31,7 @@ const router = createRouter({
 	routeTree,
 	context: {
 		auth: undefined!, // we'll make this during render
+		profile: undefined!, // we'll make this during render
 		queryClient,
 	},
 	defaultPreload: 'intent',

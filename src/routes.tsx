@@ -1,17 +1,18 @@
-import { QueryClient, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { RouterProvider, Register } from '@tanstack/react-router'
-import { AuthState } from '@/types/main'
 import { useAuth } from '@/lib/hooks'
-
-type RouterContext = {
-	auth: AuthState
-	queryClient: QueryClient
-}
+import { useProfile } from './hooks/use-profile'
+import { useMemo } from 'react'
+import { MyRouterContext } from './routes/__root'
 
 export default function Routes({ router }: Register) {
 	const auth = useAuth()
+	const { data: profile } = useProfile()
 	const queryClient = useQueryClient()
-	// oxlint-disable-next-line jsx-no-new-object-as-prop
-	const context: RouterContext = { auth, queryClient }
+	const context: MyRouterContext = useMemo(
+		() => ({ auth, profile, queryClient }),
+		[auth, profile, queryClient]
+	)
+	if (auth === undefined) return null
 	return <RouterProvider router={router} context={context} />
 }

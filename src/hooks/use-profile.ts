@@ -90,12 +90,12 @@ export const profileQuery = (userId: uuid | null) =>
 
 export const useProfile = () => {
 	const { userId } = useAuth()
-	return useSuspenseQuery({ ...profileQuery(userId) })
+	return useSuspenseQuery(profileQuery(userId))
 }
 
 export const useProfileLazy = () => {
 	const { userId } = useAuth()
-	return useQuery({ ...profileQuery(userId) })
+	return useQuery(profileQuery(userId))
 }
 
 export const searchPublicProfilesByUsername = async (
