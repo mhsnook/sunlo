@@ -10,7 +10,11 @@ import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
 import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
 import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
-import { PhraseFullType, PublicProfileType } from '@/lib/schemas'
+import {
+	PhraseFullType,
+	PhraseRequestType,
+	PublicProfileType,
+} from '@/lib/schemas'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -222,7 +226,7 @@ export type ReviewStats = {
 		index: number
 	}
 }
-type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
+export type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
 	manifest: pids
 }
 

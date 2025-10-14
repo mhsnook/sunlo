@@ -45,8 +45,8 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 		},
 	}) => {
 		await Promise.all([
-			queryClient.prefetchQuery(languageQueryOptions(lang)),
-			queryClient.prefetchQuery(deckQueryOptions(lang, userId)),
+			queryClient.ensureQueryData(languageQueryOptions(lang)),
+			queryClient.ensureQueryData(deckQueryOptions(lang, userId)),
 		])
 	},
 })

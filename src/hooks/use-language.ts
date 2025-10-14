@@ -1,6 +1,4 @@
 import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import { useLiveQuery } from '@tanstack/react-db'
-import { eq } from '@tanstack/react-db'
 import type { LanguageLoaded, pids, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import {
@@ -109,6 +107,27 @@ const selectMap = (data: LanguageLoaded) => data.phrasesMap
 export const useLanguagePhrasesMap = (lang: string) =>
 	useQuery({ ...languageQueryOptions(lang), select: selectMap })
 
+export const useLanguagePhrase = (pid: uuid | null, lang: string | null) => {
+	const selectPhrase = useCallback(
+		(data: LanguageLoaded) => data.phrasesMap[pid!],
+		[pid]
+	)
+	return useQuery({
+		...languageQueryOptions(lang!),
+		select: selectPhrase,
+		enabled: !!pid && !!lang,
+	})
+}
+
+export const useLanguagePhraseSuspense = (pid: uuid, lang: string) => {
+	const selectPhrase = useCallback(
+		(data: LanguageLoaded) => data.phrasesMap[pid],
+		[pid]
+	)
+	return useSuspenseQuery({
+		...languageQueryOptions(lang),
+		select: selectPhrase,
+	})
 }
 
 const selectTags = (data: LanguageLoaded) => data.meta.tags

@@ -15,6 +15,10 @@ import {
 	type CardMetaType,
 	CardReviewSchema,
 	type CardReviewType,
+	DailyReviewStateSchema,
+	type DailyReviewStateType,
+	MyProfileSchema,
+	type MyProfileType,
 } from './schemas'
 
 export const publicProfilesCollection = createCollection(
@@ -25,6 +29,13 @@ export const publicProfilesCollection = createCollection(
 	})
 )
 
+export const myProfileCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'my_profile',
+		getKey: (item: MyProfileType) => item.uid,
+		schema: MyProfileSchema,
+	})
+)
 export const phraseRequestsCollection = createCollection(
 	localOnlyCollectionOptions({
 		id: 'phrase_requests',
@@ -76,5 +87,13 @@ export const reviewsCollection = createCollection(
 		id: 'card_review',
 		getKey: (item: CardReviewType) => item.id,
 		schema: CardReviewSchema,
+	})
+)
+
+export const reviewDaysCollection = createCollection(
+	localOnlyCollectionOptions({
+		id: 'daily_review_state',
+		getKey: (item: DailyReviewStateType) => item.day_session,
+		schema: DailyReviewStateSchema,
 	})
 )

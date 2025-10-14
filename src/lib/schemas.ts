@@ -20,8 +20,14 @@ export const PhraseRequestStatusEnumSchema = z.enum([
 	'cancelled',
 ])
 
+export const LangSchema = z
+	.string()
+	.length(3, { message: 'Please select a language' })
+
+export type LangType = z.infer<typeof LangSchema>
+
 export const LanguageKnownSchema = z.object({
-	lang: z.string().length(3, { message: 'Please select a language' }),
+	lang: LangSchema,
 	level: LanguageProficiencyEnumSchema,
 })
 
@@ -57,16 +63,26 @@ export const PublicProfileSchema = z.object({
 
 export type PublicProfileType = z.infer<typeof PublicProfileSchema>
 
+export const MyProfileSchema = PublicProfileSchema.extend({
+	created_at: z.string(),
+	languages_known: LanguagesKnownSchema,
+	updated_at: z.string().nullable(),
+})
+
+export type MyProfileType = z.infer<typeof MyProfileSchema>
+
 export const PhraseTagSchema = z.object({
 	id: z.string().uuid(),
 	name: z.string(),
 })
 
+export type PhraseTagType = z.infer<typeof PhraseTagSchema>
+
 export const TranslationSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
 	text: z.string(),
-	lang: z.string().length(3),
+	lang: LangSchema,
 	phrase_id: z.string().uuid(),
 	added_by: z.string().uuid().nullable(),
 })
@@ -77,7 +93,7 @@ export const PhraseFullSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
 	text: z.string(),
-	lang: z.string().length(3),
+	lang: LangSchema,
 	added_by: z.string().uuid().nullable(),
 	// added_by_profile: PublicProfileSchema.optional(),
 	avg_difficulty: z.number().nullable().default(null),
@@ -106,7 +122,7 @@ export const PhraseRequestSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
 	requester_uid: z.string().uuid(),
-	lang: z.string(),
+	lang: LangSchema,
 	prompt: z.string(),
 	status: PhraseRequestStatusEnumSchema,
 	fulfilled_at: z.string().nullable(),
@@ -115,7 +131,7 @@ export const PhraseRequestSchema = z.object({
 export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>
 
 export const LanguageSchema = z.object({
-	lang: z.string().length(3),
+	lang: LangSchema,
 	alias_of: z.string().length(3).nullable(),
 	name: z.string(),
 	leaners: z.number().default(0),
@@ -129,7 +145,7 @@ export type LanguageType = z.infer<typeof LanguageSchema>
 
 export const DeckMetaSchema = z.object({
 	uid: z.string(),
-	lang: z.string().length(3),
+	lang: LangSchema,
 	created_at: z.string(),
 	archived: z.boolean().default(false),
 	daily_review_goal: z.number().default(15),
@@ -151,7 +167,7 @@ export const CardMetaSchema = z.object({
 	created_at: z.string(),
 	phrase_id: z.string().uuid(),
 	uid: z.string().uuid(),
-	lang: z.string().length(3),
+	lang: LangSchema,
 	current_timestamp: z.string(),
 	difficulty: z.number().nullable(),
 	last_reviewed_at: z.string().nullable(),
@@ -168,7 +184,7 @@ export const CardReviewSchema = z.object({
 	created_at: z.string(),
 	uid: z.string().uuid(),
 	day_session: z.string().length(10),
-	lang: z.string().length(3),
+	lang: LangSchema,
 	phrase_id: z.string().uuid(),
 	score: z.number(),
 	day_first_review: z.boolean().default(true),
@@ -179,3 +195,13 @@ export const CardReviewSchema = z.object({
 })
 
 export type CardReviewType = z.infer<typeof CardReviewSchema>
+
+export const DailyReviewStateSchema = z.object({
+	created_at: z.string(),
+	day_session: z.string().length(10),
+	lang: LangSchema,
+	manifest: z.array(z.string().uuid()),
+	uid: z.string().uuid(),
+})
+
+export type DailyReviewStateType = z.infer<typeof DailyReviewStateSchema>

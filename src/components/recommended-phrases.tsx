@@ -39,7 +39,7 @@ const PhraseSection = ({
 export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 	const recommendations = useCompositePids(lang)
 
-	//if (!recommendations) return null
+	if (!recommendations) return null
 
 	const hasRecommendations =
 		recommendations.top8.popular.length > 0 ||

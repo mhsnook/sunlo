@@ -22,8 +22,8 @@ import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
-import { profileQuery } from '@/hooks/use-profile'
 import { useAuth } from '@/lib/hooks'
+import { baseLoaderQuery } from '@/hooks/use-db-loader'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -52,9 +52,7 @@ export const Route = createFileRoute('/_user')({
 	}) => {
 		// if for some reason there is no profile, we must create one!
 		if (location.pathname !== '/getting-started') {
-			const data = await queryClient.ensureQueryData({
-				...profileQuery(userId),
-			})
+			const data = await queryClient.ensureQueryData(baseLoaderQuery(userId))
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			if (data === null) throw redirect({ to: '/getting-started' })
 		}
