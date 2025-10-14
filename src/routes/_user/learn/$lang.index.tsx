@@ -21,7 +21,6 @@ import {
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import {
-	deckQueryOptions,
 	useDeckActivityChartData,
 	useDeckMeta,
 	useDeckPids,
@@ -30,25 +29,13 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { languageQueryOptions, useLanguageMeta } from '@/hooks/use-language'
+import { useLanguageMeta } from '@/hooks/use-language'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		await Promise.all([
-			queryClient.prefetchQuery(languageQueryOptions(lang)),
-			queryClient.prefetchQuery(deckQueryOptions(lang, userId)),
-		])
-	},
 })
 
 function WelcomePage() {
