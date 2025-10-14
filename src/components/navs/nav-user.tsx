@@ -15,7 +15,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useAuth, useSignOut } from '@/lib/hooks'
+import { useAuth, useAvatarUrl, useSignOut } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
 import { Link } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
@@ -31,8 +31,8 @@ export function NavUser() {
 	const { isAuth, userEmail } = useAuth()
 	const { data: profile } = useProfile()
 	const signOut = useSignOut()
+	const avatarUrl = useAvatarUrl(profile?.avatar_path)
 	if (!profile) return null
-	const { username, avatarUrl } = profile
 
 	return (
 		<SidebarMenu>
@@ -44,11 +44,13 @@ export function NavUser() {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-2xl shadow"
 						>
 							<Avatar className="size-8 rounded-lg">
-								<AvatarImage src={avatarUrl} alt={username} />
+								<AvatarImage src={avatarUrl} alt={profile.username} />
 								<AvatarFallback className="rounded-lg">Me</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">{username}</span>
+								<span className="truncate font-semibold">
+									{profile.username}
+								</span>
 								<span className="truncate text-xs">{userEmail}</span>
 							</div>
 							<ChevronsUpDown className="ml-auto size-4" />
@@ -63,11 +65,11 @@ export function NavUser() {
 						<DropdownMenuLabel className="p-0 font-normal">
 							<div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
 								<Avatar className="size-8 rounded-lg">
-									<AvatarImage src={avatarUrl} alt={username} />
+									<AvatarImage src={avatarUrl} alt={profile.username} />
 									<AvatarFallback className="rounded-lg">CN</AvatarFallback>
 								</Avatar>
 								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-semibold">{username}</span>
+									<span className="truncate font-semibold">{profile.username}</span>
 									<span className="truncate text-xs">{userEmail}</span>
 								</div>
 							</div>

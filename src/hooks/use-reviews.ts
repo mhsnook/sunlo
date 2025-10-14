@@ -112,7 +112,7 @@ export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
 				!reviews?.length ?
 					{}
 				:	mapArray<ReviewRow, 'phrase_id'>(
-						reviews.sort((a, b) =>
+						reviews.toSorted((a, b) =>
 							a.created_at === b.created_at ? 0
 								// earlier items will come first and be overwritten in the map
 							: a.created_at > b.created_at ? 1

@@ -9,7 +9,7 @@ import type {
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { avatarUrlify, mapArray } from '@/lib/utils'
+import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { themes } from '@/lib/deck-themes'
 import { PublicProfile } from '@/routes/_user/friends/-types'
@@ -79,7 +79,6 @@ export const profileQuery = (userId: uuid | null) =>
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
 				avatar_path: profile.avatar_path ?? '',
-				avatarUrl: avatarUrlify(profile.avatar_path),
 				languagesToShow,
 				languages_known: languages_known,
 				decksMap,
@@ -118,7 +117,6 @@ export const searchPublicProfilesByUsername = async (
 						uid: row.uid!,
 						avatar_path: row.avatar_path ?? '',
 						username: row.username ?? '',
-						avatarUrl: avatarUrlify(row.avatar_path),
 					}) as PublicProfile
 			)
 }
@@ -138,7 +136,6 @@ export const publicProfileQuery = (uid: uuid | null) =>
 						uid: data.uid!,
 						username: data.username ?? '',
 						avatar_path: data.avatar_path ?? '',
-						avatarUrl: avatarUrlify(data.avatar_path),
 					} as PublicProfile)
 				)
 		},

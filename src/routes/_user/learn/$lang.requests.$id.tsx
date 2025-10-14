@@ -1,8 +1,4 @@
-import type {
-	LanguageLoaded,
-	PhraseFull,
-	Tag,
-} from '@/types/main'
+import type { LanguageLoaded, PhraseFull, Tag } from '@/types/main'
 
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
@@ -41,7 +37,6 @@ import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
-import { avatarUrlify } from '@/lib/utils'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import {
 	Collapsible,
@@ -149,7 +144,6 @@ function FulfillRequestPage() {
 					uid: profile!.uid,
 					username: profile!.username,
 					avatar_path: profile!.avatar_path,
-					avatarUrl: avatarUrlify(profile!.avatar_path),
 				} as PublicProfile,
 				translations: [translation],
 				tags: [] as Tag[],
@@ -217,7 +211,7 @@ function FulfillRequestPage() {
 						<UserPermalink
 							uid={request.requester_uid}
 							username={request.requester?.username}
-							avatarUrl={avatarUrlify(request.requester?.avatar_path)}
+							avatar_path={request.requester?.avatar_path}
 							className="px-1"
 						/>
 						{' • '}
@@ -239,9 +233,7 @@ function FulfillRequestPage() {
 										<UserPermalink
 											uid={phrase.added_by}
 											username={phrase.added_by_profile?.username}
-											avatarUrl={avatarUrlify(
-												phrase.added_by_profile?.avatar_path
-											)}
+											avatar_path={phrase.added_by_profile?.avatar_path}
 											className="px-1"
 										/>
 										{' • '}

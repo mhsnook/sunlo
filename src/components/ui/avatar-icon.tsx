@@ -2,17 +2,19 @@ import type { ReactNode } from 'react'
 import { PublicProfile } from '@/routes/_user/friends/-types'
 import { Link } from '@tanstack/react-router'
 import { User } from 'lucide-react'
+import { useAvatarUrl } from '@/lib/hooks'
 
 type AvatarIconRowProps = PublicProfile & {
 	children?: ReactNode
 }
 
 export function AvatarIconRow({
-	avatarUrl,
+	avatar_path,
 	username,
 	uid,
 	children,
 }: AvatarIconRowProps) {
+	const avatarUrl = useAvatarUrl(avatar_path)
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
 			<Link

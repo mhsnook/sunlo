@@ -7,6 +7,7 @@ import { useRelations } from '@/hooks/use-friends'
 import { publicProfileQuery } from '@/hooks/use-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
+import { useAvatarUrl } from '@/lib/hooks'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
@@ -23,6 +24,8 @@ function ProfilePage() {
 	const { data: profile } = useQuery(publicProfileQuery(uid))
 	const { data: relations } = useRelations()
 	const relationship = !relations || !uid ? null : relations.relationsMap[uid]
+
+	const avatarUrl = useAvatarUrl(profile?.avatar_path)
 
 	if (!profile)
 		throw new Error(
@@ -44,9 +47,9 @@ function ProfilePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-center">
 					<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-						{profile.avatarUrl ?
+						{avatarUrl ?
 							<img
-								src={profile.avatarUrl}
+								src={avatarUrl}
 								alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 								className="size-32 rounded-full object-cover"
 							/>

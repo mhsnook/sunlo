@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { AvatarEditorField } from '@/routes/_user/profile/-avatar-editor-field'
-import { avatarUrlify } from '@/lib/utils'
 
 const ProfileEditFormSchema = z.object({
 	username: z
@@ -50,7 +49,8 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 			reset({
 				username: data?.username ?? '',
 				avatar_path: data?.avatar_path ?? null,
-				languages_known: (data?.languages_known as LanguageKnown[]) ?? [],
+				languages_known:
+					(data?.languages_known ?? []) as LanguageKnown[]
 			})
 			if (data)
 				void queryClient.setQueryData<ProfileFull>(
@@ -59,7 +59,6 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 						return produce<ProfileFull>(old!, (draft) => {
 							draft.username = data.username ?? ''
 							draft.avatar_path = data.avatar_path ?? ''
-							draft.avatarUrl = avatarUrlify(data.avatar_path)
 							draft.languages_known = data.languages_known
 						})
 					}

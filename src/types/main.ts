@@ -231,7 +231,6 @@ export type ProfileRow = Tables<'user_profile'> & {
 export type ProfileInsert = TablesInsert<'user_profile'>
 export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
 export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
-	avatarUrl: string
 	languagesToShow: Array<string>
 	decksMap: DecksMap
 	deckLanguages: Array<string>

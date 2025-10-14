@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import { useProfileLazy } from '@/hooks/use-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cn, isNativeAppUserAgent } from '@/lib/utils'
+import { useAvatarUrl } from '@/lib/hooks'
 
 export const Route = createFileRoute('/')({
 	component: Index,
@@ -71,6 +72,7 @@ function ThemeToggle() {
 
 function UserLogin() {
 	const { data: profile } = useProfileLazy()
+	const avatarUrl = useAvatarUrl(profile?.avatar_path)
 	return profile ?
 			<Link
 				className="ring-offset-background focus-visible:ring-ring border-border/50 inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
@@ -78,7 +80,7 @@ function UserLogin() {
 				to="/learn"
 			>
 				<img
-					src={profile.avatarUrl}
+					src={avatarUrl}
 					alt="Your profile pic"
 					className="h-full w-full object-cover transition-opacity hover:opacity-70"
 				/>
