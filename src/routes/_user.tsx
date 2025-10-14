@@ -47,16 +47,16 @@ export const Route = createFileRoute('/_user')({
 		context: {
 			queryClient,
 			auth: { userId },
+			profile,
 		},
 		location,
 	}) => {
-		// if for some reason there is no profile, we must create one!
-		if (location.pathname !== '/getting-started') {
-			const data = await queryClient.ensureQueryData({
-				...profileQuery(userId),
-			})
-			// eslint-disable-next-line @typescript-eslint/only-throw-error
-			if (data === null) throw redirect({ to: '/getting-started' })
+		if (profile === null) {
+			const data = await queryClient.ensureQueryData(profileQuery(userId))
+			if (location.pathname !== '/getting-started' && data === null) {
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw redirect({ to: '/getting-started' })
+			}
 		}
 
 		return {

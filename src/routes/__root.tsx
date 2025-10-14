@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import type { AuthState } from '@/types/main'
+import type { AuthState, ProfileFull } from '@/types/main'
 
 import {
 	createRootRouteWithContext,
@@ -19,6 +19,7 @@ import { OctogonMinusDangerBadge } from '@/components/ui/badge'
 export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
+	profile: ProfileFull | null
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
