@@ -62,16 +62,21 @@ export function ArchiveDeckButton({
 					return
 				}
 			)
-			queryClient.setQueryData<ProfileFull>(['user', userId], (old) => {
-				if (old) {
-					return produce(old, (draft) => {
-						if (draft.decksMap?.[lang])
-							draft.decksMap[lang].archived = data.archived
+			queryClient.setQueryData<ProfileFull>(
+				['user', userId, 'profile'],
+				(old) => {
+					if (old) {
+						return produce(old, (draft) => {
+							if (draft.decksMap?.[lang])
+								draft.decksMap[lang].archived = data.archived
+						})
+					}
+					void queryClient.invalidateQueries({
+						queryKey: ['user', userId, 'profile'],
 					})
+					return old
 				}
-				void queryClient.invalidateQueries({ queryKey: ['user', userId] })
-				return old
-			})
+			)
 
 			toast.success(
 				data.archived ?

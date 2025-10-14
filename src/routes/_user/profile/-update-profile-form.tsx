@@ -54,7 +54,7 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 			})
 			if (data)
 				void queryClient.setQueryData<ProfileFull>(
-					['user', data.uid],
+					['user', uid, 'profile'],
 					(old) => {
 						return produce<ProfileFull>(old!, (draft) => {
 							draft.username = data.username ?? ''
@@ -64,7 +64,10 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 						})
 					}
 				)
-			else void queryClient.invalidateQueries({ queryKey: ['user'] })
+			else
+				void queryClient.invalidateQueries({
+					queryKey: ['user', uid, 'profile'],
+				})
 		},
 	})
 
