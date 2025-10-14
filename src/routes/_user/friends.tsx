@@ -4,9 +4,13 @@ import { relationsQuery } from '@/hooks/use-friends'
 
 export const Route = createFileRoute('/_user/friends')({
 	component: FriendsPage,
-	loader: async ({ context }) => {
-		const { queryClient, userId } = context
-		await queryClient.ensureQueryData(relationsQuery(userId))
+	loader: async ({
+		context: {
+			auth: { userId },
+			queryClient,
+		},
+	}) => {
+		await queryClient.ensureQueryData(relationsQuery(userId!))
 		return {
 			titleBar: {
 				title: `Friends and Contacts`,
