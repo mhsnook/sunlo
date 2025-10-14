@@ -34,9 +34,9 @@ export const Route = createFileRoute('/')({
 function Index() {
 	return (
 		<div className="relative">
-			<div className="fixed top-6 right-6 z-50 flex flex-row items-center gap-4">
-				<ThemeToggle />
+			<div className="fixed top-6 right-6 z-50 flex flex-col items-center gap-2 @xl:flex-row">
 				<UserLogin />
+				<ThemeToggle />
 			</div>
 			<HeroSection />
 			<CrowdSourcedSection />
