@@ -14,6 +14,7 @@ import {
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { mapArray, mapArrays } from '@/lib/utils'
+import { PublicProfileSchema } from '@/lib/schemas'
 
 type FriendSummariesLoaded = {
 	relationsMap: { [key: uuid]: FriendSummaryFull }
@@ -40,11 +41,7 @@ export const friendSummaryToRelative = (
 
 	if (d.profile_less && d.profile_more) {
 		const pro = d.profile_less.uid === uid ? d.profile_more : d.profile_less
-		res.profile = {
-			uid: pro.uid ?? '',
-			username: pro.username ?? '',
-			avatar_path: pro.avatar_path ?? '',
-		}
+		res.profile = PublicProfileSchema.parse(pro)
 	}
 	return res
 }
