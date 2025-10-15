@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import { PostgrestError } from '@supabase/supabase-js'
 import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import type {
@@ -11,7 +10,7 @@ import type {
 import supabase from '@/lib/supabase-client'
 import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
-import { themes } from '@/lib/deck-themes'
+import { themeNames } from '@/lib/deck-themes'
 import { PublicProfileSchema, PublicProfileType } from '@/lib/schemas'
 
 export const profileQuery = (userId: uuid | null) =>
@@ -35,18 +34,10 @@ export const profileQuery = (userId: uuid | null) =>
 					: a.lang! > b.lang! ? -1
 					: 1
 				)
-				.map((d, i) => {
-					const theme = themes[i % themes.length]
-					return {
-						...d,
-						theme,
-						themeCss: {
-							'--hue': theme?.hue,
-							'--hue-off': theme?.hueOff,
-							'--hue-accent': theme?.hueAccent,
-						} as CSSProperties,
-					}
-				})
+				.map((d, i) => ({
+					...d,
+					theme: themeNames[i % themeNames.length],
+				}))
 
 			const decksSorted = decksWithTheme.toSorted((a, b) =>
 				(

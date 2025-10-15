@@ -8,7 +8,7 @@ import {
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
-import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
+import { ThemeNamesEnum } from '@/lib/deck-themes'
 import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
 
 export type uuid = string
@@ -155,8 +155,7 @@ export type DeckStub = Tables<'user_deck'>
 export type DeckInsert = TablesInsert<'user_deck'>
 export type DeckMeta = Tables<'user_deck_plus'> & {
 	cardsScheduledForToday?: number
-	theme?: ThemeType
-	themeCss?: ThemeCSS
+	theme?: ThemeNamesEnum
 }
 export type DeckFetched = DeckMeta & {
 	cards: Array<CardFull>
