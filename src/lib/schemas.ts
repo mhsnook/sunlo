@@ -8,6 +8,11 @@ export const FriendRequestResponseEnumSchema = z.enum([
 	'remove',
 	'invite',
 ])
+export const FriendStatusEnumSchema = z.enum([
+	'friends',
+	'pending',
+	'unconnected',
+])
 export const LanguageProficiencyEnumSchema = z.enum([
 	'fluent',
 	'proficient',
@@ -19,6 +24,7 @@ export const PhraseRequestStatusEnumSchema = z.enum([
 	'fulfilled',
 	'cancelled',
 ])
+export const MessageTypeEnumSchema = z.enum(['request', 'recommendation'])
 
 export const LangSchema = z
 	.string()
@@ -205,3 +211,29 @@ export const DailyReviewStateSchema = z.object({
 })
 
 export type DailyReviewStateType = z.infer<typeof DailyReviewStateSchema>
+
+export const FriendSummarySchema = z.object({
+	uid_less: z.string().uuid(),
+	uid_more: z.string().uuid(),
+	status: FriendStatusEnumSchema,
+	most_recent_created_at: z.string(),
+	most_recent_uid_by: z.string().uuid(),
+	most_recent_uid_for: z.string().uuid(),
+	most_recent_action_type: FriendRequestResponseEnumSchema,
+})
+
+export type FriendSummaryType = z.infer<typeof FriendSummarySchema>
+
+export const ChatMessageSchema = z.object({
+	id: z.string().uuid(),
+	created_at: z.string(),
+	sender_uid: z.string().uuid(),
+	recipient_uid: z.string().uuid(),
+	message_type: MessageTypeEnumSchema,
+	phrase_id: z.string().uuid().nullable(),
+	request_id: z.string().uuid().nullable(),
+	related_message_id: z.string().uuid().nullable(),
+	lang: LangSchema,
+})
+
+export type ChatMessageType = z.infer<typeof ChatMessageSchema>

@@ -1,10 +1,10 @@
 import {
+	cardReviewsCollection,
 	cardsCollection,
 	decksCollection,
 	myProfileCollection,
 	phrasesCollection,
 	reviewDaysCollection,
-	reviewsCollection,
 } from '@/lib/collections'
 import {
 	CardMetaSchema,
@@ -80,7 +80,7 @@ export const langLoaderQuery = (lang: string, uid: uuid | null) =>
 					cardsCollection.insert(CardMetaSchema.parse(i))
 				)
 				i.user_card_review.forEach((i) =>
-					reviewsCollection.insert(CardReviewSchema.parse(i))
+					cardReviewsCollection.insert(CardReviewSchema.parse(i))
 				)
 			})
 

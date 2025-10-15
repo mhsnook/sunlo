@@ -15,7 +15,7 @@ import Routes from './routes'
 import 'styles/globals.css'
 import { Button } from '@/components/ui/button'
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
 	defaultOptions: {
 		queries: {
 			staleTime: 2 * 60 * 1000, // 2 minutes
