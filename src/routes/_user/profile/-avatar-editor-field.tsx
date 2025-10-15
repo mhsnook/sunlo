@@ -8,8 +8,9 @@ import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import ErrorLabel from '@/components/fields/error-label'
+import { useAvatarUrl } from '@/lib/hooks'
 
 export function AvatarEditorField<T extends FieldValues>({
 	control,
@@ -74,7 +75,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 			toast.success(`Avatar uploaded...`)
 		},
 	})
-	const url = avatarUrlify(avatar_path)
+	const avatarUrl = useAvatarUrl(avatar_path)
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -82,10 +83,10 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 				htmlFor="avatarUploadInput"
 				className="group border-primary-foresoft/30 hover:border-primary hover:bg-primary/10 relative isolate flex h-40 flex-col items-center rounded-2xl border text-center"
 			>
-				{!url ? null : (
+				{!avatarUrl ? null : (
 					<div className="z-10 mx-auto my-2 grid aspect-square size-36">
 						<img
-							src={url}
+							src={avatarUrl}
 							alt="Your profile pic, or avatar"
 							className="h-36 w-36 rounded-full object-cover"
 						/>

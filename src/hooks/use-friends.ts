@@ -13,7 +13,8 @@ import {
 } from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { avatarUrlify, mapArray, mapArrays } from '@/lib/utils'
+import { mapArray, mapArrays } from '@/lib/utils'
+import { PublicProfileSchema } from '@/lib/schemas'
 
 type FriendSummariesLoaded = {
 	relationsMap: { [key: uuid]: FriendSummaryFull }
@@ -40,12 +41,7 @@ export const friendSummaryToRelative = (
 
 	if (d.profile_less && d.profile_more) {
 		const pro = d.profile_less.uid === uid ? d.profile_more : d.profile_less
-		res.profile = {
-			uid: pro.uid ?? '',
-			username: pro.username ?? '',
-			avatar_path: pro.avatar_path ?? '',
-			avatarUrl: avatarUrlify(pro.avatar_path),
-		}
+		res.profile = PublicProfileSchema.parse(pro)
 	}
 	return res
 }
@@ -111,7 +107,7 @@ export const useOneRelation = (uidToUse: uuid) => {
 
 export const useFriendRequestAction = (uid_for: uuid) => {
 	const { userId: uid_by } = useAuth()
-	const [uid_less, uid_more] = [uid_by, uid_for].sort()
+	const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
 
 	return useMutation({
 		mutationKey: ['user', uid_by, 'friend_request_action', uid_for],

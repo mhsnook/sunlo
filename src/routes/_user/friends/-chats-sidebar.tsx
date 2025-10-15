@@ -4,6 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAllChats, useRelations } from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
+import { ChatMessageRelative, PublicProfile } from './-types'
+import { useAvatarUrl } from '@/lib/hooks'
 
 const linkActiveProps = {
 	className: 'bg-accent/20 text-accent-foreground',
@@ -18,7 +20,7 @@ export function ChatsSidebar() {
 	)
 
 	// Mock sorting by recent activity
-	const sortedFriends = friends?.sort((a, b) =>
+	const sortedFriends = friends?.toSorted((a, b) =>
 		a.most_recent_created_at === b.most_recent_created_at ? 0
 		: a.most_recent_created_at < b.most_recent_created_at ? 1
 		: -1
@@ -40,52 +42,17 @@ export function ChatsSidebar() {
 					<p className="text-muted-foreground p-4 text-sm">
 						You have no friends to chat with yet.
 					</p>
-				:	sortedFriends.map((friend) => {
-						const thisChatMessage =
-							!chats || !chats[friend.uidOther] ?
-								null
-							:	chats[friend.uidOther].at(-1)
-						return (
-							<Link
-								key={friend.uidOther}
-								to="/friends/chats/$friendId"
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ friendId: friend.uidOther }}
-								className={cn(
-									'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
-								)}
-								activeProps={linkActiveProps}
-							>
-								<Avatar className="h-8 w-8">
-									<AvatarImage
-										src={friend.profile?.avatarUrl}
-										alt={friend.profile?.username}
-									/>
-									<AvatarFallback>
-										{friend.profile?.username?.charAt(0).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-								<div className="flex-1 overflow-hidden">
-									<div className="font-semibold">
-										{friend.profile?.username}
-									</div>
-									<p className="text-muted-foreground line-clamp-2 text-xs">
-										{thisChatMessage ?
-											<>
-												{ago(thisChatMessage.created_at)} •{' '}
-												{thisChatMessage.isMine ? 'you ' : 'they '}
-												{thisChatMessage.message_type === 'recommendation' ?
-													'sent a recommendation'
-												: thisChatMessage.message_type === 'request' ?
-													'requested a card'
-												:	'accepted your recommendation'}
-											</>
-										:	'No messages yet'}
-									</p>
-								</div>
-							</Link>
-						)
-					})
+				:	sortedFriends.map((friend) => (
+						<ChatsItems
+							key={friend.uidOther}
+							profile={friend.profile}
+							thisChatMessage={
+								!chats || !chats[friend.uidOther] ?
+									null
+								:	(chats[friend.uidOther].at(-1) ?? null)
+							}
+						/>
+					))
 				}
 			</CardContent>
 		</Card>
@@ -104,3 +71,47 @@ const ChatSkeleton = () => (
 		</div>
 	</div>
 )
+
+function ChatsItems({
+	profile,
+	thisChatMessage,
+}: {
+	profile: PublicProfile
+	thisChatMessage: ChatMessageRelative | null
+}) {
+	const avatarUrl = useAvatarUrl(profile.avatar_path)
+	return (
+		<Link
+			to="/friends/chats/$friendId"
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			params={{ friendId: profile.uid }}
+			className={cn(
+				'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
+			)}
+			activeProps={linkActiveProps}
+		>
+			<Avatar className="h-8 w-8">
+				<AvatarImage src={avatarUrl} alt={profile.username ?? 'your friend'} />
+				<AvatarFallback>
+					{profile.username?.charAt(0).toUpperCase()}
+				</AvatarFallback>
+			</Avatar>
+			<div className="flex-1 overflow-hidden">
+				<div className="font-semibold">{profile.username}</div>
+				<p className="text-muted-foreground line-clamp-2 text-xs">
+					{thisChatMessage ?
+						<>
+							{ago(thisChatMessage.created_at)} •{' '}
+							{thisChatMessage.isMine ? 'you ' : 'they '}
+							{thisChatMessage.message_type === 'recommendation' ?
+								'sent a recommendation'
+							: thisChatMessage.message_type === 'request' ?
+								'requested a card'
+							:	'accepted your recommendation'}
+						</>
+					:	'No messages yet'}
+				</p>
+			</div>
+		</Link>
+	)
+}

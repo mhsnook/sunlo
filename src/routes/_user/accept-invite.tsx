@@ -16,7 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { useAuth } from '@/lib/hooks'
+import { useAuth, useAvatarUrl } from '@/lib/hooks'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
@@ -69,13 +69,16 @@ function AcceptInvitePage() {
 		},
 	})
 
+	const avatarUrl = useAvatarUrl(profile?.avatar_path)
+	const friendAvatarUrl = useAvatarUrl(friend?.avatar_path)
+
 	const AcceptInviteForm = () => {
 		return (
 			<>
 				{profile ?
 					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 						<img
-							src={profile.avatarUrl}
+							src={avatarUrl}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
 							alt={`Your avatar`}
@@ -84,7 +87,7 @@ function AcceptInvitePage() {
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={friend.avatarUrl}
+									src={friendAvatarUrl}
 									className="mx-auto max-w-32 shrink rounded-xl"
 									alt={`${friend.username}'s avatar`}
 								/>

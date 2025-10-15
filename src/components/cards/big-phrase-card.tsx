@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
@@ -48,7 +48,7 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 					<UserPermalink
 						uid={phrase.added_by}
 						username={phrase.added_by_profile.username}
-						avatarUrl={avatarUrlify(phrase.added_by_profile.avatar_path)}
+						avatar_path={phrase.added_by_profile.avatar_path}
 					/>
 					{' • '}
 					{ago(phrase.created_at)}

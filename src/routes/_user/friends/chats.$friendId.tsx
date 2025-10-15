@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
-import { useAuth } from '@/lib/hooks'
+import { useAuth, useAvatarUrl } from '@/lib/hooks'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -46,6 +46,9 @@ function ChatPage() {
 		return () => resizeObserver.disconnect()
 	}, [messagesQuery.data])
 
+	const relAvatarUrl = useAvatarUrl(relation?.profile.avatar_path)
+	const relUsername = relation?.profile.username ?? ''
+
 	if (!relation?.profile || messagesQuery.isPending) {
 		return (
 			<Card className="flex h-full flex-col">
@@ -53,9 +56,6 @@ function ChatPage() {
 			</Card>
 		)
 	}
-
-	const relUsername = relation?.profile.username ?? ''
-	const relAvatarUrl = relation?.profile.avatarUrl ?? ''
 
 	return (
 		<Card className="flex h-full flex-col">
@@ -182,31 +182,34 @@ function ChatPage() {
 	)
 }
 
-const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
-	<div className="flex flex-col items-center justify-center gap-6 py-10">
-		<p className="text-xl font-bold">{profile.username}</p>
-		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-			{profile.avatarUrl ?
-				<img
-					src={profile.avatarUrl}
-					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
-					className="size-32 rounded-full object-cover"
-				/>
-			:	<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
-					{(profile.username ?? '').slice(0, 2)}
-				</span>
-			}
+const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => {
+	const avatarUrl = useAvatarUrl(profile.avatar_path)
+	return (
+		<div className="flex flex-col items-center justify-center gap-6 py-10">
+			<p className="text-xl font-bold">{profile.username}</p>
+			<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
+				{avatarUrl ?
+					<img
+						src={avatarUrl}
+						alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
+						className="size-32 rounded-full object-cover"
+					/>
+				:	<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
+						{(profile.username ?? '').slice(0, 2)}
+					</span>
+				}
+			</div>
+			<p>
+				<Link
+					className={buttonVariants({ variant: 'secondary' })}
+					to="/friends/$uid"
+					from={Route.fullPath}
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid: profile.uid }}
+				>
+					View profile
+				</Link>
+			</p>
 		</div>
-		<p>
-			<Link
-				className={buttonVariants({ variant: 'secondary' })}
-				to="/friends/$uid"
-				from={Route.fullPath}
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
-				params={{ uid: profile.uid }}
-			>
-				View profile
-			</Link>
-		</p>
-	</div>
-)
+	)
+}

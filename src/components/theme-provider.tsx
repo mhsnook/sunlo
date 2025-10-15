@@ -1,3 +1,4 @@
+import { ThemeNamesEnum } from '@/lib/deck-themes'
 import type { ReactNode } from 'react'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
@@ -10,7 +11,7 @@ type ThemeProviderProps = {
 }
 
 type ThemeProviderState = {
-	theme: Theme
+	theme: ThemeNamesEnum
 	setTheme: (theme: Theme) => void
 }
 

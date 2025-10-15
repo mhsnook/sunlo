@@ -1,3 +1,4 @@
+import { useAvatarUrl } from '@/lib/hooks'
 import { cn } from '@/lib/utils'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
@@ -5,16 +6,17 @@ import { Link } from '@tanstack/react-router'
 export default function UserPermalink({
 	uid,
 	username,
-	avatarUrl,
+	avatar_path,
 	className,
 	round = false,
 }: {
 	uid: uuid | null
 	username: string | null
-	avatarUrl: string | null
+	avatar_path: string | null | undefined
 	className?: string
 	round?: boolean
 }) {
+	const avatarUrl = useAvatarUrl(avatar_path)
 	if (!uid) return null
 
 	return (

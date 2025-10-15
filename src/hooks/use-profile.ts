@@ -1,4 +1,3 @@
-import type { CSSProperties } from 'react'
 import { PostgrestError } from '@supabase/supabase-js'
 import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import type {
@@ -9,10 +8,10 @@ import type {
 	uuid,
 } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { avatarUrlify, mapArray } from '@/lib/utils'
+import { mapArray } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
-import { themes } from '@/lib/deck-themes'
-import { PublicProfile } from '@/routes/_user/friends/-types'
+import { themeNames } from '@/lib/deck-themes'
+import { PublicProfileSchema, PublicProfileType } from '@/lib/schemas'
 
 export const profileQuery = (userId: uuid | null) =>
 	queryOptions<ProfileFull | null, PostgrestError>({
@@ -35,18 +34,10 @@ export const profileQuery = (userId: uuid | null) =>
 					: a.lang! > b.lang! ? -1
 					: 1
 				)
-				.map((d, i) => {
-					const theme = themes[i % themes.length]
-					return {
-						...d,
-						theme,
-						themeCss: {
-							'--hue': theme?.hue,
-							'--hue-off': theme?.hueOff,
-							'--hue-accent': theme?.hueAccent,
-						} as CSSProperties,
-					}
-				})
+				.map((d, i) => ({
+					...d,
+					theme: themeNames[i % themeNames.length],
+				}))
 
 			const decksSorted = decksWithTheme.toSorted((a, b) =>
 				(
@@ -79,7 +70,6 @@ export const profileQuery = (userId: uuid | null) =>
 				updated_at: profile.updated_at ?? '',
 				username: profile.username ?? '',
 				avatar_path: profile.avatar_path ?? '',
-				avatarUrl: avatarUrlify(profile.avatar_path),
 				languagesToShow,
 				languages_known: languages_known,
 				decksMap,
@@ -101,7 +91,7 @@ export const useProfileLazy = () => {
 export const searchPublicProfilesByUsername = async (
 	query: string,
 	uid: uuid
-): Promise<Array<PublicProfile> | null> => {
+): Promise<Array<PublicProfileType> | null> => {
 	if (!query) return null
 	const { data } = await supabase
 		.from('public_profile')
@@ -112,15 +102,7 @@ export const searchPublicProfilesByUsername = async (
 		.throwOnError()
 	return !data || data.length === 0 ?
 			[]
-		:	data.map(
-				(row) =>
-					({
-						uid: row.uid!,
-						avatar_path: row.avatar_path ?? '',
-						username: row.username ?? '',
-						avatarUrl: avatarUrlify(row.avatar_path),
-					}) as PublicProfile
-			)
+		:	data.map((row) => PublicProfileSchema.parse(row))
 }
 
 export const publicProfileQuery = (uid: uuid | null) =>
@@ -133,14 +115,7 @@ export const publicProfileQuery = (uid: uuid | null) =>
 				.eq('uid', uid!)
 				.maybeSingle()
 				.throwOnError()
-			return !data ? null : (
-					({
-						uid: data.uid!,
-						username: data.username ?? '',
-						avatar_path: data.avatar_path ?? '',
-						avatarUrl: avatarUrlify(data.avatar_path),
-					} as PublicProfile)
-				)
+			return !data ? null : PublicProfileSchema.parse(data)
 		},
 		enabled: typeof uid === 'string' && uid?.length > 10,
 	})

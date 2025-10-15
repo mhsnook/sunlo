@@ -28,3 +28,11 @@ export const PhraseSearchSchema = z.object({
 })
 
 export type PhraseSearchType = z.infer<typeof PhraseSearchSchema>
+
+export const PublicProfileSchema = z.object({
+	uid: z.string().uuid(),
+	username: z.string().default(''),
+	avatar_path: z.string().default(''),
+})
+
+export type PublicProfileType = z.infer<typeof PublicProfileSchema>
