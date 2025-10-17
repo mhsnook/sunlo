@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Archive } from 'lucide-react'
 
-import { useProfile } from '@/hooks/use-profile'
+import { useDecks } from '@/hooks/use-profile'
 import { DeckCard } from './-deck-card'
 import Callout from '@/components/ui/callout'
 
@@ -10,10 +10,9 @@ export const Route = createFileRoute('/_user/learn/archived')({
 })
 
 function Page() {
-	const { data: profile } = useProfile()
-	if (!profile) return null
-	const { decksMap, deckLanguages } = profile
-	const archivedDecks = deckLanguages.filter((lang) => decksMap[lang].archived)
+	const { data: decks } = useDecks()
+	if (!decks) return null
+	const archivedDecks = decks.filter((i) => i.archived)
 
 	return (
 		<main className="w-full space-y-6">
@@ -35,8 +34,8 @@ function Page() {
 					</Callout>
 
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-						{archivedDecks.map((lang) => (
-							<DeckCard key={lang} deck={decksMap[lang]} />
+						{archivedDecks.map((deck) => (
+							<DeckCard key={deck.lang} deck={deck} />
 						))}
 					</div>
 				</>

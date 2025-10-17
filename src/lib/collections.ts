@@ -1,7 +1,4 @@
-import {
-	createCollection,
-	localOnlyCollectionOptions,
-} from '@tanstack/react-db'
+import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 
 import {
@@ -24,42 +21,74 @@ import {
 	MyProfileSchema,
 	type MyProfileType,
 	FriendSummarySchema,
-	FriendSummaryType,
+	type FriendSummaryType,
 	ChatMessageSchema,
-	ChatMessageType,
+	type ChatMessageType,
 } from './schemas'
-import { queryClient } from '@/main.tsx'
+import { queryClient } from './query-client'
 import supabase from './supabase-client'
 
 export const publicProfilesCollection = createCollection(
-	localOnlyCollectionOptions({
-		id: 'public_profiles',
+	queryCollectionOptions({
+		queryKey: ['public', 'profiles'],
+		queryFn: async () => {
+			const { data } = await supabase
+				.from('public_profile')
+				.select()
+				.throwOnError()
+			return data?.map((p) => PublicProfileSchema.parse(p)) ?? []
+		},
 		getKey: (item: PublicProfileType) => item.uid,
+		queryClient,
 		schema: PublicProfileSchema,
 	})
 )
 
 export const phraseRequestsCollection = createCollection(
-	localOnlyCollectionOptions({
-		id: 'phrase_requests',
+	queryCollectionOptions({
+		queryKey: ['public', 'phrase_request'],
+		queryFn: async () => {
+			const { data } = await supabase
+				.from('meta_phrase_request')
+				.select()
+				.throwOnError()
+			return data?.map((p) => PhraseRequestSchema.parse(p)) ?? []
+		},
 		getKey: (item: PhraseRequestType) => item.id,
 		schema: PhraseRequestSchema,
+		queryClient,
 	})
 )
 
 export const phrasesCollection = createCollection(
-	localOnlyCollectionOptions({
-		id: 'phrases_full',
+	queryCollectionOptions({
+		queryKey: ['public', 'phrase_full'],
 		getKey: (item: PhraseFullType) => item.id,
+		queryFn: async () => {
+			const { data } = await supabase
+				.from('meta_phrase_info')
+				.select('*, translations:phrase_translation(*)')
+				.throwOnError()
+			return data?.map((p) => PhraseFullSchema.parse(p)) ?? []
+		},
 		schema: PhraseFullSchema,
+		queryClient,
 	})
 )
 
 export const languagesCollection = createCollection(
-	localOnlyCollectionOptions({
-		id: 'language_meta',
+	queryCollectionOptions({
+		queryKey: ['public', 'language_meta'],
+		queryFn: async () => {
+			const { data } = await supabase
+				.from('language_plus')
+				.select()
+				.throwOnError()
+			return data?.map((item) => LanguageSchema.parse(item)) ?? []
+		},
 		getKey: (item: LanguageType) => item.lang,
 		schema: LanguageSchema,
+		queryClient,
 	})
 )
 
@@ -101,7 +130,10 @@ export const cardsCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'card'],
 		queryFn: async () => {
-			const { data } = await supabase.from('user_card').select().throwOnError()
+			const { data } = await supabase
+				.from('user_card_plus')
+				.select()
+				.throwOnError()
 			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
 		},
 		getKey: (item: CardMetaType) => item.phrase_id,

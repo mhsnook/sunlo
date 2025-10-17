@@ -1,102 +1,94 @@
-import type { CSSProperties } from 'react'
-import { PostgrestError } from '@supabase/supabase-js'
-import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
-import type {
-	DeckMeta,
-	DecksMap,
-	LanguageKnown,
-	ProfileFull,
-	uuid,
-} from '@/types/main'
+import { useMemo } from 'react'
+import { queryOptions } from '@tanstack/react-query'
+import type { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { avatarUrlify, mapArray } from '@/lib/utils'
-import { useAuth } from '@/lib/hooks'
 import { themes } from '@/lib/deck-themes'
 import { PublicProfile } from '@/routes/_user/friends/-types'
+import { eq, useLiveQuery } from '@tanstack/react-db'
+import {
+	decksCollection,
+	friendSummariesCollection,
+	myProfileCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
 
-export const profileQuery = (userId: uuid | null) =>
-	queryOptions<ProfileFull | null, PostgrestError>({
-		queryKey: ['user', userId],
-		queryFn: async ({ queryKey }): Promise<ProfileFull | null> => {
-			if (!queryKey[1]) return null
-			const uid = queryKey[1] as uuid
-			const { data } = await supabase
-				.from('user_profile')
-				.select(`*, decks_array:user_deck_plus(*)`)
-				.eq('uid', uid)
-				.maybeSingle()
-				.throwOnError()
-			if (data === null) return null
-			const { decks_array, ...profile } = data
-			const decksWithTheme = decks_array
+/*
+const deckLanguages: Array<string> = decksSorted
+	.map((d) => d.lang)
+	.filter((d) => typeof d === 'string')
+const languages_known = (profile.languages_known ?? []) as LanguageKnown[]
+const languagesToShow = [
+	...new Set([...languages_known.map((lk) => lk.lang), ...deckLanguages]),
+]
+*/
+
+export const useProfile = () =>
+	useLiveQuery((q) => q.from({ profile: myProfileCollection }).findOne())
+
+export const useDecks = () => {
+	const query = useLiveQuery((q) =>
+		q
+			.from({ deck: decksCollection })
+			.orderBy(({ deck }) => deck.created_at, 'asc')
+	)
+	return useMemo(
+		() => ({
+			...query,
+			data: query.data
+				?.map((d, i) => ({
+					...d,
+					theme: i % themes.length,
+				}))
 				.toSorted((a, b) =>
-					a.created_at! > b.created_at! ? -1
-					: a.created_at! < b.created_at! ? 1
-					: a.lang! > b.lang! ? -1
-					: 1
-				)
-				.map((d, i) => {
-					const theme = themes[i % themes.length]
-					return {
-						...d,
-						theme,
-						themeCss: {
-							'--hue': theme?.hue,
-							'--hue-off': theme?.hueOff,
-							'--hue-accent': theme?.hueAccent,
-						} as CSSProperties,
-					}
-				})
+					(
+						(a.most_recent_review_at || a.created_at) ===
+						(b.most_recent_review_at || b.created_at)
+					) ?
+						0
+					: (
+						(a.most_recent_review_at || a.created_at!) >
+						(b.most_recent_review_at || b.created_at!)
+					) ?
+						-1
+					:	1
+				),
+		}),
+		[query]
+	)
+}
 
-			const decksSorted = decksWithTheme.toSorted((a, b) =>
-				(
-					(a.most_recent_review_at || a.created_at) ===
-					(b.most_recent_review_at || b.created_at)
-				) ?
-					0
-				: (
-					(a.most_recent_review_at || a.created_at!) >
-					(b.most_recent_review_at || b.created_at!)
-				) ?
-					-1
-				:	1
+export const useLanguagesToShow = () => {
+	const { data: profile } = useProfile()
+	const { data: decks } = useDecks()
+	return useMemo(() => {
+		const deckLangs: Array<string> =
+			decks?.filter((d) => !d.archived)?.map((d) => d.lang) ?? []
+		const knownLangs = profile?.languages_known.map((l) => l.lang) ?? []
+		const rawArray = [...knownLangs, ...deckLangs]
+		return [...new Set(rawArray)]
+	}, [profile, decks])
+}
+
+export const useOnePublicProfile = (uid: uuid) =>
+	useLiveQuery((q) =>
+		q
+			.from({ profile: publicProfilesCollection })
+			.where(({ profile }) => eq(profile.uid, uid))
+			.findOne()
+			.join({ relation: friendSummariesCollection }, ({ profile, relation }) =>
+				eq(relation.uid, profile.uid)
 			)
-
-			const decksMap: Omit<DecksMap, 'cardsScheduledForToday'> = mapArray<
-				Omit<DeckMeta, 'cardsScheduledForToday'>,
-				'lang'
-			>(decksSorted, 'lang')
-
-			const deckLanguages: Array<string> = decksSorted
-				.map((d) => d.lang)
-				.filter((d) => typeof d === 'string')
-			const languages_known = (profile.languages_known ?? []) as LanguageKnown[]
-			const languagesToShow = [
-				...new Set([...languages_known.map((lk) => lk.lang), ...deckLanguages]),
-			]
-			return {
+			.fn.select(({ profile, relation }) => ({
 				...profile,
-				updated_at: profile.updated_at ?? '',
-				username: profile.username ?? '',
-				avatar_path: profile.avatar_path ?? '',
-				avatarUrl: avatarUrlify(profile.avatar_path),
-				languagesToShow,
-				languages_known: languages_known,
-				decksMap,
-				deckLanguages,
-			}
-		},
-	})
-
-export const useProfile = () => {
-	const { userId } = useAuth()
-	return useSuspenseQuery({ ...profileQuery(userId) })
-}
-
-export const useProfileLazy = () => {
-	const { userId } = useAuth()
-	return useQuery({ ...profileQuery(userId) })
-}
+				relation:
+					!relation ? null : (
+						{
+							...relation,
+							isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
+						}
+					),
+			}))
+	)
 
 export const searchPublicProfilesByUsername = async (
 	query: string,
@@ -118,7 +110,6 @@ export const searchPublicProfilesByUsername = async (
 						uid: row.uid!,
 						avatar_path: row.avatar_path ?? '',
 						username: row.username ?? '',
-						avatarUrl: avatarUrlify(row.avatar_path),
 					}) as PublicProfile
 			)
 }
@@ -138,7 +129,6 @@ export const publicProfileQuery = (uid: uuid | null) =>
 						uid: data.uid!,
 						username: data.username ?? '',
 						avatar_path: data.avatar_path ?? '',
-						avatarUrl: avatarUrlify(data.avatar_path),
 					} as PublicProfile | null)
 				)
 		},

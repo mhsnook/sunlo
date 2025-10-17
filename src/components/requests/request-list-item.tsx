@@ -5,7 +5,7 @@ import { PublicProfile } from '@/routes/_user/friends/-types'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import CopyLinkButton from '@/components/copy-link-button'
@@ -47,8 +47,8 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					</Link>{' '}
 					by{' '}
 					<UserPermalink
-						username={requester?.username ?? ''}
-						avatarUrl={avatarUrlify(requester?.avatar_path) ?? ''}
+						username={requester?.username}
+						avatar_path={requester?.avatar_path}
 						uid={request.requester_uid}
 						className="text-muted-foreground"
 					/>

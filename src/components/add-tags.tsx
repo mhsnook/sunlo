@@ -33,7 +33,7 @@ type AddTagsFormValues = z.infer<typeof addTagsSchema>
 export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 	const [open, setOpen] = useState(false)
 	const { data: allLangTagsData } = useLanguageTags(lang)
-	const { data: phrase } = useLanguagePhrase(phraseId, lang)
+	const { data: phrase } = useLanguagePhrase(phraseId)
 	const queryClient = useQueryClient()
 	const {
 		control,

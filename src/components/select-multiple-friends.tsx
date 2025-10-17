@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useRelations } from '@/hooks/use-friends'
+import { useRelationFriends } from '@/hooks/use-friends'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
 import { Checkbox } from '@/components/ui/checkbox'
 import { User } from 'lucide-react'
+import { avatarUrlify } from '@/lib/utils'
 
 export function SelectMultipleFriends({
 	uids = [],
@@ -12,15 +13,11 @@ export function SelectMultipleFriends({
 	uids: uuid[]
 	setUids: Dispatch<SetStateAction<uuid[]>>
 }) {
-	const { data: relations, isPending } = useRelations()
+	const { data: friends, isLoading } = useRelationFriends()
 
-	if (isPending) return <Loader />
-	if (!relations?.uids.friends.length)
+	if (isLoading) return <Loader />
+	if (!friends.length)
 		return <p className="text-muted-foreground">No friends found (oops)</p>
-
-	const friends = relations.uids.friends.map(
-		(uid) => relations.relationsMap[uid]
-	)
 
 	const handleClick = (uid: uuid) =>
 		setUids((prev: uuid[]) => {
@@ -34,13 +31,13 @@ export function SelectMultipleFriends({
 				.filter((f) => f.profile !== undefined)
 				.map((f) => (
 					<label
-						key={f.profile.uid}
-						className={`${uids.includes(f.profile.uid) ? 'bg-primary/10 outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
+						key={f.uid}
+						className={`${uids.includes(f.uid) ? 'bg-primary/10 outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
 					>
 						<div className="flex flex-row items-center gap-2">
-							{f.profile.avatarUrl ?
+							{f.profile.avatar_path ?
 								<img
-									src={f.profile.avatarUrl}
+									src={avatarUrlify(f.profile.avatar_path)}
 									alt={`${f.profile.username}'s avatar`}
 									className="size-8 rounded-full object-cover"
 								/>
@@ -49,9 +46,9 @@ export function SelectMultipleFriends({
 						</div>
 						<Checkbox
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							checked={uids.includes(f.profile.uid)}
+							checked={uids.includes(f.uid)}
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => handleClick(f.profile.uid)}
+							onClick={() => handleClick(f.uid)}
 						/>
 					</label>
 				))}

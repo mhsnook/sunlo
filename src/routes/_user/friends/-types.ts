@@ -44,7 +44,6 @@ export type FriendSummaryFull = FriendSummaryRelative & {
 
 export type PublicProfile = Tables<'public_profile'> & {
 	uid: uuid
-	avatarUrl?: string
 }
 
 export type PublicProfileFull = PublicProfile & {

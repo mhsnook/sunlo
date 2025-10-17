@@ -16,24 +16,24 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useProfile } from '@/hooks/use-profile'
+import { useDecks } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 
 const useDeckMenuData = () => {
-	const { data } = useProfile()
+	const { data } = useDecks()
 	if (!data) return null
 
-	return (data.deckLanguages ?? [])
-		.filter((lang) => !data.decksMap[lang].archived)
-		.map((lang) => {
+	return (data ?? [])
+		.filter((deck) => !deck.archived)
+		.map((deck) => {
 			return {
-				lang,
-				name: languages[lang],
+				lang: deck.lang,
+				name: languages[deck.lang],
 				to: `/learn/$lang`,
 				badge:
-					(data.decksMap[lang]?.cards_active ?? 0) +
-					(data.decksMap[lang]?.cards_learned ?? 0),
-				params: { lang },
+					deck.cards_active +
+					deck.cards_learned,
+				params: { lang: deck.lang },
 			}
 		})
 }

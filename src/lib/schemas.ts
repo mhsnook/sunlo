@@ -1,3 +1,4 @@
+import { uuid } from '@/types/main'
 import * as z from 'zod'
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
@@ -213,6 +214,7 @@ export const DailyReviewStateSchema = z.object({
 export type DailyReviewStateType = z.infer<typeof DailyReviewStateSchema>
 
 export const FriendSummarySchema = z.object({
+	uid: z.string().uuid(),
 	uid_less: z.string().uuid(),
 	uid_more: z.string().uuid(),
 	status: FriendStatusEnumSchema,
@@ -237,3 +239,4 @@ export const ChatMessageSchema = z.object({
 })
 
 export type ChatMessageType = z.infer<typeof ChatMessageSchema>
+export type ChatMessageRelative = ChatMessageType & { friendUid: uuid; isByMe: boolean }

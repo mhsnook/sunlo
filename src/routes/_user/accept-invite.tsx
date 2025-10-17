@@ -22,6 +22,7 @@ import supabase from '@/lib/supabase-client'
 import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
 import { Loader } from '@/components/ui/loader'
 import type { PublicProfile } from './friends/-types'
+import { avatarUrlify } from '@/lib/utils'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -75,7 +76,7 @@ function AcceptInvitePage() {
 				{profile ?
 					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 						<img
-							src={profile.avatarUrl}
+							src={avatarUrlify(profile.avatar_path)}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
 							alt={`Your avatar`}
@@ -84,7 +85,7 @@ function AcceptInvitePage() {
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={friend.avatarUrl}
+									src={avatarUrlify(friend.avatar_path)}
 									className="mx-auto max-w-32 shrink rounded-xl"
 									alt={`${friend.username}'s avatar`}
 								/>

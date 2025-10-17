@@ -18,7 +18,7 @@ import {
 	CommandSeparator,
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
-import { useProfile } from '@/hooks/use-profile'
+import { useLanguagesToShow } from '@/hooks/use-profile'
 
 const filterFunction = (value: string, search: string) => {
 	search = search.toLocaleLowerCase()
@@ -38,15 +38,15 @@ export function SelectOneOfYourLanguages({
 	hasError,
 	className,
 }: ControlledInputProps) {
-	const { data: profile } = useProfile()
+	const languagesToShow = useLanguagesToShow()
 	const [open, setOpen] = useState(false)
 
 	const generalLanguageOptions = useMemo(
 		() =>
 			allLanguageOptions.filter(
-				(option) => !profile?.languagesToShow.includes(option.value)
+				(option) => !languagesToShow.includes(option.value)
 			),
-		[profile?.languagesToShow]
+		[languagesToShow]
 	)
 
 	const onSelect = useCallback(
@@ -81,8 +81,8 @@ export function SelectOneOfYourLanguages({
 					<CommandList>
 						<CommandEmpty>No language found.</CommandEmpty>
 						<CommandGroup>
-							{!profile ? null : (
-								profile.languagesToShow.map((lang) =>
+							{!languagesToShow.length ? null : (
+								languagesToShow.map((lang) =>
 									lang === undefined ? null : (
 										<CommandItem key={lang} value={lang} onSelect={onSelect}>
 											<Check
@@ -97,9 +97,7 @@ export function SelectOneOfYourLanguages({
 								)
 							)}
 						</CommandGroup>
-						{!profile || profile.languagesToShow.length === 0 ? null : (
-							<CommandSeparator />
-						)}
+						{!languagesToShow.length ? null : <CommandSeparator />}
 						<CommandGroup>
 							{generalLanguageOptions.map((language) => (
 								<CommandItem

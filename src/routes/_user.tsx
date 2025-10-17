@@ -11,19 +11,22 @@ import {
 
 import { TitleBar } from '@/types/main'
 import {
-	ChatMessageRelative,
 	ChatMessageRow,
 	FriendRequestActionRow,
 } from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
-import type { ChatsMap } from '@/hooks/use-friends'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { useAuth } from '@/lib/hooks'
-import { baseLoaderQuery } from '@/hooks/use-db-loader'
+import {
+	chatMessagesCollection,
+	friendSummariesCollection,
+	myProfileCollection,
+} from '@/lib/collections'
+import { ChatMessageSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -43,18 +46,13 @@ export const Route = createFileRoute('/_user')({
 		}
 		return context.auth
 	},
-	loader: async ({
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-		location,
-	}) => {
+	loader: async ({ location }) => {
+		const data = (await myProfileCollection.toArrayWhenReady()).at(0)
 		// if for some reason there is no profile, we must create one!
 		if (location.pathname !== '/getting-started') {
-			const data = await queryClient.ensureQueryData(baseLoaderQuery(userId))
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
-			if (data === null) throw redirect({ to: '/getting-started' })
+			if (!data) throw redirect({ to: '/getting-started' })
+			// else await queryClient.ensureQueryData(baseLoaderQuery(userId))
 		}
 
 		return {
@@ -138,29 +136,9 @@ function UserLayout() {
 				},
 				(payload) => {
 					const newMessage = payload.new as ChatMessageRow
-
-					queryClient.setQueryData(
-						['user', userId, 'chats'],
-						(oldData: ChatsMap | undefined): ChatsMap => {
-							const friendId =
-								newMessage.sender_uid === userId ?
-									newMessage.recipient_uid
-								:	newMessage.sender_uid
-
-							const newChatMessageRelative: ChatMessageRelative = {
-								...newMessage,
-								isMine: newMessage.sender_uid === userId,
-								friendId: friendId,
-							}
-
-							const currentChats = oldData ?? {}
-							const friendChatHistory = currentChats[friendId] ?? []
-
-							return {
-								...currentChats,
-								[friendId]: [...friendChatHistory, newChatMessageRelative],
-							}
-						}
+					console.log(`new chat`, newMessage)
+					chatMessagesCollection.utils.writeInsert(
+						ChatMessageSchema.parse(newMessage)
 					)
 				}
 			)

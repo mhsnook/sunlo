@@ -1,12 +1,17 @@
+import {
+	friendSummariesCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
 import { TitleBar } from '@/types/main'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { relationsQuery } from '@/hooks/use-friends'
 
 export const Route = createFileRoute('/_user/friends')({
 	component: FriendsPage,
-	loader: async ({ context }) => {
-		const { queryClient, userId } = context
-		await queryClient.ensureQueryData(relationsQuery(userId))
+	loader: async () => {
+		await Promise.all([
+			friendSummariesCollection.preload(),
+			publicProfilesCollection.preload(),
+		])
 		return {
 			titleBar: {
 				title: `Friends and Contacts`,

@@ -15,12 +15,13 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
+import { getThemeCss } from '@/lib/deck-themes'
 
 export function DeckCard({ deck }: { deck: DeckMeta }) {
 	const ref = useRef<HTMLDivElement | null>(null)
 
 	return (
-		<div style={deck.themeCss} ref={ref}>
+		<div style={getThemeCss(deck.theme)} ref={ref}>
 			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
 				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
 					<Link

@@ -3,7 +3,7 @@ import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile, useDecks } from '@/hooks/use-profile'
 import { LangOnlyComponentProps } from '@/types/main'
 import { useSidebar } from '@/components/ui/sidebar'
 
@@ -33,8 +33,9 @@ const siteMenuLoggedIn = makeLinks(['/', '/profile', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
+	const { data: decks } = useDecks()
 	const deckMenu = makeLinks(deckLinks, lang)
-	const isDeckFound = profile && lang && profile.deckLanguages.includes(lang)
+	const isDeckFound = profile && lang && decks.some((d) => d.lang === lang)
 
 	return (
 		<>

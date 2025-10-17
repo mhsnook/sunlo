@@ -1,117 +1,122 @@
-import { useCallback } from 'react'
-import { queryOptions, useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
-import {
-	ChatMessageRelative,
-	ChatMessageRow,
-	FriendRequestActionInsert,
-	FriendSummaryFull,
-	FriendSummaryRaw,
-	FriendSummaryRelative,
-	uuid,
-} from '@/routes/_user/friends/-types'
+import { FriendRequestActionInsert, uuid } from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { avatarUrlify, mapArray, mapArrays } from '@/lib/utils'
-
-type FriendSummariesLoaded = {
-	relationsMap: { [key: uuid]: FriendSummaryFull }
-	uids: {
-		all: Array<uuid>
-		friends: Array<uuid>
-		invited: Array<uuid>
-		invitations: Array<uuid>
-	}
-}
-
-export const friendSummaryToRelative = (
-	uid: uuid,
-	d: FriendSummaryRaw
-): FriendSummaryRelative => {
-	let res: FriendSummaryRelative = {
-		most_recent_action_type: d.most_recent_action_type!,
-		most_recent_created_at: d.most_recent_created_at!,
-		status: d.status!,
-		uidOther: uid === d.uid_less ? d.uid_more! : d.uid_less!,
-		isMostRecentByMe: uid === d.most_recent_uid_by,
-		isMyUidMore: uid === d.uid_more,
-	}
-
-	if (d.profile_less && d.profile_more) {
-		const pro = d.profile_less.uid === uid ? d.profile_more : d.profile_less
-		res.profile = {
-			uid: pro.uid ?? '',
-			username: pro.username ?? '',
-			avatar_path: pro.avatar_path ?? '',
-			avatarUrl: avatarUrlify(pro.avatar_path),
-		}
-	}
-	return res
-}
-
-export const relationsQuery = (uidMe: uuid) =>
-	queryOptions({
-		queryKey: ['user', uidMe, 'relations'],
-		queryFn: async () => {
-			const { data } = await supabase
-				.from('friend_summary')
-				.select(
-					'*, profile_less:public_profile!friend_request_action_uid_less_fkey(*), profile_more:public_profile!friend_request_action_uid_more_fkey(*)'
-				)
-				.or(`uid_less.eq.${uidMe},uid_more.eq.${uidMe}`)
-				.throwOnError()
-
-			if (!data) return null
-
-			const cleanArray = data
-				.map((d) => friendSummaryToRelative(uidMe, d))
-				.filter(
-					(d: FriendSummaryRelative): d is FriendSummaryFull =>
-						d.profile !== undefined
-				)
-
-			return {
-				relationsMap: mapArray(cleanArray, 'uidOther'),
-				uids: {
-					all: cleanArray.map((d) => d.uidOther),
-					friends: cleanArray
-						.filter((d) => d.status === 'friends')
-						.map((d) => d.uidOther),
-					invited: cleanArray
-						.filter((d) => d.status === 'pending' && d.isMostRecentByMe)
-						.map((d) => d.uidOther),
-					invitations: cleanArray
-						.filter((d) => d.status === 'pending' && !d.isMostRecentByMe)
-						.map((d) => d.uidOther),
-				},
-			} as FriendSummariesLoaded
-		},
-		enabled: !!uidMe,
-	})
+import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
+import {
+	chatMessagesCollection,
+	friendSummariesCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
+import { useMemo } from 'react'
+import { mapArrays } from '@/lib/utils'
+import { ChatMessageRelative } from '@/lib/schemas'
 
 export const useRelations = () => {
-	const { userId } = useAuth()
-	return useQuery({ ...relationsQuery(userId!), enabled: !!userId })
+	return useLiveQuery((q) =>
+		q
+			.from({ relation: friendSummariesCollection })
+			.join(
+				{ profile: publicProfilesCollection },
+				({ relation, profile }) => eq(relation.uid, profile.uid),
+				'inner'
+			)
+			.fn.select(({ relation, profile }) => ({
+				...relation,
+				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
+				profile,
+			}))
+	)
 }
 
-export const useOneRelation = (uidToUse: uuid) => {
-	const { userId } = useAuth()
-	const selectRelation = useCallback(
-		(data: FriendSummariesLoaded | null) =>
-			data?.relationsMap[uidToUse] ?? null,
-		[uidToUse]
+export const useRelationInvitations = () => {
+	return useLiveQuery((q) =>
+		q
+			.from({ relation: friendSummariesCollection })
+			.where(({ relation }) =>
+				and(
+					eq(relation.status, 'pending'),
+					eq(relation.most_recent_uid_by, relation.uid)
+				)
+			)
+			.join(
+				{ profile: publicProfilesCollection },
+				({ relation, profile }) => eq(relation.uid, profile.uid),
+				'inner'
+			)
+			.select(({ relation, profile }) => ({
+				...relation,
+				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
+				profile,
+			}))
 	)
-	return useQuery({
-		...relationsQuery(userId!),
-		select: selectRelation,
-		enabled: !!userId,
-	})
 }
+
+export const useRelationInvitedByMes = () => {
+	return useLiveQuery((q) =>
+		q
+			.from({ relation: friendSummariesCollection })
+			.where(({ relation }) =>
+				and(
+					eq(relation.status, 'pending'),
+					eq(relation.most_recent_uid_for, relation.uid)
+				)
+			)
+			.join(
+				{ profile: publicProfilesCollection },
+				({ relation, profile }) => eq(relation.uid, profile.uid),
+				'inner'
+			)
+			.fn.select(({ relation, profile }) => ({
+				...relation,
+				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
+				profile,
+			}))
+	)
+}
+
+export const useRelationFriends = () => {
+	return useLiveQuery((q) =>
+		q
+			.from({ relation: friendSummariesCollection })
+			.where(({ relation }) => eq(relation.status, 'friends'))
+			.join(
+				{ profile: publicProfilesCollection },
+				({ relation, profile }) => eq(relation.uid, profile.uid),
+				'inner'
+			)
+			.fn.select(({ relation, profile }) => ({
+				...relation,
+				isMostRecentByMe: relation.most_recent_uid_by !== relation.uid,
+				profile,
+			}))
+	)
+}
+export const useOneRelation = (uid: uuid) =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ relation: friendSummariesCollection })
+				.where(({ relation }) => eq(relation.uid, uid))
+				.findOne()
+				.join(
+					{ profile: publicProfilesCollection },
+					({ relation, profile }) => eq(relation.uid, profile.uid),
+					'inner'
+				)
+				.fn.select(({ relation, profile }) => ({
+					...relation,
+					isMostRecentByMe: relation.most_recent_uid_by !== uid,
+					profile,
+				})),
+		[uid]
+	)
 
 export const useFriendRequestAction = (uid_for: uuid) => {
 	const { userId: uid_by } = useAuth()
-	const [uid_less, uid_more] = [uid_by, uid_for].sort()
+	const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
 
 	return useMutation({
 		mutationKey: ['user', uid_by, 'friend_request_action', uid_for],
@@ -150,48 +155,55 @@ export type ChatsMap = {
 	[key: uuid]: Array<ChatMessageRelative>
 }
 
-const chatsQueryOptions = (uid: uuid) =>
-	queryOptions({
-		queryKey: ['user', uid ?? '', 'chats'],
-		queryFn: async () => {
-			const { data } = await supabase
-				.from('chat_message')
-				.select('*')
-				.order('created_at', { ascending: true })
-				.throwOnError()
-			const chatsRelative = data.map(
-				(message: ChatMessageRow): ChatMessageRelative => ({
-					...message,
-					isMine: message.sender_uid === uid,
-					friendId:
-						message.sender_uid === uid ?
-							message.recipient_uid
-						:	message.sender_uid,
-				})
-			)
-			const chatsMap: ChatsMap = mapArrays<ChatMessageRelative, 'friendId'>(
-				chatsRelative,
-				'friendId'
-			)
-			// console.log(`fetched chatsMap`, chatsMap)
-			return chatsMap
-		},
-	})
-
 export const useAllChats = () => {
 	const { userId } = useAuth()
-	return useQuery({
-		...chatsQueryOptions(userId!),
-		enabled: !!userId,
-	})
+	const initialQuery = useLiveQuery((q) =>
+		q
+			.from({ message: chatMessagesCollection })
+			.orderBy(({ message }) => message.created_at, 'asc')
+			.fn.select(({ message }) => ({
+				...message,
+				friendUid:
+					message.sender_uid === userId ?
+						message.recipient_uid
+					:	message.sender_uid,
+				isByMe: message.sender_uid === userId,
+			}))
+	)
+
+	return useMemo(
+		() => ({
+			...initialQuery,
+			data:
+				!initialQuery.data ? null : (
+					mapArrays<ChatMessageRelative, 'friendUid'>(
+						initialQuery.data,
+						'friendUid'
+					)
+				),
+		}),
+		[initialQuery]
+	)
 }
 
-export const useOneFriendChat = (friendId: uuid) => {
+export const useOneFriendChat = (uid: uuid) => {
 	const { userId } = useAuth()
-	const selectChat = useCallback((data: ChatsMap) => data[friendId], [friendId])
-	return useQuery({
-		...chatsQueryOptions(userId!),
-		select: selectChat,
-		enabled: !!userId && !!friendId,
-	})
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ message: chatMessagesCollection })
+				.where(({ message }) =>
+					or(eq(message.sender_uid, uid), eq(message.recipient_uid, uid))
+				)
+				.orderBy(({ message }) => message.created_at, 'asc')
+				.fn.select(({ message }) => ({
+					...message,
+					friendUid:
+						message.sender_uid === userId ?
+							message.recipient_uid
+						:	message.sender_uid,
+					isByMe: message.sender_uid === userId,
+				})),
+		[uid]
+	)
 }

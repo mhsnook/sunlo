@@ -21,7 +21,6 @@ import {
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import {
-	deckQueryOptions,
 	useDeckActivityChartData,
 	useDeckMeta,
 	useDeckPids,
@@ -30,33 +29,22 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
-import { languageQueryOptions, useLanguageMeta } from '@/hooks/use-language'
+import { useLanguageMeta } from '@/hooks/use-language'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import Callout from '@/components/ui/callout'
 
 export const Route = createFileRoute('/_user/learn/$lang/')({
 	component: WelcomePage,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		await Promise.all([
-			queryClient.ensureQueryData(languageQueryOptions(lang)),
-			queryClient.ensureQueryData(deckQueryOptions(lang, userId)),
-		])
-	},
 })
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const { data: pids } = useDeckPids(lang)
-	if (!pids) throw new Error("Could not load this deck's data")
+	const { data: deck } = useDeckMeta(lang)
+	if (!deck) throw new Error("Could not load this deck's data")
 
-	const deckIsNew = !(pids.all.length > 0)
+	const deckIsNew =
+		deck.cards_active + deck.cards_skipped + deck.cards_learned === 0
 	return (
 		<div className="space-y-8">
 			{deckIsNew ?

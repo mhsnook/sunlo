@@ -125,7 +125,7 @@ function SearchProfiles() {
 									</p>
 									{resultsToShow.map((profile: PublicProfile) => (
 										<div key={profile.uid} className="rounded p-2 pe-4 shadow">
-											<ProfileWithRelationship profile={profile} />
+											<ProfileWithRelationship uid={profile.uid} />
 										</div>
 									))}
 								</div>

@@ -19,6 +19,7 @@ import { useAuth, useSignOut } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
 import { Link } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
+import { avatarUrlify } from '@/lib/utils'
 
 const data = makeLinks([
 	'/profile',
@@ -32,7 +33,8 @@ export function NavUser() {
 	const { data: profile } = useProfile()
 	const signOut = useSignOut()
 	if (!profile) return null
-	const { username, avatarUrl } = profile
+	const { username, avatar_path } = profile
+	const avatarUrl = avatarUrlify(avatar_path)
 
 	return (
 		<SidebarMenu>

@@ -9,21 +9,21 @@ export function cn(...inputs: ClassValue[]) {
 
 // this is type-funky bc we're using dynamic keys (TODO consider Map)
 export function mapArray<T extends Record<string, any>, K extends keyof T>(
-	arr: Array<T>,
+	arr: ReadonlyArray<T> | undefined | null,
 	key: K
-) {
+): Record<string, T> {
 	if (!key) throw new Error('Must provide a key to map against')
 	if (!arr) return {} // uninitialized or null array returns empty object
 
 	return arr.reduce(
-		(result, item) => {
+		(acc, item) => {
 			const itemKey = item[key]
 			if (typeof itemKey === 'string') {
-				result[itemKey] = item
+				acc[itemKey] = item
 			}
-			return result
+			return acc
 		},
-		{} as Record<K, T>
+		{} as Record<string, T>
 	)
 }
 
@@ -42,7 +42,7 @@ export function mapArrays<T extends Record<string, any>, K extends keyof T>(
 			}
 			return result
 		},
-		{} as Record<K, Array<T>>
+		{} as Record<string, Array<T>>
 	)
 }
 
@@ -119,7 +119,7 @@ export function arrayDifference(
 	return arr1.filter((item) => !set2.has(item))
 }
 
-export function avatarUrlify(path: string | null): string {
+export function avatarUrlify(path: string | null | undefined): string {
 	return !path ? '' : (
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
 		)

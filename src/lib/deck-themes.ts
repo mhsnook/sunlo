@@ -9,7 +9,7 @@ const noDeckTheme = {
 
 export type ThemeType = typeof noDeckTheme
 
-const themes: ThemeType[] = [
+export const themes: ThemeType[] = [
 	{ name: 'pink', hue: 310, hueOff: 270, hueAccent: 210 },
 	{ name: 'red', hue: 0, hueOff: 320, hueAccent: 290 },
 	{ name: 'gold', hue: 50, hueOff: 30, hueAccent: 320 },
@@ -17,8 +17,18 @@ const themes: ThemeType[] = [
 	{ name: 'blue', hue: 210, hueOff: 190, hueAccent: 40 },
 ]
 
-function setTheme(theEl?: HTMLElement, theme?: ThemeType) {
-	const toSet = theme ?? noDeckTheme
+export const getThemeCss = (index?: number) => {
+	if (typeof index !== 'number') return {}
+	const theme = themes[index % themes.length]
+	return {
+		'--hue': theme?.hue,
+		'--hue-off': theme?.hueOff,
+		'--hue-accent': theme?.hueAccent,
+	} as CSSProperties
+}
+
+export function setTheme(theEl?: HTMLElement, theme?: number) {
+	const toSet = theme ? themes[theme] : noDeckTheme
 	const el = theEl ?? document.documentElement
 
 	el.style.setProperty('--hue', String(toSet.hue))
@@ -27,5 +37,3 @@ function setTheme(theEl?: HTMLElement, theme?: ThemeType) {
 }
 
 export type ThemeCSS = CSSProperties
-
-export { themes, setTheme }

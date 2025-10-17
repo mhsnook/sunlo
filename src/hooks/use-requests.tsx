@@ -1,8 +1,14 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { PhraseRow, TranslationRow, uuid } from '@/types/main'
 import { PublicProfile } from '@/routes/_user/friends/-types'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import {
+	phraseRequestsCollection,
+	phrasesCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
 
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 	queryOptions({
@@ -35,44 +41,45 @@ export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 		},
 	})
 
-export function useAllMyPhraseRequests(lang: string) {
+export function useAllMyPhraseRequestsLang(lang: string) {
 	const { userId } = useAuth()
-	return useQuery({
-		...allMyPhraseRequestsQuery(lang, userId!),
-		enabled: !!userId,
-	})
+	return useLiveQuery((q) =>
+		q
+			.from({ request: phraseRequestsCollection })
+			.where(({ request }) =>
+				and(eq(request.requester_uid, userId), eq(request.lang, lang))
+			)
+	)
 }
 
-export async function getOneFullPhraseRequest(id: uuid) {
-	// @TODO would like to check the "my requests" cache but it is language-specific
-	// and we don't have a language here 🙄
-	let { data } = await supabase
-		.from('meta_phrase_request')
-		.select('*, phrase(*, phrase_translation(*))')
-		.eq('id', id)
-		.maybeSingle()
-		.throwOnError()
-	if (!data) return null
-	if (Array.isArray(data.phrase) && Array.isArray(data.phrases)) {
-		data.phrase.forEach((phrase) => {
-			data.phrases!.find((p) => p.id === phrase.id).translations =
-				phrase.phrase_translation
-		})
-	}
+export const useRequest = (id: string) =>
+	useLiveQuery((q) =>
+		q
+			.from({ req: phraseRequestsCollection })
+			.where(({ req }) => eq(req.id, id))
+			.findOne()
+			.join({ profile: publicProfilesCollection }, ({ req, profile }) =>
+				eq(profile.uid, req.requester_uid)
+			)
+			.select(({ req, profile }) => ({
+				...req,
+				profile,
+			}))
+	)
 
-	return data
-}
-
-export type PhraseRequestFull = Awaited<
-	ReturnType<typeof getOneFullPhraseRequest>
->
-
-export function phraseRequestQuery(id: string) {
-	return queryOptions({
-		queryKey: ['phrase_request', id],
-		queryFn: async () => await getOneFullPhraseRequest(id),
-	})
-}
+export const usePhrasesFromRequest = (id: string) =>
+	useLiveQuery((q) =>
+		q
+			.from({ phrase: phrasesCollection })
+			.where(({ phrase }) => eq(phrase.request_id, id))
+			.join({ profile: publicProfilesCollection }, ({ phrase, profile }) =>
+				eq(phrase.added_by, profile.uid)
+			)
+			.select(({ phrase, profile }) => ({
+				...phrase,
+				profile,
+			}))
+	)
 
 export type FulfillRequestResponse = {
 	phrase: PhraseRow

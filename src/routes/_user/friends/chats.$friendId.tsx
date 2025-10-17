@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
-import { cn } from '@/lib/utils'
+import { avatarUrlify, cn } from '@/lib/utils'
 import { useAuth } from '@/lib/hooks'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
@@ -46,7 +46,7 @@ function ChatPage() {
 		return () => resizeObserver.disconnect()
 	}, [messagesQuery.data])
 
-	if (!relation?.profile || messagesQuery.isPending) {
+	if (!relation?.profile || messagesQuery.isLoading) {
 		return (
 			<Card className="flex h-full flex-col">
 				<Loader />
@@ -54,8 +54,8 @@ function ChatPage() {
 		)
 	}
 
-	const relUsername = relation?.profile.username ?? ''
-	const relAvatarUrl = relation?.profile.avatarUrl ?? ''
+	const relUsername = relation?.profile.username
+	const relAvatarUrl = avatarUrlify(relation?.profile.avatar_path)
 
 	return (
 		<Card className="flex h-full flex-col">
@@ -186,9 +186,9 @@ const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
 	<div className="flex flex-col items-center justify-center gap-6 py-10">
 		<p className="text-xl font-bold">{profile.username}</p>
 		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-			{profile.avatarUrl ?
+			{profile.avatar_path ?
 				<img
-					src={profile.avatarUrl}
+					src={avatarUrlify(profile.avatar_path)}
 					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 					className="size-32 rounded-full object-cover"
 				/>

@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
 
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile, useDecks } from '@/hooks/use-profile'
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
@@ -13,17 +13,17 @@ export const Route = createFileRoute('/_user/learn/')({
 
 function Page() {
 	const { data: profile } = useProfile()
+	const { data: decks } = useDecks()
 	if (!profile) return null
-	const { decksMap, deckLanguages } = profile
-	const activeDecks = deckLanguages.filter((lang) => !decksMap[lang].archived)
+	const activeDecks = decks.filter((i) => !i.archived)
 
 	return (
 		<main className="w-full space-y-6">
 			{activeDecks.length > 0 ?
 				<>
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
-						{activeDecks.map((lang) => (
-							<DeckCard key={lang} deck={decksMap[lang]} />
+						{activeDecks.map((d) => (
+							<DeckCard key={d.lang} deck={d} />
 						))}
 					</div>
 					<Link
@@ -36,7 +36,7 @@ function Page() {
 					</Link>
 				</>
 			:	<div className="px-4 @lg:px-6 @xl:px-8">
-					{deckLanguages.length ?
+					{decks.length ?
 						<AllDecksArchived />
 					:	<NoDecks />}
 				</div>

@@ -8,8 +8,7 @@ import {
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
-import { ThemeCSS, ThemeType } from '@/lib/deck-themes'
-import { FriendshipRow, PublicProfile } from '@/routes/_user/friends/-types'
+import { PublicProfile } from '@/routes/_user/friends/-types'
 import {
 	PhraseFullType,
 	PhraseRequestType,
@@ -160,8 +159,7 @@ export type DeckStub = Tables<'user_deck'>
 export type DeckInsert = TablesInsert<'user_deck'>
 export type DeckMeta = Tables<'user_deck_plus'> & {
 	cardsScheduledForToday?: number
-	theme?: ThemeType
-	themeCss?: ThemeCSS
+	theme?: number
 }
 export type DeckFetched = DeckMeta & {
 	cards: Array<CardFull>
@@ -238,9 +236,6 @@ export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
 export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
 	avatarUrl: string
 	languagesToShow: Array<string>
-	decksMap: DecksMap
-	deckLanguages: Array<string>
-	friendships?: Array<FriendshipRow>
 	languages_known: Array<LanguageKnown>
 }
 export type DecksMap = {

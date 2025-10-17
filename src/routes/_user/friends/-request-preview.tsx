@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { LinkIcon } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,7 +6,7 @@ import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
-import { phraseRequestQuery } from '@/hooks/use-requests'
+import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 
 export function RequestPreview({
@@ -19,19 +18,20 @@ export function RequestPreview({
 	lang: string
 	isMine: boolean
 }) {
-	const { data: request, isPending } = useQuery(phraseRequestQuery(id))
+	const { data: request, isLoading } = useRequest(id)
+	const { data: answers, isLoading: isLoadingPhrases } =
+		usePhrasesFromRequest(id)
 
-	if (!isPending && !request)
+	if (!isLoading && !request)
 		return (
 			<Callout variant="problem">Can't seem to find that request...</Callout>
 		)
-	const answers = Array.isArray(request?.phrases) ? request.phrases : []
 
 	return (
 		<Card
 			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
-			{isPending || !request ?
+			{isLoading || !request ?
 				<Loader className="my-6" />
 			:	<>
 					<CardHeader className="p-4">

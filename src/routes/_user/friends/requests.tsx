@@ -3,9 +3,8 @@ import { Contact } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
-import { ShowError } from '@/components/errors'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useRelations } from '@/hooks/use-friends'
+import { useRelationInvitations } from '@/hooks/use-friends'
 import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createFileRoute('/_user/friends/requests')({
@@ -13,11 +12,11 @@ export const Route = createFileRoute('/_user/friends/requests')({
 })
 
 function RouteComponent() {
-	const { data, isPending, error } = useRelations()
+	const { data, isLoading } = useRelationInvitations()
 
-	return !data?.uids.invitations?.length ?
+	return !data?.length ?
 			<p
-				className={`text-muted-foreground mx-2 text-sm italic ${isPending ? 'invisible' : ''}`}
+				className={`text-muted-foreground mx-2 text-sm italic ${isLoading ? 'invisible' : ''}`}
 			>
 				No friend requests pending for you.
 			</p>
@@ -41,16 +40,14 @@ function RouteComponent() {
 					</CardTitle>
 				</CardHeader>
 				<CardContent className="space-y-4">
-					{isPending ?
+					{isLoading ?
 						<Loader />
-					: error ?
-						<ShowError>{error.message}</ShowError>
-					:	data?.uids.invitations.map((uid) => (
+					:	data.map((r) => (
 							<ProfileWithRelationship
-								key={uid}
+								key={r.uid}
 								// @TODO replace this with just passing the UID and have the
 								// component grab the relationship from a use-query+selector
-								profile={data?.relationsMap[uid].profile}
+								uid={r.uid}
 							/>
 						))
 					}
