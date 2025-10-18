@@ -135,9 +135,7 @@ function RouteComponent() {
 									className="flex items-start justify-between gap-2 rounded-md border p-2"
 								>
 									<LangBadge lang={phrase.lang} className="my-1" />
-									<p className="my-0.5 flex-1">
-										{phrase.text} {phrase.text} {phrase.text}
-									</p>
+									<p className="my-0.5 flex-1">{phrase.text}</p>
 									<PermalinkButton
 										size="icon"
 										from={Route.fullPath}
