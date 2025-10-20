@@ -16,9 +16,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguage } from '@/hooks/use-language'
+import { useLanguageMeta } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { useDeckPids } from '@/hooks/use-deck'
+import { useDeckCards } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
 
@@ -37,20 +37,21 @@ const filterLanguage = {
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
 
-	const { data: deckPids } = useDeckPids(lang)
+	const { data: deckCards } = useDeckCards(lang)
 	const recs = useCompositePids(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { data: language } = useLanguage(lang)
+	const { data: languageMeta } = useLanguageMeta(lang)
 
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
 
 	const tagOptions = useMemo(
 		() =>
-			(language?.meta.tags ?? []).map((tag) => ({ value: tag, label: tag })) ??
-			[],
-		[language?.meta.tags]
+			!languageMeta ?
+				[]
+			:	languageMeta.tags.map((tag) => ({ value: tag, label: tag })),
+		[languageMeta]
 	)
 
 	const selectedTags = useMemo(

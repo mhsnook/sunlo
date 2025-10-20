@@ -1,41 +1,17 @@
-import { useCallback } from 'react'
-import supabase from '@/lib/supabase-client'
-import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type {
-	CardsMap,
-	DeckFetched,
-	DeckLoaded,
-	uuid,
-	DeckPids,
-	ReviewsDayMap,
-} from '@/types/main'
-import { arrayDifference, mapArray, mapArrays } from '@/lib/utils'
-import { useAuth } from '@/lib/hooks'
-import { inLastWeek } from '@/lib/dayjs'
+import type { uuid, ReviewsDayMap } from '@/types/main'
+import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
+import {
+	cardsCollection,
+	decksCollection,
+	reviewDaysCollection,
+} from '@/lib/collections'
+import { useMemo } from 'react'
+import { cardsFull } from '@/lib/live-collections'
 
 dayjs.extend(isoWeek)
-
-const calcRoutineStats = (reviewsDayMap: ReviewsDayMap, goal: number) => {
-	if (!reviewsDayMap) return { daysMet: 0, daysSoFar: 1 }
-
-	const today = dayjs()
-	const mostRecentMonday = today.isoWeekday(1)
-	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
-
-	let daysMet = 0
-	for (let i = 0; i < daysSoFar; i++) {
-		const dayToCheck = mostRecentMonday.add(i, 'day')
-		const dayKey = dayToCheck.format('YYYY-MM-DD')
-		const reviewsForDay = reviewsDayMap[dayKey] || []
-		if (reviewsForDay.length >= goal) {
-			daysMet++
-		}
-	}
-	return { daysMet, daysSoFar }
-}
 
 const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
 	if (!reviewsDayMap) return []
@@ -56,140 +32,74 @@ const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
 	return data
 }
 
-async function fetchDeck(lang: string, uid: uuid): Promise<DeckLoaded> {
-	const { data } = await supabase
-		.from('user_deck_plus')
-		.select(`*, cards:user_card_plus(*, reviews:user_card_review(*))`)
-		.eq('lang', lang)
-		.eq('uid', uid)
-		.maybeSingle()
-		.throwOnError()
-	if (!data)
-		throw Error(
-			`This deck was not found in your profile. Perhaps it's just a bad URL? Please double check the language code in your URL; it should be 3 characters long, like "eng" or "hin". ${lang.length > 3 ? `Maybe you meant "${lang.substring(0, 3)}"?` : ''}`
-		)
-	const { cards: cardsArray, ...meta }: DeckFetched = data
-	const reviews = cardsArray.flatMap((c) => c.reviews)
-	const reviewsDayMap = mapArrays(reviews, 'day_session')
-
-	const all = cardsArray.map((c) => c.phrase_id!)
-	const active = cardsArray
-		.filter((c) => c.status === 'active')
-		.map((c) => c.phrase_id!)
-
-	const pids: DeckPids = {
-		all,
-		active,
-		inactive: arrayDifference(all, [active]),
-		reviewed: cardsArray
-			.filter((c) => c.last_reviewed_at !== null)
-			.map((c) => c.phrase_id!),
-		reviewed_or_inactive: cardsArray
-			.filter(
-				(c) =>
-					c.last_reviewed_at !== null ||
-					c.status === 'skipped' ||
-					c.status === 'learned'
-			)
-			.map((c) => c.phrase_id!),
-		reviewed_last_7d: cardsArray
-			.filter(
-				(c) => c.last_reviewed_at !== null && inLastWeek(c.last_reviewed_at)
-			)
-			.map((c) => c.phrase_id!),
-		unreviewed_active: cardsArray
-			.filter((c) => c.last_reviewed_at === null && c.status === 'active')
-			.map((c) => c.phrase_id!),
-		today_active: cardsArray
-			.filter(
-				(c) =>
-					c.last_reviewed_at !== null &&
-					typeof c.retrievability_now === 'number' &&
-					c.retrievability_now <= 0.9 &&
-					c.status === 'active'
-			)
-			.map((c) => c.phrase_id!),
-	}
-	const cardsMap: CardsMap = mapArray(cardsArray, 'phrase_id')
-
-	return {
-		meta: { ...meta, cardsScheduledForToday: pids.today_active.length },
-		pids,
-		cardsMap,
-		reviews,
-		reviewsDayMap,
-	}
-}
-
-export const deckQueryOptions = (lang: string, userId: uuid | null) =>
-	queryOptions({
-		queryKey: ['user', lang, 'deck'] as const,
-		queryFn: async () => fetchDeck(lang, userId!),
-		enabled: !!userId && !!lang,
-	})
-
-const selectDeckMeta = (data: DeckLoaded) => data.meta
-export const useDeckMeta = (lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	return useSuspenseQuery({
-		...options,
-		select: selectDeckMeta,
-	})
-}
-
-// @TODO replace this with a memoized select on data.cards
-const selectDeckPids = (data: DeckLoaded) => data.pids
-export const useDeckPids = (lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	return useQuery({
-		...options,
-		select: selectDeckPids,
-	})
-}
-
-const selectRoutineStats = (data: DeckLoaded) =>
-	calcRoutineStats(data.reviewsDayMap, data.meta.daily_review_goal ?? 15)
-export const useDeckRoutineStats = (lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	return useQuery({
-		...options,
-		select: selectRoutineStats,
-	})
-}
-
-const selectActivityChartData = (data: DeckLoaded) =>
-	calcActivityChartData(data.reviewsDayMap)
-export const useDeckActivityChartData = (lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	return useQuery({
-		...options,
-		select: selectActivityChartData,
-	})
-}
-
-const selectCardsMap = (data: DeckLoaded) => data.cardsMap
-export const useDeckCardsMap = (lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	return useQuery({
-		...options,
-		select: selectCardsMap,
-	})
-}
-
-export const useDeckCard = (pid: uuid, lang: string) => {
-	const { userId } = useAuth()
-	const options = deckQueryOptions(lang, userId)
-	const selectCard = useCallback(
-		(data: DeckLoaded) => data.cardsMap[pid],
-		[pid]
+export const useDeckMeta = (lang: string) =>
+	useLiveQuery((q) =>
+		q
+			.from({ deck: decksCollection })
+			.where(({ deck }) => eq(deck.lang, lang))
+			.findOne()
 	)
-	return useQuery({
-		...options,
-		select: selectCard,
-	})
+
+// @@TODO recreate all of deckPids with either different hooks
+// or another parameter for which PIDS you want and a different where clause
+export const useDeckCards = (lang: string) =>
+	useLiveQuery((q) =>
+		q.from({ card: cardsFull }).where(({ card }) => eq(card.lang, lang))
+	)
+
+export const useDeckRoutineStats = (lang: string) => {
+	const today = dayjs()
+	const mostRecentMonday = today.isoWeekday(1).add(4, 'hour')
+	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
+	const mondayString = mostRecentMonday.format('YYYY-MM-DD')
+
+	const query = useLiveQuery((q) =>
+		q
+			.from({ day: reviewDaysCollection })
+			.where(({ day }) =>
+				and(eq(day.lang, lang), gte(day.day_session, mondayString))
+			)
+			.select(({ day }) => ({ count: count(day.day_session) }))
+			.findOne()
+	)
+
+	return useMemo(
+		() => ({
+			...query,
+			data: query.data ? { daysMet: query.data.count, daysSoFar } : null,
+		}),
+		[query, daysSoFar]
+	)
+}
+
+export const useDeckActivityChartData = (lang: string) =>
+	useLiveQuery((q) =>
+		q
+			.from({ card: cardsCollection })
+			.where(({ card }) => eq(card.lang, lang))
+			.select(({ card }) => card.phrase_id)
+	)
+
+// export const useDeckCardsMap = (lang: string) =>
+
+export const useDeckCard = (pid: uuid) =>
+	useLiveQuery((q) =>
+		q.from({ card: cardsFull }).where(({ card }) => eq(card.phrase_id, pid))
+	)
+
+export const useDeckPids = (lang: string) => {
+	const query = useDeckCards(lang)
+
+	return !query.data ? null : (
+			{
+				all: [],
+				active: [],
+				inactive: [],
+				reviewed: [],
+				reviewed_or_inactive: [],
+				reviewed_last_7d: [],
+				unreviewed_active: [],
+				today_active: [],
+			}
+		)
 }

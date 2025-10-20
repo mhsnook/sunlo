@@ -1,7 +1,7 @@
 import type { uuid } from '@/types/main'
 
 import { languagesCollection, phrasesCollection } from '@/lib/collections'
-import { eq, InitialQueryBuilder } from '@tanstack/db'
+import { eq, type InitialQueryBuilder } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 export const useLanguageMeta = (lang: string) =>
@@ -20,12 +20,6 @@ const createBasePhraseQuery = (q: InitialQueryBuilder, lang: string) =>
 		.from({ phrase: phrasesCollection })
 		.where(({ phrase }) => eq(phrase.lang, lang))
 
-export const useLanguagePids = (lang: string) =>
-	useLiveQuery(
-		(q) => createBasePhraseQuery(q, lang).select(({ phrase }) => phrase.id),
-		[lang]
-	)
-
 export const useLanguagePhrases = (lang: string) =>
 	useLiveQuery((q) => createBasePhraseQuery(q, lang), [lang])
 
@@ -41,13 +35,14 @@ export const useLanguagePhrase = (pid: uuid | null) =>
 		[pid]
 	)
 
-export const useLanguageTags = (lang: string) =>
-	useLiveQuery(
+export const useLanguageTags = (lang: string) => {
+	return useLiveQuery(
 		(q) =>
 			q
 				.from({ language: languagesCollection })
 				.where(({ language }) => eq(language.lang, lang))
 				.findOne()
-				.select(({ language }) => language.tags),
+				.select(({ language }) => ({ tags: language.tags })),
 		[lang]
 	)
+}

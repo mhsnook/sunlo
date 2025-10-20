@@ -52,13 +52,14 @@ function SearchTab() {
 		}
 	}, [debouncedText, filter, navigate])
 
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	const { data: pids } = useLanguagePids(lang)
+	const { data: phrases } = useLanguagePhrases(lang)
 
-	const { data: allTags = [] } = useLanguageTags(lang)
+	const { data: languageMeta } = useLanguageMeta(lang)
 	const tagOptions = useMemo(
-		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
-		[allTags]
+		() =>
+			(languageMeta?.tags ?? []).map((tag) => ({ value: tag, label: tag })) ??
+			[],
+		[languageMeta?.tags]
 	)
 
 	const selectedTags = useMemo(

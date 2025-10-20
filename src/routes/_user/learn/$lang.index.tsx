@@ -62,8 +62,7 @@ function DeckOverview() {
 	const { data: meta } = useDeckMeta(lang)
 	const { data: pids } = useDeckPids(lang)
 	const { data: routineStats } = useDeckRoutineStats(lang)
-	const { data: activityChartData } = useDeckActivityChartData(lang)
-	if (!meta || !pids || !routineStats || !activityChartData)
+	if (!meta || !pids || !routineStats)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
 	const totalToday =
@@ -118,14 +117,7 @@ function DeckOverview() {
 					{meta.daily_review_goal ?? 15} new ones
 				</p>
 
-				{activityChartData.length > 0 && (
-					<div className="my-4">
-						<h4 className="text-muted-foreground mb-2 text-center font-semibold">
-							Your Recent Reviews
-						</h4>
-						<ActivityChart data={activityChartData} />
-					</div>
-				)}
+				<ActivityChart lang={lang} />
 			</CardContent>
 			<CardFooter>
 				<div className="flex flex-row flex-wrap gap-2">

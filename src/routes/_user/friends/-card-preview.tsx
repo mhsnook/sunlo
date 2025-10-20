@@ -13,18 +13,16 @@ import { Loader } from '@/components/ui/loader'
 
 export function CardPreview({
 	pid,
-	lang,
 	isMine,
 }: {
 	pid: uuid
-	lang: string
 	isMine: boolean
 }) {
-	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
+	const { data: phrase, isLoading } = useLanguagePhrase(pid)
 	// const { data: card } = useDeckCard(pid, lang)
 	const chosenTranslation = phrase?.translations[0]
 
-	if (!isPending && !phrase)
+	if (!isLoading && !phrase)
 		return (
 			<Callout variant="problem">Can't seem to find that phrase...</Callout>
 		)
@@ -32,7 +30,7 @@ export function CardPreview({
 		<Card
 			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
-			{isPending ?
+			{isLoading || !phrase ?
 				<Loader className="my-6" />
 			:	<>
 					<CardHeader className="p-4">
@@ -62,7 +60,7 @@ export function CardPreview({
 							)*/}
 						</div>
 						<div className="flex flex-row flex-wrap gap-2">
-							<CardStatusDropdown pid={pid} lang={lang} />
+							<CardStatusDropdown pid={pid} lang={phrase.lang} />
 							{!chosenTranslation && (
 								<AddTranslationsDialog
 									size="sm"
@@ -73,7 +71,7 @@ export function CardPreview({
 							<Link
 								to={'/learn/$lang/$id'}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang, id: pid }}
+								params={{ lang: phrase.lang, id: pid }}
 								className={buttonVariants({
 									variant: 'secondary',
 									size: 'sm',

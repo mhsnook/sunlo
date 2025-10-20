@@ -1,4 +1,4 @@
-import { PhraseFull } from '@/types/main'
+import { useRef } from 'react'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Pencil } from 'lucide-react'
 
+import type { PhraseFullType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import {
 	Dialog,
@@ -18,9 +19,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { ButtonProps } from '@/components/ui/button-variants'
-import { useRef } from 'react'
-import TranslationLanguageField from './fields/translation-language-field'
-import TranslationTextField from './fields/translation-text-field'
+import TranslationLanguageField from '@/components/fields/translation-language-field'
+import TranslationTextField from '@/components/fields/translation-text-field'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -32,7 +32,7 @@ export function AddTranslationsDialog({
 	phrase,
 	...props
 }: ButtonProps & {
-	phrase: PhraseFull
+	phrase: PhraseFullType
 }) {
 	const {
 		handleSubmit,

@@ -25,7 +25,11 @@ export const PhraseRequestStatusEnumSchema = z.enum([
 	'fulfilled',
 	'cancelled',
 ])
-export const MessageTypeEnumSchema = z.enum(['request', 'recommendation'])
+export const MessageTypeEnumSchema = z.enum([
+	'request',
+	'recommendation',
+	'accepted',
+])
 
 export const LangSchema = z
 	.string()
@@ -239,4 +243,3 @@ export const ChatMessageSchema = z.object({
 })
 
 export type ChatMessageType = z.infer<typeof ChatMessageSchema>
-export type ChatMessageRelative = ChatMessageType & { friendUid: uuid; isByMe: boolean }

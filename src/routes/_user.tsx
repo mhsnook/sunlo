@@ -111,9 +111,7 @@ function UserLayout() {
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toast.success('You are now connected')
 					// console.log(`new friend request action has come in`, payload)
-					void queryClient.invalidateQueries({
-						queryKey: ['user', userId, 'relations'],
-					})
+					friendSummariesCollection.utils.refetch()
 				}
 			)
 			.subscribe()

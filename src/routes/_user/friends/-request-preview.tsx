@@ -9,15 +9,7 @@ import { Loader } from '@/components/ui/loader'
 import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 
-export function RequestPreview({
-	id,
-	lang,
-	isMine,
-}: {
-	id: uuid
-	lang: string
-	isMine: boolean
-}) {
+export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 	const { data: request, isLoading } = useRequest(id)
 	const { data: answers, isLoading: isLoadingPhrases } =
 		usePhrasesFromRequest(id)
@@ -52,7 +44,7 @@ export function RequestPreview({
 							<Link
 								to={'/learn/$lang/requests/$id'}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang, id }}
+								params={{ lang: request.lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',
 									size: 'sm',

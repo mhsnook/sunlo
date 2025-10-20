@@ -136,7 +136,7 @@ function RouteComponent() {
 								>
 									<LangBadge lang={phrase.lang} className="my-1" />
 									<p className="my-0.5 flex-1">
-										{phrase.text} {phrase.text} {phrase.text}
+										{phrase.text}
 									</p>
 									<PermalinkButton
 										size="icon"

@@ -1,116 +1,57 @@
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
-import { FriendRequestActionInsert, uuid } from '@/routes/_user/friends/-types'
+import { ChatMessageRelative, type FriendRequestActionInsert, uuid } from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
 import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
 import {
 	chatMessagesCollection,
-	friendSummariesCollection,
-	publicProfilesCollection,
 } from '@/lib/collections'
 import { useMemo } from 'react'
 import { mapArrays } from '@/lib/utils'
-import { ChatMessageRelative } from '@/lib/schemas'
-
-export const useRelations = () => {
-	return useLiveQuery((q) =>
-		q
-			.from({ relation: friendSummariesCollection })
-			.join(
-				{ profile: publicProfilesCollection },
-				({ relation, profile }) => eq(relation.uid, profile.uid),
-				'inner'
-			)
-			.fn.select(({ relation, profile }) => ({
-				...relation,
-				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
-				profile,
-			}))
-	)
-}
+import { relationsFull } from '@/lib/live-collections'
 
 export const useRelationInvitations = () => {
 	return useLiveQuery((q) =>
 		q
-			.from({ relation: friendSummariesCollection })
+			.from({ relation: relationsFull })
 			.where(({ relation }) =>
 				and(
 					eq(relation.status, 'pending'),
 					eq(relation.most_recent_uid_by, relation.uid)
 				)
 			)
-			.join(
-				{ profile: publicProfilesCollection },
-				({ relation, profile }) => eq(relation.uid, profile.uid),
-				'inner'
-			)
-			.select(({ relation, profile }) => ({
-				...relation,
-				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
-				profile,
-			}))
 	)
 }
 
 export const useRelationInvitedByMes = () => {
 	return useLiveQuery((q) =>
 		q
-			.from({ relation: friendSummariesCollection })
+			.from({ relation: relationsFull })
 			.where(({ relation }) =>
 				and(
 					eq(relation.status, 'pending'),
 					eq(relation.most_recent_uid_for, relation.uid)
 				)
 			)
-			.join(
-				{ profile: publicProfilesCollection },
-				({ relation, profile }) => eq(relation.uid, profile.uid),
-				'inner'
-			)
-			.fn.select(({ relation, profile }) => ({
-				...relation,
-				isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
-				profile,
-			}))
 	)
 }
 
 export const useRelationFriends = () => {
 	return useLiveQuery((q) =>
 		q
-			.from({ relation: friendSummariesCollection })
+			.from({ relation: relationsFull })
 			.where(({ relation }) => eq(relation.status, 'friends'))
-			.join(
-				{ profile: publicProfilesCollection },
-				({ relation, profile }) => eq(relation.uid, profile.uid),
-				'inner'
-			)
-			.fn.select(({ relation, profile }) => ({
-				...relation,
-				isMostRecentByMe: relation.most_recent_uid_by !== relation.uid,
-				profile,
-			}))
 	)
 }
 export const useOneRelation = (uid: uuid) =>
 	useLiveQuery(
 		(q) =>
 			q
-				.from({ relation: friendSummariesCollection })
+				.from({ relation: relationsFull })
 				.where(({ relation }) => eq(relation.uid, uid))
-				.findOne()
-				.join(
-					{ profile: publicProfilesCollection },
-					({ relation, profile }) => eq(relation.uid, profile.uid),
-					'inner'
-				)
-				.fn.select(({ relation, profile }) => ({
-					...relation,
-					isMostRecentByMe: relation.most_recent_uid_by !== uid,
-					profile,
-				})),
+				.findOne(),
 		[uid]
 	)
 
