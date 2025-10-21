@@ -993,6 +993,7 @@ export type Database = {
 					most_recent_uid_by: string | null
 					most_recent_uid_for: string | null
 					status: string | null
+					uid: string | null
 					uid_less: string | null
 					uid_more: string | null
 				}
@@ -1973,7 +1974,7 @@ export const Constants = {
 	public: {
 		Enums: {
 			card_status: ['active', 'learned', 'skipped'],
-			chat_message_type: ['recommendation', 'accepted'],
+			chat_message_type: ['recommendation', 'accepted', 'request'],
 			friend_request_response: [
 				'accept',
 				'decline',
