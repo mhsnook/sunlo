@@ -38,7 +38,7 @@ export function SelectOneOfYourLanguages({
 	hasError,
 	className,
 }: ControlledInputProps) {
-	const languagesToShow = useLanguagesToShow()
+	const { data: languagesToShow } = useLanguagesToShow()
 	const [open, setOpen] = useState(false)
 
 	const generalLanguageOptions = useMemo(

@@ -1,18 +1,9 @@
-import { useCallback } from 'react'
-import {
-	useMutation,
-	useQuery,
-	useQueryClient,
-	useSuspenseQuery,
-} from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
 import {
-	DailyReviewStateFetched,
-	DailyReviewStateLoaded,
 	pids,
 	ReviewInsert,
-	ReviewRow,
 	ReviewsMap,
 	ReviewStages,
 	ReviewStats,
@@ -30,6 +21,9 @@ import {
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
+import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import { CardReviewType } from '@/lib/schemas'
 
 const postReview = async (submitData: ReviewInsert) => {
 	const { data } = await supabase
@@ -79,82 +73,51 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
 	}
 }
 
-export function reviewsQuery(userId: uuid, lang: string, day_session: string) {
-	return {
-		queryKey: [
-			'user',
-			lang,
-			'review',
-			day_session,
-			userId,
-			'manifest',
-		] as readonly string[],
-		queryFn: async ({
-			queryKey,
-		}: {
-			queryKey: readonly unknown[]
-		}): Promise<DailyReviewStateLoaded | null> => {
-			const [, lang, , day_session, uid] = queryKey as string[]
-			const { data } = (await supabase
-				.from('user_deck_review_state')
-				.select('*, user_card_review(*)')
-				.match({
-					uid,
-					lang,
-					day_session,
-				})
-				.throwOnError()
-				.maybeSingle()) as { data: DailyReviewStateFetched }
-			if (!data || !data.manifest?.length) return null
-			const { user_card_review: reviews, ...reviewStateRow } = data
-
-			const reviewsMap: ReviewsMap =
-				!reviews?.length ?
-					{}
-				:	mapArray<ReviewRow, 'phrase_id'>(
-						reviews.sort((a, b) =>
-							a.created_at === b.created_at ? 0
-								// earlier items will come first and be overwritten in the map
-							: a.created_at > b.created_at ? 1
-							: -1
-						),
-						'phrase_id'
-					)
-			return {
-				...reviewStateRow,
-				reviewsMap,
-			} as DailyReviewStateLoaded
-		},
-	}
-}
-
-// does not need to be used inside the review-store context
 export function useReviewsToday(lang: string, day_session: string) {
-	const { userId: uid } = useAuth()
-	return useSuspenseQuery({
-		...reviewsQuery(uid!, lang, day_session),
-	})
+	const reviewsQuery = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(eq(review.lang, lang), eq(day_session, review.day_session))
+				),
+		[lang, day_session]
+	)
+	const reviewDayQuery = useReviewDay(lang, day_session)
+	return useMemo(
+		() => ({
+			isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
+			data: {
+				...reviewDayQuery.data,
+				reviewsMap: mapArray(reviewsQuery.data, 'phrase_id'),
+			},
+		}),
+		[reviewsQuery, reviewDayQuery]
+	)
 }
-
-const selectStats = (data: DailyReviewStateLoaded | null) =>
-	!data ? null : mapToStats(data.reviewsMap, data.manifest)
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
-	const { userId: uid } = useAuth()
-	return useSuspenseQuery({
-		...reviewsQuery(uid!, lang, day_session),
-		select: selectStats,
-	})
+	const query = useReviewsToday(lang, day_session)
+	return useMemo(
+		() => ({
+			...query,
+			data: mapToStats(query.data.reviewsMap, query.data.manifest ?? []),
+		}),
+		[query]
+	)
 }
 
-const selectManifest = (data: DailyReviewStateLoaded | null) =>
-	(data?.manifest as pids) ?? null
-export function useManifest(lang: string, day_session: string) {
-	const { userId: uid } = useAuth()
-	return useSuspenseQuery({
-		...reviewsQuery(uid!, lang, day_session),
-		select: selectManifest,
-	})
+export function useReviewDay(lang: string, day_session: string) {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ day: reviewDaysCollection })
+				.where(({ day }) =>
+					and(eq(day.day_session, day_session), eq(day.lang, lang))
+				)
+				.findOne(),
+		[lang, day_session]
+	)
 }
 
 export function useOneReviewToday(
@@ -162,16 +125,22 @@ export function useOneReviewToday(
 	day_session: string,
 	pid: uuid
 ) {
-	const { userId } = useAuth()
-	const selectReview = useCallback(
-		(data: DailyReviewStateLoaded | null) => data?.reviewsMap[pid] ?? null,
-		[pid]
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(
+						eq(review.lang, lang),
+						eq(review.day_session, day_session),
+						eq(review.phrase_id, pid)
+					)
+				)
+				.orderBy(({ review }) => review.created_at, 'desc')
+				.limit(1)
+				.findOne(),
+		[lang, day_session, pid]
 	)
-	return useQuery({
-		...reviewsQuery(userId!, lang, day_session),
-		enabled: !!userId && !!pid,
-		select: selectReview,
-	})
 }
 
 export function useReviewMutation(
@@ -180,8 +149,6 @@ export function useReviewMutation(
 	day_session: string,
 	resetRevealCard: () => void
 ) {
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
 	const currentCardIndex = useCardIndex()
 	const { data: prevData } = useOneReviewToday(lang, day_session, pid)
 	const stage = useReviewStage()
@@ -189,8 +156,8 @@ export function useReviewMutation(
 	const nextIndex = useNextValid()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
 	// this mutation should only be loaded when the manifest is present
-	const manifest = reviewsData!.manifest
-	return useMutation<ReviewRow, PostgrestError, { score: number }>({
+	const manifest = reviewsData.manifest!
+	return useMutation<CardReviewType, PostgrestError, { score: number }>({
 		mutationKey: ['user', lang, 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			// during stages 1 & 2, these are corrections; only update only if score changes
@@ -223,17 +190,7 @@ export function useReviewMutation(
 			// this is done instead of using invalidateQueries... why? IDK.
 			// it does ensure that the local cache is updated even when the db
 			// data is not changed (e.g. re-reviewing a card)
-			queryClient.setQueryData<DailyReviewStateLoaded>(
-				['user', lang, 'review', day_session, userId, 'manifest'],
-				(oldData): DailyReviewStateLoaded => {
-					if (!oldData) throw new Error('No previous data in cache')
-					const newMap = { ...oldData.reviewsMap, [pid]: mergedData }
-					return {
-						...oldData,
-						reviewsMap: newMap,
-					}
-				}
-			)
+			cardReviewsCollection.utils.writeInsert(mergedData)
 
 			setTimeout(() => {
 				resetRevealCard()

@@ -10,6 +10,7 @@ import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
 import { PublicProfile } from '@/routes/_user/friends/-types'
 import {
+	CardReviewType,
 	PhraseFullType,
 	PhraseRequestType,
 	PublicProfileType,
@@ -60,7 +61,7 @@ export type Tag = {
 */
 export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
-	[key: uuid]: ReviewRow
+	[key: uuid]: CardReviewType
 }
 export type ReviewsLoaded = {
 	map: ReviewsMap
@@ -145,7 +146,7 @@ export type PhraseFull = PhraseMeta & {
 	added_by_profile: PublicProfile
 	tags?: Array<Tag> | null
 }
-export type PhraseFiltered = PhraseFull & {
+export type PhraseFiltered = PhraseFullType & {
 	translations_mine?: Array<TranslationRow>
 	translations_other?: Array<TranslationRow>
 }
@@ -186,7 +187,7 @@ export type DeckLoaded = {
 	reviews: Array<ReviewRow>
 	reviewsDayMap: ReviewsDayMap
 }
-export type ReviewsDayMap = { [key: string]: Array<ReviewRow> }
+export type ReviewsDayMap = { [key: string]: Array<CardReviewType> }
 
 export type CardRow = Tables<'user_card'>
 export type CardMeta = Tables<'user_card_plus'>

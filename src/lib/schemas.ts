@@ -1,4 +1,3 @@
-import { uuid } from '@/types/main'
 import * as z from 'zod'
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])

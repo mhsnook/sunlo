@@ -168,7 +168,7 @@ export const cardReviewsCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => CardReviewSchema.parse(item)) ?? []
 		},
-		getKey: (item: CardReviewType) => item.day_session,
+		getKey: (item: CardReviewType) => item.id,
 		queryClient,
 		schema: CardReviewSchema,
 	})
