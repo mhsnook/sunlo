@@ -42,9 +42,9 @@ export function ChatsSidebar() {
 						return (
 							<Link
 								key={friend.uid}
-								to="/friends/chats/$friendId"
+								to="/friends/chats/$friendUid"
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ friendId: friend.uid }}
+								params={{ friendUid: friend.uid }}
 								className={cn(
 									'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
 								)}

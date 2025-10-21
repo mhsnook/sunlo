@@ -27,13 +27,13 @@ import { LangBadge } from '@/components/ui/badge'
 import PermalinkButton from '@/components/permalink-button'
 
 export const Route = createFileRoute(
-	'/_user/friends/chats/$friendId/recommend'
+	'/_user/friends/chats/$friendUid/recommend'
 )({
 	component: RouteComponent,
 })
 
 function RouteComponent() {
-	const { friendId } = Route.useParams()
+	const { friendUid } = Route.useParams()
 	const { userId } = useAuth()
 	const navigate = useNavigate({ from: Route.fullPath })
 
@@ -73,7 +73,7 @@ function RouteComponent() {
 			if (error) throw error
 		},
 		onSuccess: () => {
-			void navigate({ to: '/friends/chats/$friendId', params: { friendId } })
+			void navigate({ to: '/friends/chats/$friendUid', params: { friendUid } })
 			toast.success('Phrase sent!')
 		},
 		onError: (error) => {
@@ -85,7 +85,7 @@ function RouteComponent() {
 		if (!userId) return
 		void sendMessageMutation.mutate({
 			sender_uid: userId,
-			recipient_uid: friendId,
+			recipient_uid: friendUid,
 			phrase_id: phraseId,
 			lang,
 			message_type: 'recommendation',
@@ -99,8 +99,8 @@ function RouteComponent() {
 			onOpenChange={(open) => {
 				if (!open) {
 					void navigate({
-						to: '/friends/chats/$friendId',
-						params: { friendId },
+						to: '/friends/chats/$friendUid',
+						params: { friendUid },
 					})
 				}
 			}}
@@ -135,9 +135,7 @@ function RouteComponent() {
 									className="flex items-start justify-between gap-2 rounded-md border p-2"
 								>
 									<LangBadge lang={phrase.lang} className="my-1" />
-									<p className="my-0.5 flex-1">
-										{phrase.text}
-									</p>
+									<p className="my-0.5 flex-1">{phrase.text}</p>
 									<PermalinkButton
 										size="icon"
 										from={Route.fullPath}

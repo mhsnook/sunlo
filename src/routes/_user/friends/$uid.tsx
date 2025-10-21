@@ -2,14 +2,14 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { MessagesSquare, User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import {  useOnePublicProfile } from '@/hooks/use-profile'
+import { useOnePublicProfile } from '@/hooks/use-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
 import { avatarUrlify } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
-	loader: async ({ context, params }) => {
+	loader: ({ context, params }) => {
 		const { uid } = params
 		const isMine = uid === context.auth.userId
 		return { uid, isMine }
@@ -64,10 +64,10 @@ function ProfilePage() {
 							{profile.relation?.status === 'friends' && (
 								<Link
 									className={buttonVariants({ variant: 'outline' })}
-									to="/friends/chats/$friendId"
+									to="/friends/chats/$friendUid"
 									from={Route.fullPath}
 									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ friendId: profile.uid }}
+									params={{ friendUid: profile.uid }}
 								>
 									<MessagesSquare /> Message
 								</Link>

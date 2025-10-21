@@ -5,7 +5,7 @@ export type uuid = string
 export type ChatMessageRow = Tables<'chat_message'>
 export type ChatMessageRelative = ChatMessageRow & {
 	isMine: boolean
-	friendId: uuid
+	friendUid: uuid
 }
 export type ChatMessageInsert = TablesInsert<'chat_message'>
 

@@ -16,18 +16,18 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 
-export const Route = createFileRoute('/_user/friends/chats/$friendId')({
+export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
 })
 
 function ChatPage() {
-	const { friendId } = Route.useParams()
-	const { data: relation } = useOneRelation(friendId)
+	const { friendUid } = Route.useParams()
+	const { data: relation } = useOneRelation(friendUid)
 	const { userId } = useAuth()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-	const messagesQuery = useOneFriendChat(friendId)
+	const messagesQuery = useOneFriendChat(friendUid)
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current
@@ -63,7 +63,7 @@ function ChatPage() {
 				<Link
 					to="/friends/$uid"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					params={{ uid: friendId }}
+					params={{ uid: friendUid }}
 				>
 					<Avatar>
 						<AvatarImage src={relAvatarUrl} alt={relUsername} />
@@ -108,16 +108,10 @@ function ChatPage() {
 												{ago(msg.created_at)}
 											</p>
 											{msg.phrase_id && msg.lang && (
-												<CardPreview
-													pid={msg.phrase_id}
-													isMine={isMine}
-												/>
+												<CardPreview pid={msg.phrase_id} isMine={isMine} />
 											)}
 											{msg.request_id && msg.lang && (
-												<RequestPreview
-													id={msg.request_id}
-													isMine={isMine}
-												/>
+												<RequestPreview id={msg.request_id} isMine={isMine} />
 											)}
 											<div
 												className={cn(
@@ -157,7 +151,7 @@ function ChatPage() {
 				{relation.status === 'friends' ?
 					<div className="relative">
 						<Link
-							to="/friends/chats/$friendId/recommend"
+							to="/friends/chats/$friendUid/recommend"
 							from={Route.fullPath}
 							className="flex items-center gap-2"
 						>
