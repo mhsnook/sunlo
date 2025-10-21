@@ -1,14 +1,13 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
-import { produce } from 'immer'
 import { Pencil } from 'lucide-react'
 
-import type { LanguageLoaded, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -23,6 +22,7 @@ import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
+import { languagesCollection, phrasesCollection } from '@/lib/collections'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
@@ -34,7 +34,6 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 	const [open, setOpen] = useState(false)
 	const { data: allLangTagsData } = useLanguageTags(lang)
 	const { data: phrase } = useLanguagePhrase(phraseId)
-	const queryClient = useQueryClient()
 	const {
 		control,
 		handleSubmit,
@@ -60,22 +59,33 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			if (error) throw error
 			return data
 		},
-		onSuccess: (_, values: AddTagsFormValues) => {
+		onSuccess: (data, values: AddTagsFormValues) => {
 			toast.success('Tags added!')
 			if (values.tags) {
 				// this is an inexact copy! it is not a replacement for returning the actual
 				// added rows, the UI just doesn't really care about the extra info rn 🤷
-				const newTags = values.tags.map((t) => ({ name: t, id: t })) ?? []
-				void queryClient.setQueryData<LanguageLoaded>(
-					['language', lang],
-					(old) => {
-						return produce(old!, (draft) => {
-							if (Array.isArray(draft.phrasesMap[phraseId].tags))
-								draft.phrasesMap[phraseId].tags.push(newTags)
-							else draft.phrasesMap[phraseId].tags = newTags
-						})
-					}
+				const oldPhrase = phrasesCollection.get(phraseId)
+				const newTags = values.tags.filter(
+					(t) => !oldPhrase?.tags?.some((pt) => pt.name === t)
 				)
+				phrasesCollection.utils.writeUpdate({
+					id: phraseId,
+					tags: [
+						...newTags.map((t) => ({ name: t, id: t })),
+						...(oldPhrase?.tags ?? []),
+					],
+				})
+			}
+			if (data?.length) {
+				languagesCollection.utils.writeUpdate({
+					lang,
+					tags: [
+						...new Set([
+							...data.map((t) => t.name),
+							...(allLangTagsData?.tags ?? []),
+						]),
+					],
+				})
 			}
 			setOpen(false)
 			reset({ tags: [] })
@@ -89,7 +99,7 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 	const phraseTags = phrase?.tags ?? []
 	// oxlint-disable-next-line prefer-set-has
 	const phraseTagNames = phraseTags.map((t) => t.name)
-	const allLangTags = allLangTagsData ?? []
+	const allLangTags = allLangTagsData?.tags ?? []
 	// oxlint-disable-next-line jsx-no-new-array-as-prop
 	const availableTags = allLangTags
 		.filter((t) => !phraseTagNames.includes(t))

@@ -10,15 +10,17 @@ import {
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useAuth } from '@/lib/hooks'
-import { produce } from 'immer'
+
 import supabase from '@/lib/supabase-client'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Archive, ArchiveRestore } from 'lucide-react'
-import { DeckLoaded, ProfileFull } from '@/types/main'
+
+import { decksCollection } from '@/lib/collections'
+import { DeckMetaSchema } from '@/lib/schemas'
 
 export function ArchiveDeckButton({
 	lang,
@@ -30,7 +32,6 @@ export function ArchiveDeckButton({
 	className?: string
 }) {
 	const [open, setOpen] = useState(false)
-	const queryClient = useQueryClient()
 	const { userId } = useAuth()
 	const mutation = useMutation({
 		mutationFn: async () => {
@@ -47,31 +48,7 @@ export function ArchiveDeckButton({
 		onSuccess: (data) => {
 			setOpen(false)
 			if (!data) return null
-
-			queryClient.setQueryData(
-				['user', lang, 'deck'],
-				(old: DeckLoaded | undefined) => {
-					if (old) {
-						return produce<DeckLoaded>(old, (draft) => {
-							draft.meta.archived = data.archived
-						})
-					}
-					void queryClient.invalidateQueries({
-						queryKey: ['user', lang, 'deck'],
-					})
-					return
-				}
-			)
-			queryClient.setQueryData<ProfileFull>(['user', userId], (old) => {
-				if (old) {
-					return produce(old, (draft) => {
-						if (draft.decksMap?.[lang])
-							draft.decksMap[lang].archived = data.archived
-					})
-				}
-				void queryClient.invalidateQueries({ queryKey: ['user', userId] })
-				return old
-			})
+			decksCollection.utils.writeUpdate(DeckMetaSchema.parse(data))
 
 			toast.success(
 				data.archived ?
