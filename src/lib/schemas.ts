@@ -128,6 +128,11 @@ export const PhraseFullSchema = z.object({
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
 
+export type PhraseFullFilteredType = PhraseFullType & {
+	translations_mine?: Array<TranslationType>
+	translations_other?: Array<TranslationType>
+}
+
 export const PhraseRequestSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),

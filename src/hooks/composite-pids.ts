@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useDeckPids } from '@/hooks/use-deck'
-import { useLanguagePids, useLanguagePhrasesMap } from '@/hooks/use-language'
+import { useLanguagePhrases } from '@/hooks/use-language'
 import { arrayDifference } from '@/lib/utils'
-import { useProfile } from '@/hooks/use-profile'
+import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
 /**
@@ -11,50 +11,43 @@ import { splitPhraseTranslations } from '@/hooks/composite-phrase'
  * and profile.
  */
 export function useCompositePids(lang: string) {
-	const { data: profile } = useProfile()
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	const { data: languagePids } = useLanguagePids(lang)
+	const { data: phrases, state: phrasesMap } = useLanguagePhrases(lang)
 	const { data: deckPids } = useDeckPids(lang)
+	const { data: languagesToShow } = useLanguagesToShow()
 
 	return useMemo(() => {
-		if (
-			!profile?.languagesToShow ||
-			!phrasesMap ||
-			!languagePids ||
-			!deckPids
-		) {
+		if (!languagesToShow || !phrases || !deckPids) {
 			return null
 		}
 
 		// First, filter phrases to only those with translations the user can see.
-		const language_filtered = Object.values(phrasesMap)
-			.filter(Boolean) // Ensure phrase exists
-			.map((p) => splitPhraseTranslations(p, profile.languagesToShow))
+		const pidsICanSee = phrases
+			.map((p) => splitPhraseTranslations(p, languagesToShow))
 			.filter((p) => p.translations_mine.length > 0)
-			.map((p) => p.id!)
+			.map((p) => p.id)
 
-		const not_in_deck = arrayDifference(language_filtered, [deckPids.all])
+		const pidsNotInDeck = arrayDifference(pidsICanSee, [deckPids.all])
 
 		// Then, get the pool of selectable phrases
-		const language_selectables = arrayDifference(language_filtered, [
+		const pidsSelectable = arrayDifference(pidsICanSee, [
 			deckPids.reviewed_or_inactive,
 		])
 
 		// Sort them in various ways
-		const easiest = language_selectables.toSorted(
+		const easiest = pidsSelectable.toSorted(
 			(pid1, pid2) =>
-				(phrasesMap[pid1]?.avg_difficulty ?? 99) -
-				(phrasesMap[pid2]?.avg_difficulty ?? 99)
+				(phrasesMap.get(pid1)?.avg_difficulty ?? 99) -
+				(phrasesMap.get(pid2)?.avg_difficulty ?? 99)
 		)
-		const popular = language_selectables.toSorted(
+		const popular = pidsSelectable.toSorted(
 			(pid1, pid2) =>
-				(phrasesMap[pid2]?.count_cards ?? 0) -
-				(phrasesMap[pid1]?.count_cards ?? 0)
+				(phrasesMap.get(pid2)?.count_cards ?? 0) -
+				(phrasesMap.get(pid1)?.count_cards ?? 0)
 		)
-		const newest = language_selectables.toSorted((pid1, pid2) =>
+		const newest = pidsSelectable.toSorted((pid1, pid2) =>
 			(
-				(phrasesMap[pid2]?.created_at ?? '') >
-				(phrasesMap[pid1]?.created_at ?? '')
+				(phrasesMap.get(pid2)?.created_at ?? '') >
+				(phrasesMap.get(pid1)?.created_at ?? '')
 			) ?
 				1
 			:	-1
@@ -71,13 +64,14 @@ export function useCompositePids(lang: string) {
 				popular: popular8,
 				newest: newest8,
 			},
-			language: languagePids,
-			language_selectables,
-			language_filtered,
-			not_in_deck,
-			language_no_translations: arrayDifference(languagePids, [
-				language_filtered,
-			]),
+			language: phrases,
+			language_selectables: pidsSelectable,
+			language_filtered: pidsICanSee,
+			not_in_deck: pidsNotInDeck,
+			language_no_translations: arrayDifference(
+				phrases.map((p) => p.id),
+				[pidsICanSee]
+			),
 		}
-	}, [languagePids, deckPids, phrasesMap, profile?.languagesToShow])
+	}, [phrases, deckPids, phrasesMap, languagesToShow])
 }
