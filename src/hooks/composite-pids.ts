@@ -19,6 +19,7 @@ export function useCompositePids(lang: string) {
 		if (!languagesToShow || !phrases || !deckPids) {
 			return null
 		}
+		const languagePids = phrases.map((p) => p.id)
 
 		// First, filter phrases to only those with translations the user can see.
 		const pidsICanSee = phrases
@@ -64,14 +65,11 @@ export function useCompositePids(lang: string) {
 				popular: popular8,
 				newest: newest8,
 			},
-			language: phrases,
+			language: languagePids,
 			language_selectables: pidsSelectable,
 			language_filtered: pidsICanSee,
 			not_in_deck: pidsNotInDeck,
-			language_no_translations: arrayDifference(
-				phrases.map((p) => p.id),
-				[pidsICanSee]
-			),
+			language_no_translations: arrayDifference(languagePids, [pidsICanSee]),
 		}
 	}, [phrases, deckPids, phrasesMap, languagesToShow])
 }

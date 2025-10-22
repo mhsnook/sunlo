@@ -1,4 +1,3 @@
-import type { OnePhraseComponentProps, pids } from '@/types/main'
 import {
 	Accordion,
 	AccordionContent,
@@ -11,6 +10,7 @@ import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import { usePhrase } from '@/hooks/composite-phrase'
+import { pids } from '@/types/main'
 
 interface PhrasesWithOptionalOrder {
 	lang: string
@@ -18,7 +18,6 @@ interface PhrasesWithOptionalOrder {
 }
 
 export function LanguagePhrasesAccordionComponent({
-	lang,
 	pids = null,
 }: PhrasesWithOptionalOrder) {
 	if (!pids) return null
@@ -26,20 +25,20 @@ export function LanguagePhrasesAccordionComponent({
 	return (
 		<Accordion type="single" collapsible className="w-full">
 			{pids.map((pid) => (
-				<PhraseAccordionItem key={pid} pid={pid} lang={lang} />
+				<PhraseAccordionItem key={pid} pid={pid} />
 			))}
 		</Accordion>
 	)
 }
 
-function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
-	const { data: phrase } = usePhrase(pid, lang)
+function PhraseAccordionItem({ pid }: { pid: string }) {
+	const { data: phrase } = usePhrase(pid)
 	if (!phrase) return null // or a loading skeleton
 
 	return (
 		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
-				<CardStatusDropdown lang={lang} pid={pid} />
+				<CardStatusDropdown lang={phrase.lang} pid={pid} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
@@ -69,12 +68,16 @@ function PhraseAccordionItem({ pid, lang }: OnePhraseComponentProps) {
 						<PermalinkButton
 							to="/learn/$lang/$id"
 							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang, id: pid }}
+							params={{ lang: phrase.lang, id: pid }}
 							variant="outline-accent"
 							text="View details"
 						/>
-						<SharePhraseButton pid={pid} lang={lang} variant="outline-accent" />
-						<PhraseExtraInfo lang={lang} pid={pid} />
+						<SharePhraseButton
+							pid={pid}
+							lang={phrase.lang}
+							variant="outline-accent"
+						/>
+						<PhraseExtraInfo lang={phrase.lang} pid={pid} />
 					</div>
 				</div>
 			</AccordionContent>

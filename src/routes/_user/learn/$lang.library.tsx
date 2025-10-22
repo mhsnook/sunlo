@@ -2,6 +2,7 @@ import { useCallback, useMemo, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Plus, SearchX } from 'lucide-react'
 
+import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,7 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguageMeta, useLanguagePhrases } from '@/hooks/use-language'
+import { useLanguageMeta, useLanguagePhrasesSearch } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
@@ -41,10 +42,6 @@ function DeckLibraryPage() {
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: languageMeta } = useLanguageMeta(lang)
-	const { state: languagePhrasesMap } = useLanguagePhrases(lang)
-
-	const filter = search.filter || 'not_in_deck'
-	const tagsFilter = search.tags
 
 	const tagOptions = useMemo(
 		() =>
@@ -55,8 +52,27 @@ function DeckLibraryPage() {
 	)
 
 	const selectedTags = useMemo(
-		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
-		[tagsFilter]
+		() =>
+			search.tags ?
+				search.tags
+					.split(',')
+					.map((f) => f.trim())
+					.filter(Boolean)
+			:	[],
+		[search.tags]
+	)
+	const filter = search.filter || 'not_in_deck'
+	const { data: searchedPhrases } = useLanguagePhrasesSearch(
+		lang,
+		'', // This component doesn't have a text search input, so it's empty
+		selectedTags,
+		!filter || !deckPids || !recs ? null
+		: filter in deckPids ? (deckPids[filter as DeckOnlyFiltersEnum] as pids)
+		: (recs[filter as CompositeFiltersEnum] as pids)
+	)
+	const searchedPids = useMemo(
+		() => searchedPhrases?.map((p) => p.id),
+		[searchedPhrases]
 	)
 
 	const setSelectedTags = useCallback(
@@ -118,34 +134,6 @@ function DeckLibraryPage() {
 		},
 		[navigate]
 	)
-
-	const filteredPidsByStatus = useMemo(
-		() =>
-			!deckPids || !recs ? []
-			: filter in deckPids ? deckPids[filter as DeckOnlyFiltersEnum]
-			: recs[filter as CompositeFiltersEnum],
-		[filter, recs, deckPids]
-	)
-
-	const filteredPids = useMemo(() => {
-		if (!languagePhrasesMap || filteredPidsByStatus.length === 0) return []
-		if (!tagsFilter?.trim()) return filteredPidsByStatus
-
-		const selectedTags = tagsFilter
-			.split(',')
-			.map((t) => t.trim())
-			.filter(Boolean)
-		if (selectedTags.length === 0) return filteredPidsByStatus
-
-		return filteredPidsByStatus.filter((pid) => {
-			const phrase = languagePhrasesMap.get(pid)
-			const phraseTags = phrase?.tags?.map((t) => t.name) ?? []
-			return selectedTags.every((selectedTag) =>
-				phraseTags.includes(selectedTag)
-			)
-		})
-	}, [filteredPidsByStatus, tagsFilter, languagePhrasesMap])
-
 	if (!deckPids || !recs || !languageMeta) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
@@ -219,14 +207,13 @@ function DeckLibraryPage() {
 				</div>
 				<Separator className="mt-6 mb-2" />
 				<p className="text-muted-foreground pb-2 text-right text-xs italic">
-					{filteredPids.length} of
-					{recs.language.length} phrases
+					{searchedPids?.length ?? 0} of {recs.language.length} phrases
 				</p>
 				{recs.language.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
-						{filteredPids.length > 0 ?
+						{searchedPids?.length ?
 							<LanguagePhrasesAccordionComponent
-								pids={filteredPids}
+								pids={searchedPids}
 								lang={lang}
 							/>
 						:	<Empty />}
