@@ -1,6 +1,5 @@
 import { type ChangeEvent, useCallback } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import * as z from 'zod'
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
@@ -17,14 +16,13 @@ import {
 } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import Callout from '@/components/ui/callout'
-import { ShowError } from '@/components/errors'
 import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useAuth } from '@/lib/hooks'
-import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
 import { nullSubmit } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
+import { useSearchProfilesByUsername } from '@/hooks/use-public-profile'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
@@ -48,7 +46,7 @@ function FriendRequestPage() {
 function SearchProfiles() {
 	const { query } = Route.useSearch()
 	const { userId } = useAuth()
-	const debouncedQuery = useDebounce(query, 500) ?? ''
+	const debouncedQuery = useDebounce(query, 100) ?? ''
 	const navigate = useNavigate({ from: Route.fullPath })
 	const setQueryInputValue = useCallback(
 		(event: ChangeEvent<HTMLInputElement>) =>
@@ -63,21 +61,13 @@ function SearchProfiles() {
 		[navigate]
 	)
 
-	const {
-		data: searchResults,
-		error,
-		isFetching,
-	} = useQuery({
-		queryKey: ['public_profile', 'search', debouncedQuery],
-		queryFn: async () =>
-			searchPublicProfilesByUsername(debouncedQuery, userId!),
-		enabled: !!debouncedQuery?.length && !!userId,
-	})
+	const { data: searchResults, isLoading } =
+		useSearchProfilesByUsername(debouncedQuery)
 
 	const prevResults = usePrevious(searchResults)
 	const resultsToShow =
 		!debouncedQuery ? [] : (searchResults ?? prevResults ?? [])
-	const showLoader = resultsToShow.length === 0 && isFetching
+	const showLoader = resultsToShow.length === 0 && isLoading
 
 	return (
 		<Card>
@@ -98,7 +88,7 @@ function SearchProfiles() {
 								onChange={setQueryInputValue}
 							/>
 						</div>
-						<Button disabled={isFetching}>
+						<Button disabled={isLoading}>
 							<Search />
 							<span className="hidden @md:block">Search</span>
 						</Button>
@@ -107,7 +97,6 @@ function SearchProfiles() {
 					{debouncedQuery === undefined ?
 						<p className="my-8 italic opacity-60">Search results...</p>
 					:	<div className="space-y-2">
-							<ShowError>{error?.message}</ShowError>
 							{showLoader ?
 								<div className="flex h-20 items-center justify-center opacity-50">
 									<Loader />
@@ -123,11 +112,13 @@ function SearchProfiles() {
 										{resultsToShow.length} result
 										{resultsToShow.length === 1 ? '' : 's'}
 									</p>
-									{resultsToShow.map((profile: PublicProfile) => (
-										<div key={profile.uid} className="rounded p-2 pe-4 shadow">
-											<ProfileWithRelationship uid={profile.uid} />
-										</div>
-									))}
+									{resultsToShow.map((profile: PublicProfile) =>
+										profile.uid === userId ?
+											null
+										:	<div key={profile.uid} className="rounded p-2 pe-4 shadow">
+												<ProfileWithRelationship uid={profile.uid} />
+											</div>
+									)}
 								</div>
 							}
 						</div>

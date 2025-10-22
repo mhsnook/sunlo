@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
@@ -19,10 +19,11 @@ import {
 import { useAuth } from '@/lib/hooks'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
-import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { Loader } from '@/components/ui/loader'
 import type { PublicProfile } from './friends/-types'
 import { avatarUrlify } from '@/lib/utils'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -37,9 +38,7 @@ export const Route = createFileRoute('/_user/accept-invite')({
 
 function AcceptInvitePage() {
 	const search = Route.useSearch()
-	const { data: friend, isPending } = useQuery(
-		publicProfileQuery(search.uid_by)
-	)
+	const { data: friend, isLoading } = useOnePublicProfile(search.uid_by)
 	if (!search?.uid_by)
 		throw new Error('This URL is missing the uid_by parameter')
 	const { userId } = useAuth()
@@ -120,7 +119,7 @@ function AcceptInvitePage() {
 
 	return (
 		<main className="w-app flex h-screen flex-col justify-center p-2 pb-20">
-			{isPending ?
+			{isLoading ?
 				<Loader />
 			:	<Card>
 					<CardHeader>

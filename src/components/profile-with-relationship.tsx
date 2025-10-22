@@ -5,11 +5,10 @@ import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive
 import { useFriendRequestAction } from '@/hooks/use-friends'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
-import { useOnePublicProfile } from '@/hooks/use-profile'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
 export function ProfileWithRelationship({ uid }: { uid: uuid }) {
-	const { data: profile } =
-		useOnePublicProfile(uid)
+	const { data: profile } = useOnePublicProfile(uid)
 	const inviteResponseMutation = useFriendRequestAction(uid)
 
 	return !profile ? null : (
@@ -23,10 +22,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 						<span className="size-8 rounded-full bg-green-600 p-1">
 							<Check className="size-6 text-white" />
 						</span>
-					: (
-						!profile.relation ||
-						profile.relation.status === 'unconnected'
-					) ?
+					: !profile.relation || profile.relation.status === 'unconnected' ?
 						<Button
 							variant="default"
 							className="size-8"
