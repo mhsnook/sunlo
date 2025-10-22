@@ -25,8 +25,8 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
 
-export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
-	const { data: phrase, status } = usePhrase(pid, lang)
+export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
+	const { data: phrase, status } = usePhrase(pid)
 	const [isOpen, setIsOpen] = useState(false)
 
 	if (status === 'pending') return <Loader />
@@ -47,8 +47,8 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 					Phrase by{' '}
 					<UserPermalink
 						uid={phrase.added_by}
-						username={phrase.added_by_profile.username}
-						avatar_path={phrase.added_by_profile.avatar_path}
+						username={phrase.profile.username}
+						avatar_path={phrase.profile.avatar_path}
 					/>
 					{' • '}
 					{ago(phrase.created_at)}
@@ -58,8 +58,8 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
-							<LangBadge lang={lang} />
-							<CardStatusDropdown pid={pid} lang={lang} />
+							<LangBadge lang={phrase.lang} />
+							<CardStatusDropdown pid={pid} lang={phrase.lang} />
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
 							<span>&ldquo;{phrase.text}&rdquo;</span>
@@ -145,7 +145,7 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 										</span>
 									)}
 								</div>
-								<AddTags phraseId={pid} lang={lang} />
+								<AddTags phraseId={pid} lang={phrase.lang} />
 							</div>
 						</div>
 					</div>
@@ -153,19 +153,19 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 			</Card>
 			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
 				<CopyLinkButton
-					url={`${window.location.host}/learn/${lang}/${pid}`}
+					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}
 					variant="outline"
 					size="default"
 				/>
 				<SharePhraseButton
 					pid={pid}
-					lang={lang}
+					lang={phrase.lang}
 					variant="outline"
 					size="default"
 				/>
 				<SendPhraseToFriendButton
 					pid={pid}
-					lang={lang}
+					lang={phrase.lang}
 					variant="outline"
 					size="default"
 				/>

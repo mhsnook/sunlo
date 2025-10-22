@@ -16,7 +16,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguageMeta } from '@/hooks/use-language'
+import { useLanguageMeta, useLanguagePhrases } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
@@ -41,6 +41,7 @@ function DeckLibraryPage() {
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: languageMeta } = useLanguageMeta(lang)
+	const { state: languagePhrasesMap } = useLanguagePhrases(lang)
 
 	const filter = search.filter || 'not_in_deck'
 	const tagsFilter = search.tags
@@ -127,7 +128,7 @@ function DeckLibraryPage() {
 	)
 
 	const filteredPids = useMemo(() => {
-		if (!language?.phrasesMap || filteredPidsByStatus.length === 0) return []
+		if (!languagePhrasesMap || filteredPidsByStatus.length === 0) return []
 		if (!tagsFilter?.trim()) return filteredPidsByStatus
 
 		const selectedTags = tagsFilter
@@ -137,15 +138,15 @@ function DeckLibraryPage() {
 		if (selectedTags.length === 0) return filteredPidsByStatus
 
 		return filteredPidsByStatus.filter((pid) => {
-			const phrase = language.phrasesMap[pid]
+			const phrase = languagePhrasesMap.get(pid)
 			const phraseTags = phrase?.tags?.map((t) => t.name) ?? []
 			return selectedTags.every((selectedTag) =>
 				phraseTags.includes(selectedTag)
 			)
 		})
-	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
+	}, [filteredPidsByStatus, tagsFilter, languagePhrasesMap])
 
-	if (!deckPids || !recs || !language) {
+	if (!deckPids || !recs || !languageMeta) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
 		)

@@ -128,7 +128,14 @@ export const PhraseFullSchema = z.object({
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
 
-export type PhraseFullFilteredType = PhraseFullType & {
+export type PhraseFullFullType = PhraseFullType & {
+	profile: PublicProfileType
+	card: CardMetaType
+	request: PhraseRequestType
+	searchableText: string
+}
+
+export type PhraseFullFilteredType = PhraseFullFullType & {
 	translations_mine?: Array<TranslationType>
 	translations_other?: Array<TranslationType>
 }

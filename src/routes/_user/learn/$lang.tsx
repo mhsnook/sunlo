@@ -12,7 +12,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 	loader: async ({ params: { lang } }) => {
 		await decksCollection.preload()
 		const decks = decksCollection.toArray
-		const theme = decks.findIndex((d) => (d.lang = lang))
+		const theme = decks.findIndex((d) => d.lang === lang)
 
 		return {
 			appnav: [

@@ -25,7 +25,7 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 						className="grow"
 						to="/learn/$lang"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: deck.lang! }}
+						params={{ lang: deck.lang }}
 					>
 						<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
 							<span>{deck.language}</span>
@@ -41,7 +41,7 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 								to="/learn/$lang/review"
 								className={buttonVariants({ size: 'icon' })}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
 								<Rocket />
 							</Link>
@@ -59,7 +59,7 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 						{deck.archived ?
 							<ArchiveDeckButton
 								className="w-full grow basis-60"
-								lang={deck.lang!}
+								lang={deck.lang}
 								archived={deck.archived}
 							/>
 						:	<Link
@@ -69,7 +69,7 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 									'grow basis-40'
 								)}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
 								<HouseHeart />
 								Deck Home
@@ -83,7 +83,7 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 									`grow basis-60`
 								)}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
 								<BookOpenText />
 								Explore Library
@@ -92,12 +92,12 @@ export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 					</div>
 					{/* Subtle stats footer */}
 					<div className="text-muted-foreground border-t pt-2 text-xs">
-						{deck.cards_active! + deck.cards_learned!} total cards •{' '}
+						{deck.cards_active + deck.cards_learned} total cards •{' '}
 						{!deck.cards_learned ?
 							`0 mastered`
 						:	`${(
 								(100 * deck.cards_learned) /
-								(deck.cards_learned + deck.cards_active!)
+								(deck.cards_learned + deck.cards_active)
 							).toFixed(0)} % mastered`
 						}
 					</div>

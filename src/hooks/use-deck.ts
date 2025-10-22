@@ -76,29 +76,28 @@ export const useDecks = () => {
 			.from({ deck: decksCollection })
 			.orderBy(({ deck }) => deck.created_at, 'asc')
 	)
+	const decksWithThemes = useMemo(
+		() =>
+			!query.data ?
+				[]
+			:	query.data?.map((d, i) => ({
+					...d,
+					theme: i % themes.length,
+				})),
+		[query.data]
+	)
 	return useMemo(
 		() => ({
 			...query,
-			data: query.data
-				?.map((d, i) => ({
-					...d,
-					theme: i % themes.length,
-				}))
-				.toSorted((a, b) =>
-					(
-						(a.most_recent_review_at || a.created_at) ===
-						(b.most_recent_review_at || b.created_at)
-					) ?
-						0
-					: (
-						(a.most_recent_review_at || a.created_at!) >
-						(b.most_recent_review_at || b.created_at!)
-					) ?
-						-1
-					:	1
-				),
+			data: decksWithThemes.toSorted((a, b) => {
+				const aDate = a.most_recent_review_at ?? a.created_at
+				const bDate = b.most_recent_review_at ?? b.created_at
+				if (aDate > bDate) return -1
+				if (aDate < bDate) return 1
+				return a.lang > b.lang ? 1 : -1
+			}),
 		}),
-		[query]
+		[decksWithThemes, query]
 	)
 }
 

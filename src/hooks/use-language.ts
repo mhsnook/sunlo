@@ -3,6 +3,7 @@ import type { uuid } from '@/types/main'
 import { languagesCollection, phrasesCollection } from '@/lib/collections'
 import { eq, type InitialQueryBuilder } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
+import { phrasesFull } from '@/lib/live-collections'
 
 export const useLanguageMeta = (lang: string) =>
 	useLiveQuery(
@@ -29,7 +30,7 @@ export const useLanguagePhrase = (pid: uuid | null) =>
 	useLiveQuery(
 		(q) =>
 			q
-				.from({ phrase: phrasesCollection })
+				.from({ phrase: phrasesFull })
 				.where(({ phrase }) => eq(phrase.id, pid))
 				.findOne(),
 		[pid]
