@@ -2,7 +2,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { MessagesSquare, User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useOnePublicProfile } from '@/hooks/use-profile'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
 import { avatarUrlify } from '@/lib/utils'

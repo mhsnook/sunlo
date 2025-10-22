@@ -23,6 +23,7 @@ import { AppNav } from '@/components/navs/app-nav'
 import { useAuth } from '@/lib/hooks'
 import {
 	chatMessagesCollection,
+	decksCollection,
 	friendSummariesCollection,
 	myProfileCollection,
 } from '@/lib/collections'
@@ -47,7 +48,12 @@ export const Route = createFileRoute('/_user')({
 		return context.auth
 	},
 	loader: async ({ location }) => {
-		const data = (await myProfileCollection.toArrayWhenReady()).at(0)
+		const profilePromise = myProfileCollection.toArrayWhenReady()
+		const friendsPromise = friendSummariesCollection.preload()
+		const decksPromise = decksCollection.preload()
+		await Promise.all([profilePromise, friendsPromise, decksPromise])
+
+		const data = myProfileCollection.toArray[0]
 		// if for some reason there is no profile, we must create one!
 		if (location.pathname !== '/getting-started') {
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -111,7 +117,7 @@ function UserLayout() {
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toast.success('You are now connected')
 					// console.log(`new friend request action has come in`, payload)
-					friendSummariesCollection.utils.refetch()
+					void friendSummariesCollection.utils.refetch()
 				}
 			)
 			.subscribe()
