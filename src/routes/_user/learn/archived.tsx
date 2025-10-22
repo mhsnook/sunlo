@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Archive } from 'lucide-react'
 
-import { useDecks } from '@/hooks/use-profile'
+import { useDecks } from '@/hooks/use-deck'
 import { DeckCard } from './-deck-card'
 import Callout from '@/components/ui/callout'
 

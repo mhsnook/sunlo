@@ -11,6 +11,8 @@ import {
 import { useMemo } from 'react'
 import { cardsFull } from '@/lib/live-collections'
 import { mapArrays } from '@/lib/utils'
+import { inLastWeek } from '@/lib/dayjs'
+import { themes } from '@/lib/deck-themes'
 
 dayjs.extend(isoWeek)
 
@@ -68,6 +70,40 @@ export const useDeckMeta = (lang: string) =>
 		[lang]
 	)
 
+export const useDecks = () => {
+	const query = useLiveQuery((q) =>
+		q
+			.from({ deck: decksCollection })
+			.orderBy(({ deck }) => deck.created_at, 'asc')
+	)
+	return useMemo(
+		() => ({
+			...query,
+			data: query.data
+				?.map((d, i) => ({
+					...d,
+					theme: i % themes.length,
+				}))
+				.toSorted((a, b) =>
+					(
+						(a.most_recent_review_at || a.created_at) ===
+						(b.most_recent_review_at || b.created_at)
+					) ?
+						0
+					: (
+						(a.most_recent_review_at || a.created_at!) >
+						(b.most_recent_review_at || b.created_at!)
+					) ?
+						-1
+					:	1
+				),
+		}),
+		[query]
+	)
+}
+
+export type UseOneDecksType = ReturnType<typeof useDecks>['data'][number]
+
 export const useDeckCards = (lang: string) =>
 	useLiveQuery(
 		(q) => q.from({ card: cardsFull }).where(({ card }) => eq(card.lang, lang)),
@@ -109,18 +145,44 @@ export const useDeckCard = (pid: uuid) =>
 	)
 
 export const useDeckPids = (lang: string) => {
-	const query = useDeckCards(lang)
+	const { isLoading, data } = useDeckCards(lang)
 
-	return !query.data ? null : (
-			{
-				all: [],
-				active: [],
-				inactive: [],
-				reviewed: [],
-				reviewed_or_inactive: [],
-				reviewed_last_7d: [],
-				unreviewed_active: [],
-				today_active: [],
-			}
-		)
+	return useMemo(
+		() => ({
+			isLoading,
+			data:
+				!data ? null : (
+					{
+						all: data.map((c) => c.phrase_id),
+						active: data.filter((c) => c.status === 'active'),
+						inactive: data
+							.filter((c) => c.status !== 'active')
+							.map((c) => c.phrase_id),
+						reviewed: data
+							.filter((c) => !!c.last_reviewed_at)
+							.map((c) => c.phrase_id),
+						reviewed_or_inactive: data
+							.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
+							.map((c) => c.phrase_id),
+						reviewed_last_7d: data
+							.filter(
+								(c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at)
+							)
+							.map((c) => c.phrase_id),
+						unreviewed_active: data
+							.filter((c) => c.status === 'active' && !c.last_reviewed_at)
+							.map((c) => c.phrase_id),
+						today_active: data
+							.filter(
+								(c) =>
+									!!c.retrievability_now &&
+									c.retrievability_now <= 0.9 &&
+									c.status === 'active'
+							)
+							.map((c) => c.phrase_id),
+					}
+				),
+		}),
+		[data, isLoading]
+	)
 }

@@ -55,13 +55,14 @@ function WelcomePage() {
 function DeckOverview() {
 	const { lang } = Route.useParams()
 	const { data: meta } = useDeckMeta(lang)
-	const { data: pids } = useDeckPids(lang)
+	const { data: deckPids } = useDeckPids(lang)
+	console.log(deckPids)
 	const { data: routineStats } = useDeckRoutineStats(lang)
-	if (!meta || !pids || !routineStats)
+	if (!meta || !deckPids || !routineStats)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
 
 	const totalToday =
-		(meta.cardsScheduledForToday ?? 0) + (meta.daily_review_goal ?? 15)
+		(deckPids.today_active.length ?? 0) + meta.daily_review_goal
 	return (
 		<Card>
 			<CardHeader>
@@ -82,7 +83,7 @@ function DeckOverview() {
 					</div>
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
-					<DeckStatsBadges deckMeta={meta} />
+					<DeckStatsBadges lang={lang} />
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
@@ -108,8 +109,8 @@ function DeckOverview() {
 				<p>
 					You have{' '}
 					<span className="font-bold">{totalToday} cards to review today</span>:{' '}
-					{pids.today_active.length} scheduled from prior reviews, along with{' '}
-					{meta.daily_review_goal ?? 15} new ones
+					{deckPids.today_active.length} scheduled from prior reviews, along
+					with {meta.daily_review_goal} new ones
 				</p>
 
 				<ActivityChart lang={lang} />

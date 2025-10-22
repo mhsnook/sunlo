@@ -1,61 +1,19 @@
 import { useMemo } from 'react'
 import { queryOptions } from '@tanstack/react-query'
+
 import type { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { themes } from '@/lib/deck-themes'
 import { PublicProfile } from '@/routes/_user/friends/-types'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
-	decksCollection,
 	friendSummariesCollection,
 	myProfileCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
-
-/*
-const deckLanguages: Array<string> = decksSorted
-	.map((d) => d.lang)
-	.filter((d) => typeof d === 'string')
-const languages_known = (profile.languages_known ?? []) as LanguageKnown[]
-const languagesToShow = [
-	...new Set([...languages_known.map((lk) => lk.lang), ...deckLanguages]),
-]
-*/
+import { useDecks } from './use-deck'
 
 export const useProfile = () =>
 	useLiveQuery((q) => q.from({ profile: myProfileCollection }).findOne())
-
-export const useDecks = () => {
-	const query = useLiveQuery((q) =>
-		q
-			.from({ deck: decksCollection })
-			.orderBy(({ deck }) => deck.created_at, 'asc')
-	)
-	return useMemo(
-		() => ({
-			...query,
-			data: query.data
-				?.map((d, i) => ({
-					...d,
-					theme: i % themes.length,
-				}))
-				.toSorted((a, b) =>
-					(
-						(a.most_recent_review_at || a.created_at) ===
-						(b.most_recent_review_at || b.created_at)
-					) ?
-						0
-					: (
-						(a.most_recent_review_at || a.created_at!) >
-						(b.most_recent_review_at || b.created_at!)
-					) ?
-						-1
-					:	1
-				),
-		}),
-		[query]
-	)
-}
 
 export const useLanguagesToShow = () => {
 	const { data: profile, isLoading: isLoading1 } = useProfile()

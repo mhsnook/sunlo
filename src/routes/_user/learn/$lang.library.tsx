@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { useLanguageMeta } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { useDeckCards } from '@/hooks/use-deck'
+import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
 
@@ -36,8 +36,7 @@ const filterLanguage = {
 
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
-
-	const { data: deckCards } = useDeckCards(lang)
+	const { data: deckPids } = useDeckPids(lang)
 	const recs = useCompositePids(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })

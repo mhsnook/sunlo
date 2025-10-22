@@ -3,9 +3,10 @@ import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
 import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { useProfile, useDecks } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { LangOnlyComponentProps } from '@/types/main'
 import { useSidebar } from '@/components/ui/sidebar'
+import { useDecks } from '@/hooks/use-deck'
 
 const deckLinks = [
 	'/learn/$lang',

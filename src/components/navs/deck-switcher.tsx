@@ -16,7 +16,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useDecks } from '@/hooks/use-profile'
+import { useDecks } from '@/hooks/use-deck'
 import languages from '@/lib/languages'
 
 const useDeckMenuData = () => {

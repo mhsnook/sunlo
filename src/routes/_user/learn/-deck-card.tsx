@@ -1,7 +1,6 @@
-import { DeckMeta } from '@/types/main'
-
-import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
+
+import type { UseOneDecksType } from '@/hooks/use-deck'
 import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
 import {
 	Card,
@@ -17,11 +16,9 @@ import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import { getThemeCss } from '@/lib/deck-themes'
 
-export function DeckCard({ deck }: { deck: DeckMeta }) {
-	const ref = useRef<HTMLDivElement | null>(null)
-
+export function DeckCard({ deck }: { deck: UseOneDecksType }) {
 	return (
-		<div style={getThemeCss(deck.theme)} ref={ref}>
+		<div style={getThemeCss(deck.theme)}>
 			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
 				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
 					<Link
@@ -54,7 +51,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 				<CardContent className="space-y-2 p-4">
 					<div className="flex flex-wrap gap-2">
-						<DeckStatsBadges deckMeta={deck} />
+						<DeckStatsBadges lang={deck.lang} />
 					</div>
 				</CardContent>
 				<CardFooter className="block w-full space-y-4 p-4 pt-0">

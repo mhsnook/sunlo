@@ -63,9 +63,6 @@ function ReviewPageSetup() {
 
 	const today_active = deckPids.today_active
 
-	// 1. we have today's active cards plus we need x more, based on user's goal
-	const countNeeded = meta.daily_review_goal ?? 15
-
 	// 2.
 	// haven't built this feature yet, is why it's blank array
 	// const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
@@ -80,9 +77,9 @@ function ReviewPageSetup() {
 	/*const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
 		friendRecsFiltered.slice(0, countNeeded)
 	)*/
-	const friendRecsSelected = friendRecsFiltered.slice(0, countNeeded)
+	const friendRecsSelected = friendRecsFiltered.slice(0, meta.daily_review_goal)
 
-	const countNeeded2 = min0(countNeeded - friendRecsSelected.length)
+	const countNeeded2 = min0(meta.daily_review_goal - friendRecsSelected.length)
 
 	// 3. algo recs set by user
 	const algoRecsFiltered = useMemo(
@@ -142,7 +139,7 @@ function ReviewPageSetup() {
 				algoRecsSelected,
 				cardsUnreviewedActiveSelected,
 			])
-				.sort((a, b) => (a > b ? -1 : 1))
+				.toSorted((a, b) => (a > b ? -1 : 1))
 				.slice(0, countNeeded4),
 		[
 			recs.language_selectables,
@@ -357,10 +354,10 @@ function ReviewPageSetup() {
 								</CardContent>
 							</Card>
 						</div>
-						{!(countNeeded > allCardsForToday.length) ? null : (
+						{!(meta.daily_review_goal > allCardsForToday.length) ? null : (
 							<NotEnoughCards
 								lang={lang}
-								countNeeded={countNeeded}
+								countNeeded={meta.daily_review_goal}
 								newCardsCount={freshCards.length}
 								totalCards={allCardsForToday.length}
 							/>

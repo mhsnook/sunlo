@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
 
-import { useProfile, useDecks } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
 import { FriendProfiles } from '@/components/friend-profiles'
+import { useDecks } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
