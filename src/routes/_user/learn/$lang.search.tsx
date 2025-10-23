@@ -1,5 +1,3 @@
-import type { uuid } from '@/types/main'
-
 import {
 	useCallback,
 	useEffect,

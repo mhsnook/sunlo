@@ -46,10 +46,10 @@ function DeckSettingsPage() {
 			<CardContent className="space-y-6">
 				{!meta.archived ?
 					<>
-						<GoalForm lang={meta.lang!} learning_goal={meta.learning_goal!} />
+						<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
 						<DailyGoalForm
-							lang={meta.lang!}
-							daily_review_goal={meta.daily_review_goal!}
+							lang={meta.lang}
+							daily_review_goal={meta.daily_review_goal}
 						/>
 					</>
 				:	null}
@@ -58,7 +58,7 @@ function DeckSettingsPage() {
 						<span>
 							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
 						</span>
-						<ArchiveDeckButton lang={meta.lang!} archived={meta.archived!} />
+						<ArchiveDeckButton lang={meta.lang} archived={meta.archived} />
 					</CardTitle>
 				</CardHeader>
 			</CardContent>

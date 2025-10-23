@@ -40,7 +40,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang!, id: request.id! }}
+						params={{ lang: request.lang, id: request.id }}
 						className="s-link-hidden text-primary-foresoft"
 					>
 						{ago(request.created_at)}
@@ -61,7 +61,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang!, id: request.id! }}
+						params={{ lang: request.lang, id: request.id }}
 						className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
 					>
 						<MessageSquare className="h-4 w-4" />
@@ -88,8 +88,8 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
 						<ShareRequestButton
-							id={request.id!}
-							lang={request.lang!}
+							id={request.id}
+							lang={request.lang}
 							variant="ghost"
 							size="icon"
 						/>
@@ -101,7 +101,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 						<Link
 							to="/learn/$lang/requests/$id"
 							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: request.lang!, id: request.id! }}
+							params={{ lang: request.lang, id: request.id }}
 							className={cn(
 								buttonVariants({ size: 'sm', variant: 'outline-accent' })
 							)}

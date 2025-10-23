@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
-import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
+import { OnePhraseComponentProps } from '@/types/main'
 import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
@@ -21,6 +21,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { TranslationType } from '@/lib/schemas'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
@@ -40,7 +41,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 		closeCard
 	)
 
-	const { data: phrase } = useLanguagePhrase(pid, lang)
+	const { data: phrase } = useLanguagePhrase(pid)
 
 	if (!phrase) return null
 
@@ -56,7 +57,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 							size="icon"
 							variant="secondary"
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => playAudio(phrase.text!)}
+							onClick={() => playAudio(phrase.text)}
 							aria-label="Play original phrase"
 						>
 							<Play className="size-4" />
@@ -68,7 +69,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 				<div
 					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
-					{phrase.translations.map((trans: TranslationRow) => (
+					{phrase.translations.map((trans: TranslationType) => (
 						<div
 							key={trans.id}
 							className="mt-4 flex items-center justify-center gap-2"

@@ -1,24 +1,24 @@
-import { CardFull, uuid } from '@/types/main'
+import type { CardMetaType } from '@/lib/schemas'
+import type { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
 import { useLanguagePhrase } from '@/hooks/use-language'
 import { useDeckCard } from '@/hooks/use-deck'
 import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
+import { useOneCardReviews } from '@/hooks/use-reviews'
 
 export default function PhraseExtraInfo({
 	pid,
-	lang,
 	className,
 	link,
 }: {
 	pid: uuid
-	lang: string
 	className?: string
 	link?: boolean
 }) {
-	const phrase = useLanguagePhrase(pid, lang)
-	const card = useDeckCard(pid, lang)
+	const phrase = useLanguagePhrase(pid)
+	const card = useDeckCard(pid)
 
 	return !phrase.data ? null : (
 			<ExtraInfo
@@ -44,13 +44,8 @@ export default function PhraseExtraInfo({
 		)
 }
 
-function CardSection({ card }: { card: CardFull }) {
-	const reviews =
-		card?.reviews.sort((a, b) =>
-			a.created_at > b.created_at ? -1
-			: a.created_at < b.created_at ? 1
-			: 0
-		) ?? []
+function CardSection({ card }: { card: CardMetaType }) {
+	const { data: reviews } = useOneCardReviews(card.phrase_id)
 	const rev = reviews[0] || null
 	const retr =
 		card.last_reviewed_at && card.stability ?

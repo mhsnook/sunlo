@@ -34,9 +34,11 @@ export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 					</CardHeader>
 					<CardContent className="space-y-2 p-4 pt-0">
 						<p>&ldquo;{request.prompt}&rdquo;</p>
-						<p className="text-muted-foreground text-sm">
-							{answers.length} answer{answers.length === 1 ? '' : 's'}
-						</p>
+						{isLoadingPhrases ? null : (
+							<p className="text-muted-foreground text-sm">
+								{answers.length} answer{answers.length === 1 ? '' : 's'}
+							</p>
+						)}
 
 						<div className="flex flex-row flex-wrap gap-2">
 							{/* <RequestHeartButton pid={id} lang={lang} /> */}

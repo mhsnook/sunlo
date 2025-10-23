@@ -9,7 +9,6 @@ import languages from '@/lib/languages'
 import { useRequest } from '@/hooks/use-requests'
 
 export function ShareRequestButton({
-	lang,
 	id,
 	text = 'Share request',
 	variant = 'ghost',
@@ -17,28 +16,28 @@ export function ShareRequestButton({
 	className = '',
 	...props
 }: {
-	lang: string
 	id: uuid
 	text?: string
 	variant?: string
 	size?: string
 	className?: string
 } & ButtonProps) {
-	const { data: request, isLoading } = useRequest(id)
+	const { data: request } = useRequest(id)
 
 	const sharePhrase = useCallback(() => {
+		if (!request) return
 		navigator
 			.share({
 				title: `Sunlo: ${request?.prompt}`,
-				text: `Check out this request for a phrase in ${languages[lang]}: ${request!.prompt}`,
-				url: `${window.location.origin}/learn/${lang}/requests/${request?.id}`,
+				text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
+				url: `${window.location.origin}/learn/${request.lang}/requests/${request.id}`,
 			})
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [request, lang])
+	}, [request])
 
-	if (isLoading || !request || !navigator.share) return null
+	if (!request || !navigator.share) return null
 	return (
 		<Button
 			onClick={sharePhrase}

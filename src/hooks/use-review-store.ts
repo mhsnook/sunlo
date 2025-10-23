@@ -111,10 +111,10 @@ export function useNextValid(): number {
 	const day_session = useReviewDayString()
 	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData!
+	const { manifest, reviewsMap } = reviewsData
 	return stage < 3 ?
-			getIndexOfNextUnreviewedCard(manifest, reviewsMap, currentCardIndex)
-		:	getIndexOfNextAgainCard(manifest, reviewsMap, currentCardIndex)
+			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
+		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 export function getIndexOfNextUnreviewedCard(

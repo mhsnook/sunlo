@@ -59,7 +59,7 @@ export function AddTranslationsDialog({
 				.insert({
 					lang: translation_lang,
 					text: translation_text,
-					phrase_id: phrase.id!,
+					phrase_id: phrase.id,
 				})
 				.throwOnError()
 				.select()

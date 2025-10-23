@@ -26,8 +26,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/lib/hooks'
-import { useProfile } from '@/hooks/use-profile'
-import { useDeckCard } from '@/hooks/use-deck'
+import { useDeckCard, useDecks } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 
@@ -162,9 +161,9 @@ export function CardStatusDropdown({
 	className,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
-	const { data: profile } = useProfile()
-	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
-	const { data: card } = useDeckCard(pid, lang)
+	const { data: decks } = useDecks()
+	const deckPresent = decks.some(d => d.lang === lang) ?? false
+	const { data: card } = useDeckCard(pid)
 
 	const cardMutation = useCardStatusMutation(pid, lang)
 
@@ -173,7 +172,7 @@ export function CardStatusDropdown({
 	const choice =
 		!deckPresent ? 'nodeck'
 		: !card ? 'nocard'
-		: card.status!
+		: card.status
 
 	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (

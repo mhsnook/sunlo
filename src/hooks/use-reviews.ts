@@ -207,3 +207,13 @@ export function useReviewMutation(
 		},
 	})
 }
+
+export const useOneCardReviews = (pid: uuid) =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) => eq(review.phrase_id, pid))
+				.orderBy(({ review }) => review.created_at, 'asc'),
+		[pid]
+	)

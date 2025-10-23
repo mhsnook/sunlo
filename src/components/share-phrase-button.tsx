@@ -8,7 +8,6 @@ import { useLanguagePhrase } from '@/hooks/use-language'
 import languages from '@/lib/languages'
 
 export default function SharePhraseButton({
-	lang,
 	pid,
 	text = 'Share phrase',
 	variant = 'ghost',
@@ -19,21 +18,22 @@ export default function SharePhraseButton({
 	variant?: string
 	size?: string
 } & ButtonProps) {
-	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
+	const { data: phrase, isLoading } = useLanguagePhrase(pid)
 
 	const sharePhrase = useCallback(() => {
+		if (!phrase) return
 		navigator
 			.share({
-				title: `Sunlo: ${phrase!.text}`,
-				text: `Check out this phrase in ${languages[lang]}: ${phrase!.text}`,
-				url: `${window.location.origin}/learn/${lang}/${phrase!.id}`,
+				title: `Sunlo: ${phrase.text}`,
+				text: `Check out this phrase in ${languages[phrase.lang]}: ${phrase.text}`,
+				url: `${window.location.origin}/learn/${phrase.lang}/${phrase.id}`,
 			})
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [phrase, lang])
+	}, [phrase])
 
-	if (isPending || !phrase || !navigator.share) return null
+	if (isLoading || !phrase || !navigator.share) return null
 	return (
 		<Button onClick={sharePhrase} variant={variant} size={size} {...props}>
 			<Share className="h-4 w-4" />
