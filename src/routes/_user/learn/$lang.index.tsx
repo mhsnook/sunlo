@@ -58,9 +58,10 @@ function DeckOverview() {
 	const { data: deckPids } = useDeckPids(lang)
 	console.log(deckPids)
 	const { data: routineStats } = useDeckRoutineStats(lang)
-	if (!meta || !deckPids || !routineStats)
+	if (!meta || !deckPids || routineStats === undefined) {
+		console.log(`oops, deck not found:`, meta, deckPids, routineStats)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
-
+	}
 	const totalToday =
 		(deckPids.today_active.length ?? 0) + meta.daily_review_goal
 	return (
@@ -91,21 +92,23 @@ function DeckOverview() {
 					Your last review was{' '}
 					<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
 				</p>
-				<p>
-					You've kept up with your routine
-					<span className="font-bold">
-						{(
-							routineStats.daysMet === routineStats.daysSoFar &&
-							routineStats.daysSoFar > 1
-						) ?
-							` all ${routineStats.daysSoFar} days this week!`
-						:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-								routineStats.daysSoFar === 1 ? 'day' : 'days'
-							}`
-						}
-					</span>{' '}
-					this week.
-				</p>
+				{routineStats ?
+					<p>
+						You've kept up with your routine
+						<span className="font-bold">
+							{(
+								routineStats.daysMet === routineStats.daysSoFar &&
+								routineStats.daysSoFar > 1
+							) ?
+								` all ${routineStats.daysSoFar} days this week!`
+							:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+									routineStats.daysSoFar === 1 ? 'day' : 'days'
+								}`
+							}
+						</span>{' '}
+						this week.
+					</p>
+				:	null}
 				<p>
 					You have{' '}
 					<span className="font-bold">{totalToday} cards to review today</span>:{' '}

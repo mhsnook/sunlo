@@ -10,9 +10,11 @@ import {
 } from '@/lib/collections'
 import { useMemo } from 'react'
 import { cardsFull } from '@/lib/live-collections'
-import { mapArrays } from '@/lib/utils'
+import {
+	mapArrays,
+	sortDecksByActivity,
+} from '@/lib/utils'
 import { inLastWeek } from '@/lib/dayjs'
-import { themes } from '@/lib/deck-themes'
 
 dayjs.extend(isoWeek)
 
@@ -71,33 +73,13 @@ export const useDeckMeta = (lang: string) =>
 	)
 
 export const useDecks = () => {
-	const query = useLiveQuery((q) =>
-		q
-			.from({ deck: decksCollection })
-			.orderBy(({ deck }) => deck.created_at, 'asc')
-	)
-	const decksWithThemes = useMemo(
-		() =>
-			!query.data ?
-				[]
-			:	query.data?.map((d, i) => ({
-					...d,
-					theme: i % themes.length,
-				})),
-		[query.data]
-	)
+	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
 	return useMemo(
 		() => ({
 			...query,
-			data: decksWithThemes.toSorted((a, b) => {
-				const aDate = a.most_recent_review_at ?? a.created_at
-				const bDate = b.most_recent_review_at ?? b.created_at
-				if (aDate > bDate) return -1
-				if (aDate < bDate) return 1
-				return a.lang > b.lang ? 1 : -1
-			}),
+			data: query.data.toSorted(sortDecksByActivity),
 		}),
-		[decksWithThemes, query]
+		[query]
 	)
 }
 

@@ -24,9 +24,12 @@ import {
 	type FriendSummaryType,
 	ChatMessageSchema,
 	type ChatMessageType,
+	DeckMetaRawSchema,
 } from './schemas'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
+import { sortDecksByCreation } from './utils'
+import { themes } from './deck-themes'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -118,7 +121,13 @@ export const decksCollection = createCollection(
 				.from('user_deck_plus')
 				.select()
 				.throwOnError()
-			return data?.map((item) => DeckMetaSchema.parse(item)) ?? []
+			return data
+				?.map((item) => DeckMetaRawSchema.parse(item))
+				.toSorted(sortDecksByCreation)
+				.map((d, i) => ({
+					...d,
+					theme: i % themes.length,
+				}))
 		},
 		getKey: (item: DeckMetaType) => item.lang,
 		queryClient,

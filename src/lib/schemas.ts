@@ -165,7 +165,7 @@ export const LanguageSchema = z.object({
 
 export type LanguageType = z.infer<typeof LanguageSchema>
 
-export const DeckMetaSchema = z.object({
+export const DeckMetaRawSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
 	created_at: z.string(),
@@ -182,6 +182,11 @@ export const DeckMetaSchema = z.object({
 	most_recent_review_at: z.string().nullable(),
 })
 
+export const DeckMetaSchema = DeckMetaRawSchema.extend({
+	theme: z.number(),
+})
+
+export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>
 export type DeckMetaType = z.infer<typeof DeckMetaSchema>
 
 export const CardMetaSchema = z.object({

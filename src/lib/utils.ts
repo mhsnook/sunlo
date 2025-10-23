@@ -1,7 +1,8 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import supabase from './supabase-client'
+import { DeckMetaType } from '@/lib/schemas'
+import supabase from '@/lib/supabase-client'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -131,6 +132,26 @@ export function nullSubmit(event: {
 }) {
 	event.preventDefault()
 	event.stopPropagation()
+}
+
+// sort ASC earliest first
+export const sortDecksByCreation = (a: DeckMetaType, b: DeckMetaType) =>
+	a.created_at > b.created_at ? 1
+	: a.created_at < b.created_at ? -1
+	: a.lang > b.lang ? 1
+	: -1
+
+// sort DESC most recent first
+export const sortDecksByActivity = (a: DeckMetaType, b: DeckMetaType) => {
+	const aDate = a.most_recent_review_at ?? a.created_at
+	const bDate = b.most_recent_review_at ?? b.created_at
+
+	return (
+		aDate > bDate ? -1
+		: aDate < bDate ? 1
+		: a.lang > b.lang ? -1
+		: 1
+	)
 }
 
 export const preventDefaultCallback = (e: { preventDefault: () => void }) =>

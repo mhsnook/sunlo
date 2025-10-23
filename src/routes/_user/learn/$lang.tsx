@@ -5,14 +5,27 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
 import { setTheme } from '@/lib/deck-themes'
-import { decksCollection } from '@/lib/collections'
+import {
+	cardReviewsCollection,
+	decksCollection,
+	reviewDaysCollection,
+} from '@/lib/collections'
+import { phrasesFull } from '@/lib/live-collections'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
 	loader: async ({ params: { lang } }) => {
-		await decksCollection.preload()
-		const decks = decksCollection.toArray
-		const theme = decks.findIndex((d) => d.lang === lang)
+		const decksPromise = decksCollection.preload()
+		const daysPromise = reviewDaysCollection.preload()
+		const reviewsPromise = cardReviewsCollection.preload()
+		const phrasesPromise = phrasesFull.preload()
+		await Promise.all([
+			decksPromise,
+			daysPromise,
+			reviewsPromise,
+			phrasesPromise,
+		])
+		const deck = decksCollection.get(lang)
 
 		return {
 			appnav: [
@@ -31,7 +44,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			} as TitleBar,
-			theme,
+			theme: deck?.theme,
 		}
 	},
 })
@@ -39,9 +52,10 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 function LanguageLayout() {
 	const { theme } = Route.useLoaderData()
 	useEffect(() => {
-		if (theme) setTheme(document.documentElement, theme)
+		setTheme(document.documentElement, theme)
 		return () => {
-			setTheme(document.documentElement)
+			console.log('removing theme')
+			setTheme()
 		}
 	}, [theme])
 	return <Outlet />
