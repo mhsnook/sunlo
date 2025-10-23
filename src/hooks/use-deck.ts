@@ -10,10 +10,7 @@ import {
 } from '@/lib/collections'
 import { useMemo } from 'react'
 import { cardsFull } from '@/lib/live-collections'
-import {
-	mapArrays,
-	sortDecksByActivity,
-} from '@/lib/utils'
+import { mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { inLastWeek } from '@/lib/dayjs'
 
 dayjs.extend(isoWeek)
@@ -121,7 +118,10 @@ export const useDeckRoutineStats = (lang: string) => {
 export const useDeckCard = (pid: uuid) =>
 	useLiveQuery(
 		(q) =>
-			q.from({ card: cardsFull }).where(({ card }) => eq(card.phrase_id, pid)),
+			q
+				.from({ card: cardsFull })
+				.where(({ card }) => eq(card.phrase_id, pid))
+				.findOne(),
 		[pid]
 	)
 

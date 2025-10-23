@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
 	CheckCircle,
@@ -12,12 +12,7 @@ import {
 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
-import {
-	CardRow,
-	DeckLoaded,
-	OnePhraseComponentProps,
-	uuid,
-} from '@/types/main'
+import { CardRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	DropdownMenu,
@@ -29,6 +24,9 @@ import { useAuth } from '@/lib/hooks'
 import { useDeckCard, useDecks } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { usePhrase } from '@/hooks/composite-phrase'
+import { cardsCollection } from '@/lib/collections'
+import { CardMetaSchema } from '@/lib/schemas'
 
 interface CardStatusDropdownProps {
 	pid: uuid
@@ -103,15 +101,16 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-function useCardStatusMutation(pid: uuid, lang: string) {
+function useCardStatusMutation(pid: uuid) {
 	const { userId } = useAuth()
-	const queryClient = useQueryClient()
-	const { data: card } = useDeckCard(pid, lang)
+	const { data: phrase } = usePhrase(pid)
 	return useMutation<CardRow, PostgrestError, { status: LearningStatus }>({
 		mutationKey: ['upsert-card', pid],
 		mutationFn: async ({ status }: { status: LearningStatus }) => {
+			if (!phrase)
+				throw new Error('Trying to change status of a card that does not exist')
 			const { data } =
-				card ?
+				phrase.card ?
 					await supabase
 						.from('user_card')
 						.update({
@@ -124,7 +123,7 @@ function useCardStatusMutation(pid: uuid, lang: string) {
 				:	await supabase
 						.from('user_card')
 						.insert({
-							lang,
+							lang: phrase.lang,
 							phrase_id: pid,
 							status,
 						})
@@ -132,23 +131,20 @@ function useCardStatusMutation(pid: uuid, lang: string) {
 						.throwOnError()
 			return data[0]
 		},
-		onSuccess: (data) => {
-			if (card) toast.success('Updated card status')
-			else toast.success('Added this phrase to your deck')
-			void queryClient.setQueryData(
-				['user', lang, 'deck'],
-				(oldData: DeckLoaded) => ({
-					...oldData,
-					cardsMap: {
-						...oldData.cardsMap,
-						[pid]: { ...data, reviews: oldData.cardsMap[pid]?.reviews ?? [] },
-					},
+		onSuccess: (data, variables) => {
+			if (phrase!.card) {
+				toast.success('Updated card status')
+				cardsCollection.utils.writeUpdate({
+					phrase_id: pid,
+					status: variables.status,
 				})
-			)
-			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			} else {
+				toast.success('Added this phrase to your deck')
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
+			}
 		},
 		onError: (error) => {
-			if (card) toast.error('There was an error updating this card')
+			if (phrase!.card) toast.error('There was an error updating this card')
 			else toast.error('There was an error adding this card to your deck')
 			console.log(`error upserting card`, error)
 		},
@@ -162,13 +158,11 @@ export function CardStatusDropdown({
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const { data: decks } = useDecks()
-	const deckPresent = decks.some(d => d.lang === lang) ?? false
+	const deckPresent = decks.some((d) => d.lang === lang) ?? false
 	const { data: card } = useDeckCard(pid)
 
-	const cardMutation = useCardStatusMutation(pid, lang)
+	const cardMutation = useCardStatusMutation(pid)
 
-	// optimistic update not needed because we invalidate the query
-	// const cardPresent = cardMutation.data ?? card
 	const choice =
 		!deckPresent ? 'nodeck'
 		: !card ? 'nocard'
@@ -249,9 +243,9 @@ export function CardStatusDropdown({
 		)
 }
 
-export function CardStatusHeart({ pid, lang }: OnePhraseComponentProps) {
-	const mutation = useCardStatusMutation(pid, lang)
-	const { data: card } = useDeckCard(pid, lang)
+export function CardStatusHeart({ pid }: { pid: uuid }) {
+	const { data: card } = useDeckCard(pid)
+	const mutation = useCardStatusMutation(pid)
 	const status = card?.status === 'active' ? 'skipped' : 'active'
 
 	return (

@@ -1,12 +1,11 @@
 import type { CardMetaType } from '@/lib/schemas'
 import type { uuid } from '@/types/main'
 import { ago } from '@/lib/dayjs'
-import { useLanguagePhrase } from '@/hooks/use-language'
-import { useDeckCard } from '@/hooks/use-deck'
 import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/hooks/use-reviews'
+import { usePhrase } from '@/hooks/composite-phrase'
 
 export default function PhraseExtraInfo({
 	pid,
@@ -17,29 +16,28 @@ export default function PhraseExtraInfo({
 	className?: string
 	link?: boolean
 }) {
-	const phrase = useLanguagePhrase(pid)
-	const card = useDeckCard(pid)
+	const { data: phrase } = usePhrase(pid)
 
-	return !phrase.data ? null : (
+	return !phrase ? null : (
 			<ExtraInfo
 				title="User card details"
-				description={`“${phrase.data.text}”`}
+				description={`“${phrase.text}”`}
 				className={className}
 				link={link}
 			>
 				<div className="block space-y-4">
 					<div className="flex flex-col">
 						<span className="font-semibold">Phrase ID</span>
-						<span>{phrase.data.id}</span>
+						<span>{phrase.id}</span>
 					</div>
 					<div className="flex flex-col">
 						<span className="font-semibold">Phrase created at</span>
-						<span>{ago(phrase.data.created_at)}</span>
+						<span>{ago(phrase.created_at)}</span>
 					</div>
 				</div>
-				{!card.data ?
+				{!phrase.card ?
 					<p>Phrase has no card in your deck</p>
-				:	<CardSection card={card.data} />}
+				:	<CardSection card={phrase.card} />}
 			</ExtraInfo>
 		)
 }

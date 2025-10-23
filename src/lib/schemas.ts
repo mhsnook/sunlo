@@ -1,4 +1,9 @@
+import dayjs from 'dayjs'
 import * as z from 'zod'
+import timezone from 'dayjs/plugin/timezone'
+import utc from 'dayjs/plugin/utc'
+dayjs.extend(timezone)
+dayjs.extend(utc)
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
 export const FriendRequestResponseEnumSchema = z.enum([
@@ -195,13 +200,15 @@ export const CardMetaSchema = z.object({
 	phrase_id: z.string().uuid(),
 	uid: z.string().uuid(),
 	lang: LangSchema,
-	current_timestamp: z.string(),
-	difficulty: z.number().nullable(),
-	last_reviewed_at: z.string().nullable(),
-	retrievability_now: z.number().nullable(),
-	stability: z.number().nullable(),
 	status: CardStatusEnumSchema,
 	updated_at: z.string().nullable(),
+	current_timestamp: z
+		.string()
+		.default(dayjs().tz('UTC').format('YYYY-MM-DD HH:mm:ss+00')),
+	last_reviewed_at: z.string().nullable().default(null),
+	difficulty: z.number().nullable().default(null),
+	stability: z.number().nullable().default(null),
+	retrievability_now: z.number().nullable().default(null),
 })
 
 export type CardMetaType = z.infer<typeof CardMetaSchema>
