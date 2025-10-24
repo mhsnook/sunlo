@@ -1337,13 +1337,7 @@ export type Database = {
 			}
 			add_tags_to_phrase: {
 				Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
-				Returns: {
-					added_by: string | null
-					created_at: string
-					id: string
-					lang: string
-					name: string
-				}[]
+				Returns: Json
 			}
 			are_friends: {
 				Args: { uid1: string; uid2: string }

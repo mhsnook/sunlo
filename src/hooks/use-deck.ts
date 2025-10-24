@@ -135,7 +135,9 @@ export const useDeckPids = (lang: string) => {
 				!data ? null : (
 					{
 						all: data.map((c) => c.phrase_id),
-						active: data.filter((c) => c.status === 'active'),
+						active: data
+							.filter((c) => c.status === 'active')
+							.map((c) => c.phrase_id),
 						inactive: data
 							.filter((c) => c.status !== 'active')
 							.map((c) => c.phrase_id),

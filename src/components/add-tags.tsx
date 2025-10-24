@@ -22,13 +22,18 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { languagesCollection, phrasesCollection } from '@/lib/collections'
-import { PhraseFullFilteredType } from '@/lib/schemas'
+import { PhraseFullFilteredType, PhraseTagSchema } from '@/lib/schemas'
+import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
 })
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
+type AddTagsReturnValues = {
+	tags: Tables<'tag'>[]
+	phrase_tags: Tables<'phrase_tag'>[]
+}
 
 export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [open, setOpen] = useState(false)
@@ -56,36 +61,34 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 			})
 
 			if (error) throw error
-			return data
+			return data as AddTagsReturnValues
 		},
-		onSuccess: (data, values: AddTagsFormValues) => {
-			toast.success('Tags added!')
-			if (values.tags) {
-				// this is an inexact copy! it is not a replacement for returning the actual
-				// added rows, the UI just doesn't really care about the extra info rn 🤷
-				const oldPhrase = phrasesCollection.get(phrase.id)
-				const newTags = values.tags.filter(
-					(t) => !oldPhrase?.tags?.some((pt) => pt.name === t)
-				)
-				phrasesCollection.utils.writeUpdate({
-					id: phrase.id,
-					tags: [
-						...newTags.map((t) => ({ name: t, id: t })),
-						...(oldPhrase?.tags ?? []),
-					],
-				})
-			}
-			if (data?.length) {
+		onSuccess: (data) => {
+			if (data?.tags.length) {
 				languagesCollection.utils.writeUpdate({
 					lang: phrase.lang,
 					tags: [
 						...new Set([
-							...data.map((t) => t.name),
+							...data.tags.map((t) => t.name),
 							...(allLangTagsData?.tags ?? []),
 						]),
 					],
 				})
 			}
+			if (data?.phrase_tags.length) {
+				const funnyTags = data?.phrase_tags.map((t) => {
+					// @@TODO ---
+					return null
+				})
+				phrasesCollection.utils.writeUpdate({
+					id: phrase.id,
+					tags: [
+						...(funnyTags?.map((t) => PhraseTagSchema.parse(t)) ?? []),
+						...(phrase.tags ?? []),
+					],
+				})
+			}
+			toast.success('Tags added!')
 			setOpen(false)
 			reset({ tags: [] })
 		},

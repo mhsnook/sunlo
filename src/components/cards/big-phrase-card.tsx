@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronsUpDown, Loader } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
+import { Loader } from '@/components/ui/loader'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -31,14 +32,6 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) return <PhraseNotFound />
-
-	// Tell the component what to do with incomplete composite data.
-	const [trans, other] =
-		!phrase.translations_mine ?
-			[phrase.translations, []]
-		:	[phrase.translations_mine, phrase.translations_other ?? []]
-
-	const tags = phrase.tags ?? []
 
 	return (
 		<div>
@@ -75,7 +68,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<div className="flex flex-row items-center justify-between">
 									<div className="flex flex-row items-baseline gap-2">
 										<h3 className="text-lg font-semibold">Translations</h3>
-										{trans.length ? null : (
+										{phrase.translations_mine?.length ? null : (
 											<span className="text-muted-foreground italic">
 												No tags
 											</span>
@@ -87,17 +80,17 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										size="sm"
 									/>
 								</div>
-								{trans?.map((translation) => (
+								{phrase.translations_mine?.map((trans) => (
 									<div
-										key={translation.id}
+										key={trans.id}
 										className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
 									>
-										<LangBadge lang={translation.lang} />
-										<p className="text-md">{translation.text}</p>
+										<LangBadge lang={trans.lang} />
+										<p className="text-md">{trans.text}</p>
 									</div>
 								))}
 							</div>
-							{!other.length ? null : (
+							{!phrase.translations_other.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(
@@ -106,19 +99,21 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										)}
 									>
 										<ChevronsUpDown className="h-4 w-4" />
-										{isOpen ? 'Hide extra' : `Show ${other.length} hidden`}{' '}
-										translation{other.length > 0 ? 's' : ''}
+										{isOpen ?
+											'Hide extra'
+										:	`Show ${phrase.translations_other.length} hidden`}{' '}
+										translation{phrase.translations_other.length > 0 ? 's' : ''}
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
-										{other.map((translation) => (
+										{phrase.translations_other.map((trans) => (
 											<div
-												key={translation.id}
+												key={trans.id}
 												className="bg-muted rounded-lg p-3"
 											>
 												<div className="flex items-center justify-between">
-													<p className="text-md">{translation.text}</p>
+													<p className="text-md">{trans.text}</p>
 													<Badge variant="outline">
-														{languages[translation.lang]}
+														{languages[trans.lang]}
 													</Badge>
 												</div>
 											</div>
@@ -134,12 +129,12 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							<div className="flex items-center justify-between">
 								<div className="inline-flex flex-row flex-wrap items-baseline gap-2">
 									<h3 className="text-lg font-semibold">Tags</h3>
-									{tags.map((tag: { id: string; name: string }) => (
+									{phrase.tags?.map((tag: { id: string; name: string }) => (
 										<Badge key={tag.id} variant="secondary">
 											{tag.name}
 										</Badge>
 									))}
-									{!tags.length && (
+									{!phrase.tags?.length && (
 										<span className="text-muted-foreground italic">
 											No tags
 										</span>

@@ -8,9 +8,9 @@ import { setTheme } from '@/lib/deck-themes'
 import {
 	cardReviewsCollection,
 	decksCollection,
+	phrasesCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
-import { phrasesFull } from '@/lib/live-collections'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		const decksPromise = decksCollection.preload()
 		const daysPromise = reviewDaysCollection.preload()
 		const reviewsPromise = cardReviewsCollection.preload()
-		const phrasesPromise = phrasesFull.preload()
+		const phrasesPromise = phrasesCollection.preload()
 		await Promise.all([
 			decksPromise,
 			daysPromise,
@@ -52,7 +52,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 function LanguageLayout() {
 	const { theme } = Route.useLoaderData()
 	useEffect(() => {
-		setTheme(document.documentElement, theme)
+		setTheme(document.documentElement, theme ?? undefined)
 		return () => {
 			console.log('removing theme')
 			setTheme()

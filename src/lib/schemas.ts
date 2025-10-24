@@ -128,9 +128,8 @@ export const PhraseFullSchema = z.object({
 	rank_most_stable: z.number().nullable().default(null),
 	rank_newest: z.number().nullable().default(null),
 	request_id: z.string().uuid().nullable().default(null),
-	// don't want this to be null; would rather coerce to []
-	tags: z.array(PhraseTagSchema).default([]).nullable(),
-	translations: z.array(TranslationSchema).default([]),
+	tags: z.array(PhraseTagSchema).nullable().default([]),
+	translations: z.array(TranslationSchema).nullable().default([]),
 })
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
@@ -163,7 +162,7 @@ export const LanguageSchema = z.object({
 	lang: LangSchema,
 	alias_of: z.string().length(3).nullable(),
 	name: z.string(),
-	leaners: z.number().default(0),
+	learners: z.number().default(0),
 	phrases_to_learn: z.number().default(0),
 	rank: z.number().nullable(),
 	display_order: z.number().nullable(),
