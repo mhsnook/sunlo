@@ -7,7 +7,6 @@ import toast from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
 import { Pencil } from 'lucide-react'
 
-import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -18,11 +17,12 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { languagesCollection, phrasesCollection } from '@/lib/collections'
+import { PhraseFullFilteredType } from '@/lib/schemas'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
@@ -30,10 +30,9 @@ const addTagsSchema = z.object({
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
 
-export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
+export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [open, setOpen] = useState(false)
-	const { data: allLangTagsData } = useLanguageTags(lang)
-	const { data: phrase } = useLanguagePhrase(phraseId)
+	const { data: allLangTagsData } = useLanguageTags(phrase?.lang)
 	const {
 		control,
 		handleSubmit,
@@ -51,8 +50,8 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			if (values.tags.length === 0) return
 
 			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
-				p_phrase_id: phraseId,
-				p_lang: lang,
+				p_phrase_id: phrase.id,
+				p_lang: phrase.lang,
 				p_tags: values.tags,
 			})
 
@@ -64,12 +63,12 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			if (values.tags) {
 				// this is an inexact copy! it is not a replacement for returning the actual
 				// added rows, the UI just doesn't really care about the extra info rn 🤷
-				const oldPhrase = phrasesCollection.get(phraseId)
+				const oldPhrase = phrasesCollection.get(phrase.id)
 				const newTags = values.tags.filter(
 					(t) => !oldPhrase?.tags?.some((pt) => pt.name === t)
 				)
 				phrasesCollection.utils.writeUpdate({
-					id: phraseId,
+					id: phrase.id,
 					tags: [
 						...newTags.map((t) => ({ name: t, id: t })),
 						...(oldPhrase?.tags ?? []),
@@ -78,7 +77,7 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			}
 			if (data?.length) {
 				languagesCollection.utils.writeUpdate({
-					lang,
+					lang: phrase.lang,
 					tags: [
 						...new Set([
 							...data.map((t) => t.name),

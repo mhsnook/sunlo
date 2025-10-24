@@ -6,6 +6,8 @@ dayjs.extend(timezone)
 dayjs.extend(utc)
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
+export type CardStatusEnumType = z.infer<typeof CardStatusEnumSchema>
+
 export const FriendRequestResponseEnumSchema = z.enum([
 	'accept',
 	'decline',

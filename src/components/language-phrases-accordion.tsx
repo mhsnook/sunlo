@@ -38,7 +38,7 @@ function PhraseAccordionItem({ pid }: { pid: string }) {
 	return (
 		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
-				<CardStatusDropdown lang={phrase.lang} pid={pid} />
+				<CardStatusDropdown phrase={phrase} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
@@ -73,11 +73,10 @@ function PhraseAccordionItem({ pid }: { pid: string }) {
 							text="View details"
 						/>
 						<SharePhraseButton
-							pid={pid}
-							lang={phrase.lang}
+							phrase={phrase}
 							variant="outline-accent"
 						/>
-						<PhraseExtraInfo lang={phrase.lang} pid={pid} />
+						<PhraseExtraInfo pid={pid} />
 					</div>
 				</div>
 			</AccordionContent>

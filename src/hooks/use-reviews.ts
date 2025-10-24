@@ -7,7 +7,6 @@ import {
 	ReviewsMap,
 	ReviewStages,
 	ReviewStats,
-	ReviewUpdate,
 	uuid,
 } from '@/types/main'
 import toast from 'react-hot-toast'
@@ -17,6 +16,7 @@ import {
 	useCardIndex,
 	useNextValid,
 	useReviewActions,
+	useReviewLang,
 	useReviewStage,
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -33,8 +33,10 @@ const postReview = async (submitData: ReviewInsert) => {
 	return data
 }
 
-const updateReview = async (submitData: ReviewUpdate) => {
-	if (!submitData?.review_id || !submitData?.score)
+const updateReview = async (
+	submitData: ReviewInsert | { review_id: uuid; score: number }
+) => {
+	if (!('review_id' in submitData) || !('score' in submitData))
 		throw new Error('Invalid inputs; cannot update')
 	const { data } = await supabase
 		.rpc('update_user_card_review', submitData)
@@ -120,37 +122,29 @@ export function useReviewDay(lang: string, day_session: string) {
 	)
 }
 
-export function useOneReviewToday(
-	lang: string,
-	day_session: string,
-	pid: uuid
-) {
+export function useOneReviewToday(day_session: string, pid: uuid) {
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
-					and(
-						eq(review.lang, lang),
-						eq(review.day_session, day_session),
-						eq(review.phrase_id, pid)
-					)
+					and(eq(review.day_session, day_session), eq(review.phrase_id, pid))
 				)
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[lang, day_session, pid]
+		[day_session, pid]
 	)
 }
 
 export function useReviewMutation(
 	pid: uuid,
-	lang: string,
 	day_session: string,
 	resetRevealCard: () => void
 ) {
 	const currentCardIndex = useCardIndex()
-	const { data: prevData } = useOneReviewToday(lang, day_session, pid)
+	const lang = useReviewLang()
+	const { data: prevData } = useOneReviewToday(day_session, pid)
 	const stage = useReviewStage()
 	const { gotoIndex } = useReviewActions()
 	const nextIndex = useNextValid()
@@ -158,7 +152,7 @@ export function useReviewMutation(
 	// this mutation should only be loaded when the manifest is present
 	const manifest = reviewsData.manifest!
 	return useMutation<CardReviewType, PostgrestError, { score: number }>({
-		mutationKey: ['user', lang, 'review', day_session, pid],
+		mutationKey: ['user', 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			// during stages 1 & 2, these are corrections; only update only if score changes
 			if (stage < 3 && prevData?.score === score) return prevData

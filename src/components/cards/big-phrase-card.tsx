@@ -9,7 +9,7 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-import type { OnePhraseComponentProps, TranslationStub } from '@/types/main'
+import type { uuid } from '@/types/main'
 import languages from '@/lib/languages'
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { AddTags } from '@/components/add-tags'
@@ -25,7 +25,7 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
 
-export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
+export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
 	const [isOpen, setIsOpen] = useState(false)
 
@@ -59,7 +59,7 @@ export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
 							<LangBadge lang={phrase.lang} />
-							<CardStatusDropdown pid={pid} lang={phrase.lang} />
+							<CardStatusDropdown phrase={phrase} />
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
 							<span>&ldquo;{phrase.text}&rdquo;</span>
@@ -110,7 +110,7 @@ export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
 										translation{other.length > 0 ? 's' : ''}
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
-										{other.map((translation: TranslationStub) => (
+										{other.map((translation) => (
 											<div
 												key={translation.id}
 												className="bg-muted rounded-lg p-3"
@@ -145,7 +145,7 @@ export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
 										</span>
 									)}
 								</div>
-								<AddTags phraseId={pid} lang={phrase.lang} />
+								<AddTags phrase={phrase} />
 							</div>
 						</div>
 					</div>
@@ -157,15 +157,9 @@ export function BigPhraseCard({ pid }: OnePhraseComponentProps) {
 					variant="outline"
 					size="default"
 				/>
-				<SharePhraseButton
-					pid={pid}
-					lang={phrase.lang}
-					variant="outline"
-					size="default"
-				/>
+				<SharePhraseButton phrase={phrase} variant="outline" size="default" />
 				<SendPhraseToFriendButton
-					pid={pid}
-					lang={phrase.lang}
+					phrase={phrase}
 					variant="outline"
 					size="default"
 				/>

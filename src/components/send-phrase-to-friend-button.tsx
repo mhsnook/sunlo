@@ -16,16 +16,15 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { useAuth } from '@/lib/hooks'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
+import { PhraseFullFilteredType } from '@/lib/schemas'
 
 export function SendPhraseToFriendButton({
-	pid,
-	lang,
+	phrase,
 	link,
 	className,
 	...props
 }: {
-	pid: uuid
-	lang: string
+	phrase: PhraseFullFilteredType
 	link?: boolean
 	className?: string
 } & VariantProps<typeof buttonVariants>) {
@@ -33,14 +32,14 @@ export function SendPhraseToFriendButton({
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendPhraseToFriendMutation = useMutation({
-		mutationKey: ['send-phrase-to-friend', lang, pid],
+		mutationKey: ['send-phrase-to-friend', phrase.lang, phrase.id],
 		mutationFn: async (friendUids: uuid[]) => {
 			if (!userId) throw new Error('User not logged in')
 			const messageInserts = friendUids.map((friendUid) => ({
 				sender_uid: userId,
 				recipient_uid: friendUid,
-				phrase_id: pid,
-				lang,
+				phrase_id: phrase.id,
+				lang: phrase.lang,
 				message_type: 'recommendation' as const,
 			}))
 			const { data } = await supabase

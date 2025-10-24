@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
-import { OnePhraseComponentProps } from '@/types/main'
 import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
@@ -10,7 +9,6 @@ import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/hooks/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
@@ -21,27 +19,25 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
-import { TranslationType } from '@/lib/schemas'
+import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas'
+import { uuid } from '@/types/main'
+import { usePhrase } from '@/hooks/composite-phrase'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
 	// In a real application, you would trigger audio playback here
 }
 
-export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
+export function ReviewSingleCard({ pid }: { pid: uuid }) {
+	const { data: phrase, status } = usePhrase(pid)
+	if (status === 'not-found')
+		throw new Error(`Trying to review this card, but can't find it`)
 	const dayString = useReviewDayString()
 	const [revealCard, setRevealCard] = useState(false)
-	const { data: prevData } = useOneReviewToday(lang, dayString, pid)
+	const { data: prevData } = useOneReviewToday(dayString, pid)
 	const stage = useReviewStage()
 	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
-	const { mutate, isPending } = useReviewMutation(
-		pid,
-		lang,
-		dayString,
-		closeCard
-	)
-
-	const { data: phrase } = useLanguagePhrase(pid)
+	const { mutate, isPending } = useReviewMutation(pid, dayString, closeCard)
 
 	if (!phrase) return null
 
@@ -49,7 +45,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
-				<ContextMenu lang={lang} pid={pid} />
+				<ContextMenu phrase={phrase} />
 				<div className="mb-4 flex items-center justify-center">
 					<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
 					<Flagged name="text_to_speech">
@@ -156,7 +152,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	)
 }
 
-function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
+function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [isOpen, setIsOpen] = useState(false)
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -171,26 +167,20 @@ function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
 					<PermalinkButton
 						to={'/learn/$lang/$id'}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang, id: pid }}
+						params={{ lang: phrase.lang, id: phrase.id }}
 						className="w-full px-2 py-1.5"
 						link
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<SendPhraseToFriendButton
-						lang={lang}
-						pid={pid}
+						phrase={phrase}
 						link
 						className="w-full px-2 py-1.5"
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-					<PhraseExtraInfo
-						lang={lang}
-						pid={pid}
-						link
-						className="w-full px-2 py-1.5"
-					/>
+					<PhraseExtraInfo pid={phrase.id} link className="w-full px-2 py-1.5" />
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

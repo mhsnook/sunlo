@@ -36,7 +36,7 @@ export function LangBadge({
 	lang,
 	className,
 }: {
-	lang: string | null
+	lang: string
 	className?: string
 }) {
 	return lang === null ? null : (

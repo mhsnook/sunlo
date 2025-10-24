@@ -8,13 +8,7 @@ import {
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
 import { NonNullableFields } from './utils'
-import { PublicProfile } from '@/routes/_user/friends/-types'
-import {
-	CardReviewType,
-	PhraseFullType,
-	PhraseRequestType,
-	PublicProfileType,
-} from '@/lib/schemas'
+import { CardReviewType } from '@/lib/schemas'
 
 export type uuid = string
 export type pids = Array<uuid>
@@ -114,61 +108,11 @@ export type PhraseStub = NonNullableFields<{
 	}>
 }>
 
-export type PhrasesMap = {
-	[key: uuid]: PhraseFiltered
-}
-export type LanguageLoaded = {
-	meta: LanguageMeta
-	pids: pids
-	phrases: PhraseFullType[]
-	requests: PhraseRequestType[]
-	profiles: PublicProfileType[]
-	phrasesMap: PhrasesMap
-}
-
-export type PhraseRow = Tables<'phrase'> & { created_at: string }
 export type PhraseInsert = TablesInsert<'phrase'>
 export type PhraseCardInsert =
 	Database['public']['Functions']['add_phrase_translation_card']['Args']
-export type CardStatusEnum = Database['public']['Enums']['card_status']
 
-export type Translation = Tables<'phrase_translation'>
-export type TranslationRow = Tables<'phrase_translation'>
-export type TranslationStub = Pick<
-	Tables<'phrase_translation'>,
-	'lang' | 'text' | 'id'
->
 export type TranslationInsert = TablesInsert<'phrase_translation'>
-
-export type PhraseMeta = Tables<'meta_phrase_info'>
-export type PhraseFull = PhraseMeta & {
-	translations: Array<TranslationRow>
-	added_by_profile: PublicProfile
-	tags?: Array<Tag> | null
-}
-export type PhraseFiltered = PhraseFullType & {
-	translations_mine?: Array<TranslationRow>
-	translations_other?: Array<TranslationRow>
-}
-export type PhraseFullInsert = PhraseInsert & {
-	translations: Array<TranslationInsert>
-	relation_pids?: pids
-}
-
-export type DeckRow = Tables<'user_deck'>
-export type DeckStub = Tables<'user_deck'>
-export type DeckInsert = TablesInsert<'user_deck'>
-export type DeckMeta = Tables<'user_deck_plus'> & {
-	cardsScheduledForToday?: number
-	theme?: number
-}
-export type DeckFetched = DeckMeta & {
-	cards: Array<CardFull>
-}
-// we are not literally using a map, but maybe we should!
-export type CardsMap = {
-	[key: uuid]: CardFull
-}
 
 export type DeckPids = {
 	all: pids

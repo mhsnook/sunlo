@@ -1,25 +1,23 @@
 import { useCallback } from 'react'
 import type { ButtonProps } from '@/components/ui/button-variants'
-import type { OnePhraseComponentProps } from '@/types/main'
 import { Share } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/hooks/use-language'
 import languages from '@/lib/languages'
+import { PhraseFullFilteredType } from '@/lib/schemas'
 
 export default function SharePhraseButton({
-	pid,
+	phrase,
 	text = 'Share phrase',
 	variant = 'ghost',
 	size = 'sm',
 	...props
-}: OnePhraseComponentProps & {
+}: {
+	phrase: PhraseFullFilteredType
 	text?: string
 	variant?: string
 	size?: string
 } & ButtonProps) {
-	const { data: phrase, isLoading } = useLanguagePhrase(pid)
-
 	const sharePhrase = useCallback(() => {
 		if (!phrase) return
 		navigator
@@ -33,7 +31,7 @@ export default function SharePhraseButton({
 			})
 	}, [phrase])
 
-	if (isLoading || !phrase || !navigator.share) return null
+	if (!phrase || !navigator.share) return null
 	return (
 		<Button onClick={sharePhrase} variant={variant} size={size} {...props}>
 			<Share className="h-4 w-4" />

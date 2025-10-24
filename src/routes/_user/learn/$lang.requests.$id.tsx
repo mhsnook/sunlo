@@ -49,6 +49,7 @@ import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from '@/components/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
 import { phrasesCollection } from '@/lib/collections'
+import { PhraseFullSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -105,7 +106,7 @@ function FulfillRequestPage() {
 			})
 			const { phrase, translation } = data
 			const newPhrase = { ...phrase, translations: [translation] }
-			phrasesCollection.utils.writeInsert(newPhrase)
+			phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(newPhrase))
 		},
 		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)

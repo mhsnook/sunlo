@@ -8,8 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
-// this is type-funky bc we're using dynamic keys (TODO consider Map)
-export function mapArray<T extends Record<string, any>, K extends keyof T>(
+export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
 	arr: ReadonlyArray<T> | undefined | null,
 	key: K
 ): Record<string, T> {
@@ -28,7 +27,7 @@ export function mapArray<T extends Record<string, any>, K extends keyof T>(
 	)
 }
 
-export function mapArrays<T extends Record<string, any>, K extends keyof T>(
+export function mapArrays<T extends Record<string, unknown>, K extends keyof T>(
 	arr: Array<T>,
 	key: K
 ) {
@@ -135,7 +134,10 @@ export function nullSubmit(event: {
 }
 
 // sort ASC earliest first
-export const sortDecksByCreation = (a: DeckMetaType, b: DeckMetaType) =>
+export const sortDecksByCreation = (
+	a: Partial<DeckMetaType> & { created_at: string; lang: string },
+	b: Partial<DeckMetaType> & { created_at: string; lang: string }
+) =>
 	a.created_at > b.created_at ? 1
 	: a.created_at < b.created_at ? -1
 	: a.lang > b.lang ? 1

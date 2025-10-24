@@ -12,7 +12,6 @@ import {
 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
-import { CardRow, uuid } from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	DropdownMenu,
@@ -21,16 +20,21 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/lib/hooks'
-import { useDeckCard, useDecks } from '@/hooks/use-deck'
+import { useDecks } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { usePhrase } from '@/hooks/composite-phrase'
 import { cardsCollection } from '@/lib/collections'
-import { CardMetaSchema } from '@/lib/schemas'
+import {
+	CardMetaSchema,
+	PhraseFullFilteredType,
+	PhraseFullFullType,
+} from '@/lib/schemas'
+import { Tables } from '@/types/supabase'
+import { PhraseStub } from '@/types/main'
 
+type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType | PhraseStub
 interface CardStatusDropdownProps {
-	pid: uuid
-	lang: string
+	phrase: AnyPhrase
 	className?: string
 }
 
@@ -101,11 +105,15 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-function useCardStatusMutation(pid: uuid) {
+function useCardStatusMutation(phrase: AnyPhrase) {
 	const { userId } = useAuth()
-	const { data: phrase } = usePhrase(pid)
-	return useMutation<CardRow, PostgrestError, { status: LearningStatus }>({
-		mutationKey: ['upsert-card', pid],
+
+	return useMutation<
+		Tables<'user_card'>,
+		PostgrestError,
+		{ status: LearningStatus }
+	>({
+		mutationKey: ['upsert-card', phrase.id],
 		mutationFn: async ({ status }: { status: LearningStatus }) => {
 			if (!phrase)
 				throw new Error('Trying to change status of a card that does not exist')
@@ -116,7 +124,7 @@ function useCardStatusMutation(pid: uuid) {
 						.update({
 							status,
 						})
-						.eq('phrase_id', pid)
+						.eq('phrase_id', phrase.id)
 						.eq('uid', userId!)
 						.select()
 						.throwOnError()
@@ -124,7 +132,7 @@ function useCardStatusMutation(pid: uuid) {
 						.from('user_card')
 						.insert({
 							lang: phrase.lang,
-							phrase_id: pid,
+							phrase_id: phrase.id,
 							status,
 						})
 						.select()
@@ -132,10 +140,10 @@ function useCardStatusMutation(pid: uuid) {
 			return data[0]
 		},
 		onSuccess: (data, variables) => {
-			if (phrase!.card) {
+			if (phrase.card) {
 				toast.success('Updated card status')
 				cardsCollection.utils.writeUpdate({
-					phrase_id: pid,
+					phrase_id: phrase.id,
 					status: variables.status,
 				})
 			} else {
@@ -144,7 +152,7 @@ function useCardStatusMutation(pid: uuid) {
 			}
 		},
 		onError: (error) => {
-			if (phrase!.card) toast.error('There was an error updating this card')
+			if (phrase.card) toast.error('There was an error updating this card')
 			else toast.error('There was an error adding this card to your deck')
 			console.log(`error upserting card`, error)
 		},
@@ -152,16 +160,15 @@ function useCardStatusMutation(pid: uuid) {
 }
 
 export function CardStatusDropdown({
-	pid,
-	lang,
+	phrase,
 	className,
 }: CardStatusDropdownProps) {
 	const { userId } = useAuth()
 	const { data: decks } = useDecks()
-	const deckPresent = decks.some((d) => d.lang === lang) ?? false
-	const { data: card } = useDeckCard(pid)
+	const deckPresent = decks.some((d) => d.lang === phrase.lang) ?? false
+	const card = phrase.card
 
-	const cardMutation = useCardStatusMutation(pid)
+	const cardMutation = useCardStatusMutation(phrase)
 
 	const choice =
 		!deckPresent ? 'nodeck'
@@ -190,7 +197,7 @@ export function CardStatusDropdown({
 							<Link
 								to="/learn/add-deck"
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								search={{ lang }}
+								search={{ lang: phrase.lang }}
 							>
 								<StatusSpan choice="nodeck" />
 							</Link>
@@ -243,20 +250,25 @@ export function CardStatusDropdown({
 		)
 }
 
-export function CardStatusHeart({ pid }: { pid: uuid }) {
-	const { data: card } = useDeckCard(pid)
-	const mutation = useCardStatusMutation(pid)
-	const status = card?.status === 'active' ? 'skipped' : 'active'
+export function CardStatusHeart({
+	phrase,
+}: {
+	phrase: PhraseFullFilteredType | PhraseStub
+}) {
+	const mutation = useCardStatusMutation(phrase)
+	const status = phrase.card?.status === 'active' ? 'skipped' : 'active'
 
 	return (
 		<Button
 			variant="outline"
 			size="icon"
-			className={card?.status === 'active' ? 'border-primary-foresoft/30' : ''}
+			className={
+				phrase.card?.status === 'active' ? 'border-primary-foresoft/30' : ''
+			}
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => mutation.mutate({ status })}
 		>
-			{card?.status === 'active' ?
+			{phrase.card?.status === 'active' ?
 				<Heart className="fill-red-600 text-red-600" />
 			:	<Heart className="text-muted-foreground" />}
 		</Button>

@@ -1,7 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/hooks'
-import { PhraseRow, TranslationRow, uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { PublicProfile } from '@/routes/_user/friends/-types'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
@@ -9,6 +9,7 @@ import {
 	phrasesCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
+import { Tables } from '@/types/supabase'
 
 export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
 	queryOptions({
@@ -82,6 +83,6 @@ export const usePhrasesFromRequest = (id: string) =>
 	)
 
 export type FulfillRequestResponse = {
-	phrase: PhraseRow
-	translation: TranslationRow
+	phrase: Tables<'phrase'>
+	translation: Tables<'phrase_translation'>
 }

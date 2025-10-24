@@ -1,4 +1,4 @@
-import type { CardStatusEnum, pids, uuid } from '@/types/main'
+import type { pids, uuid } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
@@ -38,6 +38,7 @@ import { useReviewsTodayStats } from '@/hooks/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
+import { CardStatusEnumType } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -188,7 +189,7 @@ function ReviewPageSetup() {
 						phrase_id: pid,
 						lang,
 						uid: userId!,
-						status: 'active' as CardStatusEnum,
+						status: 'active' as CardStatusEnumType,
 					}))
 				)
 				.select()
