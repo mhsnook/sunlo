@@ -41,7 +41,8 @@ export function LangBadge({
 }) {
 	return lang === null ? null : (
 			<Badge variant="lang" className={className}>
-				<Globe className="-ms-0.5" size="10" /> {lang}
+				<Globe className="-ms-0.5" size="10" />
+				<span className="mt-0.5">{lang}</span>
 			</Badge>
 		)
 }
