@@ -181,9 +181,6 @@ export function useReviewMutation(
 			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
 
 			const mergedData = { ...prevData, ...data, day_first_review: !prevData }
-			// this is done instead of using invalidateQueries... why? IDK.
-			// it does ensure that the local cache is updated even when the db
-			// data is not changed (e.g. re-reviewing a card)
 			cardReviewsCollection.utils.writeInsert(mergedData)
 
 			setTimeout(() => {

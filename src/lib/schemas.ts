@@ -190,7 +190,7 @@ export const DeckMetaRawSchema = z.object({
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
-	theme: z.number(),
+	theme: z.number().nullable(),
 })
 
 export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>

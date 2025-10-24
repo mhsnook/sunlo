@@ -38,9 +38,6 @@ export function InviteFriendForm() {
 		},
 		onSuccess: (_, values) => {
 			toast.success(`Invitation sent to ${values.email}.`)
-			/*void queryClient.invalidateQueries({
-				queryKey: ['user', 'friend_invited'],
-			})*/
 		},
 	})
 

@@ -2,11 +2,11 @@ import { useRef } from 'react'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Pencil } from 'lucide-react'
 
-import type { PhraseFullType } from '@/lib/schemas'
+import { TranslationSchema, type PhraseFullType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import {
 	Dialog,
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { ButtonProps } from '@/components/ui/button-variants'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import TranslationTextField from '@/components/fields/translation-text-field'
+import { phrasesCollection } from '@/lib/collections'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -46,7 +47,6 @@ export function AddTranslationsDialog({
 	})
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
-	const queryClient = useQueryClient()
 
 	const addTranslation = useMutation({
 		mutationKey: ['add-translation', phrase.id, phrase.lang],
@@ -66,16 +66,14 @@ export function AddTranslationsDialog({
 			if (!data) throw new Error('Failed to add translation')
 			return data[0]
 		},
-		onSuccess: () => {
+		onSuccess: (data) => {
+			phrasesCollection.utils.writeUpdate({
+				id: phrase.id,
+				translations: [TranslationSchema.parse(data), ...phrase.translations],
+			})
 			toast.success(`Translation added for ${phrase.text}`)
 			close()
 			reset()
-			void queryClient.invalidateQueries({
-				queryKey: ['language', phrase.lang],
-			})
-			void queryClient.invalidateQueries({
-				queryKey: ['user', phrase.lang],
-			})
 		},
 		onError: (error) => {
 			toast.error(error.message)

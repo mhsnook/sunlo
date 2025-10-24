@@ -1,12 +1,12 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
 import { uuid, ProfileInsert } from '@/types/main'
-import { LanguagesKnownSchema } from '@/lib/schemas'
+import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import supabase from '@/lib/supabase-client'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
+import { myProfileCollection } from '@/lib/collections'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -67,8 +68,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 function ProfileCreationForm({ userId }: { userId: string }) {
-	const queryClient = useQueryClient()
-
 	const {
 		register,
 		control,
@@ -92,10 +91,14 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				.select()
 			return data
 		},
-		onSuccess: async (data) => {
+		onSuccess: (data) => {
+			if (!data)
+				throw new Error(
+					`Somehow the server didn't return any data for the new profile...`
+				)
 			console.log(`Success! deck, profile`, data)
+			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
 			toast.success('Success!')
-			await queryClient.invalidateQueries({ queryKey: ['user'] })
 		},
 		onError: (error) => {
 			console.log(`Error:`, error)

@@ -1,8 +1,6 @@
-import { DeckRow } from '@/types/main'
-
 import { useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -28,6 +26,8 @@ import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
+import { decksCollection } from '@/lib/collections'
+import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -100,7 +100,6 @@ const dailyReviewGoalOptions: FancySelectOption[] = [
 ]
 
 function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
-	const queryClient = useQueryClient()
 	const { userId } = useAuth()
 	const {
 		control,
@@ -113,7 +112,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 	})
 
 	const updateDailyGoalMutation = useMutation<
-		DeckRow,
+		Tables<'user_deck'>,
 		PostgrestError,
 		DailyGoalFormInputs
 	>({
@@ -131,11 +130,9 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			toast.success('Your deck settings have been updated.')
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			decksCollection.utils.update(data)
 			reset(data)
+			toast.success('Your deck settings have been updated.')
 		},
 		onError: () => {
 			toast.error(
@@ -215,7 +212,6 @@ const learningGoalOptions: FancySelectOption[] = [
 ]
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const queryClient = useQueryClient()
 	const { userId } = useAuth()
 	const {
 		control,
@@ -228,7 +224,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	})
 
 	const updateDeckGoalMutation = useMutation<
-		DeckRow,
+		Tables<'user_deck'>,
 		PostgrestError,
 		DeckGoalFormInputs
 	>({
@@ -246,11 +242,9 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			toast.success('Your deck settings have been updated.')
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			decksCollection.utils.update(data)
 			reset(data)
+			toast.success('Your deck settings have been updated.')
 		},
 		onError: () => {
 			toast.error(
