@@ -1,10 +1,13 @@
-import { PhraseStub } from '@/types/main'
 import PermalinkButton from '@/components/permalink-button'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-status-dropdown'
 import { PhraseFullFilteredType } from '@/lib/schemas'
 
-export function CardResultSimple({ phrase }: { phrase: PhraseStub | PhraseFullFilteredType }) {
+export function CardResultSimple({
+	phrase,
+}: {
+	phrase: PhraseFullFilteredType
+}) {
 	return (
 		<div className="bg-card space-y-4 rounded-lg border p-4">
 			<div className="flex items-center justify-between">

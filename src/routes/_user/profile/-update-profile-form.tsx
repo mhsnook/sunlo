@@ -1,4 +1,4 @@
-import type { LanguageKnown, ProfileFull, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -7,7 +7,12 @@ import { toast } from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
-import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
+import {
+	LanguagesKnownSchema,
+	LanguagesKnownType,
+	MyProfileSchema,
+	MyProfileType,
+} from '@/lib/schemas'
 import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
@@ -24,11 +29,11 @@ const ProfileEditFormSchema = z.object({
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
 
-export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
+export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 	const initialData: ProfileEditFormInputs = {
 		username: profile.username,
 		avatar_path: profile.avatar_path,
-		languages_known: profile.languages_known as LanguageKnown[],
+		languages_known: profile.languages_known,
 	}
 	const uid: uuid = profile.uid
 
@@ -48,7 +53,7 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 			reset({
 				username: data?.username ?? '',
 				avatar_path: data?.avatar_path ?? null,
-				languages_known: (data?.languages_known as LanguageKnown[]) ?? [],
+				languages_known: (data?.languages_known as LanguagesKnownType) ?? [],
 			})
 			if (data)
 				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))

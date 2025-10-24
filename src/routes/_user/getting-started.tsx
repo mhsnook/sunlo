@@ -5,7 +5,7 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
-import { uuid, ProfileInsert } from '@/types/main'
+import { uuid } from '@/types/main'
 import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
@@ -15,6 +15,7 @@ import supabase from '@/lib/supabase-client'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { myProfileCollection } from '@/lib/collections'
+import { TablesInsert } from '@/types/supabase'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -82,7 +83,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 
 	const mainForm = useMutation({
 		mutationKey: ['user', userId],
-		mutationFn: async (values: ProfileInsert) => {
+		mutationFn: async (values: TablesInsert<'user_profile'>) => {
 			const { data } = await supabase
 				.from('user_profile')
 				.upsert(values)

@@ -30,9 +30,8 @@ import {
 	PhraseFullFullType,
 } from '@/lib/schemas'
 import { Tables } from '@/types/supabase'
-import { PhraseStub } from '@/types/main'
 
-type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType | PhraseStub
+type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType
 interface CardStatusDropdownProps {
 	phrase: AnyPhrase
 	className?: string
@@ -253,7 +252,7 @@ export function CardStatusDropdown({
 export function CardStatusHeart({
 	phrase,
 }: {
-	phrase: PhraseFullFilteredType | PhraseStub
+	phrase: PhraseFullFilteredType
 }) {
 	const mutation = useCardStatusMutation(phrase)
 	const status = phrase.card?.status === 'active' ? 'skipped' : 'active'

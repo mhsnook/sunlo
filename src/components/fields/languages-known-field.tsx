@@ -6,7 +6,6 @@ import {
 	type Path,
 } from 'react-hook-form'
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
-import type { LanguageKnown, LanguageProficiency } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import {
@@ -19,8 +18,15 @@ import {
 import { Label } from '@/components/ui/label'
 import ErrorLabel from './error-label'
 import { ControlledArrayFieldProps } from './types'
+import type {
+	LanguageKnownType,
+	LanguageProficiencyEnumType,
+} from '@/lib/schemas'
 
-const proficiencyLevels: { value: LanguageProficiency; label: string }[] = [
+const proficiencyLevels: {
+	value: LanguageProficiencyEnumType
+	label: string
+}[] = [
 	{ value: 'fluent', label: 'Fluent' },
 	{ value: 'proficient', label: 'Proficient' },
 	{ value: 'beginner', label: 'Beginner' },
@@ -82,7 +88,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 											setValue={langField.onChange}
 											// oxlint-disable-next-line jsx-no-new-array-as-prop
 											disabled={fields
-												.map((f) => (f as LanguageKnown).lang)
+												.map((f: LanguageKnownType) => f.lang)
 												.filter((l) => l !== langField.value)}
 										/>
 									)}

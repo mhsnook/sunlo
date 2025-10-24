@@ -25,6 +25,10 @@ export const LanguageProficiencyEnumSchema = z.enum([
 	'proficient',
 	'beginner',
 ])
+export type LanguageProficiencyEnumType = z.infer<
+	typeof LanguageProficiencyEnumSchema
+>
+
 export const LearningGoalEnumSchema = z.enum(['moving', 'family', 'visiting'])
 export const PhraseRequestStatusEnumSchema = z.enum([
 	'pending',
@@ -47,10 +51,13 @@ export const LanguageKnownSchema = z.object({
 	lang: LangSchema,
 	level: LanguageProficiencyEnumSchema,
 })
+export type LanguageKnownType = z.infer<typeof LanguageKnownSchema>
+
 
 export const LanguagesKnownSchema = z
 	.array(LanguageKnownSchema)
 	.min(1, 'Please add at least one language you know.')
+export type LanguagesKnownType = z.infer<typeof LanguagesKnownSchema>
 
 export const FilterEnumSchema = z.enum([
 	'language_filtered',

@@ -7,7 +7,6 @@ import {
 } from '@supabase/supabase-js'
 import { Route } from '@tanstack/react-router'
 import { LucideIcon } from 'lucide-react'
-import { NonNullableFields } from './utils'
 import { CardReviewType } from '@/lib/schemas'
 
 export type uuid = string
@@ -27,9 +26,6 @@ export type CompositeQueryResults<T> =
 			status: 'not-found'
 			data: null
 	  }
-
-export type LanguageProficiency = 'fluent' | 'proficient' | 'beginner'
-export type LanguageKnown = { lang: string; level: LanguageProficiency }
 
 export type RolesEnum = 'learner' | 'helper' | 'both' | null
 
@@ -56,11 +52,6 @@ export type Tag = {
 export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
 	[key: uuid]: CardReviewType
-}
-export type ReviewsLoaded = {
-	map: ReviewsMap
-	totalReviewed: number
-	totalAgain: number
 }
 
 export type SelectOption = { value: string; label: string }
@@ -93,41 +84,12 @@ export type SBQuery<T> = Promise<PostgrestResponse<T>>
 export type SBQuerySingle<T> = Promise<PostgrestMaybeSingleResponse<T>>
 export type SBMutation<T> = Promise<PostgrestResponse<T>>
 
-export type LanguageRow = Omit<Tables<'language'>, 'alias_of'>
-
-export type PhraseStub = NonNullableFields<{
-	id: uuid
-	text: string
-	lang: string
-
-	translations: Array<{
-		id: uuid
-		text: string
-		lang: string
-	}>
-}>
-
 export type PhraseInsert = TablesInsert<'phrase'>
 export type PhraseCardInsert =
 	Database['public']['Functions']['add_phrase_translation_card']['Args']
 
-export type TranslationInsert = TablesInsert<'phrase_translation'>
-
-export type DeckPids = {
-	all: pids
-	active: pids
-	inactive: pids
-	reviewed: pids
-	reviewed_or_inactive: pids
-	reviewed_last_7d: pids
-	unreviewed_active: pids
-	today_active: pids
-}
-
 export type ReviewsDayMap = { [key: string]: Array<CardReviewType> }
 
-export type CardRow = Tables<'user_card'>
-export type CardMeta = Tables<'user_card_plus'>
 export type CardInsert = TablesInsert<'user_card'>
 export type UserCardInsert = CardInsert // @TODO remove
 
@@ -137,18 +99,7 @@ export type ReviewRow = Tables<'user_card_review'>
 export type ReviewUpdate =
 	Database['public']['Functions']['update_user_card_review']['Args']
 
-export type CardFull = CardMeta & {
-	reviews: Array<ReviewRow>
-}
 
-export type DailyReviewStateFetched =
-	| null
-	| (ReviewStateManifestRow & {
-			user_card_review: Array<ReviewRow>
-	  })
-export type DailyReviewStateLoaded = ReviewStateManifestRow & {
-	reviewsMap: ReviewsMap
-}
 export type ReviewStats = {
 	reviewed: number
 	unreviewed: number
@@ -162,20 +113,3 @@ export type ReviewStats = {
 		index: number
 	}
 }
-export type ReviewStateManifestRow = Tables<'user_deck_review_state'> & {
-	manifest: pids
-}
-
-export type ProfileRow = Tables<'user_profile'> & {
-	languages_known: LanguageKnown[]
-}
-export type ProfileInsert = TablesInsert<'user_profile'>
-export type ProfileMeta = ProfileRow // Tables<'profile_meta'>
-export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
-	avatarUrl: string
-	languagesToShow: Array<string>
-	languages_known: Array<LanguageKnown>
-}
-
-export type PhraseRequest =
-	Database['public']['Tables']['phrase_request']['Row']
