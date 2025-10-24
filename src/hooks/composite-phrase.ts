@@ -54,6 +54,7 @@ function splitTranslations(
 		translations_other,
 	}
 }
+
 export function splitPhraseTranslations(
 	phrase: PhraseFullType,
 	languagesToShow: Array<string>
@@ -63,7 +64,7 @@ export function splitPhraseTranslations(
 } {
 	const { translations_mine, translations_other } = splitTranslations(
 		languagesToShow,
-		phrase.translations
+		phrase.translations ?? []
 	)
 
 	return { ...phrase, translations_mine, translations_other }

@@ -20,10 +20,9 @@ import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { useLanguagePhrasesMap, useLanguagePids } from '@/hooks/use-language'
+import { useLanguagePhrasesSearch, useLanguageTags } from '@/hooks/use-language'
 import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
-import { useLanguageTags } from '@/hooks/use-language'
 import { Separator } from '@/components/ui/separator'
 import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
 
@@ -32,17 +31,12 @@ export const Route = createFileRoute('/_user/learn/$lang/search')({
 	component: SearchTab,
 })
 
-type SearchablePhrase = {
-	pid: uuid
-	text: string
-}
-
 function SearchTab() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
 	const { text: filter, tags: tagsFilter } = Route.useSearch()
 	const [text, setText] = useState(filter)
-	const debouncedText = useDebounce(text, 300)
+	const debouncedText = useDebounce(text, 100)
 
 	useEffect(() => {
 		if (debouncedText !== filter) {
@@ -50,14 +44,12 @@ function SearchTab() {
 		}
 	}, [debouncedText, filter, navigate])
 
-	const { data: phrases } = useLanguagePhrases(lang)
-
-	const { data: languageMeta } = useLanguageMeta(lang)
+	const { data: langTags } = useLanguageTags(lang)
 	const tagOptions = useMemo(
 		() =>
-			(languageMeta?.tags ?? []).map((tag) => ({ value: tag, label: tag })) ??
+			(langTags ?? []).map((tag) => ({ value: tag.name, label: tag.name })) ??
 			[],
-		[languageMeta?.tags]
+		[langTags]
 	)
 
 	const selectedTags = useMemo(
@@ -84,53 +76,11 @@ function SearchTab() {
 		[navigate, selectedTags]
 	)
 
-	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
-		if (!pids || !phrasesMap) return []
-		return pids.map((pid: uuid) => {
-			const phrase = phrasesMap[pid]
-			const tagsText = (phrase.tags ?? [])
-				.map((t: { name: string }) => t.name)
-				.join(', ')
-			return {
-				pid,
-				text: [
-					phrase.text,
-					...phrase.translations.map((t) => t.text),
-					tagsText,
-				].join(', '),
-			}
-		})
-	}, [phrasesMap, pids])
-
-	const searchResults = useMemo(() => {
-		const textFilteredPids =
-			!filter?.trim() ?
-				pids
-			:	searchablePhrases
-					.filter((searchable) =>
-						searchable.text.toUpperCase().includes(filter.toUpperCase())
-					)
-					.map((s) => s.pid)
-
-		if (!textFilteredPids) return []
-		if (!tagsFilter) return textFilteredPids
-		if (phrasesMap === undefined) return []
-
-		if (tagsFilter.length === 0) return textFilteredPids
-
-		return textFilteredPids.filter((pid) => {
-			const phrase = phrasesMap[pid]
-			if (!phrase?.tags) return false
-			return tagsFilter
-				.split(',')
-				.filter(Boolean)
-				.every((selectedTag) =>
-					phrase.tags
-						.filter(Boolean)
-						.some((phraseTag) => phraseTag?.name === selectedTag)
-				)
-		})
-	}, [filter, searchablePhrases, pids, tagsFilter, phrasesMap])
+	const { data: searchResults } = useLanguagePhrasesSearch(
+		lang,
+		debouncedText ?? '',
+		selectedTags
+	)
 
 	return (
 		<Card>

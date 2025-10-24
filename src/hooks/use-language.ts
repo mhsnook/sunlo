@@ -4,6 +4,8 @@ import { langTagsCollection, languagesCollection } from '@/lib/collections'
 import { eq, ilike, inArray, type InitialQueryBuilder } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import { phrasesFull } from '@/lib/live-collections'
+import { useLanguagesToShow } from './use-profile'
+import { splitPhraseTranslations } from './composite-phrase'
 
 export const useLanguageMeta = (lang: string) =>
 	useLiveQuery(
@@ -26,8 +28,9 @@ export const useLanguagePhrasesSearch = (
 	lang: string,
 	queryString: string,
 	tags: string[],
-	filteredPids: pids | null
+	filteredPids?: pids | null
 ) => {
+	const { data: langs } = useLanguagesToShow()
 	return useLiveQuery(
 		(q) => {
 			if (!queryString && !tags.length && filteredPids === null)
@@ -51,7 +54,9 @@ export const useLanguagePhrasesSearch = (
 					)
 				})
 			}
-			return query
+			return query.fn.select(({ phrase }) =>
+				splitPhraseTranslations(phrase, langs)
+			)
 		},
 		[lang, queryString, tags, filteredPids]
 	)

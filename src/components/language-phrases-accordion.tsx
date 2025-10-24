@@ -9,34 +9,25 @@ import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
-import { usePhrase } from '@/hooks/composite-phrase'
-import { pids } from '@/types/main'
-
-interface PhrasesWithOptionalOrder {
-	lang: string
-	pids?: pids | null
-}
+import { PhraseFullFilteredType } from '@/lib/schemas'
 
 export function LanguagePhrasesAccordionComponent({
-	pids = null,
-}: PhrasesWithOptionalOrder) {
-	if (!pids) return null
-
+	phrases,
+}: {
+	phrases: PhraseFullFilteredType[]
+}) {
 	return (
 		<Accordion type="single" collapsible className="w-full">
-			{pids.map((pid) => (
-				<PhraseAccordionItem key={pid} pid={pid} />
+			{phrases.map((phrase) => (
+				<PhraseAccordionItem key={phrase.id} phrase={phrase} />
 			))}
 		</Accordion>
 	)
 }
 
-function PhraseAccordionItem({ pid }: { pid: string }) {
-	const { data: phrase } = usePhrase(pid)
-	if (!phrase) return null // or a loading skeleton
-
+function PhraseAccordionItem({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
-		<AccordionItem value={pid} className="mb-2 rounded px-2 shadow-sm">
+		<AccordionItem value={phrase.id} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
 				<CardStatusDropdown phrase={phrase} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
@@ -68,15 +59,12 @@ function PhraseAccordionItem({ pid }: { pid: string }) {
 						<PermalinkButton
 							to="/learn/$lang/$id"
 							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: phrase.lang, id: pid }}
+							params={{ lang: phrase.lang, id: phrase.id }}
 							variant="outline-accent"
 							text="View details"
 						/>
-						<SharePhraseButton
-							phrase={phrase}
-							variant="outline-accent"
-						/>
-						<PhraseExtraInfo pid={pid} />
+						<SharePhraseButton phrase={phrase} variant="outline-accent" />
+						<PhraseExtraInfo phrase={phrase} />
 					</div>
 				</div>
 			</AccordionContent>
