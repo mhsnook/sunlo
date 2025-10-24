@@ -80,3 +80,11 @@ export const useLanguageTags = (lang: string) => {
 		[lang]
 	)
 }
+
+export const useRequestAnswers = (requestId: uuid) => {
+	return useLiveQuery((q) =>
+		q
+			.from({ phrase: phrasesFull })
+			.where(({ phrase }) => eq(phrase.request_id, requestId))
+	)
+}
