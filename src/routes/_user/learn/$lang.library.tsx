@@ -70,10 +70,6 @@ function DeckLibraryPage() {
 		: filter in deckPids ? (deckPids[filter as DeckOnlyFiltersEnum] as pids)
 		: (recs[filter as CompositeFiltersEnum] as pids)
 	)
-	const searchedPids = useMemo(
-		() => searchedPhrases?.map((p) => p.id),
-		[searchedPhrases]
-	)
 
 	const setSelectedTags = useCallback(
 		(value: SetStateAction<string[]>) => {
@@ -207,15 +203,12 @@ function DeckLibraryPage() {
 				</div>
 				<Separator className="mt-6 mb-2" />
 				<p className="text-muted-foreground pb-2 text-right text-xs italic">
-					{searchedPids?.length ?? 0} of {recs.language.length} phrases
+					{searchedPhrases?.length ?? 0} of {recs.language.length} phrases
 				</p>
 				{recs.language.length > 0 ?
 					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
-						{searchedPids?.length ?
-							<LanguagePhrasesAccordionComponent
-								pids={searchedPids}
-								lang={lang}
-							/>
+						{searchedPhrases?.length ?
+							<LanguagePhrasesAccordionComponent phrases={searchedPhrases} />
 						:	<Empty />}
 					</div>
 				:	<LanguageIsEmpty lang={lang} />}

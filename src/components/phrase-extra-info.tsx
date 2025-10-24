@@ -1,23 +1,20 @@
-import type { CardMetaType } from '@/lib/schemas'
-import type { uuid } from '@/types/main'
+import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
+
 import { ago } from '@/lib/dayjs'
 import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/hooks/use-reviews'
-import { usePhrase } from '@/hooks/composite-phrase'
 
 export default function PhraseExtraInfo({
-	pid,
+	phrase,
 	className,
 	link,
 }: {
-	pid: uuid
+	phrase: PhraseFullFilteredType
 	className?: string
 	link?: boolean
 }) {
-	const { data: phrase } = usePhrase(pid)
-
 	return !phrase ? null : (
 			<ExtraInfo
 				title="User card details"

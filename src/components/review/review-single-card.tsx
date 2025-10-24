@@ -65,7 +65,7 @@ export function ReviewSingleCard({ pid }: { pid: uuid }) {
 				<div
 					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
-					{phrase.translations.map((trans: TranslationType) => (
+					{phrase.translations?.map((trans: TranslationType) => (
 						<div
 							key={trans.id}
 							className="mt-4 flex items-center justify-center gap-2"
@@ -180,7 +180,11 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-					<PhraseExtraInfo pid={phrase.id} link className="w-full px-2 py-1.5" />
+					<PhraseExtraInfo
+						phrase={phrase}
+						link
+						className="w-full px-2 py-1.5"
+					/>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
