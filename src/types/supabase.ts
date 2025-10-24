@@ -58,7 +58,7 @@ export type Database = {
 						foreignKeyName: 'chat_message_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -291,7 +291,7 @@ export type Database = {
 						foreignKeyName: 'phrase_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -414,7 +414,7 @@ export type Database = {
 						foreignKeyName: 'phrase_request_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -547,7 +547,7 @@ export type Database = {
 						foreignKeyName: 'phrase_translation_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -614,7 +614,7 @@ export type Database = {
 						foreignKeyName: 'tag_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 				]
@@ -659,7 +659,7 @@ export type Database = {
 						foreignKeyName: 'user_card_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -897,7 +897,7 @@ export type Database = {
 						foreignKeyName: 'user_deck_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -1056,7 +1056,7 @@ export type Database = {
 					},
 				]
 			}
-			language_plus: {
+			meta_language: {
 				Row: {
 					alias_of: string | null
 					display_order: number | null
@@ -1065,7 +1065,6 @@ export type Database = {
 					name: string | null
 					phrases_to_learn: number | null
 					rank: number | null
-					tags: string[] | null
 				}
 				Relationships: []
 			}
@@ -1120,7 +1119,7 @@ export type Database = {
 						foreignKeyName: 'phrase_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -1163,7 +1162,7 @@ export type Database = {
 						foreignKeyName: 'phrase_request_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -1227,7 +1226,7 @@ export type Database = {
 						foreignKeyName: 'user_card_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{
@@ -1303,7 +1302,7 @@ export type Database = {
 						foreignKeyName: 'user_deck_lang_fkey'
 						columns: ['lang']
 						isOneToOne: false
-						referencedRelation: 'language_plus'
+						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
 					{

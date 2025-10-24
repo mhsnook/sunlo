@@ -25,6 +25,8 @@ import {
 	ChatMessageSchema,
 	type ChatMessageType,
 	DeckMetaRawSchema,
+	LangTagSchema,
+	type LangTagType,
 } from './schemas'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
@@ -79,12 +81,25 @@ export const phrasesCollection = createCollection(
 	})
 )
 
+export const langTagsCollection = createCollection(
+	queryCollectionOptions({
+		queryKey: ['public', 'lang_tag'],
+		getKey: (item: LangTagType) => item.id,
+		queryFn: async () => {
+			const { data } = await supabase.from('tag').select().throwOnError()
+			return data?.map((p) => LangTagSchema.parse(p)) ?? []
+		},
+		schema: LangTagSchema,
+		queryClient,
+	})
+)
+
 export const languagesCollection = createCollection(
 	queryCollectionOptions({
-		queryKey: ['public', 'language_meta'],
+		queryKey: ['public', 'meta_language'],
 		queryFn: async () => {
 			const { data } = await supabase
-				.from('language_plus')
+				.from('meta_language')
 				.select()
 				.throwOnError()
 			return data?.map((item) => LanguageSchema.parse(item)) ?? []

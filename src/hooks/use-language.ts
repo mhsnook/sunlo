@@ -1,6 +1,6 @@
 import type { pids, uuid } from '@/types/main'
 
-import { languagesCollection } from '@/lib/collections'
+import { langTagsCollection, languagesCollection } from '@/lib/collections'
 import { eq, ilike, inArray, type InitialQueryBuilder } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import { phrasesFull } from '@/lib/live-collections'
@@ -73,10 +73,9 @@ export const useLanguageTags = (lang: string) => {
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ language: languagesCollection })
-				.where(({ language }) => eq(language.lang, lang))
-				.findOne()
-				.select(({ language }) => ({ tags: language.tags })),
+				.from({ langTag: langTagsCollection })
+				.where(({ langTag }) => eq(langTag.lang, lang)),
+
 		[lang]
 	)
 }

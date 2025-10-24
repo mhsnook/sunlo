@@ -94,7 +94,6 @@ export type SBQuerySingle<T> = Promise<PostgrestMaybeSingleResponse<T>>
 export type SBMutation<T> = Promise<PostgrestResponse<T>>
 
 export type LanguageRow = Omit<Tables<'language'>, 'alias_of'>
-export type LanguageMeta = Tables<'language_plus'>
 
 export type PhraseStub = NonNullableFields<{
 	id: uuid
@@ -124,13 +123,7 @@ export type DeckPids = {
 	unreviewed_active: pids
 	today_active: pids
 }
-export type DeckLoaded = {
-	meta: DeckMeta
-	pids: DeckPids
-	cardsMap: CardsMap
-	reviews: Array<ReviewRow>
-	reviewsDayMap: ReviewsDayMap
-}
+
 export type ReviewsDayMap = { [key: string]: Array<CardReviewType> }
 
 export type CardRow = Tables<'user_card'>
@@ -182,9 +175,6 @@ export type ProfileFull = NonNullableFields<Tables<'user_profile'>> & {
 	avatarUrl: string
 	languagesToShow: Array<string>
 	languages_known: Array<LanguageKnown>
-}
-export type DecksMap = {
-	[key: string]: DeckMeta
 }
 
 export type PhraseRequest =

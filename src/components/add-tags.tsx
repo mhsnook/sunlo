@@ -21,8 +21,12 @@ import { useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
-import { languagesCollection, phrasesCollection } from '@/lib/collections'
-import { PhraseFullFilteredType, PhraseTagSchema } from '@/lib/schemas'
+import { langTagsCollection, phrasesCollection } from '@/lib/collections'
+import {
+	LangTagSchema,
+	LangTagType,
+	PhraseFullFilteredType,
+} from '@/lib/schemas'
 import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({
@@ -37,7 +41,7 @@ type AddTagsReturnValues = {
 
 export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [open, setOpen] = useState(false)
-	const { data: allLangTagsData } = useLanguageTags(phrase?.lang)
+	const { data: allLangTags } = useLanguageTags(phrase?.lang)
 	const {
 		control,
 		handleSubmit,
@@ -65,26 +69,20 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 		},
 		onSuccess: (data) => {
 			if (data?.tags.length) {
-				languagesCollection.utils.writeUpdate({
-					lang: phrase.lang,
-					tags: [
-						...new Set([
-							...data.tags.map((t) => t.name),
-							...(allLangTagsData?.tags ?? []),
-						]),
-					],
+				data?.tags.map((t) => {
+					langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
 				})
 			}
 			if (data?.phrase_tags.length) {
-				const funnyTags = data?.phrase_tags.map((t) => {
-					// @@TODO ---
-					return null
-				})
+				const langTags =
+					data.phrase_tags
+						.map((t) => langTagsCollection.get(t.tag_id))
+						.filter((t): t is LangTagType => !!t) ?? []
 				phrasesCollection.utils.writeUpdate({
 					id: phrase.id,
 					tags: [
-						...(funnyTags?.map((t) => PhraseTagSchema.parse(t)) ?? []),
 						...(phrase.tags ?? []),
+						...(langTags.map((t) => ({ id: t.id, name: t.name })) ?? []),
 					],
 				})
 			}
@@ -98,14 +96,12 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 		},
 	})
 
-	const phraseTags = phrase?.tags ?? []
 	// oxlint-disable-next-line prefer-set-has
-	const phraseTagNames = phraseTags.map((t) => t.name)
-	const allLangTags = allLangTagsData?.tags ?? []
+	const phraseTagNames = phrase.tags?.map((t) => t.name) ?? []
 	// oxlint-disable-next-line jsx-no-new-array-as-prop
 	const availableTags = allLangTags
-		.filter((t) => !phraseTagNames.includes(t))
-		.map((t) => ({ value: t, label: t }))
+		.filter((t) => !phraseTagNames.includes(t.name))
+		.map((t) => ({ value: t.name, label: t.name }))
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -125,8 +121,8 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 					<div>
 						<h4 className="text-sm font-medium">Current tags</h4>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{phraseTags.length > 0 ?
-								phraseTags.map((tag) => (
+							{phrase.tags?.length ?
+								phrase.tags.map((tag) => (
 									<Badge key={tag.id} variant="secondary">
 										{tag.name}
 									</Badge>

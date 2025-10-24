@@ -159,23 +159,6 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) owner to "postgres";
 
-set
-	default_tablespace = '';
-
-set
-	default_table_access_method = "heap";
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
-
 create
 or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
@@ -522,6 +505,12 @@ alter function "public"."fulfill_phrase_request" (
 	"p_translation_lang" character varying
 ) owner to "postgres";
 
+set
+	default_tablespace = '';
+
+set
+	default_table_access_method = "heap";
+
 create table if not exists
 	"public"."user_card_review" (
 		"id" "uuid" default "gen_random_uuid" () not null,
@@ -844,7 +833,7 @@ comment on column "public"."user_deck"."learning_goal" is 'why are you learning 
 comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
 
 create or replace view
-	"public"."language_plus" as
+	"public"."meta_language" as
 with
 	"first" as (
 		select
@@ -901,19 +890,11 @@ select
 		order by
 			"second"."display_score" desc,
 			"second"."name"
-	) as "display_order",
-	array (
-		select
-			"tag"."name"
-		from
-			"public"."tag"
-		where
-			(("tag"."lang")::"text" = ("second"."lang")::"text")
-	) as "tags"
+	) as "display_order"
 from
 	"second";
 
-alter table "public"."language_plus" owner to "postgres";
+alter table "public"."meta_language" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_tag" (
@@ -950,6 +931,17 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_card" (
@@ -1947,12 +1939,6 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) to "service_role";
 
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
-
 grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
@@ -2208,11 +2194,11 @@ grant all on table "public"."user_deck" to "authenticated";
 
 grant all on table "public"."user_deck" to "service_role";
 
-grant all on table "public"."language_plus" to "anon";
+grant all on table "public"."meta_language" to "anon";
 
-grant all on table "public"."language_plus" to "authenticated";
+grant all on table "public"."meta_language" to "authenticated";
 
-grant all on table "public"."language_plus" to "service_role";
+grant all on table "public"."meta_language" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 
@@ -2231,6 +2217,12 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 

@@ -17,7 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguageMeta, useLanguagePhrasesSearch } from '@/hooks/use-language'
+import { useLanguagePhrasesSearch, useLanguageTags } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
@@ -41,14 +41,14 @@ function DeckLibraryPage() {
 	const recs = useCompositePids(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { data: languageMeta } = useLanguageMeta(lang)
+	const { data: tags } = useLanguageTags(lang)
 
 	const tagOptions = useMemo(
 		() =>
-			!languageMeta ?
+			!tags?.length ?
 				[]
-			:	languageMeta.tags.map((tag) => ({ value: tag, label: tag })),
-		[languageMeta]
+			:	tags.map((tag) => ({ value: tag.name, label: tag.name })),
+		[tags]
 	)
 
 	const selectedTags = useMemo(
@@ -134,7 +134,7 @@ function DeckLibraryPage() {
 		},
 		[navigate]
 	)
-	if (!deckPids || !recs || !languageMeta) {
+	if (!deckPids || !recs || !tags) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
 		)

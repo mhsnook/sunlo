@@ -29,7 +29,7 @@ export const phrasesFull = createLiveQueryCollection({
 				request,
 				searchableText: [
 					phrase.text,
-					...phrase.translations.map((t) => t.text),
+					...(phrase.translations?.map((t) => t.text) ?? []),
 					...(phrase.tags ?? []).map((t) => t.name),
 					request?.prompt,
 				].join(', '),

@@ -8,6 +8,7 @@ import { setTheme } from '@/lib/deck-themes'
 import {
 	cardReviewsCollection,
 	decksCollection,
+	langTagsCollection,
 	phrasesCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
@@ -15,12 +16,12 @@ import {
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
 	loader: async ({ params: { lang } }) => {
-		const decksPromise = decksCollection.preload()
+		const langTagsPromise = langTagsCollection.preload()
 		const daysPromise = reviewDaysCollection.preload()
 		const reviewsPromise = cardReviewsCollection.preload()
 		const phrasesPromise = phrasesCollection.preload()
 		await Promise.all([
-			decksPromise,
+			langTagsPromise,
 			daysPromise,
 			reviewsPromise,
 			phrasesPromise,

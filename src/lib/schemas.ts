@@ -88,6 +88,16 @@ export const MyProfileSchema = PublicProfileSchema.extend({
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>
 
+export const LangTagSchema = z.object({
+	id: z.string().uuid(),
+	created_at: z.string(),
+	name: z.string(),
+	lang: LangSchema,
+	added_by: z.string().uuid(),
+})
+
+export type LangTagType = z.infer<typeof LangTagSchema>
+
 export const PhraseTagSchema = z.object({
 	id: z.string().uuid(),
 	name: z.string(),
@@ -166,7 +176,6 @@ export const LanguageSchema = z.object({
 	phrases_to_learn: z.number().default(0),
 	rank: z.number().nullable(),
 	display_order: z.number().nullable(),
-	tags: z.array(z.string()),
 })
 
 export type LanguageType = z.infer<typeof LanguageSchema>
