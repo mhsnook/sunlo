@@ -1,8 +1,6 @@
-import { LanguageLoaded, PhraseStub } from '@/types/main'
-
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useFieldArray, useForm, Controller, FieldError } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -23,12 +21,24 @@ import { Textarea } from '@/components/ui/textarea'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
-import { useProfile } from '@/hooks/use-profile'
+import { useLanguagesToShow, useProfile } from '@/hooks/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { mapArray } from '@/lib/utils'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
+import {
+	PhraseFullFilteredType,
+	PhraseFullSchema,
+	PhraseFullType,
+} from '@/lib/schemas'
+import { phrasesCollection } from '@/lib/collections'
+import { CompositeTypes } from '@/types/supabase'
+
+type BulkAddPhrasesResponse = Array<
+	CompositeTypes<'phrase_with_translations_output'> & {
+		card: null
+	}
+>
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -56,11 +66,11 @@ export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
-	const queryClient = useQueryClient()
 	const { data: profile } = useProfile()
+	const { data: languagesToShow } = useLanguagesToShow()
 
 	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
-		Array<PhraseStub>
+		Array<PhraseFullFilteredType>
 	>([])
 
 	const {
@@ -89,7 +99,7 @@ function BulkAddPhrasesPage() {
 	})
 
 	const bulkAddMutation = useMutation<
-		Array<PhraseStub> | null,
+		BulkAddPhrasesResponse | null,
 		Error,
 		BulkAddPhrasesFormValues
 	>({
@@ -100,31 +110,29 @@ function BulkAddPhrasesPage() {
 			}
 			const { data, error } = await supabase.rpc('bulk_add_phrases', payload)
 			if (error) throw error
-			return data
+			return data.map((p) => ({ ...p, card: null }))
 		},
 		onSuccess: (newlyAddedPhrases) => {
 			if (!newlyAddedPhrases) return
 			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
-			const newPhrasesMap = mapArray(
-				newlyAddedPhrases.map((p) =>
-					splitPhraseTranslations(p, profile?.languagesToShow ?? [])
-				),
-				'id'
+			const parsedPhrases: PhraseFullType[] = newlyAddedPhrases.map((p) =>
+				PhraseFullSchema.parse(p)
 			)
-			const newPids = newlyAddedPhrases.map((p) => p.id)
-			queryClient.setQueryData(
-				['language', lang],
-				(oldData: LanguageLoaded) => ({
-					meta: oldData.meta,
-					phrasesMap: {
-						...oldData.phrasesMap,
-						...newPhrasesMap,
-					},
-					pids: [...oldData.pids, ...newPids],
-				})
+			// We need to add the user id to the phrase and translations before caching
+			const phrasesWithUser = parsedPhrases.map((p) => ({
+				...p,
+				added_by: profile!.uid,
+				translations: p.translations.map((t) => ({
+					...t,
+					added_by: profile!.uid,
+				})),
+			}))
+			phrasesCollection.utils.writeInsert(phrasesWithUser)
+			const newPhrases = parsedPhrases.map((p) =>
+				splitPhraseTranslations(p, languagesToShow ?? [])
 			)
-			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
-			setSuccessfullyAddedPhrases((prev) => [...newlyAddedPhrases, ...prev])
+
+			setSuccessfullyAddedPhrases((prev) => [...newPhrases, ...prev])
 			// Reset the form for the next batch
 			reset({
 				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
