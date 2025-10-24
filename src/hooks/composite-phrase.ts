@@ -13,14 +13,22 @@ export const usePhrase = (
 	const { data: languagesToShow, isLoading: isLoading1 } = useLanguagesToShow()
 	const { data: phrase, isLoading: isLoading2 } = useLanguagePhrase(pid)
 
-	if (isLoading2) return { data: null, status: 'pending' }
+	if (isLoading2) return { status: 'pending', data: undefined }
 	if (!phrase) return { data: null, status: 'not-found' }
-	if (isLoading1) return { data: phrase, status: 'partial' }
-	if (!languagesToShow.length) return { data: phrase, status: 'complete' }
+	const partial: PhraseFullFilteredType = {
+		...phrase,
+		translations_mine: phrase.translations,
+		translations_other: [],
+	}
+	if (isLoading1) return { data: partial, status: 'partial' }
+	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
-	const phraseFiltered = splitPhraseTranslations(phrase, languagesToShow)
+	const phraseFiltered: PhraseFullFilteredType = splitPhraseTranslations(
+		phrase,
+		languagesToShow
+	)
 
-	return { data: phraseFiltered as PhraseFullFilteredType, status: 'complete' }
+	return { data: phraseFiltered, status: 'complete' }
 }
 
 function splitTranslations(

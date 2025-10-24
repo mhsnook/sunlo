@@ -11,8 +11,10 @@ export const phrasesFull = createLiveQueryCollection({
 	query: (q) =>
 		q
 			.from({ phrase: phrasesCollection })
-			.join({ profile: publicProfilesCollection }, ({ phrase, profile }) =>
-				eq(phrase.added_by, profile.uid)
+			.join(
+				{ profile: publicProfilesCollection },
+				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
+				'inner'
 			)
 			.join({ request: phraseRequestsCollection }, ({ phrase, request }) =>
 				eq(phrase.request_id, request.id)

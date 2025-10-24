@@ -22,17 +22,17 @@ export type pids = Array<uuid>
 export type LangOnlyComponentProps = {
 	lang: string
 }
-export type OnePhraseComponentProps = {
-	lang: string
-	pid: uuid
-}
 
 export type CompositeQueryResults<T> =
+	| { status: 'pending'; data: undefined }
 	| {
+			status: 'complete' | 'partial'
 			data: T
-			status: 'partial' | 'complete'
 	  }
-	| { data: null; status: 'pending' | 'not-found' }
+	| {
+			status: 'not-found'
+			data: null
+	  }
 
 export type LanguageProficiency = 'fluent' | 'proficient' | 'beginner'
 export type LanguageKnown = { lang: string; level: LanguageProficiency }
