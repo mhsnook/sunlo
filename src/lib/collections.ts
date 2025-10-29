@@ -1,4 +1,7 @@
-import { createCollection } from '@tanstack/react-db'
+import {
+	createCollection,
+	localOnlyCollectionOptions,
+} from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 
 import {
@@ -66,18 +69,9 @@ export const phraseRequestsCollection = createCollection(
 )
 
 export const phrasesCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['public', 'phrase_full'],
+	localOnlyCollectionOptions({
 		getKey: (item: PhraseFullType) => item.id,
-		queryFn: async () => {
-			const { data } = await supabase
-				.from('meta_phrase_info')
-				.select('*, translations:phrase_translation(*)')
-				.throwOnError()
-			return data?.map((p) => PhraseFullSchema.parse(p)) ?? []
-		},
 		schema: PhraseFullSchema,
-		queryClient,
 	})
 )
 

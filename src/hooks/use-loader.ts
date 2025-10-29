@@ -13,110 +13,84 @@ Read more: /plans/db-subscriptions
 ```
 */
 
+import { phrasesCollection } from '@/lib/collections'
+import { PhraseFullSchema } from '@/lib/schemas'
+import supabase from '@/lib/supabase-client'
+import { uuid } from '@/types/main'
+import { Tables } from '@/types/supabase'
 import { Collection } from '@tanstack/db'
-import { skipToken } from '@tanstack/react-query'
-import type {
-	DefaultError,
-	QueryClient,
-	QueryFunction,
-	QueryFunctionContext,
-	QueryKey,
-	QueryOptions,
-	WithRequired,
-} from '@tanstack/react-query'
-import { useQuery } from '@tanstack/react-query'
+import { queryOptions } from '@tanstack/react-query'
+import * as z from 'zod'
 import type { ZodSchema } from 'zod'
 
-type LoaderOptions<
-	TItem extends object,
-	TError = DefaultError,
-	TQueryKey extends QueryKey = QueryKey,
-> = WithRequired<
-	Omit<
-		QueryOptions<ReadonlyArray<TItem>, TError, boolean, TQueryKey>,
-		'select'
-	>,
-	'queryKey' | 'queryFn'
-> & {
-	collection: Collection<TItem>
-	schema: ZodSchema<TItem>
+const phrasesQueryBuilder = supabase
+	.from('meta_phrase_info')
+	.select('*, translations:phrase_translation(*)')
+	.throwOnError()
+
+type PhraseFetched = Tables<'meta_phrase_info'> & {
+	translations: Tables<'phrase_translation'>[]
 }
 
-async function loadifyFn<TItem extends object, TQueryKey extends QueryKey>(
-	queryFn:
-		| QueryFunction<ReadonlyArray<TItem> | null, TQueryKey>
-		| typeof skipToken,
-	context: QueryFunctionContext<TQueryKey>,
-	collection: Collection<TItem>,
-	schema: ZodSchema<TItem>
-): Promise<boolean | null> {
-	if (queryFn === skipToken) return null
-	const data = await queryFn(context)
+function collectify<TItem>(
+	data: TItem[] | null,
+	collection: Collection<z.infer<typeof schema>>,
+	schema: ZodSchema
+) {
+	if (!data || !Array.isArray(data)) return false
 
-	if (Array.isArray(data) && data.length > 0) {
-		collection.utils.writeBatch(() => {
-			data.forEach((item) => collection.utils.writeInsert(schema.parse(item)))
-		})
-		return true
-	}
+	data.forEach((item: TItem) => collection.insert(schema.parse(item)))
 
-	return false
+	return true
 }
 
-export function useLoader<
-	TItem extends object,
-	TError = DefaultError,
-	TQueryKey extends QueryKey = QueryKey,
->({ collection, schema, ...options }: LoaderOptions<TItem, TError, TQueryKey>) {
-	const { queryKey, queryFn, ...query } = options
-	return useQuery<ReadonlyArray<TItem> | null, TError, boolean | null, TQueryKey>({
-		...query,
-		queryKey,
-		queryFn: (context) =>
-			loadifyFn<TItem, TQueryKey>(queryFn, context, collection, schema),
+export const phraseLanguageLoaderQuery = (lang: string) =>
+	queryOptions({
+		queryKey: ['public', 'phrase_full', 'lang', lang],
+		queryFn: async () => {
+			const { data: phrases } = await phrasesQueryBuilder.eq('lang', lang)
+			return collectify<PhraseFetched>(
+				phrases,
+				phrasesCollection,
+				PhraseFullSchema
+			)
+		},
+		enabled: !!lang,
+		staleTime: Infinity,
+		refetchOnMount: false,
+		refetchOnWindowFocus: false,
 	})
-}
 
-export async function prefetchLoader<
-	TItem extends object,
-	TError = DefaultError,
-	TQueryKey extends QueryKey = QueryKey,
->(
-	client: QueryClient,
-	options: LoaderOptions<TItem, TError, TQueryKey>
-): Promise<void> {
-	const { queryKey, queryFn, collection, schema, ...query } = options
-	return client.prefetchQuery<
-		ReadonlyArray<TItem> | null,
-		TError,
-		boolean,
-		TQueryKey
-	>({
-		queryKey,
-		queryFn: (context) =>
-			loadifyFn<TItem, TQueryKey>(queryFn, context, collection, schema),
-		...query,
+export const phraseIdsLoaderQuery = (pids: uuid[]) =>
+	queryOptions({
+		queryKey: ['public', 'phrase_full', 'pids', pids],
+		queryFn: async () => {
+			const { data: phrases } = await phrasesQueryBuilder.in('id', pids)
+			return collectify<PhraseFetched>(
+				phrases,
+				phrasesCollection,
+				PhraseFullSchema
+			)
+		},
+		enabled: !!pids,
+		staleTime: 120_000,
+		refetchOnMount: true,
+		refetchOnWindowFocus: false,
 	})
-}
 
-export async function ensureLoaderData<
-	TItem extends object,
-	TError = DefaultError,
-	TQueryKey extends QueryKey = QueryKey,
->(
-	client: QueryClient,
-	options: LoaderOptions<TItem, TError, TQueryKey>
-): Promise<boolean> {
-	const { queryKey, queryFn, collection, schema, ...query } = options
-	return client.ensureQueryData<
-		ReadonlyArray<TItem> | null,
-		TError,
-		boolean,
-		TQueryKey
-	>({
-		queryKey,
-		queryFn: (context) =>
-			loadifyFn<TItem, TQueryKey>(queryFn, context, collection, schema),
-		...query,
+export const phraseAddedByLoaderQuery = (uids: uuid[]) =>
+	queryOptions({
+		queryKey: ['public', 'phrase_full', 'added_py', uids],
+		queryFn: async () => {
+			const { data: phrases } = await phrasesQueryBuilder.in('added_by', uids)
+			return collectify<PhraseFetched>(
+				phrases,
+				phrasesCollection,
+				PhraseFullSchema
+			)
+		},
+		enabled: !!uids,
+		staleTime: 120_000,
+		refetchOnMount: true,
+		refetchOnWindowFocus: false,
 	})
-}

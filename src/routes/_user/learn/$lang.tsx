@@ -9,17 +9,19 @@ import {
 	cardReviewsCollection,
 	decksCollection,
 	langTagsCollection,
-	phrasesCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
+import { phraseLanguageLoaderQuery } from '@/hooks/use-loader'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	loader: async ({ params: { lang } }) => {
+	loader: async ({ params: { lang }, context: { queryClient } }) => {
 		const langTagsPromise = langTagsCollection.preload()
 		const daysPromise = reviewDaysCollection.preload()
 		const reviewsPromise = cardReviewsCollection.preload()
-		const phrasesPromise = phrasesCollection.preload()
+		const phrasesPromise = queryClient.ensureQueryData(
+			phraseLanguageLoaderQuery(lang)
+		)
 		await Promise.all([
 			langTagsPromise,
 			daysPromise,
