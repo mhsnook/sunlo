@@ -32,6 +32,7 @@ import { queryClient } from './query-client'
 import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'
 import { themes } from './deck-themes'
+import { queryOptions } from '@tanstack/react-query'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -110,18 +111,22 @@ export const languagesCollection = createCollection(
 	})
 )
 
+export const myProfileQuery = queryOptions({
+	queryKey: ['user', 'profile'],
+	queryFn: async () => {
+		const { data } = await supabase
+			.from('user_profile')
+			.select()
+			.throwOnError()
+			.maybeSingle()
+		if (!data) return []
+		return [MyProfileSchema.parse(data)]
+	},
+})
+
 export const myProfileCollection = createCollection(
 	queryCollectionOptions({
-		queryKey: ['user', 'profile'],
-		queryFn: async () => {
-			const { data } = await supabase
-				.from('user_profile')
-				.select()
-				.throwOnError()
-				.maybeSingle()
-			if (!data) return []
-			return [MyProfileSchema.parse(data)]
-		},
+		...myProfileQuery,
 		getKey: (item: MyProfileType) => item.uid,
 		queryClient,
 		schema: MyProfileSchema,

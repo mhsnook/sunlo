@@ -25,9 +25,9 @@ import {
 	chatMessagesCollection,
 	decksCollection,
 	friendSummariesCollection,
-	myProfileCollection,
+	myProfileQuery,
 } from '@/lib/collections'
-import { ChatMessageSchema } from '@/lib/schemas'
+import { ChatMessageSchema, MyProfileType } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -45,20 +45,26 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
-		return context.auth
 	},
-	loader: async ({ location }) => {
-		const profilePromise = myProfileCollection.toArrayWhenReady()
-		const friendsPromise = friendSummariesCollection.preload()
-		const decksPromise = decksCollection.preload()
-		await Promise.all([profilePromise, friendsPromise, decksPromise])
+	loader: async ({ location, context: { queryClient } }) => {
+		// The AuthProvider should have already fetched the profile
+		const profile: MyProfileType[] | undefined =
+			await queryClient.ensureQueryData(myProfileQuery)
 
-		const data = myProfileCollection.toArray[0]
-		// if for some reason there is no profile, we must create one!
+		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
-			// eslint-disable-next-line @typescript-eslint/only-throw-error
-			if (!data) throw redirect({ to: '/getting-started' })
-			// else await queryClient.ensureQueryData(baseLoaderQuery(userId))
+			// The profile data is an array; we check if it's empty.
+			if (!profile || profile.length === 0) {
+				console.log(
+					`Redirecting to /getting-started because no profile was found.`
+				)
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw redirect({ to: '/getting-started' })
+			} else {
+				const friendsPromise = friendSummariesCollection.preload()
+				const decksPromise = decksCollection.preload()
+				await Promise.all([friendsPromise, decksPromise])
+			}
 		}
 
 		return {

@@ -5,7 +5,7 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
-import { uuid } from '@/types/main'
+import { TitleBar, uuid } from '@/types/main'
 import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
@@ -25,11 +25,17 @@ export const Route = createFileRoute('/_user/getting-started')({
 	validateSearch: (search?: Record<string, unknown>): GettingStartedProps => {
 		return search ?
 				{
-					referrer: (search.referrer as string) || '',
+					referrer: (search.referrer as string) || undefined,
 				}
 			:	{}
 	},
 	component: GettingStartedPage,
+	loader: () => ({
+		titleBar: {
+			title: `Getting Started`,
+			subtitle: `Set your username and dive in!`,
+		} as TitleBar,
+	}),
 })
 
 function GettingStartedPage() {
@@ -42,7 +48,7 @@ function GettingStartedPage() {
 		: userRole === 'learner' ? '/learn/add-deck'
 		: '/friends'
 
-	return profile !== null ?
+	return profile ?
 			<Navigate to={nextPage} />
 		:	<main className="w-app px-[5cqw] py-10">
 				<div className="my-4 space-y-4 text-center">

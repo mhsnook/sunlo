@@ -1,7 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
-
-import { useProfile } from '@/hooks/use-profile'
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
@@ -13,11 +11,8 @@ export const Route = createFileRoute('/_user/learn/')({
 })
 
 function Page() {
-	const { data: profile } = useProfile()
 	const { data: decks } = useDecks()
-	if (!profile) return null
 	const activeDecks = decks.filter((i) => !i.archived)
-
 	return (
 		<main className="w-full space-y-6">
 			{activeDecks.length > 0 ?
