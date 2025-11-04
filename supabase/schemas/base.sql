@@ -844,7 +844,7 @@ comment on column "public"."user_deck"."learning_goal" is 'why are you learning 
 comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
 
 create or replace view
-	"public"."language_plus" as
+	"public"."meta_language" as
 with
 	"first" as (
 		select
@@ -901,19 +901,11 @@ select
 		order by
 			"second"."display_score" desc,
 			"second"."name"
-	) as "display_order",
-	array (
-		select
-			"tag"."name"
-		from
-			"public"."tag"
-		where
-			(("tag"."lang")::"text" = ("second"."lang")::"text")
-	) as "tags"
+	) as "display_order"
 from
 	"second";
 
-alter table "public"."language_plus" owner to "postgres";
+alter table "public"."meta_language" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_tag" (
@@ -2205,11 +2197,11 @@ grant all on table "public"."user_deck" to "authenticated";
 
 grant all on table "public"."user_deck" to "service_role";
 
-grant all on table "public"."language_plus" to "anon";
+grant all on table "public"."meta_language" to "anon";
 
-grant all on table "public"."language_plus" to "authenticated";
+grant all on table "public"."meta_language" to "authenticated";
 
-grant all on table "public"."language_plus" to "service_role";
+grant all on table "public"."meta_language" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 

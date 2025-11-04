@@ -12,7 +12,7 @@ import { mapArray } from '@/lib/utils'
 
 export async function fetchLanguage(lang: string): Promise<LanguageLoaded> {
 	const { data } = await supabase
-		.from('language_plus')
+		.from('meta_language')
 		.select(
 			`*, phrases:meta_phrase_info(*, translations:phrase_translation(*))`
 		)
@@ -87,7 +87,15 @@ export const useLanguagePhraseSuspense = (pid: uuid, lang: string) => {
 	})
 }
 
-const selectTags = (data: LanguageLoaded) => data.meta.tags
+const selectTags = (data: LanguageLoaded) => {
+	const resultSet = new Set<string>()
+	Object.entries(data.phrasesMap).forEach(([_, i]) =>
+		i.tags?.forEach((t) => {
+			if (t && typeof t === 'object' && 'name' in t) resultSet.add(t.name)
+		})
+	)
+	return Array.from(resultSet)
+}
 export const useLanguageTags = (lang: string) =>
 	useQuery({
 		...languageQueryOptions(lang),
