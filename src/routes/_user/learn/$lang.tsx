@@ -12,6 +12,7 @@ import {
 	phrasesCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
+import { useDeckMeta } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -51,13 +52,14 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 })
 
 function LanguageLayout() {
-	const { theme } = Route.useLoaderData()
+	const params = Route.useParams()
+	const { data: deck } = useDeckMeta(params.lang)
 	useEffect(() => {
-		setTheme(document.documentElement, theme ?? undefined)
+		if (typeof deck?.theme === 'number')
+			setTheme(document.documentElement, deck?.theme ?? undefined)
 		return () => {
-			console.log('removing theme')
 			setTheme()
 		}
-	}, [theme])
+	}, [deck?.theme])
 	return <Outlet />
 }
