@@ -141,13 +141,15 @@ export const decksCollection = createCollection(
 				.from('user_deck_plus')
 				.select()
 				.throwOnError()
-			return data
-				?.map((item) => DeckMetaRawSchema.parse(item))
-				.toSorted(sortDecksByCreation)
-				.map((d, i) => ({
-					...d,
-					theme: i % themes.length,
-				}))
+			return (
+				data
+					?.map((item) => DeckMetaRawSchema.parse(item))
+					.toSorted(sortDecksByCreation)
+					.map((d, i) => ({
+						...d,
+						theme: i % themes.length,
+					})) ?? []
+			)
 		},
 		getKey: (item: DeckMetaType) => item.lang,
 		queryClient,
