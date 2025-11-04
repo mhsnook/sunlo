@@ -26,6 +26,13 @@ import supabase from '@/lib/supabase-client'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button-variants'
+import { Tables } from '@/types/supabase'
+import {
+	CardMetaSchema,
+	PhraseFullSchema,
+	TranslationSchema,
+} from '@/lib/schemas'
+import { cardsCollection, phrasesCollection } from '@/lib/collections'
 
 export interface SearchParams {
 	text?: string
@@ -98,9 +105,22 @@ function AddPhraseTab() {
 				.rpc('add_phrase_translation_card', ins)
 				.throwOnError()
 
-			return data
+			return data as {
+				phrase: Tables<'phrase'>
+				translation: Tables<'phrase_translation'>
+				card: Tables<'user_card'>
+			}
 		},
 		onSuccess: (data, { translation_lang }) => {
+			if (!data)
+				throw new Error('No data returned from add_phrase_translation_card')
+			phrasesCollection.utils.writeInsert(
+				PhraseFullSchema.parse({
+					...data.phrase,
+					translations: [TranslationSchema.parse(data.translation)],
+				})
+			)
+			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
 			toast.success(
 				'New phrase has been added to the public library and will appear in your next review'
 			)

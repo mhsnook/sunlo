@@ -144,8 +144,8 @@ export const PhraseFullSchema = z.object({
 	rank_most_stable: z.number().nullable().default(null),
 	rank_newest: z.number().nullable().default(null),
 	request_id: z.string().uuid().nullable().default(null),
-	tags: z.array(PhraseTagSchema).nullable().default([]),
-	translations: z.array(TranslationSchema).nullable().default([]),
+	tags: z.preprocess((val) => val ?? [], z.array(PhraseTagSchema)),
+	translations: z.preprocess((val) => val ?? [], z.array(TranslationSchema)),
 })
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>

@@ -128,25 +128,29 @@ or replace function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text" default null::"text",
 	"translation_text_script" "text" default null::"text"
-) returns "uuid" language "plpgsql" as $$
+) returns "json" language "plpgsql" as $$
 DECLARE
-    new_phrase_id uuid;
+    new_phrase public.phrase;
+    new_translation public.phrase_translation;
+    new_card public.user_card;
 
 BEGIN
     -- Insert a new phrase and get the id
     INSERT INTO public.phrase (text, lang, text_script)
     VALUES (phrase_text, phrase_lang, phrase_text_script)
-    RETURNING id INTO new_phrase_id;
+    RETURNING * INTO new_phrase;
 
     -- Insert the translation for the new phrase
     INSERT INTO public.phrase_translation (phrase_id, text, lang, text_script)
-    VALUES (new_phrase_id, translation_text, translation_lang, translation_text_script);
+    VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
+    RETURNING * INTO new_translation;
 
     -- Insert a new user card for the authenticated user
     INSERT INTO public.user_card (phrase_id, status, lang)
-    VALUES (new_phrase_id, 'active', phrase_lang);
+    VALUES (new_phrase.id, 'active', phrase_lang)
+    RETURNING * INTO new_card;
 
-    RETURN new_phrase_id;
+    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
 END;
 $$;
 
@@ -158,23 +162,6 @@ alter function "public"."add_phrase_translation_card" (
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
 ) owner to "postgres";
-
-set
-	default_tablespace = '';
-
-set
-	default_table_access_method = "heap";
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
 
 create
 or replace function "public"."add_tags_to_phrase" (
@@ -521,6 +508,12 @@ alter function "public"."fulfill_phrase_request" (
 	"p_translation_text" "text",
 	"p_translation_lang" character varying
 ) owner to "postgres";
+
+set
+	default_tablespace = '';
+
+set
+	default_table_access_method = "heap";
 
 create table if not exists
 	"public"."user_card_review" (
@@ -942,6 +935,17 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_card" (
@@ -1936,12 +1940,6 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) to "service_role";
 
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
-
 grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
@@ -2220,6 +2218,12 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 
