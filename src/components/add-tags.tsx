@@ -64,22 +64,8 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 				phrase_tags: Tables<'phrase_tag'>[]
 			}
 		},
-		onSuccess: (data, values) => {
+		onSuccess: (_, values) => {
 			toast.success('Tags added!')
-			const newLangTags = [
-				...(allLangTagsData ?? []),
-				...(data ?? { tags: [] }).tags.map((t) => t.name),
-			]
-			if (data?.tags.length) {
-				void queryClient.setQueryData<LanguageLoaded>(
-					['language', lang],
-					(old) => {
-						return produce(old!, (draft) => {
-							draft.meta.tags = newLangTags
-						})
-					}
-				)
-			}
 			if (values.tags.length) {
 				void queryClient.setQueryData<LanguageLoaded>(
 					['language', lang],
