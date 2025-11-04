@@ -993,6 +993,7 @@ export type Database = {
 					most_recent_uid_by: string | null
 					most_recent_uid_for: string | null
 					status: string | null
+					uid: string | null
 					uid_less: string | null
 					uid_more: string | null
 				}
