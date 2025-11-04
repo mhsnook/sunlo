@@ -53,7 +53,6 @@ export const LanguageKnownSchema = z.object({
 })
 export type LanguageKnownType = z.infer<typeof LanguageKnownSchema>
 
-
 export const LanguagesKnownSchema = z
 	.array(LanguageKnownSchema)
 	.min(1, 'Please add at least one language you know.')
@@ -81,8 +80,8 @@ export type PhraseSearchType = z.infer<typeof PhraseSearchSchema>
 
 export const PublicProfileSchema = z.object({
 	uid: z.string().uuid(),
-	username: z.string().default(''),
-	avatar_path: z.string().default(''),
+	username: z.preprocess((val) => val ?? '', z.string()),
+	avatar_path: z.preprocess((val) => val ?? '', z.string()),
 })
 
 export type PublicProfileType = z.infer<typeof PublicProfileSchema>
@@ -251,7 +250,7 @@ export const DailyReviewStateSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
 	lang: LangSchema,
-	manifest: z.array(z.string().uuid()),
+	manifest: z.preprocess((val) => val ?? [], z.array(z.string().uuid())),
 	uid: z.string().uuid(),
 })
 
