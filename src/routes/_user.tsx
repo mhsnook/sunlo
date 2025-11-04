@@ -104,7 +104,7 @@ function UserLayout() {
 	const { userId } = useAuth()
 	useEffect(() => {
 		if (!userId) return
-		const channel = supabase
+		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
 			.on(
 				'postgres_changes',
@@ -127,15 +127,8 @@ function UserLayout() {
 				}
 			)
 			.subscribe()
-		return () => {
-			void supabase.removeChannel(channel)
-		}
-	}, [userId, queryClient])
 
-	useEffect(() => {
-		if (!userId) return
-
-		const channel = supabase
+		const chatChannel = supabase
 			.channel('user-chats')
 			.on(
 				'postgres_changes',
@@ -153,8 +146,10 @@ function UserLayout() {
 				}
 			)
 			.subscribe()
+
 		return () => {
-			void supabase.removeChannel(channel)
+			void supabase.removeChannel(friendRequestChannel)
+			void supabase.removeChannel(chatChannel)
 		}
 	}, [userId, queryClient])
 

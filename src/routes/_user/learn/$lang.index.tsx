@@ -56,7 +56,6 @@ function DeckOverview() {
 	const { lang } = Route.useParams()
 	const { data: meta } = useDeckMeta(lang)
 	const { data: deckPids } = useDeckPids(lang)
-	console.log(deckPids)
 	const { data: routineStats } = useDeckRoutineStats(lang)
 	if (!meta || !deckPids || routineStats === undefined) {
 		console.log(`oops, deck not found:`, meta, deckPids, routineStats)

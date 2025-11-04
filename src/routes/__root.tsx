@@ -15,10 +15,12 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
 import { useCallback } from 'react'
 import { OctogonMinusDangerBadge } from '@/components/ui/badge'
+import { MyProfileType } from '@/lib/schemas'
 
 export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
+	profile: MyProfileType | null
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
