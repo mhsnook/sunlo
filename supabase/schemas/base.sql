@@ -759,7 +759,11 @@ select distinct
 	"a"."created_at" as "most_recent_created_at",
 	"a"."uid_by" as "most_recent_uid_by",
 	"a"."uid_for" as "most_recent_uid_for",
-	"a"."action_type" as "most_recent_action_type"
+	"a"."action_type" as "most_recent_action_type",
+	case
+		when ("a"."uid_by" = "auth"."uid" ()) then "a"."uid_for"
+		else "a"."uid_by"
+	end as "uid"
 from
 	"public"."friend_request_action" "a"
 order by
