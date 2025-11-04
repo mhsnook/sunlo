@@ -159,6 +159,23 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) owner to "postgres";
 
+set
+	default_tablespace = '';
+
+set
+	default_table_access_method = "heap";
+
+create table if not exists
+	"public"."tag" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"name" "text" not null,
+		"lang" character varying not null,
+		"added_by" "uuid" default "auth"."uid" ()
+	);
+
+alter table "public"."tag" owner to "postgres";
+
 create
 or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
@@ -504,12 +521,6 @@ alter function "public"."fulfill_phrase_request" (
 	"p_translation_text" "text",
 	"p_translation_lang" character varying
 ) owner to "postgres";
-
-set
-	default_tablespace = '';
-
-set
-	default_table_access_method = "heap";
 
 create table if not exists
 	"public"."user_card_review" (
@@ -931,17 +942,6 @@ from
 	"public"."user_profile";
 
 alter table "public"."public_profile" owner to "postgres";
-
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
-
-alter table "public"."tag" owner to "postgres";
 
 create table if not exists
 	"public"."user_card" (
@@ -1899,9 +1899,6 @@ alter publication "supabase_realtime" owner to "postgres";
 alter publication "supabase_realtime"
 add table only "public"."chat_message";
 
-alter publication "supabase_realtime"
-add table only "public"."friend_request_action";
-
 revoke USAGE on schema "public"
 from
 	PUBLIC;
@@ -1938,6 +1935,12 @@ grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
 ) to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
 
 grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
@@ -2217,12 +2220,6 @@ grant all on table "public"."public_profile" to "anon";
 grant all on table "public"."public_profile" to "authenticated";
 
 grant all on table "public"."public_profile" to "service_role";
-
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 
