@@ -1277,17 +1277,20 @@ select
 	"review"."difficulty",
 	"review"."stability",
 	current_timestamp as "current_timestamp",
-	"public"."fsrs_retrievability" (
-		(
+	nullif(
+		"public"."fsrs_retrievability" (
 			(
-				extract(
-					epoch
-					from
-						(current_timestamp - "review"."created_at")
-				) / (3600)::numeric
-			) / (24)::numeric
+				(
+					extract(
+						epoch
+						from
+							(current_timestamp - "review"."created_at")
+					) / (3600)::numeric
+				) / (24)::numeric
+			),
+			"review"."stability"
 		),
-		"review"."stability"
+		'NaN'::numeric
 	) as "retrievability_now"
 from
 	(
