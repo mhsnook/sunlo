@@ -23,6 +23,7 @@ import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
+import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
@@ -58,21 +59,39 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 			})
 
 			if (error) throw error
-			return data
+			return data as {
+				tags: Tables<'tag'>[]
+				phrase_tags: Tables<'phrase_tag'>[]
+			}
 		},
-		onSuccess: (_, values: AddTagsFormValues) => {
+		onSuccess: (data, values) => {
 			toast.success('Tags added!')
-			if (values.tags) {
-				// this is an inexact copy! it is not a replacement for returning the actual
-				// added rows, the UI just doesn't really care about the extra info rn 🤷
-				const newTags = values.tags.map((t) => ({ name: t, id: t })) ?? []
+			const newLangTags = [
+				...(allLangTagsData ?? []),
+				...(data ?? { tags: [] }).tags.map((t) => t.name),
+			]
+			if (data?.tags.length) {
 				void queryClient.setQueryData<LanguageLoaded>(
 					['language', lang],
 					(old) => {
 						return produce(old!, (draft) => {
-							if (Array.isArray(draft.phrasesMap[phraseId].tags))
-								draft.phrasesMap[phraseId].tags.push(newTags)
-							else draft.phrasesMap[phraseId].tags = newTags
+							draft.meta.tags = newLangTags
+						})
+					}
+				)
+			}
+			if (values.tags.length) {
+				void queryClient.setQueryData<LanguageLoaded>(
+					['language', lang],
+					(old) => {
+						return produce(old!, (draft) => {
+							const phrase = draft.phrasesMap[phraseId]
+							if (!phrase) return
+							if (!phrase.tags) phrase.tags = []
+							phrase.tags.unshift(
+								// this is not the actual id, but the UI doesn't care
+								...values.tags.map((t) => ({ name: t, id: t }))
+							)
 						})
 					}
 				)
