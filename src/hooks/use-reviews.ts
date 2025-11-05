@@ -184,7 +184,7 @@ export function useReviewMutation(
 			}
 		},
 		onSuccess: (data) => {
-			console.log(data)
+			// console.log(`mutation returns:`, data)
 			if (data.row.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
 			if (data.row.score === 2)
