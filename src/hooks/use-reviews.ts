@@ -17,7 +17,6 @@ import {
 	useNextValid,
 	useReviewActions,
 	useReviewLang,
-	useReviewStage,
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
@@ -144,13 +143,9 @@ export function useReviewMutation(
 ) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
-	const { data: prevData } = useOneReviewToday(day_session, pid)
-	const stage = useReviewStage()
-	const { gotoIndex } = useReviewActions()
+	const { gotoIndex, gotoEnd } = useReviewActions()
 	const nextIndex = useNextValid()
-	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	// this mutation should only be loaded when the manifest is present
-	const manifest = reviewsData.manifest!
+
 	return useMutation<CardReviewType, PostgrestError, { score: number }>({
 		mutationKey: ['user', 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
@@ -187,8 +182,7 @@ export function useReviewMutation(
 				resetRevealCard()
 				// if the next is the same as current, it means we're on the final card, which
 				// is the only situation where the out-of-date nextIndex needs to be corrected
-				if (nextIndex === currentCardIndex && data.score > 1)
-					gotoIndex(manifest.length)
+				if (nextIndex === currentCardIndex && data.row.score > 1) gotoEnd()
 				else gotoIndex(nextIndex)
 			}, 1000)
 		},

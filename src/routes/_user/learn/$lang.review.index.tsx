@@ -240,7 +240,7 @@ function ReviewPageSetup() {
 					sums.manifest
 				)
 
-			initLocalReviewState(lang, dayString)
+			initLocalReviewState(lang, dayString, sums.manifest.length)
 			await queryClient.refetchQueries({ queryKey: ['user', lang] })
 		},
 	})

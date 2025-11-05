@@ -74,6 +74,7 @@ export function ContinueReview({
 						initLocalReviewState(
 							lang,
 							dayString,
+							reviewStats.count,
 							reviewStats.inferred.stage,
 							reviewStats.inferred.index
 						)
