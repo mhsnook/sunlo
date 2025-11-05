@@ -2,7 +2,6 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
-import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
@@ -28,20 +27,32 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-export function ReviewSingleCard({ pid }: { pid: uuid }) {
+export function ReviewSingleCard({
+	pid,
+	reviewStage,
+	dayString,
+}: {
+	pid: uuid
+	reviewStage: number
+	dayString: string
+}) {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'not-found')
 		throw new Error(`Trying to review this card, but can't find it`)
-	const dayString = useReviewDayString()
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dayString, pid)
-	const stage = useReviewStage()
 	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
-	const { mutate, isPending } = useReviewMutation(pid, dayString, closeCard)
+	const { mutate, isPending } = useReviewMutation(
+		pid,
+		dayString,
+		closeCard,
+		reviewStage,
+		prevData
+	)
 
 	if (!phrase) return null
 
-	const showAnswers = prevData && stage === 1 ? true : revealCard
+	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
@@ -103,7 +114,7 @@ export function ReviewSingleCard({ pid }: { pid: uuid }) {
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={
-								prevData?.score === 1 && stage < 4 ?
+								prevData?.score === 1 && reviewStage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
 							}

@@ -10,7 +10,6 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from '@/hooks/use-review-store'
-import { todayString } from '@/lib/utils'
 import { useReviewDay } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
@@ -21,14 +20,12 @@ import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
 	loader: async () => {
-		const dayString: string = todayString()
 		const daysLoaded = reviewDaysCollection.preload()
 		const reviewsLoaded = cardReviewsCollection.preload()
 		await Promise.all([daysLoaded, reviewsLoaded])
 
 		return {
 			appnav: [],
-			dayString,
 		}
 	},
 })
@@ -42,11 +39,18 @@ function ReviewPage() {
 	if (isLoading) return <Loader />
 	if (!day?.manifest?.length || !stage) return <Navigate to=".." />
 
-	return <FlashCardReviewSession manifest={day.manifest} />
+	return (
+		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
+	)
 }
 
-function FlashCardReviewSession({ manifest }: { manifest: pids }) {
-	const { lang } = Route.useParams()
+function FlashCardReviewSession({
+	manifest,
+	dayString,
+}: {
+	manifest: pids
+	dayString: string
+}) {
 	const currentCardIndex = useCardIndex()
 	const reviewStage = useReviewStage()
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
@@ -117,7 +121,11 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 							key={pid}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
 						>
-							<ReviewSingleCard pid={pid} lang={lang} />
+							<ReviewSingleCard
+								pid={pid}
+								reviewStage={reviewStage}
+								dayString={dayString}
+							/>
 						</div>
 					))}
 				</div>

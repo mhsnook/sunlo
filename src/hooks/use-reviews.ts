@@ -22,7 +22,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
-import { CardReviewType } from '@/lib/schemas'
+import { CardReviewSchema, CardReviewType } from '@/lib/schemas'
 
 const postReview = async (submitData: ReviewInsert) => {
 	const { data } = await supabase
@@ -139,44 +139,71 @@ export function useOneReviewToday(day_session: string, pid: uuid) {
 export function useReviewMutation(
 	pid: uuid,
 	day_session: string,
-	resetRevealCard: () => void
+	resetRevealCard: () => void,
+	stage: number,
+	prevData: CardReviewType | undefined
 ) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
 	const { gotoIndex, gotoEnd } = useReviewActions()
 	const nextIndex = useNextValid()
 
-	return useMutation<CardReviewType, PostgrestError, { score: number }>({
+	return useMutation<
+		{ action: string; row: CardReviewType },
+		PostgrestError,
+		{ score: number }
+	>({
 		mutationKey: ['user', 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
-			// during stages 1 & 2, these are corrections; only update only if score changes
-			if (stage < 3 && prevData?.score === score) return prevData
+			// during stages 1 & 2, corrections can be done, but only update only if score changes
+			if (stage < 3 && prevData?.score === score)
+				return {
+					action: 'noop',
+					row: prevData,
+				}
 
+			// @@TODO: this connection between the display UI and the mutation behavior is leaky
 			if (stage < 3 && prevData?.id)
-				return await updateReview({
-					score,
-					review_id: prevData.id,
-				})
+				return {
+					action: 'update',
+					row: await updateReview({
+						score,
+						review_id: prevData.id,
+					}),
+				}
 
-			// standard case: this should be represented by a new review record
-			return await postReview({
-				score,
-				phrase_id: pid,
-				lang,
-				day_session,
-			})
+			// standard case: this should return a new review record
+			return {
+				action: 'insert',
+				row: await postReview({
+					score,
+					phrase_id: pid,
+					lang,
+					day_session,
+				}),
+			}
 		},
 		onSuccess: (data) => {
-			if (data.score === 1)
+			console.log(data)
+			if (data.row.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
-			if (data.score === 2)
+			if (data.row.score === 2)
 				toast('okay', { icon: '🤷', position: 'bottom-center' })
-			if (data.score === 3)
+			if (data.row.score === 3)
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.score === 4) toast.success('nice', { position: 'bottom-center' })
+			if (data.row.score === 4)
+				toast.success('nice', { position: 'bottom-center' })
 
-			const mergedData = { ...prevData, ...data, day_first_review: !prevData }
-			cardReviewsCollection.utils.writeInsert(mergedData)
+			if (data.action === 'update') {
+				cardReviewsCollection.utils.writeUpdate(
+					CardReviewSchema.parse(data.row)
+				)
+			}
+			if (data.action === 'insert') {
+				cardReviewsCollection.utils.writeInsert(
+					CardReviewSchema.parse(data.row)
+				)
+			}
 
 			setTimeout(() => {
 				resetRevealCard()
