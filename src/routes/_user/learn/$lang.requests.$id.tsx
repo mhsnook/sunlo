@@ -1,8 +1,4 @@
-import type {
-	LanguageLoaded,
-	PhraseFull,
-	Tag,
-} from '@/types/main'
+import type { LanguageLoaded, PhraseFull, Tag } from '@/types/main'
 
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
@@ -26,8 +22,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { Loader } from '@/components/ui/loader'
-import { ShowAndLogError, ShowError } from '@/components/errors'
+import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -81,11 +76,7 @@ function FulfillRequestPage() {
 	const { id, lang } = Route.useParams()
 	const [isAnswering, setIsAnswering] = useState(false)
 	const queryClient = useQueryClient()
-	const {
-		data: request,
-		error,
-		isPending,
-	} = useSuspenseQuery(phraseRequestQuery(id))
+	const { data: request } = useSuspenseQuery(phraseRequestQuery(id))
 	const { data: profile } = useProfile()
 
 	const form = useForm<FulfillRequestFormInputs>({
@@ -115,7 +106,7 @@ function FulfillRequestPage() {
 			if (rpcError) throw rpcError
 			return rpcData as FulfillRequestResponse
 		},
-		onSuccess: (data, variables) => {
+		onSuccess: async (data, variables) => {
 			toast.success('Thank you for your contribution!')
 			setIsAnswering(false)
 			form.reset({
@@ -184,14 +175,17 @@ function FulfillRequestPage() {
 					}
 				}
 			)
+			// If the user fulfilling the request is the one who made it,
+			// a new card was created for them, so we need to refetch their deck.
+			if (profile?.uid && request?.requester_uid === profile?.uid) {
+				await queryClient.refetchQueries({ queryKey: ['user', lang, 'deck'] })
+			}
 		},
 		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)
 		},
 	})
 
-	if (isPending) return <Loader />
-	if (error) return <ShowError>{error.message}</ShowError>
 	if (!request)
 		return (
 			<Callout variant="problem" Icon={DestructiveOctagon}>
@@ -203,7 +197,8 @@ function FulfillRequestPage() {
 			</Callout>
 		)
 
-	const noAnswers = request.phrases?.length === 0
+	const noAnswers =
+		!Array.isArray(request.phrases) || request.phrases.length === 0
 
 	return (
 		<main>
