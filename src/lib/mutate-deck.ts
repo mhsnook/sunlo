@@ -7,6 +7,7 @@ import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import { decksCollection } from '@/lib/collections'
 import { DeckMetaSchema } from '@/lib/schemas'
+import { useDecks } from '@/hooks/use-deck'
 
 async function postNewDeck(lang: string) {
 	// console.log(`postNewDeck ${lang}`)
@@ -23,17 +24,24 @@ async function postNewDeck(lang: string) {
 
 export const useNewDeckMutation = () => {
 	const navigate = useNavigate()
-
+	const countDecks = useDecks().data?.length ?? 0
 	const mutation = useMutation({
 		mutationFn: async (variables: { lang: string }) => {
+			console.log(`mutationFn ${variables.lang}`)
+
 			return await postNewDeck(variables.lang)
 		},
 		mutationKey: ['new-deck'],
 		onSuccess: (deck, variables) => {
-			decksCollection.utils.writeInsert(DeckMetaSchema.parse(deck))
-			// @@TODO this is only needed because we're breaking the 'ignorance' of the deck query
-			// by adding the theme (calculating it w/r/t the entire array, not atomic)
-			void decksCollection.utils.refetch()
+			console.log(`onSuccess ${variables.lang}`)
+
+			const deck2 = {
+				...deck,
+				language: languages[deck.lang],
+				theme: countDecks % 5,
+			}
+
+			decksCollection.utils.writeInsert(DeckMetaSchema.parse(deck2))
 			toast.success(`Created a new deck to learn ${languages[variables.lang]}`)
 			void navigate({ to: `/learn/$lang`, params: { lang: variables.lang } })
 		},

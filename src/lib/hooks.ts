@@ -1,9 +1,10 @@
-import { useContext } from 'react'
+import { useContext, useMemo } from 'react'
 import supabase from '@/lib/supabase-client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AuthContext } from '@/components/auth-context'
 import { clearUser } from './collections'
+import { useDecks } from '@/hooks/use-deck'
 
 // Access the context's value from inside a provider
 export function useAuth() {
@@ -33,4 +34,9 @@ export const useSignOut = () => {
 			void navigate({ to: '/' })
 		},
 	})
+}
+
+export function useDeckLangs() {
+	const { data } = useDecks()
+	return useMemo(() => data?.map((d) => d.lang), [data])
 }

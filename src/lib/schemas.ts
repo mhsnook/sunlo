@@ -200,7 +200,7 @@ export const DeckMetaRawSchema = z.object({
 	count_reviews_7d: z.number().default(0),
 	count_reviews_7d_positive: z.number().default(0),
 	lang_total_phrases: z.number().default(0),
-	most_recent_review_at: z.string().nullable(),
+	most_recent_review_at: z.string().nullable().default(null),
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
