@@ -40,7 +40,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 		const { data: listener } = supabase.auth.onAuthStateChange(
 			async (event, session) => {
-				console.log(`User auth event: ${event}`)
+				console.log(`User auth event: ${event}`, session)
 
 				if (event === 'SIGNED_OUT')
 					queryClient.removeQueries({ queryKey: ['user'] })

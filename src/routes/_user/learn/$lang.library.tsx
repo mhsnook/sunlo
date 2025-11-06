@@ -1,15 +1,12 @@
 import { useCallback, useMemo, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Plus, SearchX } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
-import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FancyMultiSelect, ShowSelected } from '@/components/ui/multi-select'
 import { Separator } from '@/components/ui/separator'
-import { LanguageIsEmpty } from '@/components/language-is-empty'
-import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import {
 	Select,
 	SelectContent,
@@ -17,11 +14,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguagePhrasesSearch, useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
+import { DisplayPhrasesQuery } from '@/components/display-phrase-query'
 
 type DeckOnlyFiltersEnum = 'active' | 'inactive' | 'reviewed_last_7d'
 type CompositeFiltersEnum = Exclude<FilterEnumType, DeckOnlyFiltersEnum>
@@ -62,14 +60,11 @@ function DeckLibraryPage() {
 		[search.tags]
 	)
 	const filter = search.filter || 'not_in_deck'
-	const { data: searchedPhrases } = useLanguagePhrasesSearch(
-		lang,
-		'', // This component doesn't have a text search input, so it's empty
-		selectedTags,
+
+	const filteredPids =
 		!filter || !deckPids || !recs ? null
-		: filter in deckPids ? (deckPids[filter as DeckOnlyFiltersEnum] as pids)
-		: (recs[filter as CompositeFiltersEnum] as pids)
-	)
+		: filter in deckPids ? deckPids[filter as DeckOnlyFiltersEnum]
+		: recs[filter as CompositeFiltersEnum]
 
 	const setSelectedTags = useCallback(
 		(value: SetStateAction<string[]>) => {
@@ -202,29 +197,12 @@ function DeckLibraryPage() {
 					</Link>
 				</div>
 				<Separator className="mt-6 mb-2" />
-				<p className="text-muted-foreground pb-2 text-right text-xs italic">
-					{searchedPhrases?.length ?? 0} of {recs.language.length} phrases
-				</p>
-				{recs.language.length > 0 ?
-					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
-						{searchedPhrases?.length ?
-							<LanguagePhrasesAccordionComponent phrases={searchedPhrases} />
-						:	<Empty />}
-					</div>
-				:	<LanguageIsEmpty lang={lang} />}
+				<DisplayPhrasesQuery
+					lang={lang}
+					tags={selectedTags}
+					filteredPids={filteredPids}
+				/>
 			</CardContent>
 		</Card>
-	)
-}
-
-function Empty() {
-	return (
-		<div className="text-muted-foreground flex w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed py-12">
-			<SearchX className="size-12" />
-			<div className="text-center">
-				<p className="font-semibold">No phrases match your filters.</p>
-				<p className="text-sm">Try adjusting your search.</p>
-			</div>
-		</div>
 	)
 }

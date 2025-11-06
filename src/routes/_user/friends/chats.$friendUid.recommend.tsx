@@ -1,17 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Send } from 'lucide-react'
-import { useDebounce } from '@uidotdev/usehooks'
 
-import type { ChatMessageInsert, uuid } from './-types'
+import type { ChatMessageInsert } from './-types'
+import type { uuid } from '@/types/main'
+import { PhraseFullFilteredType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/hooks'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
-import { ScrollArea } from '@/components/ui/scroll-area'
+
+import { Input } from '@/components/ui/input'
 import {
 	Dialog,
 	DialogContent,
@@ -19,12 +18,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { ShowErrorDontLog } from '@/components/errors'
-import { Loader } from '@/components/ui/loader'
-import Callout from '@/components/ui/callout'
 import { Label } from '@/components/ui/label'
 import { LangBadge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import PermalinkButton from '@/components/permalink-button'
+import { DisplayPhrasesQuery } from '@/components/display-phrase-query'
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendUid/recommend'
@@ -33,39 +32,12 @@ export const Route = createFileRoute(
 })
 
 function RouteComponent() {
-	const { friendUid } = Route.useParams()
+	const params = Route.useParams()
 	const { userId } = useAuth()
 	const navigate = useNavigate({ from: Route.fullPath })
 
 	const [lang, setLang] = useState<string>('')
 	const [searchTerm, setSearchTerm] = useState('')
-	const [debouncedSearchTerm] = useDebounce(searchTerm, 500)
-
-	const searchQuery = useMemo(() => {
-		return (debouncedSearchTerm ?? '').split(' ').filter(Boolean).join(' & ')
-	}, [debouncedSearchTerm])
-
-	const {
-		data: phrasesData,
-		error,
-		isFetching,
-	} = useQuery({
-		queryKey: ['phrases-search', searchQuery, lang],
-		queryFn: async () => {
-			if (!searchQuery) return []
-			const match = lang ? { lang } : {}
-			const { data } = await supabase
-				.from('phrase')
-				.select('id, text, lang')
-				.match(match)
-				.ilike('text', `%${searchQuery}%`)
-				.limit(10)
-				.throwOnError()
-
-			return data
-		},
-		enabled: !!searchQuery,
-	})
 
 	const sendMessageMutation = useMutation({
 		mutationFn: async (newMessage: ChatMessageInsert) => {
@@ -73,7 +45,7 @@ function RouteComponent() {
 			if (error) throw error
 		},
 		onSuccess: () => {
-			void navigate({ to: '/friends/chats/$friendUid', params: { friendUid } })
+			void navigate({ to: '/friends/chats/$friendUid', params })
 			toast.success('Phrase sent!')
 		},
 		onError: (error) => {
@@ -85,7 +57,7 @@ function RouteComponent() {
 		if (!userId) return
 		void sendMessageMutation.mutate({
 			sender_uid: userId,
-			recipient_uid: friendUid,
+			recipient_uid: params.friendUid,
 			phrase_id: phraseId,
 			lang,
 			message_type: 'recommendation',
@@ -100,7 +72,7 @@ function RouteComponent() {
 				if (!open) {
 					void navigate({
 						to: '/friends/chats/$friendUid',
-						params: { friendUid },
+						params,
 					})
 				}
 			}}
@@ -121,53 +93,40 @@ function RouteComponent() {
 						<p className="mb-2">Search terms *</p>
 						<Input
 							placeholder="Search for a phrase to send..."
-							value={searchTerm}
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
 					</Label>
-					<ScrollArea className="flex-1">
-						<div className="flex min-h-20 flex-1 flex-col place-content-center gap-2">
-							{isFetching && <Loader />}
-							{phrasesData?.map((phrase) => (
-								<div
-									key={phrase.id}
-									className="flex items-start justify-between gap-2 rounded-md border p-2"
-								>
-									<LangBadge lang={phrase.lang} className="my-1" />
-									<p className="my-0.5 flex-1">{phrase.text}</p>
-									<PermalinkButton
-										size="icon"
-										from={Route.fullPath}
-										text=""
-										to="/learn/$lang/$id"
-										// oxlint-disable-next-line jsx-no-new-object-as-prop
-										params={{ lang: phrase.lang, id: phrase.id }}
-									/>
-									<Button
-										size="icon"
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
-										onClick={() => handleRecommend(phrase.id, phrase.lang)}
-										disabled={sendMessageMutation.isPending}
-									>
-										<Send className="-ms-0.5 mt-0.5" />
-									</Button>
-								</div>
-							))}
-							{phrasesData?.length === 0 && debouncedSearchTerm && (
-								<Callout variant="ghost">No phrases found.</Callout>
-							)}
-							{!debouncedSearchTerm && (
-								<Callout variant="ghost">Enter search terms above</Callout>
-							)}
-							{error && (
-								<ShowErrorDontLog
-									error={error}
-									text="An error has occurred trying to complete your search"
+					<DisplayPhrasesQuery
+						lang={lang}
+						text={searchTerm}
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
+						renderItem={(phrase: PhraseFullFilteredType) => (
+							<div
+								key={phrase.id}
+								className="flex items-start justify-between gap-2 rounded-md border p-2"
+							>
+								<LangBadge lang={phrase.lang} className="my-1" />
+								<p className="my-0.5 flex-1">{phrase.text}</p>
+								<PermalinkButton
+									size="icon"
+									from={Route.fullPath}
+									text=""
+									to="/learn/$lang/$id"
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									params={{ lang: phrase.lang, id: phrase.id }}
 								/>
-							)}
-						</div>
-					</ScrollArea>
+								<Button
+									size="icon"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onClick={() => handleRecommend(phrase.id, phrase.lang)}
+									disabled={sendMessageMutation.isPending}
+								>
+									<Send className="-ms-0.5 mt-0.5" />
+								</Button>
+							</div>
+						)}
+					/>
 				</div>
 			</DialogContent>
 		</Dialog>

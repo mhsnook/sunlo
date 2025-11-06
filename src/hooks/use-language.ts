@@ -1,11 +1,11 @@
 import type { pids, uuid } from '@/types/main'
-
-import { langTagsCollection, languagesCollection } from '@/lib/collections'
 import { eq, ilike, inArray, type InitialQueryBuilder } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
+
+import { langTagsCollection, languagesCollection } from '@/lib/collections'
 import { phrasesFull } from '@/lib/live-collections'
-import { useLanguagesToShow } from './use-profile'
-import { splitPhraseTranslations } from './composite-phrase'
+import { useLanguagesToShow } from '@/hooks/use-profile'
+import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 
 export const useLanguageMeta = (lang: string) =>
 	useLiveQuery(
@@ -25,28 +25,39 @@ export const useLanguagePhrases = (lang: string) =>
 	useLiveQuery((q) => createBasePhraseQuery(q, lang), [lang])
 
 export const useLanguagePhrasesSearch = (
-	lang: string,
-	queryString: string,
-	tags: string[],
+	lang: string | undefined,
+	queryString: string | undefined,
+	tags?: string[] | null  ,
 	filteredPids?: pids | null
 ) => {
 	const { data: langs } = useLanguagesToShow()
 	return useLiveQuery(
 		(q) => {
-			if (!queryString && !tags.length && filteredPids === null)
+			if (!queryString && !tags?.length && !filteredPids) {
+				// console.log(`useLanguagePhrasesSearch: no query`)
 				return undefined
-			let query = createBasePhraseQuery(q, lang)
-			if (queryString)
+			}
+			let query = q.from({ phrase: phrasesFull })
+			if (lang) {
+				// console.log(`useLanguagePhrasesSearch: adding lang filter ${lang}`)
+				query = query.where(({ phrase }) => eq(phrase.lang, lang))
+			}
+			if (queryString) {
+				// console.log(`useLanguagePhrasesSearch: text filter ${queryString}`)
 				query = query.where(({ phrase }) =>
 					ilike(phrase.searchableText, `%${queryString}%`)
 				)
-			if (filteredPids)
+			}
+			if (filteredPids) {
+				// console.log(
+				// 	`useLanguagePhrasesSearch: filtered pids: ${filteredPids.length}`
+				// )
 				query = query.where(({ phrase }) => inArray(phrase.id, filteredPids))
-			if (tags.length) {
+			}
+			if (tags?.length) {
+				// console.log(`useLanguagePhrasesSearch: tag filter ${tags}`)
 				query = query.fn.where(({ phrase }) => {
 					if (!phrase?.tags) return false
-					// This check was unreachable and can be removed.
-					// if (!tags) return true
 					return tags.every((selectedTag) =>
 						(phrase.tags ?? []).some(
 							(phraseTag) => phraseTag?.name === selectedTag
@@ -58,7 +69,7 @@ export const useLanguagePhrasesSearch = (
 				splitPhraseTranslations(phrase, langs)
 			)
 		},
-		[lang, queryString, tags, filteredPids]
+		[lang, queryString, tags, filteredPids, langs]
 	)
 }
 

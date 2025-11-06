@@ -1,5 +1,5 @@
+import type { PhraseFullFilteredType } from '@/lib/schemas'
 import {
-	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
@@ -9,23 +9,12 @@ import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
-import { PhraseFullFilteredType } from '@/lib/schemas'
 
-export function LanguagePhrasesAccordionComponent({
-	phrases,
+export function PhraseAccordionItem({
+	phrase,
 }: {
-	phrases: PhraseFullFilteredType[]
+	phrase: PhraseFullFilteredType
 }) {
-	return (
-		<Accordion type="single" collapsible className="w-full">
-			{phrases.map((phrase) => (
-				<PhraseAccordionItem key={phrase.id} phrase={phrase} />
-			))}
-		</Accordion>
-	)
-}
-
-function PhraseAccordionItem({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<AccordionItem value={phrase.id} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">

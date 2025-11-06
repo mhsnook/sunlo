@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type { uuid, ReviewsDayMap } from '@/types/main'
+import type { uuid, ReviewsDayMap, pids } from '@/types/main'
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import {
 	cardReviewsCollection,
@@ -125,11 +125,26 @@ export const useDeckCard = (pid: uuid) =>
 		[pid]
 	)
 
+export type DeckPids = {
+	all: pids
+	active: pids
+	inactive: pids
+	reviewed: pids
+	reviewed_or_inactive: pids
+	reviewed_last_7d: pids
+	unreviewed_active: pids
+	today_active: pids
+}
+type UseDeckPidsReturnType = {
+	isLoading: boolean
+	data: DeckPids | null
+}
+
 export const useDeckPids = (lang: string) => {
 	const { isLoading, data } = useDeckCards(lang)
 
 	return useMemo(
-		() => ({
+		(): UseDeckPidsReturnType => ({
 			isLoading,
 			data:
 				!data ? null : (

@@ -19,12 +19,12 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import languages from '@/lib/languages'
-import { useLanguagePhrasesSearch, useLanguageTags } from '@/hooks/use-language'
-import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
+import languages from '@/lib/languages'
+import { useLanguageTags } from '@/hooks/use-language'
 import { Separator } from '@/components/ui/separator'
 import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
+import { DisplayPhrasesQuery } from '@/components/display-phrase-query'
 
 export const Route = createFileRoute('/_user/learn/$lang/search')({
 	validateSearch: PhraseSearchSchema,
@@ -34,15 +34,15 @@ export const Route = createFileRoute('/_user/learn/$lang/search')({
 function SearchTab() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
-	const { text: filter, tags: tagsFilter } = Route.useSearch()
-	const [text, setText] = useState(filter)
-	const debouncedText = useDebounce(text, 100)
+	const { text: searchText, tags: tagsFilter } = Route.useSearch()
+	const [liveText, setLiveText] = useState(searchText)
+	const debouncedText = useDebounce(liveText, 100)
 
 	useEffect(() => {
-		if (debouncedText !== filter) {
+		if (debouncedText !== searchText) {
 			void navigate({ search: (prev) => ({ ...prev, text: debouncedText }) })
 		}
-	}, [debouncedText, filter, navigate])
+	}, [debouncedText, searchText, navigate])
 
 	const { data: langTags } = useLanguageTags(lang)
 	const tagOptions = useMemo(
@@ -76,12 +76,6 @@ function SearchTab() {
 		[navigate, selectedTags]
 	)
 
-	const { data: searchResults } = useLanguagePhrasesSearch(
-		lang,
-		debouncedText ?? '',
-		selectedTags
-	)
-
 	return (
 		<Card>
 			<CardHeader>
@@ -94,8 +88,8 @@ function SearchTab() {
 					<Input
 						placeholder="Enter a phrase to search or add"
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onChange={(e) => setText(e.target.value)}
-						defaultValue={filter}
+						onChange={(e) => setLiveText(e.target.value)}
+						defaultValue={searchText}
 					/>
 				</div>
 				<FancyMultiSelect
@@ -120,13 +114,7 @@ function SearchTab() {
 					</Button>
 				</div>
 				<Separator />
-
-				{searchResults?.length ?
-					<LanguagePhrasesAccordionComponent phrases={searchResults} />
-				:	<p className="text-muted-foreground mt-4 text-center">
-						No results found. Try searching for a phrase or add a new one.
-					</p>
-				}
+				<DisplayPhrasesQuery lang={lang} text={liveText} tags={selectedTags} />
 			</CardContent>
 		</Card>
 	)

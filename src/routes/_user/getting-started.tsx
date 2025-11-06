@@ -5,17 +5,17 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
-import { TitleBar, uuid } from '@/types/main'
+import type { TablesInsert } from '@/types/supabase'
+import type { TitleBar, uuid } from '@/types/main'
 import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
 import { useAuth } from '@/lib/hooks'
 import { useProfile } from '@/hooks/use-profile'
-import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { Button } from '@/components/ui/button'
 import supabase from '@/lib/supabase-client'
+import { myProfileCollection } from '@/lib/collections'
+import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
-import { myProfileCollection } from '@/lib/collections'
-import { TablesInsert } from '@/types/supabase'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -103,7 +103,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				throw new Error(
 					`Somehow the server didn't return any data for the new profile...`
 				)
-			console.log(`Success! deck, profile`, data)
+			console.log(`Success! Profile:`, data)
 			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
 			toast.success('Success!')
 		},

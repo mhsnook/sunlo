@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+
+import type { pids } from '@/types/main'
 import { useDeckPids } from '@/hooks/use-deck'
 import { useLanguagePhrases } from '@/hooks/use-language'
 import { arrayDifference } from '@/lib/utils'
@@ -10,12 +12,25 @@ import { splitPhraseTranslations } from '@/hooks/composite-phrase'
  * data points that require combining information from across deck, language,
  * and profile.
  */
+
+export type CompositePids = {
+	top8: {
+		easiest: pids
+		popular: pids
+		newest: pids
+	}
+	language: pids
+	language_selectables: pids
+	language_filtered: pids
+	not_in_deck: pids
+	language_no_translations: pids
+}
 export function useCompositePids(lang: string) {
 	const { data: phrases, state: phrasesMap } = useLanguagePhrases(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const { data: languagesToShow } = useLanguagesToShow()
 
-	return useMemo(() => {
+	return useMemo((): CompositePids | null => {
 		if (!languagesToShow || !phrases || !deckPids) {
 			return null
 		}
