@@ -449,12 +449,12 @@ alter function "public"."fsrs_stability" (
 ) owner to "postgres";
 
 create
-or replace function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) returns "json" language "plpgsql" as $$
+or replace function public.fulfill_phrase_request (
+	request_id uuid,
+	p_phrase_text text,
+	p_translation_text text,
+	p_translation_lang character varying
+) returns json language plpgsql as $$
 DECLARE
     v_requester_uid uuid;
     v_phrase_lang character varying;
@@ -486,10 +486,10 @@ BEGIN
     VALUES (new_phrase.id, p_translation_text, p_translation_lang, fulfiller_uid)
     RETURNING * INTO new_translation;
 
-    -- If this is the first phrase for the request, create a card for the requester
-    IF v_request_status = 'pending' THEN
+    -- If the requester is also the fulfiller, make them a new card
+    IF v_requester_uid = fulfiller_uid THEN
         INSERT INTO public.user_card (phrase_id, uid, lang, status)
-        VALUES (new_phrase.id, v_requester_uid, v_phrase_lang, 'active');
+        VALUES (new_phrase.id, fulfiller_uid, v_phrase_lang, 'active');
 
         -- Update the phrase_request to mark it as fulfilled
         UPDATE public.phrase_request
