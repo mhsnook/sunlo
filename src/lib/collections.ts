@@ -38,6 +38,7 @@ export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['public', 'profiles'],
 		queryFn: async () => {
+			console.log(`Loading publicProfilesCollection`)
 			const { data } = await supabase
 				.from('public_profile')
 				.select()
@@ -54,6 +55,8 @@ export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['public', 'phrase_request'],
 		queryFn: async () => {
+			console.log(`Loading phraseRequestscollection`)
+
 			const { data } = await supabase
 				.from('meta_phrase_request')
 				.select()
@@ -71,6 +74,8 @@ export const phrasesCollection = createCollection(
 		queryKey: ['public', 'phrase_full'],
 		getKey: (item: PhraseFullType) => item.id,
 		queryFn: async () => {
+			console.log(`Loading phrasesCollection`)
+
 			const { data } = await supabase
 				.from('meta_phrase_info')
 				.select('*, translations:phrase_translation(*)')
@@ -87,6 +92,7 @@ export const langTagsCollection = createCollection(
 		queryKey: ['public', 'lang_tag'],
 		getKey: (item: LangTagType) => item.id,
 		queryFn: async () => {
+			console.log(`Loading langTagsCollection`)
 			const { data } = await supabase.from('tag').select().throwOnError()
 			return data?.map((p) => LangTagSchema.parse(p)) ?? []
 		},
@@ -99,6 +105,7 @@ export const languagesCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['public', 'meta_language'],
 		queryFn: async () => {
+			console.log(`Loading languagesCollection`)
 			const { data } = await supabase
 				.from('meta_language')
 				.select()
@@ -113,7 +120,8 @@ export const languagesCollection = createCollection(
 
 export const myProfileQuery = queryOptions({
 	queryKey: ['user', 'profile'],
-	queryFn: async () => {
+	queryFn: async (_) => {
+		console.log(`Running myProfileQuery`)
 		const { data } = await supabase
 			.from('user_profile')
 			.select()
@@ -126,9 +134,14 @@ export const myProfileQuery = queryOptions({
 
 export const myProfileCollection = createCollection(
 	queryCollectionOptions({
-		...myProfileQuery,
+		queryKey: myProfileQuery.queryKey,
+		queryFn: async (args) => {
+			console.log(`Loading myProfileCollection`)
+			return myProfileQuery.queryFn!(args)
+		},
 		getKey: (item: MyProfileType) => item.uid,
 		queryClient,
+		optimistic: false,
 		schema: MyProfileSchema,
 	})
 )
@@ -137,6 +150,7 @@ export const decksCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'deck_plus'],
 		queryFn: async () => {
+			console.log(`Loading decksCollection`)
 			const { data } = await supabase
 				.from('user_deck_plus')
 				.select()
@@ -153,6 +167,7 @@ export const decksCollection = createCollection(
 		},
 		getKey: (item: DeckMetaType) => item.lang,
 		queryClient,
+		optimistic: false,
 		schema: DeckMetaSchema,
 	})
 )
@@ -161,6 +176,7 @@ export const cardsCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'card'],
 		queryFn: async () => {
+			console.log(`Loading cardsCollection`)
 			const { data } = await supabase
 				.from('user_card_plus')
 				.select()
@@ -169,6 +185,7 @@ export const cardsCollection = createCollection(
 		},
 		getKey: (item: CardMetaType) => item.phrase_id,
 		queryClient,
+		optimistic: false,
 		schema: CardMetaSchema,
 	})
 )
@@ -177,6 +194,7 @@ export const reviewDaysCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'daily_review_state'],
 		queryFn: async () => {
+			console.log(`Loading reviewDaysCollection`)
 			const { data } = await supabase
 				.from('user_deck_review_state')
 				.select()
@@ -185,6 +203,7 @@ export const reviewDaysCollection = createCollection(
 		},
 		getKey: (item: DailyReviewStateType) => item.day_session,
 		queryClient,
+		optimistic: false,
 		schema: DailyReviewStateSchema,
 	})
 )
@@ -193,6 +212,7 @@ export const cardReviewsCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'card_review'],
 		queryFn: async () => {
+			console.log(`Loading cardReviewsCollection`)
 			const { data } = await supabase
 				.from('user_card_review')
 				.select()
@@ -201,6 +221,7 @@ export const cardReviewsCollection = createCollection(
 		},
 		getKey: (item: CardReviewType) => item.id,
 		queryClient,
+		optimistic: false,
 		schema: CardReviewSchema,
 	})
 )
@@ -209,6 +230,7 @@ export const friendSummariesCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'friend_summary'],
 		queryFn: async () => {
+			console.log(`Loading friendSummariesCollection`)
 			const { data } = await supabase
 				.from('friend_summary')
 				.select()
@@ -217,6 +239,7 @@ export const friendSummariesCollection = createCollection(
 		},
 		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
 		queryClient,
+		optimistic: false,
 		schema: FriendSummarySchema,
 	})
 )
@@ -225,6 +248,7 @@ export const chatMessagesCollection = createCollection(
 	queryCollectionOptions({
 		queryKey: ['user', 'chat_message'],
 		queryFn: async () => {
+			console.log(`Loading chatMessagesCollection`)
 			const { data } = await supabase
 				.from('chat_message')
 				.select()
@@ -233,6 +257,7 @@ export const chatMessagesCollection = createCollection(
 		},
 		getKey: (item: ChatMessageType) => item.id,
 		queryClient,
+		optimistic: false,
 		schema: ChatMessageSchema,
 	})
 )
