@@ -261,3 +261,15 @@ export const chatMessagesCollection = createCollection(
 		schema: ChatMessageSchema,
 	})
 )
+
+export const clearUser = async () => {
+	await Promise.all([
+		myProfileCollection.cleanup(),
+		decksCollection.cleanup(),
+		cardsCollection.cleanup(),
+		reviewDaysCollection.cleanup(),
+		cardReviewsCollection.cleanup(),
+		friendSummariesCollection.cleanup(),
+		chatMessagesCollection.cleanup(),
+	])
+}

@@ -3,6 +3,7 @@ import supabase from '@/lib/supabase-client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { AuthContext } from '@/components/auth-context'
+import { clearUser } from './collections'
 
 // Access the context's value from inside a provider
 export function useAuth() {
@@ -19,9 +20,16 @@ export const useSignOut = () => {
 	const client = useQueryClient()
 
 	return useMutation({
-		mutationFn: async () => await supabase.auth.signOut(),
-		onSuccess: () => {
+		mutationFn: async () => {
+			const { error } = await supabase.auth.signOut()
+			if (error) {
+				console.log(`useSignOut`, error)
+				throw error
+			}
+		},
+		onSuccess: async () => {
 			client.removeQueries({ queryKey: ['user'], exact: false })
+			await clearUser()
 			void navigate({ to: '/' })
 		},
 	})
