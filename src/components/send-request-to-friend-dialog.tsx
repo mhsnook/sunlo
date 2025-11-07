@@ -20,8 +20,8 @@ export function SendRequestToFriendDialog({
 	id,
 	children,
 }: {
-	lang: string | null
-	id: uuid | null
+	lang: string
+	id: uuid
 	children: ReactNode
 }) {
 	const { userId } = useAuth()
@@ -35,7 +35,7 @@ export function SendRequestToFriendDialog({
 				sender_uid: userId,
 				recipient_uid: friendUid,
 				request_id: id,
-				lang: lang ?? '',
+				lang,
 				message_type: 'request' as const,
 			}))
 			const { data } = await supabase
