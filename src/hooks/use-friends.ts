@@ -1,13 +1,15 @@
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
-import { ChatMessageRelative, type FriendRequestActionInsert, uuid } from '@/routes/_user/friends/-types'
+import type {
+	ChatMessageRelative,
+	FriendRequestActionInsert,
+	uuid,
+} from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
-import {
-	chatMessagesCollection,
-} from '@/lib/collections'
+import { chatMessagesCollection } from '@/lib/collections'
 import { useMemo } from 'react'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull } from '@/lib/live-collections'
@@ -56,7 +58,7 @@ export const useOneRelation = (uid: uuid) =>
 	)
 
 export const useFriendRequestAction = (uid_for: uuid) => {
-	const { userId: uid_by } = useAuth()
+	const uid_by = useUserId()
 	const [uid_less, uid_more] = [uid_by, uid_for].toSorted()
 
 	return useMutation({
@@ -97,7 +99,7 @@ export type ChatsMap = {
 }
 
 export const useAllChats = () => {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const initialQuery = useLiveQuery((q) =>
 		q
 			.from({ message: chatMessagesCollection })
@@ -128,7 +130,7 @@ export const useAllChats = () => {
 }
 
 export const useOneFriendChat = (uid: uuid) => {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	return useLiveQuery(
 		(q) =>
 			q

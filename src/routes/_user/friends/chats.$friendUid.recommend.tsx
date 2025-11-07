@@ -8,7 +8,7 @@ import type { ChatMessageInsert } from './-types'
 import type { uuid } from '@/types/main'
 import { PhraseFullFilteredType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -33,7 +33,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
 	const params = Route.useParams()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const navigate = useNavigate({ from: Route.fullPath })
 
 	const [lang, setLang] = useState<string>('')

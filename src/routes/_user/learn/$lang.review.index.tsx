@@ -33,7 +33,7 @@ import {
 } from '@/components/language-is-empty'
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { useReviewsTodayStats } from '@/hooks/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
@@ -53,7 +53,7 @@ function ReviewPageSetup() {
 	const { lang } = Route.useParams()
 	const dayString = useReviewDayString()
 	const stage = useReviewStage()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const recs = useCompositePids(lang)
@@ -195,7 +195,7 @@ function ReviewPageSetup() {
 							cardsToCreate.map((pid) => ({
 								phrase_id: pid,
 								lang,
-								uid: userId!,
+								uid: userId,
 								status: 'active' as CardStatusEnumType,
 							}))
 						)
@@ -210,7 +210,7 @@ function ReviewPageSetup() {
 						.insert({
 							lang,
 							day_session: dayString,
-							uid: userId!,
+							uid: userId,
 							manifest: allCardsForToday,
 						})
 						.throwOnError()

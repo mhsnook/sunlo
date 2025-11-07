@@ -7,7 +7,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -48,7 +48,7 @@ type RequestPhraseFormInputs = z.infer<typeof RequestPhraseSchema>
 
 function Page() {
 	const { lang } = Route.useParams()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const navigate = useNavigate()
 
 	const form = useForm<RequestPhraseFormInputs>({
@@ -70,7 +70,7 @@ function Page() {
 					.insert({
 						prompt,
 						lang,
-						requester_uid: userId!,
+						requester_uid: userId,
 					})
 					.throwOnError()
 					.select()

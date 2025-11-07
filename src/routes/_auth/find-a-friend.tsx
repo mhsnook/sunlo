@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import {
 	Card,
 	CardContent,
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/_auth/find-a-friend')({
 function SearchProfilesComponent() {
 	const [rawQuery, setQuery] = useState('')
 	const query = useDebounce(rawQuery, 100)
-	const { userId } = useAuth()
+	const userId = useUserId('relaxed')
 	const { data: searchResults, isLoading } = useSearchProfilesByUsername(query)
 
 	return (

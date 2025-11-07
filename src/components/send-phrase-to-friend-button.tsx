@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
 import { PhraseFullFilteredType } from '@/lib/schemas'
@@ -28,7 +28,7 @@ export function SendPhraseToFriendButton({
 	link?: boolean
 	className?: string
 } & VariantProps<typeof buttonVariants>) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendPhraseToFriendMutation = useMutation({

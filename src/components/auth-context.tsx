@@ -5,15 +5,42 @@ import {
 	useEffect,
 	useMemo,
 } from 'react'
-
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
-import supabase from '@/lib/supabase-client'
-import { AuthState, RolesEnum } from '@/types/main'
-import { myProfileCollection } from '@/lib/collections'
-import { Loader } from './ui/loader'
 
-export const AuthContext = createContext<AuthState>(undefined)
+import type { RolesEnum, uuid } from '@/types/main'
+import supabase from '@/lib/supabase-client'
+import { myProfileCollection } from '@/lib/collections'
+import { Loader } from '@/components/ui/loader'
+
+const emptyAuth = {
+	isLoaded: false,
+	isAuth: false,
+	userId: null,
+	userEmail: null,
+	userRole: null,
+} as const
+
+type AuthNotLoaded = typeof emptyAuth
+
+export type AuthNotLoggedIn = {
+	isLoaded: true
+	isAuth: false
+	userId: null
+	userEmail: null
+	userRole: null
+}
+export type AuthLoggedIn = {
+	isLoaded: true
+	isAuth: true
+	userId: uuid
+	userEmail: string
+	userRole: RolesEnum
+}
+
+export type AuthState = AuthLoggedIn | AuthNotLoggedIn | AuthNotLoaded
+
+export const AuthContext = createContext<AuthState>(emptyAuth)
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
@@ -61,23 +88,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	}, [queryClient])
 
 	const value = useMemo(
-		() => ({
-			isAuth: sessionState?.user.role === 'authenticated',
-			userId: sessionState?.user.id ?? null,
-			userEmail: sessionState?.user.email ?? null,
-			userRole: (sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-		}),
+		() =>
+			isLoaded ?
+				{
+					isAuth: sessionState?.user.role === 'authenticated',
+					userId: sessionState?.user.id ?? null,
+					userEmail: sessionState?.user.email ?? null,
+					userRole:
+						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+					isLoaded: true,
+				}
+			:	emptyAuth,
 		[
 			sessionState?.user.role,
 			sessionState?.user.id,
 			sessionState?.user.email,
 			sessionState?.user.user_metadata?.role,
+			isLoaded,
 		]
 	)
 
 	return (
-		<AuthContext.Provider value={value}>
-			{isLoaded ? children : <AwaitingAuthLoader />}
+		<AuthContext.Provider value={value as AuthState}>
+			{value.isLoaded ? children : <AwaitingAuthLoader />}
 		</AuthContext.Provider>
 	)
 }

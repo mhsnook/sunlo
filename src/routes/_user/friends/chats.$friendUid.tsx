@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
 import { avatarUrlify, cn } from '@/lib/utils'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 function ChatPage() {
 	const { friendUid } = Route.useParams()
 	const { data: relation } = useOneRelation(friendUid)
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 

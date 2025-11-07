@@ -1,19 +1,33 @@
 import { useContext, useMemo } from 'react'
-import supabase from '@/lib/supabase-client'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+import supabase from '@/lib/supabase-client'
 import { AuthContext } from '@/components/auth-context'
-import { clearUser } from './collections'
+import { clearUser } from '@/lib/collections'
 import { useDecks } from '@/hooks/use-deck'
 
 // Access the context's value from inside a provider
 export function useAuth() {
 	const context = useContext(AuthContext)
-
-	if (context === null) {
+	if (!context) {
 		throw new Error('You need to wrap AuthProvider.')
 	}
 	return context
+}
+
+export function useUserId(): string
+export function useUserId(mode: 'default' | 'strict'): string
+export function useUserId(mode: 'relaxed'): string | null
+export function useUserId(mode: 'relaxed' | 'default' | 'strict' = 'default') {
+	const { userId } = useAuth()
+	if (!userId && mode === 'default') {
+		console.log(`We expected a userId here... but got ${userId}`)
+	}
+	if (!userId && mode === 'strict') {
+		throw new Error(`Expected a userId here but got: ${userId}`)
+	}
+	return userId!
 }
 
 export const useSignOut = () => {

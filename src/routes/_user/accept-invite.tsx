@@ -16,7 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/hooks/use-profile'
@@ -41,7 +41,7 @@ function AcceptInvitePage() {
 	const { data: friend, isLoading } = useOnePublicProfile(search.uid_by)
 	if (!search?.uid_by)
 		throw new Error('This URL is missing the uid_by parameter')
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const { data: profile } = useProfile()
 	if (!userId || userId !== search.uid_for)
 		throw new Error(

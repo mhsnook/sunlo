@@ -27,14 +27,7 @@ export type CompositeQueryResults<T> =
 			data: null
 	  }
 
-export type RolesEnum = 'learner' | 'helper' | 'both' | null
-
-export type AuthState = {
-	isAuth: boolean
-	userId: uuid | null
-	userEmail: string | null
-	userRole: RolesEnum
-}
+export type RolesEnum = 'learner' | 'helper' | 'both'
 
 export type Tag = {
 	id: uuid
@@ -98,7 +91,6 @@ export type ReviewInsert =
 export type ReviewRow = Tables<'user_card_review'>
 export type ReviewUpdate =
 	Database['public']['Functions']['update_user_card_review']['Args']
-
 
 export type ReviewStats = {
 	reviewed: number

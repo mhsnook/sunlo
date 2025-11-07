@@ -19,7 +19,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { useDecks } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
@@ -105,7 +105,7 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 }
 
 function useCardStatusMutation(phrase: AnyPhrase) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 
 	return useMutation<
 		Tables<'user_card'>,
@@ -124,7 +124,7 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 							status,
 						})
 						.eq('phrase_id', phrase.id)
-						.eq('uid', userId!)
+						.eq('uid', userId)
 						.select()
 						.throwOnError()
 				:	await supabase
@@ -162,7 +162,7 @@ export function CardStatusDropdown({
 	phrase,
 	className,
 }: CardStatusDropdownProps) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const { data: decks } = useDecks()
 	const deckPresent = decks.some((d) => d.lang === phrase.lang) ?? false
 	const card = phrase.card

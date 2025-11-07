@@ -20,7 +20,7 @@ import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import {
 	chatMessagesCollection,
 	decksCollection,
@@ -28,12 +28,13 @@ import {
 	myProfileQuery,
 } from '@/lib/collections'
 import { ChatMessageSchema, MyProfileType } from '@/lib/schemas'
+import { AuthLoggedIn } from '@/components/auth-context'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
 		// If the user is logged out, redirect them to the login page
 		// console.log(`beforeLoad auth context:`, context.auth)
-		if (!context.auth?.isAuth) {
+		if (!context.auth.isAuth) {
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw redirect({
 				to: '/login',
@@ -45,6 +46,7 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
+		return { auth: context.auth }
 	},
 	loader: async ({ location, context: { queryClient } }) => {
 		// The AuthProvider should have already fetched the profile
@@ -101,9 +103,8 @@ function UserLayout() {
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId('strict')
 	useEffect(() => {
-		if (!userId) return
 		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
 			.on(

@@ -1,6 +1,6 @@
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import type { Tables } from '@/types/supabase'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import {
 	phraseRequestsCollection,
 	publicProfilesCollection,
@@ -8,7 +8,7 @@ import {
 import { phrasesFull } from '@/lib/live-collections'
 
 export function useAllMyPhraseRequestsLang(lang: string) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	return useLiveQuery((q) =>
 		q
 			.from({ request: phraseRequestsCollection })

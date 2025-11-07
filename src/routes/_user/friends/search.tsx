@@ -19,7 +19,7 @@ import Callout from '@/components/ui/callout'
 import { Garlic } from '@/components/garlic'
 import { Label } from '@/components/ui/label'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { nullSubmit } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
 import { useSearchProfilesByUsername } from '@/hooks/use-public-profile'
@@ -45,7 +45,7 @@ function FriendRequestPage() {
 
 function SearchProfiles() {
 	const { query } = Route.useSearch()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const debouncedQuery = useDebounce(query, 100) ?? ''
 	const navigate = useNavigate({ from: Route.fullPath })
 	const setQueryInputValue = useCallback(

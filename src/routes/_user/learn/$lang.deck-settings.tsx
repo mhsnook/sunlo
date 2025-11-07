@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import {
 	FancySelectField,
@@ -100,7 +100,7 @@ const dailyReviewGoalOptions: FancySelectOption[] = [
 ]
 
 function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -122,7 +122,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 				.from('user_deck')
 				.update({ daily_review_goal: values.daily_review_goal })
 				.eq('lang', lang)
-				.eq('uid', userId!)
+				.eq('uid', userId)
 				.throwOnError()
 				.select()
 			if (!data)
@@ -212,7 +212,7 @@ const learningGoalOptions: FancySelectOption[] = [
 ]
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -234,7 +234,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 				.from('user_deck')
 				.update({ learning_goal: values.learning_goal })
 				.eq('lang', lang)
-				.eq('uid', userId!)
+				.eq('uid', userId)
 				.throwOnError()
 				.select()
 			if (!data)

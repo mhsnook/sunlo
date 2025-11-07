@@ -4,11 +4,11 @@ import { uuid } from './-types'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
 import { Button } from '@/components/ui/button'
 import { useFriendRequestAction, useOneRelation } from '@/hooks/use-friends'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 import { Loader } from '@/components/ui/loader'
 
 export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const action = useFriendRequestAction(uid_for)
 	const { data: relationship } = useOneRelation(uid_for)
 	return (

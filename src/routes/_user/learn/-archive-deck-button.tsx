@@ -9,7 +9,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/hooks'
 
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
@@ -32,14 +32,14 @@ export function ArchiveDeckButton({
 	className?: string
 }) {
 	const [open, setOpen] = useState(false)
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ archived: !archived })
 				.eq('lang', lang)
-				.eq('uid', userId!)
+				.eq('uid', userId)
 				.select()
 				.maybeSingle()
 				.throwOnError()
