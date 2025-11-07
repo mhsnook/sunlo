@@ -134,6 +134,7 @@ export const myProfileQuery = queryOptions({
 
 export const myProfileCollection = createCollection(
 	queryCollectionOptions({
+		
 		queryKey: myProfileQuery.queryKey,
 		queryFn: async (args) => {
 			console.log(`Loading myProfileCollection`)

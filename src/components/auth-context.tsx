@@ -3,14 +3,13 @@ import {
 	createContext,
 	useState,
 	useEffect,
-	useMemo,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
+import { clearUser, myProfileCollection } from '@/lib/collections'
 import { Loader } from '@/components/ui/loader'
 
 const emptyAuth = {
@@ -19,7 +18,7 @@ const emptyAuth = {
 	userId: null,
 	userEmail: null,
 	userRole: null,
-} as const
+} as AuthAny
 
 type AuthNotLoaded = typeof emptyAuth
 
@@ -38,14 +37,49 @@ export type AuthLoggedIn = {
 	userRole: RolesEnum
 }
 
+type AuthAny = {
+	isLoaded: boolean
+	isAuth: boolean
+	userId: uuid | null
+	userEmail: string | null
+	userRole: RolesEnum | null
+}
+
 export type AuthState = AuthLoggedIn | AuthNotLoggedIn | AuthNotLoaded
 
-export const AuthContext = createContext<AuthState>(emptyAuth)
+export const AuthContext = createContext<AuthAny>(emptyAuth)
+
+const authFromSession = (session: Session | null) => ({
+	isAuth: session?.user.role === 'authenticated',
+	userId: session?.user.id ?? null,
+	userEmail: session?.user.email ?? null,
+	userRole: (session?.user?.user_metadata?.role as RolesEnum) ?? null,
+	isLoaded: true,
+})
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
 	const [sessionState, setSessionState] = useState<Session | null>(null)
-	const [isLoaded, setIsLoaded] = useState(false)
+	const [auth, setAuth] = useState<AuthState>(emptyAuth)
+
+	useEffect(() => {
+		const newAuth = authFromSession(sessionState)
+		// check if anything AuthState tracks has changed
+		if (
+			auth.userId !== newAuth.userId ||
+			auth.isAuth !== newAuth.isAuth ||
+			auth.isLoaded !== newAuth.isLoaded ||
+			auth.userEmail !== newAuth.userEmail ||
+			auth.userRole !== newAuth.userRole
+		) {
+			if (auth.isAuth && !newAuth.isAuth) clearUser()
+			if (!auth.userId && newAuth.userId) {
+				myProfileCollection.preload()
+			}
+			console.log(`Changing auth from, to`, auth, newAuth)
+			setAuth(newAuth)
+		}
+	}, [sessionState])
 
 	/*
     This effect should run once when the app first mounts (the context provider), and then
@@ -68,17 +102,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		const { data: listener } = supabase.auth.onAuthStateChange(
 			async (event, session) => {
 				console.log(`User auth event: ${event}`, session)
-
-				if (event === 'SIGNED_OUT')
-					queryClient.removeQueries({ queryKey: ['user'] })
-
-				if (event === 'INITIAL_SESSION') await myProfileCollection.preload()
-
-				if (event === 'SIGNED_IN' && session)
-					await myProfileCollection.utils.refetch()
-
-				setSessionState(session)
-				setIsLoaded(true)
+				try {
+					setSessionState(session)
+				} catch (error) {
+					console.error('Error setting session state:', error)
+				}
 			}
 		)
 
@@ -87,30 +115,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [queryClient])
 
-	const value = useMemo(
-		() =>
-			isLoaded ?
-				{
-					isAuth: sessionState?.user.role === 'authenticated',
-					userId: sessionState?.user.id ?? null,
-					userEmail: sessionState?.user.email ?? null,
-					userRole:
-						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-					isLoaded: true,
-				}
-			:	emptyAuth,
-		[
-			sessionState?.user.role,
-			sessionState?.user.id,
-			sessionState?.user.email,
-			sessionState?.user.user_metadata?.role,
-			isLoaded,
-		]
-	)
-
 	return (
-		<AuthContext.Provider value={value as AuthState}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
+		<AuthContext.Provider value={auth as AuthState}>
+			{auth.isLoaded ? children : <AwaitingAuthLoader />}
 		</AuthContext.Provider>
 	)
 }

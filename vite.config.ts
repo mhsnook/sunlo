@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
 			react(),
 		],
 		build: {
-			chunkSizeWarningLimit: 750,
+			chunkSizeWarningLimit: 350,
 		},
 		envPrefix: ['VITE_', 'TAURI_ENV_'],
 		server: {

@@ -6,4 +6,6 @@ const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 const supabase = createClient<Database>(supabaseUrl, anonKey)
 
+// supabase.auth.getSession()
+
 export default supabase
