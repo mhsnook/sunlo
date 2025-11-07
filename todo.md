@@ -1,11 +1,10 @@
 NEW DATA ISSUES TO FIX LATER
 
-- writeInsert new cards created by request-answering fn
-- double check other RPC functions for this
 - when friend requests come in we refetch the entire thing friend summaries collection instead of using live queries
 
 DB WORK RELATED TO TANSTACK DB
 
+1. Some strange issue happening only in dev mode where the thing just waits for auth state for forever
 1. replace the friend requests complexity with an RPC function
 
 USER TESTING FIXES
@@ -78,14 +77,13 @@ CARD INTERACTIONS
 
 UI POLISH
 
-1. ✅ Add activity graph to deck summaries :))
 1. Full multilingual text search:
    - PGroonga: https://supabase.com/docs/guides/database/extensions/pgroonga
    - fulltext search without accents: https://www.postgresql.org/docs/current/unaccent.html
    - ⛔ fuzzy string match that only works well with american names: https://www.postgresql.org/docs/current/fuzzystrmatch.html
 1. This chat's features: https://v0.dev/chat/animated-card-interface-MHacnAB0fOp
    1. slide the cards in and out horizontally
-   1. ✅ give us a completion progress bar in the /review interface
+   1. give us a completion progress bar in the /review interface
 1. when the router loader is suspending and then stops, transition in
 1. ✅ replace my multi-language select with https://craft.mxkaske.dev/post/fancy-multi-select
 
