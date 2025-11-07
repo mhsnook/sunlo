@@ -48,8 +48,8 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from '@/components/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
-import { phrasesCollection } from '@/lib/collections'
-import { PhraseFullSchema } from '@/lib/schemas'
+import { cardsCollection, phrasesCollection } from '@/lib/collections'
+import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -104,9 +104,10 @@ function FulfillRequestPage() {
 				translation_text: '',
 				translation_lang: variables.translation_lang,
 			})
-			const { phrase, translation } = data
-			const newPhrase = { ...phrase, translations: [translation] }
+			const newPhrase = { ...data.phrase, translations: [data.translation] }
 			phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(newPhrase))
+			if (data.card)
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
 		},
 		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)

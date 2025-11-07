@@ -1,15 +1,15 @@
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type { uuid, ReviewsDayMap, pids } from '@/types/main'
+import type { ReviewsDayMap, pids } from '@/types/main'
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import {
 	cardReviewsCollection,
+	cardsCollection,
 	decksCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
 import { useMemo } from 'react'
-import { cardsFull } from '@/lib/live-collections'
 import { mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { inLastWeek } from '@/lib/dayjs'
 
@@ -84,7 +84,10 @@ export type UseOneDecksType = ReturnType<typeof useDecks>['data'][number]
 
 export const useDeckCards = (lang: string) =>
 	useLiveQuery(
-		(q) => q.from({ card: cardsFull }).where(({ card }) => eq(card.lang, lang)),
+		(q) =>
+			q
+				.from({ card: cardsCollection })
+				.where(({ card }) => eq(card.lang, lang)),
 		[lang]
 	)
 
@@ -114,16 +117,6 @@ export const useDeckRoutineStats = (lang: string) => {
 		[query, daysSoFar]
 	)
 }
-
-export const useDeckCard = (pid: uuid) =>
-	useLiveQuery(
-		(q) =>
-			q
-				.from({ card: cardsFull })
-				.where(({ card }) => eq(card.phrase_id, pid))
-				.findOne(),
-		[pid]
-	)
 
 export type DeckPids = {
 	all: pids

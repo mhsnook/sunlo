@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-// import { useDeckCard } from '@/hooks/use-deck'
 import { uuid } from '@/types/main'
-// import { ago } from '@/lib/dayjs'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { Link } from '@tanstack/react-router'
@@ -13,7 +11,6 @@ import { usePhrase } from '@/hooks/composite-phrase'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
-	// const { data: card } = useDeckCard(pid, lang)
 	const chosenTranslation = phrase?.translations[0]
 
 	if (status === 'not-found')

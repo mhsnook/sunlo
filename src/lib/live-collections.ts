@@ -51,13 +51,3 @@ export const relationsFull = createLiveQueryCollection({
 				profile,
 			})),
 })
-
-export const cardsFull = createLiveQueryCollection({
-	query: (q) =>
-		q
-			.from({ card: cardsCollection })
-			.join({ phrase: phrasesCollection }, ({ card, phrase }) =>
-				eq(phrase.id, card.phrase_id)
-			)
-			.select(({ card, phrase }) => ({ ...card, phrase })),
-})

@@ -255,8 +255,7 @@ export function CardStatusHeart({
 	phrase: PhraseFullFilteredType
 }) {
 	const mutation = useCardStatusMutation(phrase)
-	const status = phrase.card?.status === 'active' ? 'skipped' : 'active'
-
+	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
 			variant="outline"
@@ -265,7 +264,7 @@ export function CardStatusHeart({
 				phrase.card?.status === 'active' ? 'border-primary-foresoft/30' : ''
 			}
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
-			onClick={() => mutation.mutate({ status })}
+			onClick={() => mutation.mutate({ status: statusToPost })}
 		>
 			{phrase.card?.status === 'active' ?
 				<Heart className="fill-red-600 text-red-600" />

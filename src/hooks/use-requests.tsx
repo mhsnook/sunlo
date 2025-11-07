@@ -1,11 +1,11 @@
-import { useAuth } from '@/lib/hooks'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import type { Tables } from '@/types/supabase'
+import { useAuth } from '@/lib/hooks'
 import {
 	phraseRequestsCollection,
-	phrasesCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
-import { Tables } from '@/types/supabase'
+import { phrasesFull } from '@/lib/live-collections'
 
 export function useAllMyPhraseRequestsLang(lang: string) {
 	const { userId } = useAuth()
@@ -36,7 +36,7 @@ export const useRequest = (id: string) =>
 export const usePhrasesFromRequest = (id: string) =>
 	useLiveQuery((q) =>
 		q
-			.from({ phrase: phrasesCollection })
+			.from({ phrase: phrasesFull })
 			.where(({ phrase }) => eq(phrase.request_id, id))
 			.join({ profile: publicProfilesCollection }, ({ phrase, profile }) =>
 				eq(phrase.added_by, profile.uid)
@@ -50,4 +50,5 @@ export const usePhrasesFromRequest = (id: string) =>
 export type FulfillRequestResponse = {
 	phrase: Tables<'phrase'>
 	translation: Tables<'phrase_translation'>
+	card: Tables<'user_card'> | null
 }
