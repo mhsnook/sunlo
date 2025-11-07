@@ -1,14 +1,7 @@
 import { useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-import {
-	pids,
-	ReviewInsert,
-	ReviewsMap,
-	ReviewStages,
-	ReviewStats,
-	uuid,
-} from '@/types/main'
+import type { pids, RPCFunctions, uuid } from '@/types/main'
 import toast from 'react-hot-toast'
 import {
 	getIndexOfNextAgainCard,
@@ -24,7 +17,22 @@ import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import { CardReviewSchema, CardReviewType } from '@/lib/schemas'
 
-const postReview = async (submitData: ReviewInsert) => {
+/*
+	0. not yet initialised
+	1. doing the first review
+	2. going back for unreviewed
+	3. skip unreviewed and see screen asking to re-review
+	4. doing re-reviews
+	5. skip re-reviews and end
+*/
+export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
+export type ReviewsMap = {
+	[key: uuid]: CardReviewType
+}
+
+const postReview = async (
+	submitData: RPCFunctions['insert_user_card_review']['Args']
+) => {
 	const { data } = await supabase
 		.rpc('insert_user_card_review', submitData)
 		.throwOnError()
@@ -33,7 +41,9 @@ const postReview = async (submitData: ReviewInsert) => {
 }
 
 const updateReview = async (
-	submitData: ReviewInsert | { review_id: uuid; score: number }
+	submitData:
+		| RPCFunctions['update_user_card_review']['Args']
+		| { review_id: uuid; score: number }
 ) => {
 	if (!('review_id' in submitData) || !('score' in submitData))
 		throw new Error('Invalid inputs; cannot update')
@@ -44,7 +54,7 @@ const updateReview = async (
 	return data
 }
 
-function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
+function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
 	const stats = {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
@@ -73,6 +83,8 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids): ReviewStats {
 		inferred: { stage, index },
 	}
 }
+
+export type ReviewStats = ReturnType<typeof mapToStats>
 
 export function useReviewsToday(lang: string, day_session: string) {
 	const reviewsQuery = useLiveQuery(

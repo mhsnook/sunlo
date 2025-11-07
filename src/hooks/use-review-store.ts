@@ -1,8 +1,13 @@
 import { createStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
+
+import type { pids } from '@/types/main'
+import {
+	type ReviewsMap,
+	type ReviewStages,
+	useReviewsToday,
+} from './use-reviews'
 import { useReviewStore } from '@/components/review/review-context-provider'
-import type { ReviewStages, ReviewsMap, pids } from '@/types/main'
-import { useReviewsToday } from './use-reviews'
 
 const DEFAULT_PROPS = {
 	lang: '',

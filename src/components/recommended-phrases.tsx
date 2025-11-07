@@ -1,10 +1,11 @@
-import languages from '@/lib/languages'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCompositePids } from '@/hooks/composite-pids'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
-import { LangOnlyComponentProps, pids } from '@/types/main'
-import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { Link } from '@tanstack/react-router'
+import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+
+import type { pids } from '@/types/main'
+import languages from '@/lib/languages'
+import { useCompositePids } from '@/hooks/composite-pids'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
 type PhraseSectionProps = {
 	description: string
@@ -30,7 +31,7 @@ const PhraseSection = ({ description, pids, Icon }: PhraseSectionProps) => {
 	)
 }
 
-export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
+export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 	const recommendations = useCompositePids(lang)
 
 	if (!recommendations) return null

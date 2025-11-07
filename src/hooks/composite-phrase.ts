@@ -1,15 +1,24 @@
 import { useLanguagePhrase } from '@/hooks/use-language'
 import { useLanguagesToShow } from '@/hooks/use-profile'
-import type { CompositeQueryResults, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import type {
 	PhraseFullFilteredType,
 	PhraseFullType,
 	TranslationType,
 } from '@/lib/schemas'
 
-export const usePhrase = (
-	pid: uuid
-): CompositeQueryResults<PhraseFullFilteredType> => {
+export type CompositePhraseQueryResults =
+	| { status: 'pending'; data: undefined }
+	| {
+			status: 'complete' | 'partial'
+			data: PhraseFullFilteredType
+	  }
+	| {
+			status: 'not-found'
+			data: null
+	  }
+
+export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
 	const { data: languagesToShow, isLoading: isLoading1 } = useLanguagesToShow()
 	const { data: phrase, isLoading: isLoading2 } = useLanguagePhrase(pid)
 

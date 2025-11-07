@@ -1,5 +1,3 @@
-import { PhraseCardInsert } from '@/types/main'
-
 import { useCallback, useEffect } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
@@ -8,7 +6,10 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@uidotdev/usehooks'
+import { NotebookPen, Search } from 'lucide-react'
 
+import type { Tables } from '@/types/supabase'
+import type { RPCFunctions } from '@/types/main'
 import {
 	Card,
 	CardContent,
@@ -19,14 +20,12 @@ import {
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { NotebookPen, Search } from 'lucide-react'
 import languages from '@/lib/languages'
 import { Loader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { Tables } from '@/types/supabase'
 import {
 	CardMetaSchema,
 	PhraseFullSchema,
@@ -100,7 +99,10 @@ function AddPhraseTab() {
 
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
-			const ins: PhraseCardInsert = { phrase_lang: lang, ...variables }
+			const ins: RPCFunctions['add_phrase_translation_card']['Args'] = {
+				phrase_lang: lang,
+				...variables,
+			}
 			const { data } = await supabase
 				.rpc('add_phrase_translation_card', ins)
 				.throwOnError()

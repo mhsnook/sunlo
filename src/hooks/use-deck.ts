@@ -1,19 +1,22 @@
+import { useMemo } from 'react'
+import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type { ReviewsDayMap, pids } from '@/types/main'
-import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
+import type { pids } from '@/types/main'
+import type { CardReviewType } from '@/lib/schemas'
 import {
 	cardReviewsCollection,
 	cardsCollection,
 	decksCollection,
 	reviewDaysCollection,
 } from '@/lib/collections'
-import { useMemo } from 'react'
-import { mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { inLastWeek } from '@/lib/dayjs'
+import { mapArrays, sortDecksByActivity } from '@/lib/utils'
 
 dayjs.extend(isoWeek)
+
+type ReviewsDayMap = { [key: string]: Array<CardReviewType> }
 
 const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
 	if (!reviewsDayMap) return []
