@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { type Collection, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 
 import {
@@ -31,8 +31,8 @@ import {
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'
+import type { uuid } from '@/types/main'
 import { themes } from './deck-themes'
-import { queryOptions } from '@tanstack/react-query'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -118,158 +118,169 @@ export const languagesCollection = createCollection(
 	})
 )
 
-export const myProfileQuery = queryOptions({
-	queryKey: ['user', 'profile'],
-	queryFn: async (_) => {
-		console.log(`Running myProfileQuery`)
-		const { data } = await supabase
-			.from('user_profile')
-			.select()
-			.throwOnError()
-			.maybeSingle()
-		if (!data) return []
-		return [MyProfileSchema.parse(data)]
-	},
-})
+export type UserCollections = {
+	myProfile: Collection<MyProfileType, string>
+	decks: Collection<DeckMetaType, string>
+	cards: Collection<CardMetaType, string>
+	reviewDays: Collection<DailyReviewStateType, string>
+	cardReviews: Collection<CardReviewType, string>
+	friendSummaries: Collection<FriendSummaryType, string>
+	chatMessages: Collection<ChatMessageType, string>
+}
 
-export const myProfileCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: myProfileQuery.queryKey,
-		queryFn: async (args) => {
-			console.log(`Loading myProfileCollection`)
-			return myProfileQuery.queryFn!(args)
-		},
-		getKey: (item: MyProfileType) => item.uid,
-		queryClient,
-		optimistic: false,
-		schema: MyProfileSchema,
-	})
-)
+let userCollections: UserCollections | null = null
 
-export const decksCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'deck_plus'],
-		queryFn: async () => {
-			console.log(`Loading decksCollection`)
-			const { data } = await supabase
-				.from('user_deck_plus')
-				.select()
-				.throwOnError()
-			return (
-				data
-					?.map((item) => DeckMetaRawSchema.parse(item))
-					.toSorted(sortDecksByCreation)
-					.map((d, i) => ({
-						...d,
-						theme: i % themes.length,
-					})) ?? []
-			)
-		},
-		getKey: (item: DeckMetaType) => item.lang,
-		queryClient,
-		optimistic: false,
-		schema: DeckMetaSchema,
-	})
-)
+export function initializeUserCollections(userId: uuid): UserCollections {
+	if (userCollections) return userCollections
 
-export const cardsCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'card'],
-		queryFn: async () => {
-			console.log(`Loading cardsCollection`)
-			const { data } = await supabase
-				.from('user_card_plus')
-				.select()
-				.throwOnError()
-			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
-		},
-		getKey: (item: CardMetaType) => item.phrase_id,
-		queryClient,
-		optimistic: false,
-		schema: CardMetaSchema,
-	})
-)
+	/**
+	 * We are creating a new set of collections for the user.
+	 * We're using `as const` to help TypeScript infer the correct types
+	 * for the collections object, which is then assigned to the module-level
+	 * `userCollections` variable.
+	 */
 
-export const reviewDaysCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'daily_review_state'],
-		queryFn: async () => {
-			console.log(`Loading reviewDaysCollection`)
-			const { data } = await supabase
-				.from('user_deck_review_state')
-				.select()
-				.throwOnError()
-			return data?.map((item) => DailyReviewStateSchema.parse(item)) ?? []
-		},
-		getKey: (item: DailyReviewStateType) => item.day_session,
-		queryClient,
-		optimistic: false,
-		schema: DailyReviewStateSchema,
-	})
-)
+	const myProfile = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'profile'],
+			queryFn: async () => {
+				console.log(`Loading myProfileCollection`)
+				const { data } = await supabase
+					.from('user_profile')
+					.select()
+					.throwOnError()
+					.maybeSingle()
+				if (!data) return []
+				return [MyProfileSchema.parse(data)]
+			},
+			getKey: (item: MyProfileType) => item.uid,
+			queryClient,
+			schema: MyProfileSchema,
+		})
+	)
+	const decks = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'deck_plus'],
+			queryFn: async () => {
+				console.log(`Loading decks collection`)
+				const { data } = await supabase
+					.from('user_deck_plus')
+					.select()
+					.throwOnError()
+				return (
+					data
+						?.map((item) => DeckMetaRawSchema.parse(item))
+						.toSorted(sortDecksByCreation)
+						.map((d, i) => ({
+							...d,
+							theme: i % themes.length,
+						})) ?? []
+				)
+			},
+			getKey: (item: DeckMetaType) => item.lang,
+			queryClient,
+			schema: DeckMetaSchema,
+		})
+	)
+	const cards = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'card'],
+			queryFn: async () => {
+				console.log(`Loading cardsCollection`)
+				const { data } = await supabase
+					.from('user_card_plus')
+					.select()
+					.throwOnError()
+				return data?.map((item) => CardMetaSchema.parse(item)) ?? []
+			},
+			getKey: (item: CardMetaType) => item.phrase_id,
+			queryClient,
+			schema: CardMetaSchema,
+		})
+	)
+	const reviewDays = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'daily_review_state'],
+			queryFn: async () => {
+				console.log(`Loading reviewDaysCollection`)
+				const { data } = await supabase
+					.from('user_deck_review_state')
+					.select()
+					.throwOnError()
+				return data?.map((item) => DailyReviewStateSchema.parse(item)) ?? []
+			},
+			getKey: (item: DailyReviewStateType) => item.day_session,
+			queryClient,
+			schema: DailyReviewStateSchema,
+		})
+	)
+	const cardReviews = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'card_review'],
+			queryFn: async () => {
+				const { data } = await supabase
+					.from('user_card_review')
+					.select()
+					.throwOnError()
+				return data?.map((item) => CardReviewSchema.parse(item)) ?? []
+			},
+			getKey: (item: CardReviewType) => item.id,
+			queryClient,
+			schema: CardReviewSchema,
+		})
+	)
 
-export const cardReviewsCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'card_review'],
-		queryFn: async () => {
-			console.log(`Loading cardReviewsCollection`)
-			const { data } = await supabase
-				.from('user_card_review')
-				.select()
-				.throwOnError()
-			return data?.map((item) => CardReviewSchema.parse(item)) ?? []
-		},
-		getKey: (item: CardReviewType) => item.id,
-		queryClient,
-		optimistic: false,
-		schema: CardReviewSchema,
-	})
-)
+	const friendSummaries = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'friend_summary'],
+			queryFn: async () => {
+				const { data } = await supabase
+					.from('friend_summary')
+					.select()
+					.throwOnError()
+				return data?.map((item) => FriendSummarySchema.parse(item)) ?? []
+			},
+			getKey: (item: FriendSummaryType) =>
+				`${item.uid_less}--${item.uid_more}` as string,
+			queryClient,
+			schema: FriendSummarySchema,
+		})
+	)
 
-export const friendSummariesCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'friend_summary'],
-		queryFn: async () => {
-			console.log(`Loading friendSummariesCollection`)
-			const { data } = await supabase
-				.from('friend_summary')
-				.select()
-				.throwOnError()
-			return data?.map((item) => FriendSummarySchema.parse(item)) ?? []
-		},
-		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
-		queryClient,
-		optimistic: false,
-		schema: FriendSummarySchema,
-	})
-)
+	const chatMessages = createCollection(
+		queryCollectionOptions({
+			queryKey: ['user', userId, 'chat_message'],
+			queryFn: async () => {
+				const { data } = await supabase
+					.from('chat_message')
+					.select()
+					.throwOnError()
+				return data?.map((item) => ChatMessageSchema.parse(item)) ?? []
+			},
+			getKey: (item: ChatMessageType) => item.id,
+			queryClient,
+			schema: ChatMessageSchema,
+		})
+	)
 
-export const chatMessagesCollection = createCollection(
-	queryCollectionOptions({
-		queryKey: ['user', 'chat_message'],
-		queryFn: async () => {
-			console.log(`Loading chatMessagesCollection`)
-			const { data } = await supabase
-				.from('chat_message')
-				.select()
-				.throwOnError()
-			return data?.map((item) => ChatMessageSchema.parse(item)) ?? []
-		},
-		getKey: (item: ChatMessageType) => item.id,
-		queryClient,
-		optimistic: false,
-		schema: ChatMessageSchema,
-	})
-)
+	userCollections = {
+		myProfile,
+		decks,
+		cards,
+		reviewDays,
+		cardReviews,
+		friendSummaries,
+		chatMessages,
+	}
+
+	return userCollections
+}
 
 export const clearUser = async () => {
-	await Promise.all([
-		myProfileCollection.cleanup(),
-		decksCollection.cleanup(),
-		cardsCollection.cleanup(),
-		reviewDaysCollection.cleanup(),
-		cardReviewsCollection.cleanup(),
-		friendSummariesCollection.cleanup(),
-		chatMessagesCollection.cleanup(),
-	])
+	if (userCollections) {
+		await Promise.all(Object.values(userCollections).map((c) => c.cleanup()))
+	}
+	userCollections = null
+	// This will remove all queries that start with ['user']
+	await queryClient.removeQueries({ queryKey: ['user'] })
 }

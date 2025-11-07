@@ -12,6 +12,7 @@ import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/lib/collections'
 import { Loader } from '@/components/ui/loader'
+import { CollectionsProvider } from './collections-context'
 
 const emptyAuth = {
 	isLoaded: false,
@@ -110,7 +111,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 	return (
 		<AuthContext.Provider value={value as AuthState}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
+			{value.isLoaded ?
+				<CollectionsProvider>{children}</CollectionsProvider>
+			:	<AwaitingAuthLoader />}
 		</AuthContext.Provider>
 	)
 }

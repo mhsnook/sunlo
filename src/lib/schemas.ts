@@ -89,7 +89,7 @@ export type PublicProfileType = z.infer<typeof PublicProfileSchema>
 export const MyProfileSchema = PublicProfileSchema.extend({
 	created_at: z.string(),
 	languages_known: LanguagesKnownSchema,
-	updated_at: z.string().nullable(),
+	updated_at: z.string().nullable().default(null),
 })
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>
@@ -190,21 +190,21 @@ export const DeckMetaRawSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
 	created_at: z.string(),
-	archived: z.boolean().default(false),
-	daily_review_goal: z.number().default(15),
+	archived: z.boolean().transform(Boolean),
+	daily_review_goal: z.number(),
 	language: z.string(),
 	learning_goal: LearningGoalEnumSchema,
-	cards_active: z.number().default(0),
-	cards_learned: z.number().default(0),
-	cards_skipped: z.number().default(0),
-	count_reviews_7d: z.number().default(0),
-	count_reviews_7d_positive: z.number().default(0),
-	lang_total_phrases: z.number().default(0),
+	cards_active: z.number(),
+	cards_learned: z.number(),
+	cards_skipped: z.number(),
+	count_reviews_7d: z.number(),
+	count_reviews_7d_positive: z.number(),
+	lang_total_phrases: z.number(),
 	most_recent_review_at: z.string().nullable().default(null),
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
-	theme: z.number().nullable(),
+	theme: z.number().nullable().default(null),
 })
 
 export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>
@@ -217,7 +217,7 @@ export const CardMetaSchema = z.object({
 	uid: z.string().uuid(),
 	lang: LangSchema,
 	status: CardStatusEnumSchema,
-	updated_at: z.string().nullable(),
+	updated_at: z.string().nullable().default(null),
 	current_timestamp: z
 		.string()
 		.default(dayjs().tz('UTC').format('YYYY-MM-DD HH:mm:ss+00')),
@@ -237,11 +237,11 @@ export const CardReviewSchema = z.object({
 	lang: LangSchema,
 	phrase_id: z.string().uuid(),
 	score: z.number(),
-	day_first_review: z.boolean().default(true),
-	difficulty: z.number().nullable(),
-	review_time_retrievability: z.number().nullable(),
-	stability: z.number().nullable(),
-	updated_at: z.string().nullable(),
+	day_first_review: z.boolean().default(true), // Database is NOT NULL DEFAULT TRUE
+	difficulty: z.number().nullable().default(null),
+	review_time_retrievability: z.number().nullable().default(null),
+	stability: z.number().nullable().default(null),
+	updated_at: z.string(), // Database is NOT NULL DEFAULT NOW()
 })
 
 export type CardReviewType = z.infer<typeof CardReviewSchema>
@@ -250,7 +250,7 @@ export const DailyReviewStateSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
 	lang: LangSchema,
-	manifest: z.preprocess((val) => val ?? [], z.array(z.string().uuid())),
+	manifest: z.array(z.string().uuid()).nullable(),
 	uid: z.string().uuid(),
 })
 
