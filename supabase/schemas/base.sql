@@ -449,12 +449,12 @@ alter function "public"."fsrs_stability" (
 ) owner to "postgres";
 
 create
-or replace function public.fulfill_phrase_request (
-	request_id uuid,
-	p_phrase_text text,
-	p_translation_text text,
-	p_translation_lang character varying
-) returns json language plpgsql as $$
+or replace function "public"."fulfill_phrase_request" (
+	"request_id" "uuid",
+	"p_phrase_text" "text",
+	"p_translation_text" "text",
+	"p_translation_lang" character varying
+) returns "json" language "plpgsql" as $$
 DECLARE
     v_requester_uid uuid;
     v_phrase_lang character varying;
@@ -462,6 +462,7 @@ DECLARE
     fulfiller_uid uuid;
     new_phrase public.phrase;
     new_translation public.phrase_translation;
+    new_card public.user_card;
 BEGIN
     -- Get the requester's UID and the phrase language from the request
     SELECT requester_uid, lang, status
@@ -489,7 +490,8 @@ BEGIN
     -- If the requester is also the fulfiller, make them a new card
     IF v_requester_uid = fulfiller_uid THEN
         INSERT INTO public.user_card (phrase_id, uid, lang, status)
-        VALUES (new_phrase.id, fulfiller_uid, v_phrase_lang, 'active');
+        VALUES (new_phrase.id, fulfiller_uid, v_phrase_lang, 'active')
+        RETURNING * INTO new_card;
 
         -- Update the phrase_request to mark it as fulfilled
         UPDATE public.phrase_request
@@ -498,7 +500,7 @@ BEGIN
     END IF;
 
     -- Return the created phrase and translation as a JSON object
-    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation));
+    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
 END;
 $$;
 
