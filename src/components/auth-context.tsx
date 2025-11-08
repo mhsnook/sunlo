@@ -10,7 +10,7 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
+import { cleanupUser, preloadUser } from '@/lib/collections'
 import { Loader } from '@/components/ui/loader'
 
 const emptyAuth = {
@@ -44,52 +44,56 @@ export const AuthContext = createContext<AuthState>(emptyAuth)
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const queryClient = useQueryClient()
-	const [sessionState, setSessionState] = useState<Session | null>(null)
-	const [isLoaded, setIsLoaded] = useState(false)
-
-	/*
-    This effect should run once when the app first mounts (the context provider), and then
-    hopefully never again. We're just going to attach this auth-state-change listener, and whenever
-    the auth state changes, we check what kind of change has happened, update the state hook and do
-    whatever cache invalidation is needed.
-
-    Normally we would want to use a useQuery() hook to fetch the user info and pass the data
-    directly as the context value (per https://tkdodo.eu/blog/react-query-and-react-context), but
-    supabase-js is giving us this handy listener to update state, and so far we've never
-    encountered a race condition where 'INITIAL_SESSION' fires after the listener is attached.
-  */
+	const [sessionState, setSessionState] = useState<Session | null | undefined>(
+		undefined
+	)
 
 	useEffect(() => {
+		// console.log(`Adding auth-state listener`)
 		if (!queryClient) {
 			console.log('Returning early bc queryClient hook has not come back')
 			return
 		}
 
 		const { data: listener } = supabase.auth.onAuthStateChange(
-			async (event, session) => {
-				console.log(`User auth event: ${event}`, session)
-
-				if (event === 'SIGNED_OUT')
-					queryClient.removeQueries({ queryKey: ['user'] })
-
-				if (event === 'INITIAL_SESSION') await myProfileCollection.preload()
-
-				if (event === 'SIGNED_IN' && session)
-					await myProfileCollection.utils.refetch()
-
-				setSessionState(session)
-				setIsLoaded(true)
+			(event, session) => {
+				console.log(`User auth event: ${event}`)
+				if (!session && sessionState?.user.id) {
+					// console.log(`1st condition`)
+					void cleanupUser().then(() => setSessionState(session))
+				} else if (session && !sessionState?.user.id) {
+					// console.log(`2st condition`)
+					void preloadUser().then(() => setSessionState(session))
+				} else if (
+					sessionState?.user.id &&
+					sessionState?.user.id !== session?.user.id
+				) {
+					// console.log(`3st condition`)
+					void cleanupUser().then(() =>
+						preloadUser().then(() => setSessionState(session))
+					)
+				} else {
+					// console.log(`4st condition`)
+					setSessionState(session)
+				}
 			}
 		)
 
 		return () => {
 			listener.subscription.unsubscribe()
 		}
-	}, [queryClient])
+	}, [queryClient, setSessionState, sessionState?.user.id])
 
-	const value = useMemo(
-		() =>
-			isLoaded ?
+	const isSet = sessionState !== undefined
+	const value = useMemo(() => {
+		/* console.log(`Running useMemo for new auth state`, {
+			isAuth: sessionState?.user.role === 'authenticated',
+			userId: sessionState?.user.id ?? null,
+			userEmail: sessionState?.user.email ?? null,
+			userRole: (sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+			isLoaded: true,
+		}) */
+		return isSet ?
 				{
 					isAuth: sessionState?.user.role === 'authenticated',
 					userId: sessionState?.user.id ?? null,
@@ -98,15 +102,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
 						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 					isLoaded: true,
 				}
-			:	emptyAuth,
-		[
-			sessionState?.user.role,
-			sessionState?.user.id,
-			sessionState?.user.email,
-			sessionState?.user.user_metadata?.role,
-			isLoaded,
-		]
-	)
+			:	emptyAuth
+	}, [
+		sessionState?.user.role,
+		sessionState?.user.id,
+		sessionState?.user.email,
+		sessionState?.user.user_metadata?.role,
+		isSet,
+	])
 
 	return (
 		<AuthContext.Provider value={value as AuthState}>

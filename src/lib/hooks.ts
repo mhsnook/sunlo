@@ -4,8 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import supabase from '@/lib/supabase-client'
 import { AuthContext } from '@/components/auth-context'
-import { clearUser } from '@/lib/collections'
 import { useDecks } from '@/hooks/use-deck'
+import { cleanupUser } from './collections'
 
 // Access the context's value from inside a provider
 export function useAuth() {
@@ -25,7 +25,7 @@ export function useUserId(mode: 'relaxed' | 'default' | 'strict' = 'default') {
 		console.log(`We expected a userId here... but got ${userId}`)
 	}
 	if (!userId && mode === 'strict') {
-		throw new Error(`Expected a userId here but got: ${userId}`)
+		console.log(`Expected a userId here but got: ${userId}`)
 	}
 	return userId!
 }
@@ -44,7 +44,7 @@ export const useSignOut = () => {
 		},
 		onSuccess: async () => {
 			client.removeQueries({ queryKey: ['user'], exact: false })
-			await clearUser()
+			await cleanupUser()
 			void navigate({ to: '/' })
 		},
 	})

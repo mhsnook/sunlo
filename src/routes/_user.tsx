@@ -25,10 +25,9 @@ import {
 	chatMessagesCollection,
 	decksCollection,
 	friendSummariesCollection,
-	myProfileQuery,
+	myProfileCollection,
 } from '@/lib/collections'
 import { ChatMessageSchema, MyProfileType } from '@/lib/schemas'
-import { AuthLoggedIn } from '@/components/auth-context'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -48,15 +47,19 @@ export const Route = createFileRoute('/_user')({
 		}
 		return { auth: context.auth }
 	},
-	loader: async ({ location, context: { queryClient } }) => {
-		// The AuthProvider should have already fetched the profile
+	loader: async ({ location, context }) => {
+		void friendSummariesCollection.preload()
+		void decksCollection.preload()
+		// await myProfileCollection.waitFor('status:ready')
 		const profile: MyProfileType[] | undefined =
-			await queryClient.ensureQueryData(myProfileQuery)
+			context.auth.isAuth ?
+				await myProfileCollection.toArrayWhenReady()
+			:	undefined
 
 		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
 			// The profile data is an array; we check if it's empty.
-			if (!profile || profile.length === 0) {
+			if (!profile || !profile[0]) {
 				console.log(
 					`Redirecting to /getting-started because no profile was found.`
 				)

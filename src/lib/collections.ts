@@ -262,7 +262,7 @@ export const chatMessagesCollection = createCollection(
 	})
 )
 
-export const clearUser = async () => {
+export const cleanupUser = async () => {
 	await Promise.all([
 		myProfileCollection.cleanup(),
 		decksCollection.cleanup(),
@@ -271,5 +271,12 @@ export const clearUser = async () => {
 		cardReviewsCollection.cleanup(),
 		friendSummariesCollection.cleanup(),
 		chatMessagesCollection.cleanup(),
+	])
+}
+export const preloadUser = async () => {
+	await Promise.all([
+		myProfileCollection.preload(),
+		decksCollection.preload(),
+		friendSummariesCollection.preload(),
 	])
 }
