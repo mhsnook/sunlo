@@ -4,8 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import supabase from '@/lib/supabase-client'
 import { AuthContext } from '@/components/auth-context'
-import { clearUser } from '@/lib/collections'
 import { useDecks } from '@/hooks/use-deck'
+import { useCollections } from '@/components/collections-context'
 
 // Access the context's value from inside a provider
 export function useAuth() {
@@ -33,6 +33,7 @@ export function useUserId(mode: 'relaxed' | 'default' | 'strict' = 'default') {
 export const useSignOut = () => {
 	const navigate = useNavigate()
 	const client = useQueryClient()
+	const { collections } = useCollections()
 
 	return useMutation({
 		mutationFn: async () => {
@@ -42,10 +43,9 @@ export const useSignOut = () => {
 				throw error
 			}
 		},
-		onSuccess: async () => {
+		onSuccess: () => {
 			client.removeQueries({ queryKey: ['user'], exact: false })
-			await clearUser()
-			void navigate({ to: '/' })
+			void collections?.cleanupAll().then(() => void navigate({ to: '/' }))
 		},
 	})
 }

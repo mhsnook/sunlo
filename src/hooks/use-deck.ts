@@ -5,14 +5,10 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids } from '@/types/main'
 import type { CardReviewType } from '@/lib/schemas'
-import {
-	cardReviewsCollection,
-	cardsCollection,
-	decksCollection,
-	reviewDaysCollection,
-} from '@/lib/collections'
+
 import { inLastWeek } from '@/lib/dayjs'
 import { mapArrays, sortDecksByActivity } from '@/lib/utils'
+import { useCollections } from '@/components/collections-context'
 
 dayjs.extend(isoWeek)
 
@@ -43,10 +39,12 @@ export const useDeckActivityChartData = (lang: string) => {
 		.subtract(4, 'hour') // makes 4am the end of the day
 		.format('YYYY-MM-DD')
 
+	const { collections } = useCollections()
+
 	const query = useLiveQuery(
 		(q) =>
 			q
-				.from({ review: cardReviewsCollection })
+				.from({ review: collections!.reviews })
 				.where(({ review }) =>
 					and(eq(review.lang, lang), gte(review.day_session, startDate))
 				),
@@ -62,18 +60,22 @@ export const useDeckActivityChartData = (lang: string) => {
 	)
 }
 
-export const useDeckMeta = (lang: string) =>
-	useLiveQuery(
+export const useDeckMeta = (lang: string) => {
+	const { collections } = useCollections()
+	return useLiveQuery(
 		(q) =>
 			q
-				.from({ deck: decksCollection })
+				.from({ deck: collections!.decks })
 				.where(({ deck }) => eq(deck.lang, lang))
 				.findOne(),
 		[lang]
 	)
+}
 
 export const useDecks = () => {
-	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
+	const { collections } = useCollections()
+
+	const query = useLiveQuery((q) => q.from({ deck: collections!.decks }))
 	return useMemo(
 		() => ({
 			...query,
@@ -85,25 +87,29 @@ export const useDecks = () => {
 
 export type UseOneDecksType = ReturnType<typeof useDecks>['data'][number]
 
-export const useDeckCards = (lang: string) =>
-	useLiveQuery(
+export const useDeckCards = (lang: string) => {
+	const { collections } = useCollections()
+
+	return useLiveQuery(
 		(q) =>
 			q
-				.from({ card: cardsCollection })
+				.from({ card: collections!.cards })
 				.where(({ card }) => eq(card.lang, lang)),
 		[lang]
 	)
+}
 
 export const useDeckRoutineStats = (lang: string) => {
 	const today = dayjs()
 	const mostRecentMonday = today.isoWeekday(1).subtract(4, 'hour')
 	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
 	const mondayString = mostRecentMonday.format('YYYY-MM-DD')
+	const { collections } = useCollections()
 
 	const query = useLiveQuery(
 		(q) =>
 			q
-				.from({ day: reviewDaysCollection })
+				.from({ day: collections!.reviewDays })
 				.where(({ day }) =>
 					and(eq(day.lang, lang), gte(day.day_session, mondayString))
 				)

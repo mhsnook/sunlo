@@ -10,8 +10,8 @@ import { useQueryClient } from '@tanstack/react-query'
 
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
 import { Loader } from '@/components/ui/loader'
+import { CollectionsProvider } from './collections-context'
 
 const emptyAuth = {
 	isLoaded: false,
@@ -66,17 +66,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 
 		const { data: listener } = supabase.auth.onAuthStateChange(
-			async (event, session) => {
+			(event, session) => {
 				console.log(`User auth event: ${event}`, session)
-
-				if (event === 'SIGNED_OUT')
-					queryClient.removeQueries({ queryKey: ['user'] })
-
-				if (event === 'INITIAL_SESSION') await myProfileCollection.preload()
-
-				if (event === 'SIGNED_IN' && session)
-					await myProfileCollection.utils.refetch()
-
 				setSessionState(session)
 				setIsLoaded(true)
 			}
@@ -110,7 +101,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 	return (
 		<AuthContext.Provider value={value as AuthState}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
+			{value.isLoaded ?
+				<CollectionsProvider>{children}</CollectionsProvider>
+			:	<AwaitingAuthLoader />}
 		</AuthContext.Provider>
 	)
 }
