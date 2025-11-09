@@ -6,7 +6,6 @@ import {
 	useMemo,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { useQueryClient } from '@tanstack/react-query'
 
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
@@ -43,18 +42,11 @@ export type AuthState = AuthLoggedIn | AuthNotLoggedIn | AuthNotLoaded
 export const AuthContext = createContext<AuthState>(emptyAuth)
 
 export function AuthProvider({ children }: PropsWithChildren) {
-	const queryClient = useQueryClient()
 	const [sessionState, setSessionState] = useState<Session | null | undefined>(
 		undefined
 	)
 
 	useEffect(() => {
-		// console.log(`Adding auth-state listener`)
-		if (!queryClient) {
-			console.log('Returning early bc queryClient hook has not come back')
-			return
-		}
-
 		const { data: listener } = supabase.auth.onAuthStateChange(
 			(event, session) => {
 				console.log(`User auth event: ${event}`)
@@ -82,7 +74,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		return () => {
 			listener.subscription.unsubscribe()
 		}
-	}, [queryClient, setSessionState, sessionState?.user.id])
+	}, [sessionState?.user.id])
 
 	const isSet = sessionState !== undefined
 	const value = useMemo(() => {

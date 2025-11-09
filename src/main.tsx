@@ -21,7 +21,6 @@ const router = createRouter({
 	routeTree,
 	context: {
 		auth: undefined!, // we'll make this during render
-		queryClient,
 	},
 	defaultPreload: 'intent',
 	defaultPreloadStaleTime: 300_000,

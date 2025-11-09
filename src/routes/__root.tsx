@@ -1,5 +1,3 @@
-import type { QueryClient } from '@tanstack/react-query'
-
 import {
 	createRootRouteWithContext,
 	Link,
@@ -18,7 +16,6 @@ import { AuthState } from '@/components/auth-context'
 
 export interface MyRouterContext {
 	auth: AuthState
-	queryClient: QueryClient
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

@@ -25,7 +25,6 @@ export function InviteFriendForm() {
 	const { control, handleSubmit } = useForm<InviteFriendValues>({
 		resolver: zodResolver(inviteFriendSchema),
 	})
-	// const queryClient = useQueryClient()
 
 	const invite = useMutation({
 		mutationKey: ['user', 'invite_friend'],

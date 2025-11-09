@@ -1,5 +1,4 @@
 import { useEffect, type ComponentType } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
 	createFileRoute,
@@ -38,9 +37,6 @@ export const Route = createFileRoute('/_user')({
 			throw redirect({
 				to: '/login',
 				search: {
-					// Use the current location to power a redirect after login
-					// (Do not use `router.state.resolvedLocation` as it can
-					// potentially lag behind the actual current location)
 					redirectedFrom: location.href,
 				},
 			})
@@ -105,7 +101,6 @@ function UserLayout() {
 	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
-	const queryClient = useQueryClient()
 	const userId = useUserId('strict')
 	useEffect(() => {
 		const friendRequestChannel = supabase
@@ -155,7 +150,7 @@ function UserLayout() {
 			void supabase.removeChannel(friendRequestChannel)
 			void supabase.removeChannel(chatChannel)
 		}
-	}, [userId, queryClient])
+	}, [userId])
 
 	return (
 		<div className="flex h-screen w-full">
