@@ -128,6 +128,7 @@ When we need reactive hooks that return data derived from multiple queries, such
 - when using a 3-letter language code, we almost always call this variable 'lang'
 - when using a phrase_id as its own variable or prop to pass, we almost always call this 'pid'
 - when displaying times and dates, default to the `ago` function and other helper functions in `dayjs.ts`
+- never try to await a promise inside the onAuthStateChange callback; it causes a global lock that can screw everything up
 
 ## Example Code for a Form with Validation and a Mutation
 

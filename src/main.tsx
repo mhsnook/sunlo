@@ -7,6 +7,7 @@ import { Loader } from '@/components/ui/loader'
 
 import { AuthProvider } from '@/components/auth-context'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ProfileProvider } from '@/components/profile-provider'
 import { ShowError } from '@/components/errors'
 
 import { routeTree } from './routeTree.gen'
@@ -58,7 +59,9 @@ createRoot(root).render(
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<QueryClientProvider client={queryClient}>
 				<AuthProvider>
-					<Routes router={router} />
+					<ProfileProvider>
+						<Routes router={router} />
+					</ProfileProvider>
 				</AuthProvider>
 				{/* <ReactQueryDevtools /> */}
 			</QueryClientProvider>

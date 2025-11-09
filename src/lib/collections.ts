@@ -35,6 +35,7 @@ import { themes } from './deck-themes'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
+		name: 'public_profiles',
 		queryKey: ['public', 'profiles'],
 		queryFn: async () => {
 			console.log(`Loading publicProfilesCollection`)
@@ -52,6 +53,7 @@ export const publicProfilesCollection = createCollection(
 
 export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
+		name: 'phrase_requests',
 		queryKey: ['public', 'phrase_request'],
 		queryFn: async () => {
 			console.log(`Loading phraseRequestscollection`)
@@ -70,6 +72,7 @@ export const phraseRequestsCollection = createCollection(
 
 export const phrasesCollection = createCollection(
 	queryCollectionOptions({
+		name: 'phrases',
 		queryKey: ['public', 'phrase_full'],
 		getKey: (item: PhraseFullType) => item.id,
 		queryFn: async () => {
@@ -88,6 +91,7 @@ export const phrasesCollection = createCollection(
 
 export const langTagsCollection = createCollection(
 	queryCollectionOptions({
+		name: 'lang_tags',
 		queryKey: ['public', 'lang_tag'],
 		getKey: (item: LangTagType) => item.id,
 		queryFn: async () => {
@@ -102,6 +106,7 @@ export const langTagsCollection = createCollection(
 
 export const languagesCollection = createCollection(
 	queryCollectionOptions({
+		name: 'languages',
 		queryKey: ['public', 'meta_language'],
 		queryFn: async () => {
 			console.log(`Loading languagesCollection`)
@@ -119,6 +124,8 @@ export const languagesCollection = createCollection(
 
 export const myProfileCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'profile',
 		queryKey: ['user', 'profile'],
 		queryFn: async () => {
 			console.log(`Loading myProfileCollection`)
@@ -138,6 +145,8 @@ export const myProfileCollection = createCollection(
 
 export const decksCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'decks',
 		queryKey: ['user', 'deck_plus'],
 		queryFn: async () => {
 			console.log(`Loading decksCollection`)
@@ -164,6 +173,8 @@ export const decksCollection = createCollection(
 
 export const cardsCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'cards',
 		queryKey: ['user', 'card'],
 		queryFn: async () => {
 			console.log(`Loading cardsCollection`)
@@ -182,6 +193,8 @@ export const cardsCollection = createCollection(
 
 export const reviewDaysCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'review_days',
 		queryKey: ['user', 'daily_review_state'],
 		queryFn: async () => {
 			console.log(`Loading reviewDaysCollection`)
@@ -200,6 +213,8 @@ export const reviewDaysCollection = createCollection(
 
 export const cardReviewsCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'card_reviews',
 		queryKey: ['user', 'card_review'],
 		queryFn: async () => {
 			console.log(`Loading cardReviewsCollection`)
@@ -218,6 +233,8 @@ export const cardReviewsCollection = createCollection(
 
 export const friendSummariesCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'friends',
 		queryKey: ['user', 'friend_summary'],
 		queryFn: async () => {
 			console.log(`Loading friendSummariesCollection`)
@@ -236,6 +253,8 @@ export const friendSummariesCollection = createCollection(
 
 export const chatMessagesCollection = createCollection(
 	queryCollectionOptions({
+		startSync: false,
+		id: 'chat_messages',
 		queryKey: ['user', 'chat_message'],
 		queryFn: async () => {
 			console.log(`Loading chatMessagesCollection`)
@@ -264,7 +283,9 @@ export const cleanupUser = async () => {
 	])
 }
 export const preloadUser = async () => {
-	await Promise.all([
+	const res = await supabase.auth.getSession()
+	console.log(`preloadUser`, res)
+	return await Promise.all([
 		myProfileCollection.preload(),
 		decksCollection.preload(),
 		friendSummariesCollection.preload(),

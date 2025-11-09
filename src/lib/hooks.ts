@@ -7,7 +7,6 @@ import { AuthContext } from '@/components/auth-context'
 import { useDecks } from '@/hooks/use-deck'
 import { cleanupUser } from './collections'
 
-// Access the context's value from inside a provider
 export function useAuth() {
 	const context = useContext(AuthContext)
 	if (!context) {

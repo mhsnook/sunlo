@@ -22,11 +22,17 @@ import { AppNav } from '@/components/navs/app-nav'
 import { useUserId } from '@/lib/hooks'
 import {
 	chatMessagesCollection,
-	decksCollection,
 	friendSummariesCollection,
 	myProfileCollection,
 } from '@/lib/collections'
-import { ChatMessageSchema, MyProfileType } from '@/lib/schemas'
+import { ChatMessageSchema } from '@/lib/schemas'
+
+const homeTitlebar = {
+	titleBar: {
+		title: `Learning Home`,
+		subtitle: `Which deck are we studying today?`,
+	} as TitleBar,
+}
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -44,36 +50,29 @@ export const Route = createFileRoute('/_user')({
 		return { auth: context.auth }
 	},
 	loader: async ({ location, context }) => {
-		void friendSummariesCollection.preload()
-		void decksCollection.preload()
-		// await myProfileCollection.waitFor('status:ready')
-		const profile: MyProfileType[] | undefined =
-			context.auth.isAuth ?
-				await myProfileCollection.toArrayWhenReady()
-			:	undefined
+		if (!context.auth.isAuth) return homeTitlebar
+		// The user is authenticated, so we can safely fetch their profile.
+		const [profile] = await myProfileCollection.toArrayWhenReady()
 
 		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
-			// The profile data is an array; we check if it's empty.
-			if (!profile || !profile[0]) {
-				console.log(
-					`Redirecting to /getting-started because no profile was found.`
-				)
-				// eslint-disable-next-line @typescript-eslint/only-throw-error
-				throw redirect({ to: '/getting-started' })
-			} else {
-				const friendsPromise = friendSummariesCollection.preload()
-				const decksPromise = decksCollection.preload()
-				await Promise.all([friendsPromise, decksPromise])
+			if (!profile) {
+				await myProfileCollection.utils.refetch()
+				const newProfile = await myProfileCollection.toArrayWhenReady()
+				await myProfileCollection.utils.refetch()
+				const newProfile2 = await myProfileCollection.toArrayWhenReady()
+				console.log(`In the _user loader:`, profile, newProfile, newProfile2)
+				if (!newProfile2) {
+					console.log(
+						`Redirecting to /getting-started because no profile was found.`
+					)
+					// eslint-disable-next-line @typescript-eslint/only-throw-error
+					throw redirect({ to: '/getting-started' })
+				}
 			}
 		}
 
-		return {
-			titleBar: {
-				title: `Learning Home`,
-				subtitle: `Which deck are we studying today?`,
-			} as TitleBar,
-		}
+		return homeTitlebar
 	},
 	component: UserLayout,
 	pendingComponent: Loader,
@@ -101,7 +100,7 @@ function UserLayout() {
 	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
-	const userId = useUserId('strict')
+	const userId = useUserId()
 	useEffect(() => {
 		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
