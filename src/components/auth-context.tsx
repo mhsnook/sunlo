@@ -8,7 +8,6 @@ import {
 import type { Session } from '@supabase/supabase-js'
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { AwaitingAuthLoader } from '@/components/awaiting-auth-loader'
 
 const emptyAuth = {
 	isLoaded: false,
@@ -57,29 +56,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [])
 
-	const isSet = sessionState !== undefined
 	const value = useMemo(() => {
-		return isSet ?
-				{
-					isAuth: sessionState?.user.role === 'authenticated',
-					userId: sessionState?.user.id ?? null,
-					userEmail: sessionState?.user.email ?? null,
-					userRole:
-						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-					isLoaded: true,
-				}
-			:	emptyAuth
-	}, [
-		sessionState?.user.role,
-		sessionState?.user.id,
-		sessionState?.user.email,
-		sessionState?.user.user_metadata?.role,
-		isSet,
-	])
+		const isAuth = sessionState?.user.role === 'authenticated'
+		if (sessionState === undefined) return emptyAuth
+		if (!isAuth || !sessionState)
+			return {
+				isLoaded: true,
+				isAuth: false,
+				userId: null,
+				userEmail: null,
+				userRole: null,
+			}
+		return {
+			isAuth: true,
+			userId: sessionState.user.id,
+			userEmail: sessionState.user.email!,
+			userRole: (sessionState.user.user_metadata?.role as RolesEnum) ?? null,
+			isLoaded: true,
+		}
+	}, [sessionState])
 
 	return (
 		<AuthContext.Provider value={value as AuthState}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
+			{children}
 		</AuthContext.Provider>
 	)
 }

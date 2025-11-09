@@ -57,18 +57,11 @@ export const Route = createFileRoute('/_user')({
 		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
 			if (!profile) {
-				await myProfileCollection.utils.refetch()
-				const newProfile = await myProfileCollection.toArrayWhenReady()
-				await myProfileCollection.utils.refetch()
-				const newProfile2 = await myProfileCollection.toArrayWhenReady()
-				console.log(`In the _user loader:`, profile, newProfile, newProfile2)
-				if (!newProfile2) {
-					console.log(
-						`Redirecting to /getting-started because no profile was found.`
-					)
-					// eslint-disable-next-line @typescript-eslint/only-throw-error
-					throw redirect({ to: '/getting-started' })
-				}
+				console.log(
+					`Redirecting to /getting-started because no profile was found.`
+				)
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				throw redirect({ to: '/getting-started' })
 			}
 		}
 

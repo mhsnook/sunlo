@@ -1,10 +1,6 @@
 import { type PropsWithChildren, useEffect, useState } from 'react'
 import { useAuth } from '@/lib/hooks'
-import {
-	cleanupUser,
-	myProfileCollection,
-	preloadUser,
-} from '@/lib/collections'
+import { cleanupUser, preloadUser } from '@/lib/collections'
 import { AwaitingAuthLoader } from '@/components/awaiting-auth-loader'
 
 export function ProfileProvider({ children }: PropsWithChildren) {
@@ -15,13 +11,12 @@ export function ProfileProvider({ children }: PropsWithChildren) {
 		// This effect runs when the auth state changes.
 		const handleProfileLoading = async () => {
 			// Wait until the auth provider has a definitive state.
-			if (!auth.isLoaded) {
+			if (auth.isLoaded === false) {
 				return
 			}
 
 			// If the user is authenticated, preload their data.
 			if (auth.isAuth) {
-				await myProfileCollection.utils.refetch()
 				await preloadUser()
 			} else {
 				// If logged out, ensure any cached user data is cleared.
@@ -32,10 +27,8 @@ export function ProfileProvider({ children }: PropsWithChildren) {
 			setProfileReady(true)
 		}
 
-		// const profileAbort =
 		void handleProfileLoading()
-		// return () => Promise.reject(profileAbort)
-	}, [auth.isLoaded, auth.isAuth])
+	}, [auth])
 
 	// Render children only when the profile state is ready.
 	// The AwaitingAuthLoader is generic enough to be used here.
