@@ -59,9 +59,7 @@ createRoot(root).render(
 		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
 			<QueryClientProvider client={queryClient}>
 				<AuthProvider>
-					<ProfileProvider>
-						<Routes router={router} />
-					</ProfileProvider>
+					<Routes router={router} />
 				</AuthProvider>
 				{/* <ReactQueryDevtools /> */}
 			</QueryClientProvider>

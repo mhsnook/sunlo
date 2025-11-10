@@ -60,7 +60,7 @@ function GettingStartedPage() {
 						</p>
 					</div>
 				</div>
-				<ProfileCreationForm userId={userId!} />
+				<ProfileCreationForm userId={userId!} nextPage={pextPage} />
 			</main>
 }
 
@@ -74,7 +74,13 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-function ProfileCreationForm({ userId }: { userId: string }) {
+function ProfileCreationForm({
+	userId,
+	nextPage,
+}: {
+	userId: string
+	nextPage: string
+}) {
 	const {
 		register,
 		control,
@@ -86,6 +92,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 			languages_known: [{ lang: 'eng', level: 'fluent' }],
 		},
 	})
+	const navigate = Route.useNavigate()
 
 	const mainForm = useMutation({
 		mutationKey: ['user', userId],
@@ -106,6 +113,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 			console.log(`Success! Profile:`, data)
 			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
 			toast.success('Success!')
+			navigate({ to: nextPage })
 		},
 		onError: (error) => {
 			console.log(`Error:`, error)

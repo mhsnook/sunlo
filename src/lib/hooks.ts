@@ -1,6 +1,6 @@
 import { useContext, useMemo } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate, useRouter } from '@tanstack/react-router'
+import { useMutation } from '@tanstack/react-query'
 
 import supabase from '@/lib/supabase-client'
 import { AuthContext } from '@/components/auth-context'
@@ -31,7 +31,7 @@ export function useUserId(mode: 'relaxed' | 'default' | 'strict' = 'default') {
 
 export const useSignOut = () => {
 	const navigate = useNavigate()
-	const client = useQueryClient()
+	const router = useRouter()
 
 	return useMutation({
 		mutationFn: async () => {
@@ -41,10 +41,9 @@ export const useSignOut = () => {
 				throw error
 			}
 		},
-		onSuccess: async () => {
-			client.removeQueries({ queryKey: ['user'], exact: false })
-			await cleanupUser()
-			void navigate({ to: '/' })
+		onSuccess: () => {
+			router.invalidate()
+			cleanupUser().then(() => void navigate({ to: '/' }))
 		},
 	})
 }

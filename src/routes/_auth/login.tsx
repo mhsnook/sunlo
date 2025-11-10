@@ -13,6 +13,8 @@ import { useAuth } from '@/lib/hooks'
 import { ShowAndLogError } from '@/components/errors'
 import EmailField from '@/components/fields/email-field'
 import PasswordField from '@/components/fields/password-field'
+import { myProfileCollection } from '@/lib/collections'
+import { useProfile } from '@/hooks/use-profile'
 
 export interface LoginSearchParams {
 	redirectedFrom?: string
@@ -40,6 +42,7 @@ type FormInputs = z.infer<typeof FormSchema>
 function LoginForm() {
 	// we use this hook instead of loader data so it reacts to the login event
 	const { isAuth } = useAuth()
+	const { isReady, isLoading } = useProfile()
 	const { redirectedFrom } = Route.useSearch()
 
 	const loginMutation = useMutation({
@@ -52,10 +55,11 @@ function LoginForm() {
 			if (error) throw error
 			return data.user?.email
 		},
-		onSuccess: (email: string | undefined) => {
+		onSuccess: async (email: string | undefined) => {
 			if (email) {
 				toast.success(`Logged in as ${email}`)
 			}
+			myProfileCollection.utils.refetch()
 			// we don't need to redirect here, because the <Navigate> will do that
 		},
 	})
@@ -70,7 +74,7 @@ function LoginForm() {
 
 	// console.log('form state', form.state, loginMutation)
 
-	if (isAuth)
+	if (isAuth && !isLoading && isReady)
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (

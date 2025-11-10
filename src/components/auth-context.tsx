@@ -4,11 +4,19 @@ import {
 	useState,
 	useEffect,
 	useMemo,
+	useEffectEvent,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { RolesEnum, uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { AwaitingAuthLoader } from '@/components/awaiting-auth-loader'
+import { usePrevious } from '@uidotdev/usehooks'
+import {
+	cleanupUser,
+	myProfileCollection,
+	preloadProfile,
+	preloadUser,
+} from '@/lib/collections'
+import { useProfile } from '@/hooks/use-profile'
 
 const emptyAuth = {
 	isLoaded: false,
@@ -43,6 +51,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null | undefined>(
 		undefined
 	)
+	const refetchIfAuth = useEffectEvent(() => {
+		console.log(`in the useEffectEvent`)
+		if (sessionState?.user.role === 'authenticated') {
+			console.log(`in the useEffectEvent, if smt true`)
+			myProfileCollection.utils.refetch()
+		}
+	})
 
 	useEffect(() => {
 		const {
@@ -51,35 +66,62 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			console.log(`Auth event: ${event}`)
 			setSessionState(session)
 		})
+		myProfileCollection._lifecycle.onFirstReady(refetchIfAuth)
 
 		return () => {
 			subscription.unsubscribe()
 		}
 	}, [])
 
-	const isSet = sessionState !== undefined
 	const value = useMemo(() => {
-		return isSet ?
-				{
-					isAuth: sessionState?.user.role === 'authenticated',
-					userId: sessionState?.user.id ?? null,
-					userEmail: sessionState?.user.email ?? null,
-					userRole:
-						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-					isLoaded: true,
-				}
-			:	emptyAuth
-	}, [
-		sessionState?.user.role,
-		sessionState?.user.id,
-		sessionState?.user.email,
-		sessionState?.user.user_metadata?.role,
-		isSet,
-	])
+		const isAuth = sessionState?.user.role === 'authenticated'
+		if (sessionState === undefined) return emptyAuth
+		if (!isAuth || !sessionState)
+			return {
+				isLoaded: true,
+				isAuth: false,
+				userId: null,
+				userEmail: null,
+				userRole: null,
+			}
+		return {
+			isAuth: true,
+			userId: sessionState.user.id,
+			userEmail: sessionState.user.email!,
+			userRole: (sessionState.user.user_metadata?.role as RolesEnum) ?? null,
+			isLoaded: true,
+		}
+	}, [sessionState])
+
+	const prevValue = usePrevious(value)
+
+	useEffect(() => {
+		if (value.isLoaded === false && value === prevValue) {
+			console.log(
+				`Profile Provider userEffect condition 0: unready or no change`
+			)
+		} else if (value.isAuth && !prevValue?.isAuth) {
+			// If the user is newly authenticated, preload their data.
+			console.log(`Profile Provider userEffect condition 1: preload`)
+			preloadProfile()
+		} else if (!value.isAuth && prevValue?.isAuth) {
+			// If logged out, ensure any cached user data is cleared.
+			console.log(`Profile Provider userEffect condition 2: cleanup`)
+			cleanupUser()
+		} else if (value.isAuth && prevValue?.userId !== value.userId) {
+			// if they switch accounts without a logged-out state in between
+			console.log(
+				`Profile Provider userEffect condition 3: cleanup then preload`
+			)
+			cleanupUser().then(() => preloadProfile())
+		}
+	}, [prevValue])
+
+	const { isReady } = useProfile()
 
 	return (
 		<AuthContext.Provider value={value as AuthState}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
+			{isReady ? children : <>loading...</>}
 		</AuthContext.Provider>
 	)
 }

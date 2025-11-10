@@ -291,3 +291,9 @@ export const preloadUser = async () => {
 		friendSummariesCollection.preload(),
 	])
 }
+
+export const preloadProfile = async () => {
+	const res = await supabase.auth.getSession()
+	console.log(`preloadProfile`, res)
+	return await myProfileCollection.preload()
+}

@@ -51,23 +51,29 @@ export const Route = createFileRoute('/_user')({
 	},
 	loader: async ({ location, context }) => {
 		if (!context.auth.isAuth) return homeTitlebar
-		// The user is authenticated, so we can safely fetch their profile.
-		const [profile] = await myProfileCollection.toArrayWhenReady()
 
+		// debugger
+		// The user is authenticated, so we can safely fetch their profile.
+
+		const profile0 = myProfileCollection.toArray
 		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
-			if (!profile) {
+			if (!profile0.length) {
+				console.log(`No profile found. Trying again`)
+				const res = await supabase.auth.getSession()
+				const mp1 = await myProfileCollection.preload()
+				const [profile1] = myProfileCollection.toArray
+				console.log(`first version of the profile`, res, profile1)
 				await myProfileCollection.utils.refetch()
-				const newProfile = await myProfileCollection.toArrayWhenReady()
-				await myProfileCollection.utils.refetch()
-				const newProfile2 = await myProfileCollection.toArrayWhenReady()
-				console.log(`In the _user loader:`, profile, newProfile, newProfile2)
-				if (!newProfile2) {
+				const [profile2] = await myProfileCollection.toArray
+				console.log(`two version of the profile`, res, profile1, profile2)
+
+				// eslint-disable-next-line @typescript-eslint/only-throw-error
+				if (!profile2) {
+					throw redirect({ to: '/getting-started' })
 					console.log(
 						`Redirecting to /getting-started because no profile was found.`
 					)
-					// eslint-disable-next-line @typescript-eslint/only-throw-error
-					throw redirect({ to: '/getting-started' })
 				}
 			}
 		}
