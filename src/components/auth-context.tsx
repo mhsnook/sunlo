@@ -52,11 +52,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
     hopefully never again. We're just going to attach this auth-state-change listener, and whenever
     the auth state changes, we check what kind of change has happened, update the state hook and do
     whatever cache invalidation is needed.
-
-    Normally we would want to use a useQuery() hook to fetch the user info and pass the data
-    directly as the context value (per https://tkdodo.eu/blog/react-query-and-react-context), but
-    supabase-js is giving us this handy listener to update state, and so far we've never
-    encountered a race condition where 'INITIAL_SESSION' fires after the listener is attached.
   */
 
 	useEffect(() => {

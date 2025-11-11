@@ -25,10 +25,10 @@ import {
 	chatMessagesCollection,
 	decksCollection,
 	friendSummariesCollection,
+	myProfileCollection,
 	myProfileQuery,
 } from '@/lib/collections'
-import { ChatMessageSchema, MyProfileType } from '@/lib/schemas'
-import { AuthLoggedIn } from '@/components/auth-context'
+import { ChatMessageSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -49,23 +49,24 @@ export const Route = createFileRoute('/_user')({
 		return { auth: context.auth }
 	},
 	loader: async ({ location, context: { queryClient } }) => {
-		// The AuthProvider should have already fetched the profile
-		const profile: MyProfileType[] | undefined =
-			await queryClient.ensureQueryData(myProfileQuery)
-
+		let profile = await myProfileCollection.toArrayWhenReady()
+		if (!profile || !profile?.length) {
+			console.log('failed to load first profile, trying again', profile)
+			profile = await queryClient.ensureQueryData(myProfileQuery)
+			console.log('tried a second time to load the profile', profile)
+		}
 		// If there is no profile, go create one
 		if (location.pathname !== '/getting-started') {
-			// The profile data is an array; we check if it's empty.
-			if (!profile || profile.length === 0) {
+			if (!profile || !profile.length) {
 				console.log(
-					`Redirecting to /getting-started because no profile was found.`
+					`Redirecting to /getting-started because no profile was found.`,
+					profile
 				)
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw redirect({ to: '/getting-started' })
 			} else {
-				const friendsPromise = friendSummariesCollection.preload()
-				const decksPromise = decksCollection.preload()
-				await Promise.all([friendsPromise, decksPromise])
+				void decksCollection.preload()
+				void friendSummariesCollection.preload()
 			}
 		}
 
@@ -103,7 +104,7 @@ function UserLayout() {
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
-	const userId = useUserId('strict')
+	const userId = useUserId()
 	useEffect(() => {
 		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
