@@ -190,8 +190,8 @@ export const DeckMetaRawSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
 	created_at: z.string(),
-	archived: z.boolean().default(false),
-	daily_review_goal: z.number().default(15),
+	archived: z.boolean(),
+	daily_review_goal: z.number(),
 	language: z.string(),
 	learning_goal: LearningGoalEnumSchema,
 	cards_active: z.number().default(0),
@@ -204,7 +204,7 @@ export const DeckMetaRawSchema = z.object({
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
-	theme: z.number().nullable(),
+	theme: z.number(),
 })
 
 export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>
@@ -217,7 +217,7 @@ export const CardMetaSchema = z.object({
 	uid: z.string().uuid(),
 	lang: LangSchema,
 	status: CardStatusEnumSchema,
-	updated_at: z.string().nullable(),
+	updated_at: z.string(),
 	current_timestamp: z
 		.string()
 		.default(dayjs().tz('UTC').format('YYYY-MM-DD HH:mm:ss+00')),
@@ -237,7 +237,7 @@ export const CardReviewSchema = z.object({
 	lang: LangSchema,
 	phrase_id: z.string().uuid(),
 	score: z.number(),
-	day_first_review: z.boolean().default(true),
+	day_first_review: z.boolean(),
 	difficulty: z.number().nullable(),
 	review_time_retrievability: z.number().nullable(),
 	stability: z.number().nullable(),
@@ -250,7 +250,7 @@ export const DailyReviewStateSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
 	lang: LangSchema,
-	manifest: z.preprocess((val) => val ?? [], z.array(z.string().uuid())),
+	manifest: z.array(z.string().uuid()).nullable(),
 	uid: z.string().uuid(),
 })
 
