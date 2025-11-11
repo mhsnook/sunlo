@@ -36,6 +36,7 @@ import { queryOptions } from '@tanstack/react-query'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
+		id: 'public_profiles',
 		queryKey: ['public', 'profiles'],
 		queryFn: async () => {
 			console.log(`Loading publicProfilesCollection`)
@@ -53,6 +54,7 @@ export const publicProfilesCollection = createCollection(
 
 export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
+		id: 'phrase_requests',
 		queryKey: ['public', 'phrase_request'],
 		queryFn: async () => {
 			console.log(`Loading phraseRequestscollection`)
@@ -71,6 +73,7 @@ export const phraseRequestsCollection = createCollection(
 
 export const phrasesCollection = createCollection(
 	queryCollectionOptions({
+		id: 'phrases',
 		queryKey: ['public', 'phrase_full'],
 		getKey: (item: PhraseFullType) => item.id,
 		queryFn: async () => {
@@ -89,6 +92,7 @@ export const phrasesCollection = createCollection(
 
 export const langTagsCollection = createCollection(
 	queryCollectionOptions({
+		id: 'lang_tags',
 		queryKey: ['public', 'lang_tag'],
 		getKey: (item: LangTagType) => item.id,
 		queryFn: async () => {
@@ -103,6 +107,7 @@ export const langTagsCollection = createCollection(
 
 export const languagesCollection = createCollection(
 	queryCollectionOptions({
+		id: 'languages',
 		queryKey: ['public', 'meta_language'],
 		queryFn: async () => {
 			console.log(`Loading languagesCollection`)
@@ -134,6 +139,7 @@ export const myProfileQuery = queryOptions({
 
 export const myProfileCollection = createCollection(
 	queryCollectionOptions({
+		id: 'my_profile',
 		queryKey: myProfileQuery.queryKey,
 		queryFn: async (args) => {
 			console.log(`Loading myProfileCollection`)
@@ -141,13 +147,14 @@ export const myProfileCollection = createCollection(
 		},
 		getKey: (item: MyProfileType) => item.uid,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: MyProfileSchema,
 	})
 )
 
 export const decksCollection = createCollection(
 	queryCollectionOptions({
+		id: 'decks',
 		queryKey: ['user', 'deck_plus'],
 		queryFn: async () => {
 			console.log(`Loading decksCollection`)
@@ -167,13 +174,14 @@ export const decksCollection = createCollection(
 		},
 		getKey: (item: DeckMetaType) => item.lang,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: DeckMetaSchema,
 	})
 )
 
 export const cardsCollection = createCollection(
 	queryCollectionOptions({
+		id: 'cards',
 		queryKey: ['user', 'card'],
 		queryFn: async () => {
 			console.log(`Loading cardsCollection`)
@@ -185,13 +193,14 @@ export const cardsCollection = createCollection(
 		},
 		getKey: (item: CardMetaType) => item.phrase_id,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: CardMetaSchema,
 	})
 )
 
 export const reviewDaysCollection = createCollection(
 	queryCollectionOptions({
+		id: 'review_days',
 		queryKey: ['user', 'daily_review_state'],
 		queryFn: async () => {
 			console.log(`Loading reviewDaysCollection`)
@@ -203,13 +212,14 @@ export const reviewDaysCollection = createCollection(
 		},
 		getKey: (item: DailyReviewStateType) => item.day_session,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: DailyReviewStateSchema,
 	})
 )
 
 export const cardReviewsCollection = createCollection(
 	queryCollectionOptions({
+		id: 'card_reviews',
 		queryKey: ['user', 'card_review'],
 		queryFn: async () => {
 			console.log(`Loading cardReviewsCollection`)
@@ -221,13 +231,14 @@ export const cardReviewsCollection = createCollection(
 		},
 		getKey: (item: CardReviewType) => item.id,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: CardReviewSchema,
 	})
 )
 
 export const friendSummariesCollection = createCollection(
 	queryCollectionOptions({
+		id: 'friends',
 		queryKey: ['user', 'friend_summary'],
 		queryFn: async () => {
 			console.log(`Loading friendSummariesCollection`)
@@ -239,13 +250,14 @@ export const friendSummariesCollection = createCollection(
 		},
 		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: FriendSummarySchema,
 	})
 )
 
 export const chatMessagesCollection = createCollection(
 	queryCollectionOptions({
+		id: 'chat_messages',
 		queryKey: ['user', 'chat_message'],
 		queryFn: async () => {
 			console.log(`Loading chatMessagesCollection`)
@@ -257,7 +269,7 @@ export const chatMessagesCollection = createCollection(
 		},
 		getKey: (item: ChatMessageType) => item.id,
 		queryClient,
-		optimistic: false,
+		startSync: false,
 		schema: ChatMessageSchema,
 	})
 )
