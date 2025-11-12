@@ -3,8 +3,8 @@ import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
-import type { pids } from '@/types/main'
-import type { CardReviewType } from '@/lib/schemas'
+import type { pids, UseLiveQueryResult } from '@/types/main'
+import type { CardMetaType, CardReviewType, DeckMetaType } from '@/lib/schemas'
 import {
 	cardReviewsCollection,
 	cardsCollection,
@@ -37,7 +37,9 @@ const calcActivityChartData = (reviewsDayMap: ReviewsDayMap) => {
 	return data
 }
 
-export const useDeckActivityChartData = (lang: string) => {
+export const useDeckActivityChartData = (
+	lang: string
+): UseLiveQueryResult<ReturnType<typeof calcActivityChartData>> => {
 	const startDate = dayjs()
 		.subtract(9, 'day')
 		.subtract(4, 'hour') // makes 4am the end of the day
@@ -62,7 +64,7 @@ export const useDeckActivityChartData = (lang: string) => {
 	)
 }
 
-export const useDeckMeta = (lang: string) =>
+export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -72,7 +74,7 @@ export const useDeckMeta = (lang: string) =>
 		[lang]
 	)
 
-export const useDecks = () => {
+export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
 	return useMemo(
 		() => ({
@@ -83,9 +85,9 @@ export const useDecks = () => {
 	)
 }
 
-export type UseOneDecksType = ReturnType<typeof useDecks>['data'][number]
-
-export const useDeckCards = (lang: string) =>
+export const useDeckCards = (
+	lang: string
+): UseLiveQueryResult<CardMetaType[]> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -100,7 +102,7 @@ export const useDeckRoutineStats = (lang: string) => {
 	const daysSoFar = today.diff(mostRecentMonday, 'day') + 1
 	const mondayString = mostRecentMonday.format('YYYY-MM-DD')
 
-	const query = useLiveQuery(
+	const query: UseLiveQueryResult<{ count: number }> = useLiveQuery(
 		(q) =>
 			q
 				.from({ day: reviewDaysCollection })
@@ -141,7 +143,7 @@ export const useDeckPids = (lang: string) => {
 
 	return useMemo(
 		(): UseDeckPidsReturnType => ({
-			isLoading,
+			isLoading: isLoading ?? true,
 			data:
 				!data ? null : (
 					{

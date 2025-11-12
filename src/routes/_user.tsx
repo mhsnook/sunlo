@@ -9,11 +9,8 @@ import {
 	useMatches,
 } from '@tanstack/react-router'
 
+import type { Tables } from '@/types/supabase'
 import { TitleBar } from '@/types/main'
-import {
-	ChatMessageRow,
-	FriendRequestActionRow,
-} from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
@@ -116,7 +113,7 @@ function UserLayout() {
 					table: 'friend_request_action',
 				},
 				(payload) => {
-					const newAction = payload.new as FriendRequestActionRow
+					const newAction = payload.new as Tables<'friend_request_action'>
 					if (
 						newAction.action_type === 'accept' &&
 						newAction.uid_for === userId
@@ -140,7 +137,7 @@ function UserLayout() {
 					table: 'chat_message',
 				},
 				(payload) => {
-					const newMessage = payload.new as ChatMessageRow
+					const newMessage = payload.new as Tables<'chat_message'>
 					console.log(`new chat`, newMessage)
 					chatMessagesCollection.utils.writeInsert(
 						ChatMessageSchema.parse(newMessage)

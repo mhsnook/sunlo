@@ -1,6 +1,5 @@
 import { Link } from '@tanstack/react-router'
 
-import type { UseOneDecksType } from '@/hooks/use-deck'
 import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
 import {
 	Card,
@@ -15,8 +14,9 @@ import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import { getThemeCss } from '@/lib/deck-themes'
+import { DeckMetaType } from '@/lib/schemas'
 
-export function DeckCard({ deck }: { deck: UseOneDecksType }) {
+export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (
 		<div style={getThemeCss(deck.theme)}>
 			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">

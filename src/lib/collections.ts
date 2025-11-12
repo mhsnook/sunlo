@@ -248,7 +248,8 @@ export const friendSummariesCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => FriendSummarySchema.parse(item)) ?? []
 		},
-		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
+		getKey: (item: FriendSummaryType) =>
+			`${item.uid_less}--${item.uid_more}`,
 		queryClient,
 		startSync: false,
 		schema: FriendSummarySchema,

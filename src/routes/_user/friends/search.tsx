@@ -4,7 +4,6 @@ import * as z from 'zod'
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
 import { Search } from 'lucide-react'
 
-import { PublicProfile } from './-types'
 import { Loader } from '@/components/ui/loader'
 import { Button } from '@/components/ui/button'
 import {
@@ -112,7 +111,7 @@ function SearchProfiles() {
 										{resultsToShow.length} result
 										{resultsToShow.length === 1 ? '' : 's'}
 									</p>
-									{resultsToShow.map((profile: PublicProfile) =>
+									{resultsToShow.map((profile) =>
 										profile.uid === userId ?
 											null
 										:	<div key={profile.uid} className="rounded p-2 pe-4 shadow">

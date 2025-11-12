@@ -6,6 +6,7 @@ import {
 	phrasesCollection,
 	publicProfilesCollection,
 } from './collections'
+import { FriendSummaryType, PublicProfileType } from './schemas'
 
 export const phrasesFull = createLiveQueryCollection({
 	query: (q) =>
@@ -35,6 +36,11 @@ export const phrasesFull = createLiveQueryCollection({
 				].join(', '),
 			})),
 })
+
+export type RelationsFullType = FriendSummaryType & {
+	isMostRecentByMe: boolean
+	profile: PublicProfileType
+}
 
 export const relationsFull = createLiveQueryCollection({
 	query: (q) =>

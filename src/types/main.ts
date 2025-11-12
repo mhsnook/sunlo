@@ -37,3 +37,9 @@ export type TitleBar = {
 }
 
 export type RPCFunctions = Database['public']['Functions']
+
+export type UseLiveQueryResult<T> = {
+	data?: T | undefined
+	isReady?: boolean
+	isLoading?: boolean
+}

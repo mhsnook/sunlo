@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
+import type { PublicProfileType } from '@/lib/schemas'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button } from '@/components/ui/button'
@@ -21,7 +22,6 @@ import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/hooks/use-profile'
 import { Loader } from '@/components/ui/loader'
-import type { PublicProfile } from './friends/-types'
 import { avatarUrlify } from '@/lib/utils'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
@@ -150,7 +150,11 @@ function AcceptInvitePage() {
 	)
 }
 
-const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
+const ShowAccepted = ({
+	friend,
+}: {
+	friend: PublicProfileType | null | undefined
+}) => {
 	if (!friend)
 		throw new Error(
 			`Attempted to render the "success" message` +

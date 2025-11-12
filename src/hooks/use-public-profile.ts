@@ -2,11 +2,14 @@ import {
 	friendSummariesCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
-import type { uuid } from '@/types/main'
+import { FriendSummaryType, PublicProfileType } from '@/lib/schemas'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
-export const useSearchProfilesByUsername = (query: string) => {
+export const useSearchProfilesByUsername = (
+	query: string
+): UseLiveQueryResult<PublicProfileType[]> => {
 	return useLiveQuery(
 		(q) =>
 			!query.trim() ?
@@ -18,7 +21,11 @@ export const useSearchProfilesByUsername = (query: string) => {
 	)
 }
 
-export const useOnePublicProfile = (uid: uuid) =>
+export const useOnePublicProfile = (
+	uid: uuid
+): UseLiveQueryResult<
+	PublicProfileType & { relation: null | FriendSummaryType }
+> =>
 	useLiveQuery(
 		(q) =>
 			q

@@ -2,6 +2,8 @@ import dayjs from 'dayjs'
 import * as z from 'zod'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
+import type { uuid } from '@/types/main'
+
 dayjs.extend(timezone)
 dayjs.extend(utc)
 
@@ -282,3 +284,8 @@ export const ChatMessageSchema = z.object({
 })
 
 export type ChatMessageType = z.infer<typeof ChatMessageSchema>
+
+export type ChatMessageRelType = ChatMessageType & {
+	isByMe: boolean
+	friendUid: uuid
+}

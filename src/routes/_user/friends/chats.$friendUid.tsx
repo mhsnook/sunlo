@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
-import type { PublicProfileFull } from './-types'
+import type { PublicProfileType } from '@/lib/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -174,7 +174,7 @@ function ChatPage() {
 	)
 }
 
-const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
+const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 	<div className="flex flex-col items-center justify-center gap-6 py-10">
 		<p className="text-xl font-bold">{profile.username}</p>
 		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">

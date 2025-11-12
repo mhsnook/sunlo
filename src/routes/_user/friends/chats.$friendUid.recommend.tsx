@@ -4,8 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Send } from 'lucide-react'
 
-import type { ChatMessageInsert } from './-types'
 import type { uuid } from '@/types/main'
+import type { TablesInsert } from '@/types/supabase'
 import { PhraseFullFilteredType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/hooks'
@@ -40,7 +40,7 @@ function RouteComponent() {
 	const [searchTerm, setSearchTerm] = useState('')
 
 	const sendMessageMutation = useMutation({
-		mutationFn: async (newMessage: ChatMessageInsert) => {
+		mutationFn: async (newMessage: TablesInsert<'chat_message'>) => {
 			const { error } = await supabase.from('chat_message').insert(newMessage)
 			if (error) throw error
 		},
