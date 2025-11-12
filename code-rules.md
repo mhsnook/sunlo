@@ -140,7 +140,6 @@ const DeckGoalSchema = z.object({
 type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const queryClient = useQueryClient()
 	const userId = useUserId()
 	const {
 		control,

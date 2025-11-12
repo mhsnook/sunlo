@@ -43,6 +43,9 @@ export const Route = createFileRoute('/_user/learn/$lang/add-phrase')({
 			text: (search?.text as string) ?? '',
 		}
 	},
+	loader: async () => {
+		await cardsCollection.preload()
+	},
 	component: AddPhraseTab,
 })
 

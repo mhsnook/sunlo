@@ -35,9 +35,9 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const { data: deck } = useDeckMeta(lang)
-	if (!deck) throw new Error("Could not load this deck's data")
-
+	const { data: deck, isReady } = useDeckMeta(lang)
+	if (isReady && !deck) throw new Error("Could not load this deck's data")
+	if (!deck) return null
 	const deckIsNew =
 		deck.cards_active + deck.cards_skipped + deck.cards_learned === 0
 	return (
