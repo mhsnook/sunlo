@@ -17,7 +17,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/hooks/use-profile'

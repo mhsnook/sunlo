@@ -17,7 +17,7 @@ import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import {
 	chatMessagesCollection,
 	decksCollection,
@@ -43,7 +43,6 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
-		return { auth: context.auth }
 	},
 	loader: async ({ location, context: { queryClient } }) => {
 		let profile = await myProfileCollection.toArrayWhenReady()

@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import {
 	Card,
 	CardContent,

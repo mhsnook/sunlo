@@ -1,6 +1,6 @@
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import type { Tables } from '@/types/supabase'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import {
 	phraseRequestsCollection,
 	publicProfilesCollection,

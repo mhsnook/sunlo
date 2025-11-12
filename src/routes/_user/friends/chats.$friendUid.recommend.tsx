@@ -8,7 +8,7 @@ import type { uuid } from '@/types/main'
 import type { TablesInsert } from '@/types/supabase'
 import { PhraseFullFilteredType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 
 import { Input } from '@/components/ui/input'
 import {

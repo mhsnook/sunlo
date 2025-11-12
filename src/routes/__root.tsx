@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-
+import { useCallback } from 'react'
 import {
 	createRootRouteWithContext,
 	Link,
@@ -7,14 +7,13 @@ import {
 	useNavigate,
 } from '@tanstack/react-router'
 import { Toaster } from 'react-hot-toast'
-import { SidebarProvider } from '@/components/ui/sidebar'
 
+import type { AuthState } from '@/lib/use-auth'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
-import { useCallback } from 'react'
 import { OctogonMinusDangerBadge } from '@/components/ui/badge'
-import { AuthState } from '@/components/auth-context'
 
 export interface MyRouterContext {
 	auth: AuthState

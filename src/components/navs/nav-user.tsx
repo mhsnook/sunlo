@@ -15,7 +15,8 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useAuth, useSignOut } from '@/lib/hooks'
+import { useSignOut } from '@/lib/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
 import { Link } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'

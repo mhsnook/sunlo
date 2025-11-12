@@ -9,7 +9,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'

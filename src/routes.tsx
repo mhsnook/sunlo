@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { RouterProvider, Register } from '@tanstack/react-router'
-import { useAuth } from '@/lib/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { useMemo } from 'react'
 import { MyRouterContext } from './routes/__root'
 

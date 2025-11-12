@@ -7,7 +7,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { Button } from '@/components/ui/button'
 import {
 	Card,

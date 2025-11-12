@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import {
 	FancySelectField,
