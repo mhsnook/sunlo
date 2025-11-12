@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import type { uuid } from './-types'
 import Callout from '@/components/ui/callout'
 import { useProfile } from '@/hooks/use-profile'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { uuid } from '@/types/main'
 
 type FriendsSearchParams = {
 	uid: uuid

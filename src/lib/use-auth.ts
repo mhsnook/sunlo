@@ -8,7 +8,7 @@ export const emptyAuth = {
 	userId: null,
 	userEmail: null,
 	userRole: null,
-} as const
+}
 
 type AuthNotLoaded = Readonly<typeof emptyAuth>
 

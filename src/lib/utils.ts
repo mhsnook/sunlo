@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DeckMetaType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
+import toast from 'react-hot-toast'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -164,4 +165,19 @@ export function isNativeAppUserAgent() {
 		('standalone' in window.navigator && window.navigator?.standalone) ||
 		window.matchMedia('(display-mode: standalone)').matches
 	)
+}
+
+export function copyLink(url?: string, fallback = true) {
+	if (!navigator?.clipboard) toast.error('Failed to copy link')
+	if (!fallback && !url) {
+		throw new Error('No url to copy')
+	} else
+		navigator.clipboard
+			.writeText(url ?? window?.location?.href)
+			.then(() => {
+				toast.success('Link copied to clipboard')
+			})
+			.catch(() => {
+				toast.error('Failed to copy link')
+			})
 }
