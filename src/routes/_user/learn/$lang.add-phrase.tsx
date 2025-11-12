@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
@@ -9,7 +9,7 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { NotebookPen, Search } from 'lucide-react'
 
 import type { Tables } from '@/types/supabase'
-import type { RPCFunctions } from '@/types/main'
+import type { RPCFunctions, uuid } from '@/types/main'
 import {
 	Card,
 	CardContent,
@@ -32,6 +32,9 @@ import {
 	TranslationSchema,
 } from '@/lib/schemas'
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
+import { Separator } from '@radix-ui/react-separator'
+import { WithPhrase } from '@/components/with-phrase'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
 
 export interface SearchParams {
 	text?: string
@@ -70,6 +73,8 @@ function AddPhraseTab() {
 		}),
 		[text]
 	)
+
+	const [newPhrases, setNewPhrases] = useState<uuid[]>([])
 
 	const searchPhrase = text || ''
 	const {
@@ -130,6 +135,7 @@ function AddPhraseTab() {
 				'New phrase has been added to the public library and will appear in your next review'
 			)
 			console.log(`Success:`, data)
+			setNewPhrases((prev) => [data.phrase.id, ...prev])
 			reset({ phrase_text: '', translation_text: '', translation_lang })
 		},
 		onError: (error) => {
@@ -141,75 +147,88 @@ function AddPhraseTab() {
 	})
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle>Add A Phrase</CardTitle>
-				<CardDescription>
-					Search for a phrase or add a new one to your deck.
-				</CardDescription>
-			</CardHeader>
-			<CardContent>
-				<form
-					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
-					className="mt-2 space-y-4"
-				>
-					<div>
-						<Label htmlFor="newPhrase">
-							Text of the Phrase (in {languages[lang]})
-						</Label>
-						<Controller
-							name="phrase_text"
-							control={control}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							render={({ field }) => (
-								<Textarea
-									{...field}
-									placeholder="The text of the phrase to learn"
-								/>
-							)}
+		<>
+			<Card>
+				<CardHeader>
+					<CardTitle>Add A Phrase</CardTitle>
+					<CardDescription>
+						Search for a phrase or add a new one to your deck.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form
+						noValidate
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
+						onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
+						className="mt-2 space-y-4"
+					>
+						<div>
+							<Label htmlFor="newPhrase">
+								Text of the Phrase (in {languages[lang]})
+							</Label>
+							<Controller
+								name="phrase_text"
+								control={control}
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
+								render={({ field }) => (
+									<Textarea
+										{...field}
+										placeholder="The text of the phrase to learn"
+									/>
+								)}
+							/>
+						</div>
+						<TranslationTextField<AddPhraseFormValues>
+							error={errors.translation_text}
+							register={register}
 						/>
-					</div>
-					<TranslationTextField<AddPhraseFormValues>
-						error={errors.translation_text}
-						register={register}
-					/>
-					<TranslationLanguageField<AddPhraseFormValues>
-						error={errors.translation_lang}
-						control={control}
-					/>
-					<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
-						<Button
-							type="submit"
-							className={addPhraseMutation.isPending ? 'opacity-60' : ''}
-							disabled={addPhraseMutation.isPending}
-						>
-							{addPhraseMutation.isPending ?
-								<Loader />
-							:	<NotebookPen />}
-							Save and add another
-						</Button>
-						<Link
-							to="/learn/$lang/search"
-							from={Route.fullPath}
-							search={searchPlusText}
-							className={buttonVariants({ variant: 'outline' })}
-						>
-							<Search size={16} />
-							Search phrases
-						</Link>
+						<TranslationLanguageField<AddPhraseFormValues>
+							error={errors.translation_lang}
+							control={control}
+						/>
+						<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
+							<Button
+								type="submit"
+								className={addPhraseMutation.isPending ? 'opacity-60' : ''}
+								disabled={addPhraseMutation.isPending}
+							>
+								{addPhraseMutation.isPending ?
+									<Loader />
+								:	<NotebookPen />}
+								Save and add another
+							</Button>
+							<Link
+								to="/learn/$lang/search"
+								from={Route.fullPath}
+								search={searchPlusText}
+								className={buttonVariants({ variant: 'outline' })}
+							>
+								<Search size={16} />
+								Search phrases
+							</Link>
 
-						<Link
-							to="/learn/$lang/bulk-add"
-							from={Route.fullPath}
-							className={buttonVariants({ variant: 'outline' })}
-						>
-							Bulk add phrases
-						</Link>
+							<Link
+								to="/learn/$lang/bulk-add"
+								from={Route.fullPath}
+								className={buttonVariants({ variant: 'outline' })}
+							>
+								Bulk add phrases
+							</Link>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+			{newPhrases.length > 0 && (
+				<div className="my-6">
+					<Separator className="my-6" />
+					<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
+					<div className="space-y-2">
+						{newPhrases.map((pid: uuid) => (
+							<WithPhrase key={pid} pid={pid} Component={CardResultSimple} />
+						))}
 					</div>
-				</form>
-			</CardContent>
-		</Card>
+				</div>
+			)}
+		</>
 	)
 }
