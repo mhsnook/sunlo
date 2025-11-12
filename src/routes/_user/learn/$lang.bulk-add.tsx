@@ -21,24 +21,20 @@ import { Textarea } from '@/components/ui/textarea'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
-import { useLanguagesToShow, useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import {
-	PhraseFullFilteredType,
-	PhraseFullSchema,
-	PhraseFullType,
-} from '@/lib/schemas'
+import { PhraseFullSchema } from '@/lib/schemas'
 import { phrasesCollection } from '@/lib/collections'
-import { CompositeTypes } from '@/types/supabase'
+import { Tables } from '@/types/supabase'
+import { uuid } from '@/types/main'
+import { WithPhrase } from '@/components/with-phrase'
 
-type BulkAddPhrasesResponse = Array<
-	CompositeTypes<'phrase_with_translations_output'> & {
-		card: null
-	}
->
+type BulkAddPhrasesResponse = {
+	phrases: Tables<'phrase'>[]
+	translations: Tables<'phrase_translation'>[]
+}
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -67,10 +63,9 @@ export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
 	const { data: profile } = useProfile()
-	const { data: languagesToShow } = useLanguagesToShow()
 
 	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
-		Array<PhraseFullFilteredType>
+		Array<uuid>
 	>([])
 
 	const {
@@ -104,35 +99,36 @@ function BulkAddPhrasesPage() {
 		BulkAddPhrasesFormValues
 	>({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
+			console.log(`Attempting mutation`, { values })
 			const payload = {
 				p_lang: lang,
 				p_phrases: values.phrases,
+				p_user_id: profile!.uid,
 			}
 			const { data, error } = await supabase.rpc('bulk_add_phrases', payload)
-			if (error) throw error
-			return data.map((p) => ({ ...p, card: null }))
-		},
-		onSuccess: (newlyAddedPhrases) => {
-			if (!newlyAddedPhrases) return
-			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
-			const parsedPhrases: PhraseFullType[] = newlyAddedPhrases.map((p) =>
-				PhraseFullSchema.parse(p)
-			)
-			// We need to add the user id to the phrase and translations before caching
-			const phrasesWithUser = parsedPhrases.map((p) => ({
-				...p,
-				added_by: profile!.uid,
-				translations: p.translations.map((t) => ({
-					...t,
-					added_by: profile!.uid,
-				})),
-			}))
-			phrasesCollection.utils.writeInsert(phrasesWithUser)
-			const newPhrases = parsedPhrases.map((p) =>
-				splitPhraseTranslations(p, languagesToShow ?? [])
-			)
+			console.log(`After mutation`, { values, data, error })
 
-			setSuccessfullyAddedPhrases((prev) => [...newPhrases, ...prev])
+			if (error) throw error
+			return data
+		},
+		onSuccess: (data: BulkAddPhrasesResponse | null) => {
+			if (!data) {
+				toast('No data came back from the database :-/')
+				return
+			}
+			toast.success(`${data.phrases.length} phrases added successfully!`)
+			const phrasesToInsert = data.phrases.map((p) =>
+				PhraseFullSchema.parse({
+					...p,
+					translations: data.translations.filter((t) => t.phrase_id === p.id),
+				})
+			)
+			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
+
+			setSuccessfullyAddedPhrases((prev) => [
+				...phrasesToInsert.map((p) => p.id),
+				...prev,
+			])
 			// Reset the form for the next batch
 			reset({
 				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
@@ -200,8 +196,8 @@ function BulkAddPhrasesPage() {
 						<Separator className="my-6" />
 						<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
 						<div className="space-y-2">
-							{successfullyAddedPhrases.map((phrase) => (
-								<CardResultSimple key={phrase.id} phrase={phrase} />
+							{successfullyAddedPhrases.map((pid) => (
+								<WithPhrase key={pid} pid={pid} Component={CardResultSimple} />
 							))}
 						</div>
 					</div>
