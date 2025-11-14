@@ -1,4 +1,10 @@
-import { type PropsWithChildren, useState, useEffect, useMemo } from 'react'
+import {
+	type PropsWithChildren,
+	useState,
+	useEffect,
+	useMemo,
+	useEffectEvent,
+} from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { useQueryClient } from '@tanstack/react-query'
 
@@ -13,12 +19,18 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 
-	/*
-    This effect should run once when the app first mounts (the context provider), and then
-    hopefully never again. We're just going to attach this auth-state-change listener, and whenever
-    the auth state changes, we check what kind of change has happened, update the state hook and do
-    whatever cache invalidation is needed.
-  */
+	const safeInitialise = useEffectEvent(() => {
+		console.log('safeInitialise')
+		if (!sessionState && !isLoaded) {
+			console.log('safeInitialise if = true')
+			void supabase.auth.getSession().then(({ data: { session }, error }) => {
+				console.log('safeInitialise then stmt')
+				setSessionState(session)
+				if (!error) setIsLoaded(true)
+				else throw error
+			})
+		}
+	})
 
 	useEffect(() => {
 		if (!queryClient) {
@@ -42,6 +54,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				setIsLoaded(true)
 			}
 		)
+		safeInitialise()
 
 		return () => {
 			listener.subscription.unsubscribe()
