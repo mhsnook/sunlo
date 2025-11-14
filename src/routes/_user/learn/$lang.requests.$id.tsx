@@ -84,6 +84,7 @@ function FulfillRequestPage() {
 		FulfillRequestFormInputs
 	>({
 		mutationFn: async (values: FulfillRequestFormInputs) => {
+			console.log(`Beginning mutation`, { values })
 			const { data: rpcData, error: rpcError } = await supabase.rpc(
 				'fulfill_phrase_request',
 				{

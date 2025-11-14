@@ -186,6 +186,10 @@ function ReviewPageSetup() {
 	const { mutate, isPending } = useMutation({
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
+			console.log(
+				`Starting mutation to create ${allCardsForToday.length} cards`,
+				{ cardsToCreate }
+			)
 			const { data: newCards } =
 				cardsToCreate.length === 0 ?
 					{ data: [] }

@@ -168,6 +168,13 @@ export function useReviewMutation(
 		mutationKey: ['user', 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
 			// during stages 1 & 2, corrections can be done, but only update only if score changes
+			console.log(`Entering the review mutation:`, {
+				day_session,
+				pid,
+				score,
+				prevData,
+				stage,
+			})
 			if (stage < 3 && prevData?.score === score)
 				return {
 					action: 'noop',
@@ -175,7 +182,8 @@ export function useReviewMutation(
 				}
 
 			// @@TODO: this connection between the display UI and the mutation behavior is leaky
-			if (stage < 3 && prevData?.id)
+			if (stage < 3 && prevData?.id) {
+				console.log(`Attempting update with`, { stage, prevData, score })
 				return {
 					action: 'update',
 					row: await updateReview({
@@ -183,8 +191,17 @@ export function useReviewMutation(
 						review_id: prevData.id,
 					}),
 				}
-
+			}
 			// standard case: this should return a new review record
+			console.log(`Attempting new review with`, {
+				stage,
+				prevData,
+				pid,
+				lang,
+				score,
+				day_session,
+			})
+
 			return {
 				action: 'insert',
 				row: await postReview({
@@ -196,7 +213,7 @@ export function useReviewMutation(
 			}
 		},
 		onSuccess: (data) => {
-			// console.log(`mutation returns:`, data)
+			console.log(`mutation returns:`, data)
 			if (data.row.score === 1)
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
 			if (data.row.score === 2)
