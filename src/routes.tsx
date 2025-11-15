@@ -3,6 +3,7 @@ import { RouterProvider, Register } from '@tanstack/react-router'
 import { useAuth } from '@/lib/use-auth'
 import { useMemo } from 'react'
 import { MyRouterContext } from './routes/__root'
+import { AwaitingAuthLoader } from './components/awaiting-auth-loader'
 
 export default function Routes({ router }: Register) {
 	const auth = useAuth()
@@ -11,5 +12,7 @@ export default function Routes({ router }: Register) {
 		() => ({ auth: auth, queryClient }),
 		[auth, queryClient]
 	)
-	return <RouterProvider router={router} context={context} />
+	return auth.isLoaded ?
+			<RouterProvider router={router} context={context} />
+		:	<AwaitingAuthLoader />
 }

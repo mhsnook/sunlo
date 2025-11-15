@@ -11,7 +11,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/lib/collections'
-import { AwaitingAuthLoader } from '@/components/awaiting-auth-loader'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -82,9 +81,5 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		]
 	)
 
-	return (
-		<AuthContext.Provider value={value}>
-			{value.isLoaded ? children : <AwaitingAuthLoader />}
-		</AuthContext.Provider>
-	)
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
