@@ -56,6 +56,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 
 	const addTagsMutation = useMutation({
 		mutationFn: async (values: AddTagsFormValues) => {
+			console.log(`Running addTagsMutation fn`, { values, allLangTags })
 			if (values.tags.length === 0) return
 
 			const { data, error } = await supabase.rpc('add_tags_to_phrase', {

@@ -54,6 +54,10 @@ export function AddTranslationsDialog({
 			translation_lang,
 			translation_text,
 		}: AddTranslationsType) => {
+			console.log(`Adding translation`, {
+				translation_lang,
+				translation_text,
+			})
 			const { data } = await supabase
 				.from('phrase_translation')
 				.insert({
@@ -79,7 +83,11 @@ export function AddTranslationsDialog({
 			toast.error(error.message)
 		},
 	})
-
+	if (addTranslation.error)
+		console.log(
+			`Uncaught somewhere in the translation mutation`,
+			addTranslation.error
+		)
 	return (
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
