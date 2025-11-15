@@ -12,7 +12,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 
 export function SendRequestToFriendDialog({
@@ -20,11 +20,11 @@ export function SendRequestToFriendDialog({
 	id,
 	children,
 }: {
-	lang: string | null
-	id: uuid | null
+	lang: string
+	id: uuid
 	children: ReactNode
 }) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const sendRequestToFriendMutation = useMutation({
@@ -35,7 +35,7 @@ export function SendRequestToFriendDialog({
 				sender_uid: userId,
 				recipient_uid: friendUid,
 				request_id: id,
-				lang: lang ?? '',
+				lang,
 				message_type: 'request' as const,
 			}))
 			const { data } = await supabase

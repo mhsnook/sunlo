@@ -190,7 +190,10 @@ const ChartTooltipContent = React.forwardRef<
 					{payload.map((item, index) => {
 						const key = `${nameKey || item.name || item.dataKey || 'value'}`
 						const itemConfig = getPayloadConfigFromPayload(config, item, key)
-						const indicatorColor = color || item.payload.fill || item.color
+						// eslint-disable-next-line
+						const indicatorColor: string =
+							// eslint-disable-next-line
+							color || item.payload.fill || item.color
 
 						return (
 							<div
@@ -201,6 +204,7 @@ const ChartTooltipContent = React.forwardRef<
 								)}
 							>
 								{formatter && item?.value !== undefined && item.name ?
+									// eslint-disable-next-line
 									formatter(item.value, item.name, item, index, item.payload)
 								:	<>
 										{itemConfig?.icon ?
@@ -287,11 +291,13 @@ const ChartLegendContent = React.forwardRef<
 				)}
 			>
 				{payload.map((item) => {
+					// eslint-disable-next-line
 					const key = `${nameKey || item.dataKey || 'value'}`
 					const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
 					return (
 						<div
+							// eslint-disable-next-line
 							key={item.value}
 							className={cn(
 								'[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'

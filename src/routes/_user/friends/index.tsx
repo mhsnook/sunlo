@@ -2,8 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
-import { useRelations } from '@/hooks/use-friends'
-import { ShowError } from '@/components/errors'
+import { useRelationInvitedByMes } from '@/hooks/use-friends'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { PendingRequestsHeader } from '@/routes/_user/friends/-pending-requests-header'
 import { FriendProfiles } from '@/components/friend-profiles'
@@ -23,7 +22,7 @@ function FriendListPage() {
 }
 
 function PendingRequestsSection() {
-	const { data, isPending, error } = useRelations()
+	const { data, isLoading } = useRelationInvitedByMes()
 
 	return (
 		<Card>
@@ -31,19 +30,11 @@ function PendingRequestsSection() {
 				<CardTitle>Friend invites sent</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
-				{isPending ?
+				{isLoading ?
 					<Loader />
-				: error ?
-					<ShowError>{error.message}</ShowError>
-				: !data?.uids.invited.length ?
+				: !data.length ?
 					<p>You don't have any invites pending at this time.</p>
-				:	data.uids.invited.map((uid) => (
-						<ProfileWithRelationship
-							key={uid}
-							profile={data?.relationsMap[uid].profile}
-						/>
-					))
-				}
+				:	data.map((r) => <ProfileWithRelationship key={r.uid} uid={r.uid} />)}
 			</CardContent>
 		</Card>
 	)

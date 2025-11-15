@@ -1346,8 +1346,9 @@ export type Database = {
 				Args: {
 					p_lang: string
 					p_phrases: Database['public']['CompositeTypes']['phrase_with_translations_input'][]
+					p_user_id: string
 				}
-				Returns: Database['public']['CompositeTypes']['phrase_with_translations_output'][]
+				Returns: Json
 			}
 			fsrs_clamp_d: {
 				Args: { difficulty: number }
@@ -1481,20 +1482,7 @@ export type Database = {
 					| Database['public']['CompositeTypes']['translation_input'][]
 					| null
 			}
-			phrase_with_translations_output: {
-				id: string | null
-				lang: string | null
-				text: string | null
-				translations:
-					| Database['public']['CompositeTypes']['translation_output'][]
-					| null
-			}
 			translation_input: {
-				lang: string | null
-				text: string | null
-			}
-			translation_output: {
-				id: string | null
 				lang: string | null
 				text: string | null
 			}

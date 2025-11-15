@@ -1,28 +1,33 @@
-import { useContext } from 'react'
-import supabase from '@/lib/supabase-client'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { AuthContext } from '@/components/auth-context'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-// Access the context's value from inside a provider
-export function useAuth() {
-	const context = useContext(AuthContext)
+import supabase from '@/lib/supabase-client'
 
-	if (context === null) {
-		throw new Error('You need to wrap AuthProvider.')
-	}
-	return context
-}
+import { clearUser } from '@/lib/collections'
+import { useDecks } from '@/hooks/use-deck'
 
 export const useSignOut = () => {
 	const navigate = useNavigate()
 	const client = useQueryClient()
 
 	return useMutation({
-		mutationFn: async () => await supabase.auth.signOut(),
-		onSuccess: () => {
+		mutationFn: async () => {
+			const { error } = await supabase.auth.signOut()
+			if (error) {
+				console.log(`useSignOut`, error)
+				throw error
+			}
+		},
+		onSuccess: async () => {
 			client.removeQueries({ queryKey: ['user'], exact: false })
+			await clearUser()
 			void navigate({ to: '/' })
 		},
 	})
+}
+
+export function useDeckLangs() {
+	const { data } = useDecks()
+	return useMemo(() => data?.map((d) => d.lang), [data])
 }

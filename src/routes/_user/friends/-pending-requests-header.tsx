@@ -1,17 +1,17 @@
 import { Link } from '@tanstack/react-router'
-import { useRelations } from '@/hooks/use-friends'
+import { useRelationInvitations } from '@/hooks/use-friends'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 export function PendingRequestsHeader({ shy = false }) {
-	const { data, isPending } = useRelations()
-	const requestsCount = data?.uids.invitations?.length
+	const { data, isLoading } = useRelationInvitations()
+	const requestsCount = data?.length
 	return (
 		!requestsCount ?
 			shy ? null
 			:	<p
-					className={`text-muted-foreground mx-2 text-sm italic ${isPending ? 'invisible' : ''}`}
+					className={`text-muted-foreground mx-2 text-sm italic ${isLoading ? 'invisible' : ''}`}
 				>
 					No friend requests pending for you.
 				</p>

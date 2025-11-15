@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronsUpDown, Loader } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -9,7 +9,7 @@ import {
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 
-import type { OnePhraseComponentProps, TranslationStub } from '@/types/main'
+import type { uuid } from '@/types/main'
 import languages from '@/lib/languages'
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { AddTags } from '@/components/add-tags'
@@ -20,25 +20,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { ago } from '@/lib/dayjs'
+import { Loader } from '@/components/ui/loader'
 
-export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
-	const { data: phrase, status } = usePhrase(pid, lang)
+export function BigPhraseCard({ pid }: { pid: uuid }) {
+	const { data: phrase, status } = usePhrase(pid)
 	const [isOpen, setIsOpen] = useState(false)
 
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) return <PhraseNotFound />
-
-	// Tell the component what to do with incomplete composite data.
-	const [trans, other] =
-		!phrase.translations_mine ?
-			[phrase.translations, []]
-		:	[phrase.translations_mine, phrase.translations_other ?? []]
-
-	const tags = phrase.tags ?? []
 
 	return (
 		<div>
@@ -47,8 +40,8 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 					Phrase by{' '}
 					<UserPermalink
 						uid={phrase.added_by}
-						username={phrase.added_by_profile.username}
-						avatarUrl={avatarUrlify(phrase.added_by_profile.avatar_path)}
+						username={phrase.profile.username}
+						avatar_path={phrase.profile.avatar_path}
 					/>
 					{' • '}
 					{ago(phrase.created_at)}
@@ -58,8 +51,8 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
-							<LangBadge lang={lang} />
-							<CardStatusDropdown pid={pid} lang={lang} />
+							<LangBadge lang={phrase.lang} />
+							<CardStatusDropdown phrase={phrase} />
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
 							<span>&ldquo;{phrase.text}&rdquo;</span>
@@ -75,7 +68,7 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 								<div className="flex flex-row items-center justify-between">
 									<div className="flex flex-row items-baseline gap-2">
 										<h3 className="text-lg font-semibold">Translations</h3>
-										{trans.length ? null : (
+										{phrase.translations_mine?.length ? null : (
 											<span className="text-muted-foreground italic">
 												No tags
 											</span>
@@ -87,17 +80,17 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 										size="sm"
 									/>
 								</div>
-								{trans?.map((translation) => (
+								{phrase.translations_mine?.map((trans) => (
 									<div
-										key={translation.id}
+										key={trans.id}
 										className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
 									>
-										<LangBadge lang={translation.lang} />
-										<p className="text-md">{translation.text}</p>
+										<LangBadge lang={trans.lang} />
+										<p className="text-md">{trans.text}</p>
 									</div>
 								))}
 							</div>
-							{!other.length ? null : (
+							{!phrase.translations_other.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(
@@ -106,19 +99,21 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 										)}
 									>
 										<ChevronsUpDown className="h-4 w-4" />
-										{isOpen ? 'Hide extra' : `Show ${other.length} hidden`}{' '}
-										translation{other.length > 0 ? 's' : ''}
+										{isOpen ?
+											'Hide extra'
+										:	`Show ${phrase.translations_other.length} hidden`}{' '}
+										translation{phrase.translations_other.length > 0 ? 's' : ''}
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
-										{other.map((translation: TranslationStub) => (
+										{phrase.translations_other.map((trans) => (
 											<div
-												key={translation.id}
+												key={trans.id}
 												className="bg-muted rounded-lg p-3"
 											>
 												<div className="flex items-center justify-between">
-													<p className="text-md">{translation.text}</p>
+													<p className="text-md">{trans.text}</p>
 													<Badge variant="outline">
-														{languages[translation.lang]}
+														{languages[trans.lang]}
 													</Badge>
 												</div>
 											</div>
@@ -134,18 +129,18 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 							<div className="flex items-center justify-between">
 								<div className="inline-flex flex-row flex-wrap items-baseline gap-2">
 									<h3 className="text-lg font-semibold">Tags</h3>
-									{tags.map((tag: { id: string; name: string }) => (
+									{phrase.tags?.map((tag: { id: string; name: string }) => (
 										<Badge key={tag.id} variant="secondary">
 											{tag.name}
 										</Badge>
 									))}
-									{!tags.length && (
+									{!phrase.tags?.length && (
 										<span className="text-muted-foreground italic">
 											No tags
 										</span>
 									)}
 								</div>
-								<AddTags phraseId={pid} lang={lang} />
+								<AddTags phrase={phrase} />
 							</div>
 						</div>
 					</div>
@@ -153,19 +148,13 @@ export function BigPhraseCard({ pid, lang }: OnePhraseComponentProps) {
 			</Card>
 			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
 				<CopyLinkButton
-					url={`${window.location.host}/learn/${lang}/${pid}`}
+					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}
 					variant="outline"
 					size="default"
 				/>
-				<SharePhraseButton
-					pid={pid}
-					lang={lang}
-					variant="outline"
-					size="default"
-				/>
+				<SharePhraseButton phrase={phrase} variant="outline" size="default" />
 				<SendPhraseToFriendButton
-					pid={pid}
-					lang={lang}
+					phrase={phrase}
 					variant="outline"
 					size="default"
 				/>

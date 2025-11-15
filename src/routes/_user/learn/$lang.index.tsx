@@ -20,12 +20,7 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
-import {
-	useDeckActivityChartData,
-	useDeckMeta,
-	useDeckPids,
-	useDeckRoutineStats,
-} from '@/hooks/use-deck'
+import { useDeckMeta, useDeckPids, useDeckRoutineStats } from '@/hooks/use-deck'
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/components/recommended-phrases'
@@ -40,10 +35,11 @@ export const Route = createFileRoute('/_user/learn/$lang/')({
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
-	const { data: pids } = useDeckPids(lang)
-	if (!pids) throw new Error("Could not load this deck's data")
-
-	const deckIsNew = !(pids.all.length > 0)
+	const { data: deck, isReady } = useDeckMeta(lang)
+	if (isReady && !deck) throw new Error("Could not load this deck's data")
+	if (!deck) return null
+	const deckIsNew =
+		deck.cards_active + deck.cards_skipped + deck.cards_learned === 0
 	return (
 		<div className="space-y-8">
 			{deckIsNew ?
@@ -59,14 +55,14 @@ function WelcomePage() {
 function DeckOverview() {
 	const { lang } = Route.useParams()
 	const { data: meta } = useDeckMeta(lang)
-	const { data: pids } = useDeckPids(lang)
+	const { data: deckPids } = useDeckPids(lang)
 	const { data: routineStats } = useDeckRoutineStats(lang)
-	const { data: activityChartData } = useDeckActivityChartData(lang)
-	if (!meta || !pids || !routineStats || !activityChartData)
+	if (!meta || !deckPids || routineStats === undefined) {
+		console.log(`oops, deck not found:`, meta, deckPids, routineStats)
 		throw Error('This deck does not exist, sorry 🧄☹️🥦')
-
+	}
 	const totalToday =
-		(meta.cardsScheduledForToday ?? 0) + (meta.daily_review_goal ?? 15)
+		(deckPids.today_active.length ?? 0) + meta.daily_review_goal
 	return (
 		<Card>
 			<CardHeader>
@@ -87,7 +83,7 @@ function DeckOverview() {
 					</div>
 				</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
-					<DeckStatsBadges deckMeta={meta} />
+					<DeckStatsBadges lang={lang} />
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
@@ -95,36 +91,31 @@ function DeckOverview() {
 					Your last review was{' '}
 					<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
 				</p>
-				<p>
-					You've kept up with your routine
-					<span className="font-bold">
-						{(
-							routineStats.daysMet === routineStats.daysSoFar &&
-							routineStats.daysSoFar > 1
-						) ?
-							` all ${routineStats.daysSoFar} days this week!`
-						:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-								routineStats.daysSoFar === 1 ? 'day' : 'days'
-							}`
-						}
-					</span>{' '}
-					this week.
-				</p>
+				{routineStats ?
+					<p>
+						You've kept up with your routine
+						<span className="font-bold">
+							{(
+								routineStats.daysMet === routineStats.daysSoFar &&
+								routineStats.daysSoFar > 1
+							) ?
+								` all ${routineStats.daysSoFar} days this week!`
+							:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+									routineStats.daysSoFar === 1 ? 'day' : 'days'
+								}`
+							}
+						</span>{' '}
+						this week.
+					</p>
+				:	null}
 				<p>
 					You have{' '}
 					<span className="font-bold">{totalToday} cards to review today</span>:{' '}
-					{pids.today_active.length} scheduled from prior reviews, along with{' '}
-					{meta.daily_review_goal ?? 15} new ones
+					{deckPids.today_active.length} scheduled from prior reviews, along
+					with {meta.daily_review_goal} new ones
 				</p>
 
-				{activityChartData.length > 0 && (
-					<div className="my-4">
-						<h4 className="text-muted-foreground mb-2 text-center font-semibold">
-							Your Recent Reviews
-						</h4>
-						<ActivityChart data={activityChartData} />
-					</div>
-				)}
+				<ActivityChart lang={lang} />
 			</CardContent>
 			<CardFooter>
 				<div className="flex flex-row flex-wrap gap-2">

@@ -1,23 +1,8 @@
 import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import toast from 'react-hot-toast'
 import { ButtonProps } from '@/components/ui/button-variants'
 import { useCallback } from 'react'
-
-export function copyLink(url?: string, fallback = true) {
-	if (!navigator?.clipboard) toast.error('Failed to copy link')
-	if (!fallback && !url) {
-		throw new Error('No url to copy')
-	} else
-		navigator.clipboard
-			.writeText(url ?? window?.location?.href)
-			.then(() => {
-				toast.success('Link copied to clipboard')
-			})
-			.catch(() => {
-				toast.error('Failed to copy link')
-			})
-}
+import { copyLink } from '@/lib/utils'
 
 export default function CopyLinkButton({
 	url,
