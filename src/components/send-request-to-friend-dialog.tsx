@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
+import { useAllChats } from '@/hooks/use-friends'
 
 export function SendRequestToFriendDialog({
 	lang,
@@ -27,6 +28,7 @@ export function SendRequestToFriendDialog({
 	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
+	const { isReady } = useAllChats()
 	const sendRequestToFriendMutation = useMutation({
 		mutationKey: ['send-request-to-friend', lang, id],
 		mutationFn: async (friendUids: uuid[]) => {
@@ -66,7 +68,7 @@ export function SendRequestToFriendDialog({
 				<SelectMultipleFriends uids={uids} setUids={setUids} />
 
 				<Button
-					disabled={!uids.length}
+					disabled={!uids.length || !isReady}
 					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendRequestToFriendMutation.mutate(uids)}
 				>

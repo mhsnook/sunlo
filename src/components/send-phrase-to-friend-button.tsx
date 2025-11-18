@@ -17,6 +17,7 @@ import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
 import { PhraseFullFilteredType } from '@/lib/schemas'
+import { useAllChats } from '@/hooks/use-friends'
 
 export function SendPhraseToFriendButton({
 	phrase,
@@ -31,6 +32,7 @@ export function SendPhraseToFriendButton({
 	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
+	const { isReady } = useAllChats()
 	const sendPhraseToFriendMutation = useMutation({
 		mutationKey: ['send-phrase-to-friend', phrase.lang, phrase.id],
 		mutationFn: async (friendUids: uuid[]) => {
@@ -79,7 +81,7 @@ export function SendPhraseToFriendButton({
 				<SelectMultipleFriends uids={uids} setUids={setUids} />
 
 				<Button
-					disabled={!uids.length}
+					disabled={!uids.length || !isReady}
 					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendPhraseToFriendMutation.mutate(uids)}
 				>
