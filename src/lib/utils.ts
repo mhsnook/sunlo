@@ -1,33 +1,34 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import supabase from './supabase-client'
+import { DeckMetaType } from '@/lib/schemas'
+import supabase from '@/lib/supabase-client'
+import toast from 'react-hot-toast'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
-// this is type-funky bc we're using dynamic keys (TODO consider Map)
-export function mapArray<T extends Record<string, any>, K extends keyof T>(
-	arr: Array<T>,
+export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
+	arr: ReadonlyArray<T> | undefined | null,
 	key: K
-) {
+): Record<string, T> {
 	if (!key) throw new Error('Must provide a key to map against')
 	if (!arr) return {} // uninitialized or null array returns empty object
 
 	return arr.reduce(
-		(result, item) => {
+		(acc, item) => {
 			const itemKey = item[key]
 			if (typeof itemKey === 'string') {
-				result[itemKey] = item
+				acc[itemKey] = item
 			}
-			return result
+			return acc
 		},
-		{} as Record<K, T>
+		{} as Record<string, T>
 	)
 }
 
-export function mapArrays<T extends Record<string, any>, K extends keyof T>(
+export function mapArrays<T extends Record<string, unknown>, K extends keyof T>(
 	arr: Array<T>,
 	key: K
 ) {
@@ -42,7 +43,7 @@ export function mapArrays<T extends Record<string, any>, K extends keyof T>(
 			}
 			return result
 		},
-		{} as Record<K, Array<T>>
+		{} as Record<string, Array<T>>
 	)
 }
 
@@ -119,7 +120,7 @@ export function arrayDifference(
 	return arr1.filter((item) => !set2.has(item))
 }
 
-export function avatarUrlify(path: string | null): string {
+export function avatarUrlify(path: string | null | undefined): string {
 	return !path ? '' : (
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
 		)
@@ -133,6 +134,29 @@ export function nullSubmit(event: {
 	event.stopPropagation()
 }
 
+// sort ASC earliest first
+export const sortDecksByCreation = (
+	a: Partial<DeckMetaType> & { created_at: string; lang: string },
+	b: Partial<DeckMetaType> & { created_at: string; lang: string }
+) =>
+	a.created_at > b.created_at ? 1
+	: a.created_at < b.created_at ? -1
+	: a.lang > b.lang ? 1
+	: -1
+
+// sort DESC most recent first
+export const sortDecksByActivity = (a: DeckMetaType, b: DeckMetaType) => {
+	const aDate = a.most_recent_review_at ?? a.created_at
+	const bDate = b.most_recent_review_at ?? b.created_at
+
+	return (
+		aDate > bDate ? -1
+		: aDate < bDate ? 1
+		: a.lang > b.lang ? -1
+		: 1
+	)
+}
+
 export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
 	e.preventDefault()
 
@@ -141,4 +165,19 @@ export function isNativeAppUserAgent() {
 		('standalone' in window.navigator && window.navigator?.standalone) ||
 		window.matchMedia('(display-mode: standalone)').matches
 	)
+}
+
+export function copyLink(url?: string, fallback = true) {
+	if (!navigator?.clipboard) toast.error('Failed to copy link')
+	if (!fallback && !url) {
+		throw new Error('No url to copy')
+	} else
+		navigator.clipboard
+			.writeText(url ?? window?.location?.href)
+			.then(() => {
+				toast.success('Link copied to clipboard')
+			})
+			.catch(() => {
+				toast.error('Failed to copy link')
+			})
 }

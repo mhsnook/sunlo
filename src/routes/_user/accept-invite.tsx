@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
+import type { PublicProfileType } from '@/lib/schemas'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button } from '@/components/ui/button'
@@ -16,12 +17,13 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
-import { useProfile, publicProfileQuery } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { Loader } from '@/components/ui/loader'
-import type { PublicProfile } from './friends/-types'
+import { avatarUrlify } from '@/lib/utils'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),
@@ -36,12 +38,10 @@ export const Route = createFileRoute('/_user/accept-invite')({
 
 function AcceptInvitePage() {
 	const search = Route.useSearch()
-	const { data: friend, isPending } = useQuery(
-		publicProfileQuery(search.uid_by)
-	)
+	const { data: friend, isLoading } = useOnePublicProfile(search.uid_by)
 	if (!search?.uid_by)
 		throw new Error('This URL is missing the uid_by parameter')
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const { data: profile } = useProfile()
 	if (!userId || userId !== search.uid_for)
 		throw new Error(
@@ -75,7 +75,7 @@ function AcceptInvitePage() {
 				{profile ?
 					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 						<img
-							src={profile.avatarUrl}
+							src={avatarUrlify(profile.avatar_path)}
 							width=""
 							className="mx-auto max-w-32 shrink rounded-xl"
 							alt={`Your avatar`}
@@ -84,7 +84,7 @@ function AcceptInvitePage() {
 							<>
 								<ArrowRightLeft className="mx-auto opacity-70" />
 								<img
-									src={friend.avatarUrl}
+									src={avatarUrlify(friend.avatar_path)}
 									className="mx-auto max-w-32 shrink rounded-xl"
 									alt={`${friend.username}'s avatar`}
 								/>
@@ -119,7 +119,7 @@ function AcceptInvitePage() {
 
 	return (
 		<main className="w-app flex h-screen flex-col justify-center p-2 pb-20">
-			{isPending ?
+			{isLoading ?
 				<Loader />
 			:	<Card>
 					<CardHeader>
@@ -150,7 +150,11 @@ function AcceptInvitePage() {
 	)
 }
 
-const ShowAccepted = ({ friend }: { friend?: PublicProfile | null }) => {
+const ShowAccepted = ({
+	friend,
+}: {
+	friend: PublicProfileType | null | undefined
+}) => {
 	if (!friend)
 		throw new Error(
 			`Attempted to render the "success" message` +

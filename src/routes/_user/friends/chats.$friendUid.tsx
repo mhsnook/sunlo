@@ -2,32 +2,32 @@ import { useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
-import type { PublicProfileFull } from './-types'
+import type { PublicProfileType } from '@/lib/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
-import { cn } from '@/lib/utils'
-import { useAuth } from '@/lib/hooks'
+import { avatarUrlify, cn } from '@/lib/utils'
+import { useUserId } from '@/lib/use-auth'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 
-export const Route = createFileRoute('/_user/friends/chats/$friendId')({
+export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
 })
 
 function ChatPage() {
-	const { friendId } = Route.useParams()
-	const { data: relation } = useOneRelation(friendId)
-	const { userId } = useAuth()
+	const { friendUid } = Route.useParams()
+	const { data: relation } = useOneRelation(friendUid)
+	const userId = useUserId()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 
-	const messagesQuery = useOneFriendChat(friendId)
+	const messagesQuery = useOneFriendChat(friendUid)
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current
@@ -46,7 +46,7 @@ function ChatPage() {
 		return () => resizeObserver.disconnect()
 	}, [messagesQuery.data])
 
-	if (!relation?.profile || messagesQuery.isPending) {
+	if (!relation?.profile || messagesQuery.isLoading) {
 		return (
 			<Card className="flex h-full flex-col">
 				<Loader />
@@ -54,8 +54,8 @@ function ChatPage() {
 		)
 	}
 
-	const relUsername = relation?.profile.username ?? ''
-	const relAvatarUrl = relation?.profile.avatarUrl ?? ''
+	const relUsername = relation?.profile.username
+	const relAvatarUrl = avatarUrlify(relation?.profile.avatar_path)
 
 	return (
 		<Card className="flex h-full flex-col">
@@ -63,7 +63,7 @@ function ChatPage() {
 				<Link
 					to="/friends/$uid"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					params={{ uid: friendId }}
+					params={{ uid: friendUid }}
 				>
 					<Avatar>
 						<AvatarImage src={relAvatarUrl} alt={relUsername} />
@@ -108,18 +108,10 @@ function ChatPage() {
 												{ago(msg.created_at)}
 											</p>
 											{msg.phrase_id && msg.lang && (
-												<CardPreview
-													pid={msg.phrase_id}
-													lang={msg.lang}
-													isMine={isMine}
-												/>
+												<CardPreview pid={msg.phrase_id} isMine={isMine} />
 											)}
 											{msg.request_id && msg.lang && (
-												<RequestPreview
-													id={msg.request_id}
-													lang={msg.lang}
-													isMine={isMine}
-												/>
+												<RequestPreview id={msg.request_id} isMine={isMine} />
 											)}
 											<div
 												className={cn(
@@ -159,7 +151,7 @@ function ChatPage() {
 				{relation.status === 'friends' ?
 					<div className="relative">
 						<Link
-							to="/friends/chats/$friendId/recommend"
+							to="/friends/chats/$friendUid/recommend"
 							from={Route.fullPath}
 							className="flex items-center gap-2"
 						>
@@ -182,13 +174,13 @@ function ChatPage() {
 	)
 }
 
-const EmptyChat = ({ profile }: { profile: PublicProfileFull }) => (
+const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 	<div className="flex flex-col items-center justify-center gap-6 py-10">
 		<p className="text-xl font-bold">{profile.username}</p>
 		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-			{profile.avatarUrl ?
+			{profile.avatar_path ?
 				<img
-					src={profile.avatarUrl}
+					src={avatarUrlify(profile.avatar_path)}
 					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 					className="size-32 rounded-full object-cover"
 				/>

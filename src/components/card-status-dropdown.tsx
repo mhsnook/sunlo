@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
 	CheckCircle,
@@ -12,12 +12,6 @@ import {
 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
-import {
-	CardRow,
-	DeckLoaded,
-	OnePhraseComponentProps,
-	uuid,
-} from '@/types/main'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	DropdownMenu,
@@ -25,15 +19,21 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useAuth } from '@/lib/hooks'
-import { useProfile } from '@/hooks/use-profile'
-import { useDeckCard } from '@/hooks/use-deck'
+import { useUserId } from '@/lib/use-auth'
+import { useDecks } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
+import { cardsCollection } from '@/lib/collections'
+import {
+	CardMetaSchema,
+	PhraseFullFilteredType,
+	PhraseFullFullType,
+} from '@/lib/schemas'
+import { Tables } from '@/types/supabase'
 
+type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType
 interface CardStatusDropdownProps {
-	pid: uuid
-	lang: string
+	phrase: AnyPhrase
 	className?: string
 }
 
@@ -104,52 +104,54 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-function useCardStatusMutation(pid: uuid, lang: string) {
-	const { userId } = useAuth()
-	const queryClient = useQueryClient()
-	const { data: card } = useDeckCard(pid, lang)
-	return useMutation<CardRow, PostgrestError, { status: LearningStatus }>({
-		mutationKey: ['upsert-card', pid],
+function useCardStatusMutation(phrase: AnyPhrase) {
+	const userId = useUserId()
+
+	return useMutation<
+		Tables<'user_card'>,
+		PostgrestError,
+		{ status: LearningStatus }
+	>({
+		mutationKey: ['upsert-card', phrase.id],
 		mutationFn: async ({ status }: { status: LearningStatus }) => {
+			if (!phrase)
+				throw new Error('Trying to change status of a card that does not exist')
 			const { data } =
-				card ?
+				phrase.card ?
 					await supabase
 						.from('user_card')
 						.update({
 							status,
 						})
-						.eq('phrase_id', pid)
-						.eq('uid', userId!)
+						.eq('phrase_id', phrase.id)
+						.eq('uid', userId)
 						.select()
 						.throwOnError()
 				:	await supabase
 						.from('user_card')
 						.insert({
-							lang,
-							phrase_id: pid,
+							lang: phrase.lang,
+							phrase_id: phrase.id,
 							status,
 						})
 						.select()
 						.throwOnError()
 			return data[0]
 		},
-		onSuccess: (data) => {
-			if (card) toast.success('Updated card status')
-			else toast.success('Added this phrase to your deck')
-			void queryClient.setQueryData(
-				['user', lang, 'deck'],
-				(oldData: DeckLoaded) => ({
-					...oldData,
-					cardsMap: {
-						...oldData.cardsMap,
-						[pid]: { ...data, reviews: oldData.cardsMap[pid]?.reviews ?? [] },
-					},
+		onSuccess: (data, variables) => {
+			if (phrase.card) {
+				toast.success('Updated card status')
+				cardsCollection.utils.writeUpdate({
+					phrase_id: phrase.id,
+					status: variables.status,
 				})
-			)
-			void queryClient.invalidateQueries({ queryKey: ['user', lang] })
+			} else {
+				toast.success('Added this phrase to your deck')
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
+			}
 		},
 		onError: (error) => {
-			if (card) toast.error('There was an error updating this card')
+			if (phrase.card) toast.error('There was an error updating this card')
 			else toast.error('There was an error adding this card to your deck')
 			console.log(`error upserting card`, error)
 		},
@@ -157,23 +159,20 @@ function useCardStatusMutation(pid: uuid, lang: string) {
 }
 
 export function CardStatusDropdown({
-	pid,
-	lang,
+	phrase,
 	className,
 }: CardStatusDropdownProps) {
-	const { userId } = useAuth()
-	const { data: profile } = useProfile()
-	const deckPresent = profile?.deckLanguages?.includes(lang) ?? false
-	const { data: card } = useDeckCard(pid, lang)
+	const userId = useUserId()
+	const { data: decks } = useDecks()
+	const deckPresent = decks.some((d) => d.lang === phrase.lang) ?? false
+	const card = phrase.card
 
-	const cardMutation = useCardStatusMutation(pid, lang)
+	const cardMutation = useCardStatusMutation(phrase)
 
-	// optimistic update not needed because we invalidate the query
-	// const cardPresent = cardMutation.data ?? card
 	const choice =
 		!deckPresent ? 'nodeck'
 		: !card ? 'nocard'
-		: card.status!
+		: card.status
 
 	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (
@@ -197,7 +196,7 @@ export function CardStatusDropdown({
 							<Link
 								to="/learn/add-deck"
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								search={{ lang }}
+								search={{ lang: phrase.lang }}
 							>
 								<StatusSpan choice="nodeck" />
 							</Link>
@@ -250,20 +249,24 @@ export function CardStatusDropdown({
 		)
 }
 
-export function CardStatusHeart({ pid, lang }: OnePhraseComponentProps) {
-	const mutation = useCardStatusMutation(pid, lang)
-	const { data: card } = useDeckCard(pid, lang)
-	const status = card?.status === 'active' ? 'skipped' : 'active'
-
+export function CardStatusHeart({
+	phrase,
+}: {
+	phrase: PhraseFullFilteredType
+}) {
+	const mutation = useCardStatusMutation(phrase)
+	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
 			variant="outline"
 			size="icon"
-			className={card?.status === 'active' ? 'border-primary-foresoft/30' : ''}
+			className={
+				phrase.card?.status === 'active' ? 'border-primary-foresoft/30' : ''
+			}
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
-			onClick={() => mutation.mutate({ status })}
+			onClick={() => mutation.mutate({ status: statusToPost })}
 		>
-			{card?.status === 'active' ?
+			{phrase.card?.status === 'active' ?
 				<Heart className="fill-red-600 text-red-600" />
 			:	<Heart className="text-muted-foreground" />}
 		</Button>

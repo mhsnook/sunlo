@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createRouter } from '@tanstack/react-router'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider } from '@tanstack/react-query'
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { Loader } from '@/components/ui/loader'
 
@@ -14,17 +14,7 @@ import Routes from './routes'
 
 import 'styles/globals.css'
 import { Button } from '@/components/ui/button'
-
-const queryClient = new QueryClient({
-	defaultOptions: {
-		queries: {
-			staleTime: 2 * 60 * 1000, // 2 minutes
-			gcTime: 20 * 60 * 1000, // 20 minutes
-			refetchOnWindowFocus: false,
-			refetchOnMount: false,
-		},
-	},
-})
+import { queryClient } from './lib/query-client'
 
 // Create a new router instance
 const router = createRouter({

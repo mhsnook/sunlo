@@ -1,14 +1,12 @@
 import { useCallback, useMemo, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Plus, SearchX } from 'lucide-react'
+import { Plus } from 'lucide-react'
 
 import languages from '@/lib/languages'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FancyMultiSelect, ShowSelected } from '@/components/ui/multi-select'
 import { Separator } from '@/components/ui/separator'
-import { LanguageIsEmpty } from '@/components/language-is-empty'
-import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import {
 	Select,
 	SelectContent,
@@ -16,11 +14,12 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
-import { useLanguage, useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/hooks/use-language'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { useDeckPids } from '@/hooks/use-deck'
 import { FilterEnumType, PhraseSearchSchema } from '@/lib/schemas'
 import { Label } from '@/components/ui/label'
+import { DisplayPhrasesQuery } from '@/components/display-phrase-query'
 
 type DeckOnlyFiltersEnum = 'active' | 'inactive' | 'reviewed_last_7d'
 type CompositeFiltersEnum = Exclude<FilterEnumType, DeckOnlyFiltersEnum>
@@ -36,26 +35,36 @@ const filterLanguage = {
 
 function DeckLibraryPage() {
 	const { lang } = Route.useParams()
-
 	const { data: deckPids } = useDeckPids(lang)
 	const recs = useCompositePids(lang)
 	const search = Route.useSearch()
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { data: language } = useLanguage(lang)
-	const { data: languageTags } = useLanguageTags(lang)
-
-	const filter = search.filter || 'not_in_deck'
-	const tagsFilter = search.tags
+	const { data: tags } = useLanguageTags(lang)
 
 	const tagOptions = useMemo(
-		() => (languageTags ?? []).map((tag) => ({ value: tag, label: tag })) ?? [],
-		[languageTags]
+		() =>
+			!tags?.length ?
+				[]
+			:	tags.map((tag) => ({ value: tag.name, label: tag.name })),
+		[tags]
 	)
 
 	const selectedTags = useMemo(
-		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
-		[tagsFilter]
+		() =>
+			search.tags ?
+				search.tags
+					.split(',')
+					.map((f) => f.trim())
+					.filter(Boolean)
+			:	[],
+		[search.tags]
 	)
+	const filter = search.filter || 'not_in_deck'
+
+	const filteredPids =
+		!filter || !deckPids || !recs ? null
+		: filter in deckPids ? deckPids[filter as DeckOnlyFiltersEnum]
+		: recs[filter as CompositeFiltersEnum]
 
 	const setSelectedTags = useCallback(
 		(value: SetStateAction<string[]>) => {
@@ -116,35 +125,7 @@ function DeckLibraryPage() {
 		},
 		[navigate]
 	)
-
-	const filteredPidsByStatus = useMemo(
-		() =>
-			!deckPids || !recs ? []
-			: filter in deckPids ? deckPids[filter as DeckOnlyFiltersEnum]
-			: recs[filter as CompositeFiltersEnum],
-		[filter, recs, deckPids]
-	)
-
-	const filteredPids = useMemo(() => {
-		if (!language?.phrasesMap || filteredPidsByStatus.length === 0) return []
-		if (!tagsFilter?.trim()) return filteredPidsByStatus
-
-		const selectedTags = tagsFilter
-			.split(',')
-			.map((t) => t.trim())
-			.filter(Boolean)
-		if (selectedTags.length === 0) return filteredPidsByStatus
-
-		return filteredPidsByStatus.filter((pid) => {
-			const phrase = language.phrasesMap[pid]
-			const phraseTags = phrase?.tags?.map((t) => t.name) ?? []
-			return selectedTags.every((selectedTag) =>
-				phraseTags.includes(selectedTag)
-			)
-		})
-	}, [filteredPidsByStatus, tagsFilter, language?.phrasesMap])
-
-	if (!deckPids || !recs || !language) {
+	if (!deckPids || !recs || !tags) {
 		console.log(
 			'Trying to render DeckContents but not getting anything for the recs or deckPids object'
 		)
@@ -216,33 +197,12 @@ function DeckLibraryPage() {
 					</Link>
 				</div>
 				<Separator className="mt-6 mb-2" />
-				<p className="text-muted-foreground pb-2 text-right text-xs italic">
-					{filteredPids.length} of
-					{recs.language.length} phrases
-				</p>
-				{recs.language.length > 0 ?
-					<div className="flex-basis-[20rem] flex shrink flex-row flex-wrap gap-4">
-						{filteredPids.length > 0 ?
-							<LanguagePhrasesAccordionComponent
-								pids={filteredPids}
-								lang={lang}
-							/>
-						:	<Empty />}
-					</div>
-				:	<LanguageIsEmpty lang={lang} />}
+				<DisplayPhrasesQuery
+					lang={lang}
+					tags={selectedTags}
+					filteredPids={filteredPids}
+				/>
 			</CardContent>
 		</Card>
-	)
-}
-
-function Empty() {
-	return (
-		<div className="text-muted-foreground flex w-full flex-col items-center justify-center gap-4 rounded-lg border border-dashed py-12">
-			<SearchX className="size-12" />
-			<div className="text-center">
-				<p className="font-semibold">No phrases match your filters.</p>
-				<p className="text-sm">Try adjusting your search.</p>
-			</div>
-		</div>
 	)
 }

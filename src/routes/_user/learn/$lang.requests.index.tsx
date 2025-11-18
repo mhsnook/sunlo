@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RequestItem } from '@/components/requests/request-list-item'
-import { useAllMyPhraseRequests } from '@/hooks/use-requests'
+import { useAllMyPhraseRequestsLang } from '@/hooks/use-requests'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/')({
 	component: Page,
@@ -18,7 +18,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/')({
 
 function Page() {
 	const params = Route.useParams()
-	const { data: requests, isPending } = useAllMyPhraseRequests(params.lang)
+	const { data: requests, isLoading } = useAllMyPhraseRequestsLang(params.lang)
 
 	return (
 		<Card>
@@ -45,7 +45,7 @@ function Page() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				{isPending ?
+				{isLoading ?
 					<p>Loading requests...</p>
 				: !requests || requests.length === 0 ?
 					<>

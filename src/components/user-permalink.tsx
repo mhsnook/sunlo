@@ -1,22 +1,22 @@
-import { cn } from '@/lib/utils'
+import { avatarUrlify, cn } from '@/lib/utils'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 
 export default function UserPermalink({
 	uid,
 	username,
-	avatarUrl,
+	avatar_path,
 	className,
 	round = false,
 }: {
-	uid: uuid | null
-	username: string | null
-	avatarUrl: string | null
+	uid: uuid | null | undefined
+	username: string | null | undefined
+	avatar_path: string | null | undefined
 	className?: string
 	round?: boolean
 }) {
 	if (!uid) return null
-
+	const avatarUrl = avatarUrlify(avatar_path)
 	return (
 		<Link
 			to="/friends/$uid"

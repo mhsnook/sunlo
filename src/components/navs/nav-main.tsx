@@ -1,11 +1,11 @@
-import { makeLinks } from '@/hooks/links'
-import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
-import { Button } from '@/components/ui/button'
 import { Link } from '@tanstack/react-router'
+import { makeLinks } from '@/hooks/links'
 import languages from '@/lib/languages'
 import { useProfile } from '@/hooks/use-profile'
-import { LangOnlyComponentProps } from '@/types/main'
+import { useDecks } from '@/hooks/use-deck'
+import { Button } from '@/components/ui/button'
 import { useSidebar } from '@/components/ui/sidebar'
+import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
 
 const deckLinks = [
 	'/learn/$lang',
@@ -33,8 +33,9 @@ const siteMenuLoggedIn = makeLinks(['/', '/profile', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
+	const { data: decks } = useDecks()
 	const deckMenu = makeLinks(deckLinks, lang)
-	const isDeckFound = profile && lang && profile.deckLanguages.includes(lang)
+	const isDeckFound = profile && lang && decks.some((d) => d.lang === lang)
 
 	return (
 		<>
@@ -59,7 +60,7 @@ export function NavMain({ lang }: { lang?: string }) {
 	)
 }
 
-function DeckNotFound(props: LangOnlyComponentProps) {
+function DeckNotFound(props: { lang: string }) {
 	const { setClosedMobile } = useSidebar()
 	return (
 		<div className="p-4 pb-2">

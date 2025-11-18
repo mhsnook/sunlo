@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useAllChats, useRelations } from '@/hooks/use-friends'
-import { cn } from '@/lib/utils'
+import { useAllChats, useRelationFriends } from '@/hooks/use-friends'
+import { avatarUrlify, cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {
@@ -10,15 +10,11 @@ const linkActiveProps = {
 }
 
 export function ChatsSidebar() {
-	const { data: relations, isPending } = useRelations()
-	const { data: chats } = useAllChats()
-
-	const friends = relations?.uids.friends.map(
-		(uid) => relations.relationsMap[uid]
-	)
+	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
+	const { data: chats, isLoading: isLoadingChats } = useAllChats()
 
 	// Mock sorting by recent activity
-	const sortedFriends = friends?.sort((a, b) =>
+	const sortedFriends = friends?.toSorted((a, b) =>
 		a.most_recent_created_at === b.most_recent_created_at ? 0
 		: a.most_recent_created_at < b.most_recent_created_at ? 1
 		: -1
@@ -30,7 +26,7 @@ export function ChatsSidebar() {
 				<CardTitle>Chats</CardTitle>
 			</CardHeader>
 			<CardContent className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
-				{isPending ?
+				{isLoadingFriends || isLoadingChats ?
 					<>
 						<ChatSkeleton />
 						<ChatSkeleton />
@@ -42,15 +38,13 @@ export function ChatsSidebar() {
 					</p>
 				:	sortedFriends.map((friend) => {
 						const thisChatMessage =
-							!chats || !chats[friend.uidOther] ?
-								null
-							:	chats[friend.uidOther].at(-1)
+							!chats || !chats[friend.uid] ? null : chats[friend.uid].at(-1)
 						return (
 							<Link
-								key={friend.uidOther}
-								to="/friends/chats/$friendId"
+								key={friend.uid}
+								to="/friends/chats/$friendUid"
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ friendId: friend.uidOther }}
+								params={{ friendUid: friend.uid }}
 								className={cn(
 									'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
 								)}
@@ -58,7 +52,7 @@ export function ChatsSidebar() {
 							>
 								<Avatar className="h-8 w-8">
 									<AvatarImage
-										src={friend.profile?.avatarUrl}
+										src={avatarUrlify(friend.profile?.avatar_path)}
 										alt={friend.profile?.username}
 									/>
 									<AvatarFallback>
@@ -73,7 +67,7 @@ export function ChatsSidebar() {
 										{thisChatMessage ?
 											<>
 												{ago(thisChatMessage.created_at)} •{' '}
-												{thisChatMessage.isMine ? 'you ' : 'they '}
+												{thisChatMessage.isByMe ? 'you ' : 'they '}
 												{thisChatMessage.message_type === 'recommendation' ?
 													'sent a recommendation'
 												: thisChatMessage.message_type === 'request' ?

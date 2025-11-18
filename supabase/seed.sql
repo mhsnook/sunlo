@@ -571,7 +571,7 @@ values
 		'Work Andy',
 		null,
 		now() - interval '2 days',
-		'pc-background-1ad6b1.jpg',
+		null,
 		'[{"lang": "tam", "level": "fluent"}, {"lang": "hin", "level": "fluent"}, {"lang": "kan", "level": "proficient"}, {"lang": "eng", "level": "fluent"}, {"lang": "deu", "level": "proficient"}]'
 	);
 

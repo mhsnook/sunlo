@@ -1,8 +1,6 @@
-import { DeckRow } from '@/types/main'
-
 import { useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
@@ -22,12 +20,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
+import { decksCollection } from '@/lib/collections'
+import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -35,9 +35,12 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 
 function DeckSettingsPage() {
 	const { lang } = Route.useParams()
-	const { data: meta } = useDeckMeta(lang)
-	// the query for deck meta suspends higher up in the tree
-	if (!meta) throw new Error(`No deck found for language "${lang}"`)
+	const { data: meta, isReady } = useDeckMeta(lang)
+	// return early conditions: not ready yet, or deck not found error
+	if (!meta)
+		if (!isReady) return null
+		else throw new Error(`No deck found for language "${lang}"`)
+
 	return (
 		<Card>
 			<CardHeader>
@@ -46,10 +49,10 @@ function DeckSettingsPage() {
 			<CardContent className="space-y-6">
 				{!meta.archived ?
 					<>
-						<GoalForm lang={meta.lang!} learning_goal={meta.learning_goal!} />
+						<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
 						<DailyGoalForm
-							lang={meta.lang!}
-							daily_review_goal={meta.daily_review_goal!}
+							lang={meta.lang}
+							daily_review_goal={meta.daily_review_goal}
 						/>
 					</>
 				:	null}
@@ -58,7 +61,7 @@ function DeckSettingsPage() {
 						<span>
 							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
 						</span>
-						<ArchiveDeckButton lang={meta.lang!} archived={meta.archived!} />
+						<ArchiveDeckButton lang={meta.lang} archived={meta.archived} />
 					</CardTitle>
 				</CardHeader>
 			</CardContent>
@@ -100,8 +103,7 @@ const dailyReviewGoalOptions: FancySelectOption[] = [
 ]
 
 function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -113,17 +115,18 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 	})
 
 	const updateDailyGoalMutation = useMutation<
-		DeckRow,
+		Tables<'user_deck'>,
 		PostgrestError,
 		DailyGoalFormInputs
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'daily-goal'],
 		mutationFn: async (values: DailyGoalFormInputs) => {
+			console.log(`start updateDailyGoalMutation`, { values })
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ daily_review_goal: values.daily_review_goal })
 				.eq('lang', lang)
-				.eq('uid', userId!)
+				.eq('uid', userId)
 				.throwOnError()
 				.select()
 			if (!data)
@@ -132,15 +135,14 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 		},
 		onSuccess: (data) => {
 			toast.success('Your deck settings have been updated.')
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			decksCollection.utils.writeUpdate(data)
 			reset(data)
 		},
-		onError: () => {
+		onError: (error) => {
 			toast.error(
-				'There was some issue and your deck settings were not updated.'
+				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
+			console.log(`Daily Goal Form deck settings update error`, { error })
 		},
 	})
 	return (
@@ -215,8 +217,7 @@ const learningGoalOptions: FancySelectOption[] = [
 ]
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -228,17 +229,18 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	})
 
 	const updateDeckGoalMutation = useMutation<
-		DeckRow,
+		Tables<'user_deck'>,
 		PostgrestError,
 		DeckGoalFormInputs
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
 		mutationFn: async (values: DeckGoalFormInputs) => {
+			console.log(`start updateDeckGoalMutation`, { values })
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ learning_goal: values.learning_goal })
 				.eq('lang', lang)
-				.eq('uid', userId!)
+				.eq('uid', userId)
 				.throwOnError()
 				.select()
 			if (!data)
@@ -246,16 +248,15 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			toast.success('Your deck settings have been updated.')
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			decksCollection.utils.writeUpdate(data)
 			reset(data)
+			toast.success('Your deck settings have been updated.')
 		},
-		onError: () => {
+		onError: (error) => {
 			toast.error(
-				'There was some issue and your deck settings were not updated.'
+				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
+			console.log(`Language Goal Form deck settings update error`, { error })
 		},
 	})
 

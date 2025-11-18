@@ -17,6 +17,8 @@ import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import ErrorLabel from '@/components/fields/error-label'
 import { Loader } from '@/components/ui/loader'
+import { useDecks } from '@/hooks/use-deck'
+import { useDeckLangs } from '@/lib/hooks'
 
 const SearchSchema = z.object({
 	lang: z.string().optional(),
@@ -46,7 +48,9 @@ const HelloIcon = () => <span className="text-2xl">👋</span>
 
 function NewDeckForm() {
 	const createNewDeck = useNewDeckMutation()
-	const { data } = useProfile()
+	const { data: profile } = useProfile()
+	const { data: decks } = useDecks()
+	const deckLangs = useDeckLangs()
 	const search = Route.useSearch()
 	const {
 		control,
@@ -57,7 +61,7 @@ function NewDeckForm() {
 		defaultValues: { lang: search.lang },
 	})
 	const controller = useController({ name: 'lang', control })
-	if (data === undefined) return <Loader />
+	if (!profile) return <Loader />
 
 	return (
 		<main>
@@ -75,10 +79,10 @@ function NewDeckForm() {
 						onSubmit={handleSubmit((data) => createNewDeck.mutate(data))}
 						className="space-y-6"
 					>
-						{data?.deckLanguages?.length === 0 ?
+						{decks?.length === 0 ?
 							<Callout Icon={HelloIcon}>
 								<p className="text-primary-foresoft text-2xl font-bold">
-									Welcome <em>{data?.username}</em>!
+									Welcome <em>{profile.username}</em>!
 								</p>
 								<p>
 									Create a new deck to start learning, or click the "friends"
@@ -87,9 +91,9 @@ function NewDeckForm() {
 							</Callout>
 						:	<p>
 								You're currently learning{' '}
-								{(data?.deckLanguages ?? []).map((l) => (
-									<Badge key={l} className="mx-1">
-										{languages[l]}
+								{decks?.map(({ lang }) => (
+									<Badge key={lang} className="mx-1">
+										{languages[lang]}
 									</Badge>
 								))}
 							</p>
@@ -98,7 +102,7 @@ function NewDeckForm() {
 							hasError={!!errors.lang}
 							value={controller.field.value}
 							setValue={controller.field.onChange}
-							disabled={data?.deckLanguages}
+							disabled={deckLangs}
 							size="lg"
 						/>
 						<ErrorLabel error={errors.lang} />

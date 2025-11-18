@@ -15,10 +15,14 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useAuth, useSignOut } from '@/lib/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
+import { avatarUrlify } from '@/lib/utils'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import supabase from '@/lib/supabase-client'
+import { clearUser } from '@/lib/collections'
 
 const data = makeLinks([
 	'/profile',
@@ -30,9 +34,26 @@ export function NavUser() {
 	const { isMobile, setClosedMobile } = useSidebar()
 	const { isAuth, userEmail } = useAuth()
 	const { data: profile } = useProfile()
-	const signOut = useSignOut()
+	const navigate = useNavigate()
+	const client = useQueryClient()
+	const signOut = useMutation({
+		mutationFn: async () => {
+			const { error } = await supabase.auth.signOut()
+			if (error) {
+				console.log(`signOut`, error)
+				throw error
+			}
+		},
+		onSuccess: async () => {
+			client.removeQueries({ queryKey: ['user'], exact: false })
+			await clearUser()
+			void navigate({ to: '/' })
+		},
+	})
+
 	if (!profile) return null
-	const { username, avatarUrl } = profile
+	const { username, avatar_path } = profile
+	const avatarUrl = avatarUrlify(avatar_path)
 
 	return (
 		<SidebarMenu>

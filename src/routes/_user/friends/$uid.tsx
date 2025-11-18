@@ -1,28 +1,24 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { MessagesSquare, User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useRelations } from '@/hooks/use-friends'
-import { publicProfileQuery } from '@/hooks/use-profile'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
+import { avatarUrlify } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
-	loader: async ({ context, params }) => {
+	loader: ({ context, params }) => {
 		const { uid } = params
 		const isMine = uid === context.auth.userId
-		await context.queryClient.ensureQueryData(publicProfileQuery(uid))
 		return { uid, isMine }
 	},
 })
 
 function ProfilePage() {
 	const { uid, isMine } = Route.useLoaderData()
-	const { data: profile } = useQuery(publicProfileQuery(uid))
-	const { data: relations } = useRelations()
-	const relationship = !relations || !uid ? null : relations.relationsMap[uid]
+	const { data: profile } = useOnePublicProfile(uid)
 
 	if (!profile)
 		throw new Error(
@@ -44,9 +40,9 @@ function ProfilePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-center">
 					<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-						{profile.avatarUrl ?
+						{profile.avatar_path ?
 							<img
-								src={profile.avatarUrl}
+								src={avatarUrlify(profile.avatar_path)}
 								alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 								className="size-32 rounded-full object-cover"
 							/>
@@ -61,17 +57,17 @@ function ProfilePage() {
 					<h2 className="text-xl font-semibold">{profile.username}</h2>
 					<div>
 						<p className="text-muted-foreground mb-2 text-sm capitalize">
-							{relationship?.status ?? 'unconnected'}
+							{profile.relation?.status ?? 'unconnected'}
 						</p>
 						<div className="flex flex-row items-center justify-center gap-2">
 							<RelationshipActions uid_for={uid} />
-							{relationship?.status === 'friends' && (
+							{profile.relation?.status === 'friends' && (
 								<Link
 									className={buttonVariants({ variant: 'outline' })}
-									to="/friends/chats/$friendId"
+									to="/friends/chats/$friendUid"
 									from={Route.fullPath}
 									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ friendId: profile.uid }}
+									params={{ friendUid: profile.uid }}
 								>
 									<MessagesSquare /> Message
 								</Link>

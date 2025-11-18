@@ -7,9 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# build artefacts
 node_modules
 dist
-dist-ssr
+tsconfig.tsbuildinfo
+.tanstack
+
+# environments
 *.local
 .env
 

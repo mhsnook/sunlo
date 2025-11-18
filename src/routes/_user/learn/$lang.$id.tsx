@@ -6,6 +6,6 @@ export const Route = createFileRoute('/_user/learn/$lang/$id')({
 })
 
 function RouteComponent() {
-	const { lang, id } = Route.useParams()
-	return <BigPhraseCard pid={id} lang={lang} />
+	const { id } = Route.useParams()
+	return <BigPhraseCard pid={id} />
 }

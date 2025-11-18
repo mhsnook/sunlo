@@ -1,14 +1,12 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 import supabase from '@/lib/supabase-client'
-import { produce } from 'immer'
 import { Pencil } from 'lucide-react'
 
-import type { LanguageLoaded, uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -19,10 +17,16 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { useLanguagePhrase, useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
+import { langTagsCollection, phrasesCollection } from '@/lib/collections'
+import {
+	LangTagSchema,
+	LangTagType,
+	PhraseFullFilteredType,
+} from '@/lib/schemas'
 import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({
@@ -30,12 +34,14 @@ const addTagsSchema = z.object({
 })
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
+type AddTagsReturnValues = {
+	tags: Tables<'tag'>[]
+	phrase_tags: Tables<'phrase_tag'>[]
+}
 
-export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
+export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [open, setOpen] = useState(false)
-	const { data: allLangTagsData } = useLanguageTags(lang)
-	const { data: phrase } = useLanguagePhrase(phraseId, lang)
-	const queryClient = useQueryClient()
+	const { data: allLangTags } = useLanguageTags(phrase?.lang)
 	const {
 		control,
 		handleSubmit,
@@ -50,38 +56,38 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 
 	const addTagsMutation = useMutation({
 		mutationFn: async (values: AddTagsFormValues) => {
+			console.log(`Running addTagsMutation fn`, { values, allLangTags })
 			if (values.tags.length === 0) return
 
 			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
-				p_phrase_id: phraseId,
-				p_lang: lang,
+				p_phrase_id: phrase.id,
+				p_lang: phrase.lang,
 				p_tags: values.tags,
 			})
 
 			if (error) throw error
-			return data as {
-				tags: Tables<'tag'>[]
-				phrase_tags: Tables<'phrase_tag'>[]
-			}
+			return data as AddTagsReturnValues
 		},
-		onSuccess: (_, values) => {
-			toast.success('Tags added!')
-			if (values.tags.length) {
-				void queryClient.setQueryData<LanguageLoaded>(
-					['language', lang],
-					(old) => {
-						return produce(old!, (draft) => {
-							const phrase = draft.phrasesMap[phraseId]
-							if (!phrase) return
-							if (!phrase.tags) phrase.tags = []
-							phrase.tags.unshift(
-								// this is not the actual id, but the UI doesn't care
-								...values.tags.map((t) => ({ name: t, id: t }))
-							)
-						})
-					}
-				)
+		onSuccess: (data) => {
+			if (data?.tags.length) {
+				data?.tags.map((t) => {
+					langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
+				})
 			}
+			if (data?.phrase_tags.length) {
+				const langTags =
+					data.phrase_tags
+						.map((t) => langTagsCollection.get(t.tag_id))
+						.filter((t): t is LangTagType => !!t) ?? []
+				phrasesCollection.utils.writeUpdate({
+					id: phrase.id,
+					tags: [
+						...(phrase.tags ?? []),
+						...(langTags.map((t) => ({ id: t.id, name: t.name })) ?? []),
+					],
+				})
+			}
+			toast.success('Tags added!')
 			setOpen(false)
 			reset({ tags: [] })
 		},
@@ -91,14 +97,12 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 		},
 	})
 
-	const phraseTags = phrase?.tags ?? []
 	// oxlint-disable-next-line prefer-set-has
-	const phraseTagNames = phraseTags.map((t) => t.name)
-	const allLangTags = allLangTagsData ?? []
+	const phraseTagNames = phrase.tags?.map((t) => t.name) ?? []
 	// oxlint-disable-next-line jsx-no-new-array-as-prop
 	const availableTags = allLangTags
-		.filter((t) => !phraseTagNames.includes(t))
-		.map((t) => ({ value: t, label: t }))
+		.filter((t) => !phraseTagNames.includes(t.name))
+		.map((t) => ({ value: t.name, label: t.name }))
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -118,8 +122,8 @@ export function AddTags({ phraseId, lang }: { phraseId: uuid; lang: string }) {
 					<div>
 						<h4 className="text-sm font-medium">Current tags</h4>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{phraseTags.length > 0 ?
-								phraseTags.map((tag) => (
+							{phrase.tags?.length ?
+								phrase.tags.map((tag) => (
 									<Badge key={tag.id} variant="secondary">
 										{tag.name}
 									</Badge>
