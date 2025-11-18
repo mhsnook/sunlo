@@ -35,9 +35,12 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 
 function DeckSettingsPage() {
 	const { lang } = Route.useParams()
-	const { data: meta } = useDeckMeta(lang)
-	// the query for deck meta suspends higher up in the tree
-	if (!meta) throw new Error(`No deck found for language "${lang}"`)
+	const { data: meta, isReady } = useDeckMeta(lang)
+	// return early conditions: not ready yet, or deck not found error
+	if (!meta)
+		if (!isReady) return null
+		else throw new Error(`No deck found for language "${lang}"`)
+
 	return (
 		<Card>
 			<CardHeader>
@@ -118,6 +121,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'daily-goal'],
 		mutationFn: async (values: DailyGoalFormInputs) => {
+			console.log(`start updateDailyGoalMutation`, { values })
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ daily_review_goal: values.daily_review_goal })
@@ -130,14 +134,15 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			decksCollection.utils.update(data)
-			reset(data)
 			toast.success('Your deck settings have been updated.')
+			decksCollection.utils.writeUpdate(data)
+			reset(data)
 		},
-		onError: () => {
+		onError: (error) => {
 			toast.error(
-				'There was some issue and your deck settings were not updated.'
+				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
+			console.log(`Daily Goal Form deck settings update error`, { error })
 		},
 	})
 	return (
@@ -230,6 +235,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
 		mutationFn: async (values: DeckGoalFormInputs) => {
+			console.log(`start updateDeckGoalMutation`, { values })
 			const { data } = await supabase
 				.from('user_deck')
 				.update({ learning_goal: values.learning_goal })
@@ -242,14 +248,15 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			decksCollection.utils.update(data)
+			decksCollection.utils.writeUpdate(data)
 			reset(data)
 			toast.success('Your deck settings have been updated.')
 		},
-		onError: () => {
+		onError: (error) => {
 			toast.error(
-				'There was some issue and your deck settings were not updated.'
+				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
+			console.log(`Language Goal Form deck settings update error`, { error })
 		},
 	})
 

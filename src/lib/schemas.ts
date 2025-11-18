@@ -194,7 +194,6 @@ export const DeckMetaRawSchema = z.object({
 	created_at: z.string(),
 	archived: z.boolean(),
 	daily_review_goal: z.number(),
-	language: z.string(),
 	learning_goal: LearningGoalEnumSchema,
 	cards_active: z.number().default(0),
 	cards_learned: z.number().default(0),
@@ -207,6 +206,7 @@ export const DeckMetaRawSchema = z.object({
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
 	theme: z.number(),
+	language: z.string(),
 })
 
 export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>

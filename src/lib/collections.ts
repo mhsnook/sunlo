@@ -33,6 +33,7 @@ import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'
 import { themes } from './deck-themes'
 import { queryOptions } from '@tanstack/react-query'
+import languages from './languages'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -169,6 +170,7 @@ export const decksCollection = createCollection(
 					.map((d, i) => ({
 						...d,
 						theme: i % themes.length,
+						language: languages[d.lang],
 					})) ?? []
 			)
 		},
@@ -248,8 +250,7 @@ export const friendSummariesCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => FriendSummarySchema.parse(item)) ?? []
 		},
-		getKey: (item: FriendSummaryType) =>
-			`${item.uid_less}--${item.uid_more}`,
+		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
 		queryClient,
 		startSync: false,
 		schema: FriendSummarySchema,

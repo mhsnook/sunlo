@@ -20,7 +20,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
 import { decksCollection } from '@/lib/collections'
-import { DeckMetaSchema } from '@/lib/schemas'
+import { DeckMetaRawSchema } from '@/lib/schemas'
 
 export function ArchiveDeckButton({
 	lang,
@@ -48,7 +48,7 @@ export function ArchiveDeckButton({
 		onSuccess: (data) => {
 			setOpen(false)
 			if (!data) return null
-			decksCollection.utils.writeUpdate(DeckMetaSchema.parse(data))
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 
 			toast.success(
 				data.archived ?

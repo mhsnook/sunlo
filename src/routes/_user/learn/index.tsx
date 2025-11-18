@@ -14,10 +14,10 @@ export const Route = createFileRoute('/_user/learn/')({
 
 function Page() {
 	const { data: decks } = useDecks()
-	const activeDecks = decks.filter((i) => !i.archived)
+	const activeDecks = decks?.filter((i) => !i.archived)
 	return (
 		<main className="w-full space-y-6">
-			{activeDecks.length > 0 ?
+			{activeDecks?.length ?
 				<>
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
 						{activeDecks.map((d) => (
@@ -34,7 +34,7 @@ function Page() {
 					</Link>
 				</>
 			:	<div className="px-4 @lg:px-6 @xl:px-8">
-					{decks.length ?
+					{decks?.length ?
 						<AllDecksArchived />
 					:	<NoDecks />}
 				</div>
