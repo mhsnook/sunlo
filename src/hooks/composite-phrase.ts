@@ -1,42 +1,51 @@
-import {
-	PhraseFull,
-	PhraseStub,
-	TranslationRow,
-	TranslationStub,
-} from '@/types/main'
 import { useLanguagePhrase } from '@/hooks/use-language'
-import { useProfile } from '@/hooks/use-profile'
-import type { CompositeQueryResults, PhraseFiltered, uuid } from '@/types/main'
+import { useLanguagesToShow } from '@/hooks/use-profile'
+import type { uuid } from '@/types/main'
+import type {
+	PhraseFullFilteredType,
+	PhraseFullType,
+	TranslationType,
+} from '@/lib/schemas'
 
-export const usePhrase = (
-	pid: uuid,
-	lang: string
-): CompositeQueryResults<PhraseFiltered> => {
-	const { data: profile, isPending: isProfilePending } = useProfile()
-	const { data: phrase, isPending: isPhrasePending } = useLanguagePhrase(
-		pid,
-		lang
-	)
+export type CompositePhraseQueryResults =
+	| { status: 'pending'; data: undefined }
+	| {
+			status: 'complete' | 'partial'
+			data: PhraseFullFilteredType
+	  }
+	| {
+			status: 'not-found'
+			data: null
+	  }
 
-	if (isPhrasePending) return { data: null, status: 'pending' }
+export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
+	const { data: languagesToShow, isLoading: isLoading1 } = useLanguagesToShow()
+	const { data: phrase, isLoading: isLoading2 } = useLanguagePhrase(pid)
+
+	if (isLoading2) return { status: 'pending', data: undefined }
 	if (!phrase) return { data: null, status: 'not-found' }
-	if (isProfilePending) return { data: phrase, status: 'partial' }
-	if (!profile) return { data: phrase, status: 'complete' }
+	const partial: PhraseFullFilteredType = {
+		...phrase,
+		translations_mine: phrase.translations,
+		translations_other: [],
+	}
+	if (isLoading1) return { data: partial, status: 'partial' }
+	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
-	const phraseFiltered = splitPhraseTranslations(
+	const phraseFiltered: PhraseFullFilteredType = splitPhraseTranslations(
 		phrase,
-		profile.languagesToShow
+		languagesToShow
 	)
 
-	return { data: phraseFiltered as PhraseFiltered, status: 'complete' }
+	return { data: phraseFiltered, status: 'complete' }
 }
 
 function splitTranslations(
 	translationLangs: Array<string>,
-	translations_incoming: Array<TranslationRow | TranslationStub>
+	translations_incoming: Array<TranslationType>
 ): {
-	translations_mine: Array<TranslationRow>
-	translations_other: Array<TranslationRow>
+	translations_mine: Array<TranslationType>
+	translations_other: Array<TranslationType>
 } {
 	const translations_mine = translations_incoming
 		.filter((t) => translationLangs.includes(t.lang))
@@ -54,16 +63,17 @@ function splitTranslations(
 		translations_other,
 	}
 }
+
 export function splitPhraseTranslations(
-	phrase: PhraseFull | PhraseStub,
+	phrase: PhraseFullType,
 	languagesToShow: Array<string>
-): (PhraseFull | PhraseStub) & {
-	translations_mine: Array<TranslationRow | TranslationStub>
-	translations_other: Array<TranslationRow | TranslationStub>
+): PhraseFullFilteredType & {
+	translations_mine: Array<TranslationType>
+	translations_other: Array<TranslationType>
 } {
 	const { translations_mine, translations_other } = splitTranslations(
 		languagesToShow,
-		phrase.translations
+		phrase.translations ?? []
 	)
 
 	return { ...phrase, translations_mine, translations_other }

@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 import { LinkIcon } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -7,31 +6,24 @@ import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
-import { phraseRequestQuery } from '@/hooks/use-requests'
+import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 
-export function RequestPreview({
-	id,
-	lang,
-	isMine,
-}: {
-	id: uuid
-	lang: string
-	isMine: boolean
-}) {
-	const { data: request, isPending } = useQuery(phraseRequestQuery(id))
+export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
+	const { data: request, isLoading } = useRequest(id)
+	const { data: answers, isLoading: isLoadingPhrases } =
+		usePhrasesFromRequest(id)
 
-	if (!isPending && !request)
+	if (!isLoading && !request)
 		return (
 			<Callout variant="problem">Can't seem to find that request...</Callout>
 		)
-	const answers = Array.isArray(request?.phrases) ? request.phrases : []
 
 	return (
 		<Card
 			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
-			{isPending || !request ?
+			{isLoading || !request ?
 				<Loader className="my-6" />
 			:	<>
 					<CardHeader className="p-4">
@@ -42,9 +34,11 @@ export function RequestPreview({
 					</CardHeader>
 					<CardContent className="space-y-2 p-4 pt-0">
 						<p>&ldquo;{request.prompt}&rdquo;</p>
-						<p className="text-muted-foreground text-sm">
-							{answers.length} answer{answers.length === 1 ? '' : 's'}
-						</p>
+						{isLoadingPhrases ? null : (
+							<p className="text-muted-foreground text-sm">
+								{answers.length} answer{answers.length === 1 ? '' : 's'}
+							</p>
+						)}
 
 						<div className="flex flex-row flex-wrap gap-2">
 							{/* <RequestHeartButton pid={id} lang={lang} /> */}
@@ -52,7 +46,7 @@ export function RequestPreview({
 							<Link
 								to={'/learn/$lang/requests/$id'}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang, id }}
+								params={{ lang: request.lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',
 									size: 'sm',

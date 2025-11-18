@@ -1,26 +1,27 @@
 import { Link } from '@tanstack/react-router'
 import { CheckCircle, Clock, Heart, MessageSquare, Send } from 'lucide-react'
 
-import { PublicProfile } from '@/routes/_user/friends/-types'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import CopyLinkButton from '@/components/copy-link-button'
-import type { PhraseRequestFull } from '@/hooks/use-requests'
 import Flagged from '@/components/flagged'
 import { Blockquote } from '@/components/ui/blockquote'
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
 import { ShareRequestButton } from '@/components/share-request-button'
+import { PhraseRequestType } from '@/lib/schemas'
+import { useRequestAnswers } from '@/hooks/use-language'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
-export function RequestItem({ request }: { request: PhraseRequestFull }) {
+export function RequestItem({ request }: { request: PhraseRequestType }) {
+	const { data: answers } = useRequestAnswers(request.id)
+	const { data: requester } = useOnePublicProfile(request.requester_uid)
 	if (!request) return null
-	const answers = Array.isArray(request.phrases) ? request.phrases : []
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
-	const requester = (request.requester as PublicProfile) ?? null
 	return (
 		<Card className="group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md">
 			<CardHeader>
@@ -40,18 +41,20 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang!, id: request.id! }}
+						params={{ lang: request.lang, id: request.id }}
 						className="s-link-hidden text-primary-foresoft"
 					>
 						{ago(request.created_at)}
 					</Link>{' '}
 					by{' '}
-					<UserPermalink
-						username={requester?.username ?? ''}
-						avatarUrl={avatarUrlify(requester?.avatar_path) ?? ''}
-						uid={request.requester_uid}
-						className="text-muted-foreground"
-					/>
+					{requester && (
+						<UserPermalink
+							username={requester.username}
+							avatar_path={requester.avatar_path}
+							uid={request.requester_uid}
+							className="text-muted-foreground"
+						/>
+					)}
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -61,7 +64,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang!, id: request.id! }}
+						params={{ lang: request.lang, id: request.id }}
 						className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
 					>
 						<MessageSquare className="h-4 w-4" />
@@ -88,8 +91,8 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 					<div className="flex items-center gap-2">
 						<CopyLinkButton url={shareUrl} text="" size="icon" />
 						<ShareRequestButton
-							id={request.id!}
-							lang={request.lang!}
+							id={request.id}
+							lang={request.lang}
 							variant="ghost"
 							size="icon"
 						/>
@@ -101,7 +104,7 @@ export function RequestItem({ request }: { request: PhraseRequestFull }) {
 						<Link
 							to="/learn/$lang/requests/$id"
 							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: request.lang!, id: request.id! }}
+							params={{ lang: request.lang, id: request.id }}
 							className={cn(
 								buttonVariants({ size: 'sm', variant: 'outline-accent' })
 							)}

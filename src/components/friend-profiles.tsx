@@ -1,13 +1,12 @@
 import { Link } from '@tanstack/react-router'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useRelations } from '@/hooks/use-friends'
+import { useRelationFriends } from '@/hooks/use-friends'
 import { Loader } from '@/components/ui/loader'
-import { ShowError } from '@/components/errors'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 
 export function FriendProfiles() {
-	const { data, isPending, error } = useRelations()
+	const { data, isLoading } = useRelationFriends()
 	return (
 		<>
 			<Card>
@@ -16,11 +15,9 @@ export function FriendProfiles() {
 				</CardHeader>
 				<CardContent>
 					<div className="space-y-2">
-						{isPending ?
+						{isLoading ?
 							<Loader />
-						: error ?
-							<ShowError>{error.message}</ShowError>
-						: !data?.uids.friends?.length ?
+						: !data?.length ?
 							<p>
 								Your friends list is empty for now. Use{' '}
 								<Link className="s-link" to="/friends/search">
@@ -32,11 +29,8 @@ export function FriendProfiles() {
 								</Link>
 								.
 							</p>
-						:	data?.uids.friends.map((uid) => (
-								<ProfileWithRelationship
-									key={uid}
-									profile={data?.relationsMap[uid].profile}
-								/>
+						:	data?.map((f) => (
+								<ProfileWithRelationship key={f.uid} uid={f.uid} />
 							))
 						}
 					</div>

@@ -140,8 +140,7 @@ const DeckGoalSchema = z.object({
 type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -173,10 +172,8 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 		onSuccess: (data) => {
 			// usually use a toast for user feedback
 			toast.success('Your deck settings have been updated.')
-			// we usually invalidate queries rather than optimistically updating
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			// we directly update the local cache with collection.utils.writeInsert or writeUpdate
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 		},
 		onError: () => {
 			toast.error(

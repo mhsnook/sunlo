@@ -1,15 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import * as z from 'zod'
-import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { cn } from '@/lib/utils'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import {
 	Card,
 	CardContent,
@@ -17,36 +11,19 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import { searchPublicProfilesByUsername } from '@/hooks/use-profile'
+import { useSearchProfilesByUsername } from '@/hooks/use-public-profile'
+import { useState } from 'react'
+import { useDebounce } from '@uidotdev/usehooks'
 
 export const Route = createFileRoute('/_auth/find-a-friend')({
 	component: SearchProfilesComponent,
 })
 
-const SearchSchema = z.object({
-	query: z.string().min(1, 'Search query is required'),
-})
-
-type SearchFormData = z.infer<typeof SearchSchema>
-
 function SearchProfilesComponent() {
-	const {
-		register,
-		handleSubmit,
-		formState: { errors },
-	} = useForm<SearchFormData>({
-		resolver: zodResolver(SearchSchema),
-	})
-	const { userId } = useAuth()
-	const {
-		data: searchResults,
-		mutate: search,
-		isPending: isSearching,
-	} = useMutation({
-		mutationFn: (data: SearchFormData) =>
-			searchPublicProfilesByUsername(data.query, userId!),
-		onError: () => toast.error('Failed to search profiles'),
-	})
+	const [rawQuery, setQuery] = useState('')
+	const query = useDebounce(rawQuery, 100)
+	const userId = useUserId('relaxed')
+	const { data: searchResults, isLoading } = useSearchProfilesByUsername(query)
 
 	return (
 		<Card className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
@@ -57,32 +34,27 @@ function SearchProfilesComponent() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<form
-					noValidate
-					onSubmit={handleSubmit((data) => search(data))}
-					className="mb-6"
-				>
+				<form className="mb-6">
 					<div className="flex gap-2">
 						<Input
-							{...register('query')}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
+							onChange={(e) => setQuery(e.target.value)}
 							placeholder="Search by username"
-							className={cn({ 'border-red-500': errors.query })}
 						/>
-						<Button type="submit" disabled={isSearching}>
-							{isSearching ? 'Searching...' : 'Search'}
+						<Button type="submit" disabled={isLoading}>
+							{isLoading ? 'Loading profiles...' : 'Search'}
 						</Button>
 					</div>
-					{errors.query && (
-						<p className="mt-1 text-red-500">{errors.query.message}</p>
-					)}
 				</form>
 
 				<div className="flex flex-col gap-4">
-					{searchResults?.map((profile) => (
-						<div key={profile.uid} className="rounded border p-4">
-							<ProfileWithRelationship profile={profile} />
-						</div>
-					))}
+					{searchResults?.map((profile) =>
+						profile.uid === userId ?
+							null
+						:	<div key={profile.uid} className="rounded border p-4">
+								<ProfileWithRelationship uid={profile.uid} />
+							</div>
+					)}
 				</div>
 			</CardContent>
 		</Card>

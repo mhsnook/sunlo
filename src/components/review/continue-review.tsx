@@ -1,5 +1,9 @@
+import dayjs from 'dayjs'
+
+import type { ReviewStats } from '@/hooks/use-reviews'
 import { useInitialiseReviewStore } from '@/hooks/use-review-store'
-import { ReviewStats } from '@/types/main'
+import languages from '@/lib/languages'
+import { Button } from '@/components/ui/button'
 import {
 	Card,
 	CardContent,
@@ -8,9 +12,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import dayjs from 'dayjs'
-import { Button } from '@/components/ui/button'
-import languages from '@/lib/languages'
 import { Progress } from '@/components/ui/progress'
 
 type ContinueReviewProps = {
@@ -74,6 +75,7 @@ export function ContinueReview({
 						initLocalReviewState(
 							lang,
 							dayString,
+							reviewStats.count,
 							reviewStats.inferred.stage,
 							reviewStats.inferred.index
 						)

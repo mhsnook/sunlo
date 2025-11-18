@@ -5,7 +5,8 @@ import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useProfile } from '@/hooks/use-profile'
 import { NativeShareButton } from '@/components/native-share-button'
-import CopyLinkButton, { copyLink } from '@/components/copy-link-button'
+import CopyLinkButton from '@/components/copy-link-button'
+import { copyLink } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,

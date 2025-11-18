@@ -4,32 +4,34 @@ import { useEffect } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
-import { languageQueryOptions } from '@/hooks/use-language'
-import { deckQueryOptions } from '@/hooks/use-deck'
-import { profileQuery } from '@/hooks/use-profile'
 import { setTheme } from '@/lib/deck-themes'
+import {
+	cardReviewsCollection,
+	cardsCollection,
+	decksCollection,
+	langTagsCollection,
+	phrasesCollection,
+	reviewDaysCollection,
+} from '@/lib/collections'
+import { useDeckMeta } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		const languageLoader = queryClient.ensureQueryData(
-			languageQueryOptions(lang)
-		)
-		const deckLoader = queryClient.ensureQueryData(
-			deckQueryOptions(lang, userId)
-		)
-		const profile = await queryClient.ensureQueryData(profileQuery(userId))
-		const theme = profile?.decksMap?.[lang]?.theme
+	loader: async ({ params: { lang } }) => {
+		const langTagsPromise = langTagsCollection.preload()
+		const daysPromise = reviewDaysCollection.preload()
+		const reviewsPromise = cardReviewsCollection.preload()
+		const phrasesPromise = phrasesCollection.preload()
+		void cardsCollection.preload()
+		await Promise.all([
+			langTagsPromise,
+			daysPromise,
+			reviewsPromise,
+			phrasesPromise,
+		])
+		const deck = decksCollection.get(lang)
 
 		return {
-			language: await languageLoader,
-			deck: await deckLoader,
 			appnav: [
 				'/learn/$lang',
 				'/learn/$lang/review',
@@ -46,18 +48,20 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			} as TitleBar,
-			theme,
+			theme: deck?.theme,
 		}
 	},
 })
 
 function LanguageLayout() {
-	const { theme } = Route.useLoaderData()
+	const params = Route.useParams()
+	const { data: deck } = useDeckMeta(params.lang)
 	useEffect(() => {
-		if (theme) setTheme(document.documentElement, theme)
+		if (typeof deck?.theme === 'number')
+			setTheme(document.documentElement, deck?.theme ?? undefined)
 		return () => {
-			setTheme(document.documentElement)
+			setTheme()
 		}
-	}, [theme])
+	}, [deck?.theme])
 	return <Outlet />
 }

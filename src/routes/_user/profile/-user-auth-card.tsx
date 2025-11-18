@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Label } from '@/components/ui/label'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Input } from '@/components/ui/input'
-import { useAuth } from '@/lib/hooks'
+import { useAuth } from '@/lib/use-auth'
 
 export default function UserAuthCard() {
 	const { userEmail } = useAuth()
