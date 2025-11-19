@@ -87,3 +87,26 @@ export async function countReviewsForCardOnDate(cardId: string, date: string) {
 
 	return count
 }
+
+/**
+ * Count phrases for a specific language
+ */
+export async function countPhrasesByLang(lang: string) {
+	const { count } = await supabase
+		.from('phrase')
+		.select('*', { count: 'exact', head: true })
+		.eq('lang', lang)
+
+	return count ?? 0
+}
+
+/**
+ * Count all phrase translations
+ */
+export async function countTranslations() {
+	const { count } = await supabase
+		.from('phrase_translation')
+		.select('*', { count: 'exact', head: true })
+
+	return count ?? 0
+}

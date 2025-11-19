@@ -15,6 +15,16 @@ import Routes from './routes'
 import 'styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
+import { phrasesCollection } from './lib/collections'
+
+// Expose collections to window in dev/test mode for E2E testing
+if (
+	typeof window !== 'undefined' &&
+	(import.meta.env.DEV || import.meta.env.MODE === 'test')
+) {
+	// @ts-expect-error - adding to window for testing
+	window.__phrasesCollection = phrasesCollection
+}
 
 // Create a new router instance
 const router = createRouter({
