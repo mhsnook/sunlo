@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/supabase'
+import { Database } from '../../src/types/supabase'
 
 // Create a Supabase client with service role key for unrestricted DB access
 const supabase = createClient<Database>(
@@ -126,24 +126,27 @@ const tableOrder = [
 	'user_deck',
 	'phrase_translation',
 	'phrase_tag',
+	'chat_message',
 	'phrase',
 	'tag',
 	'phrase_request',
 	'friend_request_action',
-	'chat_message',
 	'user_profile',
-]
+] as const
+
+type TableName = (typeof tableOrder)[number]
 
 export async function cleanupAfterTimestamp(
 	timestamp: Date,
-	tables?: string[]
+	tables?: TableName[]
 ) {
 	const isoTimestamp = timestamp.toISOString()
 	// keeps the correct dependency original without the test-writer having to know it
 	const tablesToClean =
 		!tables ? tableOrder : tableOrder.filter((t) => tables?.includes(t))
-	tables.forEach(
-		(name) => await supabase.from(name).delete().gte('created_at', isoTimestamp)
+	tablesToClean.forEach(
+		async (name) =>
+			await supabase.from(name).delete().gte('created_at', isoTimestamp)
 	)
 }
 
@@ -160,7 +163,7 @@ export class TestCleanup {
 	/**
 	 * Delete all records created since this TestCleanup was instantiated
 	 */
-	async cleanup(tables?: string[]) {
+	async cleanup(tables?: TableName[]) {
 		await cleanupAfterTimestamp(this.startTime, tables)
 	}
 
