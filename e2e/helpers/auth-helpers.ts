@@ -22,6 +22,10 @@ export async function loginAsTestUser(page: Page): Promise<void> {
 	await login(page, 'sunloapp@gmail.com', 'password')
 }
 
+export async function loginAsFirstUser(page: Page): Promise<void> {
+	await login(page, 'sunloapp+1@gmail.com', 'password')
+}
+
 export async function loginAsSecondUser(page: Page): Promise<void> {
 	await login(page, 'sunloapp+2@gmail.com', 'password')
 }

@@ -10,7 +10,7 @@ import {
 const phraseText = 'Accha, theek hai'
 const phraseTranslation = 'okay, sounds good'
 
-test.describe('Phrase Mutations', () => {
+test.describe.serial('Phrase Mutations', () => {
 	test('addPhraseMutation: add single phrase with translation', async ({
 		page,
 	}) => {

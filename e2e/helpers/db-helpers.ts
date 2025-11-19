@@ -110,3 +110,64 @@ export async function countTranslations() {
 
 	return count ?? 0
 }
+
+// ============================================================================
+// CLEANUP HELPERS - for making tests idempotent
+// ============================================================================
+
+/**
+ * Delete all records created after a certain timestamp
+ * This makes tests idempotent without tracking individual IDs
+ */
+
+const tableOrder = [
+	'user_card_review',
+	'user_card',
+	'user_deck',
+	'phrase_translation',
+	'phrase_tag',
+	'phrase',
+	'tag',
+	'phrase_request',
+	'friend_request_action',
+	'chat_message',
+	'user_profile',
+]
+
+export async function cleanupAfterTimestamp(
+	timestamp: Date,
+	tables?: string[]
+) {
+	const isoTimestamp = timestamp.toISOString()
+	// keeps the correct dependency original without the test-writer having to know it
+	const tablesToClean =
+		!tables ? tableOrder : tableOrder.filter((t) => tables?.includes(t))
+	tables.forEach(
+		(name) => await supabase.from(name).delete().gte('created_at', isoTimestamp)
+	)
+}
+
+/**
+ * Helper class to automatically track test start time and cleanup
+ */
+export class TestCleanup {
+	private startTime: Date
+
+	constructor() {
+		this.startTime = new Date()
+	}
+
+	/**
+	 * Delete all records created since this TestCleanup was instantiated
+	 */
+	async cleanup(tables?: string[]) {
+		await cleanupAfterTimestamp(this.startTime, tables)
+	}
+
+	/**
+	 * Get the start timestamp for manual cleanup
+	 */
+	getStartTime() {
+		return this.startTime
+	}
+}
