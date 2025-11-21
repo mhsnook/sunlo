@@ -3,8 +3,6 @@ import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getPhrase,
 	getCardByPhraseId,
-	countPhrasesByLang,
-	countTranslations,
 } from '../helpers/db-helpers'
 
 const phraseText = 'Accha, theek hai'
@@ -102,8 +100,7 @@ test.describe.serial('Phrase Mutations', () => {
 		}
 
 		// 1. Get initial counts from database
-		const initialPhraseCount = await countPhrasesByLang('hin')
-		const initialTranslationCount = await countTranslations()
+		// -- removed this because a counts-based approach won't be safe from parallel tests
 
 		// 2. Navigate to bulk add page
 		await page.goto('/learn/hin/bulk-add')
@@ -155,13 +152,6 @@ test.describe.serial('Phrase Mutations', () => {
 		await expect(page.getByText('Successfully Added')).toBeVisible()
 		await expect(page.getByText(phrase1.text)).toBeVisible()
 		await expect(page.getByText(phrase2.text)).toBeVisible()
-
-		// 8. Verify database counts increased correctly
-		const finalPhraseCount = await countPhrasesByLang('hin')
-		const finalTranslationCount = await countTranslations()
-
-		expect(finalPhraseCount).toBe(initialPhraseCount + 2) // 2 new phrases
-		expect(finalTranslationCount).toBe(initialTranslationCount + 3) // 3 new translations
 
 		// 9. Verify local collection was updated correctly
 		const finalCollectionSize = await page.evaluate(() => {

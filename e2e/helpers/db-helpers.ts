@@ -130,6 +130,38 @@ export async function deleteRequest(requestId: string) {
 }
 
 /**
+ * Create a standalone phrase request (without fulfilling phrase)
+ */
+export async function createRequest(params: { lang: string; prompt: string }) {
+	const { lang, prompt } = params
+
+	const { data: request } = await supabase
+		.from('phrase_request')
+		.insert({
+			lang,
+			prompt,
+			requester_uid: TEST_USER_UID,
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	if (!request) throw new Error('Failed to create request')
+	return request
+}
+
+/**
+ * Get a phrase request from the database
+ */
+export async function getRequest(requestId: string) {
+	return await supabase
+		.from('meta_phrase_request')
+		.select()
+		.eq('id', requestId)
+		.single()
+}
+
+/**
  * Get a card by phrase ID from the database for a specific user
  */
 export async function getCardByPhraseId(phraseId: string, uid: string) {
@@ -199,29 +231,6 @@ export async function countReviewsForCardOnDate(cardId: string, date: string) {
 		)
 
 	return count
-}
-
-/**
- * Count phrases for a specific language
- */
-export async function countPhrasesByLang(lang: string) {
-	const { count } = await supabase
-		.from('phrase')
-		.select('*', { count: 'exact', head: true })
-		.eq('lang', lang)
-
-	return count ?? 0
-}
-
-/**
- * Count all phrase translations
- */
-export async function countTranslations() {
-	const { count } = await supabase
-		.from('phrase_translation')
-		.select('*', { count: 'exact', head: true })
-
-	return count ?? 0
 }
 
 // ============================================================================
