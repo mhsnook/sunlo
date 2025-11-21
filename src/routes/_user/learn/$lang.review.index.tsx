@@ -243,10 +243,6 @@ function ReviewPageSetup() {
 			if (!data.reviewDay)
 				throw new Error('No daily session data returned from mutation')
 
-			toast.success(
-				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
-			)
-
 			// add new records to local db collections
 			data.newCards.forEach((c) => {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
@@ -271,6 +267,9 @@ function ReviewPageSetup() {
 					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
 			initLocalReviewState(lang, dayString, data.countCards)
+			toast.success(
+				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
+			)
 		},
 	})
 
