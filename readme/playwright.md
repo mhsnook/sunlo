@@ -11,7 +11,7 @@ I have successfully set up End-to-End (E2E) testing for your project using **Pla
     - Use a global setup script to reset the database.
 3.  **Database Reset Strategy**: Created `e2e/global-setup.ts` which runs `pnpm supabase db reset` before the test suite begins. This applies your `supabase/seed.sql`.
 4.  **Example Test**: Created `e2e/example.spec.ts` which verifies the application title.
-5.  **NPM Scripts**: Added `test:e2e` and `test:e2e:ui` to `package.json`.
+5.  **NPM Scripts**: Added `test` and `test:ui` to `package.json`.
 
 ## How to Run Tests
 
@@ -20,7 +20,7 @@ I have successfully set up End-to-End (E2E) testing for your project using **Pla
 This runs all tests in the terminal.
 
 ```bash
-pnpm test:e2e
+pnpm test
 ```
 
 ### Run with UI (Interactive mode)
@@ -28,7 +28,7 @@ pnpm test:e2e
 This opens the Playwright UI, where you can run specific tests, see traces, and debug.
 
 ```bash
-pnpm test:e2e:ui
+pnpm test:ui
 ```
 
 ## Verification Results

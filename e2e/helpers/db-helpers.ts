@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../src/types/supabase'
+import { TEST_USER_UID } from './auth-helpers'
 
 // Create a Supabase client with service role key for unrestricted DB access
-const supabase = createClient<Database>(
+export const supabase = createClient<Database>(
 	process.env.VITE_SUPABASE_URL!,
 	process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
@@ -19,13 +20,125 @@ export async function getPhrase(id: string) {
 }
 
 /**
- * Get a card by phrase ID from the database
+ * Create a phrase request with a phrase and translation via API
  */
-export async function getCardByPhraseId(phraseId: string) {
+export async function createRequestAndPhrase(params: {
+	lang: string
+	prompt: string
+	text: string
+	translationText: string
+	translationLang?: string
+}) {
+	const {
+		lang,
+		prompt,
+		text,
+		translationText,
+		translationLang = 'eng',
+	} = params
+
+	// Insert request
+	const { data: request } = await supabase
+		.from('phrase_request')
+		.insert({
+			lang,
+			prompt,
+			requester_uid: TEST_USER_UID,
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	// Insert phrase
+	const { phrase, translation } = await createPhrase({
+		lang,
+		text,
+		translationText,
+		translationLang,
+		requestId: request!.id,
+	})
+
+	return { request, phrase, translation }
+}
+
+/**
+ * Create a phrase with a translation via API
+ */
+export async function createPhrase(params: {
+	lang: string
+	text: string
+	translationText: string
+	translationLang?: string
+	requestId?: string
+}) {
+	const { lang, text, translationText, translationLang = 'eng' } = params
+
+	// Insert phrase
+	const { data: phrase } = await supabase
+		.from('phrase')
+		.insert({
+			lang,
+			text: `${text} - ${Math.random()}`,
+			added_by: TEST_USER_UID,
+			request_id: params.requestId,
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	// Insert translation
+	const { data: translation } = await supabase
+		.from('phrase_translation')
+		.insert({
+			phrase_id: phrase!.id,
+			lang: translationLang,
+			text: `${translationText} - ${Math.random()}`,
+			added_by: TEST_USER_UID,
+		})
+		.select()
+		.throwOnError()
+		.single()
+	if (!phrase || !translation)
+		throw new Error('Failed to create phrase or translation')
+	return { phrase, translation }
+}
+
+/**
+ * Delete a phrase and its related data (cascades to translations, cards, reviews)
+ */
+export async function deletePhrase(phraseId: string) {
+	// Deletion will cascade to translations, cards, and reviews due to foreign key constraints
+	await supabase.from('phrase').delete().eq('id', phraseId).throwOnError()
+}
+
+/**
+ * Delete a card
+ */
+export async function deleteCard(cardId: string) {
+	await supabase.from('user_card').delete().eq('id', cardId).throwOnError()
+}
+
+/**
+ * Delete a phrase request
+ */
+export async function deleteRequest(requestId: string) {
+	await supabase
+		.from('phrase_request')
+		.delete()
+		.eq('id', requestId)
+		.throwOnError()
+}
+
+/**
+ * Get a card by phrase ID from the database for a specific user
+ */
+export async function getCardByPhraseId(phraseId: string, uid: string) {
+	// Query the base table instead of the view to avoid potential view refresh issues
 	return await supabase
-		.from('user_card_plus')
+		.from('user_card')
 		.select()
 		.eq('phrase_id', phraseId)
+		.eq('uid', uid)
 		.single()
 }
 

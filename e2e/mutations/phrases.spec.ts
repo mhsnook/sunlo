@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser } from '../helpers/auth-helpers'
+import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getPhrase,
 	getCardByPhraseId,
@@ -64,7 +64,8 @@ test.describe.serial('Phrase Mutations', () => {
 
 		// Verify the card was created (tests CardMetaSchema parsing)
 		const { data: dbCard, error: cardError } = await getCardByPhraseId(
-			phraseId!
+			phraseId!,
+			TEST_USER_UID
 		)
 		expect(cardError).toBeNull()
 		expect(dbCard).toMatchObject({

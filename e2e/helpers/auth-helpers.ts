@@ -1,5 +1,9 @@
 import { Page } from '@playwright/test'
 
+// Test user credentials and IDs from seed data
+export const TEST_USER_UID = 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
+export const TEST_USER_EMAIL = 'sunloapp@gmail.com'
+
 /**
  * Log in with specific credentials
  */
@@ -19,7 +23,7 @@ export async function login(
  * Log in as the default test user (sunloapp@gmail.com)
  */
 export async function loginAsTestUser(page: Page): Promise<void> {
-	await login(page, 'sunloapp@gmail.com', 'password')
+	await login(page, TEST_USER_EMAIL, 'password')
 }
 
 export async function loginAsFirstUser(page: Page): Promise<void> {
