@@ -78,15 +78,15 @@ function Page() {
 			).data!
 		},
 		onSuccess: (data) => {
-			toast.success('Your request has been created!')
 			phraseRequestsCollection.utils.writeInsert(
 				PhraseRequestSchema.parse(data)
 			)
 			void navigate({ to: '/learn/$lang/requests', params: { lang } })
+			toast.success('Your request has been created!')
 		},
 		onError: (error) => {
-			toast.error('There was an error creating your request.')
 			console.error(error)
+			toast.error('There was an error creating your request.')
 		},
 	})
 

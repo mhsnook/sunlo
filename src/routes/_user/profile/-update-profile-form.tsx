@@ -49,14 +49,14 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 			return data
 		},
 		onSuccess: (data) => {
-			toast.success(`Successfully updated your profile`)
+			if (data)
+				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
 			reset({
 				username: data?.username ?? '',
 				avatar_path: data?.avatar_path ?? null,
 				languages_known: (data?.languages_known as LanguagesKnownType) ?? [],
 			})
-			if (data)
-				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
+			toast.success(`Successfully updated your profile`)
 		},
 	})
 

@@ -47,9 +47,9 @@ export function SendRequestToFriendDialog({
 			return data
 		},
 		onSuccess: () => {
-			toast.success('Request sent to friend')
 			setOpen(false)
 			setUids([])
+			toast.success('Request sent to friend')
 		},
 		onError: () => toast.error('Something went wrong'),
 	})

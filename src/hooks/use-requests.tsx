@@ -6,8 +6,16 @@ import {
 	publicProfilesCollection,
 } from '@/lib/collections'
 import { phrasesFull } from '@/lib/live-collections'
+import {
+	PhraseFullFullType,
+	PhraseRequestType,
+	PublicProfileType,
+} from '@/lib/schemas'
+import { UseLiveQueryResult } from '@/types/main'
 
-export function useAllMyPhraseRequestsLang(lang: string) {
+export function useAllMyPhraseRequestsLang(
+	lang: string
+): UseLiveQueryResult<PhraseRequestType[]> {
 	const userId = useUserId()
 	return useLiveQuery((q) =>
 		q
@@ -15,10 +23,15 @@ export function useAllMyPhraseRequestsLang(lang: string) {
 			.where(({ request }) =>
 				and(eq(request.requester_uid, userId), eq(request.lang, lang))
 			)
+			.orderBy(({ request }) => request.created_at, 'desc')
 	)
 }
 
-export const useRequest = (id: string) =>
+export const useRequest = (
+	id: string
+): UseLiveQueryResult<
+	PhraseRequestType & { profile: PublicProfileType | undefined }
+> =>
 	useLiveQuery((q) =>
 		q
 			.from({ req: phraseRequestsCollection })
@@ -33,18 +46,13 @@ export const useRequest = (id: string) =>
 			}))
 	)
 
-export const usePhrasesFromRequest = (id: string) =>
+export const usePhrasesFromRequest = (
+	id: string
+): UseLiveQueryResult<PhraseFullFullType[]> =>
 	useLiveQuery((q) =>
 		q
 			.from({ phrase: phrasesFull })
 			.where(({ phrase }) => eq(phrase.request_id, id))
-			.join({ profile: publicProfilesCollection }, ({ phrase, profile }) =>
-				eq(phrase.added_by, profile.uid)
-			)
-			.select(({ phrase, profile }) => ({
-				...phrase,
-				profile,
-			}))
 	)
 
 export type FulfillRequestResponse = {

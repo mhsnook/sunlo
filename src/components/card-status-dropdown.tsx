@@ -140,14 +140,14 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 		},
 		onSuccess: (data, variables) => {
 			if (phrase.card) {
-				toast.success('Updated card status')
 				cardsCollection.utils.writeUpdate({
 					phrase_id: phrase.id,
 					status: variables.status,
 				})
+				toast.success('Updated card status')
 			} else {
-				toast.success('Added this phrase to your deck')
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
+				toast.success('Added this phrase to your deck')
 			}
 		},
 		onError: (error) => {

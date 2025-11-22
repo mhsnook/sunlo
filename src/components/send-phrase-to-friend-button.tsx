@@ -51,9 +51,9 @@ export function SendPhraseToFriendButton({
 			return data
 		},
 		onSuccess: () => {
-			toast.success('Phrase sent to friend')
 			setOpen(false)
 			setUids([])
+			toast.success('Phrase sent to friend')
 		},
 		onError: () => toast.error('Something went wrong'),
 	})

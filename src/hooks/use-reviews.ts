@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-import type { pids, RPCFunctions, uuid } from '@/types/main'
+import type { pids, RPCFunctions, UseLiveQueryResult, uuid } from '@/types/main'
 import toast from 'react-hot-toast'
 import {
 	getIndexOfNextAgainCard,
@@ -15,7 +15,11 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
-import { CardReviewSchema, CardReviewType } from '@/lib/schemas'
+import {
+	CardReviewSchema,
+	CardReviewType,
+	DailyReviewStateType,
+} from '@/lib/schemas'
 
 /*
 	0. not yet initialised
@@ -120,7 +124,10 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 	)
 }
 
-export function useReviewDay(lang: string, day_session: string) {
+export function useReviewDay(
+	lang: string,
+	day_session: string
+): UseLiveQueryResult<DailyReviewStateType> {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -133,7 +140,10 @@ export function useReviewDay(lang: string, day_session: string) {
 	)
 }
 
-export function useOneReviewToday(day_session: string, pid: uuid) {
+export function useOneReviewToday(
+	day_session: string,
+	pid: uuid
+): UseLiveQueryResult<CardReviewType> {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -214,15 +224,6 @@ export function useReviewMutation(
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			if (data.row.score === 1)
-				toast('okay', { icon: '🤔', position: 'bottom-center' })
-			if (data.row.score === 2)
-				toast('okay', { icon: '🤷', position: 'bottom-center' })
-			if (data.row.score === 3)
-				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.row.score === 4)
-				toast.success('nice', { position: 'bottom-center' })
-
 			if (data.action === 'update') {
 				cardReviewsCollection.utils.writeUpdate(
 					CardReviewSchema.parse(data.row)
@@ -233,6 +234,15 @@ export function useReviewMutation(
 					CardReviewSchema.parse(data.row)
 				)
 			}
+
+			if (data.row.score === 1)
+				toast('okay', { icon: '🤔', position: 'bottom-center' })
+			if (data.row.score === 2)
+				toast('okay', { icon: '🤷', position: 'bottom-center' })
+			if (data.row.score === 3)
+				toast('got it', { icon: '👍️', position: 'bottom-center' })
+			if (data.row.score === 4)
+				toast.success('nice', { position: 'bottom-center' })
 
 			setTimeout(() => {
 				resetRevealCard()
@@ -249,7 +259,9 @@ export function useReviewMutation(
 	})
 }
 
-export const useOneCardReviews = (pid: uuid) =>
+export const useOneCardReviews = (
+	pid: uuid
+): UseLiveQueryResult<CardReviewType[]> =>
 	useLiveQuery(
 		(q) =>
 			q

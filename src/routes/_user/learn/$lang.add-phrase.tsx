@@ -131,12 +131,12 @@ function AddPhraseTab() {
 				})
 			)
 			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
-			toast.success(
-				'New phrase has been added to the public library and will appear in your next review'
-			)
 			console.log(`Success:`, data)
 			setNewPhrases((prev) => [data.phrase.id, ...prev])
 			reset({ phrase_text: '', translation_text: '', translation_lang })
+			toast.success(
+				'New phrase has been added to the public library and will appear in your next review'
+			)
 		},
 		onError: (error) => {
 			toast.error(
