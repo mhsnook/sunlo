@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../src/types/supabase'
 import { TEST_USER_UID } from './auth-helpers'
+import { todayString } from '../../src/lib/utils'
 
 // Create a Supabase client with service role key for unrestricted DB access
 export const supabase = createClient<Database>(
@@ -212,6 +213,61 @@ export async function deleteDeck(lang: string, uid: string) {
 		.throwOnError()
 }
 
+// ============================================================================
+// REVIEW HELPERS
+// ============================================================================
+
+/**
+ * Get review session state from database
+ */
+export async function getReviewSessionState(uid: string, lang: string) {
+	const day = todayString()
+	return await supabase
+		.from('user_deck_review_state')
+		.select()
+		.eq('uid', uid)
+		.eq('lang', lang)
+		.eq('day_session', day)
+		.maybeSingle()
+}
+
+/**
+ * Clean up review session (delete from database)
+ * Use clearReviewSessionFromLocal() from collection-helpers.ts to clear localStorage
+ */
+export async function cleanupReviewSession(
+	uid: string,
+	lang: string,
+	daySession: string
+) {
+	await supabase
+		.from('user_deck_review_state')
+		.delete()
+		.eq('uid', uid)
+		.eq('lang', lang)
+		.eq('day_session', daySession)
+		.throwOnError()
+}
+
+/**
+ * Get a single review record (most recent if multiple exist)
+ */
+export async function getReview(
+	phraseId: string,
+	uid: string,
+	sessionDate: string
+) {
+	return await supabase
+		.from('user_card_review')
+		.select()
+		.eq('phrase_id', phraseId)
+		.eq('uid', uid)
+		.eq('day_session', sessionDate)
+		.order('created_at', { ascending: false })
+		.limit(1)
+		.maybeSingle()
+}
+
 /**
  * Get a card by phrase ID from the database for a specific user
  */
@@ -254,23 +310,6 @@ export async function getFriendSummary(uid: string, myUid: string) {
  */
 export async function getUserProfile(uid: string) {
 	return await supabase.from('user_profile').select().eq('uid', uid).single()
-}
-
-/**
- * Count reviews for a card on a specific date
- */
-export async function countReviewsForCardOnDate(cardId: string, date: string) {
-	const { count } = await supabase
-		.from('user_card_review')
-		.select('*', { count: 'exact', head: true })
-		.eq('card_id', cardId)
-		.gte('created_at', date)
-		.lt(
-			'created_at',
-			new Date(new Date(date).getTime() + 86400000).toISOString()
-		)
-
-	return count
 }
 
 // ============================================================================

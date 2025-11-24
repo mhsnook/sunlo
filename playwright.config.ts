@@ -14,8 +14,9 @@ const __dirname = path.dirname(__filename)
  */
 export default defineConfig({
 	testDir: './e2e',
-	/* Run tests in files in parallel */
-	fullyParallel: true,
+	/* Run tests in files in parallel - DISABLED to prevent cleanup race conditions */
+	/* Each browser project runs fully (including afterAll cleanup) before next browser starts */
+	fullyParallel: false,
 	/* Fail the build on CI if you accidentally left test.only in the source code. */
 	forbidOnly: !!process.env.CI,
 	/* Retry on CI only */
