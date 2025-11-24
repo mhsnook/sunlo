@@ -1,5 +1,6 @@
 import {
 	cardsCollection,
+	decksCollection,
 	phraseRequestsCollection,
 	phrasesCollection,
 } from './lib/collections'
@@ -15,4 +16,6 @@ if (
 	window.__cardsCollection = cardsCollection
 	// @ts-expect-error assigning to global window
 	window.__phraseRequestsCollection = phraseRequestsCollection
+	// @ts-expect-error assigning to global window
+	window.__decksCollection = decksCollection
 }

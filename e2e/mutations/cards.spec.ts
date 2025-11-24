@@ -215,8 +215,8 @@ test.describe('Card Status Mutations', () => {
 		// 1. Create a phrase via API
 		const { phrase } = await createPhrase({
 			lang: 'hin',
-			text: 'Schema parsing test phrase',
-			translationText: 'Schema test translation',
+			text: 'Schema parsing test phrase ' + Math.random(),
+			translationText: 'Schema test translation ' + Math.random(),
 		})
 		const phraseId = phrase.id
 

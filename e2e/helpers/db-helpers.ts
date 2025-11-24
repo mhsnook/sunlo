@@ -161,6 +161,57 @@ export async function getRequest(requestId: string) {
 		.single()
 }
 
+// ============================================================================
+// DECK HELPERS
+// ============================================================================
+
+/**
+ * Create a deck for testing
+ */
+export async function createDeck(params: { lang: string; uid: string }) {
+	const { lang, uid } = params
+
+	const { data: deck } = await supabase
+		.from('user_deck')
+		.insert({
+			lang,
+			uid,
+			daily_review_goal: 15,
+			learning_goal: 'visiting',
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	if (!deck) throw new Error('Failed to create deck')
+	return deck
+}
+
+/**
+ * Get a deck by language and user ID
+ */
+export async function getDeck(lang: string, uid: string) {
+	return await supabase
+		.from('user_deck_plus')
+		.select()
+		.eq('lang', lang)
+		.eq('uid', uid)
+		.throwOnError()
+		.maybeSingle()
+}
+
+/**
+ * Delete a deck
+ */
+export async function deleteDeck(lang: string, uid: string) {
+	await supabase
+		.from('user_deck')
+		.delete()
+		.eq('lang', lang)
+		.eq('uid', uid)
+		.throwOnError()
+}
+
 /**
  * Get a card by phrase ID from the database for a specific user
  */
@@ -171,19 +222,8 @@ export async function getCardByPhraseId(phraseId: string, uid: string) {
 		.select()
 		.eq('phrase_id', phraseId)
 		.eq('uid', uid)
-		.single()
-}
-
-/**
- * Get a deck from the database
- */
-export async function getDeck(lang: string, uid: string) {
-	return await supabase
-		.from('user_deck_plus')
-		.select()
-		.eq('lang', lang)
-		.eq('uid', uid)
-		.single()
+		.throwOnError()
+		.maybeSingle()
 }
 
 /**
