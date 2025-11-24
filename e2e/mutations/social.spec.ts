@@ -1,5 +1,5 @@
 import { test } from '@playwright/test'
-import { loginAsTestUser } from '../helpers/auth-helpers'
+import { loginAsSecondUser, loginAsTestUser } from '../helpers/auth-helpers'
 
 test.describe.serial('Social and Friend Mutations', () => {
 	test.skip('useFriendRequestAction: send/cancel friend request', async ({

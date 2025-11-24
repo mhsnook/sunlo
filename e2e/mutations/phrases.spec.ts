@@ -1,9 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
-import {
-	getPhrase,
-	getCardByPhraseId,
-} from '../helpers/db-helpers'
+import { getPhrase, getCardByPhraseId } from '../helpers/db-helpers'
 
 const phraseText = 'Accha, theek hai'
 const phraseTranslation = 'okay, sounds good'
@@ -15,7 +12,7 @@ test.describe.serial('Phrase Mutations', () => {
 		// 1. Login
 		await loginAsTestUser(page)
 
-		// 2. Navigate to add-phrase page
+		// Navigate to the add phrase page
 		await page.goto('/learn/hin/add-phrase')
 
 		// 3. Fill the form

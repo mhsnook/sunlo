@@ -7,19 +7,25 @@ import {
 	createRequestAndPhrase,
 	deleteRequest,
 } from '../helpers/db-helpers'
+import { Tables } from '../../src/types/supabase'
 
 test.describe('Card Status Mutations', () => {
+	let phraseId: string | null = null
+	let phrase: Tables<'phrase'> | null = null
+	test.beforeAll(async () => {
+		// 1. Create a phrase via API (faster and gives us the ID)
+		phrase = (
+			await createPhrase({
+				lang: 'hin',
+				text: 'Card status toggle test phrase',
+				translationText: 'Card status toggle test translation',
+			})
+		).phrase
+		phraseId = phrase.id
+	})
 	test('useCardStatusMutation: add card and change status via dropdown', async ({
 		page,
 	}) => {
-		// 1. Create a phrase via API (faster and gives us the ID)
-		const { phrase } = await createPhrase({
-			lang: 'hin',
-			text: 'Card status toggle test phrase',
-			translationText: 'Card status toggle test translation',
-		})
-		const phraseId = phrase.id
-
 		await loginAsTestUser(page)
 
 		try {
@@ -28,7 +34,7 @@ test.describe('Card Status Mutations', () => {
 			if (!phraseId)
 				throw new Error('Phrase ID not found after supposedly creating phrase')
 			// The phrase should be visible
-			await expect(page.getByText(phrase.text)).toBeVisible()
+			await expect(page.getByText(phrase!.text)).toBeVisible()
 			await expect(
 				page.getByText(new RegExp(`Card status toggle test phrase`))
 			).toBeVisible()
@@ -223,9 +229,6 @@ test.describe('Card Status Mutations', () => {
 		await loginAsTestUser(page)
 
 		try {
-			if (!phraseId)
-				throw new Error('Phrase ID not found after supposedly creating phrase')
-
 			// 2. Navigate to phrase and create a card
 			await page.goto(`/learn/hin/${phraseId}`)
 			await page.click('button:has-text("Not in deck")')

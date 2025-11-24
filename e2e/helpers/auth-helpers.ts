@@ -1,8 +1,10 @@
-import { Page } from '@playwright/test'
+import { expect, Page } from '@playwright/test'
 
 // Test user credentials and IDs from seed data
 export const TEST_USER_UID = 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
 export const TEST_USER_EMAIL = 'sunloapp@gmail.com'
+export const FIRST_USER_UID = 'a2dfa256-ef7b-41b0-b05a-d97afab8dd21'
+export const FIRST_USER_EMAIL = 'sunloapp+1@gmail.com'
 
 /**
  * Log in with specific credentials
@@ -17,6 +19,9 @@ export async function login(
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')
 	await page.waitForURL(/\/learn/)
+	await expect(
+		page.getByText('Which deck are we studying today?')
+	).toBeVisible()
 }
 
 /**

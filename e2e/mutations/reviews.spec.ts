@@ -31,7 +31,6 @@ test.describe('Review Mutations', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to Hindi deck page
-		await expect(page).toHaveURL(/\/learn/)
 		await expect(page.getByText('Hindi')).toBeVisible()
 		await page.getByText('Hindi').click()
 
@@ -107,7 +106,8 @@ test.describe('Review Mutations', () => {
 	test.skip('1. useReviewMutation: submit first card review, edit it', async ({
 		page,
 	}) => {
-		// await loginAsTestUser(page)
+		await loginAsTestUser(page)
+		// await expect(page).toHaveURL(/\/learn/)
 		// TODO: Implement first card review test
 		// Navigate to review page
 		// Expect the review to be ongoing

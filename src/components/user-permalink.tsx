@@ -1,4 +1,5 @@
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 

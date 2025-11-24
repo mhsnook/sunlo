@@ -68,7 +68,6 @@ test.describe.serial('Deck Mutations', () => {
 		page,
 	}) => {
 		await loginAsTestUser(page)
-		await expect(page).toHaveURL(/\/learn/)
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
@@ -116,7 +115,6 @@ test.describe.serial('Deck Mutations', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to deck settings
-		await expect(page).toHaveURL(/\/learn/)
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
@@ -160,7 +158,6 @@ test.describe.serial('Deck Mutations', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to deck settings
-		await expect(page).toHaveURL(/\/learn/)
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
@@ -213,7 +210,6 @@ test.describe.serial('Deck Mutations', () => {
 		await loginAsTestUser(page)
 
 		// Click the archived deck to navigate to it
-		await expect(page).toHaveURL(/\/learn/)
 		await page.getByRole('link', { name: /view archived decks/i }).click()
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()

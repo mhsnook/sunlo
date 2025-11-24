@@ -8,7 +8,8 @@ import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { Input } from '@/components/ui/input'
 import { UploadIcon } from 'lucide-react'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 import ErrorLabel from '@/components/fields/error-label'
 
 export function AvatarEditorField<T extends FieldValues>({

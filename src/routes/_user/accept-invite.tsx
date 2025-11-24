@@ -22,7 +22,7 @@ import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { useProfile } from '@/hooks/use-profile'
 import { Loader } from '@/components/ui/loader'
-import { avatarUrlify } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
 const SearchSchema = z.object({

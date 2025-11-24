@@ -11,7 +11,8 @@ import { useTheme } from '@/components/theme-provider'
 import { Button } from '@/components/ui/button'
 import { useProfile } from '@/hooks/use-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { avatarUrlify, cn, isNativeAppUserAgent } from '@/lib/utils'
+import { cn, isNativeAppUserAgent } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 
 export const Route = createFileRoute('/')({
 	component: Index,
