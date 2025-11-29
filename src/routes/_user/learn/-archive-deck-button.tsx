@@ -51,7 +51,7 @@ export function ArchiveDeckButton({
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 
 			toast.success(
-				data.archived ?
+				!data.archived ?
 					'The deck has been re-activated!'
 				:	'The deck has been archived and hidden from your active decks.'
 			)

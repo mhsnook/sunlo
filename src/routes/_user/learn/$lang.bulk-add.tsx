@@ -116,7 +116,6 @@ function BulkAddPhrasesPage() {
 				toast('No data came back from the database :-/')
 				return
 			}
-			toast.success(`${data.phrases.length} phrases added successfully!`)
 			const phrasesToInsert = data.phrases.map((p) =>
 				PhraseFullSchema.parse({
 					...p,
@@ -133,6 +132,7 @@ function BulkAddPhrasesPage() {
 			reset({
 				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
 			})
+			toast.success(`${data.phrases.length} phrases added successfully!`)
 		},
 		onError: (error) => {
 			toast.error(`Error adding phrases: ${error.message}`)

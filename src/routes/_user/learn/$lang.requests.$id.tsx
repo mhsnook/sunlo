@@ -98,7 +98,6 @@ function FulfillRequestPage() {
 			return rpcData as FulfillRequestResponse
 		},
 		onSuccess: (data, variables) => {
-			toast.success('Thank you for your contribution!')
 			setIsAnswering(false)
 			form.reset({
 				phrase_text: '',
@@ -109,6 +108,7 @@ function FulfillRequestPage() {
 			phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(newPhrase))
 			if (data.card)
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+			toast.success('Thank you for your contribution!')
 		},
 		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)

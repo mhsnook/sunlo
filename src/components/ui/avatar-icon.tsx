@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { User } from 'lucide-react'
 import { PublicProfileType } from '@/lib/schemas'
-import { avatarUrlify } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 
 type AvatarIconRowProps = PublicProfileType & {
 	children?: ReactNode

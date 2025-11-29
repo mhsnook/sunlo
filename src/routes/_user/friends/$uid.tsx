@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
-import { avatarUrlify } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,

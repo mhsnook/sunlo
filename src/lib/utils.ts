@@ -2,7 +2,6 @@ import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DeckMetaType } from '@/lib/schemas'
-import supabase from '@/lib/supabase-client'
 import toast from 'react-hot-toast'
 
 export function cn(...inputs: ClassValue[]) {
@@ -118,12 +117,6 @@ export function arrayDifference(
 ): Array<uuid> {
 	const set2 = new Set(arr2.flat())
 	return arr1.filter((item) => !set2.has(item))
-}
-
-export function avatarUrlify(path: string | null | undefined): string {
-	return !path ? '' : (
-			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
-		)
 }
 
 export function nullSubmit(event: {

@@ -2,7 +2,8 @@ import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { useAllChats, useRelationFriends } from '@/hooks/use-friends'
-import { avatarUrlify, cn } from '@/lib/utils'
+import { cn } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {

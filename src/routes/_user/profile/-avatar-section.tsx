@@ -1,5 +1,5 @@
 import { useProfile } from '@/hooks/use-profile'
-import { avatarUrlify } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 import { User } from 'lucide-react'
 
 export default function AvatarSection() {

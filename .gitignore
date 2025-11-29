@@ -30,3 +30,7 @@ tsconfig.tsbuildinfo
 .vercel
 .env*.local
 keystore.properties
+
+# Playwright
+/playwright-report/
+/test-results/

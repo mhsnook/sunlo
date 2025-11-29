@@ -4,7 +4,7 @@ import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
 import { Checkbox } from '@/components/ui/checkbox'
 import { User } from 'lucide-react'
-import { avatarUrlify } from '@/lib/utils'
+import { avatarUrlify } from '@/lib/hooks'
 
 export function SelectMultipleFriends({
 	uids = [],
@@ -16,7 +16,7 @@ export function SelectMultipleFriends({
 	const { data: friends, isLoading } = useRelationFriends()
 
 	if (isLoading) return <Loader />
-	if (!friends.length)
+	if (!friends?.length)
 		return <p className="text-muted-foreground">No friends found (oops)</p>
 
 	const handleClick = (uid: uuid) =>

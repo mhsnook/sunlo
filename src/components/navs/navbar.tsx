@@ -99,7 +99,7 @@ function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-			<DropdownMenuTrigger asChild>
+			<DropdownMenuTrigger id="top-right-context-menu" asChild>
 				<Button variant="ghost" size="icon">
 					<MoreVertical />
 					<span className="sr-only">Open menu</span>

@@ -42,8 +42,15 @@ export const useNewDeckMutation = () => {
 			}
 
 			decksCollection.utils.writeInsert(DeckMetaSchema.parse(deck2))
-			toast.success(`Created a new deck to learn ${languages[variables.lang]}`)
-			void navigate({ to: `/learn/$lang`, params: { lang: variables.lang } })
+
+			void navigate({
+				to: `/learn/$lang`,
+				params: { lang: variables.lang },
+			}).then(() =>
+				toast.success(
+					`Created a new deck to learn ${languages[variables.lang]}`
+				)
+			)
 		},
 		onError: (error) => {
 			console.log(`Error creating deck:`, error)

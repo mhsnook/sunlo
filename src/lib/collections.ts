@@ -212,7 +212,7 @@ export const reviewDaysCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => DailyReviewStateSchema.parse(item)) ?? []
 		},
-		getKey: (item: DailyReviewStateType) => item.day_session,
+		getKey: (item: DailyReviewStateType) => `${item.day_session}--${item.lang}`,
 		queryClient,
 		startSync: false,
 		schema: DailyReviewStateSchema,

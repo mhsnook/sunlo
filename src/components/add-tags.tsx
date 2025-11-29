@@ -87,9 +87,9 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 					],
 				})
 			}
-			toast.success('Tags added!')
 			setOpen(false)
 			reset({ tags: [] })
+			toast.success('Tags added!')
 		},
 		onError: (error) => {
 			console.log(`Failed to add tags: ${error.message}`, error)

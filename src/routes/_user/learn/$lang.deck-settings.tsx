@@ -134,9 +134,9 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			toast.success('Your deck settings have been updated.')
 			decksCollection.utils.writeUpdate(data)
 			reset(data)
+			toast.success('Your deck settings have been updated.')
 		},
 		onError: (error) => {
 			toast.error(

@@ -75,9 +75,9 @@ export function AddTranslationsDialog({
 				id: phrase.id,
 				translations: [TranslationSchema.parse(data), ...phrase.translations],
 			})
-			toast.success(`Translation added for ${phrase.text}`)
 			close()
 			reset()
+			toast.success(`Translation added for ${phrase.text}`)
 		},
 		onError: (error) => {
 			toast.error(error.message)
