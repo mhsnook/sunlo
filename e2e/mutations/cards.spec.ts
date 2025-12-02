@@ -7,32 +7,25 @@ import {
 	createRequestAndPhrase,
 	deleteRequest,
 } from '../helpers/db-helpers'
-import { Tables } from '../../src/types/supabase'
 
 test.describe('Card Status Mutations', () => {
-	let phraseId: string | null = null
-	let phrase: Tables<'phrase'> | null = null
-	test.beforeAll(async () => {
-		// 1. Create a phrase via API (faster and gives us the ID)
-		phrase = (
+	test('Add card, change status via dropdown', async ({ page }) => {
+		await loginAsTestUser(page)
+		const phrase = (
 			await createPhrase({
 				lang: 'hin',
-				text: 'Card status toggle test phrase',
-				translationText: 'Card status toggle test translation',
+				text: 'Card status toggle test phrase' + Math.random(),
+				translationText: 'Card status toggle test translation' + Math.random(),
 			})
 		).phrase
-		phraseId = phrase.id
-	})
-	test('useCardStatusMutation: add card and change status via dropdown', async ({
-		page,
-	}) => {
-		await loginAsTestUser(page)
+		const phraseId = phrase.id
+
+		if (!phrase || !phraseId)
+			throw new Error('Failed to create sample phrase before test')
 
 		try {
 			// 2. Navigate directly to the phrase page
 			await page.goto(`/learn/hin/${phraseId}`)
-			if (!phraseId)
-				throw new Error('Phrase ID not found after supposedly creating phrase')
 			// The phrase should be visible
 			await expect(page.getByText(phrase!.text)).toBeVisible()
 			await expect(
@@ -57,7 +50,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify card was created with status 'active'
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
 				expect(card?.status).toBe('active')
 			})
 
@@ -84,7 +77,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed in database (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
 				expect(card?.status).toBe('learned')
 			})
 
@@ -104,7 +97,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed to skipped (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
 				expect(card?.status).toBe('skipped')
 			})
 
@@ -122,7 +115,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed back to active (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
 				expect(card?.status).toBe('active')
 			})
 
@@ -135,9 +128,7 @@ test.describe('Card Status Mutations', () => {
 		}
 	})
 
-	test('useCardStatusMutation: toggle phrase and card learned via heart icon', async ({
-		page,
-	}) => {
+	test('Toggle heart icon', async ({ page }) => {
 		// 1. Create a phrase via API
 		const { request, phrase } = await createRequestAndPhrase({
 			lang: 'hin',
@@ -215,9 +206,7 @@ test.describe('Card Status Mutations', () => {
 		}
 	})
 
-	test('useCardStatusMutation: verify CardMetaSchema parsing', async ({
-		page,
-	}) => {
+	test('Verify CardMetaSchema parsing', async ({ page }) => {
 		// 1. Create a phrase via API
 		const { phrase } = await createPhrase({
 			lang: 'hin',

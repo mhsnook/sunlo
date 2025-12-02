@@ -43,7 +43,7 @@ export async function createRequestAndPhrase(params: {
 		.from('phrase_request')
 		.insert({
 			lang,
-			prompt,
+			prompt: `${prompt} - ${Math.random()}`,
 			requester_uid: TEST_USER_UID,
 		})
 		.select()
@@ -53,8 +53,8 @@ export async function createRequestAndPhrase(params: {
 	// Insert phrase
 	const { phrase, translation } = await createPhrase({
 		lang,
-		text,
-		translationText,
+		text: `${text} - ${Math.random()}`,
+		translationText: `${translationText} - ${Math.random()}`,
 		translationLang,
 		requestId: request!.id,
 	})
@@ -140,7 +140,7 @@ export async function createRequest(params: { lang: string; prompt: string }) {
 		.from('phrase_request')
 		.insert({
 			lang,
-			prompt,
+			prompt: `${prompt} - ${Math.random()}`,
 			requester_uid: TEST_USER_UID,
 		})
 		.select()
@@ -274,7 +274,7 @@ export async function getReview(
 export async function getCardByPhraseId(phraseId: string, uid: string) {
 	// Query the base table instead of the view to avoid potential view refresh issues
 	return await supabase
-		.from('user_card')
+		.from('user_card_plus')
 		.select()
 		.eq('phrase_id', phraseId)
 		.eq('uid', uid)

@@ -96,7 +96,7 @@ test.describe('Phrase Request Mutations', () => {
 
 	test('fulfillMutation: fulfill a phrase request', async ({ page }) => {
 		// 1. Create a pending request via API
-		const fulfillPrompt = `How do I say fulfill test ${Math.random()}?`
+		const fulfillPrompt = `How do I say "fulfill test" in a fun way?`
 		const request = await createRequest({
 			lang: 'hin',
 			prompt: fulfillPrompt,

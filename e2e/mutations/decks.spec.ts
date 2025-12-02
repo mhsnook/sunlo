@@ -13,7 +13,7 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	// maybe we should find and delete if present
-	test('1. useNewDeckMutation: create new deck', async ({ page }) => {
+	test('Create new deck', async ({ page }) => {
 		await loginAsTestUser(page)
 
 		// Click deck-switcher in sidebar → "New deck"
@@ -64,9 +64,7 @@ test.describe.serial('Deck Mutations', () => {
 		expect(dbDeck?.uid).toBe(TEST_USER_UID)
 	})
 
-	test('2. updateDailyGoalMutation: update daily review goal', async ({
-		page,
-	}) => {
+	test('Update daily review count', async ({ page }) => {
 		await loginAsTestUser(page)
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
@@ -109,9 +107,7 @@ test.describe.serial('Deck Mutations', () => {
 		expect(dbDeck?.daily_review_goal).toBe(10)
 	})
 
-	test('3. updateDeckGoalMutation: update deck goal/motivation', async ({
-		page,
-	}) => {
+	test('Update deck goal/motivation', async ({ page }) => {
 		await loginAsTestUser(page)
 
 		// Navigate to deck settings
@@ -154,7 +150,7 @@ test.describe.serial('Deck Mutations', () => {
 		expect(dbDeck?.learning_goal).toBe('family')
 	})
 
-	test('4. archiveDeckMutation: archive deck', async ({ page }) => {
+	test('Archive deck', async ({ page }) => {
 		await loginAsTestUser(page)
 
 		// Navigate to deck settings
@@ -206,7 +202,7 @@ test.describe.serial('Deck Mutations', () => {
 		expect(dbDeck?.archived).toBe(true)
 	})
 
-	test('5. unarchiveDeckMutation: unarchive deck', async ({ page }) => {
+	test('Unarchive deck', async ({ page }) => {
 		await loginAsTestUser(page)
 
 		// Click the archived deck to navigate to it
