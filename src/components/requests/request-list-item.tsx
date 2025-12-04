@@ -1,9 +1,16 @@
 import { Link } from '@tanstack/react-router'
-import { CheckCircle, Clock, Heart, MessageSquare, Send } from 'lucide-react'
+import {
+	CheckCircle,
+	Clock,
+	Heart,
+	MessagesSquare,
+	Send,
+	WalletCards,
+} from 'lucide-react'
 
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
@@ -26,7 +33,9 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 		<Card className="group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md">
 			<CardHeader>
 				<div className="flex flex-row items-center justify-between gap-2">
-					<LangBadge lang={request.lang} />
+					<Flagged name="multiple_languages_feed">
+						<LangBadge lang={request.lang} />
+					</Flagged>
 					<Badge
 						variant={request.status === 'fulfilled' ? 'success' : 'secondary'}
 					>
@@ -37,7 +46,15 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					</Badge>
 				</div>
 				<div className="text-muted-foreground mt-2 inline-flex min-w-0 items-center gap-1 text-sm">
-					Requested{' '}
+					{requester && (
+						<UserPermalink
+							username={requester.username}
+							avatar_path={requester.avatar_path}
+							uid={request.requester_uid}
+							className="text-muted-foreground"
+						/>
+					)}{' '}
+					•
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -46,36 +63,14 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					>
 						{ago(request.created_at)}
 					</Link>{' '}
-					by{' '}
-					{requester && (
-						<UserPermalink
-							username={requester.username}
-							avatar_path={requester.avatar_path}
-							uid={request.requester_uid}
-							className="text-muted-foreground"
-						/>
-					)}
 				</div>
 			</CardHeader>
 			<CardContent>
 				<div className="space-y-4">
-					<Blockquote>&ldquo;{request.prompt}&rdquo;</Blockquote>
-
-					<Link
-						to="/learn/$lang/requests/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang, id: request.id }}
-						className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
-					>
-						<MessageSquare className="h-4 w-4" />
-						<span>
-							{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
-						</span>
-					</Link>
+					<Blockquote>{request.prompt}</Blockquote>
 				</div>
-			</CardContent>
-			<CardFooter className="grid w-full">
-				<div className="border-border/50 flex items-center justify-between border-t pt-2">
+
+				<div className="flex items-center justify-between">
 					<div className="text-muted-foreground flex items-center gap-4 text-sm">
 						<Flagged name="phrase_request_likes" className="hidden">
 							<div className="flex items-center gap-2">
@@ -86,6 +81,17 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 								<span>others want to know this</span>
 							</div>
 						</Flagged>
+						<Link
+							to="/learn/$lang/requests/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: request.lang, id: request.id }}
+							className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
+						>
+							<WalletCards className="h-4 w-4" />
+							<span>
+								{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
+							</span>
+						</Link>
 					</div>
 
 					<div className="flex items-center gap-2">
@@ -109,11 +115,11 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 								buttonVariants({ size: 'sm', variant: 'outline-accent' })
 							)}
 						>
-							View Details
+							<MessagesSquare /> Thread
 						</Link>
 					</div>
 				</div>
-			</CardFooter>
+			</CardContent>
 		</Card>
 	)
 }

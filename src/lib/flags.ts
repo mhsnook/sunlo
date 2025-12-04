@@ -15,4 +15,5 @@ export const flags: FlagMap = {
 	client_side_fsrs_scheduling: { enabled: false },
 	phrase_request_likes: { enabled: false },
 	friend_recommendations: { enabled: false },
+	multiple_languages_feed: { disabled: true },
 }

@@ -31,15 +31,15 @@ export default function UserPermalink({
 				className
 			)}
 		>
-			{username ?
-				<span>{username}</span>
-			:	null}
 			{avatarUrl ?
 				<img
 					src={avatarUrl}
 					alt={`${username}'s avatar`}
 					className="aspect-square w-5 rounded-2xl object-cover"
 				/>
+			:	null}
+			{username ?
+				<span>{username}</span>
 			:	null}
 		</Link>
 	)
