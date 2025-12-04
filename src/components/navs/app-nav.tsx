@@ -50,7 +50,7 @@ const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 		<>
 			<div ref={ref}></div>
 			<div
-				className={`bg-background sticky mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} w-app top-0 flex flex-row items-center justify-between gap-2 ps-2`}
+				className={`bg-background sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} w-app top-0 flex flex-row items-center justify-between gap-2 ps-2`}
 			>
 				<ScrollArea>
 					<NavigationMenu className="mt-2 mb-1">
@@ -63,12 +63,12 @@ const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 									<NavigationMenuLink asChild>
 										<Link
 											{...l.link}
-											className="flex flex-row items-center justify-center gap-2 border-b-2 py-1.5 text-sm"
+											className="flex flex-row items-center justify-center gap-2 border-b-2 py-1.5 text-sm whitespace-nowrap"
 											activeProps={activeProps}
 											activeOptions={l.inexact ? inexactOptions : activeOptions}
 											inactiveProps={inactiveProps}
 										>
-											{!l.Icon ? null : <l.Icon className="size-4" />}{' '}
+											{!l.Icon ? null : <l.Icon className="size-4 shrink-0" />}{' '}
 											<>{l.name}</>
 											{!l.useBadge ? null : <TinyBadge useBadge={l.useBadge} />}
 										</Link>
