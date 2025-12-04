@@ -33,15 +33,14 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 
 		return {
 			appnav: [
-				'/learn/$lang',
 				'/learn/$lang/review',
 				'/learn/$lang/library',
+				'/learn/$lang',
 				'/learn/$lang/requests',
-				'/learn/$lang/search',
-				'/learn/$lang/add-phrase',
 			],
 			contextMenu: [
 				'/learn/$lang/search',
+				'/learn/$lang/requests/new',
 				'/learn/$lang/add-phrase',
 				'/learn/$lang/deck-settings',
 			],
