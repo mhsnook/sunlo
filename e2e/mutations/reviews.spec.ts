@@ -2,51 +2,41 @@ import { test, expect } from '@playwright/test'
 import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getReviewSessionState,
+	getCardByPhraseId,
+	getReviewByPhraseId,
 	cleanupReviewSession,
 } from '../helpers/db-helpers'
 import { getReviewSessionBoth } from '../helpers/both-helpers'
 import { todayString } from '../../src/lib/utils'
+import { goToDeckPage } from '../helpers/goto-helpers'
 
 const TEST_LANG = 'hin' // Hindi - has test data
 
-test.describe('Review Mutations', () => {
-	let sessionDate: string
+test.describe.serial('Review Mutations', () => {
+	const sessionDate = todayString()
 
 	// Cleanup any existing review session before starting
 	test.beforeAll(async () => {
 		const { data: existingSession } = await getReviewSessionState(
 			TEST_USER_UID,
-			TEST_LANG
+			TEST_LANG,
+			sessionDate
 		)
 		if (existingSession) {
-			await cleanupReviewSession(
-				TEST_USER_UID,
-				TEST_LANG,
-				existingSession.day_session
-			)
+			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
 		}
+	})
+	test.afterAll(async () => {
+		await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
 	})
 
 	test('0. create daily review session', async ({ page }) => {
 		await loginAsTestUser(page)
 
 		// Navigate to Hindi deck page
-		await expect(page.getByText('Hindi')).toBeVisible()
-		await page.getByText('Hindi').click()
+		await goToDeckPage(page, TEST_LANG)
 
-		// Should be on the deck page now
-		await expect(page).toHaveURL(/\/learn\/hin$/)
-
-		// Click Review link in the navigation
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /review/i })
-			.click()
-
-		// Should be on review index page
-		await expect(page).toHaveURL(/\/learn\/hin\/review/)
-
-		// Verify card count information is visible
+		// Verify we are on the setup page
 		await expect(page.getByText(/Total Cards/i)).toBeVisible()
 		await expect(page.getByText(/Scheduled/)).toBeVisible()
 		await expect(page.getByText(/New Phrases/i)).toBeVisible()
@@ -63,16 +53,12 @@ test.describe('Review Mutations', () => {
 		// Verify we're on a card review page
 		await expect(page.getByText(/Card \d+ of \d+/)).toBeVisible()
 
-		// Get today's date for session key
-		const today = todayString()
-		sessionDate = today
-
 		// Use helper to get both DB and local session
 		const { fromDB, fromLocal } = await getReviewSessionBoth(
 			page,
 			TEST_USER_UID,
 			TEST_LANG,
-			today
+			sessionDate
 		)
 
 		// Verify DB session (with type safety from parsed schema)
@@ -97,38 +83,148 @@ test.describe('Review Mutations', () => {
 		expect(fromLocal!.created_at).toBe(fromDB!.created_at)
 	})
 
-	test.afterAll(async () => {
-		if (sessionDate) {
-			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
-		}
-	})
-
-	test.skip('1. useReviewMutation: submit first card review, edit it', async ({
+	test('1. useReviewMutation: submit first card review, edit it', async ({
 		page,
 	}) => {
 		await loginAsTestUser(page)
-		// await expect(page).toHaveURL(/\/learn/)
-		// TODO: Implement first card review test
-		// Navigate to review page
-		// Expect the review to be ongoing
-		// Submit a review with a score (1-4)
-		// Expect a toast to come up according to the review mutation's onSuccess conditions
-		// Verify review record created in DB
-		// Verify card stats updated (difficulty, stability, retrievability)
-		// Verify day_first_review=true
-		// Verify the same info is in the local collection
-		// After the review, use the buton to navigate to the previous card
-		// Confirm the previously-answered option is disabled right now
-		// Give a different answer this time to update or "correct" the answer
-		// Expect the toast to confirm
-		// Check the database and collection to ensure:
-		// 1. the previous record was updated (a new review one was not created; there is only one review today for this phrase)
-		// 2. the record pre-update and post-update have the uid, lang, day_session, phrase_id, review_time_retrievability, created_at
-		// 3. the record post-update still has day_first_review=true
-		// 4. the record post-update has a different value for: score, difficulty, stability, updated_at
-		// Go forward two cards, confirm two changes in text
-		// Go back two cards, confirm the most recent result's button is disabled
-		// Change the answer again and expect the second card to come, then we're done.
+		// Navigate to Hindi deck page
+		await goToDeckPage(page, TEST_LANG)
+		// We expect to see this "Continue Review" because we started it already in test step 0
+		// await expect(page.getByText('Continue Review'))
+		await page.getByText('Continue Review').click()
+
+		// Grab the review's phrase_id
+		// open the context menu
+
+		// @@TODO BELOW THIS POINT NOT WORKING
+		const reviewCard = page.locator(
+			'main #app-sidebar-layout-outlet [data-slot=card-content]:visible'
+		)
+
+		await reviewCard.locator('[aria-label="Open context menu"]').click()
+		// The permalink text is inside the anchor we need
+		const permalink = page.getByText('Permalink')
+		const anchor = permalink.locator('xpath=ancestor::a')
+		const phraseId = (await anchor.getAttribute('href'))?.split('/').pop()
+
+		expect(phraseId).toBeTruthy()
+
+		// Grab the card from the DB before review
+		const { data: dbCardBefore } = await getCardByPhraseId(
+			phraseId!,
+			TEST_USER_UID
+		)
+		expect(dbCardBefore).toBeTruthy()
+
+		// Submit a review with a score of 2
+		await page.getByRole('button', { name: 'Hard' }).click()
+		await expect(page.getByText('Review recorded!')).toBeVisible()
+
+		// Verify review record created in DB for this card
+		const { data: dbReview } = await getReviewByPhraseId(
+			phraseId!,
+			TEST_USER_UID,
+			sessionDate
+		)
+		expect(dbReview).toBeTruthy()
+		expect(dbReview?.score).toBe(2)
+		expect(dbReview?.day_first_review).toBe(true)
+
+		// Verify the same review is available in our local collection
+		const localReview = await page.evaluate(
+			({ lang, phraseId, sessionDate }) => {
+				// @ts-expect-error - accessing window global
+				const reviews = window.__reviewsCollection?.toArray.filter(
+					(r) =>
+						r.lang === lang &&
+						r.phrase_id === phraseId &&
+						r.day_session === sessionDate
+				)
+				return reviews
+					?.toSorted((a, b) => (a.created_at > b.created_at ? -1 : 1))
+					.at(0)
+			},
+			{ lang: TEST_LANG, phraseId, sessionDate }
+		)
+		expect(localReview).toBeTruthy()
+		expect(localReview?.score).toBe(2)
+		expect(localReview?.day_first_review).toBe(true)
+
+		// Retrieve new record for this card_full from the DB
+		const { data: dbCardAfter } = await getCardByPhraseId(
+			phraseId!,
+			TEST_USER_UID
+		)
+		expect(dbCardAfter).toBeTruthy()
+
+		// Compare to dbCardBefore card stats
+		expect(dbCardAfter!.difficulty).not.toBe(dbCardBefore!.difficulty)
+		expect(dbCardAfter!.stability).not.toBe(dbCardBefore!.stability)
+		expect(dbCardAfter!.retrievability_now).not.toBe(
+			dbCardBefore!.retrievability_now
+		)
+
+		// After the review, use the button to navigate to the previous card
+		await page.getByRole('button', { name: 'Previous card' }).click()
+
+		// Confirm the previously-answered option is disabled
+		await expect(page.getByRole('button', { name: 'Hard' })).toBeDisabled()
+
+		// Give a different answer (score=4) to update the answer
+		await page.getByRole('button', { name: 'Easy' }).click()
+		await expect(page.getByText('Review updated!')).toBeVisible()
+
+		// Check the database for the newest review
+		const { data: dbReviewEdited } = await getReviewByPhraseId(
+			phraseId!,
+			TEST_USER_UID,
+			sessionDate
+		)
+		expect(dbReviewEdited).toBeTruthy()
+
+		// Check the local collection for the newest review
+		const localReviewEdited = await page.evaluate(
+			({ lang, phraseId, sessionDate }) => {
+				// @ts-expect-error - accessing window global
+				const reviews = window.__reviewsCollection?.get(lang)
+				return reviews?.find(
+					(r) => r.phrase_id === phraseId && r.day_session === sessionDate
+				)
+			},
+			{ lang: TEST_LANG, phraseId, sessionDate }
+		)
+		expect(localReviewEdited).toBeTruthy()
+
+		// 1. the previous review record was updated (same id)
+		expect(dbReviewEdited?.id).toBe(dbReview?.id)
+
+		// 2. there is only one review today for this phrase_id
+		const reviewsForPhrase = await page.evaluate(
+			({ lang, phraseId, sessionDate }) => {
+				// @ts-expect-error - accessing window global
+				const reviews = window.__reviewsCollection?.get(lang)
+				return reviews?.filter(
+					(r) => r.phrase_id === phraseId && r.day_session === sessionDate
+				).length
+			},
+			{ lang: TEST_LANG, phraseId, sessionDate }
+		)
+		expect(reviewsForPhrase).toBe(1)
+
+		// 3. some values are the same
+		expect(dbReviewEdited?.uid).toBe(dbReview?.uid)
+		expect(dbReviewEdited?.lang).toBe(dbReview?.lang)
+		expect(dbReviewEdited?.day_session).toBe(dbReview?.day_session)
+		expect(dbReviewEdited?.phrase_id).toBe(dbReview?.phrase_id)
+		expect(dbReviewEdited?.created_at).toBe(dbReview?.created_at)
+
+		// 4. day_first_review is still true
+		expect(dbReviewEdited?.day_first_review).toBe(true)
+
+		// 5. some values are different
+		expect(dbReviewEdited?.score).toBe(4)
+		expect(dbReviewEdited?.score).not.toBe(dbReview?.score)
+		expect(dbReviewEdited?.updated_at).not.toBe(dbReview?.updated_at)
 	})
 
 	test.skip('2. useReviewMutation: submit reviews in stage 1', async ({
@@ -189,5 +285,11 @@ test.describe('Review Mutations', () => {
 		// Expect to be on the page "Continue your {languages[lang]} flash card review"
 		// Click the "Continue Review" button in the card footer
 		// Expect to land on a phrase review where we left off
+	})
+
+	test.afterAll(async () => {
+		if (sessionDate) {
+			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
+		}
 	})
 })

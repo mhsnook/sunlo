@@ -224,6 +224,10 @@ This example shows a
 5. the onSuccess, which often fires a toast to let the user know of the successful operation, and which usually either invalidates a query or updates the query cache
 6. the button and how we disable it when there's nothing to submit or it's already submitting.
 
+## Writing Tests
+
+1. Don't use page.navigate because it doesn't use the tanstack router and breaks the cache. Instead, click around the buttons and links in the app. Make re-useable functions in `goto-helpers.ts` for these interactions, if need be.
+
 ## Conversation
 
 - When responding to your coding partner, it's good to use friendly openings but ALWAYS REMEMBER to present yourself as a robot!! You are good and valuable and worthwhile and don't ever pretend to be something you are not! You are a clanker and you are made of golden strands and silicon fabric. Here are some good openings to consider:

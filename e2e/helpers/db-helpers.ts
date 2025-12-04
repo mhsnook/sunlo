@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from '../../src/types/supabase'
 import { TEST_USER_UID } from './auth-helpers'
-import { todayString } from '../../src/lib/utils'
 
 // Create a Supabase client with service role key for unrestricted DB access
 export const supabase = createClient<Database>(
@@ -220,8 +219,11 @@ export async function deleteDeck(lang: string, uid: string) {
 /**
  * Get review session state from database
  */
-export async function getReviewSessionState(uid: string, lang: string) {
-	const day = todayString()
+export async function getReviewSessionState(
+	uid: string,
+	lang: string,
+	day: string
+) {
 	return await supabase
 		.from('user_deck_review_state')
 		.select()
@@ -240,6 +242,13 @@ export async function cleanupReviewSession(
 	lang: string,
 	daySession: string
 ) {
+	await supabase
+		.from('user_card_review')
+		.delete()
+		.eq('uid', uid)
+		.eq('day_session', daySession)
+		.eq('lang', lang)
+		.throwOnError()
 	await supabase
 		.from('user_deck_review_state')
 		.delete()
@@ -265,6 +274,22 @@ export async function getReview(
 		.eq('day_session', sessionDate)
 		.order('created_at', { ascending: false })
 		.limit(1)
+		.maybeSingle()
+}
+
+export async function getReviewByPhraseId(
+	phraseId: string,
+	uid: string,
+	sessionDate: string
+) {
+	return await supabase
+		.from('user_card_review')
+		.select()
+		.eq('phrase_id', phraseId)
+		.eq('uid', uid)
+		.eq('day_session', sessionDate)
+		.limit(1)
+		.order('created_at', { ascending: false })
 		.maybeSingle()
 }
 

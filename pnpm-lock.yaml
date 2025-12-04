@@ -69,8 +69,8 @@ importers:
         specifier: ^2.75.0
         version: 2.75.0
       '@tanstack/db':
-        specifier: ^0.4.9
-        version: 0.4.10(typescript@5.9.3)
+        specifier: ^0.5.9
+        version: 0.5.9(typescript@5.9.3)
       '@tanstack/query-core':
         specifier: ^5.90.3
         version: 5.90.3
@@ -1450,14 +1450,28 @@ packages:
     peerDependencies:
       typescript: '>=4.7'
 
+  '@tanstack/db-ivm@0.1.13':
+    resolution: {integrity: sha512-sBOWGY4tqMEym2ewjdWrDb5c5c8akvgnEbGVPAtkfFS3QVV0zfVb5RJAkAc8GSxb3ByVfYjyaShVr0kMJhMuow==}
+    peerDependencies:
+      typescript: '>=4.7'
+
   '@tanstack/db@0.4.10':
     resolution: {integrity: sha512-I4gTlzO9zgY+qUl1GqoAtUsoyPr+HNTdq3/rbL3znx8pxlUJTGA78WxrEmxTJtzCyfQoUwTwM5JYIMJnz2IFcQ==}
+    peerDependencies:
+      typescript: '>=4.7'
+
+  '@tanstack/db@0.5.9':
+    resolution: {integrity: sha512-cgM5uf5g4tcmum4xTU0cxkvU8YaXuTWDE6QIknOFyeYQdiHrsRyqN+ygFm+l1W/+t66atoUfZ+Jv7CU2PCLANw==}
     peerDependencies:
       typescript: '>=4.7'
 
   '@tanstack/history@1.133.3':
     resolution: {integrity: sha512-zFQnGdX0S4g5xRuS+95iiEXM+qlGvYG7ksmOKx7LaMv60lDWa0imR8/24WwXXvBWJT1KnwVdZcjvhCwz9IiJCw==}
     engines: {node: '>=12'}
+
+  '@tanstack/pacer-lite@0.1.0':
+    resolution: {integrity: sha512-a5A0PI0H4npUy7u3VOjOhdynXnRBna+mDvpt8ghDCVzS3Tgn8DlGzHlRqS2rKJP8ZcLuVO2qxlIIblhcoaiv8Q==}
+    engines: {node: '>=18'}
 
   '@tanstack/query-core@5.90.3':
     resolution: {integrity: sha512-HtPOnCwmx4dd35PfXU8jjkhwYrsHfuqgC8RCJIwWglmhIUIlzPP0ZcEkDAc+UtAWCiLm7T8rxeEfHZlz3hYMCA==}
@@ -4240,13 +4254,28 @@ snapshots:
       sorted-btree: 1.8.1
       typescript: 5.9.3
 
+  '@tanstack/db-ivm@0.1.13(typescript@5.9.3)':
+    dependencies:
+      fractional-indexing: 3.2.0
+      sorted-btree: 1.8.1
+      typescript: 5.9.3
+
   '@tanstack/db@0.4.10(typescript@5.9.3)':
     dependencies:
       '@standard-schema/spec': 1.0.0
       '@tanstack/db-ivm': 0.1.11(typescript@5.9.3)
       typescript: 5.9.3
 
+  '@tanstack/db@0.5.9(typescript@5.9.3)':
+    dependencies:
+      '@standard-schema/spec': 1.0.0
+      '@tanstack/db-ivm': 0.1.13(typescript@5.9.3)
+      '@tanstack/pacer-lite': 0.1.0
+      typescript: 5.9.3
+
   '@tanstack/history@1.133.3': {}
+
+  '@tanstack/pacer-lite@0.1.0': {}
 
   '@tanstack/query-core@5.90.3': {}
 

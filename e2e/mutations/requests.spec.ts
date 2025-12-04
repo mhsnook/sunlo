@@ -15,23 +15,23 @@ test.describe('Phrase Request Mutations', () => {
 			lang: 'hin',
 			prompt: 'How do I say context request?',
 		})
-
 		await loginAsTestUser(page)
+		const contextPrompt = contextRequest?.prompt
+		expect(contextPrompt).toBeTruthy()
+		expect(contextPrompt.includes('How do I say context request?')).toBeTruthy()
 
 		try {
 			// 2. Navigate to requests index page first
 			await page.goto('/learn/hin/requests')
 
 			// Verify context request is visible
-			await expect(
-				page.getByText('How do I say context request?')
-			).toBeVisible()
+			await expect(page.getByText(contextPrompt)).toBeVisible()
 
 			// Click the "New request" button
 			await page.click('a[href="/learn/hin/requests/new"]')
 
 			// 3. Create a new request via UI
-			const newPrompt = `How do I say test request ${Math.random()}?`
+			const newPrompt = `How do I say test request - form - ${Math.random()}?`
 
 			// Fill the prompt field
 			await page.fill('textarea[name="prompt"]', newPrompt)
@@ -51,7 +51,9 @@ test.describe('Phrase Request Mutations', () => {
 			await expect(page.getByText(newPrompt)).toBeVisible()
 
 			// Get the request ID from the "View Details" link in the card containing the prompt
-			const requestCard = page.locator(`div.group:has-text("${newPrompt}")`)
+			const requestCard = page
+				.locator(`div.group:has-text("${newPrompt}")`)
+				.first()
 			const viewDetailsLink = requestCard.getByRole('link', {
 				name: 'View Details',
 			})
