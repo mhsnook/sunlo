@@ -37,7 +37,11 @@ function ReviewPage() {
 	const stage = useReviewStage()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || !stage) return <Navigate to=".." />
+	if (!day?.manifest?.length || !stage)
+		// @@TODO Remove these / file issues / repros
+		// return <Navigate to=".." /> // takes me to "../.."
+		// return <Navigate to=".." from={Route.fullPath} /> // /review and /review/go
+		return <Navigate to="/learn/$lang/review" from={Route.fullPath} /> // works for some reason
 
 	return (
 		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />

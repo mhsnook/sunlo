@@ -43,7 +43,7 @@
 		"@radix-ui/react-tabs": "^1.1.13",
 		"@radix-ui/react-tooltip": "^1.2.8",
 		"@supabase/supabase-js": "^2.75.0",
-		"@tanstack/db": "^0.4.9",
+		"@tanstack/db": "^0.5.9",
 		"@tanstack/query-core": "^5.90.3",
 		"@tanstack/query-db-collection": "^0.2.29",
 		"@tanstack/react-db": "^0.1.32",

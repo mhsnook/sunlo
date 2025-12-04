@@ -168,9 +168,14 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" className="absolute top-4 right-4">
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Open context menu"
+					className="absolute top-4 right-4"
+				>
 					<MoreVertical />
-					<span className="sr-only">Open menu</span>
+					<span className="sr-only">Open context menu</span>
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">

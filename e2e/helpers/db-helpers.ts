@@ -268,6 +268,22 @@ export async function getReview(
 		.maybeSingle()
 }
 
+export async function getReviewByPhraseId(
+	phraseId: string,
+	uid: string,
+	sessionDate: string
+) {
+	return await supabase
+		.from('user_card_review')
+		.select()
+		.eq('phrase_id', phraseId)
+		.eq('uid', uid)
+		.eq('day_session', sessionDate)
+		.limit(1)
+		.order('created_at', { ascending: false })
+		.maybeSingle()
+}
+
 /**
  * Get a card by phrase ID from the database for a specific user
  */

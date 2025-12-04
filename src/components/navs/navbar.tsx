@@ -75,7 +75,12 @@ function Title({ matches }: { matches: NavbarMatch[] }) {
 
 	return (
 		<div className="ms-1.5 flex flex-row items-center gap-3">
-			<Button variant="ghost" size="icon" onClick={onBackClickFn}>
+			<Button
+				id="navbar_back"
+				variant="ghost"
+				size="icon"
+				onClick={onBackClickFn}
+			>
 				<ChevronLeft />
 				<span className="sr-only">Back</span>
 			</Button>
