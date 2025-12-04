@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		return {
 			appnav: [
 				'/learn/$lang/review',
-				'/learn/$lang/library',
+				'/learn/$lang/feed',
 				'/learn/$lang',
 				'/learn/$lang/requests',
 			],

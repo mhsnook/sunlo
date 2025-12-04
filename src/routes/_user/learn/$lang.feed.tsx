@@ -9,7 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TitleBar } from '@/types/main'
 import languages from '@/lib/languages'
 
-export const Route = createFileRoute('/_user/learn/$lang/library')({
+export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	component: DeckFeedPage,
 	loader: ({ params: { lang } }) => ({
 		titleBar: {

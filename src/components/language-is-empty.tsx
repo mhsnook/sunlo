@@ -52,13 +52,14 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 				</li>
 				<li>
 					<Link
-						to="/learn/$lang/library"
+						to="/learn/$lang/feed"
+						// @@TODO -- support this filter? change it?
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang }}
 						search={constFilter}
 						className="s-link"
 					>
-						View existing phrases to add translations in one of your languages
+						Browse the Requests feed to find new Phrases to learn
 					</Link>{' '}
 				</li>
 				<li>

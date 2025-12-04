@@ -32,11 +32,11 @@ export function NotEnoughCards({
 			<div className="my-2 flex flex-col gap-2 @lg:flex-row">
 				<Link
 					className={buttonVariants({ variant: 'outline' })}
-					to="/learn/$lang/library"
+					to="/learn/$lang/feed"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 				>
-					Add cards from the Library
+					Browse Requests feed to see what others are learning
 				</Link>
 
 				<Link

@@ -37,7 +37,6 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 		<div>
 			{phrase.added_by ?
 				<div className="mb-3 flex flex-row gap-1 px-2">
-					Phrase by{' '}
 					<UserPermalink
 						uid={phrase.added_by}
 						username={phrase.profile.username}
@@ -106,10 +105,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
 										{phrase.translations_other.map((trans) => (
-											<div
-												key={trans.id}
-												className="bg-muted rounded-lg p-3"
-											>
+											<div key={trans.id} className="bg-muted rounded-lg p-3">
 												<div className="flex items-center justify-between">
 													<p className="text-md">{trans.text}</p>
 													<Badge variant="outline">
