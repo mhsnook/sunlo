@@ -1,4 +1,9 @@
-import { Link, type RouteMatch, useMatches } from '@tanstack/react-router'
+import { memo, useCallback, useState } from 'react'
+import { Link, useMatches } from '@tanstack/react-router'
+import { MoreVertical } from 'lucide-react'
+import { useIntersectionObserver } from '@uidotdev/usehooks'
+
+import type { NavbarMatch } from './types'
 import {
 	NavigationMenu,
 	NavigationMenuItem,
@@ -8,26 +13,17 @@ import {
 import { LinkType } from '@/types/main'
 import { useLinks } from '@/hooks/links'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
-import { useIntersectionObserver } from '@uidotdev/usehooks'
-import { memo } from 'react'
 import { TinyBadge } from '@/components/ui/badge'
-
-type AppNavMatch = RouteMatch<
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown
-> & {
-	loaderData?: {
-		appnav?: string[]
-	}
-}
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Button } from '@/components/ui/button'
 
 export function AppNav() {
-	const matches: AppNavMatch[] = useMatches()
+	const matches: NavbarMatch[] = useMatches()
 	if (matches.some((match) => match.status === 'pending')) return null
 	return <Nav matches={matches} />
 }
@@ -41,23 +37,23 @@ const inactiveProps = {
 	className: 'border-transparent text-muted-foreground',
 } as const
 
-const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
+const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 	const match = matches.findLast((m) => !!m.loaderData?.appnav)
 	const links = useLinks(match?.loaderData?.appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
 		root: null,
-		rootMargin: '100px',
+		rootMargin: '12px',
 	})
 	if (!links || !links.length) return null
 	return (
 		<>
 			<div ref={ref}></div>
 			<div
-				className={`bg-background sticky border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0`}
+				className={`bg-background sticky mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} w-app top-0 flex flex-row items-center justify-between gap-2 ps-2`}
 			>
 				<ScrollArea>
-					<NavigationMenu className="my-2">
+					<NavigationMenu className="mt-2 mb-1">
 						<NavigationMenuList className="flex w-full flex-row">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
@@ -83,7 +79,43 @@ const Nav = memo(function Nav({ matches }: { matches: AppNavMatch[] }) {
 					</NavigationMenu>
 					<ScrollBar orientation="horizontal" />
 				</ScrollArea>
+				<ContextMenu matches={matches} />
 			</div>
 		</>
 	)
 })
+
+function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
+	const [isOpen, setIsOpen] = useState(false)
+	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
+	const match = matches.findLast((m) => !!m?.loaderData?.contextMenu)
+	const links = useLinks(match?.loaderData?.contextMenu)
+	if (!links || !links.length) return null
+
+	return (
+		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+			<DropdownMenuTrigger id="top-right-context-menu" asChild>
+				<Button className="me-2" variant="ghost" size="icon">
+					<MoreVertical />
+					<span className="sr-only">Open menu</span>
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-56">
+				{links.map(({ link, title, Icon }) => (
+					<DropdownMenuItem key={link.to}>
+						<Link
+							{...link}
+							className="flex w-full flex-row items-center gap-2"
+							onClick={setClosed}
+						>
+							{!Icon ? null : <Icon className="size-[1.25rem]" />}
+							{title}
+						</Link>
+					</DropdownMenuItem>
+				)) || (
+					<DropdownMenuItem disabled>No options available</DropdownMenuItem>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
