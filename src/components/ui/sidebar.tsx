@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, VariantProps } from 'class-variance-authority'
-import { PanelLeft } from 'lucide-react'
+import { PanelLeft, X } from 'lucide-react'
 
 import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
@@ -245,7 +245,7 @@ const SidebarTrigger = ({
 	onClick,
 	...props
 }: React.ComponentProps<typeof Button>) => {
-	const { toggleSidebar } = useSidebar()
+	const { toggleSidebar, openMobile, isMobile } = useSidebar()
 	const onButtonClick = React.useCallback(
 		(event: React.MouseEvent<HTMLButtonElement>) => {
 			onClick?.(event)
@@ -253,18 +253,27 @@ const SidebarTrigger = ({
 		},
 		[onClick, toggleSidebar]
 	)
+	const showTheX = isMobile && openMobile
 
 	return (
 		<Button
 			data-slot="sidebar-trigger"
+			aria-label="Toggle Sidebar"
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
-			className={className}
+			className={`${className} bg-background z-50`}
 			onClick={onButtonClick}
 			{...props}
 		>
-			<PanelLeft />
+			<span
+				className={`grid grid-cols-1 grid-rows-1 [grid-template-areas:'stack']`}
+			>
+				<PanelLeft
+					className={`[grid-area:stack] ${!showTheX ? '' : 'invisible'}`}
+				/>
+				<X className={`[grid-area:stack] ${showTheX ? '' : 'invisible'}`} />
+			</span>
 			<span className="sr-only">Toggle Sidebar</span>
 		</Button>
 	)
