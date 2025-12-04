@@ -188,11 +188,11 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: HouseHeart,
 		},
-		'/learn/$lang/library': {
+		'/learn/$lang/feed': {
 			name: `Feed`,
 			title: `Feed ${languages[lang]} Feed`,
 			link: {
-				to: '/learn/$lang/library',
+				to: '/learn/$lang/feed',
 				params: { lang },
 			},
 			Icon: Logs,

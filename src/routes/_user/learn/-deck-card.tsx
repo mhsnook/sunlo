@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
+import { Archive, Rocket, HouseHeart, Logs } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -77,7 +77,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 						}
 						{!deck.archived ?
 							<Link
-								to="/learn/$lang/library"
+								to="/learn/$lang/feed"
 								className={cn(
 									buttonVariants({ variant: 'secondary' }),
 									`grow basis-60`
@@ -85,8 +85,8 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: deck.lang }}
 							>
-								<BookOpenText />
-								Explore Library
+								<Logs />
+								Browse Feed
 							</Link>
 						:	null}
 					</div>

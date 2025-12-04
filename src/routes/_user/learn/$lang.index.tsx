@@ -9,10 +9,10 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import {
-	BookOpenText,
 	Construction,
 	Contact,
-	Library,
+	Logs,
+	MessageCircleHeart,
 	MessageSquarePlus,
 	MessageSquareQuote,
 	Rocket,
@@ -129,38 +129,40 @@ function DeckOverview() {
 					>
 						<Rocket /> Review my {languages[lang]} flashcards
 					</Link>
+					<div className="grid w-full grid-cols-1 gap-2 @lg:grid-cols-2 @lg:gap-0">
+						<Link
+							to="/learn/$lang/add-phrase"
+							from={Route.fullPath}
+							className={cn(
+								buttonVariants({ variant: 'secondary' }),
+								'@lg:rounded-r-none'
+							)}
+						>
+							<MessageSquareQuote />
+							Add a phrase
+						</Link>
+						<Link
+							to="/learn/$lang/requests/new"
+							from={Route.fullPath}
+							className={cn(
+								buttonVariants({ variant: 'secondary' }),
+								'@lg:rounded-l-none'
+							)}
+						>
+							<MessageCircleHeart />
+							Request a phrase
+						</Link>
+					</div>
 					<Link
-						to="/learn/$lang/library"
+						to="/learn/$lang/feed"
 						from={Route.fullPath}
 						className={cn(
 							buttonVariants({ variant: 'secondary' }),
 							'grow basis-40'
 						)}
 					>
-						<BookOpenText />
-						Browse the {languages[lang]} library
-					</Link>
-					<Link
-						to="/learn/$lang/add-phrase"
-						from={Route.fullPath}
-						className={cn(
-							buttonVariants({ variant: 'secondary' }),
-							'grow basis-40'
-						)}
-					>
-						<MessageSquarePlus />
-						Add a new phrase
-					</Link>
-					<Link
-						to="/learn/$lang/add-phrase"
-						from={Route.fullPath}
-						className={cn(
-							buttonVariants({ variant: 'secondary' }),
-							'grow basis-40'
-						)}
-					>
-						<MessageSquareQuote />
-						Request a phrase
+						<Logs />
+						Browse the {languages[lang]} feed
 					</Link>
 				</div>
 			</CardFooter>
@@ -297,11 +299,11 @@ function Empty() {
 				</p>
 				<div className="flex flex-col gap-4 @lg:flex-row">
 					<Link
-						to="/learn/$lang/library"
+						to="/learn/$lang/feed"
 						from={Route.fullPath}
 						className={buttonVariants({ variant: 'secondary' })}
 					>
-						<Library /> Browse the {languages[lang]} library
+						<Logs /> Browse the {languages[lang]} feed
 					</Link>
 					<Link
 						to="/friends"

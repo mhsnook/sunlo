@@ -12,7 +12,7 @@ const deckLinks = [
 	'/learn/$lang/review',
 	'/learn/$lang/search',
 	'/learn/$lang/requests',
-	'/learn/$lang/library',
+	'/learn/$lang/feed',
 	'/learn/$lang/add-phrase',
 	'/learn/$lang/deck-settings',
 ]
