@@ -4,7 +4,7 @@ import { useRelationInvitations } from '@/hooks/use-friends'
 
 import { LinkType } from '@/types/main'
 import {
-	BookOpenText,
+	ChartBarDecreasing,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -13,14 +13,14 @@ import {
 	HouseHeart,
 	Lock,
 	LogIn,
+	Logs,
 	Mail,
+	MessageCircleQuestionMark,
 	MessageSquarePlus,
 	MessageSquareQuote,
 	MessagesSquare,
 	Newspaper,
-	Rocket,
 	Search,
-	Send,
 	Settings,
 	Share,
 	UserPen,
@@ -153,9 +153,9 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 
 	const languageLinks = {
 		'/learn/$lang': {
-			name: languages[lang],
-			title: `${languages[lang]} Deck`,
-			Icon: HouseHeart,
+			name: 'Stats',
+			title: `${languages[lang]} Stats`,
+			Icon: ChartBarDecreasing,
 			link: {
 				to: '/learn/$lang',
 				params: { lang },
@@ -180,23 +180,22 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: Settings,
 		},
 		'/learn/$lang/review': {
-			name: 'Review',
-			title: 'Start a Review',
+			name: 'Home',
+			title: `${languages[lang]} Home`,
 			link: {
 				to: '/learn/$lang/review',
 				params: { lang },
 			},
-			Icon: Rocket,
-			useBadge: () => 'star',
+			Icon: HouseHeart,
 		},
 		'/learn/$lang/library': {
-			name: `Library`,
-			title: `Browse ${languages[lang]} Library`,
+			name: `Feed`,
+			title: `Feed ${languages[lang]} Feed`,
 			link: {
 				to: '/learn/$lang/library',
 				params: { lang },
 			},
-			Icon: BookOpenText,
+			Icon: Logs,
 		},
 		'/learn/$lang/add-phrase': {
 			name: 'Phrase',
@@ -208,8 +207,8 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: MessageSquarePlus,
 		},
 		'/learn/$lang/requests': {
-			name: 'Requests',
-			title: 'Card Requests',
+			name: 'My Stuff',
+			title: 'My Stuff',
 			link: {
 				to: '/learn/$lang/requests',
 				params: { lang },
@@ -223,7 +222,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/requests/new',
 				params: { lang },
 			},
-			Icon: Send,
+			Icon: MessageCircleQuestionMark,
 		},
 	}
 

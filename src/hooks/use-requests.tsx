@@ -27,6 +27,17 @@ export function useAllMyPhraseRequestsLang(
 	)
 }
 
+export function useRequestsLang(
+	lang: string
+): UseLiveQueryResult<PhraseRequestType[]> {
+	return useLiveQuery((q) =>
+		q
+			.from({ request: phraseRequestsCollection })
+			.where(({ request }) => eq(request.lang, lang))
+			.orderBy(({ request }) => request.created_at, 'desc')
+	)
+}
+
 export const useRequest = (
 	id: string
 ): UseLiveQueryResult<
