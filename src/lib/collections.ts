@@ -1,4 +1,4 @@
-import { createCollection } from '@tanstack/react-db'
+import { Collection, createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 
 import {
@@ -32,7 +32,6 @@ import { queryClient } from './query-client'
 import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'
 import { themes } from './deck-themes'
-import { queryOptions } from '@tanstack/react-query'
 import languages from './languages'
 
 export const publicProfilesCollection = createCollection(
@@ -124,27 +123,20 @@ export const languagesCollection = createCollection(
 	})
 )
 
-export const myProfileQuery = queryOptions({
-	queryKey: ['user', 'profile'],
-	queryFn: async (_) => {
-		console.log(`Running myProfileQuery`)
-		const { data } = await supabase
-			.from('user_profile')
-			.select()
-			.throwOnError()
-			.maybeSingle()
-		if (!data) return []
-		return [MyProfileSchema.parse(data)]
-	},
-})
-
-export const myProfileCollection = createCollection(
+export const myProfileCollection: Collection<MyProfileType> = createCollection(
 	queryCollectionOptions({
 		id: 'my_profile',
-		queryKey: myProfileQuery.queryKey,
-		queryFn: async (args) => {
-			console.log(`Loading myProfileCollection`)
-			return myProfileQuery.queryFn!(args)
+		queryKey: ['user', 'profile'],
+		queryFn: async () => {
+			console.log(`Running myProfileQuery`)
+
+			const { data } = await supabase
+				.from('user_profile')
+				.select()
+				.throwOnError()
+				.maybeSingle()
+			if (!data) return []
+			return [MyProfileSchema.parse(data)]
 		},
 		getKey: (item: MyProfileType) => item.uid,
 		queryClient,

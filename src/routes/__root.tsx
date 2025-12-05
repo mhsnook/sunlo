@@ -1,4 +1,3 @@
-import type { QueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 import {
 	createRootRouteWithContext,
@@ -9,6 +8,7 @@ import {
 import { Toaster } from 'react-hot-toast'
 
 import type { AuthState } from '@/lib/use-auth'
+import type { UserDbStore } from '@/lib/db-store'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -17,7 +17,7 @@ import { OctogonMinusDangerBadge } from '@/components/ui/badge'
 
 export interface MyRouterContext {
 	auth: AuthState
-	queryClient: QueryClient
+	db: UserDbStore
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

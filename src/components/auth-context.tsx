@@ -1,64 +1,40 @@
-import {
-	type PropsWithChildren,
-	useState,
-	useEffect,
-	useMemo,
-	useEffectEvent,
-} from 'react'
+import { type PropsWithChildren, useState, useEffect, useMemo } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { useQueryClient } from '@tanstack/react-query'
 
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
+import { dbStoreInit } from '@/lib/db-store'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 export function AuthProvider({ children }: PropsWithChildren) {
-	const queryClient = useQueryClient()
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 
-	const safeInitialise = useEffectEvent(() => {
-		console.log('safeInitialise')
-		if (!sessionState && !isLoaded) {
-			console.log('safeInitialise if = true')
-			void supabase.auth.getSession().then(({ data: { session }, error }) => {
-				console.log('safeInitialise then stmt')
-				setSessionState(session)
-				if (!error) setIsLoaded(true)
-				else throw error
-			})
-		}
-	})
-
 	useEffect(() => {
-		if (!queryClient) {
-			console.log('Returning early bc queryClient hook has not come back')
-			return
-		}
+		// Fetch initial session
+		void supabase.auth.getSession().then(({ data: { session } }) => {
+			console.log(`Initial session fetch`, session)
+			setSessionState(session)
+			setIsLoaded(true)
+		})
 
 		const { data: listener } = supabase.auth.onAuthStateChange(
-			async (event, session) => {
+			(event, session) => {
 				console.log(`User auth event: ${event}`, session)
-
-				if (event === 'SIGNED_OUT')
-					queryClient.removeQueries({ queryKey: ['user'] })
-
-				if (event === 'INITIAL_SESSION') await myProfileCollection.preload()
-
-				if (event === 'SIGNED_IN' && session)
-					await myProfileCollection.utils.refetch()
-
 				setSessionState(session)
 				setIsLoaded(true)
 			}
 		)
-		safeInitialise()
 
 		return () => {
 			listener.subscription.unsubscribe()
 		}
-	}, [queryClient])
+	}, [])
+
+	// re-initialize the store whenever uid changes
+	useEffect(() => {
+		dbStoreInit(sessionState?.user.id)
+	}, [sessionState?.user.id])
 
 	const value = useMemo(
 		() =>

@@ -1,5 +1,4 @@
 import { useEffect, type ComponentType } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
 	createFileRoute,
@@ -20,10 +19,7 @@ import { AppNav } from '@/components/navs/app-nav'
 import { useUserId } from '@/lib/use-auth'
 import {
 	chatMessagesCollection,
-	decksCollection,
 	friendSummariesCollection,
-	myProfileCollection,
-	myProfileQuery,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
 
@@ -44,25 +40,30 @@ export const Route = createFileRoute('/_user')({
 			})
 		}
 	},
-	loader: async ({ location, context: { queryClient } }) => {
-		let profile = await myProfileCollection.toArrayWhenReady()
-		if (!profile || !profile?.length) {
-			console.log('failed to load first profile, trying again', profile)
-			profile = await queryClient.ensureQueryData(myProfileQuery)
-			console.log('tried a second time to load the profile', profile)
+	loader: async ({ location, context: { auth, db } }) => {
+		// this guard should never hit
+		if (!auth.isAuth) {
+			throw new Error(
+				'User made it past the auth guard and got to the ' +
+					'loader but is not authenticated'
+			)
 		}
-		// If there is no profile, go create one
+		// profile guard does not apply to the getting-started page
 		if (location.pathname !== '/getting-started') {
-			if (!profile || !profile.length) {
+			// at this point we should know the profile collection is
+			// at least fetching with the correct userId, so we can just await it
+			let profile = (await db.profile?.toArrayWhenReady())?.at(0)
+
+			if (!profile) {
 				console.log(
-					`Redirecting to /getting-started because no profile was found.`,
+					`Redirecting to /getting-started because no profile was found (twice).`,
 					profile
 				)
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw redirect({ to: '/getting-started' })
 			} else {
-				void decksCollection.preload()
-				void friendSummariesCollection.preload()
+				// db.decks.preload()
+				// db.friendSummaries.preload()
 			}
 		}
 
@@ -99,7 +100,6 @@ function UserLayout() {
 	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
-	const queryClient = useQueryClient()
 	const userId = useUserId()
 	useEffect(() => {
 		const friendRequestChannel = supabase
@@ -149,7 +149,7 @@ function UserLayout() {
 			void supabase.removeChannel(friendRequestChannel)
 			void supabase.removeChannel(chatChannel)
 		}
-	}, [userId, queryClient])
+	}, [userId])
 
 	return (
 		<div className="flex h-screen w-full">
