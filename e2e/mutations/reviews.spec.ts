@@ -19,15 +19,15 @@ test.describe.serial('Review Mutations', () => {
 	test.beforeAll(async () => {
 		const { data: existingSession } = await getReviewSessionState(
 			TEST_USER_UID,
-			TEST_LANG
+			TEST_LANG,
+			sessionDate
 		)
 		if (existingSession) {
-			await cleanupReviewSession(
-				TEST_USER_UID,
-				TEST_LANG,
-				existingSession.day_session
-			)
+			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
 		}
+	})
+	test.afterAll(async () => {
+		await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
 	})
 
 	test('0. create daily review session', async ({ page }) => {
