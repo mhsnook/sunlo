@@ -1,13 +1,17 @@
-import type { pids, uuid } from '@/types/main'
-import { eq, ilike, inArray, type InitialQueryBuilder } from '@tanstack/db'
+import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
+import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import { langTagsCollection, languagesCollection } from '@/lib/collections'
 import { phrasesFull } from '@/lib/live-collections'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
+import { LangTagType, LanguageType, PhraseFullType } from '@/lib/schemas'
+import { useUserId } from '@/lib/use-auth'
 
-export const useLanguageMeta = (lang: string) =>
+export const useLanguageMeta = (
+	lang: string
+): UseLiveQueryResult<LanguageType> =>
 	useLiveQuery(
 		(q) =>
 			q
@@ -17,19 +21,23 @@ export const useLanguageMeta = (lang: string) =>
 		[lang]
 	)
 
-// Helper function to build the base query for phrases filtered by language
-const createBasePhraseQuery = (q: InitialQueryBuilder, lang: string) =>
-	q.from({ phrase: phrasesFull }).where(({ phrase }) => eq(phrase.lang, lang))
-
-export const useLanguagePhrases = (lang: string) =>
-	useLiveQuery((q) => createBasePhraseQuery(q, lang), [lang])
+export const useLanguagePhrases = (
+	lang: string
+): UseLiveQueryResult<PhraseFullType[]> =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesFull })
+				.where(({ phrase }) => eq(phrase.lang, lang)),
+		[lang]
+	)
 
 export const useLanguagePhrasesSearch = (
 	lang: string | undefined,
 	queryString: string | undefined,
-	tags?: string[] | null  ,
+	tags?: string[] | null,
 	filteredPids?: pids | null
-) => {
+): UseLiveQueryResult<PhraseFullType[]> => {
 	const { data: langs } = useLanguagesToShow()
 	return useLiveQuery(
 		(q) => {
@@ -73,7 +81,9 @@ export const useLanguagePhrasesSearch = (
 	)
 }
 
-export const useLanguagePhrase = (pid: uuid | null | undefined) =>
+export const useLanguagePhrase = (
+	pid: uuid | null | undefined
+): UseLiveQueryResult<PhraseFullType> =>
 	useLiveQuery(
 		(q) =>
 			!pid ? undefined : (
@@ -85,7 +95,9 @@ export const useLanguagePhrase = (pid: uuid | null | undefined) =>
 		[pid]
 	)
 
-export const useLanguageTags = (lang: string) => {
+export const useLanguageTags = (
+	lang: string
+): UseLiveQueryResult<LangTagType[]> => {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -96,10 +108,28 @@ export const useLanguageTags = (lang: string) => {
 	)
 }
 
-export const useRequestAnswers = (requestId: uuid) => {
+export const useRequestAnswers = (
+	requestId: uuid
+): UseLiveQueryResult<PhraseFullType[]> => {
 	return useLiveQuery((q) =>
 		q
 			.from({ phrase: phrasesFull })
 			.where(({ phrase }) => eq(phrase.request_id, requestId))
+	)
+}
+
+export function useAllMyPhrasesLang(
+	lang: string
+): UseLiveQueryResult<PhraseFullType[]> {
+	const userId = useUserId()
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesFull })
+				.where(({ phrase }) =>
+					and(eq(phrase.added_by, userId), eq(phrase.lang, lang))
+				)
+				.orderBy(({ phrase }) => phrase.created_at, 'desc'),
+		[userId]
 	)
 }

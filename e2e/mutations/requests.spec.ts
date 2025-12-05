@@ -22,7 +22,8 @@ test.describe('Phrase Request Mutations', () => {
 
 		try {
 			// 2. Navigate to requests index page first
-			await page.goto('/learn/hin/requests')
+			// @@TODO @@TEMP make this parameter work?
+			await page.goto('/learn/hin/contributions?type=request')
 
 			// Verify context request is visible
 			await expect(page.getByText(contextPrompt)).toBeVisible()
@@ -45,7 +46,7 @@ test.describe('Phrase Request Mutations', () => {
 			).toBeVisible()
 
 			// Should navigate back to requests index
-			await page.waitForURL('/learn/hin/requests')
+			await page.waitForURL('/learn/hin/contributions?type=request')
 
 			// 4. Verify the new request is showing up on the index page
 			await expect(page.getByText(newPrompt)).toBeVisible()
@@ -55,7 +56,7 @@ test.describe('Phrase Request Mutations', () => {
 				.locator(`div.group:has-text("${newPrompt}")`)
 				.first()
 			const viewDetailsLink = requestCard.getByRole('link', {
-				name: 'View Details',
+				name: 'Discussion',
 			})
 			const href = await viewDetailsLink.getAttribute('href')
 			const requestId = href?.split('/').pop()

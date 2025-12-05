@@ -81,7 +81,11 @@ function Page() {
 			phraseRequestsCollection.utils.writeInsert(
 				PhraseRequestSchema.parse(data)
 			)
-			void navigate({ to: '/learn/$lang/requests', params: { lang } })
+			void navigate({
+				to: '/learn/$lang/contributions',
+				params: { lang },
+				search: { type: 'request' },
+			})
 			toast.success('Your request has been created!')
 		},
 		onError: (error) => {

@@ -27,7 +27,7 @@ function DeckFeedPage() {
 		<main>
 			<div className="mb-2 flex flex-row items-center justify-between gap-2">
 				<Tabs defaultValue="newest">
-					<TabsList className="bg-primary-invert">
+					<TabsList>
 						<TabsTrigger value="newest">Newest</TabsTrigger>
 						<TabsTrigger value="popular" disabled>
 							Popular

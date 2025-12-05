@@ -81,17 +81,29 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 								<span>others want to know this</span>
 							</div>
 						</Flagged>
-						<Link
-							to="/learn/$lang/requests/$id"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: request.lang, id: request.id }}
-							className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
-						>
-							<WalletCards className="h-4 w-4" />
-							<span>
-								{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
-							</span>
-						</Link>
+						<div className="flex flex-row gap-2">
+							<Link
+								to="/learn/$lang/requests/$id"
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={{ lang: request.lang, id: request.id }}
+								className={cn(
+									buttonVariants({ size: 'sm', variant: 'outline-accent' })
+								)}
+							>
+								<MessagesSquare /> Discussion
+							</Link>
+							<Link
+								to="/learn/$lang/requests/$id"
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={{ lang: request.lang, id: request.id }}
+								className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
+							>
+								<WalletCards className="h-4 w-4" />
+								<span>
+									{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
+								</span>
+							</Link>
+						</div>
 					</div>
 
 					<div className="flex items-center gap-2">
@@ -107,16 +119,6 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 								<Send />
 							</Button>
 						</SendRequestToFriendDialog>
-						<Link
-							to="/learn/$lang/requests/$id"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: request.lang, id: request.id }}
-							className={cn(
-								buttonVariants({ size: 'sm', variant: 'outline-accent' })
-							)}
-						>
-							<MessagesSquare /> Thread
-						</Link>
 					</div>
 				</div>
 			</CardContent>

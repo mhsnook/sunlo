@@ -10,11 +10,6 @@ export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
 	loader: ({ params: { lang } }) => {
 		return {
-			contextMenu: [
-				'/learn/$lang/search',
-				'/learn/$lang/add-phrase',
-				'/learn/$lang/deck-settings',
-			],
 			titleBar: {
 				title: `Review ${languages[lang]} cards`,
 				onBackClick: '/learn/$lang',

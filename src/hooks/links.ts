@@ -5,6 +5,7 @@ import { useRelationInvitations } from '@/hooks/use-friends'
 import { LinkType } from '@/types/main'
 import {
 	ChartBarDecreasing,
+	CircleStar,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -15,8 +16,7 @@ import {
 	LogIn,
 	Logs,
 	Mail,
-	MessageCircleQuestionMark,
-	MessageSquarePlus,
+	MessageCircleHeart,
 	MessageSquareQuote,
 	MessagesSquare,
 	Newspaper,
@@ -154,7 +154,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 	const languageLinks = {
 		'/learn/$lang': {
 			name: 'Stats',
-			title: `${languages[lang]} Stats`,
+			title: `My Review Stats`,
 			Icon: ChartBarDecreasing,
 			link: {
 				to: '/learn/$lang',
@@ -190,7 +190,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/learn/$lang/feed': {
 			name: `Feed`,
-			title: `Feed ${languages[lang]} Feed`,
+			title: `${languages[lang]} Feed`,
 			link: {
 				to: '/learn/$lang/feed',
 				params: { lang },
@@ -204,16 +204,16 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/add-phrase',
 				params: { lang },
 			},
-			Icon: MessageSquarePlus,
+			Icon: MessageSquareQuote,
 		},
-		'/learn/$lang/requests': {
-			name: 'My Stuff',
-			title: 'My Stuff',
+		'/learn/$lang/contributions': {
+			name: 'Contributions',
+			title: 'My Contributions',
 			link: {
-				to: '/learn/$lang/requests',
+				to: '/learn/$lang/contributions',
 				params: { lang },
 			},
-			Icon: MessageSquareQuote,
+			Icon: CircleStar,
 		},
 		'/learn/$lang/requests/new': {
 			name: 'Request',
@@ -222,7 +222,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/requests/new',
 				params: { lang },
 			},
-			Icon: MessageCircleQuestionMark,
+			Icon: MessageCircleHeart,
 		},
 	}
 
