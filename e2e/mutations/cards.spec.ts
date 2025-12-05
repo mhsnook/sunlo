@@ -120,7 +120,7 @@ test.describe('Card Status Mutations', () => {
 			})
 
 			// 8. Verify card appears in library with filter
-			await page.goto('/learn/hin/library?filter=active')
+			await page.goto('/learn/hin/contributions?type=phrase')
 			await expect(page.getByText(phrase.text)).toBeVisible()
 		} finally {
 			// Clean up: Delete the phrase (which cascades to translation and card)
@@ -145,7 +145,22 @@ test.describe('Card Status Mutations', () => {
 				throw new Error('Phrase ID not found after supposedly creating phrase')
 
 			// 2. Navigate to request page where heart icon should be visible
-			await page.goto(`/learn/hin/requests/${request!.id}`)
+			await page.goto(`/learn/hin/contributions`)
+			// Should navigate back to requests index
+			await page.waitForURL('/learn/hin/contributions?type=request')
+
+			// 4. Verify the new request is showing up on the index page
+			await expect(page.getByText(request!.prompt)).toBeVisible()
+
+			// Get the request ID from the "View Details" link in the card containing the prompt
+			const requestCard = page.locator(
+				`div.group:has-text("${request?.prompt}")`
+			)
+			const viewDetailsLink = requestCard.getByRole('link', {
+				name: 'Discussion',
+			})
+			await viewDetailsLink.click()
+			await page.waitForURL(`/learn/hin/requests/${request?.id}`)
 
 			// Verify the phrase is visible on the request page
 			await expect(page.getByText(phrase.text)).toBeVisible()

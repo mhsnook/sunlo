@@ -8,12 +8,13 @@ import { useSidebar } from '@/components/ui/sidebar'
 import OneSidebarMenu from '@/components/navs/one-sidebar-menu'
 
 const deckLinks = [
-	'/learn/$lang',
 	'/learn/$lang/review',
-	'/learn/$lang/search',
-	'/learn/$lang/requests',
 	'/learn/$lang/feed',
+	'/learn/$lang/search',
 	'/learn/$lang/add-phrase',
+	'/learn/$lang/requests/new',
+	'/learn/$lang/contributions',
+	'/learn/$lang',
 	'/learn/$lang/deck-settings',
 ]
 const friendsMenu = makeLinks([

@@ -206,7 +206,8 @@ test('test with multiple phrases', async ({ page }) => {
 
 	try {
 		// Test something with both phrases
-		await page.goto('/learn/hin/library')
+		// @@TODO this will be the "my-stuff" page when we rename/relink it
+		await page.goto('/learn/hin/contributions')
 		await expect(page.getByText('phrase 1')).toBeVisible()
 		await expect(page.getByText('phrase 2')).toBeVisible()
 	} finally {

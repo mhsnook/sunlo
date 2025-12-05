@@ -36,7 +36,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				'/learn/$lang/review',
 				'/learn/$lang/feed',
 				'/learn/$lang',
-				'/learn/$lang/requests',
+				'/learn/$lang/contributions',
 			],
 			contextMenu: [
 				'/learn/$lang/search',
