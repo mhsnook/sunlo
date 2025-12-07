@@ -20,6 +20,7 @@ import {
 	MessageSquareQuote,
 	MessagesSquare,
 	Newspaper,
+	Rocket,
 	Search,
 	Settings,
 	Share,
@@ -153,13 +154,13 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 
 	const languageLinks = {
 		'/learn/$lang': {
-			name: 'Stats',
-			title: `My Review Stats`,
-			Icon: ChartBarDecreasing,
+			name: `Home`,
+			title: `${languages[lang]} Home`,
 			link: {
 				to: '/learn/$lang',
 				params: { lang },
 			},
+			Icon: HouseHeart,
 		},
 		'/learn/$lang/search': {
 			name: `Search`,
@@ -169,6 +170,15 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: Search,
+		},
+		'/learn/$lang/stats': {
+			name: 'Stats',
+			title: `My Review Stats`,
+			Icon: ChartBarDecreasing,
+			link: {
+				to: '/learn/$lang/stats',
+				params: { lang },
+			},
 		},
 		'/learn/$lang/deck-settings': {
 			name: 'Settings',
@@ -180,13 +190,13 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: Settings,
 		},
 		'/learn/$lang/review': {
-			name: 'Home',
-			title: `${languages[lang]} Home`,
+			name: 'Review',
+			title: `Daily Review`,
 			link: {
 				to: '/learn/$lang/review',
 				params: { lang },
 			},
-			Icon: HouseHeart,
+			Icon: Rocket,
 		},
 		'/learn/$lang/feed': {
 			name: `Feed`,
