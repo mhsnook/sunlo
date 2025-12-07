@@ -15,6 +15,7 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 		titleBar: {
 			title: `Requests for ${languages[lang]} Phrases`,
 			subtitle: `See what people are learning all across the network`,
+			onBackClick: '/learn',
 		} as TitleBar,
 	}),
 })
@@ -65,7 +66,7 @@ function DeckFeedPage() {
 							Post a new card request
 						</Link>
 					</>
-				:	<div className="space-y-4">
+				:	<div className="bg-background rounded-sm border p-1">
 						{requests.map((request) => (
 							<RequestItem key={request.id} request={request} />
 						))}

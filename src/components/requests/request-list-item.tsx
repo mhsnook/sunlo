@@ -10,7 +10,6 @@ import {
 
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
@@ -30,8 +29,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	if (!request) return null
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	return (
-		<Card className="group border-border/50 hover:border-border transition-all duration-200 hover:shadow-md">
-			<CardHeader>
+		<div className="group transition-all duration-200 not-last:border-b">
+			<div className="space-y-1 px-6 py-6">
 				<div className="flex flex-row items-center justify-between gap-2">
 					<Flagged name="multiple_languages_feed">
 						<LangBadge lang={request.lang} />
@@ -64,8 +63,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						{ago(request.created_at)}
 					</Link>{' '}
 				</div>
-			</CardHeader>
-			<CardContent>
+			</div>
+			<div className="px-6 pb-6">
 				<div className="space-y-4">
 					<Blockquote>{request.prompt}</Blockquote>
 				</div>
@@ -121,7 +120,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						</SendRequestToFriendDialog>
 					</div>
 				</div>
-			</CardContent>
-		</Card>
+			</div>
+		</div>
 	)
 }
