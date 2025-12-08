@@ -1,6 +1,6 @@
-import { RouterProvider, Register } from '@tanstack/react-router'
-import { useAuth } from '@/lib/use-auth'
 import { useMemo } from 'react'
+import { type Register, RouterProvider } from '@tanstack/react-router'
+import { useAuth } from '@/lib/use-auth'
 import { MyRouterContext } from './routes/__root'
 import { AwaitingAuthLoader } from './components/awaiting-auth-loader'
 

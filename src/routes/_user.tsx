@@ -1,11 +1,12 @@
 import { useEffect, type ComponentType } from 'react'
 import toast from 'react-hot-toast'
 import {
+	type RouteMatch,
 	createFileRoute,
 	Outlet,
-	type RouteMatch,
 	redirect,
 	useMatches,
+	Navigate,
 } from '@tanstack/react-router'
 
 import type { Tables } from '@/types/supabase'
@@ -22,6 +23,7 @@ import {
 	friendSummariesCollection,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
+import { dbStoreInit } from '@/lib/db-store'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -53,10 +55,23 @@ export const Route = createFileRoute('/_user')({
 			// at this point we should know the profile collection is
 			// at least fetching with the correct userId, so we can just await it
 			let profile = (await db.profile?.toArrayWhenReady())?.at(0)
-
+			console.log(`In route loader fn 1`, auth.userId, db.profile?.status, {
+				profile,
+			})
+			if (!profile) {
+				console.log(`In route loader fn 2`, auth.userId, db.profile?.status, {
+					profile,
+				})
+				dbStoreInit(auth.userId)
+				profile = (await db.profile?.toArrayWhenReady())?.at(0)
+				console.log(`In route loader fn 2.1`, auth.userId, db.profile?.status, {
+					profile,
+				})
+			}
 			if (!profile) {
 				console.log(
 					`Redirecting to /getting-started because no profile was found (twice).`,
+					auth.userId,
 					profile
 				)
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
@@ -151,6 +166,8 @@ function UserLayout() {
 		}
 	}, [userId])
 
+	// should only happen if we were logged in and then we logged out
+	if (!userId) return <Navigate to="/" />
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />

@@ -8,6 +8,7 @@ export const emptyAuth = {
 	userId: null,
 	userEmail: null,
 	userRole: null,
+	clear: async () => {},
 }
 
 type AuthNotLoaded = Readonly<typeof emptyAuth>
@@ -18,6 +19,7 @@ type AuthNotLoggedIn = {
 	userId: null
 	userEmail: null
 	userRole: null
+	clear: () => Promise<void>
 }
 type AuthLoggedIn = {
 	isLoaded: true
@@ -25,6 +27,7 @@ type AuthLoggedIn = {
 	userId: uuid
 	userEmail: string
 	userRole: RolesEnum
+	clear: () => Promise<void>
 }
 
 export type AuthLoaded = AuthNotLoggedIn | AuthLoggedIn

@@ -17,19 +17,22 @@ export const useDbStore = create<UserDbStore>(() => ({
 }))
 
 // imperatively initialize the profile when things change
-export const dbStoreInit = (userId: string | undefined | null) => {
+export const dbStoreInit = async (userId: string | undefined | null) => {
 	const db = useDbStore.getState()
 	// only act if there has been a change
 	if (db.userId !== userId) {
+		console.log(`In init fn 1`, userId)
 		if (db.userId) {
+			console.log(`In init fn 2`, userId)
 			// we remove the pointers immediately, then cleanup the clx
 			useDbStore.setState({ userId: null, profile: null })
-			void db.profile?.cleanup()
+			await db.profile?.cleanup()
 		}
 		if (userId) {
+			console.log(`In init fn 3`, userId)
 			// set the store values, then preload
 			// preload the profile when it's done getting cleaned up
-			void db.profile?.preload()
+			db.profile?.utils.refetch()
 			useDbStore.setState({ userId, profile: myProfileCollection })
 		}
 	}

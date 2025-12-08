@@ -20,9 +20,6 @@ import { useProfile } from '@/hooks/use-profile'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
 import { avatarUrlify } from '@/lib/hooks'
-import { useMutation } from '@tanstack/react-query'
-import supabase from '@/lib/supabase-client'
-import { clearUser } from '@/lib/collections'
 
 const data = makeLinks([
 	'/profile',
@@ -32,7 +29,7 @@ const data = makeLinks([
 
 export function NavUser() {
 	const { isMobile, setClosedMobile } = useSidebar()
-	const { isAuth, userEmail } = useAuth()
+	const { userEmail, clear } = useAuth()
 	const { data: profile } = useProfile()
 	const navigate = useNavigate()
 	const signOut = useMutation({
@@ -45,7 +42,6 @@ export function NavUser() {
 		},
 		onSuccess: async () => {
 			await clearUser()
-			void navigate({ to: '/' })
 		},
 	})
 
@@ -107,10 +103,13 @@ export function NavUser() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => signOut.mutate()}
+							onClick={() => {
+								clear().then(() => navigate({ to: '/' }))
+							}}
 							disabled={!isAuth || signOut.isPending}
 						>
 							<LogOut />
+
 							{signOut.isPending ? 'Signing out...' : 'Sign out'}
 						</DropdownMenuItem>
 					</DropdownMenuContent>

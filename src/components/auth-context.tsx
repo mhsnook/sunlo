@@ -1,4 +1,10 @@
-import { type PropsWithChildren, useState, useEffect, useMemo } from 'react'
+import {
+	type PropsWithChildren,
+	useState,
+	useEffect,
+	useMemo,
+	useCallback,
+} from 'react'
 import type { Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
@@ -9,6 +15,10 @@ import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
+	const clear = useCallback(async () => {
+		setIsLoaded(false)
+		await supabase.auth.signOut()
+	}, [])
 
 	useEffect(() => {
 		// Fetch initial session
@@ -46,6 +56,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 					userRole:
 						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 					isLoaded: true,
+					clear,
 				} as AuthLoaded)
 			:	emptyAuth,
 		[
