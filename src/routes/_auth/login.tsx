@@ -54,6 +54,7 @@ function LoginForm() {
 		},
 		onSuccess: (email: string | undefined) => {
 			if (email) {
+				// myProfileCollection.utils.refetch()
 				toast.success(`Logged in as ${email}`)
 			}
 			// we don't need to redirect here, because the <Navigate> will do that

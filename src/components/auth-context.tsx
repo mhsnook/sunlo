@@ -1,64 +1,46 @@
 import {
 	type PropsWithChildren,
 	useState,
-	useEffect,
 	useMemo,
 	useEffectEvent,
+	useLayoutEffect,
 } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { useQueryClient } from '@tanstack/react-query'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
+import { clearUser, myProfileCollection } from '@/lib/collections'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 export function AuthProvider({ children }: PropsWithChildren) {
-	const queryClient = useQueryClient()
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 
-	const safeInitialise = useEffectEvent(() => {
-		console.log('safeInitialise')
-		if (!sessionState && !isLoaded) {
-			console.log('safeInitialise if = true')
-			void supabase.auth.getSession().then(({ data: { session }, error }) => {
-				console.log('safeInitialise then stmt')
-				setSessionState(session)
-				if (!error) setIsLoaded(true)
-				else throw error
-			})
-		}
-	})
-
-	useEffect(() => {
-		if (!queryClient) {
-			console.log('Returning early bc queryClient hook has not come back')
-			return
-		}
-
-		const { data: listener } = supabase.auth.onAuthStateChange(
-			async (event, session) => {
-				console.log(`User auth event: ${event}`, session)
-
-				if (event === 'SIGNED_OUT')
-					queryClient.removeQueries({ queryKey: ['user'] })
-
-				if (event === 'INITIAL_SESSION') await myProfileCollection.preload()
-
-				if (event === 'SIGNED_IN' && session)
-					await myProfileCollection.utils.refetch()
-
-				setSessionState(session)
-				setIsLoaded(true)
+	const handleNewAuthState = useEffectEvent(
+		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
+			console.log(`User auth event: ${event}`, session)
+			if (event === 'SIGNED_OUT' || sessionState?.user.id !== session?.user.id)
+				void clearUser()
+			if (sessionState?.user.id) {
+				void myProfileCollection.preload()
 			}
-		)
-		safeInitialise()
+			setSessionState(session)
+			setIsLoaded(true)
+		}
+	)
+
+	useLayoutEffect(() => {
+		void supabase.auth.getSession().then(({ data: { session }, error }) => {
+			if (error) throw error
+			handleNewAuthState('GET_SESSION', session)
+		})
+		const { data: listener } =
+			supabase.auth.onAuthStateChange(handleNewAuthState)
 
 		return () => {
 			listener.subscription.unsubscribe()
 		}
-	}, [queryClient])
+	}, [])
 
 	const value = useMemo(
 		() =>
