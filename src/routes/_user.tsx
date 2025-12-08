@@ -23,9 +23,15 @@ import {
 	decksCollection,
 	friendSummariesCollection,
 	myProfileCollection,
-	myProfileQuery,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
+
+const loaderReturn = {
+	titleBar: {
+		title: `Learning Home`,
+		subtitle: `Which deck are we studying today?`,
+	} as TitleBar,
+}
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -44,20 +50,24 @@ export const Route = createFileRoute('/_user')({
 			})
 		}
 	},
-	loader: async ({ location, context: { queryClient } }) => {
-		let profile = await myProfileCollection.toArrayWhenReady()
-		if (!profile || !profile?.length) {
-			console.log('failed to load first profile, trying again', profile)
-			profile = await queryClient.ensureQueryData(myProfileQuery)
-			console.log('tried a second time to load the profile', profile)
+	loader: async ({ location }) => {
+		// all set: exit early
+		if (myProfileCollection.size === 1) return loaderReturn
+		// some weird: start over
+		if (myProfileCollection.status === 'error') {
+			await myProfileCollection.cleanup()
+			await myProfileCollection.preload()
+			// it's loading: wait
+		} else if (myProfileCollection.status !== 'ready') {
+			await myProfileCollection.preload()
 		}
-		// If there is no profile, go create one
+		// -still- no profile: refetch one time
+		if (!myProfileCollection.size) {
+			await myProfileCollection.utils.refetch()
+		}
+
 		if (location.pathname !== '/getting-started') {
-			if (!profile || !profile.length) {
-				console.log(
-					`Redirecting to /getting-started because no profile was found.`,
-					profile
-				)
+			if (!myProfileCollection.size) {
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw redirect({ to: '/getting-started' })
 			} else {
@@ -66,12 +76,7 @@ export const Route = createFileRoute('/_user')({
 			}
 		}
 
-		return {
-			titleBar: {
-				title: `Learning Home`,
-				subtitle: `Which deck are we studying today?`,
-			} as TitleBar,
-		}
+		return loaderReturn
 	},
 	component: UserLayout,
 	pendingComponent: Loader,

@@ -20,7 +20,7 @@ import { useProfile } from '@/hooks/use-profile'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
 import { avatarUrlify } from '@/lib/hooks'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { clearUser } from '@/lib/collections'
 
@@ -35,17 +35,15 @@ export function NavUser() {
 	const { isAuth, userEmail } = useAuth()
 	const { data: profile } = useProfile()
 	const navigate = useNavigate()
-	const client = useQueryClient()
 	const signOut = useMutation({
 		mutationFn: async () => {
 			const { error } = await supabase.auth.signOut()
 			if (error) {
-				console.log(`signOut`, error)
+				console.log(`auth.signOut error`, error)
 				throw error
 			}
 		},
 		onSuccess: async () => {
-			client.removeQueries({ queryKey: ['user'], exact: false })
 			await clearUser()
 			void navigate({ to: '/' })
 		},
