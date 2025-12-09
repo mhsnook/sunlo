@@ -1,4 +1,5 @@
 import { useProfile } from '@/hooks/use-profile'
+import { avatarUrlify } from '@/lib/hooks'
 import { User } from 'lucide-react'
 
 export default function AvatarSection() {
@@ -10,10 +11,10 @@ export default function AvatarSection() {
 					className="bg-foreground/20 mx-auto mb-2 flex size-36 flex-row justify-center rounded-full shadow-lg"
 					htmlFor="single"
 				>
-					{profile === null || !profile.avatarUrl ?
+					{!profile?.avatar_path ?
 						<User size={144} />
 					:	<img
-							src={profile.avatarUrl}
+							src={avatarUrlify(profile.avatar_path)}
 							alt="Your profile pic"
 							className="size-36 rounded-full object-cover"
 						/>

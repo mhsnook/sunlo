@@ -1,19 +1,23 @@
-import type { LanguageKnown, ProfileFull, uuid } from '@/types/main'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import type { uuid } from '@/types/main'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toast } from 'react-hot-toast'
-import { produce } from 'immer'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
-import { LanguagesKnownSchema } from '@/lib/schemas'
+import {
+	LanguagesKnownSchema,
+	LanguagesKnownType,
+	MyProfileSchema,
+	MyProfileType,
+} from '@/lib/schemas'
 import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { AvatarEditorField } from '@/routes/_user/profile/-avatar-editor-field'
-import { avatarUrlify } from '@/lib/utils'
+import { myProfileCollection } from '@/lib/collections'
 
 const ProfileEditFormSchema = z.object({
 	username: z
@@ -25,12 +29,11 @@ const ProfileEditFormSchema = z.object({
 
 type ProfileEditFormInputs = z.infer<typeof ProfileEditFormSchema>
 
-export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
-	const queryClient = useQueryClient()
+export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 	const initialData: ProfileEditFormInputs = {
 		username: profile.username,
 		avatar_path: profile.avatar_path,
-		languages_known: profile.languages_known as LanguageKnown[],
+		languages_known: profile.languages_known,
 	}
 	const uid: uuid = profile.uid
 
@@ -46,28 +49,14 @@ export function UpdateProfileForm({ profile }: { profile: ProfileFull }) {
 			return data
 		},
 		onSuccess: (data) => {
-			toast.success(`Successfully updated your profile`)
+			if (data)
+				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
 			reset({
 				username: data?.username ?? '',
 				avatar_path: data?.avatar_path ?? null,
-				languages_known: (data?.languages_known as LanguageKnown[]) ?? [],
+				languages_known: (data?.languages_known as LanguagesKnownType) ?? [],
 			})
-			if (data)
-				void queryClient.setQueryData<ProfileFull>(
-					['user', uid, 'profile'],
-					(old) => {
-						return produce<ProfileFull>(old!, (draft) => {
-							draft.username = data.username ?? ''
-							draft.avatar_path = data.avatar_path ?? ''
-							draft.avatarUrl = avatarUrlify(data.avatar_path)
-							draft.languages_known = data.languages_known
-						})
-					}
-				)
-			else
-				void queryClient.invalidateQueries({
-					queryKey: ['user', uid, 'profile'],
-				})
+			toast.success(`Successfully updated your profile`)
 		},
 	})
 

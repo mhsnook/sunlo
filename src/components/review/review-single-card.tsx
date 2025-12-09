@@ -2,15 +2,12 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
-import { OnePhraseComponentProps, TranslationRow } from '@/types/main'
-import { useReviewDayString, useReviewStage } from '@/hooks/use-review-store'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrase } from '@/hooks/use-language'
 import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
@@ -21,34 +18,45 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas'
+import { uuid } from '@/types/main'
+import { usePhrase } from '@/hooks/composite-phrase'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
 	// In a real application, you would trigger audio playback here
 }
 
-export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
-	const dayString = useReviewDayString()
+export function ReviewSingleCard({
+	pid,
+	reviewStage,
+	dayString,
+}: {
+	pid: uuid
+	reviewStage: number
+	dayString: string
+}) {
+	const { data: phrase, status } = usePhrase(pid)
+	if (status === 'not-found')
+		throw new Error(`Trying to review this card, but can't find it`)
 	const [revealCard, setRevealCard] = useState(false)
-	const { data: prevData } = useOneReviewToday(lang, dayString, pid)
-	const stage = useReviewStage()
+	const { data: prevData } = useOneReviewToday(dayString, pid)
 	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
 	const { mutate, isPending } = useReviewMutation(
 		pid,
-		lang,
 		dayString,
-		closeCard
+		closeCard,
+		reviewStage,
+		prevData
 	)
-
-	const { data: phrase } = useLanguagePhrase(pid, lang)
 
 	if (!phrase) return null
 
-	const showAnswers = prevData && stage === 1 ? true : revealCard
+	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
 	return (
 		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
-				<ContextMenu lang={lang} pid={pid} />
+				<ContextMenu phrase={phrase} />
 				<div className="mb-4 flex items-center justify-center">
 					<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
 					<Flagged name="text_to_speech">
@@ -56,7 +64,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 							size="icon"
 							variant="secondary"
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => playAudio(phrase.text!)}
+							onClick={() => playAudio(phrase.text)}
 							aria-label="Play original phrase"
 						>
 							<Play className="size-4" />
@@ -68,7 +76,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 				<div
 					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
-					{phrase.translations.map((trans: TranslationRow) => (
+					{phrase.translations?.map((trans: TranslationType) => (
 						<div
 							key={trans.id}
 							className="mt-4 flex items-center justify-center gap-2"
@@ -106,7 +114,7 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={
-								prevData?.score === 1 && stage < 4 ?
+								prevData?.score === 1 && reviewStage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
 							}
@@ -155,14 +163,19 @@ export function ReviewSingleCard({ pid, lang }: OnePhraseComponentProps) {
 	)
 }
 
-function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
+function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [isOpen, setIsOpen] = useState(false)
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" className="absolute top-4 right-4">
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Open context menu"
+					className="absolute top-4 right-4"
+				>
 					<MoreVertical />
-					<span className="sr-only">Open menu</span>
+					<span className="sr-only">Open context menu</span>
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
@@ -170,23 +183,21 @@ function ContextMenu({ lang, pid }: OnePhraseComponentProps) {
 					<PermalinkButton
 						to={'/learn/$lang/$id'}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang, id: pid }}
+						params={{ lang: phrase.lang, id: phrase.id }}
 						className="w-full px-2 py-1.5"
 						link
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<SendPhraseToFriendButton
-						lang={lang}
-						pid={pid}
+						phrase={phrase}
 						link
 						className="w-full px-2 py-1.5"
 					/>
 				</DropdownMenuItem>
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<PhraseExtraInfo
-						lang={lang}
-						pid={pid}
+						phrase={phrase}
 						link
 						className="w-full px-2 py-1.5"
 					/>

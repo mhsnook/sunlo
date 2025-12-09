@@ -12,21 +12,23 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
+import { useAllChats } from '@/hooks/use-friends'
 
 export function SendRequestToFriendDialog({
 	lang,
 	id,
 	children,
 }: {
-	lang: string | null
-	id: uuid | null
+	lang: string
+	id: uuid
 	children: ReactNode
 }) {
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
+	const { isReady } = useAllChats()
 	const sendRequestToFriendMutation = useMutation({
 		mutationKey: ['send-request-to-friend', lang, id],
 		mutationFn: async (friendUids: uuid[]) => {
@@ -35,7 +37,7 @@ export function SendRequestToFriendDialog({
 				sender_uid: userId,
 				recipient_uid: friendUid,
 				request_id: id,
-				lang: lang ?? '',
+				lang,
 				message_type: 'request' as const,
 			}))
 			const { data } = await supabase
@@ -45,9 +47,9 @@ export function SendRequestToFriendDialog({
 			return data
 		},
 		onSuccess: () => {
-			toast.success('Request sent to friend')
 			setOpen(false)
 			setUids([])
+			toast.success('Request sent to friend')
 		},
 		onError: () => toast.error('Something went wrong'),
 	})
@@ -66,7 +68,7 @@ export function SendRequestToFriendDialog({
 				<SelectMultipleFriends uids={uids} setUids={setUids} />
 
 				<Button
-					disabled={!uids.length}
+					disabled={!uids.length || !isReady}
 					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendRequestToFriendMutation.mutate(uids)}
 				>

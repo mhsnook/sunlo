@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
-import { useRelations } from '@/hooks/use-friends'
+import { useRelationInvitations } from '@/hooks/use-friends'
 
 import { LinkType } from '@/types/main'
 import {
-	BookOpenText,
+	ChartBarDecreasing,
+	CircleStar,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -13,14 +14,14 @@ import {
 	HouseHeart,
 	Lock,
 	LogIn,
+	Logs,
 	Mail,
-	MessageSquarePlus,
+	MessageCircleHeart,
 	MessageSquareQuote,
 	MessagesSquare,
 	Newspaper,
 	Rocket,
 	Search,
-	Send,
 	Settings,
 	Share,
 	UserPen,
@@ -52,7 +53,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			link: {
 				to: '/friends/requests',
 			},
-			useBadge: () => useRelations()?.data?.uids.invitations.length,
+			useBadge: () => useRelationInvitations()?.data?.length,
 		},
 		'/friends/chats': {
 			name: 'Chats',
@@ -153,13 +154,13 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 
 	const languageLinks = {
 		'/learn/$lang': {
-			name: languages[lang],
-			title: `${languages[lang]} Deck`,
-			Icon: HouseHeart,
+			name: `Home`,
+			title: `${languages[lang]} Home`,
 			link: {
 				to: '/learn/$lang',
 				params: { lang },
 			},
+			Icon: HouseHeart,
 		},
 		'/learn/$lang/search': {
 			name: `Search`,
@@ -169,6 +170,15 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: Search,
+		},
+		'/learn/$lang/stats': {
+			name: 'Stats',
+			title: `My Review Stats`,
+			Icon: ChartBarDecreasing,
+			link: {
+				to: '/learn/$lang/stats',
+				params: { lang },
+			},
 		},
 		'/learn/$lang/deck-settings': {
 			name: 'Settings',
@@ -181,22 +191,21 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/learn/$lang/review': {
 			name: 'Review',
-			title: 'Start a Review',
+			title: `Daily Review`,
 			link: {
 				to: '/learn/$lang/review',
 				params: { lang },
 			},
 			Icon: Rocket,
-			useBadge: () => 'star',
 		},
-		'/learn/$lang/library': {
-			name: `Library`,
-			title: `Browse ${languages[lang]} Library`,
+		'/learn/$lang/feed': {
+			name: `Feed`,
+			title: `${languages[lang]} Feed`,
 			link: {
-				to: '/learn/$lang/library',
+				to: '/learn/$lang/feed',
 				params: { lang },
 			},
-			Icon: BookOpenText,
+			Icon: Logs,
 		},
 		'/learn/$lang/add-phrase': {
 			name: 'Phrase',
@@ -205,16 +214,16 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/add-phrase',
 				params: { lang },
 			},
-			Icon: MessageSquarePlus,
+			Icon: MessageSquareQuote,
 		},
-		'/learn/$lang/requests': {
-			name: 'Requests',
-			title: 'Card Requests',
+		'/learn/$lang/contributions': {
+			name: 'Contributions',
+			title: 'My Contributions',
 			link: {
-				to: '/learn/$lang/requests',
+				to: '/learn/$lang/contributions',
 				params: { lang },
 			},
-			Icon: MessageSquareQuote,
+			Icon: CircleStar,
 		},
 		'/learn/$lang/requests/new': {
 			name: 'Request',
@@ -223,7 +232,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/requests/new',
 				params: { lang },
 			},
-			Icon: Send,
+			Icon: MessageCircleHeart,
 		},
 	}
 

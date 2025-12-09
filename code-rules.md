@@ -140,8 +140,7 @@ const DeckGoalSchema = z.object({
 type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
 
 function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
-	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	const {
 		control,
 		handleSubmit,
@@ -173,10 +172,8 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 		onSuccess: (data) => {
 			// usually use a toast for user feedback
 			toast.success('Your deck settings have been updated.')
-			// we usually invalidate queries rather than optimistically updating
-			void queryClient.invalidateQueries({
-				queryKey: ['user', lang, 'deck'],
-			})
+			// we directly update the local cache with collection.utils.writeInsert or writeUpdate
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 		},
 		onError: () => {
 			toast.error(
@@ -226,6 +223,10 @@ This example shows a
 4. the useMutation and how we type it using the database return type and the input value type
 5. the onSuccess, which often fires a toast to let the user know of the successful operation, and which usually either invalidates a query or updates the query cache
 6. the button and how we disable it when there's nothing to submit or it's already submitting.
+
+## Writing Tests
+
+1. Don't use page.navigate because it doesn't use the tanstack router and breaks the cache. Instead, click around the buttons and links in the app. Make re-useable functions in `goto-helpers.ts` for these interactions, if need be.
 
 ## Conversation
 

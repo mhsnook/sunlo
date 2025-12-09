@@ -1,12 +1,18 @@
 import { createStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
+
+import type { pids } from '@/types/main'
+import {
+	type ReviewsMap,
+	type ReviewStages,
+	useReviewsToday,
+} from './use-reviews'
 import { useReviewStore } from '@/components/review/review-context-provider'
-import type { ReviewStages, ReviewsMap, pids } from '@/types/main'
-import { useReviewsToday } from './use-reviews'
 
 const DEFAULT_PROPS = {
 	lang: '',
 	dayString: '',
+	countCards: -1,
 	stage: 0 as ReviewStages,
 	currentCardIndex: -1,
 }
@@ -20,10 +26,12 @@ type ReviewActions = {
 	gotoReviewAgains: (i: number) => void
 	gotoIndex: (i: number) => void
 	gotoNext: () => void
+	gotoEnd: () => void
 	gotoPrevious: () => void
 	init: (
 		lang: string,
 		dayString: string,
+		countCards: number,
 		stage?: ReviewStages,
 		index?: number
 	) => void
@@ -66,8 +74,18 @@ export function createReviewStore(lang: string, dayString: string) {
 							set((state) => ({
 								currentCardIndex: state.currentCardIndex - 1,
 							})),
+						gotoEnd: () =>
+							set((state) => ({
+								currentCardIndex: state.countCards,
+							})),
 
-						init: (lang: string, dayString: string, stage = 1, index = 0) =>
+						init: (
+							lang: string,
+							dayString: string,
+							countCards: number,
+							stage: ReviewStages = 1,
+							index: number = 0
+						) =>
 							set((state) => {
 								// if the lang doesn't match, we have an error
 								if (lang !== state.lang || dayString !== state.dayString)
@@ -77,18 +95,13 @@ export function createReviewStore(lang: string, dayString: string) {
 								// ensure we only init once
 								if (state.stage) return state
 								return {
-									currentCardIndex: index,
+									lang,
+									dayString,
+									countCards,
 									stage,
+									currentCardIndex: index,
 								}
 							}),
-
-						/*addReview: (review: ReviewRow) =>
-							set((state) => ({
-								reviewsMap: {
-									...state.reviewsMap,
-									[review.phrase_id!]: review,
-								},
-							})),*/
 					},
 				}),
 				{
@@ -96,6 +109,7 @@ export function createReviewStore(lang: string, dayString: string) {
 					partialize: (state): ReviewProps => ({
 						lang: state.lang,
 						dayString: state.dayString,
+						countCards: state.countCards,
 						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
 					}),
@@ -111,10 +125,10 @@ export function useNextValid(): number {
 	const day_session = useReviewDayString()
 	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData!
+	const { manifest, reviewsMap } = reviewsData
 	return stage < 3 ?
-			getIndexOfNextUnreviewedCard(manifest, reviewsMap, currentCardIndex)
-		:	getIndexOfNextAgainCard(manifest, reviewsMap, currentCardIndex)
+			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
+		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 export function getIndexOfNextUnreviewedCard(

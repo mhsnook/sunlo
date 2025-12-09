@@ -107,19 +107,6 @@ create type "public"."phrase_with_translations_input" as (
 
 alter type "public"."phrase_with_translations_input" owner to "postgres";
 
-create type "public"."translation_output" as ("id" "uuid", "lang" character(3), "text" "text");
-
-alter type "public"."translation_output" owner to "postgres";
-
-create type "public"."phrase_with_translations_output" as (
-	"id" "uuid",
-	"lang" character(3),
-	"text" "text",
-	"translations" "public"."translation_output" []
-);
-
-alter type "public"."phrase_with_translations_output" owner to "postgres";
-
 create
 or replace function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
@@ -243,58 +230,49 @@ alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "p
 create
 or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" []
-) returns setof "public"."phrase_with_translations_output" language "plpgsql" as $$
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
+) returns "jsonb" language "plpgsql" as $$
 declare
     phrase_item public.phrase_with_translations_input;
-    translation_item public.translation_input;
-    new_phrase_id uuid;
-    new_translation_id uuid;
-    result public.phrase_with_translations_output;
-    translation_outputs public.translation_output[];
+	 new_phrase public.phrase;
+    new_translation public.phrase_translation;
+    new_phrases public.phrase[] := '{}';
+    new_translations public.phrase_translation[] := '{}';
 begin
     foreach phrase_item in array p_phrases
     loop
-        -- Insert the phrase and get its ID.
-        insert into public.phrase (lang, text)
-        values (p_lang, phrase_item.phrase_text)
-        returning id into new_phrase_id;
+        -- Insert the phrase and get the whole new record.
+        insert into public.phrase (lang, text, added_by)
+        values (p_lang, phrase_item.phrase_text, p_user_id)
+        returning * into new_phrase;
 
-        -- Reset translations array for this phrase
-        translation_outputs := '{}';
+        new_phrases := array_append(new_phrases, new_phrase);
 
         -- Insert all translations for the new phrase
         if array_length(phrase_item.translations, 1) > 0 then
-            foreach translation_item in array phrase_item.translations
+            for i in 1..array_length(phrase_item.translations, 1)
             loop
                 insert into public.phrase_translation (phrase_id, lang, text)
-                values (new_phrase_id, translation_item.lang, translation_item.text)
-                returning id into new_translation_id;
+                values (new_phrase.id, (phrase_item.translations[i]).lang, (phrase_item.translations[i]).text)
+                returning * into new_translation;
 
-                -- Add the new translation to our output array
-                translation_outputs := array_append(
-                    translation_outputs,
-                    (new_translation_id, translation_item.lang, translation_item.text)::public.translation_output
-                );
+                new_translations := array_append(new_translations, new_translation);
             end loop;
         end if;
 
-        -- Construct the result for the current phrase
-        result := (
-            new_phrase_id,
-            p_lang,
-            phrase_item.phrase_text,
-            translation_outputs
-        )::public.phrase_with_translations_output;
-
-        return next result;
     end loop;
+    return jsonb_build_object(
+      'phrases', to_jsonb(new_phrases),
+      'translations', to_jsonb(new_translations)
+    );
 end;
 $$;
 
 alter function "public"."bulk_add_phrases" (
 	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" []
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) owner to "postgres";
 
 create
@@ -1968,17 +1946,20 @@ grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "
 
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" []
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) to "anon";
 
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" []
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) to "authenticated";
 
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" []
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) to "service_role";
 
 grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";

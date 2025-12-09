@@ -1,19 +1,21 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
-import { uuid, ProfileInsert } from '@/types/main'
-import { LanguagesKnownSchema } from '@/lib/schemas'
-import { useAuth } from '@/lib/hooks'
+import type { TablesInsert } from '@/types/supabase'
+import type { TitleBar, uuid } from '@/types/main'
+import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
+import { useAuth } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
-import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { Button } from '@/components/ui/button'
 import supabase from '@/lib/supabase-client'
+import { myProfileCollection } from '@/lib/collections'
+import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
+import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -23,11 +25,17 @@ export const Route = createFileRoute('/_user/getting-started')({
 	validateSearch: (search?: Record<string, unknown>): GettingStartedProps => {
 		return search ?
 				{
-					referrer: (search.referrer as string) || '',
+					referrer: (search.referrer as string) || undefined,
 				}
 			:	{}
 	},
 	component: GettingStartedPage,
+	loader: () => ({
+		titleBar: {
+			title: `Getting Started`,
+			subtitle: `Set your username and dive in!`,
+		} as TitleBar,
+	}),
 })
 
 function GettingStartedPage() {
@@ -40,7 +48,7 @@ function GettingStartedPage() {
 		: userRole === 'learner' ? '/learn/add-deck'
 		: '/friends'
 
-	return profile !== null ?
+	return profile ?
 			<Navigate to={nextPage} />
 		:	<main className="w-app px-[5cqw] py-10">
 				<div className="my-4 space-y-4 text-center">
@@ -67,8 +75,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 function ProfileCreationForm({ userId }: { userId: string }) {
-	const queryClient = useQueryClient()
-
 	const {
 		register,
 		control,
@@ -83,7 +89,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 
 	const mainForm = useMutation({
 		mutationKey: ['user', userId],
-		mutationFn: async (values: ProfileInsert) => {
+		mutationFn: async (values: TablesInsert<'user_profile'>) => {
 			const { data } = await supabase
 				.from('user_profile')
 				.upsert(values)
@@ -92,10 +98,14 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				.select()
 			return data
 		},
-		onSuccess: async (data) => {
-			console.log(`Success! deck, profile`, data)
+		onSuccess: (data) => {
+			if (!data)
+				throw new Error(
+					`Somehow the server didn't return any data for the new profile...`
+				)
+			console.log(`Success! Profile:`, data)
+			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
 			toast.success('Success!')
-			await queryClient.invalidateQueries({ queryKey: ['user'] })
 		},
 		onError: (error) => {
 			console.log(`Error:`, error)

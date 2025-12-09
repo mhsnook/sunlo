@@ -41,22 +41,22 @@ import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/cha
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
 import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
+import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
 import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
-import { Route as UserLearnLangRequestsRouteImport } from './routes/_user/learn/$lang.requests'
-import { Route as UserLearnLangLibraryRouteImport } from './routes/_user/learn/$lang.library'
+import { Route as UserLearnLangFeedRouteImport } from './routes/_user/learn/$lang.feed'
 import { Route as UserLearnLangDeckSettingsRouteImport } from './routes/_user/learn/$lang.deck-settings'
+import { Route as UserLearnLangContributionsRouteImport } from './routes/_user/learn/$lang.contributions'
 import { Route as UserLearnLangBulkAddRouteImport } from './routes/_user/learn/$lang.bulk-add'
 import { Route as UserLearnLangAddPhraseRouteImport } from './routes/_user/learn/$lang.add-phrase'
 import { Route as UserLearnLangIdRouteImport } from './routes/_user/learn/$lang.$id'
 import { Route as UserFriendsSearchUidRouteImport } from './routes/_user/friends/search.$uid'
-import { Route as UserFriendsChatsFriendIdRouteImport } from './routes/_user/friends/chats.$friendId'
+import { Route as UserFriendsChatsFriendUidRouteImport } from './routes/_user/friends/chats.$friendUid'
 import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
-import { Route as UserLearnLangRequestsIndexRouteImport } from './routes/_user/learn/$lang.requests.index'
 import { Route as UserLearnLangReviewGoRouteImport } from './routes/_user/learn/$lang.review.go'
 import { Route as UserLearnLangRequestsNewRouteImport } from './routes/_user/learn/$lang.requests.new'
 import { Route as UserLearnLangRequestsIdRouteImport } from './routes/_user/learn/$lang.requests.$id'
-import { Route as UserFriendsChatsFriendIdRecommendRouteImport } from './routes/_user/friends/chats.$friendId.recommend'
+import { Route as UserFriendsChatsFriendUidRecommendRouteImport } from './routes/_user/friends/chats.$friendUid.recommend'
 
 const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
@@ -231,6 +231,11 @@ const UserFriendsChatsIndexRoute = UserFriendsChatsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UserFriendsChatsRoute,
 } as any)
+const UserLearnLangStatsRoute = UserLearnLangStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => UserLearnLangRoute,
+} as any)
 const UserLearnLangSearchRoute = UserLearnLangSearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -241,20 +246,21 @@ const UserLearnLangReviewRoute = UserLearnLangReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-const UserLearnLangRequestsRoute = UserLearnLangRequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
-  getParentRoute: () => UserLearnLangRoute,
-} as any)
-const UserLearnLangLibraryRoute = UserLearnLangLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
+const UserLearnLangFeedRoute = UserLearnLangFeedRouteImport.update({
+  id: '/feed',
+  path: '/feed',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
 const UserLearnLangDeckSettingsRoute =
   UserLearnLangDeckSettingsRouteImport.update({
     id: '/deck-settings',
     path: '/deck-settings',
+    getParentRoute: () => UserLearnLangRoute,
+  } as any)
+const UserLearnLangContributionsRoute =
+  UserLearnLangContributionsRouteImport.update({
+    id: '/contributions',
+    path: '/contributions',
     getParentRoute: () => UserLearnLangRoute,
   } as any)
 const UserLearnLangBulkAddRoute = UserLearnLangBulkAddRouteImport.update({
@@ -277,10 +283,10 @@ const UserFriendsSearchUidRoute = UserFriendsSearchUidRouteImport.update({
   path: '/$uid',
   getParentRoute: () => UserFriendsSearchRoute,
 } as any)
-const UserFriendsChatsFriendIdRoute =
-  UserFriendsChatsFriendIdRouteImport.update({
-    id: '/$friendId',
-    path: '/$friendId',
+const UserFriendsChatsFriendUidRoute =
+  UserFriendsChatsFriendUidRouteImport.update({
+    id: '/$friendUid',
+    path: '/$friendUid',
     getParentRoute: () => UserFriendsChatsRoute,
   } as any)
 const UserLearnLangReviewIndexRoute =
@@ -289,12 +295,6 @@ const UserLearnLangReviewIndexRoute =
     path: '/',
     getParentRoute: () => UserLearnLangReviewRoute,
   } as any)
-const UserLearnLangRequestsIndexRoute =
-  UserLearnLangRequestsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => UserLearnLangRequestsRoute,
-  } as any)
 const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
   id: '/go',
   path: '/go',
@@ -302,20 +302,20 @@ const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
 } as any)
 const UserLearnLangRequestsNewRoute =
   UserLearnLangRequestsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => UserLearnLangRequestsRoute,
+    id: '/requests/new',
+    path: '/requests/new',
+    getParentRoute: () => UserLearnLangRoute,
   } as any)
 const UserLearnLangRequestsIdRoute = UserLearnLangRequestsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => UserLearnLangRequestsRoute,
+  id: '/requests/$id',
+  path: '/requests/$id',
+  getParentRoute: () => UserLearnLangRoute,
 } as any)
-const UserFriendsChatsFriendIdRecommendRoute =
-  UserFriendsChatsFriendIdRecommendRouteImport.update({
+const UserFriendsChatsFriendUidRecommendRoute =
+  UserFriendsChatsFriendUidRecommendRouteImport.update({
     id: '/recommend',
     path: '/recommend',
-    getParentRoute: () => UserFriendsChatsFriendIdRoute,
+    getParentRoute: () => UserFriendsChatsFriendUidRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -348,23 +348,23 @@ export interface FileRoutesByFullPath {
   '/friends/': typeof UserFriendsIndexRoute
   '/learn/': typeof UserLearnIndexRoute
   '/profile/': typeof UserProfileIndexRoute
-  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
+  '/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRoutesByTo {
@@ -392,21 +392,22 @@ export interface FileRoutesByTo {
   '/friends': typeof UserFriendsIndexRoute
   '/learn': typeof UserLearnIndexRoute
   '/profile': typeof UserProfileIndexRoute
-  '/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/learn/$lang/library': typeof UserLearnLangLibraryRoute
+  '/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
-  '/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRoutesById {
@@ -442,23 +443,23 @@ export interface FileRoutesById {
   '/_user/friends/': typeof UserFriendsIndexRoute
   '/_user/learn/': typeof UserLearnIndexRoute
   '/_user/profile/': typeof UserProfileIndexRoute
-  '/_user/friends/chats/$friendId': typeof UserFriendsChatsFriendIdRouteWithChildren
+  '/_user/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/_user/friends/search/$uid': typeof UserFriendsSearchUidRoute
   '/_user/learn/$lang/$id': typeof UserLearnLangIdRoute
   '/_user/learn/$lang/add-phrase': typeof UserLearnLangAddPhraseRoute
   '/_user/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
+  '/_user/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
-  '/_user/learn/$lang/library': typeof UserLearnLangLibraryRoute
-  '/_user/learn/$lang/requests': typeof UserLearnLangRequestsRouteWithChildren
+  '/_user/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
+  '/_user/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/_user/friends/chats/$friendId/recommend': typeof UserFriendsChatsFriendIdRecommendRoute
+  '/_user/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/_user/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRouteTypes {
@@ -493,23 +494,23 @@ export interface FileRouteTypes {
     | '/friends/'
     | '/learn/'
     | '/profile/'
-    | '/friends/chats/$friendId'
+    | '/friends/chats/$friendUid'
     | '/friends/search/$uid'
     | '/learn/$lang/$id'
     | '/learn/$lang/add-phrase'
     | '/learn/$lang/bulk-add'
+    | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
-    | '/learn/$lang/library'
-    | '/learn/$lang/requests'
+    | '/learn/$lang/feed'
     | '/learn/$lang/review'
     | '/learn/$lang/search'
+    | '/learn/$lang/stats'
     | '/friends/chats/'
     | '/learn/$lang/'
-    | '/friends/chats/$friendId/recommend'
+    | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
-    | '/learn/$lang/requests/'
     | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -537,21 +538,22 @@ export interface FileRouteTypes {
     | '/friends'
     | '/learn'
     | '/profile'
-    | '/friends/chats/$friendId'
+    | '/friends/chats/$friendUid'
     | '/friends/search/$uid'
     | '/learn/$lang/$id'
     | '/learn/$lang/add-phrase'
     | '/learn/$lang/bulk-add'
+    | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
-    | '/learn/$lang/library'
+    | '/learn/$lang/feed'
     | '/learn/$lang/search'
+    | '/learn/$lang/stats'
     | '/friends/chats'
     | '/learn/$lang'
-    | '/friends/chats/$friendId/recommend'
+    | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
-    | '/learn/$lang/requests'
     | '/learn/$lang/review'
   id:
     | '__root__'
@@ -586,23 +588,23 @@ export interface FileRouteTypes {
     | '/_user/friends/'
     | '/_user/learn/'
     | '/_user/profile/'
-    | '/_user/friends/chats/$friendId'
+    | '/_user/friends/chats/$friendUid'
     | '/_user/friends/search/$uid'
     | '/_user/learn/$lang/$id'
     | '/_user/learn/$lang/add-phrase'
     | '/_user/learn/$lang/bulk-add'
+    | '/_user/learn/$lang/contributions'
     | '/_user/learn/$lang/deck-settings'
-    | '/_user/learn/$lang/library'
-    | '/_user/learn/$lang/requests'
+    | '/_user/learn/$lang/feed'
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
+    | '/_user/learn/$lang/stats'
     | '/_user/friends/chats/'
     | '/_user/learn/$lang/'
-    | '/_user/friends/chats/$friendId/recommend'
+    | '/_user/friends/chats/$friendUid/recommend'
     | '/_user/learn/$lang/requests/$id'
     | '/_user/learn/$lang/requests/new'
     | '/_user/learn/$lang/review/go'
-    | '/_user/learn/$lang/requests/'
     | '/_user/learn/$lang/review/'
   fileRoutesById: FileRoutesById
 }
@@ -848,6 +850,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsChatsIndexRouteImport
       parentRoute: typeof UserFriendsChatsRoute
     }
+    '/_user/learn/$lang/stats': {
+      id: '/_user/learn/$lang/stats'
+      path: '/stats'
+      fullPath: '/learn/$lang/stats'
+      preLoaderRoute: typeof UserLearnLangStatsRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
     '/_user/learn/$lang/search': {
       id: '/_user/learn/$lang/search'
       path: '/search'
@@ -862,18 +871,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangReviewRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
-    '/_user/learn/$lang/requests': {
-      id: '/_user/learn/$lang/requests'
-      path: '/requests'
-      fullPath: '/learn/$lang/requests'
-      preLoaderRoute: typeof UserLearnLangRequestsRouteImport
-      parentRoute: typeof UserLearnLangRoute
-    }
-    '/_user/learn/$lang/library': {
-      id: '/_user/learn/$lang/library'
-      path: '/library'
-      fullPath: '/learn/$lang/library'
-      preLoaderRoute: typeof UserLearnLangLibraryRouteImport
+    '/_user/learn/$lang/feed': {
+      id: '/_user/learn/$lang/feed'
+      path: '/feed'
+      fullPath: '/learn/$lang/feed'
+      preLoaderRoute: typeof UserLearnLangFeedRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
     '/_user/learn/$lang/deck-settings': {
@@ -881,6 +883,13 @@ declare module '@tanstack/react-router' {
       path: '/deck-settings'
       fullPath: '/learn/$lang/deck-settings'
       preLoaderRoute: typeof UserLearnLangDeckSettingsRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
+    '/_user/learn/$lang/contributions': {
+      id: '/_user/learn/$lang/contributions'
+      path: '/contributions'
+      fullPath: '/learn/$lang/contributions'
+      preLoaderRoute: typeof UserLearnLangContributionsRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
     '/_user/learn/$lang/bulk-add': {
@@ -911,11 +920,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsSearchUidRouteImport
       parentRoute: typeof UserFriendsSearchRoute
     }
-    '/_user/friends/chats/$friendId': {
-      id: '/_user/friends/chats/$friendId'
-      path: '/$friendId'
-      fullPath: '/friends/chats/$friendId'
-      preLoaderRoute: typeof UserFriendsChatsFriendIdRouteImport
+    '/_user/friends/chats/$friendUid': {
+      id: '/_user/friends/chats/$friendUid'
+      path: '/$friendUid'
+      fullPath: '/friends/chats/$friendUid'
+      preLoaderRoute: typeof UserFriendsChatsFriendUidRouteImport
       parentRoute: typeof UserFriendsChatsRoute
     }
     '/_user/learn/$lang/review/': {
@@ -924,13 +933,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/learn/$lang/review/'
       preLoaderRoute: typeof UserLearnLangReviewIndexRouteImport
       parentRoute: typeof UserLearnLangReviewRoute
-    }
-    '/_user/learn/$lang/requests/': {
-      id: '/_user/learn/$lang/requests/'
-      path: '/'
-      fullPath: '/learn/$lang/requests/'
-      preLoaderRoute: typeof UserLearnLangRequestsIndexRouteImport
-      parentRoute: typeof UserLearnLangRequestsRoute
     }
     '/_user/learn/$lang/review/go': {
       id: '/_user/learn/$lang/review/go'
@@ -941,24 +943,24 @@ declare module '@tanstack/react-router' {
     }
     '/_user/learn/$lang/requests/new': {
       id: '/_user/learn/$lang/requests/new'
-      path: '/new'
+      path: '/requests/new'
       fullPath: '/learn/$lang/requests/new'
       preLoaderRoute: typeof UserLearnLangRequestsNewRouteImport
-      parentRoute: typeof UserLearnLangRequestsRoute
+      parentRoute: typeof UserLearnLangRoute
     }
     '/_user/learn/$lang/requests/$id': {
       id: '/_user/learn/$lang/requests/$id'
-      path: '/$id'
+      path: '/requests/$id'
       fullPath: '/learn/$lang/requests/$id'
       preLoaderRoute: typeof UserLearnLangRequestsIdRouteImport
-      parentRoute: typeof UserLearnLangRequestsRoute
+      parentRoute: typeof UserLearnLangRoute
     }
-    '/_user/friends/chats/$friendId/recommend': {
-      id: '/_user/friends/chats/$friendId/recommend'
+    '/_user/friends/chats/$friendUid/recommend': {
+      id: '/_user/friends/chats/$friendUid/recommend'
       path: '/recommend'
-      fullPath: '/friends/chats/$friendId/recommend'
-      preLoaderRoute: typeof UserFriendsChatsFriendIdRecommendRouteImport
-      parentRoute: typeof UserFriendsChatsFriendIdRoute
+      fullPath: '/friends/chats/$friendUid/recommend'
+      preLoaderRoute: typeof UserFriendsChatsFriendUidRecommendRouteImport
+      parentRoute: typeof UserFriendsChatsFriendUidRoute
     }
   }
 }
@@ -981,28 +983,28 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
-interface UserFriendsChatsFriendIdRouteChildren {
-  UserFriendsChatsFriendIdRecommendRoute: typeof UserFriendsChatsFriendIdRecommendRoute
+interface UserFriendsChatsFriendUidRouteChildren {
+  UserFriendsChatsFriendUidRecommendRoute: typeof UserFriendsChatsFriendUidRecommendRoute
 }
 
-const UserFriendsChatsFriendIdRouteChildren: UserFriendsChatsFriendIdRouteChildren =
+const UserFriendsChatsFriendUidRouteChildren: UserFriendsChatsFriendUidRouteChildren =
   {
-    UserFriendsChatsFriendIdRecommendRoute:
-      UserFriendsChatsFriendIdRecommendRoute,
+    UserFriendsChatsFriendUidRecommendRoute:
+      UserFriendsChatsFriendUidRecommendRoute,
   }
 
-const UserFriendsChatsFriendIdRouteWithChildren =
-  UserFriendsChatsFriendIdRoute._addFileChildren(
-    UserFriendsChatsFriendIdRouteChildren,
+const UserFriendsChatsFriendUidRouteWithChildren =
+  UserFriendsChatsFriendUidRoute._addFileChildren(
+    UserFriendsChatsFriendUidRouteChildren,
   )
 
 interface UserFriendsChatsRouteChildren {
-  UserFriendsChatsFriendIdRoute: typeof UserFriendsChatsFriendIdRouteWithChildren
+  UserFriendsChatsFriendUidRoute: typeof UserFriendsChatsFriendUidRouteWithChildren
   UserFriendsChatsIndexRoute: typeof UserFriendsChatsIndexRoute
 }
 
 const UserFriendsChatsRouteChildren: UserFriendsChatsRouteChildren = {
-  UserFriendsChatsFriendIdRoute: UserFriendsChatsFriendIdRouteWithChildren,
+  UserFriendsChatsFriendUidRoute: UserFriendsChatsFriendUidRouteWithChildren,
   UserFriendsChatsIndexRoute: UserFriendsChatsIndexRoute,
 }
 
@@ -1042,23 +1044,6 @@ const UserFriendsRouteWithChildren = UserFriendsRoute._addFileChildren(
   UserFriendsRouteChildren,
 )
 
-interface UserLearnLangRequestsRouteChildren {
-  UserLearnLangRequestsIdRoute: typeof UserLearnLangRequestsIdRoute
-  UserLearnLangRequestsNewRoute: typeof UserLearnLangRequestsNewRoute
-  UserLearnLangRequestsIndexRoute: typeof UserLearnLangRequestsIndexRoute
-}
-
-const UserLearnLangRequestsRouteChildren: UserLearnLangRequestsRouteChildren = {
-  UserLearnLangRequestsIdRoute: UserLearnLangRequestsIdRoute,
-  UserLearnLangRequestsNewRoute: UserLearnLangRequestsNewRoute,
-  UserLearnLangRequestsIndexRoute: UserLearnLangRequestsIndexRoute,
-}
-
-const UserLearnLangRequestsRouteWithChildren =
-  UserLearnLangRequestsRoute._addFileChildren(
-    UserLearnLangRequestsRouteChildren,
-  )
-
 interface UserLearnLangReviewRouteChildren {
   UserLearnLangReviewGoRoute: typeof UserLearnLangReviewGoRoute
   UserLearnLangReviewIndexRoute: typeof UserLearnLangReviewIndexRoute
@@ -1076,24 +1061,30 @@ interface UserLearnLangRouteChildren {
   UserLearnLangIdRoute: typeof UserLearnLangIdRoute
   UserLearnLangAddPhraseRoute: typeof UserLearnLangAddPhraseRoute
   UserLearnLangBulkAddRoute: typeof UserLearnLangBulkAddRoute
+  UserLearnLangContributionsRoute: typeof UserLearnLangContributionsRoute
   UserLearnLangDeckSettingsRoute: typeof UserLearnLangDeckSettingsRoute
-  UserLearnLangLibraryRoute: typeof UserLearnLangLibraryRoute
-  UserLearnLangRequestsRoute: typeof UserLearnLangRequestsRouteWithChildren
+  UserLearnLangFeedRoute: typeof UserLearnLangFeedRoute
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
   UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
+  UserLearnLangStatsRoute: typeof UserLearnLangStatsRoute
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
+  UserLearnLangRequestsIdRoute: typeof UserLearnLangRequestsIdRoute
+  UserLearnLangRequestsNewRoute: typeof UserLearnLangRequestsNewRoute
 }
 
 const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangIdRoute: UserLearnLangIdRoute,
   UserLearnLangAddPhraseRoute: UserLearnLangAddPhraseRoute,
   UserLearnLangBulkAddRoute: UserLearnLangBulkAddRoute,
+  UserLearnLangContributionsRoute: UserLearnLangContributionsRoute,
   UserLearnLangDeckSettingsRoute: UserLearnLangDeckSettingsRoute,
-  UserLearnLangLibraryRoute: UserLearnLangLibraryRoute,
-  UserLearnLangRequestsRoute: UserLearnLangRequestsRouteWithChildren,
+  UserLearnLangFeedRoute: UserLearnLangFeedRoute,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
   UserLearnLangSearchRoute: UserLearnLangSearchRoute,
+  UserLearnLangStatsRoute: UserLearnLangStatsRoute,
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
+  UserLearnLangRequestsIdRoute: UserLearnLangRequestsIdRoute,
+  UserLearnLangRequestsNewRoute: UserLearnLangRequestsNewRoute,
 }
 
 const UserLearnLangRouteWithChildren = UserLearnLangRoute._addFileChildren(

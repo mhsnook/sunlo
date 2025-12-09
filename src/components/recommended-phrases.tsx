@@ -1,24 +1,19 @@
-import languages from '@/lib/languages'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useCompositePids } from '@/hooks/composite-pids'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
-import { LangOnlyComponentProps, pids } from '@/types/main'
-import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { Link } from '@tanstack/react-router'
+import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+
+import type { pids } from '@/types/main'
+import languages from '@/lib/languages'
+import { useCompositePids } from '@/hooks/composite-pids'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
 type PhraseSectionProps = {
 	description: string
 	pids: pids
-	lang: string
 	Icon: LucideIcon
 }
 
-const PhraseSection = ({
-	description,
-	pids,
-	lang,
-	Icon,
-}: PhraseSectionProps) => {
+const PhraseSection = ({ description, pids, Icon }: PhraseSectionProps) => {
 	return (
 		<div className="space-y-4 rounded p-4 shadow">
 			<p className="my-1 flex flex-row justify-between text-lg">
@@ -28,7 +23,7 @@ const PhraseSection = ({
 			{pids?.length > 0 ?
 				<div className="grid grid-cols-1 gap-2 @xl:grid-cols-2">
 					{pids.map((pid) => (
-						<PhraseTinyCard key={pid} pid={pid} lang={lang} />
+						<PhraseTinyCard key={pid} pid={pid} />
 					))}
 				</div>
 			:	<p className="text-muted-foreground">No recommendations available</p>}
@@ -36,10 +31,10 @@ const PhraseSection = ({
 	)
 }
 
-export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
+export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 	const recommendations = useCompositePids(lang)
 
-	//if (!recommendations) return null
+	if (!recommendations) return null
 
 	const hasRecommendations =
 		recommendations.top8.popular.length > 0 ||
@@ -47,10 +42,15 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 		recommendations.top8.easiest.length > 0
 
 	return !hasRecommendations ?
-			<p className="text-muted-foreground text-sm italic">
+			<p className="text-muted-foreground mx-4 text-sm italic">
 				There are no smart recommendations for you at this time. Check back
 				later or consider{' '}
-				<Link className="s-link-muted" to="/learn/$lang/requests/new">
+				<Link
+					className="s-link-muted"
+					to="/learn/$lang/requests/new"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ lang }}
+				>
 					requesting a phrase
 				</Link>
 				.
@@ -64,19 +64,16 @@ export function RecommendedPhrasesCard({ lang }: LangOnlyComponentProps) {
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
 						pids={recommendations.top8.popular.slice(0, 4)}
-						lang={lang}
 						Icon={TrendingUp}
 					/>
 					<PhraseSection
 						description="Newly added"
 						pids={recommendations.top8.newest.slice(0, 4)}
-						lang={lang}
 						Icon={Brain}
 					/>
 					<PhraseSection
 						description="Broaden your vocabulary"
 						pids={recommendations.top8.easiest.slice(0, 4)}
-						lang={lang}
 						Icon={Carrot}
 					/>
 				</CardContent>

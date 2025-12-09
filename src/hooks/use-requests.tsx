@@ -1,82 +1,73 @@
-import { queryOptions, useQuery } from '@tanstack/react-query'
-import type { uuid } from '@/types/main'
-import type { PublicProfile } from '@/routes/_user/friends/-types'
-import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
-import { Tables } from '@/types/supabase'
+import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import type { Tables } from '@/types/supabase'
+import { useUserId } from '@/lib/use-auth'
+import {
+	phraseRequestsCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
+import { phrasesFull } from '@/lib/live-collections'
+import {
+	PhraseFullFullType,
+	PhraseRequestType,
+	PublicProfileType,
+} from '@/lib/schemas'
+import { UseLiveQueryResult } from '@/types/main'
 
-export const allMyPhraseRequestsQuery = (lang: string, userId: uuid) =>
-	queryOptions({
-		queryKey: ['user', 'phrase_requests', lang],
-		queryFn: async ({ client }) => {
-			const { data } = await supabase
-				.from('meta_phrase_request')
-				.select()
-				.eq('requester_uid', userId)
-				.eq('lang', lang)
-				.order('created_at', { ascending: false })
-				.throwOnError()
-
-			// we're pulling this info anyway, we may as well cache it in the profiles cache
-			if (data && data.length) {
-				data.forEach((request) => {
-					if (request.requester)
-						client.setQueryData(
-							[
-								'public',
-								'profile',
-								() => (request.requester as PublicProfile).uid,
-							],
-							request.requester
-						)
-				})
-			}
-
-			return data
-		},
-	})
-
-export function useAllMyPhraseRequests(lang: string) {
-	const { userId } = useAuth()
-	return useQuery({
-		...allMyPhraseRequestsQuery(lang, userId!),
-		enabled: !!userId,
-	})
+export function useAllMyPhraseRequestsLang(
+	lang: string
+): UseLiveQueryResult<PhraseRequestType[]> {
+	const userId = useUserId()
+	return useLiveQuery((q) =>
+		q
+			.from({ request: phraseRequestsCollection })
+			.where(({ request }) =>
+				and(eq(request.requester_uid, userId), eq(request.lang, lang))
+			)
+			.orderBy(({ request }) => request.created_at, 'desc')
+	)
 }
 
-export async function getOneFullPhraseRequest(id: uuid) {
-	// @TODO would like to check the "my requests" cache but it is language-specific
-	// and we don't have a language here 🙄
-	let { data } = await supabase
-		.from('meta_phrase_request')
-		.select('*, phrase(*, phrase_translation(*))')
-		.eq('id', id)
-		.maybeSingle()
-		.throwOnError()
-	if (!data) return null
-	if (Array.isArray(data.phrase) && Array.isArray(data.phrases)) {
-		data.phrase.forEach((phrase) => {
-			data.phrases!.find((p) => p.id === phrase.id).translations =
-				phrase.phrase_translation
-		})
-	}
-
-	return data
+export function useRequestsLang(
+	lang: string
+): UseLiveQueryResult<PhraseRequestType[]> {
+	return useLiveQuery((q) =>
+		q
+			.from({ request: phraseRequestsCollection })
+			.where(({ request }) => eq(request.lang, lang))
+			.orderBy(({ request }) => request.created_at, 'desc')
+	)
 }
 
-export type PhraseRequestFull = Awaited<
-	ReturnType<typeof getOneFullPhraseRequest>
->
+export const useRequest = (
+	id: string
+): UseLiveQueryResult<
+	PhraseRequestType & { profile: PublicProfileType | undefined }
+> =>
+	useLiveQuery((q) =>
+		q
+			.from({ req: phraseRequestsCollection })
+			.where(({ req }) => eq(req.id, id))
+			.findOne()
+			.join({ profile: publicProfilesCollection }, ({ req, profile }) =>
+				eq(profile.uid, req.requester_uid)
+			)
+			.select(({ req, profile }) => ({
+				...req,
+				profile,
+			}))
+	)
 
-export function phraseRequestQuery(id: string) {
-	return queryOptions({
-		queryKey: ['phrase_request', id],
-		queryFn: async () => await getOneFullPhraseRequest(id),
-	})
-}
+export const usePhrasesFromRequest = (
+	id: string
+): UseLiveQueryResult<PhraseFullFullType[]> =>
+	useLiveQuery((q) =>
+		q
+			.from({ phrase: phrasesFull })
+			.where(({ phrase }) => eq(phrase.request_id, id))
+	)
 
 export type FulfillRequestResponse = {
 	phrase: Tables<'phrase'>
 	translation: Tables<'phrase_translation'>
-	card: Tables<'user_card'>
+	card: Tables<'user_card'> | null
 }

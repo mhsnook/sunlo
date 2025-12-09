@@ -1,4 +1,4 @@
-import type { CardStatusEnum, pids, uuid } from '@/types/main'
+import type { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
@@ -33,11 +33,17 @@ import {
 } from '@/components/language-is-empty'
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { useReviewsTodayStats } from '@/hooks/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
+import {
+	CardMetaSchema,
+	CardStatusEnumType,
+	DailyReviewStateSchema,
+} from '@/lib/schemas'
+import { cardsCollection, reviewDaysCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -47,8 +53,7 @@ function ReviewPageSetup() {
 	const { lang } = Route.useParams()
 	const dayString = useReviewDayString()
 	const stage = useReviewStage()
-	const { userId } = useAuth()
-	const { queryClient } = Route.useRouteContext()
+	const userId = useUserId()
 	// const retrievabilityTarget = 0.9
 	const { data: meta } = useDeckMeta(lang)
 	const recs = useCompositePids(lang)
@@ -62,9 +67,6 @@ function ReviewPageSetup() {
 		throw new Error('Pids/recs should not be null here :/, even once')
 
 	const today_active = deckPids.today_active
-
-	// 1. we have today's active cards plus we need x more, based on user's goal
-	const countNeeded = meta.daily_review_goal ?? 15
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
@@ -80,9 +82,9 @@ function ReviewPageSetup() {
 	/*const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
 		friendRecsFiltered.slice(0, countNeeded)
 	)*/
-	const friendRecsSelected = friendRecsFiltered.slice(0, countNeeded)
+	const friendRecsSelected = friendRecsFiltered.slice(0, meta.daily_review_goal)
 
-	const countNeeded2 = min0(countNeeded - friendRecsSelected.length)
+	const countNeeded2 = min0(meta.daily_review_goal - friendRecsSelected.length)
 
 	// 3. algo recs set by user
 	const algoRecsFiltered = useMemo(
@@ -142,7 +144,7 @@ function ReviewPageSetup() {
 				algoRecsSelected,
 				cardsUnreviewedActiveSelected,
 			])
-				.sort((a, b) => (a > b ? -1 : 1))
+				.toSorted((a, b) => (a > b ? -1 : 1))
 				.slice(0, countNeeded4),
 		[
 			recs.language_selectables,
@@ -184,66 +186,90 @@ function ReviewPageSetup() {
 	const { mutate, isPending } = useMutation({
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
-			const { data } = await supabase
-				.from('user_card')
-				.upsert(
-					cardsToCreate.map((pid) => ({
-						phrase_id: pid,
-						lang,
-						uid: userId!,
-						status: 'active' as CardStatusEnum,
-					}))
-				)
-				.select()
-				.throwOnError()
+			console.log(
+				`Starting mutation to create ${allCardsForToday.length} cards`,
+				{ cardsToCreate }
+			)
+			const { data: newCards } =
+				cardsToCreate.length === 0 ?
+					{ data: [] }
+				:	await supabase
+						.from('user_card')
+						.upsert(
+							cardsToCreate.map((pid) => ({
+								phrase_id: pid,
+								lang,
+								uid: userId,
+								status: 'active' as CardStatusEnumType,
+							}))
+						)
+						.select()
+						.throwOnError()
 
-			const newCardsCreated = data.map((c) => c.phrase_id)
-			if (newCardsCreated.length !== cardsToCreate.length) {
+			const { data: reviewDay } =
+				newCards.length !== cardsToCreate.length ?
+					{ data: null }
+				:	await supabase
+						.from('user_deck_review_state')
+						.insert({
+							lang,
+							day_session: dayString,
+							uid: userId,
+							manifest: allCardsForToday,
+						})
+						.throwOnError()
+						.select()
+						.single()
+
+			if (
+				!Array.isArray(reviewDay?.manifest) ||
+				reviewDay.manifest.length !== allCardsForToday.length
+			)
 				console.warn(
-					`Error creating cards: expected ${cardsToCreate.length} but got ${newCardsCreated.length}`
+					`Error creating daily session: expected manifest of length ${allCardsForToday.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
 				)
-			}
-			const { data: data2 } = await supabase
-				.from('user_deck_review_state')
-				.insert({
-					lang,
-					day_session: dayString,
-					uid: userId!,
-					manifest: allCardsForToday,
-				})
-				.throwOnError()
-				.select()
-				.single()
-
-			// console.log(`I made the manifest:`, data2)
 
 			return {
-				total: allCardsForToday.length,
-				cards_fresh: freshCards.length,
-				cards_created: newCardsCreated.length,
-				manifest: data2?.manifest as Array<uuid>,
+				countCards: allCardsForToday.length,
+				countCardsFresh: freshCards.length,
+				countCardsCreated: newCards.length,
+				newCards,
+				reviewDay,
 			}
 		},
-		onSuccess: async (sums) => {
-			toast.success(
-				`Ready to go! ${sums.total} to study today, ${sums.cards_fresh} fresh new cards ready to go.`
-			)
-			if (sums.cards_created !== cardsToCreate.length)
-				console.log(
-					`Alert: unexpected mismatch between cards created and cards sent for creation: ${sums.cards_created}, ${cardsToCreate.length}`
+		onSettled: (data, error) => {
+			if (error) throw error
+			if (!data) throw new Error('No data returned from mutation')
+			if (!data.reviewDay)
+				throw new Error('No daily session data returned from mutation')
+
+			// add new records to local db collections
+			data.newCards.forEach((c) => {
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
+			})
+			if (data.reviewDay)
+				reviewDaysCollection.utils.writeInsert(
+					DailyReviewStateSchema.parse(data.reviewDay)
+				)
+			if (data.newCards.length !== cardsToCreate.length)
+				throw new Error(
+					`Error creating new cards for today's review. Expected ${cardsToCreate.length} but got back ${data.newCards.length}.`
+				)
+			if (!Array.isArray(data.reviewDay.manifest))
+				throw new Error(
+					`Error creating today's review session: server returned type "${typeof data.reviewDay.manifest}"`
 				)
 			if (
-				!Array.isArray(sums.manifest) ||
-				sums.manifest.length !== allCardsForToday.length
+				data.reviewDay.manifest.length === 0 ||
+				data.reviewDay.manifest.length !== allCardsForToday.length
 			)
-				console.log(
-					`Alert: unexpected mismatch between manifest before and after creation: ${allCardsForToday.length}, ${sums.manifest?.length}`,
-					allCardsForToday,
-					sums.manifest
+				throw new Error(
+					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
-
-			initLocalReviewState(lang, dayString)
-			await queryClient.refetchQueries({ queryKey: ['user', lang] })
+			initLocalReviewState(lang, dayString, data.countCards)
+			toast.success(
+				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
+			)
 		},
 	})
 
@@ -357,10 +383,10 @@ function ReviewPageSetup() {
 								</CardContent>
 							</Card>
 						</div>
-						{!(countNeeded > allCardsForToday.length) ? null : (
+						{!(meta.daily_review_goal > allCardsForToday.length) ? null : (
 							<NotEnoughCards
 								lang={lang}
-								countNeeded={countNeeded}
+								countNeeded={meta.daily_review_goal}
 								newCardsCount={freshCards.length}
 								totalCards={allCardsForToday.length}
 							/>

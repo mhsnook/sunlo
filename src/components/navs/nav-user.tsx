@@ -15,10 +15,15 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useAuth, useSignOut } from '@/lib/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
+import { avatarUrlify } from '@/lib/hooks'
+import { useMutation } from '@tanstack/react-query'
+import supabase from '@/lib/supabase-client'
+import { clearUser } from '@/lib/collections'
+import { removeSbTokens } from '@/lib/utils'
 
 const data = makeLinks([
 	'/profile',
@@ -30,9 +35,26 @@ export function NavUser() {
 	const { isMobile, setClosedMobile } = useSidebar()
 	const { isAuth, userEmail } = useAuth()
 	const { data: profile } = useProfile()
-	const signOut = useSignOut()
+	const navigate = useNavigate()
+	const signOut = useMutation({
+		mutationFn: async () =>
+			(await supabase.auth.signOut({ scope: 'local' }))?.error,
+		onError: (error) => {
+			if (error) {
+				console.log(`auth.signOut error`, error, `clearing session manually`)
+				removeSbTokens()
+				throw error
+			}
+		},
+		onSettled: async () => {
+			await clearUser()
+			void navigate({ to: '/' })
+		},
+	})
+
 	if (!profile) return null
-	const { username, avatarUrl } = profile
+	const { username, avatar_path } = profile
+	const avatarUrl = avatarUrlify(avatar_path)
 
 	return (
 		<SidebarMenu>

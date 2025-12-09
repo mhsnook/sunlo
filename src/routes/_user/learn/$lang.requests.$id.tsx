@@ -1,19 +1,12 @@
-import type { LanguageLoaded, PhraseFull, Tag } from '@/types/main'
-
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import {
-	useSuspenseQuery,
-	useMutation,
-	useQueryClient,
-} from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
 import { MessageSquarePlus, Send } from 'lucide-react'
 
-import { PublicProfile } from '../friends/-types'
 import supabase from '@/lib/supabase-client'
 import {
 	Card,
@@ -22,6 +15,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
+import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,7 +30,6 @@ import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
-import { avatarUrlify } from '@/lib/utils'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import {
 	Collapsible,
@@ -46,22 +39,20 @@ import {
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import {
 	type FulfillRequestResponse,
-	type PhraseRequestFull,
-	phraseRequestQuery,
+	usePhrasesFromRequest,
+	useRequest,
 } from '@/hooks/use-requests'
-import { useProfile } from '@/hooks/use-profile'
 import { Blockquote } from '@/components/ui/blockquote'
 import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from '@/components/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
+import { cardsCollection, phrasesCollection } from '@/lib/collections'
+import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
-	loader: async ({ params: { id }, context: { queryClient } }) => {
-		await queryClient.ensureQueryData(phraseRequestQuery(id))
-	},
 })
 
 const FulfillRequestSchema = z.object({
@@ -75,9 +66,8 @@ type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
 function FulfillRequestPage() {
 	const { id, lang } = Route.useParams()
 	const [isAnswering, setIsAnswering] = useState(false)
-	const queryClient = useQueryClient()
-	const { data: request } = useSuspenseQuery(phraseRequestQuery(id))
-	const { data: profile } = useProfile()
+	const { data: request, isLoading } = useRequest(id)
+	const { data: phrases } = usePhrasesFromRequest(id)
 
 	const form = useForm<FulfillRequestFormInputs>({
 		resolver: zodResolver(FulfillRequestSchema),
@@ -94,6 +84,7 @@ function FulfillRequestPage() {
 		FulfillRequestFormInputs
 	>({
 		mutationFn: async (values: FulfillRequestFormInputs) => {
+			console.log(`Beginning mutation`, { values })
 			const { data: rpcData, error: rpcError } = await supabase.rpc(
 				'fulfill_phrase_request',
 				{
@@ -106,85 +97,25 @@ function FulfillRequestPage() {
 			if (rpcError) throw rpcError
 			return rpcData as FulfillRequestResponse
 		},
-		onSuccess: async (data, variables) => {
-			toast.success('Thank you for your contribution!')
+		onSuccess: (data, variables) => {
 			setIsAnswering(false)
 			form.reset({
 				phrase_text: '',
 				translation_text: '',
 				translation_lang: variables.translation_lang,
 			})
-			const { phrase, translation } = data
-			const newPhrase: PhraseFull = {
-				id: phrase.id,
-				text: phrase.text,
-				lang: phrase.lang,
-				created_at: phrase.created_at,
-				avg_difficulty: null,
-				avg_stability: null,
-				count_active: 0,
-				count_cards: 0,
-				count_learned: 0,
-				count_skipped: 0,
-				percent_active: 0,
-				percent_learned: 0,
-				percent_skipped: 0,
-				rank_least_difficult: null,
-				rank_least_skipped: null,
-				rank_most_learned: null,
-				rank_most_stable: null,
-				rank_newest: null,
-				request_id: id,
-				added_by: phrase.added_by,
-				added_by_profile: {
-					uid: profile!.uid,
-					username: profile!.username,
-					avatar_path: profile!.avatar_path,
-					avatarUrl: avatarUrlify(profile!.avatar_path),
-				} as PublicProfile,
-				translations: [translation],
-				tags: [] as Tag[],
-			}
-
-			const newRequest: PhraseRequestFull = {
-				...request,
-				phrases: (!Array.isArray(request?.phrases) ?
-					[newPhrase]
-				:	[newPhrase, ...request.phrases]) as PhraseFull[],
-				status: 'fulfilled',
-			}
-
-			// Optimistically update the request data
-			queryClient.setQueryData(phraseRequestQuery(id).queryKey, newRequest)
-
-			queryClient.setQueryData(
-				['language', newPhrase.lang],
-				(oldData: LanguageLoaded | undefined) => {
-					const prevData = oldData ?? {
-						pids: [],
-						phrasesMap: {},
-					}
-
-					return {
-						...prevData,
-						pids: [...prevData.pids, phrase.id],
-						phrasesMap: {
-							...prevData.phrasesMap,
-							[phrase.id]: newPhrase,
-						},
-					}
-				}
-			)
-			// If the user fulfilling the request is the one who made it,
-			// a new card was created for them, so we need to refetch their deck.
-			if (profile?.uid && request?.requester_uid === profile?.uid) {
-				await queryClient.refetchQueries({ queryKey: ['user', lang, 'deck'] })
-			}
+			const newPhrase = { ...data.phrase, translations: [data.translation] }
+			phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(newPhrase))
+			if (data.card)
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+			toast.success('Thank you for your contribution!')
 		},
 		onError: (err: Error) => {
 			toast.error(`An error occurred: ${err.message}`)
 		},
 	})
+
+	if (isLoading) return <Loader />
 
 	if (!request)
 		return (
@@ -197,8 +128,7 @@ function FulfillRequestPage() {
 			</Callout>
 		)
 
-	const noAnswers =
-		!Array.isArray(request.phrases) || request.phrases.length === 0
+	const noAnswers = phrases?.length === 0
 
 	return (
 		<main>
@@ -211,8 +141,8 @@ function FulfillRequestPage() {
 						Request from{' '}
 						<UserPermalink
 							uid={request.requester_uid}
-							username={request.requester?.username}
-							avatarUrl={avatarUrlify(request.requester?.avatar_path)}
+							username={request.profile?.username}
+							avatar_path={request.profile?.avatar_path}
 							className="px-1"
 						/>
 						{' • '}
@@ -222,21 +152,19 @@ function FulfillRequestPage() {
 				<CardContent>
 					<Blockquote>&rdquo;{request.prompt}&ldquo;</Blockquote>
 
-					{request.phrases && request.phrases.length > 0 && (
+					{phrases && phrases.length > 0 && (
 						<div className="mb-6 space-y-4">
 							<h3 className="h3">
-								{request.phrases.length} answer
-								{request.phrases.length > 1 && 's'} so far
+								{phrases.length} answer
+								{phrases.length > 1 && 's'} so far
 							</h3>
-							{request.phrases.map((phrase: PhraseFull) => (
+							{phrases.map((phrase) => (
 								<div key={phrase.id} className="rounded-lg p-4 shadow">
 									<p className="text-muted-foreground mb-2 text-sm">
 										<UserPermalink
 											uid={phrase.added_by}
-											username={phrase.added_by_profile?.username}
-											avatarUrl={avatarUrlify(
-												phrase.added_by_profile?.avatar_path
-											)}
+											username={phrase.profile?.username}
+											avatar_path={phrase.profile?.avatar_path}
 											className="px-1"
 										/>
 										{' • '}
@@ -262,7 +190,7 @@ function FulfillRequestPage() {
 						<CollapsibleTrigger asChild className={noAnswers ? 'hidden' : ''}>
 							<Button>
 								<MessageSquarePlus />{' '}
-								{Array.isArray(request.phrases) && request.phrases.length > 0 ?
+								{Array.isArray(phrases) && phrases.length > 0 ?
 									'Submit another answer'
 								:	'Answer this request'}
 							</Button>

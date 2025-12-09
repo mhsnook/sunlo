@@ -1,5 +1,3 @@
-import type { uuid } from '@/types/main'
-
 import {
 	useCallback,
 	useEffect,
@@ -21,44 +19,37 @@ import {
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import languages from '@/lib/languages'
-import { useLanguagePhrasesMap, useLanguagePids } from '@/hooks/use-language'
-import { LanguagePhrasesAccordionComponent } from '@/components/language-phrases-accordion'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
+import languages from '@/lib/languages'
 import { useLanguageTags } from '@/hooks/use-language'
 import { Separator } from '@/components/ui/separator'
 import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
+import { DisplayPhrasesQuery } from '@/components/display-phrase-query'
 
 export const Route = createFileRoute('/_user/learn/$lang/search')({
 	validateSearch: PhraseSearchSchema,
 	component: SearchTab,
 })
 
-type SearchablePhrase = {
-	pid: uuid
-	text: string
-}
-
 function SearchTab() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
-	const { text: filter, tags: tagsFilter } = Route.useSearch()
-	const [text, setText] = useState(filter)
-	const debouncedText = useDebounce(text, 300)
+	const { text: searchText, tags: tagsFilter } = Route.useSearch()
+	const [liveText, setLiveText] = useState(searchText)
+	const debouncedText = useDebounce(liveText, 100)
 
 	useEffect(() => {
-		if (debouncedText !== filter) {
+		if (debouncedText !== searchText) {
 			void navigate({ search: (prev) => ({ ...prev, text: debouncedText }) })
 		}
-	}, [debouncedText, filter, navigate])
+	}, [debouncedText, searchText, navigate])
 
-	const { data: phrasesMap } = useLanguagePhrasesMap(lang)
-	const { data: pids } = useLanguagePids(lang)
-
-	const { data: allTags = [] } = useLanguageTags(lang)
+	const { data: langTags } = useLanguageTags(lang)
 	const tagOptions = useMemo(
-		() => allTags?.map((tag) => ({ value: tag, label: tag })) ?? [],
-		[allTags]
+		() =>
+			(langTags ?? []).map((tag) => ({ value: tag.name, label: tag.name })) ??
+			[],
+		[langTags]
 	)
 
 	const selectedTags = useMemo(
@@ -85,54 +76,6 @@ function SearchTab() {
 		[navigate, selectedTags]
 	)
 
-	const searchablePhrases: Array<SearchablePhrase> = useMemo(() => {
-		if (!pids || !phrasesMap) return []
-		return pids.map((pid: uuid) => {
-			const phrase = phrasesMap[pid]
-			const tagsText = (phrase.tags ?? [])
-				.map((t: { name: string }) => t.name)
-				.join(', ')
-			return {
-				pid,
-				text: [
-					phrase.text,
-					...phrase.translations.map((t) => t.text),
-					tagsText,
-				].join(', '),
-			}
-		})
-	}, [phrasesMap, pids])
-
-	const searchResults = useMemo(() => {
-		const textFilteredPids =
-			!filter?.trim() ?
-				pids
-			:	searchablePhrases
-					.filter((searchable) =>
-						searchable.text.toUpperCase().includes(filter.toUpperCase())
-					)
-					.map((s) => s.pid)
-
-		if (!textFilteredPids) return []
-		if (!tagsFilter) return textFilteredPids
-		if (phrasesMap === undefined) return []
-
-		if (tagsFilter.length === 0) return textFilteredPids
-
-		return textFilteredPids.filter((pid) => {
-			const phrase = phrasesMap[pid]
-			if (!phrase?.tags) return false
-			return tagsFilter
-				.split(',')
-				.filter(Boolean)
-				.every((selectedTag) =>
-					phrase.tags
-						.filter(Boolean)
-						.some((phraseTag) => phraseTag?.name === selectedTag)
-				)
-		})
-	}, [filter, searchablePhrases, pids, tagsFilter, phrasesMap])
-
 	return (
 		<Card>
 			<CardHeader>
@@ -145,8 +88,8 @@ function SearchTab() {
 					<Input
 						placeholder="Enter a phrase to search or add"
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onChange={(e) => setText(e.target.value)}
-						defaultValue={filter}
+						onChange={(e) => setLiveText(e.target.value)}
+						defaultValue={searchText}
 					/>
 				</div>
 				<FancyMultiSelect
@@ -171,13 +114,7 @@ function SearchTab() {
 					</Button>
 				</div>
 				<Separator />
-
-				{searchResults?.length ?
-					<LanguagePhrasesAccordionComponent lang={lang} pids={searchResults} />
-				:	<p className="text-muted-foreground mt-4 text-center">
-						No results found. Try searching for a phrase or add a new one.
-					</p>
-				}
+				<DisplayPhrasesQuery lang={lang} text={liveText} tags={selectedTags} />
 			</CardContent>
 		</Card>
 	)

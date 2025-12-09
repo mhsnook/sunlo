@@ -9,27 +9,35 @@ import {
 	useMatches,
 } from '@tanstack/react-router'
 
+import type { Tables } from '@/types/supabase'
 import { TitleBar } from '@/types/main'
-import {
-	ChatMessageRelative,
-	ChatMessageRow,
-	FriendRequestActionRow,
-} from '@/routes/_user/friends/-types'
 import supabase from '@/lib/supabase-client'
-import type { ChatsMap } from '@/hooks/use-friends'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
-import { profileQuery } from '@/hooks/use-profile'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
+import {
+	chatMessagesCollection,
+	decksCollection,
+	friendSummariesCollection,
+	myProfileCollection,
+} from '@/lib/collections'
+import { ChatMessageSchema } from '@/lib/schemas'
+
+const loaderReturn = {
+	titleBar: {
+		title: `Learning Home`,
+		subtitle: `Which deck are we studying today?`,
+	} as TitleBar,
+}
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
 		// If the user is logged out, redirect them to the login page
 		// console.log(`beforeLoad auth context:`, context.auth)
-		if (!context.auth?.isAuth) {
+		if (!context.auth.isAuth) {
 			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw redirect({
 				to: '/login',
@@ -41,30 +49,34 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
-		return context.auth
 	},
-	loader: async ({
-		context: {
-			queryClient,
-			auth: { userId },
-			profile,
-		},
-		location,
-	}) => {
-		if (profile === null) {
-			const data = await queryClient.ensureQueryData(profileQuery(userId))
-			if (location.pathname !== '/getting-started' && data === null) {
+	loader: async ({ location }) => {
+		// all set: exit early
+		if (myProfileCollection.size === 1) return loaderReturn
+		// some weird: start over
+		if (myProfileCollection.status === 'error') {
+			await myProfileCollection.cleanup()
+			await myProfileCollection.preload()
+			// it's loading: wait
+		} else if (myProfileCollection.status !== 'ready') {
+			await myProfileCollection.preload()
+		}
+		// -still- no profile: refetch one time
+		if (!myProfileCollection.size) {
+			await myProfileCollection.utils.refetch()
+		}
+
+		if (location.pathname !== '/getting-started') {
+			if (!myProfileCollection.size) {
 				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw redirect({ to: '/getting-started' })
+			} else {
+				void decksCollection.preload()
+				void friendSummariesCollection.preload()
 			}
 		}
 
-		return {
-			titleBar: {
-				title: `Learning Home`,
-				subtitle: `Which deck are we studying today?`,
-			} as TitleBar,
-		}
+		return loaderReturn
 	},
 	component: UserLayout,
 	pendingComponent: Loader,
@@ -93,9 +105,8 @@ function UserLayout() {
 	const sidebarExact =
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
-	const { userId } = useAuth()
+	const userId = useUserId()
 	useEffect(() => {
-		if (!userId) return
 		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
 			.on(
@@ -106,7 +117,7 @@ function UserLayout() {
 					table: 'friend_request_action',
 				},
 				(payload) => {
-					const newAction = payload.new as FriendRequestActionRow
+					const newAction = payload.new as Tables<'friend_request_action'>
 					if (
 						newAction.action_type === 'accept' &&
 						newAction.uid_for === userId
@@ -115,9 +126,7 @@ function UserLayout() {
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
 						toast.success('You are now connected')
 					// console.log(`new friend request action has come in`, payload)
-					void queryClient.invalidateQueries({
-						queryKey: ['user', userId, 'relations'],
-					})
+					void friendSummariesCollection.utils.refetch()
 				}
 			)
 			.subscribe()
@@ -132,30 +141,10 @@ function UserLayout() {
 					table: 'chat_message',
 				},
 				(payload) => {
-					const newMessage = payload.new as ChatMessageRow
-
-					queryClient.setQueryData(
-						['user', userId, 'chats'],
-						(oldData: ChatsMap | undefined): ChatsMap => {
-							const friendId =
-								newMessage.sender_uid === userId ?
-									newMessage.recipient_uid
-								:	newMessage.sender_uid
-
-							const newChatMessageRelative: ChatMessageRelative = {
-								...newMessage,
-								isMine: newMessage.sender_uid === userId,
-								friendId: friendId,
-							}
-
-							const currentChats = oldData ?? {}
-							const friendChatHistory = currentChats[friendId] ?? []
-
-							return {
-								...currentChats,
-								[friendId]: [...friendChatHistory, newChatMessageRelative],
-							}
-						}
+					const newMessage = payload.new as Tables<'chat_message'>
+					console.log(`new chat`, newMessage)
+					chatMessagesCollection.utils.writeInsert(
+						ChatMessageSchema.parse(newMessage)
 					)
 				}
 			)

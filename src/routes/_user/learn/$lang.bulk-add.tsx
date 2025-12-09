@@ -1,8 +1,6 @@
-import { LanguageLoaded, PhraseStub } from '@/types/main'
-
 import { useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useFieldArray, useForm, Controller, FieldError } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -27,8 +25,16 @@ import { useProfile } from '@/hooks/use-profile'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { mapArray } from '@/lib/utils'
-import { splitPhraseTranslations } from '@/hooks/composite-phrase'
+import { PhraseFullSchema } from '@/lib/schemas'
+import { phrasesCollection } from '@/lib/collections'
+import { Tables } from '@/types/supabase'
+import { uuid } from '@/types/main'
+import { WithPhrase } from '@/components/with-phrase'
+
+type BulkAddPhrasesResponse = {
+	phrases: Tables<'phrase'>[]
+	translations: Tables<'phrase_translation'>[]
+}
 
 const TranslationSchema = z.object({
 	lang: z.string().length(3, 'Please select a language'),
@@ -56,11 +62,10 @@ export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
-	const queryClient = useQueryClient()
 	const { data: profile } = useProfile()
 
 	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
-		Array<PhraseStub>
+		Array<uuid>
 	>([])
 
 	const {
@@ -89,46 +94,45 @@ function BulkAddPhrasesPage() {
 	})
 
 	const bulkAddMutation = useMutation<
-		Array<PhraseStub> | null,
+		BulkAddPhrasesResponse | null,
 		Error,
 		BulkAddPhrasesFormValues
 	>({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
+			console.log(`Attempting mutation`, { values })
 			const payload = {
 				p_lang: lang,
 				p_phrases: values.phrases,
+				p_user_id: profile!.uid,
 			}
 			const { data, error } = await supabase.rpc('bulk_add_phrases', payload)
+			console.log(`After mutation`, { values, data, error })
+
 			if (error) throw error
 			return data
 		},
-		onSuccess: (newlyAddedPhrases) => {
-			if (!newlyAddedPhrases) return
-			toast.success(`${newlyAddedPhrases.length} phrases added successfully!`)
-			const newPhrasesMap = mapArray(
-				newlyAddedPhrases.map((p) =>
-					splitPhraseTranslations(p, profile?.languagesToShow ?? [])
-				),
-				'id'
-			)
-			const newPids = newlyAddedPhrases.map((p) => p.id)
-			queryClient.setQueryData(
-				['language', lang],
-				(oldData: LanguageLoaded) => ({
-					meta: oldData.meta,
-					phrasesMap: {
-						...oldData.phrasesMap,
-						...newPhrasesMap,
-					},
-					pids: [...oldData.pids, ...newPids],
+		onSuccess: (data: BulkAddPhrasesResponse | null) => {
+			if (!data) {
+				toast('No data came back from the database :-/')
+				return
+			}
+			const phrasesToInsert = data.phrases.map((p) =>
+				PhraseFullSchema.parse({
+					...p,
+					translations: data.translations.filter((t) => t.phrase_id === p.id),
 				})
 			)
-			void queryClient.invalidateQueries({ queryKey: ['language', lang] })
-			setSuccessfullyAddedPhrases((prev) => [...newlyAddedPhrases, ...prev])
+			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
+
+			setSuccessfullyAddedPhrases((prev) => [
+				...phrasesToInsert.map((p) => p.id),
+				...prev,
+			])
 			// Reset the form for the next batch
 			reset({
 				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
 			})
+			toast.success(`${data.phrases.length} phrases added successfully!`)
 		},
 		onError: (error) => {
 			toast.error(`Error adding phrases: ${error.message}`)
@@ -192,8 +196,8 @@ function BulkAddPhrasesPage() {
 						<Separator className="my-6" />
 						<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
 						<div className="space-y-2">
-							{successfullyAddedPhrases.map((phrase) => (
-								<CardResultSimple key={phrase.id} phrase={phrase} />
+							{successfullyAddedPhrases.map((pid) => (
+								<WithPhrase key={pid} pid={pid} Component={CardResultSimple} />
 							))}
 						</div>
 					</div>

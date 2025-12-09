@@ -1,8 +1,6 @@
-import { DeckMeta } from '@/types/main'
-
-import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Archive, Rocket, HouseHeart, BookOpenText } from 'lucide-react'
+
+import { Archive, Rocket, HouseHeart, Logs } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -15,19 +13,19 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
+import { getThemeCss } from '@/lib/deck-themes'
+import { DeckMetaType } from '@/lib/schemas'
 
-export function DeckCard({ deck }: { deck: DeckMeta }) {
-	const ref = useRef<HTMLDivElement | null>(null)
-
+export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (
-		<div style={deck.themeCss} ref={ref}>
+		<div style={getThemeCss(deck.theme)}>
 			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
 				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
 					<Link
 						className="grow"
 						to="/learn/$lang"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: deck.lang! }}
+						params={{ lang: deck.lang }}
 					>
 						<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
 							<span>{deck.language}</span>
@@ -43,7 +41,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 								to="/learn/$lang/review"
 								className={buttonVariants({ size: 'icon' })}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
 								<Rocket />
 							</Link>
@@ -53,7 +51,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 
 				<CardContent className="space-y-2 p-4">
 					<div className="flex flex-wrap gap-2">
-						<DeckStatsBadges deckMeta={deck} />
+						<DeckStatsBadges lang={deck.lang} />
 					</div>
 				</CardContent>
 				<CardFooter className="block w-full space-y-4 p-4 pt-0">
@@ -61,7 +59,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 						{deck.archived ?
 							<ArchiveDeckButton
 								className="w-full grow basis-60"
-								lang={deck.lang!}
+								lang={deck.lang}
 								archived={deck.archived}
 							/>
 						:	<Link
@@ -71,7 +69,7 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 									'grow basis-40'
 								)}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
 								<HouseHeart />
 								Deck Home
@@ -79,27 +77,27 @@ export function DeckCard({ deck }: { deck: DeckMeta }) {
 						}
 						{!deck.archived ?
 							<Link
-								to="/learn/$lang/library"
+								to="/learn/$lang/feed"
 								className={cn(
 									buttonVariants({ variant: 'secondary' }),
 									`grow basis-60`
 								)}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: deck.lang! }}
+								params={{ lang: deck.lang }}
 							>
-								<BookOpenText />
-								Explore Library
+								<Logs />
+								Browse Feed
 							</Link>
 						:	null}
 					</div>
 					{/* Subtle stats footer */}
 					<div className="text-muted-foreground border-t pt-2 text-xs">
-						{deck.cards_active! + deck.cards_learned!} total cards •{' '}
+						{deck.cards_active + deck.cards_learned} total cards •{' '}
 						{!deck.cards_learned ?
 							`0 mastered`
 						:	`${(
 								(100 * deck.cards_learned) /
-								(deck.cards_learned + deck.cards_active!)
+								(deck.cards_learned + deck.cards_active)
 							).toFixed(0)} % mastered`
 						}
 					</div>

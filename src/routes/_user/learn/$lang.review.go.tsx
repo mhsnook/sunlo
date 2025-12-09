@@ -10,31 +10,22 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from '@/hooks/use-review-store'
-import { todayString } from '@/lib/utils'
-import { reviewsQuery, useManifest } from '@/hooks/use-reviews'
+import { useReviewDay } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
+import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	component: ReviewPage,
-	loader: async ({
-		params: { lang },
-		context: {
-			queryClient,
-			auth: { userId },
-		},
-	}) => {
-		const dayString: string = todayString()
-		// @ts-expect-error - unused variable
-		const _todaysReviewData = await queryClient.ensureQueryData(
-			reviewsQuery(userId!, lang, dayString)
-		)
+	loader: async () => {
+		const daysLoaded = reviewDaysCollection.preload()
+		const reviewsLoaded = cardReviewsCollection.preload()
+		await Promise.all([daysLoaded, reviewsLoaded])
 
 		return {
 			appnav: [],
-			dayString,
 		}
 	},
 })
@@ -42,17 +33,28 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 function ReviewPage() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
-	const { data: manifest } = useManifest(lang, dayString)
+	const { data: day, isLoading } = useReviewDay(lang, dayString)
 	const stage = useReviewStage()
 
-	if (typeof manifest !== 'object') return <Loader />
-	if (!manifest?.length || !stage) return <Navigate to=".." />
+	if (isLoading) return <Loader />
+	if (!day?.manifest?.length || !stage)
+		// @@TODO Remove these / file issues / repros
+		// return <Navigate to=".." /> // takes me to "../.."
+		// return <Navigate to=".." from={Route.fullPath} /> // /review and /review/go
+		return <Navigate to="/learn/$lang/review" from={Route.fullPath} /> // works for some reason
 
-	return <FlashCardReviewSession manifest={manifest} />
+	return (
+		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
+	)
 }
 
-function FlashCardReviewSession({ manifest }: { manifest: pids }) {
-	const { lang } = Route.useParams()
+function FlashCardReviewSession({
+	manifest,
+	dayString,
+}: {
+	manifest: pids
+	dayString: string
+}) {
 	const currentCardIndex = useCardIndex()
 	const reviewStage = useReviewStage()
 	const { gotoNext, gotoPrevious, gotoIndex } = useReviewActions()
@@ -123,7 +125,11 @@ function FlashCardReviewSession({ manifest }: { manifest: pids }) {
 							key={pid}
 							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
 						>
-							<ReviewSingleCard pid={pid} lang={lang} />
+							<ReviewSingleCard
+								pid={pid}
+								reviewStage={reviewStage}
+								dayString={dayString}
+							/>
 						</div>
 					))}
 				</div>

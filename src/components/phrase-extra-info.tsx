@@ -1,56 +1,46 @@
-import { CardFull, uuid } from '@/types/main'
+import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
+
 import { ago } from '@/lib/dayjs'
-import { useLanguagePhrase } from '@/hooks/use-language'
-import { useDeckCard } from '@/hooks/use-deck'
 import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
+import { useOneCardReviews } from '@/hooks/use-reviews'
 
 export default function PhraseExtraInfo({
-	pid,
-	lang,
+	phrase,
 	className,
 	link,
 }: {
-	pid: uuid
-	lang: string
+	phrase: PhraseFullFilteredType
 	className?: string
 	link?: boolean
 }) {
-	const phrase = useLanguagePhrase(pid, lang)
-	const card = useDeckCard(pid, lang)
-
-	return !phrase.data ? null : (
+	return !phrase ? null : (
 			<ExtraInfo
 				title="User card details"
-				description={`“${phrase.data.text}”`}
+				description={`“${phrase.text}”`}
 				className={className}
 				link={link}
 			>
 				<div className="block space-y-4">
 					<div className="flex flex-col">
 						<span className="font-semibold">Phrase ID</span>
-						<span>{phrase.data.id}</span>
+						<span>{phrase.id}</span>
 					</div>
 					<div className="flex flex-col">
 						<span className="font-semibold">Phrase created at</span>
-						<span>{ago(phrase.data.created_at)}</span>
+						<span>{ago(phrase.created_at)}</span>
 					</div>
 				</div>
-				{!card.data ?
+				{!phrase.card ?
 					<p>Phrase has no card in your deck</p>
-				:	<CardSection card={card.data} />}
+				:	<CardSection card={phrase.card} />}
 			</ExtraInfo>
 		)
 }
 
-function CardSection({ card }: { card: CardFull }) {
-	const reviews =
-		card?.reviews.sort((a, b) =>
-			a.created_at > b.created_at ? -1
-			: a.created_at < b.created_at ? 1
-			: 0
-		) ?? []
+function CardSection({ card }: { card: CardMetaType }) {
+	const { data: reviews } = useOneCardReviews(card.phrase_id)
 	const rev = reviews[0] || null
 	const retr =
 		card.last_reviewed_at && card.stability ?

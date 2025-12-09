@@ -1,30 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useLanguagePhrase } from '@/hooks/use-language'
 import Callout from '@/components/ui/callout'
-// import { useDeckCard } from '@/hooks/use-deck'
 import { uuid } from '@/types/main'
-// import { ago } from '@/lib/dayjs'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import { AddTranslationsDialog } from '@/components/add-translations-dialog'
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { LinkIcon } from 'lucide-react'
 import { Loader } from '@/components/ui/loader'
+import { usePhrase } from '@/hooks/composite-phrase'
 
-export function CardPreview({
-	pid,
-	lang,
-	isMine,
-}: {
-	pid: uuid
-	lang: string
-	isMine: boolean
-}) {
-	const { data: phrase, isPending } = useLanguagePhrase(pid, lang)
-	// const { data: card } = useDeckCard(pid, lang)
+export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
+	const { data: phrase, status } = usePhrase(pid)
 	const chosenTranslation = phrase?.translations[0]
 
-	if (!isPending && !phrase)
+	if (status === 'not-found')
 		return (
 			<Callout variant="problem">Can't seem to find that phrase...</Callout>
 		)
@@ -32,7 +21,7 @@ export function CardPreview({
 		<Card
 			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
-			{isPending ?
+			{status === 'pending' || !phrase ?
 				<Loader className="my-6" />
 			:	<>
 					<CardHeader className="p-4">
@@ -62,7 +51,7 @@ export function CardPreview({
 							)*/}
 						</div>
 						<div className="flex flex-row flex-wrap gap-2">
-							<CardStatusDropdown pid={pid} lang={lang} />
+							<CardStatusDropdown phrase={phrase} />
 							{!chosenTranslation && (
 								<AddTranslationsDialog
 									size="sm"
@@ -73,7 +62,7 @@ export function CardPreview({
 							<Link
 								to={'/learn/$lang/$id'}
 								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang, id: pid }}
+								params={{ lang: phrase.lang, id: pid }}
 								className={buttonVariants({
 									variant: 'secondary',
 									size: 'sm',

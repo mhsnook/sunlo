@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
 
-import { uuid } from './-types'
 import Callout from '@/components/ui/callout'
-import { publicProfileQuery, useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/hooks/use-profile'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { uuid } from '@/types/main'
 
 type FriendsSearchParams = {
 	uid: uuid
@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_user/friends/search/$uid')({
 function FriendRequestWithUIDPage() {
 	const { data: profile } = useProfile()
 	const { uid }: FriendsSearchParams = Route.useParams()
-	const { data: otherProfile } = useQuery(publicProfileQuery(uid))
+	const { data: otherProfile } = useOnePublicProfile(uid)
 
 	return !otherProfile || !profile ?
 			null
@@ -29,7 +29,7 @@ function FriendRequestWithUIDPage() {
 						can send them an invitation to connect.
 					</p>
 					<div className="rounded border px-4 py-3 @xl:px-6">
-						<ProfileWithRelationship profile={otherProfile} />
+						<ProfileWithRelationship uid={otherProfile.uid} />
 					</div>
 					<p>
 						Or, use this page to search for friends and get started learning

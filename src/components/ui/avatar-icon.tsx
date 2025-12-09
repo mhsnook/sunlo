@@ -1,18 +1,20 @@
 import type { ReactNode } from 'react'
-import { PublicProfile } from '@/routes/_user/friends/-types'
 import { Link } from '@tanstack/react-router'
 import { User } from 'lucide-react'
+import { PublicProfileType } from '@/lib/schemas'
+import { avatarUrlify } from '@/lib/hooks'
 
-type AvatarIconRowProps = PublicProfile & {
+type AvatarIconRowProps = PublicProfileType & {
 	children?: ReactNode
 }
 
 export function AvatarIconRow({
-	avatarUrl,
+	avatar_path,
 	username,
 	uid,
 	children,
 }: AvatarIconRowProps) {
+	const avatarUrl = avatarUrlify(avatar_path)
 	return (
 		<div className="flex w-full flex-row items-center gap-4">
 			<Link

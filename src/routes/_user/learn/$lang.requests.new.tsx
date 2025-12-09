@@ -1,15 +1,13 @@
-import { PhraseRequest } from '@/types/main'
-
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
-import { useAuth } from '@/lib/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -28,8 +26,8 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
-import { useProfile } from '@/hooks/use-profile'
-import type { PhraseRequestFull } from '@/hooks/use-requests'
+import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
+import { phraseRequestsCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: Page,
@@ -50,10 +48,8 @@ type RequestPhraseFormInputs = z.infer<typeof RequestPhraseSchema>
 
 function Page() {
 	const { lang } = Route.useParams()
-	const { userId } = useAuth()
-	const queryClient = useQueryClient()
+	const userId = useUserId()
 	const navigate = useNavigate()
-	const { data: profile } = useProfile()
 
 	const form = useForm<RequestPhraseFormInputs>({
 		resolver: zodResolver(RequestPhraseSchema),
@@ -63,7 +59,7 @@ function Page() {
 	})
 
 	const createRequestMutation = useMutation<
-		PhraseRequest,
+		PhraseRequestType,
 		PostgrestError,
 		RequestPhraseFormInputs
 	>({
@@ -74,7 +70,7 @@ function Page() {
 					.insert({
 						prompt,
 						lang,
-						requester_uid: userId!,
+						requester_uid: userId,
 					})
 					.throwOnError()
 					.select()
@@ -82,27 +78,19 @@ function Page() {
 			).data!
 		},
 		onSuccess: (data) => {
-			toast.success('Your request has been created!')
-			// @ts-expect-error: We have something wonky in the JSON types
-			const newRequest: PhraseRequestFull = {
-				...data,
-				phrases: [],
-				requester: {
-					username: profile!.username,
-					avatar_path: profile!.avatar_path,
-					uid: userId,
-				},
-			}
-			void queryClient.setQueryData(
-				['user', 'phrase_requests', lang],
-				(old: PhraseRequest[] | undefined) =>
-					old ? [newRequest, ...old] : [newRequest]
+			phraseRequestsCollection.utils.writeInsert(
+				PhraseRequestSchema.parse(data)
 			)
-			void navigate({ to: '/learn/$lang/requests', params: { lang } })
+			void navigate({
+				to: '/learn/$lang/contributions',
+				params: { lang },
+				search: { type: 'request' },
+			})
+			toast.success('Your request has been created!')
 		},
 		onError: (error) => {
-			toast.error('There was an error creating your request.')
 			console.error(error)
+			toast.error('There was an error creating your request.')
 		},
 	})
 

@@ -53,18 +53,22 @@ export function FancySelectField<T extends FieldValues>({
 						<Label
 							htmlFor={`${name}-${option.value}`}
 							className={cn(
-								`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
+								`flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors`,
 								String(value) === String(option.value) ?
 									'bg-primary/20 border-primary-foresoft/30'
 								:	'hover:bg-primary/10 hover:border-input'
 							)}
 						>
 							{option.Icon && (
-								<option.Icon
-									className={`transition-color mr-3 size-5 ${
-										String(value) === String(option.value) ? 'text-primary' : ''
+								<span
+									className={`transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2 ${
+										String(value) === String(option.value) ?
+											'bg-primary-foresoft text-white'
+										:	''
 									}`}
-								/>
+								>
+									<option.Icon className="size-5" />
+								</span>
 							)}
 							<div className="space-y-1">
 								<div>{option.label}</div>
