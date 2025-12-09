@@ -6,8 +6,8 @@ export async function goToDeckPage(page, lang: string) {
 	await expect(page.getByText(languages[lang])).toBeVisible()
 	await page.getByText(languages[lang]).click()
 
-	// Should be on the deck page now
-	await expect(page).toHaveURL(`/learn/${lang}`)
+	// Should be on the deck feed page now
+	await expect(page).toHaveURL(`/learn/${lang}/feed`)
 
 	// Click Review link in the navigation
 	await page

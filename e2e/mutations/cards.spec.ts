@@ -147,7 +147,7 @@ test.describe('Card Status Mutations', () => {
 			// 2. Navigate to request page where heart icon should be visible
 			await page.goto(`/learn/hin/contributions`)
 			// Should navigate back to requests index
-			await page.waitForURL('/learn/hin/contributions?type=request')
+			await page.waitForURL('/learn/hin/contributions')
 
 			// 4. Verify the new request is showing up on the index page
 			await expect(page.getByText(request!.prompt)).toBeVisible()

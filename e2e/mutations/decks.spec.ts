@@ -70,7 +70,10 @@ test.describe.serial('Deck Mutations', () => {
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
 		// Click context menu in navbar → "Settings"
-		await page.getByText('Settings', { exact: true }).click()
+		await page
+			.locator('[data-radix-menu-content]')
+			.getByText('Deck Settings', { exact: true })
+			.click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()

@@ -19,7 +19,10 @@ function Page() {
 		<main className="w-full space-y-6">
 			{activeDecks?.length ?
 				<>
-					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
+					<div
+						id="decks-list-grid"
+						className="grid grid-cols-1 gap-6 @xl:grid-cols-2"
+					>
 						{activeDecks.map((d) => (
 							<DeckCard key={d.lang} deck={d} />
 						))}

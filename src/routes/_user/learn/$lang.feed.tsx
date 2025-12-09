@@ -55,9 +55,7 @@ function DeckFeedPage() {
 					<p>Loading requests...</p>
 				: !requests || requests.length === 0 ?
 					<>
-						<p className="mb-4 text-lg italic">
-							You haven't made any requests yet.
-						</p>
+						<p className="mb-4 text-lg italic">This feed is empty.</p>
 						<Link
 							className={buttonVariants({ variant: 'outline-primary' })}
 							to="/learn/$lang/requests/new"
