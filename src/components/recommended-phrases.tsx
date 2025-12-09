@@ -42,7 +42,7 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 		recommendations.top8.easiest.length > 0
 
 	return !hasRecommendations ?
-			<p className="text-muted-foreground text-sm italic">
+			<p className="text-muted-foreground mx-4 text-sm italic">
 				There are no smart recommendations for you at this time. Check back
 				later or consider{' '}
 				<Link

@@ -49,10 +49,11 @@ const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 	return (
 		<>
 			<div ref={ref}></div>
+
 			<div
-				className={`bg-background sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} w-app top-0 flex flex-row items-center justify-between gap-2 ps-2`}
+				className={`bg-background sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
 			>
-				<ScrollArea>
+				<ScrollArea className="w-app">
 					<NavigationMenu className="mt-2 mb-1">
 						<NavigationMenuList className="flex w-full flex-row">
 							{links.map((l: LinkType) => (
