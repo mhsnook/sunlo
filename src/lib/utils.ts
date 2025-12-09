@@ -174,3 +174,12 @@ export function copyLink(url?: string, fallback = true) {
 				toast.error('Failed to copy link')
 			})
 }
+
+export function removeSbTokens() {
+	for (let i = 0; i < localStorage.length; i++) {
+		const key = localStorage.key(i)
+		if (key && /^sb-.+-auth-token$/.test(key)) {
+			localStorage.removeItem(key)
+		}
+	}
+}
