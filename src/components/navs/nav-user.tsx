@@ -23,6 +23,7 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { clearUser } from '@/lib/collections'
+import { removeSbTokens } from '@/lib/utils'
 
 const data = makeLinks([
 	'/profile',
@@ -36,14 +37,16 @@ export function NavUser() {
 	const { data: profile } = useProfile()
 	const navigate = useNavigate()
 	const signOut = useMutation({
-		mutationFn: async () => {
-			const { error } = await supabase.auth.signOut()
+		mutationFn: async () =>
+			(await supabase.auth.signOut({ scope: 'local' }))?.error,
+		onError: (error) => {
 			if (error) {
-				console.log(`auth.signOut error`, error)
+				console.log(`auth.signOut error`, error, `clearing session manually`)
+				removeSbTokens()
 				throw error
 			}
 		},
-		onSuccess: async () => {
+		onSettled: async () => {
 			await clearUser()
 			void navigate({ to: '/' })
 		},
