@@ -252,7 +252,7 @@ export function CardStatusDropdown({
 export function CardStatusHeart({
 	phrase,
 }: {
-	phrase: PhraseFullFilteredType
+	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
 	const mutation = useCardStatusMutation(phrase)
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'

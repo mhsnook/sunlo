@@ -1,13 +1,13 @@
 import PermalinkButton from '@/components/permalink-button'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-status-dropdown'
-import { PhraseFullFilteredType } from '@/lib/schemas'
+import { PhraseFullFilteredType, PhraseFullFullType } from '@/lib/schemas'
 import { Card } from '../ui/card'
 
 export function CardResultSimple({
 	phrase,
 }: {
-	phrase: PhraseFullFilteredType
+	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
 	return (
 		<Card className="border-primary-foresoft/50 space-y-4 rounded-s-none border-s-4 p-6">

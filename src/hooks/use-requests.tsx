@@ -1,6 +1,5 @@
-import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { Tables } from '@/types/supabase'
-import { useUserId } from '@/lib/use-auth'
 import {
 	friendSummariesCollection,
 	phraseRequestsCollection,
@@ -13,20 +12,6 @@ import {
 	PublicProfileType,
 } from '@/lib/schemas'
 import { UseLiveQueryResult } from '@/types/main'
-
-export function useAllMyPhraseRequestsLang(
-	lang: string
-): UseLiveQueryResult<PhraseRequestType[]> {
-	const userId = useUserId()
-	return useLiveQuery((q) =>
-		q
-			.from({ request: phraseRequestsCollection })
-			.where(({ request }) =>
-				and(eq(request.requester_uid, userId), eq(request.lang, lang))
-			)
-			.orderBy(({ request }) => request.created_at, 'desc')
-	)
-}
 
 export function useMyFriendsRequestsLang(
 	lang: string
