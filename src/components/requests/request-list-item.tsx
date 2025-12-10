@@ -11,7 +11,6 @@ import {
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
-import { ago } from '@/lib/dayjs'
 import UserPermalink from '@/components/user-permalink'
 import CopyLinkButton from '@/components/copy-link-button'
 import Flagged from '@/components/flagged'
@@ -22,6 +21,7 @@ import { ShareRequestButton } from '@/components/share-request-button'
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestAnswers } from '@/hooks/use-language'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: answers } = useRequestAnswers(request.id)
@@ -29,8 +29,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	if (!request) return null
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	return (
-		<div className="group transition-all duration-200 not-last:border-b">
-			<div className="space-y-1 px-6 py-6">
+		<Card className="group transition-all duration-200">
+			<CardHeader className="mb-6 border-b">
 				<div className="flex flex-row items-center justify-between gap-2">
 					<Flagged name="multiple_languages_feed">
 						<LangBadge lang={request.lang} />
@@ -44,31 +44,11 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						<span className="capitalize">{request.status}</span>
 					</Badge>
 				</div>
-				<div className="text-muted-foreground mt-2 inline-flex min-w-0 items-center gap-1 text-sm">
-					{requester && (
-						<UserPermalink
-							username={requester.username}
-							avatar_path={requester.avatar_path}
-							uid={request.requester_uid}
-							className="text-muted-foreground"
-						/>
-					)}{' '}
-					•
-					<Link
-						to="/learn/$lang/requests/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang, id: request.id }}
-						className="s-link-hidden text-primary-foresoft"
-					>
-						{ago(request.created_at)}
-					</Link>{' '}
-				</div>
-			</div>
-			<div className="px-6 pb-6">
-				<div className="space-y-4">
-					<Blockquote>{request.prompt}</Blockquote>
-				</div>
-
+			</CardHeader>
+			<CardContent>
+				<Blockquote>{request.prompt}</Blockquote>
+			</CardContent>
+			<CardFooter>
 				<div className="flex items-center justify-between">
 					<div className="text-muted-foreground flex items-center gap-4 text-sm">
 						<Flagged name="phrase_request_likes" className="hidden">
@@ -120,7 +100,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						</SendRequestToFriendDialog>
 					</div>
 				</div>
-			</div>
-		</div>
+			</CardFooter>
+		</Card>
 	)
 }

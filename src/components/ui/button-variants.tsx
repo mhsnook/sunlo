@@ -19,7 +19,7 @@ const buttonVariants = cva(
 				ghost:
 					'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
 				outline:
-					'border border-primary-foresoft/10 hover:border-primary-foresoft/30 bg-card hover:bg-primary/10 text-primary-foresoft',
+					'border border-primary-foresoft/10 hover:border-primary-foresoft/30 bg-card/50 hover:bg-background text-primary-foresoft',
 				'outline-primary':
 					'border border-primary/20 hover:bg-primary/20 text-primary-foreground hover:text-primary-foresoft bg-primary-invert/40 hover:bg-primary-invert/60',
 				'outline-accent':

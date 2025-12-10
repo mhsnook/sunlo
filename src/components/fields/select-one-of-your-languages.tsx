@@ -66,7 +66,7 @@ export function SelectOneOfYourLanguages({
 					role="combobox"
 					aria-controls={id}
 					aria-expanded={open}
-					className={`bg-card placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
+					className={`bg-card/50 placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
 				>
 					{value ?
 						allLanguageOptions.find((language) => language.value === value)

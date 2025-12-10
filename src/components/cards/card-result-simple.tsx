@@ -2,6 +2,7 @@ import PermalinkButton from '@/components/permalink-button'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-status-dropdown'
 import { PhraseFullFilteredType } from '@/lib/schemas'
+import { Card } from '../ui/card'
 
 export function CardResultSimple({
 	phrase,
@@ -9,7 +10,7 @@ export function CardResultSimple({
 	phrase: PhraseFullFilteredType
 }) {
 	return (
-		<div className="bg-card space-y-4 rounded-lg border p-4">
+		<Card className="space-y-4 p-6">
 			<div className="flex items-center justify-between">
 				<h4 className="inline-flex gap-2 align-baseline font-semibold">
 					<LangBadge lang={phrase.lang} /> &ldquo;{phrase.text}&rdquo;
@@ -35,6 +36,6 @@ export function CardResultSimple({
 					</li>
 				))}
 			</ul>
-		</div>
+		</Card>
 	)
 }
