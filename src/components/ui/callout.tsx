@@ -41,7 +41,7 @@ export default function Callout({
 			)}
 		>
 			{!Icon ? null : (
-				<div className="w-6cqw aspect-square">
+				<div className="w-6cqw bg-foreground/10 aspect-square rounded-full p-2">
 					<Icon />
 				</div>
 			)}

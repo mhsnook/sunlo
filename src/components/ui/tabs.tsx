@@ -12,7 +12,7 @@ const TabsList = ({
 	<TabsPrimitive.List
 		data-slot="tabs-list"
 		className={cn(
-			'bg-muted text-muted-foreground inline-flex h-10 items-center justify-center gap-1 rounded-2xl p-1',
+			'bg-muted text-muted-foreground border-border/50 inline-flex h-10 items-center justify-center gap-1 rounded-2xl border p-1 inset-shadow-sm',
 			className
 		)}
 		{...props}
