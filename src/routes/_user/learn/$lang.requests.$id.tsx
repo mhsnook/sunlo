@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
-import { MessageSquarePlus, Send } from 'lucide-react'
+import { MessageSquarePlus, MessagesSquare, Send, Star } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
 import {
@@ -49,6 +49,7 @@ import { ShareRequestButton } from '@/components/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
 import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
+import Flagged from '@/components/flagged'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -151,7 +152,7 @@ function FulfillRequestPage() {
 					{phrases && phrases.length > 0 && (
 						<div className="mb-6 space-y-4">
 							<h3 className="h3">
-								{phrases.length} answer
+								0 comments, {phrases.length} answer
 								{phrases.length > 1 && 's'} so far
 							</h3>
 							{phrases.map((phrase) => (
@@ -169,13 +170,32 @@ function FulfillRequestPage() {
 											timeLinkParams={params}
 											timeLinkTo="/learn/$lang/$id"
 										/>
+										<Flagged name="favourite_answer">
+											<Button
+												variant="outline"
+												size="icon"
+												className="text-muted-foreground"
+												disabled
+											>
+												<Star />
+											</Button>
+										</Flagged>
 									</div>
+									{/*<p className="py-4">Here is what I would say:</p>*/}
+
 									<CardResultSimple phrase={phrase} />
+									{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
 								</div>
 							))}
 						</div>
 					)}
 					<div className="flex flex-row gap-2">
+						<Flagged name="request_comments">
+							<Button disabled>
+								<MessagesSquare /> Comment
+							</Button>
+						</Flagged>
+
 						<Collapsible
 							open={isAnswering || noAnswers}
 							onOpenChange={setIsAnswering}
