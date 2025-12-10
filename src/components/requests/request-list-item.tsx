@@ -8,7 +8,7 @@ import {
 	WalletCards,
 } from 'lucide-react'
 
-import { Badge, LangBadge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
 import UserPermalink from '@/components/user-permalink'
@@ -32,9 +32,21 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 		<Card className="group transition-all duration-200">
 			<CardHeader className="mb-6 border-b">
 				<div className="flex flex-row items-center justify-between gap-2">
-					<Flagged name="multiple_languages_feed">
+					{requester && (
+						<UserPermalink
+							username={requester.username}
+							avatar_path={requester.avatar_path}
+							uid={request.requester_uid}
+							timeLinkTo="/learn/$lang/requests/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							timeLinkParams={{ lang: request.lang, id: request.id }}
+							timeValue={request.created_at}
+						/>
+					)}
+
+					{/*<Flagged name="multiple_languages_feed">
 						<LangBadge lang={request.lang} />
-					</Flagged>
+					</Flagged>*/}
 					<Badge
 						variant={request.status === 'fulfilled' ? 'success' : 'secondary'}
 					>

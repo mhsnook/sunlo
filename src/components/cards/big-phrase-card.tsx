@@ -23,7 +23,6 @@ import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-but
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
-import { ago } from '@/lib/dayjs'
 import { Loader } from '@/components/ui/loader'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
@@ -41,9 +40,8 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						uid={phrase.added_by}
 						username={phrase.profile.username}
 						avatar_path={phrase.profile.avatar_path}
+						timeValue={phrase.created_at}
 					/>
-					{' • '}
-					{ago(phrase.created_at)}
 				</div>
 			:	null}
 			<Card className="@container">

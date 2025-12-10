@@ -2,45 +2,60 @@ import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
+import { ago } from '@/lib/dayjs'
 
 export default function UserPermalink({
 	uid,
 	username,
 	avatar_path,
 	className,
-	round = false,
+	timeLinkTo,
+	timeLinkParams,
+	timeValue,
 }: {
 	uid: uuid | null | undefined
 	username: string | null | undefined
 	avatar_path: string | null | undefined
 	className?: string
-	round?: boolean
+	timeLinkTo?: string
+	timeLinkParams?: Record<string, string>
+	timeValue?: string
 }) {
 	if (!uid) return null
 	const avatarUrl = avatarUrlify(avatar_path)
 	return (
-		<Link
-			to="/friends/$uid"
-			// oxlint-disable-next-line jsx-no-new-object-as-prop
-			params={{ uid }}
-			className={cn(
-				round ?
-					`hover:outline-primary/30 rounded-2xl hover:outline`
-				:	`s-link-hidden text-primary-foresoft`,
-				`text-primary-foresoft inline-flex flex-row place-items-baseline items-center gap-1`,
-				className
-			)}
-		>
+		<div className="flex flex-row items-center gap-3">
 			{avatarUrl ?
-				<img
-					src={avatarUrl}
-					alt={`${username}'s avatar`}
-					className="aspect-square w-5 rounded-2xl object-cover"
-				/>
+				<Link
+					to="/friends/$uid"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid }}
+					className={cn(`inline-flex flex-row`, className)}
+				>
+					<img
+						src={avatarUrl}
+						alt={`${username}'s avatar`}
+						className="aspect-square w-8 rounded-2xl object-cover"
+					/>
+				</Link>
 			:	null}
-			{username ?
-				<span>{username}</span>
-			:	null}
-		</Link>
+			<div className="text-sm">
+				{username ?
+					<p>{username}</p>
+				:	null}
+				{timeValue && timeLinkTo ?
+					<Link
+						to={timeLinkTo}
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={timeLinkParams}
+						className="s-link-hidden text-muted-foreground"
+					>
+						{ago(timeValue)}
+					</Link>
+				: timeValue ?
+					<p className="text-muted-foreground">{ago(timeValue)}</p>
+				:	null}
+			</div>
+		</div>
 	)
 }
