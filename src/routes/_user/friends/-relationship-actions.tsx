@@ -5,7 +5,7 @@ import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive
 import { Button } from '@/components/ui/button'
 import { useFriendRequestAction, useOneRelation } from '@/hooks/use-friends'
 import { useUserId } from '@/lib/use-auth'
-import { Loader } from '@/components/ui/loader'
+import { IconSizedLoader } from '@/components/ui/loader'
 
 export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 	const userId = useUserId()
@@ -20,7 +20,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 			>
 				Add friend{' '}
 				{action.isPending ?
-					<Loader />
+					<IconSizedLoader />
 				:	<ThumbsUp />}
 			</Button>
 		: relationship.status === 'friends' ?
@@ -49,7 +49,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				>
 					Confirm friends{' '}
 					{action.isPending ?
-						<Loader />
+						<IconSizedLoader />
 					:	<ThumbsUp />}
 				</Button>
 				<ConfirmDestructiveActionDialog

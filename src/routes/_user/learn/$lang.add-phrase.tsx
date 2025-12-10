@@ -21,7 +21,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
-import { Loader } from '@/components/ui/loader'
+import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
@@ -193,7 +193,7 @@ function AddPhraseTab() {
 								disabled={addPhraseMutation.isPending}
 							>
 								{addPhraseMutation.isPending ?
-									<Loader />
+									<IconSizedLoader />
 								:	<NotebookPen />}
 								Save and add another
 							</Button>

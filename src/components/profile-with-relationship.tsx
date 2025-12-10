@@ -3,21 +3,20 @@ import { Button } from '@/components/ui/button'
 import { AvatarIconRow } from '@/components/ui/avatar-icon'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
 import { useFriendRequestAction } from '@/hooks/use-friends'
-import { Loader } from '@/components/ui/loader'
+import { IconSizedLoader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 
 export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 	const { data: profile } = useOnePublicProfile(uid)
 	const inviteResponseMutation = useFriendRequestAction(uid)
+	const isMostRecentByThem = profile?.relation?.most_recent_uid_by === uid
 
 	return !profile ? null : (
 			<AvatarIconRow {...profile}>
 				<div className="flex flex-row gap-2">
 					{inviteResponseMutation.isPending ?
-						<span className="size-8 rounded-full p-1">
-							<Loader className="size-6" />
-						</span>
+						<IconSizedLoader />
 					: inviteResponseMutation.isSuccess ?
 						<span className="size-8 rounded-full bg-green-600 p-1">
 							<Check className="size-6 text-white" />
@@ -33,10 +32,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 						>
 							<Send className="mt-[0.1rem] mr-[0.1rem] size-6" />
 						</Button>
-					: (
-						profile.relation.status === 'pending' &&
-						!profile.relation.isMostRecentByMe
-					) ?
+					: profile.relation.status === 'pending' && !isMostRecentByThem ?
 						<>
 							<Button
 								variant="default"
@@ -67,17 +63,14 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 									onClick={() => inviteResponseMutation.mutate('decline')}
 								>
 									{inviteResponseMutation.isPending ?
-										<Loader />
+										<IconSizedLoader />
 									: inviteResponseMutation.isSuccess ?
 										<Check className="size-6 text-white" />
 									:	<>Confirm</>}
 								</Button>
 							</ConfirmDestructiveActionDialog>
 						</>
-					: (
-						profile.relation?.status === 'pending' &&
-						profile.relation.isMostRecentByMe
-					) ?
+					: profile.relation?.status === 'pending' && !isMostRecentByThem ?
 						<ConfirmDestructiveActionDialog
 							title={`Cancel this request`}
 							description={`Please confirm whether you'd like to cancel this friend request`}
@@ -97,7 +90,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								onClick={() => inviteResponseMutation.mutate('cancel')}
 							>
 								{inviteResponseMutation.isPending ?
-									<Loader />
+									<IconSizedLoader />
 								: inviteResponseMutation.isSuccess ?
 									<Check className="size-6 text-white" />
 								:	<>Confirm</>}
