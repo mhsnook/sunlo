@@ -99,7 +99,7 @@ function RecentFeed() {
 	const params = Route.useParams()
 	const { data: requests, isLoading } = useRequestsLang(params.lang)
 	return (
-		<div className="bg-background rounded-sm border p-1">
+		<div className="space-y-3">
 			{isLoading ?
 				<p>Loading requests...</p>
 			: !requests || requests.length === 0 ?
@@ -113,11 +113,9 @@ function RecentFeed() {
 						Post a request for a new phrase
 					</Link>
 				</>
-			:	<div>
-					{requests.map((request) => (
-						<RequestItem key={request.id} request={request} />
-					))}
-				</div>
+			:	requests.map((request) => (
+					<RequestItem key={request.id} request={request} />
+				))
 			}
 		</div>
 	)
@@ -127,7 +125,7 @@ function FriendsFeed() {
 	const params = Route.useParams()
 	const { data: requests, isLoading } = useMyFriendsRequestsLang(params.lang)
 	return (
-		<div>
+		<div className="space-y-3">
 			{isLoading ?
 				<p>Loading requests...</p>
 			: !requests || requests.length === 0 ?
@@ -152,11 +150,9 @@ function FriendsFeed() {
 						</Link>
 					</div>
 				</Callout>
-			:	<div className="bg-background rounded-sm border p-1">
-					{requests.map((request) => (
-						<RequestItem key={request.id} request={request} />
-					))}
-				</div>
+			:	requests.map((request) => (
+					<RequestItem key={request.id} request={request} />
+				))
 			}
 		</div>
 	)
@@ -166,7 +162,7 @@ function PopularFeed() {
 	const params = Route.useParams()
 	const { data: requests, isLoading } = usePopularRequestsLang(params.lang)
 	return (
-		<div className="bg-background rounded-sm border p-1">
+		<div className="space-y-3">
 			{isLoading ?
 				<p>Loading requests...</p>
 			: !requests || requests.length === 0 ?
@@ -182,11 +178,9 @@ function PopularFeed() {
 						Post a request for a new phrase
 					</Link>
 				</div>
-			:	<div>
-					{requests.map((request) => (
-						<RequestItem key={request.id} request={request} />
-					))}
-				</div>
+			:	requests.map((request) => (
+					<RequestItem key={request.id} request={request} />
+				))
 			}
 		</div>
 	)

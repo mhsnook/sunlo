@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { MessageCircleHeart } from 'lucide-react'
+import { MessageCircleHeart, MessageSquareQuote } from 'lucide-react'
 import * as z from 'zod'
 
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -49,7 +49,7 @@ function Page() {
 							<span className="me-1">New request</span>
 						</Link>
 						<Link
-							to="/learn/$lang/requests/new"
+							to="/learn/$lang/add-phrase"
 							from={Route.fullPath}
 							className={
 								`${buttonVariants({
@@ -57,8 +57,8 @@ function Page() {
 								})}` as const
 							}
 						>
-							<MessageCircleHeart className="size-3" />
-							<span className="me-1">New request</span>
+							<MessageSquareQuote className="size-3" />
+							<span className="me-1">New Phrase</span>
 						</Link>
 					</PlusMenu>
 				</div>
