@@ -29,8 +29,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	if (!request) return null
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	return (
-		<Card className="group transition-all duration-200">
-			<CardHeader className="mb-6 border-b">
+		<Card className="bg-background group border-primary-foresoft/30 mb-6 rounded-none border transition-all duration-200">
+			<CardHeader className="border-primary-foresoft/30 mx-6 mb-6 border-b px-0">
 				<div className="flex flex-row items-center justify-between gap-2">
 					{requester && (
 						<UserPermalink

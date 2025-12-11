@@ -83,7 +83,7 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 							</Link>
 						)}
 					</>
-				:	<div className="bg-background space-y-2">
+				:	<div className="space-y-2">
 						{requests.map((request) => (
 							<RequestItem key={request.id} request={request} />
 						))}

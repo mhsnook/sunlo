@@ -262,7 +262,7 @@ const SidebarTrigger = ({
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
-			className={`${className} bg-background z-50`}
+			className={`${className} z-50`}
 			onClick={onButtonClick}
 			{...props}
 		>
@@ -317,7 +317,7 @@ const SidebarInset = ({
 		<main
 			data-slot="sidebar-inset"
 			className={cn(
-				'bg-background relative flex min-h-svh flex-1 flex-col',
+				'relative flex min-h-svh flex-1 flex-col bg-gray-50 dark:bg-gray-800',
 				'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
 				className
 			)}

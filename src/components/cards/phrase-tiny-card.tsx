@@ -22,7 +22,7 @@ export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 		>
 			<p className="font-semibold">{phrase.text}</p>{' '}
 			<p className="text-muted-foreground text-sm">
-				{phrase.translations_mine?.[0].text.length ?
+				{phrase.translations_mine?.[0]?.text.length ?
 					phrase.translations_mine[0].text
 				:	phrase.translations[0].text}
 			</p>
