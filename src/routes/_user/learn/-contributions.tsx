@@ -21,7 +21,8 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const contributionsTab =
 		'contributionsTab' in search ?
 			(search?.contributionsTab as 'request' | 'phrase' | 'comment')
-		:	'requests'
+		:	'request'
+
 	const handleTabChange = useCallback(
 		(value: string) => {
 			void navigate({
@@ -117,12 +118,12 @@ function PhrasesTab({ lang, uid }: { lang?: string; uid: uuid }) {
 						</>
 					:	<div className="space-y-4">
 							{phrases.map((phrase) => (
-								<>
+								<div key={phrase.id}>
 									<p className="text-muted-foreground mb-1 px-2 text-xs">
 										{ago(phrase.created_at)}
 									</p>
-									<CardResultSimple key={phrase.id} phrase={phrase} />
-								</>
+									<CardResultSimple phrase={phrase} />
+								</div>
 							))}
 						</div>
 					}

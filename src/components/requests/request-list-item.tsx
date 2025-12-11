@@ -60,57 +60,56 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 			<CardContent>
 				<Blockquote>{request.prompt}</Blockquote>
 			</CardContent>
-			<CardFooter>
-				<div className="flex items-center justify-between">
-					<div className="text-muted-foreground flex items-center gap-4 text-sm">
-						<Flagged name="phrase_request_likes" className="hidden">
-							<div className="flex items-center gap-2">
-								<Heart className="h-4 w-4 text-red-500" />
-								<span className="text-foreground font-medium">
-									{request.popularityCount} 4
-								</span>
-								<span>others want to know this</span>
-							</div>
-						</Flagged>
-						<div className="flex flex-row gap-2">
-							<Link
-								to="/learn/$lang/requests/$id"
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: request.lang, id: request.id }}
-								className={cn(
-									buttonVariants({ size: 'sm', variant: 'outline-accent' })
-								)}
-							>
-								<MessagesSquare /> Discussion
-							</Link>
-							<Link
-								to="/learn/$lang/requests/$id"
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang: request.lang, id: request.id }}
-								className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
-							>
-								<WalletCards className="h-4 w-4" />
-								<span>
-									{answers.length} {answers.length === 1 ? 'answer' : 'answers'}
-								</span>
-							</Link>
+			<CardFooter className="flex items-center justify-between">
+				<div className="text-muted-foreground flex items-center gap-4 text-sm">
+					<Flagged name="phrase_request_likes" className="hidden">
+						<div className="flex items-center gap-2">
+							<Heart className="h-4 w-4 text-red-500" />
+							<span className="text-foreground font-medium">
+								{request.popularityCount} 4
+							</span>
+							<span>others want to know this</span>
 						</div>
+					</Flagged>
+					<div className="flex flex-row gap-2">
+						<Link
+							to="/learn/$lang/requests/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: request.lang, id: request.id }}
+							className={cn(
+								buttonVariants({ size: 'sm', variant: 'outline-accent' })
+							)}
+						>
+							<MessagesSquare /> Discussion
+						</Link>
+						<Link
+							to="/learn/$lang/requests/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: request.lang, id: request.id }}
+							className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
+						>
+							<WalletCards className="h-4 w-4" />
+							<span>
+								{answers?.length ?? 0}{' '}
+								{answers?.length === 1 ? 'answer' : 'answers'}
+							</span>
+						</Link>
 					</div>
+				</div>
 
-					<div className="flex items-center gap-2">
-						<CopyLinkButton url={shareUrl} text="" size="icon" />
-						<ShareRequestButton
-							id={request.id}
-							lang={request.lang}
-							variant="ghost"
-							size="icon"
-						/>
-						<SendRequestToFriendDialog lang={request.lang} id={request.id}>
-							<Button title="share in chat" size="icon" variant="ghost">
-								<Send />
-							</Button>
-						</SendRequestToFriendDialog>
-					</div>
+				<div className="flex items-center gap-2">
+					<CopyLinkButton url={shareUrl} text="" size="icon" />
+					<ShareRequestButton
+						id={request.id}
+						lang={request.lang}
+						variant="ghost"
+						size="icon"
+					/>
+					<SendRequestToFriendDialog lang={request.lang} id={request.id}>
+						<Button title="share in chat" size="icon" variant="ghost">
+							<Send />
+						</Button>
+					</SendRequestToFriendDialog>
 				</div>
 			</CardFooter>
 		</Card>

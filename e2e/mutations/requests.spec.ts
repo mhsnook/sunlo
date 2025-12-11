@@ -136,7 +136,7 @@ test.describe('Phrase Request Mutations', () => {
 
 			// 4. Find the phrase card and get ID from the permalink link
 			const phraseCard = page.locator(
-				`div.bg-card:has-text("${phraseText}") .bg-card`
+				`div.bg-card/50:has-text("${phraseText}") .bg-card/50`
 			)
 			const phraseLink = phraseCard.getByRole('link').last() // PermalinkButton
 			const href = await phraseLink.getAttribute('href')

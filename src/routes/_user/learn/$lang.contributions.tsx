@@ -9,7 +9,7 @@ import { PlusMenu } from '@/components/plus-menu'
 import { UserContributions } from './-contributions'
 
 const Search = z.object({
-	type: z.enum(['request', 'phrase', 'comment']).optional(),
+	contributionsTab: z.enum(['request', 'phrase', 'comment']).optional(),
 })
 
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({

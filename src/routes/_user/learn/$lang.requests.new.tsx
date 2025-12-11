@@ -84,7 +84,7 @@ function Page() {
 			void navigate({
 				to: '/learn/$lang/contributions',
 				params: { lang },
-				search: { type: 'request' },
+				search: { contributionsTab: 'request' },
 			})
 			toast.success('Your request has been created!')
 		},

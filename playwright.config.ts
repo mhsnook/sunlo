@@ -1,13 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 import dotenv from 'dotenv'
-import path from 'path'
-import { fileURLToPath } from 'url'
 
 // Read from default .env file
 dotenv.config()
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 /**
  * See https://playwright.dev/docs/test-configuration
@@ -36,6 +31,11 @@ export default defineConfig({
 
 		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
 		trace: 'on-first-retry',
+
+		launchOptions: {
+			// 5 milliseconds delay (enough for react to tick) between actions
+			slowMo: 5,
+		},
 	},
 
 	/* Configure projects for major browsers */
