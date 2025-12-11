@@ -99,8 +99,8 @@ function Page() {
 			<CardHeader>
 				<CardTitle>Request a new card</CardTitle>
 				<CardDescription>
-					Ask a friend or a native speaker to help you create a new flashcard.
-					Write a prompt for them below.
+					Ask a friend or a native speaker to help you create a new flashcard
+					for you and others to learn.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -119,6 +119,10 @@ function Page() {
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>What phrase do you need?</FormLabel>
+									<p className="text-muted-foreground text-sm">
+										Supports markdown like `&gt;` for blockquote,{' '}
+										<em>_italics_</em>, <strong>**bold**</strong>
+									</p>
 									<FormControl>
 										<Textarea
 											placeholder="e.g., How do I say 'this is delicious' in a casual way?"
@@ -139,11 +143,8 @@ function Page() {
 								</Callout>
 							)
 						}
-
 						<Button type="submit" disabled={createRequestMutation.isPending}>
-							{createRequestMutation.isPending ?
-								'Creating...'
-							:	'Create Request'}
+							{createRequestMutation.isPending ? 'Posting...' : 'Post Request'}
 						</Button>
 					</form>
 				</Form>

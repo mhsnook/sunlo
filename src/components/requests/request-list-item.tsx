@@ -16,6 +16,7 @@ import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import { PhraseTinyCard } from '../cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
+import { Markdown } from '@/components/my-markdown'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: answers } = useRequestAnswers(request.id)
@@ -42,7 +43,9 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 				</div>
 			</CardHeader>
 			<CardContent>
-				<p className="text-lg">{request.prompt}</p>
+				<div className="text-lg">
+					<Markdown>{request.prompt}</Markdown>
+				</div>
 
 				<p className="text-muted-foreground mt-4 text-sm">
 					{answers?.length || 'No'} answers {answers?.length ? '' : 'yet'}

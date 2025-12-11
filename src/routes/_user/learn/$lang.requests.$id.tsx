@@ -36,7 +36,6 @@ import {
 	usePhrasesFromRequest,
 	useRequest,
 } from '@/hooks/use-requests'
-import { Blockquote } from '@/components/ui/blockquote'
 import Callout from '@/components/ui/callout'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import CopyLinkButton from '@/components/copy-link-button'
@@ -45,7 +44,7 @@ import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-d
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
 import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
 import Flagged from '@/components/flagged'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Markdown } from '@/components/my-markdown'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -184,11 +183,9 @@ function FulfillRequestPage() {
 								</div>
 							))}
 						</div>
-					)}
-					<div className="flex flex-row gap-2">
-						<Button disabled>
-							<MessagesSquare /> Comment
-						</Button>
+					<p className="text-lg">
+						<Markdown>{request.prompt}</Markdown>
+					</p>
 
 						<Dialog
 							open={isAnswering || noAnswers}
@@ -203,6 +200,7 @@ function FulfillRequestPage() {
 								</Button>
 							</DialogTrigger>
 							<DialogContent className="mt-4 w-full rounded px-4 pt-4 pb-4 shadow">
+								<Markdown>{request.prompt}</Markdown>
 								<Form {...form}>
 									<form
 										// eslint-disable-next-line @typescript-eslint/no-misused-promises
