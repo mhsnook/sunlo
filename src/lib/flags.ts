@@ -17,5 +17,4 @@ export const flags: FlagMap = {
 	friend_recommendations: { enabled: false },
 	multiple_languages_feed: { disabled: true },
 	favourite_answer: { enabled: false },
-	request_comments: { enabled: false },
 }

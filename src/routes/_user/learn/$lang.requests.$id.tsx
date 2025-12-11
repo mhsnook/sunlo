@@ -30,11 +30,6 @@ import { Textarea } from '@/components/ui/textarea'
 import languages from '@/lib/languages'
 import UserPermalink from '@/components/user-permalink'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import {
 	type FulfillRequestResponse,
@@ -50,6 +45,7 @@ import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-d
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
 import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
 import Flagged from '@/components/flagged'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -190,25 +186,23 @@ function FulfillRequestPage() {
 						</div>
 					)}
 					<div className="flex flex-row gap-2">
-						<Flagged name="request_comments">
-							<Button disabled>
-								<MessagesSquare /> Comment
-							</Button>
-						</Flagged>
+						<Button disabled>
+							<MessagesSquare /> Comment
+						</Button>
 
-						<Collapsible
+						<Dialog
 							open={isAnswering || noAnswers}
 							onOpenChange={setIsAnswering}
 						>
-							<CollapsibleTrigger asChild className={noAnswers ? 'hidden' : ''}>
+							<DialogTrigger asChild className={noAnswers ? 'hidden' : ''}>
 								<Button>
 									<MessageSquarePlus />{' '}
 									{Array.isArray(phrases) && phrases.length > 0 ?
 										'Submit an answer'
 									:	'Answer this request'}
 								</Button>
-							</CollapsibleTrigger>
-							<CollapsibleContent className="mt-4 rounded px-4 pt-4 pb-4 shadow">
+							</DialogTrigger>
+							<DialogContent className="mt-4 w-full rounded px-4 pt-4 pb-4 shadow">
 								<Form {...form}>
 									<form
 										// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -280,8 +274,8 @@ function FulfillRequestPage() {
 										<ShowAndLogError error={fulfillMutation.error} />
 									</form>
 								</Form>
-							</CollapsibleContent>
-						</Collapsible>
+							</DialogContent>
+						</Dialog>
 					</div>
 				</CardContent>
 			</Card>
