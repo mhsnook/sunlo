@@ -17,7 +17,7 @@ export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 	}
 	return (
 		<Link
-			className="card-like m-1 flex basis-50 flex-col justify-start px-3 py-2 transition-all hover:-translate-y-px"
+			className="card-like m-1 flex min-w-40 basis-50 flex-col justify-start px-3 py-2 transition-all hover:-translate-y-px"
 			to="/learn/$lang/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
