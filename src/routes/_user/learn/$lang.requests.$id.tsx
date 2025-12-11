@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
-import { MessageSquarePlus, MessagesSquare, Send, Star } from 'lucide-react'
+import { MessageSquarePlus, Repeat, Send, Star } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
 import {
@@ -44,7 +44,16 @@ import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-d
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
 import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
 import Flagged from '@/components/flagged'
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog'
+
 import { Markdown } from '@/components/my-markdown'
+import { Badge } from '@/components/ui/badge'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -127,71 +136,46 @@ function FulfillRequestPage() {
 
 	return (
 		<main>
-			<Card>
-				<CardHeader>
-					<CardTitle>Request for {languages[request.lang]}</CardTitle>
+			<Card className="request-like">
+				<CardHeader className="border-primary-foresoft/30 mx-6 mb-3 border-b px-0 pt-6 pb-3">
+					<CardTitle className="sr-only">
+						Request for {languages[request.lang]}
+					</CardTitle>
+					<div className="flex flex-row items-center justify-between">
+						<UserPermalink
+							uid={request.requester_uid}
+							username={request.profile?.username}
+							avatar_path={request.profile?.avatar_path}
+							timeValue={request.created_at}
+						/>
+						<Button variant="ghost" size="icon">
+							<Repeat />
+						</Button>
+					</div>
+					<CardDescription className="sr-only">
+						A request for a flash card, and discussion section with 0 comments
+						nad {phrases?.length ?? 0} answers offered by the community.
+					</CardDescription>
 				</CardHeader>
-				<CardDescription className="sr-only">
-					A request for a flash card, and discussion section with 0 comments nad{' '}
-					{phrases?.length ?? 0} answers offered by the community.
-				</CardDescription>
-				<CardContent className="space-y-4">
-					<UserPermalink
-						uid={request.requester_uid}
-						username={request.profile?.username}
-						avatar_path={request.profile?.avatar_path}
-						timeValue={request.created_at}
-					/>
-					<Blockquote>&rdquo;{request.prompt}&ldquo;</Blockquote>
-
-					{phrases && phrases.length > 0 && (
-						<div className="mb-6 space-y-4">
-							<h3 className="h3">
-								0 comments, {phrases.length} answer
-								{phrases.length > 1 && 's'} so far
-							</h3>
-							{phrases.map((phrase) => (
-								<div
-									key={phrase.id}
-									className="rounded-0 space-y-2 p-4 hover:shadow"
-								>
-									<div className="flex flex-row items-center justify-between">
-										<UserPermalink
-											uid={phrase.added_by}
-											username={phrase.profile?.username}
-											avatar_path={phrase.profile?.avatar_path}
-											timeValue={phrase.created_at}
-											// oxlint-disable-next-line jsx-no-new-object-as-prop
-											timeLinkParams={params}
-											timeLinkTo="/learn/$lang/$id"
-										/>
-										<Flagged name="favourite_answer">
-											<Button
-												variant="outline"
-												size="icon"
-												className="text-muted-foreground"
-												disabled
-											>
-												<Star />
-											</Button>
-										</Flagged>
-									</div>
-									{/*<p className="py-4">Here is what I would say:</p>*/}
-
-									<CardResultSimple phrase={phrase} />
-									{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
-								</div>
-							))}
+				<CardContent className="flex flex-col gap-2">
+					<Flagged>
+						<div className="inline-flex flex-row gap-2">
+							<Badge variant="outline">Food</Badge>
+							<Badge variant="outline">Beginners</Badge>
 						</div>
+					</Flagged>
 					<p className="text-lg">
 						<Markdown>{request.prompt}</Markdown>
 					</p>
 
-						<Dialog
-							open={isAnswering || noAnswers}
-							onOpenChange={setIsAnswering}
-						>
-							<DialogTrigger asChild className={noAnswers ? 'hidden' : ''}>
+					<p className="text-muted-foreground mt-4 text-sm">
+						{phrases?.length ?? 0} comments, {phrases?.length ?? 0} answer
+						{phrases?.length !== 1 && 's'} so far
+					</p>
+
+					<div className="flex w-full flex-row justify-between gap-4">
+						<Dialog open={isAnswering} onOpenChange={setIsAnswering}>
+							<DialogTrigger asChild>
 								<Button>
 									<MessageSquarePlus />{' '}
 									{Array.isArray(phrases) && phrases.length > 0 ?
@@ -200,6 +184,9 @@ function FulfillRequestPage() {
 								</Button>
 							</DialogTrigger>
 							<DialogContent className="mt-4 w-full rounded px-4 pt-4 pb-4 shadow">
+								<DialogHeader>
+									<DialogTitle>Provide an answer</DialogTitle>
+								</DialogHeader>
 								<Markdown>{request.prompt}</Markdown>
 								<Form {...form}>
 									<form
@@ -274,28 +261,66 @@ function FulfillRequestPage() {
 								</Form>
 							</DialogContent>
 						</Dialog>
+						<div className="flex flex-row items-center gap-2">
+							<CopyLinkButton
+								url={`${window.location.host}/learn/${params.lang}/requests/${params.id}`}
+								variant="ghost"
+								size="icon"
+								text=""
+							/>
+							<ShareRequestButton
+								id={params.id}
+								lang={params.lang}
+								variant="ghost"
+								size="icon"
+							/>
+							<SendRequestToFriendDialog id={params.id} lang={params.lang}>
+								<Button variant="ghost" size="icon">
+									<Send />
+								</Button>
+							</SendRequestToFriendDialog>
+						</div>
 					</div>
 				</CardContent>
 			</Card>
-			<div className="grid w-full flex-grow grid-cols-3 justify-stretch gap-4 px-2 py-3">
-				<CopyLinkButton
-					url={`${window.location.host}/learn/${params.lang}/requests/${params.id}`}
-					variant="outline"
-					size="default"
-				/>
-				<ShareRequestButton
-					id={params.id}
-					lang={params.lang}
-					variant="outline"
-					size="default"
-				/>
-				<SendRequestToFriendDialog id={params.id} lang={params.lang}>
-					<Button variant="outline" size="default">
-						<Send />
-						Send in chat
-					</Button>
-				</SendRequestToFriendDialog>
-			</div>
+			{!phrases?.length ? null : (
+				phrases.map((phrase) => (
+					<div key={phrase.id} className="ms-4 space-y-2 border border-t-0 p-4">
+						<div className="flex flex-row items-center justify-between">
+							<UserPermalink
+								uid={phrase.added_by}
+								username={phrase.profile?.username}
+								avatar_path={phrase.profile?.avatar_path}
+								timeValue={phrase.created_at}
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								timeLinkParams={params}
+								timeLinkTo="/learn/$lang/$id"
+							/>
+							<Flagged name="favourite_answer" className="flex flex-row gap-2">
+								<Button
+									variant="outline"
+									size="icon"
+									className="text-muted-foreground"
+									disabled
+								>
+									<Star />
+								</Button>
+							</Flagged>
+						</div>
+						<Flagged>
+							<p className="py-4 text-lg">
+								This is a <em>great</em> question! Here is a phrase my mother
+								used to say. It's a little funny; you'll see in the translation.
+							</p>
+						</Flagged>
+						<CardResultSimple phrase={phrase} />
+						<Flagged>
+							<p className="s-link py-4 text-sm">show 3 replies</p>
+						</Flagged>
+						{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
+					</div>
+				))
+			)}
 		</main>
 	)
 }
