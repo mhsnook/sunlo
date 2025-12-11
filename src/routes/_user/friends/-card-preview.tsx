@@ -19,7 +19,7 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 		)
 	return (
 		<Card
-			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
+			className={`card-like relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
 			{status === 'pending' || !phrase ?
 				<Loader className="my-6" />

@@ -9,7 +9,7 @@ import { Loader } from '@/components/ui/loader'
 import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 
-export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
+export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
 	const { data: answers, isLoading: isLoadingPhrases } =
 		usePhrasesFromRequest(id)
@@ -20,13 +20,11 @@ export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 		)
 
 	return (
-		<Card
-			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
-		>
+		<Card className="request-like relative z-10">
 			{isLoading || !request ?
 				<Loader className="my-6" />
 			:	<>
-					<CardHeader className="p-4">
+					<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-4 border-b px-0 py-4">
 						<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 							<span>Phrase request </span>
 							<LangBadge lang={request.lang} />

@@ -112,7 +112,7 @@ function ChatPage() {
 												<CardPreview pid={msg.phrase_id} isMine={isMine} />
 											)}
 											{msg.request_id && msg.lang && (
-												<RequestPreview id={msg.request_id} isMine={isMine} />
+												<RequestPreview id={msg.request_id} />
 											)}
 											<div
 												className={cn(
