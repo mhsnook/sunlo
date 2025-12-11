@@ -39,8 +39,8 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: Newspaper,
 		},
 		'/friends': {
-			name: 'Contacts',
-			title: 'Contacts',
+			name: 'Friends',
+			title: 'Friends',
 			Icon: HeartHandshake,
 			link: {
 				to: '/friends',
