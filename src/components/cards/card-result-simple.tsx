@@ -10,7 +10,7 @@ export function CardResultSimple({
 	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
 	return (
-		<Card className="border-primary-foresoft/50 space-y-4 rounded-s-none border-s-4 p-6">
+		<Card className="card-like space-y-4 p-6">
 			<div className="flex items-center justify-between">
 				<h4 className="inline-flex gap-2 align-baseline font-semibold">
 					<LangBadge lang={phrase.lang} /> &ldquo;{phrase.text}&rdquo;

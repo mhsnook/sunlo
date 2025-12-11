@@ -1,20 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import {
-	CheckCircle,
-	Clock,
-	Heart,
-	MessagesSquare,
-	Send,
-	WalletCards,
-} from 'lucide-react'
+import { Heart, MessagesSquare, Send, WalletCards } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
+import { LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
 import UserPermalink from '@/components/user-permalink'
 import CopyLinkButton from '@/components/copy-link-button'
 import Flagged from '@/components/flagged'
-import { Blockquote } from '@/components/ui/blockquote'
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '@/components/send-request-to-friend-dialog'
 import { ShareRequestButton } from '@/components/share-request-button'
@@ -22,6 +14,8 @@ import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestAnswers } from '@/hooks/use-language'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
+import { PhraseTinyCard } from '../cards/phrase-tiny-card'
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: answers } = useRequestAnswers(request.id)
@@ -44,21 +38,21 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						/>
 					)}
 
-					{/*<Flagged name="multiple_languages_feed">
-						<LangBadge lang={request.lang} />
-					</Flagged>*/}
-					<Badge
-						variant={request.status === 'fulfilled' ? 'success' : 'secondary'}
-					>
-						{request.status === 'pending' ?
-							<Clock size={12} />
-						:	<CheckCircle size={12} />}
-						<span className="capitalize">{request.status}</span>
-					</Badge>
+					<LangBadge lang={request.lang} />
 				</div>
 			</CardHeader>
 			<CardContent>
-				<Blockquote>{request.prompt}</Blockquote>
+				<p className="text-lg">{request.prompt}</p>
+
+				<p className="text-muted-foreground mt-4 text-sm">
+					{answers?.length || 'No'} answers {answers?.length ? '' : 'yet'}
+				</p>
+				<ScrollArea className="flex w-full flex-row justify-start gap-2">
+					<div className="flex w-full flex-row justify-start gap-2">
+						{answers?.map((p) => <PhraseTinyCard key={p.id} pid={p.id} />)}
+					</div>
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
 			</CardContent>
 			<CardFooter className="flex items-center justify-between">
 				<div className="text-muted-foreground flex items-center gap-4 text-sm">

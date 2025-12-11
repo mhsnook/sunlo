@@ -2,6 +2,8 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
+import { LangBadge } from '../ui/badge'
+import { CardStatusHeart } from '../card-status-dropdown'
 
 export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 	const { data: phrase, status } = usePhrase(pid)
@@ -15,17 +17,23 @@ export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 	}
 	return (
 		<Link
-			className="s-link hover:bg-primary/10 m-1 block justify-start rounded-2xl p-3 no-underline decoration-2 shadow-sm transition-all hover:underline"
+			className="card-like m-1 flex basis-50 flex-col justify-start px-3 py-2 transition-all hover:-translate-y-px"
 			to="/learn/$lang/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>
-			<p className="font-semibold">{phrase.text}</p>{' '}
-			<p className="text-muted-foreground text-sm">
-				{phrase.translations_mine?.[0]?.text.length ?
-					phrase.translations_mine[0].text
-				:	phrase.translations[0].text}
-			</p>
+			<div className="line-clamp-3">
+				<p className="font-semibold">{phrase.text}</p>{' '}
+				<p className="text-muted-foreground text-sm">
+					{phrase.translations_mine?.[0]?.text.length ?
+						phrase.translations_mine[0].text
+					:	phrase.translations[0].text}
+				</p>
+			</div>
+			<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
+				<LangBadge lang={phrase.lang} />
+				<CardStatusHeart phrase={phrase} />
+			</div>
 		</Link>
 	)
 }

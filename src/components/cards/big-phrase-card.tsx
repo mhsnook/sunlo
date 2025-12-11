@@ -44,7 +44,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					/>
 				</div>
 			:	null}
-			<Card className="@container">
+			<Card className="card-like @container">
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
