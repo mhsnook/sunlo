@@ -111,10 +111,12 @@ export const useLanguageTags = (
 export const useRequestAnswers = (
 	requestId: uuid
 ): UseLiveQueryResult<PhraseFullType[]> => {
-	return useLiveQuery((q) =>
-		q
-			.from({ phrase: phrasesFull })
-			.where(({ phrase }) => eq(phrase.request_id, requestId))
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesFull })
+				.where(({ phrase }) => eq(phrase.request_id, requestId)),
+		[requestId]
 	)
 }
 
@@ -130,6 +132,6 @@ export function useAllMyPhrasesLang(
 					and(eq(phrase.added_by, userId), eq(phrase.lang, lang))
 				)
 				.orderBy(({ phrase }) => phrase.created_at, 'desc'),
-		[userId]
+		[userId, lang]
 	)
 }

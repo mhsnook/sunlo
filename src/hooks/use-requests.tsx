@@ -16,17 +16,19 @@ import { UseLiveQueryResult } from '@/types/main'
 export function useMyFriendsRequestsLang(
 	lang: string
 ): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery((q) =>
-		q
-			.from({ request: phraseRequestsCollection })
-			.where(({ request }) => eq(request.lang, lang))
-			.join(
-				{ friend: friendSummariesCollection },
-				({ request, friend }) => eq(friend.uid, request.requester_uid),
-				'inner'
-			)
-			.orderBy(({ request }) => request.created_at, 'desc')
-			.select(({ request }) => ({ ...request }))
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ request: phraseRequestsCollection })
+				.where(({ request }) => eq(request.lang, lang))
+				.join(
+					{ friend: friendSummariesCollection },
+					({ request, friend }) => eq(friend.uid, request.requester_uid),
+					'inner'
+				)
+				.orderBy(({ request }) => request.created_at, 'desc')
+				.select(({ request }) => ({ ...request })),
+		[lang]
 	)
 }
 
@@ -36,11 +38,13 @@ export const usePopularRequestsLang = useMyFriendsRequestsLang
 export function useRequestsLang(
 	lang: string
 ): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery((q) =>
-		q
-			.from({ request: phraseRequestsCollection })
-			.where(({ request }) => eq(request.lang, lang))
-			.orderBy(({ request }) => request.created_at, 'desc')
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ request: phraseRequestsCollection })
+				.where(({ request }) => eq(request.lang, lang))
+				.orderBy(({ request }) => request.created_at, 'desc'),
+		[lang]
 	)
 }
 
@@ -49,27 +53,31 @@ export const useRequest = (
 ): UseLiveQueryResult<
 	PhraseRequestType & { profile: PublicProfileType | undefined }
 > =>
-	useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.id, id))
-			.findOne()
-			.join({ profile: publicProfilesCollection }, ({ req, profile }) =>
-				eq(profile.uid, req.requester_uid)
-			)
-			.select(({ req, profile }) => ({
-				...req,
-				profile,
-			}))
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ req: phraseRequestsCollection })
+				.where(({ req }) => eq(req.id, id))
+				.findOne()
+				.join({ profile: publicProfilesCollection }, ({ req, profile }) =>
+					eq(profile.uid, req.requester_uid)
+				)
+				.select(({ req, profile }) => ({
+					...req,
+					profile,
+				})),
+		[id]
 	)
 
 export const usePhrasesFromRequest = (
 	id: string
 ): UseLiveQueryResult<PhraseFullFullType[]> =>
-	useLiveQuery((q) =>
-		q
-			.from({ phrase: phrasesFull })
-			.where(({ phrase }) => eq(phrase.request_id, id))
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesFull })
+				.where(({ phrase }) => eq(phrase.request_id, id)),
+		[id]
 	)
 
 export type FulfillRequestResponse = {
