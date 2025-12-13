@@ -12,8 +12,8 @@ import { useCallback } from 'react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Link } from '@tanstack/react-router'
 import { RequestItem } from '@/components/requests/request-list-item'
-import { ago } from '@/lib/dayjs'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import UserPermalink from '@/components/user-permalink'
 
 export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const search = useSearch({ strict: false })
@@ -83,7 +83,7 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 							</Link>
 						)}
 					</>
-				:	<div className="space-y-2">
+				:	<div className="space-y-4">
 						{requests.map((request) => (
 							<RequestItem key={request.id} request={request} />
 						))}
@@ -91,8 +91,8 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 				}
 			</div>
 }
-function PhrasesTab({ lang, uid }: { lang?: string; uid: uuid }) {
-	const { data: phrases, isLoading } = useAnyonesPhrases(uid, lang)
+function PhrasesTab(props: { lang?: string; uid: uuid }) {
+	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
 	return isLoading ?
 			<Loader />
 		:	<div>
@@ -104,12 +104,12 @@ function PhrasesTab({ lang, uid }: { lang?: string; uid: uuid }) {
 							<p className="mb-4 text-lg italic">
 								You haven't made any requests yet.
 							</p>
-							{lang && (
+							{props.lang && (
 								<Link
 									className={buttonVariants({ variant: 'outline-primary' })}
 									to="/learn/$lang/add-phrase"
 									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang }}
+									params={{ lang: props.lang }}
 								>
 									<MessageSquareQuote />
 									Add a new phrase
@@ -118,10 +118,15 @@ function PhrasesTab({ lang, uid }: { lang?: string; uid: uuid }) {
 						</>
 					:	<div className="space-y-4">
 							{phrases.map((phrase) => (
-								<div key={phrase.id}>
-									<p className="text-muted-foreground mb-1 px-2 text-xs">
-										{ago(phrase.created_at)}
-									</p>
+								<div key={phrase.id} className="space-y-2">
+									<UserPermalink
+										uid={phrase.added_by}
+										username={phrase.profile.username}
+										avatar_path={phrase.profile.avatar_path}
+										timeValue={phrase.created_at}
+										timeLinkParams={props}
+										timeLinkTo="/learn/$lang/$id"
+									/>
 									<CardResultSimple phrase={phrase} />
 								</div>
 							))}

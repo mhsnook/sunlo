@@ -99,11 +99,11 @@ function RecentFeed() {
 	const params = Route.useParams()
 	const { data: requests, isLoading } = useRequestsLang(params.lang)
 	return (
-		<div className="space-y-3">
+		<div className="space-y-6">
 			{isLoading ?
 				<p>Loading requests...</p>
 			: !requests || requests.length === 0 ?
-				<>
+				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' })}
@@ -112,7 +112,7 @@ function RecentFeed() {
 					>
 						Post a request for a new phrase
 					</Link>
-				</>
+				</Callout>
 			:	requests.map((request) => (
 					<RequestItem key={request.id} request={request} />
 				))

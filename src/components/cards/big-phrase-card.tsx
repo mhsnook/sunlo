@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronsUpDown } from 'lucide-react'
+import { ChevronsUpDown, MessagesSquare } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -25,6 +25,8 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { Button } from '@/components/ui/button'
+import Flagged from '@/components/flagged'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -142,6 +144,11 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 				</CardContent>
 			</CardlikeFlashcard>
 			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
+				<Flagged>
+					<Button>
+						<MessagesSquare /> Discuss
+					</Button>
+				</Flagged>
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}
 					variant="outline"
