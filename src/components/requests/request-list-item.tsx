@@ -13,10 +13,11 @@ import { ShareRequestButton } from '@/components/share-request-button'
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestAnswers } from '@/hooks/use-language'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
+import { CardContent, CardFooter, CardHeader } from '../ui/card'
 import { PhraseTinyCard } from '../cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Markdown } from '@/components/my-markdown'
+import { CardlikeRequest } from '@/components/ui/card-like'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: answers } = useRequestAnswers(request.id)
@@ -24,8 +25,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	if (!request) return null
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
 	return (
-		<Card className="request-like group mb-6 transition-all duration-200">
-			<CardHeader className="border-primary-foresoft/30 mx-6 mb-6 border-b px-0">
+		<CardlikeRequest className="group mb-6">
+			<CardHeader className="border-primary-foresoft/20 mx-6 mb-6 border-b px-0">
 				<div className="flex flex-row items-center justify-between gap-2">
 					{requester && (
 						<UserPermalink
@@ -63,7 +64,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						<div className="flex items-center gap-2">
 							<Heart className="h-4 w-4 text-red-500" />
 							<span className="text-foreground font-medium">
-								{request.popularityCount} 4
+								{/*request.popularityCount*/} 4
 							</span>
 							<span>others want to know this</span>
 						</div>
@@ -109,6 +110,6 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					</SendRequestToFriendDialog>
 				</div>
 			</CardFooter>
-		</Card>
+		</CardlikeRequest>
 	)
 }

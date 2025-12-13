@@ -9,7 +9,6 @@ import { MessageSquarePlus, Repeat, Send, Star } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
 import {
-	Card,
 	CardContent,
 	CardDescription,
 	CardHeader,
@@ -54,6 +53,7 @@ import {
 
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
+import { CardlikeRequest } from '@/components/ui/card-like'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -136,8 +136,8 @@ function FulfillRequestPage() {
 
 	return (
 		<main>
-			<Card className="request-like">
-				<CardHeader className="border-primary-foresoft/30 mx-6 mb-3 border-b px-0 pt-6 pb-3">
+			<CardlikeRequest>
+				<CardHeader className="border-primary-foresoft/20 mb-3 border-b pb-3">
 					<CardTitle className="sr-only">
 						Request for {languages[request.lang]}
 					</CardTitle>
@@ -282,7 +282,7 @@ function FulfillRequestPage() {
 						</div>
 					</div>
 				</CardContent>
-			</Card>
+			</CardlikeRequest>
 			{!phrases?.length ? null : (
 				phrases.map((phrase) => (
 					<div key={phrase.id} className="ms-4 space-y-2 border border-t-0 p-4">

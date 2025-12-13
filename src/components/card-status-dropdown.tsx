@@ -164,7 +164,7 @@ export function CardStatusDropdown({
 }: CardStatusDropdownProps) {
 	const userId = useUserId()
 	const { data: decks } = useDecks()
-	const deckPresent = decks.some((d) => d.lang === phrase.lang) ?? false
+	const deckPresent = decks?.some((d) => d.lang === phrase.lang) ?? false
 	const card = phrase.card
 
 	const cardMutation = useCardStatusMutation(phrase)
@@ -260,9 +260,6 @@ export function CardStatusHeart({
 		<Button
 			variant="outline"
 			size="icon"
-			className={
-				phrase.card?.status === 'active' ? 'border-primary-foresoft/30' : ''
-			}
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => mutation.mutate({ status: statusToPost })}
 		>

@@ -232,12 +232,6 @@
 @utility s-language-name {
 	@apply text-accent-foreground font-semibold italic;
 }
-@utility card-like {
-	@apply bg-card! border-primary mb-4 rounded-lg border border-s-4! border-e-0! border-t-0! border-b-0! shadow-[7px_7px_12px_-3px_rgba(0,0,0,0.36)]!;
-}
-@utility request-like {
-	@apply bg-background! border-primary-foresoft/30! rounded-none! border shadow-none;
-}
 
 @layer base {
 	body {

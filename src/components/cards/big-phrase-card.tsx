@@ -16,7 +16,7 @@ import { AddTags } from '@/components/add-tags'
 import { CardStatusDropdown } from '@/components/card-status-dropdown'
 import CopyLinkButton from '@/components/copy-link-button'
 import SharePhraseButton from '@/components/share-phrase-button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
@@ -24,6 +24,7 @@ import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import UserPermalink from '@/components/user-permalink'
 import { Loader } from '@/components/ui/loader'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -44,7 +45,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					/>
 				</div>
 			:	null}
-			<Card className="card-like @container">
+			<CardlikeFlashcard className="@container">
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
@@ -139,7 +140,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						</div>
 					</div>
 				</CardContent>
-			</Card>
+			</CardlikeFlashcard>
 			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}

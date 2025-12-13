@@ -1,13 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { LinkIcon } from 'lucide-react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
 import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
+import { CardlikeRequest } from '@/components/ui/card-like'
 
 export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
@@ -20,7 +21,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 		)
 
 	return (
-		<Card className="request-like relative z-10">
+		<CardlikeRequest className="relative z-10">
 			{isLoading || !request ?
 				<Loader className="my-6" />
 			:	<>
@@ -34,7 +35,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 						<p>&ldquo;{request.prompt}&rdquo;</p>
 						{isLoadingPhrases ? null : (
 							<p className="text-muted-foreground text-sm">
-								{answers.length} answer{answers.length === 1 ? '' : 's'}
+								{answers?.length} answer{answers?.length === 1 ? '' : 's'}
 							</p>
 						)}
 
@@ -57,6 +58,6 @@ export function RequestPreview({ id }: { id: uuid }) {
 					</CardContent>
 				</>
 			}
-		</Card>
+		</CardlikeRequest>
 	)
 }
