@@ -5,15 +5,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
-import { MessageSquarePlus, Repeat, Send, Star } from 'lucide-react'
+import { MessageSquarePlus, Send, Star } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
-import {
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/components/ui/card'
+import { CardContent } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
@@ -54,6 +49,7 @@ import {
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
+import { RequestHeader } from '@/components/card-pieces/request-header-footer'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	component: FulfillRequestPage,
@@ -137,26 +133,8 @@ function FulfillRequestPage() {
 	return (
 		<main>
 			<CardlikeRequest>
-				<CardHeader className="border-primary-foresoft/20 mb-3 border-b pb-3">
-					<CardTitle className="sr-only">
-						Request for {languages[request.lang]}
-					</CardTitle>
-					<div className="flex flex-row items-center justify-between">
-						<UserPermalink
-							uid={request.requester_uid}
-							username={request.profile?.username}
-							avatar_path={request.profile?.avatar_path}
-							timeValue={request.created_at}
-						/>
-						<Button variant="ghost" size="icon">
-							<Repeat />
-						</Button>
-					</div>
-					<CardDescription className="sr-only">
-						A request for a flash card, and discussion section with 0 comments
-						nad {phrases?.length ?? 0} answers offered by the community.
-					</CardDescription>
-				</CardHeader>
+				<RequestHeader profile={request.profile} request={request} />
+
 				<CardContent className="flex flex-col gap-2">
 					<Flagged>
 						<div className="inline-flex flex-row gap-2">
@@ -309,8 +287,8 @@ function FulfillRequestPage() {
 						</div>
 						<Flagged>
 							<p className="py-4 text-lg">
-								This is a <em>great</em> question! Here is a phrase my mother
-								used to say. It's a little funny; you'll see in the translation.
+								This is a <em>great</em> question! Sample comment showing an
+								answer:
 							</p>
 						</Flagged>
 						<CardResultSimple phrase={phrase} />
