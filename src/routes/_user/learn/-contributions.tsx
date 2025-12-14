@@ -13,7 +13,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Link } from '@tanstack/react-router'
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import UserPermalink from '@/components/user-permalink'
+import UserPermalink from '@/components/card-pieces/user-permalink'
 
 export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const search = useSearch({ strict: false })

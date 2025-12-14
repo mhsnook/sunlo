@@ -5,9 +5,9 @@ import {
 	AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { CardStatusDropdown } from '@/components/card-status-dropdown'
+import { CardStatusDropdown } from '@/components/card-pieces/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
-import SharePhraseButton from '@/components/share-phrase-button'
+import SharePhraseButton from '@/components/card-pieces/share-phrase-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 
 export function PhraseAccordionItem({

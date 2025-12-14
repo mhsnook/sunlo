@@ -3,7 +3,7 @@ import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
 import { LangBadge } from '@/components/ui/badge'
-import { CardStatusHeart } from '@/components/card-status-dropdown'
+import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {

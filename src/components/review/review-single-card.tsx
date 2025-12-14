@@ -17,11 +17,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
 import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { CardlikeFlashcard } from '../ui/card-like'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
