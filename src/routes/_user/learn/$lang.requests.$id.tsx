@@ -50,8 +50,12 @@ import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/card-pieces/request-header-footer'
+import { Collapsible } from '@radix-ui/react-collapsible'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
+	validateSearch: z.object({
+		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
+	}),
 	component: FulfillRequestPage,
 })
 
@@ -68,6 +72,7 @@ function FulfillRequestPage() {
 	const [isAnswering, setIsAnswering] = useState(false)
 	const { data: request, isLoading } = useRequest(params.id)
 	const { data: phrases } = usePhrasesFromRequest(params.id)
+	const search = Route.useSearch()
 
 	const form = useForm<FulfillRequestFormInputs>({
 		resolver: zodResolver(FulfillRequestSchema),
@@ -261,44 +266,53 @@ function FulfillRequestPage() {
 					</div>
 				</CardContent>
 			</CardlikeRequest>
-			{!phrases?.length ? null : (
-				phrases.map((phrase) => (
-					<div key={phrase.id} className="ms-4 space-y-2 border border-t-0 p-4">
-						<div className="flex flex-row items-center justify-between">
-							<UserPermalink
-								uid={phrase.added_by}
-								username={phrase.profile?.username}
-								avatar_path={phrase.profile?.avatar_path}
-								timeValue={phrase.created_at}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								timeLinkParams={params}
-								timeLinkTo="/learn/$lang/$id"
-							/>
-							<Flagged name="favourite_answer" className="flex flex-row gap-2">
-								<Button
-									variant="outline"
-									size="icon"
-									className="text-muted-foreground"
-									disabled
+
+			<Collapsible open={search.show !== 'request-only'}>
+				{!phrases?.length ? null : (
+					phrases.map((phrase) => (
+						<div
+							key={phrase.id}
+							className="ms-4 space-y-2 border border-t-0 p-4"
+						>
+							<div className="flex flex-row items-center justify-between">
+								<UserPermalink
+									uid={phrase.added_by}
+									username={phrase.profile?.username}
+									avatar_path={phrase.profile?.avatar_path}
+									timeValue={phrase.created_at}
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									timeLinkParams={params}
+									timeLinkTo="/learn/$lang/$id"
+								/>
+								<Flagged
+									name="favourite_answer"
+									className="flex flex-row gap-2"
 								>
-									<Star />
-								</Button>
+									<Button
+										variant="outline"
+										size="icon"
+										className="text-muted-foreground"
+										disabled
+									>
+										<Star />
+									</Button>
+								</Flagged>
+							</div>
+							<Flagged>
+								<p className="py-4 text-lg">
+									This is a <em>great</em> question! Sample comment showing an
+									answer:
+								</p>
 							</Flagged>
+							<CardResultSimple phrase={phrase} />
+							<Flagged>
+								<p className="s-link py-4 text-sm">show 3 replies</p>
+							</Flagged>
+							{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
 						</div>
-						<Flagged>
-							<p className="py-4 text-lg">
-								This is a <em>great</em> question! Sample comment showing an
-								answer:
-							</p>
-						</Flagged>
-						<CardResultSimple phrase={phrase} />
-						<Flagged>
-							<p className="s-link py-4 text-sm">show 3 replies</p>
-						</Flagged>
-						{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
-					</div>
-				))
-			)}
+					))
+				)}
+			</Collapsible>
 		</main>
 	)
 }

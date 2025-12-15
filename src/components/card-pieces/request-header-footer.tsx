@@ -4,7 +4,7 @@ import UserPermalink from './user-permalink'
 import { LangBadge } from '@/components/ui/badge'
 import Flagged from '@/components/flagged'
 import { Heart, MessagesSquare, Repeat, Send, WalletCards } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { Link, useSearch } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from './share-request-button'
@@ -60,6 +60,7 @@ export function RequestFooter({
 	commentsCount: number
 }) {
 	const shareUrl = `${window.location.origin}/learn/${request.lang}/requests/${request.id}`
+	const search = useSearch({ strict: false })
 	return (
 		<CardFooter className="flex items-center justify-between">
 			<div className="text-muted-foreground flex items-center gap-4 text-sm">
@@ -77,23 +78,37 @@ export function RequestFooter({
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: request.lang, id: request.id }}
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						search={{
+							show: search.show === 'thread' ? 'request-only' : 'thread',
+						}}
 						className={cn(
 							buttonVariants({ size: 'sm', variant: 'outline-accent' })
 						)}
 					>
-						<MessagesSquare /> View comments ({commentsCount})
+						<MessagesSquare /> {search.show === 'thread' ? 'Hide' : 'Show'}{' '}
+						comments ({commentsCount})
 					</Link>
-					<Link
-						to="/learn/$lang/requests/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: request.lang, id: request.id }}
-						className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
-					>
-						<WalletCards className="h-4 w-4" />
-						<span>
-							{answersCount} {answersCount === 1 ? 'answer' : 'answers'}
-						</span>
-					</Link>
+					{answersCount ?
+						<Link
+							to="/learn/$lang/requests/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: request.lang, id: request.id }}
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							search={{
+								show:
+									search.show === 'answers-only' ? 'thread' : 'answers-only',
+							}}
+							className="s-link-hidden text-muted-foreground flex items-center gap-2 text-sm"
+						>
+							<WalletCards className="h-4 w-4" />
+							<span>
+								{search.show === 'answers-only' ?
+									'Show all comments'
+								:	`Show ${answersCount} answer${answersCount !== 1 ? 's' : ''}`}
+							</span>
+						</Link>
+					:	null}
 				</div>
 			</div>
 
