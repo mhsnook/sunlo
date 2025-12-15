@@ -1,5 +1,8 @@
-import { createCollection } from '@tanstack/react-db'
-import { queryCollectionOptions } from '@tanstack/query-db-collection'
+import { Collection, createCollection } from '@tanstack/react-db'
+import {
+	queryCollectionOptions,
+	QueryCollectionUtils,
+} from '@tanstack/query-db-collection'
 
 import {
 	PhraseFullSchema,
@@ -27,6 +30,12 @@ import {
 	DeckMetaRawSchema,
 	LangTagSchema,
 	type LangTagType,
+	RequestCommentSchema,
+	type RequestCommentType,
+	CommentPhraseSchema,
+	type CommentPhraseType,
+	CommentUpvoteSchema,
+	type CommentUpvoteType,
 } from './schemas'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
@@ -276,6 +285,70 @@ export const chatMessagesCollection = createCollection(
 	})
 )
 
+// Comment system collections
+export const commentsCollection: Collection<
+	RequestCommentType,
+	string,
+	QueryCollectionUtils
+> = createCollection(
+	queryCollectionOptions({
+		id: 'request_comments',
+		queryKey: ['public', 'request_comment'],
+		queryFn: async () => {
+			console.log(`Loading commentsCollection`)
+			const { data } = await supabase
+				.from('request_comment')
+				.select('*')
+				.throwOnError()
+			return data?.map((item) => RequestCommentSchema.parse(item)) ?? []
+		},
+		getKey: (item: RequestCommentType) => item.id,
+		queryClient,
+		schema: RequestCommentSchema,
+	})
+)
+
+export const commentPhrasesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'comment_phrases',
+		queryKey: ['public', 'comment_phrase'],
+		queryFn: async () => {
+			console.log(`Loading commentPhrasesCollection`)
+			const { data } = await supabase
+				.from('comment_phrase')
+				.select()
+				.throwOnError()
+			return data?.map((item) => CommentPhraseSchema.parse(item)) ?? []
+		},
+		getKey: (item: CommentPhraseType) => item.id,
+		queryClient,
+		schema: CommentPhraseSchema,
+	})
+)
+
+export const commentUpvotesCollection: Collection<
+	CommentUpvoteType,
+	string,
+	QueryCollectionUtils
+> = createCollection(
+	queryCollectionOptions({
+		id: 'comment_upvotes',
+		queryKey: ['public', 'comment_upvote'],
+		queryFn: async () => {
+			console.log(`Loading commentUpvotesCollection`)
+			const { data } = await supabase
+				.from('comment_upvote')
+				.select('comment_id')
+				.throwOnError()
+			return data?.map((item) => CommentUpvoteSchema.parse(item)) ?? []
+		},
+		// this is a one-column table consisting of comment IDs only
+		getKey: (item: CommentUpvoteType) => item.comment_id,
+		queryClient,
+		schema: CommentUpvoteSchema,
+	})
+)
+
 export const clearUser = async () => {
 	await Promise.all([
 		myProfileCollection.cleanup(),
@@ -285,5 +358,8 @@ export const clearUser = async () => {
 		cardReviewsCollection.cleanup(),
 		friendSummariesCollection.cleanup(),
 		chatMessagesCollection.cleanup(),
+		commentsCollection.cleanup(),
+		commentPhrasesCollection.cleanup(),
+		commentUpvotesCollection.cleanup(),
 	])
 }

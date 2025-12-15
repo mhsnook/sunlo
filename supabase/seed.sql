@@ -621,15 +621,7 @@ values
 -- Data for Name: phrase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
-	"public"."phrase" (
-		"text",
-		"id",
-		"added_by",
-		"lang",
-		"created_at",
-		"text_script",
-		"request_id"
-	)
+	"public"."phrase" ("text", "id", "added_by", "lang", "created_at", "text_script")
 values
 	(
 		'Amele',
@@ -637,7 +629,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -646,7 +637,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -655,7 +645,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -664,7 +653,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -673,7 +661,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kok',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -682,7 +669,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kok',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -691,7 +677,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -700,7 +685,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -709,7 +693,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -718,7 +701,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -727,7 +709,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -736,7 +717,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -745,7 +725,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -754,7 +733,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -763,7 +741,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -772,7 +749,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -781,7 +757,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -790,7 +765,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -799,7 +773,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -808,7 +781,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -817,7 +789,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -826,7 +797,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -835,7 +805,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -844,7 +813,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -853,7 +821,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -862,7 +829,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -871,7 +837,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -880,7 +845,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -889,7 +853,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -898,7 +861,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -907,7 +869,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ita',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -916,7 +877,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -925,7 +885,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -934,7 +893,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -943,7 +901,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -952,7 +909,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -961,7 +917,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -970,7 +925,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -979,7 +933,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -988,7 +941,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -997,7 +949,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1006,7 +957,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1015,7 +965,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1024,7 +973,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1033,7 +981,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1042,7 +989,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1051,7 +997,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1060,7 +1005,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1069,7 +1013,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1078,7 +1021,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1087,7 +1029,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1096,7 +1037,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1105,7 +1045,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1114,7 +1053,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1123,7 +1061,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1132,7 +1069,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1141,7 +1077,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1150,7 +1085,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1159,7 +1093,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1168,7 +1101,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1177,7 +1109,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1186,7 +1117,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1195,7 +1125,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1204,7 +1133,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1213,7 +1141,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1222,7 +1149,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1231,7 +1157,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1240,7 +1165,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1249,7 +1173,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1258,7 +1181,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1267,7 +1189,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1276,7 +1197,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1285,7 +1205,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1294,7 +1213,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1303,7 +1221,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ara',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1312,7 +1229,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1321,7 +1237,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1330,7 +1245,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1339,7 +1253,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1348,7 +1261,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1357,7 +1269,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1366,7 +1277,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1375,7 +1285,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1384,7 +1293,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1393,7 +1301,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1402,7 +1309,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1411,7 +1317,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1420,7 +1325,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1429,7 +1333,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ara',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1438,7 +1341,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1447,7 +1349,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1456,7 +1357,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1465,7 +1365,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1474,7 +1373,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mal',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1483,7 +1381,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1492,7 +1389,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1501,7 +1397,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1510,7 +1405,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1519,7 +1413,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1528,7 +1421,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1537,7 +1429,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1546,7 +1437,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1555,7 +1445,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1564,7 +1453,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1573,7 +1461,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1582,7 +1469,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1591,7 +1477,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1600,7 +1485,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'aar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1609,7 +1493,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1618,7 +1501,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'aar',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1627,7 +1509,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1636,7 +1517,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1645,7 +1525,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1654,7 +1533,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1663,7 +1541,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1672,7 +1549,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1681,7 +1557,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1690,7 +1565,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1699,7 +1573,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1708,7 +1581,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1717,7 +1589,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1726,7 +1597,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1735,7 +1605,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1744,7 +1613,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1753,7 +1621,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1762,7 +1629,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1771,7 +1637,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1780,7 +1645,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1789,7 +1653,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1798,7 +1661,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1807,7 +1669,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1816,7 +1677,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1825,7 +1685,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1834,7 +1693,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1843,7 +1701,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1852,7 +1709,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1861,7 +1717,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1870,7 +1725,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1879,7 +1733,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1888,7 +1741,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1897,7 +1749,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1906,7 +1757,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1915,7 +1765,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1924,7 +1773,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1933,7 +1781,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1942,7 +1789,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1951,7 +1797,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1960,7 +1805,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1969,7 +1813,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1978,7 +1821,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1987,7 +1829,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -1996,7 +1837,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2005,7 +1845,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2014,7 +1853,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2023,7 +1861,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2032,7 +1869,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2041,7 +1877,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2050,7 +1885,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2059,7 +1893,6 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
 		now() - interval '60 days',
-		null,
 		null
 	),
 	(
@@ -2068,8 +1901,7 @@ values
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'hin',
 		now() - interval '2 days',
-		null,
-		'e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+		null
 	);
 
 --

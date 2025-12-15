@@ -3,6 +3,21 @@ import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
+
+export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
+	const { data, isLoading } = useOnePublicProfile(uid)
+	return (
+		isLoading ? null
+		: !data ? <>profile not found</>
+		: <UserPermalink
+				uid={uid}
+				username={data?.username}
+				avatar_path={data?.avatar_path}
+				{...args}
+			/>
+	)
+}
 
 export default function UserPermalink({
 	uid,

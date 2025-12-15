@@ -6,8 +6,10 @@ import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 export function CardResultSimple({
 	phrase,
+	nonInteractive,
 }: {
 	phrase: PhraseFullFilteredType | PhraseFullFullType
+	nonInteractive?: boolean
 }) {
 	return (
 		<CardlikeFlashcard className="space-y-4 p-6">
@@ -16,17 +18,19 @@ export function CardResultSimple({
 					<LangBadge lang={phrase.lang} /> &ldquo;{phrase.text}&rdquo;
 				</h4>
 
-				<div className="space-x-2">
-					<PermalinkButton
-						to="/learn/$lang/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={{ lang: phrase.lang, id: phrase.id }}
-						variant="ghost"
-						size="icon"
-						text=""
-					/>
-					<CardStatusHeart phrase={phrase} />
-				</div>
+				{nonInteractive ? null : (
+					<div className="space-x-2">
+						<PermalinkButton
+							to="/learn/$lang/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: phrase.lang, id: phrase.id }}
+							variant="ghost"
+							size="icon"
+							text=""
+						/>
+						<CardStatusHeart phrase={phrase} />
+					</div>
+				)}
 			</div>
 			<ul className="mt-2 space-y-1">
 				{phrase.translations?.map((t) => (
