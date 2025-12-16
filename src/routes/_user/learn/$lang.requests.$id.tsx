@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/card-pieces/request-header-footer'
 import { Collapsible } from '@radix-ui/react-collapsible'
-import { AddCommentForm } from '@/components/comments/add-comment-form'
+import { CommentForm } from '@/components/comments/comment-form'
 import { CommentList } from '@/components/comments/comment-list'
 import { AnswersOnlyView } from '@/components/comments/answers-only-view'
 import { Send } from 'lucide-react'
@@ -41,7 +41,7 @@ function FulfillRequestPage() {
 		return (
 			<ShowAndLogError
 				error={new Error('Request not found')}
-				message="We couldn't find that request. It might have been deleted or you may have mistyped the link."
+				text="We couldn't find that request. It might have been deleted or you may have mistyped the link."
 			/>
 		)
 
@@ -88,7 +88,7 @@ function FulfillRequestPage() {
 						</div>
 					</div>
 
-					<AddCommentForm requestId={params.id} lang={params.lang} />
+					<CommentForm requestId={params.id} lang={params.lang} />
 				</CardContent>
 			</CardlikeRequest>
 

@@ -26,7 +26,7 @@ import {
 import UserPermalink from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { AddReplyForm } from './add-reply-form'
+import { CommentForm } from './comment-form'
 import { ReplyDisplay } from './reply-display'
 import supabase from '@/lib/supabase-client'
 import {
@@ -35,7 +35,7 @@ import {
 	publicProfilesCollection,
 } from '@/lib/collections'
 import { useUserId } from '@/lib/use-auth'
-import type { RequestCommentType } from '@/lib/schemas'
+import { RequestCommentSchema, type RequestCommentType } from '@/lib/schemas'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { uuid } from '@/types/main'
 import { usePhrasesFromComment } from '@/hooks/use-comments'
@@ -139,7 +139,7 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 		onSuccess: (data) => {
 			setIsEditing(false)
 			toast.success('Comment updated!')
-			commentsCollection.utils.writeUpdate(data)
+			commentsCollection.utils.writeUpdate(RequestCommentSchema.parse(data))
 		},
 		onError: (error: Error) => {
 			toast.error(`Failed to update comment: ${error.message}`)
@@ -301,12 +301,14 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 			{/* Reply form */}
 			{isReplying && (
 				<div className="border-primary-foresoft/30 ms-4 mt-3 border-s ps-4">
-					<AddReplyForm
+					<CommentForm
 						parentCommentId={comment.id}
 						requestId={comment.request_id}
 						lang={lang}
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onCancel={() => setIsReplying(false)}
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
+						onSuccess={() => setIsReplying(false)}
 					/>
 				</div>
 			)}

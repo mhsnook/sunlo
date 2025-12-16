@@ -39,14 +39,25 @@ const CommentFormSchema = z.object({
 
 type CommentFormInputs = z.infer<typeof CommentFormSchema>
 
-interface AddCommentFormProps {
+interface CommentFormProps {
 	requestId: uuid
 	lang: string
+	parentCommentId?: uuid | null
+	onCancel?: () => void
+	onSuccess?: () => void
 }
 
-export function AddCommentForm({ requestId, lang }: AddCommentFormProps) {
+export function CommentForm({
+	requestId,
+	lang,
+	parentCommentId = null,
+	onCancel,
+	onSuccess,
+}: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
+
+	const isReply = !!parentCommentId
 
 	const form = useForm<CommentFormInputs>({
 		resolver: zodResolver(CommentFormSchema),
@@ -62,7 +73,7 @@ export function AddCommentForm({ requestId, lang }: AddCommentFormProps) {
 				{
 					p_request_id: requestId,
 					p_content: values.content,
-					p_parent_comment_id: null, // null for top-level comments
+					p_parent_comment_id: parentCommentId,
 					p_phrase_ids: selectedPhraseIds,
 				}
 			)
@@ -75,10 +86,13 @@ export function AddCommentForm({ requestId, lang }: AddCommentFormProps) {
 			// Reset form
 			form.reset()
 			setSelectedPhraseIds([])
-			toast.success('Comment posted!')
+			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
+			onSuccess?.()
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to post comment: ${error.message}`)
+			toast.error(
+				`Failed to post ${isReply ? 'reply' : 'comment'}: ${error.message}`
+			)
 		},
 	})
 
@@ -101,19 +115,27 @@ export function AddCommentForm({ requestId, lang }: AddCommentFormProps) {
 					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel className="sr-only">Add a comment</FormLabel>
+							<FormLabel className="sr-only">
+								{isReply ? 'Write a reply' : 'Add a comment'}
+							</FormLabel>
 
 							<FormControl>
 								<Textarea
-									placeholder="Share your thoughts or answer the request..."
-									rows={4}
+									placeholder={
+										isReply ? 'Write a reply...' : (
+											'Share your thoughts or answer the request...'
+										)
+									}
+									rows={isReply ? 3 : 4}
 									{...field}
 								/>
 							</FormControl>
-							<p className="text-muted-foreground text-sm">
-								Comments support markdown like `&gt;` for blockquote,{' '}
-								<em>_italics_</em>, <strong>**bold**</strong>
-							</p>
+							{!isReply && (
+								<p className="text-muted-foreground text-sm">
+									Comments support markdown like `&gt;` for blockquote,{' '}
+									<em>_italics_</em>, <strong>**bold**</strong>
+								</p>
+							)}
 							<FormMessage />
 						</FormItem>
 					)}
@@ -146,10 +168,23 @@ export function AddCommentForm({ requestId, lang }: AddCommentFormProps) {
 				)}
 
 				<div className="flex flex-row items-center justify-between gap-2">
-					{/* Submit button */}
-					<Button type="submit" disabled={createCommentMutation.isPending}>
-						{createCommentMutation.isPending ? 'Posting...' : 'Post Comment'}
-					</Button>
+					<div className="flex flex-row gap-2">
+						{/* Submit button */}
+						<Button type="submit" disabled={createCommentMutation.isPending}>
+							{createCommentMutation.isPending ?
+								'Posting...'
+							: isReply ?
+								'Post Reply'
+							:	'Post Comment'}
+						</Button>
+
+						{/* Cancel button for replies */}
+						{isReply && onCancel && (
+							<Button type="button" variant="ghost" onClick={onCancel}>
+								Cancel
+							</Button>
+						)}
+					</div>
 
 					{/* Add flashcard button */}
 					<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
