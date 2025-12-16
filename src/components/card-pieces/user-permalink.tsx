@@ -4,6 +4,8 @@ import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { Avatar } from '../ui/avatar'
+import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
 
 export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
 	const { data, isLoading } = useOnePublicProfile(uid)
@@ -47,11 +49,12 @@ export default function UserPermalink({
 					params={{ uid }}
 					className={cn(`inline-flex flex-row`, className)}
 				>
-					<img
-						src={avatarUrl}
-						alt={`${username}'s avatar`}
-						className="aspect-square w-8 rounded-2xl object-cover"
-					/>
+					<Avatar className="bg-foreground text-background rounded-2xl">
+						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
+						<AvatarFallback className="mx-auto place-self-center font-bold">
+							{username?.slice(0, 2)}
+						</AvatarFallback>
+					</Avatar>
 				</Link>
 			:	null}
 			<div className="text-sm">
