@@ -1,9 +1,5 @@
-import { Collection, createCollection } from '@tanstack/react-db'
-import {
-	queryCollectionOptions,
-	QueryCollectionUtils,
-} from '@tanstack/query-db-collection'
-
+import { createCollection } from '@tanstack/react-db'
+import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	PhraseFullSchema,
 	type PhraseFullType,
@@ -286,11 +282,7 @@ export const chatMessagesCollection = createCollection(
 )
 
 // Comment system collections
-export const commentsCollection: Collection<
-	RequestCommentType,
-	string,
-	QueryCollectionUtils
-> = createCollection(
+export const commentsCollection = createCollection(
 	queryCollectionOptions({
 		id: 'request_comments',
 		queryKey: ['public', 'request_comment'],
@@ -298,7 +290,7 @@ export const commentsCollection: Collection<
 			console.log(`Loading commentsCollection`)
 			const { data } = await supabase
 				.from('request_comment')
-				.select('*')
+				.select()
 				.throwOnError()
 			return data?.map((item) => RequestCommentSchema.parse(item)) ?? []
 		},
@@ -326,11 +318,7 @@ export const commentPhrasesCollection = createCollection(
 	})
 )
 
-export const commentUpvotesCollection: Collection<
-	CommentUpvoteType,
-	string,
-	QueryCollectionUtils
-> = createCollection(
+export const commentUpvotesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'comment_upvotes',
 		queryKey: ['public', 'comment_upvote'],
