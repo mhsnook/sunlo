@@ -128,32 +128,32 @@ export type Database = {
 			}
 			comment_phrase: {
 				Row: {
-					comment_id: string | null
+					comment_id: string
 					created_at: string
 					id: string
 					phrase_id: string
-					reply_id: string | null
+					request_id: string
 				}
 				Insert: {
-					comment_id?: string | null
+					comment_id: string
 					created_at?: string
 					id?: string
 					phrase_id: string
-					reply_id?: string | null
+					request_id: string
 				}
 				Update: {
-					comment_id?: string | null
+					comment_id?: string
 					created_at?: string
 					id?: string
 					phrase_id?: string
-					reply_id?: string | null
+					request_id?: string
 				}
 				Relationships: [
 					{
 						foreignKeyName: 'comment_phrase_comment_id_fkey'
 						columns: ['comment_id']
 						isOneToOne: false
-						referencedRelation: 'phrase_request_comment'
+						referencedRelation: 'request_comment'
 						referencedColumns: ['id']
 					},
 					{
@@ -171,10 +171,17 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'comment_phrase_reply_id_fkey'
-						columns: ['reply_id']
+						foreignKeyName: 'comment_phrase_request_id_fkey'
+						columns: ['request_id']
 						isOneToOne: false
-						referencedRelation: 'phrase_request_comment_reply'
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
 					},
 				]
@@ -203,7 +210,7 @@ export type Database = {
 						foreignKeyName: 'comment_upvote_comment_id_fkey'
 						columns: ['comment_id']
 						isOneToOne: false
-						referencedRelation: 'phrase_request_comment'
+						referencedRelation: 'request_comment'
 						referencedColumns: ['id']
 					},
 					{
@@ -512,131 +519,6 @@ export type Database = {
 					},
 				]
 			}
-			phrase_request_comment: {
-				Row: {
-					commenter_uid: string
-					content: string
-					created_at: string
-					id: string
-					request_id: string
-					updated_at: string
-					upvote_count: number
-				}
-				Insert: {
-					commenter_uid: string
-					content: string
-					created_at?: string
-					id?: string
-					request_id: string
-					updated_at?: string
-					upvote_count?: number
-				}
-				Update: {
-					commenter_uid?: string
-					content?: string
-					created_at?: string
-					id?: string
-					request_id?: string
-					updated_at?: string
-					upvote_count?: number
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_comment_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request'
-						referencedColumns: ['id']
-					},
-				]
-			}
-			phrase_request_comment_reply: {
-				Row: {
-					commenter_uid: string
-					content: string
-					created_at: string
-					id: string
-					parent_comment_id: string
-					request_id: string
-					updated_at: string
-				}
-				Insert: {
-					commenter_uid: string
-					content: string
-					created_at?: string
-					id?: string
-					parent_comment_id: string
-					request_id: string
-					updated_at?: string
-				}
-				Update: {
-					commenter_uid?: string
-					content?: string
-					created_at?: string
-					id?: string
-					parent_comment_id?: string
-					request_id?: string
-					updated_at?: string
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_comment_reply_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_reply_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_reply_parent_comment_id_fkey'
-						columns: ['parent_comment_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request_comment'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_reply_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_request_comment_reply_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request'
-						referencedColumns: ['id']
-					},
-				]
-			}
 			phrase_tag: {
 				Row: {
 					added_by: string
@@ -766,6 +648,75 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+				]
+			}
+			request_comment: {
+				Row: {
+					commenter_uid: string
+					content: string
+					created_at: string
+					id: string
+					parent_comment_id: string | null
+					request_id: string
+					updated_at: string
+					upvote_count: number
+				}
+				Insert: {
+					commenter_uid: string
+					content: string
+					created_at?: string
+					id?: string
+					parent_comment_id?: string | null
+					request_id: string
+					updated_at?: string
+					upvote_count?: number
+				}
+				Update: {
+					commenter_uid?: string
+					content?: string
+					created_at?: string
+					id?: string
+					parent_comment_id?: string | null
+					request_id?: string
+					updated_at?: string
+					upvote_count?: number
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'request_comment_commenter_uid_fkey'
+						columns: ['commenter_uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'request_comment_commenter_uid_fkey'
+						columns: ['commenter_uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'request_comment_parent_comment_id_fkey'
+						columns: ['parent_comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
 					},
 				]
@@ -1539,21 +1490,13 @@ export type Database = {
 			create_comment_with_phrases: {
 				Args: {
 					p_content: string
-					p_phrase_ids: string[]
+					p_parent_comment_id?: string
+					p_phrase_ids?: string[]
 					p_request_id: string
 				}
 				Returns: Json
 			}
-			create_reply_with_phrases: {
-				Args: {
-					p_content: string
-					p_parent_comment_id: string
-					p_phrase_ids: string[]
-				}
-				Returns: Json
-			}
 			delete_comment: { Args: { p_comment_id: string }; Returns: undefined }
-			delete_reply: { Args: { p_reply_id: string }; Returns: undefined }
 			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
 			fsrs_d_0: { Args: { score: number }; Returns: number }
 			fsrs_days_between: {
@@ -1642,10 +1585,6 @@ export type Database = {
 			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
 			update_comment: {
 				Args: { p_comment_id: string; p_content: string }
-				Returns: Json
-			}
-			update_reply: {
-				Args: { p_content: string; p_reply_id: string }
 				Returns: Json
 			}
 			update_user_card_review: {

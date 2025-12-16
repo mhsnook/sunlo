@@ -6,6 +6,7 @@ import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Paperclip, X } from 'lucide-react'
 
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -26,9 +27,76 @@ import {
 import { SelectPhrasesForComment } from './select-phrases-for-comment'
 import supabase from '@/lib/supabase-client'
 import { commentsCollection } from '@/lib/collections'
-import { RequestCommentSchema } from '@/lib/schemas'
-import type { uuid } from '@/types/main'
-import { PhraseTinyCard } from '../cards/phrase-tiny-card'
+import { PublicProfileType, RequestCommentSchema } from '@/lib/schemas'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import { useRequest } from '@/hooks/use-requests'
+import UserPermalink from '../card-pieces/user-permalink'
+import { Markdown } from '../my-markdown'
+import { useOneComment } from '@/hooks/use-comments'
+import { Separator } from '../ui/separator'
+
+function CommentDisplayOnly({ id }: { id: uuid }) {
+	const { data, isLoading } = useOneComment(id)
+	return isLoading || !data ? null : (
+			<DisplayBlock markdown={data.comment.content} profile={data.profile} />
+		)
+}
+
+function RequestDisplayOnly({ id }: { id: uuid }) {
+	const { data, isLoading } = useRequest(id)
+	return isLoading || !data ? null : (
+			<DisplayBlock markdown={data.prompt} profile={data.profile} />
+		)
+}
+
+function DisplayBlock({
+	markdown,
+	profile,
+}: {
+	markdown: string
+	profile: PublicProfileType
+}) {
+	return (
+		<div>
+			<UserPermalink {...profile} />
+			<div className="ms-13 text-sm">
+				<Markdown>{markdown}</Markdown>
+			</div>
+		</div>
+	)
+}
+
+export function CommentFormDialog({
+	requestId,
+	lang,
+	parentCommentId,
+}: {
+	requestId: uuid
+	lang: string
+	parentCommentId?: uuid
+}) {
+	return (
+		<Dialog>
+			<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
+				<p className="w-full text-start">
+					{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
+					...
+				</p>
+			</DialogTrigger>
+			<DialogContent>
+				{parentCommentId ?
+					<CommentDisplayOnly id={parentCommentId} />
+				:	<RequestDisplayOnly id={requestId} />}
+				<Separator />
+				<CommentForm
+					requestId={requestId}
+					lang={lang}
+					parentCommentId={parentCommentId}
+				/>
+			</DialogContent>
+		</Dialog>
+	)
+}
 
 const CommentFormSchema = z.object({
 	content: z
@@ -42,18 +110,10 @@ type CommentFormInputs = z.infer<typeof CommentFormSchema>
 interface CommentFormProps {
 	requestId: uuid
 	lang: string
-	parentCommentId?: uuid | null
-	onCancel?: () => void
-	onSuccess?: () => void
+	parentCommentId?: uuid
 }
 
-export function CommentForm({
-	requestId,
-	lang,
-	parentCommentId = null,
-	onCancel,
-	onSuccess,
-}: CommentFormProps) {
+function CommentForm({ requestId, lang, parentCommentId }: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
 
@@ -83,11 +143,13 @@ export function CommentForm({
 		onSuccess: (data) => {
 			// Parse and add to collection
 			commentsCollection.utils.writeInsert(RequestCommentSchema.parse(data))
+			// @@TODO: We actually need to be adding little records to the commentPhrase
 			// Reset form
+
+			// commentPhrasesCollection.utils.writeInsert
 			form.reset()
 			setSelectedPhraseIds([])
 			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
-			onSuccess?.()
 		},
 		onError: (error: Error) => {
 			toast.error(
@@ -179,8 +241,8 @@ export function CommentForm({
 						</Button>
 
 						{/* Cancel button for replies */}
-						{isReply && onCancel && (
-							<Button type="button" variant="ghost" onClick={onCancel}>
+						{isReply && (
+							<Button type="button" variant="ghost">
 								Cancel
 							</Button>
 						)}

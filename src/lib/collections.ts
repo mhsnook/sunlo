@@ -294,6 +294,11 @@ export const commentsCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => RequestCommentSchema.parse(item)) ?? []
 		},
+		/*
+		onUpdate: async (item) => {},
+		onInsert: async (item) => {},
+		onDelete: async (commentId) => {},
+		*/
 		getKey: (item: RequestCommentType) => item.id,
 		queryClient,
 		schema: RequestCommentSchema,

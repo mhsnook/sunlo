@@ -4,7 +4,6 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import toast from 'react-hot-toast'
 import {
 	ThumbsUp,
-	MessageSquare,
 	Edit,
 	Trash2,
 	ChevronDown,
@@ -26,8 +25,7 @@ import {
 import UserPermalink from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { CommentForm } from './comment-form'
-import { ReplyDisplay } from './reply-display'
+import { CommentFormDialog } from './comment-form'
 import supabase from '@/lib/supabase-client'
 import {
 	commentsCollection,
@@ -72,7 +70,6 @@ function useIsCommentUpvoted(commentId: uuid) {
 
 export function CommentThread({ comment, lang }: CommentThreadProps) {
 	const userId = useUserId()
-	const [isReplying, setIsReplying] = useState(false)
 	const [isEditing, setIsEditing] = useState(false)
 	const [editContent, setEditContent] = useState(comment.content)
 	const [showReplies, setShowReplies] = useState(false)
@@ -129,10 +126,13 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 	// Update comment mutation
 	const updateCommentMutation = useMutation({
 		mutationFn: async (content: string) => {
-			const { data, error } = await supabase.rpc('update_comment', {
-				p_comment_id: comment.id,
-				p_content: content,
-			})
+			const { data, error } = await supabase
+				.from('request_comment')
+				.update({ content })
+				.eq('id', comment.id)
+				.select()
+				.single()
+
 			if (error) throw error
 			return data
 		},
@@ -149,9 +149,11 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 	// Delete comment mutation
 	const deleteCommentMutation = useMutation({
 		mutationFn: async () => {
-			const { error } = await supabase.rpc('delete_comment', {
-				p_comment_id: comment.id,
-			})
+			const { error } = await supabase
+				.from('request_comment')
+				.delete()
+				.eq('id', comment.id)
+
 			if (error) throw error
 		},
 		onSuccess: () => {
@@ -254,7 +256,7 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="mt-3 flex gap-2">
+			<div className="mt-3 flex items-center gap-2 mb-2 pb-2">
 				<Button
 					variant={hasUpvoted ? 'outline' : 'outline'}
 					size="sm"
@@ -273,16 +275,6 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 					{comment.upvote_count}
 				</Button>
 
-				<Button
-					variant="ghost"
-					size="sm"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => setIsReplying(!isReplying)}
-				>
-					<MessageSquare className="mr-1 h-4 w-4" />
-					Reply
-				</Button>
-
 				{replyCount > 0 && (
 					<Button
 						variant="ghost"
@@ -293,31 +285,22 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 						{showReplies ?
 							<ChevronUp className="mr-1 h-4 w-4" />
 						:	<ChevronDown className="mr-1 h-4 w-4" />}
-						{replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+						{showReplies ? 'Hide' : `Show ${replyCount}`}
+						{replyCount === 1 ? ' reply' : ' replies'}
 					</Button>
 				)}
 			</div>
 
-			{/* Reply form */}
-			{isReplying && (
-				<div className="border-primary-foresoft/30 ms-4 mt-3 border-s ps-4">
-					<CommentForm
-						parentCommentId={comment.id}
-						requestId={comment.request_id}
-						lang={lang}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onCancel={() => setIsReplying(false)}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onSuccess={() => setIsReplying(false)}
-					/>
-				</div>
-			)}
-
+			<CommentFormDialog
+				parentCommentId={comment.id}
+				requestId={comment.request_id}
+				lang={lang}
+			/>
 			{/* Replies */}
 			{showReplies && replies && replies.length > 0 && (
 				<div className="border-primary-foresoft/30 ms-4 mt-3 space-y-3 border-s ps-4">
 					{replies.map(({ reply }) => (
-						<ReplyDisplay key={reply.id} reply={reply} lang={lang} />
+						<CommentThread key={reply.id} comment={reply} lang={lang} />
 					))}
 				</div>
 			)}

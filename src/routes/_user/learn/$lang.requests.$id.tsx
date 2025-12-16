@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import * as z from 'zod'
-import { MessageSquareQuote, MessagesSquare } from 'lucide-react'
+import { MessageSquareQuote, MessagesSquare, Repeat } from 'lucide-react'
 
-import { CardContent } from '@/components/ui/card'
+import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/card-pieces/request-header-footer'
 import { Collapsible } from '@radix-ui/react-collapsible'
-import { CommentForm } from '@/components/comments/comment-form'
+import { CommentFormDialog } from '@/components/comments/comment-form'
 import { CommentList } from '@/components/comments/comment-list'
 import { AnswersOnlyView } from '@/components/comments/answers-only-view'
 import { Send } from 'lucide-react'
@@ -26,10 +26,10 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
 	}),
-	component: FulfillRequestPage,
+	component: RequestThreadPage,
 })
 
-function FulfillRequestPage() {
+function RequestThreadPage() {
 	const params = Route.useParams()
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: request, isLoading } = useRequest(params.id)
@@ -50,7 +50,7 @@ function FulfillRequestPage() {
 			<CardlikeRequest>
 				<RequestHeader profile={request.profile} request={request} />
 
-				<CardContent className="flex flex-col gap-2">
+				<CardContent className="flex flex-col gap-6">
 					<Flagged>
 						<div className="inline-flex flex-row gap-2">
 							<Badge variant="outline">Food</Badge>
@@ -60,10 +60,19 @@ function FulfillRequestPage() {
 					<div className="text-lg">
 						<Markdown>{request.prompt}</Markdown>
 					</div>
-					<div className="flex flex-row items-center justify-between">
-						<p className="text-muted-foreground mt-4 text-sm">
-							View comments and answers below
-						</p>
+				</CardContent>
+				<CardFooter className="flex flex-col gap-2 border-t pt-6">
+					<div className="flex w-full flex-row items-center justify-between gap-2">
+						<div className="text-muted-foreground flex flex-row items-center gap-2">
+							<Button variant="ghost" size="icon">
+								<Repeat />
+							</Button>
+							<span>0</span>
+							<Button variant="ghost" size="icon" className="ms-4">
+								<MessagesSquare />
+							</Button>
+							<span>0</span>
+						</div>
 
 						<div className="flex flex-row justify-between gap-4">
 							<div className="flex flex-row items-center gap-2">
@@ -87,9 +96,8 @@ function FulfillRequestPage() {
 							</div>
 						</div>
 					</div>
-
-					<CommentForm requestId={params.id} lang={params.lang} />
-				</CardContent>
+					<CommentFormDialog requestId={params.id} lang={params.lang} />
+				</CardFooter>
 			</CardlikeRequest>
 
 			{/* View toggle buttons */}

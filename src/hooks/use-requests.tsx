@@ -50,17 +50,17 @@ export function useRequestsLang(
 
 export const useRequest = (
 	id: string
-): UseLiveQueryResult<
-	PhraseRequestType & { profile: PublicProfileType | undefined }
-> =>
+): UseLiveQueryResult<PhraseRequestType & { profile: PublicProfileType }> =>
 	useLiveQuery(
 		(q) =>
 			q
 				.from({ req: phraseRequestsCollection })
 				.where(({ req }) => eq(req.id, id))
 				.findOne()
-				.join({ profile: publicProfilesCollection }, ({ req, profile }) =>
-					eq(profile.uid, req.requester_uid)
+				.join(
+					{ profile: publicProfilesCollection },
+					({ req, profile }) => eq(profile.uid, req.requester_uid),
+					'inner'
 				)
 				.select(({ req, profile }) => ({
 					...req,
@@ -69,6 +69,7 @@ export const useRequest = (
 		[id]
 	)
 
+// @@TODO THIS IS NOT WORKING ANY MORE DUE TO NEW DB STRUCTURE
 export const usePhrasesFromRequest = (
 	id: string
 ): UseLiveQueryResult<PhraseFullFullType[]> =>
