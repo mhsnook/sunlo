@@ -6,7 +6,13 @@ import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 
-export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
+export const PhraseTinyCard = ({
+	pid,
+	className,
+}: {
+	pid: uuid
+	className: string
+}) => {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) {
@@ -18,7 +24,7 @@ export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 	}
 	return (
 		<Link
-			className="m-1 transition-all hover:-translate-y-px"
+			className={`m-1 transition-all hover:-translate-y-px ${className}`}
 			to="/learn/$lang/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}

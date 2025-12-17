@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { ReactNode, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -58,7 +58,7 @@ function DisplayBlock({
 }) {
 	return (
 		<div>
-			<UserPermalink {...profile} />
+			<UserPermalink {...profile} nonInteractive />
 			<div className="ms-13 text-sm">
 				<Markdown>{markdown}</Markdown>
 			</div>
@@ -66,29 +66,33 @@ function DisplayBlock({
 	)
 }
 
-export function CommentFormDialog({
+export function AddCommentDialog({
 	requestId,
 	lang,
 	parentCommentId,
+	children,
 }: {
 	requestId: uuid
 	lang: string
 	parentCommentId?: uuid
+	children?: ReactNode
 }) {
 	return (
 		<Dialog>
-			<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
-				<p className="w-full text-start">
-					{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
-					...
-				</p>
-			</DialogTrigger>
+			{children ?? (
+				<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
+					<p className="w-full text-start">
+						{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
+						...
+					</p>
+				</DialogTrigger>
+			)}
 			<DialogContent>
 				{parentCommentId ?
 					<CommentDisplayOnly id={parentCommentId} />
 				:	<RequestDisplayOnly id={requestId} />}
 				<Separator />
-				<CommentForm
+				<NewCommentForm
 					requestId={requestId}
 					lang={lang}
 					parentCommentId={parentCommentId}
@@ -113,7 +117,11 @@ interface CommentFormProps {
 	parentCommentId?: uuid
 }
 
-function CommentForm({ requestId, lang, parentCommentId }: CommentFormProps) {
+function NewCommentForm({
+	requestId,
+	lang,
+	parentCommentId,
+}: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
 
@@ -205,14 +213,14 @@ function CommentForm({ requestId, lang, parentCommentId }: CommentFormProps) {
 
 				{/* Attached flashcards */}
 				{selectedPhraseIds && selectedPhraseIds.length > 0 && (
-					<div className="space-y-2">
+					<div className="mb-0 space-y-2">
 						<p className="text-sm font-medium">
 							Attached flashcards ({selectedPhraseIds.length}/4)
 						</p>
 						<div className="grid grid-cols-2 space-y-2">
 							{selectedPhraseIds.map((pid) => (
 								<div key={pid} className="relative col-span-1 px-2 py-1">
-									<PhraseTinyCard pid={pid} />
+									<PhraseTinyCard pid={pid} className="mb-0" />
 									<Button
 										type="button"
 										variant="ghost"

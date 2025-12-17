@@ -15,17 +15,19 @@ import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/card-pieces/request-header-footer'
 import { Collapsible } from '@radix-ui/react-collapsible'
-import { CommentFormDialog } from '@/components/comments/comment-form'
-import { CommentList } from '@/components/comments/comment-list'
+import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
 import { AnswersOnlyView } from '@/components/comments/answers-only-view'
 import { Send } from 'lucide-react'
 import Flagged from '@/components/flagged'
 import { ButtonGroup } from '@/components/ui/button-group'
+import { TopLevelComments } from '@/components/comments/top-level-comments'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
 		showSubthread: z.string().uuid().optional(),
+		// @@TODO style the highlighted comment
+		highlightComment: z.string().uuid().optional(),
 	}),
 	component: RequestThreadPage,
 })
@@ -97,7 +99,7 @@ function RequestThreadPage() {
 							</div>
 						</div>
 					</div>
-					<CommentFormDialog requestId={params.id} lang={params.lang} />
+					<AddCommentDialog requestId={params.id} lang={params.lang} />
 				</CardFooter>
 			</CardlikeRequest>
 
@@ -130,7 +132,7 @@ function RequestThreadPage() {
 				<div className="ms-4 border border-t-0 p-4">
 					{search.show === 'answers-only' ?
 						<AnswersOnlyView requestId={params.id} />
-					:	<CommentList requestId={params.id} lang={params.lang} />}
+					:	<TopLevelComments requestId={params.id} lang={params.lang} />}
 				</div>
 			</Collapsible>
 		</main>

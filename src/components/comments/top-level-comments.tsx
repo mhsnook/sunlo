@@ -1,6 +1,6 @@
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import { commentsCollection } from '@/lib/collections'
-import { CommentThread } from './comment-thread'
+import { CommentWithReplies } from './comment-with-replies'
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 
@@ -25,7 +25,7 @@ function useTopLevelComments(requestId: uuid) {
 	)
 }
 
-export function CommentList({ requestId, lang }: CommentListProps) {
+export function TopLevelComments({ requestId, lang }: CommentListProps) {
 	// Get comments for this request, sorted by upvote count
 	const { data: comments, isLoading } = useTopLevelComments(requestId)
 
@@ -41,7 +41,7 @@ export function CommentList({ requestId, lang }: CommentListProps) {
 	return (
 		<div className="divide-y">
 			{comments.map((comment) => (
-				<CommentThread key={comment.id} comment={comment} lang={lang} />
+				<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
 			))}
 		</div>
 	)

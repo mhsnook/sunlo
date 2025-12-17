@@ -28,7 +28,9 @@ export default function UserPermalink({
 	className,
 	timeLinkTo,
 	timeLinkParams,
+	timeLinkSearch,
 	timeValue,
+	nonInteractive,
 }: {
 	uid: uuid | null | undefined
 	username: string | null | undefined
@@ -36,7 +38,9 @@ export default function UserPermalink({
 	className?: string
 	timeLinkTo?: string
 	timeLinkParams?: Record<string, string>
+	timeLinkSearch?: Record<string, string>
 	timeValue?: string
+	nonInteractive?: boolean
 }) {
 	if (!uid) return null
 	const avatarUrl = avatarUrlify(avatar_path)
@@ -48,6 +52,7 @@ export default function UserPermalink({
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className={cn(`inline-flex flex-row`, className)}
+					disabled={nonInteractive}
 				>
 					<Avatar className="bg-foreground text-background rounded-2xl">
 						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
@@ -66,6 +71,7 @@ export default function UserPermalink({
 						to={timeLinkTo}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={timeLinkParams}
+						search={timeLinkSearch}
 						className="s-link-hidden text-muted-foreground"
 					>
 						{ago(timeValue)}
