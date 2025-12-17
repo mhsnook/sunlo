@@ -1,5 +1,6 @@
-import type { UseMutationResult } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -12,20 +13,41 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { RequestCommentType } from '@/lib/schemas'
+import supabase from '@/lib/supabase-client'
+import { commentsCollection } from '@/lib/collections'
 
 export function DeleteCommentDialog({
-	mutation,
+	comment,
 }: {
-	mutation: UseMutationResult<void, Error, void, unknown>
+	comment: RequestCommentType
 }) {
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+	const [open, setOpen] = useState(false)
+	// Delete comment mutation
+	const mutation = useMutation({
+		mutationFn: async () => {
+			const { error } = await supabase
+				.from('request_comment')
+				.delete()
+				.eq('id', comment.id)
+
+			if (error) throw error
+		},
+		onSuccess: () => {
+			commentsCollection.utils.writeDelete(comment.id)
+			toast.success('Comment deleted')
+		},
+		onError: (error: Error) => {
+			toast.error(`Failed to delete comment: ${error.message}`)
+		},
+	})
 	return (
-		<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
 				variant="ghost"
 				size="icon"
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
-				onClick={() => setDeleteDialogOpen(true)}
+				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />
 			</Button>
