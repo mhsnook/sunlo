@@ -26,7 +26,11 @@ interface CommentThreadProps {
 export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const userId = useUserId()
 	const search = useSearch({ strict: false })
-	const showReplies = search.showSubthread === comment.id
+	const showSubthread = search.showSubthread === comment.id
+	const isHighlighted = useSearch({
+		strict: false,
+		select: (data) => data.highlightComment === comment.id,
+	})
 
 	// Get profile for this comment
 	const { data: profileData } = useOnePublicProfile(comment.commenter_uid)
@@ -55,7 +59,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const replyCount = replies?.length ?? 0
 
 	return (
-		<div className="border-b py-4">
+		<div
+			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} pt-4`}
+		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
 				<UserPermalink
@@ -65,6 +71,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					timeValue={comment.created_at}
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ id: comment.request_id, lang }}
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					timeLinkSearch={{ showSubthread: comment.id }}
 					timeLinkTo="/learn/$lang/requests/$id"
 				/>
 
@@ -124,26 +132,28 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							} else return { ...search, showSubthread: comment.id }
 						}}
 					>
-						{showReplies ?
+						{showSubthread ?
 							<ChevronUp className="mr-1 h-4 w-4" />
 						:	<ChevronDown className="mr-1 h-4 w-4" />}
-						{showReplies ? 'Hide' : `Show ${replyCount}`}
+						{showSubthread ? 'Hide' : `Show ${replyCount}`}
 						{replyCount === 1 ? ' reply' : ' replies'}
 					</Link>
 				)}
 			</div>
 
 			{/* Replies */}
-			{showReplies && replies && replies.length > 0 && (
+			{showSubthread && replies && replies.length > 0 && (
 				<div className="border-primary-foresoft/30 ms-4 mt-3 space-y-3 border-s ps-4">
+					<div className="divide-y">
+						{replies.map(({ reply }) => (
+							<CommentReply key={reply.id} comment={reply} lang={lang} />
+						))}
+					</div>
 					<AddCommentDialog
 						parentCommentId={comment.id}
 						requestId={comment.request_id}
 						lang={lang}
 					/>
-					{replies.map(({ reply }) => (
-						<CommentReply key={reply.id} comment={reply} lang={lang} />
-					))}
 				</div>
 			)}
 		</div>
@@ -153,13 +163,19 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseData } = usePhrasesFromComment(comment.id)
 	const { data: profileData } = useOnePublicProfile(comment.commenter_uid)
+	const isHighlighted = useSearch({
+		strict: false,
+		select: (data) => data.highlightComment === comment.id,
+	})
 	const userId = useUserId()
 	const phrases = phraseData ?? []
 
 	const isOwner = userId === comment.commenter_uid
 
 	return (
-		<div className="py-4">
+		<div
+			className={`my-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
+		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
 				<UserPermalink

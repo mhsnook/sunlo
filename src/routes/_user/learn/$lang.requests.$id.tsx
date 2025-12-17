@@ -21,12 +21,12 @@ import { Send } from 'lucide-react'
 import Flagged from '@/components/flagged'
 import { ButtonGroup } from '@/components/ui/button-group'
 import { TopLevelComments } from '@/components/comments/top-level-comments'
+import { DialogTrigger } from '@/components/ui/dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
 		showSubthread: z.string().uuid().optional(),
-		// @@TODO style the highlighted comment
 		highlightComment: z.string().uuid().optional(),
 	}),
 	component: RequestThreadPage,
@@ -67,13 +67,19 @@ function RequestThreadPage() {
 				<CardFooter className="flex flex-col gap-2 border-t pt-6">
 					<div className="flex w-full flex-row items-center justify-between gap-2">
 						<div className="text-muted-foreground flex flex-row items-center gap-2">
-							<Button variant="ghost" size="icon">
-								<Repeat />
-							</Button>
-							<span>0</span>
-							<Button variant="ghost" size="icon" className="ms-4">
-								<MessagesSquare />
-							</Button>
+							<Flagged>
+								<Button variant="ghost" size="icon">
+									<Repeat />
+								</Button>
+								<span>0</span>
+							</Flagged>
+							<AddCommentDialog requestId={params.id} lang={params.lang}>
+								<DialogTrigger asChild>
+									<Button variant="ghost" size="icon" className="ms-4">
+										<MessagesSquare />
+									</Button>
+								</DialogTrigger>
+							</AddCommentDialog>
 							<span>0</span>
 						</div>
 

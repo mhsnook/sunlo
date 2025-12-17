@@ -34,6 +34,7 @@ import UserPermalink from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { useOneComment } from '@/hooks/use-comments'
 import { Separator } from '../ui/separator'
+import { useNavigate } from '@tanstack/react-router'
 
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
@@ -77,8 +78,10 @@ export function AddCommentDialog({
 	parentCommentId?: uuid
 	children?: ReactNode
 }) {
+	const [open, setOpen] = useState(false)
+	const navigate = useNavigate({ from: '/learn/$lang/requests/$id' })
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
 				<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
 					<p className="w-full text-start">
@@ -96,6 +99,15 @@ export function AddCommentDialog({
 					requestId={requestId}
 					lang={lang}
 					parentCommentId={parentCommentId}
+					// oxlint-disable-next-line jsx-no-new-function-as-prop
+					onSuccess={() => {
+						setOpen(false)
+						if (parentCommentId)
+							void navigate({
+								to: '/learn/$lang/requests/$id',
+								search: { showSubthread: parentCommentId },
+							})
+					}}
 				/>
 			</DialogContent>
 		</Dialog>
@@ -115,12 +127,14 @@ interface CommentFormProps {
 	requestId: uuid
 	lang: string
 	parentCommentId?: uuid
+	onSuccess: () => void
 }
 
 function NewCommentForm({
 	requestId,
 	lang,
 	parentCommentId,
+	onSuccess,
 }: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
@@ -158,6 +172,7 @@ function NewCommentForm({
 			form.reset()
 			setSelectedPhraseIds([])
 			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
+			onSuccess()
 		},
 		onError: (error: Error) => {
 			toast.error(
@@ -247,13 +262,6 @@ function NewCommentForm({
 								'Post Reply'
 							:	'Post Comment'}
 						</Button>
-
-						{/* Cancel button for replies */}
-						{isReply && (
-							<Button type="button" variant="ghost">
-								Cancel
-							</Button>
-						)}
 					</div>
 
 					{/* Add flashcard button */}
