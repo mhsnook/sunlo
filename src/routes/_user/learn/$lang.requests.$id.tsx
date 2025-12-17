@@ -25,6 +25,7 @@ import { ButtonGroup } from '@/components/ui/button-group'
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
+		showSubthread: z.string().uuid().optional(),
 	}),
 	component: RequestThreadPage,
 })

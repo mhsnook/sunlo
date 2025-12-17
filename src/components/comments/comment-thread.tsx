@@ -1,27 +1,13 @@
 import { useState } from 'react'
+import { Link, useSearch } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import toast from 'react-hot-toast'
-import {
-	ThumbsUp,
-	Edit,
-	Trash2,
-	ChevronDown,
-	ChevronUp,
-} from 'lucide-react'
+import { ThumbsUp, Edit, ChevronDown, ChevronUp } from 'lucide-react'
 
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import UserPermalink from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
@@ -35,8 +21,10 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import { RequestCommentSchema, type RequestCommentType } from '@/lib/schemas'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { uuid } from '@/types/main'
 import { usePhrasesFromComment } from '@/hooks/use-comments'
+import { buttonVariants } from '@/components/ui/button-variants'
+
+import { DeleteCommentDialog } from './delete-comment-dialog'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
@@ -70,10 +58,10 @@ function useIsCommentUpvoted(commentId: uuid) {
 
 export function CommentThread({ comment, lang }: CommentThreadProps) {
 	const userId = useUserId()
+	const search = useSearch({ strict: false })
 	const [isEditing, setIsEditing] = useState(false)
 	const [editContent, setEditContent] = useState(comment.content)
-	const [showReplies, setShowReplies] = useState(false)
-	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+	const showReplies = search.showSubthread === comment.id
 
 	// Get profile for this comment
 	const { data: profileData } = useOnePublicProfile(comment.commenter_uid)
@@ -193,14 +181,7 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 							>
 								<Edit className="h-4 w-4" />
 							</Button>
-							<Button
-								variant="ghost"
-								size="icon"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onClick={() => setDeleteDialogOpen(true)}
-							>
-								<Trash2 className="h-4 w-4" />
-							</Button>
+							<DeleteCommentDialog mutation={deleteCommentMutation} />
 						</>
 					)}
 				</div>
@@ -256,7 +237,7 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="mt-3 flex items-center gap-2 mb-2 pb-2">
+			<div className="mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Button
 					variant={hasUpvoted ? 'outline' : 'outline'}
 					size="sm"
@@ -276,57 +257,39 @@ export function CommentThread({ comment, lang }: CommentThreadProps) {
 				</Button>
 
 				{replyCount > 0 && (
-					<Button
-						variant="ghost"
-						size="sm"
+					<Link
+						className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+						to={'.'}
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onClick={() => setShowReplies(!showReplies)}
+						search={(search) => {
+							if (search.showSubthread === comment.id) {
+								const { showSubthread, ...args } = search
+								return args
+							} else return { ...search, showSubthread: comment.id }
+						}}
 					>
 						{showReplies ?
 							<ChevronUp className="mr-1 h-4 w-4" />
 						:	<ChevronDown className="mr-1 h-4 w-4" />}
 						{showReplies ? 'Hide' : `Show ${replyCount}`}
 						{replyCount === 1 ? ' reply' : ' replies'}
-					</Button>
+					</Link>
 				)}
 			</div>
 
-			<CommentFormDialog
-				parentCommentId={comment.id}
-				requestId={comment.request_id}
-				lang={lang}
-			/>
 			{/* Replies */}
 			{showReplies && replies && replies.length > 0 && (
 				<div className="border-primary-foresoft/30 ms-4 mt-3 space-y-3 border-s ps-4">
+					<CommentFormDialog
+						parentCommentId={comment.id}
+						requestId={comment.request_id}
+						lang={lang}
+					/>
 					{replies.map(({ reply }) => (
 						<CommentThread key={reply.id} comment={reply} lang={lang} />
 					))}
 				</div>
 			)}
-
-			{/* Delete confirmation dialog */}
-			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete comment?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This will permanently delete your comment and all its replies.
-							This action cannot be undone.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => deleteCommentMutation.mutate()}
-							className="bg-destructive text-destructive-foreground"
-						>
-							Delete
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 		</div>
 	)
 }
