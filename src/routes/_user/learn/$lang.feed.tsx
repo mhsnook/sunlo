@@ -91,6 +91,17 @@ function DeckFeedPage() {
 					</TabsContent>
 				</Tabs>
 			</div>
+			<p className="text-muted-foreground my-6 ms-6 italic">
+				This is the end of the feed... how about{' '}
+				<Link
+					to="/friends/invite"
+					from={Route.fullPath}
+					className="s-link-muted"
+				>
+					inviting a friend
+				</Link>{' '}
+				to learn together?
+			</p>
 		</main>
 	)
 }
