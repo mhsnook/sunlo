@@ -6,14 +6,13 @@ import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
-import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
+import { useRequestLinks, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 
 export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
-	const { data: answers, isLoading: isLoadingPhrases } =
-		usePhrasesFromRequest(id)
+	const { data: links, isLoading: isLoadingPhrases } = useRequestLinks(id)
 
 	if (!isLoading && !request)
 		return (
@@ -35,7 +34,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 						<p>&ldquo;{request.prompt}&rdquo;</p>
 						{isLoadingPhrases ? null : (
 							<p className="text-muted-foreground text-sm">
-								{answers?.length} answer{answers?.length === 1 ? '' : 's'}
+								{links?.length} answer{links?.length === 1 ? '' : 's'}
 							</p>
 						)}
 

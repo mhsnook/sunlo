@@ -7,12 +7,7 @@ import {
 	phraseRequestsCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
-import { phrasesFull } from '@/lib/live-collections'
-import {
-	PhraseFullFullType,
-	PhraseRequestType,
-	PublicProfileType,
-} from '@/lib/schemas'
+import { PhraseRequestType, PublicProfileType } from '@/lib/schemas'
 import { UseLiveQueryResult, uuid } from '@/types/main'
 import { useMemo } from 'react'
 
@@ -51,22 +46,32 @@ export function useRequestsLang(
 	)
 }
 
+export const useRequestLinks = (
+	requestId: uuid
+): UseLiveQueryResult<{ phrase_id: uuid }[]> => {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.request_id, requestId))
+				.select(({ link }) => ({ phrase_id: link.phrase_id }))
+				.distinct(),
+		[requestId]
+	)
+}
+
 export const useRequestCounts = (
 	id: uuid
 ): {
-	countComments: number
-	countLinks: number
+	countComments: number | undefined
+	countLinks: number | undefined
 } => {
 	const countComments = useLiveQuery((q) =>
 		q
 			.from({ comment: commentsCollection })
 			.where(({ comment }) => eq(id, comment.request_id))
 	).data?.length
-	const countLinks = useLiveQuery((q) =>
-		q
-			.from({ link: commentPhraseLinksCollection })
-			.where(({ link }) => eq(id, link.request_id))
-	).data?.length
+	const countLinks = useRequestLinks(id).data?.length
 	return useMemo(
 		() => ({
 			countComments,
@@ -95,18 +100,6 @@ export const useRequest = (
 					profile,
 				}))
 		},
-		[id]
-	)
-
-// @@TODO THIS IS NOT WORKING ANY MORE DUE TO NEW DB STRUCTURE
-export const usePhrasesFromRequest = (
-	id: string
-): UseLiveQueryResult<PhraseFullFullType[]> =>
-	useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesFull })
-				.where(({ phrase }) => eq(phrase.request_id, id)),
 		[id]
 	)
 

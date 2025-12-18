@@ -11,7 +11,7 @@ export const PhraseTinyCard = ({
 	className,
 }: {
 	pid: uuid
-	className: string
+	className?: string
 }) => {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'pending') return <Loader />
@@ -29,7 +29,7 @@ export const PhraseTinyCard = ({
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>
-			<CardlikeFlashcard className="flex min-w-40 basis-50 flex-col justify-start px-3 py-2">
+			<CardlikeFlashcard className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2">
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
 					<p className="text-muted-foreground text-sm">

@@ -108,18 +108,6 @@ export const useLanguageTags = (
 	)
 }
 
-export const useRequestAnswers = (
-	requestId: uuid
-): UseLiveQueryResult<PhraseFullType[]> => {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesFull })
-				.where(({ phrase }) => eq(phrase.request_id, requestId)),
-		[requestId]
-	)
-}
-
 export function useAllMyPhrasesLang(
 	lang: string
 ): UseLiveQueryResult<PhraseFullType[]> {

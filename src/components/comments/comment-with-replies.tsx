@@ -114,7 +114,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				)}
 
 				{/* Comment actions */}
-				<div className="mt-3 mb-2 flex items-center gap-2 pb-4">
+				<div className="mt-3 flex items-center gap-2">
 					<Upvote comment={comment} />
 					<AddCommentDialog
 						// @@TODO THIS IS NOT WORKING
