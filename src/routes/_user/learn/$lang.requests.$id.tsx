@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import * as z from 'zod'
-import { MessageSquareQuote, MessagesSquare, Repeat } from 'lucide-react'
+import { Repeat } from 'lucide-react'
 
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
@@ -14,14 +14,12 @@ import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/card-pieces/request-header-footer'
-import { Collapsible } from '@radix-ui/react-collapsible'
 import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
 import { AnswersOnlyView } from '@/components/comments/answers-only-view'
 import { Send } from 'lucide-react'
 import Flagged from '@/components/flagged'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { TopLevelComments } from '@/components/comments/top-level-comments'
-import { DialogTrigger } from '@/components/ui/dialog'
+import { Collapsible } from '@/components/ui/collapsible'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -29,12 +27,15 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		showSubthread: z.string().uuid().optional(),
 		highlightComment: z.string().uuid().optional(),
 	}),
+	loader: () => ({
+		titleBar: { title: 'Request' },
+		appnav: [],
+	}),
 	component: RequestThreadPage,
 })
 
 function RequestThreadPage() {
 	const params = Route.useParams()
-	const navigate = useNavigate({ from: Route.fullPath })
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
 
@@ -64,23 +65,46 @@ function RequestThreadPage() {
 						<Markdown>{request.prompt}</Markdown>
 					</div>
 				</CardContent>
-				<CardFooter className="flex flex-col gap-2 border-t pt-6">
+				<CardFooter className="flex flex-col gap-4 border-t py-4">
+					<AddCommentDialog requestId={params.id} lang={params.lang} />
 					<div className="flex w-full flex-row items-center justify-between gap-2">
-						<div className="text-muted-foreground flex flex-row items-center gap-2">
-							<Flagged>
-								<Button variant="ghost" size="icon">
-									<Repeat />
-								</Button>
-								<span>0</span>
-							</Flagged>
-							<AddCommentDialog requestId={params.id} lang={params.lang}>
-								<DialogTrigger asChild>
-									<Button variant="ghost" size="icon" className="ms-4">
-										<MessagesSquare />
+						<div className="text-muted-foreground flex flex-row items-center gap-8">
+							<div>
+								<Flagged className="space-x-2">
+									<Button variant="ghost" size="icon" className="me-2">
+										<Repeat />
 									</Button>
-								</DialogTrigger>
-							</AddCommentDialog>
-							<span>0</span>
+									<span>0</span>
+								</Flagged>
+							</div>
+							{/*<div className="space-x-2">
+								<AddCommentDialog requestId={params.id} lang={params.lang}>
+									<DialogTrigger asChild>
+										<Button variant="ghost" size="icon">
+											<MessagesSquare />
+										</Button>
+									</DialogTrigger>
+								</AddCommentDialog>
+								<span>{request.commentsCount}</span>
+							</div>
+							<div className="space-x-2">
+								<Link
+									to="."
+									search={
+										search.show === 'answers-only' ? showThread : answersOnly
+									}
+									className={buttonVariants({
+										variant:
+											search.show === 'answers-only' ?
+												'outline-primary'
+											:	'ghost',
+										size: 'icon',
+									})}
+								>
+									<MessageSquareQuote />
+								</Link>
+								<span>{request.answersCount}</span>
+							</div>*/}
 						</div>
 
 						<div className="flex flex-row justify-between gap-4">
@@ -105,41 +129,14 @@ function RequestThreadPage() {
 							</div>
 						</div>
 					</div>
-					<AddCommentDialog requestId={params.id} lang={params.lang} />
 				</CardFooter>
 			</CardlikeRequest>
 
-			{/* View toggle buttons */}
-			<ButtonGroup className="my-4">
-				<Button
-					variant={
-						!search.show || search.show === 'thread' ? 'default' : 'outline'
-					}
-					size="sm"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => void navigate({ search: { show: 'thread' } })}
-				>
-					<MessagesSquare />
-					Comments
-				</Button>
-				<Button
-					variant={search.show === 'answers-only' ? 'default' : 'outline'}
-					size="sm"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => void navigate({ search: { show: 'answers-only' } })}
-				>
-					<MessageSquareQuote />
-					Answers Only
-				</Button>
-			</ButtonGroup>
-
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
-				<div className="ms-4 border border-t-0 p-4">
-					{search.show === 'answers-only' ?
-						<AnswersOnlyView requestId={params.id} />
-					:	<TopLevelComments requestId={params.id} lang={params.lang} />}
-				</div>
+				{search.show === 'answers-only' ?
+					<AnswersOnlyView requestId={params.id} />
+				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
 			</Collapsible>
 		</main>
 	)

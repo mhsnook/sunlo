@@ -3,11 +3,14 @@ import { commentsCollection } from '@/lib/collections'
 import { CommentWithReplies } from './comment-with-replies'
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
+import { Link } from '@tanstack/react-router'
 
 interface CommentListProps {
 	requestId: uuid
 	lang: string
 }
+
+const answersOnly = { show: 'answers-only' }
 
 function useTopLevelComments(requestId: uuid) {
 	return useLiveQuery(
@@ -39,10 +42,19 @@ export function TopLevelComments({ requestId, lang }: CommentListProps) {
 	}
 
 	return (
-		<div className="divide-y">
-			{comments.map((comment) => (
-				<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
-			))}
+		<div className="my-4 space-y-3">
+			<p className="text-muted-foreground text-sm">
+				Showing {comments.length} comment
+				{comments.length !== 1 ? 's' : ''}.{' '}
+				<Link to="." className="s-link" search={answersOnly}>
+					Show only proposed answers.
+				</Link>
+			</p>
+			<div className="divide-y border">
+				{comments.map((comment) => (
+					<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
+				))}
+			</div>
 		</div>
 	)
 }

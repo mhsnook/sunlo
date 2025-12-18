@@ -1,12 +1,14 @@
 import { ReactNode, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import { useMutation } from '@tanstack/react-query'
+import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { Paperclip, X } from 'lucide-react'
 
-import type { uuid } from '@/types/main'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -24,17 +26,19 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
-import { SelectPhrasesForComment } from './select-phrases-for-comment'
 import supabase from '@/lib/supabase-client'
-import { commentsCollection } from '@/lib/collections'
-import { PublicProfileType, RequestCommentSchema } from '@/lib/schemas'
+import { commentsCollection, publicProfilesCollection } from '@/lib/collections'
+import {
+	PublicProfileType,
+	RequestCommentSchema,
+	RequestCommentType,
+} from '@/lib/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/hooks/use-requests'
 import UserPermalink from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
-import { useOneComment } from '@/hooks/use-comments'
 import { Separator } from '../ui/separator'
-import { useNavigate } from '@tanstack/react-router'
+import { SelectPhrasesForComment } from './select-phrases-for-comment'
 
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
@@ -128,6 +132,25 @@ interface CommentFormProps {
 	lang: string
 	parentCommentId?: uuid
 	onSuccess: () => void
+}
+
+function useOneComment(commentId: uuid): UseLiveQueryResult<{
+	comment: RequestCommentType
+	profile: PublicProfileType
+}> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) => eq(comment.id, commentId))
+				.join(
+					{ profile: publicProfilesCollection },
+					({ comment, profile }) => eq(comment.uid, profile.uid),
+					'inner'
+				)
+				.findOne(),
+		[commentId]
+	)
 }
 
 function NewCommentForm({

@@ -4,8 +4,7 @@ import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { Avatar } from '../ui/avatar'
-import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
 export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
 	const { data, isLoading } = useOnePublicProfile(uid)

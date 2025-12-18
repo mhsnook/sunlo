@@ -9,10 +9,13 @@ import type { uuid } from '@/types/main'
 import { phrasesFull } from '@/lib/live-collections'
 import { Loader } from '@/components/ui/loader'
 import { WithPhrase } from '@/components/with-phrase'
+import { Link } from '@tanstack/react-router'
 
 interface AnswersOnlyViewProps {
 	requestId: uuid
 }
+
+const showThread = { show: 'thread' }
 
 export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 	// Get all comment-phrase links for this request
@@ -47,15 +50,44 @@ export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 	}
 
 	return (
-		<div className="space-y-3">
+		<div className="my-4 space-y-3">
 			<p className="text-muted-foreground text-sm">
-				Showing all {phrasesIds.length} flashcard
-				{phrasesIds.length !== 1 ? 's' : ''} from comments
+				Showing {phrasesIds.length} flashcard
+				{phrasesIds.length !== 1 ? 's' : ''} suggested from comments.{' '}
+				<Link to="." className="s-link" search={showThread}>
+					Return to thread view.
+				</Link>
 			</p>
-			<div className="grid gap-3">
+			<div className="grid divide-y border">
 				{phrasesIds.map((pid) => (
-					<div key={pid} className="rounded-lg border p-3">
+					<div key={pid} className="p-4 pb-2">
 						<WithPhrase pid={pid} Component={CardResultSimple} />
+						<p className="text-sm">
+							View in thread:{' '}
+							{commentPhraseLinks
+								.filter((link) => link.link.phrase_id === pid)
+								.map((l, i, arr) => (
+									<>
+										{i > 0 && i < arr.length - 1 ? ',' : ''}
+										{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
+										<Link
+											key={l.link.id}
+											to="."
+											// oxlint-disable-next-line jsx-no-new-object-as-prop
+											search={{
+												show: 'thread',
+												highlightComment: l.link.comment_id,
+												showSubthread:
+													l.comment?.parent_comment_id ?? l.link.comment_id,
+											}}
+											className="s-link text-sm"
+										>
+											here
+										</Link>
+									</>
+								))}
+							.
+						</p>
 					</div>
 				))}
 			</div>

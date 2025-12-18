@@ -6,17 +6,27 @@ import UserPermalink from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { AddCommentDialog } from './add-comment-dialog'
-import { commentsCollection, publicProfilesCollection } from '@/lib/collections'
+import {
+	commentPhraseLinksCollection,
+	commentsCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
 import { useUserId } from '@/lib/use-auth'
-import { type RequestCommentType } from '@/lib/schemas'
+import {
+	CommentPhraseLinkType,
+	PhraseFullFullType,
+	type RequestCommentType,
+} from '@/lib/schemas'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { usePhrasesFromComment } from '@/hooks/use-comments'
+
 import { buttonVariants } from '@/components/ui/button-variants'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { DialogTrigger } from '../ui/dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
 import { Upvote } from './upvote'
+import { UseLiveQueryResult, uuid } from '@/types/main'
+import { phrasesFull } from '@/lib/live-collections'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
@@ -51,124 +61,143 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const replies = repliesData ?? []
 
 	// Get phrases for this comment with a join
-	const { data: phraseData } = usePhrasesFromComment(comment.id)
+	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 
-	const phrases = phraseData ?? []
+	const phrases = phraseFromComment ?? []
 
 	const isOwner = userId === comment.uid
 	const replyCount = replies?.length ?? 0
 
 	return (
 		<div
-			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} pt-4`}
+			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} p-4`}
 		>
 			{/* Comment header */}
-			<div className="flex items-center justify-between">
-				<UserPermalink
-					uid={comment.uid}
-					username={profileData?.username ?? ''}
-					avatar_path={profileData?.avatar_path ?? ''}
-					timeValue={comment.created_at}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					timeLinkParams={{ id: comment.request_id, lang }}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					timeLinkSearch={{ showSubthread: comment.id }}
-					timeLinkTo="/learn/$lang/requests/$id"
-				/>
+			<div className="w-full">
+				<div className="flex items-center justify-between">
+					<UserPermalink
+						uid={comment.uid}
+						username={profileData?.username ?? ''}
+						avatar_path={profileData?.avatar_path ?? ''}
+						timeValue={comment.created_at}
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						timeLinkParams={{ id: comment.request_id, lang }}
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						timeLinkSearch={{ showSubthread: comment.id }}
+						timeLinkTo="/learn/$lang/requests/$id"
+					/>
 
-				<div className="flex gap-2">
-					{isOwner && (
-						<>
-							<UpdateCommentDialog comment={comment} />
-							<DeleteCommentDialog comment={comment} />
-						</>
+					<div className="flex gap-2">
+						{isOwner && (
+							<>
+								<UpdateCommentDialog comment={comment} />
+								<DeleteCommentDialog comment={comment} />
+							</>
+						)}
+					</div>
+				</div>
+
+				{/* Comment content */}
+				{comment.content && (
+					<div className="mt-2">
+						<Markdown>{comment.content}</Markdown>
+					</div>
+				)}
+
+				{/* Attached flashcards */}
+				{phrases && phrases.length > 0 && (
+					<div className="mt-3 space-y-2">
+						{phrases.map(({ phrase }) => {
+							return <CardResultSimple key={phrase.id} phrase={phrase} />
+						})}
+					</div>
+				)}
+
+				{/* Comment actions */}
+				<div className="mt-3 mb-2 flex items-center gap-2 pb-4">
+					<Upvote comment={comment} />
+					<AddCommentDialog
+						// @@TODO THIS IS NOT WORKING
+						lang={lang}
+						requestId={comment.request_id}
+						parentCommentId={comment.id}
+					>
+						<DialogTrigger
+							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+						>
+							<MessagesSquare />
+						</DialogTrigger>
+					</AddCommentDialog>
+
+					{replyCount > 0 && (
+						<Link
+							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+							to={'.'}
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
+							search={(search) => {
+								if (search.showSubthread === comment.id) {
+									const { showSubthread: _, ...args } = search
+									return args
+								} else return { ...search, showSubthread: comment.id }
+							}}
+						>
+							{showSubthread ?
+								<ChevronUp className="mr-1 h-4 w-4" />
+							:	<ChevronDown className="mr-1 h-4 w-4" />}
+							{showSubthread ? 'Hide' : `Show ${replyCount}`}
+							{replyCount === 1 ? ' reply' : ' replies'}
+						</Link>
 					)}
 				</div>
-			</div>
 
-			{/* Comment content */}
-			{comment.content && (
-				<div className="mt-2">
-					<Markdown>{comment.content}</Markdown>
-				</div>
-			)}
-
-			{/* Attached flashcards */}
-			{phrases && phrases.length > 0 && (
-				<div className="mt-3 space-y-2">
-					{phrases.map((phrase) => (
-						<div key={phrase.id} className="border-primary border-l-2 pl-3">
-							<CardResultSimple phrase={phrase} />
+				{/* Replies */}
+				{showSubthread && replies && replies.length > 0 && (
+					<div className="border-primary-foresoft/30 mt-3 space-y-3">
+						<div className="divide-y">
+							{replies.map(({ reply }) => (
+								<CommentReply key={reply.id} comment={reply} lang={lang} />
+							))}
+							<AddCommentDialog
+								parentCommentId={comment.id}
+								requestId={comment.request_id}
+								lang={lang}
+							/>
 						</div>
-					))}
-				</div>
-			)}
-
-			{/* Comment actions */}
-			<div className="mt-3 mb-2 flex items-center gap-2 pb-2">
-				<Upvote comment={comment} />
-				<AddCommentDialog
-					// @@TODO THIS IS NOT WORKING
-					lang={lang}
-					requestId={comment.request_id}
-					parentCommentId={comment.id}
-				>
-					<DialogTrigger
-						className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-					>
-						<MessagesSquare />
-					</DialogTrigger>
-				</AddCommentDialog>
-
-				{replyCount > 0 && (
-					<Link
-						className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-						to={'.'}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						search={(search) => {
-							if (search.showSubthread === comment.id) {
-								const { showSubthread: _, ...args } = search
-								return args
-							} else return { ...search, showSubthread: comment.id }
-						}}
-					>
-						{showSubthread ?
-							<ChevronUp className="mr-1 h-4 w-4" />
-						:	<ChevronDown className="mr-1 h-4 w-4" />}
-						{showSubthread ? 'Hide' : `Show ${replyCount}`}
-						{replyCount === 1 ? ' reply' : ' replies'}
-					</Link>
+					</div>
 				)}
 			</div>
-
-			{/* Replies */}
-			{showSubthread && replies && replies.length > 0 && (
-				<div className="border-primary-foresoft/30 ms-4 mt-3 space-y-3 border-s ps-4">
-					<div className="divide-y">
-						{replies.map(({ reply }) => (
-							<CommentReply key={reply.id} comment={reply} lang={lang} />
-						))}
-					</div>
-					<AddCommentDialog
-						parentCommentId={comment.id}
-						requestId={comment.request_id}
-						lang={lang}
-					/>
-				</div>
-			)}
 		</div>
 	)
 }
 
+function usePhrasesFromComment(
+	commentId: uuid
+): UseLiveQueryResult<
+	{ phrase: PhraseFullFullType; link: CommentPhraseLinkType }[]
+> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.comment_id, commentId))
+				.join(
+					{ phrase: phrasesFull },
+					({ link, phrase }) => eq(link.phrase_id, phrase.id),
+					'inner'
+				),
+		[commentId]
+	)
+}
+
 function CommentReply({ comment, lang }: CommentThreadProps) {
-	const { data: phraseData } = usePhrasesFromComment(comment.id)
+	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const { data: profileData } = useOnePublicProfile(comment.uid)
 	const isHighlighted = useSearch({
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
 	})
 	const userId = useUserId()
-	const phrases = phraseData ?? []
+	const phrases = phraseFromComment ?? []
 
 	const isOwner = userId === comment.uid
 
@@ -205,15 +234,15 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 			{/* Comment content */}
 			{comment.content && (
-				<div className="mt-2">
+				<div className="ms-13 mt-2">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
 			{/* Attached flashcards */}
 			{phrases && phrases.length > 0 && (
-				<div className="mt-3 space-y-2">
-					{phrases.map((phrase) => (
+				<div className="ms-13 mt-3 space-y-2">
+					{phrases.map(({ phrase }) => (
 						<div key={phrase.id} className="border-primary border-l-2 pl-3">
 							<CardResultSimple phrase={phrase} />
 						</div>
@@ -222,7 +251,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="ms-13 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
 			</div>
 		</div>
