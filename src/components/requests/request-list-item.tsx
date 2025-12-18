@@ -1,15 +1,13 @@
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestAnswers } from '@/hooks/use-language'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { CardContent } from '../ui/card'
-import { PhraseTinyCard } from '../cards/phrase-tiny-card'
+import { CardContent, CardFooter } from '@/components/ui/card'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
-import {
-	RequestFooter,
-	RequestHeader,
-} from '../card-pieces/request-header-footer'
+import { RequestHeader } from '@/components/requests/request-header'
+import { RequestButtonsRow } from './request-buttons-row'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: answers } = useRequestAnswers(request.id)
@@ -37,11 +35,9 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 						<ScrollBar orientation="horizontal" />
 					</ScrollArea>
 				</CardContent>
-				<RequestFooter
-					request={request}
-					answersCount={answers?.length ?? 0}
-					commentsCount={answers?.length ?? 0}
-				/>
+				<CardFooter className="flex flex-col gap-4 border-t py-4">
+					<RequestButtonsRow requestId={request.id} lang={request.lang} />
+				</CardFooter>
 			</CardlikeRequest>
 		)
 }

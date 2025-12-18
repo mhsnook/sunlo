@@ -41,13 +41,6 @@ export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 	}, [commentPhraseLinks])
 
 	if (isLoading) return <Loader />
-	if (phrasesIds.length === 0) {
-		return (
-			<div className="text-muted-foreground py-8 text-center">
-				<p>No answers have been proposed yet.</p>
-			</div>
-		)
-	}
 
 	return (
 		<div className="my-4 space-y-3">
