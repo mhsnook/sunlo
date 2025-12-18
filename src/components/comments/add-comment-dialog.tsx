@@ -165,10 +165,10 @@ function NewCommentForm({
 		onSuccess: (data) => {
 			// Parse and add to collection
 			commentsCollection.utils.writeInsert(RequestCommentSchema.parse(data))
-			// @@TODO: We actually need to be adding little records to the commentPhrase
+			// @@TODO: We actually need to be adding little records to the commentPhraseLink
 			// Reset form
 
-			// commentPhrasesCollection.utils.writeInsert
+			// commentPhraseLinksCollection.utils.writeInsert
 			form.reset()
 			setSelectedPhraseIds([])
 			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')

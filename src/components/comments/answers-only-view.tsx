@@ -1,6 +1,9 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useMemo } from 'react'
-import { commentPhrasesCollection, commentsCollection } from '@/lib/collections'
+import {
+	commentPhraseLinksCollection,
+	commentsCollection,
+} from '@/lib/collections'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import type { uuid } from '@/types/main'
 import { phrasesFull } from '@/lib/live-collections'
@@ -13,10 +16,10 @@ interface AnswersOnlyViewProps {
 
 export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 	// Get all comment-phrase links for this request
-	const { data: commentPhrases, isLoading } = useLiveQuery(
+	const { data: commentPhraseLinks, isLoading } = useLiveQuery(
 		(q) =>
 			q
-				.from({ link: commentPhrasesCollection })
+				.from({ link: commentPhraseLinksCollection })
 				.join(
 					{ phrase: phrasesFull },
 					({ link, phrase }) => eq(link.phrase_id, phrase.id),
@@ -31,8 +34,8 @@ export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 
 	// Filter and deduplicate phrase IDs for this request
 	const phrasesIds = useMemo(() => {
-		return Array.from(new Set(commentPhrases.map((p) => p.phrase.id)))
-	}, [commentPhrases])
+		return Array.from(new Set(commentPhraseLinks.map((p) => p.phrase.id)))
+	}, [commentPhraseLinks])
 
 	if (isLoading) return <Loader />
 	if (phrasesIds.length === 0) {

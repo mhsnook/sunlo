@@ -24,21 +24,21 @@ create index if not exists "idx_comment_upvotes" on "public"."request_comment" (
 create index if not exists "idx_comment_created_at" on "public"."request_comment" ("parent_comment_id", "created_at" asc);
 
 create table if not exists
-	"public"."comment_phrase" (
+	"public"."comment_phrase_link" (
 		"id" "uuid" default "gen_random_uuid" () not null,
 		"request_id" "uuid" not null,
 		"comment_id" "uuid" not null,
 		"phrase_id" "uuid" not null,
 		"created_at" timestamp with time zone default "now" () not null,
-		constraint "comment_phrase_pkey" primary key ("id"),
-		constraint "comment_phrase_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete cascade,
-		constraint "comment_phrase_comment_id_fkey" foreign key ("comment_id") references "public"."request_comment" ("id") on delete cascade,
-		constraint "comment_phrase_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade
+		constraint "comment_phrase_link_pkey" primary key ("id"),
+		constraint "comment_phrase_link_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete cascade,
+		constraint "comment_phrase_link_comment_id_fkey" foreign key ("comment_id") references "public"."request_comment" ("id") on delete cascade,
+		constraint "comment_phrase_link_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade
 	);
 
-create index if not exists "idx_comment_phrase_request" on "public"."comment_phrase" ("request_id");
-create index if not exists "idx_comment_phrase_comment" on "public"."comment_phrase" ("comment_id");
-create index if not exists "idx_comment_phrase_phrase" on "public"."comment_phrase" ("phrase_id");
+create index if not exists "idx_comment_phrase_link_request" on "public"."comment_phrase_link" ("request_id");
+create index if not exists "idx_comment_phrase_link_comment" on "public"."comment_phrase_link" ("comment_id");
+create index if not exists "idx_comment_phrase_link_phrase" on "public"."comment_phrase_link" ("phrase_id");
 
 create table if not exists
 	"public"."comment_upvote" (
@@ -57,12 +57,12 @@ create index if not exists "idx_upvote_user" on "public"."comment_upvote" ("uid"
 
 -- 2. Enable RLS
 alter table "public"."request_comment" enable row level security;
-alter table "public"."comment_phrase" enable row level security;
+alter table "public"."comment_phrase_link" enable row level security;
 alter table "public"."comment_upvote" enable row level security;
 
 -- 3. RLS Policies
 create policy "Enable read access for all users" on "public"."request_comment" for select using (true);
-create policy "Enable read access for all users" on "public"."comment_phrase" for select using (true);
+create policy "Enable read access for all users" on "public"."comment_phrase_link" for select using (true);
 create policy "Enable read access for all users" on "public"."comment_upvote" for select using (true);
 
 create policy "Users can create comments" on "public"."request_comment" for insert to "authenticated"
@@ -84,8 +84,8 @@ using ("uid" = "auth"."uid" ());
 grant select on table "public"."request_comment" to "anon";
 grant select on table "public"."request_comment" to "authenticated";
 
-grant select on table "public"."comment_phrase" to "anon";
-grant select on table "public"."comment_phrase" to "authenticated";
+grant select on table "public"."comment_phrase_link" to "anon";
+grant select on table "public"."comment_phrase_link" to "authenticated";
 
 grant select on table "public"."comment_upvote" to "anon";
 grant select on table "public"."comment_upvote" to "authenticated";
@@ -124,7 +124,7 @@ BEGIN
 
     FOREACH v_phrase_id IN ARRAY p_phrase_ids
     LOOP
-      INSERT INTO comment_phrase (request_id, comment_id, phrase_id)
+      INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id)
       VALUES (p_request_id, v_comment_id, v_phrase_id);
     END LOOP;
   END IF;
@@ -425,8 +425,8 @@ FROM phrase p
 WHERE p.request_id IS NOT NULL
 GROUP BY p.request_id, p.added_by;
 
--- Link phrases to their comments via comment_phrase
-INSERT INTO comment_phrase (request_id, comment_id, phrase_id, created_at)
+-- Link phrases to their comments via comment_phrase_link
+INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id, created_at)
 SELECT
   c.request_id,
   c.id,
@@ -461,7 +461,7 @@ select
 	) as "profile",
 	(
 		select array_agg(distinct cp.phrase_id)
-		from comment_phrase cp
+		from comment_phrase_link cp
 		where cp.request_id = pr.id
 	) as "phrase_ids"
 from

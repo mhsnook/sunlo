@@ -302,7 +302,7 @@ export const RequestCommentSchema = z.object({
 
 export type RequestCommentType = z.infer<typeof RequestCommentSchema>
 
-export const CommentPhraseSchema = z.object({
+export const CommentPhraseLinkSchema = z.object({
 	id: z.string().uuid(),
 	request_id: z.string().uuid(),
 	comment_id: z.string().uuid(),
@@ -310,7 +310,7 @@ export const CommentPhraseSchema = z.object({
 	created_at: z.string(),
 })
 
-export type CommentPhraseType = z.infer<typeof CommentPhraseSchema>
+export type CommentPhraseLinkType = z.infer<typeof CommentPhraseLinkSchema>
 
 export const CommentUpvoteSchema = z.object({
 	// id: z.string().uuid(),

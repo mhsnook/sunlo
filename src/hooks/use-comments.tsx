@@ -1,6 +1,6 @@
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
-	commentPhrasesCollection,
+	commentPhraseLinksCollection,
 	commentsCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
@@ -18,7 +18,7 @@ export function usePhrasesFromComment(
 	return useLiveQuery(
 		(q) =>
 			q
-				.from({ link: commentPhrasesCollection })
+				.from({ link: commentPhraseLinksCollection })
 				.where(({ link }) => eq(link.comment_id, commentId))
 				.join(
 					{ phrase: phrasesFull },

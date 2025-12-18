@@ -126,7 +126,7 @@ export type Database = {
 					},
 				]
 			}
-			comment_phrase: {
+			comment_phrase_link: {
 				Row: {
 					comment_id: string
 					created_at: string
@@ -150,35 +150,35 @@ export type Database = {
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'comment_phrase_comment_id_fkey'
+						foreignKeyName: 'comment_phrase_link_comment_id_fkey'
 						columns: ['comment_id']
 						isOneToOne: false
 						referencedRelation: 'request_comment'
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'comment_phrase_phrase_id_fkey'
+						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'meta_phrase_info'
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'comment_phrase_phrase_id_fkey'
+						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'comment_phrase_request_id_fkey'
+						foreignKeyName: 'comment_phrase_link_request_id_fkey'
 						columns: ['request_id']
 						isOneToOne: false
 						referencedRelation: 'meta_phrase_request'
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'comment_phrase_request_id_fkey'
+						foreignKeyName: 'comment_phrase_link_request_id_fkey'
 						columns: ['request_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_request'

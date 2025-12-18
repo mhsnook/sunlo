@@ -45,7 +45,7 @@ VALUES
 	);
 
 -- Link phrases to the first comment
-INSERT INTO "public"."comment_phrase" (
+INSERT INTO "public"."comment_phrase_link" (
 	"id",
 	"request_id",
 	"comment_id",

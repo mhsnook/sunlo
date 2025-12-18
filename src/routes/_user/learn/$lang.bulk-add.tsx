@@ -323,19 +323,19 @@ function PhraseEntry({
 				))}
 				<ErrorLabel error={errors?.translations?.root} />
 			</div>
-				<Button
-					type="button"
-					variant="outline"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() =>
-						appendTranslation({
-							lang: profile?.languages_known[0]?.lang,
-							text: '',
-						})
-					}
-				>
-					<Plus className="mr-2 size-4" /> Add Translation
-				</Button>
+			<Button
+				type="button"
+				variant="outline"
+				// oxlint-disable-next-line jsx-no-new-function-as-prop
+				onClick={() =>
+					appendTranslation({
+						lang: profile?.languages_known[0]?.lang,
+						text: '',
+					})
+				}
+			>
+				<Plus className="mr-2 size-4" /> Add Translation
+			</Button>
 			<ErrorLabel error={errors?.root} />
 		</Card>
 	)

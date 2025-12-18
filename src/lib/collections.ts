@@ -28,8 +28,8 @@ import {
 	type LangTagType,
 	RequestCommentSchema,
 	type RequestCommentType,
-	CommentPhraseSchema,
-	type CommentPhraseType,
+	CommentPhraseLinkSchema,
+	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
 } from './schemas'
@@ -305,21 +305,21 @@ export const commentsCollection = createCollection(
 	})
 )
 
-export const commentPhrasesCollection = createCollection(
+export const commentPhraseLinksCollection = createCollection(
 	queryCollectionOptions({
-		id: 'comment_phrases',
-		queryKey: ['public', 'comment_phrase'],
+		id: 'comment_phrase_links',
+		queryKey: ['public', 'comment_phrase_link'],
 		queryFn: async () => {
-			console.log(`Loading commentPhrasesCollection`)
+			console.log(`Loading commentPhraseLinksCollection`)
 			const { data } = await supabase
-				.from('comment_phrase')
+				.from('comment_phrase_link')
 				.select()
 				.throwOnError()
-			return data?.map((item) => CommentPhraseSchema.parse(item)) ?? []
+			return data?.map((item) => CommentPhraseLinkSchema.parse(item)) ?? []
 		},
-		getKey: (item: CommentPhraseType) => item.id,
+		getKey: (item: CommentPhraseLinkType) => item.id,
 		queryClient,
-		schema: CommentPhraseSchema,
+		schema: CommentPhraseLinkSchema,
 	})
 )
 
@@ -352,7 +352,7 @@ export const clearUser = async () => {
 		friendSummariesCollection.cleanup(),
 		chatMessagesCollection.cleanup(),
 		commentsCollection.cleanup(),
-		commentPhrasesCollection.cleanup(),
+		commentPhraseLinksCollection.cleanup(),
 		commentUpvotesCollection.cleanup(),
 	])
 }
