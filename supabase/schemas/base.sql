@@ -2144,15 +2144,6 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
-) to "anon";
-
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text"
 ) to "authenticated";
 
 grant all on function "public"."add_phrase_translation_card" (
@@ -2168,12 +2159,6 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
-) to "anon";
-
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
 ) to "authenticated";
 
 grant all on function "public"."add_tags_to_phrase" (
@@ -2181,18 +2166,10 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_lang" character varying,
 	"p_tags" "text" []
 ) to "service_role";
-
-grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "service_role";
-
-grant all on function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) to "anon";
 
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
@@ -2375,16 +2352,6 @@ grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
 
-grant all on table "public"."user_card_review" to "anon";
-
-grant all on function "public"."insert_user_card_review" (
-	"phrase_id" "uuid",
-	"lang" character varying,
-	"score" integer,
-	"day_session" "text",
-	"desired_retention" numeric
-) to "anon";
-
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
@@ -2413,13 +2380,9 @@ grant all on function "public"."update_comment_upvote_count" () to "authenticate
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
-grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "anon";
-
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "authenticated";
 
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "service_role";
-
-grant all on table "public"."chat_message" to "anon";
 
 grant all on table "public"."chat_message" to "authenticated";
 
@@ -2439,13 +2402,9 @@ grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
 
-grant all on table "public"."friend_request_action" to "anon";
-
 grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
-
-grant all on table "public"."friend_summary" to "anon";
 
 grant all on table "public"."friend_summary" to "authenticated";
 
@@ -2462,8 +2421,6 @@ grant all on table "public"."phrase" to "anon";
 grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
-
-grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
 
@@ -2483,8 +2440,6 @@ grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
 
-grant all on table "public"."user_profile" to "anon";
-
 grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
@@ -2500,8 +2455,6 @@ grant all on table "public"."tag" to "anon";
 grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
-
-grant all on table "public"."user_card" to "anon";
 
 grant all on table "public"."user_card" to "authenticated";
 
@@ -2549,8 +2502,6 @@ grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
 
-grant all on table "public"."user_card_plus" to "anon";
-
 grant all on table "public"."user_card_plus" to "authenticated";
 
 grant all on table "public"."user_card_plus" to "service_role";
@@ -2563,13 +2514,9 @@ grant all on table "public"."user_client_event" to "service_role";
 
 grant all on table "public"."user_deck_plus" to "postgres";
 
-grant all on table "public"."user_deck_plus" to "anon";
-
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
-
-grant all on table "public"."user_deck_review_state" to "anon";
 
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
