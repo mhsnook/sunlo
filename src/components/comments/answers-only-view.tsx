@@ -67,11 +67,10 @@ export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 							{commentPhraseLinks
 								.filter((link) => link.link.phrase_id === pid)
 								.map((l, i, arr) => (
-									<>
+									<span key={l.link.id}>
 										{i > 0 && i < arr.length - 1 ? ',' : ''}
 										{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
 										<Link
-											key={l.link.id}
 											to="."
 											// oxlint-disable-next-line jsx-no-new-object-as-prop
 											search={{
@@ -84,7 +83,7 @@ export function AnswersOnlyView({ requestId }: AnswersOnlyViewProps) {
 										>
 											here
 										</Link>
-									</>
+									</span>
 								))}
 							.
 						</p>

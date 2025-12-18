@@ -1,12 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { Repeat } from 'lucide-react'
+import { MessageSquareQuote, MessagesSquare, Repeat } from 'lucide-react'
 
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
 import { Button } from '@/components/ui/button'
-import { useRequest } from '@/hooks/use-requests'
+import { useRequest, useRequestCounts } from '@/hooks/use-requests'
 import CopyLinkButton from '@/components/copy-link-button'
 import { ShareRequestButton } from '@/components/card-pieces/share-request-button'
 import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request-to-friend'
@@ -20,6 +20,9 @@ import { Send } from 'lucide-react'
 import Flagged from '@/components/flagged'
 import { TopLevelComments } from '@/components/comments/top-level-comments'
 import { Collapsible } from '@/components/ui/collapsible'
+import languages from '@/lib/languages'
+import { DialogTrigger } from '@/components/ui/dialog'
+import { buttonVariants } from '@/components/ui/button-variants'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -27,17 +30,21 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		showSubthread: z.string().uuid().optional(),
 		highlightComment: z.string().uuid().optional(),
 	}),
-	loader: () => ({
-		titleBar: { title: 'Request' },
+	loader: ({ params: { lang } }) => ({
+		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),
 	component: RequestThreadPage,
 })
 
+const showThread = { show: 'thread' }
+const answersOnly = { show: 'answers-only' }
+
 function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
+	const counts = useRequestCounts(params.id)
 
 	if (isLoading) return <Loader />
 
@@ -77,7 +84,7 @@ function RequestThreadPage() {
 									<span>0</span>
 								</Flagged>
 							</div>
-							{/*<div className="space-x-2">
+							<div className="space-x-2">
 								<AddCommentDialog requestId={params.id} lang={params.lang}>
 									<DialogTrigger asChild>
 										<Button variant="ghost" size="icon">
@@ -85,7 +92,7 @@ function RequestThreadPage() {
 										</Button>
 									</DialogTrigger>
 								</AddCommentDialog>
-								<span>{request.commentsCount}</span>
+								<span>{counts?.countComments ?? 0}</span>
 							</div>
 							<div className="space-x-2">
 								<Link
@@ -103,8 +110,8 @@ function RequestThreadPage() {
 								>
 									<MessageSquareQuote />
 								</Link>
-								<span>{request.answersCount}</span>
-							</div>*/}
+								<span>{counts?.countLinks ?? 0}</span>
+							</div>
 						</div>
 
 						<div className="flex flex-row justify-between gap-4">

@@ -1,6 +1,8 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { Tables } from '@/types/supabase'
 import {
+	commentPhraseLinksCollection,
+	commentsCollection,
 	friendSummariesCollection,
 	phraseRequestsCollection,
 	publicProfilesCollection,
@@ -11,7 +13,8 @@ import {
 	PhraseRequestType,
 	PublicProfileType,
 } from '@/lib/schemas'
-import { UseLiveQueryResult } from '@/types/main'
+import { UseLiveQueryResult, uuid } from '@/types/main'
+import { useMemo } from 'react'
 
 export function useMyFriendsRequestsLang(
 	lang: string
@@ -48,12 +51,37 @@ export function useRequestsLang(
 	)
 }
 
+export const useRequestCounts = (
+	id: uuid
+): {
+	countComments: number
+	countLinks: number
+} => {
+	const countComments = useLiveQuery((q) =>
+		q
+			.from({ comment: commentsCollection })
+			.where(({ comment }) => eq(id, comment.request_id))
+	).data?.length
+	const countLinks = useLiveQuery((q) =>
+		q
+			.from({ link: commentPhraseLinksCollection })
+			.where(({ link }) => eq(id, link.request_id))
+	).data?.length
+	return useMemo(
+		() => ({
+			countComments,
+			countLinks,
+		}),
+		[countComments, countLinks]
+	)
+}
+
 export const useRequest = (
-	id: string
+	id: uuid
 ): UseLiveQueryResult<PhraseRequestType & { profile: PublicProfileType }> =>
 	useLiveQuery(
-		(q) =>
-			q
+		(q) => {
+			return q
 				.from({ req: phraseRequestsCollection })
 				.where(({ req }) => eq(req.id, id))
 				.findOne()
@@ -65,7 +93,8 @@ export const useRequest = (
 				.select(({ req, profile }) => ({
 					...req,
 					profile,
-				})),
+				}))
+		},
 		[id]
 	)
 
