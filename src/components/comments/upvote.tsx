@@ -29,20 +29,25 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 			if (error) throw error
 			return data as {
 				comment_id: uuid
-				is_upvoted: boolean
-				upvote_count: number
+				action: 'added' | 'removed'
 			}
 		},
 		onSuccess: (data) => {
+			const currentCount = comment.upvote_count ?? 0
+			const newCount =
+				data.action === 'added' ?
+					currentCount + 1
+				:	Math.max(0, currentCount - 1)
+
 			commentsCollection.utils.writeUpdate({
 				id: data.comment_id,
-				upvote_count: data.upvote_count ?? 0,
+				upvote_count: newCount,
 			})
-			if (data.is_upvoted == true) {
+			if (data.action === 'added') {
 				commentUpvotesCollection.utils.writeInsert({
 					comment_id: data.comment_id,
 				})
-			} else if (data.is_upvoted == false) {
+			} else {
 				commentUpvotesCollection.utils.writeDelete(data.comment_id)
 			}
 		},

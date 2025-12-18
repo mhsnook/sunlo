@@ -293,7 +293,7 @@ export const RequestCommentSchema = z.object({
 	id: z.string().uuid(),
 	request_id: z.string().uuid(),
 	parent_comment_id: z.string().uuid().nullable(),
-	commenter_uid: z.string().uuid(),
+	uid: z.string().uuid(),
 	content: z.string(),
 	created_at: z.string(),
 	updated_at: z.string(),
@@ -307,6 +307,7 @@ export const CommentPhraseLinkSchema = z.object({
 	request_id: z.string().uuid(),
 	comment_id: z.string().uuid(),
 	phrase_id: z.string().uuid(),
+	uid: z.string().uuid(),
 	created_at: z.string(),
 })
 

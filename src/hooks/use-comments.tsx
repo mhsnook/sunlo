@@ -41,7 +41,7 @@ export function useOneComment(commentId: uuid): UseLiveQueryResult<{
 				.where(({ comment }) => eq(comment.id, commentId))
 				.join(
 					{ profile: publicProfilesCollection },
-					({ comment, profile }) => eq(comment.commenter_uid, profile.uid),
+					({ comment, profile }) => eq(comment.uid, profile.uid),
 					'inner'
 				)
 				.findOne(),

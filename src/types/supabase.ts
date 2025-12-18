@@ -133,6 +133,7 @@ export type Database = {
 					id: string
 					phrase_id: string
 					request_id: string
+					uid: string
 				}
 				Insert: {
 					comment_id: string
@@ -140,6 +141,7 @@ export type Database = {
 					id?: string
 					phrase_id: string
 					request_id: string
+					uid?: string
 				}
 				Update: {
 					comment_id?: string
@@ -147,6 +149,7 @@ export type Database = {
 					id?: string
 					phrase_id?: string
 					request_id?: string
+					uid?: string
 				}
 				Relationships: [
 					{
@@ -190,19 +193,16 @@ export type Database = {
 				Row: {
 					comment_id: string
 					created_at: string
-					id: string
 					uid: string
 				}
 				Insert: {
 					comment_id: string
 					created_at?: string
-					id?: string
-					uid: string
+					uid?: string
 				}
 				Update: {
 					comment_id?: string
 					created_at?: string
-					id?: string
 					uid?: string
 				}
 				Relationships: [
@@ -654,50 +654,36 @@ export type Database = {
 			}
 			request_comment: {
 				Row: {
-					commenter_uid: string
 					content: string
 					created_at: string
 					id: string
 					parent_comment_id: string | null
 					request_id: string
+					uid: string
 					updated_at: string
 					upvote_count: number
 				}
 				Insert: {
-					commenter_uid: string
 					content: string
 					created_at?: string
 					id?: string
 					parent_comment_id?: string | null
 					request_id: string
+					uid?: string
 					updated_at?: string
 					upvote_count?: number
 				}
 				Update: {
-					commenter_uid?: string
 					content?: string
 					created_at?: string
 					id?: string
 					parent_comment_id?: string | null
 					request_id?: string
+					uid?: string
 					updated_at?: string
 					upvote_count?: number
 				}
 				Relationships: [
-					{
-						foreignKeyName: 'request_comment_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'request_comment_commenter_uid_fkey'
-						columns: ['commenter_uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
-					},
 					{
 						foreignKeyName: 'request_comment_parent_comment_id_fkey'
 						columns: ['parent_comment_id']
@@ -718,6 +704,20 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'request_comment_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -1496,7 +1496,6 @@ export type Database = {
 				}
 				Returns: Json
 			}
-			delete_comment: { Args: { p_comment_id: string }; Returns: undefined }
 			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
 			fsrs_d_0: { Args: { score: number }; Returns: number }
 			fsrs_days_between: {
@@ -1583,10 +1582,6 @@ export type Database = {
 				}
 			}
 			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
-			update_comment: {
-				Args: { p_comment_id: string; p_content: string }
-				Returns: Json
-			}
 			update_user_card_review: {
 				Args: { review_id: string; score: number }
 				Returns: {

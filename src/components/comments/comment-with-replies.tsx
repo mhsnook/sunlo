@@ -33,7 +33,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	})
 
 	// Get profile for this comment
-	const { data: profileData } = useOnePublicProfile(comment.commenter_uid)
+	const { data: profileData } = useOnePublicProfile(comment.uid)
 
 	// Get replies for this comment
 	const { data: repliesData } = useLiveQuery(
@@ -42,7 +42,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				.from({ reply: commentsCollection })
 				.where(({ reply }) => eq(reply.parent_comment_id, comment.id))
 				.join({ profile: publicProfilesCollection }, ({ reply, profile }) =>
-					eq(profile.uid, reply.commenter_uid)
+					eq(profile.uid, reply.uid)
 				)
 				.orderBy(({ reply }) => reply.created_at, 'asc'),
 		[comment.id]
@@ -55,7 +55,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const phrases = phraseData ?? []
 
-	const isOwner = userId === comment.commenter_uid
+	const isOwner = userId === comment.uid
 	const replyCount = replies?.length ?? 0
 
 	return (
@@ -65,7 +65,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
 				<UserPermalink
-					uid={comment.commenter_uid}
+					uid={comment.uid}
 					username={profileData?.username ?? ''}
 					avatar_path={profileData?.avatar_path ?? ''}
 					timeValue={comment.created_at}
@@ -162,7 +162,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseData } = usePhrasesFromComment(comment.id)
-	const { data: profileData } = useOnePublicProfile(comment.commenter_uid)
+	const { data: profileData } = useOnePublicProfile(comment.uid)
 	const isHighlighted = useSearch({
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
@@ -170,7 +170,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 	const userId = useUserId()
 	const phrases = phraseData ?? []
 
-	const isOwner = userId === comment.commenter_uid
+	const isOwner = userId === comment.uid
 
 	return (
 		<div
@@ -179,7 +179,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
 				<UserPermalink
-					uid={comment.commenter_uid}
+					uid={comment.uid}
 					username={profileData?.username ?? ''}
 					avatar_path={profileData?.avatar_path ?? ''}
 					timeValue={comment.created_at}
