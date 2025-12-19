@@ -1,22 +1,25 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 
+import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-
-import { useRequest } from '@/hooks/use-requests'
+import { useRequest, useRequestLinksWithComments } from '@/hooks/use-requests'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
-import { AnswersOnlyView } from '@/components/comments/answers-only-view'
 import Flagged from '@/components/flagged'
-import { TopLevelComments } from '@/components/comments/top-level-comments'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
 import { RequestButtonsRow } from '@/components/requests/request-buttons-row'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { WithPhrase } from '@/components/with-phrase'
+import { CommentWithReplies } from '@/components/comments/comment-with-replies'
+import { commentsCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -71,9 +74,121 @@ function RequestThreadPage() {
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
 				{search.show === 'answers-only' ?
-					<AnswersOnlyView requestId={params.id} />
+					<AnswersOnlyView />
 				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
 			</Collapsible>
 		</main>
+	)
+}
+
+const showThread = { show: 'thread' } as const
+
+function AnswersOnlyView() {
+	// Get all comment-phrase links for this request
+	const params = Route.useParams()
+	const { data: linksWithCommentsMap, isLoading } = useRequestLinksWithComments(
+		params.id
+	)
+	if (isLoading) return <Loader />
+	if (!linksWithCommentsMap) {
+		console.log(
+			`isLoading has completed but links is not linking`,
+			linksWithCommentsMap
+		)
+		return null
+	}
+
+	const phraseIds = Object.keys(linksWithCommentsMap)
+
+	return (
+		<div className="my-4 space-y-3">
+			<p className="text-muted-foreground text-sm">
+				Showing {phraseIds.length} flashcard
+				{phraseIds.length !== 1 ? 's' : ''} suggested from comments.{' '}
+				<Link to="." className="s-link" search={showThread}>
+					Return to thread view.
+				</Link>
+			</p>
+			<div className="grid divide-y border">
+				{phraseIds.map((pid) => (
+					<div key={pid} className="p-4 pb-2">
+						<WithPhrase pid={pid} Component={CardResultSimple} />
+						<p className="text-sm">
+							View in thread:{' '}
+							{linksWithCommentsMap[pid].map((l, i, arr) => (
+								<span key={l.id}>
+									{i > 0 && i < arr.length - 1 ? ',' : ''}
+									{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
+									<Link
+										to="."
+										// oxlint-disable-next-line jsx-no-new-object-as-prop
+										search={{
+											show: 'thread',
+											highlightComment: l.comment_id,
+											showSubthread: l.parent_comment_id ?? l.comment_id,
+										}}
+										className="s-link text-sm"
+									>
+										here
+									</Link>
+								</span>
+							))}
+							.
+						</p>
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+const answersOnly = { show: 'answers-only' } as const
+
+function TopLevelComments({
+	requestId,
+	lang,
+}: {
+	requestId: uuid
+	lang: string
+}) {
+	// Get comments for this request, sorted by upvote count
+	const { data: comments, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) =>
+					and(
+						eq(comment.request_id, requestId),
+						isNull(comment.parent_comment_id)
+					)
+				)
+				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
+		[requestId]
+	)
+
+	if (isLoading) return <Loader />
+	if (!comments || comments.length === 0) {
+		return (
+			<div className="text-muted-foreground py-8 text-center">
+				<p>No comments yet. Be the first to comment!</p>
+			</div>
+		)
+	}
+
+	return (
+		<div className="my-4 space-y-3">
+			<p className="text-muted-foreground text-sm">
+				Showing {comments.length} comment
+				{comments.length !== 1 ? 's' : ''}.{' '}
+				<Link to="." className="s-link" search={answersOnly}>
+					Show only proposed answers.
+				</Link>
+			</p>
+			<div className="divide-y border">
+				{comments.map((comment) => (
+					<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
+				))}
+			</div>
+		</div>
 	)
 }

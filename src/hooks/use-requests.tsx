@@ -1,5 +1,8 @@
+import { useMemo } from 'react'
 import { eq, useLiveQuery } from '@tanstack/react-db'
+
 import type { Tables } from '@/types/supabase'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
@@ -7,9 +10,12 @@ import {
 	phraseRequestsCollection,
 	publicProfilesCollection,
 } from '@/lib/collections'
-import { PhraseRequestType, PublicProfileType } from '@/lib/schemas'
-import { UseLiveQueryResult, uuid } from '@/types/main'
-import { useMemo } from 'react'
+import {
+	CommentPhraseLinkType,
+	PhraseRequestType,
+	PublicProfileType,
+} from '@/lib/schemas'
+import { mapArrays } from '@/lib/utils'
 
 export function useMyFriendsRequestsLang(
 	lang: string
@@ -46,7 +52,7 @@ export function useRequestsLang(
 	)
 }
 
-export const useRequestLinks = (
+export const useRequestLinksPhraseIds = (
 	requestId: uuid
 ): UseLiveQueryResult<{ phrase_id: uuid }[]> => {
 	return useLiveQuery(
@@ -60,6 +66,32 @@ export const useRequestLinks = (
 	)
 }
 
+export const useRequestLinksWithComments = (requestId: uuid) => {
+	const { data, isLoading } = useLiveQuery((q) =>
+		q
+			.from({ link: commentPhraseLinksCollection })
+			.where(({ link }) => eq(link.request_id, requestId))
+			.join(
+				{ comment: commentsCollection },
+				({ link, comment }) => eq(link.comment_id, comment.id),
+				'inner'
+			)
+			.select(({ link, comment }) => ({
+				...link,
+				parent_comment_id: comment.parent_comment_id,
+			}))
+	)
+	return useMemo(() => {
+		return {
+			isLoading,
+			data: mapArrays<
+				CommentPhraseLinkType & { parent_comment_id: uuid | null },
+				'phrase_id'
+			>(data, 'phrase_id'),
+		}
+	}, [data, isLoading])
+}
+
 export const useRequestCounts = (
 	id: uuid
 ): {
@@ -71,7 +103,7 @@ export const useRequestCounts = (
 			.from({ comment: commentsCollection })
 			.where(({ comment }) => eq(id, comment.request_id))
 	).data?.length
-	const countLinks = useRequestLinks(id).data?.length
+	const countLinks = useRequestLinksPhraseIds(id).data?.length
 	return useMemo(
 		() => ({
 			countComments,

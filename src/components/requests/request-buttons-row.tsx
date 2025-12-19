@@ -12,8 +12,8 @@ import { DialogTrigger } from '@/components/ui/dialog'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/hooks/use-requests'
 
-const showThread = { show: 'thread' }
-const answersOnly = { show: 'answers-only' }
+const showThread = { show: 'thread' } as const
+const answersOnly = { show: 'answers-only' } as const
 
 export function RequestButtonsRow({
 	requestId,
