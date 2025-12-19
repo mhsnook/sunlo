@@ -243,9 +243,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			{phrases && phrases.length > 0 && (
 				<div className="ms-13 mt-3 space-y-2">
 					{phrases.map(({ phrase }) => (
-						<div key={phrase.id} className="border-primary border-l-2 pl-3">
-							<CardResultSimple phrase={phrase} />
-						</div>
+						<CardResultSimple key={phrase.id} phrase={phrase} />
 					))}
 				</div>
 			)}

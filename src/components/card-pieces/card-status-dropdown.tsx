@@ -258,7 +258,7 @@ export function CardStatusHeart({
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
-			variant="outline"
+			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
 			size="icon"
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => mutation.mutate({ status: statusToPost })}
