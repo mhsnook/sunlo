@@ -104,12 +104,17 @@ function AnswersOnlyView() {
 		<div className="my-4 space-y-3">
 			<p className="text-muted-foreground text-sm">
 				Showing {phraseIds.length} flashcard
-				{phraseIds.length !== 1 ? 's' : ''} suggested from comments.{' '}
+				{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
 				<Link to="." className="s-link" search={showThread}>
-					Return to thread view.
+					Return to discussion.
 				</Link>
 			</p>
 			<div className="grid divide-y border">
+				{!phraseIds.length && (
+					<div className="text-muted-foreground py-8 text-center">
+						<p>No answers yet. Be the first to add one!</p>
+					</div>
+				)}
 				{phraseIds.map((pid) => (
 					<div key={pid} className="p-4 pb-2">
 						<WithPhrase pid={pid} Component={CardResultSimple} />
@@ -167,13 +172,6 @@ function TopLevelComments({
 	)
 
 	if (isLoading) return <Loader />
-	if (!comments || comments.length === 0) {
-		return (
-			<div className="text-muted-foreground py-8 text-center">
-				<p>No comments yet. Be the first to comment!</p>
-			</div>
-		)
-	}
 
 	return (
 		<div className="my-4 space-y-3">
@@ -188,6 +186,11 @@ function TopLevelComments({
 				{comments.map((comment) => (
 					<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
 				))}
+				{!comments.length && (
+					<div className="text-muted-foreground py-8 text-center">
+						<p>No comments yet. Be the first to comment!</p>
+					</div>
+				)}
 			</div>
 		</div>
 	)

@@ -26,7 +26,7 @@ export function RequestButtonsRow({
 	const currentUrlParams = useParams({ strict: false })
 	const search = useSearch({ strict: false })
 	return (
-		<div className="flex w-full flex-row items-center justify-between gap-2">
+		<div className="@container flex w-full flex-row items-center justify-between gap-2">
 			<div className="text-muted-foreground flex flex-row items-center gap-8">
 				<div>
 					<Flagged className="space-x-2">
@@ -34,6 +34,7 @@ export function RequestButtonsRow({
 							<Repeat />
 						</Button>
 						<span>0</span>
+						<span className="@max-lg:sr-only"> reposts</span>
 					</Flagged>
 				</div>
 				<div className="space-x-2">
@@ -44,13 +45,17 @@ export function RequestButtonsRow({
 							</Button>
 						</DialogTrigger>
 					</AddCommentDialog>
-					<span>{counts?.countComments ?? 0}</span>
+					<span>
+						{counts?.countComments ?? 0}
+						<span className="@max-lg:sr-only"> comments</span>
+					</span>
 				</div>
 				<div className="space-x-2">
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang, id: requestId }}
+						title={`Click to view answers (${counts?.countLinks ?? 0}))`}
 						search={
 							(
 								search.show === 'answers-only' &&
@@ -67,7 +72,10 @@ export function RequestButtonsRow({
 					>
 						<MessageSquareQuote />
 					</Link>
-					<span>{counts?.countLinks ?? 0}</span>
+					<span>
+						{counts?.countLinks ?? 0}
+						<span className="@max-lg:sr-only"> answers</span>
+					</span>
 				</div>
 			</div>
 

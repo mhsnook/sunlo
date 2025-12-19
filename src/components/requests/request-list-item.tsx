@@ -8,13 +8,27 @@ import { Markdown } from '@/components/my-markdown'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { RequestButtonsRow } from './request-buttons-row'
+import { useNavigate } from '@tanstack/react-router'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: links } = useRequestLinksPhraseIds(request.id)
 	const { data: profile } = useOnePublicProfile(request.requester_uid)
+	const navigate = useNavigate()
 
 	return !request ? null : (
-			<CardlikeRequest className="group">
+			<CardlikeRequest
+				className="group hover:bg-primary/0 cursor-pointer"
+				// oxlint-disable-next-line jsx-no-new-function-as-prop
+				onClick={(e) => {
+					const target = e.target as HTMLElement
+					if (!e.currentTarget.contains(target)) return
+					if (target.closest('button, a, input')) return
+					void navigate({
+						to: '/learn/$lang/requests/$id',
+						params: { lang: request.lang, id: request.id },
+					})
+				}}
+			>
 				<RequestHeader
 					request={request}
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
