@@ -183,7 +183,6 @@ or replace function public.create_comment_with_phrases (
 DECLARE
   v_comment_id uuid;
   v_new_comment request_comment;
-  v_phrase_id uuid;
 BEGIN
   -- Validate that either content or phrases are provided
   IF (p_content IS NULL OR trim(p_content) = '') AND (p_phrase_ids IS NULL OR array_length(p_phrase_ids, 1) IS NULL) THEN
@@ -203,15 +202,19 @@ BEGIN
       RAISE EXCEPTION 'Cannot attach more than 4 phrases to a comment';
     END IF;
 
-    FOREACH v_phrase_id IN ARRAY p_phrase_ids
-    LOOP
-      INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id)
-      VALUES (p_request_id, v_comment_id, v_phrase_id);
-    END LOOP;
+    INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id)
+    SELECT p_request_id, v_comment_id, unnest(p_phrase_ids);
   END IF;
 
-  -- Return the comment
-  RETURN row_to_json(v_new_comment);
+  -- Return the comment and links
+  RETURN json_build_object(
+    'request_comment', row_to_json(v_new_comment),
+    'comment_phrase_links', (
+      SELECT coalesce(json_agg(l), '[]'::json)
+      FROM comment_phrase_link l
+      WHERE l.comment_id = v_comment_id
+    )
+  );
 END;
 $function$;
 

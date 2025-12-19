@@ -27,8 +27,14 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import supabase from '@/lib/supabase-client'
-import { commentsCollection, publicProfilesCollection } from '@/lib/collections'
 import {
+	commentPhraseLinksCollection,
+	commentsCollection,
+	publicProfilesCollection,
+} from '@/lib/collections'
+import {
+	CommentPhraseLinkSchema,
+	CommentPhraseLinkType,
 	PublicProfileType,
 	RequestCommentSchema,
 	RequestCommentType,
@@ -183,15 +189,29 @@ function NewCommentForm({
 				}
 			)
 			if (error) throw error
-			return data
+			return data as {
+				request_comment: RequestCommentType
+				comment_phrase_links: CommentPhraseLinkType[]
+			}
 		},
 		onSuccess: (data) => {
 			// Parse and add to collection
-			commentsCollection.utils.writeInsert(RequestCommentSchema.parse(data))
-			// @@TODO: We actually need to be adding little records to the commentPhraseLink
-			// Reset form
+			commentsCollection.utils.writeInsert(
+				RequestCommentSchema.parse(data.request_comment)
+			)
 
-			// commentPhraseLinksCollection.utils.writeInsert
+			if (
+				data.comment_phrase_links &&
+				Array.isArray(data.comment_phrase_links)
+			) {
+				data.comment_phrase_links.forEach((link) => {
+					commentPhraseLinksCollection.utils.writeInsert(
+						CommentPhraseLinkSchema.parse(link)
+					)
+				})
+			}
+
+			// Reset form
 			form.reset()
 			setSelectedPhraseIds([])
 			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
