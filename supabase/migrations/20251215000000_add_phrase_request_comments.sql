@@ -542,7 +542,9 @@ from
 	);
 
 create or replace view
-	"public"."user_deck_plus" as
+	"public"."user_deck_plus"
+with
+	("security_invoker" = 'true') as
 select
 	d.uid,
 	d.lang,
@@ -861,9 +863,3 @@ create trigger tr_update_comment_upvote_count
 after insert
 or delete on public.comment_upvote for each row
 execute function public.update_comment_upvote_count ();
-
-drop policy "Allow users to select, insert, update 1oj01fe_0" on "storage"."objects";
-
-drop policy "Allow users to select, insert, update 1oj01fe_1" on "storage"."objects";
-
-drop policy "Allow users to select, insert, update 1oj01fe_2" on "storage"."objects";
