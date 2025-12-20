@@ -99,7 +99,7 @@ export function AddCommentDialog({
 					</p>
 				</DialogTrigger>
 			)}
-			<DialogContent>
+			<DialogContent className="max-h-[90vh] overflow-y-auto">
 				{parentCommentId ?
 					<CommentDisplayOnly id={parentCommentId} />
 				:	<RequestDisplayOnly id={requestId} />}
@@ -271,14 +271,13 @@ function NewCommentForm({
 
 				{/* Attached flashcards */}
 				{selectedPhraseIds && selectedPhraseIds.length > 0 && (
-					<div className="mb-0 space-y-2">
+					<div className="mb-0">
 						<p className="text-sm font-medium">
 							Attached flashcards ({selectedPhraseIds.length}/4)
 						</p>
-						<div className="grid grid-cols-2 space-y-2">
+						<div className="flex flex-wrap gap-x-2">
 							{selectedPhraseIds.map((pid) => (
-								<div key={pid} className="relative col-span-1 px-2 py-1">
-									<PhraseTinyCard pid={pid} className="mb-0" />
+								<div key={pid} className="relative px-2">
 									<Button
 										type="button"
 										variant="ghost"
@@ -287,8 +286,9 @@ function NewCommentForm({
 										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onClick={() => handleRemovePhrase(pid)}
 									>
-										<X className="h-4 w-4" />
+										<X />
 									</Button>
+									<PhraseTinyCard pid={pid} className="mb-0" />
 								</div>
 							))}
 						</div>
