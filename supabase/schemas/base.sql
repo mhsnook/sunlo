@@ -275,20 +275,6 @@ alter function "public"."bulk_add_phrases" (
 	"p_user_id" "uuid"
 ) owner to "postgres";
 
-create table if not exists
-	"public"."request_comment" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"request_id" "uuid" not null,
-		"parent_comment_id" "uuid",
-		"uid" "uuid" default "auth"."uid" () not null,
-		"content" "text" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"updated_at" timestamp with time zone default "now" () not null,
-		"upvote_count" integer default 0 not null
-	);
-
-alter table "public"."request_comment" owner to "postgres";
-
 create
 or replace function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
@@ -299,7 +285,6 @@ or replace function "public"."create_comment_with_phrases" (
 DECLARE
   v_comment_id uuid;
   v_new_comment request_comment;
-  v_phrase_id uuid;
 BEGIN
   -- Validate that either content or phrases are provided
   IF (p_content IS NULL OR trim(p_content) = '') AND (p_phrase_ids IS NULL OR array_length(p_phrase_ids, 1) IS NULL) THEN
@@ -319,15 +304,19 @@ BEGIN
       RAISE EXCEPTION 'Cannot attach more than 4 phrases to a comment';
     END IF;
 
-    FOREACH v_phrase_id IN ARRAY p_phrase_ids
-    LOOP
-      INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id)
-      VALUES (p_request_id, v_comment_id, v_phrase_id);
-    END LOOP;
+    INSERT INTO comment_phrase_link (request_id, comment_id, phrase_id)
+    SELECT p_request_id, v_comment_id, unnest(p_phrase_ids);
   END IF;
 
-  -- Return the comment
-  RETURN row_to_json(v_new_comment);
+  -- Return the comment and links
+  RETURN json_build_object(
+    'request_comment', row_to_json(v_new_comment),
+    'comment_phrase_links', (
+      SELECT coalesce(json_agg(l), '[]'::json)
+      FROM comment_phrase_link l
+      WHERE l.comment_id = v_comment_id
+    )
+  );
 END;
 $$;
 
@@ -709,6 +698,42 @@ $$;
 alter function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") owner to "postgres";
 
 create
+or replace function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") returns "json" language "plpgsql" as $$
+DECLARE
+  v_user_uid uuid := auth.uid();
+  v_upvote_exists boolean;
+BEGIN
+  -- Check if upvote exists
+  SELECT EXISTS(
+    SELECT 1 FROM phrase_request_upvote
+    WHERE request_id = p_request_id AND uid = v_user_uid
+  ) INTO v_upvote_exists;
+
+  IF v_upvote_exists THEN
+    -- Remove upvote
+    DELETE FROM phrase_request_upvote
+    WHERE request_id = p_request_id AND uid = v_user_uid;
+
+    RETURN json_build_object(
+      'request_id', p_request_id,
+      'action', 'removed'
+    );
+  ELSE
+    -- Add upvote
+    INSERT INTO phrase_request_upvote (request_id, uid)
+    VALUES (p_request_id, v_user_uid);
+
+    RETURN json_build_object(
+      'request_id', p_request_id,
+      'action', 'added'
+    );
+  END IF;
+END;
+$$;
+
+alter function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") owner to "postgres";
+
+create
 or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
   if (TG_OP = 'INSERT') then
@@ -727,6 +752,26 @@ end;
 $$;
 
 alter function "public"."update_comment_upvote_count" () owner to "postgres";
+
+create
+or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  if (TG_OP = 'INSERT') then
+    update phrase_request
+    set upvote_count = upvote_count + 1
+    where id = NEW.request_id;
+    return NEW;
+  elsif (TG_OP = 'DELETE') then
+    update phrase_request
+    set upvote_count = upvote_count - 1
+    where id = OLD.request_id;
+    return OLD;
+  end if;
+  return null;
+end;
+$$;
+
+alter function "public"."update_phrase_request_upvote_count" () owner to "postgres";
 
 create
 or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
@@ -1277,53 +1322,6 @@ from
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
-	"public"."phrase_request" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"requester_uid" "uuid" not null,
-		"lang" character varying not null,
-		"prompt" "text" not null,
-		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"fulfilled_at" timestamp with time zone
-	);
-
-alter table "public"."phrase_request" owner to "postgres";
-
-create or replace view
-	"public"."meta_phrase_request" as
-select
-	"pr"."id",
-	"pr"."created_at",
-	"pr"."requester_uid",
-	"pr"."lang",
-	"pr"."prompt",
-	"pr"."status",
-	"pr"."fulfilled_at",
-	"jsonb_build_object" (
-		'uid',
-		"pp"."uid",
-		'username',
-		"pp"."username",
-		'avatar_path',
-		"pp"."avatar_path"
-	) as "profile",
-	(
-		select
-			"array_agg" (distinct "cp"."phrase_id") as "array_agg"
-		from
-			"public"."comment_phrase_link" "cp"
-		where
-			("cp"."request_id" = "pr"."id")
-	) as "phrase_ids"
-from
-	(
-		"public"."phrase_request" "pr"
-		left join "public"."public_profile" "pp" on (("pr"."requester_uid" = "pp"."uid"))
-	);
-
-alter table "public"."meta_phrase_request" owner to "postgres";
-
-create table if not exists
 	"public"."phrase_relation" (
 		"from_phrase_id" "uuid",
 		"to_phrase_id" "uuid",
@@ -1334,6 +1332,28 @@ create table if not exists
 alter table "public"."phrase_relation" owner to "postgres";
 
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
+
+create table if not exists
+	"public"."phrase_request" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"requester_uid" "uuid" not null,
+		"lang" character varying not null,
+		"prompt" "text" not null,
+		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
+		"upvote_count" integer default 0 not null
+	);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists
+	"public"."phrase_request_upvote" (
+		"request_id" "uuid" not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"created_at" timestamp with time zone default "now" () not null
+	);
+
+alter table "public"."phrase_request_upvote" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_translation" (
@@ -1354,6 +1374,20 @@ comment on table "public"."phrase_translation" is 'A translation of one phrase i
 comment on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+create table if not exists
+	"public"."request_comment" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"request_id" "uuid" not null,
+		"parent_comment_id" "uuid",
+		"uid" "uuid" default "auth"."uid" () not null,
+		"content" "text" not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"updated_at" timestamp with time zone default "now" () not null,
+		"upvote_count" integer default 0 not null
+	);
+
+alter table "public"."request_comment" owner to "postgres";
 
 create or replace view
 	"public"."user_card_plus"
@@ -1611,6 +1645,9 @@ add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 alter table only "public"."phrase_request"
 add constraint "phrase_request_pkey" primary key ("id");
 
+alter table only "public"."phrase_request_upvote"
+add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
+
 alter table only "public"."phrase_tag"
 add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
 
@@ -1688,6 +1725,16 @@ create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "la
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
 create
+or replace trigger "on_phrase_request_upvote_added"
+after insert on "public"."phrase_request_upvote" for each row
+execute function "public"."update_phrase_request_upvote_count" ();
+
+create
+or replace trigger "on_phrase_request_upvote_removed"
+after delete on "public"."phrase_request_upvote" for each row
+execute function "public"."update_phrase_request_upvote_count" ();
+
+create
 or replace trigger "tr_update_comment_upvote_count"
 after insert
 or delete on "public"."comment_upvote" for each row
@@ -1749,6 +1796,12 @@ add constraint "phrase_request_lang_fkey" foreign key ("lang") references "publi
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_requester_uid_fkey" foreign key ("requester_uid") references "public"."user_profile" ("uid") on delete cascade;
+
+alter table only "public"."phrase_request_upvote"
+add constraint "phrase_request_upvote_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete cascade;
+
+alter table only "public"."phrase_request_upvote"
+add constraint "phrase_request_upvote_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on delete cascade;
 
 alter table only "public"."phrase_relation"
 add constraint "phrase_see_also_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
@@ -1962,6 +2015,10 @@ select
 		)
 	);
 
+create policy "Enable users to view their own upvotes" on "public"."phrase_request_upvote" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Logged in users can add see_also's" on "public"."phrase_relation" for insert to "authenticated"
 with
 	check (true);
@@ -2032,9 +2089,15 @@ create policy "Users can create upvotes" on "public"."comment_upvote" for insert
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Users can create upvotes" on "public"."phrase_request_upvote" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
+
 create policy "Users can delete own comments" on "public"."request_comment" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can delete own upvotes" on "public"."comment_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Users can delete own upvotes" on "public"."phrase_request_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can insert phrase links for their own comments" on "public"."comment_phrase_link" for insert to "authenticated"
 with
@@ -2102,6 +2165,8 @@ alter table "public"."phrase_relation" enable row level security;
 
 alter table "public"."phrase_request" enable row level security;
 
+alter table "public"."phrase_request_upvote" enable row level security;
+
 alter table "public"."phrase_tag" enable row level security;
 
 alter table "public"."phrase_translation" enable row level security;
@@ -2126,6 +2191,9 @@ alter publication "supabase_realtime" owner to "postgres";
 
 alter publication "supabase_realtime"
 add table only "public"."chat_message";
+
+alter publication "supabase_realtime"
+add table only "public"."friend_request_action";
 
 revoke USAGE on schema "public"
 from
@@ -2182,13 +2250,6 @@ grant all on function "public"."bulk_add_phrases" (
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"
 ) to "service_role";
-
-grant all on function "public"."create_comment_with_phrases" (
-	"p_request_id" "uuid",
-	"p_content" "text",
-	"p_parent_comment_id" "uuid",
-	"p_phrase_ids" "uuid" []
-) to "postgres";
 
 grant all on function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
@@ -2332,13 +2393,6 @@ grant all on function "public"."fulfill_phrase_request" (
 	"p_phrase_text" "text",
 	"p_translation_text" "text",
 	"p_translation_lang" character varying
-) to "anon";
-
-grant all on function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
 ) to "authenticated";
 
 grant all on function "public"."fulfill_phrase_request" (
@@ -2368,17 +2422,25 @@ grant all on function "public"."insert_user_card_review" (
 	"desired_retention" numeric
 ) to "service_role";
 
-grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "postgres";
-
 grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "authenticated";
 
 grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "service_role";
 
-grant all on function "public"."update_comment_upvote_count" () to "postgres";
+grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "postgres";
+
+grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "authenticated";
+
+grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "service_role";
 
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_upvote_count" () to "postgres";
+
+grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
+
+grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
 
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "authenticated";
 
@@ -2388,15 +2450,11 @@ grant all on table "public"."chat_message" to "authenticated";
 
 grant all on table "public"."chat_message" to "service_role";
 
-grant all on table "public"."comment_phrase_link" to "postgres";
-
 grant all on table "public"."comment_phrase_link" to "anon";
 
 grant all on table "public"."comment_phrase_link" to "authenticated";
 
 grant all on table "public"."comment_phrase_link" to "service_role";
-
-grant all on table "public"."comment_upvote" to "postgres";
 
 grant all on table "public"."comment_upvote" to "authenticated";
 
@@ -2425,8 +2483,6 @@ grant all on table "public"."phrase" to "service_role";
 grant all on table "public"."user_deck" to "authenticated";
 
 grant all on table "public"."user_deck" to "service_role";
-
-grant all on table "public"."meta_language" to "postgres";
 
 grant all on table "public"."meta_language" to "anon";
 
@@ -2460,27 +2516,11 @@ grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
 
-grant all on table "public"."meta_phrase_info" to "postgres";
-
 grant all on table "public"."meta_phrase_info" to "anon";
 
 grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
-
-grant all on table "public"."phrase_request" to "anon";
-
-grant all on table "public"."phrase_request" to "authenticated";
-
-grant all on table "public"."phrase_request" to "service_role";
-
-grant all on table "public"."meta_phrase_request" to "postgres";
-
-grant all on table "public"."meta_phrase_request" to "anon";
-
-grant all on table "public"."meta_phrase_request" to "authenticated";
-
-grant all on table "public"."meta_phrase_request" to "service_role";
 
 grant all on table "public"."phrase_relation" to "anon";
 
@@ -2488,13 +2528,23 @@ grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
 
+grant all on table "public"."phrase_request" to "anon";
+
+grant all on table "public"."phrase_request" to "authenticated";
+
+grant all on table "public"."phrase_request" to "service_role";
+
+grant all on table "public"."phrase_request_upvote" to "postgres";
+
+grant all on table "public"."phrase_request_upvote" to "authenticated";
+
+grant all on table "public"."phrase_request_upvote" to "service_role";
+
 grant all on table "public"."phrase_translation" to "anon";
 
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
-
-grant all on table "public"."request_comment" to "postgres";
 
 grant all on table "public"."request_comment" to "anon";
 
@@ -2511,8 +2561,6 @@ grant all on table "public"."user_client_event" to "anon";
 grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
-
-grant all on table "public"."user_deck_plus" to "postgres";
 
 grant all on table "public"."user_deck_plus" to "authenticated";
 
