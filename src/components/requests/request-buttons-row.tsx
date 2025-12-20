@@ -27,7 +27,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 
 				<Flagged>
 					<div className="flex flex-row items-center gap-2">
-						<Button variant="ghost" size="icon">
+						<Button variant="ghost" size="icon" title="Repost this request">
 							<Repeat />
 						</Button>
 						<span className="@max-sm:sr-only">
@@ -43,7 +43,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				<div className="flex flex-row items-center gap-2">
 					<AddCommentDialog requestId={request.id} lang={request.lang}>
 						<DialogTrigger asChild>
-							<Button variant="ghost" size="icon">
+							<Button variant="ghost" size="icon" title="Add a comment">
 								<MessagesSquare />
 							</Button>
 						</DialogTrigger>
@@ -103,7 +103,11 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						size="icon"
 					/>
 					<SendRequestToFriendDialog id={request.id} lang={request.lang}>
-						<Button variant="ghost" size="icon">
+						<Button
+							variant="ghost"
+							size="icon"
+							title="Send this request to a friend"
+						>
 							<Send />
 						</Button>
 					</SendRequestToFriendDialog>

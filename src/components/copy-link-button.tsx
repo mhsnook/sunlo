@@ -20,7 +20,13 @@ export default function CopyLinkButton({
 } & ButtonProps) {
 	const copy = useCallback(() => copyLink(url), [url])
 	return (
-		<Button onClick={copy} variant={variant} size={size} {...props}>
+		<Button
+			onClick={copy}
+			variant={variant}
+			size={size}
+			title="Copy link"
+			{...props}
+		>
 			<Copy className="h-4 w-4" />
 			<span className={collapse ? 'hidden @md:block' : ''}>{text}</span>
 		</Button>

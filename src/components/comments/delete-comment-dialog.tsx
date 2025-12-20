@@ -46,6 +46,7 @@ export function DeleteCommentDialog({
 			<Button
 				variant="ghost"
 				size="icon"
+				title="Delete comment"
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() => setOpen(true)}
 			>

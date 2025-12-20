@@ -89,7 +89,6 @@ export function AddCommentDialog({
 	children?: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
-	const navigate = useNavigate({ from: '/learn/$lang/requests/$id' })
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
@@ -112,11 +111,6 @@ export function AddCommentDialog({
 					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onSuccess={() => {
 						setOpen(false)
-						if (parentCommentId)
-							void navigate({
-								to: '/learn/$lang/requests/$id',
-								search: { showSubthread: parentCommentId },
-							})
 					}}
 				/>
 			</DialogContent>
@@ -167,6 +161,7 @@ function NewCommentForm({
 }: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
+	const navigate = useNavigate()
 
 	const isReply = !!parentCommentId
 
@@ -214,6 +209,11 @@ function NewCommentForm({
 			// Reset form
 			form.reset()
 			setSelectedPhraseIds([])
+			void navigate({
+				to: '/learn/$lang/requests/$id',
+				params: { lang, id: requestId },
+				search: { showSubthread: parentCommentId },
+			})
 			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
 			onSuccess()
 		},

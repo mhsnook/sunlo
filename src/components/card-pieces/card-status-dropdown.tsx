@@ -262,9 +262,14 @@ export function CardStatusHeart({
 			size="icon"
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => mutation.mutate({ status: statusToPost })}
+			title={
+				phrase.card?.status === 'active' ?
+					'Remove phrase from library'
+				:	'Add phrase to library'
+			}
 		>
 			{phrase.card?.status === 'active' ?
-				<Heart className="fill-red-600 text-red-600" />
+				<Heart className="fill-red-600/50 text-red-600/50" />
 			:	<Heart className="text-muted-foreground" />}
 		</Button>
 	)

@@ -76,6 +76,9 @@ function RequestThreadPage() {
 				{search.show === 'answers-only' ?
 					<AnswersOnlyView />
 				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
+				<p className="text-muted-foreground mb-6 px-4 italic">
+					This is the end of the thread.
+				</p>
 			</Collapsible>
 		</main>
 	)

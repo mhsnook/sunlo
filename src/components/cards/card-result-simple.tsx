@@ -38,6 +38,7 @@ export function CardResultSimple({
 						params={{ lang: phrase.lang, id: phrase.id }}
 						variant="ghost"
 						size="icon"
+						title="View full phrase info"
 						text=""
 					/>
 				</div>

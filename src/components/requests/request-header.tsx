@@ -2,10 +2,6 @@ import { PhraseRequestType, PublicProfileType } from '@/lib/schemas'
 import { CardDescription, CardHeader } from '@/components/ui/card'
 import UserPermalink from '../card-pieces/user-permalink'
 import { LangBadge } from '@/components/ui/badge'
-import Flagged from '@/components/flagged'
-import { Repeat } from 'lucide-react'
-
-import { Button } from '@/components/ui/button'
 
 export function RequestHeader({
 	request,
@@ -15,7 +11,7 @@ export function RequestHeader({
 	profile: undefined | PublicProfileType
 }) {
 	return (
-		<CardHeader className="border-primary-foresoft/20 mb-6 border-b">
+		<CardHeader className="border-primary-foresoft/20 mb-6 border-b pb-4">
 			<div className="flex flex-row items-center justify-between gap-2">
 				{profile && (
 					<UserPermalink
@@ -29,11 +25,6 @@ export function RequestHeader({
 					/>
 				)}
 				<div className="flex flex-row items-center gap-2">
-					<Flagged>
-						<Button variant="ghost" size="icon">
-							<Repeat />
-						</Button>
-					</Flagged>
 					<LangBadge lang={request.lang} />
 				</div>
 			</div>

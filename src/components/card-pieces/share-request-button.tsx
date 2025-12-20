@@ -44,6 +44,7 @@ export function ShareRequestButton({
 			variant={variant}
 			size={size}
 			className={className}
+			title="Share request"
 			{...props}
 		>
 			<Share className="h-4 w-4" />

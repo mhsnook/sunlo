@@ -24,7 +24,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { DialogTrigger } from '../ui/dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
-import { Upvote } from './upvote'
+import { Upvote } from './upvote-comment-button'
 import { UseLiveQueryResult, uuid } from '@/types/main'
 import { phrasesFull } from '@/lib/live-collections'
 
@@ -118,12 +118,12 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					<Upvote comment={comment} />
 					<div className="flex items-center gap-2">
 						<AddCommentDialog
-							// @@TODO THIS IS NOT WORKING
 							lang={lang}
 							requestId={comment.request_id}
 							parentCommentId={comment.id}
 						>
 							<DialogTrigger
+								title="Add a reply"
 								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
 							>
 								<MessagesSquare />

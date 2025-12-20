@@ -66,6 +66,7 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
 			<Button
 				variant={hasUpvoted ? 'outline-primary' : 'ghost'}
+				title={hasUpvoted ? 'Remove vote' : 'Vote up this request'}
 				size="icon"
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {

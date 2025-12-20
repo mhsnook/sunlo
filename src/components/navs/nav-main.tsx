@@ -36,7 +36,7 @@ export function NavMain({ lang }: { lang?: string }) {
 	const { data: profile } = useProfile()
 	const { data: decks } = useDecks()
 	const deckMenu = makeLinks(deckLinks, lang)
-	const isDeckFound = profile && lang && decks.some((d) => d.lang === lang)
+	const isDeckFound = profile && lang && decks?.some((d) => d.lang === lang)
 
 	return (
 		<>
