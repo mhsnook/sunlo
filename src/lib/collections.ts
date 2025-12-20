@@ -7,6 +7,8 @@ import {
 	type PublicProfileType,
 	PhraseRequestSchema,
 	type PhraseRequestType,
+	PhraseRequestUpvoteSchema,
+	type PhraseRequestUpvoteType,
 	LanguageSchema,
 	type LanguageType,
 	DeckMetaSchema,
@@ -66,7 +68,7 @@ export const phraseRequestsCollection = createCollection(
 			console.log(`Loading phraseRequestscollection`)
 
 			const { data } = await supabase
-				.from('meta_phrase_request')
+				.from('phrase_request')
 				.select()
 				.throwOnError()
 			return data?.map((p) => PhraseRequestSchema.parse(p)) ?? []
@@ -172,11 +174,12 @@ export const decksCollection = createCollection(
 				data
 					?.map((item) => DeckMetaRawSchema.parse(item))
 					.toSorted(sortDecksByCreation)
-					.map((d, i) => ({
-						...d,
-						theme: i % themes.length,
-						language: languages[d.lang],
-					})) ?? []
+					.map((d, i) =>
+						Object.assign(d, {
+							theme: i % themes.length,
+							language: languages[d.lang],
+						})
+					) ?? []
 			)
 		},
 		getKey: (item: DeckMetaType) => item.lang,
@@ -326,7 +329,7 @@ export const commentPhraseLinksCollection = createCollection(
 export const commentUpvotesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'comment_upvotes',
-		queryKey: ['public', 'comment_upvote'],
+		queryKey: ['user', 'comment_upvote'],
 		queryFn: async () => {
 			console.log(`Loading commentUpvotesCollection`)
 			const { data } = await supabase
@@ -342,6 +345,24 @@ export const commentUpvotesCollection = createCollection(
 	})
 )
 
+export const phraseRequestUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_request_upvotes',
+		queryKey: ['user', 'phrase_request_upvote'],
+		queryFn: async () => {
+			console.log(`Loading phraseRequestUpvotesCollection`)
+			const { data } = await supabase
+				.from('phrase_request_upvote')
+				.select('request_id')
+				.throwOnError()
+			return data?.map((item) => PhraseRequestUpvoteSchema.parse(item)) ?? []
+		},
+		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
+		queryClient,
+		schema: PhraseRequestUpvoteSchema,
+	})
+)
+
 export const clearUser = async () => {
 	await Promise.all([
 		myProfileCollection.cleanup(),
@@ -354,5 +375,6 @@ export const clearUser = async () => {
 		commentsCollection.cleanup(),
 		commentPhraseLinksCollection.cleanup(),
 		commentUpvotesCollection.cleanup(),
+		phraseRequestUpvotesCollection.cleanup(),
 	])
 }

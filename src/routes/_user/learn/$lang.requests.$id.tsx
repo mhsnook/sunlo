@@ -67,7 +67,7 @@ function RequestThreadPage() {
 				</CardContent>
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
 					<AddCommentDialog requestId={params.id} lang={params.lang} />
-					<RequestButtonsRow requestId={params.id} lang={params.lang} />
+					<RequestButtonsRow request={request} />
 				</CardFooter>
 			</CardlikeRequest>
 

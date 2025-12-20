@@ -170,10 +170,16 @@ export const PhraseRequestSchema = z.object({
 	lang: LangSchema,
 	prompt: z.string(),
 	status: PhraseRequestStatusEnumSchema,
-	fulfilled_at: z.string().nullable(),
+	upvote_count: z.number().default(0),
 })
 
 export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>
+
+export const PhraseRequestUpvoteSchema = z.object({
+	request_id: z.string().uuid(),
+})
+
+export type PhraseRequestUpvoteType = z.infer<typeof PhraseRequestUpvoteSchema>
 
 export const LanguageSchema = z.object({
 	lang: LangSchema,

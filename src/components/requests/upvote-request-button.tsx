@@ -4,51 +4,57 @@ import { count, eq } from '@tanstack/db'
 import toast from 'react-hot-toast'
 import { ThumbsUp } from 'lucide-react'
 
-import { commentsCollection, commentUpvotesCollection } from '@/lib/collections'
+import {
+	phraseRequestsCollection,
+	phraseRequestUpvotesCollection,
+} from '@/lib/collections'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/lib/schemas'
+import { PhraseRequestType } from '@/lib/schemas'
 
-export function Upvote({ comment }: { comment: RequestCommentType }) {
+export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 	const hasUpvoted = !!useLiveQuery(
 		(q) =>
 			q
-				.from({ upvote: commentUpvotesCollection })
-				.where(({ upvote }) => eq(upvote.comment_id, comment.id))
-				.select(({ upvote }) => ({ total: count(upvote.comment_id) })),
-		[comment.id]
+				.from({ upvote: phraseRequestUpvotesCollection })
+				.where(({ upvote }) => eq(upvote.request_id, request.id))
+				.select(({ upvote }) => ({ total: count(upvote.request_id) })),
+		[request.id]
 	).data?.length
 
 	// Toggle upvote mutation
 	const toggleUpvoteMutation = useMutation({
 		mutationFn: async () => {
-			const { data, error } = await supabase.rpc('toggle_comment_upvote', {
-				p_comment_id: comment.id,
-			})
+			const { data, error } = await supabase.rpc(
+				'toggle_phrase_request_upvote',
+				{
+					p_request_id: request.id,
+				}
+			)
 			if (error) throw error
 			return data as {
-				comment_id: uuid
+				request_id: uuid
 				action: 'added' | 'removed'
 			}
 		},
 		onSuccess: (data) => {
-			const currentCount = comment.upvote_count ?? 0
+			const currentCount = request.upvote_count ?? 0
 			const newCount =
 				data.action === 'added' ?
 					currentCount + 1
 				:	Math.max(0, currentCount - 1)
 
-			commentsCollection.utils.writeUpdate({
-				id: data.comment_id,
+			phraseRequestsCollection.utils.writeUpdate({
+				id: data.request_id,
 				upvote_count: newCount,
 			})
 			if (data.action === 'added') {
-				commentUpvotesCollection.utils.writeInsert({
-					comment_id: data.comment_id,
+				phraseRequestUpvotesCollection.utils.writeInsert({
+					request_id: data.request_id,
 				})
 			} else {
-				commentUpvotesCollection.utils.writeDelete(data.comment_id)
+				phraseRequestUpvotesCollection.utils.writeDelete(data.request_id)
 			}
 		},
 		onError: (error: Error) => {
@@ -57,7 +63,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 	})
 
 	return (
-		<div className="flex flex-row items-center gap-2 text-sm">
+		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
 			<Button
 				variant={hasUpvoted ? 'outline-primary' : 'ghost'}
 				size="icon"
@@ -70,11 +76,10 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 			>
 				<ThumbsUp />
 			</Button>
-			<span>
-				{comment.upvote_count}
+			<span className="font-medium @max-sm:sr-only">
+				{request.upvote_count}{' '}
 				<span className="@max-xl:sr-only">
-					{' '}
-					vote{comment.upvote_count === 1 ? '' : 's'}
+					vote{request.upvote_count === 1 ? '' : 's'}
 				</span>
 			</span>
 		</div>

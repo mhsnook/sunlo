@@ -21,9 +21,9 @@ const buttonVariants = cva(
 				outline:
 					'border border-primary-foresoft/10 hover:border-primary-foresoft/30 bg-card/50 hover:bg-background text-primary-foresoft',
 				'outline-primary':
-					'border border-primary-foresoft bg-primary/20 hover:bg-primary/40 text-primary-foresoft hover:text-primary-foresoft bg-primary-invert/40 hover:bg-primary-invert/60',
+					'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
 				'outline-accent':
-					'border border-accent/20 hover:bg-accent/20 text-accent-foreground hover:text-accent-foresoft bg-accent-invert/40 hover:bg-accent-invert/60',
+					'border border-accent-foresoft/40 bg-accent/10 hover:bg-accent/30 text-accent-foreground hover:text-accent-foresoft dark:bg-accent-invert/40 dark:hover:bg-accent-invert/50',
 				'badge-outline':
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
 			},

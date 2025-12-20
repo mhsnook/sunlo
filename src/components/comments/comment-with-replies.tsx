@@ -114,24 +114,30 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				)}
 
 				{/* Comment actions */}
-				<div className="mt-3 flex items-center gap-2">
+				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
-					<AddCommentDialog
-						// @@TODO THIS IS NOT WORKING
-						lang={lang}
-						requestId={comment.request_id}
-						parentCommentId={comment.id}
-					>
-						<DialogTrigger
-							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+					<div className="flex items-center gap-2">
+						<AddCommentDialog
+							// @@TODO THIS IS NOT WORKING
+							lang={lang}
+							requestId={comment.request_id}
+							parentCommentId={comment.id}
 						>
-							<MessagesSquare />
-						</DialogTrigger>
-					</AddCommentDialog>
+							<DialogTrigger
+								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+							>
+								<MessagesSquare />
+							</DialogTrigger>
+						</AddCommentDialog>{' '}
+						<span>comment</span>
+					</div>
 
 					{replyCount > 0 && (
 						<Link
-							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+							className={buttonVariants({
+								variant: showSubthread ? 'outline-primary' : 'ghost',
+								size: 'sm',
+							})}
 							to={'.'}
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							search={(search) => {
@@ -144,7 +150,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							{showSubthread ?
 								<ChevronUp className="mr-1 h-4 w-4" />
 							:	<ChevronDown className="mr-1 h-4 w-4" />}
-							{showSubthread ? 'Hide' : `Show ${replyCount}`}
+							<span className="@max-md:sr-only">
+								{showSubthread ? 'Showing' : `Show`}{' '}
+							</span>
+							{replyCount}
 							{replyCount === 1 ? ' reply' : ' replies'}
 						</Link>
 					)}
@@ -249,7 +258,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="ms-13 mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="text-muted-foreground ms-13 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
 			</div>
 		</div>

@@ -52,7 +52,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					</ScrollArea>
 				</CardContent>
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
-					<RequestButtonsRow requestId={request.id} lang={request.lang} />
+					<RequestButtonsRow request={request} />
 				</CardFooter>
 			</CardlikeRequest>
 		)

@@ -469,6 +469,7 @@ export type Database = {
 					prompt: string
 					requester_uid: string
 					status: Database['public']['Enums']['phrase_request_status']
+					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
@@ -478,6 +479,7 @@ export type Database = {
 					prompt: string
 					requester_uid: string
 					status?: Database['public']['Enums']['phrase_request_status']
+					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
@@ -487,6 +489,7 @@ export type Database = {
 					prompt?: string
 					requester_uid?: string
 					status?: Database['public']['Enums']['phrase_request_status']
+					upvote_count?: number
 				}
 				Relationships: [
 					{
@@ -513,6 +516,53 @@ export type Database = {
 					{
 						foreignKeyName: 'phrase_request_requester_uid_fkey'
 						columns: ['requester_uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+				]
+			}
+			phrase_request_upvote: {
+				Row: {
+					created_at: string
+					request_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					request_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					request_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_uid_fkey'
+						columns: ['uid']
 						isOneToOne: false
 						referencedRelation: 'user_profile'
 						referencedColumns: ['uid']
@@ -1289,6 +1339,7 @@ export type Database = {
 					prompt: string | null
 					requester_uid: string | null
 					status: Database['public']['Enums']['phrase_request_status'] | null
+					upvote_count: number | null
 				}
 				Relationships: [
 					{
@@ -1582,6 +1633,10 @@ export type Database = {
 				}
 			}
 			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
+			toggle_phrase_request_upvote: {
+				Args: { p_request_id: string }
+				Returns: Json
+			}
 			update_user_card_review: {
 				Args: { review_id: string; score: number }
 				Returns: {
