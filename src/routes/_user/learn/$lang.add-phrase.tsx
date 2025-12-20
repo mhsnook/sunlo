@@ -32,9 +32,9 @@ import {
 	TranslationSchema,
 } from '@/lib/schemas'
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
-import { Separator } from '@radix-ui/react-separator'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { Separator } from '@/components/ui/separator'
 
 export interface SearchParams {
 	text?: string

@@ -2,9 +2,9 @@
 
 Use concise, functional TypeScript, the latest ECMAScript features, and React 19.
 
-Use @tanstack/react-query version 5 to manage asynchronous state and mutations.
+Use @tanstack/db to load needed segments of the database into the local db, and then assemble whatever data components need from live queries.
 
-- we like to define and export queryOptions, so that the components and routes requiring such data can choose when to useSuspenseQuery, useQuery, or use the loader function to ensureQueryData or otherwise handle prefetching and/or suspending, while being sure we're accessing the same batches of data or same overall shapes from the same cache keys.
+- we like to use Tanstack DB's queryCollections to connect the database to the local db. Sometimes we load up whole tables, especially for user tables where RLS will do a lot of filtering for us. Other times we use `on-demand` query loading with subsets defined in the live queries themselves.
 
 We use supabase as our back-end, our database, storage system, auth system; we use postgres functions that supabase turns into RPC endpoints, and supabase's tools for migrations and seed data. Use supabase-js version 2 to asynchronously fetch and post data, inside react-query queryFn's and mutationFns.
 
@@ -12,8 +12,7 @@ We use supabase as our back-end, our database, storage system, auth system; we u
 
 This is a Single-Page Application (SPA) that uses `@tanstack/react-router` with file-based routes for routes, navigation, dynamic routes with nested layouts, and page parameter and search validation.
 
-- the loader functions of our routes and layouts are handy places to prefetch or ensure certain query data be present in the react-query cache.
-- we also use the loader functions to return the data that's used to fill out the Navbar's title and icons, and to pass the list of links for the app-nav and context menu, and to directly pass the second sidebar if it is required
+- we use the loader functions to return the data that's used to fill out the Navbar's title and icons, and to pass the list of links for the app-nav and context menu, and to directly pass the second sidebar if it is required.
 
 We use TailwindCSS with ShadCN theme structure for styling.
 
@@ -54,6 +53,8 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - to import components, use `from '@/components/[component-name-here].tsx`'
 - to import lib functions, use `from '@/lib/[file-name-here].tsx`'
 - for files that only contain typescript definitions, these don't operate at run-time, so name them with `*.d.ts` so they will be excluded from the Vite dev server's watch/refresh.
+- In UI components, for fetching data from the server / from the cache, we often use use hooks with names like useDeck and useLanguage, but it's fine to just write a useLiveQuery for each component.
+- In the query functions for our collections, we usually only pull down the data for the item itself because most tables have their own collections which we populate.
 
 ## Development Tools & Quality
 
@@ -69,25 +70,6 @@ You are an expert in your craft, and you know how to spend less time on the smal
 - **immer** - for immutable state updates when needed
 - **dayjs** - for date manipulation (lighter than moment.js)
 - **recharts** - for data visualization components
-
-## Data fetching
-
-- In UI components, for fetching data from the server, we should always use hooks like useDeck, and useLanguage.
-  - Usedeck has select-variants, like useCardsMap, useDeckMeta, and useDeckPids. These all use the same cache key and simply select on it,
-    so once one of these queries is cached they will all enjoy immediate access.
-  - The same for useLanguage and its variants: usePhrasesMap, use LanguageMeta, useLanguagePids
-  - When in doubt, invalidate all the data rather than attempting optimistic updates.
-- Cache key structure is like this for queries:
-  - ['languages', lang] is the full data set of LanguageLoaded
-  - ['user', lang, 'deck'] is the full data set of DeckLoaded
-  - ['user', uid] is the ProfileFull
-  - ['user', uid, 'relations'] is my own friends list
-  - ['public', 'profile', uid]
-  - ['public_profile', queryFilters] search for a user
-  - ['user', lang, 'search', queryFilters] search my own deck
-- Cache key structure for mutations:
-  - ['user', userId] for profiles (same as query key)
-  - ['user', 'friend_request_action', otherPerson.uid] for all friend request actions
 
 ## Data Mutations
 

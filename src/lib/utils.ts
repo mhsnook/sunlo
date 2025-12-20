@@ -27,6 +27,13 @@ export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
 	)
 }
 
+/*
+	returns a map-object of _arrays_ of items matching the key
+	mapArrays(arr, 'id') --> {
+		1: [{id: 1, val: 'a'}],
+		2: [{id: 2, val: 'b'}, {id: 2, val: 'c' }]
+	}
+*/
 export function mapArrays<T extends Record<string, unknown>, K extends keyof T>(
 	arr: Array<T>,
 	key: K

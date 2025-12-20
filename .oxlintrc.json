@@ -110,16 +110,7 @@
 			"env": {
 				"es2022": true
 			},
-			"plugins": ["react", "unicorn", "typescript", "oxc"],
-			"categories": {
-				"correctness": "error",
-				"suspicious": "warn",
-				"pedantic": "warn",
-				"perf": "warn",
-				"style": "warn",
-				"restriction": "warn",
-				"nursery": "warn"
-			}
+			"plugins": ["react", "unicorn", "typescript", "oxc"]
 		}
 	]
 }

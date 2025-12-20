@@ -1,6 +1,5 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
-
 import {
 	PhraseFullSchema,
 	type PhraseFullType,
@@ -8,6 +7,8 @@ import {
 	type PublicProfileType,
 	PhraseRequestSchema,
 	type PhraseRequestType,
+	PhraseRequestUpvoteSchema,
+	type PhraseRequestUpvoteType,
 	LanguageSchema,
 	type LanguageType,
 	DeckMetaSchema,
@@ -27,6 +28,12 @@ import {
 	DeckMetaRawSchema,
 	LangTagSchema,
 	type LangTagType,
+	RequestCommentSchema,
+	type RequestCommentType,
+	CommentPhraseLinkSchema,
+	type CommentPhraseLinkType,
+	CommentUpvoteSchema,
+	type CommentUpvoteType,
 } from './schemas'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
@@ -61,7 +68,7 @@ export const phraseRequestsCollection = createCollection(
 			console.log(`Loading phraseRequestscollection`)
 
 			const { data } = await supabase
-				.from('meta_phrase_request')
+				.from('phrase_request')
 				.select()
 				.throwOnError()
 			return data?.map((p) => PhraseRequestSchema.parse(p)) ?? []
@@ -167,11 +174,12 @@ export const decksCollection = createCollection(
 				data
 					?.map((item) => DeckMetaRawSchema.parse(item))
 					.toSorted(sortDecksByCreation)
-					.map((d, i) => ({
-						...d,
-						theme: i % themes.length,
-						language: languages[d.lang],
-					})) ?? []
+					.map((d, i) =>
+						Object.assign(d, {
+							theme: i % themes.length,
+							language: languages[d.lang],
+						})
+					) ?? []
 			)
 		},
 		getKey: (item: DeckMetaType) => item.lang,
@@ -276,6 +284,85 @@ export const chatMessagesCollection = createCollection(
 	})
 )
 
+// Comment system collections
+export const commentsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'request_comments',
+		queryKey: ['public', 'request_comment'],
+		queryFn: async () => {
+			console.log(`Loading commentsCollection`)
+			const { data } = await supabase
+				.from('request_comment')
+				.select()
+				.throwOnError()
+			return data?.map((item) => RequestCommentSchema.parse(item)) ?? []
+		},
+		/*
+		onUpdate: async (item) => {},
+		onInsert: async (item) => {},
+		onDelete: async (commentId) => {},
+		*/
+		getKey: (item: RequestCommentType) => item.id,
+		queryClient,
+		schema: RequestCommentSchema,
+	})
+)
+
+export const commentPhraseLinksCollection = createCollection(
+	queryCollectionOptions({
+		id: 'comment_phrase_links',
+		queryKey: ['public', 'comment_phrase_link'],
+		queryFn: async () => {
+			console.log(`Loading commentPhraseLinksCollection`)
+			const { data } = await supabase
+				.from('comment_phrase_link')
+				.select()
+				.throwOnError()
+			return data?.map((item) => CommentPhraseLinkSchema.parse(item)) ?? []
+		},
+		getKey: (item: CommentPhraseLinkType) => item.id,
+		queryClient,
+		schema: CommentPhraseLinkSchema,
+	})
+)
+
+export const commentUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'comment_upvotes',
+		queryKey: ['user', 'comment_upvote'],
+		queryFn: async () => {
+			console.log(`Loading commentUpvotesCollection`)
+			const { data } = await supabase
+				.from('comment_upvote')
+				.select('comment_id')
+				.throwOnError()
+			return data?.map((item) => CommentUpvoteSchema.parse(item)) ?? []
+		},
+		// this is a one-column table consisting of comment IDs only
+		getKey: (item: CommentUpvoteType) => item.comment_id,
+		queryClient,
+		schema: CommentUpvoteSchema,
+	})
+)
+
+export const phraseRequestUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_request_upvotes',
+		queryKey: ['user', 'phrase_request_upvote'],
+		queryFn: async () => {
+			console.log(`Loading phraseRequestUpvotesCollection`)
+			const { data } = await supabase
+				.from('phrase_request_upvote')
+				.select('request_id')
+				.throwOnError()
+			return data?.map((item) => PhraseRequestUpvoteSchema.parse(item)) ?? []
+		},
+		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
+		queryClient,
+		schema: PhraseRequestUpvoteSchema,
+	})
+)
+
 export const clearUser = async () => {
 	await Promise.all([
 		myProfileCollection.cleanup(),
@@ -285,5 +372,9 @@ export const clearUser = async () => {
 		cardReviewsCollection.cleanup(),
 		friendSummariesCollection.cleanup(),
 		chatMessagesCollection.cleanup(),
+		commentsCollection.cleanup(),
+		commentPhraseLinksCollection.cleanup(),
+		commentUpvotesCollection.cleanup(),
+		phraseRequestUpvotesCollection.cleanup(),
 	])
 }

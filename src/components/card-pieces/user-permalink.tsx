@@ -3,6 +3,22 @@ import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
+import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+
+export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
+	const { data, isLoading } = useOnePublicProfile(uid)
+	return (
+		isLoading ? null
+		: !data ? <>profile not found</>
+		: <UserPermalink
+				uid={uid}
+				username={data?.username}
+				avatar_path={data?.avatar_path}
+				{...args}
+			/>
+	)
+}
 
 export default function UserPermalink({
 	uid,
@@ -11,7 +27,9 @@ export default function UserPermalink({
 	className,
 	timeLinkTo,
 	timeLinkParams,
+	timeLinkSearch,
 	timeValue,
+	nonInteractive,
 }: {
 	uid: uuid | null | undefined
 	username: string | null | undefined
@@ -19,7 +37,9 @@ export default function UserPermalink({
 	className?: string
 	timeLinkTo?: string
 	timeLinkParams?: Record<string, string>
+	timeLinkSearch?: Record<string, string>
 	timeValue?: string
+	nonInteractive?: boolean
 }) {
 	if (!uid) return null
 	const avatarUrl = avatarUrlify(avatar_path)
@@ -31,12 +51,14 @@ export default function UserPermalink({
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className={cn(`inline-flex flex-row`, className)}
+					disabled={nonInteractive}
 				>
-					<img
-						src={avatarUrl}
-						alt={`${username}'s avatar`}
-						className="aspect-square w-8 rounded-2xl object-cover"
-					/>
+					<Avatar className="bg-foreground text-background rounded-2xl">
+						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
+						<AvatarFallback className="mx-auto place-self-center font-bold">
+							{username?.slice(0, 2)}
+						</AvatarFallback>
+					</Avatar>
 				</Link>
 			:	null}
 			<div className="text-sm">
@@ -48,6 +70,7 @@ export default function UserPermalink({
 						to={timeLinkTo}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={timeLinkParams}
+						search={timeLinkSearch}
 						className="s-link-hidden text-muted-foreground"
 					>
 						{ago(timeValue)}

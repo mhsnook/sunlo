@@ -155,7 +155,7 @@ export async function createRequest(params: { lang: string; prompt: string }) {
  */
 export async function getRequest(requestId: string) {
 	return await supabase
-		.from('meta_phrase_request')
+		.from('phrase_request')
 		.select()
 		.eq('id', requestId)
 		.single()

@@ -91,6 +91,17 @@ function DeckFeedPage() {
 					</TabsContent>
 				</Tabs>
 			</div>
+			<p className="text-muted-foreground my-6 ms-6 italic">
+				This is the end of the feed... how about{' '}
+				<Link
+					to="/friends/invite"
+					from={Route.fullPath}
+					className="s-link-muted"
+				>
+					inviting a friend
+				</Link>{' '}
+				to learn together?
+			</p>
 		</main>
 	)
 }
@@ -106,7 +117,7 @@ function RecentFeed() {
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
 					<Link
-						className={buttonVariants({ variant: 'outline-primary' })}
+						className={buttonVariants()}
 						to="/learn/$lang/requests/new"
 						from={Route.fullPath}
 					>
@@ -135,14 +146,14 @@ function FriendsFeed() {
 					</p>
 					<div className="space-y-2 space-x-2">
 						<Link
-							className={buttonVariants({ variant: 'outline-primary' })}
+							className={buttonVariants()}
 							to="/friends"
 							from={Route.fullPath}
 						>
 							Search for a friend
 						</Link>
 						<Link
-							className={buttonVariants({ variant: 'outline-primary' })}
+							className={buttonVariants()}
 							to="/learn/$lang/requests/new"
 							from={Route.fullPath}
 						>
@@ -171,7 +182,7 @@ function PopularFeed() {
 						This feed is empty. You might have to be the one to lead the way!
 					</p>
 					<Link
-						className={buttonVariants({ variant: 'outline-primary' })}
+						className={buttonVariants()}
 						to="/learn/$lang/requests/new"
 						from={Route.fullPath}
 					>

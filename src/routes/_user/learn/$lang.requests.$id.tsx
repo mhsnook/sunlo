@@ -1,318 +1,200 @@
-import { useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
-import { MessageSquarePlus, Send, Star } from 'lucide-react'
 
-import supabase from '@/lib/supabase-client'
-import { CardContent } from '@/components/ui/card'
+import type { uuid } from '@/types/main'
+import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { Button } from '@/components/ui/button'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
-import languages from '@/lib/languages'
-import UserPermalink from '@/components/card-pieces/user-permalink'
-import TranslationLanguageField from '@/components/fields/translation-language-field'
-import { CardResultSimple } from '@/components/cards/card-result-simple'
-import {
-	type FulfillRequestResponse,
-	usePhrasesFromRequest,
-	useRequest,
-} from '@/hooks/use-requests'
-import Callout from '@/components/ui/callout'
-import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import CopyLinkButton from '@/components/copy-link-button'
-import { ShareRequestButton } from '@/components/card-pieces/share-request-button'
-import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request-to-friend'
-import { cardsCollection, phrasesCollection } from '@/lib/collections'
-import { CardMetaSchema, PhraseFullSchema } from '@/lib/schemas'
-import Flagged from '@/components/flagged'
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog'
-
+import { useRequest, useRequestLinksWithComments } from '@/hooks/use-requests'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
-import { RequestHeader } from '@/components/card-pieces/request-header-footer'
-import { Collapsible } from '@radix-ui/react-collapsible'
+import { RequestHeader } from '@/components/requests/request-header'
+import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
+import Flagged from '@/components/flagged'
+import { Collapsible } from '@/components/ui/collapsible'
+import languages from '@/lib/languages'
+import { RequestButtonsRow } from '@/components/requests/request-buttons-row'
+import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { WithPhrase } from '@/components/with-phrase'
+import { CommentWithReplies } from '@/components/comments/comment-with-replies'
+import { commentsCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
+		showSubthread: z.string().uuid().optional(),
+		highlightComment: z.string().uuid().optional(),
 	}),
-	component: FulfillRequestPage,
+	loader: ({ params: { lang } }) => ({
+		titleBar: { title: `${languages[lang]} Request` },
+		appnav: [],
+	}),
+	component: RequestThreadPage,
 })
 
-const FulfillRequestSchema = z.object({
-	phrase_text: z.string().min(1, 'Please enter the phrase text.'),
-	translation_text: z.string().min(1, 'Please enter a translation.'),
-	translation_lang: z.string().length(3, 'Please select a language.'),
-})
-
-type FulfillRequestFormInputs = z.infer<typeof FulfillRequestSchema>
-
-function FulfillRequestPage() {
+function RequestThreadPage() {
 	const params = Route.useParams()
-	const [isAnswering, setIsAnswering] = useState(false)
 	const { data: request, isLoading } = useRequest(params.id)
-	const { data: phrases } = usePhrasesFromRequest(params.id)
 	const search = Route.useSearch()
-
-	const form = useForm<FulfillRequestFormInputs>({
-		resolver: zodResolver(FulfillRequestSchema),
-		defaultValues: {
-			phrase_text: '',
-			translation_text: '',
-			translation_lang: 'eng',
-		},
-	})
-
-	const fulfillMutation = useMutation<
-		FulfillRequestResponse,
-		Error,
-		FulfillRequestFormInputs
-	>({
-		mutationFn: async (values: FulfillRequestFormInputs) => {
-			console.log(`Beginning mutation`, { values })
-			const { data: rpcData, error: rpcError } = await supabase.rpc(
-				'fulfill_phrase_request',
-				{
-					request_id: params.id,
-					p_phrase_text: values.phrase_text,
-					p_translation_text: values.translation_text,
-					p_translation_lang: values.translation_lang,
-				}
-			)
-			if (rpcError) throw rpcError
-			return rpcData as FulfillRequestResponse
-		},
-		onSuccess: (data, variables) => {
-			setIsAnswering(false)
-			form.reset({
-				phrase_text: '',
-				translation_text: '',
-				translation_lang: variables.translation_lang,
-			})
-			const newPhrase = { ...data.phrase, translations: [data.translation] }
-			phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(newPhrase))
-			if (data.card)
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
-			toast.success('Thank you for your contribution!')
-		},
-		onError: (err: Error) => {
-			toast.error(`An error occurred: ${err.message}`)
-		},
-	})
 
 	if (isLoading) return <Loader />
 
 	if (!request)
 		return (
-			<Callout variant="problem" Icon={DestructiveOctagon}>
-				<h1 className="h3">404 request not found</h1>
-				<p>
-					We're sorry, we could not locate that request. You might have typed in
-					the link incorrectly? Or it may have been deleted.
-				</p>
-			</Callout>
+			<ShowAndLogError
+				error={new Error('Request not found')}
+				text="We couldn't find that request. It might have been deleted or you may have mistyped the link."
+			/>
 		)
-
-	const noAnswers = phrases?.length === 0
 
 	return (
 		<main>
 			<CardlikeRequest>
 				<RequestHeader profile={request.profile} request={request} />
 
-				<CardContent className="flex flex-col gap-2">
+				<CardContent className="flex flex-col gap-6">
 					<Flagged>
 						<div className="inline-flex flex-row gap-2">
 							<Badge variant="outline">Food</Badge>
 							<Badge variant="outline">Beginners</Badge>
 						</div>
 					</Flagged>
-					<p className="text-lg">
+					<div className="text-lg">
 						<Markdown>{request.prompt}</Markdown>
-					</p>
-
-					<p className="text-muted-foreground mt-4 text-sm">
-						{phrases?.length ?? 0} comments, {phrases?.length ?? 0} answer
-						{phrases?.length !== 1 && 's'} so far
-					</p>
-
-					<div className="flex w-full flex-row justify-between gap-4">
-						<Dialog open={isAnswering} onOpenChange={setIsAnswering}>
-							<DialogTrigger asChild>
-								<Button>
-									<MessageSquarePlus />{' '}
-									{Array.isArray(phrases) && phrases.length > 0 ?
-										'Submit an answer'
-									:	'Answer this request'}
-								</Button>
-							</DialogTrigger>
-							<DialogContent className="mt-4 w-full rounded px-4 pt-4 pb-4 shadow">
-								<DialogHeader>
-									<DialogTitle>Provide an answer</DialogTitle>
-								</DialogHeader>
-								<Markdown>{request.prompt}</Markdown>
-								<Form {...form}>
-									<form
-										// eslint-disable-next-line @typescript-eslint/no-misused-promises
-										onSubmit={form.handleSubmit((data) =>
-											fulfillMutation.mutate(data)
-										)}
-										className="space-y-4"
-									>
-										<FormField
-											control={form.control}
-											name="phrase_text"
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
-											render={({ field }) => (
-												<FormItem>
-													<FormLabel>
-														Phrase in {languages[request.lang]}
-													</FormLabel>
-													<FormControl>
-														<Textarea
-															placeholder="e.g., C'est délicieux"
-															{...field}
-														/>
-													</FormControl>
-													<FormMessage />
-												</FormItem>
-											)}
-										/>
-										<div className="mb-8 grid gap-4">
-											<FormField
-												control={form.control}
-												name="translation_text"
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
-												render={({ field }) => (
-													<FormItem className="col-span-2">
-														<FormLabel>Translation</FormLabel>
-														<FormControl>
-															<Textarea
-																placeholder="e.g., It's delicious"
-																{...field}
-															/>
-														</FormControl>
-														<FormMessage />
-													</FormItem>
-												)}
-											/>
-											<TranslationLanguageField
-												control={form.control}
-												error={form.formState.errors.translation_lang}
-											/>
-										</div>
-										<div className="space-x-2">
-											<Button
-												type="submit"
-												disabled={fulfillMutation.isPending}
-											>
-												{fulfillMutation.isPending ?
-													'Submitting...'
-												:	'Submit Phrase'}
-											</Button>
-											<Button
-												variant="secondary"
-												className={noAnswers ? 'hidden' : ''}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
-												onClick={() => setIsAnswering(false)}
-											>
-												Cancel
-											</Button>
-										</div>
-										<ShowAndLogError error={fulfillMutation.error} />
-									</form>
-								</Form>
-							</DialogContent>
-						</Dialog>
-						<div className="flex flex-row items-center gap-2">
-							<CopyLinkButton
-								url={`${window.location.host}/learn/${params.lang}/requests/${params.id}`}
-								variant="ghost"
-								size="icon"
-								text=""
-							/>
-							<ShareRequestButton
-								id={params.id}
-								lang={params.lang}
-								variant="ghost"
-								size="icon"
-							/>
-							<SendRequestToFriendDialog id={params.id} lang={params.lang}>
-								<Button variant="ghost" size="icon">
-									<Send />
-								</Button>
-							</SendRequestToFriendDialog>
-						</div>
 					</div>
 				</CardContent>
+				<CardFooter className="flex flex-col gap-4 border-t py-4">
+					<AddCommentDialog requestId={params.id} lang={params.lang} />
+					<RequestButtonsRow request={request} />
+				</CardFooter>
 			</CardlikeRequest>
 
+			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
-				{!phrases?.length ? null : (
-					phrases.map((phrase) => (
-						<div
-							key={phrase.id}
-							className="ms-4 space-y-2 border border-t-0 p-4"
-						>
-							<div className="flex flex-row items-center justify-between">
-								<UserPermalink
-									uid={phrase.added_by}
-									username={phrase.profile?.username}
-									avatar_path={phrase.profile?.avatar_path}
-									timeValue={phrase.created_at}
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									timeLinkParams={params}
-									timeLinkTo="/learn/$lang/$id"
-								/>
-								<Flagged
-									name="favourite_answer"
-									className="flex flex-row gap-2"
-								>
-									<Button
-										variant="outline"
-										size="icon"
-										className="text-muted-foreground"
-										disabled
-									>
-										<Star />
-									</Button>
-								</Flagged>
-							</div>
-							<Flagged>
-								<p className="py-4 text-lg">
-									This is a <em>great</em> question! Sample comment showing an
-									answer:
-								</p>
-							</Flagged>
-							<CardResultSimple phrase={phrase} />
-							<Flagged>
-								<p className="s-link py-4 text-sm">show 3 replies</p>
-							</Flagged>
-							{/* <p className="py-4 text-sm underline text-muted-foreground">4 replies</p> */}
-						</div>
-					))
-				)}
+				{search.show === 'answers-only' ?
+					<AnswersOnlyView />
+				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
+				<p className="text-muted-foreground mb-6 px-4 italic">
+					This is the end of the thread.
+				</p>
 			</Collapsible>
 		</main>
+	)
+}
+
+const showThread = { show: 'thread' } as const
+
+function AnswersOnlyView() {
+	// Get all comment-phrase links for this request
+	const params = Route.useParams()
+	const { data: linksWithCommentsMap, isLoading } = useRequestLinksWithComments(
+		params.id
+	)
+	if (isLoading) return <Loader />
+	if (!linksWithCommentsMap) {
+		console.log(
+			`isLoading has completed but links is not linking`,
+			linksWithCommentsMap
+		)
+		return null
+	}
+
+	const phraseIds = Object.keys(linksWithCommentsMap)
+
+	return (
+		<div className="my-4 space-y-3">
+			<p className="text-muted-foreground text-sm">
+				Showing {phraseIds.length} flashcard
+				{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
+				<Link to="." className="s-link" search={showThread}>
+					Return to discussion.
+				</Link>
+			</p>
+			<div className="grid divide-y border">
+				{!phraseIds.length && (
+					<div className="text-muted-foreground py-8 text-center">
+						<p>No answers yet. Be the first to add one!</p>
+					</div>
+				)}
+				{phraseIds.map((pid) => (
+					<div key={pid} className="p-4 pb-2">
+						<WithPhrase pid={pid} Component={CardResultSimple} />
+						<p className="text-sm">
+							View in thread:{' '}
+							{linksWithCommentsMap[pid].map((l, i, arr) => (
+								<span key={l.id}>
+									{i > 0 && i < arr.length - 1 ? ',' : ''}
+									{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
+									<Link
+										to="."
+										// oxlint-disable-next-line jsx-no-new-object-as-prop
+										search={{
+											show: 'thread',
+											highlightComment: l.comment_id,
+											showSubthread: l.parent_comment_id ?? l.comment_id,
+										}}
+										className="s-link text-sm"
+									>
+										here
+									</Link>
+								</span>
+							))}
+							.
+						</p>
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+const answersOnly = { show: 'answers-only' } as const
+
+function TopLevelComments({
+	requestId,
+	lang,
+}: {
+	requestId: uuid
+	lang: string
+}) {
+	// Get comments for this request, sorted by upvote count
+	const { data: comments, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) =>
+					and(
+						eq(comment.request_id, requestId),
+						isNull(comment.parent_comment_id)
+					)
+				)
+				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
+		[requestId]
+	)
+
+	if (isLoading) return <Loader />
+
+	return (
+		<div className="my-4 space-y-3">
+			<p className="text-muted-foreground text-sm">
+				Showing {comments.length} comment
+				{comments.length !== 1 ? 's' : ''}.{' '}
+				<Link to="." className="s-link" search={answersOnly}>
+					Show only proposed answers.
+				</Link>
+			</p>
+			<div className="divide-y border">
+				{comments.map((comment) => (
+					<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
+				))}
+				{!comments.length && (
+					<div className="text-muted-foreground py-8 text-center">
+						<p>No comments yet. Be the first to comment!</p>
+					</div>
+				)}
+			</div>
+		</div>
 	)
 }

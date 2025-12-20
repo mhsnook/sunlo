@@ -47,7 +47,7 @@ max_client_conn = 100
 enabled = true
 # Specifies an ordered list of seed files to load during db reset.
 # Supports glob patterns relative to supabase directory: "./seeds/*.sql"
-sql_paths = ["./seed.sql"]
+sql_paths = ["./seed.sql", "./seed-*.sql"]
 
 [storage.buckets.avatars]
 public = true

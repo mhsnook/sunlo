@@ -145,7 +145,6 @@ export const PhraseFullSchema = z.object({
 	rank_most_learned: z.number().nullable().default(null),
 	rank_most_stable: z.number().nullable().default(null),
 	rank_newest: z.number().nullable().default(null),
-	request_id: z.string().uuid().nullable().default(null),
 	tags: z.preprocess((val) => val ?? [], z.array(PhraseTagSchema)),
 	translations: z.preprocess((val) => val ?? [], z.array(TranslationSchema)),
 })
@@ -171,10 +170,16 @@ export const PhraseRequestSchema = z.object({
 	lang: LangSchema,
 	prompt: z.string(),
 	status: PhraseRequestStatusEnumSchema,
-	fulfilled_at: z.string().nullable(),
+	upvote_count: z.number().default(0),
 })
 
 export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>
+
+export const PhraseRequestUpvoteSchema = z.object({
+	request_id: z.string().uuid(),
+})
+
+export type PhraseRequestUpvoteType = z.infer<typeof PhraseRequestUpvoteSchema>
 
 export const LanguageSchema = z.object({
 	lang: LangSchema,
@@ -289,3 +294,36 @@ export type ChatMessageRelType = ChatMessageType & {
 	isByMe: boolean
 	friendUid: uuid
 }
+
+export const RequestCommentSchema = z.object({
+	id: z.string().uuid(),
+	request_id: z.string().uuid(),
+	parent_comment_id: z.string().uuid().nullable(),
+	uid: z.string().uuid(),
+	content: z.string(),
+	created_at: z.string(),
+	updated_at: z.string(),
+	upvote_count: z.number(),
+})
+
+export type RequestCommentType = z.infer<typeof RequestCommentSchema>
+
+export const CommentPhraseLinkSchema = z.object({
+	id: z.string().uuid(),
+	request_id: z.string().uuid(),
+	comment_id: z.string().uuid(),
+	phrase_id: z.string().uuid(),
+	uid: z.string().uuid(),
+	created_at: z.string(),
+})
+
+export type CommentPhraseLinkType = z.infer<typeof CommentPhraseLinkSchema>
+
+export const CommentUpvoteSchema = z.object({
+	// id: z.string().uuid(),
+	comment_id: z.string().uuid(),
+	// uid: z.string().uuid(),
+	// created_at: z.string(),
+})
+
+export type CommentUpvoteType = z.infer<typeof CommentUpvoteSchema>
