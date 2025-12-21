@@ -72,12 +72,13 @@ group by
 
 -- Link phrases to their comments via comment_phrase_link
 insert into
-	comment_phrase_link (request_id, comment_id, phrase_id, created_at)
+	comment_phrase_link (request_id, comment_id, phrase_id, created_at, uid)
 select
 	c.request_id,
 	c.id,
 	p.id,
-	p.created_at
+	p.created_at,
+	p.added_by
 from
 	phrase p
 	join request_comment c on c.request_id = p.request_id
