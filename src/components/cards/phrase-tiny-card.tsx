@@ -5,13 +5,16 @@ import { uuid } from '@/types/main'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { cn } from '@/lib/utils'
 
 export const PhraseTinyCard = ({
 	pid,
 	className,
+	nonInteractive,
 }: {
 	pid: uuid
 	className?: string
+	nonInteractive?: boolean
 }) => {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'pending') return <Loader />
@@ -22,9 +25,32 @@ export const PhraseTinyCard = ({
 		)
 		return null
 	}
+
+	if (nonInteractive)
+		return (
+			<CardlikeFlashcard
+				className={cn(
+					`flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
+					className
+				)}
+			>
+				<div className="line-clamp-3">
+					<p className="font-semibold">{phrase.text}</p>{' '}
+					<p className="text-muted-foreground text-sm">
+						{phrase.translations_mine?.[0]?.text.length ?
+							phrase.translations_mine[0].text
+						:	phrase.translations[0].text}
+					</p>
+				</div>
+				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
+					<LangBadge lang={phrase.lang} />
+				</div>
+			</CardlikeFlashcard>
+		)
+
 	return (
 		<Link
-			className={`m-1 transition-all hover:-translate-y-px ${className}`}
+			className={cn(`m-1 transition-all hover:-translate-y-px`, className)}
 			to="/learn/$lang/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}

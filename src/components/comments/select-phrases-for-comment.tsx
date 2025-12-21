@@ -5,7 +5,6 @@ import type { uuid } from '@/types/main'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { useLanguagePhrasesSearch } from '@/hooks/use-language'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -15,6 +14,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '../ui/dialog'
+import { PhraseTinyCard } from '../cards/phrase-tiny-card'
 
 interface SelectPhrasesForCommentProps {
 	lang: string
@@ -122,7 +122,7 @@ export function SelectPhrasesForComment({
 													className="mt-1"
 												/>
 												<div className="flex-1">
-													<CardResultSimple phrase={phrase} nonInteractive />
+													<PhraseTinyCard pid={phrase.id} nonInteractive />
 												</div>
 											</label>
 										)
