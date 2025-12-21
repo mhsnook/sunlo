@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
-import { Paperclip, X } from 'lucide-react'
+import { X } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
@@ -19,13 +19,7 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
@@ -160,7 +154,7 @@ function NewCommentForm({
 	onSuccess,
 }: CommentFormProps) {
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
-	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
+
 	const navigate = useNavigate()
 
 	const isReply = !!parentCommentId
@@ -308,32 +302,11 @@ function NewCommentForm({
 					</div>
 
 					{/* Add flashcard button */}
-					<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
-						<DialogTrigger asChild>
-							<Button
-								type="button"
-								variant="outline"
-								disabled={selectedPhraseIds.length >= 4}
-							>
-								<Paperclip className="mr-2 h-4 w-4" />
-								{selectedPhraseIds.length >= 4 ?
-									'Maximum flashcards reached'
-								:	'Suggest a phrase'}
-							</Button>
-						</DialogTrigger>
-						<DialogContent className="max-h-[80vh] max-w-2xl">
-							<DialogHeader>
-								<DialogTitle>Select Flashcards</DialogTitle>
-							</DialogHeader>
-							<SelectPhrasesForComment
-								lang={lang}
-								selectedPhraseIds={selectedPhraseIds}
-								onSelectionChange={setSelectedPhraseIds}
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onDone={() => setPhraseDialogOpen(false)}
-							/>
-						</DialogContent>
-					</Dialog>
+					<SelectPhrasesForComment
+						lang={lang}
+						selectedPhraseIds={selectedPhraseIds}
+						onSelectionChange={setSelectedPhraseIds}
+					/>
 				</div>
 			</form>
 		</Form>
