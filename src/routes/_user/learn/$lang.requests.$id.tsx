@@ -51,7 +51,10 @@ function RequestThreadPage() {
 
 	return (
 		<main>
-			<CardlikeRequest>
+			<CardlikeRequest
+				data-request-id={request.id}
+				data-testid="request-permalink-card"
+			>
 				<RequestHeader profile={request.profile} request={request} />
 
 				<CardContent className="flex flex-col gap-6">

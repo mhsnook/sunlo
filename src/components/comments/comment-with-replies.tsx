@@ -71,6 +71,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	return (
 		<div
 			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} p-4`}
+			data-comment-id={comment.id}
+			data-testid="comment-item"
 		>
 			{/* Comment header */}
 			<div className="w-full">

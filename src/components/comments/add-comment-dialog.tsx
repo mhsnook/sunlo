@@ -243,6 +243,7 @@ function NewCommentForm({
 
 							<FormControl>
 								<Textarea
+									data-testid="comment-textarea"
 									placeholder={
 										isReply ? 'Write a reply...' : (
 											'Share your thoughts or answer the request...'
@@ -292,7 +293,11 @@ function NewCommentForm({
 				<div className="flex flex-row items-center justify-between gap-2">
 					<div className="flex flex-row gap-2">
 						{/* Submit button */}
-						<Button type="submit" disabled={createCommentMutation.isPending}>
+						<Button
+							type="submit"
+							data-testid="post-comment-button"
+							disabled={createCommentMutation.isPending}
+						>
 							{createCommentMutation.isPending ?
 								'Posting...'
 							: isReply ?

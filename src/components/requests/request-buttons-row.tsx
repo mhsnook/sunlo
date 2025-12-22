@@ -25,6 +25,11 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 			<div className="text-muted-foreground flex flex-row items-center gap-4 text-sm font-normal @xl:gap-6">
 				<UpvoteRequest request={request} />
 
+				{/*
+					We want a "repost" feature that allows you to do a sort of cross-post
+					to another language. But we need to make a lot of decisions about how
+					exactly that will work.
+				*/}
 				<Flagged>
 					<div className="flex flex-row items-center gap-2">
 						<Button variant="ghost" size="icon" title="Repost this request">
@@ -43,7 +48,12 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				<div className="flex flex-row items-center gap-2">
 					<AddCommentDialog requestId={request.id} lang={request.lang}>
 						<DialogTrigger asChild>
-							<Button variant="ghost" size="icon" title="Add a comment">
+							<Button
+								variant="ghost"
+								size="icon"
+								title="Add a comment"
+								data-testid="add-comment-trigger"
+							>
 								<MessagesSquare />
 							</Button>
 						</DialogTrigger>
@@ -107,6 +117,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 							variant="ghost"
 							size="icon"
 							title="Send this request to a friend"
+							data-testid="send-to-friend-button"
 						>
 							<Send />
 						</Button>

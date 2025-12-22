@@ -125,6 +125,7 @@ function Page() {
 									</p>
 									<FormControl>
 										<Textarea
+											data-testid="request-prompt-input"
 											placeholder="e.g., How do I say 'this is delicious' in a casual way?"
 											{...field}
 										/>
@@ -143,7 +144,11 @@ function Page() {
 								</Callout>
 							)
 						}
-						<Button type="submit" disabled={createRequestMutation.isPending}>
+						<Button
+							type="submit"
+							data-testid="post-request-button"
+							disabled={createRequestMutation.isPending}
+						>
 							{createRequestMutation.isPending ? 'Posting...' : 'Post Request'}
 						</Button>
 					</form>
