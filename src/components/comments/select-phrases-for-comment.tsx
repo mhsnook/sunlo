@@ -56,6 +56,7 @@ export function SelectPhrasesForComment({
 					type="button"
 					variant="outline"
 					disabled={selectedPhraseIds.length >= 4}
+					data-testid="open-phrase-picker"
 				>
 					<Paperclip className="mr-2 h-4 w-4" />
 					{selectedPhraseIds.length >= 4 ?
@@ -78,6 +79,7 @@ export function SelectPhrasesForComment({
 							type="text"
 							placeholder="Search phrases..."
 							value={searchText}
+							data-testid="phrase-search-input"
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setSearchText(e.target.value)}
 							className="pl-9"
@@ -135,6 +137,7 @@ export function SelectPhrasesForComment({
 						onClick={() => setPhraseDialogOpen(false)}
 						disabled={selectedPhraseIds.length === 0}
 						className="w-full"
+						data-testid="add-selected-phrases-button"
 					>
 						Add {selectedPhraseIds.length} flashcard
 						{selectedPhraseIds.length !== 1 ? 's' : ''}

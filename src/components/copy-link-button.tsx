@@ -25,6 +25,7 @@ export default function CopyLinkButton({
 			variant={variant}
 			size={size}
 			title="Copy link"
+			data-testid="copy-link-button"
 			{...props}
 		>
 			<Copy className="h-4 w-4" />
