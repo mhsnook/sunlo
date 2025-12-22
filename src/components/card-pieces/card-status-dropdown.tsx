@@ -164,7 +164,7 @@ export function CardStatusDropdown({
 }: CardStatusDropdownProps) {
 	const userId = useUserId()
 	const { data: decks } = useDecks()
-	const deckPresent = decks.some((d) => d.lang === phrase.lang) ?? false
+	const deckPresent = decks?.some((d) => d.lang === phrase.lang) ?? false
 	const card = phrase.card
 
 	const cardMutation = useCardStatusMutation(phrase)
@@ -252,22 +252,24 @@ export function CardStatusDropdown({
 export function CardStatusHeart({
 	phrase,
 }: {
-	phrase: PhraseFullFilteredType
+	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
 	const mutation = useCardStatusMutation(phrase)
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
-			variant="outline"
+			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
 			size="icon"
-			className={
-				phrase.card?.status === 'active' ? 'border-primary-foresoft/30' : ''
-			}
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => mutation.mutate({ status: statusToPost })}
+			title={
+				phrase.card?.status === 'active' ?
+					'Remove phrase from library'
+				:	'Add phrase to library'
+			}
 		>
 			{phrase.card?.status === 'active' ?
-				<Heart className="fill-red-600 text-red-600" />
+				<Heart className="fill-red-600/50 text-red-600/50" />
 			:	<Heart className="text-muted-foreground" />}
 		</Button>
 	)

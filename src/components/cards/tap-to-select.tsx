@@ -1,6 +1,5 @@
 import { usePhrase } from '@/hooks/composite-phrase'
 import {
-	Card,
 	CardDescription,
 	CardFooter,
 	CardHeader,
@@ -9,6 +8,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle } from 'lucide-react'
 import { uuid } from '@/types/main'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 type TapCardToSelectProps = {
 	toggleCardSelection: (pid: string) => void
@@ -21,16 +21,15 @@ export function TapCardToSelect({
 	toggleCardSelection,
 	isSelected,
 	pid,
-	lang,
 }: TapCardToSelectProps) {
-	const { data: phrase } = usePhrase(pid, lang)
+	const { data: phrase } = usePhrase(pid)
 	if (!phrase) return null
 	return (
-		<Card
+		<CardlikeFlashcard
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() => toggleCardSelection(pid)}
 			key={pid}
-			className={`hover:bg-primary/20 cursor-pointer border-1 transition-all ${isSelected ? 'border-primary bg-primary/10' : ''}`}
+			className={`hover:bg-primary/10 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
 		>
 			<CardHeader className="p-3 pb-0">
 				<CardTitle className="text-base">{phrase.text}</CardTitle>
@@ -54,6 +53,6 @@ export function TapCardToSelect({
 					</span>
 				</Badge>
 			</CardFooter>
-		</Card>
+		</CardlikeFlashcard>
 	)
 }

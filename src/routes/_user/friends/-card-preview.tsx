@@ -1,13 +1,15 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import Callout from '@/components/ui/callout'
-import { uuid } from '@/types/main'
-import { CardStatusDropdown } from '@/components/card-status-dropdown'
-import { AddTranslationsDialog } from '@/components/add-translations-dialog'
+import type { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
-import { buttonVariants } from '@/components/ui/button-variants'
 import { LinkIcon } from 'lucide-react'
+
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Callout from '@/components/ui/callout'
+import { CardStatusDropdown } from '@/components/card-pieces/card-status-dropdown'
+import { AddTranslationsDialog } from '@/components/card-pieces/add-translations'
+import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
 import { usePhrase } from '@/hooks/composite-phrase'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -18,8 +20,8 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 			<Callout variant="problem">Can't seem to find that phrase...</Callout>
 		)
 	return (
-		<Card
-			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
+		<CardlikeFlashcard
+			className={`relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
 		>
 			{status === 'pending' || !phrase ?
 				<Loader className="my-6" />
@@ -75,6 +77,6 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 					</CardContent>
 				</>
 			}
-		</Card>
+		</CardlikeFlashcard>
 	)
 }

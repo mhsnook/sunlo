@@ -126,6 +126,109 @@ export type Database = {
 					},
 				]
 			}
+			comment_phrase_link: {
+				Row: {
+					comment_id: string
+					created_at: string
+					id: string
+					phrase_id: string
+					request_id: string
+					uid: string
+				}
+				Insert: {
+					comment_id: string
+					created_at?: string
+					id?: string
+					phrase_id: string
+					request_id: string
+					uid?: string
+				}
+				Update: {
+					comment_id?: string
+					created_at?: string
+					id?: string
+					phrase_id?: string
+					request_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'comment_phrase_link_comment_id_fkey'
+						columns: ['comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_info'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+				]
+			}
+			comment_upvote: {
+				Row: {
+					comment_id: string
+					created_at: string
+					uid: string
+				}
+				Insert: {
+					comment_id: string
+					created_at?: string
+					uid?: string
+				}
+				Update: {
+					comment_id?: string
+					created_at?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'comment_upvote_comment_id_fkey'
+						columns: ['comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'comment_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+				]
+			}
 			friend_request_action: {
 				Row: {
 					action_type:
@@ -243,7 +346,6 @@ export type Database = {
 					created_at: string
 					id: string
 					lang: string
-					request_id: string | null
 					text: string
 					text_script: string | null
 				}
@@ -252,7 +354,6 @@ export type Database = {
 					created_at?: string
 					id?: string
 					lang: string
-					request_id?: string | null
 					text: string
 					text_script?: string | null
 				}
@@ -261,7 +362,6 @@ export type Database = {
 					created_at?: string
 					id?: string
 					lang?: string
-					request_id?: string | null
 					text?: string
 					text_script?: string | null
 				}
@@ -293,20 +393,6 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request'
-						referencedColumns: ['id']
 					},
 				]
 			}
@@ -383,6 +469,7 @@ export type Database = {
 					prompt: string
 					requester_uid: string
 					status: Database['public']['Enums']['phrase_request_status']
+					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
@@ -392,6 +479,7 @@ export type Database = {
 					prompt: string
 					requester_uid: string
 					status?: Database['public']['Enums']['phrase_request_status']
+					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
@@ -401,6 +489,7 @@ export type Database = {
 					prompt?: string
 					requester_uid?: string
 					status?: Database['public']['Enums']['phrase_request_status']
+					upvote_count?: number
 				}
 				Relationships: [
 					{
@@ -427,6 +516,53 @@ export type Database = {
 					{
 						foreignKeyName: 'phrase_request_requester_uid_fkey'
 						columns: ['requester_uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+				]
+			}
+			phrase_request_upvote: {
+				Row: {
+					created_at: string
+					request_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					request_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					request_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'phrase_request_upvote_uid_fkey'
+						columns: ['uid']
 						isOneToOne: false
 						referencedRelation: 'user_profile'
 						referencedColumns: ['uid']
@@ -563,6 +699,75 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'phrase'
 						referencedColumns: ['id']
+					},
+				]
+			}
+			request_comment: {
+				Row: {
+					content: string
+					created_at: string
+					id: string
+					parent_comment_id: string | null
+					request_id: string
+					uid: string
+					updated_at: string
+					upvote_count: number
+				}
+				Insert: {
+					content: string
+					created_at?: string
+					id?: string
+					parent_comment_id?: string | null
+					request_id: string
+					uid?: string
+					updated_at?: string
+					upvote_count?: number
+				}
+				Update: {
+					content?: string
+					created_at?: string
+					id?: string
+					parent_comment_id?: string | null
+					request_id?: string
+					uid?: string
+					updated_at?: string
+					upvote_count?: number
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'request_comment_parent_comment_id_fkey'
+						columns: ['parent_comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'request_comment_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'request_comment_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -1089,7 +1294,6 @@ export type Database = {
 					rank_most_learned: number | null
 					rank_most_stable: number | null
 					rank_newest: number | null
-					request_id: string | null
 					tags: Json | null
 					text: string | null
 				}
@@ -1122,20 +1326,6 @@ export type Database = {
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
 					},
-					{
-						foreignKeyName: 'phrase_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request'
-						referencedColumns: ['id']
-					},
 				]
 			}
 			meta_phrase_request: {
@@ -1144,11 +1334,12 @@ export type Database = {
 					fulfilled_at: string | null
 					id: string | null
 					lang: string | null
-					phrases: Json | null
+					phrase_ids: string[] | null
+					profile: Json | null
 					prompt: string | null
-					requester: Json | null
 					requester_uid: string | null
 					status: Database['public']['Enums']['phrase_request_status'] | null
+					upvote_count: number | null
 				}
 				Relationships: [
 					{
@@ -1338,41 +1529,36 @@ export type Database = {
 				Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
 				Returns: Json
 			}
-			are_friends: {
-				Args: { uid1: string; uid2: string }
-				Returns: boolean
-			}
+			are_friends: { Args: { uid1: string; uid2: string }; Returns: boolean }
 			bulk_add_phrases: {
 				Args: {
 					p_lang: string
 					p_phrases: Database['public']['CompositeTypes']['phrase_with_translations_input'][]
+					p_user_id: string
 				}
-				Returns: Database['public']['CompositeTypes']['phrase_with_translations_output'][]
+				Returns: Json
 			}
-			fsrs_clamp_d: {
-				Args: { difficulty: number }
-				Returns: number
+			create_comment_with_phrases: {
+				Args: {
+					p_content: string
+					p_parent_comment_id?: string
+					p_phrase_ids?: string[]
+					p_request_id: string
+				}
+				Returns: Json
 			}
-			fsrs_d_0: {
-				Args: { score: number }
-				Returns: number
-			}
+			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
+			fsrs_d_0: { Args: { score: number }; Returns: number }
 			fsrs_days_between: {
 				Args: { date_after: string; date_before: string }
 				Returns: number
 			}
-			fsrs_delta_d: {
-				Args: { score: number }
-				Returns: number
-			}
+			fsrs_delta_d: { Args: { score: number }; Returns: number }
 			fsrs_difficulty: {
 				Args: { difficulty: number; score: number }
 				Returns: number
 			}
-			fsrs_dp: {
-				Args: { difficulty: number; score: number }
-				Returns: number
-			}
+			fsrs_dp: { Args: { difficulty: number; score: number }; Returns: number }
 			fsrs_interval: {
 				Args: { desired_retrievability: number; stability: number }
 				Returns: number
@@ -1381,10 +1567,7 @@ export type Database = {
 				Args: { stability: number; time_in_days: number }
 				Returns: number
 			}
-			fsrs_s_0: {
-				Args: { score: number }
-				Returns: number
-			}
+			fsrs_s_0: { Args: { score: number }; Returns: number }
 			fsrs_s_fail: {
 				Args: {
 					difficulty: number
@@ -1442,6 +1625,17 @@ export type Database = {
 					uid: string
 					updated_at: string
 				}
+				SetofOptions: {
+					from: '*'
+					to: 'user_card_review'
+					isOneToOne: true
+					isSetofReturn: false
+				}
+			}
+			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
+			toggle_phrase_request_upvote: {
+				Args: { p_request_id: string }
+				Returns: Json
 			}
 			update_user_card_review: {
 				Args: { review_id: string; score: number }
@@ -1458,6 +1652,12 @@ export type Database = {
 					stability: number | null
 					uid: string
 					updated_at: string
+				}
+				SetofOptions: {
+					from: '*'
+					to: 'user_card_review'
+					isOneToOne: true
+					isSetofReturn: false
 				}
 			}
 		}
@@ -1481,20 +1681,7 @@ export type Database = {
 					| Database['public']['CompositeTypes']['translation_input'][]
 					| null
 			}
-			phrase_with_translations_output: {
-				id: string | null
-				lang: string | null
-				text: string | null
-				translations:
-					| Database['public']['CompositeTypes']['translation_output'][]
-					| null
-			}
 			translation_input: {
-				lang: string | null
-				text: string | null
-			}
-			translation_output: {
-				id: string | null
 				lang: string | null
 				text: string | null
 			}
@@ -1547,21 +1734,48 @@ export type Database = {
 			buckets_analytics: {
 				Row: {
 					created_at: string
+					deleted_at: string | null
 					format: string
+					id: string
+					name: string
+					type: Database['storage']['Enums']['buckettype']
+					updated_at: string
+				}
+				Insert: {
+					created_at?: string
+					deleted_at?: string | null
+					format?: string
+					id?: string
+					name: string
+					type?: Database['storage']['Enums']['buckettype']
+					updated_at?: string
+				}
+				Update: {
+					created_at?: string
+					deleted_at?: string | null
+					format?: string
+					id?: string
+					name?: string
+					type?: Database['storage']['Enums']['buckettype']
+					updated_at?: string
+				}
+				Relationships: []
+			}
+			buckets_vectors: {
+				Row: {
+					created_at: string
 					id: string
 					type: Database['storage']['Enums']['buckettype']
 					updated_at: string
 				}
 				Insert: {
 					created_at?: string
-					format?: string
 					id: string
 					type?: Database['storage']['Enums']['buckettype']
 					updated_at?: string
 				}
 				Update: {
 					created_at?: string
-					format?: string
 					id?: string
 					type?: Database['storage']['Enums']['buckettype']
 					updated_at?: string
@@ -1570,30 +1784,36 @@ export type Database = {
 			}
 			iceberg_namespaces: {
 				Row: {
-					bucket_id: string
+					bucket_name: string
+					catalog_id: string
 					created_at: string
 					id: string
+					metadata: Json
 					name: string
 					updated_at: string
 				}
 				Insert: {
-					bucket_id: string
+					bucket_name: string
+					catalog_id: string
 					created_at?: string
 					id?: string
+					metadata?: Json
 					name: string
 					updated_at?: string
 				}
 				Update: {
-					bucket_id?: string
+					bucket_name?: string
+					catalog_id?: string
 					created_at?: string
 					id?: string
+					metadata?: Json
 					name?: string
 					updated_at?: string
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'iceberg_namespaces_bucket_id_fkey'
-						columns: ['bucket_id']
+						foreignKeyName: 'iceberg_namespaces_catalog_id_fkey'
+						columns: ['catalog_id']
 						isOneToOne: false
 						referencedRelation: 'buckets_analytics'
 						referencedColumns: ['id']
@@ -1602,36 +1822,48 @@ export type Database = {
 			}
 			iceberg_tables: {
 				Row: {
-					bucket_id: string
+					bucket_name: string
+					catalog_id: string
 					created_at: string
 					id: string
 					location: string
 					name: string
 					namespace_id: string
+					remote_table_id: string | null
+					shard_id: string | null
+					shard_key: string | null
 					updated_at: string
 				}
 				Insert: {
-					bucket_id: string
+					bucket_name: string
+					catalog_id: string
 					created_at?: string
 					id?: string
 					location: string
 					name: string
 					namespace_id: string
+					remote_table_id?: string | null
+					shard_id?: string | null
+					shard_key?: string | null
 					updated_at?: string
 				}
 				Update: {
-					bucket_id?: string
+					bucket_name?: string
+					catalog_id?: string
 					created_at?: string
 					id?: string
 					location?: string
 					name?: string
 					namespace_id?: string
+					remote_table_id?: string | null
+					shard_id?: string | null
+					shard_key?: string | null
 					updated_at?: string
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'iceberg_tables_bucket_id_fkey'
-						columns: ['bucket_id']
+						foreignKeyName: 'iceberg_tables_catalog_id_fkey'
+						columns: ['catalog_id']
 						isOneToOne: false
 						referencedRelation: 'buckets_analytics'
 						referencedColumns: ['id']
@@ -1852,6 +2084,50 @@ export type Database = {
 					},
 				]
 			}
+			vector_indexes: {
+				Row: {
+					bucket_id: string
+					created_at: string
+					data_type: string
+					dimension: number
+					distance_metric: string
+					id: string
+					metadata_configuration: Json | null
+					name: string
+					updated_at: string
+				}
+				Insert: {
+					bucket_id: string
+					created_at?: string
+					data_type: string
+					dimension: number
+					distance_metric: string
+					id?: string
+					metadata_configuration?: Json | null
+					name: string
+					updated_at?: string
+				}
+				Update: {
+					bucket_id?: string
+					created_at?: string
+					data_type?: string
+					dimension?: number
+					distance_metric?: string
+					id?: string
+					metadata_configuration?: Json | null
+					name?: string
+					updated_at?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'vector_indexes_bucket_id_fkey'
+						columns: ['bucket_id']
+						isOneToOne: false
+						referencedRelation: 'buckets_vectors'
+						referencedColumns: ['id']
+					},
+				]
+			}
 		}
 		Views: {
 			[_ in never]: never
@@ -1873,32 +2149,14 @@ export type Database = {
 				Args: { _bucket_id: string; _name: string }
 				Returns: boolean
 			}
-			extension: {
-				Args: { name: string }
-				Returns: string
-			}
-			filename: {
-				Args: { name: string }
-				Returns: string
-			}
-			foldername: {
-				Args: { name: string }
-				Returns: string[]
-			}
-			get_level: {
-				Args: { name: string }
-				Returns: number
-			}
-			get_prefix: {
-				Args: { name: string }
-				Returns: string
-			}
-			get_prefixes: {
-				Args: { name: string }
-				Returns: string[]
-			}
+			extension: { Args: { name: string }; Returns: string }
+			filename: { Args: { name: string }; Returns: string }
+			foldername: { Args: { name: string }; Returns: string[] }
+			get_level: { Args: { name: string }; Returns: number }
+			get_prefix: { Args: { name: string }; Returns: string }
+			get_prefixes: { Args: { name: string }; Returns: string[] }
 			get_size_by_bucket: {
-				Args: Record<PropertyKey, never>
+				Args: never
 				Returns: {
 					bucket_id: string
 					size: number
@@ -1939,10 +2197,7 @@ export type Database = {
 				Args: { bucket_ids: string[]; names: string[] }
 				Returns: undefined
 			}
-			operation: {
-				Args: Record<PropertyKey, never>
-				Returns: string
-			}
+			operation: { Args: never; Returns: string }
 			search: {
 				Args: {
 					bucketname: string
@@ -2026,7 +2281,7 @@ export type Database = {
 			}
 		}
 		Enums: {
-			buckettype: 'STANDARD' | 'ANALYTICS'
+			buckettype: 'STANDARD' | 'ANALYTICS' | 'VECTOR'
 		}
 		CompositeTypes: {
 			[_ in never]: never
@@ -2210,7 +2465,7 @@ export const Constants = {
 	},
 	storage: {
 		Enums: {
-			buckettype: ['STANDARD', 'ANALYTICS'],
+			buckettype: ['STANDARD', 'ANALYTICS', 'VECTOR'],
 		},
 	},
 } as const

@@ -1,4 +1,4 @@
-import { LinkIcon } from 'lucide-react'
+import { EllipsisVertical } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { cn } from '@/lib/utils'
 import { Link, LinkProps } from '@tanstack/react-router'
@@ -11,9 +11,15 @@ export default function PermalinkButton({
 	variant = 'ghost',
 	size = 'sm',
 	className,
+	title,
 	link,
 	...props
-}: { text?: string; className?: string; link?: boolean } & LinkProps &
+}: {
+	text?: string
+	className?: string
+	link?: boolean
+	title?: string
+} & LinkProps &
 	VariantProps<typeof buttonVariants>) {
 	return !to ? null : (
 			<Link
@@ -21,17 +27,18 @@ export default function PermalinkButton({
 				params={params}
 				className={cn(link ? '' : buttonVariants({ variant, size }), className)}
 				preload="intent"
+				title={title}
 				{...props}
 			>
 				{text === '' ?
-					<LinkIcon className="h-4 w-4" />
+					<EllipsisVertical className="h-4 w-4" />
 				: link ?
 					<span className="inline-flex items-center gap-2">
-						<LinkIcon className="h-4 w-4" />
+						<EllipsisVertical className="h-4 w-4" />
 						{text}
 					</span>
 				:	<span className="inline-flex items-center gap-2">
-						<LinkIcon className="h-4 w-4" />
+						<EllipsisVertical className="h-4 w-4" />
 						<span className="hidden @sm:block">{text}</span>
 					</span>
 				}

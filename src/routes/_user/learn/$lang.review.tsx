@@ -12,7 +12,6 @@ export const Route = createFileRoute('/_user/learn/$lang/review')({
 		return {
 			titleBar: {
 				title: `Review ${languages[lang]} cards`,
-				onBackClick: '/learn/$lang',
 			} as TitleBar,
 		}
 	},

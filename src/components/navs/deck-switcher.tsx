@@ -30,9 +30,7 @@ const useDeckMenuData = () => {
 				lang: deck.lang,
 				name: languages[deck.lang],
 				to: `/learn/$lang`,
-				badge:
-					deck.cards_active +
-					deck.cards_learned,
+				badge: deck.cards_active + deck.cards_learned,
 				params: { lang: deck.lang },
 			}
 		})

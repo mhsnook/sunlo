@@ -22,6 +22,7 @@ import type {
 	LanguageKnownType,
 	LanguageProficiencyEnumType,
 } from '@/lib/schemas'
+import { Card } from '@/components/ui/card'
 
 const proficiencyLevels: {
 	value: LanguageProficiencyEnumType
@@ -50,10 +51,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 			</p>
 			<div className="space-y-2">
 				{fields.map((field, index) => (
-					<div
-						key={field.id}
-						className="bg-card space-y-2 rounded-lg border p-2"
-					>
+					<Card key={field.id} className="space-y-2 p-2">
 						<div className="flex items-center gap-2">
 							<div className="flex flex-col">
 								<Button
@@ -133,7 +131,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 								<ErrorLabel error={error[index].level} />
 							</div>
 						)}
-					</div>
+					</Card>
 				))}
 				<ErrorLabel error={error?.root} />
 			</div>

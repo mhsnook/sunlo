@@ -6,6 +6,7 @@ import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { RelationshipActions } from './-relationship-actions'
 import { avatarUrlify } from '@/lib/hooks'
+import { UserContributions } from '../learn/-contributions'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
@@ -25,7 +26,7 @@ function ProfilePage() {
 			'Something went wrong loading this profile... please contact administrator'
 		)
 	return (
-		<main className="mx-auto max-w-sm px-2 py-6">
+		<main className="mx-auto space-y-6 px-2 py-6">
 			{isMine ?
 				<p className="text-muted-foreground mb-1 text-center italic">
 					This is how your profile appears to others
@@ -76,6 +77,14 @@ function ProfilePage() {
 					</div>
 				</CardContent>
 			</Card>
+			<div>
+				<h2 className="h2">{profile.username}'s Contributions</h2>
+				<Card>
+					<CardContent className="pt-6">
+						<UserContributions uid={uid} />
+					</CardContent>
+				</Card>
+			</div>
 		</main>
 	)
 }

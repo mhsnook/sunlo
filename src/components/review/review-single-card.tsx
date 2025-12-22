@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
-import { Card, CardContent, CardFooter } from '@/components/ui/card'
+import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
@@ -17,10 +17,11 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
 import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
@@ -54,7 +55,7 @@ export function ReviewSingleCard({
 
 	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
 	return (
-		<Card className="mx-auto flex min-h-[80vh] w-full flex-col">
+		<CardlikeFlashcard className="mx-auto flex min-h-[80vh] w-full flex-col">
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
 				<ContextMenu phrase={phrase} />
 				<div className="mb-4 flex items-center justify-center">
@@ -159,7 +160,7 @@ export function ReviewSingleCard({
 					</div>
 				}
 			</CardFooter>
-		</Card>
+		</CardlikeFlashcard>
 	)
 }
 

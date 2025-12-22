@@ -5,10 +5,9 @@ import {
 	AccordionTrigger,
 } from '@/components/ui/accordion'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { CardStatusDropdown } from '@/components/card-status-dropdown'
+import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
-import SharePhraseButton from '@/components/share-phrase-button'
-import PhraseExtraInfo from '@/components/phrase-extra-info'
+import SharePhraseButton from '@/components/card-pieces/share-phrase-button'
 
 export function PhraseAccordionItem({
 	phrase,
@@ -18,7 +17,7 @@ export function PhraseAccordionItem({
 	return (
 		<AccordionItem value={phrase.id} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
-				<CardStatusDropdown phrase={phrase} />
+				<CardStatusHeart phrase={phrase} />
 				<AccordionTrigger>{phrase.text}</AccordionTrigger>
 			</div>
 			<AccordionContent>
@@ -53,7 +52,6 @@ export function PhraseAccordionItem({
 							text="View details"
 						/>
 						<SharePhraseButton phrase={phrase} variant="outline-accent" />
-						<PhraseExtraInfo phrase={phrase} />
 					</div>
 				</div>
 			</AccordionContent>

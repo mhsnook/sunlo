@@ -32,7 +32,7 @@ function PendingRequestsSection() {
 			<CardContent className="space-y-4">
 				{isLoading ?
 					<Loader />
-				: !data.length ?
+				: !data?.length ?
 					<p>You don't have any invites pending at this time.</p>
 				:	data.map((r) => <ProfileWithRelationship key={r.uid} uid={r.uid} />)}
 			</CardContent>

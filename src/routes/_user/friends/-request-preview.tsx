@@ -1,18 +1,19 @@
 import { Link } from '@tanstack/react-router'
 import { LinkIcon } from 'lucide-react'
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
-import { usePhrasesFromRequest, useRequest } from '@/hooks/use-requests'
+import { useRequestLinksPhraseIds, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
+import { CardlikeRequest } from '@/components/ui/card-like'
 
-export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
+export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
-	const { data: answers, isLoading: isLoadingPhrases } =
-		usePhrasesFromRequest(id)
+	const { data: links, isLoading: isLoadingPhrases } =
+		useRequestLinksPhraseIds(id)
 
 	if (!isLoading && !request)
 		return (
@@ -20,13 +21,11 @@ export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 		)
 
 	return (
-		<Card
-			className={`bg-background mt relative z-10 -mb-1 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
-		>
+		<CardlikeRequest className="relative z-10">
 			{isLoading || !request ?
 				<Loader className="my-6" />
 			:	<>
-					<CardHeader className="p-4">
+					<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-4 border-b px-0 py-4">
 						<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 							<span>Phrase request </span>
 							<LangBadge lang={request.lang} />
@@ -36,7 +35,7 @@ export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 						<p>&ldquo;{request.prompt}&rdquo;</p>
 						{isLoadingPhrases ? null : (
 							<p className="text-muted-foreground text-sm">
-								{answers.length} answer{answers.length === 1 ? '' : 's'}
+								{links?.length} answer{links?.length === 1 ? '' : 's'}
 							</p>
 						)}
 
@@ -59,6 +58,6 @@ export function RequestPreview({ id, isMine }: { id: uuid; isMine: boolean }) {
 					</CardContent>
 				</>
 			}
-		</Card>
+		</CardlikeRequest>
 	)
 }

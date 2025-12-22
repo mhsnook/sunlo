@@ -16,4 +16,5 @@ export const flags: FlagMap = {
 	phrase_request_likes: { enabled: false },
 	friend_recommendations: { enabled: false },
 	multiple_languages_feed: { disabled: true },
+	favourite_answer: { enabled: false },
 }

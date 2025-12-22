@@ -53,6 +53,7 @@ import { Route as UserLearnLangIdRouteImport } from './routes/_user/learn/$lang.
 import { Route as UserFriendsSearchUidRouteImport } from './routes/_user/friends/search.$uid'
 import { Route as UserFriendsChatsFriendUidRouteImport } from './routes/_user/friends/chats.$friendUid'
 import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
+import { Route as UserLearnLangRequestsIndexRouteImport } from './routes/_user/learn/$lang.requests.index'
 import { Route as UserLearnLangReviewGoRouteImport } from './routes/_user/learn/$lang.review.go'
 import { Route as UserLearnLangRequestsNewRouteImport } from './routes/_user/learn/$lang.requests.new'
 import { Route as UserLearnLangRequestsIdRouteImport } from './routes/_user/learn/$lang.requests.$id'
@@ -295,6 +296,12 @@ const UserLearnLangReviewIndexRoute =
     path: '/',
     getParentRoute: () => UserLearnLangReviewRoute,
   } as any)
+const UserLearnLangRequestsIndexRoute =
+  UserLearnLangRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => UserLearnLangRoute,
+  } as any)
 const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
   id: '/go',
   path: '/go',
@@ -365,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRoutesByTo {
@@ -408,6 +416,7 @@ export interface FileRoutesByTo {
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRoutesById {
@@ -460,6 +469,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRouteTypes {
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
+    | '/learn/$lang/requests'
     | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -554,6 +565,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
+    | '/learn/$lang/requests'
     | '/learn/$lang/review'
   id:
     | '__root__'
@@ -605,6 +617,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/requests/$id'
     | '/_user/learn/$lang/requests/new'
     | '/_user/learn/$lang/review/go'
+    | '/_user/learn/$lang/requests/'
     | '/_user/learn/$lang/review/'
   fileRoutesById: FileRoutesById
 }
@@ -934,6 +947,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangReviewIndexRouteImport
       parentRoute: typeof UserLearnLangReviewRoute
     }
+    '/_user/learn/$lang/requests/': {
+      id: '/_user/learn/$lang/requests/'
+      path: '/requests'
+      fullPath: '/learn/$lang/requests'
+      preLoaderRoute: typeof UserLearnLangRequestsIndexRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
     '/_user/learn/$lang/review/go': {
       id: '/_user/learn/$lang/review/go'
       path: '/go'
@@ -1070,6 +1090,7 @@ interface UserLearnLangRouteChildren {
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
   UserLearnLangRequestsIdRoute: typeof UserLearnLangRequestsIdRoute
   UserLearnLangRequestsNewRoute: typeof UserLearnLangRequestsNewRoute
+  UserLearnLangRequestsIndexRoute: typeof UserLearnLangRequestsIndexRoute
 }
 
 const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
@@ -1085,6 +1106,7 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
   UserLearnLangRequestsIdRoute: UserLearnLangRequestsIdRoute,
   UserLearnLangRequestsNewRoute: UserLearnLangRequestsNewRoute,
+  UserLearnLangRequestsIndexRoute: UserLearnLangRequestsIndexRoute,
 }
 
 const UserLearnLangRouteWithChildren = UserLearnLangRoute._addFileChildren(

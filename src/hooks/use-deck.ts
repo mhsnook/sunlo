@@ -111,7 +111,7 @@ export const useDeckRoutineStats = (lang: string) => {
 				)
 				.select(({ day }) => ({ count: count(day.day_session) }))
 				.findOne(),
-		[lang]
+		[lang, mondayString]
 	)
 
 	return useMemo(

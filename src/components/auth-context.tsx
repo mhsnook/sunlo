@@ -18,7 +18,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
-			console.log(`User auth event: ${event}`, session)
+			console.log(`User auth event: ${event}`)
 			if (event === 'SIGNED_OUT' || sessionState?.user.id !== session?.user.id)
 				void clearUser()
 			if (sessionState?.user.id) {

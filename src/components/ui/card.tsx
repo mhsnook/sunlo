@@ -9,7 +9,7 @@ const Card = ({
 	<div
 		data-slot="card"
 		className={cn(
-			'bg-card text-card-foreground rounded-lg border shadow-xs',
+			'bg-card/50 text-card-foreground rounded-lg border shadow-xs',
 			className
 		)}
 		{...props}

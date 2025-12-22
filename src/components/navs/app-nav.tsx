@@ -51,7 +51,7 @@ const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 			<div ref={ref}></div>
 
 			<div
-				className={`bg-background sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
+				className={`sticky z-30 mt-1 border-b bg-gray-50 transition-colors dark:bg-gray-800 ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
 			>
 				<ScrollArea className="w-app">
 					<NavigationMenu className="mt-2 mb-1">
@@ -109,7 +109,7 @@ function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
 							className="flex w-full flex-row items-center gap-2"
 							onClick={setClosed}
 						>
-							{!Icon ? null : <Icon className="size-[1.25rem]" />}
+							{!Icon ? null : <Icon className="size-5" />}
 							{title}
 						</Link>
 					</DropdownMenuItem>

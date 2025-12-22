@@ -245,7 +245,7 @@ function PhraseEntry({
 	const { data: profile } = useProfile()
 
 	return (
-		<div className="bg-card space-y-4 rounded-lg border p-4">
+		<Card className="space-y-4 p-4">
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 space-y-2">
 					<div className="flex items-center justify-between">
@@ -277,7 +277,7 @@ function PhraseEntry({
 				{translationFields.map((translationField, translationIndex) => (
 					<div
 						key={translationField.id}
-						className="bg-background flex flex-col gap-2 rounded p-2"
+						className="bg-background/50 flex flex-col gap-2 rounded p-2"
 					>
 						<div className="flex w-full flex-row items-center justify-between gap-2">
 							<Controller
@@ -322,21 +322,21 @@ function PhraseEntry({
 					</div>
 				))}
 				<ErrorLabel error={errors?.translations?.root} />
-				<Button
-					type="button"
-					variant="outline"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() =>
-						appendTranslation({
-							lang: profile?.languages_known[0]?.lang,
-							text: '',
-						})
-					}
-				>
-					<Plus className="mr-2 size-4" /> Add Translation
-				</Button>
 			</div>
+			<Button
+				type="button"
+				variant="outline"
+				// oxlint-disable-next-line jsx-no-new-function-as-prop
+				onClick={() =>
+					appendTranslation({
+						lang: profile?.languages_known[0]?.lang,
+						text: '',
+					})
+				}
+			>
+				<Plus className="mr-2 size-4" /> Add Translation
+			</Button>
 			<ErrorLabel error={errors?.root} />
-		</div>
+		</Card>
 	)
 }

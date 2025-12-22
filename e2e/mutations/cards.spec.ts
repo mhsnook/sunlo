@@ -120,7 +120,7 @@ test.describe('Card Status Mutations', () => {
 			})
 
 			// 8. Verify card appears in library with filter
-			await page.goto('/learn/hin/contributions?type=phrase')
+			await page.goto('/learn/hin/contributions?contributionsTab=phrase')
 			await expect(page.getByText(phrase.text)).toBeVisible()
 		} finally {
 			// Clean up: Delete the phrase (which cascades to translation and card)

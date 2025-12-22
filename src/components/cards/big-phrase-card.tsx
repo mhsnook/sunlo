@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronsUpDown } from 'lucide-react'
+import { ChevronsUpDown, MessagesSquare } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -11,20 +11,22 @@ import {
 
 import type { uuid } from '@/types/main'
 import languages from '@/lib/languages'
-import { AddTranslationsDialog } from '@/components/add-translations-dialog'
-import { AddTags } from '@/components/add-tags'
-import { CardStatusDropdown } from '@/components/card-status-dropdown'
+import { AddTranslationsDialog } from '@/components/card-pieces/add-translations'
+import { AddTags } from '@/components/card-pieces/add-tags'
+import { CardStatusDropdown } from '@/components/card-pieces/card-status-dropdown'
 import CopyLinkButton from '@/components/copy-link-button'
-import SharePhraseButton from '@/components/share-phrase-button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import SharePhraseButton from '@/components/card-pieces/share-phrase-button'
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { SendPhraseToFriendButton } from '@/components/send-phrase-to-friend-button'
+import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import UserPermalink from '@/components/user-permalink'
-import { ago } from '@/lib/dayjs'
+import UserPermalink from '@/components/card-pieces/user-permalink'
 import { Loader } from '@/components/ui/loader'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { Button } from '@/components/ui/button'
+import Flagged from '@/components/flagged'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -41,12 +43,11 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						uid={phrase.added_by}
 						username={phrase.profile.username}
 						avatar_path={phrase.profile.avatar_path}
+						timeValue={phrase.created_at}
 					/>
-					{' • '}
-					{ago(phrase.created_at)}
 				</div>
 			:	null}
-			<Card className="@container">
+			<CardlikeFlashcard className="@container">
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
@@ -141,8 +142,13 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						</div>
 					</div>
 				</CardContent>
-			</Card>
+			</CardlikeFlashcard>
 			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
+				<Flagged>
+					<Button>
+						<MessagesSquare /> Discuss
+					</Button>
+				</Flagged>
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}
 					variant="outline"

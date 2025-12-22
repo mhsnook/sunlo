@@ -2,8 +2,20 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
+import { LangBadge } from '@/components/ui/badge'
+import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { cn } from '@/lib/utils'
 
-export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
+export const PhraseTinyCard = ({
+	pid,
+	className,
+	nonInteractive,
+}: {
+	pid: uuid
+	className?: string
+	nonInteractive?: boolean
+}) => {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) {
@@ -13,19 +25,50 @@ export const PhraseTinyCard = ({ pid }: { pid: uuid }) => {
 		)
 		return null
 	}
+
+	if (nonInteractive)
+		return (
+			<CardlikeFlashcard
+				className={cn(
+					`flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
+					className
+				)}
+			>
+				<div className="line-clamp-3">
+					<p className="font-semibold">{phrase.text}</p>{' '}
+					<p className="text-muted-foreground text-sm">
+						{phrase.translations_mine?.[0]?.text.length ?
+							phrase.translations_mine[0].text
+						:	phrase.translations[0].text}
+					</p>
+				</div>
+				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
+					<LangBadge lang={phrase.lang} />
+				</div>
+			</CardlikeFlashcard>
+		)
+
 	return (
 		<Link
-			className="s-link hover:bg-primary/10 m-1 block justify-start rounded-2xl p-3 no-underline decoration-2 shadow-sm transition-all hover:underline"
+			className={cn(`m-1 transition-all hover:-translate-y-px`, className)}
 			to="/learn/$lang/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>
-			<p className="font-semibold">{phrase.text}</p>{' '}
-			<p className="text-muted-foreground text-sm">
-				{phrase.translations_mine?.[0].text.length ?
-					phrase.translations_mine[0].text
-				:	phrase.translations[0].text}
-			</p>
+			<CardlikeFlashcard className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2">
+				<div className="line-clamp-3">
+					<p className="font-semibold">{phrase.text}</p>{' '}
+					<p className="text-muted-foreground text-sm">
+						{phrase.translations_mine?.[0]?.text.length ?
+							phrase.translations_mine[0].text
+						:	phrase.translations[0].text}
+					</p>
+				</div>
+				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
+					<LangBadge lang={phrase.lang} />
+					<CardStatusHeart phrase={phrase} />
+				</div>
+			</CardlikeFlashcard>
 		</Link>
 	)
 }

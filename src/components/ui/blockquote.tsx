@@ -6,7 +6,7 @@ export function Blockquote({
 	children,
 }: {
 	className?: string
-	children: ReactNode
+	children?: ReactNode
 }) {
 	return (
 		<blockquote
