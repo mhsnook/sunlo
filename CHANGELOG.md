@@ -1,3 +1,23 @@
+## 0.3 - Feeds! Recent requests, upvotes, comments, recs
+
+_December 2025_
+
+Here we have added the bulk of the features that the architectural work of v0.2 was meant to make
+possible for our small team to maintain a fully modern approach that meets very high standards for
+a native-feeling mobile app, while adding on a big surface area of interactive features: a social
+media style feed with comments, votes, different feeds/algos, etc.
+
+You can [view new features and views in the screenshots posted on the PR](https://github.com/mhsnook/sunlo/pull/252#issuecomment-3679066683). They include:
+
+- The language requests feed is now much more like a social media feed, with request posts, top-
+  level comments, and replies.
+- Comments and replies can have up to 4 card recommendations, which are treated as proposed
+  "answers" to the request.
+- We currently have feeds for "most recent" and "friends", and have a disabled teaser option for
+  "most popular" to indicate the direction we plan to go with this in the near future.
+
+[Style work and visual language enhancements are also shown and detailed in the PR.](https://github.com/mhsnook/sunlo/pull/252#issuecomment-3679066683)
+
 ## 0.2 - Social Features and New Data Management
 
 _November 2025_
