@@ -73,7 +73,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 			</Button>
 			<span>
 				{comment.upvote_count}
-				<span className="@max-xl:sr-only">
+				<span className="sr-only">
 					{' '}
 					vote{comment.upvote_count === 1 ? '' : 's'}
 				</span>
