@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { CSSProperties, useCallback, useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
@@ -61,6 +61,8 @@ const addPhraseSchema = z.object({
 })
 
 type AddPhraseFormValues = z.infer<typeof addPhraseSchema>
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function AddPhraseTab() {
 	const navigate = Route.useNavigate()
@@ -147,7 +149,7 @@ function AddPhraseTab() {
 	})
 
 	return (
-		<>
+		<main style={style}>
 			<Card>
 				<CardHeader>
 					<CardTitle>Add A Phrase</CardTitle>
@@ -229,6 +231,6 @@ function AddPhraseTab() {
 					</div>
 				</div>
 			)}
-		</>
+		</main>
 	)
 }

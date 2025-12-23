@@ -20,6 +20,7 @@ import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { WithPhrase } from '@/components/with-phrase'
 import { CommentWithReplies } from '@/components/comments/comment-with-replies'
 import { commentsCollection } from '@/lib/collections'
+import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -33,6 +34,8 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	}),
 	component: RequestThreadPage,
 })
+
+const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function RequestThreadPage() {
 	const params = Route.useParams()
@@ -50,10 +53,14 @@ function RequestThreadPage() {
 		)
 
 	return (
-		<main>
+		<main style={style}>
 			<CardlikeRequest
 				data-request-id={request.id}
 				data-testid="request-permalink-card"
+				style={
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					{ viewTransitionName: `request-${request.id}` } as CSSProperties
+				}
 			>
 				<RequestHeader profile={request.profile} request={request} />
 

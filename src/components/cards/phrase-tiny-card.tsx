@@ -6,6 +6,7 @@ import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { cn } from '@/lib/utils'
+import { CSSProperties } from 'react'
 
 export const PhraseTinyCard = ({
 	pid,
@@ -33,6 +34,8 @@ export const PhraseTinyCard = ({
 					`flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
 					className
 				)}
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
+				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
 			>
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
@@ -55,7 +58,11 @@ export const PhraseTinyCard = ({
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>
-			<CardlikeFlashcard className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2">
+			<CardlikeFlashcard
+				className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2"
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
+				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
+			>
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
 					<p className="text-muted-foreground text-sm">

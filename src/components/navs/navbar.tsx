@@ -31,7 +31,7 @@ function Title({ matches }: { matches: NavbarMatch[] }) {
 
 	const goBackOrToStringUrl = useEffectEvent(() => {
 		if (canGoBack && (titleBar?.onBackClick === '<' || !titleBar?.onBackClick))
-			router.history.back()
+			document.startViewTransition(() => router.history.back())
 		else if (typeof titleBar?.onBackClick === 'function')
 			titleBar?.onBackClick()
 		else if (typeof titleBar?.onBackClick === 'string')

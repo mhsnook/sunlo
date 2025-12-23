@@ -3,6 +3,7 @@ import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { PhraseFullFilteredType, PhraseFullFullType } from '@/lib/schemas'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { CSSProperties } from 'react'
 
 export function CardResultSimple({
 	phrase,
@@ -12,7 +13,11 @@ export function CardResultSimple({
 	nonInteractive?: boolean
 }) {
 	return (
-		<CardlikeFlashcard className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1">
+		<CardlikeFlashcard
+			className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1"
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
+		>
 			<div className="grow py-6">
 				<div className="space-x-2 pb-2">
 					<LangBadge lang={phrase.lang} />

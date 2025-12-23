@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { ChevronsUpDown, MessagesSquare } from 'lucide-react'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
@@ -47,7 +47,11 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					/>
 				</div>
 			:	null}
-			<CardlikeFlashcard className="@container">
+			<CardlikeFlashcard
+				className="@container"
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
+				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
+			>
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">

@@ -1,3 +1,4 @@
+import { Activity, type CSSProperties, useCallback } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Construction, MessageSquareQuote } from 'lucide-react'
@@ -14,7 +15,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
-import { Activity, useCallback } from 'react'
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
@@ -32,6 +32,8 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	}),
 })
 
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
 function DeckFeedPage() {
 	const navigate = Route.useNavigate()
 	const handleValueChange = useCallback(
@@ -45,7 +47,7 @@ function DeckFeedPage() {
 	const search = Route.useSearch()
 	const activeTab = search.feed ?? 'newest'
 	return (
-		<main>
+		<main style={style}>
 			<div className="mb-2 flex flex-row items-center justify-between gap-2">
 				<Tabs
 					className="w-full"

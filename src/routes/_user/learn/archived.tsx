@@ -4,10 +4,13 @@ import { Archive } from 'lucide-react'
 import { useDecks } from '@/hooks/use-deck'
 import { DeckCard } from './-deck-card'
 import Callout from '@/components/ui/callout'
+import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/archived')({
 	component: Page,
 })
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function Page() {
 	const { data: decks } = useDecks()
@@ -15,7 +18,7 @@ function Page() {
 	const archivedDecks = decks.filter((i) => i.archived)
 
 	return (
-		<main className="w-full space-y-6">
+		<main className="w-full space-y-6" style={style}>
 			{archivedDecks.length > 0 ?
 				<>
 					<div className="flex items-center justify-between">

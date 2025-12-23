@@ -9,6 +9,7 @@ import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { RequestButtonsRow } from './request-buttons-row'
 import { useNavigate } from '@tanstack/react-router'
+import { CSSProperties } from 'react'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: links } = useRequestLinksPhraseIds(request.id)
@@ -18,6 +19,10 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	return !request ? null : (
 			<CardlikeRequest
 				className="group hover:bg-primary/0 cursor-pointer hover:shadow"
+				style={
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					{ viewTransitionName: `request-${request.id}` } as CSSProperties
+				}
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					const target = e.target as HTMLElement
