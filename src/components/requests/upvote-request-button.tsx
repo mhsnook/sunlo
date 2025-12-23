@@ -80,7 +80,7 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 			</Button>
 			<span className="font-medium @max-sm:sr-only">
 				{request.upvote_count}{' '}
-				<span className="@max-xl:sr-only">
+				<span className="sr-only">
 					vote{request.upvote_count === 1 ? '' : 's'}
 				</span>
 			</span>

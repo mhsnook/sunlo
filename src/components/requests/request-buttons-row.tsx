@@ -37,7 +37,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						</Button>
 						<span className="@max-sm:sr-only">
 							{/*counts?.countReposts ??*/ 0}
-							<span className="@max-xl:sr-only">
+							<span className="sr-only">
 								{' '}
 								repost{counts?.countLinks === 1 ? '' : 's'}
 							</span>
