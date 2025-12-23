@@ -6,17 +6,20 @@ import { GarlicBroccoli } from '@/components/garlic'
 import { FriendProfiles } from '@/components/friend-profiles'
 import { useDecks } from '@/hooks/use-deck'
 import { decksCollection } from '@/lib/collections'
+import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
 	loader: async () => await decksCollection.preload(),
 })
 
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
 function Page() {
 	const { data: decks } = useDecks()
 	const activeDecks = decks?.filter((i) => !i.archived)
 	return (
-		<main className="w-full space-y-6">
+		<main className="w-full space-y-6" style={style}>
 			{activeDecks?.length ?
 				<>
 					<div

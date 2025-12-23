@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { CSSProperties, useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
@@ -55,7 +55,11 @@ export function ReviewSingleCard({
 
 	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
 	return (
-		<CardlikeFlashcard className="mx-auto flex min-h-[80vh] w-full flex-col">
+		<CardlikeFlashcard
+			className="mx-auto flex min-h-[80vh] w-full flex-col"
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
+		>
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
 				<ContextMenu phrase={phrase} />
 				<div className="mb-4 flex items-center justify-center">

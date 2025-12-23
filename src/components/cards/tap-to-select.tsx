@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { CheckCircle } from 'lucide-react'
 import { uuid } from '@/types/main'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { CSSProperties } from 'react'
 
 type TapCardToSelectProps = {
 	toggleCardSelection: (pid: string) => void
@@ -30,6 +31,8 @@ export function TapCardToSelect({
 			onClick={() => toggleCardSelection(pid)}
 			key={pid}
 			className={`hover:bg-primary/10 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
 			<CardHeader className="p-3 pb-0">
 				<CardTitle className="text-base">{phrase.text}</CardTitle>

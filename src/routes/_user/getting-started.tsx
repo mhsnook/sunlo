@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
+import { CSSProperties } from 'react'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -38,6 +39,8 @@ export const Route = createFileRoute('/_user/getting-started')({
 	}),
 })
 
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
 function GettingStartedPage() {
 	const { referrer }: GettingStartedProps = Route.useSearch()
 	const { userId, userRole } = useAuth()
@@ -50,7 +53,7 @@ function GettingStartedPage() {
 
 	return profile ?
 			<Navigate to={nextPage} />
-		:	<main className="w-app px-[5cqw] py-10">
+		:	<main className="w-app px-[5cqw] py-10" style={style}>
 				<div className="my-4 space-y-4 text-center">
 					<h1 className="d1">Welcome to Sunlo</h1>
 					<div className="mx-auto inline-flex shrink flex-row items-center gap-4">

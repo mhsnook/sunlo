@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { CSSProperties, useEffect, useState } from 'react'
 import { Loader } from '@/components/ui/loader'
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 export function AwaitingAuthLoader() {
 	const [time, setTime] = useState(0)
@@ -11,7 +13,10 @@ export function AwaitingAuthLoader() {
 	}, [])
 
 	return (
-		<div className="flex h-full w-full flex-col items-center justify-center gap-4 py-10">
+		<div
+			className="flex h-full w-full flex-col items-center justify-center gap-4 py-10"
+			style={style}
+		>
 			<p
 				className={`${time >= 5 ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300 ease-linear`}
 			>

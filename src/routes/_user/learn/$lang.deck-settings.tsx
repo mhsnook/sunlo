@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { CSSProperties, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -33,6 +33,8 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
 })
 
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
 function DeckSettingsPage() {
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
@@ -42,7 +44,7 @@ function DeckSettingsPage() {
 		else throw new Error(`No deck found for language "${lang}"`)
 
 	return (
-		<Card>
+		<Card style={style}>
 			<CardHeader>
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>

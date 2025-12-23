@@ -25,6 +25,7 @@ const router = createRouter({
 		profile: undefined!, // we'll make this during render
 		queryClient,
 	},
+	defaultViewTransition: true,
 	defaultPreload: 'intent',
 	defaultPreloadStaleTime: 300_000,
 	defaultPendingComponent: () => (

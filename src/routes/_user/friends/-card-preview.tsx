@@ -10,6 +10,7 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import { CSSProperties } from 'react'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -22,6 +23,8 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	return (
 		<CardlikeFlashcard
 			className={`relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
+			// oxlint-disable-next-line jsx-no-new-object-as-prop
+			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
 			{status === 'pending' || !phrase ?
 				<Loader className="my-6" />

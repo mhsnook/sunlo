@@ -7,6 +7,7 @@ import languages from '@/lib/languages'
 import { phraseRequestsCollection } from '@/lib/collections'
 import { PlusMenu } from '@/components/plus-menu'
 import { UserContributions } from './-contributions'
+import { CSSProperties } from 'react'
 
 const Search = z.object({
 	contributionsTab: z.enum(['request', 'phrase', 'comment']).optional(),
@@ -26,12 +27,14 @@ export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 	},
 })
 
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
 function Page() {
 	const params = Route.useParams()
 	const uid = Route.useRouteContext().auth.userId!
 
 	return (
-		<main>
+		<main style={style}>
 			<div>
 				<div className="flex flex-row items-center justify-between gap-2">
 					<h2 className="h2">Your Requests and Phrases</h2>

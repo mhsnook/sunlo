@@ -13,6 +13,7 @@ import { useAuth } from '@/lib/use-auth'
 import { ShowAndLogError } from '@/components/errors'
 import EmailField from '@/components/fields/email-field'
 import PasswordField from '@/components/fields/password-field'
+import { CSSProperties } from 'react'
 
 export interface LoginSearchParams {
 	redirectedFrom?: string
@@ -36,6 +37,8 @@ const FormSchema = z.object({
 })
 
 type FormInputs = z.infer<typeof FormSchema>
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function LoginForm() {
 	// we use this hook instead of loader data so it reacts to the login event
@@ -75,7 +78,10 @@ function LoginForm() {
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (
-		<Card className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
+		<Card
+			className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]"
+			style={style}
+		>
 			<CardHeader>
 				<CardTitle>Please log in</CardTitle>
 			</CardHeader>

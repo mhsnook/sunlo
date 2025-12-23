@@ -28,10 +28,13 @@ import { useLanguageMeta } from '@/hooks/use-language'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import Callout from '@/components/ui/callout'
+import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/stats')({
 	component: WelcomePage,
 })
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function WelcomePage() {
 	const { lang } = Route.useParams()
@@ -41,14 +44,14 @@ function WelcomePage() {
 	const deckIsNew =
 		deck.cards_active + deck.cards_skipped + deck.cards_learned === 0
 	return (
-		<div className="space-y-8">
+		<main className="space-y-8" style={style}>
 			{deckIsNew ?
 				<Empty />
 			:	<DeckOverview />}
 
 			<RecommendedPhrasesCard lang={lang} />
 			<DeckSettings />
-		</div>
+		</main>
 	)
 }
 
