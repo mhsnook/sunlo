@@ -1,20 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { MessageCircleHeart, MessageSquareQuote } from 'lucide-react'
-import * as z from 'zod'
+import { Disc3, MessageCircleHeart, MessageSquareQuote } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button-variants'
 import languages from '@/lib/languages'
 import { phraseRequestsCollection } from '@/lib/collections'
 import { PlusMenu } from '@/components/plus-menu'
 import { UserContributions } from './-contributions'
-import { CSSProperties } from 'react'
-
-const Search = z.object({
-	contributionsTab: z.enum(['request', 'phrase', 'comment']).optional(),
-})
+import type { CSSProperties } from 'react'
+import { UserContributionsTabs } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({
-	validateSearch: Search,
+	validateSearch: UserContributionsTabs,
 	component: Page,
 	loader: async ({ params: { lang } }) => {
 		await phraseRequestsCollection.preload()
@@ -62,6 +58,18 @@ function Page() {
 						>
 							<MessageSquareQuote className="size-3" />
 							<span className="me-1">New Phrase</span>
+						</Link>
+						<Link
+							to="/learn/$lang/playlists/new"
+							from={Route.fullPath}
+							className={
+								`${buttonVariants({
+									variant: 'outline',
+								})}` as const
+							}
+						>
+							<Disc3 className="size-3" />
+							<span className="me-1">New Playlist</span>
 						</Link>
 					</PlusMenu>
 				</div>

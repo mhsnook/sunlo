@@ -43,6 +43,12 @@ export const MessageTypeEnumSchema = z.enum([
 	'accepted',
 ])
 
+export const UserContributionsTabs = z.object({
+	contributionsTab: z
+		.enum(['requests', 'phrases', 'playlists', 'answers', 'comments'])
+		.optional(),
+})
+
 export const LangSchema = z
 	.string()
 	.length(3, { message: 'Please select a language' })

@@ -26,6 +26,7 @@ const friendsMenu = makeLinks([
 ])
 const learnMenu = makeLinks([
 	'/learn',
+	'/learn/contributions',
 	// '/learn/quick-search',
 	'/learn/add-deck',
 ])

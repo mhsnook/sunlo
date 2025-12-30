@@ -10,7 +10,7 @@ import {
 export function PlusMenu({ children }: { children: ReactNode }) {
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger>
+			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" size="icon">
 					<PlusIcon />
 				</Button>
