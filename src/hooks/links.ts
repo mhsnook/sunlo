@@ -96,6 +96,14 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/add-deck',
 			},
 		},
+		'/learn/contributions': {
+			name: 'Contributions',
+			title: 'Your Contributions',
+			Icon: CircleStar,
+			link: {
+				to: '/learn/contributions',
+			},
+		},
 		'/learn/quick-search': {
 			name: 'Search',
 			title: 'Quick Search',

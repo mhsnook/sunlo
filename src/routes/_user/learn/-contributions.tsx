@@ -1,4 +1,5 @@
 import {
+	Disc3,
 	Logs,
 	MessageCircleHeart,
 	MessageSquarePlus,
@@ -19,8 +20,12 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import { Link } from '@tanstack/react-router'
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { useAnyonesPlaylists } from '@/hooks/use-playlists'
+import { PlaylistItem } from '@/components/playlists/playlist-list-item'
+import languages from '@/lib/languages'
+import Callout from '@/components/ui/callout'
 
-type viewTabName = 'request' | 'phrase' | 'answers' | 'comments'
+type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
 
 export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const search = useSearch({ strict: false })
@@ -28,7 +33,7 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const contributionsTab =
 		'contributionsTab' in search ?
 			(search?.contributionsTab as viewTabName)
-		:	'request'
+		:	'requests'
 
 	const handleTabChange = useCallback(
 		(value: string) => {
@@ -49,11 +54,14 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 				onValueChange={handleTabChange}
 			>
 				<TabsList className="mt-1 text-lg">
-					<TabsTrigger value="request">
+					<TabsTrigger value="requests">
 						<MessageCircleHeart size={16} className="me-1" /> Requests
 					</TabsTrigger>
-					<TabsTrigger value="phrase">
+					<TabsTrigger value="phrases">
 						<MessageSquareQuote size={16} className="me-1" /> Phrases
+					</TabsTrigger>
+					<TabsTrigger value="playlists">
+						<Disc3 size={16} className="me-1" /> Playlists
 					</TabsTrigger>
 					<TabsTrigger value="answers" disabled>
 						<MessageSquarePlus size={16} className="me-1" /> Answers
@@ -63,11 +71,14 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 					</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="request">
+				<TabsContent value="requests">
 					<RequestsTab lang={lang} uid={uid} />
 				</TabsContent>
-				<TabsContent value="phrase">
+				<TabsContent value="phrases">
 					<PhrasesTab lang={lang} uid={uid} />
+				</TabsContent>
+				<TabsContent value="playlists">
+					<PlaylistsTab lang={lang} uid={uid} />
 				</TabsContent>
 				<TabsContent value="answers">
 					<AnswersTab lang={lang} uid={uid} />
@@ -82,145 +93,163 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 
 function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 	const { data: requests, isLoading } = useAnyonesPhraseRequests(uid, lang)
-	return isLoading ?
-			<Loader />
-		:	<div>
-				{isLoading ?
-					<p>Loading requests...</p>
-				: !requests || requests.length === 0 ?
-					<>
-						<p className="mb-4 text-lg italic">
-							You haven't made any requests yet.
-						</p>
-						{lang && (
-							<Link
-								className={buttonVariants({ variant: 'outline-primary' })}
-								to="/learn/$lang/requests/new"
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								params={{ lang }}
-							>
-								<MessageCircleHeart />
-								Post a new phrase request
-							</Link>
-						)}
-					</>
-				:	<div className="space-y-4">
-						{requests.map((request) => (
-							<RequestItem key={request.id} request={request} />
-						))}
-					</div>
+	return (
+		isLoading ? <Loader />
+		: !requests || requests.length === 0 ?
+			<Callout variant="ghost">
+				<p className="text-lg">You haven't made any requests yet.</p>
+				{lang ?
+					<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn/$lang/requests/new"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang }}
+					>
+						<MessageCircleHeart />
+						Post a new phrase request
+					</Link>
+				:	<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn"
+					>
+						Choose a language deck to make a request for
+					</Link>
 				}
+			</Callout>
+		:	<div className="space-y-4">
+				{requests.map((request) => (
+					<RequestItem key={request.id} request={request} />
+				))}
 			</div>
+	)
 }
+
 function PhrasesTab(props: { lang?: string; uid: uuid }) {
 	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
-	return isLoading ?
-			<Loader />
-		:	<div>
-				<div>
-					{isLoading ?
-						<p>Loading requests...</p>
-					: !phrases || phrases.length === 0 ?
-						<>
-							<p className="mb-4 text-lg italic">
-								This person hasn't made any requests yet.
-							</p>
-							{props.lang && (
-								<Link
-									className={buttonVariants()}
-									to="/learn/$lang/add-phrase"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang: props.lang }}
-								>
-									<MessageSquareQuote />
-									Add a new phrase
-								</Link>
-							)}
-						</>
-					:	<div className="space-y-4">
-							{phrases.map((phrase) => (
-								<div key={phrase.id} className="space-y-2">
-									<CardResultSimple phrase={phrase} />
-								</div>
-							))}
-						</div>
-					}
-				</div>
+	return (
+		isLoading ? <Loader />
+		: !phrases || phrases.length === 0 ?
+			<Callout variant="ghost">
+				<p className="text-lg">This person hasn't made any requests yet.</p>
+				{props.lang && (
+					<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn/$lang/add-phrase"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang: props.lang }}
+					>
+						<MessageSquareQuote />
+						Add a new phrase
+					</Link>
+				)}
+			</Callout>
+		:	<div className="space-y-4">
+				{phrases.map((phrase) => (
+					<div key={phrase.id} className="space-y-2">
+						<CardResultSimple phrase={phrase} />
+					</div>
+				))}
 			</div>
+	)
+}
+
+function PlaylistsTab(props: { lang?: string; uid: uuid }) {
+	const { data: playlists, isLoading } = useAnyonesPlaylists(
+		props.uid,
+		props.lang
+	)
+	return (
+		isLoading ? <Loader />
+		: !playlists || playlists.length === 0 ?
+			<Callout variant="ghost">
+				<p className="text-lg">This user hasn't made any playlists yet.</p>
+				{props.lang ?
+					<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn/$lang/playlists"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang: props.lang }}
+					>
+						<Disc3 />
+						Browse other {languages[props.lang]} playlists
+					</Link>
+				:	<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+					>
+						Choose a language deck to make a playlist for
+					</Link>
+				}
+			</Callout>
+		:	<div className="space-y-4">
+				{playlists.map((playlist) => (
+					<div key={playlist.id} className="space-y-2">
+						<PlaylistItem playlist={playlist} />
+					</div>
+				))}
+			</div>
+	)
 }
 
 function AnswersTab(props: { lang?: string; uid: uuid }) {
 	// @@TODO change this
 	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
-	return isLoading ?
-			<Loader />
-		:	<div>
-				<div>
-					{isLoading ?
-						<p>Loading answers...</p>
-					: !phrases || phrases.length === 0 ?
-						<>
-							<p className="mb-4 text-lg italic">
-								This person hasn't recommended any flashcards to answer
-								requests.
-							</p>
-							{props.lang && (
-								<Link
-									className={buttonVariants()}
-									to="/learn/$lang/feed"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang: props.lang }}
-								>
-									<Logs />
-									Check out the feed and get involved
-								</Link>
-							)}
-						</>
-					:	<div className="space-y-4">
-							{phrases.map((phrase) => (
-								<div key={phrase.id} className="space-y-2">
-									<CardResultSimple phrase={phrase} />
-								</div>
-							))}
-						</div>
-					}
-				</div>
+	return (
+		isLoading ? <Loader />
+		: !phrases || phrases.length === 0 ?
+			<Callout variant="ghost">
+				<p className="text-lg">
+					This user hasn't recommended any flashcards to answer requests.
+				</p>
+				{props.lang && (
+					<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn/$lang/feed"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang: props.lang }}
+					>
+						<Logs />
+						Check out the feed and get involved
+					</Link>
+				)}
+			</Callout>
+		:	<div className="space-y-4">
+				{phrases.map((phrase) => (
+					<div key={phrase.id} className="space-y-2">
+						<CardResultSimple phrase={phrase} />
+					</div>
+				))}
 			</div>
+	)
 }
+
 function CommentsTab(props: { lang?: string; uid: uuid }) {
 	// @@TODO change this
 	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
-	return isLoading ?
-			<Loader />
-		:	<div>
-				<div>
-					{isLoading ?
-						<p>Loading comments...</p>
-					: !phrases || phrases.length === 0 ?
-						<>
-							<p className="mb-4 text-lg italic">
-								This person hasn't made any comments yet.
-							</p>
-							{props.lang && (
-								<Link
-									className={buttonVariants()}
-									to="/learn/$lang/feed"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang: props.lang }}
-								>
-									<Logs />
-									Check out the feed and get involved
-								</Link>
-							)}
-						</>
-					:	<div className="space-y-4">
-							{phrases.map((phrase) => (
-								<div key={phrase.id} className="space-y-2">
-									<CardResultSimple phrase={phrase} />
-								</div>
-							))}
-						</div>
-					}
-				</div>
+	return (
+		isLoading ? <Loader />
+		: !phrases || phrases.length === 0 ?
+			<Callout variant="ghost">
+				<p className="text-lg">This user hasn't made any comments yet.</p>
+				{props.lang && (
+					<Link
+						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
+						to="/learn/$lang/feed"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang: props.lang }}
+					>
+						<Logs />
+						Check out the feed and get involved
+					</Link>
+				)}
+			</Callout>
+		:	<div className="space-y-4">
+				{phrases.map((phrase) => (
+					<div key={phrase.id} className="space-y-2">
+						<CardResultSimple phrase={phrase} />
+					</div>
+				))}
 			</div>
+	)
 }

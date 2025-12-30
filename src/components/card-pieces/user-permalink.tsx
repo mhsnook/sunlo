@@ -6,7 +6,7 @@ import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
-export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
+export function UidPermalink({ uid, ...args }: { uid: uuid; args?: unknown }) {
 	const { data, isLoading } = useOnePublicProfile(uid)
 	return (
 		isLoading ? null
