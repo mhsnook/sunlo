@@ -396,6 +396,51 @@ export type Database = {
 					},
 				]
 			}
+			phrase_playlist: {
+				Row: {
+					created_at: string
+					description: string | null
+					href: string | null
+					id: string
+					lang: string
+					title: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					description?: string | null
+					href?: string | null
+					id?: string
+					lang: string
+					title: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					description?: string | null
+					href?: string | null
+					id?: string
+					lang?: string
+					title?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_playlist_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'language'
+						referencedColumns: ['lang']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'meta_language'
+						referencedColumns: ['lang']
+					},
+				]
+			}
 			phrase_relation: {
 				Row: {
 					added_by: string
@@ -698,6 +743,58 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+				]
+			}
+			playlist_phrase_link: {
+				Row: {
+					created_at: string
+					href: string | null
+					id: string
+					order: number | null
+					phrase_id: string
+					playlist_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					href?: string | null
+					id?: string
+					order?: number | null
+					phrase_id: string
+					playlist_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					href?: string | null
+					id?: string
+					order?: number | null
+					phrase_id?: string
+					playlist_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_info'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'playlist_phrase_link_playlist_id_fkey'
+						columns: ['playlist_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_playlist'
 						referencedColumns: ['id']
 					},
 				]
