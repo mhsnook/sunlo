@@ -34,6 +34,10 @@ import {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	PhrasePlaylistSchema,
+	type PhrasePlaylistType,
+	PlaylistPhraseLinkSchema,
+	type PlaylistPhraseLinkType,
 } from './schemas'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
@@ -360,6 +364,50 @@ export const phraseRequestUpvotesCollection = createCollection(
 		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
 		queryClient,
 		schema: PhraseRequestUpvoteSchema,
+	})
+)
+
+export const phrasePlaylistsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_playlist',
+		queryKey: ['public', 'playlist'],
+		queryFn: async (/*{ meta }*/) => {
+			console.log(`Loading phrasePlaylistsCollection`)
+			// const params = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+			const { data } = await supabase
+				.from('phrase_playlist')
+				.select()
+				// .eq('uid', params.uid)
+				.throwOnError()
+
+			return data
+		},
+		getKey: (item: PhrasePlaylistType) => item.id,
+		queryClient,
+		schema: PhrasePlaylistSchema,
+		// snycMode: 'on-demand',
+	})
+)
+
+export const playlistPhraseLinksCollection = createCollection(
+	queryCollectionOptions({
+		id: 'playlist_phrase_links',
+		queryKey: ['public', 'playlist_phrase_link'],
+		queryFn: async (/*{ meta }*/) => {
+			console.log(`Loading playlistPhraseLinksCollection`)
+			// const params = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+			const { data } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				// .eq('uid', params.uid)
+				.throwOnError()
+
+			return data
+		},
+		getKey: (item: PlaylistPhraseLinkType) => item.id,
+		queryClient,
+		schema: PlaylistPhraseLinkSchema,
+		// snycMode: 'on-demand',
 	})
 )
 

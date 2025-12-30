@@ -1322,6 +1322,19 @@ from
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
+	"public"."phrase_playlist" (
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"title" "text" not null,
+		"description" "text",
+		"href" "text",
+		"created_at" timestamp with time zone default "now" () not null,
+		"lang" character varying not null
+	);
+
+alter table "public"."phrase_playlist" owner to "postgres";
+
+create table if not exists
 	"public"."phrase_relation" (
 		"from_phrase_id" "uuid",
 		"to_phrase_id" "uuid",
@@ -1374,6 +1387,19 @@ comment on table "public"."phrase_translation" is 'A translation of one phrase i
 comment on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+create table if not exists
+	"public"."playlist_phrase_link" (
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"phrase_id" "uuid" not null,
+		"playlist_id" "uuid" not null,
+		"order" double precision,
+		"href" "text",
+		"created_at" timestamp with time zone default "now" () not null
+	);
+
+alter table "public"."playlist_phrase_link" owner to "postgres";
 
 create table if not exists
 	"public"."request_comment" (
@@ -1642,6 +1668,9 @@ add constraint "language_pkey" primary key ("lang");
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
+alter table only "public"."phrase_playlist"
+add constraint "phrase_playlist_pkey" primary key ("id");
+
 alter table only "public"."phrase_request"
 add constraint "phrase_request_pkey" primary key ("id");
 
@@ -1650,6 +1679,9 @@ add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
 
 alter table only "public"."phrase_tag"
 add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_pkey" primary key ("id");
 
 alter table only "public"."user_profile"
 add constraint "profile_old_id_key" unique ("uid");
@@ -1717,6 +1749,12 @@ create index "idx_comment_upvotes" on "public"."request_comment" using "btree" (
 create index "idx_upvote_comment" on "public"."comment_upvote" using "btree" ("comment_id");
 
 create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid");
+
+create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
+
+create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
+
+create index "playlist_phrase_link_playlist_id_idx" on "public"."playlist_phrase_link" using "btree" ("playlist_id");
 
 create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
 
@@ -1791,6 +1829,9 @@ add constraint "phrase_added_by_fkey" foreign key ("added_by") references "publi
 alter table only "public"."phrase"
 add constraint "phrase_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
+alter table only "public"."phrase_playlist"
+add constraint "phrase_playlist_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
+
 alter table only "public"."phrase_request"
 add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;
 
@@ -1829,6 +1870,12 @@ add constraint "phrase_translation_lang_fkey" foreign key ("lang") references "p
 
 alter table only "public"."phrase_translation"
 add constraint "phrase_translation_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_playlist_id_fkey" foreign key ("playlist_id") references "public"."phrase_playlist" ("id") on delete cascade;
 
 alter table only "public"."request_comment"
 add constraint "request_comment_parent_comment_id_fkey" foreign key ("parent_comment_id") references "public"."request_comment" ("id") on delete cascade;
@@ -1888,6 +1935,24 @@ create policy "Anyone can add cards" on "public"."phrase" for insert to "authent
 with
 	check (true);
 
+create policy "Enable delete for users based on uid" on "public"."phrase_playlist" for delete to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+);
+
+create policy "Enable delete for users based on uid" on "public"."playlist_phrase_link" for delete to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+);
+
 create policy "Enable insert for any user" on "public"."user_client_event" for insert to "authenticated",
 "anon"
 with
@@ -1908,6 +1973,28 @@ create policy "Enable insert for authenticated users only" on "public"."user_dec
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Enable insert for users based on uid" on "public"."phrase_playlist" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable insert for users based on uid" on "public"."playlist_phrase_link" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
 create policy "Enable read access for all users" on "public"."comment_phrase_link" for
 select
 	using (true);
@@ -1917,6 +2004,10 @@ select
 	using (true);
 
 create policy "Enable read access for all users" on "public"."phrase" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."phrase_playlist" for
 select
 	using (true);
 
@@ -1936,6 +2027,10 @@ create policy "Enable read access for all users" on "public"."phrase_translation
 select
 	using (true);
 
+create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
+select
+	using (true);
+
 create policy "Enable read access for all users" on "public"."request_comment" for
 select
 	using (true);
@@ -1943,6 +2038,44 @@ select
 create policy "Enable read access for all users" on "public"."tag" for
 select
 	using (true);
+
+create policy "Enable update for users based on uid" on "public"."phrase_playlist" for
+update to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+)
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable update for users based on uid" on "public"."playlist_phrase_link" for
+update to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+)
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
 
 create policy "Enable users to update their own data only" on "public"."user_card_review" for
 update to "authenticated" using (
@@ -2161,6 +2294,8 @@ alter table "public"."language" enable row level security;
 
 alter table "public"."phrase" enable row level security;
 
+alter table "public"."phrase_playlist" enable row level security;
+
 alter table "public"."phrase_relation" enable row level security;
 
 alter table "public"."phrase_request" enable row level security;
@@ -2170,6 +2305,8 @@ alter table "public"."phrase_request_upvote" enable row level security;
 alter table "public"."phrase_tag" enable row level security;
 
 alter table "public"."phrase_translation" enable row level security;
+
+alter table "public"."playlist_phrase_link" enable row level security;
 
 alter table "public"."request_comment" enable row level security;
 
@@ -2522,6 +2659,14 @@ grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
 
+grant all on table "public"."phrase_playlist" to "postgres";
+
+grant all on table "public"."phrase_playlist" to "anon";
+
+grant all on table "public"."phrase_playlist" to "authenticated";
+
+grant all on table "public"."phrase_playlist" to "service_role";
+
 grant all on table "public"."phrase_relation" to "anon";
 
 grant all on table "public"."phrase_relation" to "authenticated";
@@ -2545,6 +2690,14 @@ grant all on table "public"."phrase_translation" to "anon";
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
+
+grant all on table "public"."playlist_phrase_link" to "postgres";
+
+grant all on table "public"."playlist_phrase_link" to "anon";
+
+grant all on table "public"."playlist_phrase_link" to "authenticated";
+
+grant all on table "public"."playlist_phrase_link" to "service_role";
 
 grant all on table "public"."request_comment" to "anon";
 
