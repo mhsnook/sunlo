@@ -8,7 +8,7 @@ Use @tanstack/db to load needed segments of the database into the local db, and 
 
 We use supabase as our back-end, our database, storage system, auth system; we use postgres functions that supabase turns into RPC endpoints, and supabase's tools for migrations and seed data. Use supabase-js version 2 to asynchronously fetch and post data, inside react-query queryFn's and mutationFns.
 
-- our typescript types are auto-generated from the supabase cli into `@/src/types/supabase.ts`, but we have our own types in `@/src/types/main.ts` that often wrap these types, name them nicely, or combine them with others to form a fuller "shape" such as ProfileFull and CardFull.
+- our typescript types are auto-generated from the supabase cli into `@/src/types/supabase.ts`, and we have utility types in `@/src/types/main.ts` may wrap or combine the supabase types into other useful things.
 
 This is a Single-Page Application (SPA) that uses `@tanstack/react-router` with file-based routes for routes, navigation, dynamic routes with nested layouts, and page parameter and search validation.
 
@@ -43,6 +43,9 @@ You are an expert in your craft, and you know how to spend less time on the smal
 
 - Use shadcn/ui for components, and use radix-ui components when useful.
 - For Toasts, use `react-hot-toast`
+- Use `<Button>` for buttons and `<Link className={buttonVariants()} />` for links resembling buttons.
+- Use `<Link className="s-link" />` for links resembling links.
+- Use generics like `<Input>` and `<Textarea>` even for simple things, to maintain visual consistency and DRY styles.
 
 ## Code style
 
@@ -67,24 +70,14 @@ You are an expert in your craft, and you know how to spend less time on the smal
 
 - **@uidotdev/usehooks** - for additional React hooks beyond our custom ones
 - **zustand** v5 - for lightweight client-side state management when React Query isn't appropriate (currently in the Review interface)
-- **immer** - for immutable state updates when needed
 - **dayjs** - for date manipulation (lighter than moment.js)
 - **recharts** - for data visualization components
 
 ## Data Mutations
 
-- We always use a useMutation for all mutations. We may not always need a useForm (from react-hook-form), such as when there are no error states or input fields, but we'll still use a mutation (e.g. for mutations like a "like" or "archive" button).
-- When possible, we do try to optimistically update content in the local store, often using Immer to perform atomic updates. The react-query cache will usually handle these gracefully so as not to update components that don't need it.
+- We always use a useMutation for anything that will change server state (including a login/logout). We may not always need a `useForm` (from react-hook-form), such as when there are no input fields and no client-side validation, but we'll still use a mutation, e.g. for a "like" or "archive" button.
+- In almost all cases, after a mutation, we return the updated or inserted rows, and then insert or update our local collection in the `onSuccess` function, rather than using optimistic updates or invalidating queries.
 - But sometimes there's a lot of data being collated on the server that will need to change in response to our one little update, in which case it's always fine to just invalidate the query cache for the relevant information and move on with our lives.
-
-### Composite Data Access
-
-When we need reactive hooks that return data derived from multiple queries, such as `usePhrase` (which compiles data from the `LanguageLoaded` cache, the `DeckLoaded` user cache, and the `ProfileFull` user cache), we have a few conventions about these advanced data-shaping situations:
-
-- We put them in `@/hooks/composite.ts`
-- We try to keep these as granular as possible so that they only compute when needed
-- When a component only needs data from one source, we use the standard query which pulls only from one data source, not a composite hook
-- We write tests for them (to a higher standard than the rest of the code in the react app)
 
 ## Supabase/Postgres Conventions
 
@@ -107,8 +100,8 @@ When we need reactive hooks that return data derived from multiple queries, such
 
 ## Misc conventions
 
-- when using a 3-letter language code, we almost always call this variable 'lang'
-- when using a phrase_id as its own variable or prop to pass, we almost always call this 'pid'
+- when using a 3-letter language code, we almost always call this variable `lang`
+- when using a phrase_id as its own variable or prop to pass, we call this `pid`
 - when displaying times and dates, default to the `ago` function and other helper functions in `dayjs.ts`
 
 ## Example Code for a Form with Validation and a Mutation
