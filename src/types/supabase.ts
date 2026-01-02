@@ -1569,6 +1569,16 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			create_playlist_with_links: {
+				Args: {
+					description?: string
+					href?: string
+					lang: string
+					phrases?: Json
+					title: string
+				}
+				Returns: Json
+			}
 			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
 			fsrs_d_0: { Args: { score: number }; Returns: number }
 			fsrs_days_between: {
