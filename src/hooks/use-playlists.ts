@@ -78,7 +78,8 @@ export function useOnePlaylistPhrases(
 					({ link, phrase }) => eq(link.phrase_id, phrase.id),
 					'inner'
 				)
-				.where(({ link }) => eq(link.playlist_id, id)),
+				.where(({ link }) => eq(link.playlist_id, id))
+				.orderBy(({ link }) => link.order),
 		[id]
 	)
 }

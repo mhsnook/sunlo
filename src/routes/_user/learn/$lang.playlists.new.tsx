@@ -20,7 +20,7 @@ import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
 } from '@/lib/collections'
-import { Trash } from 'lucide-react'
+import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
@@ -33,13 +33,18 @@ type CreatePlaylistRPCReturnType = {
 	links: Tables<'playlist_phrase_link'>[]
 }
 
+type PhraseWithHref = {
+	phrase_id: string
+	href: string | null
+}
+
 // eslint-disable-next-line react-refresh/only-export-components
 function NewPlaylistPage() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
 
-	// Track selected phrase IDs separately from form state for the picker
-	const [selectedPhraseIds, setSelectedPhraseIds] = useState<string[]>([])
+	// Track selected phrases with their hrefs
+	const [selectedPhrases, setSelectedPhrases] = useState<PhraseWithHref[]>([])
 
 	const form = useForm<PhrasePlaylistInsertType>({
 		resolver: zodResolver(PhrasePlaylistInsertSchema),
@@ -53,20 +58,21 @@ function NewPlaylistPage() {
 
 	const mutation = useMutation({
 		mutationKey: ['createPlaylist'],
-		mutationFn: async ({ phrases, ...values }: PhrasePlaylistInsertType) => {
-			// Build phrases array with order values from selectedPhraseIds
-			const phrasesWithOrder = selectedPhraseIds.map((phrase_id, i) => ({
-				phrase_id,
-				href: phrases.find((p) => p.phrase_id === phrase_id)?.href ?? null,
+		mutationFn: async (values: PhrasePlaylistInsertType) => {
+			// Build phrases array with order values
+			const phrasesWithOrder = selectedPhrases.map((p, i) => ({
+				phrase_id: p.phrase_id,
+				href: p.href,
 				order: i,
 			}))
 			// API call
 			const { data } = await supabase
 				.rpc('create_playlist_with_links', {
-					...values,
+					title: values.title,
+					description: values.description,
+					href: values.href ?? undefined,
 					phrases: phrasesWithOrder,
 					lang,
-					href: values.href ?? undefined,
 				})
 				.throwOnError()
 			return data as CreatePlaylistRPCReturnType
@@ -93,9 +99,48 @@ function NewPlaylistPage() {
 		},
 	})
 
-	const removePhrase = (phraseId: string) => {
-		setSelectedPhraseIds((ids) => ids.filter((id) => id !== phraseId))
+	// Handle phrase selection from the picker
+	const handleSelectionChange = (phraseIds: string[]) => {
+		setSelectedPhrases((current) => {
+			// Keep existing phrases that are still selected, preserving their hrefs
+			const existingMap = new Map(current.map((p) => [p.phrase_id, p]))
+			return phraseIds.map(
+				(id) => existingMap.get(id) ?? { phrase_id: id, href: null }
+			)
+		})
 	}
+
+	const removePhrase = (phraseId: string) => {
+		setSelectedPhrases((phrases) =>
+			phrases.filter((p) => p.phrase_id !== phraseId)
+		)
+	}
+
+	const movePhrase = (index: number, direction: 'up' | 'down') => {
+		setSelectedPhrases((phrases) => {
+			const newPhrases = [...phrases]
+			const targetIndex = direction === 'up' ? index - 1 : index + 1
+			if (targetIndex < 0 || targetIndex >= phrases.length)
+				return phrases
+				// Swap
+			;[newPhrases[index], newPhrases[targetIndex]] = [
+				newPhrases[targetIndex],
+				newPhrases[index],
+			]
+			return newPhrases
+		})
+	}
+
+	const updatePhraseHref = (phraseId: string, href: string) => {
+		setSelectedPhrases((phrases) =>
+			phrases.map((p) =>
+				p.phrase_id === phraseId ? { ...p, href: href || null } : p
+			)
+		)
+	}
+
+	// Extract just the IDs for the picker component
+	const selectedPhraseIds = selectedPhrases.map((p) => p.phrase_id)
 
 	return (
 		<div className="mx-auto max-w-2xl p-4">
@@ -154,26 +199,72 @@ function NewPlaylistPage() {
 				</div>
 
 				<div className="space-y-3">
-					<Label>Phrases ({selectedPhraseIds.length})</Label>
+					<Label>Phrases ({selectedPhrases.length})</Label>
 
-					{/* Display selected phrases */}
-					{selectedPhraseIds.map((phraseId) => (
+					{/* Display selected phrases with reorder and href controls */}
+					{selectedPhrases.map((phrase, index) => (
 						<div
-							key={phraseId}
-							className="bg-muted/30 flex items-center gap-2 rounded border p-2"
+							key={phrase.phrase_id}
+							className="bg-muted/30 rounded border p-3"
 						>
-							<div className="flex-1">
-								<PhraseTinyCard pid={phraseId} nonInteractive />
+							<div className="flex items-start gap-2">
+								{/* Reorder buttons */}
+								<div className="flex flex-col gap-1">
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6"
+										disabled={index === 0}
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
+										onClick={() => movePhrase(index, 'up')}
+									>
+										<ChevronUp className="h-4 w-4" />
+									</Button>
+									<Button
+										type="button"
+										variant="ghost"
+										size="icon"
+										className="h-6 w-6"
+										disabled={index === selectedPhrases.length - 1}
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
+										onClick={() => movePhrase(index, 'down')}
+									>
+										<ChevronDown className="h-4 w-4" />
+									</Button>
+								</div>
+
+								{/* Phrase card */}
+								<div className="min-w-0 flex-1">
+									<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
+
+									{/* Href input for timestamp */}
+									<div className="mt-2 flex items-center gap-2">
+										<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+										<Input
+											type="url"
+											placeholder="Timestamp link (optional)"
+											value={phrase.href ?? ''}
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
+											onChange={(e) =>
+												updatePhraseHref(phrase.phrase_id, e.target.value)
+											}
+											className="h-8 text-sm"
+										/>
+									</div>
+								</div>
+
+								{/* Delete button */}
+								<Button
+									type="button"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onClick={() => removePhrase(phrase.phrase_id)}
+									variant="destructive-outline"
+									size="icon"
+								>
+									<Trash className="h-4 w-4" />
+								</Button>
 							</div>
-							<Button
-								type="button"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onClick={() => removePhrase(phraseId)}
-								variant="destructive-outline"
-								size="icon"
-							>
-								<Trash />
-							</Button>
 						</div>
 					))}
 
@@ -181,10 +272,10 @@ function NewPlaylistPage() {
 					<SelectPhrasesForComment
 						lang={lang}
 						selectedPhraseIds={selectedPhraseIds}
-						onSelectionChange={setSelectedPhraseIds}
+						onSelectionChange={handleSelectionChange}
 						maxPhrases={null}
 						triggerText={
-							selectedPhraseIds.length ? '+ Add more phrases' : (
+							selectedPhrases.length ? '+ Add more phrases' : (
 								'Add phrases to your playlist'
 							)
 						}
@@ -205,7 +296,7 @@ function NewPlaylistPage() {
 						disabled={
 							mutation.isPending ||
 							!form.formState.isValid ||
-							selectedPhraseIds.length === 0
+							selectedPhrases.length === 0
 						}
 					>
 						{mutation.isPending ? 'Creating...' : 'Create Playlist'}
