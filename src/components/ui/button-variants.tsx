@@ -26,6 +26,8 @@ const buttonVariants = cva(
 					'border border-accent-foresoft/40 bg-accent/10 hover:bg-accent/30 text-accent-foreground hover:text-accent-foresoft dark:bg-accent-invert/40 dark:hover:bg-accent-invert/50',
 				'badge-outline':
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
+				'dashed-w-full':
+					'w-full border-2 border-dashed border-border/50 hover:border-border hover:text-foreground shadow-none hover:shadow-sm',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2',

@@ -333,27 +333,3 @@ export const CommentUpvoteSchema = z.object({
 })
 
 export type CommentUpvoteType = z.infer<typeof CommentUpvoteSchema>
-
-export const PlaylistPhraseLinkSchema = z.object({
-	id: z.string().uuid(),
-	uid: z.string().uuid(),
-	phrase_id: z.string().uuid(),
-	playlist_id: z.string().uuid(),
-	order: z.number().nullable(),
-	href: z.string().url().nullable(),
-	created_at: z.string(),
-})
-
-export type PlaylistPhraseLinkType = z.infer<typeof PlaylistPhraseLinkSchema>
-
-export const PhrasePlaylistSchema = z.object({
-	id: z.string().uuid(),
-	uid: z.string().uuid(),
-	description: z.string().nullable(),
-	href: z.string().url().nullable(),
-	title: z.string(),
-	created_at: z.string(),
-	lang: LangSchema,
-})
-
-export type PhrasePlaylistType = z.infer<typeof PhrasePlaylistSchema>
