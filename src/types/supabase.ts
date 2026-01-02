@@ -100,13 +100,6 @@ export type Database = {
 						foreignKeyName: 'chat_message_request_id_fkey'
 						columns: ['request_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'chat_message_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
 						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
 					},
@@ -171,13 +164,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'comment_phrase_link_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
 						referencedColumns: ['id']
 					},
 					{
@@ -508,7 +494,6 @@ export type Database = {
 			phrase_request: {
 				Row: {
 					created_at: string
-					fulfilled_at: string | null
 					id: string
 					lang: string
 					prompt: string
@@ -518,7 +503,6 @@ export type Database = {
 				}
 				Insert: {
 					created_at?: string
-					fulfilled_at?: string | null
 					id?: string
 					lang: string
 					prompt: string
@@ -528,7 +512,6 @@ export type Database = {
 				}
 				Update: {
 					created_at?: string
-					fulfilled_at?: string | null
 					id?: string
 					lang?: string
 					prompt?: string
@@ -584,13 +567,6 @@ export type Database = {
 					uid?: string
 				}
 				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
 					{
 						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
 						columns: ['request_id']
@@ -836,13 +812,6 @@ export type Database = {
 						columns: ['parent_comment_id']
 						isOneToOne: false
 						referencedRelation: 'request_comment'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'request_comment_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
 						referencedColumns: ['id']
 					},
 					{
@@ -1422,50 +1391,6 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
-					},
-				]
-			}
-			meta_phrase_request: {
-				Row: {
-					created_at: string | null
-					fulfilled_at: string | null
-					id: string | null
-					lang: string | null
-					phrase_ids: string[] | null
-					profile: Json | null
-					prompt: string | null
-					requester_uid: string | null
-					status: Database['public']['Enums']['phrase_request_status'] | null
-					upvote_count: number | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_request_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'meta_language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_request_requester_uid_fkey'
-						columns: ['requester_uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_requester_uid_fkey'
-						columns: ['requester_uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
 					},
 				]
 			}
