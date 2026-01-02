@@ -30,7 +30,7 @@ import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
 import { phraseRequestsCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
-	component: Page,
+	component: NewRequestPage,
 })
 
 const RequestPhraseSchema = z.object({
@@ -46,7 +46,8 @@ const RequestPhraseSchema = z.object({
 
 type RequestPhraseFormInputs = z.infer<typeof RequestPhraseSchema>
 
-function Page() {
+// eslint-disable-next-line react-refresh/only-export-components
+function NewRequestPage() {
 	const { lang } = Route.useParams()
 	const userId = useUserId()
 	const navigate = useNavigate()
@@ -84,7 +85,7 @@ function Page() {
 			void navigate({
 				to: '/learn/$lang/contributions',
 				params: { lang },
-				search: { contributionsTab: 'request' },
+				search: { contributionsTab: 'requests' },
 			})
 			toast.success('Your request has been created!')
 		},
