@@ -34,11 +34,13 @@ import {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+} from './schemas'
+import {
 	PhrasePlaylistSchema,
 	type PhrasePlaylistType,
 	PlaylistPhraseLinkSchema,
 	type PlaylistPhraseLinkType,
-} from './schemas'
+} from './schemas-playlist'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'

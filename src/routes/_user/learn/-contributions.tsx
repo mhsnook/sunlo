@@ -158,6 +158,8 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 		props.uid,
 		props.lang
 	)
+	const navigate = useNavigate()
+
 	return (
 		isLoading ? <Loader />
 		: !playlists || playlists.length === 0 ?
@@ -184,8 +186,29 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 			</Callout>
 		:	<div className="space-y-4">
 				{playlists.map((playlist) => (
-					<div key={playlist.id} className="space-y-2">
-						<PlaylistItem playlist={playlist} />
+					// oxlint-disable-next-line click-events-have-key-events
+					<div
+						key={playlist.id}
+						className="cursor-pointer hover:shadow"
+						// oxlint-disable-next-line jsx-no-new-function-as-prop
+						onClick={(e) => {
+							const target = e.target as HTMLElement
+							if (!e.currentTarget.contains(target)) return
+							if (target.closest('button, a, input')) return
+							void navigate({
+								to: '/learn/$lang/playlists/$playlistId',
+								params: { lang: playlist.lang, playlistId: playlist.id },
+							})
+						}}
+					>
+						<Link
+							to="/learn/$lang/playlists/$playlistId"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: playlist.lang, playlistId: playlist.id }}
+							className="block"
+						>
+							<PlaylistItem playlist={playlist} />
+						</Link>
 					</div>
 				))}
 			</div>

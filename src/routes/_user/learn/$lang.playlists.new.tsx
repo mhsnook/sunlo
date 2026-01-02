@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { useMutation } from '@tanstack/react-query'
@@ -15,27 +16,30 @@ import {
 	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
 } from '@/lib/schemas-playlist'
-import { PhraseFullSchema } from '@/lib/schemas'
 import {
 	phrasePlaylistsCollection,
-	phrasesCollection,
 	playlistPhraseLinksCollection,
 } from '@/lib/collections'
 import { Trash } from 'lucide-react'
+import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
-	component: RouteComponent,
+	component: NewPlaylistPage,
 })
 
 type CreatePlaylistRPCReturnType = {
 	playlist: Tables<'phrase_playlist'>
 	links: Tables<'playlist_phrase_link'>[]
-	new_phrases: Tables<'phrase'>[]
 }
 
-function RouteComponent() {
+// eslint-disable-next-line react-refresh/only-export-components
+function NewPlaylistPage() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
+
+	// Track selected phrase IDs separately from form state for the picker
+	const [selectedPhraseIds, setSelectedPhraseIds] = useState<string[]>([])
 
 	const form = useForm<PhrasePlaylistInsertType>({
 		resolver: zodResolver(PhrasePlaylistInsertSchema),
@@ -43,24 +47,26 @@ function RouteComponent() {
 			title: '',
 			description: '',
 			href: null,
-			phrases: [] as {
-				phrase_id: string
-				href: string | null
-			}[],
+			phrases: [],
 		},
 	})
 
 	const mutation = useMutation({
 		mutationKey: ['createPlaylist'],
 		mutationFn: async ({ phrases, ...values }: PhrasePlaylistInsertType) => {
-			// give the phrases array its order values
-			phrases = phrases.map((p, i) => ({ ...p, order: i }))
+			// Build phrases array with order values from selectedPhraseIds
+			const phrasesWithOrder = selectedPhraseIds.map((phrase_id, i) => ({
+				phrase_id,
+				href: phrases.find((p) => p.phrase_id === phrase_id)?.href ?? null,
+				order: i,
+			}))
 			// API call
 			const { data } = await supabase
 				.rpc('create_playlist_with_links', {
 					...values,
-					phrases,
+					phrases: phrasesWithOrder,
 					lang,
+					href: values.href ?? undefined,
 				})
 				.throwOnError()
 			return data as CreatePlaylistRPCReturnType
@@ -70,17 +76,12 @@ function RouteComponent() {
 			phrasePlaylistsCollection.utils.writeInsert(
 				PhrasePlaylistSchema.parse(data.playlist)
 			)
-			data.new_phrases.forEach((phrase) =>
-				phrasesCollection.utils.writeInsert(PhraseFullSchema.parse(phrase))
-			)
 			data.links.forEach((link) =>
 				playlistPhraseLinksCollection.utils.writeInsert(
 					PlaylistPhraseLinkSchema.parse(link)
 				)
 			)
-			toast.success(
-				`Added new playlist with ${data.links.length} flashcards, ${data.new_phrases.length} new phrases}`
-			)
+			toast.success(`Added new playlist with ${data.links.length} phrases`)
 			void navigate({
 				to: '/learn/$lang/playlists/$playlistId',
 				params: { lang, playlistId: data.playlist.id },
@@ -92,10 +93,9 @@ function RouteComponent() {
 		},
 	})
 
-	const { fields, append, remove } = useFieldArray({
-		control: form.control,
-		name: 'phrases',
-	})
+	const removePhrase = (phraseId: string) => {
+		setSelectedPhraseIds((ids) => ids.filter((id) => id !== phraseId))
+	}
 
 	return (
 		<div className="mx-auto max-w-2xl p-4">
@@ -136,9 +136,9 @@ function RouteComponent() {
 				</div>
 
 				<div className="space-y-2">
-					<Label htmlFor="title">Title</Label>
+					<Label htmlFor="href">Source Link</Label>
 					<Input
-						id="title"
+						id="href"
 						className={form.formState.errors.href ? 'border-red-500' : ''}
 						{...form.register('href')}
 						placeholder="https://youtube.com/watch?v=... or Spotify link"
@@ -154,20 +154,21 @@ function RouteComponent() {
 				</div>
 
 				<div className="space-y-3">
-					<Label>Phrases</Label>
-					{fields.map((field, index) => (
+					<Label>Phrases ({selectedPhraseIds.length})</Label>
+
+					{/* Display selected phrases */}
+					{selectedPhraseIds.map((phraseId) => (
 						<div
-							key={field.id}
-							className="flex items-center gap-2 rounded border bg-gray-50 p-2"
+							key={phraseId}
+							className="bg-muted/30 flex items-center gap-2 rounded border p-2"
 						>
-							{/* TODO: Replace this input with your Phrase Picker/Linker component */}
-							<Input
-								{...form.register(`phrases.${index}.phrase_id`)}
-								placeholder="Select a phrase..."
-							/>
+							<div className="flex-1">
+								<PhraseTinyCard pid={phraseId} nonInteractive />
+							</div>
 							<Button
+								type="button"
 								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onClick={() => remove(index)}
+								onClick={() => removePhrase(phraseId)}
 								variant="destructive-outline"
 								size="icon"
 							>
@@ -175,27 +176,40 @@ function RouteComponent() {
 							</Button>
 						</div>
 					))}
-					<Button
-						variant="dashed-w-full"
-						className={fields.length ? '' : 'h-24'}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onClick={() => append({ phrase_id: '', href: null })}
-					>
-						{fields.length ?
-							'+ Add another phrase'
-						:	'No phrases added yet. Click here to get started'}
-					</Button>
+
+					{/* Phrase picker with inline creation */}
+					<SelectPhrasesForComment
+						lang={lang}
+						selectedPhraseIds={selectedPhraseIds}
+						onSelectionChange={setSelectedPhraseIds}
+						maxPhrases={null}
+						triggerText={
+							selectedPhraseIds.length ? '+ Add more phrases' : (
+								'Add phrases to your playlist'
+							)
+						}
+					/>
 				</div>
 
 				<div className="flex justify-end gap-4 pt-4">
 					<Button
+						type="button"
 						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => window.history.back()}
 						variant="secondary"
 					>
 						Cancel
 					</Button>
-					<Button type="submit">Create Playlist</Button>
+					<Button
+						type="submit"
+						disabled={
+							mutation.isPending ||
+							!form.formState.isValid ||
+							selectedPhraseIds.length === 0
+						}
+					>
+						{mutation.isPending ? 'Creating...' : 'Create Playlist'}
+					</Button>
 				</div>
 			</form>
 		</div>

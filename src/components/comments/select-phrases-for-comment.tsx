@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Paperclip, Search } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import { Paperclip, Plus, Search } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
 import { Input } from '@/components/ui/input'
@@ -15,39 +15,69 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '../ui/dialog'
-import { PhraseTinyCard } from '../cards/phrase-tiny-card'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 
 interface SelectPhrasesForCommentProps {
 	lang: string
 	selectedPhraseIds: uuid[]
 	onSelectionChange: (phraseIds: uuid[]) => void
+	/** Maximum phrases allowed. Defaults to 4 for comments. Set to null for no limit. */
+	maxPhrases?: number | null
+	/** Custom trigger button text when no phrases selected */
+	triggerText?: string
+	/** Custom trigger button text when max is reached */
+	triggerMaxText?: string
 }
 
-const MAX_PHRASES = 4
+const DEFAULT_MAX_PHRASES = 4
 
 export function SelectPhrasesForComment({
 	lang,
 	selectedPhraseIds,
 	onSelectionChange,
+	maxPhrases = DEFAULT_MAX_PHRASES,
+	triggerText = 'Suggest a phrase',
+	triggerMaxText = 'Maximum flashcards reached',
 }: SelectPhrasesForCommentProps) {
 	const [searchText, setSearchText] = useState('')
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
+	const [showCreateForm, setShowCreateForm] = useState(false)
 
 	// Get all phrases for the language
 	const { data: filteredPhrases } = useLanguagePhrasesSearch(lang, searchText)
+
+	const effectiveMax = maxPhrases ?? Infinity
 
 	const handleToggle = (phraseId: uuid) => {
 		if (selectedPhraseIds.includes(phraseId)) {
 			onSelectionChange(selectedPhraseIds.filter((id) => id !== phraseId))
 		} else {
-			if (selectedPhraseIds.length >= MAX_PHRASES) {
-				return // Don't allow more than MAX_PHRASES
+			if (selectedPhraseIds.length >= effectiveMax) {
+				return // Don't allow more than max
 			}
 			onSelectionChange([...selectedPhraseIds, phraseId])
 		}
 	}
 
-	const isMaxReached = selectedPhraseIds.length >= MAX_PHRASES
+	const handlePhraseCreated = useCallback(
+		(phraseId: string) => {
+			// Auto-add the newly created phrase to selection
+			if (selectedPhraseIds.length < effectiveMax) {
+				onSelectionChange([...selectedPhraseIds, phraseId])
+			}
+			setShowCreateForm(false)
+		},
+		[selectedPhraseIds, effectiveMax, onSelectionChange]
+	)
+
+	const isMaxReached = selectedPhraseIds.length >= effectiveMax
+
+	// Format the count display
+	const countDisplay =
+		maxPhrases === null ?
+			`${selectedPhraseIds.length} selected`
+		:	`${selectedPhraseIds.length}/${maxPhrases}`
 
 	return (
 		<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
@@ -55,22 +85,20 @@ export function SelectPhrasesForComment({
 				<Button
 					type="button"
 					variant="outline"
-					disabled={selectedPhraseIds.length >= 4}
+					disabled={isMaxReached}
 					data-testid="open-phrase-picker"
 				>
 					<Paperclip className="mr-2 h-4 w-4" />
-					{selectedPhraseIds.length >= 4 ?
-						'Maximum flashcards reached'
-					:	'Suggest a phrase'}
+					{isMaxReached ? triggerMaxText : triggerText}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
 				<DialogHeader className="flex-none border-b p-6 pb-4">
-					<DialogTitle>
-						Select Flashcards ({selectedPhraseIds.length}/{MAX_PHRASES})
-					</DialogTitle>
+					<DialogTitle>Select Flashcards ({countDisplay})</DialogTitle>
 					<p className="text-muted-foreground text-sm">
-						Choose up to {MAX_PHRASES} flashcards to attach to your comment
+						{maxPhrases === null ?
+							'Select flashcards to add'
+						:	`Choose up to ${maxPhrases} flashcards`}
 					</p>
 
 					<div className="relative mt-2">
@@ -90,6 +118,30 @@ export function SelectPhrasesForComment({
 				<div className="min-h-0 overflow-hidden">
 					<ScrollArea className="h-full">
 						<div className="flex flex-col gap-2 p-6">
+							{/* Inline phrase creator */}
+							{showCreateForm && (
+								<InlinePhraseCreator
+									lang={lang}
+									onPhraseCreated={handlePhraseCreated}
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onCancel={() => setShowCreateForm(false)}
+								/>
+							)}
+
+							{/* Create new phrase button */}
+							{!showCreateForm && (
+								<Button
+									type="button"
+									variant="dashed-w-full"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onClick={() => setShowCreateForm(true)}
+									className="mb-2"
+								>
+									<Plus className="mr-2 h-4 w-4" />
+									Create new phrase
+								</Button>
+							)}
+
 							{!filteredPhrases?.length ?
 								<p className="text-muted-foreground py-8 text-center">
 									No phrases found

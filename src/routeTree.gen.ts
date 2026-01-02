@@ -45,6 +45,7 @@ import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friend
 import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
 import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
+import { Route as UserLearnLangPlaylistsRouteImport } from './routes/_user/learn/$lang.playlists'
 import { Route as UserLearnLangFeedRouteImport } from './routes/_user/learn/$lang.feed'
 import { Route as UserLearnLangDeckSettingsRouteImport } from './routes/_user/learn/$lang.deck-settings'
 import { Route as UserLearnLangContributionsRouteImport } from './routes/_user/learn/$lang.contributions'
@@ -256,6 +257,11 @@ const UserLearnLangReviewRoute = UserLearnLangReviewRouteImport.update({
   path: '/review',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
+const UserLearnLangPlaylistsRoute = UserLearnLangPlaylistsRouteImport.update({
+  id: '/playlists',
+  path: '/playlists',
+  getParentRoute: () => UserLearnLangRoute,
+} as any)
 const UserLearnLangFeedRoute = UserLearnLangFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -313,9 +319,9 @@ const UserLearnLangRequestsIndexRoute =
   } as any)
 const UserLearnLangPlaylistsIndexRoute =
   UserLearnLangPlaylistsIndexRouteImport.update({
-    id: '/playlists/',
-    path: '/playlists/',
-    getParentRoute: () => UserLearnLangRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => UserLearnLangPlaylistsRoute,
   } as any)
 const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
   id: '/go',
@@ -335,15 +341,15 @@ const UserLearnLangRequestsIdRoute = UserLearnLangRequestsIdRouteImport.update({
 } as any)
 const UserLearnLangPlaylistsNewRoute =
   UserLearnLangPlaylistsNewRouteImport.update({
-    id: '/playlists/new',
-    path: '/playlists/new',
-    getParentRoute: () => UserLearnLangRoute,
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => UserLearnLangPlaylistsRoute,
   } as any)
 const UserLearnLangPlaylistsPlaylistIdRoute =
   UserLearnLangPlaylistsPlaylistIdRouteImport.update({
-    id: '/playlists/$playlistId',
-    path: '/playlists/$playlistId',
-    getParentRoute: () => UserLearnLangRoute,
+    id: '/$playlistId',
+    path: '/$playlistId',
+    getParentRoute: () => UserLearnLangPlaylistsRoute,
   } as any)
 const UserFriendsChatsFriendUidRecommendRoute =
   UserFriendsChatsFriendUidRecommendRouteImport.update({
@@ -391,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
+  '/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
@@ -402,7 +409,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
-  '/learn/$lang/playlists': typeof UserLearnLangPlaylistsIndexRoute
+  '/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
   '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
@@ -496,6 +503,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/_user/learn/$lang/feed': typeof UserLearnLangFeedRoute
+  '/_user/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/_user/learn/$lang/stats': typeof UserLearnLangStatsRoute
@@ -552,6 +560,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/feed'
+    | '/learn/$lang/playlists'
     | '/learn/$lang/review'
     | '/learn/$lang/search'
     | '/learn/$lang/stats'
@@ -563,7 +572,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
-    | '/learn/$lang/playlists'
+    | '/learn/$lang/playlists/'
     | '/learn/$lang/requests'
     | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
@@ -656,6 +665,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/contributions'
     | '/_user/learn/$lang/deck-settings'
     | '/_user/learn/$lang/feed'
+    | '/_user/learn/$lang/playlists'
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
     | '/_user/learn/$lang/stats'
@@ -942,6 +952,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangReviewRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
+    '/_user/learn/$lang/playlists': {
+      id: '/_user/learn/$lang/playlists'
+      path: '/playlists'
+      fullPath: '/learn/$lang/playlists'
+      preLoaderRoute: typeof UserLearnLangPlaylistsRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
     '/_user/learn/$lang/feed': {
       id: '/_user/learn/$lang/feed'
       path: '/feed'
@@ -1014,10 +1031,10 @@ declare module '@tanstack/react-router' {
     }
     '/_user/learn/$lang/playlists/': {
       id: '/_user/learn/$lang/playlists/'
-      path: '/playlists'
-      fullPath: '/learn/$lang/playlists'
+      path: '/'
+      fullPath: '/learn/$lang/playlists/'
       preLoaderRoute: typeof UserLearnLangPlaylistsIndexRouteImport
-      parentRoute: typeof UserLearnLangRoute
+      parentRoute: typeof UserLearnLangPlaylistsRoute
     }
     '/_user/learn/$lang/review/go': {
       id: '/_user/learn/$lang/review/go'
@@ -1042,17 +1059,17 @@ declare module '@tanstack/react-router' {
     }
     '/_user/learn/$lang/playlists/new': {
       id: '/_user/learn/$lang/playlists/new'
-      path: '/playlists/new'
+      path: '/new'
       fullPath: '/learn/$lang/playlists/new'
       preLoaderRoute: typeof UserLearnLangPlaylistsNewRouteImport
-      parentRoute: typeof UserLearnLangRoute
+      parentRoute: typeof UserLearnLangPlaylistsRoute
     }
     '/_user/learn/$lang/playlists/$playlistId': {
       id: '/_user/learn/$lang/playlists/$playlistId'
-      path: '/playlists/$playlistId'
+      path: '/$playlistId'
       fullPath: '/learn/$lang/playlists/$playlistId'
       preLoaderRoute: typeof UserLearnLangPlaylistsPlaylistIdRouteImport
-      parentRoute: typeof UserLearnLangRoute
+      parentRoute: typeof UserLearnLangPlaylistsRoute
     }
     '/_user/friends/chats/$friendUid/recommend': {
       id: '/_user/friends/chats/$friendUid/recommend'
@@ -1143,6 +1160,25 @@ const UserFriendsRouteWithChildren = UserFriendsRoute._addFileChildren(
   UserFriendsRouteChildren,
 )
 
+interface UserLearnLangPlaylistsRouteChildren {
+  UserLearnLangPlaylistsPlaylistIdRoute: typeof UserLearnLangPlaylistsPlaylistIdRoute
+  UserLearnLangPlaylistsNewRoute: typeof UserLearnLangPlaylistsNewRoute
+  UserLearnLangPlaylistsIndexRoute: typeof UserLearnLangPlaylistsIndexRoute
+}
+
+const UserLearnLangPlaylistsRouteChildren: UserLearnLangPlaylistsRouteChildren =
+  {
+    UserLearnLangPlaylistsPlaylistIdRoute:
+      UserLearnLangPlaylistsPlaylistIdRoute,
+    UserLearnLangPlaylistsNewRoute: UserLearnLangPlaylistsNewRoute,
+    UserLearnLangPlaylistsIndexRoute: UserLearnLangPlaylistsIndexRoute,
+  }
+
+const UserLearnLangPlaylistsRouteWithChildren =
+  UserLearnLangPlaylistsRoute._addFileChildren(
+    UserLearnLangPlaylistsRouteChildren,
+  )
+
 interface UserLearnLangReviewRouteChildren {
   UserLearnLangReviewGoRoute: typeof UserLearnLangReviewGoRoute
   UserLearnLangReviewIndexRoute: typeof UserLearnLangReviewIndexRoute
@@ -1163,15 +1199,13 @@ interface UserLearnLangRouteChildren {
   UserLearnLangContributionsRoute: typeof UserLearnLangContributionsRoute
   UserLearnLangDeckSettingsRoute: typeof UserLearnLangDeckSettingsRoute
   UserLearnLangFeedRoute: typeof UserLearnLangFeedRoute
+  UserLearnLangPlaylistsRoute: typeof UserLearnLangPlaylistsRouteWithChildren
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
   UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
   UserLearnLangStatsRoute: typeof UserLearnLangStatsRoute
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
-  UserLearnLangPlaylistsPlaylistIdRoute: typeof UserLearnLangPlaylistsPlaylistIdRoute
-  UserLearnLangPlaylistsNewRoute: typeof UserLearnLangPlaylistsNewRoute
   UserLearnLangRequestsIdRoute: typeof UserLearnLangRequestsIdRoute
   UserLearnLangRequestsNewRoute: typeof UserLearnLangRequestsNewRoute
-  UserLearnLangPlaylistsIndexRoute: typeof UserLearnLangPlaylistsIndexRoute
   UserLearnLangRequestsIndexRoute: typeof UserLearnLangRequestsIndexRoute
 }
 
@@ -1182,15 +1216,13 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangContributionsRoute: UserLearnLangContributionsRoute,
   UserLearnLangDeckSettingsRoute: UserLearnLangDeckSettingsRoute,
   UserLearnLangFeedRoute: UserLearnLangFeedRoute,
+  UserLearnLangPlaylistsRoute: UserLearnLangPlaylistsRouteWithChildren,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
   UserLearnLangSearchRoute: UserLearnLangSearchRoute,
   UserLearnLangStatsRoute: UserLearnLangStatsRoute,
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
-  UserLearnLangPlaylistsPlaylistIdRoute: UserLearnLangPlaylistsPlaylistIdRoute,
-  UserLearnLangPlaylistsNewRoute: UserLearnLangPlaylistsNewRoute,
   UserLearnLangRequestsIdRoute: UserLearnLangRequestsIdRoute,
   UserLearnLangRequestsNewRoute: UserLearnLangRequestsNewRoute,
-  UserLearnLangPlaylistsIndexRoute: UserLearnLangPlaylistsIndexRoute,
   UserLearnLangRequestsIndexRoute: UserLearnLangRequestsIndexRoute,
 }
 
