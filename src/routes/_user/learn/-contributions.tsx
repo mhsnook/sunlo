@@ -201,14 +201,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 							})
 						}}
 					>
-						<Link
-							to="/learn/$lang/playlists/$playlistId"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
-							params={{ lang: playlist.lang, playlistId: playlist.id }}
-							className="block"
-						>
-							<PlaylistItem playlist={playlist} />
-						</Link>
+						<PlaylistItem playlist={playlist} />
 					</div>
 				))}
 			</div>
