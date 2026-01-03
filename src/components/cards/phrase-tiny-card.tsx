@@ -54,7 +54,7 @@ export const PhraseTinyCard = ({
 	return (
 		<Link
 			className={cn(`m-1 transition-all hover:-translate-y-px`, className)}
-			to="/learn/$lang/$id"
+			to="/learn/$lang/phrases/$id"
 			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>

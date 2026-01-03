@@ -154,7 +154,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					</Button>
 				</Flagged>
 				<CopyLinkButton
-					url={`${window.location.host}/learn/${phrase.lang}/${pid}`}
+					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
 					variant="outline"
 					size="default"
 				/>
