@@ -186,7 +186,7 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 			<DropdownMenuContent align="end" className="w-56">
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<PermalinkButton
-						to={'/learn/$lang/$id'}
+						to={'/learn/$lang/phrases/$id'}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: phrase.lang, id: phrase.id }}
 						className="w-full px-2 py-1.5"

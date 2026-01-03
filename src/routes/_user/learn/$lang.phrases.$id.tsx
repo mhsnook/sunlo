@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import { CSSProperties } from 'react'
 
-export const Route = createFileRoute('/_user/learn/$lang/$id')({
+export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	component: RouteComponent,
 })
 

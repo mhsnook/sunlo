@@ -112,7 +112,7 @@ function RouteComponent() {
 									size="icon"
 									from={Route.fullPath}
 									text=""
-									to="/learn/$lang/$id"
+									to="/learn/$lang/phrases/$id"
 									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ lang: phrase.lang, id: phrase.id }}
 								/>
