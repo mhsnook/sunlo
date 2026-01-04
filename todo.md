@@ -33,7 +33,6 @@ EPIC OF SIGNUPS AND GETTING STARTED AND CONNECTING FRIENDS
      - ✅ original invite needs to embed the friend's uid
      - ✅ grab the url argument and save it when the temp user is created
      - ✅ detect the friend uid in the user object for the first-redirect after getting-started
-1. the unauthenticated find-a-friend page should prompt you to sign in/sign up if you try to interact
 
 EDGE CASES LEFT BEHIND
 
