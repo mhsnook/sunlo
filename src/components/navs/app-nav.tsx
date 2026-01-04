@@ -1,9 +1,8 @@
-import { memo, useCallback, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Link, useMatches } from '@tanstack/react-router'
 import { MoreVertical } from 'lucide-react'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
 
-import type { NavbarMatch } from './types'
 import {
 	NavigationMenu,
 	NavigationMenuItem,
@@ -21,12 +20,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-
-export function AppNav() {
-	const matches: NavbarMatch[] = useMatches()
-	if (matches.some((match) => match.status === 'pending')) return null
-	return <Nav matches={matches} />
-}
+import type { MyRouterContext } from '@/routes/__root'
 
 const activeProps = {
 	className: 'border-primary text-primary-foresoft',
@@ -37,9 +31,18 @@ const inactiveProps = {
 	className: 'border-transparent text-muted-foreground',
 } as const
 
-const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
-	const match = matches.findLast((m) => !!m.loaderData?.appnav)
-	const links = useLinks(match?.loaderData?.appnav)
+export function AppNav() {
+	const matches = useMatches()
+	const appnavMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.appnav
+	)
+	const appnav = (appnavMatch?.context as MyRouterContext)?.appnav
+	const contextMenuMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.contextMenu
+	)
+	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
+		?.contextMenu
+	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
 		root: null,
@@ -80,17 +83,17 @@ const Nav = memo(function Nav({ matches }: { matches: NavbarMatch[] }) {
 					</NavigationMenu>
 					<ScrollBar orientation="horizontal" />
 				</ScrollArea>
-				<ContextMenu matches={matches} />
+				<ContextMenu contextMenu={contextMenu} />
 			</div>
 		</>
 	)
-})
+}
 
-function ContextMenu({ matches }: { matches: NavbarMatch[] }) {
+function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 	const [isOpen, setIsOpen] = useState(false)
 	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
-	const match = matches.findLast((m) => !!m?.loaderData?.contextMenu)
-	const links = useLinks(match?.loaderData?.contextMenu)
+	const links = useLinks(contextMenu)
+
 	if (!links || !links.length) return null
 
 	return (

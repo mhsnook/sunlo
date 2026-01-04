@@ -33,7 +33,7 @@ export type MenuType = LinkType & {
 export type TitleBar = {
 	title: string
 	subtitle?: string
-	onBackClick?: string | (() => void)
+	onBackClick?: string
 }
 
 export type RPCFunctions = Database['public']['Functions']

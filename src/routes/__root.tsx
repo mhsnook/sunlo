@@ -14,10 +14,14 @@ import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Button } from '@/components/ui/button'
 import { OctogonMinusDangerBadge } from '@/components/ui/badge'
+import { TitleBar } from '@/types/main'
 
 export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
+	titleBar?: TitleBar
+	appnav?: string[]
+	contextMenu?: string[]
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

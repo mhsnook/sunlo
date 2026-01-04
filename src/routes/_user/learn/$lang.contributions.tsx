@@ -12,14 +12,14 @@ import { UserContributionsTabs } from '@/lib/schemas'
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 	validateSearch: UserContributionsTabs,
 	component: Page,
-	loader: async ({ params: { lang } }) => {
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Contributions to the ${languages[lang]} Library`,
+			subtitle: '',
+		},
+	}),
+	loader: async () => {
 		await phraseRequestsCollection.preload()
-		return {
-			titleBar: {
-				title: `Contributions to the ${languages[lang]} Library`,
-				subtitle: '',
-			},
-		}
 	},
 })
 
