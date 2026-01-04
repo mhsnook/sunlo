@@ -58,6 +58,11 @@ type BulkAddPhrasesFormValues = z.infer<typeof BulkAddPhrasesSchema>
 
 export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 	component: BulkAddPhrasesPage,
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Bulk Add ${languages[lang]} Phrases`,
+		},
+	}),
 })
 
 const style = { viewTransitionName: `main-area` } as CSSProperties

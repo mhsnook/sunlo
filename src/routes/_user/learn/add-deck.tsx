@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_user/learn/add-deck')({
 	validateSearch: SearchSchema,
 	beforeLoad: () => ({
 		titleBar: {
-			title: 'Start Learning a New Language',
+			title: 'Start A New Deck of Flashcards',
 		},
 	}),
 	component: NewDeckForm,

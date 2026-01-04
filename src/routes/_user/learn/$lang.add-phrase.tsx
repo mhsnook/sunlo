@@ -46,6 +46,11 @@ export const Route = createFileRoute('/_user/learn/$lang/add-phrase')({
 			text: (search?.text as string) ?? '',
 		}
 	},
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Add ${languages[lang]} Phrase`,
+		},
+	}),
 	loader: async () => {
 		await cardsCollection.preload()
 	},

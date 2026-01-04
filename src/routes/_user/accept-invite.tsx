@@ -33,6 +33,11 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute('/_user/accept-invite')({
 	validateSearch: SearchSchema,
+	beforeLoad: () => ({
+		titleBar: {
+			title: 'Accept Invite',
+		},
+	}),
 	component: AcceptInvitePage,
 })
 
