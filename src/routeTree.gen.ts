@@ -23,7 +23,6 @@ import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSetNewPasswordRouteImport } from './routes/_auth/set-new-password'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
-import { Route as AuthFindAFriendRouteImport } from './routes/_auth/find-a-friend'
 import { Route as UserProfileIndexRouteImport } from './routes/_user/profile/index'
 import { Route as UserLearnIndexRouteImport } from './routes/_user/learn/index'
 import { Route as UserFriendsIndexRouteImport } from './routes/_user/friends/index'
@@ -143,11 +142,6 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
-  getParentRoute: () => AuthRoute,
-} as any)
-const AuthFindAFriendRoute = AuthFindAFriendRouteImport.update({
-  id: '/find-a-friend',
-  path: '/find-a-friend',
   getParentRoute: () => AuthRoute,
 } as any)
 const UserProfileIndexRoute = UserProfileIndexRouteImport.update({
@@ -363,7 +357,6 @@ export interface FileRoutesByFullPath {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/find-a-friend': typeof AuthFindAFriendRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -418,7 +411,6 @@ export interface FileRoutesByTo {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/find-a-friend': typeof AuthFindAFriendRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -469,7 +461,6 @@ export interface FileRoutesById {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/_auth/find-a-friend': typeof AuthFindAFriendRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
@@ -526,7 +517,6 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
-    | '/find-a-friend'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -581,7 +571,6 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
-    | '/find-a-friend'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -631,7 +620,6 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
-    | '/_auth/find-a-friend'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/set-new-password'
@@ -796,13 +784,6 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_auth/find-a-friend': {
-      id: '/_auth/find-a-friend'
-      path: '/find-a-friend'
-      fullPath: '/find-a-friend'
-      preLoaderRoute: typeof AuthFindAFriendRouteImport
       parentRoute: typeof AuthRoute
     }
     '/_user/profile/': {
@@ -1082,7 +1063,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthRouteChildren {
-  AuthFindAFriendRoute: typeof AuthFindAFriendRoute
   AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthSetNewPasswordRoute: typeof AuthSetNewPasswordRoute
@@ -1090,7 +1070,6 @@ interface AuthRouteChildren {
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthFindAFriendRoute: AuthFindAFriendRoute,
   AuthForgotPasswordRoute: AuthForgotPasswordRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthSetNewPasswordRoute: AuthSetNewPasswordRoute,
