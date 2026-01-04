@@ -4,8 +4,6 @@ import * as z from 'zod'
 import { Construction, MessageSquareQuote } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button-variants'
-
-import type { TitleBar } from '@/types/main'
 import {
 	useMyFriendsRequestsLang,
 	usePopularRequestsLang,
@@ -23,12 +21,12 @@ const SearchSchema = z.object({
 export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	validateSearch: SearchSchema,
 	component: DeckFeedPage,
-	loader: ({ params: { lang } }) => ({
+	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
 			title: `Requests for ${languages[lang]} Phrases`,
-			subtitle: `See what people are learning all across the network`,
+			subtitle: 'See what people are learning all across the network',
 			onBackClick: '/learn',
-		} as TitleBar,
+		},
 	}),
 })
 

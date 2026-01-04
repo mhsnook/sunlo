@@ -19,6 +19,12 @@ import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
+	beforeLoad: () => ({
+		titleBar: {
+			title: 'Chat',
+		},
+		appnav: [],
+	}),
 })
 
 function ChatPage() {

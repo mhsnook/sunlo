@@ -23,10 +23,6 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		const daysLoaded = reviewDaysCollection.preload()
 		const reviewsLoaded = cardReviewsCollection.preload()
 		await Promise.all([daysLoaded, reviewsLoaded])
-
-		return {
-			appnav: [],
-		}
 	},
 })
 

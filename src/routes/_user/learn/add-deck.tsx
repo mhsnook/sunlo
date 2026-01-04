@@ -1,5 +1,3 @@
-import type { TitleBar } from '@/types/main'
-
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useController, useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -26,10 +24,10 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute('/_user/learn/add-deck')({
 	validateSearch: SearchSchema,
-	loader: () => ({
+	beforeLoad: () => ({
 		titleBar: {
-			title: `Start Learning a New Language`,
-		} as TitleBar,
+			title: 'Start Learning a New Language',
+		},
 	}),
 	component: NewDeckForm,
 })

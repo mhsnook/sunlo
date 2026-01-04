@@ -1,15 +1,9 @@
-import { TitleBar } from '@/types/main'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_user/profile')({
-	component: ProfilePage,
-	loader: () => ({
+	beforeLoad: () => ({
 		titleBar: {
-			title: `Manage your Profile`,
-		} as TitleBar,
+			title: 'Manage your Profile',
+		},
 	}),
 })
-
-function ProfilePage() {
-	return <Outlet />
-}

@@ -1,5 +1,3 @@
-import { TitleBar } from '@/types/main'
-
 import { useState } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import languages from '@/lib/languages'
@@ -8,13 +6,13 @@ import { ReviewStoreProvider } from '@/components/review/review-context-provider
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
-	loader: ({ params: { lang } }) => {
-		return {
-			titleBar: {
-				title: `Review ${languages[lang]} cards`,
-			} as TitleBar,
-		}
-	},
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Review ${languages[lang]} cards`,
+			onBackClick: '/learn/$lang',
+		},
+		appnav: [],
+	}),
 })
 
 function ReviewPage() {

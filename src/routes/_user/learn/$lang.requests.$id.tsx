@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		showSubthread: z.string().uuid().optional(),
 		highlightComment: z.string().uuid().optional(),
 	}),
-	loader: ({ params: { lang } }) => ({
+	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),

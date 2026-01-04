@@ -5,7 +5,6 @@ import { Loader } from '@/components/ui/loader'
 import { useOnePlaylist, useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import languages from '@/lib/languages'
-import { TitleBar } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { HeartPlus } from 'lucide-react'
 import Flagged from '@/components/flagged'
@@ -15,11 +14,12 @@ export const Route = createFileRoute(
 	'/_user/learn/$lang/playlists/$playlistId'
 )({
 	component: PlaylistPage,
-	loader: ({ params }) => ({
+	beforeLoad: ({ params }) => ({
 		titleBar: {
 			title: `Playlist of ${languages[params.lang]} Flashcards`,
-			subtitle: ``,
-		} as TitleBar,
+			subtitle: '',
+		},
+		appnav: [],
 	}),
 })
 

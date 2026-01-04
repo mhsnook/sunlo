@@ -2,42 +2,43 @@ import { useEffectEvent } from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-import { useMatches, useNavigate, useRouter } from '@tanstack/react-router'
+import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
-import { NavbarMatch } from './types'
 import { useCanGoBack } from '@tanstack/react-router'
+import type { MyRouterContext } from '@/routes/__root'
 
 export default function Navbar() {
-	const matches = useMatches()
-	if (matches.some((match) => match.status === 'pending')) return null
-
 	return (
 		<nav className="flex items-center justify-between gap-4 border-b px-2 py-3">
 			<div className="flex h-12 items-center">
-				<Title matches={matches} />
+				<Title />
 			</div>
 			<SidebarTrigger />
 		</nav>
 	)
 }
 
-function Title({ matches }: { matches: NavbarMatch[] }) {
+function Title() {
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
+	const matches = useMatches()
 
-	const match = matches.findLast((m) => !!m?.loaderData?.titleBar)
-	const titleBar = match?.loaderData?.titleBar
+	const titleBarMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.titleBar
+	)
+	const titleBar = (titleBarMatch?.context as MyRouterContext)?.titleBar
+
+	const onBackClick =
+		titleBar && 'onBackClick' in titleBar ? titleBar.onBackClick : null
 
 	const goBackOrToStringUrl = useEffectEvent(() => {
-		if (canGoBack && (titleBar?.onBackClick === '<' || !titleBar?.onBackClick))
-			document.startViewTransition(() => router.history.back())
-		else if (typeof titleBar?.onBackClick === 'function')
-			titleBar?.onBackClick()
-		else if (typeof titleBar?.onBackClick === 'string')
+		if (onBackClick)
 			void navigate({
-				to: titleBar?.onBackClick,
+				to: onBackClick,
 			})
+		else if (canGoBack)
+			document.startViewTransition(() => router.history.back())
 		else
 			void navigate({
 				to: '..',
