@@ -39,9 +39,14 @@ export function SelectMultipleFriends({
 								<img
 									src={avatarUrlify(f.profile.avatar_path)}
 									alt={`${f.profile.username}'s avatar`}
-									className="size-8 rounded-full object-cover"
+									className="rounded-squircle size-8 rounded-full object-cover"
 								/>
-							:	<User className="bg-foreground/20 size-8 rounded-full p-1" />}
+							:	<User
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									style={{ background: `#${f.profile.uid.slice(-6)}44` }}
+									className="rounded-squircle size-8 rounded-full p-1"
+								/>
+							}
 							<span>{f.profile.username}</span>
 						</div>
 						<Checkbox

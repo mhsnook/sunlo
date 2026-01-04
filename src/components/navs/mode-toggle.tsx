@@ -29,7 +29,7 @@ export function ModeToggle() {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-2xl shadow group-data-[collapsible=icon]:p-2!"
+							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow group-data-[collapsible=icon]:p-2!"
 						>
 							<Sun className="h-[1.3rem] w-[1.3rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
 							<Moon className="absolute h-[1.3rem] w-[1.3rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
@@ -41,7 +41,7 @@ export function ModeToggle() {
 					</DropdownMenuTrigger>
 
 					<DropdownMenuContent
-						className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+						className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
 						side={isMobile ? 'bottom' : 'right'}
 						align="end"
 						sideOffset={4}

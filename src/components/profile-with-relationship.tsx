@@ -18,7 +18,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 					{inviteResponseMutation.isPending ?
 						<IconSizedLoader />
 					: inviteResponseMutation.isSuccess ?
-						<span className="size-8 rounded-full bg-green-600 p-1">
+						<span className="rounded-squircle size-8 rounded-full bg-green-600 p-1">
 							<Check className="size-6 text-white" />
 						</span>
 					: !profile.relation || profile.relation.status === 'unconnected' ?
