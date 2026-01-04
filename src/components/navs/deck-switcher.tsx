@@ -44,7 +44,7 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 	const languageName = lang ? languages[lang] : null
 
 	return (
-		<SidebarMenu className="rounded-2xl shadow">
+		<SidebarMenu>
 			<SidebarMenuItem>
 				{deckMenuData === undefined ?
 					<div style={sizeStyles} />
@@ -52,9 +52,9 @@ export function DeckSwitcher({ lang }: { lang?: string }) {
 						<DropdownMenuTrigger asChild>
 							<SidebarMenuButton
 								size="lg"
-								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
 							>
-								<div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+								<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
 									<GalleryHorizontalEnd />
 								</div>
 								<div className="grid flex-1 text-left text-sm leading-tight">
