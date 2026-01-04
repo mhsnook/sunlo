@@ -31,6 +31,9 @@ import { phraseRequestsCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: NewRequestPage,
+	beforeLoad: () => ({
+		titleBar: { title: 'New Request Post' },
+	}),
 })
 
 const RequestPhraseSchema = z.object({

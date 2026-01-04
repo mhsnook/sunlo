@@ -23,9 +23,15 @@ import {
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import languages from '@/lib/languages'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
 	component: NewPlaylistPage,
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Add ${languages[lang]} Playlist`,
+		},
+	}),
 })
 
 type CreatePlaylistRPCReturnType = {
