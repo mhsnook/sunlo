@@ -195,9 +195,7 @@ export function removeSbTokens() {
 export function useOneRandomly<T>(array: T[]) {
 	const [index] = useState(() => {
 		const r = Math.random()
-		console.log({ r, len: array.length, times: array.length * r })
 		return Array.isArray(array) ? Math.floor(r * array.length) : 0
 	})
-	console.log({ index })
 	return array[index]
 }
