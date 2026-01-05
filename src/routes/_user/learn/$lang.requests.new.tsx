@@ -61,7 +61,7 @@ const placeholders = [
 	`Hey everyone, how do I say: "this is delicious" in a casual way?`,
 	`I'm meeting a friend's parents and I want to thank them for showing me around`,
 	`Hey chat, I'm trying to better understand this song lyric...`,
-	`Is there poetry in your language about garlic and now good it is?`,
+	`Is there poetry in your language about garlic and how good it is?`,
 ]
 
 // eslint-disable-next-line react-refresh/only-export-components

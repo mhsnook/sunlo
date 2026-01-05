@@ -213,6 +213,36 @@ export async function deleteDeck(lang: string, uid: string) {
 }
 
 // ============================================================================
+// PLAYLIST HELPERS
+// ============================================================================
+
+export async function createPlaylist(params: {
+	lang: string
+	title: string
+	description?: string
+}) {
+	const { lang, title, description } = params
+	const { data: playlist } = await supabase
+		.from('phrase_playlist')
+		.insert({
+			lang,
+			title,
+			description,
+			uid: TEST_USER_UID,
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	if (!playlist) throw new Error('Failed to create playlist')
+	return playlist
+}
+
+export async function deletePlaylist(id: string) {
+	await supabase.from('phrase_playlist').delete().eq('id', id).throwOnError()
+}
+
+// ============================================================================
 // REVIEW HELPERS
 // ============================================================================
 
@@ -356,6 +386,8 @@ const tableOrder = [
 	'phrase',
 	'tag',
 	'phrase_request',
+	'playlist_phrase_link',
+	'phrase_playlist',
 	'friend_request_action',
 	'user_profile',
 ] as const

@@ -1255,6 +1255,17 @@ export type Database = {
 			}
 		}
 		Views: {
+			feed_activities: {
+				Row: {
+					created_at: string | null
+					id: string | null
+					lang: string | null
+					payload: Json | null
+					type: string | null
+					uid: string | null
+				}
+				Relationships: []
+			}
 			friend_summary: {
 				Row: {
 					most_recent_action_type:

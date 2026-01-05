@@ -32,8 +32,6 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
-create extension if not exists "pgsodium";
-
 alter schema "public" owner to "postgres";
 
 comment on schema "public" is '@graphql({"inflect_names": true})';
@@ -955,6 +953,131 @@ create table if not exists
 alter table "public"."comment_upvote" owner to "postgres";
 
 create table if not exists
+	"public"."phrase" (
+		"text" "text" not null,
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"added_by" "uuid" default "auth"."uid" () not null,
+		"lang" character varying not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"text_script" "text"
+	);
+
+alter table "public"."phrase" owner to "postgres";
+
+comment on column "public"."phrase"."added_by" is 'User who added this card';
+
+comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+create table if not exists
+	"public"."phrase_playlist" (
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"title" "text" not null,
+		"description" "text",
+		"href" "text",
+		"created_at" timestamp with time zone default "now" () not null,
+		"lang" character varying not null
+	);
+
+alter table "public"."phrase_playlist" owner to "postgres";
+
+create table if not exists
+	"public"."phrase_request" (
+		"id" "uuid" default "gen_random_uuid" () not null,
+		"created_at" timestamp with time zone default "now" () not null,
+		"requester_uid" "uuid" not null,
+		"lang" character varying not null,
+		"prompt" "text" not null,
+		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
+		"upvote_count" integer default 0 not null
+	);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists
+	"public"."playlist_phrase_link" (
+		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+		"uid" "uuid" default "auth"."uid" () not null,
+		"phrase_id" "uuid" not null,
+		"playlist_id" "uuid" not null,
+		"order" double precision,
+		"href" "text",
+		"created_at" timestamp with time zone default "now" () not null
+	);
+
+alter table "public"."playlist_phrase_link" owner to "postgres";
+
+create or replace view
+	"public"."feed_activities" as
+select
+	"pr"."id",
+	'request'::"text" as "type",
+	"pr"."created_at",
+	"pr"."lang",
+	"pr"."requester_uid" as "uid",
+	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
+from
+	"public"."phrase_request" "pr"
+union all
+select
+	"pp"."id",
+	'playlist'::"text" as "type",
+	"pp"."created_at",
+	"pp"."lang",
+	"pp"."uid",
+	"jsonb_build_object" ('title', "pp"."title", 'description', "pp"."description") as "payload"
+from
+	"public"."phrase_playlist" "pp"
+union all
+select distinct
+	on ("p"."id") "p"."id",
+	'phrase'::"text" as "type",
+	"p"."created_at",
+	"p"."lang",
+	"p"."added_by" as "uid",
+	"jsonb_build_object" (
+		'text',
+		"p"."text",
+		'source',
+		case
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
+				'type',
+				'request',
+				'id',
+				"cpl"."request_id",
+				'comment_id',
+				"cpl"."comment_id"
+			)
+			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
+				'type',
+				'playlist',
+				'id',
+				"ppl"."playlist_id",
+				'title',
+				"playlist"."title",
+				'follows',
+				("p"."count_active" + "p"."count_learned")::integer
+			)
+			else null::"jsonb"
+		end
+	) as "payload"
+from
+	(
+		(
+			(
+				"public"."meta_phrase_info" "p"
+				left join "public"."comment_phrase_link" "cpl" on (("p"."id" = "cpl"."phrase_id"))
+			)
+			left join "public"."playlist_phrase_link" "ppl" on (("p"."id" = "ppl"."phrase_id"))
+		)
+		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
+	)
+where
+	("p"."added_by" is not null);
+
+alter table "public"."feed_activities" owner to "postgres";
+
+create table if not exists
 	"public"."friend_request_action" (
 		"id" "uuid" default "gen_random_uuid" () not null,
 		"uid_by" "uuid" not null,
@@ -1019,22 +1142,6 @@ create table if not exists
 alter table "public"."language" owner to "postgres";
 
 comment on table "public"."language" is 'The languages that people are trying to learn';
-
-create table if not exists
-	"public"."phrase" (
-		"text" "text" not null,
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" () not null,
-		"lang" character varying not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"text_script" "text"
-	);
-
-alter table "public"."phrase" owner to "postgres";
-
-comment on column "public"."phrase"."added_by" is 'User who added this card';
-
-comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
 create table if not exists
 	"public"."user_deck" (
@@ -1384,19 +1491,6 @@ from
 alter table "public"."meta_phrase_info" owner to "postgres";
 
 create table if not exists
-	"public"."phrase_playlist" (
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"title" "text" not null,
-		"description" "text",
-		"href" "text",
-		"created_at" timestamp with time zone default "now" () not null,
-		"lang" character varying not null
-	);
-
-alter table "public"."phrase_playlist" owner to "postgres";
-
-create table if not exists
 	"public"."phrase_relation" (
 		"from_phrase_id" "uuid",
 		"to_phrase_id" "uuid",
@@ -1407,19 +1501,6 @@ create table if not exists
 alter table "public"."phrase_relation" owner to "postgres";
 
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
-
-create table if not exists
-	"public"."phrase_request" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"requester_uid" "uuid" not null,
-		"lang" character varying not null,
-		"prompt" "text" not null,
-		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"upvote_count" integer default 0 not null
-	);
-
-alter table "public"."phrase_request" owner to "postgres";
 
 create table if not exists
 	"public"."phrase_request_upvote" (
@@ -1449,19 +1530,6 @@ comment on table "public"."phrase_translation" is 'A translation of one phrase i
 comment on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-create table if not exists
-	"public"."playlist_phrase_link" (
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"phrase_id" "uuid" not null,
-		"playlist_id" "uuid" not null,
-		"order" double precision,
-		"href" "text",
-		"created_at" timestamp with time zone default "now" () not null
-	);
-
-alter table "public"."playlist_phrase_link" owner to "postgres";
 
 create table if not exists
 	"public"."request_comment" (
@@ -2641,7 +2709,6 @@ grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") t
 
 grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "service_role";
 
-grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "postgres";
 
 grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "authenticated";
 
@@ -2651,7 +2718,6 @@ grant all on function "public"."update_comment_upvote_count" () to "authenticate
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
-grant all on function "public"."update_phrase_request_upvote_count" () to "postgres";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
@@ -2675,6 +2741,38 @@ grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
 
+grant all on table "public"."phrase" to "anon";
+
+grant all on table "public"."phrase" to "authenticated";
+
+grant all on table "public"."phrase" to "service_role";
+
+grant all on table "public"."phrase_playlist" to "anon";
+
+grant all on table "public"."phrase_playlist" to "authenticated";
+
+grant all on table "public"."phrase_playlist" to "service_role";
+
+grant all on table "public"."phrase_request" to "anon";
+
+grant all on table "public"."phrase_request" to "authenticated";
+
+grant all on table "public"."phrase_request" to "service_role";
+
+grant all on table "public"."playlist_phrase_link" to "anon";
+
+grant all on table "public"."playlist_phrase_link" to "authenticated";
+
+grant all on table "public"."playlist_phrase_link" to "service_role";
+
+grant all on table "public"."feed_activities" to "anon";
+
+grant all on table "public"."feed_activities" to "authenticated";
+
+grant all on table "public"."feed_activities" to "service_role";
+
+grant all on table "public"."friend_request_action" to "anon";
+
 grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
@@ -2688,12 +2786,6 @@ grant all on table "public"."language" to "anon";
 grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
-
-grant all on table "public"."phrase" to "anon";
-
-grant all on table "public"."phrase" to "authenticated";
-
-grant all on table "public"."phrase" to "service_role";
 
 grant all on table "public"."user_deck" to "authenticated";
 
@@ -2737,27 +2829,12 @@ grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
 
-grant all on table "public"."phrase_playlist" to "postgres";
-
-grant all on table "public"."phrase_playlist" to "anon";
-
-grant all on table "public"."phrase_playlist" to "authenticated";
-
-grant all on table "public"."phrase_playlist" to "service_role";
-
 grant all on table "public"."phrase_relation" to "anon";
 
 grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
 
-grant all on table "public"."phrase_request" to "anon";
-
-grant all on table "public"."phrase_request" to "authenticated";
-
-grant all on table "public"."phrase_request" to "service_role";
-
-grant all on table "public"."phrase_request_upvote" to "postgres";
 
 grant all on table "public"."phrase_request_upvote" to "authenticated";
 
@@ -2768,14 +2845,6 @@ grant all on table "public"."phrase_translation" to "anon";
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
-
-grant all on table "public"."playlist_phrase_link" to "postgres";
-
-grant all on table "public"."playlist_phrase_link" to "anon";
-
-grant all on table "public"."playlist_phrase_link" to "authenticated";
-
-grant all on table "public"."playlist_phrase_link" to "service_role";
 
 grant all on table "public"."request_comment" to "anon";
 
