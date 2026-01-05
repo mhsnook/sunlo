@@ -1,7 +1,7 @@
 import { Activity, type CSSProperties, useCallback } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { Construction, MessageSquareQuote } from 'lucide-react'
+import { Construction } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button-variants'
 import {
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
+import { PlusMenu } from '@/components/plus-menu'
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
@@ -23,7 +24,7 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	component: DeckFeedPage,
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
-			title: `Requests for ${languages[lang]} Phrases`,
+			title: `Activity feed for ${languages[lang]}`,
 			subtitle: 'See what people are learning all across the network',
 			onBackClick: '/learn',
 		},
@@ -43,6 +44,7 @@ function DeckFeedPage() {
 		[navigate]
 	)
 	const search = Route.useSearch()
+	const params = Route.useParams()
 	const activeTab = search.feed ?? 'newest'
 	return (
 		<main style={style}>
@@ -60,19 +62,7 @@ function DeckFeedPage() {
 								Popular
 							</TabsTrigger>
 						</TabsList>
-						<Link
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-							className={
-								`${buttonVariants({
-									variant: 'outline',
-									size: 'sm',
-								})}` as const
-							}
-						>
-							<MessageSquareQuote className="size-3" />
-							<span className="me-1">New request</span>
-						</Link>
+						<PlusMenu lang={params.lang} />
 					</div>
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>

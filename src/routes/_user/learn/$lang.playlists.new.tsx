@@ -205,7 +205,9 @@ function NewPlaylistPage() {
 				</div>
 
 				<div className="space-y-3">
-					<Label>Phrases ({selectedPhrases.length})</Label>
+					<div className="w-full">
+						<Label>Phrases ({selectedPhrases.length})</Label>
+					</div>
 
 					{/* Display selected phrases with reorder and href controls */}
 					{selectedPhrases.map((phrase, index) => (
