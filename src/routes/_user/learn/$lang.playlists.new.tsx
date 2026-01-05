@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -24,6 +24,13 @@ import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import languages from '@/lib/languages'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
 	component: NewPlaylistPage,
@@ -43,6 +50,8 @@ type PhraseWithHref = {
 	phrase_id: string
 	href: string | null
 }
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
 
 // eslint-disable-next-line react-refresh/only-export-components
 function NewPlaylistPage() {
@@ -149,168 +158,177 @@ function NewPlaylistPage() {
 	const selectedPhraseIds = selectedPhrases.map((p) => p.phrase_id)
 
 	return (
-		<div className="mx-auto max-w-2xl p-4">
-			<h1 className="mb-6 text-2xl font-bold">Create New Playlist</h1>
+		<main style={style}>
+			<Card>
+				<CardHeader>
+					<CardTitle>Create New Playlist</CardTitle>
+					<CardDescription>
+						A group of flash cards that go together. Optional: Link to a podcast
+						or video.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form
+						role="form"
+						noValidate
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
+						onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+						className="space-y-6"
+					>
+						<div className="space-y-2">
+							<Label htmlFor="title">Title</Label>
+							<Input
+								id="title"
+								className={form.formState.errors.title ? 'border-red-500' : ''}
+								{...form.register('title')}
+								placeholder="Playlist Title"
+							/>
+							{form.formState.errors.title && (
+								<p className="text-sm text-red-500">
+									{form.formState.errors.title.message}
+								</p>
+							)}
+						</div>
 
-			<form
-				role="form"
-				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-				className="space-y-6"
-			>
-				<div className="space-y-2">
-					<Label htmlFor="title">Title</Label>
-					<Input
-						id="title"
-						className={form.formState.errors.title ? 'border-red-500' : ''}
-						{...form.register('title')}
-						placeholder="Playlist Title"
-					/>
-					{form.formState.errors.title && (
-						<p className="text-sm text-red-500">
-							{form.formState.errors.title.message}
-						</p>
-					)}
-				</div>
+						<div className="space-y-2">
+							<Label htmlFor="description">Description</Label>
+							<Textarea
+								id="description"
+								{...form.register('description')}
+								placeholder="Optional description"
+							/>
+							<p className="text-muted-foreground text-xs">
+								Describe what this playlist is about
+							</p>
+						</div>
 
-				<div className="space-y-2">
-					<Label htmlFor="description">Description</Label>
-					<Textarea
-						id="description"
-						{...form.register('description')}
-						placeholder="Optional description"
-					/>
-					<p className="text-muted-foreground text-xs">
-						Describe what this playlist is about
-					</p>
-				</div>
+						<div className="space-y-2">
+							<Label htmlFor="href">Source Link</Label>
+							<Input
+								id="href"
+								className={form.formState.errors.href ? 'border-red-500' : ''}
+								{...form.register('href')}
+								placeholder="https://youtube.com/watch?v=... or Spotify link"
+							/>
+							{form.formState.errors.href ?
+								<p className="text-sm text-red-500">
+									{form.formState.errors.href.message}
+								</p>
+							:	<p className="text-muted-foreground text-xs">
+									Link to a video or podcast episode
+								</p>
+							}
+						</div>
 
-				<div className="space-y-2">
-					<Label htmlFor="href">Source Link</Label>
-					<Input
-						id="href"
-						className={form.formState.errors.href ? 'border-red-500' : ''}
-						{...form.register('href')}
-						placeholder="https://youtube.com/watch?v=... or Spotify link"
-					/>
-					{form.formState.errors.href ?
-						<p className="text-sm text-red-500">
-							{form.formState.errors.href.message}
-						</p>
-					:	<p className="text-muted-foreground text-xs">
-							Link to a video or podcast episode
-						</p>
-					}
-				</div>
+						<div className="space-y-3">
+							<div className="w-full">
+								<Label>Phrases ({selectedPhrases.length})</Label>
+							</div>
 
-				<div className="space-y-3">
-					<div className="w-full">
-						<Label>Phrases ({selectedPhrases.length})</Label>
-					</div>
+							{/* Display selected phrases with reorder and href controls */}
+							{selectedPhrases.map((phrase, index) => (
+								<div
+									key={phrase.phrase_id}
+									className="bg-muted/30 rounded border p-3"
+								>
+									<div className="flex items-start gap-2">
+										{/* Reorder buttons */}
+										<div className="flex flex-col gap-1">
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6"
+												disabled={index === 0}
+												// oxlint-disable-next-line jsx-no-new-function-as-prop
+												onClick={() => movePhrase(index, 'up')}
+											>
+												<ChevronUp className="h-4 w-4" />
+											</Button>
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6"
+												disabled={index === selectedPhrases.length - 1}
+												// oxlint-disable-next-line jsx-no-new-function-as-prop
+												onClick={() => movePhrase(index, 'down')}
+											>
+												<ChevronDown className="h-4 w-4" />
+											</Button>
+										</div>
 
-					{/* Display selected phrases with reorder and href controls */}
-					{selectedPhrases.map((phrase, index) => (
-						<div
-							key={phrase.phrase_id}
-							className="bg-muted/30 rounded border p-3"
-						>
-							<div className="flex items-start gap-2">
-								{/* Reorder buttons */}
-								<div className="flex flex-col gap-1">
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className="h-6 w-6"
-										disabled={index === 0}
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
-										onClick={() => movePhrase(index, 'up')}
-									>
-										<ChevronUp className="h-4 w-4" />
-									</Button>
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className="h-6 w-6"
-										disabled={index === selectedPhrases.length - 1}
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
-										onClick={() => movePhrase(index, 'down')}
-									>
-										<ChevronDown className="h-4 w-4" />
-									</Button>
-								</div>
+										{/* Phrase card */}
+										<div className="min-w-0 flex-1">
+											<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
 
-								{/* Phrase card */}
-								<div className="min-w-0 flex-1">
-									<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
+											{/* Href input for timestamp */}
+											<div className="mt-2 flex items-center gap-2">
+												<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+												<Input
+													type="url"
+													placeholder="Timestamp link (optional)"
+													value={phrase.href ?? ''}
+													// oxlint-disable-next-line jsx-no-new-function-as-prop
+													onChange={(e) =>
+														updatePhraseHref(phrase.phrase_id, e.target.value)
+													}
+													className="h-8 text-sm"
+												/>
+											</div>
+										</div>
 
-									{/* Href input for timestamp */}
-									<div className="mt-2 flex items-center gap-2">
-										<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
-										<Input
-											type="url"
-											placeholder="Timestamp link (optional)"
-											value={phrase.href ?? ''}
+										{/* Delete button */}
+										<Button
+											type="button"
 											// oxlint-disable-next-line jsx-no-new-function-as-prop
-											onChange={(e) =>
-												updatePhraseHref(phrase.phrase_id, e.target.value)
-											}
-											className="h-8 text-sm"
-										/>
+											onClick={() => removePhrase(phrase.phrase_id)}
+											variant="destructive-outline"
+											size="icon"
+										>
+											<Trash className="h-4 w-4" />
+										</Button>
 									</div>
 								</div>
+							))}
 
-								{/* Delete button */}
-								<Button
-									type="button"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
-									onClick={() => removePhrase(phrase.phrase_id)}
-									variant="destructive-outline"
-									size="icon"
-								>
-									<Trash className="h-4 w-4" />
-								</Button>
-							</div>
+							{/* Phrase picker with inline creation */}
+							<SelectPhrasesForComment
+								lang={lang}
+								selectedPhraseIds={selectedPhraseIds}
+								onSelectionChange={handleSelectionChange}
+								maxPhrases={null}
+								triggerText={
+									selectedPhrases.length ? '+ Add more phrases' : (
+										'Add phrases to your playlist'
+									)
+								}
+							/>
 						</div>
-					))}
 
-					{/* Phrase picker with inline creation */}
-					<SelectPhrasesForComment
-						lang={lang}
-						selectedPhraseIds={selectedPhraseIds}
-						onSelectionChange={handleSelectionChange}
-						maxPhrases={null}
-						triggerText={
-							selectedPhrases.length ? '+ Add more phrases' : (
-								'Add phrases to your playlist'
-							)
-						}
-					/>
-				</div>
-
-				<div className="flex justify-end gap-4 pt-4">
-					<Button
-						type="button"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onClick={() => window.history.back()}
-						variant="secondary"
-					>
-						Cancel
-					</Button>
-					<Button
-						type="submit"
-						disabled={
-							mutation.isPending ||
-							!form.formState.isValid ||
-							selectedPhrases.length === 0
-						}
-					>
-						{mutation.isPending ? 'Creating...' : 'Create Playlist'}
-					</Button>
-				</div>
-			</form>
-		</div>
+						<div className="flex justify-end gap-4 pt-4">
+							<Button
+								type="button"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
+								onClick={() => window.history.back()}
+								variant="secondary"
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								disabled={
+									mutation.isPending ||
+									!form.formState.isValid ||
+									selectedPhrases.length === 0
+								}
+							>
+								{mutation.isPending ? 'Creating...' : 'Create Playlist'}
+							</Button>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+		</main>
 	)
 }
