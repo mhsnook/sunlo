@@ -1,12 +1,13 @@
+import { useCallback } from 'react'
+import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
 	Disc3,
 	Logs,
 	MessageCircleHeart,
-	MessageSquarePlus,
 	MessageSquareQuote,
-	MessagesSquare,
 } from 'lucide-react'
 
+import { buttonVariants } from '@/components/ui/button-variants'
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -14,16 +15,14 @@ import {
 	useAnyonesPhraseRequests,
 	useAnyonesPhrases,
 } from '@/hooks/use-contributions'
-import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useCallback } from 'react'
-import { buttonVariants } from '@/components/ui/button-variants'
-import { Link } from '@tanstack/react-router'
+
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { useAnyonesPlaylists } from '@/hooks/use-playlists'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
+import { PlusMenu } from '@/components/plus-menu'
 
 type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
 
@@ -53,23 +52,30 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 				value={contributionsTab}
 				onValueChange={handleTabChange}
 			>
-				<TabsList className="mt-1 text-lg">
-					<TabsTrigger value="requests">
-						<MessageCircleHeart size={16} className="me-1" /> Requests
-					</TabsTrigger>
-					<TabsTrigger value="phrases">
-						<MessageSquareQuote size={16} className="me-1" /> Phrases
-					</TabsTrigger>
-					<TabsTrigger value="playlists">
-						<Disc3 size={16} className="me-1" /> Playlists
-					</TabsTrigger>
-					<TabsTrigger value="answers" disabled>
-						<MessageSquarePlus size={16} className="me-1" /> Answers
-					</TabsTrigger>
-					<TabsTrigger value="comments" disabled>
-						<MessagesSquare size={16} className="me-1" /> Comments
-					</TabsTrigger>
-				</TabsList>
+				<div className="flex w-full flex-row items-center justify-between gap-2">
+					<TabsList className="mt-1 text-lg">
+						<TabsTrigger value="requests">
+							<MessageCircleHeart size={16} className="me-1" /> Requests
+						</TabsTrigger>
+						<TabsTrigger value="phrases">
+							<MessageSquareQuote size={16} className="me-1" /> Phrases
+						</TabsTrigger>
+						<TabsTrigger value="playlists">
+							<Disc3 size={16} className="me-1" /> Playlists
+						</TabsTrigger>
+						{/*<TabsTrigger value="answers" disabled>
+							<MessageSquarePlus size={16} className="me-1" /> Answers
+						</TabsTrigger>
+						<TabsTrigger value="comments" disabled>
+							<MessagesSquare size={16} className="me-1" /> Comments
+						</TabsTrigger>*/}
+					</TabsList>
+					{lang && (
+						<div className="shrink-0">
+							<PlusMenu lang={lang} />
+						</div>
+					)}
+				</div>
 
 				<TabsContent value="requests">
 					<RequestsTab lang={lang} uid={uid} />
