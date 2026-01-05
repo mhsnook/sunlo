@@ -45,7 +45,7 @@ EDGE CASES LEFT BEHIND
    - replace this RLS hack with an RPC
 1. ✅ build some "info" page for public profles/Friends
    - ✅ should be able to unfriend them
-   - should be able to see their phrases and requests
+   - ✅ should be able to see their phrases and requests
 
 MOCKS / Incompletes
 

@@ -7,13 +7,14 @@ import { buttonVariants } from '@/components/ui/button-variants'
 import {
 	useMyFriendsRequestsLang,
 	usePopularRequestsLang,
-	useRequestsLang,
 } from '@/hooks/use-requests'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
 import { PlusMenu } from '@/components/plus-menu'
+import { useFeedLang } from '@/hooks/use-feed'
+import { FeedItem } from '@/components/feed/FeedItem'
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
@@ -98,12 +99,17 @@ function DeckFeedPage() {
 
 function RecentFeed() {
 	const params = Route.useParams()
-	const { data: requests, isLoading } = useRequestsLang(params.lang)
+	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+		useFeedLang(params.lang)
+
+	// flatten pages
+	const feedItems = data?.pages.flat()
+
 	return (
 		<div className="space-y-6">
 			{isLoading ?
-				<p>Loading requests...</p>
-			: !requests || requests.length === 0 ?
+				<p>Loading feed...</p>
+			: !feedItems || feedItems.length === 0 ?
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
 					<Link
@@ -114,9 +120,21 @@ function RecentFeed() {
 						Post a request for a new phrase
 					</Link>
 				</Callout>
-			:	requests.map((request) => (
-					<RequestItem key={request.id} request={request} />
-				))
+			:	<>
+					{feedItems.map((item) => (
+						<FeedItem key={item.id} item={item} />
+					))}
+					{hasNextPage && (
+						<button
+							className={buttonVariants({ variant: 'outline' })}
+							// oxlint-disable-next-line
+							onClick={() => fetchNextPage()}
+							disabled={isFetchingNextPage}
+						>
+							{isFetchingNextPage ? 'Loading...' : 'Load More'}
+						</button>
+					)}
+				</>
 			}
 		</div>
 	)
