@@ -175,7 +175,6 @@ export const PhraseRequestSchema = z.object({
 	requester_uid: z.string().uuid(),
 	lang: LangSchema,
 	prompt: z.string(),
-	status: PhraseRequestStatusEnumSchema,
 	upvote_count: z.number().default(0),
 })
 
@@ -342,7 +341,7 @@ export const FeedActivityTypeEnumSchema = z.enum([
 
 export const FeedActivityPayloadRequestSchema = z.object({
 	prompt: z.string(),
-	status: PhraseRequestStatusEnumSchema,
+	upvote_count: z.number(),
 })
 
 export const FeedActivityPayloadPlaylistSchema = z.object({

@@ -579,31 +579,28 @@ values
 -- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
-	"public"."phrase_request" ("id", "created_at", "requester_uid", "lang", "prompt", "status")
+	"public"."phrase_request" ("id", "created_at", "requester_uid", "lang", "prompt")
 values
 	(
 		'26fc0561-2b17-4663-a017-b88257702e25',
 		now() - interval '10 days',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ibo',
-		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
-		'pending'
+		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc'
 	),
 	(
 		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
 		now() - interval '5 days',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
-		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.',
-		'pending'
+		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.'
 	),
 	(
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
 		now() - interval '3 days',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'hin',
-		'How do I say "I''d like a cheeseburger?"',
-		'fulfilled'
+		'How do I say "I''d like a cheeseburger?"'
 	);
 
 --
