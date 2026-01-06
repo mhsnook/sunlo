@@ -288,6 +288,9 @@ values
 -- Data for Name: instances; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
+-- Data for Name: oauth_clients; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
 -- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
@@ -2359,6 +2362,9 @@ values
 	);
 
 --
+-- Data for Name: phrase_request_upvote; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+--
 -- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
@@ -4232,9 +4238,6 @@ Meaning: To be used in a manner in which "Oh shit" or "Oh fuck" is used.',
 		now() - interval '1 days'
 	);
 
---
--- Data for Name: playlist_phrase_link; Type: TABLE DATA; Schema: public; Owner: postgres
---
 --
 -- Data for Name: user_deck; Type: TABLE DATA; Schema: public; Owner: postgres
 --
