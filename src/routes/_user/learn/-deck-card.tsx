@@ -19,11 +19,15 @@ import { DeckMetaType } from '@/lib/schemas'
 export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (
 		<div style={getThemeCss(deck.theme)}>
-			<Card className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
+			<Card
+				data-testid={`deck-card-${deck.lang}`}
+				className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
+			>
 				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
 					<Link
 						className="grow"
 						to="/learn/$lang"
+						data-testid={`deck-card-link-${deck.lang}`}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: deck.lang }}
 					>

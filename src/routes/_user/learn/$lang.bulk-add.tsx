@@ -30,6 +30,7 @@ import { phrasesCollection } from '@/lib/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 
 type BulkAddPhrasesResponse = {
 	phrases: Tables<'phrase'>[]
@@ -67,6 +68,7 @@ export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
+// eslint-disable-next-line react-refresh/only-export-components
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
 	const { data: profile } = useProfile()
@@ -94,6 +96,8 @@ function BulkAddPhrasesPage() {
 			],
 		},
 	})
+
+	const invalidateFeed = useInvalidateFeed()
 
 	const { fields, append, remove } = useFieldArray({
 		control,
@@ -130,7 +134,7 @@ function BulkAddPhrasesPage() {
 				})
 			)
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
-
+			invalidateFeed(lang)
 			setSuccessfullyAddedPhrases((prev) => [
 				...phrasesToInsert.map((p) => p.id),
 				...prev,
@@ -233,6 +237,7 @@ type PhraseEntryErrors =
 	  })
 	| undefined
 
+// eslint-disable-next-line react-refresh/only-export-components
 function PhraseEntry({
 	phraseIndex,
 	control,

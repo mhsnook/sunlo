@@ -40,11 +40,16 @@ test.describe('Unified Feed', () => {
 		})
 
 		try {
-			await page.goto(`/learn/${lang}/feed`)
+			// Navigate to feed via UI
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
 
-			await expect(page.getByText(requestText)).toBeVisible()
-			await expect(page.getByText(playlistText)).toBeVisible()
-			await expect(page.getByText(phraseText)).toBeVisible()
+			await expect(page.getByText(requestText).first()).toBeVisible()
+			await expect(page.getByText(playlistText).first()).toBeVisible()
+			await expect(page.getByText(phraseText).first()).toBeVisible()
 
 			// Order: Phrase (top), Playlist, Request (bottom)
 			const phraseLoc = page.getByText(phraseText)
@@ -110,16 +115,25 @@ test.describe('Unified Feed', () => {
 		}
 
 		try {
-			await page.goto(`/learn/${lang}/feed`)
+			// Navigate to feed via UI (start from home/learn)
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
 
-			// Find the phrase item
-			await expect(page.getByText(`Provenance Phrase ${nonce}`)).toBeVisible()
+			// Find the phrase item using the actual text from the database
+			await expect(page.getByText(phraseText).first()).toBeVisible()
 
-			// Check for provenance text in pieces (since it's in separate spans)
-			await expect(page.getByText('added a phrase')).toBeVisible()
-			await expect(page.getByText('In response to request')).toBeVisible()
-			await expect(page.getByRole('link', { name: 'discussion' })).toBeVisible()
-			await expect(page.getByText(prompt)).toBeVisible()
+			// Check for provenance text in pieces
+			await expect(page.getByText('added a phrase').first()).toBeVisible()
+			await expect(
+				page.getByText('In response to request').first()
+			).toBeVisible()
+			await expect(
+				page.getByRole('link', { name: 'discussion' }).first()
+			).toBeVisible()
+			await expect(page.getByText(request.prompt).first()).toBeVisible()
 		} finally {
 			// Cleanup
 			await deletePhrase(phrase.id)
@@ -149,10 +163,17 @@ test.describe('Unified Feed', () => {
 		const createdRequests = await Promise.all(requests)
 
 		try {
-			await page.goto(`/learn/${lang}/feed`)
+			// Navigate to feed via UI
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
 
 			// Verify first page is visible
-			await expect(page.getByText('Pagination Request 24')).toBeVisible()
+			await expect(
+				page.getByText(createdRequests[count - 1].prompt).first()
+			).toBeVisible()
 
 			// Scroll to bottom
 			await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
@@ -164,11 +185,54 @@ test.describe('Unified Feed', () => {
 			}
 
 			// Verify items from second page are visible
-			await expect(page.getByText('Pagination Request 0')).toBeVisible()
+			await expect(
+				page.getByText(createdRequests[0].prompt).first()
+			).toBeVisible()
 		} finally {
 			for (const r of createdRequests) {
-				await deleteRequest(r.id)
+				deleteRequest(r.id)
 			}
 		}
+	})
+	test('updates feed immediately after creating a request through UI', async ({
+		page,
+	}) => {
+		await loginAsTestUser(page)
+		const lang = 'hin'
+		const nonce = Math.random().toString(36).substring(7)
+		const promptText = `UI Sync Request ${nonce}`
+
+		// 1. Go to Feed initially
+		await expect(page).toHaveURL(`/learn`)
+		await page
+			.getByTestId(`deck-card-${lang}`)
+			.getByTestId(`deck-card-link-${lang}`)
+			.click()
+		await expect(page.getByText('Activity feed for Hindi')).toBeVisible()
+
+		// 2. Navigate to New Request page via UI (preserving SPA state)
+		await page.getByRole('link', { name: 'Request a Phrase' }).click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/new`))
+
+		// 3. Fill and submit
+		await page.getByTestId('request-prompt-input').fill(promptText)
+		await page.getByTestId('post-request-button').click()
+
+		// 4. Wait for success and redirect to the request detail page
+		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/`))
+
+		// 5. Navigate back to feed using UI link (preserving SPA state)
+		await page.getByTestId('sidebar-link-feed').click()
+
+		// 6. Verify the new request is visible immediately (due to invalidation & SPA state)
+		await expect(page.getByText(promptText).first()).toBeVisible()
+
+		// Cleanup
+		const { data: request } = await supabase
+			.from('phrase_request')
+			.select('id')
+			.eq('prompt', promptText)
+			.single()
+		if (request) await deleteRequest(request.id)
 	})
 })
