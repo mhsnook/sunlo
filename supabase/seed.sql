@@ -300,6 +300,12 @@ values
 -- Data for Name: mfa_challenges; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
+-- Data for Name: oauth_authorizations; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: oauth_consents; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
 -- Data for Name: one_time_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
@@ -573,34 +579,6 @@ values
 		now() - interval '2 days',
 		null,
 		'[{"lang": "tam", "level": "fluent"}, {"lang": "hin", "level": "fluent"}, {"lang": "kan", "level": "proficient"}, {"lang": "eng", "level": "fluent"}, {"lang": "deu", "level": "proficient"}]'
-	);
-
---
--- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
---
-insert into
-	"public"."phrase_request" ("id", "created_at", "requester_uid", "lang", "prompt")
-values
-	(
-		'26fc0561-2b17-4663-a017-b88257702e25',
-		now() - interval '10 days',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'ibo',
-		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc'
-	),
-	(
-		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
-		now() - interval '5 days',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'tam',
-		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.'
-	),
-	(
-		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		now() - interval '3 days',
-		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
-		'hin',
-		'How do I say "I''d like a cheeseburger?"'
 	);
 
 --
@@ -1888,6 +1866,60 @@ values
 		'hin',
 		now() - interval '2 days',
 		null
+	),
+	(
+		'Ondu coffee mattu dosa kodhi',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		now() - interval '1 days',
+		null
+	);
+
+--
+-- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."phrase_request" (
+		"id",
+		"created_at",
+		"requester_uid",
+		"lang",
+		"prompt",
+		"upvote_count"
+	)
+values
+	(
+		'26fc0561-2b17-4663-a017-b88257702e25',
+		now() - interval '10 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ibo',
+		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
+		0
+	),
+	(
+		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
+		now() - interval '5 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'tam',
+		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.',
+		0
+	),
+	(
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		now() - interval '3 days',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'hin',
+		'How do I say "I''d like a cheeseburger?"',
+		0
+	),
+	(
+		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
+		now() - interval '2 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		'How do I order a dosa and a coffee?',
+		0
 	);
 
 --
@@ -4188,8 +4220,21 @@ Meaning: To be used in a manner in which "Oh shit" or "Oh fuck" is used.',
 		'fra',
 		null,
 		now() - interval '2 days'
+	),
+	(
+		'give one coffee and one dosa',
+		null,
+		'2309c74e-ea4f-4b87-b538-af6f20f8d7ae',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'eng',
+		null,
+		now() - interval '1 days'
 	);
 
+--
+-- Data for Name: playlist_phrase_link; Type: TABLE DATA; Schema: public; Owner: postgres
+--
 --
 -- Data for Name: user_deck; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4272,6 +4317,24 @@ values
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'hin',
 		now() - interval '30 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'9533bf48-fb98-4ace-befd-1eb1215e7f22',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		now() - interval '15 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'3ea47a8a-3397-4658-9860-86cb607c43f2',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		now() - interval '15 days',
 		'moving',
 		false,
 		15
@@ -4722,6 +4785,15 @@ values
 		now() - interval '10 days',
 		'active',
 		'hin'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'0630743e-c2e8-4b71-9707-b5c8ca467785',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		now() - interval '1 days',
+		now() - interval '1 days',
+		'active',
+		'kan'
 	);
 
 --
@@ -5290,14 +5362,38 @@ values
 		'new row violates row-level security policy for table "user_card"',
 		'{"code": "42501", "message": "new row violates row-level security policy for table \"user_card\""}',
 		'http://localhost:5173/learn/hin/requests/e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	),
+	(
+		'e97591d8-4838-4f50-9b52-1dbf97f9fa07',
+		'2026-01-06 07:42:39.459389+00',
+		null,
+		'Invalid login credentials',
+		'{"code": "invalid_credentials", "name": "AuthApiError", "status": "400"}',
+		'http://localhost:5173/login?redirectedFrom=%2Flearn%2Ftam%2Ffeed'
+	),
+	(
+		'71608fdd-d794-4a25-8b13-1394009a9ead',
+		'2026-01-06 07:42:39.459389+00',
+		null,
+		'Invalid login credentials',
+		'{"code": "invalid_credentials", "name": "AuthApiError", "status": "400"}',
+		'http://localhost:5173/login?redirectedFrom=%2Flearn%2Ftam%2Ffeed'
 	);
 
+--
+-- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
 --
 --
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
-	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
+	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2815, true);
+
+--
+-- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+select
+	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
 
 --
 -- PostgreSQL database dump complete

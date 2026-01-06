@@ -68,7 +68,7 @@ export const PhraseTinyCard = ({
 					<p className="text-muted-foreground text-sm">
 						{phrase.translations_mine?.[0]?.text.length ?
 							phrase.translations_mine[0].text
-						:	phrase.translations[0].text}
+						:	phrase.translations[0]?.text}
 					</p>
 				</div>
 				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
