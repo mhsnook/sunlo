@@ -23,6 +23,7 @@ import {
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 import languages from '@/lib/languages'
 import {
 	Card,
@@ -71,6 +72,7 @@ function NewPlaylistPage() {
 		},
 	})
 
+	const invalidateFeed = useInvalidateFeed()
 	const mutation = useMutation({
 		mutationKey: ['createPlaylist'],
 		mutationFn: async (values: PhrasePlaylistInsertType) => {
@@ -102,6 +104,7 @@ function NewPlaylistPage() {
 					PlaylistPhraseLinkSchema.parse(link)
 				)
 			)
+			invalidateFeed(lang)
 			toast.success(`Added new playlist with ${data.links.length} phrases`)
 			void navigate({
 				to: '/learn/$lang/playlists/$playlistId',

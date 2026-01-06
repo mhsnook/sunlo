@@ -29,6 +29,7 @@ import Callout from '@/components/ui/callout'
 import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
 import { phraseRequestsCollection } from '@/lib/collections'
 import { useOneRandomly } from '@/lib/utils'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: NewRequestPage,
@@ -78,6 +79,7 @@ function NewRequestPage() {
 		},
 	})
 
+	const invalidateFeed = useInvalidateFeed()
 	const createRequestMutation = useMutation<
 		PhraseRequestType,
 		PostgrestError,
@@ -101,10 +103,10 @@ function NewRequestPage() {
 			phraseRequestsCollection.utils.writeInsert(
 				PhraseRequestSchema.parse(data)
 			)
+			invalidateFeed(lang)
 			void navigate({
-				to: '/learn/$lang/contributions',
-				params: { lang },
-				search: { contributionsTab: 'requests' },
+				to: '/learn/$lang/requests/$id',
+				params: { lang, id: data.id },
 			})
 			toast.success('Your request has been created!')
 		},

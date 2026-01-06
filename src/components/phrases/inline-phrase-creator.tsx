@@ -20,6 +20,7 @@ import {
 	CardMetaSchema,
 } from '@/lib/schemas'
 import { phrasesCollection, cardsCollection } from '@/lib/collections'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 
 const inlinePhraseSchema = z.object({
 	phrase_text: z.string().min(1, 'Enter a phrase'),
@@ -53,6 +54,7 @@ export function InlinePhraseCreator({
 			translation_lang: 'eng',
 		},
 	})
+	const invalidateFeed = useInvalidateFeed()
 
 	const mutation = useMutation({
 		mutationFn: async (values: InlinePhraseFormValues) => {
@@ -81,7 +83,7 @@ export function InlinePhraseCreator({
 				})
 			)
 			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
-
+			invalidateFeed(lang)
 			toast.success('Phrase created and added to your deck')
 			onPhraseCreated(data.phrase.id)
 		},

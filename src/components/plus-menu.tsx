@@ -13,6 +13,8 @@ import {
 import { Link } from '@tanstack/react-router'
 import { buttonVariants } from './ui/button-variants'
 
+const buttonOutline = buttonVariants({ variant: 'outline' })
+
 export function PlusMenu({ lang }: { lang: string }) {
 	return (
 		<DropdownMenu>
@@ -26,24 +28,16 @@ export function PlusMenu({ lang }: { lang: string }) {
 					to="/learn/$lang/requests/new"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
-					className={
-						`${buttonVariants({
-							variant: 'outline',
-						})}` as const
-					}
+					className={buttonOutline}
 				>
 					<MessageCircleHeart className="size-3" />
-					<span className="me-1">New request</span>
+					<span className="me-1">New Request</span>
 				</Link>
 				<Link
 					to="/learn/$lang/add-phrase"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
-					className={
-						`${buttonVariants({
-							variant: 'outline',
-						})}` as const
-					}
+					className={buttonOutline}
 				>
 					<MessageSquareQuote className="size-3" />
 					<span className="me-1">New Phrase</span>
@@ -52,11 +46,7 @@ export function PlusMenu({ lang }: { lang: string }) {
 					to="/learn/$lang/playlists/new"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
-					className={
-						`${buttonVariants({
-							variant: 'outline',
-						})}` as const
-					}
+					className={buttonOutline}
 				>
 					<Disc3 className="size-3" />
 					<span className="me-1">New Playlist</span>

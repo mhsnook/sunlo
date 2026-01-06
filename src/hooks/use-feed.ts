@@ -1,6 +1,8 @@
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { FeedActivitySchema, type LangType } from '@/lib/schemas'
+
+export const FEED_QUERY_KEY = ['feed']
 
 export function useFeedLang(lang: LangType) {
 	return useInfiniteQuery({
@@ -27,5 +29,15 @@ export function useFeedLang(lang: LangType) {
 			if (lastPage.length < 20) return null
 			return lastPage[lastPage.length - 1].created_at
 		},
+		refetchOnMount: true,
 	})
+}
+
+export function useInvalidateFeed() {
+	const queryClient = useQueryClient()
+	return (lang?: string) => {
+		void queryClient.resetQueries({
+			queryKey: lang ? [...FEED_QUERY_KEY, lang] : FEED_QUERY_KEY,
+		})
+	}
 }

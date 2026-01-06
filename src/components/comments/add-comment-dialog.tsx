@@ -199,7 +199,6 @@ function NewCommentForm({
 					)
 				})
 			}
-
 			// Reset form
 			form.reset()
 			setSelectedPhraseIds([])

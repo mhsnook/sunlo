@@ -38,6 +38,7 @@ export default function OneSidebarMenu({
 						<SidebarMenuButton asChild>
 							<Link
 								{...item.link}
+								data-testid={`sidebar-link-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
 								onClick={setClosedMobile}
 								activeOptions={item.inexact ? inexactOptions : activeOptions}
 								activeProps={activeProps}
