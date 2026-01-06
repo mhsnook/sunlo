@@ -353,12 +353,14 @@ export const FeedActivityPayloadPhraseSourceSchema = z.union([
 	z.object({
 		type: z.literal('request'),
 		id: z.string().uuid(),
-		comment_id: z.string().uuid(),
+		title: z.string().optional(),
+		comment_id: z.string().uuid().optional(),
 	}),
 	z.object({
 		type: z.literal('playlist'),
 		id: z.string().uuid(),
 		title: z.string(),
+		// follows: z.number().optional(),
 	}),
 ])
 
