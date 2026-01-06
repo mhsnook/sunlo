@@ -7,7 +7,7 @@ export function useFeedLang(lang: LangType) {
 		queryKey: ['feed', lang],
 		queryFn: async ({ pageParam }) => {
 			let query = supabase
-				.from('feed_activities' as any)
+				.from('feed_activities')
 				.select('*')
 				.eq('lang', lang)
 				.order('created_at', { ascending: false })

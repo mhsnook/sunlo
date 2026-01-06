@@ -12,17 +12,16 @@ import { ShowError } from '@/components/errors'
 import { routeTree } from './routeTree.gen'
 import Routes from './routes'
 
-import 'styles/globals.css'
+import '@/styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
-import 'test-runtime-helpers'
+import './test-runtime-helpers'
 
 // Create a new router instance
 const router = createRouter({
 	routeTree,
 	context: {
 		auth: undefined!, // we'll make this during render
-		profile: undefined!, // we'll make this during render
 		queryClient,
 	},
 	defaultViewTransition: true,

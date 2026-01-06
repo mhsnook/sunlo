@@ -8,6 +8,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 
 	const payload = FeedActivityPayloadPlaylistSchema.parse(item.payload)
 
+	// oxlint-disable-next-line jsx-no-new-object-as-prop
 	const playlist: PhrasePlaylistType = {
 		id: item.id,
 		created_at: item.created_at,
@@ -16,8 +17,8 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 		title: payload.title,
 		description: payload.description,
 		href: null,
-		likes_count: 0,
-	} as any
+		// upvotes_count: 0, // payload.upvotes_count
+	}
 
 	return <PlaylistItem playlist={playlist} />
 }
