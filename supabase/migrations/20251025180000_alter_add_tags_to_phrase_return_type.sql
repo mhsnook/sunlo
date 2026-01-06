@@ -4,8 +4,7 @@ drop function "public"."add_tags_to_phrase" (
 	"p_tags" "text" []
 );
 
-create
-or replace function "public"."add_tags_to_phrase" (
+create or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []

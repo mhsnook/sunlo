@@ -1,1 +1,2 @@
-alter type "public"."chat_message_type" add value 'request';
+alter type "public"."chat_message_type"
+add value 'request';

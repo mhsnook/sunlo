@@ -1,5 +1,4 @@
-create or replace view
-	"public"."meta_phrase_request" as
+create or replace view "public"."meta_phrase_request" as
 select
 	"pr"."id",
 	"pr"."created_at",

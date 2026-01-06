@@ -30,8 +30,7 @@ create type public.phrase_with_translations_output as (
 );
 
 -- The RPC function to bulk-add phrases and translations, now returning the created data
-create
-or replace function public.bulk_add_phrases (
+create or replace function public.bulk_add_phrases (
 	p_lang character(3),
 	p_phrases public.phrase_with_translations_input[]
 ) returns setof public.phrase_with_translations_output language plpgsql as $$

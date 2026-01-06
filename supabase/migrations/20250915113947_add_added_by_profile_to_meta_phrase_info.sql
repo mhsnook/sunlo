@@ -1,7 +1,6 @@
 drop view if exists "public"."meta_phrase_info";
 
-create or replace view
-	"public"."meta_phrase_info" as
+create or replace view "public"."meta_phrase_info" as
 with
 	"recent_review" as (
 		select

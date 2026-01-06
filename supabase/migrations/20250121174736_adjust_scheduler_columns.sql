@@ -1,5 +1,4 @@
-DO
-$$
+do $$
 	BEGIN
 		alter table "public"."user_card_scheduled" drop constraint "user_card_scheduled_review_time_score_check";
 	EXCEPTION
@@ -7,8 +6,7 @@ $$
 	END;
 $$;
 
-DO
-$$
+do $$
 	BEGIN
 		alter table "public"."user_card_scheduled" rename column "review_time_score" to "score";
 	EXCEPTION
@@ -16,8 +14,7 @@ $$
 	END;
 $$;
 
-DO
-$$
+do $$
 	BEGIN
 		alter table "public"."user_card_scheduled" rename column "last_user_card_schedule_id" to "prev_id";
 	EXCEPTION
@@ -25,8 +22,7 @@ $$
 	END;
 $$;
 
-DO
-$$
+do $$
 	BEGIN
 		alter table "public"."user_card_scheduled" add column "user_deck_id" uuid;
 		UPDATE "public"."user_card_scheduled"

@@ -14,8 +14,7 @@ drop function if exists "public"."insert_user_card_review" (user_card_id uuid, s
 set
 	check_function_bodies = off;
 
-create
-or replace function public.insert_user_card_review (
+create or replace function public.insert_user_card_review (
 	user_card_id uuid,
 	score integer,
 	day_session text,

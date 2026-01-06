@@ -1,13 +1,16 @@
-create or replace view
-	"public"."friend_summary"
+create or replace view "public"."friend_summary"
 with
 	("security_invoker" = 'true') as
 select distinct
 	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
 	"a"."uid_more",
 	case
-		when ("a"."action_type" = 'accept'::"public"."friend_request_response") then 'friends'::"text"
-		when ("a"."action_type" = 'invite'::"public"."friend_request_response") then 'pending'::"text"
+		when (
+			"a"."action_type" = 'accept'::"public"."friend_request_response"
+		) then 'friends'::"text"
+		when (
+			"a"."action_type" = 'invite'::"public"."friend_request_response"
+		) then 'pending'::"text"
 		when (
 			"a"."action_type" = any (
 				array[

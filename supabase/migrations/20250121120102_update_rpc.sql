@@ -1,10 +1,11 @@
-set check_function_bodies = off;
+set
+	check_function_bodies = off;
 
-
-CREATE OR REPLACE FUNCTION public.record_review_and_schedule(user_card_id uuid, review_time_retrievability numeric, review_time_score integer)
- RETURNS timestamp without time zone
- LANGUAGE plv8
-AS $function$
+create or replace function public.record_review_and_schedule (
+	user_card_id uuid,
+	review_time_retrievability numeric,
+	review_time_score integer
+) returns timestamp without time zone language plv8 as $function$
 const desired_retention = 0.9;
 var comments = '';
 
@@ -50,5 +51,4 @@ plv8.elog(LOG, 'Finished record_review_and_schedule: ', comments)
 
 
 return scheduled_for;
-$function$
-;
+$function$;

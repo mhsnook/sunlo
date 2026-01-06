@@ -9,38 +9,35 @@ drop view if exists "public"."meta_phrase_info";
 
 drop view if exists "public"."user_deck_plus";
 
-create table
-	"public"."comment_phrase_link" (
-		"id" uuid not null default gen_random_uuid (),
-		"request_id" uuid not null,
-		"comment_id" uuid not null,
-		"phrase_id" uuid not null,
-		"uid" uuid not null default auth.uid (),
-		"created_at" timestamp with time zone not null default now()
-	);
+create table "public"."comment_phrase_link" (
+	"id" uuid not null default gen_random_uuid(),
+	"request_id" uuid not null,
+	"comment_id" uuid not null,
+	"phrase_id" uuid not null,
+	"uid" uuid not null default auth.uid (),
+	"created_at" timestamp with time zone not null default now()
+);
 
 alter table "public"."comment_phrase_link" enable row level security;
 
-create table
-	"public"."comment_upvote" (
-		"comment_id" uuid not null,
-		"uid" uuid not null default auth.uid (),
-		"created_at" timestamp with time zone not null default now()
-	);
+create table "public"."comment_upvote" (
+	"comment_id" uuid not null,
+	"uid" uuid not null default auth.uid (),
+	"created_at" timestamp with time zone not null default now()
+);
 
 alter table "public"."comment_upvote" enable row level security;
 
-create table
-	"public"."request_comment" (
-		"id" uuid not null default gen_random_uuid (),
-		"request_id" uuid not null,
-		"parent_comment_id" uuid,
-		"uid" uuid not null default auth.uid (),
-		"content" text not null,
-		"created_at" timestamp with time zone not null default now(),
-		"updated_at" timestamp with time zone not null default now(),
-		"upvote_count" integer not null default 0
-	);
+create table "public"."request_comment" (
+	"id" uuid not null default gen_random_uuid(),
+	"request_id" uuid not null,
+	"parent_comment_id" uuid,
+	"uid" uuid not null default auth.uid (),
+	"content" text not null,
+	"created_at" timestamp with time zone not null default now(),
+	"updated_at" timestamp with time zone not null default now(),
+	"upvote_count" integer not null default 0
+);
 
 alter table "public"."request_comment" enable row level security;
 
@@ -174,8 +171,7 @@ alter table "public"."request_comment" validate constraint "request_comment_uid_
 set
 	check_function_bodies = off;
 
-create
-or replace function public.create_comment_with_phrases (
+create or replace function public.create_comment_with_phrases (
 	p_request_id uuid,
 	p_content text,
 	p_parent_comment_id uuid default null::uuid,
@@ -219,8 +215,7 @@ BEGIN
 END;
 $function$;
 
-create
-or replace function public.toggle_comment_upvote (p_comment_id uuid) returns json language plpgsql as $function$
+create or replace function public.toggle_comment_upvote (p_comment_id uuid) returns json language plpgsql as $function$
 DECLARE
   v_user_uid uuid := auth.uid();
   v_upvote_exists boolean;
@@ -253,8 +248,7 @@ BEGIN
 END;
 $function$;
 
-create
-or replace function public.update_comment_upvote_count () returns trigger language plpgsql security definer as $function$
+create or replace function public.update_comment_upvote_count () returns trigger language plpgsql security definer as $function$
 begin
   if (TG_OP = 'INSERT') then
     update request_comment
@@ -271,8 +265,7 @@ begin
 end;
 $function$;
 
-create or replace view
-	"public"."meta_language" as
+create or replace view "public"."meta_language" as
 with
 	first as (
 		select
@@ -333,8 +326,7 @@ select
 from
 	second;
 
-create or replace view
-	"public"."meta_phrase_info" as
+create or replace view "public"."meta_phrase_info" as
 with
 	recent_review as (
 		select
@@ -513,8 +505,7 @@ select
 from
 	results;
 
-create or replace view
-	"public"."meta_phrase_request" as
+create or replace view "public"."meta_phrase_request" as
 select
 	pr.id,
 	pr.created_at,
@@ -545,8 +536,7 @@ from
 		left join public.public_profile pp on ((pr.requester_uid = pp.uid))
 	);
 
-create or replace view
-	"public"."user_deck_plus"
+create or replace view "public"."user_deck_plus"
 with
 	("security_invoker" = 'true') as
 select
@@ -860,8 +850,9 @@ with
 
 create policy "Users can delete own comments" on "public"."request_comment" as permissive for delete to authenticated using ((uid = auth.uid ()));
 
-create policy "Users can update own comments" on "public"."request_comment" as permissive for
-update to authenticated using ((uid = auth.uid ()));
+create policy "Users can update own comments" on "public"."request_comment" as permissive
+for update
+	to authenticated using ((uid = auth.uid ()));
 
 create trigger tr_update_comment_upvote_count
 after insert

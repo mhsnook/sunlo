@@ -4,8 +4,7 @@ drop function if exists "public"."insert_user_card_review" (
 	"desired_retention" numeric
 );
 
-create
-or replace function "public"."insert_user_card_review" (
+create or replace function "public"."insert_user_card_review" (
 	"user_card_id" "uuid",
 	"score" integer,
 	"desired_retention" numeric default 0.9

@@ -5,27 +5,28 @@ const prettierConfig = {
 	singleQuote: true,
 	trailingComma: 'es5',
 	experimentalTernaries: true,
-	plugins: [
-		'prettier-plugin-tailwindcss',
-		//'prettier-plugin-sql'
-	],
+	plugins: ['prettier-plugin-tailwindcss', 'prettier-plugin-sql'],
 }
 
-/** //@//type {import('prettier-plugin-sql').SqlBaseOptions} */
+/** @type {import('prettier-plugin-sql').SqlBaseOptions} */
 const prettierPluginSqlConfig = {
+	// formatter: 'node-sql-parser',
 	language: 'postgresql',
+	// dialect: 'postgresql',
 	keywordCase: 'lower',
 	dataTypeCase: 'lower',
 	functionCase: 'lower',
 	identifierCase: 'lower',
-	expressionWidth: 60,
-	denseOperators: true,
+	indentStyle: 'standard',
+	logicalOperatorNewline: 'before',
+	expressionWidth: 64,
+	denseOperators: false,
 	database: 'postgresql',
 }
 
 const config = {
 	...prettierConfig,
-	// ...prettierPluginSqlConfig,
+	...prettierPluginSqlConfig,
 }
 
 export default config

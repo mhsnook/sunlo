@@ -1,5 +1,4 @@
-create or replace view
-	"public"."feed_activities" as
+create or replace view "public"."feed_activities" as
 select
 	"pr"."id",
 	'request'::"text" as "type",

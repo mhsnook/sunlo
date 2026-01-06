@@ -1,5 +1,5 @@
 create table public.user_card_review (
-	id uuid not null default gen_random_uuid (),
+	id uuid not null default gen_random_uuid(),
 	uid uuid not null default auth.uid (),
 	user_card_id uuid not null,
 	score smallint not null,
@@ -10,8 +10,8 @@ create table public.user_card_review (
 	updated_at timestamp with time zone not null default now(),
 	user_deck_id uuid not null,
 	constraint user_card_review_pkey primary key (id),
-	constraint user_card_review_user_card_id_fkey foreign KEY (user_card_id) references user_card (id) on update cascade on delete set null,
-	constraint user_card_review_user_deck_id_fkey foreign KEY (user_deck_id) references user_deck (id) on update cascade on delete set null,
+	constraint user_card_review_user_card_id_fkey foreign key (user_card_id) references user_card (id) on update cascade on delete set null,
+	constraint user_card_review_user_deck_id_fkey foreign key (user_deck_id) references user_deck (id) on update cascade on delete set null,
 	constraint user_card_review_difficulty_check check (
 		(
 			(difficulty >= 0.0)
@@ -20,7 +20,7 @@ create table public.user_card_review (
 	),
 	constraint user_card_review_stability_check check ((stability >= 0.0)),
 	constraint user_card_review_score_check check ((score = any (array[1, 2, 3, 4])))
-) TABLESPACE pg_default;
+) tablespace pg_default;
 
 alter table "public"."user_card_review" enable row level security;
 

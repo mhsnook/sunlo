@@ -16,8 +16,7 @@ alter table "public"."user_card" validate constraint "user_card_lang_fkey";
 
 drop view public.user_card_plus;
 
-create or replace view
-	public.user_card_plus
+create or replace view public.user_card_plus
 with
 	(security_invoker = true) as
 select
@@ -63,8 +62,7 @@ from
 
 drop function "public"."add_phrase_translation_card";
 
-create
-or replace function "public"."add_phrase_translation_card" (
+create or replace function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
 	"phrase_lang" "text",
 	"translation_text" "text",

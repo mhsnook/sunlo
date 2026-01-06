@@ -2,19 +2,18 @@ create type "public"."phrase_request_status" as enum('pending', 'fulfilled', 'ca
 
 alter type "public"."phrase_request_status" owner to "postgres";
 
-create table if not exists
-	"public"."phrase_request" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"requester_uid" "uuid" not null,
-		"lang" character varying not null,
-		"prompt" "text" not null,
-		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"fulfilled_at" timestamp with time zone,
-		constraint "phrase_request_pkey" primary key ("id"),
-		constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade,
-		constraint "phrase_request_requester_uid_fkey" foreign key ("requester_uid") references "public"."user_profile" ("uid") on delete cascade
-	);
+create table if not exists "public"."phrase_request" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"requester_uid" "uuid" not null,
+	"lang" character varying not null,
+	"prompt" "text" not null,
+	"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
+	"fulfilled_at" timestamp with time zone,
+	constraint "phrase_request_pkey" primary key ("id"),
+	constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade,
+	constraint "phrase_request_requester_uid_fkey" foreign key ("requester_uid") references "public"."user_profile" ("uid") on delete cascade
+);
 
 alter table "public"."phrase_request" owner to "postgres";
 
@@ -34,8 +33,9 @@ create policy "Users can create their own requests" on "public"."phrase_request"
 with
 	check (("requester_uid" = "auth"."uid" ()));
 
-create policy "Users can cancel their own requests" on "public"."phrase_request" for
-update to "authenticated" using (("requester_uid" = "auth"."uid" ()))
+create policy "Users can cancel their own requests" on "public"."phrase_request"
+for update
+	to "authenticated" using (("requester_uid" = "auth"."uid" ()))
 with
 	check (("requester_uid" = "auth"."uid" ()));
 
@@ -47,8 +47,7 @@ grant
 select
 	on table "public"."phrase_request" to "authenticated";
 
-create
-or replace function "public"."fulfill_phrase_request" (
+create or replace function "public"."fulfill_phrase_request" (
 	"request_id" "uuid",
 	"p_phrase_text" "text",
 	"p_translation_text" "text",

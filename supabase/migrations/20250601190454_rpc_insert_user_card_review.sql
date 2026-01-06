@@ -8,8 +8,7 @@ drop function if exists "public"."insert_user_card_review" (
 set
 	check_function_bodies = off;
 
-create
-or replace function "public"."insert_user_card_review" (
+create or replace function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
 	"score" integer,

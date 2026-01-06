@@ -203,16 +203,16 @@ This example shows a
 
 1. Don't use page.navigate because it doesn't use the tanstack router and breaks the cache. Instead, click around the buttons and links in the app. Make re-useable functions in `goto-helpers.ts` for these interactions, if need be.
 
-	```typescript
-	// ✅ Correct behavior
-	await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /feed/i })
-			.click()
+   ```typescript
+   // ✅ Correct behavior
+   await page
+   	.locator('nav[data-slot=navigation-menu]')
+   	.getByRole('link', { name: /feed/i })
+   	.click()
 
-	// ❌ Incorrect behavior
-	page.goto('/learn/hin/feed')
-	```
+   // ❌ Incorrect behavior
+   page.goto('/learn/hin/feed')
+   ```
 
 ## Conversation
 

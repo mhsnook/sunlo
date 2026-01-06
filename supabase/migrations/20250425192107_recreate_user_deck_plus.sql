@@ -1,7 +1,6 @@
 drop view if exists "public"."user_deck_plus";
 
-create or replace view
-	public.user_deck_plus
+create or replace view public.user_deck_plus
 with
 	(security_invoker = true) as
 select

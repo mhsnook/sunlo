@@ -1,7 +1,6 @@
 drop function if exists public.bulk_add_phrases;
 
-create
-or replace function "public"."bulk_add_phrases" (
+create or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"

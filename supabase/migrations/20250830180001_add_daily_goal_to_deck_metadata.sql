@@ -8,8 +8,7 @@ add constraint "daily_review_goal_valid_values" check ((daily_review_goal = any 
 
 alter table "public"."user_deck" validate constraint "daily_review_goal_valid_values";
 
-create or replace view
-	"public"."user_deck_plus" as
+create or replace view "public"."user_deck_plus" as
 select
 	d.uid,
 	d.lang,
