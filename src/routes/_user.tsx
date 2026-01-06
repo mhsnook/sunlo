@@ -53,6 +53,9 @@ export const Route = createFileRoute('/_user')({
 		if (myProfileCollection.size === 1) return
 		// some weird: start over
 		if (myProfileCollection.status === 'error') {
+			console.log(
+				`myProfileCollection is in an error state. We'll clean it up and reload it.`
+			)
 			await myProfileCollection.cleanup()
 			await myProfileCollection.preload()
 			// it's loading: wait

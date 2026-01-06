@@ -54,7 +54,7 @@ export function PlaylistItem({
 				<Flagged>
 					<div className="flex items-center gap-1">
 						<Heart className="h-4 w-4" />
-						<span>{playlist.likes_count || 0}</span>
+						<span>{playlist.upvote_count || 0}</span>
 					</div>
 				</Flagged>
 				<SharePlaylistButton id={playlist.id} />
