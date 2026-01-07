@@ -3,7 +3,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import { UidPermalink } from '@/components/card-pieces/user-permalink'
+import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import {
@@ -72,7 +72,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			{/* Comment header */}
 			<div className="w-full">
 				<div className="flex items-center justify-between">
-					<UidPermalink
+					<UidPermalinkInline
 						uid={comment.uid}
 						timeValue={comment.created_at}
 						action="commented"
@@ -211,7 +211,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
-				<UidPermalink
+				<UidPermalinkInline
 					uid={comment.uid}
 					timeValue={comment.created_at}
 					action="replied"
@@ -237,14 +237,14 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 			{/* Comment content */}
 			{comment.content && (
-				<div className="ms-13 mt-2">
+				<div className="ms-9 mt-2">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
 			{/* Attached flashcards */}
 			{phrases && phrases.length > 0 && (
-				<div className="ms-13 mt-3 space-y-2">
+				<div className="ms-9 mt-3 space-y-2">
 					{phrases.map(({ phrase }) => (
 						<CardResultSimple key={phrase.id} phrase={phrase} />
 					))}
@@ -252,7 +252,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="text-muted-foreground ms-13 mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
 			</div>
 		</div>

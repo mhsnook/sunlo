@@ -3,7 +3,7 @@ import {
 	FeedActivityPayloadPhraseSchema,
 } from '@/lib/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
-import { UidPermalink } from '@/components/card-pieces/user-permalink'
+import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { MessageSquare, ListMusic } from 'lucide-react'
 
@@ -16,7 +16,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 	return (
 		<div className="bg-card text-card-foreground flex flex-col gap-2 rounded-lg border p-4 shadow-sm">
 			<div className="text-muted-foreground mb-2 flex flex-row items-center justify-between text-sm">
-				<UidPermalink
+				<UidPermalinkInline
 					uid={item.uid}
 					action="added a Phrase"
 					timeValue={item.created_at}
