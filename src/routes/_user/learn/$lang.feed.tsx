@@ -60,9 +60,7 @@ function DeckFeedPage() {
 						<TabsList>
 							<TabsTrigger value="newest">Newest</TabsTrigger>
 							<TabsTrigger value="friends">Friends</TabsTrigger>
-							<TabsTrigger value="popular" disabled>
-								Popular
-							</TabsTrigger>
+							<TabsTrigger value="popular">Popular</TabsTrigger>
 						</TabsList>
 						<PlusMenu lang={params.lang} />
 					</div>
