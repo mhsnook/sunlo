@@ -22,7 +22,7 @@ export const PhrasePlaylistSchema = z.object({
 	created_at: z.string(),
 	lang: LangSchema,
 	phrase_count: z.number().optional(),
-	// upvotes_count: z.number(),
+	upvote_count: z.number().default(0),
 })
 
 export type PhrasePlaylistType = z.infer<typeof PhrasePlaylistSchema>
