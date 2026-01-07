@@ -23,42 +23,46 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 		[playlist.id]
 	).data?.length
 
-	// Toggle upvote mutation
-	const toggleUpvoteMutation = useMutation({
-		mutationFn: async () => {
-			const { data, error } = await supabase.rpc(
-				'toggle_phrase_playlist_upvote',
-				{
-					p_playlist_id: playlist.id,
-				}
-			)
+	// Upvote mutation with explicit action
+	const upvoteMutation = useMutation({
+		mutationFn: async (action: 'add' | 'remove') => {
+			const { data, error } = await supabase.rpc('set_phrase_playlist_upvote', {
+				p_playlist_id: playlist.id,
+				p_action: action,
+			})
 			if (error) throw error
 			return data as {
 				playlist_id: uuid
-				action: 'added' | 'removed'
+				action: 'added' | 'removed' | 'no_change'
 			}
 		},
 		onSuccess: (data) => {
+			// Only update if server actually made a change
+			if (data.action === 'no_change') return
+
 			const currentCount = playlist.upvote_count ?? 0
 			const newCount =
 				data.action === 'added' ?
 					currentCount + 1
 				:	Math.max(0, currentCount - 1)
 
+			// Update the playlist count
 			phrasePlaylistsCollection.utils.writeUpdate({
 				id: data.playlist_id,
 				upvote_count: newCount,
 			})
+
+			// Update the upvotes collection
 			if (data.action === 'added') {
 				phrasePlaylistUpvotesCollection.utils.writeInsert({
 					playlist_id: data.playlist_id,
 				})
-			} else {
+			} else if (data.action === 'removed') {
 				phrasePlaylistUpvotesCollection.utils.writeDelete(data.playlist_id)
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to toggle upvote: ${error.message}`)
+			toast.error(`Failed to update upvote: ${error.message}`)
 		},
 	})
 
@@ -72,9 +76,10 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
-					toggleUpvoteMutation.mutate()
+					// Send explicit action based on current state
+					upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
 				}}
-				disabled={toggleUpvoteMutation.isPending}
+				disabled={upvoteMutation.isPending}
 			>
 				<ThumbsUp />
 			</Button>

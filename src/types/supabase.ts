@@ -1706,13 +1706,16 @@ export type Database = {
 					isSetofReturn: false
 				}
 			}
-			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
-			toggle_phrase_playlist_upvote: {
-				Args: { p_playlist_id: string }
+			set_comment_upvote: {
+				Args: { p_action: string; p_comment_id: string }
 				Returns: Json
 			}
-			toggle_phrase_request_upvote: {
-				Args: { p_request_id: string }
+			set_phrase_playlist_upvote: {
+				Args: { p_action: string; p_playlist_id: string }
+				Returns: Json
+			}
+			set_phrase_request_upvote: {
+				Args: { p_action: string; p_request_id: string }
 				Returns: Json
 			}
 			update_user_card_review: {
