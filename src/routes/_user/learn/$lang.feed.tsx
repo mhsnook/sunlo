@@ -17,6 +17,8 @@ import { PlusMenu } from '@/components/plus-menu'
 import { useFeedLang } from '@/hooks/use-feed'
 import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
+import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'
+
 // Helper function to group consecutive phrase additions by the same user
 function groupConsecutivePhrases(
 	items: FeedActivityType[]
@@ -64,6 +66,9 @@ function groupConsecutivePhrases(
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
+	filter_requests: z.boolean().optional(),
+	filter_playlists: z.boolean().optional(),
+	filter_phrases: z.boolean().optional(),
 })
 
 export const Route = createFileRoute('/_user/learn/$lang/feed')({
@@ -107,7 +112,10 @@ function DeckFeedPage() {
 							<TabsTrigger value="friends">Friends</TabsTrigger>
 							<TabsTrigger value="popular">Popular</TabsTrigger>
 						</TabsList>
-						<PlusMenu lang={params.lang} />
+						<div className="flex items-center gap-2">
+							<FeedFilterMenu />
+							<PlusMenu lang={params.lang} />
+						</div>
 					</div>
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>
@@ -141,8 +149,11 @@ function DeckFeedPage() {
 	)
 }
 
+const empty = {}
+
 function RecentFeed() {
 	const params = Route.useParams()
+	const search = Route.useSearch()
 	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
 		useFeedLang(params.lang)
 
@@ -151,8 +162,24 @@ function RecentFeed() {
 		const feedItems = data?.pages.flat()
 		if (!feedItems) return []
 
-		return groupConsecutivePhrases(feedItems)
-	}, [data])
+		// Apply filters (default all to true)
+		const filterRequests = search.filter_requests ?? true
+		const filterPlaylists = search.filter_playlists ?? true
+		const filterPhrases = search.filter_phrases ?? true
+		const filteredItems = feedItems.filter((item) => {
+			if (item.type === 'request') return filterRequests
+			if (item.type === 'playlist') return filterPlaylists
+			if (item.type === 'phrase') return filterPhrases
+			return true
+		})
+
+		return groupConsecutivePhrases(filteredItems)
+	}, [
+		data,
+		search.filter_requests,
+		search.filter_playlists,
+		search.filter_phrases,
+	])
 
 	return (
 		<div className="space-y-4">
@@ -161,13 +188,28 @@ function RecentFeed() {
 			: !groupedItems || groupedItems.length === 0 ?
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
-					<Link
-						className={buttonVariants()}
-						to="/learn/$lang/requests/new"
-						from={Route.fullPath}
-					>
-						Post a request for a new phrase
-					</Link>
+					<div className="flex flex-row gap-2">
+						<Link
+							className={buttonVariants()}
+							to="/learn/$lang/requests/new"
+							from={Route.fullPath}
+						>
+							Post a request for a new phrase
+						</Link>
+						{(
+							(search.filter_requests ?? true) &&
+							(search.filter_playlists ?? true) &&
+							(search.filter_phrases ?? true)
+						) ?
+							null
+						:	<Link
+								className={buttonVariants()}
+								search={empty}
+								from={Route.fullPath}
+							>
+								Clear feed filters
+							</Link>}
+					</div>
 				</Callout>
 			:	<>
 					{groupedItems.map((item, index) => (
