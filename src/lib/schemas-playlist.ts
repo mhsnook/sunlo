@@ -22,6 +22,8 @@ export const PhrasePlaylistSchema = z.object({
 	created_at: z.string(),
 	lang: LangSchema,
 	upvote_count: z.number().default(0),
+	deleted: z.boolean().default(false),
+	updated_at: z.string().nullable().optional(),
 })
 
 export type PhrasePlaylistType = z.infer<typeof PhrasePlaylistSchema>

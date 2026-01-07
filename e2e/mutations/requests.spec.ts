@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import {
+	loginAsTestUser,
+	TEST_USER_UID,
+	FIRST_USER_UID,
+} from '../helpers/auth-helpers'
 import {
 	createRequest,
 	deleteRequest,
@@ -264,7 +268,7 @@ test.describe('Phrase Request Mutations', () => {
 				)
 				if (clipboardText) {
 					expect(clipboardText).toContain(`/learn/hin/requests/${request.id}`)
-					expect(clipboardText).toContain(`showSubthread=${comment.id}`)
+					expect(clipboardText).toContain(`showSubthread=${comment!.id}`)
 				}
 			} catch /*(error)*/ {
 				// Clipboard permissions not supported or operation failed, skip verification
@@ -287,6 +291,176 @@ test.describe('Phrase Request Mutations', () => {
 				await supabase.from('request_comment').delete().eq('id', comment.id)
 			}
 			await deleteRequest(request.id)
+		}
+	})
+
+	test('update request: edit request prompt', async ({ page }) => {
+		// 1. Create a request via API
+		const originalPrompt = `Original request prompt ${Math.random()}`
+		const request = await createRequest({
+			lang: 'hin',
+			prompt: originalPrompt,
+		})
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate to the request page
+			await page.goto(`/learn/hin/requests/${request.id}`)
+
+			// Verify original prompt is visible
+			await expect(page.getByText(originalPrompt)).toBeVisible()
+
+			// 3. Click the edit button (should be visible since we're the owner)
+			const editButton = page.getByRole('button', { name: 'Update request' })
+			await expect(editButton).toBeVisible()
+			await editButton.click()
+
+			// 4. Verify the edit dialog is open
+			await expect(page.getByRole('dialog')).toBeVisible()
+			await expect(
+				page.getByRole('heading', { name: 'Edit Request' })
+			).toBeVisible()
+
+			// 5. Edit the prompt
+			const updatedPrompt = `Updated request prompt ${Math.random()}`
+			const textarea = page.getByRole('dialog').locator('textarea')
+			await textarea.clear()
+			await textarea.fill(updatedPrompt)
+
+			// 6. Save the changes
+			await page
+				.getByRole('dialog')
+				.getByRole('button', { name: 'Save' })
+				.click()
+
+			// Wait for success toast
+			await expect(page.getByText('Request updated!')).toBeVisible()
+
+			// 7. Verify the dialog is closed and the new prompt is visible
+			await expect(page.getByRole('dialog')).not.toBeVisible()
+			await expect(page.getByText(updatedPrompt)).toBeVisible()
+			await expect(page.getByText(originalPrompt)).not.toBeVisible()
+
+			// 8. Verify update in local collection
+			const requestInCollection = await page.evaluate(
+				(reqId) => (window as any).__phraseRequestsCollection.get(reqId),
+				request.id
+			)
+			expect(requestInCollection).toBeTruthy()
+			expect(requestInCollection?.prompt).toBe(updatedPrompt)
+
+			// 9. Verify update in database
+			const { data: dbRequest } = await getRequest(request.id)
+			expect(dbRequest).toBeTruthy()
+			expect(dbRequest?.prompt).toBe(updatedPrompt)
+			expect(dbRequest?.updated_at).toBeTruthy()
+		} finally {
+			// Clean up the request
+			await deleteRequest(request.id)
+		}
+	})
+
+	test('delete request: soft delete request', async ({ page }) => {
+		// 1. Create a request via API
+		const requestPrompt = `Request to be deleted ${Math.random()}`
+		const request = await createRequest({
+			lang: 'hin',
+			prompt: requestPrompt,
+		})
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate to the request page
+			await page.goto(`/learn/hin/requests/${request.id}`)
+
+			// Verify request is visible
+			await expect(page.getByText(requestPrompt)).toBeVisible()
+
+			// 3. Click the delete button (should be visible since we're the owner)
+			const deleteButton = page.getByRole('button', { name: 'Delete request' })
+			await expect(deleteButton).toBeVisible()
+			await deleteButton.click()
+
+			// 4. Verify the delete confirmation dialog is open
+			await expect(
+				page.getByRole('heading', { name: 'Delete request?' })
+			).toBeVisible()
+
+			// 5. Confirm deletion
+			await page.getByRole('button', { name: 'Delete' }).click()
+
+			// Wait for success toast
+			await expect(page.getByText('Request deleted')).toBeVisible()
+
+			// 6. Should navigate away from the deleted request page
+			await page.waitForURL('/learn/hin/feed')
+
+			// 7. Verify request is not in local collection
+			const requestInCollection = await page.evaluate(
+				(reqId) => (window as any).__phraseRequestsCollection.get(reqId),
+				request.id
+			)
+			expect(requestInCollection).toBeFalsy()
+
+			// 8. Verify request is soft-deleted in database (deleted flag = true)
+			const { data: dbRequest } = await supabase
+				.from('phrase_request')
+				.select('*, deleted')
+				.eq('id', request.id)
+				.single()
+
+			expect(dbRequest).toBeTruthy()
+			expect(dbRequest?.deleted).toBe(true)
+
+			// 9. Verify request doesn't appear when using normal select (RLS should filter it out)
+			const { data: filteredRequest } = await getRequest(request.id)
+			expect(filteredRequest).toBeNull()
+		} finally {
+			// Clean up the request (hard delete for test cleanup)
+			await supabase.from('phrase_request').delete().eq('id', request.id)
+		}
+	})
+
+	test('ownership: non-owner cannot see edit/delete buttons', async ({
+		page,
+	}) => {
+		// 1. Create a request owned by FIRST_USER
+		const requestPrompt = `Another user's request ${Math.random()}`
+		const { data: otherUserRequest } = await supabase
+			.from('phrase_request')
+			.insert({
+				lang: 'hin',
+				prompt: requestPrompt,
+				requester_uid: FIRST_USER_UID,
+			})
+			.select()
+			.single()
+
+		expect(otherUserRequest).toBeTruthy()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate to the request page as TEST_USER (not the owner)
+			await page.goto(`/learn/hin/requests/${otherUserRequest!.id}`)
+
+			// Verify request is visible
+			await expect(page.getByText(requestPrompt)).toBeVisible()
+
+			// 3. Verify edit and delete buttons are NOT visible
+			const editButton = page.getByRole('button', { name: 'Update request' })
+			await expect(editButton).not.toBeVisible()
+
+			const deleteButton = page.getByRole('button', { name: 'Delete request' })
+			await expect(deleteButton).not.toBeVisible()
+		} finally {
+			// Clean up
+			await supabase
+				.from('phrase_request')
+				.delete()
+				.eq('id', otherUserRequest!.id)
 		}
 	})
 })

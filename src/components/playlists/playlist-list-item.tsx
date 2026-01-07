@@ -9,6 +9,9 @@ import { UpvotePlaylist } from './upvote-playlist-button'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
 import { PlaylistEmbed } from './playlist-embed'
+import { useProfile } from '@/hooks/use-profile'
+import { UpdatePlaylistDialog } from './update-playlist-dialog'
+import { DeletePlaylistDialog } from './delete-playlist-dialog'
 
 export function PlaylistItem({
 	playlist,
@@ -18,6 +21,8 @@ export function PlaylistItem({
 	children?: ReactNode
 }) {
 	const { data } = useOnePlaylistPhrases(playlist.id)
+	const { data: profile } = useProfile()
+	const isOwner = profile?.uid === playlist.uid
 
 	return (
 		<div
@@ -41,6 +46,12 @@ export function PlaylistItem({
 				/>
 
 				<div className="flex items-center gap-2">
+					{isOwner && (
+						<>
+							<UpdatePlaylistDialog playlist={playlist} />
+							<DeletePlaylistDialog playlist={playlist} />
+						</>
+					)}
 					<Badge variant="outline">
 						{data?.length ?? 0} phrase
 						{data?.length === 1 ? '' : 's'}

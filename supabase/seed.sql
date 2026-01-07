@@ -5397,7 +5397,6 @@ select
 --
 -- select
 -- 	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
-
 --
 -- PostgreSQL database dump complete
 --
