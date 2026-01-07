@@ -1,8 +1,9 @@
-import { Activity, type CSSProperties, useCallback } from 'react'
+import { Activity, type CSSProperties, useCallback, useMemo } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Construction } from 'lucide-react'
 
+import type { FeedActivityType } from '@/lib/schemas'
 import { buttonVariants } from '@/components/ui/button-variants'
 import {
 	useMyFriendsRequestsLang,
@@ -16,6 +17,50 @@ import { PlusMenu } from '@/components/plus-menu'
 import { useFeedLang } from '@/hooks/use-feed'
 import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
+// Helper function to group consecutive phrase additions by the same user
+function groupConsecutivePhrases(
+	items: FeedActivityType[]
+): (FeedActivityType | { type: 'phrase_group'; items: FeedActivityType[] })[] {
+	const grouped: (
+		| FeedActivityType
+		| { type: 'phrase_group'; items: FeedActivityType[] }
+	)[] = []
+	let currentGroup: FeedActivityType[] = []
+
+	for (const item of items) {
+		if (item.type === 'phrase') {
+			if (currentGroup.length === 0 || currentGroup[0].uid === item.uid) {
+				currentGroup.push(item)
+			} else {
+				// Different user, flush current group
+				if (currentGroup.length > 1) {
+					grouped.push({ type: 'phrase_group', items: currentGroup })
+				} else {
+					grouped.push(currentGroup[0])
+				}
+				currentGroup = [item]
+			}
+		} else {
+			// Non-phrase item, flush current group
+			if (currentGroup.length > 1) {
+				grouped.push({ type: 'phrase_group', items: currentGroup })
+			} else if (currentGroup.length === 1) {
+				grouped.push(currentGroup[0])
+			}
+			currentGroup = []
+			grouped.push(item)
+		}
+	}
+
+	// Flush remaining group
+	if (currentGroup.length > 1) {
+		grouped.push({ type: 'phrase_group', items: currentGroup })
+	} else if (currentGroup.length === 1) {
+		grouped.push(currentGroup[0])
+	}
+
+	return grouped
+}
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
@@ -101,14 +146,19 @@ function RecentFeed() {
 	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
 		useFeedLang(params.lang)
 
-	// flatten pages
-	const feedItems = data?.pages.flat()
+	// flatten pages, apply filters, and group consecutive phrases
+	const groupedItems = useMemo(() => {
+		const feedItems = data?.pages.flat()
+		if (!feedItems) return []
+
+		return groupConsecutivePhrases(feedItems)
+	}, [data])
 
 	return (
 		<div className="space-y-4">
 			{isLoading ?
 				<p>Loading feed...</p>
-			: !feedItems || feedItems.length === 0 ?
+			: !groupedItems || groupedItems.length === 0 ?
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
 					<Link
@@ -120,8 +170,15 @@ function RecentFeed() {
 					</Link>
 				</Callout>
 			:	<>
-					{feedItems.map((item) => (
-						<FeedItem key={item.id} item={item} />
+					{groupedItems.map((item, index) => (
+						<FeedItem
+							key={
+								'type' in item && item.type === 'phrase_group' ?
+									`group-${index}`
+								:	item.id
+							}
+							item={item}
+						/>
 					))}
 					{hasNextPage && (
 						<Button
