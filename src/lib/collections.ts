@@ -40,6 +40,8 @@ import {
 	type PhrasePlaylistType,
 	PlaylistPhraseLinkSchema,
 	type PlaylistPhraseLinkType,
+	PhrasePlaylistUpvoteSchema,
+	type PhrasePlaylistUpvoteType,
 } from './schemas-playlist'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
@@ -369,6 +371,24 @@ export const phraseRequestUpvotesCollection = createCollection(
 	})
 )
 
+export const phrasePlaylistUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_playlist_upvotes',
+		queryKey: ['user', 'phrase_playlist_upvote'],
+		queryFn: async () => {
+			console.log(`Loading phrasePlaylistUpvotesCollection`)
+			const { data } = await supabase
+				.from('phrase_playlist_upvote')
+				.select('playlist_id')
+				.throwOnError()
+			return data?.map((item) => PhrasePlaylistUpvoteSchema.parse(item)) ?? []
+		},
+		getKey: (item: PhrasePlaylistUpvoteType) => item.playlist_id,
+		queryClient,
+		schema: PhrasePlaylistUpvoteSchema,
+	})
+)
+
 export const phrasePlaylistsCollection = createCollection(
 	queryCollectionOptions({
 		id: 'phrase_playlist',
@@ -426,5 +446,6 @@ export const clearUser = async () => {
 		commentPhraseLinksCollection.cleanup(),
 		commentUpvotesCollection.cleanup(),
 		phraseRequestUpvotesCollection.cleanup(),
+		phrasePlaylistUpvotesCollection.cleanup(),
 	])
 }
