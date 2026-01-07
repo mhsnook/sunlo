@@ -62,7 +62,7 @@ function RequestThreadPage() {
 					{ viewTransitionName: `request-${request.id}` } as CSSProperties
 				}
 			>
-				<RequestHeader profile={request.profile} request={request} />
+				<RequestHeader request={request} />
 
 				<CardContent className="flex flex-col gap-6">
 					<Flagged>

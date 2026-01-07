@@ -14,6 +14,7 @@ export function UidPermalink({
 	timeLinkSearch,
 	timeValue,
 	nonInteractive,
+	action,
 }: {
 	uid: uuid
 	className?: string
@@ -22,19 +23,20 @@ export function UidPermalink({
 	timeLinkSearch?: Record<string, string>
 	timeValue?: string
 	nonInteractive?: boolean
+	action?: string
 }) {
 	const { data, isLoading } = useOnePublicProfile(uid)
 	if (!uid || !data || isLoading) return null
 
 	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
-		<div className="flex flex-row items-center gap-3">
+		<div className={cn('flex flex-row items-center gap-3', className)}>
 			{avatarUrl ?
 				<Link
 					to="/friends/$uid"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
-					className={cn(`inline-flex flex-row`, className)}
+					className="inline-flex flex-row"
 					disabled={nonInteractive}
 				>
 					<Avatar className="bg-foreground text-background rounded-2xl">
@@ -46,22 +48,25 @@ export function UidPermalink({
 				</Link>
 			:	null}
 			<div className="text-sm">
-				{data.username ?
-					<p>{data.username}</p>
-				:	null}
-				{timeValue && timeLinkTo ?
-					<Link
-						to={timeLinkTo}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={timeLinkParams}
-						search={timeLinkSearch}
-						className="s-link-hidden text-muted-foreground"
-					>
-						{ago(timeValue)}
-					</Link>
-				: timeValue ?
-					<p className="text-muted-foreground">{ago(timeValue)}</p>
-				:	null}
+				<p>
+					<span className="font-medium">{data.username}</span>
+					{action && <span className="text-muted-foreground"> {action}</span>}
+				</p>
+				{timeValue && (
+					<div className="text-muted-foreground">
+						{timeLinkTo ?
+							<Link
+								to={timeLinkTo}
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={timeLinkParams}
+								search={timeLinkSearch}
+								className="s-link-hidden"
+							>
+								{ago(timeValue)}
+							</Link>
+						:	ago(timeValue)}
+					</div>
+				)}
 			</div>
 		</div>
 	)

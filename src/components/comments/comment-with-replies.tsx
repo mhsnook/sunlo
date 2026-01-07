@@ -75,6 +75,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					<UidPermalink
 						uid={comment.uid}
 						timeValue={comment.created_at}
+						action="commented"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						timeLinkParams={{ id: comment.request_id, lang }}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -213,6 +214,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				<UidPermalink
 					uid={comment.uid}
 					timeValue={comment.created_at}
+					action="replied"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ id: comment.request_id, lang }}
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
