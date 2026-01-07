@@ -25,6 +25,8 @@ import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
+import { CSSProperties } from 'react'
+import { Separator } from '../ui/separator'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
@@ -65,9 +67,20 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} p-4`}
+			className={`${
+				isHighlighted ?
+					'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4'
+				: showSubthread ? 'outline-primary rounded-lg outline'
+				: ''
+			} p-4`}
 			data-comment-id={comment.id}
 			data-testid="comment-item"
+			style={
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
+				{
+					viewTransitionName: `comment-${comment.id}`,
+				} as CSSProperties
+			}
 		>
 			{/* Comment header */}
 			<div className="w-full">
@@ -158,16 +171,17 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				{/* Replies */}
 				{showSubthread && replies && replies.length > 0 && (
 					<div className="border-primary-foresoft/30 mt-3 space-y-3">
+						<Separator />
 						<div className="divide-y">
 							{replies.map(({ reply }) => (
 								<CommentReply key={reply.id} comment={reply} lang={lang} />
 							))}
-							<AddCommentDialog
-								parentCommentId={comment.id}
-								requestId={comment.request_id}
-								lang={lang}
-							/>
 						</div>
+						<AddCommentDialog
+							parentCommentId={comment.id}
+							requestId={comment.request_id}
+							lang={lang}
+						/>
 					</div>
 				)}
 			</div>
@@ -207,7 +221,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`my-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
+			className={`mt-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">

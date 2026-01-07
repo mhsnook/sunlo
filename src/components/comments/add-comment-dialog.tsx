@@ -33,7 +33,7 @@ import {
 } from '@/lib/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/hooks/use-requests'
-import { UidPermalink } from '../card-pieces/user-permalink'
+import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'
 import { SelectPhrasesForComment } from './select-phrases-for-comment'
@@ -78,8 +78,9 @@ export function AddCommentDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
-				<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
-					<p className="w-full text-start">
+				<DialogTrigger className="@group flex w-full grow cursor-pointer flex-row items-center justify-between gap-2">
+					<TinySelfAvatar className="grow-o shrink-0" />
+					<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
 						{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
 						...
 					</p>

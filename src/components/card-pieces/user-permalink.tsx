@@ -5,6 +5,22 @@ import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { useProfile } from '@/hooks/use-profile'
+
+export function TinySelfAvatar({ className }: { className?: string }) {
+	const { data } = useProfile()
+	const avatarUrl = avatarUrlify(data?.avatar_path)
+	return !avatarUrl ? null : (
+			<Avatar
+				className={`bg-foreground text-background h-6 w-6 rounded-lg ${className}`}
+			>
+				<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
+				<AvatarFallback className="text-[10px] font-bold">
+					{data?.username?.slice(0, 2)}
+				</AvatarFallback>
+			</Avatar>
+		)
+}
 
 export function UidPermalink({
 	uid,
