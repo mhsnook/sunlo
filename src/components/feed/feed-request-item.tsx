@@ -7,6 +7,7 @@ export function FeedRequestItem({ item }: { item: FeedActivityType }) {
 
 	const payload = FeedActivityPayloadRequestSchema.parse(item.payload)
 
+	// oxlint-disable-next-line jsx-no-new-object-as-prop
 	const request: PhraseRequestType = {
 		id: item.id,
 		created_at: item.created_at,

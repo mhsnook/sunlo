@@ -14,7 +14,7 @@ import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
 import { PlusMenu } from '@/components/plus-menu'
 import { useFeedLang } from '@/hooks/use-feed'
-import { FeedItem } from '@/components/feed/FeedItem'
+import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
 
 const SearchSchema = z.object({

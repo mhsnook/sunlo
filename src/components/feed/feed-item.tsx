@@ -1,7 +1,7 @@
 import { FeedActivityType } from '@/lib/schemas'
-import { FeedRequestItem } from './FeedRequestItem'
-import { FeedPlaylistItem } from './FeedPlaylistItem'
-import { FeedPhraseItem } from './FeedPhraseItem'
+import { FeedRequestItem } from './feed-request-item'
+import { FeedPlaylistItem } from './feed-playlist-item'
+import { FeedPhraseItem } from './feed-phrase-item'
 
 export function FeedItem({ item }: { item: FeedActivityType }) {
 	switch (item.type) {
