@@ -13,9 +13,13 @@ export function FeedRequestItem({ item }: { item: FeedActivityType }) {
 		requester_uid: item.uid,
 		lang: item.lang,
 		prompt: payload.prompt,
-		status: payload.status,
 		upvote_count: 0, // @TODO: Add upvote count to view if needed
 	}
 
-	return <RequestItem request={request} />
+	return (
+		<div>
+			<p className="text-muted-foreground text-sm">A Request for flashcards</p>
+			<RequestItem request={request} />
+		</div>
+	)
 }

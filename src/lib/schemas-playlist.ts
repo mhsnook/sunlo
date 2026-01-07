@@ -21,6 +21,7 @@ export const PhrasePlaylistSchema = z.object({
 	title: z.string(),
 	created_at: z.string(),
 	lang: LangSchema,
+	phrase_count: z.number().optional(),
 	// upvotes_count: z.number(),
 })
 

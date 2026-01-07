@@ -16,6 +16,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 		lang: item.lang,
 		title: payload.title,
 		description: payload.description,
+		phrase_count: payload.phrase_count,
 		href: null,
 		// upvotes_count: 0, // payload.upvotes_count
 	}
