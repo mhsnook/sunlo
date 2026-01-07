@@ -2,67 +2,63 @@ import {
 	FeedActivityType,
 	FeedActivityPayloadPhraseSchema,
 } from '@/lib/schemas'
-import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
-import { MessageSquare, ListMusic } from 'lucide-react'
+import { usePhrase } from '@/hooks/composite-phrase'
+import { PhraseSummaryLine } from './feed-phrase-group-item'
 
 export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
-	if (item.type !== 'phrase') return null
-
 	const payload = FeedActivityPayloadPhraseSchema.parse(item.payload)
 	const source = payload.source
+	const { data: phrase } = usePhrase(item.id)
+	if (item.type !== 'phrase' || !phrase) return null
 
 	return (
-		<div className="flex flex-col gap-2 px-2 pt-4">
-			<div className="text-muted-foreground mb-2 flex flex-row items-center justify-between text-sm">
+		<div className="text-muted-foreground flex flex-col gap-1 px-2 py-2 text-sm">
+			<div className="flex flex-col gap-2">
 				<UidPermalinkInline
 					uid={item.uid}
-					action="added a Phrase"
+					action="added"
 					timeValue={item.created_at}
 					timeLinkTo="/learn/$lang/phrases/$id"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ lang: item.lang, id: item.id }}
 				/>
+				<div className="bg-background flex flex-row items-center gap-2 rounded-lg p-3">
+					<PhraseSummaryLine item={item} />
+				</div>
 			</div>
 
+			{/* @@TODO -- IT's possible this is entirely dead code at the moment */}
 			{source && (
-				<div className="bg-muted/50 text-muted-foreground mb-2 rounded p-2 text-sm">
+				<div className="text-muted-foreground/70 ml-2 text-xs italic">
 					{source.type === 'request' ?
-						<div className="flex items-center gap-2">
-							<MessageSquare className="h-4 w-4" />
-							<span>
-								In response to request{' '}
-								<Link
-									to="/learn/$lang/requests/$id"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang: item.lang, id: source.id }}
-									className="hover:text-foreground font-medium underline"
-								>
-									discussion
-								</Link>
-							</span>
-						</div>
+						<>
+							for{' '}
+							<Link
+								to="/learn/$lang/requests/$id"
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={{ lang: item.lang, id: source.id }}
+								className="hover:text-foreground underline"
+							>
+								request
+							</Link>
+						</>
 					: source.type === 'playlist' ?
-						<div className="flex items-center gap-2">
-							<ListMusic className="h-4 w-4" />
-							<span>
-								Added to playlist{' '}
-								<Link
-									to="/learn/$lang/playlists/$playlistId"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
-									params={{ lang: item.lang, playlistId: source.id }}
-									className="hover:text-foreground font-medium underline"
-								>
-									{source.title}
-								</Link>
-							</span>
-						</div>
+						<>
+							in{' '}
+							<Link
+								to="/learn/$lang/playlists/$playlistId"
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={{ lang: item.lang, playlistId: source.id }}
+								className="hover:text-foreground underline"
+							>
+								{source.title}
+							</Link>
+						</>
 					:	null}
 				</div>
 			)}
-
-			<PhraseTinyCard pid={item.id} />
 		</div>
 	)
 }
