@@ -1,3 +1,17 @@
+## 0.4 - Playlists and the Polymorphic Feed
+
+_January 2026_
+
+This release adds an important "Playlists" feature, which allows users to add a set of cards together, and group them with a title and description, and optionally a link to an external resource like a podcast or a video or a song. So users can create things like:
+
+- A set of phrases that are words to an iconic song
+- A set of phrases that have been taught in this episode of a lesson or podcast
+- A set of lines from a movie compilation
+
+The first user will make and publish the playlist, and then other users can choose to watch or listen to the media and then add the set of phrases to their deck, and they won't appear at random any more because they will have been introduced in some way, giving the users choice and aligned expectations for what they experience in their review sessions.
+
+Then, the existence of the Playlists, which also need to be displayed on the feed alongside Requests, led us to the creation of a _Feed view_ which combines Requests, Playlists, and also newly created Phrases. This Feed operates differently from our local collections because it doesn't contain the library data, it just shows us an order, essentially returning a Feed Skeleton with some attached metadata for any client-side sorting that may be required. These quasi Feed Skeletons are stored simply in a react query cache.
+
 ## 0.3 - Feeds! Recent requests, upvotes, comments, recs
 
 _December 2025_
