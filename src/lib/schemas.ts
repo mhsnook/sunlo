@@ -347,7 +347,8 @@ export const FeedActivityPayloadRequestSchema = z.object({
 export const FeedActivityPayloadPlaylistSchema = z.object({
 	title: z.string(),
 	description: z.string().nullable(),
-	phrase_count: z.number().optional(),
+	phrase_count: z.number().default(0),
+	upvote_count: z.number().default(0),
 })
 
 export const FeedActivityPayloadPhraseSourceSchema = z.union([

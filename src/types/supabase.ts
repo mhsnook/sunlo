@@ -391,6 +391,7 @@ export type Database = {
 					lang: string
 					title: string
 					uid: string
+					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
@@ -400,6 +401,7 @@ export type Database = {
 					lang: string
 					title: string
 					uid?: string
+					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
@@ -409,6 +411,7 @@ export type Database = {
 					lang?: string
 					title?: string
 					uid?: string
+					upvote_count?: number
 				}
 				Relationships: [
 					{
@@ -424,6 +427,46 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
+					},
+				]
+			}
+			phrase_playlist_upvote: {
+				Row: {
+					created_at: string
+					playlist_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					playlist_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					playlist_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_playlist_upvote_playlist_id_fkey'
+						columns: ['playlist_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_playlist'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -498,7 +541,6 @@ export type Database = {
 					lang: string
 					prompt: string
 					requester_uid: string
-					status: Database['public']['Enums']['phrase_request_status']
 					upvote_count: number
 				}
 				Insert: {
@@ -507,7 +549,6 @@ export type Database = {
 					lang: string
 					prompt: string
 					requester_uid: string
-					status?: Database['public']['Enums']['phrase_request_status']
 					upvote_count?: number
 				}
 				Update: {
@@ -516,7 +557,6 @@ export type Database = {
 					lang?: string
 					prompt?: string
 					requester_uid?: string
-					status?: Database['public']['Enums']['phrase_request_status']
 					upvote_count?: number
 				}
 				Relationships: [
@@ -1637,15 +1677,6 @@ export type Database = {
 				}
 				Returns: number
 			}
-			fulfill_phrase_request: {
-				Args: {
-					p_phrase_text: string
-					p_translation_lang: string
-					p_translation_text: string
-					request_id: string
-				}
-				Returns: Json
-			}
 			insert_user_card_review: {
 				Args: {
 					day_session: string
@@ -1676,6 +1707,10 @@ export type Database = {
 				}
 			}
 			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
+			toggle_phrase_playlist_upvote: {
+				Args: { p_playlist_id: string }
+				Returns: Json
+			}
 			toggle_phrase_request_upvote: {
 				Args: { p_request_id: string }
 				Returns: Json
@@ -1715,7 +1750,6 @@ export type Database = {
 				| 'invite'
 			language_proficiency: 'fluent' | 'proficient' | 'beginner'
 			learning_goal: 'moving' | 'family' | 'visiting'
-			phrase_request_status: 'pending' | 'fulfilled' | 'cancelled'
 		}
 		CompositeTypes: {
 			phrase_with_translations_input: {
@@ -2503,7 +2537,6 @@ export const Constants = {
 			],
 			language_proficiency: ['fluent', 'proficient', 'beginner'],
 			learning_goal: ['moving', 'family', 'visiting'],
-			phrase_request_status: ['pending', 'fulfilled', 'cancelled'],
 		},
 	},
 	storage: {

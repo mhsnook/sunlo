@@ -665,6 +665,41 @@ $$;
 
 alter function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") owner to "postgres";
 
+create or replace function "public"."toggle_phrase_playlist_upvote" ("p_playlist_id" "uuid") returns "json" language "plpgsql" as $$
+DECLARE
+  v_user_uid uuid := auth.uid();
+  v_upvote_exists boolean;
+BEGIN
+  -- Check if upvote exists
+  SELECT EXISTS(
+    SELECT 1 FROM phrase_playlist_upvote
+    WHERE playlist_id = p_playlist_id AND uid = v_user_uid
+  ) INTO v_upvote_exists;
+
+  IF v_upvote_exists THEN
+    -- Remove upvote
+    DELETE FROM phrase_playlist_upvote
+    WHERE playlist_id = p_playlist_id AND uid = v_user_uid;
+
+    RETURN json_build_object(
+      'playlist_id', p_playlist_id,
+      'action', 'removed'
+    );
+  ELSE
+    -- Add upvote
+    INSERT INTO phrase_playlist_upvote (playlist_id, uid)
+    VALUES (p_playlist_id, v_user_uid);
+
+    RETURN json_build_object(
+      'playlist_id', p_playlist_id,
+      'action', 'added'
+    );
+  END IF;
+END;
+$$;
+
+alter function "public"."toggle_phrase_playlist_upvote" ("p_playlist_id" "uuid") owner to "postgres";
+
 create or replace function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") returns "json" language "plpgsql" as $$
 DECLARE
   v_user_uid uuid := auth.uid();
@@ -718,6 +753,25 @@ end;
 $$;
 
 alter function "public"."update_comment_upvote_count" () owner to "postgres";
+
+create or replace function "public"."update_phrase_playlist_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  if (TG_OP = 'INSERT') then
+    update phrase_playlist
+    set upvote_count = upvote_count + 1
+    where id = NEW.playlist_id;
+    return NEW;
+  elsif (TG_OP = 'DELETE') then
+    update phrase_playlist
+    set upvote_count = upvote_count - 1
+    where id = OLD.playlist_id;
+    return OLD;
+  end if;
+  return null;
+end;
+$$;
+
+alter function "public"."update_phrase_playlist_upvote_count" () owner to "postgres";
 
 create or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1126,7 +1180,8 @@ create table if not exists "public"."phrase_playlist" (
 	"description" "text",
 	"href" "text",
 	"created_at" timestamp with time zone default "now" () not null,
-	"lang" character varying not null
+	"lang" character varying not null,
+	"upvote_count" integer default 0 not null
 );
 
 alter table "public"."phrase_playlist" owner to "postgres";
@@ -1176,6 +1231,8 @@ select
 		"pp"."title",
 		'description',
 		"pp"."description",
+		'upvote_count',
+		"pp"."upvote_count",
 		'phrase_count',
 		(
 			select
@@ -1395,6 +1452,14 @@ from
 	"second";
 
 alter table "public"."meta_language" owner to "postgres";
+
+create table if not exists "public"."phrase_playlist_upvote" (
+	"playlist_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."phrase_playlist_upvote" owner to "postgres";
 
 create table if not exists "public"."phrase_relation" (
 	"from_phrase_id" "uuid",
@@ -1699,6 +1764,9 @@ add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 alter table only "public"."phrase_playlist"
 add constraint "phrase_playlist_pkey" primary key ("id");
 
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_pkey" primary key ("playlist_id", "uid");
+
 alter table only "public"."phrase_request"
 add constraint "phrase_request_pkey" primary key ("id");
 
@@ -1790,6 +1858,14 @@ create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "la
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
+create or replace trigger "on_phrase_playlist_upvote_added"
+after insert on "public"."phrase_playlist_upvote" for each row
+execute function "public"."update_phrase_playlist_upvote_count" ();
+
+create or replace trigger "on_phrase_playlist_upvote_removed"
+after delete on "public"."phrase_playlist_upvote" for each row
+execute function "public"."update_phrase_playlist_upvote_count" ();
+
 create or replace trigger "on_phrase_request_upvote_added"
 after insert on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
@@ -1856,6 +1932,12 @@ add constraint "phrase_lang_fkey" foreign key ("lang") references "public"."lang
 
 alter table only "public"."phrase_playlist"
 add constraint "phrase_playlist_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
+
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_playlist_id_fkey" foreign key ("playlist_id") references "public"."phrase_playlist" ("id") on delete cascade;
+
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on delete cascade;
 
 alter table only "public"."phrase_request"
 add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;
@@ -2176,6 +2258,10 @@ select
 		)
 	);
 
+create policy "Enable users to view their own upvotes" on "public"."phrase_playlist_upvote" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Enable users to view their own upvotes" on "public"."phrase_request_upvote" for
 select
 	to "authenticated" using (("uid" = "auth"."uid" ()));
@@ -2251,6 +2337,10 @@ create policy "Users can create upvotes" on "public"."comment_upvote" for insert
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Users can create upvotes" on "public"."phrase_playlist_upvote" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
+
 create policy "Users can create upvotes" on "public"."phrase_request_upvote" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2258,6 +2348,8 @@ with
 create policy "Users can delete own comments" on "public"."request_comment" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can delete own upvotes" on "public"."comment_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Users can delete own upvotes" on "public"."phrase_playlist_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can delete own upvotes" on "public"."phrase_request_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
@@ -2325,6 +2417,8 @@ alter table "public"."language" enable row level security;
 alter table "public"."phrase" enable row level security;
 
 alter table "public"."phrase_playlist" enable row level security;
+
+alter table "public"."phrase_playlist_upvote" enable row level security;
 
 alter table "public"."phrase_relation" enable row level security;
 
@@ -2595,6 +2689,12 @@ grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") t
 
 grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "service_role";
 
+grant all on function "public"."toggle_phrase_playlist_upvote" ("p_playlist_id" "uuid") to "authenticated";
+
+grant all on function "public"."toggle_phrase_playlist_upvote" ("p_playlist_id" "uuid") to "service_role";
+
+grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "anon";
+
 grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "authenticated";
 
 grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "service_role";
@@ -2602,6 +2702,12 @@ grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "u
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
+
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_upvote_count" () to "anon";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
@@ -2712,6 +2818,10 @@ grant all on table "public"."meta_language" to "anon";
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
+
+grant all on table "public"."phrase_playlist_upvote" to "authenticated";
+
+grant all on table "public"."phrase_playlist_upvote" to "service_role";
 
 grant all on table "public"."phrase_relation" to "anon";
 

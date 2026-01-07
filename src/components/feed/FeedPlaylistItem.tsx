@@ -18,7 +18,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 		description: payload.description,
 		phrase_count: payload.phrase_count,
 		href: null,
-		// upvotes_count: 0, // payload.upvotes_count
+		upvote_count: payload.upvote_count,
 	}
 
 	return <PlaylistItem playlist={playlist} />
