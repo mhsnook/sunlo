@@ -21,6 +21,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 					action="added a Phrase"
 					timeValue={item.created_at}
 					timeLinkTo="/learn/$lang/phrases/$id"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ lang: item.lang, id: item.id }}
 				/>
 			</div>
@@ -34,6 +35,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 								In response to request{' '}
 								<Link
 									to="/learn/$lang/requests/$id"
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ lang: item.lang, id: source.id }}
 									className="hover:text-foreground font-medium underline"
 								>
@@ -48,6 +50,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 								Added to playlist{' '}
 								<Link
 									to="/learn/$lang/playlists/$playlistId"
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ lang: item.lang, playlistId: source.id }}
 									className="hover:text-foreground font-medium underline"
 								>

@@ -1,11 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { ExternalLink, Heart, LinkIcon } from 'lucide-react'
+import { ExternalLink, LinkIcon } from 'lucide-react'
 import { PhrasePlaylistType } from '@/lib/schemas-playlist'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { SharePlaylistButton } from './share-playlist-button'
-import Flagged from '@/components/flagged'
+import { UpvotePlaylist } from './upvote-playlist-button'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
 
@@ -54,12 +54,7 @@ export function PlaylistItem({
 				<p className="text-muted-foreground text-sm">{playlist.description}</p>
 			)}
 			<div className="text-muted-foreground flex items-center gap-4 text-sm">
-				<Flagged>
-					<div className="flex items-center gap-1">
-						<Heart className="h-4 w-4" />
-						<span>{playlist.upvote_count || 0}</span>
-					</div>
-				</Flagged>
+				<UpvotePlaylist playlist={playlist} />
 				<SharePlaylistButton id={playlist.id} />
 				{!children ?
 					<Link

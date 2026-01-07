@@ -27,6 +27,14 @@ export const PhrasePlaylistSchema = z.object({
 
 export type PhrasePlaylistType = z.infer<typeof PhrasePlaylistSchema>
 
+export const PhrasePlaylistUpvoteSchema = z.object({
+	playlist_id: z.string().uuid(),
+})
+
+export type PhrasePlaylistUpvoteType = z.infer<
+	typeof PhrasePlaylistUpvoteSchema
+>
+
 // this is for links that are included as part of the larger create-playlist item
 export const PlaylistPhraseLinkIncludedInsertSchema = z.object({
 	phrase_id: z.string().uuid(),

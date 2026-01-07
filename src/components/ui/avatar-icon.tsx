@@ -30,6 +30,7 @@ export function AvatarIconRow({
 						className="rounded-squircle size-8 rounded-full object-cover"
 					/>
 				:	<User
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						style={{ background: `#${uid.slice(-6)}44` }}
 						className="bg-foreground/20 rounded-squircle size-8 rounded-full p-1"
 					/>

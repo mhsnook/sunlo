@@ -126,6 +126,7 @@ function RecentFeed() {
 					{hasNextPage && (
 						<Button
 							variant="outline"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							// eslint-disable-next-line @typescript-eslint/no-misused-promises
 							onClick={() => fetchNextPage()}
 							disabled={isFetchingNextPage}
