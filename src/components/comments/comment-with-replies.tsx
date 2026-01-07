@@ -25,6 +25,7 @@ import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
+import { CommentContextMenu } from './comment-context-menu'
 import { CSSProperties } from 'react'
 import { Separator } from '../ui/separator'
 
@@ -103,6 +104,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								<DeleteCommentDialog comment={comment} />
 							</>
 						)}
+						<CommentContextMenu comment={comment} lang={lang} />
 					</div>
 				</div>
 
@@ -246,6 +248,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 							<DeleteCommentDialog comment={comment} />
 						</>
 					)}
+					<CommentContextMenu comment={comment} lang={lang} />
 				</div>
 			</div>
 
