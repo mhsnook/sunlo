@@ -8,13 +8,8 @@ import {
 	commentsCollection,
 	friendSummariesCollection,
 	phraseRequestsCollection,
-	publicProfilesCollection,
 } from '@/lib/collections'
-import {
-	CommentPhraseLinkType,
-	PhraseRequestType,
-	PublicProfileType,
-} from '@/lib/schemas'
+import { CommentPhraseLinkType, PhraseRequestType } from '@/lib/schemas'
 import { mapArrays } from '@/lib/utils'
 
 export function useMyFriendsRequestsLang(
@@ -113,24 +108,13 @@ export const useRequestCounts = (
 	)
 }
 
-export const useRequest = (
-	id: uuid
-): UseLiveQueryResult<PhraseRequestType & { profile: PublicProfileType }> =>
+export const useRequest = (id: uuid): UseLiveQueryResult<PhraseRequestType> =>
 	useLiveQuery(
 		(q) => {
 			return q
 				.from({ req: phraseRequestsCollection })
 				.where(({ req }) => eq(req.id, id))
 				.findOne()
-				.join(
-					{ profile: publicProfilesCollection },
-					({ req, profile }) => eq(profile.uid, req.requester_uid),
-					'inner'
-				)
-				.select(({ req, profile }) => ({
-					...req,
-					profile,
-				}))
 		},
 		[id]
 	)

@@ -8,28 +8,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 
 export function UidPermalink({
 	uid,
-	...args
-}: { uid: uuid } & Omit<
-	Parameters<typeof UserPermalink>[0],
-	'uid' | 'username' | 'avatar_path'
->) {
-	const { data, isLoading } = useOnePublicProfile(uid)
-	return (
-		isLoading ? null
-		: !data ? <>profile not found</>
-		: <UserPermalink
-				uid={uid}
-				username={data?.username}
-				avatar_path={data?.avatar_path}
-				{...args}
-			/>
-	)
-}
-
-export default function UserPermalink({
-	uid,
-	username,
-	avatar_path,
 	className,
 	timeLinkTo,
 	timeLinkParams,
@@ -37,9 +15,7 @@ export default function UserPermalink({
 	timeValue,
 	nonInteractive,
 }: {
-	uid: uuid | null | undefined
-	username: string | null | undefined
-	avatar_path: string | null | undefined
+	uid: uuid
 	className?: string
 	timeLinkTo?: string
 	timeLinkParams?: Record<string, string>
@@ -47,8 +23,10 @@ export default function UserPermalink({
 	timeValue?: string
 	nonInteractive?: boolean
 }) {
-	if (!uid) return null
-	const avatarUrl = avatarUrlify(avatar_path)
+	const { data, isLoading } = useOnePublicProfile(uid)
+	if (!uid || !data || isLoading) return null
+
+	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
 		<div className="flex flex-row items-center gap-3">
 			{avatarUrl ?
@@ -60,16 +38,16 @@ export default function UserPermalink({
 					disabled={nonInteractive}
 				>
 					<Avatar className="bg-foreground text-background rounded-2xl">
-						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
+						<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
 						<AvatarFallback className="mx-auto place-self-center font-bold">
-							{username?.slice(0, 2)}
+							{data.username?.slice(0, 2)}
 						</AvatarFallback>
 					</Avatar>
 				</Link>
 			:	null}
 			<div className="text-sm">
-				{username ?
-					<p>{username}</p>
+				{data.username ?
+					<p>{data.username}</p>
 				:	null}
 				{timeValue && timeLinkTo ?
 					<Link

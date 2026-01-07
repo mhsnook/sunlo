@@ -13,7 +13,7 @@ export function FeedRequestItem({ item }: { item: FeedActivityType }) {
 		requester_uid: item.uid,
 		lang: item.lang,
 		prompt: payload.prompt,
-		upvote_count: 0, // @TODO: Add upvote count to view if needed
+		upvote_count: payload.upvote_count,
 	}
 
 	return (

@@ -2,10 +2,10 @@ import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
 
-import UserPermalink from '@/components/card-pieces/user-permalink'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
+import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { AddCommentDialog } from './add-comment-dialog'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
@@ -17,16 +17,14 @@ import {
 	PhraseFullFullType,
 	type RequestCommentType,
 } from '@/lib/schemas'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
-
 import { buttonVariants } from '@/components/ui/button-variants'
+import { DialogTrigger } from '@/components/ui/dialog'
+import { phrasesFull } from '@/lib/live-collections'
 
+import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
-import { DialogTrigger } from '../ui/dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
-import { UseLiveQueryResult, uuid } from '@/types/main'
-import { phrasesFull } from '@/lib/live-collections'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
@@ -41,9 +39,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
 	})
-
-	// Get profile for this comment
-	const { data: profileData } = useOnePublicProfile(comment.uid)
 
 	// Get replies for this comment
 	const { data: repliesData } = useLiveQuery(
@@ -77,10 +72,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			{/* Comment header */}
 			<div className="w-full">
 				<div className="flex items-center justify-between">
-					<UserPermalink
+					<UidPermalink
 						uid={comment.uid}
-						username={profileData?.username ?? ''}
-						avatar_path={profileData?.avatar_path ?? ''}
 						timeValue={comment.created_at}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						timeLinkParams={{ id: comment.request_id, lang }}
@@ -202,7 +195,6 @@ function usePhrasesFromComment(
 
 function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
-	const { data: profileData } = useOnePublicProfile(comment.uid)
 	const isHighlighted = useSearch({
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
@@ -218,10 +210,8 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
-				<UserPermalink
+				<UidPermalink
 					uid={comment.uid}
-					username={profileData?.username ?? ''}
-					avatar_path={profileData?.avatar_path ?? ''}
 					timeValue={comment.created_at}
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ id: comment.request_id, lang }}

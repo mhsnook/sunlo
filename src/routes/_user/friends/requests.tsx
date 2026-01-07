@@ -42,15 +42,7 @@ function RouteComponent() {
 				<CardContent className="space-y-4">
 					{isLoading ?
 						<Loader />
-					:	data.map((r) => (
-							<ProfileWithRelationship
-								key={r.uid}
-								// @TODO replace this with just passing the UID and have the
-								// component grab the relationship from a use-query+selector
-								uid={r.uid}
-							/>
-						))
-					}
+					:	data.map((r) => <ProfileWithRelationship key={r.uid} uid={r.uid} />)}
 				</CardContent>
 			</Card>
 }
