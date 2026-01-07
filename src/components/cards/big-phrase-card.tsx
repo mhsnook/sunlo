@@ -54,7 +54,14 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							<CardStatusDropdown phrase={phrase} />
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
-							<span>&ldquo;{phrase.text}&rdquo;</span>
+							<span
+								style={
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									{ viewTransitionName: `phrase-text-${pid}` } as CSSProperties
+								}
+							>
+								&ldquo;{phrase.text}&rdquo;
+							</span>
 						</CardTitle>
 					</div>
 				</CardHeader>
@@ -142,7 +149,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="flex w-full flex-grow flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
+			<div className="flex w-full flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
 				<Flagged>
 					<Button>
 						<MessagesSquare /> Discuss
