@@ -1,6 +1,5 @@
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestLinksPhraseIds } from '@/hooks/use-requests'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -13,7 +12,6 @@ import { CSSProperties } from 'react'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: links } = useRequestLinksPhraseIds(request.id)
-	const { data: profile } = useOnePublicProfile(request.requester_uid)
 	const navigate = useNavigate()
 
 	return !request ? null : (
@@ -34,11 +32,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					})
 				}}
 			>
-				<RequestHeader
-					request={request}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					profile={profile}
-				/>
+				<RequestHeader request={request} />
 				<CardContent>
 					<div className="text-lg">
 						<Markdown>{request.prompt}</Markdown>

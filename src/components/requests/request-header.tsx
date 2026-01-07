@@ -9,6 +9,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 			<div className="flex flex-row items-center justify-between gap-2">
 				<UidPermalink
 					uid={request.requester_uid}
+					action="posted a Request"
 					timeLinkTo="/learn/$lang/requests/$id"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ lang: request.lang, id: request.id }}

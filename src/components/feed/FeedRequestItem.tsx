@@ -16,10 +16,5 @@ export function FeedRequestItem({ item }: { item: FeedActivityType }) {
 		upvote_count: payload.upvote_count,
 	}
 
-	return (
-		<div>
-			<p className="text-muted-foreground text-sm">A Request for flashcards</p>
-			<RequestItem request={request} />
-		</div>
-	)
+	return <RequestItem request={request} />
 }
