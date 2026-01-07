@@ -784,6 +784,15 @@ $$;
 
 alter function "public"."update_comment_upvote_count" () owner to "postgres";
 
+create or replace function "public"."update_phrase_playlist_timestamp" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_phrase_playlist_timestamp" () owner to "postgres";
+
 create or replace function "public"."update_phrase_playlist_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
   if (TG_OP = 'INSERT') then
@@ -802,6 +811,15 @@ end;
 $$;
 
 alter function "public"."update_phrase_playlist_upvote_count" () owner to "postgres";
+
+create or replace function "public"."update_phrase_request_timestamp" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_phrase_request_timestamp" () owner to "postgres";
 
 create or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1211,7 +1229,9 @@ create table if not exists "public"."phrase_playlist" (
 	"href" "text",
 	"created_at" timestamp with time zone default "now" () not null,
 	"lang" character varying not null,
-	"upvote_count" integer default 0 not null
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
 );
 
 alter table "public"."phrase_playlist" owner to "postgres";
@@ -1222,7 +1242,9 @@ create table if not exists "public"."phrase_request" (
 	"requester_uid" "uuid" not null,
 	"lang" character varying not null,
 	"prompt" "text" not null,
-	"upvote_count" integer default 0 not null
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
 );
 
 alter table "public"."phrase_request" owner to "postgres";
@@ -1249,6 +1271,8 @@ select
 	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
 from
 	"public"."phrase_request" "pr"
+where
+	("pr"."deleted" = false)
 union all
 select
 	"pp"."id",
@@ -1275,6 +1299,8 @@ select
 	) as "payload"
 from
 	"public"."phrase_playlist" "pp"
+where
+	("pp"."deleted" = false)
 union all
 select distinct
 	on ("p"."id") "p"."id",
@@ -1888,6 +1914,10 @@ create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "la
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
+create or replace trigger "on_phrase_playlist_updated" before
+update on "public"."phrase_playlist" for each row
+execute function "public"."update_phrase_playlist_timestamp" ();
+
 create or replace trigger "on_phrase_playlist_upvote_added"
 after insert on "public"."phrase_playlist_upvote" for each row
 execute function "public"."update_phrase_playlist_upvote_count" ();
@@ -1895,6 +1925,10 @@ execute function "public"."update_phrase_playlist_upvote_count" ();
 create or replace trigger "on_phrase_playlist_upvote_removed"
 after delete on "public"."phrase_playlist_upvote" for each row
 execute function "public"."update_phrase_playlist_upvote_count" ();
+
+create or replace trigger "on_phrase_request_updated" before
+update on "public"."phrase_request" for each row
+execute function "public"."update_phrase_request_timestamp" ();
 
 create or replace trigger "on_phrase_request_upvote_added"
 after insert on "public"."phrase_request_upvote" for each row
@@ -2146,7 +2180,12 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase_playlist" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or ("uid" = "auth"."uid" ())
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."phrase_relation" for
 select
@@ -2154,7 +2193,12 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase_request" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or ("requester_uid" = "auth"."uid" ())
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."phrase_tag" for
 select
@@ -2175,26 +2219,6 @@ select
 create policy "Enable read access for all users" on "public"."tag" for
 select
 	using (true);
-
-create policy "Enable update for users based on uid" on "public"."phrase_playlist"
-for update
-	to "authenticated" using (
-		(
-			(
-				select
-					"auth"."uid" () as "uid"
-			) = "uid"
-		)
-	)
-with
-	check (
-		(
-			(
-				select
-					"auth"."uid" () as "uid"
-			) = "uid"
-		)
-	);
 
 create policy "Enable update for users based on uid" on "public"."playlist_phrase_link"
 for update
@@ -2349,12 +2373,6 @@ create policy "User data only for this user" on "public"."user_deck" using (("au
 with
 	check (("auth"."uid" () = "uid"));
 
-create policy "Users can cancel their own requests" on "public"."phrase_request"
-for update
-	to "authenticated" using (("requester_uid" = "auth"."uid" ()))
-with
-	check (("requester_uid" = "auth"."uid" ()));
-
 create policy "Users can create comments" on "public"."request_comment" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2424,6 +2442,28 @@ with
 create policy "Users can update own comments" on "public"."request_comment"
 for update
 	to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Users can update their own playlists" on "public"."phrase_playlist"
+for update
+	to "authenticated" using (
+		(
+			("uid" = "auth"."uid" ())
+			and ("deleted" = false)
+		)
+	)
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Users can update their own requests" on "public"."phrase_request"
+for update
+	to "authenticated" using (
+		(
+			("requester_uid" = "auth"."uid" ())
+			and ("deleted" = false)
+		)
+	)
+with
+	check (("requester_uid" = "auth"."uid" ()));
 
 create policy "Users can view their own chat messages" on "public"."chat_message" for
 select
@@ -2731,9 +2771,17 @@ grant all on function "public"."update_comment_upvote_count" () to "authenticate
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
+grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
+
+grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
+
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 

@@ -176,6 +176,8 @@ export const PhraseRequestSchema = z.object({
 	lang: LangSchema,
 	prompt: z.string(),
 	upvote_count: z.number().default(0),
+	deleted: z.boolean().default(false),
+	updated_at: z.string().nullable().optional(),
 })
 
 export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>

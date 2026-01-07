@@ -385,32 +385,38 @@ export type Database = {
 			phrase_playlist: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					description: string | null
 					href: string | null
 					id: string
 					lang: string
 					title: string
 					uid: string
+					updated_at: string | null
 					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					description?: string | null
 					href?: string | null
 					id?: string
 					lang: string
 					title: string
 					uid?: string
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					description?: string | null
 					href?: string | null
 					id?: string
 					lang?: string
 					title?: string
 					uid?: string
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Relationships: [
@@ -537,26 +543,32 @@ export type Database = {
 			phrase_request: {
 				Row: {
 					created_at: string
+					deleted: boolean
 					id: string
 					lang: string
 					prompt: string
 					requester_uid: string
+					updated_at: string | null
 					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					lang: string
 					prompt: string
 					requester_uid: string
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
+					deleted?: boolean
 					id?: string
 					lang?: string
 					prompt?: string
 					requester_uid?: string
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Relationships: [
