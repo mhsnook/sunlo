@@ -31,8 +31,20 @@ export function useMyFriendsRequestsLang(
 	)
 }
 
-// @@TODO obviously a placeholder
-export const usePopularRequestsLang = useMyFriendsRequestsLang
+export function usePopularRequestsLang(
+	lang: string
+): UseLiveQueryResult<PhraseRequestType[]> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ request: phraseRequestsCollection })
+				.where(({ request }) => eq(request.lang, lang))
+				.orderBy(({ request }) => request.upvote_count, 'desc')
+				.orderBy(({ request }) => request.created_at, 'desc')
+				.select(({ request }) => ({ ...request })),
+		[lang]
+	)
+}
 
 export function useRequestsLang(
 	lang: string
