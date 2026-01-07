@@ -14,7 +14,7 @@ export function FeedPhraseItem({ item }: { item: FeedActivityType }) {
 	const source = payload.source
 
 	return (
-		<div className="bg-card text-card-foreground flex flex-col gap-2 rounded-lg border p-4 shadow-sm">
+		<div className="flex flex-col gap-2 px-2 pt-4">
 			<div className="text-muted-foreground mb-2 flex flex-row items-center justify-between text-sm">
 				<UidPermalinkInline
 					uid={item.uid}

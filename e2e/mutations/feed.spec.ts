@@ -293,4 +293,104 @@ test.describe('Unified Feed', () => {
 			.single()
 		if (request) await deleteRequest(request.id)
 	})
+
+	test('allows users to upvote playlists', async ({ page }) => {
+		await loginAsTestUser(page)
+		const lang = 'hin'
+		const nonce = Math.random().toString(36).substring(7)
+		const playlistTitle = `Upvote Test Playlist ${nonce}`
+
+		// 1. Create a playlist
+		const playlist = await createPlaylist({
+			lang,
+			title: playlistTitle,
+		})
+
+		try {
+			// 2. Navigate to feed
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
+
+			// 3. Verify playlist is visible in feed
+			await expect(page.getByText(playlistTitle).first()).toBeVisible()
+
+			// 4. Find the upvote button for this playlist
+			const playlistCard = page.locator(
+				`div.bg-card:has-text("${playlistTitle}")`
+			)
+			const upvoteButton = playlistCard.getByTestId('upvote-playlist-button')
+
+			// 5. Verify initial upvote count is 0
+			// Use aria-label or more specific selector to avoid ambiguity with "0 phrases"
+			const upvoteArea = upvoteButton.locator('..')
+			await expect(upvoteArea).toContainText('0')
+
+			// 6. Click upvote button
+			await upvoteButton.click()
+
+			// 7. Verify upvote count increased to 1
+			await expect(upvoteArea).toContainText('1')
+
+			// 8. Verify button state changed (title changes to "Remove vote")
+			await expect(upvoteButton).toHaveAttribute('title', 'Remove vote')
+
+			// 9. Verify upvote in database
+			const { data: upvoteInDb } = await supabase
+				.from('phrase_playlist_upvote')
+				.select()
+				.eq('playlist_id', playlist.id)
+				.eq('uid', TEST_USER_UID)
+				.single()
+
+			expect(upvoteInDb).toBeTruthy()
+			expect(upvoteInDb?.playlist_id).toBe(playlist.id)
+			expect(upvoteInDb?.uid).toBe(TEST_USER_UID)
+
+			// 10. Verify upvote_count updated in playlist table
+			const { data: updatedPlaylist } = await supabase
+				.from('phrase_playlist')
+				.select('upvote_count')
+				.eq('id', playlist.id)
+				.single()
+
+			expect(updatedPlaylist?.upvote_count).toBe(1)
+
+			// 11. Click upvote button again to remove upvote
+			await upvoteButton.click()
+
+			// 12. Verify count decreased back to 0
+			await expect(upvoteArea).toContainText('0')
+
+			// 13. Verify button state changed back (title changes back to "Vote up this playlist")
+			await expect(upvoteButton).toHaveAttribute(
+				'title',
+				'Vote up this playlist'
+			)
+
+			// 14. Verify upvote removed from database
+			const { data: removedUpvote } = await supabase
+				.from('phrase_playlist_upvote')
+				.select()
+				.eq('playlist_id', playlist.id)
+				.eq('uid', TEST_USER_UID)
+				.maybeSingle()
+
+			expect(removedUpvote).toBeNull()
+
+			// 15. Verify upvote_count updated back to 0
+			const { data: finalPlaylist } = await supabase
+				.from('phrase_playlist')
+				.select('upvote_count')
+				.eq('id', playlist.id)
+				.single()
+
+			expect(finalPlaylist?.upvote_count).toBe(0)
+		} finally {
+			// Cleanup
+			await deletePlaylist(playlist.id)
+		}
+	})
 })

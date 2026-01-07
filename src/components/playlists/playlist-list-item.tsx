@@ -41,8 +41,8 @@ export function PlaylistItem({
 
 				<div className="flex items-center gap-2">
 					<Badge variant="outline">
-						{data?.length ?? playlist.phrase_count ?? 0} phrase
-						{(data?.length ?? playlist.phrase_count) === 1 ? '' : 's'}
+						{data?.length ?? 0} phrase
+						{data?.length === 1 ? '' : 's'}
 					</Badge>
 					<LangBadge lang={playlist.lang} />
 				</div>
