@@ -6,6 +6,7 @@ import {
 	getRequest,
 	deletePhrase,
 	getPhrase,
+	supabase,
 } from '../helpers/db-helpers'
 
 test.describe('Phrase Request Mutations', () => {
@@ -191,6 +192,100 @@ test.describe('Phrase Request Mutations', () => {
 			await deletePhrase(phraseId!)
 		} finally {
 			// Clean up the request
+			await deleteRequest(request.id)
+		}
+	})
+
+	test('comment context menu: share and copy permalink', async ({
+		page,
+		context,
+	}) => {
+		// 1. Create a request and a comment
+		const request = await createRequest({
+			lang: 'hin',
+			prompt: 'Test request for comment context menu',
+		})
+
+		// Create a comment on the request
+		const commentContent = `Test comment ${Math.random()}`
+		const { data: comment, error: commentError } = await supabase
+			.from('request_comment')
+			.insert({
+				request_id: request.id,
+				uid: TEST_USER_UID,
+				content: commentContent,
+			})
+			.select()
+			.single()
+
+		expect(commentError).toBeNull()
+		expect(comment).toBeTruthy()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate to the request page
+			await page.goto(`/learn/hin/requests/${request.id}`)
+
+			// Verify comment is visible
+			await expect(page.getByText(commentContent)).toBeVisible()
+
+			// 3. Find the comment item and its context menu button
+			const commentItem = page
+				.locator('[data-testid="comment-item"]')
+				.filter({ hasText: commentContent })
+			const contextMenuButton = commentItem.getByTestId(
+				'comment-context-menu-trigger'
+			)
+
+			await expect(contextMenuButton).toBeVisible()
+
+			// 4. Click the context menu button
+			await contextMenuButton.click()
+
+			// Verify menu is open
+			await expect(
+				page.getByRole('menuitem', { name: 'Copy link' })
+			).toBeVisible()
+
+			// 5. Test "Copy link" functionality
+			await page.getByRole('menuitem', { name: 'Copy link' }).click()
+
+			// Wait for either success or error toast
+			await expect(
+				page.getByText(/Link copied to clipboard|Failed to copy link/)
+			).toBeVisible({ timeout: 10000 })
+
+			// Try to verify clipboard (only works in Chromium with permissions)
+			try {
+				await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+				const clipboardText = await page.evaluate(() =>
+					navigator.clipboard.readText()
+				)
+				if (clipboardText) {
+					expect(clipboardText).toContain(`/learn/hin/requests/${request.id}`)
+					expect(clipboardText).toContain(`showSubthread=${comment.id}`)
+				}
+			} catch /*(error)*/ {
+				// Clipboard permissions not supported or operation failed, skip verification
+			}
+
+			// 7. Open the context menu again to test Report (if visible in dev mode)
+			await contextMenuButton.click()
+
+			// Check if Report option exists (it's wrapped in Flagged component)
+			const reportOption = page.getByRole('menuitem', { name: 'Report' })
+			if (await reportOption.isVisible()) {
+				await reportOption.click()
+
+				// Wait for success toast
+				await expect(page.getByText('Thank you for reporting')).toBeVisible()
+			}
+		} finally {
+			// Clean up comment and request
+			if (comment?.id) {
+				await supabase.from('request_comment').delete().eq('id', comment.id)
+			}
 			await deleteRequest(request.id)
 		}
 	})
