@@ -8,6 +8,7 @@ import { SharePlaylistButton } from './share-playlist-button'
 import { UpvotePlaylist } from './upvote-playlist-button'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
+import { PlaylistEmbed } from './playlist-embed'
 
 export function PlaylistItem({
 	playlist,
@@ -53,6 +54,50 @@ export function PlaylistItem({
 			{playlist.description && (
 				<p className="text-muted-foreground text-sm">{playlist.description}</p>
 			)}
+
+			{/* Embed player for source material */}
+			{playlist.href && <PlaylistEmbed href={playlist.href} />}
+
+			{/* Track list of linked phrases */}
+			{data && data.length > 0 && (
+				<div className="text-muted-foreground flex flex-col gap-1 text-sm">
+					{data.map(({ phrase }, index) => (
+						<Link
+							key={phrase.id}
+							to="/learn/$lang/phrases/$id"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang: phrase.lang, id: phrase.id }}
+							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+						>
+							<span className="text-muted-foreground/50 w-6 text-right text-xs">
+								{index + 1}
+							</span>
+							<span
+								className="truncate font-medium"
+								style={
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									{
+										viewTransitionName: `phrase-text-${phrase.id}`,
+									} as CSSProperties
+								}
+							>
+								&ldquo;
+								{phrase.text.length > 60 ?
+									`${phrase.text.slice(0, 60)}...`
+								:	phrase.text}
+								&rdquo;
+							</span>
+							{phrase.translations && phrase.translations.length > 0 && (
+								<span className="text-muted-foreground/70 ml-auto text-xs whitespace-nowrap">
+									{phrase.translations.length} translation
+									{phrase.translations.length === 1 ? '' : 's'}
+								</span>
+							)}
+						</Link>
+					))}
+				</div>
+			)}
+
 			<div className="text-muted-foreground flex items-center gap-4 text-sm">
 				<UpvotePlaylist playlist={playlist} />
 				<SharePlaylistButton id={playlist.id} />
