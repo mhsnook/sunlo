@@ -22,7 +22,7 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import UserPermalink from '@/components/card-pieces/user-permalink'
+import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { Button } from '@/components/ui/button'
@@ -39,12 +39,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 		<div>
 			{phrase.added_by ?
 				<div className="mb-3 flex flex-row gap-1 px-2">
-					<UserPermalink
-						uid={phrase.added_by}
-						username={phrase.profile.username}
-						avatar_path={phrase.profile.avatar_path}
-						timeValue={phrase.created_at}
-					/>
+					<UidPermalink uid={phrase.added_by} timeValue={phrase.created_at} />
 				</div>
 			:	null}
 			<CardlikeFlashcard

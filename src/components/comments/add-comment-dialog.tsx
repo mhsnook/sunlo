@@ -24,18 +24,16 @@ import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	publicProfilesCollection,
 } from '@/lib/collections'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
-	PublicProfileType,
 	RequestCommentSchema,
 	RequestCommentType,
 } from '@/lib/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/hooks/use-requests'
-import UserPermalink from '../card-pieces/user-permalink'
+import { UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'
 import { SelectPhrasesForComment } from './select-phrases-for-comment'
@@ -43,27 +41,21 @@ import { SelectPhrasesForComment } from './select-phrases-for-comment'
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.comment.content} profile={data.profile} />
+			<DisplayBlock markdown={data.content} uid={data.uid} />
 		)
 }
 
 function RequestDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useRequest(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.prompt} profile={data.profile} />
+			<DisplayBlock markdown={data.prompt} uid={data.requester_uid} />
 		)
 }
 
-function DisplayBlock({
-	markdown,
-	profile,
-}: {
-	markdown: string
-	profile: PublicProfileType
-}) {
+function DisplayBlock({ markdown, uid }: { markdown: string; uid: uuid }) {
 	return (
 		<div>
-			<UserPermalink {...profile} nonInteractive />
+			<UidPermalink uid={uid} nonInteractive />
 			<div className="ms-13 text-sm">
 				<Markdown>{markdown}</Markdown>
 			</div>
@@ -128,20 +120,14 @@ interface CommentFormProps {
 	onSuccess: () => void
 }
 
-function useOneComment(commentId: uuid): UseLiveQueryResult<{
-	comment: RequestCommentType
-	profile: PublicProfileType
-}> {
+function useOneComment(
+	commentId: uuid
+): UseLiveQueryResult<RequestCommentType> {
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ comment: commentsCollection })
 				.where(({ comment }) => eq(comment.id, commentId))
-				.join(
-					{ profile: publicProfilesCollection },
-					({ comment, profile }) => eq(comment.uid, profile.uid),
-					'inner'
-				)
 				.findOne(),
 		[commentId]
 	)
