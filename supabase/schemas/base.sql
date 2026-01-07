@@ -34,8 +34,6 @@ with
 
 alter schema "public" owner to "postgres";
 
-comment on schema "public" is '@graphql({"inflect_names": true})';
-
 create extension if not exists "plv8"
 with
 	schema "pg_catalog";
@@ -870,265 +868,6 @@ comment on column "public"."phrase"."added_by" is 'User who added this card';
 
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-create table if not exists "public"."phrase_playlist" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"title" "text" not null,
-	"description" "text",
-	"href" "text",
-	"created_at" timestamp with time zone default "now" () not null,
-	"lang" character varying not null
-);
-
-alter table "public"."phrase_playlist" owner to "postgres";
-
-create table if not exists "public"."phrase_request" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"requester_uid" "uuid" not null,
-	"lang" character varying not null,
-	"prompt" "text" not null,
-	"upvote_count" integer default 0 not null
-);
-
-alter table "public"."phrase_request" owner to "postgres";
-
-create table if not exists "public"."playlist_phrase_link" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"phrase_id" "uuid" not null,
-	"playlist_id" "uuid" not null,
-	"order" double precision,
-	"href" "text",
-	"created_at" timestamp with time zone default "now" () not null
-);
-
-alter table "public"."playlist_phrase_link" owner to "postgres";
-
-create or replace view "public"."feed_activities" as
-select
-	"pr"."id",
-	'request'::"text" as "type",
-	"pr"."created_at",
-	"pr"."lang",
-	"pr"."requester_uid" as "uid",
-	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
-from
-	"public"."phrase_request" "pr"
-union all
-select
-	"pp"."id",
-	'playlist'::"text" as "type",
-	"pp"."created_at",
-	"pp"."lang",
-	"pp"."uid",
-	"jsonb_build_object" ('title', "pp"."title", 'description', "pp"."description") as "payload"
-from
-	"public"."phrase_playlist" "pp"
-union all
-select distinct
-	on ("p"."id") "p"."id",
-	'phrase'::"text" as "type",
-	"p"."created_at",
-	"p"."lang",
-	"p"."added_by" as "uid",
-	"jsonb_build_object" (
-		'text',
-		"p"."text",
-		'source',
-		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
-			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
-				'type',
-				'playlist',
-				'id',
-				"ppl"."playlist_id",
-				'title',
-				"playlist"."title",
-				'follows',
-				("p"."count_active" + "p"."count_learned")::integer
-			)
-			else null::"jsonb"
-		end
-	) as "payload"
-from
-	(
-		(
-			(
-				"public"."meta_phrase_info" "p"
-				left join "public"."comment_phrase_link" "cpl" on (("p"."id" = "cpl"."phrase_id"))
-			)
-			left join "public"."playlist_phrase_link" "ppl" on (("p"."id" = "ppl"."phrase_id"))
-		)
-		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
-	)
-where
-	("p"."added_by" is not null);
-
-alter table "public"."feed_activities" owner to "postgres";
-
-create table if not exists "public"."friend_request_action" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"uid_by" "uuid" not null,
-	"uid_for" "uuid" not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"action_type" "public"."friend_request_response",
-	"uid_less" "uuid",
-	"uid_more" "uuid"
-);
-
-alter table "public"."friend_request_action" owner to "postgres";
-
-comment on column "public"."friend_request_action"."uid_less" is 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
-
-comment on column "public"."friend_request_action"."uid_more" is 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
-
-create or replace view "public"."friend_summary"
-with
-	("security_invoker" = 'true') as
-select distinct
-	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
-	"a"."uid_more",
-	case
-		when (
-			"a"."action_type" = 'accept'::"public"."friend_request_response"
-		) then 'friends'::"text"
-		when (
-			"a"."action_type" = 'invite'::"public"."friend_request_response"
-		) then 'pending'::"text"
-		when (
-			"a"."action_type" = any (
-				array[
-					'decline'::"public"."friend_request_response",
-					'cancel'::"public"."friend_request_response",
-					'remove'::"public"."friend_request_response"
-				]
-			)
-		) then 'unconnected'::"text"
-		else null::"text"
-	end as "status",
-	"a"."created_at" as "most_recent_created_at",
-	"a"."uid_by" as "most_recent_uid_by",
-	"a"."uid_for" as "most_recent_uid_for",
-	"a"."action_type" as "most_recent_action_type",
-	case
-		when ("a"."uid_by" = "auth"."uid" ()) then "a"."uid_for"
-		else "a"."uid_by"
-	end as "uid"
-from
-	"public"."friend_request_action" "a"
-order by
-	"a"."uid_less",
-	"a"."uid_more",
-	"a"."created_at" desc;
-
-alter table "public"."friend_summary" owner to "postgres";
-
-create table if not exists "public"."language" (
-	"name" "text" not null,
-	"lang" character varying not null,
-	"alias_of" character varying
-);
-
-alter table "public"."language" owner to "postgres";
-
-comment on table "public"."language" is 'The languages that people are trying to learn';
-
-create table if not exists "public"."user_deck" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"lang" character varying not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
-	"archived" boolean default false not null,
-	"daily_review_goal" smallint default 15 not null,
-	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
-);
-
-alter table "public"."user_deck" owner to "postgres";
-
-comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
-
-comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
-
-comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
-
-comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
-
-comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
-
-create or replace view "public"."meta_language" as
-with
-	"first" as (
-		select
-			"l"."lang",
-			"l"."name",
-			"l"."alias_of",
-			(
-				select
-					"count" (distinct "d"."uid") as "count"
-				from
-					"public"."user_deck" "d"
-				where
-					(("l"."lang")::"text" = ("d"."lang")::"text")
-			) as "learners",
-			(
-				select
-					"count" (distinct "p"."id") as "count"
-				from
-					"public"."phrase" "p"
-				where
-					(("l"."lang")::"text" = ("p"."lang")::"text")
-			) as "phrases_to_learn"
-		from
-			"public"."language" "l"
-		group by
-			"l"."lang",
-			"l"."name",
-			"l"."alias_of"
-	),
-	"second" as (
-		select
-			"first"."lang",
-			"first"."name",
-			"first"."alias_of",
-			"first"."learners",
-			"first"."phrases_to_learn",
-			("first"."learners" * "first"."phrases_to_learn") as "display_score"
-		from
-			"first"
-		order by
-			("first"."learners" * "first"."phrases_to_learn") desc
-	)
-select
-	"second"."lang",
-	"second"."name",
-	"second"."alias_of",
-	"second"."learners",
-	"second"."phrases_to_learn",
-	"rank" () over (
-		order by
-			"second"."display_score" desc
-	) as "rank",
-	"rank" () over (
-		order by
-			"second"."display_score" desc,
-			"second"."name"
-	) as "display_order"
-from
-	"second";
-
-alter table "public"."meta_language" owner to "postgres";
-
 create table if not exists "public"."phrase_tag" (
 	"phrase_id" "uuid" not null,
 	"tag_id" "uuid" not null,
@@ -1379,6 +1118,283 @@ from
 	"results";
 
 alter table "public"."meta_phrase_info" owner to "postgres";
+
+create table if not exists "public"."phrase_playlist" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"title" "text" not null,
+	"description" "text",
+	"href" "text",
+	"created_at" timestamp with time zone default "now" () not null,
+	"lang" character varying not null
+);
+
+alter table "public"."phrase_playlist" owner to "postgres";
+
+create table if not exists "public"."phrase_request" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"requester_uid" "uuid" not null,
+	"lang" character varying not null,
+	"prompt" "text" not null,
+	"upvote_count" integer default 0 not null
+);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists "public"."playlist_phrase_link" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"phrase_id" "uuid" not null,
+	"playlist_id" "uuid" not null,
+	"order" double precision,
+	"href" "text",
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."playlist_phrase_link" owner to "postgres";
+
+create or replace view "public"."feed_activities" as
+select
+	"pr"."id",
+	'request'::"text" as "type",
+	"pr"."created_at",
+	"pr"."lang",
+	"pr"."requester_uid" as "uid",
+	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
+from
+	"public"."phrase_request" "pr"
+union all
+select
+	"pp"."id",
+	'playlist'::"text" as "type",
+	"pp"."created_at",
+	"pp"."lang",
+	"pp"."uid",
+	"jsonb_build_object" (
+		'title',
+		"pp"."title",
+		'description',
+		"pp"."description",
+		'phrase_count',
+		(
+			select
+				"count" (*) as "count"
+			from
+				"public"."playlist_phrase_link"
+			where
+				("playlist_phrase_link"."playlist_id" = "pp"."id")
+		)
+	) as "payload"
+from
+	"public"."phrase_playlist" "pp"
+union all
+select distinct
+	on ("p"."id") "p"."id",
+	'phrase'::"text" as "type",
+	"p"."created_at",
+	"p"."lang",
+	"p"."added_by" as "uid",
+	"jsonb_build_object" (
+		'text',
+		"p"."text",
+		'source',
+		case
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
+				'type',
+				'request',
+				'id',
+				"cpl"."request_id",
+				'comment_id',
+				"cpl"."comment_id"
+			)
+			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
+				'type',
+				'playlist',
+				'id',
+				"ppl"."playlist_id",
+				'title',
+				"playlist"."title",
+				'follows',
+				(("p"."count_active" + "p"."count_learned"))::integer
+			)
+			else null::"jsonb"
+		end
+	) as "payload"
+from
+	(
+		(
+			(
+				"public"."meta_phrase_info" "p"
+				left join "public"."comment_phrase_link" "cpl" on (("p"."id" = "cpl"."phrase_id"))
+			)
+			left join "public"."playlist_phrase_link" "ppl" on (("p"."id" = "ppl"."phrase_id"))
+		)
+		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
+	)
+where
+	(
+		("p"."added_by" is not null)
+		and ("cpl"."id" is null)
+		and ("ppl"."id" is null)
+	);
+
+alter table "public"."feed_activities" owner to "postgres";
+
+create table if not exists "public"."friend_request_action" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid_by" "uuid" not null,
+	"uid_for" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"action_type" "public"."friend_request_response",
+	"uid_less" "uuid",
+	"uid_more" "uuid"
+);
+
+alter table "public"."friend_request_action" owner to "postgres";
+
+comment on column "public"."friend_request_action"."uid_less" is 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
+
+comment on column "public"."friend_request_action"."uid_more" is 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
+
+create or replace view "public"."friend_summary"
+with
+	("security_invoker" = 'true') as
+select distinct
+	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
+	"a"."uid_more",
+	case
+		when (
+			"a"."action_type" = 'accept'::"public"."friend_request_response"
+		) then 'friends'::"text"
+		when (
+			"a"."action_type" = 'invite'::"public"."friend_request_response"
+		) then 'pending'::"text"
+		when (
+			"a"."action_type" = any (
+				array[
+					'decline'::"public"."friend_request_response",
+					'cancel'::"public"."friend_request_response",
+					'remove'::"public"."friend_request_response"
+				]
+			)
+		) then 'unconnected'::"text"
+		else null::"text"
+	end as "status",
+	"a"."created_at" as "most_recent_created_at",
+	"a"."uid_by" as "most_recent_uid_by",
+	"a"."uid_for" as "most_recent_uid_for",
+	"a"."action_type" as "most_recent_action_type",
+	case
+		when ("a"."uid_by" = "auth"."uid" ()) then "a"."uid_for"
+		else "a"."uid_by"
+	end as "uid"
+from
+	"public"."friend_request_action" "a"
+order by
+	"a"."uid_less",
+	"a"."uid_more",
+	"a"."created_at" desc;
+
+alter table "public"."friend_summary" owner to "postgres";
+
+create table if not exists "public"."language" (
+	"name" "text" not null,
+	"lang" character varying not null,
+	"alias_of" character varying
+);
+
+alter table "public"."language" owner to "postgres";
+
+comment on table "public"."language" is 'The languages that people are trying to learn';
+
+create table if not exists "public"."user_deck" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
+	"archived" boolean default false not null,
+	"daily_review_goal" smallint default 15 not null,
+	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
+);
+
+alter table "public"."user_deck" owner to "postgres";
+
+comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
+
+comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
+
+comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
+
+comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
+
+comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
+
+create or replace view "public"."meta_language" as
+with
+	"first" as (
+		select
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of",
+			(
+				select
+					"count" (distinct "d"."uid") as "count"
+				from
+					"public"."user_deck" "d"
+				where
+					(("l"."lang")::"text" = ("d"."lang")::"text")
+			) as "learners",
+			(
+				select
+					"count" (distinct "p"."id") as "count"
+				from
+					"public"."phrase" "p"
+				where
+					(("l"."lang")::"text" = ("p"."lang")::"text")
+			) as "phrases_to_learn"
+		from
+			"public"."language" "l"
+		group by
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of"
+	),
+	"second" as (
+		select
+			"first"."lang",
+			"first"."name",
+			"first"."alias_of",
+			"first"."learners",
+			"first"."phrases_to_learn",
+			("first"."learners" * "first"."phrases_to_learn") as "display_score"
+		from
+			"first"
+		order by
+			("first"."learners" * "first"."phrases_to_learn") desc
+	)
+select
+	"second"."lang",
+	"second"."name",
+	"second"."alias_of",
+	"second"."learners",
+	"second"."phrases_to_learn",
+	"rank" () over (
+		order by
+			"second"."display_score" desc
+	) as "rank",
+	"rank" () over (
+		order by
+			"second"."display_score" desc,
+			"second"."name"
+	) as "display_order"
+from
+	"second";
+
+alter table "public"."meta_language" owner to "postgres";
 
 create table if not exists "public"."phrase_relation" (
 	"from_phrase_id" "uuid",
@@ -2615,6 +2631,38 @@ grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
 
+grant all on table "public"."phrase_tag" to "anon";
+
+grant all on table "public"."phrase_tag" to "authenticated";
+
+grant all on table "public"."phrase_tag" to "service_role";
+
+grant all on table "public"."user_profile" to "authenticated";
+
+grant all on table "public"."user_profile" to "service_role";
+
+grant all on table "public"."public_profile" to "anon";
+
+grant all on table "public"."public_profile" to "authenticated";
+
+grant all on table "public"."public_profile" to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
+
+grant all on table "public"."user_card" to "authenticated";
+
+grant all on table "public"."user_card" to "service_role";
+
+grant all on table "public"."meta_phrase_info" to "anon";
+
+grant all on table "public"."meta_phrase_info" to "authenticated";
+
+grant all on table "public"."meta_phrase_info" to "service_role";
+
 grant all on table "public"."phrase_playlist" to "anon";
 
 grant all on table "public"."phrase_playlist" to "authenticated";
@@ -2664,38 +2712,6 @@ grant all on table "public"."meta_language" to "anon";
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
-
-grant all on table "public"."phrase_tag" to "anon";
-
-grant all on table "public"."phrase_tag" to "authenticated";
-
-grant all on table "public"."phrase_tag" to "service_role";
-
-grant all on table "public"."user_profile" to "authenticated";
-
-grant all on table "public"."user_profile" to "service_role";
-
-grant all on table "public"."public_profile" to "anon";
-
-grant all on table "public"."public_profile" to "authenticated";
-
-grant all on table "public"."public_profile" to "service_role";
-
-grant all on table "public"."tag" to "anon";
-
-grant all on table "public"."tag" to "authenticated";
-
-grant all on table "public"."tag" to "service_role";
-
-grant all on table "public"."user_card" to "authenticated";
-
-grant all on table "public"."user_card" to "service_role";
-
-grant all on table "public"."meta_phrase_info" to "anon";
-
-grant all on table "public"."meta_phrase_info" to "authenticated";
-
-grant all on table "public"."meta_phrase_info" to "service_role";
 
 grant all on table "public"."phrase_relation" to "anon";
 

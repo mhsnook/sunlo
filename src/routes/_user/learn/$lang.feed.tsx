@@ -15,6 +15,7 @@ import languages from '@/lib/languages'
 import { PlusMenu } from '@/components/plus-menu'
 import { useFeedLang } from '@/hooks/use-feed'
 import { FeedItem } from '@/components/feed/FeedItem'
+import { Button } from '@/components/ui/button'
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
@@ -106,7 +107,7 @@ function RecentFeed() {
 	const feedItems = data?.pages.flat()
 
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4">
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !feedItems || feedItems.length === 0 ?
@@ -125,14 +126,14 @@ function RecentFeed() {
 						<FeedItem key={item.id} item={item} />
 					))}
 					{hasNextPage && (
-						<button
-							className={buttonVariants({ variant: 'outline' })}
-							// oxlint-disable-next-line
+						<Button
+							variant="outline"
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
 							onClick={() => fetchNextPage()}
 							disabled={isFetchingNextPage}
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
-						</button>
+						</Button>
 					)}
 				</>
 			}

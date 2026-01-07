@@ -122,18 +122,15 @@ test.describe('Unified Feed', () => {
 				.getByTestId(`deck-card-link-${lang}`)
 				.click()
 
-			// Find the phrase item using the actual text from the database
-			await expect(page.getByText(phraseText).first()).toBeVisible()
+			// 6. Verify the phrase is NOT visible as a standalone activity (the "A new Phrase" text)
+			// It should be visible elsewhere (like in the request card) but not as its own activity item.
+			await expect(
+				page.locator('div', { hasText: 'A new Phrase' }).getByText(phraseText)
+			).not.toBeVisible()
 
-			// Check for provenance text in pieces
-			await expect(page.getByText('added a phrase').first()).toBeVisible()
-			await expect(
-				page.getByText('In response to request').first()
-			).toBeVisible()
-			await expect(
-				page.getByRole('link', { name: 'discussion' }).first()
-			).toBeVisible()
-			await expect(page.getByText(request.prompt).first()).toBeVisible()
+			// Check that the request item is visible and shows the answer
+			await expect(page.getByText(prompt).first()).toBeVisible()
+			await expect(page.getByText('1 answer').first()).toBeVisible()
 		} finally {
 			// Cleanup
 			await deletePhrase(phrase.id)
@@ -141,6 +138,67 @@ test.describe('Unified Feed', () => {
 			if (comment) {
 				await supabase.from('request_comment').delete().eq('id', comment.id)
 			}
+		}
+	})
+	test('folds playlist phrases into the playlist activity', async ({
+		page,
+	}) => {
+		await loginAsTestUser(page)
+		const lang = 'hin'
+		const nonce = Math.random().toString(36).substring(7)
+		const playlistTitle = `Folding Playlist ${nonce}`
+		const phrase1Text = `Folded Phrase 1 ${nonce}`
+		const phrase2Text = `Folded Phrase 2 ${nonce}`
+
+		// 1. Create a playlist
+		const playlist = await createPlaylist({
+			lang,
+			title: playlistTitle,
+		})
+
+		// 2. Create phrases and link them to the playlist
+		const { phrase: phrase1 } = await createPhrase({
+			lang,
+			text: phrase1Text,
+			translationText: 'Trans 1',
+			translationLang: 'eng',
+		})
+		const { phrase: phrase2 } = await createPhrase({
+			lang,
+			text: phrase2Text,
+			translationText: 'Trans 2',
+			translationLang: 'eng',
+		})
+
+		await supabase.from('playlist_phrase_link').insert([
+			{ playlist_id: playlist.id, phrase_id: phrase1.id, uid: TEST_USER_UID },
+			{ playlist_id: playlist.id, phrase_id: phrase2.id, uid: TEST_USER_UID },
+		])
+
+		try {
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
+
+			// 3. Verify the playlist is visible with the count
+			await expect(page.getByText(playlistTitle).first()).toBeVisible()
+			await expect(
+				page.getByText('A Playlist with 2 phrases').first()
+			).toBeVisible()
+
+			// 4. Verify individual phrases are NOT visible standalone
+			await expect(
+				page.locator('div', { hasText: 'A new Phrase' }).getByText(phrase1Text)
+			).not.toBeVisible()
+			await expect(
+				page.locator('div', { hasText: 'A new Phrase' }).getByText(phrase2Text)
+			).not.toBeVisible()
+		} finally {
+			await deletePhrase(phrase1.id)
+			await deletePhrase(phrase2.id)
+			await deletePlaylist(playlist.id)
 		}
 	})
 

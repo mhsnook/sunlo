@@ -45,7 +45,8 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					</div>
 
 					<p className="text-muted-foreground mt-4 text-sm">
-						{links?.length || 'No'} answers {links?.length ? '' : 'yet'}
+						{links?.length || 'No'} answer{links?.length === 1 ? '' : 's'}{' '}
+						{links?.length ? '' : 'yet'}
 					</p>
 					<ScrollArea className="flex w-full flex-row justify-start gap-2">
 						<div className="flex w-full flex-row justify-start gap-2">
