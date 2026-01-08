@@ -1,13 +1,22 @@
-import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
 import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
-import { langTagsCollection, languagesCollection } from '@/lib/collections'
+import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
+import type { LangTagType, LanguageType, PhraseFullType } from '@/lib/schemas'
+import {
+	langTagsCollection,
+	languagesCollection,
+	playlistPhraseLinksCollection,
+	phrasePlaylistsCollection,
+	commentPhraseLinksCollection,
+	commentsCollection,
+	phraseRequestsCollection,
+} from '@/lib/collections'
 import { phrasesFull } from '@/lib/live-collections'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import { LangTagType, LanguageType, PhraseFullType } from '@/lib/schemas'
 import { useUserId } from '@/lib/use-auth'
+import { useMemo } from 'react'
 
 export const useLanguageMeta = (
 	lang: string
@@ -122,4 +131,121 @@ export function useAllMyPhrasesLang(
 				.orderBy(({ phrase }) => phrase.created_at, 'desc'),
 		[userId, lang]
 	)
+}
+
+// Provenance types for phrase metadata
+export interface PhraseProvenancePlaylist {
+	type: 'playlist'
+	id: uuid
+	playlistId: uuid
+	title: string
+	description: string | null
+	href: string | null
+	created_at: string
+	uid: uuid
+}
+
+export interface PhraseProvenanceComment {
+	type: 'comment'
+	id: uuid
+	commentId: uuid
+	requestId: uuid
+	prompt: string
+	created_at: string
+	uid: uuid
+}
+
+export type PhraseProvenanceItem =
+	| PhraseProvenancePlaylist
+	| PhraseProvenanceComment
+
+/**
+ * Get playlists that contain this phrase
+ */
+export function usePhrasePlaylists(
+	phraseId: uuid
+): UseLiveQueryResult<PhraseProvenancePlaylist[]> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ link: playlistPhraseLinksCollection })
+				.join(
+					{ playlist: phrasePlaylistsCollection },
+					({ link, playlist }) => eq(link.playlist_id, playlist.id),
+					'inner'
+				)
+				.where(({ link, playlist }) =>
+					and(eq(link.phrase_id, phraseId), eq(playlist.deleted, false))
+				)
+				.select(({ playlist, link }) => ({
+					type: 'playlist' as const,
+					id: link.id,
+					playlistId: playlist.id,
+					title: playlist.title,
+					description: playlist.description,
+					href: link.href,
+					created_at: link.created_at,
+					uid: playlist.uid,
+				})),
+		[phraseId]
+	)
+}
+
+/**
+ * Get comments that mention this phrase
+ */
+export function usePhraseComments(
+	phraseId: uuid
+): UseLiveQueryResult<PhraseProvenanceComment[]> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.join(
+					{ comment: commentsCollection },
+					({ link, comment }) => eq(link.comment_id, comment.id),
+					'inner'
+				)
+				.join(
+					{ request: phraseRequestsCollection },
+					({ comment, request }) => eq(comment.request_id, request.id),
+					'inner'
+				)
+				.where(({ link, request }) =>
+					and(eq(link.phrase_id, phraseId), eq(request.deleted, false))
+				)
+				.select(({ comment, request, link }) => ({
+					type: 'comment' as const,
+					id: link.id,
+					commentId: comment.id,
+					requestId: request.id,
+					prompt: request.prompt,
+					created_at: comment.created_at,
+					uid: comment.uid,
+				})),
+		[phraseId]
+	)
+}
+
+/**
+ * Get all provenance items (playlists + comments) sorted by date
+ */
+export function usePhraseProvenance(phraseId: uuid) {
+	const { data: playlists } = usePhrasePlaylists(phraseId)
+	const { data: comments } = usePhraseComments(phraseId)
+
+	return useMemo(() => {
+		const items: PhraseProvenanceItem[] = [
+			...(playlists ?? []),
+			...(comments ?? []),
+		]
+
+		// Sort by created_at descending (newest first)
+		items.sort(
+			(a, b) =>
+				new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+		)
+
+		return items
+	}, [playlists, comments])
 }
