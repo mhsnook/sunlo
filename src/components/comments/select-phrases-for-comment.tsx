@@ -67,6 +67,8 @@ export function SelectPhrasesForComment({
 				onSelectionChange([...selectedPhraseIds, phraseId])
 			}
 			setShowCreateForm(false)
+			// Close the dialog immediately, assuming this is the only phrase being added
+			setPhraseDialogOpen(false)
 		},
 		[selectedPhraseIds, effectiveMax, onSelectionChange]
 	)
