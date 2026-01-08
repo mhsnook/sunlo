@@ -135,6 +135,11 @@ export const useDeckCards = (lang: string) =>
 		(q) =>
 			q
 				.from({ card: cardsCollection })
+				// ❌ incorrect: `.join(phraseFull, ...)
+				// ✅ correct: `.join({ phrase: phraseFull }, ...)`
+				.join({ phrase: phraseFull }, ({ card, phrase }) =>
+					eq(card.phrase_id, phrase.id)
+				)
 				.where(({ card }) => eq(card.lang, lang)),
 		[lang]
 	)
