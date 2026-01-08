@@ -1,5 +1,6 @@
 import { CSSProperties, useState } from 'react'
-import { ChevronsUpDown, MessagesSquare } from 'lucide-react'
+import { ChevronsUpDown, MessagesSquare, ListMusic } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -22,18 +23,31 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import { UidPermalink } from '@/components/card-pieces/user-permalink'
+import {
+	UidPermalink,
+	UidPermalinkInline,
+} from '@/components/card-pieces/user-permalink'
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { Button } from '@/components/ui/button'
-
+import {
+	usePhraseProvenance,
+	type PhraseProvenanceItem as PhraseProvenanceItemType,
+} from '@/hooks/use-language'
+import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
 	const [isOpen, setIsOpen] = useState(false)
+	const [showAllProvenance, setShowAllProvenance] = useState(false)
+	const provenanceItems = usePhraseProvenance(pid)
 
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) return <PhraseNotFound />
+
+	const displayedProvenance =
+		showAllProvenance ? provenanceItems : provenanceItems.slice(0, 5)
+	const hasMore = provenanceItems.length > 5
 
 	return (
 		<div>
@@ -169,6 +183,37 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					size="icon"
 				/>
 			</div>
+			{/* Provenance section */}
+			{provenanceItems.length > 0 && (
+				<>
+					<Separator />
+					<div className="mt-4 space-y-3">
+						<h3 className="h3">
+							Found in {provenanceItems.length}{' '}
+							{provenanceItems.length === 1 ? 'place' : 'places'}
+						</h3>
+						<div className="space-y-2">
+							{displayedProvenance.map((item) => (
+								<PhraseProvenanceItem
+									key={item.id}
+									item={item}
+									lang={phrase.lang}
+								/>
+							))}
+						</div>
+						{hasMore && !showAllProvenance && (
+							<Button
+								variant="outline"
+								size="sm"
+								// oxlint-disable-next-line jsx-no-new-function-as-prop
+								onClick={() => setShowAllProvenance(true)}
+							>
+								Show {provenanceItems.length - 5} more
+							</Button>
+						)}
+					</div>
+				</>
+			)}
 		</div>
 	)
 }
@@ -178,5 +223,68 @@ function PhraseNotFound() {
 		<Callout variant="problem" Icon={DestructiveOctagon}>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
 		</Callout>
+	)
+}
+
+interface PhraseProvenanceItemProps {
+	item: PhraseProvenanceItemType
+	lang: string
+}
+
+function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
+	if (item.type === 'playlist') {
+		return (
+			<div className="bg-muted/50 space-y-2 rounded-lg p-3">
+				<div className="flex items-start gap-2">
+					<ListMusic className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+					<div className="min-w-0 flex-1">
+						<Link
+							to="/learn/$lang/playlists/$playlistId"
+							// oxlint-disable-next-line jsx-no-new-object-as-prop
+							params={{ lang, playlistId: item.playlistId }}
+							className="s-link font-medium"
+						>
+							Playlist: {item.title}
+						</Link>
+						{item.description && (
+							<p className="text-muted-foreground mt-1 text-sm">
+								{item.description}
+							</p>
+						)}
+						<div className="mt-2">
+							<UidPermalinkInline uid={item.uid} timeValue={item.created_at} />
+						</div>
+						{item.href && (
+							<div className="mt-2">
+								<PlaylistEmbed href={item.href} />
+							</div>
+						)}
+					</div>
+				</div>
+			</div>
+		)
+	}
+
+	// Comment type
+	return (
+		<div className="bg-muted/50 space-y-2 rounded-lg p-3">
+			<div className="flex items-start gap-2">
+				<MessagesSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
+				<div className="min-w-0 flex-1">
+					<Link
+						to="/learn/$lang/requests/$id"
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						params={{ lang, id: item.requestId }}
+						hash={`#comment-${item.commentId}`}
+						className="s-link font-medium"
+					>
+						Thread: {item.prompt}
+					</Link>
+					<div className="mt-2">
+						<UidPermalinkInline uid={item.uid} timeValue={item.created_at} />
+					</div>
+				</div>
+			</div>
+		</div>
 	)
 }
