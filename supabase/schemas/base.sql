@@ -784,6 +784,20 @@ $$;
 
 alter function "public"."update_comment_upvote_count" () owner to "postgres";
 
+create or replace function "public"."update_parent_playlist_timestamp" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  -- Update the parent playlist's updated_at timestamp
+  -- Works for both INSERT/UPDATE (NEW) and DELETE (OLD) operations
+  update public.phrase_playlist
+  set updated_at = now()
+  where id = coalesce(NEW.playlist_id, OLD.playlist_id);
+
+  return coalesce(NEW, OLD);
+end;
+$$;
+
+alter function "public"."update_parent_playlist_timestamp" () owner to "postgres";
+
 create or replace function "public"."update_phrase_playlist_timestamp" () returns "trigger" language "plpgsql" as $$
 begin
   NEW.updated_at = now();
@@ -1938,6 +1952,16 @@ create or replace trigger "on_phrase_request_upvote_removed"
 after delete on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
 
+create or replace trigger "on_playlist_phrase_link_changed"
+after insert
+or delete on "public"."playlist_phrase_link" for each row
+execute function "public"."update_parent_playlist_timestamp" ();
+
+create or replace trigger "on_playlist_phrase_link_updated"
+after
+update on "public"."playlist_phrase_link" for each row
+execute function "public"."update_parent_playlist_timestamp" ();
+
 create or replace trigger "tr_update_comment_upvote_count"
 after insert
 or delete on "public"."comment_upvote" for each row
@@ -2770,6 +2794,10 @@ grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
+
+grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
+
+grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
 

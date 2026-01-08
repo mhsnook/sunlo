@@ -74,13 +74,13 @@ pnpm run seeds:data
 pnpm run seeds:apply
 ```
 
-**Important**: When regenerating `base.sql`, be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
+**Important**: When regenerating `base.sql` and `seed.sql`, be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
 
 ### Database Workflow
 
 1. Use Supabase Studio (http://localhost:54323) to modify schema/data
 2. When feature works, run `pnpm run migrate` to create migration
-3. Run `pnpm run seeds:schema` to update base.sql (review carefully!)
+3. Run `pnpm run seeds:schema` to update base.sql (review carefully!), update supabase types, run formatter
 4. Run `pnpm run types` to regenerate TypeScript types
 
 ## Architecture Overview

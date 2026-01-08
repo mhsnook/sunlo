@@ -1,6 +1,15 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, FIRST_USER_UID } from '../helpers/auth-helpers'
-import { createPlaylist, deletePlaylist, supabase } from '../helpers/db-helpers'
+import {
+	loginAsTestUser,
+	FIRST_USER_UID,
+	TEST_USER_UID,
+} from '../helpers/auth-helpers'
+import {
+	createPlaylist,
+	deletePlaylist,
+	createPhrase,
+	supabase,
+} from '../helpers/db-helpers'
 
 test.describe('Playlist Mutations', () => {
 	test('update playlist: edit title, description, and href', async ({
@@ -189,6 +198,435 @@ test.describe('Playlist Mutations', () => {
 
 			const deleteButton = page.getByRole('button', { name: 'Delete playlist' })
 			await expect(deleteButton).not.toBeVisible()
+		} finally {
+			// Clean up
+			await supabase
+				.from('phrase_playlist')
+				.delete()
+				.eq('id', otherUserPlaylist!.id)
+		}
+	})
+
+	test('manage phrases: add phrase to existing playlist', async ({ page }) => {
+		// 1. Create some phrases via API
+		const phrase1 = await createPhrase({
+			lang: 'hin',
+			text: 'Initial phrase 1',
+			translationText: 'Translation 1',
+		})
+		const phrase2 = await createPhrase({
+			lang: 'hin',
+			text: 'Initial phrase 2',
+			translationText: 'Translation 2',
+		})
+		const phraseToAdd = await createPhrase({
+			lang: 'hin',
+			text: 'Phrase to add',
+			translationText: 'Translation to add',
+		})
+
+		// 2. Create a playlist with 2 phrases via API
+		const playlist = await createPlaylist({
+			lang: 'hin',
+			title: `Test playlist ${Math.random()}`,
+		})
+
+		// Add initial phrases to playlist
+		await supabase
+			.from('playlist_phrase_link')
+			.insert([
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase1.phrase.id,
+					order: 1,
+					uid: TEST_USER_UID,
+				},
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase2.phrase.id,
+					order: 2,
+					uid: TEST_USER_UID,
+				},
+			])
+			.throwOnError()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 3. Navigate to playlist page
+			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+
+			// Verify initial phrases are visible
+			await expect(
+				page.getByText(phrase1.phrase.text, { exact: false })
+			).toBeVisible()
+			await expect(
+				page.getByText(phrase2.phrase.text, { exact: false })
+			).toBeVisible()
+
+			// 4. Click "Manage Phrases" button
+			const manageButton = page.getByRole('button', { name: 'Manage phrases' })
+			await expect(manageButton).toBeVisible()
+			await manageButton.click()
+
+			// 5. Verify dialog is open
+			await expect(page.getByRole('dialog')).toBeVisible()
+			await expect(
+				page.getByRole('heading', { name: 'Manage Phrases' })
+			).toBeVisible()
+
+			// 6. Click "Add phrases" button
+			await page.getByRole('button', { name: /Add.*phrases/i }).click()
+
+			// 7. Search and select the new phrase
+			await page.fill('input[placeholder*="Search"]', phraseToAdd.phrase.text)
+			await page.waitForTimeout(500) // Wait for debounce
+
+			// Click the checkbox for the phrase
+			const phraseCheckbox = page
+				.locator(`label:has-text("${phraseToAdd.phrase.text}")`)
+				.locator('button[role="checkbox"]')
+			await phraseCheckbox.click()
+
+			// Close the phrase selector
+			await page.getByRole('button', { name: 'Done' }).click()
+
+			// 8. Wait for success toast
+			await expect(page.getByText('Phrase added to playlist')).toBeVisible()
+
+			// 9. Verify phrase appears in manage dialog
+			await expect(
+				page.getByText(phraseToAdd.phrase.text, { exact: false })
+			).toBeVisible()
+
+			// 10. Verify link in database
+			const { data: link } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				.eq('playlist_id', playlist.id)
+				.eq('phrase_id', phraseToAdd.phrase.id)
+				.single()
+
+			expect(link).toBeTruthy()
+			expect(link?.order).toBe(3)
+
+			// 11. Verify playlist updated_at changed
+			const { data: updatedPlaylist } = await supabase
+				.from('phrase_playlist')
+				.select()
+				.eq('id', playlist.id)
+				.single()
+
+			expect(updatedPlaylist?.updated_at).toBeTruthy()
+		} finally {
+			// Clean up
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlist.id)
+			await deletePlaylist(playlist.id)
+			await supabase
+				.from('phrase')
+				.delete()
+				.in('id', [phrase1.phrase.id, phrase2.phrase.id, phraseToAdd.phrase.id])
+		}
+	})
+
+	test('manage phrases: remove phrase from playlist', async ({ page }) => {
+		// 1. Create phrases
+		const phrase1 = await createPhrase({
+			lang: 'hin',
+			text: 'Phrase 1',
+			translationText: 'Translation 1',
+		})
+		const phrase2 = await createPhrase({
+			lang: 'hin',
+			text: 'Phrase to remove',
+			translationText: 'Translation to remove',
+		})
+		const phrase3 = await createPhrase({
+			lang: 'hin',
+			text: 'Phrase 3',
+			translationText: 'Translation 3',
+		})
+
+		// 2. Create playlist with 3 phrases
+		const playlist = await createPlaylist({
+			lang: 'hin',
+			title: `Test playlist ${Math.random()}`,
+		})
+
+		const { data: links } = await supabase
+			.from('playlist_phrase_link')
+			.insert([
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase1.phrase.id,
+					order: 1,
+					uid: TEST_USER_UID,
+				},
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase2.phrase.id,
+					order: 2,
+					uid: TEST_USER_UID,
+				},
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase3.phrase.id,
+					order: 3,
+					uid: TEST_USER_UID,
+				},
+			])
+			.select()
+			.throwOnError()
+
+		const linkToRemove = links![1]
+
+		await loginAsTestUser(page)
+
+		try {
+			// 3. Navigate to playlist page
+			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+
+			// 4. Click "Manage Phrases" button
+			await page.getByRole('button', { name: 'Manage phrases' }).click()
+
+			// 5. Verify all 3 phrases are visible
+			await expect(
+				page.getByText(phrase1.phrase.text, { exact: false })
+			).toBeVisible()
+			await expect(
+				page.getByText(phrase2.phrase.text, { exact: false })
+			).toBeVisible()
+			await expect(
+				page.getByText(phrase3.phrase.text, { exact: false })
+			).toBeVisible()
+
+			// 6. Click remove button on second phrase
+			const phraseCards = page.locator('.bg-muted\\/30')
+			const secondCard = phraseCards.nth(1)
+			const removeButton = secondCard.getByRole('button').last() // Trash button is last
+			await removeButton.click()
+
+			// 7. Wait for success toast
+			await expect(page.getByText('Phrase removed from playlist')).toBeVisible()
+
+			// 8. Verify phrase removed from UI
+			await expect(
+				page.getByText(phrase2.phrase.text, { exact: false })
+			).not.toBeVisible()
+
+			// 9. Verify link removed from database
+			const { data: removedLink } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				.eq('id', linkToRemove.id)
+				.maybeSingle()
+
+			expect(removedLink).toBeNull()
+
+			// 10. Verify playlist updated_at changed
+			const { data: updatedPlaylist } = await supabase
+				.from('phrase_playlist')
+				.select()
+				.eq('id', playlist.id)
+				.single()
+
+			expect(updatedPlaylist?.updated_at).toBeTruthy()
+		} finally {
+			// Clean up
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlist.id)
+			await deletePlaylist(playlist.id)
+			await supabase
+				.from('phrase')
+				.delete()
+				.in('id', [phrase1.phrase.id, phrase2.phrase.id, phrase3.phrase.id])
+		}
+	})
+
+	test('manage phrases: reorder phrases', async ({ page }) => {
+		// 1. Create phrases
+		const phrase1 = await createPhrase({
+			lang: 'hin',
+			text: 'First phrase',
+			translationText: 'Translation 1',
+		})
+		const phrase2 = await createPhrase({
+			lang: 'hin',
+			text: 'Second phrase',
+			translationText: 'Translation 2',
+		})
+		const phrase3 = await createPhrase({
+			lang: 'hin',
+			text: 'Third phrase',
+			translationText: 'Translation 3',
+		})
+
+		// 2. Create playlist
+		const playlist = await createPlaylist({
+			lang: 'hin',
+			title: `Test playlist ${Math.random()}`,
+		})
+
+		const { data: _links } = await supabase
+			.from('playlist_phrase_link')
+			.insert([
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase1.phrase.id,
+					order: 1,
+					uid: TEST_USER_UID,
+				},
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase2.phrase.id,
+					order: 2,
+					uid: TEST_USER_UID,
+				},
+				{
+					playlist_id: playlist.id,
+					phrase_id: phrase3.phrase.id,
+					order: 3,
+					uid: TEST_USER_UID,
+				},
+			])
+			.select()
+			.throwOnError()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 3. Navigate and open manage dialog
+			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.getByRole('button', { name: 'Manage phrases' }).click()
+
+			// 4. Click "Move Down" on first phrase
+			const phraseCards = page.locator('.bg-muted\\/30')
+			const firstCard = phraseCards.first()
+			const moveDownButton = firstCard.getByRole('button').nth(1) // Second button is move down
+			await moveDownButton.click()
+
+			// 5. Wait a moment for mutation to complete
+			await page.waitForTimeout(500)
+
+			// 6. Verify order changed in database
+			const { data: updatedLinks } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				.eq('playlist_id', playlist.id)
+				.order('order')
+
+			// First phrase should now be second
+			expect(updatedLinks![0].phrase_id).toBe(phrase2.phrase.id)
+			expect(updatedLinks![1].phrase_id).toBe(phrase1.phrase.id)
+			expect(updatedLinks![2].phrase_id).toBe(phrase3.phrase.id)
+		} finally {
+			// Clean up
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlist.id)
+			await deletePlaylist(playlist.id)
+			await supabase
+				.from('phrase')
+				.delete()
+				.in('id', [phrase1.phrase.id, phrase2.phrase.id, phrase3.phrase.id])
+		}
+	})
+
+	test('manage phrases: edit phrase href', async ({ page }) => {
+		// 1. Create phrase and playlist
+		const phrase = await createPhrase({
+			lang: 'hin',
+			text: 'Test phrase',
+			translationText: 'Test translation',
+		})
+
+		const playlist = await createPlaylist({
+			lang: 'hin',
+			title: `Test playlist ${Math.random()}`,
+		})
+
+		const { data: link } = await supabase
+			.from('playlist_phrase_link')
+			.insert({
+				playlist_id: playlist.id,
+				phrase_id: phrase.phrase.id,
+				order: 1,
+				href: null,
+				uid: TEST_USER_UID,
+			})
+			.select()
+			.single()
+			.throwOnError()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate and open manage dialog
+			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.getByRole('button', { name: 'Manage phrases' }).click()
+
+			// 3. Enter href in input field
+			const hrefInput = page.locator('input[type="url"]').first()
+			const testHref = 'https://youtube.com/watch?v=test&t=123'
+			await hrefInput.fill(testHref)
+
+			// 4. Wait for debounced mutation
+			await page.waitForTimeout(500)
+
+			// 5. Verify href saved in database
+			const { data: updatedLink } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				.eq('id', link!.id)
+				.single()
+
+			expect(updatedLink?.href).toBe(testHref)
+		} finally {
+			// Clean up
+			await supabase
+				.from('playlist_phrase_link')
+				.delete()
+				.eq('playlist_id', playlist.id)
+			await deletePlaylist(playlist.id)
+			await supabase.from('phrase').delete().eq('id', phrase.phrase.id)
+		}
+	})
+
+	test('manage phrases: non-owner cannot see manage button', async ({
+		page,
+	}) => {
+		// 1. Create playlist owned by FIRST_USER
+		const playlistTitle = `Another user's playlist ${Math.random()}`
+		const { data: otherUserPlaylist } = await supabase
+			.from('phrase_playlist')
+			.insert({
+				lang: 'hin',
+				title: playlistTitle,
+				uid: FIRST_USER_UID,
+			})
+			.select()
+			.single()
+
+		expect(otherUserPlaylist).toBeTruthy()
+
+		await loginAsTestUser(page)
+
+		try {
+			// 2. Navigate to the playlist page as TEST_USER (not the owner)
+			await page.goto(`/learn/hin/playlists/${otherUserPlaylist!.id}`)
+
+			// Verify playlist is visible
+			await expect(page.getByText(playlistTitle)).toBeVisible()
+
+			// 3. Verify manage button is NOT visible
+			const manageButton = page.getByRole('button', { name: 'Manage phrases' })
+			await expect(manageButton).not.toBeVisible()
 		} finally {
 			// Clean up
 			await supabase
