@@ -23,11 +23,13 @@ export function SendPhraseToFriendButton({
 	phrase,
 	link,
 	className,
+	text = 'Send in chat',
 	...props
 }: {
 	phrase: PhraseFullFilteredType
 	link?: boolean
 	className?: string
+	text?: string
 } & VariantProps<typeof buttonVariants>) {
 	const userId = useUserId()
 	const [open, setOpen] = useState(false)
@@ -65,10 +67,11 @@ export function SendPhraseToFriendButton({
 					<span
 						className={`inline-flex cursor-pointer items-center gap-2 ${className}`}
 					>
-						<Send /> Send in chat
+						<Send />
+						{text}
 					</span>
 				:	<Button {...props}>
-						<Send /> <span className="hidden @md:inline">Send in chat</span>
+						<Send /> {text && <span className="hidden @md:inline">{text}</span>}
 					</Button>
 				}
 			</DialogTrigger>
