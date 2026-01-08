@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DeckMetaType } from '@/lib/schemas'
 import toast from 'react-hot-toast'
+import { useState } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -189,4 +190,12 @@ export function removeSbTokens() {
 			localStorage.removeItem(key)
 		}
 	}
+}
+
+export function useOneRandomly<T>(array: T[]) {
+	const [index] = useState(() => {
+		const r = Math.random()
+		return Array.isArray(array) ? Math.floor(r * array.length) : 0
+	})
+	return array[index]
 }

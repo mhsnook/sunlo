@@ -20,39 +20,46 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 		[comment.id]
 	).data?.length
 
-	// Toggle upvote mutation
-	const toggleUpvoteMutation = useMutation({
-		mutationFn: async () => {
-			const { data, error } = await supabase.rpc('toggle_comment_upvote', {
+	// Upvote mutation with explicit action
+	const upvoteMutation = useMutation({
+		mutationFn: async (action: 'add' | 'remove') => {
+			const { data, error } = await supabase.rpc('set_comment_upvote', {
 				p_comment_id: comment.id,
+				p_action: action,
 			})
 			if (error) throw error
 			return data as {
 				comment_id: uuid
-				action: 'added' | 'removed'
+				action: 'added' | 'removed' | 'no_change'
 			}
 		},
 		onSuccess: (data) => {
+			// Only update if server actually made a change
+			if (data.action === 'no_change') return
+
 			const currentCount = comment.upvote_count ?? 0
 			const newCount =
 				data.action === 'added' ?
 					currentCount + 1
 				:	Math.max(0, currentCount - 1)
 
+			// Update the comment count
 			commentsCollection.utils.writeUpdate({
 				id: data.comment_id,
 				upvote_count: newCount,
 			})
+
+			// Update the upvotes collection
 			if (data.action === 'added') {
 				commentUpvotesCollection.utils.writeInsert({
 					comment_id: data.comment_id,
 				})
-			} else {
+			} else if (data.action === 'removed') {
 				commentUpvotesCollection.utils.writeDelete(data.comment_id)
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to toggle upvote: ${error.message}`)
+			toast.error(`Failed to update upvote: ${error.message}`)
 		},
 	})
 
@@ -65,15 +72,16 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
-					toggleUpvoteMutation.mutate()
+					// Send explicit action based on current state
+					upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
 				}}
-				disabled={toggleUpvoteMutation.isPending}
+				disabled={upvoteMutation.isPending}
 			>
 				<ThumbsUp />
 			</Button>
 			<span>
 				{comment.upvote_count}
-				<span className="@max-xl:sr-only">
+				<span className="sr-only">
 					{' '}
 					vote{comment.upvote_count === 1 ? '' : 's'}
 				</span>

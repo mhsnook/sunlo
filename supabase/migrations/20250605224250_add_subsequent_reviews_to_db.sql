@@ -40,8 +40,7 @@ from
 set
 	check_function_bodies = off;
 
-create
-or replace function public.insert_user_card_review (
+create or replace function public.insert_user_card_review (
 	phrase_id uuid,
 	lang character varying,
 	score integer,
@@ -120,8 +119,7 @@ return response
 
 $function$;
 
-create
-or replace function public.update_user_card_review (review_id uuid, score integer) returns user_card_review language plv8 as $function$
+create or replace function public.update_user_card_review (review_id uuid, score integer) returns user_card_review language plv8 as $function$
 
 const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id = $1", [review_id])
 const review = reviewQuery[0] ?? null

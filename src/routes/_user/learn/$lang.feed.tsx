@@ -1,34 +1,85 @@
-import { Activity, type CSSProperties, useCallback } from 'react'
+import { Activity, type CSSProperties, useCallback, useMemo } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { Construction, MessageSquareQuote } from 'lucide-react'
+import { Construction } from 'lucide-react'
 
+import type { FeedActivityType } from '@/lib/schemas'
 import { buttonVariants } from '@/components/ui/button-variants'
-
-import type { TitleBar } from '@/types/main'
 import {
 	useMyFriendsRequestsLang,
 	usePopularRequestsLang,
-	useRequestsLang,
 } from '@/hooks/use-requests'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
+import { PlusMenu } from '@/components/plus-menu'
+import { useFeedLang } from '@/hooks/use-feed'
+import { FeedItem } from '@/components/feed/feed-item'
+import { Button } from '@/components/ui/button'
+import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'
+
+// Helper function to group consecutive phrase additions by the same user
+function groupConsecutivePhrases(
+	items: FeedActivityType[]
+): (FeedActivityType | { type: 'phrase_group'; items: FeedActivityType[] })[] {
+	const grouped: (
+		| FeedActivityType
+		| { type: 'phrase_group'; items: FeedActivityType[] }
+	)[] = []
+	let currentGroup: FeedActivityType[] = []
+
+	for (const item of items) {
+		if (item.type === 'phrase') {
+			if (currentGroup.length === 0 || currentGroup[0].uid === item.uid) {
+				currentGroup.push(item)
+			} else {
+				// Different user, flush current group
+				if (currentGroup.length > 1) {
+					grouped.push({ type: 'phrase_group', items: currentGroup })
+				} else {
+					grouped.push(currentGroup[0])
+				}
+				currentGroup = [item]
+			}
+		} else {
+			// Non-phrase item, flush current group
+			if (currentGroup.length > 1) {
+				grouped.push({ type: 'phrase_group', items: currentGroup })
+			} else if (currentGroup.length === 1) {
+				grouped.push(currentGroup[0])
+			}
+			currentGroup = []
+			grouped.push(item)
+		}
+	}
+
+	// Flush remaining group
+	if (currentGroup.length > 1) {
+		grouped.push({ type: 'phrase_group', items: currentGroup })
+	} else if (currentGroup.length === 1) {
+		grouped.push(currentGroup[0])
+	}
+
+	return grouped
+}
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
+	filter_requests: z.boolean().optional(),
+	filter_playlists: z.boolean().optional(),
+	filter_phrases: z.boolean().optional(),
 })
 
 export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	validateSearch: SearchSchema,
 	component: DeckFeedPage,
-	loader: ({ params: { lang } }) => ({
+	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
-			title: `Requests for ${languages[lang]} Phrases`,
-			subtitle: `See what people are learning all across the network`,
+			title: `Activity feed for ${languages[lang]}`,
+			subtitle: 'See what people are learning all across the network',
 			onBackClick: '/learn',
-		} as TitleBar,
+		},
 	}),
 })
 
@@ -45,6 +96,7 @@ function DeckFeedPage() {
 		[navigate]
 	)
 	const search = Route.useSearch()
+	const params = Route.useParams()
 	const activeTab = search.feed ?? 'newest'
 	return (
 		<main style={style}>
@@ -58,23 +110,12 @@ function DeckFeedPage() {
 						<TabsList>
 							<TabsTrigger value="newest">Newest</TabsTrigger>
 							<TabsTrigger value="friends">Friends</TabsTrigger>
-							<TabsTrigger value="popular" disabled>
-								Popular
-							</TabsTrigger>
+							<TabsTrigger value="popular">Popular</TabsTrigger>
 						</TabsList>
-						<Link
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-							className={
-								`${buttonVariants({
-									variant: 'outline',
-									size: 'sm',
-								})}` as const
-							}
-						>
-							<MessageSquareQuote className="size-3" />
-							<span className="me-1">New request</span>
-						</Link>
+						<div className="flex items-center gap-2">
+							<FeedFilterMenu />
+							<PlusMenu lang={params.lang} />
+						</div>
 					</div>
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>
@@ -108,27 +149,91 @@ function DeckFeedPage() {
 	)
 }
 
+const empty = {}
+
 function RecentFeed() {
 	const params = Route.useParams()
-	const { data: requests, isLoading } = useRequestsLang(params.lang)
+	const search = Route.useSearch()
+	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+		useFeedLang(params.lang)
+
+	// flatten pages, apply filters, and group consecutive phrases
+	const groupedItems = useMemo(() => {
+		const feedItems = data?.pages.flat()
+		if (!feedItems) return []
+
+		// Apply filters (default all to true)
+		const filterRequests = search.filter_requests ?? true
+		const filterPlaylists = search.filter_playlists ?? true
+		const filterPhrases = search.filter_phrases ?? true
+		const filteredItems = feedItems.filter((item) => {
+			if (item.type === 'request') return filterRequests
+			if (item.type === 'playlist') return filterPlaylists
+			if (item.type === 'phrase') return filterPhrases
+			return true
+		})
+
+		return groupConsecutivePhrases(filteredItems)
+	}, [
+		data,
+		search.filter_requests,
+		search.filter_playlists,
+		search.filter_phrases,
+	])
+
 	return (
-		<div className="space-y-6">
+		<div className="space-y-4">
 			{isLoading ?
-				<p>Loading requests...</p>
-			: !requests || requests.length === 0 ?
+				<p>Loading feed...</p>
+			: !groupedItems || groupedItems.length === 0 ?
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">This feed is empty.</p>
-					<Link
-						className={buttonVariants()}
-						to="/learn/$lang/requests/new"
-						from={Route.fullPath}
-					>
-						Post a request for a new phrase
-					</Link>
+					<div className="flex flex-row gap-2">
+						<Link
+							className={buttonVariants()}
+							to="/learn/$lang/requests/new"
+							from={Route.fullPath}
+						>
+							Post a request for a new phrase
+						</Link>
+						{(
+							(search.filter_requests ?? true) &&
+							(search.filter_playlists ?? true) &&
+							(search.filter_phrases ?? true)
+						) ?
+							null
+						:	<Link
+								className={buttonVariants()}
+								search={empty}
+								from={Route.fullPath}
+							>
+								Clear feed filters
+							</Link>}
+					</div>
 				</Callout>
-			:	requests.map((request) => (
-					<RequestItem key={request.id} request={request} />
-				))
+			:	<>
+					{groupedItems.map((item, index) => (
+						<FeedItem
+							key={
+								'type' in item && item.type === 'phrase_group' ?
+									`group-${index}`
+								:	item.id
+							}
+							item={item}
+						/>
+					))}
+					{hasNextPage && (
+						<Button
+							variant="outline"
+							// oxlint-disable-next-line jsx-no-new-function-as-prop
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
+							onClick={() => fetchNextPage()}
+							disabled={isFetchingNextPage}
+						>
+							{isFetchingNextPage ? 'Loading...' : 'Load More'}
+						</Button>
+					)}
+				</>
 			}
 		</div>
 	)

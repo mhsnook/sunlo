@@ -1,7 +1,6 @@
 drop view public.language_plus;
 
-create view
-	public.meta_language as
+create view public.meta_language as
 with
 	first as (
 		select

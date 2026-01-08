@@ -1,8 +1,7 @@
 set
 	check_function_bodies = off;
 
-create
-or replace function public.add_phrase_translation_card (
+create or replace function public.add_phrase_translation_card (
 	phrase_text text,
 	phrase_lang text,
 	translation_text text,

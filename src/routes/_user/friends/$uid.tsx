@@ -10,6 +10,11 @@ import { UserContributions } from '../learn/-contributions'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
+	beforeLoad: () => ({
+		titleBar: {
+			title: 'Profile',
+		},
+	}),
 	loader: ({ context, params }) => {
 		const { uid } = params
 		const isMine = uid === context.auth.userId

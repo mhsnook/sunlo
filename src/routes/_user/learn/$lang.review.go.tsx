@@ -23,10 +23,6 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		const daysLoaded = reviewDaysCollection.preload()
 		const reviewsLoaded = cardReviewsCollection.preload()
 		await Promise.all([daysLoaded, reviewsLoaded])
-
-		return {
-			appnav: [],
-		}
 	},
 })
 
@@ -38,9 +34,6 @@ function ReviewPage() {
 
 	if (isLoading) return <Loader />
 	if (!day?.manifest?.length || !stage)
-		// @@TODO Remove these / file issues / repros
-		// return <Navigate to=".." /> // takes me to "../.."
-		// return <Navigate to=".." from={Route.fullPath} /> // /review and /review/go
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} /> // works for some reason
 
 	return (

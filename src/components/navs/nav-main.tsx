@@ -26,6 +26,7 @@ const friendsMenu = makeLinks([
 ])
 const learnMenu = makeLinks([
 	'/learn',
+	'/learn/contributions',
 	// '/learn/quick-search',
 	'/learn/add-deck',
 ])
@@ -37,21 +38,26 @@ export function NavMain({ lang }: { lang?: string }) {
 	const { data: decks } = useDecks()
 	const deckMenu = makeLinks(deckLinks, lang)
 	const isDeckFound = profile && lang && decks?.some((d) => d.lang === lang)
-
+	const { isMobile, open } = useSidebar()
 	return (
 		<>
 			{!deckMenu || !lang || !(lang in languages) ? null : (
-				<div className="bg-primary/10 mx-2 rounded-2xl pb-2">
+				<div
+					className={
+						!open && !isMobile ? 'px-0.5' : 'border-primary/50 border-b px-2'
+					}
+				>
 					{!isDeckFound ?
 						<DeckNotFound lang={lang} />
-					:	<OneSidebarMenu menu={deckMenu} title="" />}
+					:	<OneSidebarMenu
+							menu={deckMenu}
+							title=""
+							className="bg-primary/10 mb-2 rounded-xl"
+						/>
+					}
 				</div>
 			)}
-			<OneSidebarMenu
-				className="border-muted-primary border-t"
-				menu={learnMenu}
-				title="Learning center"
-			/>
+			<OneSidebarMenu menu={learnMenu} title="Learning center" />
 			<OneSidebarMenu menu={friendsMenu} title="Network" />
 			<OneSidebarMenu
 				menu={profile ? siteMenuLoggedIn : siteMenu}

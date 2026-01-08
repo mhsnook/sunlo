@@ -55,8 +55,27 @@ export async function createRequestAndPhrase(params: {
 		text: `${text} - ${Math.random()}`,
 		translationText: `${translationText} - ${Math.random()}`,
 		translationLang,
-		requestId: request!.id,
 	})
+
+	// Link the phrase to the request via comment
+	const { data: comment } = await supabase
+		.from('request_comment')
+		.insert({
+			request_id: request!.id,
+			uid: TEST_USER_UID,
+			content: 'Linked phrase',
+		})
+		.select()
+		.single()
+
+	if (comment) {
+		await supabase.from('comment_phrase_link').insert({
+			request_id: request!.id,
+			comment_id: comment.id,
+			phrase_id: phrase!.id,
+			uid: TEST_USER_UID,
+		})
+	}
 
 	return { request, phrase, translation }
 }
@@ -69,7 +88,6 @@ export async function createPhrase(params: {
 	text: string
 	translationText: string
 	translationLang?: string
-	requestId?: string
 }) {
 	const { lang, text, translationText, translationLang = 'eng' } = params
 
@@ -80,7 +98,6 @@ export async function createPhrase(params: {
 			lang,
 			text: `${text} - ${Math.random()}`,
 			added_by: TEST_USER_UID,
-			request_id: params.requestId,
 		})
 		.select()
 		.throwOnError()
@@ -210,6 +227,36 @@ export async function deleteDeck(lang: string, uid: string) {
 		.eq('lang', lang)
 		.eq('uid', uid)
 		.throwOnError()
+}
+
+// ============================================================================
+// PLAYLIST HELPERS
+// ============================================================================
+
+export async function createPlaylist(params: {
+	lang: string
+	title: string
+	description?: string
+}) {
+	const { lang, title, description } = params
+	const { data: playlist } = await supabase
+		.from('phrase_playlist')
+		.insert({
+			lang,
+			title,
+			description,
+			uid: TEST_USER_UID,
+		})
+		.select()
+		.throwOnError()
+		.single()
+
+	if (!playlist) throw new Error('Failed to create playlist')
+	return playlist
+}
+
+export async function deletePlaylist(id: string) {
+	await supabase.from('phrase_playlist').delete().eq('id', id).throwOnError()
 }
 
 // ============================================================================
@@ -356,6 +403,8 @@ const tableOrder = [
 	'phrase',
 	'tag',
 	'phrase_request',
+	'playlist_phrase_link',
+	'phrase_playlist',
 	'friend_request_action',
 	'user_profile',
 ] as const

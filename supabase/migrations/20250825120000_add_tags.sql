@@ -1,11 +1,10 @@
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
+create table if not exists "public"."tag" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"name" "text" not null,
+	"lang" character varying not null,
+	"added_by" "uuid" default "auth"."uid" ()
+);
 
 alter table "public"."tag" owner to "postgres";
 
@@ -37,13 +36,12 @@ grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
 
-create table if not exists
-	"public"."phrase_tag" (
-		"phrase_id" "uuid" not null,
-		"tag_id" "uuid" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
+create table if not exists "public"."phrase_tag" (
+	"phrase_id" "uuid" not null,
+	"tag_id" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"added_by" "uuid" default "auth"."uid" ()
+);
 
 alter table "public"."phrase_tag" owner to "postgres";
 
@@ -75,8 +73,7 @@ grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
 
-create
-or replace function "public"."add_tags_to_phrase" (
+create or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
@@ -121,8 +118,7 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_tags" "text" []
 ) to "authenticated";
 
-create or replace view
-	"public"."meta_phrase_info" as
+create or replace view "public"."meta_phrase_info" as
 with
 	"recent_review" as (
 		select

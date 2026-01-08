@@ -1,5 +1,4 @@
-create or replace view
-	"public"."meta_phrase_info"
+create or replace view "public"."meta_phrase_info"
 with
 	(security_invoker = false) as (
 		with

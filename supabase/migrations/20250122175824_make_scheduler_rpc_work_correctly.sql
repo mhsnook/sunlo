@@ -1,18 +1,14 @@
-CREATE OR REPLACE function public.fsrs_days_between(date_before timestamptz, date_after timestamptz)
-	returns numeric
-	LANGUAGE plv8
-AS $function$
+create or replace function public.fsrs_days_between (date_before timestamptz, date_after timestamptz) returns numeric language plv8 as $function$
 	// returns interval, in days, rounded to the second
 	return Math.round((new Date(date_after) - new Date(date_before)) / 60 / 60 / 24) / 1000;
 $function$;
 
-alter table "public"."user_card_scheduled" add column "reviewed_at" timestamp with time zone;
+alter table "public"."user_card_scheduled"
+add column "reviewed_at" timestamp with time zone;
 
-DROP FUNCTION public.record_review_and_schedule;
-CREATE OR REPLACE FUNCTION public.record_review_and_schedule(user_card_id uuid, score integer)
- RETURNS user_card_scheduled
- LANGUAGE plv8
-AS $function$
+drop function public.record_review_and_schedule;
+
+create or replace function public.record_review_and_schedule (user_card_id uuid, score integer) returns user_card_scheduled language plv8 as $function$
 
 var calc = {
 	reviewed_at: new Date(),
@@ -99,5 +95,4 @@ const response = insertedResult[0] ?? null;
 if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${user_card_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
 return response
 
-$function$
-;
+$function$;

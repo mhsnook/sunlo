@@ -23,42 +23,46 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 		[request.id]
 	).data?.length
 
-	// Toggle upvote mutation
-	const toggleUpvoteMutation = useMutation({
-		mutationFn: async () => {
-			const { data, error } = await supabase.rpc(
-				'toggle_phrase_request_upvote',
-				{
-					p_request_id: request.id,
-				}
-			)
+	// Upvote mutation with explicit action
+	const upvoteMutation = useMutation({
+		mutationFn: async (action: 'add' | 'remove') => {
+			const { data, error } = await supabase.rpc('set_phrase_request_upvote', {
+				p_request_id: request.id,
+				p_action: action,
+			})
 			if (error) throw error
 			return data as {
 				request_id: uuid
-				action: 'added' | 'removed'
+				action: 'added' | 'removed' | 'no_change'
 			}
 		},
 		onSuccess: (data) => {
+			// Only update if server actually made a change
+			if (data.action === 'no_change') return
+
 			const currentCount = request.upvote_count ?? 0
 			const newCount =
 				data.action === 'added' ?
 					currentCount + 1
 				:	Math.max(0, currentCount - 1)
 
+			// Update the request count
 			phraseRequestsCollection.utils.writeUpdate({
 				id: data.request_id,
 				upvote_count: newCount,
 			})
+
+			// Update the upvotes collection
 			if (data.action === 'added') {
 				phraseRequestUpvotesCollection.utils.writeInsert({
 					request_id: data.request_id,
 				})
-			} else {
+			} else if (data.action === 'removed') {
 				phraseRequestUpvotesCollection.utils.writeDelete(data.request_id)
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to toggle upvote: ${error.message}`)
+			toast.error(`Failed to update upvote: ${error.message}`)
 		},
 	})
 
@@ -72,15 +76,16 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
-					toggleUpvoteMutation.mutate()
+					// Send explicit action based on current state
+					upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
 				}}
-				disabled={toggleUpvoteMutation.isPending}
+				disabled={upvoteMutation.isPending}
 			>
 				<ThumbsUp />
 			</Button>
 			<span className="font-medium @max-sm:sr-only">
 				{request.upvote_count}{' '}
-				<span className="@max-xl:sr-only">
+				<span className="sr-only">
 					vote{request.upvote_count === 1 ? '' : 's'}
 				</span>
 			</span>

@@ -1,5 +1,5 @@
 alter table "public"."user_card_review"
-add constraint "user_card_review_uid_fkey" FOREIGN KEY (uid) REFERENCES user_profile (uid) ON UPDATE CASCADE ON DELETE CASCADE not valid;
+add constraint "user_card_review_uid_fkey" foreign key (uid) references user_profile (uid) on update cascade on delete cascade not valid;
 
 alter table "public"."user_card_review" validate constraint "user_card_review_uid_fkey";
 
@@ -139,103 +139,102 @@ drop index if exists "public"."user_card_scheduled_pkey";
 
 drop table "public"."user_card_scheduled";
 
-create or replace view
-	"public"."user_deck_plus" as
-SELECT
+create or replace view "public"."user_deck_plus" as
+select
 	d.id,
 	d.uid,
 	d.lang,
 	d.learning_goal,
 	d.archived,
 	(
-		SELECT
+		select
 			l.name
-		FROM
+		from
 			language l
-		WHERE
+		where
 			((l.lang)::text = (d.lang)::text)
-		LIMIT
+		limit
 			1
-	) AS language,
+	) as language,
 	d.created_at,
-	count(*) FILTER (
-		WHERE
+	count(*) filter (
+		where
 			(c.status = 'learned'::card_status)
-	) AS cards_learned,
-	count(*) FILTER (
-		WHERE
+	) as cards_learned,
+	count(*) filter (
+		where
 			(c.status = 'active'::card_status)
-	) AS cards_active,
-	count(*) FILTER (
-		WHERE
+	) as cards_active,
+	count(*) filter (
+		where
 			(c.status = 'skipped'::card_status)
-	) AS cards_skipped,
+	) as cards_skipped,
 	(
-		SELECT
-			count(*) AS count
-		FROM
+		select
+			count(*) as count
+		from
 			phrase p
-		WHERE
+		where
 			((p.lang)::text = (d.lang)::text)
-	) AS lang_total_phrases,
+	) as lang_total_phrases,
 	(
-		SELECT
-			max(c.created_at) AS max
-		FROM
+		select
+			max(c.created_at) as max
+		from
 			user_card_review r
-		WHERE
+		where
 			(r.user_deck_id = d.id)
-		LIMIT
+		limit
 			1
-	) AS most_recent_review_at,
+	) as most_recent_review_at,
 	(
-		SELECT
-			count(*) AS count
-		FROM
+		select
+			count(*) as count
+		from
 			user_card_review r
-		WHERE
+		where
 			(
 				(r.user_deck_id = d.id)
-				AND (r.created_at > (now() - '7 days'::interval))
+				and (r.created_at > (now() - '7 days'::interval))
 			)
-		LIMIT
+		limit
 			1
-	) AS count_reviews_7d,
+	) as count_reviews_7d,
 	(
-		SELECT
-			count(*) AS count
-		FROM
+		select
+			count(*) as count
+		from
 			user_card_review r
-		WHERE
+		where
 			(
 				(r.user_deck_id = d.id)
-				AND (r.created_at > (now() - '7 days'::interval))
-				AND (r.score >= 2)
+				and (r.created_at > (now() - '7 days'::interval))
+				and (r.score >= 2)
 			)
-		LIMIT
+		limit
 			1
-	) AS count_reviews_7d_positive
-FROM
+	) as count_reviews_7d_positive
+from
 	(
 		user_deck d
-		LEFT JOIN user_card c ON ((d.id = c.user_deck_id))
+		left join user_card c on ((d.id = c.user_deck_id))
 	)
-GROUP BY
+group by
 	d.id,
 	d.lang,
 	d.created_at
-ORDER BY
+order by
 	(
-		SELECT
-			count(*) AS count
-		FROM
+		select
+			count(*) as count
+		from
 			user_card_review r
-		WHERE
+		where
 			(
 				(r.user_deck_id = d.id)
-				AND (r.created_at > (now() - '7 days'::interval))
+				and (r.created_at > (now() - '7 days'::interval))
 			)
-		LIMIT
+		limit
 			1
-	) DESC NULLS LAST,
-	d.created_at DESC;
+	) desc nulls last,
+	d.created_at desc;

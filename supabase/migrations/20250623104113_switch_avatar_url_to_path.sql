@@ -13,8 +13,7 @@ drop view "public"."public_profile";
 alter table "public"."user_profile"
 drop column if exists "avatar_url";
 
-create or replace view
-	"public"."public_profile" as
+create or replace view "public"."public_profile" as
 select
 	user_profile.uid,
 	user_profile.username,

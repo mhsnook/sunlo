@@ -100,13 +100,6 @@ export type Database = {
 						foreignKeyName: 'chat_message_request_id_fkey'
 						columns: ['request_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'chat_message_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
 						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
 					},
@@ -171,13 +164,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'comment_phrase_link_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
 						referencedColumns: ['id']
 					},
 					{
@@ -396,6 +382,100 @@ export type Database = {
 					},
 				]
 			}
+			phrase_playlist: {
+				Row: {
+					created_at: string
+					deleted: boolean
+					description: string | null
+					href: string | null
+					id: string
+					lang: string
+					title: string
+					uid: string
+					updated_at: string | null
+					upvote_count: number
+				}
+				Insert: {
+					created_at?: string
+					deleted?: boolean
+					description?: string | null
+					href?: string | null
+					id?: string
+					lang: string
+					title: string
+					uid?: string
+					updated_at?: string | null
+					upvote_count?: number
+				}
+				Update: {
+					created_at?: string
+					deleted?: boolean
+					description?: string | null
+					href?: string | null
+					id?: string
+					lang?: string
+					title?: string
+					uid?: string
+					updated_at?: string | null
+					upvote_count?: number
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_playlist_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'language'
+						referencedColumns: ['lang']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'meta_language'
+						referencedColumns: ['lang']
+					},
+				]
+			}
+			phrase_playlist_upvote: {
+				Row: {
+					created_at: string
+					playlist_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					playlist_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					playlist_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_playlist_upvote_playlist_id_fkey'
+						columns: ['playlist_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_playlist'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'phrase_playlist_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+				]
+			}
 			phrase_relation: {
 				Row: {
 					added_by: string
@@ -463,32 +543,32 @@ export type Database = {
 			phrase_request: {
 				Row: {
 					created_at: string
-					fulfilled_at: string | null
+					deleted: boolean
 					id: string
 					lang: string
 					prompt: string
 					requester_uid: string
-					status: Database['public']['Enums']['phrase_request_status']
+					updated_at: string | null
 					upvote_count: number
 				}
 				Insert: {
 					created_at?: string
-					fulfilled_at?: string | null
+					deleted?: boolean
 					id?: string
 					lang: string
 					prompt: string
 					requester_uid: string
-					status?: Database['public']['Enums']['phrase_request_status']
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Update: {
 					created_at?: string
-					fulfilled_at?: string | null
+					deleted?: boolean
 					id?: string
 					lang?: string
 					prompt?: string
 					requester_uid?: string
-					status?: Database['public']['Enums']['phrase_request_status']
+					updated_at?: string | null
 					upvote_count?: number
 				}
 				Relationships: [
@@ -539,13 +619,6 @@ export type Database = {
 					uid?: string
 				}
 				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
-						referencedColumns: ['id']
-					},
 					{
 						foreignKeyName: 'phrase_request_upvote_request_id_fkey'
 						columns: ['request_id']
@@ -702,6 +775,58 @@ export type Database = {
 					},
 				]
 			}
+			playlist_phrase_link: {
+				Row: {
+					created_at: string
+					href: string | null
+					id: string
+					order: number | null
+					phrase_id: string
+					playlist_id: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					href?: string | null
+					id?: string
+					order?: number | null
+					phrase_id: string
+					playlist_id: string
+					uid?: string
+				}
+				Update: {
+					created_at?: string
+					href?: string | null
+					id?: string
+					order?: number | null
+					phrase_id?: string
+					playlist_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'meta_phrase_info'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'playlist_phrase_link_playlist_id_fkey'
+						columns: ['playlist_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_playlist'
+						referencedColumns: ['id']
+					},
+				]
+			}
 			request_comment: {
 				Row: {
 					content: string
@@ -739,13 +864,6 @@ export type Database = {
 						columns: ['parent_comment_id']
 						isOneToOne: false
 						referencedRelation: 'request_comment'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'request_comment_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_request'
 						referencedColumns: ['id']
 					},
 					{
@@ -1189,6 +1307,17 @@ export type Database = {
 			}
 		}
 		Views: {
+			feed_activities: {
+				Row: {
+					created_at: string | null
+					id: string | null
+					lang: string | null
+					payload: Json | null
+					type: string | null
+					uid: string | null
+				}
+				Relationships: []
+			}
 			friend_summary: {
 				Row: {
 					most_recent_action_type:
@@ -1325,50 +1454,6 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
-					},
-				]
-			}
-			meta_phrase_request: {
-				Row: {
-					created_at: string | null
-					fulfilled_at: string | null
-					id: string | null
-					lang: string | null
-					phrase_ids: string[] | null
-					profile: Json | null
-					prompt: string | null
-					requester_uid: string | null
-					status: Database['public']['Enums']['phrase_request_status'] | null
-					upvote_count: number | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'phrase_request_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_request_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'meta_language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_request_requester_uid_fkey'
-						columns: ['requester_uid']
-						isOneToOne: false
-						referencedRelation: 'public_profile'
-						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'phrase_request_requester_uid_fkey'
-						columns: ['requester_uid']
-						isOneToOne: false
-						referencedRelation: 'user_profile'
-						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -1547,6 +1632,16 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			create_playlist_with_links: {
+				Args: {
+					description?: string
+					href?: string
+					lang: string
+					phrases?: Json
+					title: string
+				}
+				Returns: Json
+			}
 			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
 			fsrs_d_0: { Args: { score: number }; Returns: number }
 			fsrs_days_between: {
@@ -1594,15 +1689,6 @@ export type Database = {
 				}
 				Returns: number
 			}
-			fulfill_phrase_request: {
-				Args: {
-					p_phrase_text: string
-					p_translation_lang: string
-					p_translation_text: string
-					request_id: string
-				}
-				Returns: Json
-			}
 			insert_user_card_review: {
 				Args: {
 					day_session: string
@@ -1632,9 +1718,16 @@ export type Database = {
 					isSetofReturn: false
 				}
 			}
-			toggle_comment_upvote: { Args: { p_comment_id: string }; Returns: Json }
-			toggle_phrase_request_upvote: {
-				Args: { p_request_id: string }
+			set_comment_upvote: {
+				Args: { p_action: string; p_comment_id: string }
+				Returns: Json
+			}
+			set_phrase_playlist_upvote: {
+				Args: { p_action: string; p_playlist_id: string }
+				Returns: Json
+			}
+			set_phrase_request_upvote: {
+				Args: { p_action: string; p_request_id: string }
 				Returns: Json
 			}
 			update_user_card_review: {
@@ -1672,7 +1765,6 @@ export type Database = {
 				| 'invite'
 			language_proficiency: 'fluent' | 'proficient' | 'beginner'
 			learning_goal: 'moving' | 'family' | 'visiting'
-			phrase_request_status: 'pending' | 'fulfilled' | 'cancelled'
 		}
 		CompositeTypes: {
 			phrase_with_translations_input: {
@@ -2460,7 +2552,6 @@ export const Constants = {
 			],
 			language_proficiency: ['fluent', 'proficient', 'beginner'],
 			learning_goal: ['moving', 'family', 'visiting'],
-			phrase_request_status: ['pending', 'fulfilled', 'cancelled'],
 		},
 	},
 	storage: {

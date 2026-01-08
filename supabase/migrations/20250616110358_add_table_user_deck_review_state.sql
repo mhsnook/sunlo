@@ -1,11 +1,10 @@
-create table
-	"public"."user_deck_review_state" (
-		"lang" character varying not null,
-		"uid" uuid not null default auth.uid (),
-		"day_session" date not null,
-		"created_at" timestamp with time zone not null default now(),
-		"manifest" jsonb
-	);
+create table "public"."user_deck_review_state" (
+	"lang" character varying not null,
+	"uid" uuid not null default auth.uid (),
+	"day_session" date not null,
+	"created_at" timestamp with time zone not null default now(),
+	"manifest" jsonb
+);
 
 alter table "public"."user_deck_review_state" enable row level security;
 
@@ -80,8 +79,8 @@ from
 group by
 	uid,
 	lang,
-	day_session on conflict
-do nothing;
+	day_session
+on conflict do nothing;
 
 alter table "public"."user_card_review"
 add constraint "user_card_review_uid_lang_day_session_fkey" foreign key (uid, lang, day_session) references user_deck_review_state (uid, lang, day_session) on update cascade on delete set null not valid;

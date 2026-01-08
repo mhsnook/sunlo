@@ -1,19 +1,16 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { TitleBar } from '@/types/main'
 import { PendingRequestsHeader } from './friends/-pending-requests-header'
 
 export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
-	loader: () => {
-		return {
-			appnav: ['/learn', '/friends', '/learn/add-deck'],
-			contextMenu: ['/learn/add-deck' /*'/learn/quick-search'*/],
-			titleBar: {
-				title: `Learning Home`,
-				subtitle: `Which deck are we studying today?`,
-			} as TitleBar,
-		}
-	},
+	beforeLoad: () => ({
+		titleBar: {
+			title: 'Learning Home',
+			subtitle: 'Which deck are we studying today?',
+		},
+		appnav: ['/learn', '/friends', '/learn/contributions', '/learn/add-deck'],
+		contextMenu: ['/learn/add-deck' /*'/learn/quick-search'*/],
+	}),
 })
 
 function LearnLayout() {

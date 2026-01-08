@@ -1,10 +1,17 @@
+Feeds Work Cleanup tasks:
+
+1. Playlists need "likes"
+2. Need to be able to "repost" a Request to a new language
+3. Playlists page needs to do the embed
+4. Playlists should have an image option if you don't have an external source with og:image
+5. meta_phrase_info can remove the added_by_profile
+
 NEW DATA ISSUES TO FIX LATER
 
 - when friend requests come in we refetch the entire thing friend summaries collection instead of using live queries
 
 DB WORK RELATED TO TANSTACK DB
 
-1. Some strange issue happening only in dev mode where the thing just waits for auth state for forever
 1. replace the friend requests complexity with an RPC function
 
 USER TESTING FIXES
@@ -18,8 +25,6 @@ EPIC: Postgres DX / Run Supabase Locally
 
 1. make the email stuff work with the local setup
 1. pgTap set up testing framework / run tests on the RPC functions: https://supabase.com/docs/guides/database/extensions/pgtap
-1. ✅ switch to v8
-   - test out pglinter?
 1. future:
    - use postmark templates like [this](https://github.com/supabase/auth/issues/304#issuecomment-998029660)
 
@@ -33,7 +38,6 @@ EPIC OF SIGNUPS AND GETTING STARTED AND CONNECTING FRIENDS
      - ✅ original invite needs to embed the friend's uid
      - ✅ grab the url argument and save it when the temp user is created
      - ✅ detect the friend uid in the user object for the first-redirect after getting-started
-1. the unauthenticated find-a-friend page should prompt you to sign in/sign up if you try to interact
 
 EDGE CASES LEFT BEHIND
 
@@ -46,7 +50,7 @@ EDGE CASES LEFT BEHIND
    - replace this RLS hack with an RPC
 1. ✅ build some "info" page for public profles/Friends
    - ✅ should be able to unfriend them
-   - should be able to see their phrases and requests
+   - ✅ should be able to see their phrases and requests
 
 MOCKS / Incompletes
 
@@ -64,10 +68,6 @@ CARD INTERACTIONS
 1. ✅ make the "add to deck" function work
    - ✅ or no deck (start learning this language)
    - or not logged in (login)
-1. deeper interactions with cards:
-   - when we open these accordion things, should we open a whole dialog or a drawer? or have a button that opens the whole dialog?
-   - ✅ $lang/library/$pid perhaps should be built which permalinks to the same thing as goes in the dialog
-   - ✅ add translations button must work
 1. "suggest edits to this card"
    - Plan: Allow any logged-in user to submit a change to the `edit_suggestions` table.
 1. "edit" feature for editing translations and phrases. a user deck assigns the user's relationship to the language, are they no-relation, curious, learner, friend, teacher, or editor. in this example, editor is the high mark, like an admin.
@@ -85,7 +85,6 @@ UI POLISH
    1. slide the cards in and out horizontally
    1. give us a completion progress bar in the /review interface
 1. when the router loader is suspending and then stops, transition in
-1. ✅ replace my multi-language select with https://craft.mxkaske.dev/post/fancy-multi-select
 
 OTHER IDEAS
 

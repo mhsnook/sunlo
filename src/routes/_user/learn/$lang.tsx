@@ -1,5 +1,3 @@
-import { TitleBar } from '@/types/main'
-
 import { useEffect } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 
@@ -8,7 +6,6 @@ import { setTheme } from '@/lib/deck-themes'
 import {
 	cardReviewsCollection,
 	cardsCollection,
-	decksCollection,
 	langTagsCollection,
 	phrasesCollection,
 	reviewDaysCollection,
@@ -17,7 +14,25 @@ import { useDeckMeta } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	loader: async ({ params: { lang } }) => {
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `${languages[lang]} Deck`,
+		},
+		appnav: [
+			'/learn/$lang/feed',
+			'/learn/$lang/review',
+			'/learn/$lang/contributions',
+			'/learn/$lang/stats',
+			'/learn/$lang/search',
+		],
+		contextMenu: [
+			'/learn/$lang/search',
+			'/learn/$lang/requests/new',
+			'/learn/$lang/add-phrase',
+			'/learn/$lang/deck-settings',
+		],
+	}),
+	loader: async () => {
 		const langTagsPromise = langTagsCollection.preload()
 		const daysPromise = reviewDaysCollection.preload()
 		const reviewsPromise = cardReviewsCollection.preload()
@@ -29,27 +44,6 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			reviewsPromise,
 			phrasesPromise,
 		])
-		const deck = decksCollection.get(lang)
-
-		return {
-			appnav: [
-				'/learn/$lang/feed',
-				'/learn/$lang/review',
-				'/learn/$lang/contributions',
-				'/learn/$lang/stats',
-				'/learn/$lang/search',
-			],
-			contextMenu: [
-				'/learn/$lang/search',
-				'/learn/$lang/requests/new',
-				'/learn/$lang/add-phrase',
-				'/learn/$lang/deck-settings',
-			],
-			titleBar: {
-				title: `${languages[lang]} Deck`,
-			} as TitleBar,
-			theme: deck?.theme,
-		}
 	},
 })
 

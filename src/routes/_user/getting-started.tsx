@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
 
 import type { TablesInsert } from '@/types/supabase'
-import type { TitleBar, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
 import { useAuth } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
@@ -31,11 +31,11 @@ export const Route = createFileRoute('/_user/getting-started')({
 			:	{}
 	},
 	component: GettingStartedPage,
-	loader: () => ({
+	beforeLoad: () => ({
 		titleBar: {
-			title: `Getting Started`,
-			subtitle: `Set your username and dive in!`,
-		} as TitleBar,
+			title: 'Getting Started',
+			subtitle: 'Set your username and dive in!',
+		},
 	}),
 })
 

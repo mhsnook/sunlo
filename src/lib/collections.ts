@@ -35,6 +35,14 @@ import {
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
 } from './schemas'
+import {
+	PhrasePlaylistSchema,
+	type PhrasePlaylistType,
+	PlaylistPhraseLinkSchema,
+	type PlaylistPhraseLinkType,
+	PhrasePlaylistUpvoteSchema,
+	type PhrasePlaylistUpvoteType,
+} from './schemas-playlist'
 import { queryClient } from './query-client'
 import supabase from './supabase-client'
 import { sortDecksByCreation } from './utils'
@@ -363,6 +371,68 @@ export const phraseRequestUpvotesCollection = createCollection(
 	})
 )
 
+export const phrasePlaylistUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_playlist_upvotes',
+		queryKey: ['user', 'phrase_playlist_upvote'],
+		queryFn: async () => {
+			console.log(`Loading phrasePlaylistUpvotesCollection`)
+			const { data } = await supabase
+				.from('phrase_playlist_upvote')
+				.select('playlist_id')
+				.throwOnError()
+			return data?.map((item) => PhrasePlaylistUpvoteSchema.parse(item)) ?? []
+		},
+		getKey: (item: PhrasePlaylistUpvoteType) => item.playlist_id,
+		queryClient,
+		schema: PhrasePlaylistUpvoteSchema,
+	})
+)
+
+export const phrasePlaylistsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'phrase_playlist',
+		queryKey: ['public', 'playlist'],
+		queryFn: async (/*{ meta }*/) => {
+			console.log(`Loading phrasePlaylistsCollection`)
+			// const params = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+			const { data } = await supabase
+				.from('phrase_playlist')
+				.select()
+				// .eq('uid', params.uid)
+				.throwOnError()
+
+			return data
+		},
+		getKey: (item: PhrasePlaylistType) => item.id,
+		queryClient,
+		schema: PhrasePlaylistSchema,
+		// snycMode: 'on-demand',
+	})
+)
+
+export const playlistPhraseLinksCollection = createCollection(
+	queryCollectionOptions({
+		id: 'playlist_phrase_links',
+		queryKey: ['public', 'playlist_phrase_link'],
+		queryFn: async (/*{ meta }*/) => {
+			console.log(`Loading playlistPhraseLinksCollection`)
+			// const params = parseLoadSubsetOptions(meta?.loadSubsetOptions)
+			const { data } = await supabase
+				.from('playlist_phrase_link')
+				.select()
+				// .eq('uid', params.uid)
+				.throwOnError()
+
+			return data
+		},
+		getKey: (item: PlaylistPhraseLinkType) => item.id,
+		queryClient,
+		schema: PlaylistPhraseLinkSchema,
+		// snycMode: 'on-demand',
+	})
+)
+
 export const clearUser = async () => {
 	await Promise.all([
 		myProfileCollection.cleanup(),
@@ -376,5 +446,6 @@ export const clearUser = async () => {
 		commentPhraseLinksCollection.cleanup(),
 		commentUpvotesCollection.cleanup(),
 		phraseRequestUpvotesCollection.cleanup(),
+		phrasePlaylistUpvotesCollection.cleanup(),
 	])
 }

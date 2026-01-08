@@ -1,5 +1,4 @@
-create or replace view
-	"public"."meta_phrase_info" as
+create or replace view "public"."meta_phrase_info" as
 with
 	recent_review as (
 		select
@@ -146,8 +145,7 @@ select
 from
 	results;
 
-create or replace view
-	"public"."user_card_plus"
+create or replace view "public"."user_card_plus"
 with
 	("security_invoker" = 'true') as
 with
@@ -211,8 +209,7 @@ from
 		)
 	);
 
-create or replace view
-	"public"."user_deck_plus"
+create or replace view "public"."user_deck_plus"
 with
 	("security_invoker" = 'true') as
 select

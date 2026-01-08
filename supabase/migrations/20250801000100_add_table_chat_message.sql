@@ -1,18 +1,17 @@
 -- Create the ENUM type for chat message types
 create type public.chat_message_type as enum('recommendation', 'accepted');
 
-create table
-	public.chat_message (
-		id uuid default gen_random_uuid () not null primary key,
-		created_at timestamp with time zone not null default now(),
-		sender_uid uuid not null default auth.uid () references public.user_profile (uid) on delete cascade,
-		recipient_uid uuid not null references public.user_profile (uid) on delete cascade,
-		message_type public.chat_message_type not null,
-		phrase_id uuid references public.phrase (id) on delete set null,
-		related_message_id uuid references public.chat_message (id) on delete set null,
-		content jsonb,
-		constraint uids_are_different check (sender_uid <> recipient_uid)
-	);
+create table public.chat_message (
+	id uuid default gen_random_uuid() not null primary key,
+	created_at timestamp with time zone not null default now(),
+	sender_uid uuid not null default auth.uid () references public.user_profile (uid) on delete cascade,
+	recipient_uid uuid not null references public.user_profile (uid) on delete cascade,
+	message_type public.chat_message_type not null,
+	phrase_id uuid references public.phrase (id) on delete set null,
+	related_message_id uuid references public.chat_message (id) on delete set null,
+	content jsonb,
+	constraint uids_are_different check (sender_uid <> recipient_uid)
+);
 
 -- Add comments to explain the columns
 comment on column public.chat_message.sender_uid is 'The user who sent the message.';
@@ -29,11 +28,11 @@ comment on column public.chat_message.content is 'Flexible JSONB for extra data,
 
 -- Add indexes for performance
 create index on public.chat_message (sender_uid, recipient_uid, created_at desc);
+
 create index on public.chat_message (recipient_uid, sender_uid, created_at desc);
 
 -- Helper function to check for friendship
-create
-or replace function public.are_friends (uid1 uuid, uid2 uuid) returns boolean language sql security definer as $$
+create or replace function public.are_friends (uid1 uuid, uid2 uuid) returns boolean language sql security definer as $$
   SELECT EXISTS (
     SELECT 1
     FROM public.friend_summary

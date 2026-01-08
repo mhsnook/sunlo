@@ -50,25 +50,30 @@ the file, most dates are calculated from a formula like this:
 ```sql
 insert into
 	"public"."user_card_review" (
-		"id", "uid", "score",
-		"difficulty", "stability", "review_time_retrievability",
-		"created_at", "updated_at", "day_session",
-		"lang", "phrase_id", "day_first_review"
+		"id",
+		"uid",
+		"score",
+		"difficulty",
+		"stability",
+		"review_time_retrievability",
+		"created_at",
+		"updated_at",
+		"day_session",
+		"lang",
+		"phrase_id",
+		"day_first_review"
 	)
 values
 	(
 		'4d828aaf-119c-48c8-89c4-c1747e4a6745',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		3,
-
 		5.282434422319,
 		3.173,
 		null,
-
 		current_date - 4 + interval '2 minute',
 		current_date - 4 + interval '2 minute',
 		(current_date - 4 + interval '2 minute' - interval '4 hour')::date,
-
 		'tam',
 		'1f6bac22-b32a-4b77-9857-d2de02b538de',
 		true

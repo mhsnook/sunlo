@@ -1,8 +1,7 @@
 set
 	check_function_bodies = off;
 
-create
-or replace function public.fulfill_phrase_request (
+create or replace function public.fulfill_phrase_request (
 	request_id uuid,
 	p_phrase_text text,
 	p_translation_text text,

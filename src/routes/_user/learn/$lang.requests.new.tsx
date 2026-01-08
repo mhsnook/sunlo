@@ -28,9 +28,14 @@ import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
 import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
 import { phraseRequestsCollection } from '@/lib/collections'
+import { useOneRandomly } from '@/lib/utils'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
-	component: Page,
+	component: NewRequestPage,
+	beforeLoad: () => ({
+		titleBar: { title: 'New Community Request' },
+	}),
 })
 
 const RequestPhraseSchema = z.object({
@@ -46,10 +51,26 @@ const RequestPhraseSchema = z.object({
 
 type RequestPhraseFormInputs = z.infer<typeof RequestPhraseSchema>
 
-function Page() {
+const placeholders = [
+	`How to say to a cab driver 'hi, can you take me/are you free?'`,
+	`I'm at lunch with a colleague; how do I say 'Broccoli is my favourite vegetable'?`,
+	`Sincerely, but not like too deeply, I want to thank my neighbour auntie for helping me out recently`,
+	`I want to compliment my friend's outfit (non flirty)`,
+	`How do I say "Oh I love that place!" like a restaurant my friend is suggesting`,
+	`I'd like to say "talk to you soon" but in a sort of business-y context`,
+	`Help -- I need to learn to talk like a pirate to bond with my niece in her language`,
+	`Hey everyone, how do I say: "this is delicious" in a casual way?`,
+	`I'm meeting a friend's parents and I want to thank them for showing me around`,
+	`Hey chat, I'm trying to better understand this song lyric...`,
+	`Is there poetry in your language about garlic and how good it is?`,
+]
+
+// eslint-disable-next-line react-refresh/only-export-components
+function NewRequestPage() {
 	const { lang } = Route.useParams()
 	const userId = useUserId()
 	const navigate = useNavigate()
+	const placeholder = useOneRandomly(placeholders)
 
 	const form = useForm<RequestPhraseFormInputs>({
 		resolver: zodResolver(RequestPhraseSchema),
@@ -58,6 +79,7 @@ function Page() {
 		},
 	})
 
+	const invalidateFeed = useInvalidateFeed()
 	const createRequestMutation = useMutation<
 		PhraseRequestType,
 		PostgrestError,
@@ -81,10 +103,10 @@ function Page() {
 			phraseRequestsCollection.utils.writeInsert(
 				PhraseRequestSchema.parse(data)
 			)
+			invalidateFeed(lang)
 			void navigate({
-				to: '/learn/$lang/contributions',
-				params: { lang },
-				search: { contributionsTab: 'request' },
+				to: '/learn/$lang/requests/$id',
+				params: { lang, id: data.id },
 			})
 			toast.success('Your request has been created!')
 		},
@@ -97,10 +119,11 @@ function Page() {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Request a new card</CardTitle>
+				<CardTitle>Post a Request</CardTitle>
 				<CardDescription>
-					Ask a friend or a native speaker to help you create a new flashcard
-					for you and others to learn.
+					Ask the community (or share with a friend) for a flashcard
+					recommendation from the library, or to make you a new one for everyone
+					to learn.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -118,18 +141,20 @@ function Page() {
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel>What phrase do you need?</FormLabel>
-									<p className="text-muted-foreground text-sm">
-										Supports markdown like `&gt;` for blockquote,{' '}
-										<em>_italics_</em>, <strong>**bold**</strong>
-									</p>
+									<FormLabel>
+										What kinds of flash cards are you looking for?
+									</FormLabel>
 									<FormControl>
 										<Textarea
 											data-testid="request-prompt-input"
-											placeholder="e.g., How do I say 'this is delicious' in a casual way?"
+											placeholder={`ex: "${placeholder}"`}
 											{...field}
 										/>
 									</FormControl>
+									<p className="text-muted-foreground -mt-1 text-xs">
+										Supports markdown like `&gt;` for blockquote,{' '}
+										<em>_italics_</em>, <strong>**bold**</strong>.
+									</p>
 									<FormMessage />
 								</FormItem>
 							)}

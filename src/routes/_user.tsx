@@ -10,7 +10,6 @@ import {
 } from '@tanstack/react-router'
 
 import type { Tables } from '@/types/supabase'
-import { TitleBar } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
@@ -25,13 +24,6 @@ import {
 	myProfileCollection,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
-
-const loaderReturn = {
-	titleBar: {
-		title: `Learning Home`,
-		subtitle: `Which deck are we studying today?`,
-	} as TitleBar,
-}
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context, location }) => {
@@ -49,12 +41,21 @@ export const Route = createFileRoute('/_user')({
 				},
 			})
 		}
+		return {
+			titleBar: {
+				title: 'Learning Home',
+				subtitle: 'Which deck are we studying today?',
+			},
+		}
 	},
 	loader: async ({ location }) => {
 		// all set: exit early
-		if (myProfileCollection.size === 1) return loaderReturn
+		if (myProfileCollection.size === 1) return
 		// some weird: start over
 		if (myProfileCollection.status === 'error') {
+			console.log(
+				`myProfileCollection is in an error state. We'll clean it up and reload it.`
+			)
 			await myProfileCollection.cleanup()
 			await myProfileCollection.preload()
 			// it's loading: wait
@@ -75,8 +76,6 @@ export const Route = createFileRoute('/_user')({
 				void friendSummariesCollection.preload()
 			}
 		}
-
-		return loaderReturn
 	},
 	component: UserLayout,
 	pendingComponent: Loader,

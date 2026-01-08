@@ -32,6 +32,7 @@ import {
 	TranslationSchema,
 } from '@/lib/schemas'
 import { cardsCollection, phrasesCollection } from '@/lib/collections'
+import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
@@ -46,6 +47,11 @@ export const Route = createFileRoute('/_user/learn/$lang/add-phrase')({
 			text: (search?.text as string) ?? '',
 		}
 	},
+	beforeLoad: ({ params: { lang } }) => ({
+		titleBar: {
+			title: `Add ${languages[lang]} Phrase`,
+		},
+	}),
 	loader: async () => {
 		await cardsCollection.preload()
 	},
@@ -64,6 +70,7 @@ type AddPhraseFormValues = z.infer<typeof addPhraseSchema>
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
+// eslint-disable-next-line react-refresh/only-export-components
 function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
@@ -107,6 +114,7 @@ function AddPhraseTab() {
 		}
 	}, [text, debouncedText, navigate])
 
+	const invalidateFeed = useInvalidateFeed()
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
 			const ins: RPCFunctions['add_phrase_translation_card']['Args'] = {
@@ -133,6 +141,7 @@ function AddPhraseTab() {
 				})
 			)
 			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+			invalidateFeed(lang)
 			console.log(`Success:`, data)
 			setNewPhrases((prev) => [data.phrase.id, ...prev])
 			reset({ phrase_text: '', translation_text: '', translation_lang })

@@ -1,5 +1,4 @@
-create
-or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $$
+create or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $$
 
 const reviewQuery = plv8.execute("SELECT * from public.user_card_review where id = $1", [review_id])
 const review = reviewQuery[0] ?? null

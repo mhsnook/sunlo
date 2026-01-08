@@ -27,9 +27,14 @@ export function AvatarIconRow({
 					<img
 						src={avatarUrl}
 						alt={`${username}'s avatar`}
-						className="size-8 rounded-full object-cover"
+						className="rounded-squircle size-8 rounded-full object-cover"
 					/>
-				:	<User className="bg-foreground/20 size-8 rounded-full p-1" />}
+				:	<User
+						// oxlint-disable-next-line jsx-no-new-object-as-prop
+						style={{ background: `#${uid.slice(-6)}44` }}
+						className="bg-foreground/20 rounded-squircle size-8 rounded-full p-1"
+					/>
+				}
 				<span>{username}</span>
 			</Link>
 			{children}

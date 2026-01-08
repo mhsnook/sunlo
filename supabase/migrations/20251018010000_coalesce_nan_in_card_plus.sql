@@ -1,5 +1,4 @@
-create or replace view
-	public.user_card_plus
+create or replace view public.user_card_plus
 with
 	("security_invoker" = 'true') as
 with

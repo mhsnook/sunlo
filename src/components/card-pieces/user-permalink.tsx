@@ -5,79 +5,151 @@ import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { useProfile } from '@/hooks/use-profile'
 
-export function UidPermalink({ uid, ...args }: { uid: uuid; args: unknown }) {
-	const { data, isLoading } = useOnePublicProfile(uid)
-	return (
-		isLoading ? null
-		: !data ? <>profile not found</>
-		: <UserPermalink
-				uid={uid}
-				username={data?.username}
-				avatar_path={data?.avatar_path}
-				{...args}
-			/>
-	)
+export function TinySelfAvatar({ className }: { className?: string }) {
+	const { data } = useProfile()
+	const avatarUrl = avatarUrlify(data?.avatar_path)
+	return !avatarUrl ? null : (
+			<Avatar
+				className={`bg-foreground text-background h-6 w-6 rounded-lg ${className}`}
+			>
+				<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
+				<AvatarFallback className="text-[10px] font-bold">
+					{data?.username?.slice(0, 2)}
+				</AvatarFallback>
+			</Avatar>
+		)
 }
 
-export default function UserPermalink({
+export function UidPermalink({
 	uid,
-	username,
-	avatar_path,
 	className,
 	timeLinkTo,
 	timeLinkParams,
 	timeLinkSearch,
 	timeValue,
 	nonInteractive,
+	action,
 }: {
-	uid: uuid | null | undefined
-	username: string | null | undefined
-	avatar_path: string | null | undefined
+	uid: uuid
 	className?: string
 	timeLinkTo?: string
 	timeLinkParams?: Record<string, string>
 	timeLinkSearch?: Record<string, string>
 	timeValue?: string
 	nonInteractive?: boolean
+	action?: string
 }) {
-	if (!uid) return null
-	const avatarUrl = avatarUrlify(avatar_path)
+	const { data, isLoading } = useOnePublicProfile(uid)
+	if (!uid || !data || isLoading) return null
+
+	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
-		<div className="flex flex-row items-center gap-3">
+		<div className={cn('flex flex-row items-center gap-3', className)}>
 			{avatarUrl ?
 				<Link
 					to="/friends/$uid"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
-					className={cn(`inline-flex flex-row`, className)}
+					className="inline-flex flex-row"
 					disabled={nonInteractive}
 				>
 					<Avatar className="bg-foreground text-background rounded-2xl">
-						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
+						<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
 						<AvatarFallback className="mx-auto place-self-center font-bold">
-							{username?.slice(0, 2)}
+							{data.username?.slice(0, 2)}
 						</AvatarFallback>
 					</Avatar>
 				</Link>
 			:	null}
 			<div className="text-sm">
-				{username ?
-					<p>{username}</p>
-				:	null}
-				{timeValue && timeLinkTo ?
-					<Link
-						to={timeLinkTo}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
-						params={timeLinkParams}
-						search={timeLinkSearch}
-						className="s-link-hidden text-muted-foreground"
-					>
-						{ago(timeValue)}
-					</Link>
-				: timeValue ?
-					<p className="text-muted-foreground">{ago(timeValue)}</p>
-				:	null}
+				<p>
+					<span className="font-medium">{data.username}</span>
+					{action && <span className="text-muted-foreground"> {action}</span>}
+				</p>
+				{timeValue && (
+					<div className="text-muted-foreground">
+						{timeLinkTo ?
+							<Link
+								to={timeLinkTo}
+								// oxlint-disable-next-line jsx-no-new-object-as-prop
+								params={timeLinkParams}
+								search={timeLinkSearch}
+								className="s-link-hidden"
+							>
+								{ago(timeValue)}
+							</Link>
+						:	ago(timeValue)}
+					</div>
+				)}
+			</div>
+		</div>
+	)
+}
+
+export function UidPermalinkInline({
+	uid,
+	className,
+	timeLinkTo,
+	timeLinkParams,
+	timeLinkSearch,
+	timeValue,
+	nonInteractive,
+	action,
+}: {
+	uid: uuid
+	className?: string
+	timeLinkTo?: string
+	timeLinkParams?: Record<string, string>
+	timeLinkSearch?: Record<string, string>
+	timeValue?: string
+	nonInteractive?: boolean
+	action?: string
+}) {
+	const { data, isLoading } = useOnePublicProfile(uid)
+	if (!uid || !data || isLoading) return null
+
+	const avatarUrl = avatarUrlify(data.avatar_path)
+	return (
+		<div className={cn('inline-flex flex-row items-center gap-2', className)}>
+			{avatarUrl ?
+				<Link
+					to="/friends/$uid"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid }}
+					className="inline-flex flex-row"
+					disabled={nonInteractive}
+				>
+					<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
+						<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
+						<AvatarFallback className="text-[10px] font-bold">
+							{data.username?.slice(0, 2)}
+						</AvatarFallback>
+					</Avatar>
+				</Link>
+			:	null}
+			<div className="flex flex-row items-center gap-1.5 text-sm">
+				<span className="font-medium">{data.username}</span>
+				{action && <span className="text-muted-foreground">{action}</span>}
+				{timeValue && (
+					<>
+						<span className="text-muted-foreground/50">/</span>
+						<div className="text-muted-foreground">
+							{timeLinkTo ?
+								<Link
+									to={timeLinkTo}
+									// oxlint-disable-next-line jsx-no-new-object-as-prop
+									params={timeLinkParams}
+									search={timeLinkSearch}
+									className="s-link-hidden hover:underline"
+								>
+									{ago(timeValue)}
+								</Link>
+							:	ago(timeValue)}
+						</div>
+					</>
+				)}
 			</div>
 		</div>
 	)

@@ -288,6 +288,9 @@ values
 -- Data for Name: instances; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
+-- Data for Name: oauth_clients; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
 -- Data for Name: sessions; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
@@ -298,6 +301,12 @@ values
 --
 --
 -- Data for Name: mfa_challenges; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: oauth_authorizations; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
+--
+--
+-- Data for Name: oauth_consents; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 --
 -- Data for Name: one_time_tokens; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
@@ -573,37 +582,6 @@ values
 		now() - interval '2 days',
 		null,
 		'[{"lang": "tam", "level": "fluent"}, {"lang": "hin", "level": "fluent"}, {"lang": "kan", "level": "proficient"}, {"lang": "eng", "level": "fluent"}, {"lang": "deu", "level": "proficient"}]'
-	);
-
---
--- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
---
-insert into
-	"public"."phrase_request" ("id", "created_at", "requester_uid", "lang", "prompt", "status")
-values
-	(
-		'26fc0561-2b17-4663-a017-b88257702e25',
-		now() - interval '10 days',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'ibo',
-		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
-		'pending'
-	),
-	(
-		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
-		now() - interval '5 days',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'tam',
-		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.',
-		'pending'
-	),
-	(
-		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		now() - interval '3 days',
-		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
-		'hin',
-		'How do I say "I''d like a cheeseburger?"',
-		'fulfilled'
 	);
 
 --
@@ -1891,6 +1869,368 @@ values
 		'hin',
 		now() - interval '2 days',
 		null
+	),
+	(
+		'Ondu coffee mattu dosa kodhi',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		now() - interval '1 days',
+		null
+	);
+
+--
+-- Data for Name: phrase_request; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."phrase_request" (
+		"id",
+		"created_at",
+		"requester_uid",
+		"lang",
+		"prompt",
+		"upvote_count"
+	)
+values
+	(
+		'26fc0561-2b17-4663-a017-b88257702e25',
+		now() - interval '10 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ibo',
+		'I see a cab and driver waiting on the road and I want to ask them if they''re available to take me someplace, how do I say this? "Are you available for hire?" "Can you take me?" etc',
+		0
+	),
+	(
+		'bc2e2811-1a9b-4131-981d-f2d7d7b26411',
+		now() - interval '5 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'tam',
+		'How do I say "This is one of my favourite foods / I know and love this dish" like I''m being a little casual but someone is saying "oh should I get you something else?" and I''m saying "no I love this food! don''t worry, I''m just taking a minute" kind of like that.',
+		0
+	),
+	(
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		now() - interval '3 days',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'hin',
+		'How do I say "I''d like a cheeseburger?"',
+		0
+	),
+	(
+		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
+		now() - interval '2 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		'How do I order a dosa and a coffee?',
+		0
+	),
+	(
+		'3f8c9e2a-1234-4567-89ab-cdef01234567',
+		current_date - interval '8 days',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'hin',
+		'I''m learning to cook Indian food and need phrases for common ingredients. How do I ask for tomatoes, onions, garlic, ginger, and spices at the market?',
+		2
+	),
+	(
+		'4a9d0f3b-2345-5678-90bc-def012345678',
+		current_date - interval '6 days',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		'How do I ask where the bathroom is in Kannada? Also need phrases for "excuse me" and "thank you".',
+		1
+	),
+	(
+		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		current_date - interval '4 days',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'hin',
+		'What are some polite ways to decline food when someone offers? I don''t want to seem rude but I''m full.',
+		3
+	),
+	(
+		'6c1f2a5d-4567-7890-12de-f01234567890',
+		current_date - interval '1 day',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		'Need help with directions in Kannada - left, right, straight, turn, stop.',
+		0
+	);
+
+--
+-- Data for Name: phrase_playlist; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."phrase_playlist" (
+		"id",
+		"uid",
+		"title",
+		"description",
+		"created_at",
+		"lang",
+		"upvote_count"
+	)
+values
+	(
+		'a1b2c3d4-1111-2222-3333-444444444444',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'Essential Hindi Greetings',
+		'Common greetings and polite phrases for everyday conversations in Hindi',
+		current_date - interval '15 days',
+		'hin',
+		12
+	),
+	(
+		'b2c3d4e5-2222-3333-4444-555555555555',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'Hindi Questions',
+		'Useful question phrases to help you get information',
+		current_date - interval '12 days',
+		'hin',
+		8
+	),
+	(
+		'c3d4e5f6-3333-4444-5555-666666666666',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'Basic Kannada Phrases',
+		'Starter phrases for Kannada learners',
+		current_date - interval '10 days',
+		'kan',
+		5
+	),
+	(
+		'd4e5f6a7-4444-5555-6666-777777777777',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'Hindi Numbers and Counting',
+		'Learn to count in Hindi from 1 to 10',
+		current_date - interval '7 days',
+		'hin',
+		15
+	),
+	(
+		'e5f6a7b8-5555-6666-7777-888888888888',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'Kannada Food & Dining',
+		'Order food and drinks in Kannada restaurants',
+		current_date - interval '5 days',
+		'kan',
+		9
+	),
+	(
+		'f6a7b8c9-6666-7777-8888-999999999999',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'Hindi Travel Phrases',
+		'Essential phrases for getting around in Hindi-speaking areas',
+		current_date - interval '3 days',
+		'hin',
+		6
+	);
+
+--
+-- Data for Name: playlist_phrase_link; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."playlist_phrase_link" ("id", "uid", "phrase_id", "playlist_id", "order", "created_at")
+values
+	(
+		'11111111-aaaa-bbbb-cccc-dddddddddddd',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		'a1b2c3d4-1111-2222-3333-444444444444',
+		1.0,
+		current_date - interval '15 days'
+	),
+	(
+		'22222222-bbbb-cccc-dddd-eeeeeeeeeeee',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		'a1b2c3d4-1111-2222-3333-444444444444',
+		2.0,
+		current_date - interval '15 days'
+	),
+	(
+		'33333333-cccc-dddd-eeee-ffffffffffff',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
+		'a1b2c3d4-1111-2222-3333-444444444444',
+		3.0,
+		current_date - interval '15 days'
+	),
+	(
+		'44444444-dddd-eeee-ffff-000000000000',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'1d44afd2-1274-47ec-8107-36bd09861c3d',
+		'b2c3d4e5-2222-3333-4444-555555555555',
+		1.0,
+		current_date - interval '12 days'
+	),
+	(
+		'55555555-eeee-ffff-0000-111111111111',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'267acd7c-65f2-4aad-bf5c-58e01c0f69f8',
+		'b2c3d4e5-2222-3333-4444-555555555555',
+		2.0,
+		current_date - interval '12 days'
+	),
+	(
+		'66666666-ffff-0000-1111-222222222222',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
+		'b2c3d4e5-2222-3333-4444-555555555555',
+		3.0,
+		current_date - interval '12 days'
+	),
+	(
+		'77777777-0000-1111-2222-333333333333',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
+		'c3d4e5f6-3333-4444-5555-666666666666',
+		1.0,
+		current_date - interval '10 days'
+	),
+	(
+		'88888888-1111-2222-3333-444444444444',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
+		'c3d4e5f6-3333-4444-5555-666666666666',
+		2.0,
+		current_date - interval '10 days'
+	),
+	(
+		'99999999-2222-3333-4444-555555555555',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
+		'c3d4e5f6-3333-4444-5555-666666666666',
+		3.0,
+		current_date - interval '10 days'
+	),
+	(
+		'aaaaaaaa-3333-4444-5555-666666666666',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'8133abe3-f908-445a-b8ae-6f01db3c18d7',
+		'd4e5f6a7-4444-5555-6666-777777777777',
+		1.0,
+		current_date - interval '7 days'
+	),
+	(
+		'bbbbbbbb-4444-5555-6666-777777777777',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'e5f6a7b8-5555-6666-7777-888888888888',
+		1.0,
+		current_date - interval '5 days'
+	),
+	(
+		'cccccccc-5555-6666-7777-888888888888',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		'f6a7b8c9-6666-7777-8888-999999999999',
+		1.0,
+		current_date - interval '3 days'
+	),
+	(
+		'dddddddd-6666-7777-8888-999999999999',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'48edc28c-1530-4549-b48c-f678033a6892',
+		'f6a7b8c9-6666-7777-8888-999999999999',
+		2.0,
+		current_date - interval '3 days'
+	);
+
+--
+-- Data for Name: request_comment; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."request_comment" (
+		"id",
+		"request_id",
+		"parent_comment_id",
+		"uid",
+		"content",
+		"created_at",
+		"upvote_count"
+	)
+values
+	(
+		'c0000001-1111-2222-3333-444444444444',
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		null,
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'You can say "[mujhe] ek cheeseburger chahiye" - I just added this phrase!',
+		current_date - interval '3 days' + interval '2 hours',
+		5
+	),
+	(
+		'c0000002-2222-3333-4444-555555555555',
+		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		'c0000001-1111-2222-3333-444444444444',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'Thanks! This is exactly what I needed.',
+		current_date - interval '3 days' + interval '4 hours',
+		2
+	),
+	(
+		'c0000003-3333-4444-5555-666666666666',
+		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
+		null,
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'For coffee and dosa: "Ondu coffee mattu dosa kodhi" - added to my collection',
+		current_date - interval '2 days' + interval '1 hour',
+		3
+	),
+	(
+		'c0000004-4444-5555-6666-777777777777',
+		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
+		null,
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'You can also say "Vandu tea kudhi" for tea',
+		current_date - interval '2 days' + interval '3 hours',
+		1
+	),
+	(
+		'c0000005-5555-6666-7777-888888888888',
+		'3f8c9e2a-1234-4567-89ab-cdef01234567',
+		null,
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'Great question! For veggies at the market you can point and say "ye kitna?" (how much is this?) or "aap ke paas [item] hai?" (do you have [item]?)',
+		current_date - interval '7 days' + interval '5 hours',
+		4
+	),
+	(
+		'c0000006-6666-7777-8888-999999999999',
+		'4a9d0f3b-2345-5678-90bc-def012345678',
+		null,
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'I think "bathroom" is not commonly used - people usually ask for the toilet',
+		current_date - interval '6 days' + interval '2 hours',
+		2
+	),
+	(
+		'c0000007-7777-8888-9999-000000000000',
+		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		null,
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'You can say "nahi, dhanyavaad" (no, thank you) or "bas, ho gaya" (enough, I''m done). Both are polite!',
+		current_date - interval '4 days' + interval '6 hours',
+		6
+	),
+	(
+		'c0000008-8888-9999-0000-111111111111',
+		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		'c0000007-7777-8888-9999-000000000000',
+		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
+		'Perfect! I''ll add these to my deck.',
+		current_date - interval '4 days' + interval '8 hours',
+		1
+	),
+	(
+		'c0000009-9999-0000-1111-222222222222',
+		'6c1f2a5d-4567-7890-12de-f01234567890',
+		null,
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'Still learning these myself! Would love to see what others suggest.',
+		current_date - interval '1 day' + interval '3 hours',
+		0
 	);
 
 --
@@ -2329,6 +2669,9 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
 	);
 
+--
+-- Data for Name: phrase_request_upvote; Type: TABLE DATA; Schema: public; Owner: postgres
+--
 --
 -- Data for Name: tag; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -4191,6 +4534,16 @@ Meaning: To be used in a manner in which "Oh shit" or "Oh fuck" is used.',
 		'fra',
 		null,
 		now() - interval '2 days'
+	),
+	(
+		'give one coffee and one dosa',
+		null,
+		'2309c74e-ea4f-4b87-b538-af6f20f8d7ae',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'eng',
+		null,
+		now() - interval '1 days'
 	);
 
 --
@@ -4275,6 +4628,24 @@ values
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'hin',
 		now() - interval '30 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'9533bf48-fb98-4ace-befd-1eb1215e7f22',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'kan',
+		now() - interval '15 days',
+		'moving',
+		false,
+		15
+	),
+	(
+		'3ea47a8a-3397-4658-9860-86cb607c43f2',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'kan',
+		now() - interval '15 days',
 		'moving',
 		false,
 		15
@@ -4725,6 +5096,15 @@ values
 		now() - interval '10 days',
 		'active',
 		'hin'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'0630743e-c2e8-4b71-9707-b5c8ca467785',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		now() - interval '1 days',
+		now() - interval '1 days',
+		'active',
+		'kan'
 	);
 
 --
@@ -5293,15 +5673,38 @@ values
 		'new row violates row-level security policy for table "user_card"',
 		'{"code": "42501", "message": "new row violates row-level security policy for table \"user_card\""}',
 		'http://localhost:5173/learn/hin/requests/e0d3a74e-4fe7-43c0-aa35-d05c83929986'
+	),
+	(
+		'e97591d8-4838-4f50-9b52-1dbf97f9fa07',
+		'2026-01-06 07:42:39.459389+00',
+		null,
+		'Invalid login credentials',
+		'{"code": "invalid_credentials", "name": "AuthApiError", "status": "400"}',
+		'http://localhost:5173/login?redirectedFrom=%2Flearn%2Ftam%2Ffeed'
+	),
+	(
+		'71608fdd-d794-4a25-8b13-1394009a9ead',
+		'2026-01-06 07:42:39.459389+00',
+		null,
+		'Invalid login credentials',
+		'{"code": "invalid_credentials", "name": "AuthApiError", "status": "400"}',
+		'http://localhost:5173/login?redirectedFrom=%2Flearn%2Ftam%2Ffeed'
 	);
 
+--
+-- Data for Name: hooks; Type: TABLE DATA; Schema: supabase_functions; Owner: supabase_functions_admin
 --
 --
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 select
-	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2813, true);
+	pg_catalog.setval ('"auth"."refresh_tokens_id_seq"', 2815, true);
 
+--
+-- Name: hooks_id_seq; Type: SEQUENCE SET; Schema: supabase_functions; Owner: supabase_functions_admin
+--
+-- select
+-- 	pg_catalog.setval ('"supabase_functions"."hooks_id_seq"', 1, false);
 --
 -- PostgreSQL database dump complete
 --

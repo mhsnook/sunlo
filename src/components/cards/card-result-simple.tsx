@@ -38,7 +38,7 @@ export function CardResultSimple({
 				<div className="flex flex-col gap-2 px-4 py-4">
 					<CardStatusHeart phrase={phrase} />
 					<PermalinkButton
-						to="/learn/$lang/$id"
+						to="/learn/$lang/phrases/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: phrase.lang, id: phrase.id }}
 						variant="ghost"

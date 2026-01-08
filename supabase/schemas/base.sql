@@ -32,11 +32,7 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
-create extension if not exists "pgsodium";
-
 alter schema "public" owner to "postgres";
-
-comment on schema "public" is '@graphql({"inflect_names": true})';
 
 create extension if not exists "plv8"
 with
@@ -70,8 +66,7 @@ create type "public"."card_status" as enum('active', 'learned', 'skipped');
 
 alter type "public"."card_status" owner to "postgres";
 
-comment on
-type "public"."card_status" is 'card status is either active, learned or skipped';
+comment on type "public"."card_status" is 'card status is either active, learned or skipped';
 
 create type "public"."chat_message_type" as enum('recommendation', 'accepted', 'request');
 
@@ -89,12 +84,7 @@ create type "public"."learning_goal" as enum('moving', 'family', 'visiting');
 
 alter type "public"."learning_goal" owner to "postgres";
 
-comment on
-type "public"."learning_goal" is 'why are you learning this language?';
-
-create type "public"."phrase_request_status" as enum('pending', 'fulfilled', 'cancelled');
-
-alter type "public"."phrase_request_status" owner to "postgres";
+comment on type "public"."learning_goal" is 'why are you learning this language?';
 
 create type "public"."translation_input" as ("lang" character(3), "text" "text");
 
@@ -107,8 +97,7 @@ create type "public"."phrase_with_translations_input" as (
 
 alter type "public"."phrase_with_translations_input" owner to "postgres";
 
-create
-or replace function "public"."add_phrase_translation_card" (
+create or replace function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
 	"phrase_lang" "text",
 	"translation_text" "text",
@@ -150,8 +139,7 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) owner to "postgres";
 
-create
-or replace function "public"."add_tags_to_phrase" (
+create or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
@@ -211,8 +199,7 @@ alter function "public"."add_tags_to_phrase" (
 	"p_tags" "text" []
 ) owner to "postgres";
 
-create
-or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
+create or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
     SELECT 1
     FROM public.friend_summary
@@ -227,8 +214,7 @@ $$;
 
 alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "postgres";
 
-create
-or replace function "public"."bulk_add_phrases" (
+create or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"
@@ -275,8 +261,7 @@ alter function "public"."bulk_add_phrases" (
 	"p_user_id" "uuid"
 ) owner to "postgres";
 
-create
-or replace function "public"."create_comment_with_phrases" (
+create or replace function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
 	"p_content" "text",
 	"p_parent_comment_id" "uuid" default null::"uuid",
@@ -327,15 +312,74 @@ alter function "public"."create_comment_with_phrases" (
 	"p_phrase_ids" "uuid" []
 ) owner to "postgres";
 
-create
-or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
-  return Math.min(Math.max(difficulty, 1.0), 10.0);
+create or replace function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text" default null::"text",
+	"href" "text" default null::"text",
+	"phrases" "jsonb" default '[]'::"jsonb"
+) returns "json" language "plpgsql" as $$
+DECLARE
+  v_playlist_id uuid;
+  v_new_playlist phrase_playlist;
+  v_phrase_item jsonb;
+  v_link_record playlist_phrase_link;
+  v_links playlist_phrase_link[] := '{}';
+BEGIN
+  -- Insert the playlist
+  INSERT INTO phrase_playlist (title, description, href, lang)
+  VALUES (title, description, href, lang)
+  RETURNING * INTO v_new_playlist;
+
+  v_playlist_id := v_new_playlist.id;
+
+  -- Insert phrase links
+  IF phrases IS NOT NULL AND jsonb_array_length(phrases) > 0 THEN
+    FOR v_phrase_item IN SELECT * FROM jsonb_array_elements(phrases)
+    LOOP
+      INSERT INTO playlist_phrase_link (
+        playlist_id,
+        phrase_id,
+        href,
+        "order"
+      ) VALUES (
+        v_playlist_id,
+        (v_phrase_item->>'phrase_id')::uuid,
+        v_phrase_item->>'href',
+        (v_phrase_item->>'order')::double precision
+      )
+      RETURNING * INTO v_link_record;
+
+      v_links := array_append(v_links, v_link_record);
+    END LOOP;
+  END IF;
+
+  -- Return the playlist and links
+  RETURN json_build_object(
+    'playlist', row_to_json(v_new_playlist),
+    'links', (
+      SELECT coalesce(json_agg(l), '[]'::json)
+      FROM unnest(v_links) AS l
+    )
+  );
+END;
+$$;
+
+alter function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"phrases" "jsonb"
+) owner to "postgres";
+
+create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
+	return Math.min(Math.max(difficulty, 1.0), 10.0);
 $$;
 
 alter function "public"."fsrs_clamp_d" ("difficulty" numeric) owner to "postgres";
 
-create
-or replace function "public"."fsrs_d_0" ("score" integer) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_d_0" ("score" integer) returns numeric language "plv8" as $$
 	const W_4 = 7.1949;
 	const W_5 = 0.5345;
 	return plv8.find_function("fsrs_clamp_d")(W_4 - Math.exp(W_5 * (score - 1.0)) + 1.0);
@@ -343,8 +387,7 @@ $$;
 
 alter function "public"."fsrs_d_0" ("score" integer) owner to "postgres";
 
-create
-or replace function "public"."fsrs_days_between" (
+create or replace function "public"."fsrs_days_between" (
 	"date_before" timestamp with time zone,
 	"date_after" timestamp with time zone
 ) returns numeric language "plv8" as $$
@@ -357,31 +400,27 @@ alter function "public"."fsrs_days_between" (
 	"date_after" timestamp with time zone
 ) owner to "postgres";
 
-create
-or replace function "public"."fsrs_delta_d" ("score" integer) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_delta_d" ("score" integer) returns numeric language "plv8" as $$
 	const W_6 = 1.4604;
   return -W_6 * (score - 3.0);
 $$;
 
 alter function "public"."fsrs_delta_d" ("score" integer) owner to "postgres";
 
-create
-or replace function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
 	const W_7 = 0.0046;
 	return plv8.find_function("fsrs_clamp_d")(W_7 * plv8.find_function("fsrs_d_0")(4) + (1.0 - W_7) * plv8.find_function("fsrs_dp")(difficulty, score));
 $$;
 
 alter function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) owner to "postgres";
 
-create
-or replace function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
 	return difficulty + plv8.find_function("fsrs_delta_d")(score) * ((10.0 - difficulty) / 9.0);
 $$;
 
 alter function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) owner to "postgres";
 
-create
-or replace function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) returns numeric language "plv8" as $$
 	const f = 19.0 / 81.0;
 	const c = -0.5;
 	return (stability / f) * (Math.pow(desired_retrievability, 1.0 / c) - 1.0);
@@ -389,8 +428,7 @@ $$;
 
 alter function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) owner to "postgres";
 
-create
-or replace function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) returns numeric language "plv8" as $$
 	const f = 19.0 / 81.0;
 	const c = -0.5;
 	return Math.pow(1.0 + f * (time_in_days / stability), c);
@@ -398,16 +436,14 @@ $$;
 
 alter function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) owner to "postgres";
 
-create
-or replace function "public"."fsrs_s_0" ("score" integer) returns numeric language "plv8" as $$
+create or replace function "public"."fsrs_s_0" ("score" integer) returns numeric language "plv8" as $$
 	const W = [0.40255, 1.18385, 3.173, 15.69105];
 	return W[score - 1];
 $$;
 
 alter function "public"."fsrs_s_0" ("score" integer) owner to "postgres";
 
-create
-or replace function "public"."fsrs_s_fail" (
+create or replace function "public"."fsrs_s_fail" (
 	"difficulty" numeric,
 	"stability" numeric,
 	"review_time_retrievability" numeric
@@ -430,8 +466,7 @@ alter function "public"."fsrs_s_fail" (
 	"review_time_retrievability" numeric
 ) owner to "postgres";
 
-create
-or replace function "public"."fsrs_s_success" (
+create or replace function "public"."fsrs_s_success" (
 	"difficulty" numeric,
 	"stability" numeric,
 	"review_time_retrievability" numeric,
@@ -459,8 +494,7 @@ alter function "public"."fsrs_s_success" (
 	"score" integer
 ) owner to "postgres";
 
-create
-or replace function "public"."fsrs_stability" (
+create or replace function "public"."fsrs_stability" (
 	"difficulty" numeric,
 	"stability" numeric,
 	"review_time_retrievability" numeric,
@@ -478,103 +512,38 @@ alter function "public"."fsrs_stability" (
 	"score" integer
 ) owner to "postgres";
 
-create
-or replace function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) returns "json" language "plpgsql" as $$
-DECLARE
-    v_requester_uid uuid;
-    v_phrase_lang character varying;
-    v_request_status public.phrase_request_status;
-    fulfiller_uid uuid;
-    new_phrase public.phrase;
-    new_translation public.phrase_translation;
-    new_card public.user_card;
-BEGIN
-    -- Get the requester's UID and the phrase language from the request
-    SELECT requester_uid, lang, status
-    INTO v_requester_uid, v_phrase_lang, v_request_status
-    FROM public.phrase_request
-    WHERE id = request_id;
-
-    IF v_requester_uid IS NULL THEN
-        RAISE EXCEPTION 'Phrase request not found';
-    END IF;
-
-    -- Get the UID of the user calling this function, if they are authenticated
-    fulfiller_uid := auth.uid();
-
-    -- Insert the new phrase and return the entire row
-    INSERT INTO public.phrase (text, lang, added_by, request_id)
-    VALUES (p_phrase_text, v_phrase_lang, fulfiller_uid, request_id)
-    RETURNING * INTO new_phrase;
-
-    -- Insert the translation for the new phrase and return the entire row
-    INSERT INTO public.phrase_translation (phrase_id, text, lang, added_by)
-    VALUES (new_phrase.id, p_translation_text, p_translation_lang, fulfiller_uid)
-    RETURNING * INTO new_translation;
-
-    -- If the requester is also the fulfiller, make them a new card
-    IF v_requester_uid = fulfiller_uid THEN
-        INSERT INTO public.user_card (phrase_id, uid, lang, status)
-        VALUES (new_phrase.id, fulfiller_uid, v_phrase_lang, 'active')
-        RETURNING * INTO new_card;
-
-        -- Update the phrase_request to mark it as fulfilled
-        UPDATE public.phrase_request
-        SET status = 'fulfilled', fulfilled_at = now()
-        WHERE id = request_id;
-    END IF;
-
-    -- Return the created phrase and translation as a JSON object
-    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
-END;
-$$;
-
-alter function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) owner to "postgres";
-
 set
 	default_tablespace = '';
 
 set
 	default_table_access_method = "heap";
 
-create table if not exists
-	"public"."user_card_review" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"score" smallint not null,
-		"difficulty" numeric,
-		"stability" numeric,
-		"review_time_retrievability" numeric,
-		"created_at" timestamp with time zone default "now" () not null,
-		"updated_at" timestamp with time zone default "now" () not null,
-		"day_session" "date" not null,
-		"lang" character varying not null,
-		"phrase_id" "uuid" not null,
-		"day_first_review" boolean default true not null,
-		constraint "user_card_review_difficulty_check" check (
-			(
-				("difficulty" >= 0.0)
-				and ("difficulty" <= 10.0)
-			)
-		),
-		constraint "user_card_review_score_check" check (("score" = any (array[1, 2, 3, 4]))),
-		constraint "user_card_review_stability_check" check (("stability" >= 0.0))
-	);
+create table if not exists "public"."user_card_review" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"score" smallint not null,
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"created_at" timestamp with time zone default "now" () not null,
+	"updated_at" timestamp with time zone default "now" () not null,
+	"day_session" "date" not null,
+	"lang" character varying not null,
+	"phrase_id" "uuid" not null,
+	"day_first_review" boolean default true not null,
+	constraint "user_card_review_difficulty_check" check (
+		(
+			("difficulty" >= 0.0)
+			and ("difficulty" <= 10.0)
+		)
+	),
+	constraint "user_card_review_score_check" check (("score" = any (array[1, 2, 3, 4]))),
+	constraint "user_card_review_stability_check" check (("stability" >= 0.0))
+);
 
 alter table "public"."user_card_review" owner to "postgres";
 
-create
-or replace function "public"."insert_user_card_review" (
+create or replace function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
 	"score" integer,
@@ -661,11 +630,11 @@ alter function "public"."insert_user_card_review" (
 	"desired_retention" numeric
 ) owner to "postgres";
 
-create
-or replace function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") returns "json" language "plpgsql" as $$
+create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
 DECLARE
   v_user_uid uuid := auth.uid();
   v_upvote_exists boolean;
+  v_actual_action text;
 BEGIN
   -- Check if upvote exists
   SELECT EXISTS(
@@ -673,35 +642,89 @@ BEGIN
     WHERE comment_id = p_comment_id AND uid = v_user_uid
   ) INTO v_upvote_exists;
 
-  IF v_upvote_exists THEN
-    -- Remove upvote
-    DELETE FROM comment_upvote
-    WHERE comment_id = p_comment_id AND uid = v_user_uid;
-
-    RETURN json_build_object(
-      'comment_id', p_comment_id,
-      'action', 'removed'
-    );
+  IF p_action = 'add' THEN
+    IF NOT v_upvote_exists THEN
+      -- Add upvote
+      INSERT INTO comment_upvote (comment_id, uid)
+      VALUES (p_comment_id, v_user_uid);
+      v_actual_action := 'added';
+    ELSE
+      -- Already exists, no change
+      v_actual_action := 'no_change';
+    END IF;
+  ELSIF p_action = 'remove' THEN
+    IF v_upvote_exists THEN
+      -- Remove upvote
+      DELETE FROM comment_upvote
+      WHERE comment_id = p_comment_id AND uid = v_user_uid;
+      v_actual_action := 'removed';
+    ELSE
+      -- Doesn't exist, no change
+      v_actual_action := 'no_change';
+    END IF;
   ELSE
-    -- Add upvote
-    INSERT INTO comment_upvote (comment_id, uid)
-    VALUES (p_comment_id, v_user_uid);
-
-    RETURN json_build_object(
-      'comment_id', p_comment_id,
-      'action', 'added'
-    );
+    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
   END IF;
+
+  RETURN json_build_object(
+    'comment_id', p_comment_id,
+    'action', v_actual_action
+  );
 END;
 $$;
 
-alter function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") owner to "postgres";
+alter function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") owner to "postgres";
 
-create
-or replace function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") returns "json" language "plpgsql" as $$
+create or replace function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
 DECLARE
   v_user_uid uuid := auth.uid();
   v_upvote_exists boolean;
+  v_actual_action text;
+BEGIN
+  -- Check if upvote exists
+  SELECT EXISTS(
+    SELECT 1 FROM phrase_playlist_upvote
+    WHERE playlist_id = p_playlist_id AND uid = v_user_uid
+  ) INTO v_upvote_exists;
+
+  IF p_action = 'add' THEN
+    IF NOT v_upvote_exists THEN
+      -- Add upvote
+      INSERT INTO phrase_playlist_upvote (playlist_id, uid)
+      VALUES (p_playlist_id, v_user_uid);
+      v_actual_action := 'added';
+    ELSE
+      -- Already exists, no change
+      v_actual_action := 'no_change';
+    END IF;
+  ELSIF p_action = 'remove' THEN
+    IF v_upvote_exists THEN
+      -- Remove upvote
+      DELETE FROM phrase_playlist_upvote
+      WHERE playlist_id = p_playlist_id AND uid = v_user_uid;
+      v_actual_action := 'removed';
+    ELSE
+      -- Doesn't exist, no change
+      v_actual_action := 'no_change';
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
+  END IF;
+
+  RETURN json_build_object(
+    'playlist_id', p_playlist_id,
+    'action', v_actual_action
+  );
+END;
+$$;
+
+alter function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") owner to "postgres";
+
+create or replace function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
+DECLARE
+  v_user_uid uuid := auth.uid();
+  v_upvote_exists boolean;
+  v_actual_action text;
 BEGIN
   -- Check if upvote exists
   SELECT EXISTS(
@@ -709,32 +732,40 @@ BEGIN
     WHERE request_id = p_request_id AND uid = v_user_uid
   ) INTO v_upvote_exists;
 
-  IF v_upvote_exists THEN
-    -- Remove upvote
-    DELETE FROM phrase_request_upvote
-    WHERE request_id = p_request_id AND uid = v_user_uid;
-
-    RETURN json_build_object(
-      'request_id', p_request_id,
-      'action', 'removed'
-    );
+  IF p_action = 'add' THEN
+    IF NOT v_upvote_exists THEN
+      -- Add upvote
+      INSERT INTO phrase_request_upvote (request_id, uid)
+      VALUES (p_request_id, v_user_uid);
+      v_actual_action := 'added';
+    ELSE
+      -- Already exists, no change
+      v_actual_action := 'no_change';
+    END IF;
+  ELSIF p_action = 'remove' THEN
+    IF v_upvote_exists THEN
+      -- Remove upvote
+      DELETE FROM phrase_request_upvote
+      WHERE request_id = p_request_id AND uid = v_user_uid;
+      v_actual_action := 'removed';
+    ELSE
+      -- Doesn't exist, no change
+      v_actual_action := 'no_change';
+    END IF;
   ELSE
-    -- Add upvote
-    INSERT INTO phrase_request_upvote (request_id, uid)
-    VALUES (p_request_id, v_user_uid);
-
-    RETURN json_build_object(
-      'request_id', p_request_id,
-      'action', 'added'
-    );
+    RAISE EXCEPTION 'Invalid action: %. Must be "add" or "remove"', p_action;
   END IF;
+
+  RETURN json_build_object(
+    'request_id', p_request_id,
+    'action', v_actual_action
+  );
 END;
 $$;
 
-alter function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") owner to "postgres";
+alter function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") owner to "postgres";
 
-create
-or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
+create or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
   if (TG_OP = 'INSERT') then
     update request_comment
@@ -753,8 +784,58 @@ $$;
 
 alter function "public"."update_comment_upvote_count" () owner to "postgres";
 
-create
-or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
+create or replace function "public"."update_parent_playlist_timestamp" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  -- Update the parent playlist's updated_at timestamp
+  -- Works for both INSERT/UPDATE (NEW) and DELETE (OLD) operations
+  update public.phrase_playlist
+  set updated_at = now()
+  where id = coalesce(NEW.playlist_id, OLD.playlist_id);
+
+  return coalesce(NEW, OLD);
+end;
+$$;
+
+alter function "public"."update_parent_playlist_timestamp" () owner to "postgres";
+
+create or replace function "public"."update_phrase_playlist_timestamp" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_phrase_playlist_timestamp" () owner to "postgres";
+
+create or replace function "public"."update_phrase_playlist_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
+begin
+  if (TG_OP = 'INSERT') then
+    update phrase_playlist
+    set upvote_count = upvote_count + 1
+    where id = NEW.playlist_id;
+    return NEW;
+  elsif (TG_OP = 'DELETE') then
+    update phrase_playlist
+    set upvote_count = upvote_count - 1
+    where id = OLD.playlist_id;
+    return OLD;
+  end if;
+  return null;
+end;
+$$;
+
+alter function "public"."update_phrase_playlist_upvote_count" () owner to "postgres";
+
+create or replace function "public"."update_phrase_request_timestamp" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_phrase_request_timestamp" () owner to "postgres";
+
+create or replace function "public"."update_phrase_request_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
   if (TG_OP = 'INSERT') then
     update phrase_request
@@ -773,8 +854,7 @@ $$;
 
 alter function "public"."update_phrase_request_upvote_count" () owner to "postgres";
 
-create
-or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
+create or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
 
 const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id = $1", [review_id])
 const review = reviewQuery[0] ?? null
@@ -842,20 +922,19 @@ $_$;
 
 alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
 
-create table if not exists
-	"public"."chat_message" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"sender_uid" "uuid" default "auth"."uid" () not null,
-		"recipient_uid" "uuid" not null,
-		"message_type" "public"."chat_message_type" not null,
-		"phrase_id" "uuid",
-		"related_message_id" "uuid",
-		"content" "jsonb",
-		"lang" character varying not null,
-		"request_id" "uuid",
-		constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
-	);
+create table if not exists "public"."chat_message" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"sender_uid" "uuid" default "auth"."uid" () not null,
+	"recipient_uid" "uuid" not null,
+	"message_type" "public"."chat_message_type" not null,
+	"phrase_id" "uuid",
+	"related_message_id" "uuid",
+	"content" "jsonb",
+	"lang" character varying not null,
+	"request_id" "uuid",
+	constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
+);
 
 alter table "public"."chat_message" owner to "postgres";
 
@@ -871,102 +950,33 @@ comment on column "public"."chat_message"."related_message_id" is 'If this messa
 
 comment on column "public"."chat_message"."content" is 'Flexible JSONB for extra data, like the text of an accepted phrase.';
 
-create table if not exists
-	"public"."comment_phrase_link" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"request_id" "uuid" not null,
-		"comment_id" "uuid" not null,
-		"phrase_id" "uuid" not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"created_at" timestamp with time zone default "now" () not null
-	);
+create table if not exists "public"."comment_phrase_link" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"request_id" "uuid" not null,
+	"comment_id" "uuid" not null,
+	"phrase_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
 
 alter table "public"."comment_phrase_link" owner to "postgres";
 
-create table if not exists
-	"public"."comment_upvote" (
-		"comment_id" "uuid" not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"created_at" timestamp with time zone default "now" () not null
-	);
+create table if not exists "public"."comment_upvote" (
+	"comment_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
 
 alter table "public"."comment_upvote" owner to "postgres";
 
-create table if not exists
-	"public"."friend_request_action" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"uid_by" "uuid" not null,
-		"uid_for" "uuid" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"action_type" "public"."friend_request_response",
-		"uid_less" "uuid",
-		"uid_more" "uuid"
-	);
-
-alter table "public"."friend_request_action" owner to "postgres";
-
-comment on column "public"."friend_request_action"."uid_less" is 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
-
-comment on column "public"."friend_request_action"."uid_more" is 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
-
-create or replace view
-	"public"."friend_summary"
-with
-	("security_invoker" = 'true') as
-select distinct
-	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
-	"a"."uid_more",
-	case
-		when ("a"."action_type" = 'accept'::"public"."friend_request_response") then 'friends'::"text"
-		when ("a"."action_type" = 'invite'::"public"."friend_request_response") then 'pending'::"text"
-		when (
-			"a"."action_type" = any (
-				array[
-					'decline'::"public"."friend_request_response",
-					'cancel'::"public"."friend_request_response",
-					'remove'::"public"."friend_request_response"
-				]
-			)
-		) then 'unconnected'::"text"
-		else null::"text"
-	end as "status",
-	"a"."created_at" as "most_recent_created_at",
-	"a"."uid_by" as "most_recent_uid_by",
-	"a"."uid_for" as "most_recent_uid_for",
-	"a"."action_type" as "most_recent_action_type",
-	case
-		when ("a"."uid_by" = "auth"."uid" ()) then "a"."uid_for"
-		else "a"."uid_by"
-	end as "uid"
-from
-	"public"."friend_request_action" "a"
-order by
-	"a"."uid_less",
-	"a"."uid_more",
-	"a"."created_at" desc;
-
-alter table "public"."friend_summary" owner to "postgres";
-
-create table if not exists
-	"public"."language" (
-		"name" "text" not null,
-		"lang" character varying not null,
-		"alias_of" character varying
-	);
-
-alter table "public"."language" owner to "postgres";
-
-comment on table "public"."language" is 'The languages that people are trying to learn';
-
-create table if not exists
-	"public"."phrase" (
-		"text" "text" not null,
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" () not null,
-		"lang" character varying not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"text_script" "text"
-	);
+create table if not exists "public"."phrase" (
+	"text" "text" not null,
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"added_by" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"text_script" "text"
+);
 
 alter table "public"."phrase" owner to "postgres";
 
@@ -974,123 +984,30 @@ comment on column "public"."phrase"."added_by" is 'User who added this card';
 
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-create table if not exists
-	"public"."user_deck" (
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"lang" character varying not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
-		"archived" boolean default false not null,
-		"daily_review_goal" smallint default 15 not null,
-		constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
-	);
-
-alter table "public"."user_deck" owner to "postgres";
-
-comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
-
-comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
-
-comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
-
-comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
-
-comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
-
-create or replace view
-	"public"."meta_language" as
-with
-	"first" as (
-		select
-			"l"."lang",
-			"l"."name",
-			"l"."alias_of",
-			(
-				select
-					"count" (distinct "d"."uid") as "count"
-				from
-					"public"."user_deck" "d"
-				where
-					(("l"."lang")::"text" = ("d"."lang")::"text")
-			) as "learners",
-			(
-				select
-					"count" (distinct "p"."id") as "count"
-				from
-					"public"."phrase" "p"
-				where
-					(("l"."lang")::"text" = ("p"."lang")::"text")
-			) as "phrases_to_learn"
-		from
-			"public"."language" "l"
-		group by
-			"l"."lang",
-			"l"."name",
-			"l"."alias_of"
-	),
-	"second" as (
-		select
-			"first"."lang",
-			"first"."name",
-			"first"."alias_of",
-			"first"."learners",
-			"first"."phrases_to_learn",
-			("first"."learners" * "first"."phrases_to_learn") as "display_score"
-		from
-			"first"
-		order by
-			("first"."learners" * "first"."phrases_to_learn") desc
-	)
-select
-	"second"."lang",
-	"second"."name",
-	"second"."alias_of",
-	"second"."learners",
-	"second"."phrases_to_learn",
-	"rank" () over (
-		order by
-			"second"."display_score" desc
-	) as "rank",
-	"rank" () over (
-		order by
-			"second"."display_score" desc,
-			"second"."name"
-	) as "display_order"
-from
-	"second";
-
-alter table "public"."meta_language" owner to "postgres";
-
-create table if not exists
-	"public"."phrase_tag" (
-		"phrase_id" "uuid" not null,
-		"tag_id" "uuid" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"added_by" "uuid" default "auth"."uid" () not null
-	);
+create table if not exists "public"."phrase_tag" (
+	"phrase_id" "uuid" not null,
+	"tag_id" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"added_by" "uuid" default "auth"."uid" () not null
+);
 
 alter table "public"."phrase_tag" owner to "postgres";
 
-create table if not exists
-	"public"."user_profile" (
-		"uid" "uuid" default "auth"."uid" () not null,
-		"username" "text",
-		"updated_at" timestamp with time zone,
-		"created_at" timestamp with time zone default "now" () not null,
-		"avatar_path" "text",
-		"languages_known" "jsonb" default '[]'::"jsonb" not null,
-		constraint "username_length" check (("char_length" ("username") >= 3))
-	);
+create table if not exists "public"."user_profile" (
+	"uid" "uuid" default "auth"."uid" () not null,
+	"username" "text",
+	"updated_at" timestamp with time zone,
+	"created_at" timestamp with time zone default "now" () not null,
+	"avatar_path" "text",
+	"languages_known" "jsonb" default '[]'::"jsonb" not null,
+	constraint "username_length" check (("char_length" ("username") >= 3))
+);
 
 alter table "public"."user_profile" owner to "postgres";
 
 comment on column "public"."user_profile"."uid" is 'Primary key (same as auth.users.id and uid())';
 
-create or replace view
-	"public"."public_profile" as
+create or replace view "public"."public_profile" as
 select
 	"user_profile"."uid",
 	"user_profile"."username",
@@ -1100,27 +1017,25 @@ from
 
 alter table "public"."public_profile" owner to "postgres";
 
-create table if not exists
-	"public"."tag" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"name" "text" not null,
-		"lang" character varying not null,
-		"added_by" "uuid" default "auth"."uid" ()
-	);
+create table if not exists "public"."tag" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"name" "text" not null,
+	"lang" character varying not null,
+	"added_by" "uuid" default "auth"."uid" ()
+);
 
 alter table "public"."tag" owner to "postgres";
 
-create table if not exists
-	"public"."user_card" (
-		"uid" "uuid" default "auth"."uid" () not null,
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"phrase_id" "uuid" not null,
-		"updated_at" timestamp with time zone default "now" (),
-		"created_at" timestamp with time zone default "now" (),
-		"status" "public"."card_status" default 'active'::"public"."card_status",
-		"lang" character varying not null
-	);
+create table if not exists "public"."user_card" (
+	"uid" "uuid" default "auth"."uid" () not null,
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"phrase_id" "uuid" not null,
+	"updated_at" timestamp with time zone default "now" (),
+	"created_at" timestamp with time zone default "now" (),
+	"status" "public"."card_status" default 'active'::"public"."card_status",
+	"lang" character varying not null
+);
 
 alter table "public"."user_card" owner to "postgres";
 
@@ -1128,8 +1043,7 @@ comment on table "public"."user_card" is 'Which card is in which deck, and its s
 
 comment on column "public"."user_card"."uid" is 'The owner user''s ID';
 
-create or replace view
-	"public"."meta_phrase_info" as
+create or replace view "public"."meta_phrase_info" as
 with
 	"recent_review" as (
 		select
@@ -1321,51 +1235,331 @@ from
 
 alter table "public"."meta_phrase_info" owner to "postgres";
 
-create table if not exists
-	"public"."phrase_relation" (
-		"from_phrase_id" "uuid",
-		"to_phrase_id" "uuid",
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"added_by" "uuid" default "auth"."uid" () not null
+create table if not exists "public"."phrase_playlist" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"title" "text" not null,
+	"description" "text",
+	"href" "text",
+	"created_at" timestamp with time zone default "now" () not null,
+	"lang" character varying not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
+);
+
+alter table "public"."phrase_playlist" owner to "postgres";
+
+create table if not exists "public"."phrase_request" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"requester_uid" "uuid" not null,
+	"lang" character varying not null,
+	"prompt" "text" not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
+);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists "public"."playlist_phrase_link" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"phrase_id" "uuid" not null,
+	"playlist_id" "uuid" not null,
+	"order" double precision,
+	"href" "text",
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."playlist_phrase_link" owner to "postgres";
+
+create or replace view "public"."feed_activities" as
+select
+	"pr"."id",
+	'request'::"text" as "type",
+	"pr"."created_at",
+	"pr"."lang",
+	"pr"."requester_uid" as "uid",
+	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
+from
+	"public"."phrase_request" "pr"
+where
+	("pr"."deleted" = false)
+union all
+select
+	"pp"."id",
+	'playlist'::"text" as "type",
+	"pp"."created_at",
+	"pp"."lang",
+	"pp"."uid",
+	"jsonb_build_object" (
+		'title',
+		"pp"."title",
+		'description',
+		"pp"."description",
+		'upvote_count',
+		"pp"."upvote_count",
+		'phrase_count',
+		(
+			select
+				"count" (*) as "count"
+			from
+				"public"."playlist_phrase_link"
+			where
+				("playlist_phrase_link"."playlist_id" = "pp"."id")
+		)
+	) as "payload"
+from
+	"public"."phrase_playlist" "pp"
+where
+	("pp"."deleted" = false)
+union all
+select distinct
+	on ("p"."id") "p"."id",
+	'phrase'::"text" as "type",
+	"p"."created_at",
+	"p"."lang",
+	"p"."added_by" as "uid",
+	"jsonb_build_object" (
+		'text',
+		"p"."text",
+		'source',
+		case
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
+				'type',
+				'request',
+				'id',
+				"cpl"."request_id",
+				'comment_id',
+				"cpl"."comment_id"
+			)
+			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
+				'type',
+				'playlist',
+				'id',
+				"ppl"."playlist_id",
+				'title',
+				"playlist"."title",
+				'follows',
+				(("p"."count_active" + "p"."count_learned"))::integer
+			)
+			else null::"jsonb"
+		end
+	) as "payload"
+from
+	(
+		(
+			(
+				"public"."meta_phrase_info" "p"
+				left join "public"."comment_phrase_link" "cpl" on (("p"."id" = "cpl"."phrase_id"))
+			)
+			left join "public"."playlist_phrase_link" "ppl" on (("p"."id" = "ppl"."phrase_id"))
+		)
+		left join "public"."phrase_playlist" "playlist" on (("ppl"."playlist_id" = "playlist"."id"))
+	)
+where
+	(
+		("p"."added_by" is not null)
+		and ("cpl"."id" is null)
+		and ("ppl"."id" is null)
 	);
+
+alter table "public"."feed_activities" owner to "postgres";
+
+create table if not exists "public"."friend_request_action" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid_by" "uuid" not null,
+	"uid_for" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"action_type" "public"."friend_request_response",
+	"uid_less" "uuid",
+	"uid_more" "uuid"
+);
+
+alter table "public"."friend_request_action" owner to "postgres";
+
+comment on column "public"."friend_request_action"."uid_less" is 'The lesser of the two UIDs (to prevent cases where B-A duplicates A-B)';
+
+comment on column "public"."friend_request_action"."uid_more" is 'The greater of the two UIDs (to prevent cases where B-A duplicates A-B)';
+
+create or replace view "public"."friend_summary"
+with
+	("security_invoker" = 'true') as
+select distinct
+	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
+	"a"."uid_more",
+	case
+		when (
+			"a"."action_type" = 'accept'::"public"."friend_request_response"
+		) then 'friends'::"text"
+		when (
+			"a"."action_type" = 'invite'::"public"."friend_request_response"
+		) then 'pending'::"text"
+		when (
+			"a"."action_type" = any (
+				array[
+					'decline'::"public"."friend_request_response",
+					'cancel'::"public"."friend_request_response",
+					'remove'::"public"."friend_request_response"
+				]
+			)
+		) then 'unconnected'::"text"
+		else null::"text"
+	end as "status",
+	"a"."created_at" as "most_recent_created_at",
+	"a"."uid_by" as "most_recent_uid_by",
+	"a"."uid_for" as "most_recent_uid_for",
+	"a"."action_type" as "most_recent_action_type",
+	case
+		when ("a"."uid_by" = "auth"."uid" ()) then "a"."uid_for"
+		else "a"."uid_by"
+	end as "uid"
+from
+	"public"."friend_request_action" "a"
+order by
+	"a"."uid_less",
+	"a"."uid_more",
+	"a"."created_at" desc;
+
+alter table "public"."friend_summary" owner to "postgres";
+
+create table if not exists "public"."language" (
+	"name" "text" not null,
+	"lang" character varying not null,
+	"alias_of" character varying
+);
+
+alter table "public"."language" owner to "postgres";
+
+comment on table "public"."language" is 'The languages that people are trying to learn';
+
+create table if not exists "public"."user_deck" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
+	"archived" boolean default false not null,
+	"daily_review_goal" smallint default 15 not null,
+	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
+);
+
+alter table "public"."user_deck" owner to "postgres";
+
+comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
+
+comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
+
+comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
+
+comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
+
+comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
+
+create or replace view "public"."meta_language" as
+with
+	"first" as (
+		select
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of",
+			(
+				select
+					"count" (distinct "d"."uid") as "count"
+				from
+					"public"."user_deck" "d"
+				where
+					(("l"."lang")::"text" = ("d"."lang")::"text")
+			) as "learners",
+			(
+				select
+					"count" (distinct "p"."id") as "count"
+				from
+					"public"."phrase" "p"
+				where
+					(("l"."lang")::"text" = ("p"."lang")::"text")
+			) as "phrases_to_learn"
+		from
+			"public"."language" "l"
+		group by
+			"l"."lang",
+			"l"."name",
+			"l"."alias_of"
+	),
+	"second" as (
+		select
+			"first"."lang",
+			"first"."name",
+			"first"."alias_of",
+			"first"."learners",
+			"first"."phrases_to_learn",
+			("first"."learners" * "first"."phrases_to_learn") as "display_score"
+		from
+			"first"
+		order by
+			("first"."learners" * "first"."phrases_to_learn") desc
+	)
+select
+	"second"."lang",
+	"second"."name",
+	"second"."alias_of",
+	"second"."learners",
+	"second"."phrases_to_learn",
+	"rank" () over (
+		order by
+			"second"."display_score" desc
+	) as "rank",
+	"rank" () over (
+		order by
+			"second"."display_score" desc,
+			"second"."name"
+	) as "display_order"
+from
+	"second";
+
+alter table "public"."meta_language" owner to "postgres";
+
+create table if not exists "public"."phrase_playlist_upvote" (
+	"playlist_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."phrase_playlist_upvote" owner to "postgres";
+
+create table if not exists "public"."phrase_relation" (
+	"from_phrase_id" "uuid",
+	"to_phrase_id" "uuid",
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"added_by" "uuid" default "auth"."uid" () not null
+);
 
 alter table "public"."phrase_relation" owner to "postgres";
 
 comment on column "public"."phrase_relation"."added_by" is 'User who added this association';
 
-create table if not exists
-	"public"."phrase_request" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"requester_uid" "uuid" not null,
-		"lang" character varying not null,
-		"prompt" "text" not null,
-		"status" "public"."phrase_request_status" default 'pending'::"public"."phrase_request_status" not null,
-		"upvote_count" integer default 0 not null
-	);
-
-alter table "public"."phrase_request" owner to "postgres";
-
-create table if not exists
-	"public"."phrase_request_upvote" (
-		"request_id" "uuid" not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"created_at" timestamp with time zone default "now" () not null
-	);
+create table if not exists "public"."phrase_request_upvote" (
+	"request_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
 
 alter table "public"."phrase_request_upvote" owner to "postgres";
 
-create table if not exists
-	"public"."phrase_translation" (
-		"text" "text" not null,
-		"literal" "text",
-		"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-		"phrase_id" "uuid" not null,
-		"added_by" "uuid" default "auth"."uid" () not null,
-		"lang" character varying not null,
-		"text_script" "text",
-		"created_at" timestamp with time zone default "now" () not null
-	);
+create table if not exists "public"."phrase_translation" (
+	"text" "text" not null,
+	"literal" "text",
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"phrase_id" "uuid" not null,
+	"added_by" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"text_script" "text",
+	"created_at" timestamp with time zone default "now" () not null
+);
 
 alter table "public"."phrase_translation" owner to "postgres";
 
@@ -1375,22 +1569,20 @@ comment on column "public"."phrase_translation"."added_by" is 'User who added th
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
 
-create table if not exists
-	"public"."request_comment" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"request_id" "uuid" not null,
-		"parent_comment_id" "uuid",
-		"uid" "uuid" default "auth"."uid" () not null,
-		"content" "text" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"updated_at" timestamp with time zone default "now" () not null,
-		"upvote_count" integer default 0 not null
-	);
+create table if not exists "public"."request_comment" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"request_id" "uuid" not null,
+	"parent_comment_id" "uuid",
+	"uid" "uuid" default "auth"."uid" () not null,
+	"content" "text" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"updated_at" timestamp with time zone default "now" () not null,
+	"upvote_count" integer default 0 not null
+);
 
 alter table "public"."request_comment" owner to "postgres";
 
-create or replace view
-	"public"."user_card_plus"
+create or replace view "public"."user_card_plus"
 with
 	("security_invoker" = 'true') as
 with
@@ -1461,20 +1653,18 @@ from
 
 alter table "public"."user_card_plus" owner to "postgres";
 
-create table if not exists
-	"public"."user_client_event" (
-		"id" "uuid" default "gen_random_uuid" () not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"uid" "uuid" default "auth"."uid" (),
-		"message" "text",
-		"context" "jsonb",
-		"url" "text"
-	);
+create table if not exists "public"."user_client_event" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"uid" "uuid" default "auth"."uid" (),
+	"message" "text",
+	"context" "jsonb",
+	"url" "text"
+);
 
 alter table "public"."user_client_event" owner to "postgres";
 
-create or replace view
-	"public"."user_deck_plus"
+create or replace view "public"."user_deck_plus"
 with
 	("security_invoker" = 'true') as
 select
@@ -1592,14 +1782,13 @@ order by
 
 alter table "public"."user_deck_plus" owner to "postgres";
 
-create table if not exists
-	"public"."user_deck_review_state" (
-		"lang" character varying not null,
-		"uid" "uuid" default "auth"."uid" () not null,
-		"day_session" "date" not null,
-		"created_at" timestamp with time zone default "now" () not null,
-		"manifest" "jsonb"
-	);
+create table if not exists "public"."user_deck_review_state" (
+	"lang" character varying not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"day_session" "date" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"manifest" "jsonb"
+);
 
 alter table "public"."user_deck_review_state" owner to "postgres";
 
@@ -1642,6 +1831,12 @@ add constraint "language_pkey" primary key ("lang");
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
+alter table only "public"."phrase_playlist"
+add constraint "phrase_playlist_pkey" primary key ("id");
+
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_pkey" primary key ("playlist_id", "uid");
+
 alter table only "public"."phrase_request"
 add constraint "phrase_request_pkey" primary key ("id");
 
@@ -1650,6 +1845,9 @@ add constraint "phrase_request_upvote_pkey" primary key ("request_id", "uid");
 
 alter table only "public"."phrase_tag"
 add constraint "phrase_tag_pkey" primary key ("phrase_id", "tag_id");
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_pkey" primary key ("id");
 
 alter table only "public"."user_profile"
 add constraint "profile_old_id_key" unique ("uid");
@@ -1718,24 +1916,53 @@ create index "idx_upvote_comment" on "public"."comment_upvote" using "btree" ("c
 
 create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid");
 
+create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btree" ("uid");
+
+create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
+
+create index "playlist_phrase_link_playlist_id_idx" on "public"."playlist_phrase_link" using "btree" ("playlist_id");
+
 create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
 
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
-create
-or replace trigger "on_phrase_request_upvote_added"
+create or replace trigger "on_phrase_playlist_updated" before
+update on "public"."phrase_playlist" for each row
+execute function "public"."update_phrase_playlist_timestamp" ();
+
+create or replace trigger "on_phrase_playlist_upvote_added"
+after insert on "public"."phrase_playlist_upvote" for each row
+execute function "public"."update_phrase_playlist_upvote_count" ();
+
+create or replace trigger "on_phrase_playlist_upvote_removed"
+after delete on "public"."phrase_playlist_upvote" for each row
+execute function "public"."update_phrase_playlist_upvote_count" ();
+
+create or replace trigger "on_phrase_request_updated" before
+update on "public"."phrase_request" for each row
+execute function "public"."update_phrase_request_timestamp" ();
+
+create or replace trigger "on_phrase_request_upvote_added"
 after insert on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
 
-create
-or replace trigger "on_phrase_request_upvote_removed"
+create or replace trigger "on_phrase_request_upvote_removed"
 after delete on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
 
-create
-or replace trigger "tr_update_comment_upvote_count"
+create or replace trigger "on_playlist_phrase_link_changed"
+after insert
+or delete on "public"."playlist_phrase_link" for each row
+execute function "public"."update_parent_playlist_timestamp" ();
+
+create or replace trigger "on_playlist_phrase_link_updated"
+after
+update on "public"."playlist_phrase_link" for each row
+execute function "public"."update_parent_playlist_timestamp" ();
+
+create or replace trigger "tr_update_comment_upvote_count"
 after insert
 or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
@@ -1791,6 +2018,15 @@ add constraint "phrase_added_by_fkey" foreign key ("added_by") references "publi
 alter table only "public"."phrase"
 add constraint "phrase_lang_fkey" foreign key ("lang") references "public"."language" ("lang");
 
+alter table only "public"."phrase_playlist"
+add constraint "phrase_playlist_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
+
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_playlist_id_fkey" foreign key ("playlist_id") references "public"."phrase_playlist" ("id") on delete cascade;
+
+alter table only "public"."phrase_playlist_upvote"
+add constraint "phrase_playlist_upvote_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on delete cascade;
+
 alter table only "public"."phrase_request"
 add constraint "phrase_request_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on delete cascade;
 
@@ -1829,6 +2065,12 @@ add constraint "phrase_translation_lang_fkey" foreign key ("lang") references "p
 
 alter table only "public"."phrase_translation"
 add constraint "phrase_translation_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."playlist_phrase_link"
+add constraint "playlist_phrase_link_playlist_id_fkey" foreign key ("playlist_id") references "public"."phrase_playlist" ("id") on delete cascade;
 
 alter table only "public"."request_comment"
 add constraint "request_comment_parent_comment_id_fkey" foreign key ("parent_comment_id") references "public"."request_comment" ("id") on delete cascade;
@@ -1888,6 +2130,24 @@ create policy "Anyone can add cards" on "public"."phrase" for insert to "authent
 with
 	check (true);
 
+create policy "Enable delete for users based on uid" on "public"."phrase_playlist" for delete to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+);
+
+create policy "Enable delete for users based on uid" on "public"."playlist_phrase_link" for delete to "authenticated" using (
+	(
+		(
+			select
+				"auth"."uid" () as "uid"
+		) = "uid"
+	)
+);
+
 create policy "Enable insert for any user" on "public"."user_client_event" for insert to "authenticated",
 "anon"
 with
@@ -1908,6 +2168,28 @@ create policy "Enable insert for authenticated users only" on "public"."user_dec
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Enable insert for users based on uid" on "public"."phrase_playlist" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable insert for users based on uid" on "public"."playlist_phrase_link" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
 create policy "Enable read access for all users" on "public"."comment_phrase_link" for
 select
 	using (true);
@@ -1920,19 +2202,37 @@ create policy "Enable read access for all users" on "public"."phrase" for
 select
 	using (true);
 
+create policy "Enable read access for all users" on "public"."phrase_playlist" for
+select
+	using (
+		(
+			("deleted" = false)
+			or ("uid" = "auth"."uid" ())
+		)
+	);
+
 create policy "Enable read access for all users" on "public"."phrase_relation" for
 select
 	using (true);
 
 create policy "Enable read access for all users" on "public"."phrase_request" for
 select
-	using (true);
+	using (
+		(
+			("deleted" = false)
+			or ("requester_uid" = "auth"."uid" ())
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."phrase_tag" for
 select
 	using (true);
 
 create policy "Enable read access for all users" on "public"."phrase_translation" for
+select
+	using (true);
+
+create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
 select
 	using (true);
 
@@ -1944,15 +2244,36 @@ create policy "Enable read access for all users" on "public"."tag" for
 select
 	using (true);
 
-create policy "Enable users to update their own data only" on "public"."user_card_review" for
-update to "authenticated" using (
-	(
+create policy "Enable update for users based on uid" on "public"."playlist_phrase_link"
+for update
+	to "authenticated" using (
 		(
-			select
-				"auth"."uid" () as "uid"
-		) = "uid"
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
 	)
-)
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	);
+
+create policy "Enable users to update their own data only" on "public"."user_card_review"
+for update
+	to "authenticated" using (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "uid"
+		)
+	)
 with
 	check (
 		(
@@ -2015,6 +2336,10 @@ select
 		)
 	);
 
+create policy "Enable users to view their own upvotes" on "public"."phrase_playlist_upvote" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Enable users to view their own upvotes" on "public"."phrase_request_upvote" for
 select
 	to "authenticated" using (("uid" = "auth"."uid" ()));
@@ -2072,11 +2397,6 @@ create policy "User data only for this user" on "public"."user_deck" using (("au
 with
 	check (("auth"."uid" () = "uid"));
 
-create policy "Users can cancel their own requests" on "public"."phrase_request" for
-update to "authenticated" using (("requester_uid" = "auth"."uid" ()))
-with
-	check (("requester_uid" = "auth"."uid" ()));
-
 create policy "Users can create comments" on "public"."request_comment" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2089,6 +2409,10 @@ create policy "Users can create upvotes" on "public"."comment_upvote" for insert
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Users can create upvotes" on "public"."phrase_playlist_upvote" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
+
 create policy "Users can create upvotes" on "public"."phrase_request_upvote" for insert to "authenticated"
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2096,6 +2420,8 @@ with
 create policy "Users can delete own comments" on "public"."request_comment" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can delete own upvotes" on "public"."comment_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Users can delete own upvotes" on "public"."phrase_playlist_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Users can delete own upvotes" on "public"."phrase_request_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
@@ -2137,8 +2463,31 @@ with
 		)
 	);
 
-create policy "Users can update own comments" on "public"."request_comment" for
-update to "authenticated" using (("uid" = "auth"."uid" ()));
+create policy "Users can update own comments" on "public"."request_comment"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
+create policy "Users can update their own playlists" on "public"."phrase_playlist"
+for update
+	to "authenticated" using (
+		(
+			("uid" = "auth"."uid" ())
+			and ("deleted" = false)
+		)
+	)
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Users can update their own requests" on "public"."phrase_request"
+for update
+	to "authenticated" using (
+		(
+			("requester_uid" = "auth"."uid" ())
+			and ("deleted" = false)
+		)
+	)
+with
+	check (("requester_uid" = "auth"."uid" ()));
 
 create policy "Users can view their own chat messages" on "public"."chat_message" for
 select
@@ -2161,6 +2510,10 @@ alter table "public"."language" enable row level security;
 
 alter table "public"."phrase" enable row level security;
 
+alter table "public"."phrase_playlist" enable row level security;
+
+alter table "public"."phrase_playlist_upvote" enable row level security;
+
 alter table "public"."phrase_relation" enable row level security;
 
 alter table "public"."phrase_request" enable row level security;
@@ -2170,6 +2523,8 @@ alter table "public"."phrase_request_upvote" enable row level security;
 alter table "public"."phrase_tag" enable row level security;
 
 alter table "public"."phrase_translation" enable row level security;
+
+alter table "public"."playlist_phrase_link" enable row level security;
 
 alter table "public"."request_comment" enable row level security;
 
@@ -2195,15 +2550,15 @@ add table only "public"."chat_message";
 alter publication "supabase_realtime"
 add table only "public"."friend_request_action";
 
-revoke USAGE on schema "public"
+revoke usage on schema "public"
 from
-	PUBLIC;
+	public;
 
-grant USAGE on schema "public" to "anon";
+grant usage on schema "public" to "anon";
 
-grant USAGE on schema "public" to "authenticated";
+grant usage on schema "public" to "authenticated";
 
-grant USAGE on schema "public" to "service_role";
+grant usage on schema "public" to "service_role";
 
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
@@ -2263,6 +2618,22 @@ grant all on function "public"."create_comment_with_phrases" (
 	"p_content" "text",
 	"p_parent_comment_id" "uuid",
 	"p_phrase_ids" "uuid" []
+) to "service_role";
+
+grant all on function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"phrases" "jsonb"
+) to "authenticated";
+
+grant all on function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"phrases" "jsonb"
 ) to "service_role";
 
 grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";
@@ -2388,20 +2759,6 @@ grant all on function "public"."fsrs_stability" (
 	"score" integer
 ) to "service_role";
 
-grant all on function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) to "authenticated";
-
-grant all on function "public"."fulfill_phrase_request" (
-	"request_id" "uuid",
-	"p_phrase_text" "text",
-	"p_translation_text" "text",
-	"p_translation_lang" character varying
-) to "service_role";
-
 grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
@@ -2422,21 +2779,37 @@ grant all on function "public"."insert_user_card_review" (
 	"desired_retention" numeric
 ) to "service_role";
 
-grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "authenticated";
+grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
-grant all on function "public"."toggle_comment_upvote" ("p_comment_id" "uuid") to "service_role";
+grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
 
-grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "postgres";
+grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
-grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "authenticated";
+grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "service_role";
 
-grant all on function "public"."toggle_phrase_request_upvote" ("p_request_id" "uuid") to "service_role";
+grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
+
+grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "service_role";
 
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
-grant all on function "public"."update_phrase_request_upvote_count" () to "postgres";
+grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
+
+grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
+
+grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
+
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
@@ -2460,35 +2833,11 @@ grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
 
-grant all on table "public"."friend_request_action" to "authenticated";
-
-grant all on table "public"."friend_request_action" to "service_role";
-
-grant all on table "public"."friend_summary" to "authenticated";
-
-grant all on table "public"."friend_summary" to "service_role";
-
-grant all on table "public"."language" to "anon";
-
-grant all on table "public"."language" to "authenticated";
-
-grant all on table "public"."language" to "service_role";
-
 grant all on table "public"."phrase" to "anon";
 
 grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
-
-grant all on table "public"."user_deck" to "authenticated";
-
-grant all on table "public"."user_deck" to "service_role";
-
-grant all on table "public"."meta_language" to "anon";
-
-grant all on table "public"."meta_language" to "authenticated";
-
-grant all on table "public"."meta_language" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 
@@ -2522,11 +2871,11 @@ grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
 
-grant all on table "public"."phrase_relation" to "anon";
+grant all on table "public"."phrase_playlist" to "anon";
 
-grant all on table "public"."phrase_relation" to "authenticated";
+grant all on table "public"."phrase_playlist" to "authenticated";
 
-grant all on table "public"."phrase_relation" to "service_role";
+grant all on table "public"."phrase_playlist" to "service_role";
 
 grant all on table "public"."phrase_request" to "anon";
 
@@ -2534,7 +2883,53 @@ grant all on table "public"."phrase_request" to "authenticated";
 
 grant all on table "public"."phrase_request" to "service_role";
 
-grant all on table "public"."phrase_request_upvote" to "postgres";
+grant all on table "public"."playlist_phrase_link" to "anon";
+
+grant all on table "public"."playlist_phrase_link" to "authenticated";
+
+grant all on table "public"."playlist_phrase_link" to "service_role";
+
+grant all on table "public"."feed_activities" to "anon";
+
+grant all on table "public"."feed_activities" to "authenticated";
+
+grant all on table "public"."feed_activities" to "service_role";
+
+grant all on table "public"."friend_request_action" to "anon";
+
+grant all on table "public"."friend_request_action" to "authenticated";
+
+grant all on table "public"."friend_request_action" to "service_role";
+
+grant all on table "public"."friend_summary" to "authenticated";
+
+grant all on table "public"."friend_summary" to "service_role";
+
+grant all on table "public"."language" to "anon";
+
+grant all on table "public"."language" to "authenticated";
+
+grant all on table "public"."language" to "service_role";
+
+grant all on table "public"."user_deck" to "authenticated";
+
+grant all on table "public"."user_deck" to "service_role";
+
+grant all on table "public"."meta_language" to "anon";
+
+grant all on table "public"."meta_language" to "authenticated";
+
+grant all on table "public"."meta_language" to "service_role";
+
+grant all on table "public"."phrase_playlist_upvote" to "authenticated";
+
+grant all on table "public"."phrase_playlist_upvote" to "service_role";
+
+grant all on table "public"."phrase_relation" to "anon";
+
+grant all on table "public"."phrase_relation" to "authenticated";
+
+grant all on table "public"."phrase_relation" to "service_role";
 
 grant all on table "public"."phrase_request_upvote" to "authenticated";
 

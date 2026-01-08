@@ -233,6 +233,15 @@
 	@apply text-accent-foreground font-semibold italic;
 }
 
+@utility rounded-squircle {
+	@supports (corner-shape: superellipse(1.6)) {
+		corner-shape: superellipse(
+			1.6
+		) !important; /* equivalent to superellipse(2) */
+		border-radius: 50% !important; /* Full height/width value for corner-shape to work as expected */
+	}
+}
+
 @layer base {
 	body {
 		padding-top: env(safe-area-inset-top);

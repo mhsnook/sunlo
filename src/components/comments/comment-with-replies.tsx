@@ -2,10 +2,10 @@ import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
 
-import UserPermalink from '@/components/card-pieces/user-permalink'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
+import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { AddCommentDialog } from './add-comment-dialog'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
@@ -17,16 +17,17 @@ import {
 	PhraseFullFullType,
 	type RequestCommentType,
 } from '@/lib/schemas'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
-
 import { buttonVariants } from '@/components/ui/button-variants'
+import { DialogTrigger } from '@/components/ui/dialog'
+import { phrasesFull } from '@/lib/live-collections'
 
+import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
-import { DialogTrigger } from '../ui/dialog'
 import { UpdateCommentDialog } from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
-import { UseLiveQueryResult, uuid } from '@/types/main'
-import { phrasesFull } from '@/lib/live-collections'
+import { CommentContextMenu } from './comment-context-menu'
+import { CSSProperties } from 'react'
+import { Separator } from '../ui/separator'
 
 interface CommentThreadProps {
 	comment: RequestCommentType
@@ -41,9 +42,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
 	})
-
-	// Get profile for this comment
-	const { data: profileData } = useOnePublicProfile(comment.uid)
 
 	// Get replies for this comment
 	const { data: repliesData } = useLiveQuery(
@@ -70,18 +68,28 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''} p-4`}
+			className={`${
+				isHighlighted ?
+					'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4'
+				: showSubthread ? 'outline-primary rounded-lg outline'
+				: ''
+			} p-4`}
 			data-comment-id={comment.id}
 			data-testid="comment-item"
+			style={
+				// oxlint-disable-next-line jsx-no-new-object-as-prop
+				{
+					viewTransitionName: `comment-${comment.id}`,
+				} as CSSProperties
+			}
 		>
 			{/* Comment header */}
 			<div className="w-full">
 				<div className="flex items-center justify-between">
-					<UserPermalink
+					<UidPermalinkInline
 						uid={comment.uid}
-						username={profileData?.username ?? ''}
-						avatar_path={profileData?.avatar_path ?? ''}
 						timeValue={comment.created_at}
+						action="commented"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						timeLinkParams={{ id: comment.request_id, lang }}
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -96,6 +104,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								<DeleteCommentDialog comment={comment} />
 							</>
 						)}
+						<CommentContextMenu comment={comment} lang={lang} />
 					</div>
 				</div>
 
@@ -164,16 +173,17 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				{/* Replies */}
 				{showSubthread && replies && replies.length > 0 && (
 					<div className="border-primary-foresoft/30 mt-3 space-y-3">
+						<Separator />
 						<div className="divide-y">
 							{replies.map(({ reply }) => (
 								<CommentReply key={reply.id} comment={reply} lang={lang} />
 							))}
-							<AddCommentDialog
-								parentCommentId={comment.id}
-								requestId={comment.request_id}
-								lang={lang}
-							/>
 						</div>
+						<AddCommentDialog
+							parentCommentId={comment.id}
+							requestId={comment.request_id}
+							lang={lang}
+						/>
 					</div>
 				)}
 			</div>
@@ -202,7 +212,6 @@ function usePhrasesFromComment(
 
 function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
-	const { data: profileData } = useOnePublicProfile(comment.uid)
 	const isHighlighted = useSearch({
 		strict: false,
 		select: (data) => data.highlightComment === comment.id,
@@ -214,15 +223,14 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`my-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
+			className={`mt-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
-				<UserPermalink
+				<UidPermalinkInline
 					uid={comment.uid}
-					username={profileData?.username ?? ''}
-					avatar_path={profileData?.avatar_path ?? ''}
 					timeValue={comment.created_at}
+					action="replied"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ id: comment.request_id, lang }}
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -240,19 +248,20 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 							<DeleteCommentDialog comment={comment} />
 						</>
 					)}
+					<CommentContextMenu comment={comment} lang={lang} />
 				</div>
 			</div>
 
 			{/* Comment content */}
 			{comment.content && (
-				<div className="ms-13 mt-2">
+				<div className="ms-9 mt-2">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
 			{/* Attached flashcards */}
 			{phrases && phrases.length > 0 && (
-				<div className="ms-13 mt-3 space-y-2">
+				<div className="ms-9 mt-3 space-y-2">
 					{phrases.map(({ phrase }) => (
 						<CardResultSimple key={phrase.id} phrase={phrase} />
 					))}
@@ -260,7 +269,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			)}
 
 			{/* Comment actions */}
-			<div className="text-muted-foreground ms-13 mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
 			</div>
 		</div>

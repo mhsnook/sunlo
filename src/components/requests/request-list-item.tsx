@@ -1,6 +1,11 @@
+import {
+	type CSSProperties,
+	type KeyboardEvent,
+	type MouseEvent,
+	useCallback,
+} from 'react'
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestLinksPhraseIds } from '@/hooks/use-requests'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
@@ -9,12 +14,23 @@ import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { RequestButtonsRow } from './request-buttons-row'
 import { useNavigate } from '@tanstack/react-router'
-import { CSSProperties } from 'react'
 
 export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: links } = useRequestLinksPhraseIds(request.id)
-	const { data: profile } = useOnePublicProfile(request.requester_uid)
 	const navigate = useNavigate()
+
+	const handleRequestClick = useCallback(
+		(e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+			const target = e.target as HTMLElement
+			if (!e.currentTarget?.contains(target)) return
+			if (target.closest('button, a, input')) return
+			void navigate({
+				to: '/learn/$lang/requests/$id',
+				params: { lang: request.lang, id: request.id },
+			})
+		},
+		[navigate, request.id, request.lang]
+	)
 
 	return !request ? null : (
 			<CardlikeRequest
@@ -23,29 +39,24 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					{ viewTransitionName: `request-${request.id}` } as CSSProperties
 				}
+				onClick={handleRequestClick}
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
-				onClick={(e) => {
-					const target = e.target as HTMLElement
-					if (!e.currentTarget.contains(target)) return
-					if (target.closest('button, a, input')) return
-					void navigate({
-						to: '/learn/$lang/requests/$id',
-						params: { lang: request.lang, id: request.id },
-					})
+				onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
+					if (e.key === 'Enter') handleRequestClick(e)
+					else return
 				}}
+				tabIndex={0}
+				data-testid={`request-item-${request.id}`}
 			>
-				<RequestHeader
-					request={request}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					profile={profile}
-				/>
+				<RequestHeader request={request} />
 				<CardContent>
 					<div className="text-lg">
 						<Markdown>{request.prompt}</Markdown>
 					</div>
 
 					<p className="text-muted-foreground mt-4 text-sm">
-						{links?.length || 'No'} answers {links?.length ? '' : 'yet'}
+						{links?.length || 'No'} answer{links?.length === 1 ? '' : 's'}{' '}
+						{links?.length ? '' : 'yet'}
 					</p>
 					<ScrollArea className="flex w-full flex-row justify-start gap-2">
 						<div className="flex w-full flex-row justify-start gap-2">

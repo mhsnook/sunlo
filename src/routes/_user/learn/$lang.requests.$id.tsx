@@ -28,7 +28,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		showSubthread: z.string().uuid().optional(),
 		highlightComment: z.string().uuid().optional(),
 	}),
-	loader: ({ params: { lang } }) => ({
+	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),
@@ -62,7 +62,7 @@ function RequestThreadPage() {
 					{ viewTransitionName: `request-${request.id}` } as CSSProperties
 				}
 			>
-				<RequestHeader profile={request.profile} request={request} />
+				<RequestHeader request={request} />
 
 				<CardContent className="flex flex-col gap-6">
 					<Flagged>

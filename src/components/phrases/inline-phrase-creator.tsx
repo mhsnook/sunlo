@@ -1,0 +1,165 @@
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import * as z from 'zod'
+import toast from 'react-hot-toast'
+import { Plus, ChevronUp } from 'lucide-react'
+
+import type { Tables } from '@/types/supabase'
+import type { RPCFunctions } from '@/types/main'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { IconSizedLoader } from '@/components/ui/loader'
+import supabase from '@/lib/supabase-client'
+import languages from '@/lib/languages'
+import TranslationLanguageField from '@/components/fields/translation-language-field'
+import {
+	PhraseFullSchema,
+	TranslationSchema,
+	CardMetaSchema,
+} from '@/lib/schemas'
+import { phrasesCollection, cardsCollection } from '@/lib/collections'
+import { useInvalidateFeed } from '@/hooks/use-feed'
+
+const inlinePhraseSchema = z.object({
+	phrase_text: z.string().min(1, 'Enter a phrase'),
+	translation_text: z.string().min(1, 'Enter the translation'),
+	translation_lang: z.string().length(3, 'Select a language'),
+})
+
+type InlinePhraseFormValues = z.infer<typeof inlinePhraseSchema>
+
+interface InlinePhraseCreatorProps {
+	lang: string
+	onPhraseCreated: (phraseId: string) => void
+	onCancel: () => void
+}
+
+export function InlinePhraseCreator({
+	lang,
+	onPhraseCreated,
+	onCancel,
+}: InlinePhraseCreatorProps) {
+	const {
+		register,
+		control,
+		handleSubmit,
+		formState: { errors },
+	} = useForm<InlinePhraseFormValues>({
+		resolver: zodResolver(inlinePhraseSchema),
+		defaultValues: {
+			phrase_text: '',
+			translation_text: '',
+			translation_lang: 'eng',
+		},
+	})
+	const invalidateFeed = useInvalidateFeed()
+
+	const mutation = useMutation({
+		mutationFn: async (values: InlinePhraseFormValues) => {
+			const args: RPCFunctions['add_phrase_translation_card']['Args'] = {
+				phrase_lang: lang,
+				...values,
+			}
+			const { data } = await supabase
+				.rpc('add_phrase_translation_card', args)
+				.throwOnError()
+
+			return data as {
+				phrase: Tables<'phrase'>
+				translation: Tables<'phrase_translation'>
+				card: Tables<'user_card'>
+			}
+		},
+		onSuccess: (data) => {
+			if (!data) throw new Error('No data returned')
+
+			// Update local collections
+			phrasesCollection.utils.writeInsert(
+				PhraseFullSchema.parse({
+					...data.phrase,
+					translations: [TranslationSchema.parse(data.translation)],
+				})
+			)
+			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+			invalidateFeed(lang)
+			toast.success('Phrase created and added to your deck')
+			onPhraseCreated(data.phrase.id)
+		},
+		onError: (error) => {
+			toast.error(`Failed to create phrase: ${error.message}`)
+		},
+	})
+
+	return (
+		<div className="bg-muted/30 rounded-lg border p-4">
+			<div className="mb-3 flex items-center justify-between">
+				<h4 className="font-medium">Create New Phrase</h4>
+				<Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+					<ChevronUp className="h-4 w-4" />
+					Cancel
+				</Button>
+			</div>
+
+			<form
+				noValidate
+				// oxlint-disable-next-line jsx-no-new-function-as-prop
+				onSubmit={(e) => {
+					e.stopPropagation()
+					void handleSubmit((data) => mutation.mutate(data))(e)
+				}}
+				className="space-y-3"
+			>
+				<div>
+					<Label htmlFor="inline-phrase-text" className="text-sm">
+						Phrase in {languages[lang]}
+					</Label>
+					<Input
+						id="inline-phrase-text"
+						{...register('phrase_text')}
+						placeholder="Enter the phrase..."
+						className={errors.phrase_text ? 'border-red-500' : ''}
+					/>
+					{errors.phrase_text && (
+						<p className="text-xs text-red-500">{errors.phrase_text.message}</p>
+					)}
+				</div>
+
+				<div>
+					<Label htmlFor="inline-translation-text" className="text-sm">
+						Translation
+					</Label>
+					<Input
+						id="inline-translation-text"
+						{...register('translation_text')}
+						placeholder="Enter the translation..."
+						className={errors.translation_text ? 'border-red-500' : ''}
+					/>
+					{errors.translation_text && (
+						<p className="text-xs text-red-500">
+							{errors.translation_text.message}
+						</p>
+					)}
+				</div>
+
+				<TranslationLanguageField<InlinePhraseFormValues>
+					error={errors.translation_lang}
+					control={control}
+				/>
+
+				<Button
+					type="submit"
+					size="sm"
+					disabled={mutation.isPending}
+					className="w-full"
+				>
+					{mutation.isPending ?
+						<IconSizedLoader />
+					:	<Plus className="h-4 w-4" />}
+					Create and Select Phrase
+				</Button>
+			</form>
+		</div>
+	)
+}

@@ -24,18 +24,16 @@ import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	publicProfilesCollection,
 } from '@/lib/collections'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
-	PublicProfileType,
 	RequestCommentSchema,
 	RequestCommentType,
 } from '@/lib/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/hooks/use-requests'
-import UserPermalink from '../card-pieces/user-permalink'
+import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'
 import { SelectPhrasesForComment } from './select-phrases-for-comment'
@@ -43,27 +41,21 @@ import { SelectPhrasesForComment } from './select-phrases-for-comment'
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.comment.content} profile={data.profile} />
+			<DisplayBlock markdown={data.content} uid={data.uid} />
 		)
 }
 
 function RequestDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useRequest(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.prompt} profile={data.profile} />
+			<DisplayBlock markdown={data.prompt} uid={data.requester_uid} />
 		)
 }
 
-function DisplayBlock({
-	markdown,
-	profile,
-}: {
-	markdown: string
-	profile: PublicProfileType
-}) {
+function DisplayBlock({ markdown, uid }: { markdown: string; uid: uuid }) {
 	return (
 		<div>
-			<UserPermalink {...profile} nonInteractive />
+			<UidPermalink uid={uid} nonInteractive />
 			<div className="ms-13 text-sm">
 				<Markdown>{markdown}</Markdown>
 			</div>
@@ -86,8 +78,9 @@ export function AddCommentDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
-				<DialogTrigger className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full grow rounded-xl border px-2 py-1.5 pe-6 text-sm shadow-xs inset-shadow-sm">
-					<p className="w-full text-start">
+				<DialogTrigger className="@group flex w-full grow cursor-pointer flex-row items-center justify-between gap-2">
+					<TinySelfAvatar className="grow-o shrink-0" />
+					<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
 						{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
 						...
 					</p>
@@ -128,20 +121,14 @@ interface CommentFormProps {
 	onSuccess: () => void
 }
 
-function useOneComment(commentId: uuid): UseLiveQueryResult<{
-	comment: RequestCommentType
-	profile: PublicProfileType
-}> {
+function useOneComment(
+	commentId: uuid
+): UseLiveQueryResult<RequestCommentType> {
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ comment: commentsCollection })
 				.where(({ comment }) => eq(comment.id, commentId))
-				.join(
-					{ profile: publicProfilesCollection },
-					({ comment, profile }) => eq(comment.uid, profile.uid),
-					'inner'
-				)
 				.findOne(),
 		[commentId]
 	)
@@ -199,7 +186,6 @@ function NewCommentForm({
 					)
 				})
 			}
-
 			// Reset form
 			form.reset()
 			setSelectedPhraseIds([])
