@@ -54,7 +54,6 @@ type PhraseWithHref = {
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
-// eslint-disable-next-line react-refresh/only-export-components
 function NewPlaylistPage() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
