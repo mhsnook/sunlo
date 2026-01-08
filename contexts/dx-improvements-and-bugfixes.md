@@ -70,9 +70,9 @@ LESSONS LEARNED:
 
 ### Fix Embed Bug
 
-STATUS: PENDING
-COMPLEXITY:
-DIFFICULTY:
+STATUS: COMPLETE
+COMPLEXITY: 1
+DIFFICULTY: 1
 
 DESCRIPTION FROM HUMAN MANAGER:
 I'm getting this error when I try to load a playlist with a youtube embed.
@@ -85,8 +85,25 @@ www-embed-player.js:2362 Uncaught SecurityError: Failed to read the 'caches' pro
 ```
 
 NOTE FROM CODING AGENT:
+✅ COMPLETED - Fixed YouTube embed SecurityError by updating iframe sandbox attributes in `/src/components/playlists/playlist-embed.tsx`.
+
+The error was caused by restrictive iframe sandbox settings. The `sandbox="allow-scripts"` attribute was blocking YouTube's cache storage access. Added `allow-same-origin` flag to resolve this.
+
+Changes made:
+
+- Updated YouTube iframe: `sandbox="allow-scripts allow-same-origin"`
+- Updated Spotify iframe: `sandbox="allow-scripts allow-same-origin"`
+- Updated SoundCloud iframe: `sandbox="allow-scripts allow-same-origin"`
+
+This is a standard web security pattern for embedded content that needs proper functionality while maintaining reasonable security boundaries.
+
+Code formatted and ready to commit.
 
 LESSONS LEARNED:
+
+- iframe sandbox attributes need both `allow-scripts` and `allow-same-origin` for embedded players to access browser APIs like cache storage
+- The error specifically mentioned "lacks the 'allow-same-origin' flag" which made diagnosis straightforward
+- Applied the fix consistently across all three embed types (YouTube, Spotify, SoundCloud)
 
 ### Feature: The translation language select box should default to your first language
 
