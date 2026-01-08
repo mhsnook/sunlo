@@ -39,6 +39,7 @@ import { Route as UserFriendsRequestsRouteImport } from './routes/_user/friends/
 import { Route as UserFriendsInviteRouteImport } from './routes/_user/friends/invite'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
+import { Route as UserAdminDashboardRouteImport } from './routes/_user/admin.dashboard'
 import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
 import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
@@ -226,6 +227,11 @@ const UserFriendsUidRoute = UserFriendsUidRouteImport.update({
   path: '/$uid',
   getParentRoute: () => UserFriendsRoute,
 } as any)
+const UserAdminDashboardRoute = UserAdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => UserRoute,
+} as any)
 const UserLearnLangIndexRoute = UserLearnLangIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -366,6 +372,7 @@ export interface FileRoutesByFullPath {
   '/getting-started': typeof UserGettingStartedRoute
   '/learn': typeof UserLearnRouteWithChildren
   '/profile': typeof UserProfileRouteWithChildren
+  '/admin/dashboard': typeof UserAdminDashboardRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/friends/invite': typeof UserFriendsInviteRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
   '/getting-started': typeof UserGettingStartedRoute
+  '/admin/dashboard': typeof UserAdminDashboardRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/invite': typeof UserFriendsInviteRoute
   '/friends/requests': typeof UserFriendsRequestsRoute
@@ -470,6 +478,7 @@ export interface FileRoutesById {
   '/_user/getting-started': typeof UserGettingStartedRoute
   '/_user/learn': typeof UserLearnRouteWithChildren
   '/_user/profile': typeof UserProfileRouteWithChildren
+  '/_user/admin/dashboard': typeof UserAdminDashboardRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/_user/friends/invite': typeof UserFriendsInviteRoute
@@ -526,6 +535,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/learn'
     | '/profile'
+    | '/admin/dashboard'
     | '/friends/$uid'
     | '/friends/chats'
     | '/friends/invite'
@@ -577,6 +587,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/accept-invite'
     | '/getting-started'
+    | '/admin/dashboard'
     | '/friends/$uid'
     | '/friends/invite'
     | '/friends/requests'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/_user/getting-started'
     | '/_user/learn'
     | '/_user/profile'
+    | '/_user/admin/dashboard'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
     | '/_user/friends/invite'
@@ -897,6 +909,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/friends/$uid'
       preLoaderRoute: typeof UserFriendsUidRouteImport
       parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/admin/dashboard': {
+      id: '/_user/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof UserAdminDashboardRouteImport
+      parentRoute: typeof UserRoute
     }
     '/_user/learn/$lang/': {
       id: '/_user/learn/$lang/'
@@ -1255,6 +1274,7 @@ interface UserRouteChildren {
   UserGettingStartedRoute: typeof UserGettingStartedRoute
   UserLearnRoute: typeof UserLearnRouteWithChildren
   UserProfileRoute: typeof UserProfileRouteWithChildren
+  UserAdminDashboardRoute: typeof UserAdminDashboardRoute
 }
 
 const UserRouteChildren: UserRouteChildren = {
@@ -1263,6 +1283,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserGettingStartedRoute: UserGettingStartedRoute,
   UserLearnRoute: UserLearnRouteWithChildren,
   UserProfileRoute: UserProfileRouteWithChildren,
+  UserAdminDashboardRoute: UserAdminDashboardRoute,
 }
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)

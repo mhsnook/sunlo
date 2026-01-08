@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
 	public: {
 		Tables: {
+			admin_users: {
+				Row: {
+					created_at: string
+					granted_by: string | null
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					granted_by?: string | null
+					uid: string
+				}
+				Update: {
+					created_at?: string
+					granted_by?: string | null
+					uid?: string
+				}
+				Relationships: []
+			}
 			chat_message: {
 				Row: {
 					content: Json | null
@@ -1307,6 +1325,47 @@ export type Database = {
 			}
 		}
 		Views: {
+			admin_deck_stats: {
+				Row: {
+					creation_date: string | null
+					decks_created: number | null
+					lang: string | null
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'user_deck_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'language'
+						referencedColumns: ['lang']
+					},
+					{
+						foreignKeyName: 'user_deck_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'meta_language'
+						referencedColumns: ['lang']
+					},
+				]
+			}
+			admin_review_stats: {
+				Row: {
+					review_date: string | null
+					total_reviews: number | null
+					unique_review_sessions: number | null
+					unique_users: number | null
+				}
+				Relationships: []
+			}
+			admin_social_stats: {
+				Row: {
+					activity_date: string | null
+					activity_type: string | null
+					count: number | null
+					unique_users: number | null
+				}
+				Relationships: []
+			}
 			feed_activities: {
 				Row: {
 					created_at: string | null
@@ -1614,6 +1673,45 @@ export type Database = {
 				Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
 				Returns: Json
 			}
+			admin_get_recent_signups: {
+				Args: never
+				Returns: {
+					active_decks: number
+					created_at: string
+					email: string
+					id: string
+					last_sign_in_at: string
+					username: string
+				}[]
+			}
+			admin_get_signup_stats: {
+				Args: never
+				Returns: {
+					new_signups: number
+					signup_date: string
+				}[]
+			}
+			admin_get_summary_stats: {
+				Args: never
+				Returns: {
+					active_decks: number
+					dau: number
+					mau: number
+					new_users_week: number
+					reviews_week: number
+					total_playlists: number
+					total_requests: number
+					total_users: number
+					wau: number
+				}[]
+			}
+			admin_get_user_activity: {
+				Args: never
+				Returns: {
+					active_users: number
+					activity_date: string
+				}[]
+			}
 			are_friends: { Args: { uid1: string; uid2: string }; Returns: boolean }
 			bulk_add_phrases: {
 				Args: {
@@ -1718,6 +1816,7 @@ export type Database = {
 					isSetofReturn: false
 				}
 			}
+			is_admin: { Args: { user_id?: string }; Returns: boolean }
 			set_comment_upvote: {
 				Args: { p_action: string; p_comment_id: string }
 				Returns: Json
