@@ -36,6 +36,7 @@ import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
+import { useProfile } from '@/hooks/use-profile'
 
 export interface SearchParams {
 	text?: string
@@ -70,11 +71,11 @@ type AddPhraseFormValues = z.infer<typeof addPhraseSchema>
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
-// eslint-disable-next-line react-refresh/only-export-components
 function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
+	const { data: profile } = useProfile()
 	const searchPlusText = useCallback(
 		(search: SearchParams) => ({
 			...search,
@@ -95,7 +96,10 @@ function AddPhraseTab() {
 		formState: { errors },
 	} = useForm<AddPhraseFormValues>({
 		resolver: zodResolver(addPhraseSchema),
-		defaultValues: { phrase_text: searchPhrase },
+		defaultValues: {
+			phrase_text: searchPhrase,
+			translation_lang: profile?.languages_known[0]?.lang ?? 'eng',
+		},
 	})
 
 	const phraseText = watch('phrase_text')
@@ -131,7 +135,7 @@ function AddPhraseTab() {
 				card: Tables<'user_card'>
 			}
 		},
-		onSuccess: (data, { translation_lang }) => {
+		onSuccess: (data) => {
 			if (!data)
 				throw new Error('No data returned from add_phrase_translation_card')
 			phrasesCollection.utils.writeInsert(
@@ -144,7 +148,12 @@ function AddPhraseTab() {
 			invalidateFeed(lang)
 			console.log(`Success:`, data)
 			setNewPhrases((prev) => [data.phrase.id, ...prev])
-			reset({ phrase_text: '', translation_text: '', translation_lang })
+			reset({
+				phrase_text: '',
+				translation_text: '',
+				translation_lang:
+					data.translation.lang ?? profile?.languages_known[0]?.lang ?? 'eng',
+			})
 			toast.success(
 				'New phrase has been added to the public library and will appear in your next review'
 			)

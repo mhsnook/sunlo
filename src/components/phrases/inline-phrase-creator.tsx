@@ -21,6 +21,7 @@ import {
 } from '@/lib/schemas'
 import { phrasesCollection, cardsCollection } from '@/lib/collections'
 import { useInvalidateFeed } from '@/hooks/use-feed'
+import { useProfile } from '@/hooks/use-profile'
 
 const inlinePhraseSchema = z.object({
 	phrase_text: z.string().min(1, 'Enter a phrase'),
@@ -41,6 +42,7 @@ export function InlinePhraseCreator({
 	onPhraseCreated,
 	onCancel,
 }: InlinePhraseCreatorProps) {
+	const { data: profile } = useProfile()
 	const {
 		register,
 		control,
@@ -51,7 +53,7 @@ export function InlinePhraseCreator({
 		defaultValues: {
 			phrase_text: '',
 			translation_text: '',
-			translation_lang: 'eng',
+			translation_lang: profile?.languages_known[0]?.lang ?? 'eng',
 		},
 	})
 	const invalidateFeed = useInvalidateFeed()

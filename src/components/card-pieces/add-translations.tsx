@@ -22,6 +22,7 @@ import { ButtonProps } from '@/components/ui/button-variants'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import { phrasesCollection } from '@/lib/collections'
+import { useProfile } from '@/hooks/use-profile'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -35,6 +36,7 @@ export function AddTranslationsDialog({
 }: ButtonProps & {
 	phrase: PhraseFullType
 }) {
+	const { data: profile } = useProfile()
 	const {
 		handleSubmit,
 		register,
@@ -42,7 +44,10 @@ export function AddTranslationsDialog({
 		reset,
 		formState: { errors, isSubmitting, isValid },
 	} = useForm<AddTranslationsType>({
-		defaultValues: { translation_text: '', translation_lang: 'eng' },
+		defaultValues: {
+			translation_text: '',
+			translation_lang: profile?.languages_known[0]?.lang ?? 'eng',
+		},
 		resolver: zodResolver(AddTranslationsInputs),
 	})
 	const closeRef = useRef<HTMLButtonElement | null>(null)
