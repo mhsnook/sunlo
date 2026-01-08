@@ -65,7 +65,6 @@ const placeholders = [
 	`Is there poetry in your language about garlic and how good it is?`,
 ]
 
-// eslint-disable-next-line react-refresh/only-export-components
 function NewRequestPage() {
 	const { lang } = Route.useParams()
 	const userId = useUserId()
