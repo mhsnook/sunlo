@@ -199,6 +199,87 @@ alter function "public"."add_tags_to_phrase" (
 	"p_tags" "text" []
 ) owner to "postgres";
 
+create or replace function "public"."admin_get_recent_signups" () returns table (
+	"id" "uuid",
+	"email" "text",
+	"username" "text",
+	"created_at" timestamp with time zone,
+	"last_sign_in_at" timestamp with time zone,
+	"active_decks" bigint
+) language "sql" security definer as $$
+  select
+    u.id,
+    u.email,
+    p.username,
+    u.created_at,
+    u.last_sign_in_at,
+    (select count(*) from public.user_deck d where d.uid = u.id and d.archived = false) as active_decks
+  from auth.users u
+  left join public.public_profile p on u.id = p.uid
+  order by u.created_at desc
+  limit 20;
+$$;
+
+alter function "public"."admin_get_recent_signups" () owner to "postgres";
+
+comment on function "public"."admin_get_recent_signups" () is 'Admin dashboard function - accesses auth.users via security definer. Route-level auth check required.';
+
+create or replace function "public"."admin_get_signup_stats" () returns table ("signup_date" timestamp with time zone, "new_signups" bigint) language "sql" security definer as $$
+  select
+    date_trunc('day', created_at) as signup_date,
+    count(*) as new_signups
+  from auth.users
+  group by date_trunc('day', created_at)
+  order by signup_date desc
+  limit 30;
+$$;
+
+alter function "public"."admin_get_signup_stats" () owner to "postgres";
+
+comment on function "public"."admin_get_signup_stats" () is 'Admin dashboard function - accesses auth.users via security definer. Route-level auth check required.';
+
+create or replace function "public"."admin_get_summary_stats" () returns table (
+	"total_users" bigint,
+	"new_users_week" bigint,
+	"dau" bigint,
+	"wau" bigint,
+	"mau" bigint,
+	"active_decks" bigint,
+	"reviews_week" bigint,
+	"total_requests" bigint,
+	"total_playlists" bigint
+) language "sql" security definer as $$
+  select
+    (select count(*) from auth.users) as total_users,
+    (select count(*) from auth.users where created_at >= now() - interval '7 days') as new_users_week,
+    (select count(distinct id) from auth.users where last_sign_in_at >= now() - interval '1 day') as dau,
+    (select count(distinct id) from auth.users where last_sign_in_at >= now() - interval '7 days') as wau,
+    (select count(distinct id) from auth.users where last_sign_in_at >= now() - interval '30 days') as mau,
+    (select count(*) from public.user_deck where archived = false) as active_decks,
+    (select count(*) from public.user_card_review where created_at >= now() - interval '7 days') as reviews_week,
+    (select count(*) from public.phrase_request where deleted = false) as total_requests,
+    (select count(*) from public.phrase_playlist where deleted = false) as total_playlists;
+$$;
+
+alter function "public"."admin_get_summary_stats" () owner to "postgres";
+
+comment on function "public"."admin_get_summary_stats" () is 'Admin dashboard function - accesses auth.users via security definer. Route-level auth check required.';
+
+create or replace function "public"."admin_get_user_activity" () returns table ("activity_date" timestamp with time zone, "active_users" bigint) language "sql" security definer as $$
+  select
+    date_trunc('day', last_sign_in_at) as activity_date,
+    count(distinct id) as active_users
+  from auth.users
+  where last_sign_in_at >= now() - interval '90 days'
+  group by date_trunc('day', last_sign_in_at)
+  order by activity_date desc
+  limit 30;
+$$;
+
+alter function "public"."admin_get_user_activity" () owner to "postgres";
+
+comment on function "public"."admin_get_user_activity" () is 'Admin dashboard function - accesses auth.users via security definer. Route-level auth check required.';
+
 create or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
     SELECT 1
@@ -374,7 +455,7 @@ alter function "public"."create_playlist_with_links" (
 ) owner to "postgres";
 
 create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
-	return Math.min(Math.max(difficulty, 1.0), 10.0);
+  return Math.min(Math.max(difficulty, 1.0), 10.0);
 $$;
 
 alter function "public"."fsrs_clamp_d" ("difficulty" numeric) owner to "postgres";
@@ -629,6 +710,12 @@ alter function "public"."insert_user_card_review" (
 	"day_session" "text",
 	"desired_retention" numeric
 ) owner to "postgres";
+
+create or replace function "public"."is_admin" ("user_id" "uuid" default "auth"."uid" ()) returns boolean language "sql" security definer as $$
+  select exists(select 1 from public.admin_users where uid = user_id);
+$$;
+
+alter function "public"."is_admin" ("user_id" "uuid") owner to "postgres";
 
 create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
 DECLARE
@@ -921,6 +1008,213 @@ return response
 $_$;
 
 alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
+
+create table if not exists "public"."user_deck" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"lang" character varying not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
+	"archived" boolean default false not null,
+	"daily_review_goal" smallint default 15 not null,
+	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
+);
+
+alter table "public"."user_deck" owner to "postgres";
+
+comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
+
+comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
+
+comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
+
+comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
+
+comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
+
+create or replace view "public"."admin_deck_stats"
+with
+	("security_invoker" = 'on') as
+select
+	"date_trunc" ('day'::"text", "user_deck"."created_at") as "creation_date",
+	"user_deck"."lang",
+	"count" (*) as "decks_created"
+from
+	"public"."user_deck"
+where
+	("user_deck"."created_at" >= ("now" () - '30 days'::interval))
+group by
+	("date_trunc" ('day'::"text", "user_deck"."created_at")),
+	"user_deck"."lang"
+order by
+	("date_trunc" ('day'::"text", "user_deck"."created_at")) desc,
+	("count" (*)) desc;
+
+alter table "public"."admin_deck_stats" owner to "postgres";
+
+create or replace view "public"."admin_review_stats"
+with
+	("security_invoker" = 'on') as
+select
+	"user_card_review"."day_session" as "review_date",
+	"count" (*) as "total_reviews",
+	"count" (distinct "user_card_review"."uid") as "unique_users",
+	"count" (
+		distinct (
+			(
+				("user_card_review"."uid")::"text" || ("user_card_review"."day_session")::"text"
+			) || ("user_card_review"."lang")::"text"
+		)
+	) as "unique_review_sessions"
+from
+	"public"."user_card_review"
+where
+	(
+		"user_card_review"."created_at" >= ("now" () - '30 days'::interval)
+	)
+group by
+	"user_card_review"."day_session"
+order by
+	"user_card_review"."day_session" desc;
+
+alter table "public"."admin_review_stats" owner to "postgres";
+
+create table if not exists "public"."phrase_playlist" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"title" "text" not null,
+	"description" "text",
+	"href" "text",
+	"created_at" timestamp with time zone default "now" () not null,
+	"lang" character varying not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
+);
+
+alter table "public"."phrase_playlist" owner to "postgres";
+
+create table if not exists "public"."phrase_request" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"requester_uid" "uuid" not null,
+	"lang" character varying not null,
+	"prompt" "text" not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
+);
+
+alter table "public"."phrase_request" owner to "postgres";
+
+create table if not exists "public"."request_comment" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"request_id" "uuid" not null,
+	"parent_comment_id" "uuid",
+	"uid" "uuid" default "auth"."uid" () not null,
+	"content" "text" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"updated_at" timestamp with time zone default "now" () not null,
+	"upvote_count" integer default 0 not null
+);
+
+alter table "public"."request_comment" owner to "postgres";
+
+create or replace view "public"."admin_social_stats"
+with
+	("security_invoker" = 'on') as
+with
+	"request_activity" as (
+		select
+			"date_trunc" ('day'::"text", "phrase_request"."created_at") as "activity_date",
+			'request'::"text" as "activity_type",
+			"count" (*) as "count",
+			"count" (distinct "phrase_request"."requester_uid") as "unique_users"
+		from
+			"public"."phrase_request"
+		where
+			(
+				(
+					"phrase_request"."created_at" >= ("now" () - '30 days'::interval)
+				)
+				and ("phrase_request"."deleted" = false)
+			)
+		group by
+			("date_trunc" ('day'::"text", "phrase_request"."created_at"))
+	),
+	"playlist_activity" as (
+		select
+			"date_trunc" ('day'::"text", "phrase_playlist"."created_at") as "activity_date",
+			'playlist'::"text" as "activity_type",
+			"count" (*) as "count",
+			"count" (distinct "phrase_playlist"."uid") as "unique_users"
+		from
+			"public"."phrase_playlist"
+		where
+			(
+				(
+					"phrase_playlist"."created_at" >= ("now" () - '30 days'::interval)
+				)
+				and ("phrase_playlist"."deleted" = false)
+			)
+		group by
+			("date_trunc" ('day'::"text", "phrase_playlist"."created_at"))
+	),
+	"comment_activity" as (
+		select
+			"date_trunc" ('day'::"text", "request_comment"."created_at") as "activity_date",
+			'comment'::"text" as "activity_type",
+			"count" (*) as "count",
+			"count" (distinct "request_comment"."uid") as "unique_users"
+		from
+			"public"."request_comment"
+		where
+			(
+				"request_comment"."created_at" >= ("now" () - '30 days'::interval)
+			)
+		group by
+			("date_trunc" ('day'::"text", "request_comment"."created_at"))
+	)
+select
+	"request_activity"."activity_date",
+	"request_activity"."activity_type",
+	"request_activity"."count",
+	"request_activity"."unique_users"
+from
+	"request_activity"
+union all
+select
+	"playlist_activity"."activity_date",
+	"playlist_activity"."activity_type",
+	"playlist_activity"."count",
+	"playlist_activity"."unique_users"
+from
+	"playlist_activity"
+union all
+select
+	"comment_activity"."activity_date",
+	"comment_activity"."activity_type",
+	"comment_activity"."count",
+	"comment_activity"."unique_users"
+from
+	"comment_activity"
+order by
+	1 desc,
+	2;
+
+alter table "public"."admin_social_stats" owner to "postgres";
+
+create table if not exists "public"."admin_users" (
+	"uid" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"granted_by" "uuid"
+);
+
+alter table "public"."admin_users" owner to "postgres";
+
+comment on table "public"."admin_users" is 'Admin users table. To grant admin access, manually insert user ID: INSERT INTO public.admin_users (uid) VALUES (''user-uuid-here'');';
 
 create table if not exists "public"."chat_message" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1235,34 +1529,6 @@ from
 
 alter table "public"."meta_phrase_info" owner to "postgres";
 
-create table if not exists "public"."phrase_playlist" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"title" "text" not null,
-	"description" "text",
-	"href" "text",
-	"created_at" timestamp with time zone default "now" () not null,
-	"lang" character varying not null,
-	"upvote_count" integer default 0 not null,
-	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" ()
-);
-
-alter table "public"."phrase_playlist" owner to "postgres";
-
-create table if not exists "public"."phrase_request" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"requester_uid" "uuid" not null,
-	"lang" character varying not null,
-	"prompt" "text" not null,
-	"upvote_count" integer default 0 not null,
-	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" ()
-);
-
-alter table "public"."phrase_request" owner to "postgres";
-
 create table if not exists "public"."playlist_phrase_link" (
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
 	"uid" "uuid" default "auth"."uid" () not null,
@@ -1435,31 +1701,6 @@ alter table "public"."language" owner to "postgres";
 
 comment on table "public"."language" is 'The languages that people are trying to learn';
 
-create table if not exists "public"."user_deck" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"lang" character varying not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
-	"archived" boolean default false not null,
-	"daily_review_goal" smallint default 15 not null,
-	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
-);
-
-alter table "public"."user_deck" owner to "postgres";
-
-comment on table "public"."user_deck" is 'A set of cards in one language which user intends to learn @graphql({"name": "UserDeck"})';
-
-comment on column "public"."user_deck"."uid" is 'The owner user''s ID';
-
-comment on column "public"."user_deck"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-comment on column "public"."user_deck"."created_at" is 'the moment the deck was created';
-
-comment on column "public"."user_deck"."learning_goal" is 'why are you learning this language?';
-
-comment on column "public"."user_deck"."archived" is 'is the deck archived or active';
-
 create or replace view "public"."meta_language" as
 with
 	"first" as (
@@ -1568,19 +1809,6 @@ comment on table "public"."phrase_translation" is 'A translation of one phrase i
 comment on column "public"."phrase_translation"."added_by" is 'User who added this translation';
 
 comment on column "public"."phrase_translation"."lang" is 'The 3-letter code for the language (iso-369-3)';
-
-create table if not exists "public"."request_comment" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"request_id" "uuid" not null,
-	"parent_comment_id" "uuid",
-	"uid" "uuid" default "auth"."uid" () not null,
-	"content" "text" not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"updated_at" timestamp with time zone default "now" () not null,
-	"upvote_count" integer default 0 not null
-);
-
-alter table "public"."request_comment" owner to "postgres";
 
 create or replace view "public"."user_card_plus"
 with
@@ -1792,6 +2020,9 @@ create table if not exists "public"."user_deck_review_state" (
 
 alter table "public"."user_deck_review_state" owner to "postgres";
 
+alter table only "public"."admin_users"
+add constraint "admin_users_pkey" primary key ("uid");
+
 alter table only "public"."phrase"
 add constraint "card_phrase_id_int_key" unique ("id");
 
@@ -1967,6 +2198,12 @@ after insert
 or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
 
+alter table only "public"."admin_users"
+add constraint "admin_users_granted_by_fkey" foreign key ("granted_by") references "auth"."users" ("id");
+
+alter table only "public"."admin_users"
+add constraint "admin_users_uid_fkey" foreign key ("uid") references "auth"."users" ("id") on delete cascade;
+
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
@@ -2125,6 +2362,19 @@ add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid"
 
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+create policy "Admins can view admin list" on "public"."admin_users" for
+select
+	to "authenticated" using (
+		(
+			"auth"."uid" () in (
+				select
+					"admin_users_1"."uid"
+				from
+					"public"."admin_users" "admin_users_1"
+			)
+		)
+	);
 
 create policy "Anyone can add cards" on "public"."phrase" for insert to "authenticated"
 with
@@ -2498,6 +2748,8 @@ select
 		)
 	);
 
+alter table "public"."admin_users" enable row level security;
+
 alter table "public"."chat_message" enable row level security;
 
 alter table "public"."comment_phrase_link" enable row level security;
@@ -2544,12 +2796,6 @@ alter table "public"."user_profile" enable row level security;
 
 alter publication "supabase_realtime" owner to "postgres";
 
-alter publication "supabase_realtime"
-add table only "public"."chat_message";
-
-alter publication "supabase_realtime"
-add table only "public"."friend_request_action";
-
 revoke usage on schema "public"
 from
 	public;
@@ -2567,6 +2813,15 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
+) to "anon";
+
+grant all on function "public"."add_phrase_translation_card" (
+	"phrase_text" "text",
+	"phrase_lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text",
+	"phrase_text_script" "text",
+	"translation_text_script" "text"
 ) to "authenticated";
 
 grant all on function "public"."add_phrase_translation_card" (
@@ -2582,6 +2837,12 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
+) to "anon";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
 ) to "authenticated";
 
 grant all on function "public"."add_tags_to_phrase" (
@@ -2589,6 +2850,32 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_lang" character varying,
 	"p_tags" "text" []
 ) to "service_role";
+
+grant all on function "public"."admin_get_recent_signups" () to "anon";
+
+grant all on function "public"."admin_get_recent_signups" () to "authenticated";
+
+grant all on function "public"."admin_get_recent_signups" () to "service_role";
+
+grant all on function "public"."admin_get_signup_stats" () to "anon";
+
+grant all on function "public"."admin_get_signup_stats" () to "authenticated";
+
+grant all on function "public"."admin_get_signup_stats" () to "service_role";
+
+grant all on function "public"."admin_get_summary_stats" () to "anon";
+
+grant all on function "public"."admin_get_summary_stats" () to "authenticated";
+
+grant all on function "public"."admin_get_summary_stats" () to "service_role";
+
+grant all on function "public"."admin_get_user_activity" () to "anon";
+
+grant all on function "public"."admin_get_user_activity" () to "authenticated";
+
+grant all on function "public"."admin_get_user_activity" () to "service_role";
+
+grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
 
@@ -2598,6 +2885,12 @@ grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"
+) to "anon";
+
+grant all on function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) to "authenticated";
 
 grant all on function "public"."bulk_add_phrases" (
@@ -2611,6 +2904,13 @@ grant all on function "public"."create_comment_with_phrases" (
 	"p_content" "text",
 	"p_parent_comment_id" "uuid",
 	"p_phrase_ids" "uuid" []
+) to "anon";
+
+grant all on function "public"."create_comment_with_phrases" (
+	"p_request_id" "uuid",
+	"p_content" "text",
+	"p_parent_comment_id" "uuid",
+	"p_phrase_ids" "uuid" []
 ) to "authenticated";
 
 grant all on function "public"."create_comment_with_phrases" (
@@ -2619,6 +2919,14 @@ grant all on function "public"."create_comment_with_phrases" (
 	"p_parent_comment_id" "uuid",
 	"p_phrase_ids" "uuid" []
 ) to "service_role";
+
+grant all on function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"phrases" "jsonb"
+) to "anon";
 
 grant all on function "public"."create_playlist_with_links" (
 	"lang" "text",
@@ -2763,6 +3071,16 @@ grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
 
+grant all on table "public"."user_card_review" to "anon";
+
+grant all on function "public"."insert_user_card_review" (
+	"phrase_id" "uuid",
+	"lang" character varying,
+	"score" integer,
+	"day_session" "text",
+	"desired_retention" numeric
+) to "anon";
+
 grant all on function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
@@ -2779,45 +3097,121 @@ grant all on function "public"."insert_user_card_review" (
 	"desired_retention" numeric
 ) to "service_role";
 
+grant all on function "public"."is_admin" ("user_id" "uuid") to "anon";
+
+grant all on function "public"."is_admin" ("user_id" "uuid") to "authenticated";
+
+grant all on function "public"."is_admin" ("user_id" "uuid") to "service_role";
+
+grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "anon";
+
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
+
+grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "anon";
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "service_role";
 
+grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "anon";
+
 grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "service_role";
+
+grant all on function "public"."update_comment_upvote_count" () to "anon";
 
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
+grant all on function "public"."update_parent_playlist_timestamp" () to "anon";
+
 grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_timestamp" () to "anon";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "anon";
+
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "anon";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_request_upvote_count" () to "anon";
+
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
 
+grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "anon";
+
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "authenticated";
 
 grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "service_role";
+
+grant all on table "public"."user_deck" to "anon";
+
+grant all on table "public"."user_deck" to "authenticated";
+
+grant all on table "public"."user_deck" to "service_role";
+
+grant all on table "public"."admin_deck_stats" to "anon";
+
+grant all on table "public"."admin_deck_stats" to "authenticated";
+
+grant all on table "public"."admin_deck_stats" to "service_role";
+
+grant all on table "public"."admin_review_stats" to "anon";
+
+grant all on table "public"."admin_review_stats" to "authenticated";
+
+grant all on table "public"."admin_review_stats" to "service_role";
+
+grant all on table "public"."phrase_playlist" to "anon";
+
+grant all on table "public"."phrase_playlist" to "authenticated";
+
+grant all on table "public"."phrase_playlist" to "service_role";
+
+grant all on table "public"."phrase_request" to "anon";
+
+grant all on table "public"."phrase_request" to "authenticated";
+
+grant all on table "public"."phrase_request" to "service_role";
+
+grant all on table "public"."request_comment" to "anon";
+
+grant all on table "public"."request_comment" to "authenticated";
+
+grant all on table "public"."request_comment" to "service_role";
+
+grant all on table "public"."admin_social_stats" to "anon";
+
+grant all on table "public"."admin_social_stats" to "authenticated";
+
+grant all on table "public"."admin_social_stats" to "service_role";
+
+grant all on table "public"."admin_users" to "anon";
+
+grant all on table "public"."admin_users" to "authenticated";
+
+grant all on table "public"."admin_users" to "service_role";
+
+grant all on table "public"."chat_message" to "anon";
 
 grant all on table "public"."chat_message" to "authenticated";
 
@@ -2828,6 +3222,8 @@ grant all on table "public"."comment_phrase_link" to "anon";
 grant all on table "public"."comment_phrase_link" to "authenticated";
 
 grant all on table "public"."comment_phrase_link" to "service_role";
+
+grant all on table "public"."comment_upvote" to "anon";
 
 grant all on table "public"."comment_upvote" to "authenticated";
 
@@ -2845,6 +3241,8 @@ grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
 
+grant all on table "public"."user_profile" to "anon";
+
 grant all on table "public"."user_profile" to "authenticated";
 
 grant all on table "public"."user_profile" to "service_role";
@@ -2861,6 +3259,8 @@ grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
 
+grant all on table "public"."user_card" to "anon";
+
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
@@ -2870,18 +3270,6 @@ grant all on table "public"."meta_phrase_info" to "anon";
 grant all on table "public"."meta_phrase_info" to "authenticated";
 
 grant all on table "public"."meta_phrase_info" to "service_role";
-
-grant all on table "public"."phrase_playlist" to "anon";
-
-grant all on table "public"."phrase_playlist" to "authenticated";
-
-grant all on table "public"."phrase_playlist" to "service_role";
-
-grant all on table "public"."phrase_request" to "anon";
-
-grant all on table "public"."phrase_request" to "authenticated";
-
-grant all on table "public"."phrase_request" to "service_role";
 
 grant all on table "public"."playlist_phrase_link" to "anon";
 
@@ -2901,6 +3289,8 @@ grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
 
+grant all on table "public"."friend_summary" to "anon";
+
 grant all on table "public"."friend_summary" to "authenticated";
 
 grant all on table "public"."friend_summary" to "service_role";
@@ -2911,15 +3301,13 @@ grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
 
-grant all on table "public"."user_deck" to "authenticated";
-
-grant all on table "public"."user_deck" to "service_role";
-
 grant all on table "public"."meta_language" to "anon";
 
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
+
+grant all on table "public"."phrase_playlist_upvote" to "anon";
 
 grant all on table "public"."phrase_playlist_upvote" to "authenticated";
 
@@ -2931,6 +3319,8 @@ grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
 
+grant all on table "public"."phrase_request_upvote" to "anon";
+
 grant all on table "public"."phrase_request_upvote" to "authenticated";
 
 grant all on table "public"."phrase_request_upvote" to "service_role";
@@ -2941,11 +3331,7 @@ grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
 
-grant all on table "public"."request_comment" to "anon";
-
-grant all on table "public"."request_comment" to "authenticated";
-
-grant all on table "public"."request_comment" to "service_role";
+grant all on table "public"."user_card_plus" to "anon";
 
 grant all on table "public"."user_card_plus" to "authenticated";
 
@@ -2957,9 +3343,13 @@ grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
 
+grant all on table "public"."user_deck_plus" to "anon";
+
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
+
+grant all on table "public"."user_deck_review_state" to "anon";
 
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
