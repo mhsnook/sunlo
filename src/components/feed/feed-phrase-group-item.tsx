@@ -5,8 +5,13 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/hooks/use-profile'
 import { MessageSquareQuote } from 'lucide-react'
 import { CSSProperties } from 'react'
+import { uuid } from '@/types/main'
 
-export function PhraseSummaryLine({ item }: { item: FeedActivityType }) {
+export function PhraseSummaryLine({
+	item,
+}: {
+	item: FeedActivityType | { lang: string; id: uuid }
+}) {
 	const { data: phrase } = usePhrase(item.id)
 	const { data: profile } = useProfile()
 
@@ -34,6 +39,8 @@ export function PhraseSummaryLine({ item }: { item: FeedActivityType }) {
 				params={{ lang: item.lang, id: item.id }}
 				className="group-hover:text-foreground inline-flex items-center gap-2 truncate font-medium"
 				data-testid={`feed-phrase-link-${item.id}`}
+				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
+				disabled={!('payload' in item)}
 			>
 				<MessageSquareQuote size={14} />
 				<span

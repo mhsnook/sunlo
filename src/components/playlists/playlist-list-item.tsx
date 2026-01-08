@@ -11,6 +11,7 @@ import { Link } from '@tanstack/react-router'
 import { PlaylistEmbed } from './playlist-embed'
 import { useProfile } from '@/hooks/use-profile'
 import { UpdatePlaylistDialog } from './update-playlist-dialog'
+import { ManagePlaylistPhrasesDialog } from './manage-playlist-phrases-dialog'
 import { DeletePlaylistDialog } from './delete-playlist-dialog'
 
 export function PlaylistItem({
@@ -49,6 +50,7 @@ export function PlaylistItem({
 					{isOwner && (
 						<>
 							<UpdatePlaylistDialog playlist={playlist} />
+							<ManagePlaylistPhrasesDialog playlist={playlist} />
 							<DeletePlaylistDialog playlist={playlist} />
 						</>
 					)}
