@@ -261,13 +261,40 @@ LESSONS LEARNED:
 
 ### DX: Fix Languages-Known ESLint errors
 
-STATUS: PENDING
+STATUS: COMPLETE
 COMPLEXITY: 2
-DIFFICULTY:
+DIFFICULTY: 1
 
 DESCRIPTION FROM HUMAN MANAGER:
 Please run `pnpm lint` and see all the errors in the `@src/components/fields/languages-known-field.tsx`. There's a lot! Is it easy to fix? Should we rewrite this component altogether? Is there a small surgical fix? Please try to fix but feel free to also just propose a couple options and move on.
 
 NOTE FROM CODING AGENT:
+✅ COMPLETED - Fixed all 12 ESLint errors (10 in languages-known-field.tsx, 2 in types.d.ts) using a surgical type fix.
+
+The problem: The `AnyArrayFieldType` type had an overly permissive index signature that allowed either `FieldError` directly OR a `Record<string, FieldError>`, causing TypeScript to infer `error` type instead of the proper structure.
+
+The fix (in `/src/components/fields/types.d.ts`):
+
+1. Made `AnyArrayFieldType` generic over `T extends FieldValues`
+2. Changed the index signature from:
+   ```typescript
+   [x: number]: FieldError | Record<string, FieldError> | undefined
+   ```
+   to:
+   ```typescript
+   [x: number]: Record<string, FieldError | undefined> | undefined
+   ```
+3. Updated `ArrayFieldProps` and `ControlledArrayFieldProps` to pass the generic parameter
+4. Removed unused `ArrayFieldValues` import
+
+Result: Reduced from 12 errors to 0 errors. The type now accurately reflects that array field errors are objects with nested field errors (like `{ lang?: FieldError, level?: FieldError }`), not flat FieldError values.
+
+Code formatted and ready to commit.
 
 LESSONS LEARNED:
+
+- Index signatures can conflict with specific properties if types aren't carefully designed
+- The original type allowed `FieldError | Record<string, FieldError>` which created ambiguity
+- The actual usage pattern shows errors are always records/objects, never flat FieldError values
+- Making helper types generic allows for better type safety and inference
+- This was easier than expected - just needed to refine the type definition, no component rewrite needed
