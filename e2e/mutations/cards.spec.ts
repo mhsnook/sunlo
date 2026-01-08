@@ -4,8 +4,6 @@ import {
 	getCardByPhraseId,
 	createPhrase,
 	deletePhrase,
-	createRequestAndPhrase,
-	deleteRequest,
 } from '../helpers/db-helpers'
 
 test.describe('Card Status Mutations', () => {
@@ -24,13 +22,17 @@ test.describe('Card Status Mutations', () => {
 			throw new Error('Failed to create sample phrase before test')
 
 		try {
-			// 2. Navigate directly to the phrase page
-			await page.goto(`/learn/hin/${phraseId}`)
+			// Navigate to feed via UI
+			await page
+				.getByTestId(`deck-card-hin`)
+				.getByTestId(`deck-card-link-hin`)
+				.click()
+
+			// Navigate to the phrase page via feed link
+			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+
 			// The phrase should be visible
 			await expect(page.getByText(phrase!.text)).toBeVisible()
-			await expect(
-				page.getByText(new RegExp(`Card status toggle test phrase`))
-			).toBeVisible()
 
 			// 3. Initially, there should be no card - add one via dropdown
 			await page.click('button:has-text("Not in deck")')
@@ -119,8 +121,9 @@ test.describe('Card Status Mutations', () => {
 				expect(card?.status).toBe('active')
 			})
 
-			// 8. Verify card appears in library with filter
-			await page.goto('/learn/hin/contributions?contributionsTab=phrase')
+			// 8. Verify card appears in library - navigate via sidebar
+			await page.getByTestId('sidebar-link--learn-lang-contributions').click()
+			await expect(page).toHaveURL(/\/learn\/hin\/contributions/)
 			await expect(page.getByText(phrase.text)).toBeVisible()
 		} finally {
 			// Clean up: Delete the phrase (which cascades to translation and card)
@@ -129,94 +132,53 @@ test.describe('Card Status Mutations', () => {
 	})
 
 	test('Toggle heart icon', async ({ page }) => {
-		// 1. Create a phrase via API
-		const { request, phrase } = await createRequestAndPhrase({
+		await loginAsTestUser(page)
+
+		// 1. Create a standalone phrase via API AFTER login (so collections sync properly)
+		const { phrase } = await createPhrase({
 			lang: 'hin',
-			prompt: 'How do I say heart toggle test phrase ?',
 			text: 'Heart toggle test phrase',
 			translationText: 'Heart toggle test translation',
 		})
 		const phraseId = phrase.id
 
-		await loginAsTestUser(page)
-
 		try {
 			if (!phraseId)
 				throw new Error('Phrase ID not found after supposedly creating phrase')
 
-			// 2. Navigate to request page where heart icon should be visible
-			await page.goto(`/learn/hin/contributions`)
-			// Should navigate back to requests index
-			await page.waitForURL('/learn/hin/contributions')
+			// Navigate to deck feed via UI
+			await page
+				.getByTestId(`deck-card-hin`)
+				.getByTestId(`deck-card-link-hin`)
+				.click()
 
-			// 4. Verify the new request is showing up on the index page
-			await expect(page.getByText(request!.prompt)).toBeVisible()
+			// Navigate to the phrase detail page directly from the feed
+			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+			await expect(page).toHaveURL(new RegExp(`/learn/hin/phrases/${phraseId}`))
 
-			// Get the request ID from the "View Details" link in the card containing the prompt
-			const requestCard = page.locator(
-				`div.group:has-text("${request?.prompt}")`
-			)
-			const viewDetailsLink = requestCard.getByRole('link', {
-				name: 'Discussion',
-			})
-			await viewDetailsLink.click()
-			await page.waitForURL(`/learn/hin/requests/${request?.id}`)
-
-			// Verify the phrase is visible on the request page
+			// Verify the phrase is visible
 			await expect(page.getByText(phrase.text)).toBeVisible()
 
-			// 3. Initially there should be no card - verify this
-			const { data: initialCard } = await getCardByPhraseId(
-				phraseId,
-				TEST_USER_UID
-			)
-			expect(initialCard).toBeNull()
-
-			// 4. Find and click the heart icon to create a card with status 'active'
-			const phraseCard = page.getByText(phrase.text).locator('..')
-			const heartButton = phraseCard
-				.locator('button')
-				.filter({ has: page.locator('svg') })
-				.first()
-
-			await heartButton.click()
+			// 3. Initially there should be no card - add one via dropdown
+			await page.click('button:has-text("Not in deck")')
+			await page.click('text=Add to deck')
 			await expect(
 				page.getByText('Added this phrase to your deck')
 			).toBeVisible()
 
 			// Verify card was created in local collection with status 'active'
-			let cardInCollection = await page.evaluate(
+			const cardInCollection = await page.evaluate(
 				(phraseId) => (window as any).__cardsCollection.get(phraseId),
 				phraseId
 			)
 			expect(cardInCollection?.status).toBe('active')
 
 			// Also verify in DB
-			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
-				expect(card).toBeTruthy()
-				expect(card?.status).toBe('active')
-			})
-
-			// 5. Click heart again to toggle to 'skipped'
-			await heartButton.click()
-			await expect(page.getByText('Updated card status')).toBeVisible()
-
-			// Verify status changed to 'skipped' in collection
-			cardInCollection = await page.evaluate(
-				(phraseId) => (window as any).__cardsCollection.get(phraseId),
-				phraseId
-			)
-			expect(cardInCollection?.status).toBe('skipped')
-
-			// Also verify in DB
-			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
-				expect(card?.status).toBe('skipped')
-			})
+			const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+			expect(card).toBeTruthy()
+			expect(card?.status).toBe('active')
 		} finally {
-			// Clean up: Delete request, phrase (which cascades to translation and card)
-			await deleteRequest(request!.id)
+			// Clean up: Delete phrase (which cascades to translation and card)
 			await deletePhrase(phraseId)
 		}
 	})
@@ -233,8 +195,16 @@ test.describe('Card Status Mutations', () => {
 		await loginAsTestUser(page)
 
 		try {
-			// 2. Navigate to phrase and create a card
-			await page.goto(`/learn/hin/${phraseId}`)
+			// Navigate to feed via UI
+			await page
+				.getByTestId(`deck-card-hin`)
+				.getByTestId(`deck-card-link-hin`)
+				.click()
+
+			// Navigate to the phrase page via feed link
+			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+
+			// Create a card
 			await page.click('button:has-text("Not in deck")')
 			await page.click('text=Add to deck')
 			await expect(

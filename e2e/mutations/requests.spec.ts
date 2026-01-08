@@ -28,7 +28,7 @@ test.describe('Phrase Request Mutations', () => {
 		try {
 			// 2. Navigate to requests index page first
 			// @@TODO @@TEMP make this parameter work?
-			await page.goto('/learn/hin/contributions?type=request')
+			await page.goto('/learn/hin/contributions?contributionsTab=requests')
 
 			// Verify context request is visible
 			await expect(page.getByText(contextPrompt)).toBeVisible()
@@ -43,7 +43,7 @@ test.describe('Phrase Request Mutations', () => {
 			await page.fill('textarea[name="prompt"]', newPrompt)
 
 			// Submit the form
-			await page.click('button[type="submit"]:has-text("Create Request")')
+			await page.click('button[type="submit"]:has-text("Post Request")')
 
 			// Wait for success toast
 			await expect(
@@ -51,20 +51,14 @@ test.describe('Phrase Request Mutations', () => {
 			).toBeVisible()
 
 			// Should navigate back to requests index
-			await page.waitForURL('/learn/hin/contributions?type=request')
+			await expect(page).toHaveURL(new RegExp(`/learn/hin/requests/[a-f0-9-]+`))
 
 			// 4. Verify the new request is showing up on the index page
 			await expect(page.getByText(newPrompt)).toBeVisible()
 
-			// Get the request ID from the "View Details" link in the card containing the prompt
-			const requestCard = page
-				.locator(`div.group:has-text("${newPrompt}")`)
-				.first()
-			const viewDetailsLink = requestCard.getByRole('link', {
-				name: 'Discussion',
-			})
-			const href = await viewDetailsLink.getAttribute('href')
-			const requestId = href?.split('/').pop()
+			// Click on the card containing the prompt
+			await page.click(`p:has-text("${newPrompt}")`)
+			const requestId = page.url().split('/').pop()
 
 			expect(requestId).toBeTruthy()
 

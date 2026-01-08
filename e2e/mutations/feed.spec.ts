@@ -182,11 +182,10 @@ test.describe('Unified Feed', () => {
 				.getByTestId(`deck-card-link-${lang}`)
 				.click()
 
-			// 3. Verify the playlist is visible with the count
+			// 3. Verify the playlist is visible, with "2 phrases" badge
 			await expect(page.getByText(playlistTitle).first()).toBeVisible()
-			await expect(
-				page.getByText('A Playlist with 2 phrases').first()
-			).toBeVisible()
+			await expect(page.getByText('created a playlist').first()).toBeVisible()
+			await expect(page.getByText('2 phrases').first()).toBeVisible()
 
 			// 4. Verify individual phrases are NOT visible standalone
 			await expect(
@@ -280,7 +279,7 @@ test.describe('Unified Feed', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/`))
 
 		// 5. Navigate back to feed using UI link (preserving SPA state)
-		await page.getByTestId('sidebar-link-feed').click()
+		await page.getByTestId('sidebar-link--learn-lang-feed').click()
 
 		// 6. Verify the new request is visible immediately (due to invalidation & SPA state)
 		await expect(page.getByText(promptText).first()).toBeVisible()

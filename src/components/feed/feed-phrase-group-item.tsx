@@ -33,6 +33,7 @@ export function PhraseSummaryLine({ item }: { item: FeedActivityType }) {
 				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				params={{ lang: item.lang, id: item.id }}
 				className="group-hover:text-foreground inline-flex items-center gap-2 truncate font-medium"
+				data-testid={`feed-phrase-link-${item.id}`}
 			>
 				<MessageSquareQuote size={14} />
 				<span
