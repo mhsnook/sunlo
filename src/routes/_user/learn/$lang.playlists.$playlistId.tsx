@@ -25,7 +25,6 @@ export const Route = createFileRoute(
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
-// eslint-disable-next-line react-refresh/only-export-components
 function PlaylistPage() {
 	const { playlistId } = Route.useParams()
 	const { data: playlist, isLoading } = useOnePlaylist(playlistId)
@@ -74,7 +73,6 @@ function PlaylistPage() {
 	)
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 function Show404() {
 	return (
 		<Callout variant="ghost">
