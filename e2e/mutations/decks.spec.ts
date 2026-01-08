@@ -113,11 +113,22 @@ test.describe.serial('Deck Mutations', () => {
 	test('Update deck goal/motivation', async ({ page }) => {
 		await loginAsTestUser(page)
 
+		// Navigate to the learn page where decks are shown
+		await expect(page).toHaveURL('/learn')
+
 		// Navigate to deck settings
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
-		await page.getByText('Settings', { exact: true }).click()
+
+		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
+		await page.waitForSelector('[data-radix-menu-content]', {
+			state: 'visible',
+		})
+		await page
+			.locator('[data-radix-menu-content]')
+			.getByText('Deck Settings')
+			.click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
@@ -160,7 +171,15 @@ test.describe.serial('Deck Mutations', () => {
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
-		await page.getByText('Settings', { exact: true }).click()
+
+		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
+		await page.waitForSelector('[data-radix-menu-content]', {
+			state: 'visible',
+		})
+		await page
+			.locator('[data-radix-menu-content]')
+			.getByText('Deck Settings')
+			.click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
@@ -183,8 +202,8 @@ test.describe.serial('Deck Mutations', () => {
 		// Click link to go back to /learn index
 		await page.getByRole('link', { name: /all decks/i }).click()
 
-		// Verify deck NOT visible on page
-		await expect(page.getByText('Spanish')).not.toBeVisible()
+		// Verify deck card NOT visible on page (use testid to be specific)
+		await expect(page.getByTestId('deck-card-spa')).not.toBeVisible()
 
 		// Click "View archived decks" link
 		await page.getByRole('link', { name: /view archived decks/i }).click()
@@ -210,11 +229,19 @@ test.describe.serial('Deck Mutations', () => {
 
 		// Click the archived deck to navigate to it
 		await page.getByRole('link', { name: /view archived decks/i }).click()
-		await expect(page.getByText('Spanish')).toBeVisible()
-		await page.getByText('Spanish').click()
+		await expect(page.getByTestId('deck-card-spa')).toBeVisible()
+		await page.getByTestId('deck-card-link-spa').click()
 		// Navigate to deck settings
 		await page.locator('#top-right-context-menu').click()
-		await page.getByText('Settings', { exact: true }).click()
+
+		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
+		await page.waitForSelector('[data-radix-menu-content]', {
+			state: 'visible',
+		})
+		await page
+			.locator('[data-radix-menu-content]')
+			.getByText('Deck Settings')
+			.click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
@@ -249,8 +276,8 @@ test.describe.serial('Deck Mutations', () => {
 		// Click link to go to /learn index
 		await page.getByRole('link', { name: /all decks/i }).click()
 
-		// Verify deck IS visible on page again
-		await expect(page.getByText('Spanish')).toBeVisible()
+		// Verify deck card IS visible on page again (use testid to be specific)
+		await expect(page.getByTestId('deck-card-spa')).toBeVisible()
 	})
 
 	// Cleanup: delete the test deck after all tests complete
