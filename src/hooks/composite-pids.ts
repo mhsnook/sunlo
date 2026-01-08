@@ -1,11 +1,12 @@
 import { useMemo } from 'react'
 
-import type { pids } from '@/types/main'
+import type { pids, uuid } from '@/types/main'
 import { useDeckPids } from '@/hooks/use-deck'
 import { useLanguagePhrases } from '@/hooks/use-language'
 import { arrayDifference } from '@/lib/utils'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
+import type { PhraseFullType } from '@/lib/schemas'
 
 /**
  * This hook computes the top recommended phrases for a user, and other
@@ -26,9 +27,18 @@ export type CompositePids = {
 	language_no_translations: pids
 }
 export function useCompositePids(lang: string) {
-	const { data: phrases, state: phrasesMap } = useLanguagePhrases(lang)
+	const { data: phrases } = useLanguagePhrases(lang)
 	const { data: deckPids } = useDeckPids(lang)
 	const { data: languagesToShow } = useLanguagesToShow()
+
+	// Create a Map for fast phrase lookups by ID
+	const phrasesMap = useMemo(
+		() =>
+			phrases ?
+				new Map<uuid, PhraseFullType>(phrases.map((p) => [p.id, p]))
+			:	new Map<uuid, PhraseFullType>(),
+		[phrases]
+	)
 
 	return useMemo((): CompositePids | null => {
 		if (!languagesToShow || !phrases || !deckPids) {

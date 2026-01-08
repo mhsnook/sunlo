@@ -220,16 +220,44 @@ LESSONS LEARNED:
 
 ### DX: Fix Composite-Pids ESLint errors
 
-STATUS: PENDING
+STATUS: COMPLETE
 COMPLEXITY: 2
-DIFFICULTY:
+DIFFICULTY: 2
 
 DESCRIPTION FROM HUMAN MANAGER:
 Please run `pnpm lint` and see all the errors in the `@src/hooks/composite-pids.ts`. There's a lot! Is it easy to fix? Should we rewrite this hook? Is there a small surgical fix? Please try to fix but feel free to also just propose a couple options and move on.
 
 NOTE FROM CODING AGENT:
+✅ COMPLETED - Fixed all 18 ESLint errors in `/src/hooks/composite-pids.ts` using a surgical fix.
+
+The problem: The code was trying to destructure a non-existent `state` property from `useLiveQuery`, and TypeScript couldn't infer proper types for `phrasesMap.get()` operations.
+
+The fix:
+
+1. Removed the invalid `state: phrasesMap` destructuring from `useLanguagePhrases(lang)`
+2. Created a properly-typed Map manually using `useMemo`:
+   ```typescript
+   const phrasesMap = useMemo(
+   	() =>
+   		phrases ?
+   			new Map<uuid, PhraseFullType>(phrases.map((p) => [p.id, p]))
+   		:	new Map<uuid, PhraseFullType>(),
+   	[phrases]
+   )
+   ```
+3. Added proper type imports (`uuid`, `PhraseFullType`)
+
+Result: Reduced from 18 errors to 0 errors in this file. The fix maintains the same performance characteristics (fast O(1) lookups) while properly typing the Map.
+
+Code formatted and ready to commit.
 
 LESSONS LEARNED:
+
+- TanStack DB's `useLiveQuery` returns `{ data, isReady, isLoading }` but NOT a `state` property
+- The custom `UseLiveQueryResult` type was correctly typed, but the code was expecting something that doesn't exist
+- When creating Maps from arrays, explicit typing prevents TypeScript from inferring `any`
+- The pattern `new Map<K, V>(array.map(item => [key, value]))` is the standard approach
+- This was a surgical fix - no rewrite needed, just proper type annotations
 
 ### DX: Fix Languages-Known ESLint errors
 
