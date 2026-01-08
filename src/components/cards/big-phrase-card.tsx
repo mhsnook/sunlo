@@ -26,7 +26,7 @@ import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { Button } from '@/components/ui/button'
-import Flagged from '@/components/flagged'
+
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -149,22 +149,24 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="flex w-full flex-row flex-wrap gap-4 px-2 py-3 @md:place-content-evenly">
-				<Flagged>
-					<Button>
-						<MessagesSquare /> Discuss
-					</Button>
-				</Flagged>
+			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
 					variant="outline"
-					size="default"
+					size="icon"
+					text=""
 				/>
-				<SharePhraseButton phrase={phrase} variant="outline" size="default" />
+				<SharePhraseButton
+					text=""
+					phrase={phrase}
+					variant="outline"
+					size="icon"
+				/>
 				<SendPhraseToFriendButton
 					phrase={phrase}
 					variant="outline"
-					size="default"
+					text=""
+					size="icon"
 				/>
 			</div>
 		</div>
