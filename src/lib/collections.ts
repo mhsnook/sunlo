@@ -99,7 +99,18 @@ export const phrasesCollection = createCollection(
 				.from('meta_phrase_info')
 				.select('*, translations:phrase_translation(*)')
 				.throwOnError()
-			return data?.map((p) => PhraseFullSchema.parse(p)) ?? []
+			return (
+				data?.map((p) =>
+					PhraseFullSchema.parse(
+						Object.assign(
+							{ ...p },
+							{
+								count_learners: (p.count_active ?? 0) + (p.count_learned ?? 0),
+							}
+						)
+					)
+				) ?? []
+			)
 		},
 		schema: PhraseFullSchema,
 		queryClient,

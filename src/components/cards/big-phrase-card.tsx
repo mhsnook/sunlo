@@ -1,6 +1,15 @@
-import { CSSProperties, useState } from 'react'
-import { ChevronsUpDown, MessagesSquare, ListMusic } from 'lucide-react'
+import { type CSSProperties, useState } from 'react'
 import { Link } from '@tanstack/react-router'
+import {
+	ChevronsUpDown,
+	MessagesSquare,
+	ListMusic,
+	Users,
+	Edit,
+	Trash2,
+} from 'lucide-react'
+
+import type { uuid } from '@/types/main'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button-variants'
 import Callout from '@/components/ui/callout'
@@ -9,8 +18,6 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from '@/components/ui/collapsible'
-
-import type { uuid } from '@/types/main'
 import languages from '@/lib/languages'
 import { AddTranslationsDialog } from '@/components/card-pieces/add-translations'
 import { AddTags } from '@/components/card-pieces/add-tags'
@@ -35,6 +42,7 @@ import {
 	type PhraseProvenanceItem as PhraseProvenanceItemType,
 } from '@/hooks/use-language'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
+import Flagged from '@/components/flagged'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -51,11 +59,18 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 
 	return (
 		<div>
-			{phrase.added_by ?
-				<div className="mb-3 flex flex-row gap-1 px-2">
-					<UidPermalink uid={phrase.added_by} timeValue={phrase.created_at} />
+			<div className="mb-3 flex flex-row items-center justify-between gap-1 px-2">
+				<UidPermalink uid={phrase.added_by!} timeValue={phrase.created_at} />
+				<div className="flex items-center gap-2">
+					<Badge variant="secondary" className="gap-1">
+						<Users className="h-3 w-3" />
+						{phrase.count_learners}
+					</Badge>
+
+					<CardStatusDropdown phrase={phrase} />
 				</div>
-			:	null}
+			</div>
+
 			<CardlikeFlashcard
 				className="@container"
 				// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -65,7 +80,16 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
 							<LangBadge lang={phrase.lang} />
-							<CardStatusDropdown phrase={phrase} />
+							<div className="flex flex-row items-center gap-2">
+								<Flagged>
+									<Button size="icon" variant="ghost">
+										<Trash2 />
+									</Button>
+									<Button size="icon" variant="ghost">
+										<Edit />
+									</Button>
+								</Flagged>
+							</div>
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
 							<span
@@ -142,22 +166,31 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 
 						<Separator />
 
-						<div>
-							<div className="flex items-center justify-between">
-								<div className="inline-flex flex-row flex-wrap items-baseline gap-2">
-									<h3 className="text-lg font-semibold">Tags</h3>
-									{phrase.tags?.map((tag: { id: string; name: string }) => (
-										<Badge key={tag.id} variant="secondary">
-											{tag.name}
-										</Badge>
-									))}
-									{!phrase.tags?.length && (
-										<span className="text-muted-foreground italic">
-											No tags
-										</span>
-									)}
-								</div>
-								<AddTags phrase={phrase} />
+						<div className="flex items-center justify-between">
+							<div className="inline-flex flex-row flex-wrap items-baseline gap-2">
+								<h3 className="text-lg font-semibold">Tags</h3>
+								{phrase.tags?.map((tag: { id: string; name: string }) => (
+									<Badge key={tag.id} variant="secondary">
+										{tag.name}
+									</Badge>
+								))}
+								{!phrase.tags?.length && (
+									<span className="text-muted-foreground italic">No tags</span>
+								)}
+							</div>
+							<AddTags phrase={phrase} />
+						</div>
+						<Separator />
+						<div className="flex flex-row items-center gap-2">
+							<div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
+								{phrase.avg_difficulty && (
+									<span>Difficulty: {phrase.avg_difficulty.toFixed(1)}/10</span>
+								)}
+								•
+								<span>
+									{phrase.count_learners} learner
+									{phrase.count_learners === 1 ? '' : 's'}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -188,7 +221,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 				<>
 					<Separator />
 					<div className="mt-4 space-y-3">
-						<h3 className="h3">
+						<h3 className="h3 mb-1">
 							Found in {provenanceItems.length}{' '}
 							{provenanceItems.length === 1 ? 'place' : 'places'}
 						</h3>
@@ -237,14 +270,15 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 			<div className="bg-muted/50 space-y-2 rounded-lg p-3">
 				<div className="flex items-start gap-2">
 					<ListMusic className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-					<div className="min-w-0 flex-1">
+					<div className="inline min-w-0 flex-1">
+						<span>Playlist: </span>
 						<Link
 							to="/learn/$lang/playlists/$playlistId"
 							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang, playlistId: item.playlistId }}
 							className="s-link font-medium"
 						>
-							Playlist: {item.title}
+							{item.title}
 						</Link>
 						{item.description && (
 							<p className="text-muted-foreground mt-1 text-sm">
@@ -270,7 +304,8 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 		<div className="bg-muted/50 space-y-2 rounded-lg p-3">
 			<div className="flex items-start gap-2">
 				<MessagesSquare className="text-muted-foreground mt-0.5 h-4 w-4 shrink-0" />
-				<div className="min-w-0 flex-1">
+				<div className="inline min-w-0 flex-1">
+					<span>Thread: </span>
 					<Link
 						to="/learn/$lang/requests/$id"
 						// oxlint-disable-next-line jsx-no-new-object-as-prop
@@ -278,7 +313,7 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 						hash={`#comment-${item.commentId}`}
 						className="s-link font-medium"
 					>
-						Thread: {item.prompt}
+						{item.prompt}
 					</Link>
 					<div className="mt-2">
 						<UidPermalinkInline uid={item.uid} timeValue={item.created_at} />

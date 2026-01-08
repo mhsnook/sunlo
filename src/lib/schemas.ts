@@ -139,6 +139,7 @@ export const PhraseFullSchema = z.object({
 	// added_by_profile: PublicProfileSchema.optional(),
 	avg_difficulty: z.number().nullable().default(null),
 	avg_stability: z.number().nullable().default(null),
+	count_learners: z.number().nullable().default(null),
 	count_active: z.number().nullable().default(null),
 	count_cards: z.number().nullable().default(null),
 	count_learned: z.number().nullable().default(null),

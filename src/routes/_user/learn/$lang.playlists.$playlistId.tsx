@@ -6,7 +6,7 @@ import { useOnePlaylist, useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
-import { HeartPlus } from 'lucide-react'
+import { ExternalLink, HeartPlus } from 'lucide-react'
 import Flagged from '@/components/flagged'
 import Callout from '@/components/ui/callout'
 
@@ -55,8 +55,12 @@ function PlaylistPage() {
 									<div className="flex flex-row items-start justify-start gap-2 text-sm">
 										<span>{i + 1}.</span>
 										{row.link.href ?
-											<a className="s-link-muted shrink-0" href={row.link.href}>
-												[goto clip]
+											<a
+												className="s-link-muted inline-flex shrink-0 items-center gap-1"
+												href={row.link.href}
+											>
+												<span>[ goto clip</span> <ExternalLink size={14} />
+												<span>]</span>
 											</a>
 										:	null}
 										<p className="line-clamp-1">
