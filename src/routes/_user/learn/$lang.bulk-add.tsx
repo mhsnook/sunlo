@@ -29,7 +29,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
-import { useProfile } from '@/hooks/use-profile'
+import { usePreferredTranslationLang } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
@@ -80,8 +80,8 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
-	const { data: profile } = useProfile()
 	const userId = useUserId()
+	const preferredTranslationLang = usePreferredTranslationLang(lang)
 
 	const [successfullyAddedPhrases, setSuccessfullyAddedPhrases] = useState<
 		Array<uuid>
@@ -108,9 +108,7 @@ function BulkAddPhrasesPage() {
 			phrases: [
 				{
 					phrase_text: '',
-					translations: [
-						{ lang: profile?.languages_known[0]?.lang ?? 'eng', text: '' },
-					],
+					translations: [{ lang: preferredTranslationLang, text: '' }],
 				},
 			],
 		},
@@ -156,7 +154,7 @@ function BulkAddPhrasesPage() {
 			const payload = {
 				p_lang: lang,
 				p_phrases: values.phrases,
-				p_user_id: profile!.uid,
+				p_user_id: userId,
 			}
 			const { data, error } = await supabase.rpc('bulk_add_phrases', payload)
 			console.log(`After mutation`, { values, data, error })
@@ -203,7 +201,7 @@ function BulkAddPhrasesPage() {
 			])
 			// Reset the form for the next batch
 			reset({
-				phrases: [getEmptyPhrase(profile?.languages_known[0]?.lang)],
+				phrases: [getEmptyPhrase(preferredTranslationLang)],
 			})
 
 			// Show appropriate success message
@@ -261,9 +259,7 @@ function BulkAddPhrasesPage() {
 								type="button"
 								variant="outline"
 								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onClick={() =>
-									append(getEmptyPhrase(profile?.languages_known[0]?.lang))
-								}
+								onClick={() => append(getEmptyPhrase(preferredTranslationLang))}
 							>
 								<Plus className="mr-2 size-4" /> Add Another Phrase
 							</Button>
@@ -341,6 +337,7 @@ function PhraseEntry({
 	disableRemove: boolean
 }) {
 	const { lang } = Route.useParams()
+	const preferredTranslationLang = usePreferredTranslationLang(lang)
 	const {
 		fields: translationFields,
 		append: appendTranslation,
@@ -349,7 +346,6 @@ function PhraseEntry({
 		control,
 		name: `phrases.${phraseIndex}.translations`,
 	})
-	const { data: profile } = useProfile()
 
 	return (
 		<Card className="space-y-4 p-4">
@@ -442,14 +438,14 @@ function PhraseEntry({
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() =>
 					appendTranslation({
-						lang: profile?.languages_known[0]?.lang ?? 'eng',
+						lang: preferredTranslationLang,
 						text: '',
 					})
 				}
 			>
 				<Plus className="mr-2 size-4" /> Add Translation
 			</Button>
-			<ErrorLabel error={errors?.root} />
+			<ErrorLabel error={errors?.[phraseIndex]?.root} />
 		</Card>
 	)
 }

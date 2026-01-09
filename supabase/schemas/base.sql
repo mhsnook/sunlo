@@ -141,52 +141,6 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text"
 ) owner to "postgres";
 
-create or replace function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text" default null::"text",
-	"translation_text_script" "text" default null::"text",
-	"create_card" boolean default true
-) returns "json" language "plpgsql" as $$
-DECLARE
-    new_phrase public.phrase;
-    new_translation public.phrase_translation;
-    new_card public.user_card;
-
-BEGIN
-    -- Insert a new phrase and get the id
-    INSERT INTO public.phrase (text, lang, text_script)
-    VALUES (phrase_text, phrase_lang, phrase_text_script)
-    RETURNING * INTO new_phrase;
-
-    -- Insert the translation for the new phrase
-    INSERT INTO public.phrase_translation (phrase_id, text, lang, text_script)
-    VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
-    RETURNING * INTO new_translation;
-
-    -- Only insert a new user card if create_card is true
-    IF create_card THEN
-        INSERT INTO public.user_card (phrase_id, status, lang)
-        VALUES (new_phrase.id, 'active', phrase_lang)
-        RETURNING * INTO new_card;
-    END IF;
-
-    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
-END;
-$$;
-
-alter function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text",
-	"create_card" boolean
-) owner to "postgres";
-
 create or replace function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
@@ -422,7 +376,7 @@ alter function "public"."create_playlist_with_links" (
 ) owner to "postgres";
 
 create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
-	return Math.min(Math.max(difficulty, 1.0), 10.0);
+  return Math.min(Math.max(difficulty, 1.0), 10.0);
 $$;
 
 alter function "public"."fsrs_clamp_d" ("difficulty" numeric) owner to "postgres";
@@ -1491,6 +1445,7 @@ create table if not exists "public"."user_deck" (
 	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
 	"archived" boolean default false not null,
 	"daily_review_goal" smallint default 15 not null,
+	"preferred_translation_lang" character varying(3) default null::character varying,
 	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
 );
 

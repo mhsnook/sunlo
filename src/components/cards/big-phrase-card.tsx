@@ -43,6 +43,7 @@ import {
 } from '@/hooks/use-language'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
+import { ago } from '@/lib/dayjs'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -183,14 +184,37 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						<Separator />
 						<div className="flex flex-row items-center gap-2">
 							<div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
-								{phrase.avg_difficulty && (
-									<span>Difficulty: {phrase.avg_difficulty.toFixed(1)}/10</span>
-								)}
-								•
-								<span>
-									{phrase.count_learners} learner
-									{phrase.count_learners === 1 ? '' : 's'}
+								<span title="Shows the average difficulty for this phrase across all learners">
+									Difficulty:{' '}
+									{!phrase.avg_difficulty ?
+										'unknown'
+									:	<span>
+											<span className="font-bold">
+												{phrase.avg_difficulty?.toFixed(1) ?? '?'}
+											</span>{' '}
+											/ 10
+										</span>
+									}
 								</span>
+								<span>•</span>
+								<span>
+									<span className={phrase.count_learners ? 'font-bold' : ''}>
+										{' '}
+										{phrase.count_learners} learner
+										{phrase.count_learners === 1 ? '' : 's'}
+									</span>
+								</span>
+								{phrase.card ?
+									<>
+										<span>•</span>
+										<span>
+											Your last review:{' '}
+											<span className="font-bold">
+												{ago(phrase.card?.last_reviewed_at)}
+											</span>
+										</span>
+									</>
+								:	null}
 							</div>
 						</div>
 					</div>

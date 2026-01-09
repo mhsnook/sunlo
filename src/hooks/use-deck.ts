@@ -13,6 +13,7 @@ import {
 } from '@/lib/collections'
 import { inLastWeek } from '@/lib/dayjs'
 import { mapArrays, sortDecksByActivity } from '@/lib/utils'
+import { useProfile } from './use-profile'
 
 dayjs.extend(isoWeek)
 
@@ -181,4 +182,25 @@ export const useDeckPids = (lang: string) => {
 		}),
 		[data, isLoading]
 	)
+}
+
+/**
+ * Returns the preferred translation language for a deck.
+ * Priority:
+ * 1. Deck-specific preferred_translation_lang (if set)
+ * 2. Profile's first known language
+ * 3. Fallback to 'eng'
+ */
+export const usePreferredTranslationLang = (lang: string): string => {
+	const { data: deck } = useDeckMeta(lang)
+	const { data: profile } = useProfile()
+
+	return useMemo(() => {
+		// Deck-specific preference takes priority
+		if (deck?.preferred_translation_lang) {
+			return deck.preferred_translation_lang
+		}
+		// Global default from profile
+		return profile?.languages_known[0]?.lang ?? 'eng'
+	}, [deck, profile])
 }

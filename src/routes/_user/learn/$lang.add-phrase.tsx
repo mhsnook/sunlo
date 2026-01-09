@@ -42,8 +42,11 @@ import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
-import { useProfile } from '@/hooks/use-profile'
-import { useDeckMeta, useDecks } from '@/hooks/use-deck'
+import {
+	useDeckMeta,
+	useDecks,
+	usePreferredTranslationLang,
+} from '@/hooks/use-deck'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 
@@ -84,8 +87,8 @@ function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
-	const { data: profile } = useProfile()
 	const userId = useUserId()
+	const preferredTranslationLang = usePreferredTranslationLang(lang)
 	const searchPlusText = useCallback(
 		(search: SearchParams) => ({
 			...search,
@@ -118,7 +121,7 @@ function AddPhraseTab() {
 		resolver: zodResolver(addPhraseSchema),
 		defaultValues: {
 			phrase_text: searchPhrase,
-			translation_lang: profile?.languages_known[0]?.lang ?? 'eng',
+			translation_lang: preferredTranslationLang,
 		},
 	})
 
@@ -230,9 +233,7 @@ function AddPhraseTab() {
 				phrase_text: '',
 				translation_text: '',
 				translation_lang:
-					rpcResult.translation.lang ??
-					profile?.languages_known[0]?.lang ??
-					'eng',
+					rpcResult.translation.lang ?? preferredTranslationLang,
 			})
 
 			// Show appropriate success message
