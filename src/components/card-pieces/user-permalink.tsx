@@ -84,7 +84,7 @@ export function UidPermalink({
 								className="s-link-hidden"
 							>
 								{action && (
-									<span className="text-muted-foreground"> {action}</span>
+									<span className="text-muted-foreground"> {action} </span>
 								)}
 								{ago(timeValue)}
 							</Link>

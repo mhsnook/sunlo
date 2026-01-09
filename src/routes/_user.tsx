@@ -8,6 +8,7 @@ import {
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
+// Note: redirect is still used in the loader for getting-started check
 
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
@@ -26,28 +27,21 @@ import {
 import { ChatMessageSchema } from '@/lib/schemas'
 
 export const Route = createFileRoute('/_user')({
-	beforeLoad: ({ context, location }) => {
-		// If the user is logged out, redirect them to the login page
-		// console.log(`beforeLoad auth context:`, context.auth)
-		if (!context.auth.isAuth) {
-			throw redirect({
-				to: '/login',
-				search: {
-					// Use the current location to power a redirect after login
-					// (Do not use `router.state.resolvedLocation` as it can
-					// potentially lag behind the actual current location)
-					redirectedFrom: location.href,
-				},
-			})
-		}
+	beforeLoad: ({ context }) => {
+		// Auth is optional - RLS handles data security
+		// Individual routes can require auth if needed
 		return {
+			auth: context.auth,
 			titleBar: {
 				title: 'Learning Home',
 				subtitle: 'Which deck are we studying today?',
 			},
 		}
 	},
-	loader: async ({ location }) => {
+	loader: async ({ context, location }) => {
+		// If not authenticated, skip user-specific loading
+		if (!context.auth.isAuth) return
+
 		// all set: exit early
 		if (myProfileCollection.size === 1) return
 		// some weird: start over
@@ -103,7 +97,11 @@ function UserLayout() {
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
 	const userId = useUserId()
+
+	// Only set up realtime subscriptions when authenticated
 	useEffect(() => {
+		if (!userId) return
+
 		const friendRequestChannel = supabase
 			.channel('friend-request-action-realtime')
 			.on(

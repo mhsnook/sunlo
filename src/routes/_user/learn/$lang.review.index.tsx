@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 import languages from '@/lib/languages'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -49,7 +50,24 @@ export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
 })
 
+// Outer component handles auth check
 function ReviewPageSetup() {
+	const isAuth = useIsAuthenticated()
+
+	// Require auth for review
+	if (!isAuth) {
+		return (
+			<RequireAuth message="You need to be logged in to review your flashcards.">
+				<div />
+			</RequireAuth>
+		)
+	}
+
+	return <ReviewPageContent />
+}
+
+// Inner component contains all the hooks - only rendered when authenticated
+function ReviewPageContent() {
 	const { lang } = Route.useParams()
 	const dayString = useReviewDayString()
 	const stage = useReviewStage()
@@ -61,12 +79,7 @@ function ReviewPageSetup() {
 	const initLocalReviewState = useInitialiseReviewStore()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
 
-	if (meta?.lang !== lang)
-		throw new Error("Attempted to build a review but we can't find the deck")
-	if (!deckPids || !recs)
-		throw new Error('Pids/recs should not be null here :/, even once')
-
-	const today_active = deckPids.today_active
+	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
@@ -75,37 +88,39 @@ function ReviewPageSetup() {
 		() =>
 			arrayDifference(
 				[] /* friendRecsFromDB */,
-				[deckPids.reviewed_or_inactive]
+				[deckPids?.reviewed_or_inactive ?? []]
 			),
-		[deckPids.reviewed_or_inactive /*, friendRecsFromDB */]
+		[deckPids?.reviewed_or_inactive /*, friendRecsFromDB */]
 	)
-	/*const [friendRecsSelected, setFriendRecsSelected] = useState<pids>(() =>
-		friendRecsFiltered.slice(0, countNeeded)
-	)*/
-	const friendRecsSelected = friendRecsFiltered.slice(0, meta.daily_review_goal)
 
-	const countNeeded2 = min0(meta.daily_review_goal - friendRecsSelected.length)
+	const friendRecsSelected = useMemo(
+		() => friendRecsFiltered.slice(0, meta?.daily_review_goal ?? 0),
+		[friendRecsFiltered, meta?.daily_review_goal]
+	)
+
+	const countNeeded2 = min0(
+		(meta?.daily_review_goal ?? 0) - friendRecsSelected.length
+	)
 
 	// 3. algo recs set by user
 	const algoRecsFiltered = useMemo(
 		() => ({
-			popular: arrayDifference(recs.top8.popular, [
-				deckPids.reviewed_or_inactive,
+			popular: arrayDifference(recs?.top8.popular ?? [], [
+				deckPids?.reviewed_or_inactive ?? [],
 				friendRecsFiltered,
 			]),
-			easiest: arrayDifference(recs.top8.easiest, [
-				deckPids.reviewed_or_inactive,
+			easiest: arrayDifference(recs?.top8.easiest ?? [], [
+				deckPids?.reviewed_or_inactive ?? [],
 				friendRecsFiltered,
 			]),
-			newest: arrayDifference(recs.top8.newest, [
-				deckPids.reviewed_or_inactive,
+			newest: arrayDifference(recs?.top8.newest ?? [], [
+				deckPids?.reviewed_or_inactive ?? [],
 				friendRecsFiltered,
 			]),
 		}),
-		[recs.top8, deckPids.reviewed_or_inactive, friendRecsFiltered]
+		[recs?.top8, deckPids?.reviewed_or_inactive, friendRecsFiltered]
 	)
 
-	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
 	const algosInitialCount =
 		algoRecsFiltered.popular.length +
@@ -117,7 +132,7 @@ function ReviewPageSetup() {
 	// pull new unreviewed cards, excluding the friend recs we already got,
 	// and limiting to the number we need from the deck
 	const cardsUnreviewedActiveSelected = useMemo(() => {
-		return arrayDifference(deckPids.unreviewed_active, [
+		return arrayDifference(deckPids?.unreviewed_active ?? [], [
 			friendRecsSelected,
 			algoRecsSelected,
 		]).slice(0, countNeeded3)
@@ -125,7 +140,7 @@ function ReviewPageSetup() {
 		countNeeded3,
 		friendRecsSelected,
 		algoRecsSelected,
-		deckPids.unreviewed_active,
+		deckPids?.unreviewed_active,
 	])
 
 	// the user does not get to preview or select these.
@@ -139,7 +154,7 @@ function ReviewPageSetup() {
 	// sorting by pid is randomish, but stable
 	const libraryPhrasesSelected = useMemo(
 		() =>
-			arrayDifference(recs.language_selectables, [
+			arrayDifference(recs?.language_selectables ?? [], [
 				friendRecsSelected,
 				algoRecsSelected,
 				cardsUnreviewedActiveSelected,
@@ -147,7 +162,7 @@ function ReviewPageSetup() {
 				.toSorted((a, b) => (a > b ? -1 : 1))
 				.slice(0, countNeeded4),
 		[
-			recs.language_selectables,
+			recs?.language_selectables,
 			friendRecsSelected,
 			algoRecsSelected,
 			cardsUnreviewedActiveSelected,
@@ -173,13 +188,13 @@ function ReviewPageSetup() {
 	)
 
 	const cardsToCreate = useMemo(
-		() => arrayDifference(freshCards, [deckPids.all]),
-		[deckPids.all, freshCards]
+		() => arrayDifference(freshCards, [deckPids?.all ?? []]),
+		[deckPids?.all, freshCards]
 	)
 
 	const allCardsForToday = useMemo(
-		() => arrayUnion([freshCards, today_active]),
-		[freshCards, today_active]
+		() => arrayUnion([freshCards, deckPids?.today_active ?? []]),
+		[freshCards, deckPids?.today_active]
 	)
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
@@ -272,6 +287,12 @@ function ReviewPageSetup() {
 			)
 		},
 	})
+
+	// Data validation - these checks happen after all hooks
+	if (meta?.lang !== lang)
+		throw new Error("Attempted to build a review but we can't find the deck")
+	if (!deckPids || !recs)
+		throw new Error('Pids/recs should not be null here :/, even once')
 
 	// when the manifest is present, skip this page, go to a better one
 	if (stats?.count)

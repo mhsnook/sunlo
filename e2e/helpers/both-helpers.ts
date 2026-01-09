@@ -14,7 +14,7 @@ export async function getReviewSessionBoth(
 	daySession: string
 ) {
 	// Fetch from DB
-	const { data: fromDB } = await getReviewSessionState(uid, lang)
+	const { data: fromDB } = await getReviewSessionState(uid, lang, daySession)
 	const parsedDB = fromDB ? DailyReviewStateSchema.parse(fromDB) : null
 
 	// Fetch from local collection
