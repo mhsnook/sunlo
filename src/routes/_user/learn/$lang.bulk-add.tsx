@@ -30,6 +30,7 @@ import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
 import { usePreferredTranslationLang } from '@/hooks/use-deck'
+import { useUserId } from '@/lib/use-auth'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
@@ -40,7 +41,6 @@ import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import { useDeckMeta, useDecks } from '@/hooks/use-deck'
-import { useUserId } from '@/lib/use-auth'
 
 type BulkAddPhrasesResponse = {
 	phrases: Tables<'phrase'>[]
