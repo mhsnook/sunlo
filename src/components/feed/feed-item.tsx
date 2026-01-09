@@ -4,12 +4,14 @@ import { FeedPlaylistItem } from './feed-playlist-item'
 import { FeedPhraseItem } from './feed-phrase-item'
 import { FeedPhraseGroupItem } from './feed-phrase-group-item'
 
-export function FeedItem({
-	item,
-}: {
-	item: FeedActivityType | { type: 'phrase_group'; items: FeedActivityType[] }
-}) {
-	if ('type' in item && item.type === 'phrase_group') {
+type PhraseGroup = {
+	type: 'phrase_group'
+	items: FeedActivityType[]
+	earliest_created_at: string
+}
+
+export function FeedItem({ item }: { item: FeedActivityType | PhraseGroup }) {
+	if ('earliest_created_at' in item) {
 		return <FeedPhraseGroupItem items={item.items} />
 	}
 
