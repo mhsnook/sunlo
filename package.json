@@ -22,7 +22,9 @@
 		"types:production": "supabase gen types typescript --project-id hepudeougzlgnuqvybrj > ./src/types/supabase.ts",
 		"seeds:data": "supabase db dump --data-only --local > supabase/seed.sql",
 		"seeds:schema": "supabase db dump --local > supabase/schemas/base.sql && pnpm types && pnpm format",
-		"seeds:apply": "supabase db reset",
+		"db-reset": "supabase db reset",
+		"db-schema": "pnpm run seeds:schema",
+		"db-reset-schema": "supabase db reset && pnpm run seeds:schema",
 		"prepare": "husky"
 	},
 	"dependencies": {

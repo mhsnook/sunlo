@@ -9,7 +9,7 @@ import { useDebounce } from '@uidotdev/usehooks'
 import { NotebookPen, Search } from 'lucide-react'
 
 import type { Tables } from '@/types/supabase'
-import type { RPCFunctions, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import {
 	Card,
 	CardContent,
@@ -20,6 +20,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
 import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
@@ -28,15 +29,26 @@ import TranslationLanguageField from '@/components/fields/translation-language-f
 import { buttonVariants } from '@/components/ui/button-variants'
 import {
 	CardMetaSchema,
+	DeckMetaSchema,
 	PhraseFullSchema,
 	TranslationSchema,
 } from '@/lib/schemas'
-import { cardsCollection, phrasesCollection } from '@/lib/collections'
+import {
+	cardsCollection,
+	decksCollection,
+	phrasesCollection,
+} from '@/lib/collections'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
-import { usePreferredTranslationLang } from '@/hooks/use-deck'
+import {
+	useDeckMeta,
+	useDecks,
+	usePreferredTranslationLang,
+} from '@/hooks/use-deck'
+import { useUserId } from '@/lib/use-auth'
+import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 
 export interface SearchParams {
 	text?: string
@@ -75,6 +87,7 @@ function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
+	const userId = useUserId()
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
 	const searchPlusText = useCallback(
 		(search: SearchParams) => ({
@@ -85,6 +98,16 @@ function AddPhraseTab() {
 	)
 
 	const [newPhrases, setNewPhrases] = useState<uuid[]>([])
+
+	// Deck status detection
+	const { data: deck } = useDeckMeta(lang)
+	const { data: allDecks } = useDecks()
+	const hasActiveDeck = !!deck && !deck.archived
+	const hasArchivedDeck = !!deck && deck.archived
+	const noDeck = !deck
+	const showDeckCheckbox = noDeck || hasArchivedDeck
+	const [shouldCreateOrReactivateDeck, setShouldCreateOrReactivateDeck] =
+		useState(true)
 
 	const searchPhrase = text || ''
 	const {
@@ -121,41 +144,116 @@ function AddPhraseTab() {
 	const invalidateFeed = useInvalidateFeed()
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
-			const ins: RPCFunctions['add_phrase_translation_card']['Args'] = {
-				phrase_lang: lang,
-				...variables,
+			// Determine if we should create a card
+			// Only create card if user has active deck OR is creating/reactivating one
+			const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
+
+			// Handle deck creation/reactivation if needed
+			let newDeck: Tables<'user_deck'> | null = null
+			if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+				if (hasArchivedDeck) {
+					// Reactivate archived deck
+					const { data } = await supabase
+						.from('user_deck')
+						.update({ archived: false })
+						.eq('lang', lang)
+						.eq('uid', userId)
+						.select()
+						.maybeSingle()
+						.throwOnError()
+					newDeck = data
+				} else if (noDeck) {
+					// Create new deck
+					const { data } = await supabase
+						.from('user_deck')
+						.insert({ lang })
+						.select()
+						.maybeSingle()
+						.throwOnError()
+					newDeck = data
+				}
 			}
+
+			// Add phrase (and optionally card)
 			const { data } = await supabase
-				.rpc('add_phrase_translation_card', ins)
+				.rpc('add_phrase_translation_card', {
+					phrase_lang: lang,
+					phrase_text: variables.phrase_text,
+					translation_lang: variables.translation_lang,
+					translation_text: variables.translation_text,
+					create_card: shouldCreateCard,
+				})
 				.throwOnError()
 
-			return data as {
-				phrase: Tables<'phrase'>
-				translation: Tables<'phrase_translation'>
-				card: Tables<'user_card'>
+			return {
+				rpcResult: data as {
+					phrase: Tables<'phrase'>
+					translation: Tables<'phrase_translation'>
+					card: Tables<'user_card'> | null
+				},
+				newDeck,
+				createdCard: shouldCreateCard,
 			}
 		},
-		onSuccess: (data) => {
-			if (!data)
+		onSuccess: ({ rpcResult, newDeck, createdCard }) => {
+			if (!rpcResult)
 				throw new Error('No data returned from add_phrase_translation_card')
+
+			// Update phrase collection
 			phrasesCollection.utils.writeInsert(
 				PhraseFullSchema.parse({
-					...data.phrase,
-					translations: [TranslationSchema.parse(data.translation)],
+					...rpcResult.phrase,
+					translations: [TranslationSchema.parse(rpcResult.translation)],
 				})
 			)
-			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+
+			// Update deck collection if we created/reactivated one
+			if (newDeck) {
+				const deckWithTheme = {
+					...newDeck,
+					language: languages[newDeck.lang],
+					theme: (allDecks?.length ?? 0) % 5,
+				}
+				if (hasArchivedDeck) {
+					decksCollection.utils.writeUpdate(DeckMetaSchema.parse(deckWithTheme))
+				} else {
+					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
+				}
+			}
+
+			// Update card collection if we created a card
+			if (createdCard && rpcResult.card) {
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(rpcResult.card))
+			}
+
 			invalidateFeed(lang)
-			console.log(`Success:`, data)
-			setNewPhrases((prev) => [data.phrase.id, ...prev])
+			console.log(`Success:`, rpcResult)
+			setNewPhrases((prev) => [rpcResult.phrase.id, ...prev])
 			reset({
 				phrase_text: '',
 				translation_text: '',
-				translation_lang: data.translation.lang ?? preferredTranslationLang,
+				translation_lang:
+					rpcResult.translation.lang ?? preferredTranslationLang,
 			})
-			toast.success(
-				'New phrase has been added to the public library and will appear in your next review'
-			)
+
+			// Show appropriate success message
+			if (newDeck && createdCard) {
+				const deckAction =
+					hasArchivedDeck ?
+						`re-activated your ${languages[lang]} deck`
+					:	`started learning ${languages[lang]}`
+				toast.success(
+					`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
+				)
+			} else if (createdCard) {
+				toast.success(
+					'New phrase has been added to the public library and will appear in your next review'
+				)
+			} else {
+				toast.success(
+					'Phrase has been added to the public library (not added to your deck)'
+				)
+			}
 		},
 		onError: (error) => {
 			toast.error(
@@ -205,6 +303,33 @@ function AddPhraseTab() {
 							error={errors.translation_lang}
 							control={control}
 						/>
+						{showDeckCheckbox && (
+							<Item variant="outline">
+								<ItemMedia>
+									<Checkbox
+										id="create-deck"
+										checked={shouldCreateOrReactivateDeck}
+										className="mt-2 mb-3"
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
+										onCheckedChange={(checked) =>
+											setShouldCreateOrReactivateDeck(checked === true)
+										}
+									/>
+								</ItemMedia>
+								<ItemContent>
+									<Label
+										htmlFor="create-deck"
+										className="cursor-pointer text-sm font-normal"
+									>
+										You are not currently learning working on an{' '}
+										{languages[lang]} deck.{' '}
+										{hasArchivedDeck ?
+											`Re-activate ${languages[lang]} deck`
+										:	`Start learning ${languages[lang]}?`}
+									</Label>
+								</ItemContent>
+							</Item>
+						)}
 						<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
 							<Button
 								type="submit"

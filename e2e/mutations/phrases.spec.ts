@@ -19,9 +19,7 @@ test.describe.serial('Phrase Mutations', () => {
 		await page.fill('textarea[placeholder*="text of the phrase"]', phraseText)
 		await page.fill('textarea[name="translation_text"]', phraseTranslation)
 
-		// 4. Set translation language (it's a combobox, not a select)
-		await page.click('button[role="combobox"]:has-text("Select language")')
-		await page.click('text=English (eng)')
+		// 4. Translation language defaults to English from user profile, no action needed
 
 		// 5. Submit the form
 		await page.click('button[type="submit"]:has-text("Save and add another")')
