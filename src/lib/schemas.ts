@@ -208,6 +208,7 @@ export const DeckMetaRawSchema = z.object({
 	archived: z.boolean(),
 	daily_review_goal: z.number(),
 	learning_goal: LearningGoalEnumSchema,
+	preferred_translation_lang: LangSchema.nullable().default(null),
 	cards_active: z.number().default(0),
 	cards_learned: z.number().default(0),
 	cards_skipped: z.number().default(0),

@@ -1188,6 +1188,7 @@ export type Database = {
 					id: string
 					lang: string
 					learning_goal: Database['public']['Enums']['learning_goal']
+					preferred_translation_lang: string | null
 					uid: string
 				}
 				Insert: {
@@ -1197,6 +1198,7 @@ export type Database = {
 					id?: string
 					lang: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
+					preferred_translation_lang?: string | null
 					uid?: string
 				}
 				Update: {
@@ -1206,6 +1208,7 @@ export type Database = {
 					id?: string
 					lang?: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
+					preferred_translation_lang?: string | null
 					uid?: string
 				}
 				Relationships: [

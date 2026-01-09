@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback } from 'react'
+import { CSSProperties, useCallback, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -26,8 +26,12 @@ import {
 	FancySelectField,
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
+import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { decksCollection } from '@/lib/collections'
 import { Tables } from '@/types/supabase'
+import { useProfile } from '@/hooks/use-profile'
+import languages from '@/lib/languages'
+import { Label } from '@/components/ui/label'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -55,6 +59,10 @@ function DeckSettingsPage() {
 						<DailyGoalForm
 							lang={meta.lang}
 							daily_review_goal={meta.daily_review_goal}
+						/>
+						<PreferredTranslationLanguageForm
+							lang={meta.lang}
+							preferred_translation_lang={meta.preferred_translation_lang}
 						/>
 					</>
 				:	null}
@@ -296,6 +304,127 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 						</Button>
 					</div>
 				</form>
+			</CardContent>
+		</div>
+	)
+}
+
+type PreferredTranslationLangFormInputs = {
+	preferred_translation_lang: string | null
+	lang: string
+}
+
+function PreferredTranslationLanguageForm({
+	preferred_translation_lang,
+	lang,
+}: PreferredTranslationLangFormInputs) {
+	const userId = useUserId()
+	const { data: profile } = useProfile()
+	const [selectedLang, setSelectedLang] = useState<string | null>(
+		preferred_translation_lang
+	)
+
+	const profileDefaultLang = profile?.languages_known[0]?.lang ?? null
+
+	const updatePreferredLangMutation = useMutation<
+		Tables<'user_deck'>,
+		PostgrestError,
+		{ preferred_translation_lang: string | null }
+	>({
+		mutationKey: ['user', lang, 'deck', 'settings', 'preferred-translation'],
+		mutationFn: async (values) => {
+			console.log(`start updatePreferredLangMutation`, { values })
+			const { data } = await supabase
+				.from('user_deck')
+				.update({
+					preferred_translation_lang: values.preferred_translation_lang,
+				})
+				.eq('lang', lang)
+				.eq('uid', userId)
+				.throwOnError()
+				.select()
+			if (!data)
+				throw new Error(
+					'Failed to update preferred translation language: did not find deck'
+				)
+			return data[0]
+		},
+		onSuccess: (data) => {
+			decksCollection.utils.writeUpdate(data)
+			setSelectedLang(data.preferred_translation_lang)
+			toast.success('Your preferred translation language has been updated.')
+		},
+		onError: (error) => {
+			toast.error(
+				'There was some error; please refresh the page to see if settings updated correctly.'
+			)
+			console.log(`Preferred translation lang update error`, { error })
+		},
+	})
+
+	const isDirty = selectedLang !== preferred_translation_lang
+
+	const handleSave = useCallback(() => {
+		updatePreferredLangMutation.mutate({
+			preferred_translation_lang: selectedLang,
+		})
+	}, [selectedLang, updatePreferredLangMutation])
+
+	const handleReset = useCallback(() => {
+		setSelectedLang(preferred_translation_lang)
+	}, [preferred_translation_lang])
+
+	const handleClearOverride = useCallback(() => {
+		updatePreferredLangMutation.mutate({
+			preferred_translation_lang: null,
+		})
+	}, [updatePreferredLangMutation])
+
+	const handleSetLang = useCallback(
+		(val: string) => setSelectedLang(val || null),
+		[]
+	)
+
+	return (
+		<div className="rounded shadow">
+			<CardHeader className="pb-0">
+				<CardTitle>
+					<span className="h4">Preferred translation language</span>
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<p className="text-muted-foreground text-sm">
+					Choose which language translations are shown first when studying this
+					deck. If not set, your profile default will be used.
+				</p>
+				{profileDefaultLang && (
+					<p className="text-muted-foreground text-sm">
+						Your profile default:{' '}
+						<strong>
+							{languages[profileDefaultLang] ?? profileDefaultLang}
+						</strong>
+					</p>
+				)}
+				<div className="space-y-2">
+					<Label>Translation language for this deck</Label>
+					<SelectOneOfYourLanguages
+						value={selectedLang ?? ''}
+						setValue={handleSetLang}
+					/>
+				</div>
+				<div className="flex flex-wrap gap-2">
+					<Button onClick={handleSave} disabled={!isDirty}>
+						Save preference
+					</Button>
+					<Button variant="secondary" onClick={handleReset} disabled={!isDirty}>
+						Reset
+					</Button>
+					{preferred_translation_lang && (
+						<Button variant="outline" onClick={handleClearOverride}>
+							Use profile default
+						</Button>
+					)}
+				</div>
 			</CardContent>
 		</div>
 	)
