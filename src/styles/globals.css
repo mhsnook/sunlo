@@ -7,8 +7,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--hue: 260;
-	--hue-off: 220;
+	--hue: 275;
+	--hue-off: 235;
 	--hue-accent: 160;
 	--s-high: 83%;
 	--s-low: 20%;
