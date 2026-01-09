@@ -36,7 +36,7 @@ import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
-import { useProfile } from '@/hooks/use-profile'
+import { usePreferredTranslationLang } from '@/hooks/use-deck'
 
 export interface SearchParams {
 	text?: string
@@ -75,7 +75,7 @@ function AddPhraseTab() {
 	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
-	const { data: profile } = useProfile()
+	const preferredTranslationLang = usePreferredTranslationLang(lang)
 	const searchPlusText = useCallback(
 		(search: SearchParams) => ({
 			...search,
@@ -98,7 +98,7 @@ function AddPhraseTab() {
 		resolver: zodResolver(addPhraseSchema),
 		defaultValues: {
 			phrase_text: searchPhrase,
-			translation_lang: profile?.languages_known[0]?.lang ?? 'eng',
+			translation_lang: preferredTranslationLang,
 		},
 	})
 
@@ -151,8 +151,7 @@ function AddPhraseTab() {
 			reset({
 				phrase_text: '',
 				translation_text: '',
-				translation_lang:
-					data.translation.lang ?? profile?.languages_known[0]?.lang ?? 'eng',
+				translation_lang: data.translation.lang ?? preferredTranslationLang,
 			})
 			toast.success(
 				'New phrase has been added to the public library and will appear in your next review'
