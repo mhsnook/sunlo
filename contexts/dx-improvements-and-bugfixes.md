@@ -289,78 +289,6 @@ NOTE FROM CODING AGENT:
 
 LESSONS LEARNED:
 
-### Fix Embed Bug
-
-STATUS: COMPLETE
-COMPLEXITY: 1
-DIFFICULTY: 1
-
-DESCRIPTION FROM HUMAN MANAGER:
-I'm getting this error when I try to load a playlist with a youtube embed.
-
-```
-www-embed-player.js:2362 Uncaught SecurityError: Failed to read the 'caches' property from 'Window': Cache storage is disabled because the context is sandboxed and lacks the 'allow-same-origin' flag.
-(anonymous) @ www-embed-player.js:2362Understand this error
-2lk97RmZNf8:10 Uncaught ReferenceError: writeEmbed is not defined
-    at 2lk97RmZNf8:10:1479
-```
-
-NOTE FROM CODING AGENT:
-✅ COMPLETED - Fixed YouTube embed SecurityError by updating iframe sandbox attributes in `/src/components/playlists/playlist-embed.tsx`.
-
-The error was caused by restrictive iframe sandbox settings. The `sandbox="allow-scripts"` attribute was blocking YouTube's cache storage access. Added `allow-same-origin` flag to resolve this.
-
-Changes made:
-
-- Updated YouTube iframe: `sandbox="allow-scripts allow-same-origin"`
-- Updated Spotify iframe: `sandbox="allow-scripts allow-same-origin"`
-- Updated SoundCloud iframe: `sandbox="allow-scripts allow-same-origin"`
-
-This is a standard web security pattern for embedded content that needs proper functionality while maintaining reasonable security boundaries.
-
-Code formatted and ready to commit.
-
-LESSONS LEARNED:
-
-- iframe sandbox attributes need both `allow-scripts` and `allow-same-origin` for embedded players to access browser APIs like cache storage
-- The error specifically mentioned "lacks the 'allow-same-origin' flag" which made diagnosis straightforward
-- Applied the fix consistently across all three embed types (YouTube, Spotify, SoundCloud)
-
-### Feature: The translation language select box should default to your first language
-
-STATUS: COMPLETE
-COMPLEXITY: 1
-DIFFICULTY: 1
-
-DESCRIPTION FROM HUMAN MANAGER:
-The translation language select box should default to your first language.
-
-NOTE FROM CODING AGENT:
-✅ COMPLETED - Updated all forms using `TranslationLanguageField` to default to the user's first language from their profile.
-
-Changes made:
-
-1. Updated `/routes/_user/learn/$lang.add-phrase.tsx`:
-   - Added `useProfile()` hook
-   - Set default value: `translation_lang: profile?.languages_known[0]?.lang ?? 'eng'`
-   - Also updated the reset() call to preserve this default after successful submission
-2. Updated `/components/card-pieces/add-translations.tsx`:
-   - Added `useProfile()` hook
-   - Set same default value for translation_lang
-3. Updated `/components/phrases/inline-phrase-creator.tsx`:
-   - Added `useProfile()` hook
-   - Set same default value for translation_lang
-
-The pattern follows what's already used in `$lang.bulk-add.tsx`. The first language in `profile.languages_known` array is considered the user's primary language, with a fallback to 'eng' if not available.
-
-Code formatted and ready.
-
-LESSONS LEARNED:
-
-- The user's profile has `languages_known` array where the first element is their primary language
-- This pattern (`profile?.languages_known[0]?.lang ?? 'eng'`) is already used elsewhere in the codebase for consistency
-- All three components that use TranslationLanguageField needed to be updated for a complete fix
-
 ### Deck-Specific Setting for "First Language"
 
 STATUS: PENDING
@@ -469,7 +397,7 @@ In `/src/lib/mutate-deck.ts`, when creating a new deck:
 
 ```typescript
 .insert({
-  lang,
+	lang,
   preferred_translation_lang: profile?.languages_known[0]?.lang ?? 'eng'
 })
 ```
@@ -498,38 +426,6 @@ In `/src/lib/mutate-deck.ts`, when creating a new deck:
 
 LESSONS LEARNED:
 
-### DX: NPM Script to run tests, accept args for which project and which test
-
-STATUS: COMPLETE
-COMPLEXITY: 1
-DIFFICULTY: 1
-
-DESCRIPTION FROM HUMAN MANAGER:
-The NPM Scripts to run playwright tests should accept args for which project and which test to run, to make it easier to do development even if you only have access to the scripts in packages.json.
-
-NOTE FROM CODING AGENT:
-✅ COMPLETED - Added convenience scripts for each browser project (chromium, firefox, webkit) to package.json. The scripts now support:
-
-- `pnpm test` - runs all tests (can add args: `pnpm test <file>` or `pnpm test --project=chromium <file>`)
-- `pnpm test:chromium <file>` - runs specific file in chromium only
-- `pnpm test:firefox <file>` - runs specific file in firefox only
-- `pnpm test:webkit <file>` - runs specific file in webkit only
-- `pnpm test:ui` - opens Playwright UI mode
-
-Examples:
-
-- Run specific file: `pnpm test e2e/mutations/cards.spec.ts`
-- Run specific file in chromium: `pnpm test:chromium e2e/mutations/cards.spec.ts`
-- Run with any playwright args: `pnpm test --headed e2e/login-flow.spec.ts`
-
-Tested and verified working.
-
-LESSONS LEARNED:
-
-- PNPM naturally passes arguments through to scripts, so `pnpm test <args>` just works
-- Adding browser-specific convenience scripts makes it more discoverable
-- Both `pnpm script args` and `pnpm script -- args` work (the `--` separator is optional with pnpm)
-
 ### Estimated Difficulty: 2
 
 - Data mostly exists in views/tables
@@ -546,3 +442,6 @@ LESSONS LEARNED:
 - [x] Comment dialog should assume a new phrase is the only phrase
 - [x] Fix Languages-Known ESLint errors
 - [x] Fix Composite-Pids ESLint errors
+- [x] NPM Script to run tests, accept args for which project and which test
+- [x] Fix Embed Bug with `allow-same-origin`
+- [x] The translation language select box should default to your first language
