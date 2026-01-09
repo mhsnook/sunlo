@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut } from 'lucide-react'
+import { ChevronsUpDown, LogIn, LogOut, UserPlus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
 	DropdownMenu,
@@ -51,7 +51,30 @@ export function NavUser() {
 		},
 	})
 
-	if (!profile) return null
+	// Show login/signup buttons when not authenticated
+	if (!isAuth || !profile) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<SidebarMenuButton asChild>
+						<Link to="/login" onClick={setClosedMobile}>
+							<LogIn className="size-4" />
+							<span>Log in</span>
+						</Link>
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+				<SidebarMenuItem>
+					<SidebarMenuButton asChild>
+						<Link to="/signup" onClick={setClosedMobile}>
+							<UserPlus className="size-4" />
+							<span>Sign up</span>
+						</Link>
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		)
+	}
+
 	const { username, avatar_path } = profile
 	const avatarUrl = avatarUrlify(avatar_path)
 

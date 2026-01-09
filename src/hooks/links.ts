@@ -242,6 +242,15 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: MessageCircleHeart,
 		},
+		'/learn/$lang/playlists': {
+			name: 'Playlists',
+			title: `${languages[lang]} Playlists`,
+			link: {
+				to: '/learn/$lang/playlists',
+				params: { lang },
+			},
+			Icon: Logs,
+		},
 	}
 
 	return { ...constantLinks, ...languageLinks }
@@ -255,5 +264,5 @@ export function useLinks(paths: Array<string> | undefined) {
 export function makeLinks(paths: Array<string> | undefined, lang?: string) {
 	if (!paths) return []
 	const l = links(lang)
-	return paths.map((p) => l[p])
+	return paths.map((p) => l[p]).filter(Boolean)
 }

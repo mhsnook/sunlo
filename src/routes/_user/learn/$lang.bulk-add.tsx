@@ -15,6 +15,7 @@ import toast from 'react-hot-toast'
 import { Plus, Trash2 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
+import { RequireAuth } from '@/components/require-auth'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -223,96 +224,102 @@ function BulkAddPhrasesPage() {
 	})
 
 	return (
-		<main style={style}>
-			<Card>
-				<CardHeader>
-					<CardTitle>
-						Bulk Add Phrases to the {languages[lang]} Library
-					</CardTitle>
-					<CardDescription>
-						Add multiple phrases and their translations at once.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form
-						noValidate
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => bulkAddMutation.mutate(data))}
-						className="space-y-6"
-					>
-						<div className="space-y-4">
-							{fields.map((phraseField, phraseIndex) => (
-								<PhraseEntry
-									key={phraseField.id}
-									phraseIndex={phraseIndex}
-									control={control}
-									register={register}
-									removePhrase={remove}
-									errors={errors.phrases}
-									disableRemove={fields.length === 1}
-								/>
-							))}
-						</div>
-
-						<div className="flex justify-between">
-							<Button
-								type="button"
-								variant="outline"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								onClick={() => append(getEmptyPhrase(preferredTranslationLang))}
-							>
-								<Plus className="mr-2 size-4" /> Add Another Phrase
-							</Button>
-						</div>
-
-						{showDeckCheckbox && (
-							<div className="flex items-center gap-3 rounded-lg border p-4">
-								<Checkbox
-									id="create-deck"
-									checked={shouldCreateOrReactivateDeck}
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
-									onCheckedChange={(checked) =>
-										setShouldCreateOrReactivateDeck(checked === true)
-									}
-								/>
-								<Label htmlFor="create-deck" className="cursor-pointer">
-									{hasArchivedDeck ?
-										`Re-activate ${languages[lang]} deck`
-									:	`Start learning ${languages[lang]}`}
-								</Label>
-							</div>
-						)}
-
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!isDirty || isSubmitting || bulkAddMutation.isPending}
+		<RequireAuth message="You need to be logged in to bulk add phrases.">
+			<main style={style}>
+				<Card>
+					<CardHeader>
+						<CardTitle>
+							Bulk Add Phrases to the {languages[lang]} Library
+						</CardTitle>
+						<CardDescription>
+							Add multiple phrases and their translations at once.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form
+							noValidate
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
+							onSubmit={handleSubmit((data) => bulkAddMutation.mutate(data))}
+							className="space-y-6"
 						>
-							Save All Phrases ({fields.length})
-						</Button>
-						<ShowAndLogError
-							error={bulkAddMutation.error}
-							text="There was an error submitting your phrases"
-						/>
-					</form>
-					{successfullyAddedPhrases.length > 0 && (
-						<div className="my-6">
-							<Separator className="my-6" />
-							<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
-							<div className="space-y-2">
-								{successfullyAddedPhrases.map((pid) => (
-									<WithPhrase
-										key={pid}
-										pid={pid}
-										Component={CardResultSimple}
+							<div className="space-y-4">
+								{fields.map((phraseField, phraseIndex) => (
+									<PhraseEntry
+										key={phraseField.id}
+										phraseIndex={phraseIndex}
+										control={control}
+										register={register}
+										removePhrase={remove}
+										errors={errors.phrases}
+										disableRemove={fields.length === 1}
 									/>
 								))}
 							</div>
-						</div>
-					)}
-				</CardContent>
-			</Card>
-		</main>
+
+							<div className="flex justify-between">
+								<Button
+									type="button"
+									variant="outline"
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onClick={() =>
+										append(getEmptyPhrase(preferredTranslationLang))
+									}
+								>
+									<Plus className="mr-2 size-4" /> Add Another Phrase
+								</Button>
+							</div>
+
+							{showDeckCheckbox && (
+								<div className="flex items-center gap-3 rounded-lg border p-4">
+									<Checkbox
+										id="create-deck"
+										checked={shouldCreateOrReactivateDeck}
+										// oxlint-disable-next-line jsx-no-new-function-as-prop
+										onCheckedChange={(checked) =>
+											setShouldCreateOrReactivateDeck(checked === true)
+										}
+									/>
+									<Label htmlFor="create-deck" className="cursor-pointer">
+										{hasArchivedDeck ?
+											`Re-activate ${languages[lang]} deck`
+										:	`Start learning ${languages[lang]}`}
+									</Label>
+								</div>
+							)}
+
+							<Button
+								type="submit"
+								className="w-full"
+								disabled={!isDirty || isSubmitting || bulkAddMutation.isPending}
+							>
+								Save All Phrases ({fields.length})
+							</Button>
+							<ShowAndLogError
+								error={bulkAddMutation.error}
+								text="There was an error submitting your phrases"
+							/>
+						</form>
+						{successfullyAddedPhrases.length > 0 && (
+							<div className="my-6">
+								<Separator className="my-6" />
+								<h3 className="mb-4 text-lg font-semibold">
+									Successfully Added
+								</h3>
+								<div className="space-y-2">
+									{successfullyAddedPhrases.map((pid) => (
+										<WithPhrase
+											key={pid}
+											pid={pid}
+											Component={CardResultSimple}
+										/>
+									))}
+								</div>
+							</div>
+						)}
+					</CardContent>
+				</Card>
+			</main>
+		</RequireAuth>
 	)
 }
 

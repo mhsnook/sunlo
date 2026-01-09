@@ -184,7 +184,9 @@ test.describe('Card Status Mutations', () => {
 	})
 
 	test('Verify CardMetaSchema parsing', async ({ page }) => {
-		// 1. Create a phrase via API
+		await loginAsTestUser(page)
+
+		// 1. Create a phrase via API (after login so feed can see it)
 		const { phrase } = await createPhrase({
 			lang: 'hin',
 			text: 'Schema parsing test phrase ' + Math.random(),
@@ -192,9 +194,10 @@ test.describe('Card Status Mutations', () => {
 		})
 		const phraseId = phrase.id
 
-		await loginAsTestUser(page)
-
 		try {
+			// Reload to refresh feed data with new phrase
+			await page.goto('/learn')
+
 			// Navigate to feed via UI
 			await page
 				.getByTestId(`deck-card-hin`)
