@@ -32,7 +32,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 						>
 							<Send className="mt-[0.1rem] mr-[0.1rem] size-6" />
 						</Button>
-					: profile.relation.status === 'pending' && !isMostRecentByThem ?
+					: profile.relation.status === 'pending' && isMostRecentByThem ?
 						<>
 							<Button
 								variant="default"
@@ -98,7 +98,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 						</ConfirmDestructiveActionDialog>
 					: profile.relation.status === 'friends' ?
 						<UserCheck className="size-6 p-0" />
-					:	<> status is null for some reason</>}
+					:	<> status is "{profile.relation.status}" for some reason</>}
 				</div>
 			</AvatarIconRow>
 		)
