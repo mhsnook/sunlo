@@ -1599,17 +1599,30 @@ export type Database = {
 			}
 		}
 		Functions: {
-			add_phrase_translation_card: {
-				Args: {
-					phrase_lang: string
-					phrase_text: string
-					phrase_text_script?: string
-					translation_lang: string
-					translation_text: string
-					translation_text_script?: string
-				}
-				Returns: Json
-			}
+			add_phrase_translation_card:
+				| {
+						Args: {
+							phrase_lang: string
+							phrase_text: string
+							phrase_text_script?: string
+							translation_lang: string
+							translation_text: string
+							translation_text_script?: string
+						}
+						Returns: Json
+				  }
+				| {
+						Args: {
+							create_card?: boolean
+							phrase_lang: string
+							phrase_text: string
+							phrase_text_script?: string
+							translation_lang: string
+							translation_text: string
+							translation_text_script?: string
+						}
+						Returns: Json
+				  }
 			add_tags_to_phrase: {
 				Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
 				Returns: Json
