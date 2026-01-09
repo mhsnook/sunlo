@@ -1,7 +1,14 @@
 import { CSSProperties, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useFieldArray, useForm, Controller, FieldError } from 'react-hook-form'
+import {
+	useFieldArray,
+	useForm,
+	Controller,
+	type Control,
+	type UseFormRegister,
+	type FieldErrors,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
@@ -68,7 +75,6 @@ export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
-// eslint-disable-next-line react-refresh/only-export-components
 function BulkAddPhrasesPage() {
 	const { lang } = Route.useParams()
 	const { data: profile } = useProfile()
@@ -104,11 +110,7 @@ function BulkAddPhrasesPage() {
 		name: 'phrases',
 	})
 
-	const bulkAddMutation = useMutation<
-		BulkAddPhrasesResponse | null,
-		Error,
-		BulkAddPhrasesFormValues
-	>({
+	const bulkAddMutation = useMutation({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
 			console.log(`Attempting mutation`, { values })
 			const payload = {
@@ -120,7 +122,7 @@ function BulkAddPhrasesPage() {
 			console.log(`After mutation`, { values, data, error })
 
 			if (error) throw error
-			return data
+			return data as BulkAddPhrasesResponse | null
 		},
 		onSuccess: (data: BulkAddPhrasesResponse | null) => {
 			if (!data) {
@@ -176,7 +178,7 @@ function BulkAddPhrasesPage() {
 									control={control}
 									register={register}
 									removePhrase={remove}
-									errors={errors.phrases?.[phraseIndex]}
+									errors={errors}
 									disableRemove={fields.length === 1}
 								/>
 							))}
@@ -231,13 +233,6 @@ const getEmptyPhrase = (lang: string = 'eng') => ({
 	translations: [{ lang, text: '' }],
 })
 
-type PhraseEntryErrors =
-	| (z.infer<typeof PhraseWithTranslationsSchema> & {
-			root?: FieldError
-	  })
-	| undefined
-
-// eslint-disable-next-line react-refresh/only-export-components
 function PhraseEntry({
 	phraseIndex,
 	control,
@@ -247,10 +242,10 @@ function PhraseEntry({
 	disableRemove = false,
 }: {
 	phraseIndex: number
-	control: unknown
-	register: unknown
+	control: Control<BulkAddPhrasesFormValues>
+	register: UseFormRegister<BulkAddPhrasesFormValues>
 	removePhrase: (index: number) => void
-	errors: PhraseEntryErrors
+	errors: FieldErrors<BulkAddPhrasesFormValues>
 	disableRemove: boolean
 }) {
 	const { lang } = Route.useParams()
@@ -288,7 +283,7 @@ function PhraseEntry({
 						{...register(`phrases.${phraseIndex}.phrase_text`)}
 						placeholder="Enter the phrase to learn"
 					/>
-					<ErrorLabel error={errors?.phrase_text} />
+					<ErrorLabel error={errors.phrases?.[phraseIndex]?.phrase_text} />
 				</div>
 			</div>
 
@@ -332,16 +327,24 @@ function PhraseEntry({
 							/>
 							<div className="ms-2">
 								<ErrorLabel
-									error={errors?.translations?.[translationIndex]?.text}
+									error={
+										errors.phrases?.[phraseIndex]?.translations?.[
+											translationIndex
+										]?.text
+									}
 								/>
 								<ErrorLabel
-									error={errors?.translations?.[translationIndex]?.lang}
+									error={
+										errors.phrases?.[phraseIndex]?.translations?.[
+											translationIndex
+										]?.lang
+									}
 								/>
 							</div>
 						</div>
 					</div>
 				))}
-				<ErrorLabel error={errors?.translations?.root} />
+				<ErrorLabel error={errors.phrases?.[phraseIndex]?.translations?.root} />
 			</div>
 			<Button
 				type="button"
@@ -349,14 +352,14 @@ function PhraseEntry({
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() =>
 					appendTranslation({
-						lang: profile?.languages_known[0]?.lang,
+						lang: profile?.languages_known[0]?.lang ?? 'eng',
 						text: '',
 					})
 				}
 			>
 				<Plus className="mr-2 size-4" /> Add Translation
 			</Button>
-			<ErrorLabel error={errors?.root} />
+			<ErrorLabel error={errors.phrases?.[phraseIndex]?.root} />
 		</Card>
 	)
 }
