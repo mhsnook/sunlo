@@ -30,7 +30,6 @@ export const Route = createFileRoute('/_user')({
 		// If the user is logged out, redirect them to the login page
 		// console.log(`beforeLoad auth context:`, context.auth)
 		if (!context.auth.isAuth) {
-			// eslint-disable-next-line @typescript-eslint/only-throw-error
 			throw redirect({
 				to: '/login',
 				search: {
@@ -69,7 +68,6 @@ export const Route = createFileRoute('/_user')({
 
 		if (location.pathname !== '/getting-started') {
 			if (!myProfileCollection.size) {
-				// eslint-disable-next-line @typescript-eslint/only-throw-error
 				throw redirect({ to: '/getting-started' })
 			} else {
 				void decksCollection.preload()
