@@ -32,6 +32,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
+import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
 	component: NewPlaylistPage,
@@ -54,7 +55,24 @@ type PhraseWithHref = {
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
+// Outer component handles auth check
 function NewPlaylistPage() {
+	const isAuth = useIsAuthenticated()
+
+	// Require auth to create playlists
+	if (!isAuth) {
+		return (
+			<RequireAuth message="You need to be logged in to create playlists.">
+				<div />
+			</RequireAuth>
+		)
+	}
+
+	return <NewPlaylistPageContent />
+}
+
+// Inner component contains all the hooks - only rendered when authenticated
+function NewPlaylistPageContent() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
 

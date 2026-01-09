@@ -31,6 +31,7 @@ import { Route as UserProfileChangeEmailConfirmRouteImport } from './routes/_use
 import { Route as UserProfileChangeEmailRouteImport } from './routes/_user/profile/change-email'
 import { Route as UserLearnQuickSearchRouteImport } from './routes/_user/learn/quick-search'
 import { Route as UserLearnContributionsRouteImport } from './routes/_user/learn/contributions'
+import { Route as UserLearnBrowseRouteImport } from './routes/_user/learn/browse'
 import { Route as UserLearnArchivedRouteImport } from './routes/_user/learn/archived'
 import { Route as UserLearnAddDeckRouteImport } from './routes/_user/learn/add-deck'
 import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
@@ -184,6 +185,11 @@ const UserLearnQuickSearchRoute = UserLearnQuickSearchRouteImport.update({
 const UserLearnContributionsRoute = UserLearnContributionsRouteImport.update({
   id: '/contributions',
   path: '/contributions',
+  getParentRoute: () => UserLearnRoute,
+} as any)
+const UserLearnBrowseRoute = UserLearnBrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
   getParentRoute: () => UserLearnRoute,
 } as any)
 const UserLearnArchivedRoute = UserLearnArchivedRouteImport.update({
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
+  '/learn/browse': typeof UserLearnBrowseRoute
   '/learn/contributions': typeof UserLearnContributionsRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
@@ -423,6 +430,7 @@ export interface FileRoutesByTo {
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
+  '/learn/browse': typeof UserLearnBrowseRoute
   '/learn/contributions': typeof UserLearnContributionsRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
   '/_user/learn/archived': typeof UserLearnArchivedRoute
+  '/_user/learn/browse': typeof UserLearnBrowseRoute
   '/_user/learn/contributions': typeof UserLearnContributionsRoute
   '/_user/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
@@ -534,6 +543,7 @@ export interface FileRouteTypes {
     | '/learn/$lang'
     | '/learn/add-deck'
     | '/learn/archived'
+    | '/learn/browse'
     | '/learn/contributions'
     | '/learn/quick-search'
     | '/profile/change-email'
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
     | '/friends/search'
     | '/learn/add-deck'
     | '/learn/archived'
+    | '/learn/browse'
     | '/learn/contributions'
     | '/learn/quick-search'
     | '/profile/change-email'
@@ -637,6 +648,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang'
     | '/_user/learn/add-deck'
     | '/_user/learn/archived'
+    | '/_user/learn/browse'
     | '/_user/learn/contributions'
     | '/_user/learn/quick-search'
     | '/_user/profile/change-email'
@@ -840,6 +852,13 @@ declare module '@tanstack/react-router' {
       path: '/contributions'
       fullPath: '/learn/contributions'
       preLoaderRoute: typeof UserLearnContributionsRouteImport
+      parentRoute: typeof UserLearnRoute
+    }
+    '/_user/learn/browse': {
+      id: '/_user/learn/browse'
+      path: '/browse'
+      fullPath: '/learn/browse'
+      preLoaderRoute: typeof UserLearnBrowseRouteImport
       parentRoute: typeof UserLearnRoute
     }
     '/_user/learn/archived': {
@@ -1213,6 +1232,7 @@ interface UserLearnRouteChildren {
   UserLearnLangRoute: typeof UserLearnLangRouteWithChildren
   UserLearnAddDeckRoute: typeof UserLearnAddDeckRoute
   UserLearnArchivedRoute: typeof UserLearnArchivedRoute
+  UserLearnBrowseRoute: typeof UserLearnBrowseRoute
   UserLearnContributionsRoute: typeof UserLearnContributionsRoute
   UserLearnQuickSearchRoute: typeof UserLearnQuickSearchRoute
   UserLearnIndexRoute: typeof UserLearnIndexRoute
@@ -1222,6 +1242,7 @@ const UserLearnRouteChildren: UserLearnRouteChildren = {
   UserLearnLangRoute: UserLearnLangRouteWithChildren,
   UserLearnAddDeckRoute: UserLearnAddDeckRoute,
   UserLearnArchivedRoute: UserLearnArchivedRoute,
+  UserLearnBrowseRoute: UserLearnBrowseRoute,
   UserLearnContributionsRoute: UserLearnContributionsRoute,
   UserLearnQuickSearchRoute: UserLearnQuickSearchRoute,
   UserLearnIndexRoute: UserLearnIndexRoute,

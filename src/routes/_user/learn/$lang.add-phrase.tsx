@@ -10,6 +10,7 @@ import { NotebookPen, Search } from 'lucide-react'
 
 import type { Tables } from '@/types/supabase'
 import type { uuid } from '@/types/main'
+import { RequireAuth } from '@/components/require-auth'
 import {
 	Card,
 	CardContent,
@@ -264,115 +265,117 @@ function AddPhraseTab() {
 	})
 
 	return (
-		<main style={style}>
-			<Card>
-				<CardHeader>
-					<CardTitle>Add A Phrase</CardTitle>
-					<CardDescription>
-						Search for a phrase or add a new one to your deck.
-					</CardDescription>
-				</CardHeader>
-				<CardContent>
-					<form
-						noValidate
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
-						className="mt-2 space-y-4"
-					>
-						<div>
-							<Label htmlFor="newPhrase">
-								Text of the Phrase (in {languages[lang]})
-							</Label>
-							<Controller
-								name="phrase_text"
-								control={control}
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
-								render={({ field }) => (
-									<Textarea
-										{...field}
-										placeholder="The text of the phrase to learn"
-									/>
-								)}
+		<RequireAuth message="You need to be logged in to add new phrases.">
+			<main style={style}>
+				<Card>
+					<CardHeader>
+						<CardTitle>Add A Phrase</CardTitle>
+						<CardDescription>
+							Search for a phrase or add a new one to your deck.
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<form
+							noValidate
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
+							onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
+							className="mt-2 space-y-4"
+						>
+							<div>
+								<Label htmlFor="newPhrase">
+									Text of the Phrase (in {languages[lang]})
+								</Label>
+								<Controller
+									name="phrase_text"
+									control={control}
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									render={({ field }) => (
+										<Textarea
+											{...field}
+											placeholder="The text of the phrase to learn"
+										/>
+									)}
+								/>
+							</div>
+							<TranslationTextField<AddPhraseFormValues>
+								error={errors.translation_text}
+								register={register}
 							/>
-						</div>
-						<TranslationTextField<AddPhraseFormValues>
-							error={errors.translation_text}
-							register={register}
-						/>
-						<TranslationLanguageField<AddPhraseFormValues>
-							error={errors.translation_lang}
-							control={control}
-						/>
-						{showDeckCheckbox && (
-							<Item variant="outline">
-								<ItemMedia>
-									<Checkbox
-										id="create-deck"
-										checked={shouldCreateOrReactivateDeck}
-										className="mt-2 mb-3"
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
-										onCheckedChange={(checked) =>
-											setShouldCreateOrReactivateDeck(checked === true)
-										}
-									/>
-								</ItemMedia>
-								<ItemContent>
-									<Label
-										htmlFor="create-deck"
-										className="cursor-pointer text-sm font-normal"
-									>
-										You are not currently learning working on an{' '}
-										{languages[lang]} deck.{' '}
-										{hasArchivedDeck ?
-											`Re-activate ${languages[lang]} deck`
-										:	`Start learning ${languages[lang]}?`}
-									</Label>
-								</ItemContent>
-							</Item>
-						)}
-						<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
-							<Button
-								type="submit"
-								className={addPhraseMutation.isPending ? 'opacity-60' : ''}
-								disabled={addPhraseMutation.isPending}
-							>
-								{addPhraseMutation.isPending ?
-									<IconSizedLoader />
-								:	<NotebookPen />}
-								Save and add another
-							</Button>
-							<Link
-								to="/learn/$lang/search"
-								from={Route.fullPath}
-								search={searchPlusText}
-								className={buttonVariants({ variant: 'outline' })}
-							>
-								<Search size={16} />
-								Search phrases
-							</Link>
+							<TranslationLanguageField<AddPhraseFormValues>
+								error={errors.translation_lang}
+								control={control}
+							/>
+							{showDeckCheckbox && (
+								<Item variant="outline">
+									<ItemMedia>
+										<Checkbox
+											id="create-deck"
+											checked={shouldCreateOrReactivateDeck}
+											className="mt-2 mb-3"
+											// oxlint-disable-next-line jsx-no-new-function-as-prop
+											onCheckedChange={(checked) =>
+												setShouldCreateOrReactivateDeck(checked === true)
+											}
+										/>
+									</ItemMedia>
+									<ItemContent>
+										<Label
+											htmlFor="create-deck"
+											className="cursor-pointer text-sm font-normal"
+										>
+											You are not currently learning working on an{' '}
+											{languages[lang]} deck.{' '}
+											{hasArchivedDeck ?
+												`Re-activate ${languages[lang]} deck`
+											:	`Start learning ${languages[lang]}?`}
+										</Label>
+									</ItemContent>
+								</Item>
+							)}
+							<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
+								<Button
+									type="submit"
+									className={addPhraseMutation.isPending ? 'opacity-60' : ''}
+									disabled={addPhraseMutation.isPending}
+								>
+									{addPhraseMutation.isPending ?
+										<IconSizedLoader />
+									:	<NotebookPen />}
+									Save and add another
+								</Button>
+								<Link
+									to="/learn/$lang/search"
+									from={Route.fullPath}
+									search={searchPlusText}
+									className={buttonVariants({ variant: 'outline' })}
+								>
+									<Search size={16} />
+									Search phrases
+								</Link>
 
-							<Link
-								to="/learn/$lang/bulk-add"
-								from={Route.fullPath}
-								className={buttonVariants({ variant: 'outline' })}
-							>
-								Bulk add phrases
-							</Link>
+								<Link
+									to="/learn/$lang/bulk-add"
+									from={Route.fullPath}
+									className={buttonVariants({ variant: 'outline' })}
+								>
+									Bulk add phrases
+								</Link>
+							</div>
+						</form>
+					</CardContent>
+				</Card>
+				{newPhrases.length > 0 && (
+					<div className="my-6">
+						<Separator className="my-6" />
+						<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
+						<div className="space-y-2">
+							{newPhrases.map((pid: uuid) => (
+								<WithPhrase key={pid} pid={pid} Component={CardResultSimple} />
+							))}
 						</div>
-					</form>
-				</CardContent>
-			</Card>
-			{newPhrases.length > 0 && (
-				<div className="my-6">
-					<Separator className="my-6" />
-					<h3 className="mb-4 text-lg font-semibold">Successfully Added</h3>
-					<div className="space-y-2">
-						{newPhrases.map((pid: uuid) => (
-							<WithPhrase key={pid} pid={pid} Component={CardResultSimple} />
-						))}
 					</div>
-				</div>
-			)}
-		</main>
+				)}
+			</main>
+		</RequireAuth>
 	)
 }

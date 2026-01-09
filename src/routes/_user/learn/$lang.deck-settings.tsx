@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
@@ -40,8 +41,19 @@ export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function DeckSettingsPage() {
+	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
+
+	// Require auth for deck settings
+	if (!isAuth) {
+		return (
+			<RequireAuth message="You need to be logged in to manage deck settings.">
+				<div />
+			</RequireAuth>
+		)
+	}
+
 	// return early conditions: not ready yet, or deck not found error
 	if (!meta)
 		if (!isReady) return null

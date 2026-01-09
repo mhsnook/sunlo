@@ -256,12 +256,12 @@ test.describe('Playlist Mutations', () => {
 			// 3. Navigate to playlist page
 			await page.goto(`/learn/hin/playlists/${playlist.id}`)
 
-			// Verify initial phrases are visible
+			// Verify initial phrases are visible (use .first() since phrase text appears multiple times)
 			await expect(
-				page.getByText(phrase1.phrase.text, { exact: false })
+				page.getByText(phrase1.phrase.text, { exact: false }).first()
 			).toBeVisible()
 			await expect(
-				page.getByText(phrase2.phrase.text, { exact: false })
+				page.getByText(phrase2.phrase.text, { exact: false }).first()
 			).toBeVisible()
 
 			// 4. Click "Manage Phrases" button
@@ -392,15 +392,15 @@ test.describe('Playlist Mutations', () => {
 			// 4. Click "Manage Phrases" button
 			await page.getByRole('button', { name: 'Manage phrases' }).click()
 
-			// 5. Verify all 3 phrases are visible
+			// 5. Verify all 3 phrases are visible (use .first() since phrase text appears multiple times)
 			await expect(
-				page.getByText(phrase1.phrase.text, { exact: false })
+				page.getByText(phrase1.phrase.text, { exact: false }).first()
 			).toBeVisible()
 			await expect(
-				page.getByText(phrase2.phrase.text, { exact: false })
+				page.getByText(phrase2.phrase.text, { exact: false }).first()
 			).toBeVisible()
 			await expect(
-				page.getByText(phrase3.phrase.text, { exact: false })
+				page.getByText(phrase3.phrase.text, { exact: false }).first()
 			).toBeVisible()
 
 			// 6. Click remove button on second phrase

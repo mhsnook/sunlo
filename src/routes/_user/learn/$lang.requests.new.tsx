@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
+import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -66,6 +67,7 @@ const placeholders = [
 ]
 
 function NewRequestPage() {
+	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const userId = useUserId()
 	const navigate = useNavigate()
@@ -114,6 +116,15 @@ function NewRequestPage() {
 			toast.error('There was an error creating your request.')
 		},
 	})
+
+	// Require auth to create requests
+	if (!isAuth) {
+		return (
+			<RequireAuth message="You need to be logged in to create phrase requests.">
+				<div />
+			</RequireAuth>
+		)
+	}
 
 	return (
 		<Card>
