@@ -2,12 +2,12 @@ import { CSSProperties, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import {
+	type Control,
+	type FieldErrors,
+	type UseFormRegister,
 	useFieldArray,
 	useForm,
 	Controller,
-	type Control,
-	type UseFormRegister,
-	type FieldErrors,
 } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -25,20 +25,22 @@ import {
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import ErrorLabel from '@/components/fields/error-label'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
 import { usePreferredTranslationLang } from '@/hooks/use-deck'
-import { useUserId } from '@/lib/use-auth'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { PhraseFullSchema } from '@/lib/schemas'
-import { phrasesCollection } from '@/lib/collections'
+import { DeckMetaSchema, PhraseFullSchema } from '@/lib/schemas'
+import { decksCollection, phrasesCollection } from '@/lib/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
 import { useInvalidateFeed } from '@/hooks/use-feed'
+import { useDeckMeta, useDecks } from '@/hooks/use-deck'
+import { useUserId } from '@/lib/use-auth'
 
 type BulkAddPhrasesResponse = {
 	phrases: Tables<'phrase'>[]
@@ -85,6 +87,15 @@ function BulkAddPhrasesPage() {
 		Array<uuid>
 	>([])
 
+	// Deck status detection
+	const { data: deck } = useDeckMeta(lang)
+	const { data: allDecks } = useDecks()
+	const hasArchivedDeck = !!deck && deck.archived
+	const noDeck = !deck
+	const showDeckCheckbox = noDeck || hasArchivedDeck
+	const [shouldCreateOrReactivateDeck, setShouldCreateOrReactivateDeck] =
+		useState(true)
+
 	const {
 		control,
 		handleSubmit,
@@ -113,6 +124,33 @@ function BulkAddPhrasesPage() {
 	const bulkAddMutation = useMutation({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
 			console.log(`Attempting mutation`, { values })
+
+			// Handle deck creation/reactivation if needed
+			let newDeck: Tables<'user_deck'> | null = null
+			if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+				if (hasArchivedDeck) {
+					// Reactivate archived deck
+					const { data } = await supabase
+						.from('user_deck')
+						.update({ archived: false })
+						.eq('lang', lang)
+						.eq('uid', userId)
+						.select()
+						.maybeSingle()
+						.throwOnError()
+					newDeck = data
+				} else if (noDeck) {
+					// Create new deck
+					const { data } = await supabase
+						.from('user_deck')
+						.insert({ lang })
+						.select()
+						.maybeSingle()
+						.throwOnError()
+					newDeck = data
+				}
+			}
+
 			const payload = {
 				p_lang: lang,
 				p_phrases: values.phrases,
@@ -122,17 +160,37 @@ function BulkAddPhrasesPage() {
 			console.log(`After mutation`, { values, data, error })
 
 			if (error) throw error
-			return data as BulkAddPhrasesResponse | null
+			return {
+				rpcResult: data as BulkAddPhrasesResponse | null,
+				newDeck,
+			}
 		},
-		onSuccess: (data: BulkAddPhrasesResponse | null) => {
-			if (!data) {
+		onSuccess: ({ rpcResult, newDeck }) => {
+			if (!rpcResult) {
 				toast('No data came back from the database :-/')
 				return
 			}
-			const phrasesToInsert = data.phrases.map((p) =>
+
+			// Update deck collection if we created/reactivated one
+			if (newDeck) {
+				const deckWithTheme = {
+					...newDeck,
+					language: languages[newDeck.lang],
+					theme: (allDecks?.length ?? 0) % 5,
+				}
+				if (hasArchivedDeck) {
+					decksCollection.utils.writeUpdate(DeckMetaSchema.parse(deckWithTheme))
+				} else {
+					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
+				}
+			}
+
+			const phrasesToInsert = rpcResult.phrases.map((p) =>
 				PhraseFullSchema.parse({
 					...p,
-					translations: data.translations.filter((t) => t.phrase_id === p.id),
+					translations: rpcResult.translations.filter(
+						(t) => t.phrase_id === p.id
+					),
 				})
 			)
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
@@ -145,7 +203,19 @@ function BulkAddPhrasesPage() {
 			reset({
 				phrases: [getEmptyPhrase(preferredTranslationLang)],
 			})
-			toast.success(`${data.phrases.length} phrases added successfully!`)
+
+			// Show appropriate success message
+			if (newDeck) {
+				const deckAction =
+					hasArchivedDeck ?
+						`re-activated your ${languages[lang]} deck`
+					:	`started learning ${languages[lang]}`
+				toast.success(
+					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.`
+				)
+			} else {
+				toast.success(`${rpcResult.phrases.length} phrases added successfully!`)
+			}
 		},
 		onError: (error) => {
 			toast.error(`Error adding phrases: ${error.message}`)
@@ -178,7 +248,7 @@ function BulkAddPhrasesPage() {
 									control={control}
 									register={register}
 									removePhrase={remove}
-									errors={errors}
+									errors={errors.phrases}
 									disableRemove={fields.length === 1}
 								/>
 							))}
@@ -193,13 +263,33 @@ function BulkAddPhrasesPage() {
 							>
 								<Plus className="mr-2 size-4" /> Add Another Phrase
 							</Button>
-							<Button
-								type="submit"
-								disabled={!isDirty || isSubmitting || bulkAddMutation.isPending}
-							>
-								Save All Phrases
-							</Button>
 						</div>
+
+						{showDeckCheckbox && (
+							<div className="flex items-center gap-3 rounded-lg border p-4">
+								<Checkbox
+									id="create-deck"
+									checked={shouldCreateOrReactivateDeck}
+									// oxlint-disable-next-line jsx-no-new-function-as-prop
+									onCheckedChange={(checked) =>
+										setShouldCreateOrReactivateDeck(checked === true)
+									}
+								/>
+								<Label htmlFor="create-deck" className="cursor-pointer">
+									{hasArchivedDeck ?
+										`Re-activate ${languages[lang]} deck`
+									:	`Start learning ${languages[lang]}`}
+								</Label>
+							</div>
+						)}
+
+						<Button
+							type="submit"
+							className="w-full"
+							disabled={!isDirty || isSubmitting || bulkAddMutation.isPending}
+						>
+							Save All Phrases ({fields.length})
+						</Button>
 						<ShowAndLogError
 							error={bulkAddMutation.error}
 							text="There was an error submitting your phrases"
@@ -243,7 +333,7 @@ function PhraseEntry({
 	control: Control<BulkAddPhrasesFormValues>
 	register: UseFormRegister<BulkAddPhrasesFormValues>
 	removePhrase: (index: number) => void
-	errors: FieldErrors<BulkAddPhrasesFormValues>
+	errors: FieldErrors<BulkAddPhrasesFormValues>['phrases']
 	disableRemove: boolean
 }) {
 	const { lang } = Route.useParams()
@@ -263,7 +353,7 @@ function PhraseEntry({
 				<div className="flex-1 space-y-2">
 					<div className="flex items-center justify-between">
 						<Label htmlFor={`phrases.${phraseIndex}.phrase_text`}>
-							Phrase in {languages[lang]}
+							{phraseIndex + 1}. Phrase in {languages[lang]}
 						</Label>
 						<Button
 							type="button"
@@ -281,7 +371,7 @@ function PhraseEntry({
 						{...register(`phrases.${phraseIndex}.phrase_text`)}
 						placeholder="Enter the phrase to learn"
 					/>
-					<ErrorLabel error={errors.phrases?.[phraseIndex]?.phrase_text} />
+					<ErrorLabel error={errors?.[phraseIndex]?.phrase_text} />
 				</div>
 			</div>
 
@@ -326,23 +416,21 @@ function PhraseEntry({
 							<div className="ms-2">
 								<ErrorLabel
 									error={
-										errors.phrases?.[phraseIndex]?.translations?.[
-											translationIndex
-										]?.text
+										errors?.[phraseIndex]?.translations?.[translationIndex]
+											?.text
 									}
 								/>
 								<ErrorLabel
 									error={
-										errors.phrases?.[phraseIndex]?.translations?.[
-											translationIndex
-										]?.lang
+										errors?.[phraseIndex]?.translations?.[translationIndex]
+											?.lang
 									}
 								/>
 							</div>
 						</div>
 					</div>
 				))}
-				<ErrorLabel error={errors.phrases?.[phraseIndex]?.translations?.root} />
+				<ErrorLabel error={errors?.[phraseIndex]?.translations?.root} />
 			</div>
 			<Button
 				type="button"
@@ -357,7 +445,7 @@ function PhraseEntry({
 			>
 				<Plus className="mr-2 size-4" /> Add Translation
 			</Button>
-			<ErrorLabel error={errors.phrases?.[phraseIndex]?.root} />
+			<ErrorLabel error={errors?.[phraseIndex]?.root} />
 		</Card>
 	)
 }

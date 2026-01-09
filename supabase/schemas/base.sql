@@ -32,6 +32,8 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
+create extension if not exists "pgsodium";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "plv8"
@@ -374,7 +376,7 @@ alter function "public"."create_playlist_with_links" (
 ) owner to "postgres";
 
 create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
-	return Math.min(Math.max(difficulty, 1.0), 10.0);
+  return Math.min(Math.max(difficulty, 1.0), 10.0);
 $$;
 
 alter function "public"."fsrs_clamp_d" ("difficulty" numeric) owner to "postgres";
@@ -1443,6 +1445,7 @@ create table if not exists "public"."user_deck" (
 	"learning_goal" "public"."learning_goal" default 'moving'::"public"."learning_goal" not null,
 	"archived" boolean default false not null,
 	"daily_review_goal" smallint default 15 not null,
+	"preferred_translation_lang" character varying(3) default null::character varying,
 	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
 );
 
@@ -2576,6 +2579,26 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text"
+) to "service_role";
+
+grant all on function "public"."add_phrase_translation_card" (
+	"phrase_text" "text",
+	"phrase_lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text",
+	"phrase_text_script" "text",
+	"translation_text_script" "text",
+	"create_card" boolean
+) to "authenticated";
+
+grant all on function "public"."add_phrase_translation_card" (
+	"phrase_text" "text",
+	"phrase_lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text",
+	"phrase_text_script" "text",
+	"translation_text_script" "text",
+	"create_card" boolean
 ) to "service_role";
 
 grant all on function "public"."add_tags_to_phrase" (
