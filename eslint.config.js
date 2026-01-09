@@ -33,6 +33,14 @@ export default [
 
 			...reactHooks.configs.recommended.rules,
 			'react-refresh/only-export-components': ['off'],
+			'@typescript-eslint/only-throw-error': [
+				'error',
+				{
+					allow: ['Redirect'],
+					allowThrowingAny: false,
+					allowThrowingUnknown: false,
+				},
+			],
 		},
 	},
 	{
