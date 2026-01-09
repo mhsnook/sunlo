@@ -64,10 +64,15 @@ export function UidPermalink({
 				</Link>
 			:	null}
 			<div className="text-sm">
-				<p>
+				<Link
+					to="/friends/$uid"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid }}
+					className="inline-flex flex-row hover:underline"
+					disabled={nonInteractive}
+				>
 					<span className="font-medium">{data.username}</span>
-					{action && <span className="text-muted-foreground"> {action}</span>}
-				</p>
+				</Link>
 				{timeValue && (
 					<div className="text-muted-foreground">
 						{timeLinkTo ?
@@ -78,6 +83,9 @@ export function UidPermalink({
 								search={timeLinkSearch}
 								className="s-link-hidden"
 							>
+								{action && (
+									<span className="text-muted-foreground"> {action}</span>
+								)}
 								{ago(timeValue)}
 							</Link>
 						:	ago(timeValue)}
@@ -118,7 +126,7 @@ export function UidPermalinkInline({
 					to="/friends/$uid"
 					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
-					className="inline-flex flex-row"
+					className="inline-flex flex-row hover:underline"
 					disabled={nonInteractive}
 				>
 					<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
@@ -130,11 +138,17 @@ export function UidPermalinkInline({
 				</Link>
 			:	null}
 			<div className="flex flex-row items-center gap-1.5 text-sm">
-				<span className="font-medium">{data.username}</span>
-				{action && <span className="text-muted-foreground">{action}</span>}
+				<Link
+					to="/friends/$uid"
+					// oxlint-disable-next-line jsx-no-new-object-as-prop
+					params={{ uid }}
+					className="inline-flex flex-row hover:underline"
+					disabled={nonInteractive}
+				>
+					<span className="font-medium">{data.username}</span>
+				</Link>
 				{timeValue && (
 					<>
-						<span className="text-muted-foreground/50">/</span>
 						<div className="text-muted-foreground">
 							{timeLinkTo ?
 								<Link
@@ -144,7 +158,10 @@ export function UidPermalinkInline({
 									search={timeLinkSearch}
 									className="s-link-hidden hover:underline"
 								>
-									{ago(timeValue)}
+									{action && (
+										<span className="text-muted-foreground">{action} </span>
+									)}
+									/ {ago(timeValue)}
 								</Link>
 							:	ago(timeValue)}
 						</div>
