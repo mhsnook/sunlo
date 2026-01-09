@@ -10,11 +10,21 @@ const noDeckTheme = {
 export type ThemeType = typeof noDeckTheme
 
 export const themes: ThemeType[] = [
-	{ name: 'pink', hue: 310, hueOff: 270, hueAccent: 210 },
-	{ name: 'red', hue: 0, hueOff: 320, hueAccent: 290 },
-	{ name: 'gold', hue: 50, hueOff: 30, hueAccent: 320 },
-	{ name: 'green', hue: 160, hueOff: 140, hueAccent: 220 },
-	{ name: 'blue', hue: 210, hueOff: 190, hueAccent: 40 },
+	// 355 is our true red, 015 is adjacent
+	{ name: 'brick', hue: 30, hueOff: 50, hueAccent: 30 },
+	{ name: 'sand', hue: 55, hueOff: 35, hueAccent: 55 },
+	// 75 looks sick, 95 and 115 look like owl
+	// 135 is adjacent to true green
+	// 155 is our true green,
+	// 175 would seem too close, but human eyes are good at green
+	{ name: 'teal', hue: 180, hueOff: 200, hueAccent: 180 },
+	{ name: 'cyan', hue: 205, hueOff: 225, hueAccent: 205 },
+	{ name: 'ocean', hue: 230, hueOff: 210, hueAccent: 230 },
+	// 255 is adjacent to true purple
+	// 275 is our true purple
+	{ name: 'hotpink', hue: 300, hueOff: 320, hueAccent: 300 },
+	{ name: 'blush', hue: 325, hueOff: 305, hueAccent: 325 },
+	// 335 is adjacent to our true red
 ]
 
 export const getThemeCss = (index?: number) => {
