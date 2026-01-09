@@ -19,14 +19,26 @@ import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
 import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'
 
-// Helper function to group consecutive phrase additions by the same user
-function groupConsecutivePhrases(
+type PhraseGroup = {
+	type: 'phrase_group'
 	items: FeedActivityType[]
-): (FeedActivityType | { type: 'phrase_group'; items: FeedActivityType[] })[] {
-	const grouped: (
-		| FeedActivityType
-		| { type: 'phrase_group'; items: FeedActivityType[] }
-	)[] = []
+	earliest_created_at: string
+}
+
+type GroupedFeedItem = FeedActivityType | PhraseGroup
+
+// Helper to get effective created_at for sorting (earliest for groups)
+function getEffectiveCreatedAt(item: GroupedFeedItem): string {
+	if ('earliest_created_at' in item) {
+		return item.earliest_created_at
+	}
+	return item.created_at
+}
+
+// Helper function to group consecutive phrase additions by the same user
+// Uses earliest created_at for groups to maintain stable sort order when loading more
+function groupConsecutivePhrases(items: FeedActivityType[]): GroupedFeedItem[] {
+	const grouped: GroupedFeedItem[] = []
 	let currentGroup: FeedActivityType[] = []
 
 	for (const item of items) {
@@ -36,7 +48,12 @@ function groupConsecutivePhrases(
 			} else {
 				// Different user, flush current group
 				if (currentGroup.length > 1) {
-					grouped.push({ type: 'phrase_group', items: currentGroup })
+					grouped.push({
+						type: 'phrase_group',
+						items: currentGroup,
+						earliest_created_at:
+							currentGroup[currentGroup.length - 1].created_at,
+					})
 				} else {
 					grouped.push(currentGroup[0])
 				}
@@ -45,7 +62,11 @@ function groupConsecutivePhrases(
 		} else {
 			// Non-phrase item, flush current group
 			if (currentGroup.length > 1) {
-				grouped.push({ type: 'phrase_group', items: currentGroup })
+				grouped.push({
+					type: 'phrase_group',
+					items: currentGroup,
+					earliest_created_at: currentGroup[currentGroup.length - 1].created_at,
+				})
 			} else if (currentGroup.length === 1) {
 				grouped.push(currentGroup[0])
 			}
@@ -56,12 +77,21 @@ function groupConsecutivePhrases(
 
 	// Flush remaining group
 	if (currentGroup.length > 1) {
-		grouped.push({ type: 'phrase_group', items: currentGroup })
+		grouped.push({
+			type: 'phrase_group',
+			items: currentGroup,
+			earliest_created_at: currentGroup[currentGroup.length - 1].created_at,
+		})
 	} else if (currentGroup.length === 1) {
 		grouped.push(currentGroup[0])
 	}
 
-	return grouped
+	// Sort by effective created_at to maintain stable order after grouping
+	return grouped.toSorted(
+		(a, b) =>
+			new Date(getEffectiveCreatedAt(b)).getTime() -
+			new Date(getEffectiveCreatedAt(a)).getTime()
+	)
 }
 
 const SearchSchema = z.object({
@@ -134,17 +164,6 @@ function DeckFeedPage() {
 					</TabsContent>
 				</Tabs>
 			</div>
-			<p className="text-muted-foreground my-6 ms-6 italic">
-				This is the end of the feed... how about{' '}
-				<Link
-					to="/friends/invite"
-					from={Route.fullPath}
-					className="s-link-muted"
-				>
-					inviting a friend
-				</Link>{' '}
-				to learn together?
-			</p>
 		</main>
 	)
 }
@@ -212,26 +231,39 @@ function RecentFeed() {
 					</div>
 				</Callout>
 			:	<>
-					{groupedItems.map((item, index) => (
+					{groupedItems.map((item) => (
 						<FeedItem
 							key={
-								'type' in item && item.type === 'phrase_group' ?
-									`group-${index}`
+								'earliest_created_at' in item ?
+									`group-${item.earliest_created_at}`
 								:	item.id
 							}
 							item={item}
 						/>
 					))}
-					{hasNextPage && (
+
+					{hasNextPage ?
 						<Button
 							variant="outline"
 							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => void fetchNextPage()}
 							disabled={isFetchingNextPage}
+							className={hasNextPage ? 'opacity-100' : 'opacity-0'}
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
-					)}
+					:	<p className="text-muted-foreground my-6 ms-6 italic">
+							This is the end of the feed... how about{' '}
+							<Link
+								to="/friends/invite"
+								from={Route.fullPath}
+								className="s-link-muted"
+							>
+								inviting a friend
+							</Link>{' '}
+							to learn together?
+						</p>
+					}
 				</>
 			}
 		</div>
@@ -271,6 +303,17 @@ function FriendsFeed() {
 					<RequestItem key={request.id} request={request} />
 				))
 			}
+			<p className="text-muted-foreground my-6 ms-6 italic">
+				This is the end of the feed... how about{' '}
+				<Link
+					to="/friends/invite"
+					from={Route.fullPath}
+					className="s-link-muted"
+				>
+					inviting a friend
+				</Link>{' '}
+				to learn together?
+			</p>
 		</div>
 	)
 }
@@ -299,6 +342,17 @@ function PopularFeed() {
 					<RequestItem key={request.id} request={request} />
 				))
 			}
+			<p className="text-muted-foreground my-6 ms-6 italic">
+				This is the end of the feed... how about{' '}
+				<Link
+					to="/friends/invite"
+					from={Route.fullPath}
+					className="s-link-muted"
+				>
+					inviting a friend
+				</Link>{' '}
+				to learn together?
+			</p>
 		</div>
 	)
 }
