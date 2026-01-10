@@ -9,8 +9,10 @@ import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/lib/schemas'
+import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function Upvote({ comment }: { comment: RequestCommentType }) {
+	const requireAuth = useRequireAuth()
 	const hasUpvoted = !!useLiveQuery(
 		(q) =>
 			q
@@ -72,8 +74,10 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
-					// Send explicit action based on current state
-					upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
+					requireAuth(() => {
+						// Send explicit action based on current state
+						upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
+					}, 'Please log in to vote on comments')
 				}}
 				disabled={upvoteMutation.isPending}
 			>
