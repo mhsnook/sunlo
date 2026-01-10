@@ -6,6 +6,7 @@ import { LinkType } from '@/types/main'
 import {
 	ChartBarDecreasing,
 	CircleStar,
+	Compass,
 	FileText,
 	HandHeart,
 	HeartHandshake,
@@ -86,6 +87,14 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: Home,
 			link: {
 				to: '/learn',
+			},
+		},
+		'/learn/browse': {
+			name: 'Browse',
+			title: 'Browse Library',
+			Icon: Compass,
+			link: {
+				to: '/learn/browse',
 			},
 		},
 		'/learn/add-deck': {
