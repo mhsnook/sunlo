@@ -2,19 +2,19 @@
 
 ## Current Status Done/Todo
 
-**Cases To Work On:**
+**Interactions that need to be managed**
 
+- [ ] in the big-phrase-card, "Add tags" and "Add translations" buttons should result in login prompts rather than unusable dialogs
+- [ ] the <Send /> icon buttons that share with a friend, should result in login prompts rather than unusable dialogs
 - [ ] "Post comment" attempts to post and then hits an error; probably this whole thing should instead say "you need to log in to comment". Perhaps we should have a second Dialog component that is actually like an Auth'dDialog where it works like RequireAuth. Lots of Auth'd activities take place inside dialogs.
 - [ ] Upvote Request attempts and fails, should prompt login.
-- [ ] Send Request to Friend opens a dialog which is empty, should be login.
-- [ ] The entire Learning Center menu in the sidebar should be either hidden or replaced with a thing like "Sign up to begin learning"
 - [ ] The card status heart attempts a mutation and then fails
-- [ ] On the big-phrase-card, the "Edit tags" and "Add translation" buttons should prompt login
 
 **Other work to do:**
 
-- [ ] The Home page needs some way to log in and start browsing languages
-- [ ] There needs to be some page like perhaps a replacement for the /learn route or a /learn/browse route that un-auth'd people get sent to, which shows alll the active languages and an overview of their contents or their recent feed activity
+- [ ] The "browse" page is really kind of crying out for a "search" box right there up at the top which searches all the phrases and translations and requests and playlists in the local DB.
+- [x] The home page should feature numerous links and CTAs to the new /learn/browse route
+- [x] There needs to be some page like perhaps a replacement for the /learn route or a /learn/browse route that un-auth'd people get sent to, which shows alll the active languages and an overview of their contents or their recent feed activity
 - [ ] The "Choose a deck" menu is not relevant. Maybe replace it with "Browse a language" and have a looong menu that opens up with top 10 languages in the top section and then all languages below. Maybe a badge for # of learners in that language.
 - [ ] When you get intercepted on the add-phrase page and then log in, the sidebar does not update unless you refresh
 - [ ] Track down these "expected otherwise" console.logs `We expected a userId here... but got null` -- they are probably signs of a component or route that should have some attention paid to it to see whether things need to be rendered conditionally or have auth checks intercept features, etc.

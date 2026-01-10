@@ -168,10 +168,10 @@ export function CrowdSourcedSection() {
 
 							<div className="text-center">
 								<Link
-									to="/signup"
+									to="/learn/browse"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
-										'transform bg-emerald-600 font-semibold text-white/80 transition-all duration-300 hover:scale-105 hover:bg-emerald-700'
+										'bg-emerald-600 font-semibold text-white/80 transition-all duration-300 hover:bg-emerald-700'
 									)}
 								>
 									Explore Phrase Library
