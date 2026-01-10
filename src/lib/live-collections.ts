@@ -2,7 +2,6 @@ import { createLiveQueryCollection, eq } from '@tanstack/db'
 import {
 	cardsCollection,
 	friendSummariesCollection,
-	phraseRequestsCollection,
 	phrasesCollection,
 	publicProfilesCollection,
 } from './collections'
@@ -17,22 +16,17 @@ export const phrasesFull = createLiveQueryCollection({
 				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
 				'inner'
 			)
-			.join({ request: phraseRequestsCollection }, ({ phrase, request }) =>
-				eq(phrase.request_id, request.id)
-			)
 			.join({ card: cardsCollection }, ({ phrase, card }) =>
 				eq(phrase.id, card.phrase_id)
 			)
-			.fn.select(({ phrase, profile, request, card }) => ({
+			.fn.select(({ phrase, profile, card }) => ({
 				...phrase,
 				card,
 				profile,
-				request,
 				searchableText: [
 					phrase.text,
 					...(phrase.translations?.map((t) => t.text) ?? []),
 					...(phrase.tags ?? []).map((t) => t.name),
-					request?.prompt,
 				].join(', '),
 			})),
 })
