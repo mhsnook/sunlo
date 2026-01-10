@@ -14,23 +14,29 @@ import { useDeckMeta } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	beforeLoad: ({ params: { lang } }) => ({
+	beforeLoad: ({ params: { lang }, context }) => ({
 		titleBar: {
 			title: `${languages[lang]} Deck`,
 		},
-		appnav: [
-			'/learn/$lang/feed',
-			'/learn/$lang/review',
-			'/learn/$lang/contributions',
-			'/learn/$lang/stats',
-			'/learn/$lang/search',
-		],
-		contextMenu: [
-			'/learn/$lang/search',
-			'/learn/$lang/requests/new',
-			'/learn/$lang/add-phrase',
-			'/learn/$lang/deck-settings',
-		],
+		appnav:
+			context.auth.isAuth ?
+				[
+					'/learn/$lang/feed',
+					'/learn/$lang/review',
+					'/learn/$lang/contributions',
+					'/learn/$lang/stats',
+					'/learn/$lang/search',
+				]
+			:	['/learn/$lang/feed', '/learn/$lang/search'],
+		contextMenu:
+			context.auth.isAuth ?
+				[
+					'/learn/$lang/search',
+					'/learn/$lang/requests/new',
+					'/learn/$lang/add-phrase',
+					'/learn/$lang/deck-settings',
+				]
+			:	[],
 	}),
 	loader: async () => {
 		const langTagsPromise = langTagsCollection.preload()

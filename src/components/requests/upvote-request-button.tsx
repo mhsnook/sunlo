@@ -12,8 +12,10 @@ import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { PhraseRequestType } from '@/lib/schemas'
+import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
+	const requireAuth = useRequireAuth()
 	const hasUpvoted = !!useLiveQuery(
 		(q) =>
 			q
@@ -76,8 +78,10 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
-					// Send explicit action based on current state
-					upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
+					requireAuth(() => {
+						// Send explicit action based on current state
+						upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
+					}, 'Please log in to vote on requests')
 				}}
 				disabled={upvoteMutation.isPending}
 			>

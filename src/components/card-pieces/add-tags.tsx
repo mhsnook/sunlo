@@ -10,13 +10,13 @@ import { Pencil } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -111,7 +111,11 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 					<Pencil className="me-2 h-4 w-4" /> Edit tags
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px]">
+			<AuthenticatedDialogContent
+				authTitle="Login to Edit Tags"
+				authMessage="You need to be logged in to add tags to phrases."
+				className="sm:max-w-[425px]"
+			>
 				<DialogHeader>
 					<DialogTitle>Edit tags</DialogTitle>
 					<DialogDescription>
@@ -173,7 +177,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 						{addTagsMutation.isPending ? 'Saving...' : 'Save changes'}
 					</Button>
 				</DialogFooter>
-			</DialogContent>
+			</AuthenticatedDialogContent>
 		</Dialog>
 	)
 }

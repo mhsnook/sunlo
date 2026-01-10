@@ -6,11 +6,11 @@ import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { useUserId } from '@/lib/use-auth'
@@ -75,7 +75,10 @@ export function SendPhraseToFriendButton({
 					</Button>
 				}
 			</DialogTrigger>
-			<DialogContent>
+			<AuthenticatedDialogContent
+				authTitle="Login to Send"
+				authMessage="You need to be logged in to send phrases to friends."
+			>
 				<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>
 				<DialogDescription className="sr-only">
 					Select 1 or more friends from the list below to send this phrase to
@@ -90,7 +93,7 @@ export function SendPhraseToFriendButton({
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
 				</Button>
-			</DialogContent>
+			</AuthenticatedDialogContent>
 		</Dialog>
 	)
 }

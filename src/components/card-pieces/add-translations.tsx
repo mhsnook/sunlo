@@ -11,12 +11,12 @@ import supabase from '@/lib/supabase-client'
 import {
 	Dialog,
 	DialogTrigger,
-	DialogContent,
 	DialogHeader,
 	DialogTitle,
 	DialogDescription,
 	DialogFooter,
 } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Button } from '@/components/ui/button'
 import { ButtonProps } from '@/components/ui/button-variants'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
@@ -100,7 +100,11 @@ export function AddTranslationsDialog({
 					<Pencil className="size-4" /> Add translation
 				</Button>
 			</DialogTrigger>
-			<DialogContent className="w-[92%] max-w-[425px]">
+			<AuthenticatedDialogContent
+				authTitle="Login to Add Translations"
+				authMessage="You need to be logged in to add translations to phrases."
+				className="w-[92%] max-w-[425px]"
+			>
 				<DialogHeader className="text-left">
 					<DialogTitle>Add translations</DialogTitle>
 					<DialogDescription className="space-y-2 text-left">
@@ -149,7 +153,7 @@ export function AddTranslationsDialog({
 						</Button>
 					</DialogFooter>
 				</form>
-			</DialogContent>
+			</AuthenticatedDialogContent>
 		</Dialog>
 	)
 }
