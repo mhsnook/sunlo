@@ -17,6 +17,7 @@ import ErrorLabel from '@/components/fields/error-label'
 import { Loader } from '@/components/ui/loader'
 import { useDecks } from '@/hooks/use-deck'
 import { useDeckLangs } from '@/lib/hooks'
+import { RequireAuth } from '@/components/require-auth'
 
 const SearchSchema = z.object({
 	lang: z.string().optional(),
@@ -45,9 +46,17 @@ type FormValues = z.infer<typeof NewDeckSchema>
 const HelloIcon = () => <span className="text-2xl">👋</span>
 
 function NewDeckForm() {
+	return (
+		<RequireAuth message="You need to be logged in to create a new deck.">
+			<NewDeckFormInner />
+		</RequireAuth>
+	)
+}
+
+function NewDeckFormInner() {
 	const createNewDeck = useNewDeckMutation()
-	const { data: profile } = useProfile()
-	const { data: decks } = useDecks()
+	const { data: profile, isLoading: profileLoading } = useProfile()
+	const { data: decks, isLoading: decksLoading } = useDecks()
 	const deckLangs = useDeckLangs()
 	const search = Route.useSearch()
 	const {
@@ -59,7 +68,7 @@ function NewDeckForm() {
 		defaultValues: { lang: search.lang },
 	})
 	const controller = useController({ name: 'lang', control })
-	if (!profile) return <Loader />
+	if (profileLoading || decksLoading) return <Loader />
 
 	return (
 		<main>
@@ -80,7 +89,7 @@ function NewDeckForm() {
 						{decks?.length === 0 ?
 							<Callout Icon={HelloIcon}>
 								<p className="text-primary-foresoft text-2xl font-bold">
-									Welcome <em>{profile.username}</em>!
+									Welcome <em>{profile?.username}</em>!
 								</p>
 								<p>
 									Create a new deck to start learning, or click the "friends"

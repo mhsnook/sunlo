@@ -38,7 +38,11 @@ const learnMenu = makeLinks([
 	// '/learn/quick-search',
 	'/learn/add-deck',
 ])
-const learnMenuPublic = makeLinks(['/learn', '/learn/add-deck'])
+const learnMenuPublic = makeLinks([
+	'/learn',
+	'/learn/browse',
+	'/learn/add-deck',
+])
 const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
 const siteMenuLoggedIn = makeLinks(['/', '/profile', '/privacy-policy'])
 

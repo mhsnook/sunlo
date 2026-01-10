@@ -1,10 +1,17 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { Archive, ChevronsRight, HeartPlus } from 'lucide-react'
+import {
+	Archive,
+	ChevronsRight,
+	Compass,
+	HeartPlus,
+	UserPlus,
+} from 'lucide-react'
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { GarlicBroccoli } from '@/components/garlic'
 import { FriendProfiles } from '@/components/friend-profiles'
 import { useDecks } from '@/hooks/use-deck'
+import { useAuth } from '@/lib/use-auth'
 import { decksCollection } from '@/lib/collections'
 import { CSSProperties } from 'react'
 
@@ -18,8 +25,21 @@ export const Route = createFileRoute('/_user/learn/')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function Page() {
+	const { isAuth } = useAuth()
 	const { data: decks } = useDecks()
 	const activeDecks = decks?.filter((i) => !i.archived)
+
+	// For non-authenticated users, show browse prompt
+	if (!isAuth) {
+		return (
+			<main className="w-full space-y-6" style={style}>
+				<div className="px-4 @lg:px-6 @xl:px-8">
+					<BrowsePrompt />
+				</div>
+			</main>
+		)
+	}
+
 	return (
 		<main className="w-full space-y-6" style={style}>
 			{activeDecks?.length ?
@@ -87,6 +107,32 @@ function AllDecksArchived() {
 					className={buttonVariants({ variant: 'secondary', size: 'lg' })}
 				>
 					<Archive size={14} /> View archived decks{' '}
+					<ChevronsRight className="h-6 w-5" />
+				</Link>
+			</div>
+		</div>
+	)
+}
+
+function BrowsePrompt() {
+	return (
+		<div className="space-y-6 py-6 text-center">
+			<GarlicBroccoli />
+			<h2 className="text-xl font-bold">Welcome to Sunlo</h2>
+			<p className="text-muted-foreground mb-4">
+				Explore community-created flashcards and language learning content.
+			</p>
+
+			<div className="mx-auto grid max-w-100 grid-cols-1 gap-4">
+				<Link to="/signup" className={buttonVariants({ size: 'lg' })}>
+					<UserPlus size={14} /> Create an account
+					<ChevronsRight className="h-6 w-5" />
+				</Link>
+				<Link
+					to="/learn/browse"
+					className={buttonVariants({ variant: 'secondary', size: 'lg' })}
+				>
+					<Compass size={14} /> Browse languages
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
 			</div>
