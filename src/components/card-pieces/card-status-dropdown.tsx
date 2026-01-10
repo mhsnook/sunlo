@@ -13,6 +13,7 @@ import {
 
 import supabase from '@/lib/supabase-client'
 import { PostgrestError } from '@supabase/supabase-js'
+import { useRequireAuth } from '@/hooks/use-require-auth'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -254,6 +255,7 @@ export function CardStatusHeart({
 }: {
 	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
+	const requireAuth = useRequireAuth()
 	const mutation = useCardStatusMutation(phrase)
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
@@ -261,7 +263,12 @@ export function CardStatusHeart({
 			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
 			size="icon"
 			// oxlint-disable-next-line jsx-no-new-function-as-prop
-			onClick={() => mutation.mutate({ status: statusToPost })}
+			onClick={() =>
+				requireAuth(
+					() => mutation.mutate({ status: statusToPost }),
+					'Please log in to add phrases to your library'
+				)
+			}
 			title={
 				phrase.card?.status === 'active' ?
 					'Remove phrase from library'

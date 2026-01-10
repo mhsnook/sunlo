@@ -6,11 +6,11 @@ import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Button } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
@@ -59,7 +59,10 @@ export function SendRequestToFriendDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent>
+			<AuthenticatedDialogContent
+				authTitle="Login to Share"
+				authMessage="You need to be logged in to share requests with friends."
+			>
 				<DialogTitle className="h3 font-bold">Share</DialogTitle>
 				<DialogDescription className="sr-only">
 					Select 1 or more friends from the list below to send this request to
@@ -74,7 +77,7 @@ export function SendRequestToFriendDialog({
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
 				</Button>
-			</DialogContent>
+			</AuthenticatedDialogContent>
 		</Dialog>
 	)
 }

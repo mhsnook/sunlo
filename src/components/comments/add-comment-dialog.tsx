@@ -19,7 +19,8 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogTrigger } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
@@ -86,7 +87,11 @@ export function AddCommentDialog({
 					</p>
 				</DialogTrigger>
 			)}
-			<DialogContent className="max-h-[90vh] overflow-y-auto">
+			<AuthenticatedDialogContent
+				authTitle="Login to Comment"
+				authMessage="You need to be logged in to join the conversation."
+				className="max-h-[90vh] overflow-y-auto"
+			>
 				{parentCommentId ?
 					<CommentDisplayOnly id={parentCommentId} />
 				:	<RequestDisplayOnly id={requestId} />}
@@ -100,7 +105,7 @@ export function AddCommentDialog({
 						setOpen(false)
 					}}
 				/>
-			</DialogContent>
+			</AuthenticatedDialogContent>
 		</Dialog>
 	)
 }
