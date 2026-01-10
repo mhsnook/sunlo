@@ -121,10 +121,10 @@ export function SocialLearningSection() {
 
 							<div className="text-center">
 								<Link
-									to="/signup"
+									to="/friends/invite"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
-										'transform bg-rose-700 font-semibold text-white/90 transition-all duration-300 hover:scale-105 hover:bg-rose-800'
+										'bg-rose-700 font-semibold text-white/90 transition-all duration-300 hover:bg-rose-800'
 									)}
 								>
 									Invite Your {isForFriends ? 'Friends' : 'Family'}
@@ -221,7 +221,7 @@ export function SocialLearningSection() {
 									to="/signup"
 									className={cn(
 										buttonVariants(),
-										'border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:scale-105 hover:from-green-700'
+										'border-2 border-transparent bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-6 text-lg font-semibold text-white transition-all duration-300 hover:from-green-700'
 									)}
 								>
 									Start Learning

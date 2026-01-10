@@ -1,5 +1,14 @@
 import { Card } from '@/components/ui/card'
-import { Users, BookOpen, Heart, Star, ArrowRight } from 'lucide-react'
+import {
+	Users,
+	BookOpen,
+	Heart,
+	Star,
+	ArrowRight,
+	Compass,
+	LogIn,
+	UserPlus,
+} from 'lucide-react'
 import { UnderConstructionNotice } from './under-construction'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
@@ -97,22 +106,34 @@ export function HeroSection() {
 					<div className="mb-16 text-center">
 						<div className="mx-auto mb-8 flex max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
 							<Link
+								to="/learn/browse"
+								className={cn(
+									buttonVariants({ size: 'lg', variant: 'outline' }),
+									'group border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+								)}
+							>
+								<Compass className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}
+								Browse Library
+							</Link>
+							<Link
 								to="/signup"
 								className={cn(
 									buttonVariants({ size: 'lg' }),
-									'group from-primary dark:from-primary dark:hover:to-primary] w-full transform border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
+									'group from-primary dark:from-primary dark:hover:to-primary w-full border-2 border-transparent bg-gradient-to-r to-violet-600 px-8 text-lg font-semibold text-white shadow-lg transition-all duration-300 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl sm:w-auto dark:hover:from-purple-700'
 								)}
 							>
+								<UserPlus className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}
 								Start Learning
-								<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+								<ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-0.5" />
 							</Link>
 							<Link
 								to="/login"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'outline' }),
-									'border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
+									'group border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
+								<LogIn className="opacity-60 transition-opacity group-hover:opacity-100" />{' '}
 								Sign In
 							</Link>
 						</div>
