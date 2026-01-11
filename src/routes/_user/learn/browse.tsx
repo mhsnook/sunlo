@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { LangBadge, Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import Flagged from '@/components/flagged'
 
 export const Route = createFileRoute('/_user/learn/browse')({
 	beforeLoad: () => ({
@@ -385,10 +386,12 @@ function RequestCard({
 			<CardHeader className="pb-2">
 				<div className="flex items-center gap-2">
 					<LangBadge lang={request.lang} />
-					<span className="text-muted-foreground flex items-center gap-1 text-sm">
-						<Star className="size-3 fill-current" />
-						{((request.upvote_count ?? 0) / 10 + 4).toFixed(1)}
-					</span>
+					<Flagged>
+						<span className="text-muted-foreground flex items-center gap-1 text-sm">
+							<Star className="size-3 fill-current" />
+							{((request.upvote_count ?? 0) / 10 + 4).toFixed(1)}
+						</span>
+					</Flagged>
 				</div>
 			</CardHeader>
 			<CardContent className="pb-4">
