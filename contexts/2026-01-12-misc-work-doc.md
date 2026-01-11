@@ -40,10 +40,13 @@ COMPLEXITY: 2
 STATUS: PENDING
 COMPLEXITY: 1
 
-### Fix G: When the loading spinner spins, e.g. on /friends suspending for the loader, the way the Loader spins creates x and y scrolls that come and go
+### COMPLETED: Fix G: When the loading spinner spins, e.g. on /friends suspending for the loader, the way the Loader spins creates x and y scrolls that come and go
 
-STATUS: PENDING
+STATUS: COMPLETED
 COMPLEXITY: 1
+DIFFICULTY: 1
+
+NOTE: The router's fallback loading component wasn't using the standard Loader component; switching to that fixed it.
 
 ### Feature Research H: User Consents and GDPR
 
