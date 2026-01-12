@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useParams } from '@tanstack/react-router'
 import { useRelationInvitations } from '@/hooks/use-friends'
 
@@ -265,12 +264,15 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 	return { ...constantLinks, ...languageLinks }
 }
 
-export function useLinks(paths: Array<string> | undefined) {
+export function useLinks(paths: Array<string> | undefined): LinkType[] {
 	const { lang } = useParams({ strict: false })
-	return useMemo(() => makeLinks(paths, lang), [lang, paths])
+	return makeLinks(paths, lang)
 }
 
-export function makeLinks(paths: Array<string> | undefined, lang?: string) {
+export function makeLinks(
+	paths: Array<string> | undefined,
+	lang?: string
+): LinkType[] {
 	if (!paths) return []
 	const l = links(lang)
 	return paths.map((p) => l[p]).filter(Boolean)

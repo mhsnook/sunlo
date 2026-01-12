@@ -1,4 +1,4 @@
-import { Activity, useMemo, type CSSProperties } from 'react'
+import { Activity, type CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Construction } from 'lucide-react'
@@ -171,29 +171,25 @@ function RecentFeed() {
 	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
 		useFeedLang(params.lang)
 
-	// flatten pages, apply filters, and group consecutive phrases
-	const groupedItems = useMemo(() => {
-		const feedItems = data?.pages.flat()
-		if (!feedItems) return []
+	const feedItems = data?.pages.flat()
 
-		// Apply filters (default all to true)
-		const filterRequests = search.filter_requests ?? true
-		const filterPlaylists = search.filter_playlists ?? true
-		const filterPhrases = search.filter_phrases ?? true
-		const filteredItems = feedItems.filter((item) => {
-			if (item.type === 'request') return filterRequests
-			if (item.type === 'playlist') return filterPlaylists
-			if (item.type === 'phrase') return filterPhrases
-			return true
-		})
+	// Default all filters to true
+	const filterRequests = search.filter_requests ?? true
+	const filterPlaylists = search.filter_playlists ?? true
+	const filterPhrases = search.filter_phrases ?? true
 
-		return groupConsecutivePhrases(filteredItems)
-	}, [
-		data,
-		search.filter_requests,
-		search.filter_playlists,
-		search.filter_phrases,
-	])
+	// Apply filters, and group consecutive phrases
+	const groupedItems =
+		!feedItems ?
+			[]
+		:	groupConsecutivePhrases(
+				feedItems.filter((item) => {
+					if (item.type === 'request') return filterRequests
+					if (item.type === 'playlist') return filterPlaylists
+					if (item.type === 'phrase') return filterPhrases
+					return true
+				})
+			)
 
 	return (
 		<div className="space-y-4">

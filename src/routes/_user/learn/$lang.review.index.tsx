@@ -1,7 +1,7 @@
 import type { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -84,18 +84,14 @@ function ReviewPageContent() {
 	// 2.
 	// haven't built this feature yet, is why it's blank array
 	// const friendRecsFromDB: pids = [] // useCardsRecommendedByFriends(lang)
-	const friendRecsFiltered = useMemo(
-		() =>
-			arrayDifference(
-				[] /* friendRecsFromDB */,
-				[deckPids?.reviewed_or_inactive ?? []]
-			),
-		[deckPids?.reviewed_or_inactive /*, friendRecsFromDB */]
+	const friendRecsFiltered = arrayDifference(
+		[] /* friendRecsFromDB */,
+		[deckPids?.reviewed_or_inactive ?? []]
 	)
 
-	const friendRecsSelected = useMemo(
-		() => friendRecsFiltered.slice(0, meta?.daily_review_goal ?? 0),
-		[friendRecsFiltered, meta?.daily_review_goal]
+	const friendRecsSelected = friendRecsFiltered.slice(
+		0,
+		meta?.daily_review_goal ?? 0
 	)
 
 	const countNeeded2 = min0(
@@ -103,23 +99,20 @@ function ReviewPageContent() {
 	)
 
 	// 3. algo recs set by user
-	const algoRecsFiltered = useMemo(
-		() => ({
-			popular: arrayDifference(recs?.top8.popular ?? [], [
-				deckPids?.reviewed_or_inactive ?? [],
-				friendRecsFiltered,
-			]),
-			easiest: arrayDifference(recs?.top8.easiest ?? [], [
-				deckPids?.reviewed_or_inactive ?? [],
-				friendRecsFiltered,
-			]),
-			newest: arrayDifference(recs?.top8.newest ?? [], [
-				deckPids?.reviewed_or_inactive ?? [],
-				friendRecsFiltered,
-			]),
-		}),
-		[recs?.top8, deckPids?.reviewed_or_inactive, friendRecsFiltered]
-	)
+	const algoRecsFiltered = {
+		popular: arrayDifference(recs?.top8.popular ?? [], [
+			deckPids?.reviewed_or_inactive ?? [],
+			friendRecsFiltered,
+		]),
+		easiest: arrayDifference(recs?.top8.easiest ?? [], [
+			deckPids?.reviewed_or_inactive ?? [],
+			friendRecsFiltered,
+		]),
+		newest: arrayDifference(recs?.top8.newest ?? [], [
+			deckPids?.reviewed_or_inactive ?? [],
+			friendRecsFiltered,
+		]),
+	}
 
 	const countNeeded3 = min0(countNeeded2 - algoRecsSelected.length)
 	const algosInitialCount =
@@ -131,17 +124,10 @@ function ReviewPageContent() {
 	// 4. deck cards
 	// pull new unreviewed cards, excluding the friend recs we already got,
 	// and limiting to the number we need from the deck
-	const cardsUnreviewedActiveSelected = useMemo(() => {
-		return arrayDifference(deckPids?.unreviewed_active ?? [], [
-			friendRecsSelected,
-			algoRecsSelected,
-		]).slice(0, countNeeded3)
-	}, [
-		countNeeded3,
-		friendRecsSelected,
-		algoRecsSelected,
-		deckPids?.unreviewed_active,
-	])
+	const cardsUnreviewedActiveSelected = arrayDifference(
+		deckPids?.unreviewed_active ?? [],
+		[friendRecsSelected, algoRecsSelected]
+	).slice(0, countNeeded3)
 
 	// the user does not get to preview or select these.
 	// in many cases, we'll be done here because people will have 15+ cards
@@ -152,50 +138,27 @@ function ReviewPageContent() {
 	// 5. pick cards randomly from the library, if needed
 
 	// sorting by pid is randomish, but stable
-	const libraryPhrasesSelected = useMemo(
-		() =>
-			arrayDifference(recs?.language_selectables ?? [], [
-				friendRecsSelected,
-				algoRecsSelected,
-				cardsUnreviewedActiveSelected,
-			])
-				.toSorted((a, b) => (a > b ? -1 : 1))
-				.slice(0, countNeeded4),
-		[
-			recs?.language_selectables,
-			friendRecsSelected,
-			algoRecsSelected,
-			cardsUnreviewedActiveSelected,
-			countNeeded4,
-		]
+	const libraryPhrasesSelected = arrayDifference(
+		recs?.language_selectables ?? [],
+		[friendRecsSelected, algoRecsSelected, cardsUnreviewedActiveSelected]
 	)
+		.toSorted((a, b) => (a > b ? -1 : 1))
+		.slice(0, countNeeded4)
 
 	// 6. now let's just collate the cards we need to create on user_card table
-	const freshCards = useMemo(
-		() =>
-			arrayUnion([
-				friendRecsSelected, // 2
-				algoRecsSelected, // 3
-				cardsUnreviewedActiveSelected, // 4
-				libraryPhrasesSelected, // 5
-			]),
-		[
-			friendRecsSelected,
-			algoRecsSelected,
-			cardsUnreviewedActiveSelected,
-			libraryPhrasesSelected,
-		]
-	)
+	const freshCards = arrayUnion([
+		friendRecsSelected, // 2
+		algoRecsSelected, // 3
+		cardsUnreviewedActiveSelected, // 4
+		libraryPhrasesSelected, // 5
+	])
 
-	const cardsToCreate = useMemo(
-		() => arrayDifference(freshCards, [deckPids?.all ?? []]),
-		[deckPids?.all, freshCards]
-	)
+	const cardsToCreate = arrayDifference(freshCards, [deckPids?.all ?? []])
 
-	const allCardsForToday = useMemo(
-		() => arrayUnion([freshCards, deckPids?.today_active ?? []]),
-		[freshCards, deckPids?.today_active]
-	)
+	const allCardsForToday = arrayUnion([
+		freshCards,
+		deckPids?.today_active ?? [],
+	])
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({

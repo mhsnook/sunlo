@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
@@ -56,13 +55,10 @@ export const useDeckActivityChartData = (
 		[lang, startDate]
 	)
 
-	return useMemo(
-		() => ({
-			...query,
-			data: calcActivityChartData(mapArrays(query.data, 'day_session')),
-		}),
-		[query]
-	)
+	return {
+		...query,
+		data: calcActivityChartData(mapArrays(query.data, 'day_session')),
+	}
 }
 
 export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
@@ -77,13 +73,10 @@ export const useDeckMeta = (lang: string): UseLiveQueryResult<DeckMetaType> =>
 
 export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	const query = useLiveQuery((q) => q.from({ deck: decksCollection }))
-	return useMemo(
-		() => ({
-			...query,
-			data: query.data.toSorted(sortDecksByActivity),
-		}),
-		[query]
-	)
+	return {
+		...query,
+		data: query.data.toSorted(sortDecksByActivity),
+	}
 }
 
 export const useDeckCards = (
@@ -115,13 +108,10 @@ export const useDeckRoutineStats = (lang: string) => {
 		[lang, mondayString]
 	)
 
-	return useMemo(
-		() => ({
-			...query,
-			data: query.data ? { daysMet: query.data.count, daysSoFar } : null,
-		}),
-		[query, daysSoFar]
-	)
+	return {
+		...query,
+		data: query.data ? { daysMet: query.data.count, daysSoFar } : null,
+	}
 }
 
 export type DeckPids = {
@@ -139,49 +129,44 @@ type UseDeckPidsReturnType = {
 	data: DeckPids | null
 }
 
-export const useDeckPids = (lang: string) => {
+export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 	const { isLoading, data } = useDeckCards(lang)
 
-	return useMemo(
-		(): UseDeckPidsReturnType => ({
-			isLoading: isLoading ?? true,
-			data:
-				!data ? null : (
-					{
-						all: data.map((c) => c.phrase_id),
-						active: data
-							.filter((c) => c.status === 'active')
-							.map((c) => c.phrase_id),
-						inactive: data
-							.filter((c) => c.status !== 'active')
-							.map((c) => c.phrase_id),
-						reviewed: data
-							.filter((c) => !!c.last_reviewed_at)
-							.map((c) => c.phrase_id),
-						reviewed_or_inactive: data
-							.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
-							.map((c) => c.phrase_id),
-						reviewed_last_7d: data
-							.filter(
-								(c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at)
-							)
-							.map((c) => c.phrase_id),
-						unreviewed_active: data
-							.filter((c) => c.status === 'active' && !c.last_reviewed_at)
-							.map((c) => c.phrase_id),
-						today_active: data
-							.filter(
-								(c) =>
-									!!c.retrievability_now &&
-									c.retrievability_now <= 0.9 &&
-									c.status === 'active'
-							)
-							.map((c) => c.phrase_id),
-					}
-				),
-		}),
-		[data, isLoading]
-	)
+	return {
+		isLoading: isLoading ?? true,
+		data:
+			!data ? null : (
+				{
+					all: data.map((c) => c.phrase_id),
+					active: data
+						.filter((c) => c.status === 'active')
+						.map((c) => c.phrase_id),
+					inactive: data
+						.filter((c) => c.status !== 'active')
+						.map((c) => c.phrase_id),
+					reviewed: data
+						.filter((c) => !!c.last_reviewed_at)
+						.map((c) => c.phrase_id),
+					reviewed_or_inactive: data
+						.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
+						.map((c) => c.phrase_id),
+					reviewed_last_7d: data
+						.filter((c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at))
+						.map((c) => c.phrase_id),
+					unreviewed_active: data
+						.filter((c) => c.status === 'active' && !c.last_reviewed_at)
+						.map((c) => c.phrase_id),
+					today_active: data
+						.filter(
+							(c) =>
+								!!c.retrievability_now &&
+								c.retrievability_now <= 0.9 &&
+								c.status === 'active'
+						)
+						.map((c) => c.phrase_id),
+				}
+			),
+	}
 }
 
 /**
@@ -194,13 +179,10 @@ export const useDeckPids = (lang: string) => {
 export const usePreferredTranslationLang = (lang: string): string => {
 	const { data: deck } = useDeckMeta(lang)
 	const { data: profile } = useProfile()
-
-	return useMemo(() => {
-		// Deck-specific preference takes priority
-		if (deck?.preferred_translation_lang) {
-			return deck.preferred_translation_lang
-		}
-		// Global default from profile
-		return profile?.languages_known[0]?.lang ?? 'eng'
-	}, [deck, profile])
+	// Deck-specific preference takes priority
+	if (deck?.preferred_translation_lang) {
+		return deck.preferred_translation_lang
+	}
+	// Global default from profile
+	return profile?.languages_known[0]?.lang ?? 'eng'
 }

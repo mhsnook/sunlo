@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, RPCFunctions, UseLiveQueryResult, uuid } from '@/types/main'
@@ -101,27 +100,21 @@ export function useReviewsToday(lang: string, day_session: string) {
 		[lang, day_session]
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
-	return useMemo(
-		() => ({
-			isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
-			data: {
-				...reviewDayQuery.data,
-				reviewsMap: mapArray(reviewsQuery.data, 'phrase_id'),
-			},
-		}),
-		[reviewsQuery, reviewDayQuery]
-	)
+	return {
+		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
+		data: {
+			...reviewDayQuery.data,
+			reviewsMap: mapArray(reviewsQuery.data, 'phrase_id'),
+		},
+	}
 }
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const query = useReviewsToday(lang, day_session)
-	return useMemo(
-		() => ({
-			...query,
-			data: mapToStats(query.data.reviewsMap, query.data.manifest ?? []),
-		}),
-		[query]
-	)
+	return {
+		...query,
+		data: mapToStats(query.data.reviewsMap, query.data.manifest ?? []),
+	}
 }
 
 export function useReviewDay(
