@@ -52,7 +52,7 @@ export function NavUser() {
 	})
 
 	// Show login/signup buttons when not authenticated
-	if (!isAuth || !profile) {
+	if (!isAuth) {
 		return (
 			<SidebarMenu>
 				<SidebarMenuItem>
@@ -75,8 +75,7 @@ export function NavUser() {
 		)
 	}
 
-	const { username, avatar_path } = profile
-	const avatarUrl = avatarUrlify(avatar_path)
+	const avatarUrl = avatarUrlify(profile?.avatar_path)
 
 	return (
 		<SidebarMenu>
@@ -88,11 +87,13 @@ export function NavUser() {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
 						>
 							<Avatar>
-								<AvatarImage src={avatarUrl} alt={username} />
+								<AvatarImage src={avatarUrl} alt={profile?.username} />
 								<AvatarFallback className="rounded-lg">Me</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">{username}</span>
+								<span className="truncate font-semibold">
+									{profile?.username}
+								</span>
 								<span className="truncate text-xs">{userEmail}</span>
 							</div>
 							<ChevronsUpDown className="ml-auto size-4" />
