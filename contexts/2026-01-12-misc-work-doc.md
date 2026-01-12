@@ -7,6 +7,7 @@ Completed items:
 - [x] (c1, d1) Fix: Loading spinner creating scrollbars
 - [x] (c3, d2) Add: react compiler
 - [x] (c1, d1) Chore: Remove these console logs `We expected a userId here`
+- [x] (c1, d1) Fix: convert the PlusMenu to standard shadcn menu
 
 ## Instructions for the Coding Agent
 
@@ -28,17 +29,6 @@ Completed items:
 
 STATUS: PENDING
 COMPLEXITY: 2
-
-### Fix F: the PlusMenu is not keyboard navigable. We should switch to standard ShadCN menu.
-
-STATUS: PENDING
-COMPLEXITY: 1
-
-### COMPLETED: Fix G: When the loading spinner spins, e.g. on /friends suspending for the loader, the way the Loader spins creates x and y scrolls that come and go
-
-STATUS: COMPLETED
-COMPLEXITY: 1
-DIFFICULTY: 1
 
 NOTE: The router's fallback loading component wasn't using the standard Loader component; switching to that fixed it.
 
@@ -79,22 +69,17 @@ COMPLEXITY: 1
 
 NOTE FROM HUMAN MANAGER: The "browse" page is really kind of crying out for a "search" box right there up at the top which searches all the phrases and translations and requests and playlists in the local DB. See `phraseFull` collection's `searchableText` field for a head start on this (but playlists are not integrated there at this time).
 
-### Misc L: Leftovers from 2026-01-10-public-mode.md
+### L. Fix: When you get login-requred intercepted on the add-phrase page and then log in, the sidebar does not update unless you refresh
 
 STATUS: Pending
-COMPLEXITY: 2 // just because it's 3 things
-
-NOTE FROM HUMAN MANAGER: This is 3 tasks left over from
-
-- [ ] The "browse" page is really kind of crying out for a "search" box right there up at the top which searches all the phrases and translations and requests and playlists in the local DB. See `phraseFull` collection's `searchableText` field for a head start on this (but playlists are not integrated there at this time).
-- [ ] When you get intercepted on the add-phrase page and then log in, the sidebar does not update unless you refresh
+COMPLEXITY: 1
 
 ### M. Design: Try font "Instrument Sans"
 
 STATUS: PENDING
 COMPLEXITY: 1
 
-MESSAGE FROM HUMAN MANAGER: do this on a separate branch so we can compare easily. [Link to font](https://fonts.google.com/specimen/Instrument+Sans)
+MESSAGE FROM HUMAN MANAGER: [Link to font](https://fonts.google.com/specimen/Instrument+Sans)
 
 ### N. Feature: Mutations that add/remove/change card status should update that phrase's count_active, count_learned, count_cards, count_skipped, count_learners, just like we do with upvote counts for requests, comments and playlists.
 
