@@ -1604,6 +1604,7 @@ export type Database = {
 		Functions: {
 			add_phrase_translation_card: {
 				Args: {
+					create_card?: boolean
 					phrase_lang: string
 					phrase_text: string
 					phrase_text_script?: string

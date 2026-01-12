@@ -5,9 +5,10 @@ WORKING BRANCH: `2026-01-10-general`.
 Completed items:
 
 - [x] (c1, d1) Fix: Loading spinner creating scrollbars
-- [x] (c3, d2) Add: react compiler
+- [x] (c3, d2) Add: react compiler, remove linter cruft
 - [x] (c1, d1) Chore: Remove these console logs `We expected a userId here`
 - [x] (c1, d1) Fix: convert the PlusMenu to standard shadcn menu
+- [x] (c1, d1) Design: Try font "Instrument Sans"
 
 ## Instructions for the Coding Agent
 
@@ -74,13 +75,6 @@ NOTE FROM HUMAN MANAGER: The "browse" page is really kind of crying out for a "s
 STATUS: Pending
 COMPLEXITY: 1
 
-### M. Design: Try font "Instrument Sans"
-
-STATUS: PENDING
-COMPLEXITY: 1
-
-MESSAGE FROM HUMAN MANAGER: [Link to font](https://fonts.google.com/specimen/Instrument+Sans)
-
 ### N. Feature: Mutations that add/remove/change card status should update that phrase's count_active, count_learned, count_cards, count_skipped, count_learners, just like we do with upvote counts for requests, comments and playlists.
 
 STATUS: PENDING
@@ -123,3 +117,25 @@ STATUS: PENDING
 COMPLEXITY: 1
 
 NOTE FROM HUMAN MANAGER: could be a bug parsing `null` in the `ago` function in @src/lib/dayjs.ts.
+
+### U. Fix: malformed links like /learn/undefined should 404
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### V. Fix: When you try to "sign up" using credentials of an existing user, you get an error but then still get logged in. We should probably inspect these errors, and if it's this specific case, just log you in and don't throw the error/toast.
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### W. Feature: Edit or soft-delete your own translations
+
+STATUS: PENDING
+COMPLEXITY: 2
+
+NOTE FROM HUMAN MANAGER: This should be a simple update call (no RPC needed) to edit the translation item, and then we have to do a tiny bit of fanciness to update the local Phrase item with just the translation we've changed (or to remove it), and update the `phrase_translation` RLS so that archived/deleted rows don't show up. So it all seems very small but several layers must be done together.
+
+### X. Chore: 1. Replace the friend request / accept / cancel logic with a dedicated RPC
+
+STATUS: PENDING
+COMPLEXITY: 2 (simple enough, but requires migrations and checking state/idempotence/edge cases (like both people sending requests at the same time))
