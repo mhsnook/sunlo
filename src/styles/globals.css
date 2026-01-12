@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap');
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
@@ -104,8 +105,8 @@
 	--breakpoint-md: 768px;
 	--breakpoint-lg: 1024px;
 
-	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue',
-		Oxygen-Sans, Cantarell, sans-serif;
+	--font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+		'Helvetica Neue', Oxygen-Sans, Cantarell, sans-serif;
 
 	--shadow-2xs: 0 1px var(--shadow-color-1);
 	--shadow-xs: 0 1px 2px 0 var(--shadow-color-1);
