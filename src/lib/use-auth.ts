@@ -41,16 +41,6 @@ export function useAuth() {
 	return context
 }
 
-export function useUserId(): string
-export function useUserId(mode: 'default' | 'strict'): string
-export function useUserId(mode: 'relaxed'): string | null
-export function useUserId(mode: 'relaxed' | 'default' | 'strict' = 'default') {
-	const { userId } = useAuth()
-	if (!userId && mode === 'default') {
-		console.log(`We expected a userId here... but got ${userId}`)
-	}
-	if (!userId && mode === 'strict') {
-		throw new Error(`Expected a userId here but got: ${userId}`)
-	}
-	return userId!
+export function useUserId(): string | null {
+	return useAuth()?.userId
 }

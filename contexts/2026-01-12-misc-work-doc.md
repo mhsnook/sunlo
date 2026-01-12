@@ -4,7 +4,9 @@ WORKING BRANCH: `2026-01-10-general`.
 
 Completed items:
 
-- // add list here
+- [x] (c1, d1) Fix: Loading spinner creating scrollbars
+- [x] (c3, d2) Add: react compiler
+- [x] (c1, d1) Chore: Remove these console logs `We expected a userId here`
 
 ## Instructions for the Coding Agent
 
@@ -21,14 +23,6 @@ Completed items:
 6. Go back to step 1 for as long as there are more PENDING items.
 
 ## Items to Work On
-
-### Analysis D: React Compiler
-
-STATUS: PENDING
-COMPLEXITY: 3
-
-DESCRIPTION FROM HUMAN MANAGER:
-Please analyse the code to determine whether we might benefit from, or be harmed by, the adoption of the react compiler, as it is now stable and promising to simplify code while maintaining or even improving client performance. If necessary, please create a new github branch and install the compiler and try it out. But do not commit anything on the current working branch, `dev/9th-jan`. The primary output
 
 ### Feature E: Friends feed and Popular feed should become polymorphic like the recent feed, and Filters should work there too
 
@@ -94,4 +88,53 @@ NOTE FROM HUMAN MANAGER: This is 3 tasks left over from
 
 - [ ] The "browse" page is really kind of crying out for a "search" box right there up at the top which searches all the phrases and translations and requests and playlists in the local DB. See `phraseFull` collection's `searchableText` field for a head start on this (but playlists are not integrated there at this time).
 - [ ] When you get intercepted on the add-phrase page and then log in, the sidebar does not update unless you refresh
-- [ ] Track down these "expected otherwise" console.logs `We expected a userId here... but got null` -- they are probably signs of a component or route that should have some attention paid to it to see whether things need to be rendered conditionally or have auth checks intercept features, etc.
+
+### M. Design: Try font "Instrument Sans"
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+MESSAGE FROM HUMAN MANAGER: do this on a separate branch so we can compare easily. [Link to font](https://fonts.google.com/specimen/Instrument+Sans)
+
+### N. Feature: Mutations that add/remove/change card status should update that phrase's count_active, count_learned, count_cards, count_skipped, count_learners, just like we do with upvote counts for requests, comments and playlists.
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### O. Fix: The view `meta_phrase_info` seems to be incorrectly reporting zeros for numbers like `count_active`, `count_learned`, `count_skipped`
+
+STATUS: PENDING
+COMPLEXITY: 2
+
+NOTE FROM HUMAN MANAGER: This is a complex view and it's not clear when it started being broken. But it does appear to be broken now. While we're messing with this, we can actually remove `count_cards` because it is data we can derive from the other counts, and it is actually only used in one place where `count_learners` is more appropriate. Also please drop `added_by_profile` while you're in there, as it is no longer used (we do this join on the client now).
+
+Also, while working on this, please recommend other ways that we might simplify this view. For example, the subquery with all the most recent reviews from every person; maybe this should be a materialized view that gets updated daily. Or maybe all of this aggregate metadata should be kept on a separate table! I don't know. What do you think?
+
+### P. Card Bookmarks! Let's change the card-status things so we're not using a heart any more but a bookmark, and change the dropdown accordingly but leave its "menu-ness" in place, but only use it on the phrase detail page.
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### Q. Feature: Card Review interface should show a context menu with options: "Banish this card" or "I've learned this (don't show it any more)"
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### R. Design: Make the default theme 'light' somehow
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+### S. Feature: Reverse Reviews
+
+STATUS: Still defining the problem / desired behaviour
+COMPLEXITY: 2
+
+NOTE FROM HUMAN MANAGER: the card shouldn't always be shown on the front, should it? sometimes we need to see the translation and remember the phrase (or see the request??). What do you think?
+
+### T. Fix: When you've never reviewed a thing, it says most recent review `1 mo ago`
+
+STATUS: PENDING
+COMPLEXITY: 1
+
+NOTE FROM HUMAN MANAGER: could be a bug parsing `null` in the `ago` function in @src/lib/dayjs.ts.
