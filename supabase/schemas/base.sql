@@ -32,8 +32,6 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
-create extension if not exists "pgsodium";
-
 alter schema "public" owner to "postgres";
 
 create extension if not exists "plv8"
@@ -105,7 +103,8 @@ create or replace function "public"."add_phrase_translation_card" (
 	"translation_text" "text",
 	"translation_lang" "text",
 	"phrase_text_script" "text" default null::"text",
-	"translation_text_script" "text" default null::"text"
+	"translation_text_script" "text" default null::"text",
+	"create_card" boolean default true
 ) returns "json" language "plpgsql" as $$
 DECLARE
     new_phrase public.phrase;
@@ -123,10 +122,12 @@ BEGIN
     VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
     RETURNING * INTO new_translation;
 
-    -- Insert a new user card for the authenticated user
-    INSERT INTO public.user_card (phrase_id, status, lang)
-    VALUES (new_phrase.id, 'active', phrase_lang)
-    RETURNING * INTO new_card;
+    -- Only insert a new user card if create_card is true
+    IF create_card THEN
+        INSERT INTO public.user_card (phrase_id, status, lang)
+        VALUES (new_phrase.id, 'active', phrase_lang)
+        RETURNING * INTO new_card;
+    END IF;
 
     RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
 END;
@@ -138,7 +139,8 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_text" "text",
 	"translation_lang" "text",
 	"phrase_text_script" "text",
-	"translation_text_script" "text"
+	"translation_text_script" "text",
+	"create_card" boolean
 ) owner to "postgres";
 
 create or replace function "public"."add_tags_to_phrase" (
@@ -2562,24 +2564,6 @@ grant usage on schema "public" to "anon";
 grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
-
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text"
-) to "authenticated";
-
-grant all on function "public"."add_phrase_translation_card" (
-	"phrase_text" "text",
-	"phrase_lang" "text",
-	"translation_text" "text",
-	"translation_lang" "text",
-	"phrase_text_script" "text",
-	"translation_text_script" "text"
-) to "service_role";
 
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
