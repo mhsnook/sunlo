@@ -16,7 +16,6 @@ import { phrasesFull } from '@/lib/live-collections'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import { useUserId } from '@/lib/use-auth'
-import { useMemo } from 'react'
 
 export const useLanguageMeta = (
 	lang: string
@@ -234,18 +233,12 @@ export function usePhraseProvenance(phraseId: uuid) {
 	const { data: playlists } = usePhrasePlaylists(phraseId)
 	const { data: comments } = usePhraseComments(phraseId)
 
-	return useMemo(() => {
-		const items: PhraseProvenanceItem[] = [
-			...(playlists ?? []),
-			...(comments ?? []),
-		]
-
-		// Sort by created_at descending (newest first)
-		items.sort(
-			(a, b) =>
-				new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-		)
-
-		return items
-	}, [playlists, comments])
+	const items: PhraseProvenanceItem[] = [
+		...(playlists ?? []),
+		...(comments ?? []),
+	].toSorted(
+		(a, b) =>
+			new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+	)
+	return items
 }

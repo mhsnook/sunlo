@@ -1,10 +1,4 @@
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useState,
-	type SetStateAction,
-} from 'react'
+import { useEffect, useState, type SetStateAction } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useDebounce } from '@uidotdev/usehooks'
 
@@ -45,36 +39,25 @@ function SearchTab() {
 	}, [debouncedText, searchText, navigate])
 
 	const { data: langTags } = useLanguageTags(lang)
-	const tagOptions = useMemo(
-		() =>
-			(langTags ?? []).map((tag) => ({ value: tag.name, label: tag.name })) ??
-			[],
-		[langTags]
-	)
+	const tagOptions =
+		(langTags ?? []).map((tag) => ({ value: tag.name, label: tag.name })) ?? []
 
-	const selectedTags = useMemo(
-		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
-		[tagsFilter]
-	)
+	const selectedTags = tagsFilter ? tagsFilter.split(',').filter(Boolean) : []
 
-	const setSelectedTags = useCallback(
-		(value: SetStateAction<string[]>) => {
-			void navigate({
-				search: (prev: PhraseSearchType) => {
-					const newSelectedTags =
-						typeof value === 'function' ? value(selectedTags) : value
-					return {
-						...prev,
-						tags:
-							newSelectedTags.length ? newSelectedTags.join(',') : undefined,
-					}
-				},
-				replace: true,
-				params: true,
-			})
-		},
-		[navigate, selectedTags]
-	)
+	const setSelectedTags = (value: SetStateAction<string[]>) => {
+		void navigate({
+			search: (prev: PhraseSearchType) => {
+				const newSelectedTags =
+					typeof value === 'function' ? value(selectedTags) : value
+				return {
+					...prev,
+					tags: newSelectedTags.length ? newSelectedTags.join(',') : undefined,
+				}
+			},
+			replace: true,
+			params: true,
+		})
+	}
 
 	return (
 		<Card>

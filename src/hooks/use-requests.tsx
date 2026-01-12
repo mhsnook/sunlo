@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 
 import type { Tables } from '@/types/supabase'
@@ -88,15 +87,13 @@ export const useRequestLinksWithComments = (requestId: uuid) => {
 				parent_comment_id: comment.parent_comment_id,
 			}))
 	)
-	return useMemo(() => {
-		return {
-			isLoading,
-			data: mapArrays<
-				CommentPhraseLinkType & { parent_comment_id: uuid | null },
-				'phrase_id'
-			>(data, 'phrase_id'),
-		}
-	}, [data, isLoading])
+	return {
+		isLoading,
+		data: mapArrays<
+			CommentPhraseLinkType & { parent_comment_id: uuid | null },
+			'phrase_id'
+		>(data, 'phrase_id'),
+	}
 }
 
 export const useRequestCounts = (
@@ -111,13 +108,10 @@ export const useRequestCounts = (
 			.where(({ comment }) => eq(id, comment.request_id))
 	).data?.length
 	const countLinks = useRequestLinksPhraseIds(id).data?.length
-	return useMemo(
-		() => ({
-			countComments,
-			countLinks,
-		}),
-		[countComments, countLinks]
-	)
+	return {
+		countComments,
+		countLinks,
+	}
 }
 
 export const useRequest = (id: uuid): UseLiveQueryResult<PhraseRequestType> =>

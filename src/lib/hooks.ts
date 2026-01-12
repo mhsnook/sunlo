@@ -1,10 +1,9 @@
-import { useMemo } from 'react'
 import { useDecks } from '@/hooks/use-deck'
 import supabase from './supabase-client'
 
 export function useDeckLangs() {
 	const { data } = useDecks()
-	return useMemo(() => data?.map((d) => d.lang), [data])
+	return data?.map((d) => d.lang)
 }
 
 export function avatarUrlify(path: string | null | undefined): string {

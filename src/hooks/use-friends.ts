@@ -8,7 +8,6 @@ import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
 import { chatMessagesCollection } from '@/lib/collections'
-import { useMemo } from 'react'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, RelationsFullType } from '@/lib/live-collections'
 
@@ -120,19 +119,16 @@ export const useAllChats = (): UseLiveQueryResult<ChatsMap> => {
 			}))
 	)
 
-	return useMemo(
-		() => ({
-			...initialQuery,
-			data:
-				!initialQuery.data ? undefined : (
-					mapArrays<ChatMessageRelType, 'friendUid'>(
-						initialQuery.data,
-						'friendUid'
-					)
-				),
-		}),
-		[initialQuery]
-	)
+	return {
+		...initialQuery,
+		data:
+			!initialQuery.data ? undefined : (
+				mapArrays<ChatMessageRelType, 'friendUid'>(
+					initialQuery.data,
+					'friendUid'
+				)
+			),
+	}
 }
 
 export const useOneFriendChat = (

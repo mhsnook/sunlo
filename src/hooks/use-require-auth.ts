@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import toast from 'react-hot-toast'
 
@@ -13,20 +12,17 @@ export function useRequireAuth() {
 	const { isAuth } = useAuth()
 	const navigate = useNavigate()
 
-	return useCallback(
-		(action: () => void, message = 'Please log in to continue') => {
-			if (!isAuth) {
-				toast.error(message)
-				void navigate({
-					to: '/login',
-					search: { redirectedFrom: window.location.href },
-				})
-			} else {
-				action()
-			}
-		},
-		[isAuth, navigate]
-	)
+	return (action: () => void, message = 'Please log in to continue') => {
+		if (!isAuth) {
+			toast.error(message)
+			void navigate({
+				to: '/login',
+				search: { redirectedFrom: window.location.href },
+			})
+		} else {
+			action()
+		}
+	}
 }
 
 /**

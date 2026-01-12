@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
 
@@ -14,19 +13,17 @@ export const Route = createFileRoute('/_user/friends/invite')({
 
 function InviteFriendPage() {
 	const { data: profile } = useProfile()
-	const share = useMemo(() => {
-		const signupUrl = `${window.location.origin}/signup?referrer=${profile?.uid}`
-		const data = {
-			text: `Hello friend, I'm learning a language with Sunlo, a social language learning app. Will you join me? ${signupUrl}`,
-			title: `Invitation! Join ${profile?.username || 'your friend'} on Sunlo.app`,
-		}
-		return {
-			can: typeof navigator.canShare === 'function' && navigator.canShare(data),
-			data,
-			url: signupUrl,
-			copyUrl: () => copyLink(signupUrl),
-		}
-	}, [profile?.username, profile?.uid])
+	const signupUrl = `${window.location.origin}/signup?referrer=${profile?.uid}`
+	const data = {
+		text: `Hello friend, I'm learning a language with Sunlo, a social language learning app. Will you join me? ${signupUrl}`,
+		title: `Invitation! Join ${profile?.username || 'your friend'} on Sunlo.app`,
+	}
+	const share = {
+		can: typeof navigator.canShare === 'function' && navigator.canShare(data),
+		data,
+		url: signupUrl,
+		copyUrl: () => copyLink(signupUrl),
+	}
 
 	return (
 		<main className="mx-auto max-w-4xl space-y-12 px-4 py-8 @lg:px-6 @xl:px-8">

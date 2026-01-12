@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo, useState } from 'react'
+import { useId, useState } from 'react'
 import type { ControlledInputProps } from './types'
 import {
 	Popover,
@@ -41,21 +41,14 @@ export function SelectOneOfYourLanguages({
 	const { data: languagesToShow } = useLanguagesToShow()
 	const [open, setOpen] = useState(false)
 
-	const generalLanguageOptions = useMemo(
-		() =>
-			allLanguageOptions.filter(
-				(option) => !languagesToShow.includes(option.value)
-			),
-		[languagesToShow]
+	const generalLanguageOptions = allLanguageOptions.filter(
+		(option) => !languagesToShow.includes(option.value)
 	)
 
-	const onSelect = useCallback(
-		(currentValue: string) => {
-			setValue(currentValue === value ? '' : currentValue)
-			setOpen(false)
-		},
-		[value, setValue, setOpen]
-	)
+	const onSelect = (currentValue: string) => {
+		setValue(currentValue === value ? '' : currentValue)
+		setOpen(false)
+	}
 
 	const id = useId()
 	return (
