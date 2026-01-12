@@ -11,7 +11,11 @@ export default defineConfig(({ mode }) => {
 			tanstackRouter({
 				autoCodeSplitting: true,
 			}),
-			react(),
+			react({
+				babel: {
+					plugins: ['babel-plugin-react-compiler'],
+				},
+			}),
 		],
 		build: {
 			chunkSizeWarningLimit: 750,
