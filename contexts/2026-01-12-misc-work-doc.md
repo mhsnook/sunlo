@@ -9,6 +9,7 @@ Completed items:
 - [x] (c1, d1) Chore: Remove these console logs `We expected a userId here`
 - [x] (c1, d1) Fix: convert the PlusMenu to standard shadcn menu
 - [x] (c1, d1) Design: Try font "Instrument Sans"
+- [x] (c1, d1) Design: Use Bookmark\* icons to card status
 
 ## Instructions for the Coding Agent
 
@@ -88,11 +89,6 @@ COMPLEXITY: 2
 NOTE FROM HUMAN MANAGER: This is a complex view and it's not clear when it started being broken. But it does appear to be broken now. While we're messing with this, we can actually remove `count_cards` because it is data we can derive from the other counts, and it is actually only used in one place where `count_learners` is more appropriate. Also please drop `added_by_profile` while you're in there, as it is no longer used (we do this join on the client now).
 
 Also, while working on this, please recommend other ways that we might simplify this view. For example, the subquery with all the most recent reviews from every person; maybe this should be a materialized view that gets updated daily. Or maybe all of this aggregate metadata should be kept on a separate table! I don't know. What do you think?
-
-### P. Card Bookmarks! Let's change the card-status things so we're not using a heart any more but a bookmark, and change the dropdown accordingly but leave its "menu-ness" in place, but only use it on the phrase detail page.
-
-STATUS: PENDING
-COMPLEXITY: 1
 
 ### Q. Feature: Card Review interface should show a context menu with options: "Banish this card" or "I've learned this (don't show it any more)"
 
