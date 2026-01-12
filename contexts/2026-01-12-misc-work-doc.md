@@ -74,7 +74,19 @@ NOTE FROM HUMAN MANAGER: The "browse" page is really kind of crying out for a "s
 ### L. Fix: When you get login-requred intercepted on the add-phrase page and then log in, the sidebar does not update unless you refresh
 
 STATUS: Pending
-COMPLEXITY: 1
+COMPLEXITY: 2
+
+#### NOTE FROM HUMAN MANAGER
+
+This login results in a whole bunch of this console warning from tanstack/db:
+
+> [Live Query Error] Source collection 'my_profile' was manually cleaned up while live query 'live-query-4' depends on it. Live queries prevent automatic GC, so this was likely a manual cleanup() call.
+
+And
+
+> [Live Query Error] Source collection 'decks' was manually cleaned up while live query 'live-query-9' depends on it. Live queries prevent automatic GC, so this was likely a manual cleanup() call.
+
+And so on.
 
 ### N. Feature: Mutations that add/remove/change card status should update that phrase's count_active, count_learned, count_cards, count_skipped, count_learners, just like we do with upvote counts for requests, comments and playlists.
 
