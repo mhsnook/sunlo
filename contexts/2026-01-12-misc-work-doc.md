@@ -10,6 +10,7 @@ Completed items:
 - [x] (c1, d1) Fix: convert the PlusMenu to standard shadcn menu
 - [x] (c1, d1) Design: Try font "Instrument Sans"
 - [x] (c1, d1) Design: Use Bookmark\* icons to card status
+- [x] (c1, d1) Changing card status updates the phrase's metadata (count_learners) etc
 
 ## Instructions for the Coding Agent
 
@@ -87,11 +88,6 @@ And
 > [Live Query Error] Source collection 'decks' was manually cleaned up while live query 'live-query-9' depends on it. Live queries prevent automatic GC, so this was likely a manual cleanup() call.
 
 And so on.
-
-### N. Feature: Mutations that add/remove/change card status should update that phrase's count_active, count_learned, count_cards, count_skipped, count_learners, just like we do with upvote counts for requests, comments and playlists.
-
-STATUS: PENDING
-COMPLEXITY: 1
 
 ### O. Fix: The view `meta_phrase_info` seems to be incorrectly reporting zeros for numbers like `count_active`, `count_learned`, `count_skipped`
 

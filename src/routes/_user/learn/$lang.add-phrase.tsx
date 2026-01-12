@@ -204,6 +204,15 @@ function AddPhraseTab() {
 					translations: [TranslationSchema.parse(rpcResult.translation)],
 				})
 			)
+			if (rpcResult.card)
+				phrasesCollection.utils.writeUpdate({
+					id: rpcResult.phrase.id,
+					count_cards: 1,
+					count_learners: 1,
+					count_active: 1,
+					count_skipped: 0,
+					count_learned: 0,
+				})
 
 			// Update deck collection if we created/reactivated one
 			if (newDeck) {

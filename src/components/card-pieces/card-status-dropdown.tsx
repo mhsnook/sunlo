@@ -23,9 +23,10 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import { useDecks } from '@/hooks/use-deck'
 import { Button } from '@/components/ui/button'
-import { cardsCollection } from '@/lib/collections'
+import { cardsCollection, phrasesCollection } from '@/lib/collections'
 import {
 	CardMetaSchema,
+	CardMetaType,
 	PhraseFullFilteredType,
 	PhraseFullFullType,
 } from '@/lib/schemas'
@@ -105,6 +106,52 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
+function updatePhraseCounts(
+	oldCard: CardMetaType | undefined,
+	newCard: Tables<'user_card'> // cards never get deleted, just marked inactive
+) {
+	// if no change in status, nothing to update
+	if (oldCard?.status === newCard?.status) return
+	const oldPhrase = phrasesCollection.get(newCard.phrase_id)
+	// if we can't find the phrase, that's weird
+	if (!oldPhrase) {
+		console.error(
+			`Odd that we have a new card but can't find the phrase for id "${newCard.phrase_id}"`
+		)
+		return
+	}
+	phrasesCollection.utils.writeUpdate({
+		id: oldPhrase.id,
+		count_cards: (oldPhrase?.count_cards ?? 0) + (!oldCard ? 1 : 0),
+		count_learned: Math.max(
+			(oldPhrase?.count_learned ?? 0) -
+				(oldCard?.status === 'learned' ? 1 : 0) +
+				(newCard.status === 'learned' ? 1 : 0),
+			0
+		),
+		count_active: Math.max(
+			(oldPhrase?.count_active ?? 0) -
+				(oldCard?.status === 'active' ? 1 : 0) +
+				(newCard.status === 'active' ? 1 : 0),
+			0
+		),
+		count_skipped: Math.max(
+			(oldPhrase?.count_skipped ?? 0) -
+				(oldCard?.status === 'skipped' ? 1 : 0) +
+				(newCard.status === 'skipped' ? 1 : 0),
+			0
+		),
+		count_learners: Math.max(
+			(oldPhrase?.count_learners ?? 0) -
+				(oldCard?.status === 'active' || oldCard?.status === 'learned' ?
+					1
+				:	0) +
+				(newCard.status === 'active' || newCard.status === 'learned' ? 1 : 0),
+			0
+		),
+	})
+}
+
 function useCardStatusMutation(phrase: AnyPhrase) {
 	const userId = useUserId()
 
@@ -142,6 +189,8 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 			return data[0]
 		},
 		onSuccess: (data, variables) => {
+			if (data) updatePhraseCounts(phrase.card, data)
+
 			if (phrase.card) {
 				cardsCollection.utils.writeUpdate({
 					phrase_id: phrase.id,

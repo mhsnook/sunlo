@@ -59,8 +59,8 @@ export function useCompositePids(lang: string) {
 	)
 	const popular = pidsSelectable.toSorted(
 		(pid1, pid2) =>
-			(phrasesMap.get(pid2)?.count_cards ?? 0) -
-			(phrasesMap.get(pid1)?.count_cards ?? 0)
+			(phrasesMap.get(pid2)?.count_learners ?? 0) -
+			(phrasesMap.get(pid1)?.count_learners ?? 0)
 	)
 	const newest = pidsSelectable.toSorted((pid1, pid2) =>
 		(
