@@ -192,7 +192,6 @@ export function ManagePlaylistPhrasesDialog({
 				variant="ghost"
 				size="icon"
 				title="Manage phrases"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() => setOpen(true)}
 			>
 				<ListMusic className="h-4 w-4" />
@@ -222,7 +221,6 @@ export function ManagePlaylistPhrasesDialog({
 												size="icon"
 												className="h-6 w-6"
 												disabled={index === 0 || reorderMutation.isPending}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
 												onClick={() =>
 													reorderMutation.mutate({
 														currentIndex: index,
@@ -241,7 +239,6 @@ export function ManagePlaylistPhrasesDialog({
 													index === phrasesData.length - 1 ||
 													reorderMutation.isPending
 												}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
 												onClick={() =>
 													reorderMutation.mutate({
 														currentIndex: index,
@@ -264,7 +261,6 @@ export function ManagePlaylistPhrasesDialog({
 													type="url"
 													placeholder="Timestamp link (optional)"
 													value={item.link.href ?? ''}
-													// oxlint-disable-next-line jsx-no-new-function-as-prop
 													onChange={(e) =>
 														updateHrefMutation.mutate({
 															linkId: item.link.id,
@@ -279,7 +275,6 @@ export function ManagePlaylistPhrasesDialog({
 										{/* Delete button */}
 										<Button
 											type="button"
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onClick={() => removePhraseMutation.mutate(item.link.id)}
 											variant="ghost"
 											size="icon"

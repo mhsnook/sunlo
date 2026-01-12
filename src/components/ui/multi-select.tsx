@@ -75,7 +75,7 @@ export function FancyMultiSelect({
 			onKeyDown={handleKeyDown}
 			className="overflow-visible bg-transparent"
 		>
-			<div className="group border-primary-foresoft/30 hover:border-primary ring-offset-background focus-within:ring-ring rounded-2xl border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
+			<div className="border-primary-foresoft/30 hover:border-primary ring-offset-background focus-within:ring-ring group rounded-2xl border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-offset-2">
 				<div className="flex flex-wrap gap-1">
 					{showSelected && (
 						<ShowSelected
@@ -114,9 +114,7 @@ export function FancyMultiSelect({
 										null
 									:	<CommandItem
 											key={option.value}
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onMouseDown={nullSubmit}
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onSelect={() => {
 												setInputValue('')
 												setSelected(
@@ -164,16 +162,13 @@ export function ShowSelected({
 							<Button
 								size="icon"
 								variant="badge-outline"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
 										handleUnselect(value)
 									}
 								}}
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onMouseDown={nullSubmit}
 								type="button"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => handleUnselect(value)}
 							>
 								<X />

@@ -148,7 +148,6 @@ function NewRequestPage() {
 						<FormField
 							control={form.control}
 							name="prompt"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>

@@ -27,10 +27,7 @@ export function PlaylistItem({
 
 	return (
 		<div
-			style={
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
-				{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties
-			}
+			style={{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties}
 			className="bg-card text-card-foreground @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
 		>
 			<div className="flex flex-row items-center justify-between gap-2">
@@ -38,7 +35,6 @@ export function PlaylistItem({
 					uid={playlist.uid}
 					action="created a Playlist"
 					timeLinkTo="/learn/$lang/playlists/$playlistId"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{
 						lang: playlist.lang,
 						playlistId: playlist.id,
@@ -78,7 +74,6 @@ export function PlaylistItem({
 						<Link
 							key={phrase.id}
 							to="/learn/$lang/phrases/$id"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang: phrase.lang, id: phrase.id }}
 							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
 						>
@@ -88,7 +83,6 @@ export function PlaylistItem({
 							<span
 								className="truncate font-medium"
 								style={
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									{
 										viewTransitionName: `phrase-text-${phrase.id}`,
 									} as CSSProperties
@@ -118,7 +112,6 @@ export function PlaylistItem({
 					<Link
 						to="/learn/$lang/playlists/$playlistId"
 						className="hover:text-foreground flex items-center gap-1"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: playlist.lang, playlistId: playlist.id }}
 					>
 						<LinkIcon className="h-4 w-4" /> Playlist details

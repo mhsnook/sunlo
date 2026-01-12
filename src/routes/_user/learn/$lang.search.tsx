@@ -70,7 +70,6 @@ function SearchTab() {
 					<Label htmlFor="phrase">Phrase</Label>
 					<Input
 						placeholder="Enter a phrase to search or add"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onChange={(e) => setLiveText(e.target.value)}
 						defaultValue={searchText}
 					/>

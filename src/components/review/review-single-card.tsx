@@ -57,7 +57,6 @@ export function ReviewSingleCard({
 	return (
 		<CardlikeFlashcard
 			className="mx-auto flex min-h-[80vh] w-full flex-col"
-			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
@@ -68,7 +67,6 @@ export function ReviewSingleCard({
 						<Button
 							size="icon"
 							variant="secondary"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => playAudio(phrase.text)}
 							aria-label="Play original phrase"
 						>
@@ -92,7 +90,6 @@ export function ReviewSingleCard({
 								<Button
 									size="icon"
 									variant="secondary"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => playAudio(trans.text)}
 									aria-label="Play translation"
 								>
@@ -105,17 +102,12 @@ export function ReviewSingleCard({
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
-					<Button
-						className="mb-3 w-full"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
-						onClick={() => setRevealCard(true)}
-					>
+					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
 						Show Translation
 					</Button>
 				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
 						<Button
 							variant="default"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
@@ -129,7 +121,6 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={cn(
@@ -141,7 +132,6 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
@@ -157,7 +147,6 @@ export function ReviewSingleCard({
 								'bg-blue-500 hover:border-blue-400 hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutate({ score: 4 })}
 							disabled={isPending}
 						>
@@ -189,7 +178,6 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<PermalinkButton
 						to={'/learn/$lang/phrases/$id'}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: phrase.lang, id: phrase.id }}
 						className="w-full px-2 py-1.5"
 						link

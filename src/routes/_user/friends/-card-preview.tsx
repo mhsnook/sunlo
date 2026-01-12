@@ -23,7 +23,6 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	return (
 		<CardlikeFlashcard
 			className={`relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
-			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
 			{status === 'pending' || !phrase ?
@@ -66,7 +65,6 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 							)}
 							<Link
 								to={'/learn/$lang/phrases/$id'}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: phrase.lang, id: pid }}
 								className={buttonVariants({
 									variant: 'secondary',

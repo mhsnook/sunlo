@@ -196,7 +196,6 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 						<Button
 							variant="secondary"
 							type="button"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => reset()}
 							disabled={!isDirty}
 						>

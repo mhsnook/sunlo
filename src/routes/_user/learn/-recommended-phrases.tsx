@@ -48,7 +48,6 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 				<Link
 					className="s-link-muted"
 					to="/learn/$lang/requests/new"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 				>
 					requesting a phrase

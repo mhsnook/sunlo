@@ -34,7 +34,6 @@ export const PhraseTinyCard = ({
 					`mb-4 flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
 					className
 				)}
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
 			>
 				<div className="line-clamp-3">
@@ -55,12 +54,10 @@ export const PhraseTinyCard = ({
 		<Link
 			className={cn(`m-1 transition-all hover:-translate-y-px`, className)}
 			to="/learn/$lang/phrases/$id"
-			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			params={{ lang: phrase.lang, id: pid }}
 		>
 			<CardlikeFlashcard
 				className="mb-4 flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2"
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
 			>
 				<div className="line-clamp-3">

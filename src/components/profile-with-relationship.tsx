@@ -27,7 +27,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							className="size-8"
 							size="icon"
 							title="Send friend request"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => inviteResponseMutation.mutate('invite')}
 						>
 							<Send className="mt-[0.1rem] mr-[0.1rem] size-6" />
@@ -39,7 +38,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								className="size-8"
 								size="icon"
 								title="Accept pending invitation"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => inviteResponseMutation.mutate('accept')}
 							>
 								<ThumbsUp />
@@ -59,7 +57,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								<Button
 									variant="destructive"
 									title="Confirm: Decline friend request"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => inviteResponseMutation.mutate('decline')}
 								>
 									{inviteResponseMutation.isPending ?
@@ -86,7 +83,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							<Button
 								variant="destructive"
 								title="Confirm: Cancel friend request"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => inviteResponseMutation.mutate('cancel')}
 							>
 								{inviteResponseMutation.isPending ?

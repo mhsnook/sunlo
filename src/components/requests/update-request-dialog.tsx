@@ -62,14 +62,12 @@ export function UpdateRequestDialog({
 				<div className="mt-2 space-y-2">
 					<Textarea
 						value={editPrompt}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onChange={(e) => setEditPrompt(e.target.value)}
 						rows={4}
 					/>
 					<div className="flex gap-2">
 						<Button
 							size="sm"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutation.mutate(editPrompt)}
 							disabled={mutation.isPending}
 						>
@@ -78,7 +76,6 @@ export function UpdateRequestDialog({
 						<Button
 							size="sm"
 							variant="ghost"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => {
 								setOpen(false)
 								setEditPrompt(request.prompt)

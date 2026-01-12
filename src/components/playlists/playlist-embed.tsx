@@ -110,7 +110,6 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 				<iframe
 					className="w-full"
 					sandbox="allow-same-origin allow-presentation"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					style={height152}
 					src={embedInfo.embedUrl}
 					title="Spotify player"
@@ -122,7 +121,6 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 				<iframe
 					className="w-full"
 					sandbox="allow-same-origin allow-presentation"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					style={height172}
 					src={embedInfo.embedUrl}
 					title="SoundCloud player"

@@ -102,7 +102,6 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								>
 									<Link
 										to="/learn/$lang"
-										// oxlint-disable-next-line jsx-no-new-object-as-prop
 										params={{ lang: deck.lang }}
 										onClick={setClosedMobile}
 									>
@@ -189,7 +188,6 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 							>
 								<Link
 									to="/learn/$lang/feed"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ lang: langItem.lang }}
 									onClick={setClosedMobile}
 								>
@@ -215,7 +213,6 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 									>
 										<Link
 											to="/learn/$lang/feed"
-											// oxlint-disable-next-line jsx-no-new-object-as-prop
 											params={{ lang: langItem.lang }}
 											onClick={setClosedMobile}
 										>

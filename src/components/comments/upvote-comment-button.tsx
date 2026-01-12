@@ -71,7 +71,6 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 				variant={hasUpvoted ? 'outline-primary' : 'ghost'}
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this comment'}
 				size="icon"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
 					requireAuth(() => {

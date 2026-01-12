@@ -34,7 +34,6 @@ function RouteComponent() {
 					{playlists?.map((p) => (
 						<div
 							style={
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								{ viewTransitionName: `playlist-${p.id}` } as CSSProperties
 							}
 							className="p-4"

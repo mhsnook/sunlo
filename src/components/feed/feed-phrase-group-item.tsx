@@ -35,7 +35,6 @@ export function PhraseSummaryLine({
 		<div className="group flex flex-row items-center gap-2 px-2">
 			<Link
 				to="/learn/$lang/phrases/$id"
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				params={{ lang: item.lang, id: item.id }}
 				className="group-hover:text-foreground inline-flex items-center gap-2 truncate font-medium"
 				data-testid={`feed-phrase-link-${item.id}`}
@@ -45,7 +44,6 @@ export function PhraseSummaryLine({
 				<MessageSquareQuote size={14} />
 				<span
 					style={
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						{ viewTransitionName: `phrase-text-${item.id}` } as CSSProperties
 					}
 				>
@@ -74,7 +72,6 @@ export function FeedPhraseGroupItem({ items }: { items: FeedActivityType[] }) {
 					action={`added ${items.length} phrase${items.length === 1 ? '' : 's'}`}
 					timeValue={firstItem.created_at}
 					timeLinkTo="/learn/$lang/phrases/$id"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ lang: firstItem.lang, id: firstItem.id }}
 				/>
 			</div>

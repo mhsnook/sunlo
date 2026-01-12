@@ -72,7 +72,6 @@ function ProfilePage() {
 									className={buttonVariants({ variant: 'outline' })}
 									to="/friends/chats/$friendUid"
 									from={Route.fullPath}
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ friendUid: profile.uid }}
 								>
 									<MessagesSquare /> Message

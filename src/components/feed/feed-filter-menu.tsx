@@ -1,4 +1,3 @@
-import {} from 'react'
 import { Filter } from 'lucide-react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
@@ -30,7 +29,6 @@ export function FeedFilterMenu() {
 			: filterPhrases
 
 		void navigate({
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			search: (prev: typeof search) => ({
 				...prev,
 				[filterName]: currentValue ? false : undefined,
@@ -68,21 +66,18 @@ export function FeedFilterMenu() {
 				<DropdownMenuSeparator />
 				<DropdownMenuCheckboxItem
 					checked={filterRequests}
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onCheckedChange={() => toggleFilter('filter_requests')}
 				>
 					Requests
 				</DropdownMenuCheckboxItem>
 				<DropdownMenuCheckboxItem
 					checked={filterPlaylists}
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onCheckedChange={() => toggleFilter('filter_playlists')}
 				>
 					Playlists
 				</DropdownMenuCheckboxItem>
 				<DropdownMenuCheckboxItem
 					checked={filterPhrases}
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onCheckedChange={() => toggleFilter('filter_phrases')}
 				>
 					New Phrases

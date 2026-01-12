@@ -17,7 +17,6 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 					uid={request.requester_uid}
 					action="posted a Request"
 					timeLinkTo="/learn/$lang/requests/$id"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ lang: request.lang, id: request.id }}
 					timeValue={request.created_at}
 				/>

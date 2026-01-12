@@ -42,7 +42,6 @@ export function SelectMultipleFriends({
 									className="rounded-squircle size-8 rounded-full object-cover"
 								/>
 							:	<User
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									style={{ background: `#${f.profile.uid.slice(-6)}44` }}
 									className="rounded-squircle size-8 rounded-full p-1"
 								/>
@@ -50,9 +49,7 @@ export function SelectMultipleFriends({
 							<span>{f.profile.username}</span>
 						</div>
 						<Checkbox
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							checked={uids.includes(f.uid)}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => handleClick(f.uid)}
 						/>
 					</label>

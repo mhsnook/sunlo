@@ -19,7 +19,6 @@ export function AvatarIconRow({
 		<div className="flex w-full flex-row items-center gap-4">
 			<Link
 				to="/friends/$uid"
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				params={{ uid }}
 				className="hover:bg-primary/10 hover:border-primary/20 flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
 			>
@@ -30,7 +29,6 @@ export function AvatarIconRow({
 						className="rounded-squircle size-8 rounded-full object-cover"
 					/>
 				:	<User
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						style={{ background: `#${uid.slice(-6)}44` }}
 						className="bg-foreground/20 rounded-squircle size-8 rounded-full p-1"
 					/>

@@ -72,7 +72,6 @@ export function SendRequestToFriendDialog({
 
 				<Button
 					disabled={!uids.length || !isReady}
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() => sendRequestToFriendMutation.mutate(uids)}
 				>
 					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}

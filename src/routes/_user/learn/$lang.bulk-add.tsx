@@ -260,7 +260,6 @@ function BulkAddPhrasesPage() {
 								<Button
 									type="button"
 									variant="outline"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() =>
 										append(getEmptyPhrase(preferredTranslationLang))
 									}
@@ -274,7 +273,6 @@ function BulkAddPhrasesPage() {
 									<Checkbox
 										id="create-deck"
 										checked={shouldCreateOrReactivateDeck}
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onCheckedChange={(checked) =>
 											setShouldCreateOrReactivateDeck(checked === true)
 										}
@@ -366,7 +364,6 @@ function PhraseEntry({
 							type="button"
 							variant="ghost"
 							size="icon"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => removePhrase(phraseIndex)}
 							disabled={disableRemove}
 						>
@@ -393,7 +390,6 @@ function PhraseEntry({
 							<Controller
 								control={control}
 								name={`phrases.${phraseIndex}.translations.${translationIndex}.lang`}
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								render={({ field }) => (
 									<SelectOneOfYourLanguages
 										value={field.value}
@@ -406,7 +402,6 @@ function PhraseEntry({
 								type="button"
 								variant="ghost"
 								size="icon"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => removeTranslation(translationIndex)}
 								disabled={translationFields.length === 1}
 							>
@@ -442,7 +437,6 @@ function PhraseEntry({
 			<Button
 				type="button"
 				variant="outline"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() =>
 					appendTranslation({
 						lang: preferredTranslationLang,

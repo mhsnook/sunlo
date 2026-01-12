@@ -77,7 +77,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			data-comment-id={comment.id}
 			data-testid="comment-item"
 			style={
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				{
 					viewTransitionName: `comment-${comment.id}`,
 				} as CSSProperties
@@ -90,9 +89,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						uid={comment.uid}
 						timeValue={comment.created_at}
 						action="commented"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						timeLinkParams={{ id: comment.request_id, lang }}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						timeLinkSearch={{ showSubthread: comment.id }}
 						timeLinkTo="/learn/$lang/requests/$id"
 					/>
@@ -150,7 +147,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								size: 'sm',
 							})}
 							to={'.'}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							search={(search) => {
 								if (search.showSubthread === comment.id) {
 									const { showSubthread: _, ...args } = search
@@ -231,9 +227,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					uid={comment.uid}
 					timeValue={comment.created_at}
 					action="replied"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkParams={{ id: comment.request_id, lang }}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					timeLinkSearch={{
 						showSubthread: comment.parent_comment_id!,
 						highlightComment: comment.id,

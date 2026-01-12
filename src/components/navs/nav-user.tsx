@@ -118,7 +118,6 @@ export function NavUser() {
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => signOut.mutate()}
 							disabled={!isAuth || signOut.isPending}
 						>

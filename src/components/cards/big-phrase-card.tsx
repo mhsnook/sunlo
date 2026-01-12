@@ -74,7 +74,6 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 
 			<CardlikeFlashcard
 				className="@container"
-				// oxlint-disable-next-line jsx-no-new-object-as-prop
 				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 			>
 				<CardHeader>
@@ -95,7 +94,6 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						<CardTitle className="space-x-1 text-2xl">
 							<span
 								style={
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									{ viewTransitionName: `phrase-text-${pid}` } as CSSProperties
 								}
 							>
@@ -262,7 +260,6 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							<Button
 								variant="outline"
 								size="sm"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => setShowAllProvenance(true)}
 							>
 								Show {provenanceItems.length - 5} more
@@ -298,7 +295,6 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 						<span>Playlist: </span>
 						<Link
 							to="/learn/$lang/playlists/$playlistId"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang, playlistId: item.playlistId }}
 							className="s-link font-medium"
 						>
@@ -332,7 +328,6 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 					<span>Thread: </span>
 					<Link
 						to="/learn/$lang/requests/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang, id: item.requestId }}
 						hash={`#comment-${item.commentId}`}
 						className="s-link font-medium"

@@ -75,7 +75,6 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}
 				size="icon"
 				data-testid="upvote-playlist-button"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
 					requireAuth(() => {
