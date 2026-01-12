@@ -51,7 +51,7 @@ export default [
 			parser: tseslint.parser,
 			parserOptions: {
 				project: ['./tsconfig.node.json'],
-				tsconfigRootDir: '.',
+				// tsconfigRootDir: './',
 			},
 		},
 		plugins: {
