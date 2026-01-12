@@ -104,7 +104,6 @@ function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn/$lang/requests/new"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang }}
 					>
 						<MessageCircleHeart />
@@ -137,7 +136,6 @@ function PhrasesTab(props: { lang?: string; uid: uuid }) {
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn/$lang/add-phrase"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: props.lang }}
 					>
 						<MessageSquareQuote />
@@ -171,7 +169,6 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn/$lang/playlists"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: props.lang }}
 					>
 						<Disc3 />
@@ -180,7 +177,6 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 				:	<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 					>
 						Choose a language deck to make a playlist for
 					</Link>
@@ -192,7 +188,6 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 					<div
 						key={playlist.id}
 						className="cursor-pointer hover:shadow"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={(e) => {
 							const target = e.target as HTMLElement
 							if (!e.currentTarget.contains(target)) return
@@ -224,7 +219,6 @@ function AnswersTab(props: { lang?: string; uid: uuid }) {
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn/$lang/feed"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: props.lang }}
 					>
 						<Logs />
@@ -254,7 +248,6 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
 						to="/learn/$lang/feed"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: props.lang }}
 					>
 						<Logs />

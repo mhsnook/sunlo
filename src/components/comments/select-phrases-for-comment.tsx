@@ -107,7 +107,6 @@ export function SelectPhrasesForComment({
 							placeholder="Search phrases..."
 							value={searchText}
 							data-testid="phrase-search-input"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setSearchText(e.target.value)}
 							className="pl-9"
 						/>
@@ -122,7 +121,6 @@ export function SelectPhrasesForComment({
 								<InlinePhraseCreator
 									lang={lang}
 									onPhraseCreated={handlePhraseCreated}
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onCancel={() => setShowCreateForm(false)}
 								/>
 							)}
@@ -132,7 +130,6 @@ export function SelectPhrasesForComment({
 								<Button
 									type="button"
 									variant="dashed-w-full"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => setShowCreateForm(true)}
 									className="mb-2"
 								>
@@ -158,7 +155,6 @@ export function SelectPhrasesForComment({
 													'border-primary bg-primary/5'
 												:	'hover:bg-muted/50'
 											} ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onClick={(e) => {
 												if (isDisabled) e.preventDefault()
 											}}
@@ -167,7 +163,6 @@ export function SelectPhrasesForComment({
 												checked={isSelected}
 												disabled={isDisabled}
 												id={`select-phrase-${phrase.id}`}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
 												onCheckedChange={() => handleToggle(phrase.id)}
 												className="mt-1"
 											/>
@@ -184,7 +179,6 @@ export function SelectPhrasesForComment({
 
 				<DialogFooter className="bg-background flex-none border-t p-6 pt-4">
 					<Button
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => setPhraseDialogOpen(false)}
 						disabled={selectedPhraseIds.length === 0}
 						className="w-full"

@@ -78,7 +78,6 @@ export function UpdatePlaylistDialog({
 						<Input
 							id="playlist-title"
 							value={editTitle}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setEditTitle(e.target.value)}
 						/>
 					</div>
@@ -87,7 +86,6 @@ export function UpdatePlaylistDialog({
 						<Textarea
 							id="playlist-description"
 							value={editDescription}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setEditDescription(e.target.value)}
 							rows={3}
 						/>
@@ -98,7 +96,6 @@ export function UpdatePlaylistDialog({
 							id="playlist-href"
 							type="url"
 							value={editHref}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setEditHref(e.target.value)}
 							placeholder="https://..."
 						/>
@@ -106,7 +103,6 @@ export function UpdatePlaylistDialog({
 					<div className="flex gap-2">
 						<Button
 							size="sm"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutation.mutate()}
 							disabled={mutation.isPending || !editTitle.trim()}
 						>
@@ -115,7 +111,6 @@ export function UpdatePlaylistDialog({
 						<Button
 							size="sm"
 							variant="ghost"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => {
 								setOpen(false)
 								setEditTitle(playlist.title)

@@ -70,7 +70,6 @@ export function ContinueReview({
 			<CardFooter>
 				<Button
 					size="lg"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onClick={() =>
 						initLocalReviewState(
 							lang,

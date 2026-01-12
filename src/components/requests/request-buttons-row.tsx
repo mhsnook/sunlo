@@ -69,7 +69,6 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				<div className="flex flex-row items-center gap-2">
 					<Link
 						to="/learn/$lang/requests/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: request.lang, id: request.id }}
 						title={`Click to view answers (${counts?.countLinks ?? 0})`}
 						search={

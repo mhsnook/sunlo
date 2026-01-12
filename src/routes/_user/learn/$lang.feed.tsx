@@ -236,7 +236,6 @@ function RecentFeed() {
 					{hasNextPage ?
 						<Button
 							variant="outline"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => void fetchNextPage()}
 							disabled={isFetchingNextPage}
 							className={hasNextPage ? 'opacity-100' : 'opacity-0'}

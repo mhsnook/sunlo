@@ -99,7 +99,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 
 	// oxlint-disable-next-line prefer-set-has
 	const phraseTagNames = phrase.tags?.map((t) => t.name) ?? []
-	// oxlint-disable-next-line jsx-no-new-array-as-prop
+
 	const availableTags = allLangTags
 		.filter((t) => !phraseTagNames.includes(t.name))
 		.map((t) => ({ value: t.name, label: t.name }))
@@ -150,7 +150,6 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 							<Controller
 								control={control}
 								name="tags"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								render={({ field }) => (
 									<MultiSelectCreatable
 										options={availableTags}

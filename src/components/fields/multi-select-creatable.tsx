@@ -73,7 +73,6 @@ export function MultiSelectCreatable({
 							placeholder="Search or create tag..."
 							value={inputValue}
 							onValueChange={setInputValue}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onKeyDown={(e) => {
 								if (e.key === 'Enter') {
 									e.preventDefault()
@@ -96,7 +95,6 @@ export function MultiSelectCreatable({
 									<CommandItem
 										key={option.value}
 										value={option.value}
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onSelect={() => handleSelect(option.value)}
 									>
 										<Check
@@ -122,7 +120,6 @@ export function MultiSelectCreatable({
 						<button
 							type="button"
 							className="ring-offset-background focus:ring-ring ml-1 rounded-full outline-none focus:ring-2 focus:ring-offset-2"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => handleRemove(value)}
 						>
 							<X className="text-muted-foreground hover:text-foreground h-3 w-3" />

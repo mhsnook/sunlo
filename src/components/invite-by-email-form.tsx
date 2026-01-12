@@ -52,7 +52,6 @@ export function InviteFriendForm() {
 					<Controller
 						name="email"
 						control={control}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						render={({ field }) => (
 							<Input
 								{...field}

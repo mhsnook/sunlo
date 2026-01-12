@@ -191,7 +191,6 @@ function LanguagesSection() {
 					<Button
 						variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
 						size="sm"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => setViewMode('grid')}
 					>
 						<LayoutGrid className="size-4" />
@@ -200,7 +199,6 @@ function LanguagesSection() {
 					<Button
 						variant={viewMode === 'list' ? 'secondary' : 'ghost'}
 						size="sm"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => setViewMode('list')}
 					>
 						<List className="size-4" />
@@ -295,7 +293,6 @@ function LanguageCard({
 			<CardFooter className="pt-0">
 				<Link
 					to="/learn/$lang/feed"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 					className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
 				>
@@ -337,7 +334,6 @@ function LanguageListItem({
 				</span>
 				<Link
 					to="/learn/$lang/feed"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 					className={buttonVariants({ variant: 'outline', size: 'sm' })}
 				>
@@ -406,7 +402,6 @@ function RequestCard({
 				</span>
 				<Link
 					to="/learn/$lang/requests/$id"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang: request.lang, id: request.id }}
 					className={buttonVariants({ variant: 'outline', size: 'sm' })}
 				>
@@ -519,7 +514,6 @@ function PlaylistCard({
 				</div>
 				<Link
 					to="/learn/$lang/playlists/$playlistId"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang: playlist.lang, playlistId: playlist.id }}
 					className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
 				>

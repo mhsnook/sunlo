@@ -57,10 +57,7 @@ function RequestThreadPage() {
 			<CardlikeRequest
 				data-request-id={request.id}
 				data-testid="request-permalink-card"
-				style={
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					{ viewTransitionName: `request-${request.id}` } as CSSProperties
-				}
+				style={{ viewTransitionName: `request-${request.id}` } as CSSProperties}
 			>
 				<RequestHeader request={request} />
 
@@ -139,7 +136,6 @@ function AnswersOnlyView() {
 									{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
 									<Link
 										to="."
-										// oxlint-disable-next-line jsx-no-new-object-as-prop
 										search={{
 											show: 'thread',
 											highlightComment: l.comment_id,

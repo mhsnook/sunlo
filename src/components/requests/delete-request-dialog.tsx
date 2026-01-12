@@ -55,7 +55,6 @@ export function DeleteRequestDialog({
 				variant="ghost"
 				size="icon"
 				title="Delete request"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />
@@ -72,7 +71,6 @@ export function DeleteRequestDialog({
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
 						disabled={mutation.isPending}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => mutation.mutate()}
 						className="bg-destructive text-destructive-foreground"
 					>

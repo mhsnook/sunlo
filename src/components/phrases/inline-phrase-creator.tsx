@@ -106,7 +106,6 @@ export function InlinePhraseCreator({
 
 			<form
 				noValidate
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onSubmit={(e) => {
 					e.stopPropagation()
 					void handleSubmit((data) => mutation.mutate(data))(e)

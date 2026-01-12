@@ -60,14 +60,12 @@ export function UpdateCommentDialog({
 				<div className="mt-2 space-y-2">
 					<Textarea
 						value={editContent}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onChange={(e) => setEditContent(e.target.value)}
 						rows={4}
 					/>
 					<div className="flex gap-2">
 						<Button
 							size="sm"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutation.mutate(editContent)}
 							disabled={mutation.isPending}
 						>
@@ -76,7 +74,6 @@ export function UpdateCommentDialog({
 						<Button
 							size="sm"
 							variant="ghost"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => {
 								setOpen(false)
 								setEditContent(comment.content)

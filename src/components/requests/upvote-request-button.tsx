@@ -75,7 +75,6 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this request'}
 				size="icon"
 				data-testid="upvote-request-button"
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onClick={(e) => {
 					e.stopPropagation()
 					requireAuth(() => {

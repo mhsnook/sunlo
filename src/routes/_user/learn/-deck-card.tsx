@@ -28,7 +28,6 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 						className="grow"
 						to="/learn/$lang"
 						data-testid={`deck-card-link-${deck.lang}`}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: deck.lang }}
 					>
 						<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
@@ -44,7 +43,6 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 						:	<Link
 								to="/learn/$lang/review"
 								className={buttonVariants({ size: 'icon' })}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: deck.lang }}
 							>
 								<Rocket />
@@ -72,7 +70,6 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 									buttonVariants({ variant: 'secondary' }),
 									'grow basis-40'
 								)}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: deck.lang }}
 							>
 								<HouseHeart />
@@ -86,7 +83,6 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 									buttonVariants({ variant: 'secondary' }),
 									`grow basis-60`
 								)}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: deck.lang }}
 							>
 								<Logs />

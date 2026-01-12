@@ -50,7 +50,6 @@ export function UidPermalink({
 			{avatarUrl ?
 				<Link
 					to="/friends/$uid"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className="inline-flex flex-row"
 					disabled={nonInteractive}
@@ -66,7 +65,6 @@ export function UidPermalink({
 			<div className="text-sm">
 				<Link
 					to="/friends/$uid"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className="inline-flex flex-row hover:underline"
 					disabled={nonInteractive}
@@ -78,7 +76,6 @@ export function UidPermalink({
 						{timeLinkTo ?
 							<Link
 								to={timeLinkTo}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={timeLinkParams}
 								search={timeLinkSearch}
 								className="s-link-hidden"
@@ -124,7 +121,6 @@ export function UidPermalinkInline({
 			{avatarUrl ?
 				<Link
 					to="/friends/$uid"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className="inline-flex flex-row hover:underline"
 					disabled={nonInteractive}
@@ -140,7 +136,6 @@ export function UidPermalinkInline({
 			<div className="flex flex-row items-center gap-1.5 text-sm">
 				<Link
 					to="/friends/$uid"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ uid }}
 					className="inline-flex flex-row hover:underline"
 					disabled={nonInteractive}
@@ -153,7 +148,6 @@ export function UidPermalinkInline({
 							{timeLinkTo ?
 								<Link
 									to={timeLinkTo}
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={timeLinkParams}
 									search={timeLinkSearch}
 									className="s-link-hidden hover:underline"

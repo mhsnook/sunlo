@@ -28,13 +28,9 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 
 	return !request ? null : (
 			<CardlikeRequest
-				className="group hover:bg-primary/0 cursor-pointer hover:shadow"
-				style={
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
-					{ viewTransitionName: `request-${request.id}` } as CSSProperties
-				}
+				className="hover:bg-primary/0 group cursor-pointer hover:shadow"
+				style={{ viewTransitionName: `request-${request.id}` } as CSSProperties}
 				onClick={handleRequestClick}
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
 				onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
 					if (e.key === 'Enter') handleRequestClick(e)
 					else return

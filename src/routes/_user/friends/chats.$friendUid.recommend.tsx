@@ -67,7 +67,6 @@ function RouteComponent() {
 	return (
 		<Dialog
 			open={true}
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onOpenChange={(open) => {
 				if (!open) {
 					void navigate({
@@ -93,14 +92,12 @@ function RouteComponent() {
 						<p className="mb-2">Search terms *</p>
 						<Input
 							placeholder="Search for a phrase to send..."
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onChange={(e) => setSearchTerm(e.target.value)}
 						/>
 					</Label>
 					<DisplayPhrasesQuery
 						lang={lang}
 						text={searchTerm}
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						renderItem={(phrase: PhraseFullFilteredType) => (
 							<div
 								key={phrase.id}
@@ -113,12 +110,10 @@ function RouteComponent() {
 									from={Route.fullPath}
 									text=""
 									to="/learn/$lang/phrases/$id"
-									// oxlint-disable-next-line jsx-no-new-object-as-prop
 									params={{ lang: phrase.lang, id: phrase.id }}
 								/>
 								<Button
 									size="icon"
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									onClick={() => handleRecommend(phrase.id, phrase.lang)}
 									disabled={sendMessageMutation.isPending}
 								>

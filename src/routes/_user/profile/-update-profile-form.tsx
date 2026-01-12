@@ -97,7 +97,6 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 					</Button>
 					<Button
 						type="button"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => reset()}
 						variant="secondary"
 						disabled={updateProfile.isPending || !isDirty}
@@ -107,7 +106,6 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 				</div>
 				<ShowAndLogError
 					error={updateProfile.error}
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					values={{
 						...updateProfile.variables,
 						languages_known: JSON.stringify(

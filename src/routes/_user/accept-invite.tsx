@@ -100,7 +100,6 @@ function AcceptInvitePage() {
 				<div className="flex flex-row justify-center gap-4">
 					<Button
 						size="lg"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => acceptOrDeclineMutation.mutate({ action: 'accept' })}
 						disabled={acceptOrDeclineMutation.isPending}
 					>
@@ -109,7 +108,6 @@ function AcceptInvitePage() {
 					<Button
 						size="lg"
 						variant="secondary"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() =>
 							acceptOrDeclineMutation.mutate({ action: 'decline' })
 						}
@@ -176,7 +174,6 @@ const ShowAccepted = ({
 					<Link
 						to="/friends/$uid"
 						from={Route.fullPath}
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ uid: friend.uid }}
 						className={buttonVariants({ variant: 'default' })}
 					>

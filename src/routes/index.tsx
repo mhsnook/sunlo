@@ -74,7 +74,6 @@ function ThemeToggle() {
 		<Button
 			variant="ghost"
 			size="icon"
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={toggle}
 			title="Toggle theme"
 			className="border-border/50 h-12 w-12 rounded-full border bg-white/10 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"

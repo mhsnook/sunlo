@@ -104,15 +104,11 @@ export function ArchiveDeckButton({
 						Cancel
 					</AlertDialogCancel>
 					{archived ?
-						<AlertDialogAction
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
-							onClick={() => mutation.mutate()}
-						>
+						<AlertDialogAction onClick={() => mutation.mutate()}>
 							Restore
 						</AlertDialogAction>
 					:	<AlertDialogAction
 							className={buttonVariants({ variant: 'destructive' })}
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => mutation.mutate()}
 						>
 							Archive

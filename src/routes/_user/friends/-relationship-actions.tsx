@@ -14,10 +14,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 	return (
 		!userId ? null
 		: !relationship?.status || relationship.status === 'unconnected' ?
-			<Button
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
-				onClick={() => action.mutate('invite')}
-			>
+			<Button onClick={() => action.mutate('invite')}>
 				Add friend{' '}
 				{action.isPending ?
 					<IconSizedLoader />
@@ -32,21 +29,14 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 					<UserCheck />
 					Friends
 				</Button>
-				<Button
-					variant="destructive"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => action.mutate('remove')}
-				>
+				<Button variant="destructive" onClick={() => action.mutate('remove')}>
 					<UserMinus />
 					Unfriend
 				</Button>
 			</ConfirmDestructiveActionDialog>
 		: relationship.status === 'pending' && !relationship.isMostRecentByMe ?
 			<div className="flex flex-row items-center justify-center gap-2">
-				<Button
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => action.mutate('accept')}
-				>
+				<Button onClick={() => action.mutate('accept')}>
 					Confirm friends{' '}
 					{action.isPending ?
 						<IconSizedLoader />
@@ -61,7 +51,6 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 					</Button>
 					<Button
 						variant="destructive"
-						// oxlint-disable-next-line jsx-no-new-function-as-prop
 						onClick={() => action.mutate('decline')}
 					>
 						Confirm
@@ -76,11 +65,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				<Button variant="outline" className="hover:bg-destructive/30">
 					<UserCheck /> Requested
 				</Button>
-				<Button
-					variant="destructive"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
-					onClick={() => action.mutate('cancel')}
-				>
+				<Button variant="destructive" onClick={() => action.mutate('cancel')}>
 					Cancel request
 				</Button>
 			</ConfirmDestructiveActionDialog>

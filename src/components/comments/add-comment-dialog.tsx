@@ -100,7 +100,6 @@ export function AddCommentDialog({
 					requestId={requestId}
 					lang={lang}
 					parentCommentId={parentCommentId}
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					onSuccess={() => {
 						setOpen(false)
 					}}
@@ -225,7 +224,6 @@ function NewCommentForm({
 				<FormField
 					control={form.control}
 					name="content"
-					// oxlint-disable-next-line jsx-no-new-function-as-prop
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="sr-only">
@@ -269,7 +267,6 @@ function NewCommentForm({
 										variant="ghost"
 										size="icon"
 										className="border-border absolute top-5 right-1 h-6 w-6 backdrop-blur-xs"
-										// oxlint-disable-next-line jsx-no-new-function-as-prop
 										onClick={() => handleRemovePhrase(pid)}
 									>
 										<X />

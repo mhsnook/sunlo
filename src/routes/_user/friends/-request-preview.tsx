@@ -44,7 +44,6 @@ export function RequestPreview({ id }: { id: uuid }) {
 
 							<Link
 								to={'/learn/$lang/requests/$id'}
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
 								params={{ lang: request.lang, id }}
 								className={buttonVariants({
 									variant: 'secondary',

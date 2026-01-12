@@ -25,9 +25,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 	return (
 		<div
 			className="cursor-pointer"
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={handlePlaylistClick}
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
 				if (e.key === 'Enter') handlePlaylistClick(e)
 				else return

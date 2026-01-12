@@ -33,7 +33,6 @@ export function NotEnoughCards({
 				<Link
 					className={buttonVariants({ variant: 'outline' })}
 					to="/learn/$lang/feed"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 				>
 					Browse Requests feed to see what others are learning
@@ -42,7 +41,6 @@ export function NotEnoughCards({
 				<Link
 					className={buttonVariants({ variant: 'outline' })}
 					to="/learn/$lang/add-phrase"
-					// oxlint-disable-next-line jsx-no-new-object-as-prop
 					params={{ lang }}
 				>
 					Create new cards

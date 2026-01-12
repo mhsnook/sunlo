@@ -194,24 +194,18 @@ export function CardStatusDropdown({
 				<DropdownMenuContent className="">
 					{!deckPresent ?
 						<DropdownMenuItem>
-							<Link
-								to="/learn/add-deck"
-								// oxlint-disable-next-line jsx-no-new-object-as-prop
-								search={{ lang: phrase.lang }}
-							>
+							<Link to="/learn/add-deck" search={{ lang: phrase.lang }}>
 								<StatusSpan choice="nodeck" />
 							</Link>
 						</DropdownMenuItem>
 					: !card ?
 						<DropdownMenuItem
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => cardMutation.mutate({ status: 'active' })}
 						>
 							<StatusSpan choice="nocard" />
 						</DropdownMenuItem>
 					:	<>
 							<DropdownMenuItem
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() =>
 									card?.status === 'active' ?
 										false
@@ -222,7 +216,6 @@ export function CardStatusDropdown({
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() =>
 									card?.status === 'learned' ?
 										false
@@ -233,7 +226,6 @@ export function CardStatusDropdown({
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
 							<DropdownMenuItem
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() =>
 									card?.status === 'skipped' ?
 										false
@@ -262,7 +254,6 @@ export function CardStatusHeart({
 		<Button
 			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
 			size="icon"
-			// oxlint-disable-next-line jsx-no-new-function-as-prop
 			onClick={() =>
 				requireAuth(
 					() => mutation.mutate({ status: statusToPost }),

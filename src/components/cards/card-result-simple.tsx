@@ -15,7 +15,6 @@ export function CardResultSimple({
 	return (
 		<CardlikeFlashcard
 			className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1"
-			// oxlint-disable-next-line jsx-no-new-object-as-prop
 			style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
 		>
 			<div className="grow py-6">
@@ -39,7 +38,6 @@ export function CardResultSimple({
 					<CardStatusHeart phrase={phrase} />
 					<PermalinkButton
 						to="/learn/$lang/phrases/$id"
-						// oxlint-disable-next-line jsx-no-new-object-as-prop
 						params={{ lang: phrase.lang, id: phrase.id }}
 						variant="ghost"
 						size="icon"

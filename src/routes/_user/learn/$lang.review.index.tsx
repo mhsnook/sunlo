@@ -396,7 +396,6 @@ function ReviewPageContent() {
 								/>
 							</Drawer>
 							<Button
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={(e) => {
 									e.preventDefault()
 									e.stopPropagation()

@@ -38,7 +38,6 @@ export function WhenComplete() {
 						</p>
 						<Button
 							size="lg"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => {
 								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
 							}}
@@ -64,7 +63,6 @@ export function WhenComplete() {
 						</p>
 						<Button
 							size="lg"
-							// oxlint-disable-next-line jsx-no-new-function-as-prop
 							onClick={() => {
 								actions.gotoReviewAgains(stats.firstAgainIndex)
 							}}

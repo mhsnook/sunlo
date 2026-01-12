@@ -260,7 +260,6 @@ function NewPlaylistPageContent() {
 												size="icon"
 												className="h-6 w-6"
 												disabled={index === 0}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
 												onClick={() => movePhrase(index, 'up')}
 											>
 												<ChevronUp className="h-4 w-4" />
@@ -271,7 +270,6 @@ function NewPlaylistPageContent() {
 												size="icon"
 												className="h-6 w-6"
 												disabled={index === selectedPhrases.length - 1}
-												// oxlint-disable-next-line jsx-no-new-function-as-prop
 												onClick={() => movePhrase(index, 'down')}
 											>
 												<ChevronDown className="h-4 w-4" />
@@ -289,7 +287,6 @@ function NewPlaylistPageContent() {
 													type="url"
 													placeholder="Timestamp link (optional)"
 													value={phrase.href ?? ''}
-													// oxlint-disable-next-line jsx-no-new-function-as-prop
 													onChange={(e) =>
 														updatePhraseHref(phrase.phrase_id, e.target.value)
 													}
@@ -301,7 +298,6 @@ function NewPlaylistPageContent() {
 										{/* Delete button */}
 										<Button
 											type="button"
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onClick={() => removePhrase(phrase.phrase_id)}
 											variant="destructive-outline"
 											size="icon"
@@ -329,7 +325,6 @@ function NewPlaylistPageContent() {
 						<div className="flex justify-end gap-4 pt-4">
 							<Button
 								type="button"
-								// oxlint-disable-next-line jsx-no-new-function-as-prop
 								onClick={() => window.history.back()}
 								variant="secondary"
 							>

@@ -285,7 +285,6 @@ function AddPhraseTab() {
 								<Controller
 									name="phrase_text"
 									control={control}
-									// oxlint-disable-next-line jsx-no-new-function-as-prop
 									render={({ field }) => (
 										<Textarea
 											{...field}
@@ -309,7 +308,6 @@ function AddPhraseTab() {
 											id="create-deck"
 											checked={shouldCreateOrReactivateDeck}
 											className="mt-2 mb-3"
-											// oxlint-disable-next-line jsx-no-new-function-as-prop
 											onCheckedChange={(checked) =>
 												setShouldCreateOrReactivateDeck(checked === true)
 											}

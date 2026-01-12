@@ -46,7 +46,6 @@ export function PhraseAccordionItem({
 					<div className="my-4 flex flex-row items-center gap-2">
 						<PermalinkButton
 							to="/learn/$lang/phrases/$id"
-							// oxlint-disable-next-line jsx-no-new-object-as-prop
 							params={{ lang: phrase.lang, id: phrase.id }}
 							variant="outline-accent"
 							text="View details"
