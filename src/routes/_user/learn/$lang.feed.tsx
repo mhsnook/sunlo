@@ -1,4 +1,4 @@
-import { Activity, type CSSProperties, useCallback, useMemo } from 'react'
+import { Activity, useMemo, type CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Construction } from 'lucide-react'
@@ -117,14 +117,11 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function DeckFeedPage() {
 	const navigate = Route.useNavigate()
-	const handleValueChange = useCallback(
-		(value: string) => {
-			void navigate({
-				search: { feed: value as 'newest' | 'friends' | 'popular' },
-			})
-		},
-		[navigate]
-	)
+	const handleValueChange = (value: string) => {
+		void navigate({
+			search: { feed: value as 'newest' | 'friends' | 'popular' },
+		})
+	}
 	const search = Route.useSearch()
 	const params = Route.useParams()
 	const activeTab = search.feed ?? 'newest'
@@ -167,8 +164,6 @@ function DeckFeedPage() {
 		</main>
 	)
 }
-
-const empty = {}
 
 function RecentFeed() {
 	const params = Route.useParams()
@@ -223,7 +218,7 @@ function RecentFeed() {
 							null
 						:	<Link
 								className={buttonVariants()}
-								search={empty}
+								search={{}}
 								from={Route.fullPath}
 							>
 								Clear feed filters

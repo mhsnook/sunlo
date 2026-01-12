@@ -1,7 +1,6 @@
 import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ButtonProps } from '@/components/ui/button-variants'
-import { useCallback } from 'react'
 import { copyLink } from '@/lib/utils'
 
 export default function CopyLinkButton({
@@ -18,7 +17,7 @@ export default function CopyLinkButton({
 	size?: string
 	collapse?: boolean
 } & ButtonProps) {
-	const copy = useCallback(() => copyLink(url), [url])
+	const copy = () => copyLink(url)
 	return (
 		<Button
 			onClick={copy}

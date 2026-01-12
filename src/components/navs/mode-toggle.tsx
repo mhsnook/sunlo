@@ -13,14 +13,13 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from '@/components/ui/sidebar'
-import { useCallback } from 'react'
 
 export function ModeToggle() {
 	const { theme, setTheme } = useTheme()
 	const { isMobile } = useSidebar()
-	const setLight = useCallback(() => setTheme('light'), [setTheme])
-	const setDark = useCallback(() => setTheme('dark'), [setTheme])
-	const setSystem = useCallback(() => setTheme('system'), [setTheme])
+	const setLight = () => setTheme('light')
+	const setDark = () => setTheme('dark')
+	const setSystem = () => setTheme('system')
 
 	return (
 		<SidebarMenu>

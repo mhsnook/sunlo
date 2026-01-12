@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Link, useMatches } from '@tanstack/react-router'
 import { MoreVertical } from 'lucide-react'
 import { useIntersectionObserver } from '@uidotdev/usehooks'
@@ -91,7 +91,7 @@ export function AppNav() {
 
 function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 	const [isOpen, setIsOpen] = useState(false)
-	const setClosed = useCallback(() => setIsOpen(false), [setIsOpen])
+	const setClosed = () => setIsOpen(false)
 	const links = useLinks(contextMenu)
 
 	if (!links || !links.length) return null

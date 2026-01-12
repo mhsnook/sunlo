@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useEffect, useState } from 'react'
+import { CSSProperties, useEffect, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
@@ -90,13 +90,10 @@ function AddPhraseTab() {
 	const { text } = Route.useSearch()
 	const userId = useUserId()
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
-	const searchPlusText = useCallback(
-		(search: SearchParams) => ({
-			...search,
-			text,
-		}),
-		[text]
-	)
+	const searchPlusText = (search: SearchParams) => ({
+		...search,
+		text,
+	})
 
 	const [newPhrases, setNewPhrases] = useState<uuid[]>([])
 

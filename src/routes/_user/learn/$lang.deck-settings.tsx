@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -309,7 +309,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 						<Button
 							variant="secondary"
 							type="button"
-							onClick={useCallback(() => reset(), [reset])}
+							onClick={() => reset()}
 							disabled={!isDirty}
 						>
 							Reset
@@ -376,26 +376,23 @@ function PreferredTranslationLanguageForm({
 
 	const isDirty = selectedLang !== preferred_translation_lang
 
-	const handleSave = useCallback(() => {
+	const handleSave = () => {
 		updatePreferredLangMutation.mutate({
 			preferred_translation_lang: selectedLang,
 		})
-	}, [selectedLang, updatePreferredLangMutation])
+	}
 
-	const handleReset = useCallback(() => {
+	const handleReset = () => {
 		setSelectedLang(preferred_translation_lang)
-	}, [preferred_translation_lang])
+	}
 
-	const handleClearOverride = useCallback(() => {
+	const handleClearOverride = () => {
 		updatePreferredLangMutation.mutate({
 			preferred_translation_lang: null,
 		})
-	}, [updatePreferredLangMutation])
+	}
 
-	const handleSetLang = useCallback(
-		(val: string) => setSelectedLang(val || null),
-		[]
-	)
+	const handleSetLang = (val: string) => setSelectedLang(val || null)
 
 	return (
 		<div className="rounded shadow">

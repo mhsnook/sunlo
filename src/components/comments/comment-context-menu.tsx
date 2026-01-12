@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { Share, Link as LinkIcon, Flag, MoreVertical } from 'lucide-react'
 
@@ -21,7 +20,7 @@ interface CommentContextMenuProps {
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?showSubthread=${comment.parent_comment_id ?? comment.id}${comment.parent_comment_id ? `&highlightComment=${comment.id}` : ''}`
 
-	const handleShare = useCallback(() => {
+	const handleShare = () => {
 		if (!navigator.share) {
 			toast.error('Sharing is not supported on this device')
 			return
@@ -36,9 +35,9 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [comment.content, commentUrl])
+	}
 
-	const handleCopyPermalink = useCallback(() => {
+	const handleCopyPermalink = () => {
 		navigator.clipboard
 			.writeText(commentUrl)
 			.then(() => {
@@ -47,14 +46,14 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 			.catch(() => {
 				toast.error('Failed to copy link')
 			})
-	}, [commentUrl])
+	}
 
-	const handleReport = useCallback(() => {
+	const handleReport = () => {
 		// Placeholder for report functionality
 		toast.success(
 			'Thank you for reporting. We will review this comment shortly.'
 		)
-	}, [])
+	}
 
 	return (
 		<DropdownMenu>

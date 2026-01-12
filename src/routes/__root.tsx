@@ -1,5 +1,4 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { useCallback } from 'react'
 import {
 	createRootRouteWithContext,
 	Link,
@@ -42,9 +41,9 @@ function RootComponent() {
 
 function NotFoundComponent() {
 	const navigate = useNavigate()
-	const goBack = useCallback(() => {
+	const goBack = () => {
 		void navigate({ to: '..' })
-	}, [navigate])
+	}
 	return (
 		<div className="flex h-full w-full items-center justify-center py-10">
 			<Callout variant="problem" Icon={OctogonMinusDangerBadge}>

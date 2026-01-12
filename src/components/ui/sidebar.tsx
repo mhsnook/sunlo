@@ -73,25 +73,22 @@ const SidebarProvider = ({
 	// We use openProp and setOpenProp for control from outside the component.
 	const [_open, _setOpen] = React.useState(defaultOpen)
 	const open = openProp ?? _open
-	const setOpen = React.useCallback(
-		(value: boolean | ((value: boolean) => boolean)) => {
-			const openState = typeof value === 'function' ? value(open) : value
-			if (setOpenProp) {
-				setOpenProp(openState)
-			} else {
-				_setOpen(openState)
-			}
+	const setOpen = (value: boolean | ((value: boolean) => boolean)) => {
+		const openState = typeof value === 'function' ? value(open) : value
+		if (setOpenProp) {
+			setOpenProp(openState)
+		} else {
+			_setOpen(openState)
+		}
 
-			// This sets the cookie to keep the sidebar state.
-			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
-		},
-		[setOpenProp, open]
-	)
+		// This sets the cookie to keep the sidebar state.
+		document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+	}
 
 	// Helper to toggle the sidebar.
-	const toggleSidebar = React.useCallback(() => {
+	const toggleSidebar = () => {
 		return isMobile ? setOpenMobile((open) => !open) : setOpen((open) => !open)
-	}, [isMobile, setOpen, setOpenMobile])
+	}
 
 	// Adds a keyboard shortcut to toggle the sidebar.
 	React.useEffect(() => {
@@ -113,19 +110,16 @@ const SidebarProvider = ({
 	// This makes it easier to style the sidebar with Tailwind classes.
 	const state = open ? 'expanded' : 'collapsed'
 
-	const contextValue = React.useMemo<SidebarContextType>(
-		() => ({
-			state,
-			open,
-			setOpen,
-			isMobile,
-			openMobile,
-			setOpenMobile,
-			setClosedMobile: () => setOpenMobile(false),
-			toggleSidebar,
-		}),
-		[state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
-	)
+	const contextValue: SidebarContextType = {
+		state,
+		open,
+		setOpen,
+		isMobile,
+		openMobile,
+		setOpenMobile,
+		setClosedMobile: () => setOpenMobile(false),
+		toggleSidebar,
+	}
 
 	return (
 		<SidebarContext.Provider value={contextValue}>
@@ -246,13 +240,10 @@ const SidebarTrigger = ({
 	...props
 }: React.ComponentProps<typeof Button>) => {
 	const { toggleSidebar, openMobile, isMobile } = useSidebar()
-	const onButtonClick = React.useCallback(
-		(event: React.MouseEvent<HTMLButtonElement>) => {
-			onClick?.(event)
-			toggleSidebar()
-		},
-		[onClick, toggleSidebar]
-	)
+	const onButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+		onClick?.(event)
+		toggleSidebar()
+	}
 	const showTheX = isMobile && openMobile
 
 	return (
@@ -637,9 +628,7 @@ const SidebarMenuSkeleton = ({
 	showIcon?: boolean
 }) => {
 	// Random width between 50 to 90%.
-	const skeletonWidth = React.useMemo(() => {
-		return { width: `${Math.floor(Math.random() * 40) + 50}%` }
-	}, [])
+	const skeletonWidth = { width: `${Math.floor(Math.random() * 40) + 50}%` }
 
 	return (
 		<div

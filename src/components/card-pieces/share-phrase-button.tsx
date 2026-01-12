@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import type { ButtonProps } from '@/components/ui/button-variants'
 import { Share } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -18,7 +17,7 @@ export default function SharePhraseButton({
 	variant?: string
 	size?: string
 } & ButtonProps) {
-	const sharePhrase = useCallback(() => {
+	const sharePhrase = () => {
 		if (!phrase) return
 		navigator
 			.share({
@@ -29,7 +28,7 @@ export default function SharePhraseButton({
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [phrase])
+	}
 
 	if (!phrase || !navigator.share) return null
 	return (

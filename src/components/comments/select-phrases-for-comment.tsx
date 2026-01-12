@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Paperclip, Plus, Search } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -60,18 +60,15 @@ export function SelectPhrasesForComment({
 		}
 	}
 
-	const handlePhraseCreated = useCallback(
-		(phraseId: string) => {
-			// Auto-add the newly created phrase to selection
-			if (selectedPhraseIds.length < effectiveMax) {
-				onSelectionChange([...selectedPhraseIds, phraseId])
-			}
-			setShowCreateForm(false)
-			// Close the dialog immediately, assuming this is the only phrase being added
-			setPhraseDialogOpen(false)
-		},
-		[selectedPhraseIds, effectiveMax, onSelectionChange]
-	)
+	const handlePhraseCreated = (phraseId: string) => {
+		// Auto-add the newly created phrase to selection
+		if (selectedPhraseIds.length < effectiveMax) {
+			onSelectionChange([...selectedPhraseIds, phraseId])
+		}
+		setShowCreateForm(false)
+		// Close the dialog immediately, assuming this is the only phrase being added
+		setPhraseDialogOpen(false)
+	}
 
 	const isMaxReached = selectedPhraseIds.length >= effectiveMax
 

@@ -33,6 +33,8 @@ export default [
 
 			...reactHooks.configs.recommended.rules,
 			'react-refresh/only-export-components': ['off'],
+			'jsx-no-new-object-as-prop': ['off'],
+			'jsx-no-new-function-as-prop': ['off'],
 			'@typescript-eslint/only-throw-error': [
 				'error',
 				{

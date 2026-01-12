@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
 	Disc3,
@@ -34,16 +33,13 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 			(search?.contributionsTab as viewTabName)
 		:	'requests'
 
-	const handleTabChange = useCallback(
-		(value: string) => {
-			void navigate({
-				search: {
-					contributionsTab: value as viewTabName,
-				},
-			})
-		},
-		[navigate]
-	)
+	const handleTabChange = (value: string) => {
+		void navigate({
+			search: {
+				contributionsTab: value as viewTabName,
+			},
+		})
+	}
 
 	return (
 		<>

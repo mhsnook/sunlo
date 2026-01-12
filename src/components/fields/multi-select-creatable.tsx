@@ -14,7 +14,7 @@ import {
 import { Check, ChevronsUpDown, PlusCircle, X } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { useCallback, useState } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
@@ -32,23 +32,20 @@ export function MultiSelectCreatable({
 	const [open, setOpen] = useState(false)
 	const [inputValue, setInputValue] = useState('')
 
-	const handleSelect = useCallback(
-		(value: string) => {
-			onChange([...selected, value])
-			setInputValue('')
-		},
-		[onChange, selected]
-	)
+	const handleSelect = (value: string) => {
+		onChange([...selected, value])
+		setInputValue('')
+	}
 
 	const handleRemove = (value: string) => {
 		onChange(selected.filter((s) => s !== value))
 	}
 
-	const handleCreate = useCallback(() => {
+	const handleCreate = () => {
 		if (inputValue && !selected.includes(inputValue)) {
 			handleSelect(inputValue)
 		}
-	}, [inputValue, selected, handleSelect])
+	}
 
 	const filteredOptions = options.filter((o) => !selected.includes(o.value))
 

@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import {} from 'react'
 import toast from 'react-hot-toast'
 import { Share } from 'lucide-react'
 
@@ -20,7 +20,7 @@ export function SharePlaylistButton({
 } & ButtonProps) {
 	const { data: playlist } = useOnePlaylist(id)
 
-	const sharePlaylist = useCallback(() => {
+	const sharePlaylist = () => {
 		if (!playlist) return
 		navigator
 			.share({
@@ -31,7 +31,7 @@ export function SharePlaylistButton({
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [playlist])
+	}
 
 	if (!playlist || !navigator.share) return null
 

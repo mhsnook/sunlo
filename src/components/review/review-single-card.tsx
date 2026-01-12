@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useState } from 'react'
+import { type CSSProperties, useState } from 'react'
 import toast from 'react-hot-toast'
 import { MoreVertical, Play } from 'lucide-react'
 
@@ -42,7 +42,7 @@ export function ReviewSingleCard({
 		throw new Error(`Trying to review this card, but can't find it`)
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dayString, pid)
-	const closeCard = useCallback(() => setRevealCard(false), [setRevealCard])
+	const closeCard = () => setRevealCard(false)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
 		dayString,

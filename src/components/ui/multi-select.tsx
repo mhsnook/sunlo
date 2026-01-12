@@ -3,7 +3,6 @@ import {
 	type Dispatch,
 	type KeyboardEvent,
 	type SetStateAction,
-	useCallback,
 	useRef,
 	useState,
 } from 'react'
@@ -45,33 +44,27 @@ export function FancyMultiSelect({
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [open, setOpen] = useState(false)
 	const [inputValue, setInputValue] = useState('')
-	const setItClosed = useCallback(() => setOpen(false), [setOpen])
-	const setItOpen = useCallback(() => setOpen(true), [setOpen])
+	const setItClosed = () => setOpen(false)
+	const setItOpen = () => setOpen(true)
 
-	const handleUnselect = useCallback(
-		(value: string) => {
-			setSelected(selected.filter((s) => s !== value))
-		},
-		[selected, setSelected]
-	)
+	const handleUnselect = (value: string) => {
+		setSelected(selected.filter((s) => s !== value))
+	}
 
-	const handleKeyDown = useCallback(
-		(e: KeyboardEvent<HTMLDivElement>) => {
-			const input = inputRef.current
-			if (input) {
-				if (e.key === 'Delete' || e.key === 'Backspace') {
-					if (input.value === '') {
-						if (selected.length) handleUnselect(selected[selected.length - 1])
-					}
-				}
-				// This is not a default behaviour of the <input /> field
-				if (e.key === 'Escape') {
-					input.blur()
+	const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+		const input = inputRef.current
+		if (input) {
+			if (e.key === 'Delete' || e.key === 'Backspace') {
+				if (input.value === '') {
+					if (selected.length) handleUnselect(selected[selected.length - 1])
 				}
 			}
-		},
-		[selected, inputRef, handleUnselect]
-	)
+			// This is not a default behaviour of the <input /> field
+			if (e.key === 'Escape') {
+				input.blur()
+			}
+		}
+	}
 
 	const selectables = options.filter(
 		(option) => !selected.includes(option.value)
@@ -155,12 +148,9 @@ export function ShowSelected({
 	options: Option[]
 	setSelected: (value: string[]) => void
 }) {
-	const handleUnselect = useCallback(
-		(value: string) => {
-			setSelected(selected.filter((s) => s !== value))
-		},
-		[selected, setSelected]
-	)
+	const handleUnselect = (value: string) => {
+		setSelected(selected.filter((s) => s !== value))
+	}
 	return (
 		<>
 			{always ?

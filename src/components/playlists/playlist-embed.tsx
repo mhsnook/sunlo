@@ -1,5 +1,3 @@
-import { useMemo } from 'react'
-
 interface PlaylistEmbedProps {
 	href: string
 }
@@ -90,7 +88,7 @@ function detectEmbedType(url: string): EmbedInfo {
 }
 
 export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
-	const embedInfo = useMemo(() => detectEmbedType(href), [href])
+	const embedInfo = detectEmbedType(href)
 
 	if (embedInfo.type === 'unknown' || !embedInfo.embedUrl) {
 		return null

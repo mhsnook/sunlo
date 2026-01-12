@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { Share } from 'lucide-react'
 
@@ -24,7 +23,7 @@ export function ShareRequestButton({
 } & ButtonProps) {
 	const { data: request } = useRequest(id)
 
-	const sharePhrase = useCallback(() => {
+	const sharePhrase = () => {
 		if (!request) return
 		navigator
 			.share({
@@ -35,7 +34,7 @@ export function ShareRequestButton({
 			.catch(() => {
 				toast.error('Failed to share')
 			})
-	}, [request])
+	}
 
 	if (!request || !navigator.share) return null
 	return (
