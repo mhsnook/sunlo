@@ -2,13 +2,13 @@ import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
+	Bookmark,
+	BookmarkCheck,
+	BookmarkPlus,
+	BookmarkX,
 	CheckCircle,
 	ChevronDown,
-	CircleMinus,
-	Heart,
 	PlusCircle,
-	Sparkles,
-	Zap,
 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
 import { useDecks } from '@/hooks/use-deck'
-import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { cardsCollection } from '@/lib/collections'
 import {
@@ -49,8 +48,11 @@ const statusStrings = {
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card added',
-		icon: (size = 16) => (
-			<Zap size={size} className="text-yellow-600" aria-label="Active" />
+		icon: () => (
+			<Bookmark
+				className="fill-purple-600/50 text-purple-600"
+				aria-label="Active"
+			/>
 		),
 	},
 	learned: {
@@ -59,8 +61,8 @@ const statusStrings = {
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
-		icon: (size = 16) => (
-			<Sparkles size={size} className="text-green-600" aria-label="Learned" />
+		icon: () => (
+			<BookmarkCheck className="text-green-600" aria-label="Learned" />
 		),
 	},
 	skipped: {
@@ -69,7 +71,7 @@ const statusStrings = {
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
-		icon: (size = 16) => <CircleMinus size={size} aria-label="Skipped" />,
+		icon: () => <BookmarkX aria-label="Skipped" />,
 	},
 	nocard: {
 		short: 'Not in deck',
@@ -77,9 +79,7 @@ const statusStrings = {
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: (size = 16) => (
-			<PlusCircle className="opacity-50" size={size} aria-label="Add card" />
-		),
+		icon: () => <BookmarkPlus className="opacity-50" aria-label="Add card" />,
 	},
 	nodeck: {
 		short: 'Start deck',
@@ -87,14 +87,14 @@ const statusStrings = {
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
-		icon: (size = 16) => <PlusCircle size={size} aria-label="Start learning" />,
+		icon: () => <PlusCircle aria-label="Start learning" />,
 	},
 }
 
 function StatusSpan({ choice }: { choice: ShowableActions }) {
 	return (
 		<div className="flex flex-row items-center gap-2 py-1 pe-2">
-			{statusStrings[choice].icon()}
+			<span className="h-5 w-5">{statusStrings[choice].icon()}</span>
 			<div>
 				<p className="font-bold">{statusStrings[choice].action}</p>
 				<p className="text-opacity-80 text-sm">
@@ -117,6 +117,8 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 		mutationFn: async ({ status }: { status: LearningStatus }) => {
 			if (!phrase)
 				throw new Error('Trying to change status of a card that does not exist')
+			if (!userId)
+				throw new Error("Trying to change card status but you're not logged in")
 			const { data } =
 				phrase.card ?
 					await supabase
@@ -145,7 +147,7 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 					phrase_id: phrase.id,
 					status: variables.status,
 				})
-				toast.success('Updated card status')
+				toast.success(`Updated card status to "${data.status}"`)
 			} else {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
 				toast.success('Added this phrase to your deck')
@@ -179,16 +181,18 @@ export function CardStatusDropdown({
 	return !userId ? null : (
 			<DropdownMenu>
 				<DropdownMenuTrigger className={className} asChild>
-					<Button variant="secondary" size="sm" className="m-0 gap-1 px-1.5">
-						{cardMutation.isSuccess ?
-							<CheckCircle className="size-4 text-green-500" />
-						:	statusStrings[choice].icon()}{' '}
-						{statusStrings[choice].short}
-						<Separator
-							orientation="vertical"
-							className="bg-secondary-foreground/10 ms-1"
-						/>
-						<ChevronDown size="12" />
+					<Button
+						variant="secondary"
+						size="sm"
+						className="m-0 min-w-28 justify-between px-1.5"
+					>
+						<span className="flex items-center justify-center [&_svg]:size-4">
+							{cardMutation.isSuccess ?
+								<CheckCircle className="text-green-500" />
+							:	statusStrings[choice].icon()}{' '}
+						</span>
+						<span className="me-1">{statusStrings[choice].short}</span>
+						<ChevronDown size={12} />
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">
@@ -262,13 +266,17 @@ export function CardStatusHeart({
 			}
 			title={
 				phrase.card?.status === 'active' ?
-					'Remove phrase from library'
-				:	'Add phrase to library'
+					'Skip this phrase (remove it from your active deck)'
+				:	'Learn this phrase (add to your active deck)'
 			}
 		>
-			{phrase.card?.status === 'active' ?
-				<Heart className="fill-red-600/50 text-red-600/50" />
-			:	<Heart className="text-muted-foreground" />}
+			<Bookmark
+				className={
+					phrase.card?.status === 'active' ?
+						'fill-purple-600/50 text-purple-600'
+					:	'text-muted-foreground'
+				}
+			/>
 		</Button>
 	)
 }
