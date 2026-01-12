@@ -84,7 +84,17 @@ export function InlinePhraseCreator({
 					translations: [TranslationSchema.parse(data.translation)],
 				})
 			)
-			cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+			if (data.card) {
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+				phrasesCollection.utils.writeUpdate({
+					id: data.card.phrase_id,
+					count_cards: 1,
+					count_learners: 1,
+					count_active: 1,
+					count_skipped: 0,
+					count_learned: 0,
+				})
+			}
 			invalidateFeed(lang)
 			toast.success('Phrase created and added to your deck')
 			onPhraseCreated(data.phrase.id)
