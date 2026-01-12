@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import {} from 'react'
 import { Filter } from 'lucide-react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
@@ -21,23 +21,22 @@ export function FeedFilterMenu() {
 	const filterPlaylists = search.filter_playlists ?? true
 	const filterPhrases = search.filter_phrases ?? true
 
-	const toggleFilter = useCallback(
-		(filterName: 'filter_requests' | 'filter_playlists' | 'filter_phrases') => {
-			const currentValue =
-				filterName === 'filter_requests' ? filterRequests
-				: filterName === 'filter_playlists' ? filterPlaylists
-				: filterPhrases
+	const toggleFilter = (
+		filterName: 'filter_requests' | 'filter_playlists' | 'filter_phrases'
+	) => {
+		const currentValue =
+			filterName === 'filter_requests' ? filterRequests
+			: filterName === 'filter_playlists' ? filterPlaylists
+			: filterPhrases
 
-			void navigate({
-				// oxlint-disable-next-line jsx-no-new-function-as-prop
-				search: (prev: typeof search) => ({
-					...prev,
-					[filterName]: currentValue ? false : undefined,
-				}),
-			})
-		},
-		[navigate, filterRequests, filterPlaylists, filterPhrases]
-	)
+		void navigate({
+			// oxlint-disable-next-line jsx-no-new-function-as-prop
+			search: (prev: typeof search) => ({
+				...prev,
+				[filterName]: currentValue ? false : undefined,
+			}),
+		})
+	}
 
 	// Count active filters
 	const activeFilterCount = [

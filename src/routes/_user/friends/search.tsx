@@ -1,4 +1,4 @@
-import { type ChangeEvent, useCallback } from 'react'
+import { type ChangeEvent } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import * as z from 'zod'
 import { useDebounce, usePrevious } from '@uidotdev/usehooks'
@@ -47,18 +47,15 @@ function SearchProfiles() {
 	const userId = useUserId()
 	const debouncedQuery = useDebounce(query, 100) ?? ''
 	const navigate = useNavigate({ from: Route.fullPath })
-	const setQueryInputValue = useCallback(
-		(event: ChangeEvent<HTMLInputElement>) =>
-			void navigate({
-				search: (old) => ({
-					...old,
-					query: event.target.value || undefined,
-				}),
-				replace: true,
-				params: true,
+	const setQueryInputValue = (event: ChangeEvent<HTMLInputElement>) =>
+		void navigate({
+			search: (old) => ({
+				...old,
+				query: event.target.value || undefined,
 			}),
-		[navigate]
-	)
+			replace: true,
+			params: true,
+		})
 
 	const { data: searchResults, isLoading } =
 		useSearchProfilesByUsername(debouncedQuery)

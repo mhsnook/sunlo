@@ -1,7 +1,6 @@
 import {
 	type PropsWithChildren,
 	useState,
-	useMemo,
 	useEffectEvent,
 	useLayoutEffect,
 } from 'react'
@@ -42,26 +41,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [])
 
-	const value = useMemo(
-		() =>
-			isLoaded ?
-				({
-					isAuth: sessionState?.user.role === 'authenticated',
-					userId: sessionState?.user.id ?? null,
-					userEmail: sessionState?.user.email ?? null,
-					userRole:
-						(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
-					isLoaded: true,
-				} as AuthLoaded)
-			:	emptyAuth,
-		[
-			sessionState?.user.role,
-			sessionState?.user.id,
-			sessionState?.user.email,
-			sessionState?.user.user_metadata?.role,
-			isLoaded,
-		]
-	)
+	const value =
+		isLoaded ?
+			({
+				isAuth: sessionState?.user.role === 'authenticated',
+				userId: sessionState?.user.id ?? null,
+				userEmail: sessionState?.user.email ?? null,
+				userRole:
+					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+				isLoaded: true,
+			} as AuthLoaded)
+		:	emptyAuth
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

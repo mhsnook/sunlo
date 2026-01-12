@@ -1,4 +1,4 @@
-import { CSSProperties, useCallback, useMemo, useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -135,7 +135,7 @@ function NewPlaylistPageContent() {
 	})
 
 	// Handle phrase selection from the picker
-	const handleSelectionChange = useCallback((phraseIds: string[]) => {
+	const handleSelectionChange = (phraseIds: string[]) => {
 		setSelectedPhrases((current) => {
 			// Keep existing phrases that are still selected, preserving their hrefs
 			const existingMap = new Map(current.map((p) => [p.phrase_id, p]))
@@ -143,7 +143,7 @@ function NewPlaylistPageContent() {
 				(id) => existingMap.get(id) ?? { phrase_id: id, href: null }
 			)
 		})
-	}, [])
+	}
 
 	const removePhrase = (phraseId: string) => {
 		setSelectedPhrases((phrases) =>
@@ -175,10 +175,7 @@ function NewPlaylistPageContent() {
 	}
 
 	// Extract just the IDs for the picker component
-	const selectedPhraseIds = useMemo(
-		() => selectedPhrases.map((p) => p.phrase_id),
-		[selectedPhrases]
-	)
+	const selectedPhraseIds = selectedPhrases.map((p) => p.phrase_id)
 
 	return (
 		<main style={style}>

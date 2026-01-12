@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import {
@@ -85,13 +85,13 @@ function AuthGate({ message }: { message: string }) {
 		resolver: zodResolver(FormSchema),
 	})
 
-	const handleGoBack = useCallback(() => {
+	const handleGoBack = () => {
 		if (canGoBack) {
 			router.history.back()
 		} else {
 			void navigate({ to: '/learn' })
 		}
-	}, [canGoBack, router.history, navigate])
+	}
 
 	return (
 		<div className="flex flex-col items-center gap-6 py-8">

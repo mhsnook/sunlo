@@ -1,4 +1,3 @@
-import { useCallback } from 'react'
 import { createFileRoute, Link, redirect } from '@tanstack/react-router'
 
 import { Compass, LogIn, Moon, Sun } from 'lucide-react'
@@ -69,10 +68,7 @@ function BrowseLink() {
 
 function ThemeToggle() {
 	const { theme, setTheme } = useTheme()
-	const toggle = useCallback(
-		() => setTheme(theme === 'light' ? 'dark' : 'light'),
-		[setTheme, theme]
-	)
+	const toggle = () => setTheme(theme === 'light' ? 'dark' : 'light')
 
 	return (
 		<Button

@@ -1,9 +1,4 @@
-import {
-	type CSSProperties,
-	type KeyboardEvent,
-	type MouseEvent,
-	useCallback,
-} from 'react'
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
 import { PhraseRequestType } from '@/lib/schemas'
 import { useRequestLinksPhraseIds } from '@/hooks/use-requests'
 import { CardContent, CardFooter } from '@/components/ui/card'
@@ -19,18 +14,17 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	const { data: links } = useRequestLinksPhraseIds(request.id)
 	const navigate = useNavigate()
 
-	const handleRequestClick = useCallback(
-		(e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
-			const target = e.target as HTMLElement
-			if (!e.currentTarget?.contains(target)) return
-			if (target.closest('button, a, input')) return
-			void navigate({
-				to: '/learn/$lang/requests/$id',
-				params: { lang: request.lang, id: request.id },
-			})
-		},
-		[navigate, request.id, request.lang]
-	)
+	const handleRequestClick = (
+		e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>
+	) => {
+		const target = e.target as HTMLElement
+		if (!e.currentTarget?.contains(target)) return
+		if (target.closest('button, a, input')) return
+		void navigate({
+			to: '/learn/$lang/requests/$id',
+			params: { lang: request.lang, id: request.id },
+		})
+	}
 
 	return !request ? null : (
 			<CardlikeRequest

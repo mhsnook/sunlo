@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import {
@@ -36,10 +36,7 @@ export function ManagePlaylistPhrasesDialog({
 	const { data: phrasesData } = useOnePlaylistPhrases(playlist.id)
 
 	// Track which phrase IDs are already in the playlist
-	const currentPhraseIds = useMemo(
-		() => phrasesData?.map((p) => p.phrase.id) ?? [],
-		[phrasesData]
-	)
+	const currentPhraseIds = phrasesData?.map((p) => p.phrase.id) ?? []
 
 	// Add phrase mutation
 	const addPhraseMutation = useMutation({
@@ -177,20 +174,17 @@ export function ManagePlaylistPhrasesDialog({
 	})
 
 	// Handle phrase selection from SelectPhrasesForComment
-	const handleSelectionChange = useCallback(
-		(phraseIds: string[]) => {
-			// Find newly added phrases
-			const newPhraseIds = phraseIds.filter(
-				(id) => !currentPhraseIds.includes(id)
-			)
+	const handleSelectionChange = (phraseIds: string[]) => {
+		// Find newly added phrases
+		const newPhraseIds = phraseIds.filter(
+			(id) => !currentPhraseIds.includes(id)
+		)
 
-			// Add each new phrase
-			for (const phraseId of newPhraseIds) {
-				addPhraseMutation.mutate(phraseId)
-			}
-		},
-		[addPhraseMutation, currentPhraseIds]
-	)
+		// Add each new phrase
+		for (const phraseId of newPhraseIds) {
+			addPhraseMutation.mutate(phraseId)
+		}
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
