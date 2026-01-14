@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, notFound } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
 import { setTheme } from '@/lib/deck-themes'
@@ -14,30 +14,36 @@ import { useDeckMeta } from '@/hooks/use-deck'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	beforeLoad: ({ params: { lang }, context }) => ({
-		titleBar: {
-			title: `${languages[lang]} Deck`,
-		},
-		appnav:
-			context.auth.isAuth ?
-				[
-					'/learn/$lang/feed',
-					'/learn/$lang/review',
-					'/learn/$lang/contributions',
-					'/learn/$lang/stats',
-					'/learn/$lang/search',
-				]
-			:	['/learn/$lang/feed', '/learn/$lang/search'],
-		contextMenu:
-			context.auth.isAuth ?
-				[
-					'/learn/$lang/search',
-					'/learn/$lang/requests/new',
-					'/learn/$lang/add-phrase',
-					'/learn/$lang/deck-settings',
-				]
-			:	[],
-	}),
+	beforeLoad: ({ params: { lang }, context }) => {
+		if (!languages[lang]) {
+			console.log(`not found`)
+			throw notFound()
+		}
+		return {
+			titleBar: {
+				title: `${languages[lang]} Deck`,
+			},
+			appnav:
+				context.auth.isAuth ?
+					[
+						'/learn/$lang/feed',
+						'/learn/$lang/review',
+						'/learn/$lang/contributions',
+						'/learn/$lang/stats',
+						'/learn/$lang/search',
+					]
+				:	['/learn/$lang/feed', '/learn/$lang/search'],
+			contextMenu:
+				context.auth.isAuth ?
+					[
+						'/learn/$lang/search',
+						'/learn/$lang/requests/new',
+						'/learn/$lang/add-phrase',
+						'/learn/$lang/deck-settings',
+					]
+				:	[],
+		}
+	},
 	loader: async () => {
 		const langTagsPromise = langTagsCollection.preload()
 		const daysPromise = reviewDaysCollection.preload()
