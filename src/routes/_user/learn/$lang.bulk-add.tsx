@@ -124,6 +124,12 @@ function BulkAddPhrasesPage() {
 
 	const bulkAddMutation = useMutation({
 		mutationFn: async (values: BulkAddPhrasesFormValues) => {
+			if (!userId) {
+				console.log(`Auth guard didn't work in $lang.bulk-add`)
+				throw new Error(
+					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
+				)
+			}
 			console.log(`Attempting mutation`, { values })
 
 			// Handle deck creation/reactivation if needed

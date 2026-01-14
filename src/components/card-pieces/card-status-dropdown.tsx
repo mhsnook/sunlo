@@ -122,25 +122,6 @@ function updatePhraseCounts(
 	}
 	phrasesCollection.utils.writeUpdate({
 		id: oldPhrase.id,
-		count_cards: (oldPhrase?.count_cards ?? 0) + (!oldCard ? 1 : 0),
-		count_learned: Math.max(
-			(oldPhrase?.count_learned ?? 0) -
-				(oldCard?.status === 'learned' ? 1 : 0) +
-				(newCard.status === 'learned' ? 1 : 0),
-			0
-		),
-		count_active: Math.max(
-			(oldPhrase?.count_active ?? 0) -
-				(oldCard?.status === 'active' ? 1 : 0) +
-				(newCard.status === 'active' ? 1 : 0),
-			0
-		),
-		count_skipped: Math.max(
-			(oldPhrase?.count_skipped ?? 0) -
-				(oldCard?.status === 'skipped' ? 1 : 0) +
-				(newCard.status === 'skipped' ? 1 : 0),
-			0
-		),
 		count_learners: Math.max(
 			(oldPhrase?.count_learners ?? 0) -
 				(oldCard?.status === 'active' || oldCard?.status === 'learned' ?

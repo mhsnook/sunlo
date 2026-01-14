@@ -41,11 +41,13 @@ export default function PhraseExtraInfo({
 
 function CardSection({ card }: { card: CardMetaType }) {
 	const { data: reviews } = useOneCardReviews(card.phrase_id)
-	const rev = reviews[0] || null
+	const neverReviewed =
+		!reviews || !Array.isArray(reviews) || reviews.length === 0
+
+	const rev = reviews?.at(-1) ?? null
 	const retr =
-		card.last_reviewed_at && card.stability ?
-			retrievability(card.last_reviewed_at, card.stability)
-		:	0
+		neverReviewed ? 0 : retrievability(rev!.created_at, rev!.stability!)
+
 	return (
 		<div className="block space-y-4">
 			<div className="flex flex-col">
@@ -56,22 +58,21 @@ function CardSection({ card }: { card: CardMetaType }) {
 				<span className="font-semibold">Card created at</span>
 				<span>{ago(card.created_at)}</span>
 			</div>
-			{!card.last_reviewed_at || !reviews.length ?
+			{neverReviewed ?
 				<p>Never reviewed</p>
 			:	<>
 					<div className="flex flex-col">
 						<span className="font-semibold">
 							Recentest of {reviews.length} reviews
 						</span>
-						<span>{ago(card.last_reviewed_at)}</span>
+						<span>{ago(rev!.created_at)}</span>
 					</div>
 					<div className="flex flex-col">
 						<span className="font-semibold">Card current variables:</span>
 						<span>
-							Difficulty{' '}
-							{rev?.difficulty ? roundAndTrim(rev.difficulty) : 'N/A'},
-							Stability {rev?.stability ? roundAndTrim(rev.stability) : 'N/A'},{' '}
-							{roundAndTrim(dateDiff(rev.created_at), 1)} days since last
+							Difficulty {roundAndTrim(rev!.difficulty!)}, Stability{' '}
+							{roundAndTrim(rev!.stability!)},{' '}
+							{roundAndTrim(dateDiff(rev!.created_at), 1)} days since last
 							review.
 						</span>
 						<span>
@@ -89,7 +90,7 @@ function CardSection({ card }: { card: CardMetaType }) {
 
 			<div className="flex flex-col">
 				<ul className="space-y-2">
-					{reviews.map((r) => (
+					{reviews?.map((r) => (
 						<li key={r.id} className="hover:bg-background/20 border p-2">
 							<p className="text-muted-foreground font-semibold">
 								{ago(r.created_at)}
