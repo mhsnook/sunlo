@@ -88,11 +88,7 @@ export function InlinePhraseCreator({
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
 				phrasesCollection.utils.writeUpdate({
 					id: data.card.phrase_id,
-					count_cards: 1,
 					count_learners: 1,
-					count_active: 1,
-					count_skipped: 0,
-					count_learned: 0,
 				})
 			}
 			invalidateFeed(lang)

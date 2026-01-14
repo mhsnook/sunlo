@@ -65,14 +65,14 @@ export type Database = {
 						foreignKeyName: 'chat_message_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'chat_message_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -156,14 +156,14 @@ export type Database = {
 						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -514,21 +514,14 @@ export type Database = {
 						foreignKeyName: 'phrase_see_also_from_phrase_id_fkey'
 						columns: ['from_phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'phrase_see_also_from_phrase_id_fkey'
 						columns: ['from_phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
-						columns: ['to_phrase_id']
-						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -536,6 +529,13 @@ export type Database = {
 						columns: ['to_phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
+						columns: ['to_phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 				]
@@ -680,14 +680,14 @@ export type Database = {
 						foreignKeyName: 'phrase_tag_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'phrase_tag_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -763,14 +763,14 @@ export type Database = {
 						foreignKeyName: 'phrase_translation_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'phrase_translation_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 				]
@@ -808,14 +808,14 @@ export type Database = {
 						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -1003,14 +1003,14 @@ export type Database = {
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -1091,14 +1091,14 @@ export type Database = {
 						foreignKeyName: 'user_card_review_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'user_card_review_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
@@ -1405,27 +1405,15 @@ export type Database = {
 				}
 				Relationships: []
 			}
-			meta_phrase_info: {
+			phrase_meta: {
 				Row: {
 					added_by: string | null
-					added_by_profile: Json | null
 					avg_difficulty: number | null
 					avg_stability: number | null
-					count_active: number | null
-					count_cards: number | null
-					count_learned: number | null
-					count_skipped: number | null
+					count_learners: number | null
 					created_at: string | null
 					id: string | null
 					lang: string | null
-					percent_active: number | null
-					percent_learned: number | null
-					percent_skipped: number | null
-					rank_least_difficult: number | null
-					rank_least_skipped: number | null
-					rank_most_learned: number | null
-					rank_most_stable: number | null
-					rank_newest: number | null
 					tags: Json | null
 					text: string | null
 				}
@@ -1526,14 +1514,14 @@ export type Database = {
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'meta_phrase_info'
+						referencedRelation: 'phrase'
 						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'user_card_phrase_id_fkey'
 						columns: ['phrase_id']
 						isOneToOne: false
-						referencedRelation: 'phrase'
+						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
 					{
