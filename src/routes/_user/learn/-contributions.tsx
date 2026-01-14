@@ -50,20 +50,32 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 			>
 				<div className="flex w-full flex-row items-center justify-between gap-2">
 					<TabsList className="mt-1 text-lg">
-						<TabsTrigger value="requests">
+						<TabsTrigger
+							data-testid="contributions-tab--requests"
+							value="requests"
+						>
 							<MessageCircleHeart size={16} className="me-1" /> Requests
 						</TabsTrigger>
-						<TabsTrigger value="phrases">
+						<TabsTrigger
+							data-testid="contributions-tab--phrases"
+							value="phrases"
+						>
 							<MessageSquareQuote size={16} className="me-1" /> Phrases
 						</TabsTrigger>
-						<TabsTrigger value="playlists">
+						<TabsTrigger
+							data-testid="contributions-tab--playlists"
+							value="playlists"
+						>
 							<Disc3 size={16} className="me-1" /> Playlists
 						</TabsTrigger>
-						{/*<TabsTrigger value="answers" disabled>
+						{/*<TabsTrigger data-testid="contributions-tab--answers" value="answers" disabled>
 							<MessageSquarePlus size={16} className="me-1" /> Answers
 						</TabsTrigger>
-						<TabsTrigger value="comments" disabled>
+						<TabsTrigger data-testid="contributions-tab--comments" value="comments" disabled>
 							<MessagesSquare size={16} className="me-1" /> Comments
+						</TabsTrigger>
+						<TabsTrigger data-testid="contributions-tab--translations" value="translations" disabled>
+							<Languages size={16} className="me-1" /> Translations
 						</TabsTrigger>*/}
 					</TabsList>
 					{lang && (
