@@ -96,21 +96,10 @@ export const phrasesCollection = createCollection(
 			console.log(`Loading phrasesCollection`)
 
 			const { data } = await supabase
-				.from('meta_phrase_info')
+				.from('phrase_meta')
 				.select('*, translations:phrase_translation(*)')
 				.throwOnError()
-			return (
-				data?.map((p) =>
-					PhraseFullSchema.parse(
-						Object.assign(
-							{ ...p },
-							{
-								count_learners: (p.count_active ?? 0) + (p.count_learned ?? 0),
-							}
-						)
-					)
-				) ?? []
-			)
+			return data?.map((p) => PhraseFullSchema.parse(p)) ?? []
 		},
 		schema: PhraseFullSchema,
 		queryClient,

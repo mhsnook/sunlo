@@ -142,6 +142,12 @@ function AddPhraseTab() {
 	const invalidateFeed = useInvalidateFeed()
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
+			if (!userId) {
+				console.log(`Auth guard didn't work in $lang.add-phrase`)
+				throw new Error(
+					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
+				)
+			}
 			// Determine if we should create a card
 			// Only create card if user has active deck OR is creating/reactivating one
 			const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
@@ -207,11 +213,7 @@ function AddPhraseTab() {
 			if (rpcResult.card)
 				phrasesCollection.utils.writeUpdate({
 					id: rpcResult.phrase.id,
-					count_cards: 1,
 					count_learners: 1,
-					count_active: 1,
-					count_skipped: 0,
-					count_learned: 0,
 				})
 
 			// Update deck collection if we created/reactivated one
