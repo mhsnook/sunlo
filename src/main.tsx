@@ -38,6 +38,14 @@ const router = createRouter({
 			</Button>
 		</ShowError>
 	),
+	defaultNotFoundComponent: () => (
+		<ShowError>
+			<p>404: Could not find that page</p>
+			<p>
+				Please check your URL and try again. Or refresh the page to continue.
+			</p>
+		</ShowError>
+	),
 })
 
 // Register the router instance for type safety
