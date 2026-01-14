@@ -124,6 +124,7 @@ test.describe('Card Status Mutations', () => {
 			// 8. Verify card appears in library - navigate via sidebar
 			await page.getByTestId('sidebar-link--learn-lang-contributions').click()
 			await expect(page).toHaveURL(/\/learn\/hin\/contributions/)
+			await page.getByTestId('contributions-tab--phrases').click()
 			await expect(page.getByText(phrase.text)).toBeVisible()
 		} finally {
 			// Clean up: Delete the phrase (which cascades to translation and card)
