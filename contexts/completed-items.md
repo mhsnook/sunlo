@@ -22,3 +22,4 @@ During Jan
 **14th Jan**
 
 - [x] (c3, d2) Refactor: meta_phrase_info into phrase_meta, do less, more reliably
+- [x] (c1, d1) Fix: review buttons were all one colour
