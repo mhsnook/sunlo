@@ -2333,7 +2333,12 @@ create policy "Users can send messages to friends" on "public"."chat_message" fo
 with
 	check (
 		(
-			("auth"."uid" () = "sender_uid")
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "sender_uid"
+			)
 			and "public"."are_friends" ("sender_uid", "recipient_uid")
 		)
 	);
@@ -2368,8 +2373,18 @@ create policy "Users can view their own chat messages" on "public"."chat_message
 select
 	using (
 		(
-			("auth"."uid" () = "sender_uid")
-			or ("auth"."uid" () = "recipient_uid")
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "sender_uid"
+			)
+			or (
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "recipient_uid"
+			)
 		)
 	);
 
@@ -2721,16 +2736,6 @@ grant all on table "public"."phrase_tag" to "anon";
 grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
-
-grant all on table "public"."user_profile" to "authenticated";
-
-grant all on table "public"."user_profile" to "service_role";
-
-grant all on table "public"."public_profile" to "anon";
-
-grant all on table "public"."public_profile" to "authenticated";
-
-grant all on table "public"."public_profile" to "service_role";
 
 grant all on table "public"."tag" to "anon";
 
