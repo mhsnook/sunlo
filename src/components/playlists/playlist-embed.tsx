@@ -99,7 +99,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'youtube' && (
 				<iframe
 					className="aspect-video h-full w-full"
-					sandbox="allow-same-origin allow-presentation"
+					sandbox="allow-scripts allow-same-origin allow-presentation"
 					src={embedInfo.embedUrl}
 					title="YouTube video player"
 					allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -109,7 +109,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'spotify' && (
 				<iframe
 					className="w-full"
-					sandbox="allow-same-origin allow-presentation"
+					sandbox="allow-scripts allow-same-origin allow-presentation"
 					style={height152}
 					src={embedInfo.embedUrl}
 					title="Spotify player"
@@ -120,7 +120,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'soundcloud' && (
 				<iframe
 					className="w-full"
-					sandbox="allow-same-origin allow-presentation"
+					sandbox="allow-scripts allow-same-origin allow-presentation"
 					style={height172}
 					src={embedInfo.embedUrl}
 					title="SoundCloud player"
