@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
-import { loginForProject } from '../helpers/auth-helpers'
+import { loginForProject, getTestUserForProject } from '../helpers/auth-helpers'
+import { deleteMostRecentReviewState } from '../helpers/db-helpers'
 
 test.describe('Deck Workflow Navigation', () => {
 	test.beforeEach(async ({ page }, testInfo) => {
@@ -27,7 +28,11 @@ test.describe('Deck Workflow Navigation', () => {
 		).toBeVisible()
 	})
 
-	test('can click through to review without submitting', async ({ page }) => {
+	test('can click through to review without submitting', async ({
+		page,
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
+
 		// Go to Hindi deck
 		await page.getByText('Hindi').click()
 
@@ -58,6 +63,9 @@ test.describe('Deck Workflow Navigation', () => {
 				.click()
 
 			await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+
+			// Clean up the review state record created by starting the review
+			await deleteMostRecentReviewState(uid, 'hin')
 		}
 	})
 
