@@ -60,7 +60,7 @@ if (!root) throw new Error('No root element on the page')
 
 createRoot(root).render(
 	<StrictMode>
-		<ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+		<ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
 			<QueryClientProvider client={queryClient}>
 				<AuthProvider>
 					<Routes router={router} />
