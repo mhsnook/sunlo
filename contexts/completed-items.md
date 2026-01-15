@@ -1,7 +1,9 @@
 During v0.4 - Before v0.5
-During Jan
+Deployments in Jan 2026
 
-**15th Jan**
+**16h Jan**
+
+- **15th Jan**
 
 - (c1, d1) A. Fix: Embeds not working in production (bdd0e7e9)
 - (c1, d1) AB. Fix: Poor RLS performance for chat messages (16b3f200)
