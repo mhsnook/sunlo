@@ -23,3 +23,9 @@ During Jan
 
 - [x] (c3, d2) Refactor: meta_phrase_info into phrase_meta, do less, more reliably
 - [x] (c1, d1) Fix: review buttons were all one colour
+- [x] (c1, d1) Fix ago() returning '1 mo ago' for null dates (e723a944)
+- [x] (c1, d1) Fix /learn/undefined should 404 (45b04d8e - prior work)
+- [x] (c1, d1) Fix DialogContent aria-labelledby/description warnings (a73a4fbf)
+- [x] (c1, d1) Make default theme 'light' (85474e8f)
+- [x] (c1, d1) Add 'add to deck' option to bulk-add (746f3073)
+- [x] (c1, d1) Add 'learned' and 'skip' options to review context menu (4da341d1)

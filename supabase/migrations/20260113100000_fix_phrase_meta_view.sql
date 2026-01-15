@@ -1,4 +1,8 @@
-create or replace view public.phrase_meta as
+drop view if exists public.feed_activities;
+drop view if exists public.meta_phrase_info;
+drop view if exists public.phrase_meta;
+
+create view public.phrase_meta as
 with
 	"tags" as (
 		select
@@ -6,7 +10,7 @@ with
 			json_agg(distinct jsonb_build_object('id', tag.id, 'name', tag.name)) filter (
 				where
 					tag.id is not null
-			) as "tags"
+			)::"jsonb" as "tags"
 		from
 			public.phrase_tag "pt"
 			left join public.tag as "tag" on (tag.id = pt.tag_id)
@@ -16,9 +20,9 @@ with
 	"cards" as (
 		select
 			card.phrase_id as "c_phrase_id",
-			count(*) as "count_learners",
-			avg(card.difficulty) as "avg_difficulty",
-			avg(card.stability) as "avg_stability"
+			"count" (*) as "count_learners",
+			"avg" (card.difficulty) as "avg_difficulty",
+			"avg" (card.stability) as "avg_stability"
 		from
 			user_card_plus "card"
 		where
@@ -33,10 +37,10 @@ select
 	phrase.text,
 	phrase.created_at,
 	phrase.added_by,
-	cards.count_learners,
+	coalesce(cards.count_learners, 0) as "count_learners",
 	cards.avg_difficulty,
 	cards.avg_stability,
-	tags.tags
+	coalesce(tags.tags, '[]'::"jsonb") as "tags"
 from
 	public.phrase "phrase"
 	left join cards on (cards.c_phrase_id = phrase.id)
@@ -133,4 +137,4 @@ where
 		and ("ppl"."id" is null)
 	);
 
-drop view public.meta_phrase_info;
+

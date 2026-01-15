@@ -195,12 +195,9 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									}
 								</span>
 								<span>•</span>
-								<span>
-									<span className={phrase.count_learners ? 'font-bold' : ''}>
-										{' '}
-										{phrase.count_learners} learner
-										{phrase.count_learners === 1 ? '' : 's'}
-									</span>
+								<span className={phrase.count_learners ? 'font-bold' : ''}>
+									{phrase.count_learners} learner
+									{phrase.count_learners === 1 ? '' : 's'}
 								</span>
 								{phrase.card?.last_reviewed_at ?
 									<>

@@ -1429,7 +1429,7 @@ with
 	"cards" as (
 		select
 			"card"."phrase_id" as "c_phrase_id",
-			"count" (*) as "count_learners",
+			coalesce("count" (*), 0)::bigint as "count_learners",
 			"avg" ("card"."difficulty") as "avg_difficulty",
 			"avg" ("card"."stability") as "avg_stability"
 		from
