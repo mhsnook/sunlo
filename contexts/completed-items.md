@@ -29,3 +29,5 @@ During Jan
 - [x] (c1, d1) Make default theme 'light' (85474e8f)
 - [x] (c1, d1) Add 'add to deck' option to bulk-add (746f3073)
 - [x] (c1, d1) Add 'learned' and 'skip' options to review context menu (4da341d1)
+
+**16th Jan**
