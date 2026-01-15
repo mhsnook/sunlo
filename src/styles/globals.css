@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap');
+@import url('https://fonts.cdnfonts.com/css/opendyslexic');
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
@@ -105,8 +106,11 @@
 	--breakpoint-md: 768px;
 	--breakpoint-lg: 1024px;
 
-	--font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+	--font-instrument: 'Instrument Sans', -apple-system, BlinkMacSystemFont,
+		'Segoe UI', 'Helvetica Neue', Oxygen-Sans, Cantarell, sans-serif;
+	--font-dyslexic: 'OpenDyslexic', -apple-system, BlinkMacSystemFont, 'Segoe UI',
 		'Helvetica Neue', Oxygen-Sans, Cantarell, sans-serif;
+	--font-sans: var(--font-instrument);
 
 	--shadow-2xs: 0 1px var(--shadow-color-1);
 	--shadow-xs: 0 1px 2px 0 var(--shadow-color-1);
@@ -255,5 +259,8 @@
 	}
 	body {
 		@apply text-foreground bg-gray-50 dark:bg-gray-800;
+	}
+	body.font-dyslexic {
+		--font-sans: var(--font-dyslexic);
 	}
 }

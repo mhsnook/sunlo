@@ -94,10 +94,14 @@ export const PublicProfileSchema = z.object({
 
 export type PublicProfileType = z.infer<typeof PublicProfileSchema>
 
+export const FontPreferenceSchema = z.enum(['default', 'dyslexic'])
+export type FontPreferenceType = z.infer<typeof FontPreferenceSchema>
+
 export const MyProfileSchema = PublicProfileSchema.extend({
 	created_at: z.string(),
 	languages_known: LanguagesKnownSchema,
 	updated_at: z.string().nullable(),
+	font_preference: FontPreferenceSchema.nullable().default('default'),
 })
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>

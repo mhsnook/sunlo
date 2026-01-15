@@ -10,6 +10,7 @@ import AvatarSection from '@/routes/_user/profile/-avatar-section'
 import UserAuthCard from '@/routes/_user/profile/-user-auth-card'
 import { useProfile } from '@/hooks/use-profile'
 import { UpdateProfileForm } from './-update-profile-form'
+import { DisplayPreferences } from './-display-preferences'
 
 export const Route = createFileRoute('/_user/profile/')({
 	component: ProfilePage,
@@ -18,7 +19,7 @@ export const Route = createFileRoute('/_user/profile/')({
 function ProfilePage() {
 	const { data: profile } = useProfile()
 
-	if (profile === null) return <Navigate to={`/getting-started`} />
+	if (!profile) return <Navigate to={`/getting-started`} />
 
 	return (
 		<main className="flex flex-col gap-6 px-px">
@@ -31,6 +32,16 @@ function ProfilePage() {
 				</CardHeader>
 				<CardContent>
 					<UpdateProfileForm profile={profile} />
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle>Display Preferences</CardTitle>
+					<CardDescription>Customize how the app looks for you</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<DisplayPreferences profile={profile} />
 				</CardContent>
 			</Card>
 
