@@ -13,6 +13,7 @@
 		"check": "tsc -b",
 		"format:check": "prettier --check .",
 		"test": "playwright test",
+		"test:nav": "SKIP_DB_RESET=1 playwright test e2e/navigations e2e/example.spec.ts e2e/login-flow.spec.ts",
 		"test:ui": "playwright test --ui",
 		"test:chromium": "playwright test --project=chromium",
 		"test:firefox": "playwright test --project=firefox",
