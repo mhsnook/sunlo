@@ -1,5 +1,7 @@
 drop view if exists public.feed_activities;
+
 drop view if exists public.meta_phrase_info;
+
 drop view if exists public.phrase_meta;
 
 create view public.phrase_meta as
@@ -136,5 +138,3 @@ where
 		and ("cpl"."id" is null)
 		and ("ppl"."id" is null)
 	);
-
-
