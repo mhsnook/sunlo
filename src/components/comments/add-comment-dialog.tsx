@@ -19,7 +19,12 @@ import {
 	FormMessage,
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogTrigger } from '@/components/ui/dialog'
+import {
+	Dialog,
+	DialogDescription,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import supabase from '@/lib/supabase-client'
 import {
@@ -92,6 +97,14 @@ export function AddCommentDialog({
 				authMessage="You need to be logged in to join the conversation."
 				className="max-h-[90vh] overflow-y-auto"
 			>
+				<DialogTitle className="sr-only">
+					{parentCommentId ? 'Reply to comment' : 'Add a comment'}
+				</DialogTitle>
+				<DialogDescription className="sr-only">
+					{parentCommentId ?
+						'Write a reply to this comment'
+					:	'Share your thoughts or answer the request'}
+				</DialogDescription>
 				{parentCommentId ?
 					<CommentDisplayOnly id={parentCommentId} />
 				:	<RequestDisplayOnly id={requestId} />}

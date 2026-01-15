@@ -3,6 +3,7 @@ import { Edit } from 'lucide-react'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -58,6 +59,9 @@ export function UpdateRequestDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Request</DialogTitle>
+					<DialogDescription className="sr-only">
+						Edit your request text below
+					</DialogDescription>
 				</DialogHeader>
 				<div className="mt-2 space-y-2">
 					<Textarea

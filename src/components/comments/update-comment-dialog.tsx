@@ -3,6 +3,7 @@ import { Edit } from 'lucide-react'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -56,6 +57,9 @@ export function UpdateCommentDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Comment</DialogTitle>
+					<DialogDescription className="sr-only">
+						Edit your comment text below
+					</DialogDescription>
 				</DialogHeader>
 				<div className="mt-2 space-y-2">
 					<Textarea
