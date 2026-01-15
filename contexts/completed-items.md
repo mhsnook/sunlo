@@ -19,4 +19,6 @@ During Jan
 - [x] (c1, d1) Feat: throw notFound() for /learn/{whatever}
 - [x] (c1, d1) Changing card status updates the phrase's metadata (count_learners) etc
 
-**13th Jan**
+**14th Jan**
+
+- [x] (c3, d2) Refactor: meta_phrase_info into phrase_meta, do less, more reliably

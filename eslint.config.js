@@ -36,7 +36,14 @@ export default [
 			'@typescript-eslint/only-throw-error': [
 				'error',
 				{
-					allow: ['Redirect'],
+					allow: [
+						'Redirect',
+						{
+							from: 'package',
+							package: '@tanstack/router',
+							name: 'NotFoundError',
+						},
+					],
 					allowThrowingAny: false,
 					allowThrowingUnknown: false,
 				},
