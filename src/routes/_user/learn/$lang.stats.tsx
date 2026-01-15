@@ -90,10 +90,12 @@ function DeckOverview() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				<p>
-					Your last review was{' '}
-					<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
-				</p>
+				{meta.most_recent_review_at ?
+					<p>
+						Your last review was{' '}
+						<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
+					</p>
+				:	<p>You haven't done any reviews yet</p>}
 				{routineStats ?
 					<p>
 						You've kept up with your routine

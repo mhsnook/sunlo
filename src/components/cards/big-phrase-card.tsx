@@ -202,13 +202,13 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										{phrase.count_learners === 1 ? '' : 's'}
 									</span>
 								</span>
-								{phrase.card ?
+								{phrase.card?.last_reviewed_at ?
 									<>
 										<span>•</span>
 										<span>
 											Your last review:{' '}
 											<span className="font-bold">
-												{ago(phrase.card?.last_reviewed_at)}
+												{ago(phrase.card.last_reviewed_at)}
 											</span>
 										</span>
 									</>

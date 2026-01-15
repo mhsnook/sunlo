@@ -37,9 +37,11 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 					<span>{deckMeta.cards_active} active cards</span>
 				</Badge>
 
-				<Badge variant="outline">
-					<BookOpenCheck />
-					<span>{ago(deckMeta.most_recent_review_at)}</span>
-				</Badge>
+				{deckMeta.most_recent_review_at ?
+					<Badge variant="outline">
+						<BookOpenCheck />
+						<span>{ago(deckMeta.most_recent_review_at)}</span>
+					</Badge>
+				:	null}
 			</>
 }
