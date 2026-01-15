@@ -55,9 +55,6 @@ file_size_limit = "5MB"
 allowed_mime_types = ["image/png", "image/jpeg", "image/gif"]
 objects_path = "./avatars"
 
-[remotes.next]
-project_id = "zamqvnghfirvtxwzqdzs"
-
 [realtime]
 enabled = true
 # Bind realtime via either IPv4 or IPv6. (default: IPv4)
