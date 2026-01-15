@@ -1,6 +1,7 @@
 import { type CSSProperties, useState } from 'react'
 import toast from 'react-hot-toast'
-import { MoreVertical, Play } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
+import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
 
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
@@ -15,13 +16,21 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
+	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
-import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas'
+import {
+	CardMetaSchema,
+	PhraseFullFilteredType,
+	TranslationType,
+} from '@/lib/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
+import supabase from '@/lib/supabase-client'
+import { useUserId } from '@/lib/use-auth'
+import { cardsCollection } from '@/lib/collections'
 
 const playAudio = (text: string) => {
 	toast(`Playing audio for: ${text}`)
@@ -161,6 +170,38 @@ export function ReviewSingleCard({
 
 function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [isOpen, setIsOpen] = useState(false)
+	const userId = useUserId()
+
+	const cardStatusMutation = useMutation({
+		mutationKey: ['update-card-status', phrase.id],
+		mutationFn: async (status: 'learned' | 'skipped') => {
+			if (!userId) throw new Error('You must be logged in')
+			const { data } = await supabase
+				.from('user_card')
+				.update({ status })
+				.eq('phrase_id', phrase.id)
+				.eq('uid', userId)
+				.select()
+				.throwOnError()
+			return data?.[0]
+		},
+		onSuccess: (data) => {
+			if (data) {
+				cardsCollection.utils.writeUpdate(CardMetaSchema.parse(data))
+				const message =
+					data.status === 'learned' ?
+						"Great! This card is now marked as learned and won't appear in your reviews."
+					:	"This card has been skipped and won't appear in your reviews."
+				toast.success(message)
+			}
+			setIsOpen(false)
+		},
+		onError: (error) => {
+			toast.error('Failed to update card status')
+			console.log('Error updating card status', error)
+		},
+	})
+
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
@@ -175,6 +216,21 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
+				<DropdownMenuItem
+					onClick={() => cardStatusMutation.mutate('learned')}
+					disabled={cardStatusMutation.isPending}
+				>
+					<BookmarkCheck className="mr-2 h-4 w-4 text-green-600" />
+					I've learned this
+				</DropdownMenuItem>
+				<DropdownMenuItem
+					onClick={() => cardStatusMutation.mutate('skipped')}
+					disabled={cardStatusMutation.isPending}
+				>
+					<BookmarkX className="mr-2 h-4 w-4" />
+					Skip this card
+				</DropdownMenuItem>
+				<DropdownMenuSeparator />
 				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
 					<PermalinkButton
 						to={'/learn/$lang/phrases/$id'}
