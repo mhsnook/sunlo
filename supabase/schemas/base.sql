@@ -2333,7 +2333,12 @@ create policy "Users can send messages to friends" on "public"."chat_message" fo
 with
 	check (
 		(
-			("auth"."uid" () = "sender_uid")
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "sender_uid"
+			)
 			and "public"."are_friends" ("sender_uid", "recipient_uid")
 		)
 	);
