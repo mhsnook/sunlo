@@ -20,7 +20,10 @@ test.describe('Deck Workflow Navigation', () => {
 
 		// Should see review stats
 		await expect(page.getByText(/total cards/i)).toBeVisible()
-		await expect(page.getByText(/scheduled/i)).toBeVisible()
+		// Use heading role to avoid matching multiple "scheduled" elements
+		await expect(
+			page.getByRole('heading', { name: /scheduled/i })
+		).toBeVisible()
 	})
 
 	test('can click through to review without submitting', async ({ page }) => {
@@ -57,28 +60,19 @@ test.describe('Deck Workflow Navigation', () => {
 		}
 	})
 
-	test('phrase detail page loads from browse', async ({ page }) => {
-		// Go to Hindi browse
+	test('search page loads from deck nav', async ({ page }) => {
+		// Go to Hindi deck
 		await page.getByText('Hindi').click()
-		await page
+		await expect(page).toHaveURL(/\/learn\/hin/)
+
+		// Click search in nav (the deck-specific nav has "search", not "browse")
+		const searchLink = page
 			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /browse/i })
-			.click()
+			.getByRole('link', { name: /search/i })
+		await expect(searchLink).toBeVisible()
+		await searchLink.click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/browse/)
-
-		// Click on a phrase card to see details
-		const phraseCard = page.locator('[data-slot=card]').first()
-		await expect(phraseCard).toBeVisible()
-
-		// Look for a "view" or clickable area on the card
-		const viewLink = phraseCard.getByRole('link').first()
-		if ((await viewLink.count()) > 0) {
-			await viewLink.click()
-
-			// Should be on a phrase detail page
-			await expect(page).toHaveURL(/\/learn\/hin\/phrase\//)
-		}
+		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 	})
 
 	test('feed page loads with content', async ({ page }) => {
@@ -88,9 +82,9 @@ test.describe('Deck Workflow Navigation', () => {
 		// Should be on feed by default
 		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
 
-		// Feed should have content or empty state message
-		const mainContent = page.locator('main')
-		await expect(mainContent).toBeVisible()
+		// Feed should have content visible in the app outlet
+		const appOutlet = page.locator('#app-sidebar-layout-outlet')
+		await expect(appOutlet).toBeVisible()
 
 		// Check for feed tabs if they exist
 		const recentTab = page.getByRole('tab', { name: /recent/i })
@@ -174,12 +168,12 @@ test.describe('Deck Workflow Navigation', () => {
 		await page.getByText('Hindi').click()
 		await expect(page).toHaveURL(/\/learn\/hin/)
 
-		// Go to browse
+		// Go to search page
 		await page
 			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /browse/i })
+			.getByRole('link', { name: /search/i })
 			.click()
-		await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 
 		// Go back to learn page
 		await page.goto('/learn')

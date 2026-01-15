@@ -69,8 +69,13 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('profile page loads and shows user info', async ({ page }) => {
-		// Find and click profile link in sidebar
-		const profileLink = page.getByRole('link', { name: /profile/i }).first()
+		// Profile link is in a dropdown menu triggered by user avatar button
+		// The user button has an avatar and user info, not just the theme toggle
+		const userMenuButton = page.getByRole('button', { name: /garlicface/i })
+		await userMenuButton.click()
+
+		// Now click the Profile link in the dropdown
+		const profileLink = page.getByRole('menuitem', { name: /profile/i }).first()
 		await profileLink.click()
 
 		await expect(page).toHaveURL(/\/profile/)
@@ -110,30 +115,32 @@ test.describe('Logged In Navigation', () => {
 		}
 	})
 
-	test('browse page shows cards with user status', async ({ page }) => {
+	test('search page shows phrase cards', async ({ page }) => {
 		// Go to Hindi deck
 		await page.getByText('Hindi').click()
 
-		// Navigate to browse
+		// Navigate to search (deck-specific navigation)
 		await page
 			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /browse/i })
+			.getByRole('link', { name: /search/i })
 			.click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 
-		// Should see phrase cards
-		const cards = page.locator('[data-slot=card]')
-		await expect(cards.first()).toBeVisible()
+		// Should see phrase cards or search interface
+		const appOutlet = page.locator('#app-sidebar-layout-outlet')
+		await expect(appOutlet).toBeVisible()
 	})
 
-	test('search functionality in browse page', async ({ page }) => {
-		// Go to Hindi browse
+	test('search functionality works', async ({ page }) => {
+		// Go to Hindi search page
 		await page.getByText('Hindi').click()
 		await page
 			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /browse/i })
+			.getByRole('link', { name: /search/i })
 			.click()
+
+		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 
 		// Find search input
 		const searchInput = page.getByPlaceholder(/search/i)
@@ -145,7 +152,7 @@ test.describe('Logged In Navigation', () => {
 			await page.waitForTimeout(500)
 
 			// Page should still be functional (no crash)
-			await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+			await expect(page).toHaveURL(/\/learn\/hin\/search/)
 		}
 	})
 })

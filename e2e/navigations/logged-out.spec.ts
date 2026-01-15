@@ -6,78 +6,81 @@ test.describe('Logged Out Navigation', () => {
 
 		// Verify landing page has main call to action
 		await expect(page).toHaveTitle(/Sunlo/)
-		await expect(page.getByRole('link', { name: /get started/i })).toBeVisible()
-	})
-
-	test('can navigate to learn page without login', async ({ page }) => {
-		await page.goto('/')
-
-		// Click the "Get started" or similar link to reach learn page
-		await page.getByRole('link', { name: /get started/i }).click()
-
-		// Should be on the learn page
-		await expect(page).toHaveURL(/\/learn/)
-
-		// Should see language options or login prompt
+		// Landing page has "Start Learning", "Browse Library", and "Sign In" links
+		// Use first() since there may be duplicate links (header + main CTA)
 		await expect(
-			page.getByRole('link', { name: /log in/i }).first()
+			page.getByRole('link', { name: /start learning/i }).first()
+		).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /browse library/i }).first()
 		).toBeVisible()
 	})
 
-	test('can browse languages and see phrase counts', async ({ page }) => {
-		await page.goto('/learn')
+	test('can navigate to browse page from landing', async ({ page }) => {
+		await page.goto('/')
 
-		// Should see some language cards with phrase counts
-		// Look for a language link (Hindi, Spanish, etc.)
-		const languageLinks = page.locator('#decks-list-grid a')
-		const count = await languageLinks.count()
-		expect(count).toBeGreaterThan(0)
+		// Click "Browse Library" to reach the browse page
+		await page
+			.getByRole('link', { name: /browse library/i })
+			.first()
+			.click()
 
-		// Click on a language to go to its browse page
-		await languageLinks.first().click()
-
-		// Should be on a language-specific page
-		await expect(page).toHaveURL(/\/learn\/[a-z]{3}/)
+		// Should be on the browse page
+		await expect(page).toHaveURL(/\/learn\/browse/)
 	})
 
-	test('can view browse page for a language', async ({ page }) => {
-		await page.goto('/learn')
+	test('can navigate to signup from landing', async ({ page }) => {
+		await page.goto('/')
 
-		// Find and click on Hindi (should have test data)
-		const hindiLink = page.getByRole('link', { name: /hindi/i })
-		if ((await hindiLink.count()) > 0) {
-			await hindiLink.click()
-			await expect(page).toHaveURL(/\/learn\/hin/)
+		// Click "Start Learning" to reach signup
+		await page
+			.getByRole('link', { name: /start learning/i })
+			.first()
+			.click()
 
-			// Navigate to browse from sidebar
-			const browseLink = page
-				.locator('nav[data-slot=navigation-menu]')
-				.getByRole('link', { name: /browse/i })
-			if ((await browseLink.count()) > 0) {
-				await browseLink.click()
-				await expect(page).toHaveURL(/\/learn\/hin\/browse/)
-
-				// Should see phrase cards
-				await expect(page.locator('[data-slot=card]').first()).toBeVisible()
-			}
-		}
+		// Should be on the signup page
+		await expect(page).toHaveURL(/\/signup/)
 	})
 
-	test('can view feed page for a language', async ({ page }) => {
+	test('learn page shows browse prompt for logged-out users', async ({
+		page,
+	}) => {
 		await page.goto('/learn')
 
-		// Find and click on Hindi
-		const hindiLink = page.getByRole('link', { name: /hindi/i })
-		if ((await hindiLink.count()) > 0) {
-			await hindiLink.click()
+		// Logged-out users see a browse prompt, not deck list
+		await expect(page.getByText(/welcome to sunlo/i)).toBeVisible()
+		await expect(
+			page.getByRole('link', { name: /browse languages/i })
+		).toBeVisible()
+	})
 
-			// Should land on feed by default
-			await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+	test('can navigate to browse from learn page', async ({ page }) => {
+		await page.goto('/learn')
 
-			// Should see feed items or empty state
-			const feedContent = page.locator('main')
-			await expect(feedContent).toBeVisible()
-		}
+		// Click "Browse languages" button
+		await page.getByRole('link', { name: /browse languages/i }).click()
+
+		// Should be on the browse page
+		await expect(page).toHaveURL(/\/learn\/browse/)
+	})
+
+	test('browse page shows language cards', async ({ page }) => {
+		await page.goto('/learn/browse')
+
+		// Browse page should show language cards
+		const languageCards = page.locator('[data-slot=card]')
+		await expect(languageCards.first()).toBeVisible()
+	})
+
+	test('can navigate to a language from browse', async ({ page }) => {
+		await page.goto('/learn/browse')
+
+		// Find and click on Hindi card or link
+		const hindiCard = page.getByRole('link', { name: /hindi/i }).first()
+		await hindiCard.click()
+
+		// Should be on Hindi page (feed or browse)
+		await expect(page).toHaveURL(/\/learn\/hin/)
 	})
 
 	test('login link appears and works', async ({ page }) => {
@@ -113,27 +116,15 @@ test.describe('Logged Out Navigation', () => {
 		}
 	})
 
-	test('protected actions show login prompt', async ({ page }) => {
-		await page.goto('/learn')
+	test('sidebar shows login options for logged-out users', async ({ page }) => {
+		// Navigate to a language page (browse -> language)
+		await page.goto('/learn/browse')
+		await page.getByRole('link', { name: /hindi/i }).first().click()
+		await expect(page).toHaveURL(/\/learn\/hin/)
 
-		// Navigate to Hindi
-		const hindiLink = page.getByRole('link', { name: /hindi/i })
-		if ((await hindiLink.count()) > 0) {
-			await hindiLink.click()
-
-			// Try to access add phrase or another protected route
-			const addLink = page.getByRole('link', { name: /add.*phrase/i }).first()
-			if ((await addLink.count()) > 0) {
-				await addLink.click()
-
-				// Should be redirected to login or see a login prompt
-				const onLoginPage = await page.url().includes('/login')
-				const hasLoginPrompt =
-					(await page.getByText(/log in/i).count()) > 0 ||
-					(await page.getByText(/sign in/i).count()) > 0
-
-				expect(onLoginPage || hasLoginPrompt).toBe(true)
-			}
-		}
+		// Sidebar should show login/signup for logged-out users
+		await expect(
+			page.getByRole('link', { name: /log in/i }).first()
+		).toBeVisible()
 	})
 })
