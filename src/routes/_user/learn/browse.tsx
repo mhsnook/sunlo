@@ -228,7 +228,7 @@ function BrowsePage() {
 					matchingTagSuggestions.length > 0) && (
 					<div className="flex flex-col items-start gap-2">
 						{matchingLangSuggestions.length > 0 && (
-							<div className="inline-flex flex-row gap-2">
+							<div className="inline-flex flex-row items-center gap-2">
 								<span className="text-muted-foreground text-sm">
 									Languages:
 								</span>
@@ -237,7 +237,7 @@ function BrowsePage() {
 										key={lang.value}
 										type="button"
 										onClick={() => addLangFilter(lang.value)}
-										className="bg-primary/10 text-primary hover:bg-primary/20 rounded-full px-3 py-1 text-sm transition-colors"
+										className="bg-primary/10 text-primary hover:bg-primary/20 line-clamp-1 max-w-40 truncate rounded-full px-3 py-1 text-sm transition-colors"
 									>
 										+ {lang.label}
 									</button>
@@ -245,14 +245,14 @@ function BrowsePage() {
 							</div>
 						)}
 						{matchingTagSuggestions.length > 0 && (
-							<div className="inline-flex flex-row gap-2">
+							<div className="inline-flex flex-row items-center gap-2">
 								<span className="text-muted-foreground text-sm">Tags:</span>
 								{matchingTagSuggestions.map((tag) => (
 									<button
 										key={tag.value}
 										type="button"
 										onClick={() => addTagFilter(tag.value)}
-										className="bg-accent/50 text-accent-foreground hover:bg-accent/70 rounded-full px-3 py-1 text-sm transition-colors"
+										className="bg-accent/50 text-accent-foreground hover:bg-accent/70 max-w-40 truncate rounded-full px-3 py-1 text-sm transition-colors"
 									>
 										+ {tag.label}
 									</button>
