@@ -175,19 +175,23 @@ test.describe('Deck Workflow Navigation', () => {
 			.click()
 		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 
-		// Go back to learn page
-		await page.goto('/learn')
+		// Go back to learn page via sidebar - use the link with title "All Decks"
+		// (The /learn link is in "Learning center" section with title "All Decks")
+		await page.getByRole('link', { name: /all decks/i }).click()
+		await expect(page).toHaveURL('/learn')
 
 		// Go to Spanish if available
 		const spanishLink = page.getByText('Spanish')
 		if ((await spanishLink.count()) > 0) {
 			await spanishLink.click()
 			await expect(page).toHaveURL(/\/learn\/spa/)
-		}
 
-		// Go back to Hindi - should work fine
-		await page.goto('/learn')
-		await page.getByText('Hindi').click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+			// Go back to learn page and then Hindi
+			await page.getByRole('link', { name: /all decks/i }).click()
+			await expect(page).toHaveURL('/learn')
+
+			await page.getByText('Hindi').click()
+			await expect(page).toHaveURL(/\/learn\/hin/)
+		}
 	})
 })
