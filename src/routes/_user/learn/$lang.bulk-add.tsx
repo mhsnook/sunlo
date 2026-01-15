@@ -34,8 +34,12 @@ import { usePreferredTranslationLang } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { DeckMetaSchema, PhraseFullSchema } from '@/lib/schemas'
-import { decksCollection, phrasesCollection } from '@/lib/collections'
+import { CardMetaSchema, DeckMetaSchema, PhraseFullSchema } from '@/lib/schemas'
+import {
+	cardsCollection,
+	decksCollection,
+	phrasesCollection,
+} from '@/lib/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
@@ -91,11 +95,13 @@ function BulkAddPhrasesPage() {
 	// Deck status detection
 	const { data: deck } = useDeckMeta(lang)
 	const { data: allDecks } = useDecks()
+	const hasActiveDeck = !!deck && !deck.archived
 	const hasArchivedDeck = !!deck && deck.archived
 	const noDeck = !deck
 	const showDeckCheckbox = noDeck || hasArchivedDeck
 	const [shouldCreateOrReactivateDeck, setShouldCreateOrReactivateDeck] =
 		useState(true)
+	const [shouldAddToMyDeck, setShouldAddToMyDeck] = useState(true)
 
 	const {
 		control,
@@ -167,12 +173,39 @@ function BulkAddPhrasesPage() {
 			console.log(`After mutation`, { values, data, error })
 
 			if (error) throw error
+
+			// Cast the RPC result to our expected type
+			const rpcResult = data as BulkAddPhrasesResponse | null
+
+			// Determine if we should create cards
+			const shouldCreateCards =
+				(hasActiveDeck || (shouldCreateOrReactivateDeck && showDeckCheckbox)) &&
+				shouldAddToMyDeck
+
+			// Create cards for each phrase if requested
+			let cards: Tables<'user_card'>[] = []
+			if (shouldCreateCards && rpcResult?.phrases?.length) {
+				const cardsToInsert = rpcResult.phrases.map((p) => ({
+					phrase_id: p.id,
+					lang,
+					uid: userId,
+					status: 'active' as const,
+				}))
+				const { data: cardData } = await supabase
+					.from('user_card')
+					.insert(cardsToInsert)
+					.select()
+					.throwOnError()
+				cards = cardData ?? []
+			}
+
 			return {
-				rpcResult: data as BulkAddPhrasesResponse | null,
+				rpcResult,
 				newDeck,
+				cards,
 			}
 		},
-		onSuccess: ({ rpcResult, newDeck }) => {
+		onSuccess: ({ rpcResult, newDeck, cards }) => {
 			if (!rpcResult) {
 				toast('No data came back from the database :-/')
 				return
@@ -201,6 +234,14 @@ function BulkAddPhrasesPage() {
 				})
 			)
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
+
+			// Update card collection if we created cards
+			if (cards.length) {
+				cards.forEach((card) =>
+					cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+				)
+			}
+
 			invalidateFeed(lang)
 			setSuccessfullyAddedPhrases((prev) => [
 				...phrasesToInsert.map((p) => p.id),
@@ -212,16 +253,20 @@ function BulkAddPhrasesPage() {
 			})
 
 			// Show appropriate success message
+			const cardsMessage =
+				cards.length ? ' They will appear in your next review.' : ''
 			if (newDeck) {
 				const deckAction =
 					hasArchivedDeck ?
 						`re-activated your ${languages[lang]} deck`
 					:	`started learning ${languages[lang]}`
 				toast.success(
-					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.`
+					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.${cardsMessage}`
 				)
 			} else {
-				toast.success(`${rpcResult.phrases.length} phrases added successfully!`)
+				toast.success(
+					`${rpcResult.phrases.length} phrases added successfully!${cardsMessage}`
+				)
 			}
 		},
 		onError: (error) => {
@@ -287,6 +332,22 @@ function BulkAddPhrasesPage() {
 										{hasArchivedDeck ?
 											`Re-activate ${languages[lang]} deck`
 										:	`Start learning ${languages[lang]}`}
+									</Label>
+								</div>
+							)}
+
+							{(hasActiveDeck ||
+								(showDeckCheckbox && shouldCreateOrReactivateDeck)) && (
+								<div className="flex items-center gap-3 rounded-lg border p-4">
+									<Checkbox
+										id="add-to-deck"
+										checked={shouldAddToMyDeck}
+										onCheckedChange={(checked) =>
+											setShouldAddToMyDeck(checked === true)
+										}
+									/>
+									<Label htmlFor="add-to-deck" className="cursor-pointer">
+										Add these phrases to my deck for review
 									</Label>
 								</div>
 							)}
