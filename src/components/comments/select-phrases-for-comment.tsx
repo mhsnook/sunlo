@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
@@ -94,11 +95,11 @@ export function SelectPhrasesForComment({
 			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
 				<DialogHeader className="flex-none border-b p-6 pb-4">
 					<DialogTitle>Select Flashcards ({countDisplay})</DialogTitle>
-					<p className="text-muted-foreground text-sm">
+					<DialogDescription>
 						{maxPhrases === null ?
 							'Select flashcards to add'
 						:	`Choose up to ${maxPhrases} flashcards`}
-					</p>
+					</DialogDescription>
 
 					<div className="relative mt-2">
 						<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />

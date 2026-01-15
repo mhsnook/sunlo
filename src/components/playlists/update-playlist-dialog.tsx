@@ -3,6 +3,7 @@ import { Edit } from 'lucide-react'
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -71,6 +72,9 @@ export function UpdatePlaylistDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Playlist</DialogTitle>
+					<DialogDescription className="sr-only">
+						Edit the playlist title, description, and source URL
+					</DialogDescription>
 				</DialogHeader>
 				<div className="mt-2 space-y-4">
 					<div className="space-y-2">
