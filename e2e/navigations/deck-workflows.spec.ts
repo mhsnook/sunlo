@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser } from '../helpers/auth-helpers'
+import { loginForProject } from '../helpers/auth-helpers'
 
 test.describe('Deck Workflow Navigation', () => {
-	test.beforeEach(async ({ page }) => {
-		await loginAsTestUser(page)
+	test.beforeEach(async ({ page }, testInfo) => {
+		// Each browser uses a different test user to avoid DB conflicts
+		await loginForProject(page, testInfo)
 	})
 
 	test('review setup page loads with stats', async ({ page }) => {

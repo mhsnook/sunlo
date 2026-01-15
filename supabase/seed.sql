@@ -4649,6 +4649,16 @@ values
 		'moving',
 		false,
 		15
+	),
+	-- Hindi deck for second test user (webkit tests)
+	(
+		'f8a7b3c1-2d4e-5f6a-8b9c-0d1e2f3a4b5c',
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'hin',
+		now() - interval '30 days',
+		'moving',
+		false,
+		15
 	);
 
 --

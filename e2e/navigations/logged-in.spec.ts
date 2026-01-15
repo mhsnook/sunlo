@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser } from '../helpers/auth-helpers'
+import { loginForProject, getTestUserForProject } from '../helpers/auth-helpers'
 
 test.describe('Logged In Navigation', () => {
-	test.beforeEach(async ({ page }) => {
-		await loginAsTestUser(page)
+	test.beforeEach(async ({ page }, testInfo) => {
+		// Each browser uses a different test user to avoid DB conflicts
+		await loginForProject(page, testInfo)
 	})
 
 	test('deck list shows on learn page', async ({ page }) => {
@@ -68,10 +69,13 @@ test.describe('Logged In Navigation', () => {
 		}
 	})
 
-	test('profile page loads and shows user info', async ({ page }) => {
+	test('profile page loads and shows user info', async ({ page }, testInfo) => {
 		// Profile link is in a dropdown menu triggered by user avatar button
 		// The user button has an avatar and user info, not just the theme toggle
-		const userMenuButton = page.getByRole('button', { name: /garlicface/i })
+		const { username } = getTestUserForProject(testInfo)
+		const userMenuButton = page.getByRole('button', {
+			name: new RegExp(username, 'i'),
+		})
 		await userMenuButton.click()
 
 		// Now click the Profile link in the dropdown
@@ -85,8 +89,10 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('friends section is visible on learn page', async ({ page }) => {
-		// Should see friends section
-		await expect(page.getByText(/your friends/i)).toBeVisible()
+		// Should see friends section (use heading role to be specific)
+		await expect(
+			page.getByRole('heading', { name: /your friends/i })
+		).toBeVisible()
 	})
 
 	test('can switch between decks', async ({ page }) => {
