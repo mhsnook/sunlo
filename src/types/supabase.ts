@@ -1285,6 +1285,7 @@ export type Database = {
 				Row: {
 					avatar_path: string | null
 					created_at: string
+					font_preference: string | null
 					languages_known: Json
 					uid: string
 					updated_at: string | null
@@ -1293,6 +1294,7 @@ export type Database = {
 				Insert: {
 					avatar_path?: string | null
 					created_at?: string
+					font_preference?: string | null
 					languages_known?: Json
 					uid?: string
 					updated_at?: string | null
@@ -1301,6 +1303,7 @@ export type Database = {
 				Update: {
 					avatar_path?: string | null
 					created_at?: string
+					font_preference?: string | null
 					languages_known?: Json
 					uid?: string
 					updated_at?: string | null

@@ -25,6 +25,7 @@ import {
 	myProfileCollection,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
+import { useFontPreference } from '@/hooks/use-font-preference'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context }) => {
@@ -97,6 +98,9 @@ function UserLayout() {
 		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
 	const userId = useUserId()
+
+	// Apply user's font preference to the document body
+	useFontPreference()
 
 	// Only set up realtime subscriptions when authenticated
 	useEffect(() => {
