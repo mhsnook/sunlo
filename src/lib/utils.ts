@@ -54,19 +54,8 @@ export function mapArrays<T extends Record<string, unknown>, K extends keyof T>(
 	)
 }
 
-function trimmedNumberString(num: number, places: number): string {
-	// We may end up with string like 5.1234.00 and that's okay
-	const content = num.toString() + '.' + '0'.repeat(places)
-
-	return content.substring(0, content.indexOf('.') + places + 1)
-}
-
 export function round(num: number, places: number = 2): number {
 	return Math.pow(10, -places) * Math.round(Math.pow(10, places) * num)
-}
-
-export function roundAndTrim(num: number, places: number = 2): string {
-	return trimmedNumberString(round(num, places), places)
 }
 
 export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
