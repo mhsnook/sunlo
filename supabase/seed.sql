@@ -4649,6 +4649,16 @@ values
 		'moving',
 		false,
 		15
+	),
+	-- Hindi deck for second test user (webkit tests)
+	(
+		'f8a7b3c1-2d4e-5f6a-8b9c-0d1e2f3a4b5c',
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'hin',
+		now() - interval '30 days',
+		'moving',
+		false,
+		15
 	);
 
 --
@@ -5105,6 +5115,34 @@ values
 		now() - interval '1 days',
 		'active',
 		'kan'
+	),
+	-- Hindi cards for second test user (webkit tests)
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'hin'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7',
+		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'hin'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'e3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8',
+		'90108f59-7968-457f-9744-2e3b44e980dd',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'hin'
 	);
 
 --
