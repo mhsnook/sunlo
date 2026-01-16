@@ -42,7 +42,6 @@ export const Route = createFileRoute('/_auth/signup')({
 		}
 	},
 	beforeLoad: ({ context: { auth } }) => {
-		console.log(`beforeLoad`, auth)
 		if (auth.isAuth) {
 			console.log(
 				`Issuing redirect from /signup to /learn because auth.isAuth is true`
@@ -99,7 +98,6 @@ function SignUp() {
 			return { user: data.user, wasLogin: false }
 		},
 		onSuccess: (data) => {
-			console.log(`Signup form response data`, data)
 			if (data.wasLogin) {
 				toast.success(`Welcome back! Logged in as ${data.user?.email}`)
 				void navigate({ to: '/learn' })
