@@ -13,7 +13,7 @@ export const supabase = createClient<Database>(
  */
 export async function getPhrase(id: string) {
 	return await supabase
-		.from('meta_phrase_info')
+		.from('phrase_meta')
 		.select('*, translations:phrase_translation(*)')
 		.eq('id', id)
 		.single()

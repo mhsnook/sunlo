@@ -26,7 +26,7 @@ test('login flow redirects and shows content', async ({ page }) => {
 	await expect(page).toHaveURL(/\/learn/)
 
 	// 7. Verify the presence of 3 active decks and 2 friends
-	await expect(page.getByText('Your friends')).toBeVisible()
+	await expect(page.getByText('Your friends').first()).toBeVisible()
 
 	// Assert 3 active decks
 	const decksGrid = page.locator('#decks-list-grid')

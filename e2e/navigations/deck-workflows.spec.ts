@@ -10,18 +10,15 @@ test.describe('Deck Workflow Navigation', () => {
 
 	test('review setup page loads with stats', async ({ page }) => {
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
-		// Navigate to review
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /review/i })
-			.click()
+		// Navigate to review using data-testid
+		await page.getByTestId('appnav-review').click()
 
 		await expect(page).toHaveURL(/\/learn\/hin\/review/)
 
 		// Should see review stats
-		await expect(page.getByText(/total cards/i)).toBeVisible()
+		await expect(page.getByText(/total cards|continue review/i)).toBeVisible()
 		// Use heading role to avoid matching multiple "scheduled" elements
 		await expect(
 			page.getByRole('heading', { name: /scheduled/i })
@@ -34,59 +31,48 @@ test.describe('Deck Workflow Navigation', () => {
 		const { uid } = getTestUserForProject(testInfo)
 
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
-		// Navigate to review
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /review/i })
-			.click()
+		// Navigate to review using data-testid
+		await page.getByTestId('appnav-review').click()
 
-		// Look for start or continue review button
+		// Start or continue review button should be visible
 		const startButton = page.getByRole('button', {
 			name: /start.*review|continue.*review/i,
 		})
-		if ((await startButton.count()) > 0) {
-			await startButton.click()
+		await expect(startButton).toBeVisible()
+		await startButton.click()
 
-			// Should be on review/go page
-			await expect(page).toHaveURL(/\/learn\/hin\/review\/go/)
+		// Should be on review/go page
+		await expect(page).toHaveURL(/\/learn\/hin\/review\/go/)
 
-			// Should see a card
-			await expect(page.getByText(/card \d+ of \d+/i)).toBeVisible()
+		// Should see a card
+		await expect(page.getByText(/card \d+ of \d+/i)).toBeVisible()
 
-			// DON'T click any review buttons - just verify the page loaded
-			// Navigate away without submitting
-			await page
-				.locator('nav[data-slot=navigation-menu]')
-				.getByRole('link', { name: /browse/i })
-				.click()
+		// DON'T click any review buttons - just verify the page loaded
+		// Navigate away without submitting - use the back button (review page has no appnav)
+		await page.getByTestId('navbar-back').click()
 
-			await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+		await expect(page).toHaveURL(/\/learn\/hin/)
 
-			// Clean up the review state record created by starting the review
-			await deleteMostRecentReviewState(uid, 'hin')
-		}
+		// Clean up the review state record created by starting the review
+		await deleteMostRecentReviewState(uid, 'hin')
 	})
 
 	test('search page loads from deck nav', async ({ page }) => {
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 		await expect(page).toHaveURL(/\/learn\/hin/)
 
-		// Click search in nav (the deck-specific nav has "search", not "browse")
-		const searchLink = page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /search/i })
-		await expect(searchLink).toBeVisible()
-		await searchLink.click()
+		// Click search in nav using data-testid
+		await page.getByTestId('appnav-search').click()
 
 		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 	})
 
 	test('feed page loads with content', async ({ page }) => {
 		// Go to Hindi feed
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
 		// Should be on feed by default
 		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
@@ -104,7 +90,7 @@ test.describe('Deck Workflow Navigation', () => {
 
 	test('feed tabs switch content', async ({ page }) => {
 		// Go to Hindi feed
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
 
 		// Try switching tabs if they exist
@@ -127,7 +113,7 @@ test.describe('Deck Workflow Navigation', () => {
 
 	test('add phrase page loads for authenticated user', async ({ page }) => {
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
 		// Look for add phrase link
 		const addLink = page.getByRole('link', { name: /add.*phrase|new.*phrase/i })
@@ -146,7 +132,7 @@ test.describe('Deck Workflow Navigation', () => {
 
 	test('deck settings page loads', async ({ page }) => {
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
 		// Look for settings link (might be in a menu)
 		const settingsLink = page.getByRole('link', { name: /settings/i })
@@ -160,7 +146,7 @@ test.describe('Deck Workflow Navigation', () => {
 
 	test('bulk add page loads', async ({ page }) => {
 		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 
 		// Navigate to bulk add if link exists
 		const bulkAddLink = page.getByRole('link', { name: /bulk.*add/i })
@@ -174,14 +160,11 @@ test.describe('Deck Workflow Navigation', () => {
 		page,
 	}) => {
 		// Go to Hindi
-		await page.getByText('Hindi').click()
+		await page.getByText('Hindi').first().click()
 		await expect(page).toHaveURL(/\/learn\/hin/)
 
-		// Go to search page
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /search/i })
-			.click()
+		// Go to search page using data-testid
+		await page.getByTestId('appnav-search').click()
 		await expect(page).toHaveURL(/\/learn\/hin\/search/)
 
 		// Go back to learn page via sidebar - use the link with title "All Decks"
@@ -192,14 +175,14 @@ test.describe('Deck Workflow Navigation', () => {
 		// Go to Spanish if available
 		const spanishLink = page.getByText('Spanish')
 		if ((await spanishLink.count()) > 0) {
-			await spanishLink.click()
+			await spanishLink.first().click()
 			await expect(page).toHaveURL(/\/learn\/spa/)
 
 			// Go back to learn page and then Hindi
 			await page.getByRole('link', { name: /all decks/i }).click()
 			await expect(page).toHaveURL('/learn')
 
-			await page.getByText('Hindi').click()
+			await page.getByText('Hindi').first().click()
 			await expect(page).toHaveURL(/\/learn\/hin/)
 		}
 	})
