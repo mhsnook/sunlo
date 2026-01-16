@@ -89,6 +89,7 @@ pnpm run seeds:apply
 
 - **Local First Approach:** Get the most out of Tanstack DB. Use `collection.insert` when possible, prefer live queries to postgres views, always return full objects from RPCs.
 - **RLS-Backed:** Privacy is handled directly in the DB, so we must be very sure of our work on RLS, and then the client can do whatever it wants with the worst case being "broken component / error in UI" rather than leaked data.
+- **Container Queries:** We use tailwind's @container and container queries like `@lg:class-name` so that our components remain composable and portable.
 
 ### Tech Stack
 

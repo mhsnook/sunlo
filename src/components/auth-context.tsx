@@ -23,14 +23,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
 			console.log(`User auth event: ${event}`)
-			if (event === 'SIGNED_OUT' || sessionState?.user.id !== session?.user.id)
+			// Only clear user data when:
+			// 1. Explicitly signing out, OR
+			// 2. Switching between two different authenticated users
+			// Do NOT clear when logging in from a logged-out state (null -> user)
+			// as this causes live query errors from cleaning up subscribed collections
+			const isSigningOut = event === 'SIGNED_OUT'
+			const isSwitchingUsers =
+				sessionState?.user.id &&
+				session?.user.id &&
+				sessionState.user.id !== session.user.id
+			if (isSigningOut || isSwitchingUsers) {
 				void clearUser()
-			// Preload user collections when the NEW session has a user ID
-			// This ensures sidebar components get data after inline login
-			if (session?.user.id) {
-				void myProfileCollection.preload()
-				void decksCollection.preload()
-				void friendSummariesCollection.preload()
+			}
+			// Refetch user collections only when logging in from a logged-out state
+			// (not on token refresh or other events that already have a user)
+			const isLoggingIn = !sessionState?.user.id && session?.user.id
+			if (isLoggingIn) {
+				void myProfileCollection.utils.refetch()
+				void decksCollection.utils.refetch()
+				void friendSummariesCollection.utils.refetch()
 			}
 			setSessionState(session)
 			setIsLoaded(true)
