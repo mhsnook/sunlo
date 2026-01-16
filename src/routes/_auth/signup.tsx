@@ -1,4 +1,9 @@
-import { Link, Navigate, createFileRoute } from '@tanstack/react-router'
+import {
+	Link,
+	Navigate,
+	createFileRoute,
+	redirect,
+} from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -36,6 +41,16 @@ export const Route = createFileRoute('/_auth/signup')({
 			referrer: (search.referrer as uuid) || undefined,
 		}
 	},
+	beforeLoad: ({ context: { auth } }) => {
+		console.log(`beforeLoad`, auth)
+		if (auth.isAuth) {
+			console.log(
+				`Issuing redirect from /signup to /learn because auth.isAuth is true`
+			)
+			return redirect({ to: '/learn' })
+		}
+		return
+	},
 	component: SignUp,
 })
 
@@ -55,6 +70,7 @@ type FormInputs = z.infer<typeof FormSchema>
 function SignUp() {
 	const { referrer } = Route.useSearch()
 	const { isAuth } = useAuth()
+	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
@@ -86,6 +102,7 @@ function SignUp() {
 			console.log(`Signup form response data`, data)
 			if (data.wasLogin) {
 				toast.success(`Welcome back! Logged in as ${data.user?.email}`)
+				void navigate({ to: '/learn' })
 			} else {
 				toast.success(
 					`Account created for ${data.user?.email}. Please check your email to confirm.`
@@ -109,12 +126,17 @@ function SignUp() {
 	})
 
 	// Redirect if already logged in (either from wasLogin or regular auth state)
-	if (isAuth) return <Navigate to="/getting-started" from={Route.fullPath} />
+	if (isAuth) {
+		console.log(
+			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
+		)
+		return <Navigate to="/getting-started" from={Route.fullPath} />
+	}
 
 	return (
 		<>
 			{signupMutation.isSuccess ? null : <UnderConstructionNotice />}
-			<Card className="mx-auto mt-[1cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]">
+			<Card className="mx-auto mt-[1cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]">
 				<CardHeader>
 					<CardTitle>Sign Up</CardTitle>
 				</CardHeader>
