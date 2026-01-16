@@ -3,7 +3,10 @@ Deployments in Jan 2026
 
 **16h Jan**
 
--
+- [x] (c2, d2) DX: GitHub actions for CI/CD
+- [x] (c2, d2) DX: Navigating-around-the-app tests
+- [x] (c2, d2) Chore: Retire PLv8, move FSRS to client
+- [x] (c1, d1) Feat: catch login on signup page and show better feedback
 
 - **15th Jan**
 
