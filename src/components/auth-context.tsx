@@ -8,7 +8,12 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import { clearUser, myProfileCollection } from '@/lib/collections'
+import {
+	clearUser,
+	decksCollection,
+	friendSummariesCollection,
+	myProfileCollection,
+} from '@/lib/collections'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -20,8 +25,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			console.log(`User auth event: ${event}`)
 			if (event === 'SIGNED_OUT' || sessionState?.user.id !== session?.user.id)
 				void clearUser()
-			if (sessionState?.user.id) {
+			// Preload user collections when the NEW session has a user ID
+			// This ensures sidebar components get data after inline login
+			if (session?.user.id) {
 				void myProfileCollection.preload()
+				void decksCollection.preload()
+				void friendSummariesCollection.preload()
 			}
 			setSessionState(session)
 			setIsLoaded(true)
