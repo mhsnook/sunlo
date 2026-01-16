@@ -95,10 +95,6 @@ export function retrievability(
 	return Math.pow(1.0 + F * (diff / stability), C)
 }
 
-export function intervals() {
-	return [1, 2, 3, 4]
-}
-
 function makeItHave2Digits(input: string | number) {
 	const startingString = String(input)
 	return `0${startingString}`.slice(-2)

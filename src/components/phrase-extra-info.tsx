@@ -1,10 +1,11 @@
 import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
 
 import { ago } from '@/lib/dayjs'
-import { dateDiff, intervals, retrievability, roundAndTrim } from '@/lib/utils'
+import { dateDiff, retrievability, roundAndTrim } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/hooks/use-reviews'
+import { intervals } from '@/lib/fsrs'
 
 export default function PhraseExtraInfo({
 	phrase,
@@ -80,9 +81,7 @@ function CardSection({ card }: { card: CardMetaType }) {
 						</span>
 						<span>
 							Interval spread for a review this minute:{' '}
-							{intervals()
-								.map((i) => roundAndTrim(i))
-								.join(', ')}
+							{intervals(rev!).join(', ')}
 						</span>
 					</div>
 				</>

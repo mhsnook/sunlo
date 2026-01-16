@@ -29,4 +29,16 @@ const ago = (dbstring: string | null) =>
 const inLastWeek = (dbstring: string) =>
 	dayjs(dbstring).isAfter(dayjs().subtract(7, 'days'))
 
-export { ago, inLastWeek }
+/**
+ * Format a number of days as a short interval string
+ * e.g., 1 -> "1d", 14 -> "2w", 45 -> "1mo", 400 -> "1yr"
+ */
+const formatInterval = (days: number): string => {
+	const rounded = Math.round(days)
+	if (rounded < 14) return `${rounded}d`
+	if (rounded < 60) return `${Math.round(rounded / 7)}w`
+	if (rounded < 365) return `${Math.round(rounded / 30)}mo`
+	return `${Math.round(rounded / 365)}yr`
+}
+
+export { ago, inLastWeek, formatInterval }

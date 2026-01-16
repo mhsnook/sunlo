@@ -92,7 +92,7 @@ pnpm run seeds:apply
 
 ### Tech Stack
 
-- **Frontend**: React 19 + TypeScript 5.8+ + Vite
+- **Frontend**: React 19 + TypeScript 5.8+ + Vite + React Compiler
 - **Language**: Concise, functional TypeScript with latest ECMAScript features
 - **Routing**: TanStack Router (file-based)
 - **Data Management**: TanStack DB Collections + TanStack Query
