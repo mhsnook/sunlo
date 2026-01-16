@@ -588,13 +588,22 @@ values
 -- Data for Name: phrase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
-	"public"."phrase" ("text", "id", "added_by", "lang", "created_at", "text_script")
+	"public"."phrase" (
+		"text",
+		"id",
+		"added_by",
+		"lang",
+		"only_reverse",
+		"created_at",
+		"text_script"
+	)
 values
 	(
 		'Amele',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -603,6 +612,7 @@ values
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -611,6 +621,7 @@ values
 		'2fbae84f-5b1d-43c2-8927-ef4d41c7e794',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -619,6 +630,7 @@ values
 		'5f7ce03f-f6a1-48cf-bb59-6265faf2ea98',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -627,6 +639,7 @@ values
 		'a417afc8-6c80-4589-a314-55ac756b28f1',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kok',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -635,6 +648,7 @@ values
 		'd9da12a0-18f3-4836-af4b-8ea9423848ca',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kok',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -643,6 +657,7 @@ values
 		'5b714f21-94e2-4345-88ca-7ea25a5bf988',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -651,6 +666,7 @@ values
 		'd546b14b-0bdf-48fa-9f55-0fa3ac1f3af7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -659,6 +675,7 @@ values
 		'faae3442-2957-431d-b055-e8910b3c26ad',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tha',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -667,6 +684,7 @@ values
 		'de2f5e51-876d-4978-8a12-6146ece9202c',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -675,6 +693,7 @@ values
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -683,6 +702,7 @@ values
 		'bb8b9a4c-ddff-470a-86d8-8cd1ac335501',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -691,6 +711,7 @@ values
 		'f1f5234e-0426-44f5-a007-b67329a70a81',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -699,6 +720,7 @@ values
 		'170f5fd4-58f8-4b05-aba4-23522f35800f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -707,6 +729,7 @@ values
 		'90108f59-7968-457f-9744-2e3b44e980dd',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -715,6 +738,7 @@ values
 		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -723,6 +747,7 @@ values
 		'5b5cc7ec-702e-4dc1-a568-0dcc660c25bb',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -731,6 +756,7 @@ values
 		'f878e60f-9647-4728-a368-fc8681b0acbb',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -739,6 +765,7 @@ values
 		'295fbba3-892c-43f9-84ba-85cf15fd28a5',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		true,
 		now() - interval '60 days',
 		null
 	),
@@ -747,6 +774,7 @@ values
 		'06e117d1-1b43-4047-996f-a298aad53823',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -755,6 +783,7 @@ values
 		'9e2fef5c-d144-4ea9-9b31-0bd4cefb7ee8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -763,6 +792,7 @@ values
 		'a8fbdb84-24bf-456e-836c-b355355caa45',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -771,6 +801,7 @@ values
 		'7f412edd-af7c-486e-a35f-3b2a7803efc9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -779,6 +810,7 @@ values
 		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -787,6 +819,7 @@ values
 		'4d3207d1-a0bf-4504-831e-bfadb834d315',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -795,6 +828,7 @@ values
 		'ded8028a-493f-438f-8b72-316c769a66b9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -803,6 +837,7 @@ values
 		'e060237f-1744-427a-8e8e-53da29582d35',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -811,6 +846,7 @@ values
 		'c412f03e-a014-4aaa-b0e8-0e1a58f5c6e8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -819,6 +855,7 @@ values
 		'cc3847f3-b151-401e-80c9-4aef221c54b5',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -827,6 +864,7 @@ values
 		'f6b69f3b-09b9-41a7-a9f2-255da0697015',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -835,6 +873,7 @@ values
 		'bca7ad96-44f4-4d58-b5b0-004f4450209a',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ita',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -843,6 +882,7 @@ values
 		'7e01d5e8-d3ab-4cc1-8e7a-b5861f1742cd',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -851,6 +891,7 @@ values
 		'a8d4b1f5-bdf1-4aa2-b04c-bdb8b35b27b9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -859,6 +900,7 @@ values
 		'c3d00086-6d8c-431d-b2a0-df5757457a5e',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -867,6 +909,7 @@ values
 		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -875,6 +918,7 @@ values
 		'78057374-cf85-4940-91d1-7d04c156abfb',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -883,6 +927,7 @@ values
 		'57ddf6f6-d655-4fef-832d-b13650b26b82',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'fra',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -891,6 +936,7 @@ values
 		'80b03361-25d1-434b-8935-4a2a762d2353',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -899,6 +945,7 @@ values
 		'43a760da-65af-400e-b3f0-fbed7a6b338e',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -907,6 +954,7 @@ values
 		'99d430c1-5cbf-45aa-a95b-993e867ed668',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -915,6 +963,7 @@ values
 		'e9e0cdff-30b0-48fb-9816-285464943466',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -923,6 +972,7 @@ values
 		'025301d1-00ef-45da-a1a0-d8382c4e5660',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -931,6 +981,7 @@ values
 		'3282e79e-3041-4adb-89fc-35d61f2f9eb8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -939,6 +990,7 @@ values
 		'd155ec89-6bd2-411f-877f-51e96513dbc7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -947,6 +999,7 @@ values
 		'7d1461c8-a158-4633-b650-de7f83c7e436',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -955,6 +1008,7 @@ values
 		'83daad8e-f64f-4e8d-81f7-63aedd829c11',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -963,6 +1017,7 @@ values
 		'903817a7-168a-4b99-87a1-79b3e3e14d84',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -971,6 +1026,7 @@ values
 		'ee0fb561-8e07-413b-ac5c-65ec7041c17d',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -979,6 +1035,7 @@ values
 		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -987,6 +1044,7 @@ values
 		'1d44afd2-1274-47ec-8107-36bd09861c3d',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -995,6 +1053,7 @@ values
 		'fdd62764-2438-42bb-af7f-9eb378082899',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1003,6 +1062,7 @@ values
 		'184170d9-3717-427e-b347-35533ea52a02',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1011,6 +1071,7 @@ values
 		'ca8af1e7-304a-4aef-a22e-26d9376b6313',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1019,6 +1080,7 @@ values
 		'0823546b-d240-4f14-9d51-8dfae5fcddc3',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1027,6 +1089,7 @@ values
 		'48edc28c-1530-4549-b48c-f678033a6892',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1035,6 +1098,7 @@ values
 		'24746d12-8a65-47e7-97c5-87c828585db6',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1043,6 +1107,7 @@ values
 		'52851577-c8ba-4254-9c74-6edd310d6971',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1051,6 +1116,7 @@ values
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1059,6 +1125,7 @@ values
 		'd4b66bd6-52fc-438d-afc5-3d35be9995c2',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1067,6 +1134,7 @@ values
 		'46ed187a-c132-4781-822f-ebb056ddf960',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1075,6 +1143,7 @@ values
 		'48fe0624-f586-4812-a1a5-33c634995671',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1083,6 +1152,7 @@ values
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1091,6 +1161,7 @@ values
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1099,6 +1170,7 @@ values
 		'8133abe3-f908-445a-b8ae-6f01db3c18d7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1107,6 +1179,7 @@ values
 		'267acd7c-65f2-4aad-bf5c-58e01c0f69f8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1115,6 +1188,7 @@ values
 		'1174699b-deac-480a-94af-555018da33fb',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1123,6 +1197,7 @@ values
 		'14fd9a81-be8c-44b2-a8f7-8a2bf5c9c8e6',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1131,6 +1206,7 @@ values
 		'f7454ec3-5673-4858-a2f9-65925083ecbf',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1139,6 +1215,7 @@ values
 		'0fd8b810-237a-4a38-a972-2d26706854ce',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1147,6 +1224,7 @@ values
 		'1b6c63dd-177f-411e-8f87-bf2b3fe7c927',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1155,6 +1233,7 @@ values
 		'e24dd614-0033-4c9c-a72a-475f96dcfca6',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1163,6 +1242,7 @@ values
 		'd40c50fd-fd7b-4c47-af68-c85ef6879ac9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1171,6 +1251,7 @@ values
 		'12536684-0b35-4aff-80cd-f4ce56c866b6',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1179,6 +1260,7 @@ values
 		'b53afc7f-1349-4f28-aafb-3f471009dd97',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1187,6 +1269,7 @@ values
 		'f250e23f-0aee-48d8-bb6f-1be22c0df7c7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ara',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1195,6 +1278,7 @@ values
 		'7b396c7b-18c4-4e58-97a0-bc4687e67427',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1203,6 +1287,7 @@ values
 		'4c55ff26-b29e-48ce-8b72-0c28cd37d0c9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1211,6 +1296,7 @@ values
 		'de1df463-8186-4748-9557-0de18c1a16ef',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1219,6 +1305,7 @@ values
 		'ae43221d-6be8-468c-9af8-71bbab95c1ec',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1227,6 +1314,7 @@ values
 		'ee043244-9de8-4419-aee8-8ba2f3f5edcc',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1235,6 +1323,7 @@ values
 		'bbe138a2-1bec-44a0-afb5-679ecc0b2214',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1243,6 +1332,7 @@ values
 		'f45c7d8a-acbe-42e0-8308-b2207c07eec1',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1251,6 +1341,7 @@ values
 		'e0eef035-e5bd-45be-902a-62002512673b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1259,6 +1350,7 @@ values
 		'ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1267,6 +1359,7 @@ values
 		'37dd6e13-d915-4c41-8767-17cdd74beb96',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1275,6 +1368,7 @@ values
 		'288676f6-d224-4cf2-8ab1-abae8076f24b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1283,6 +1377,7 @@ values
 		'7d9a7e8b-4e6c-412d-8adb-7923dff1e04f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1291,6 +1386,7 @@ values
 		'a9b7300d-5599-42f0-b573-8c5a54f0f299',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1299,6 +1395,7 @@ values
 		'0dd3a1d6-6a2c-4061-b6c0-51f6fb829082',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'ara',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1307,6 +1404,7 @@ values
 		'95b1a0d4-666f-423d-a2b5-e7f27b5ea65c',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1315,6 +1413,7 @@ values
 		'674b81c7-eb26-4247-96cb-0c02378ee004',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1323,6 +1422,7 @@ values
 		'b97d6fed-d12f-4272-b92c-7d8525550207',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1331,6 +1431,7 @@ values
 		'222e15d2-e94d-4369-912e-89186e222863',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1339,6 +1440,7 @@ values
 		'a3532d81-0870-4e51-927c-59497d348fc9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'mal',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1347,6 +1449,7 @@ values
 		'f83954c3-864d-46c7-a4b8-d996bd5cb517',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1355,6 +1458,7 @@ values
 		'21ed1ee9-af6f-46e1-8f7e-7669b96db0ae',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1363,6 +1467,7 @@ values
 		'c6726b7d-d1b6-4e32-802f-c2352889d1fc',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1371,6 +1476,7 @@ values
 		'a925dd57-384c-44c2-8c8f-67ad05a05819',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1379,6 +1485,7 @@ values
 		'f54f8a2a-dce8-401d-badf-b3d4ab36809f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1387,6 +1494,7 @@ values
 		'aa9f28b1-3481-40dd-a926-946ed4048f1a',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1395,6 +1503,7 @@ values
 		'469e1199-82e3-46da-8da7-c9ae60efca41',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1403,6 +1512,7 @@ values
 		'24971c85-e336-4af4-821e-74bc6f9c9099',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1411,6 +1521,7 @@ values
 		'1989b6d7-2904-4e4d-88de-a0bc7f0ecaa0',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1419,6 +1530,7 @@ values
 		'6dacfd10-fb5f-4b48-a21b-43b13b591d03',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1427,6 +1539,7 @@ values
 		'70182dec-e235-4aa5-9364-5d1c7c91fa59',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1435,6 +1548,7 @@ values
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1443,6 +1557,7 @@ values
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1451,6 +1566,7 @@ values
 		'7b915b5e-f8d2-4324-8d40-a2f00212875a',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'aar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1459,6 +1575,7 @@ values
 		'2e398135-21f9-4843-a8c7-273c986979c7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1467,6 +1584,7 @@ values
 		'1b33c04e-016e-4d12-a938-aa4ce8cd7596',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'aar',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1475,6 +1593,7 @@ values
 		'1f6bac22-b32a-4b77-9857-d2de02b538de',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1483,6 +1602,7 @@ values
 		'76402538-688d-4757-bdd9-c07d09c124dc',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1491,6 +1611,7 @@ values
 		'7280cf0c-a394-40ee-92f4-0b68f08b16a2',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1499,6 +1620,7 @@ values
 		'802bbec9-1c6c-49b8-8550-5efb71c39f54',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1507,6 +1629,7 @@ values
 		'a29cea29-acbf-4ef9-bd00-8fab74c30335',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1515,6 +1638,7 @@ values
 		'6eaf6b05-d83f-424b-9269-fd80611ecc4c',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1523,6 +1647,7 @@ values
 		'c545194f-b50f-4a44-bc75-a9f90a3538da',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1531,6 +1656,7 @@ values
 		'2b15b306-52f0-4493-bab5-634287a7fb47',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1539,6 +1665,7 @@ values
 		'3d0e57a6-eaf2-4eab-922d-f2055c611418',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1547,6 +1674,7 @@ values
 		'13a8cb15-f575-461a-afe3-bbca427a7c0b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1555,6 +1683,7 @@ values
 		'5c5c5c0c-324a-42eb-8e06-461ee63c4b5f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1563,6 +1692,7 @@ values
 		'23fbf5e9-fabe-4da0-9175-0b0f462216af',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1571,6 +1701,7 @@ values
 		'cbcff06c-4a47-449b-a1c3-c37b4443df5b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1579,6 +1710,7 @@ values
 		'0972c5a6-464a-4193-9f0d-b2fbcf0bd71d',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1587,6 +1719,7 @@ values
 		'909ae4d6-bd02-46b1-a9f1-93469ea9ea94',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1595,6 +1728,7 @@ values
 		'7ae6b46c-c7c8-480c-a242-0655a34b6aec',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1603,6 +1737,7 @@ values
 		'c8cca0b1-7176-4418-ba82-279e97278a1b',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1611,6 +1746,7 @@ values
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1619,6 +1755,7 @@ values
 		'22d2875f-1164-47a0-9572-e2d19137950d',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1627,6 +1764,7 @@ values
 		'24730a53-1b7f-422c-83ab-0cd3a51c2fe3',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'deu',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1635,6 +1773,7 @@ values
 		'bf1cee96-86f2-44e9-97e3-59897dd864ed',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1643,6 +1782,7 @@ values
 		'215b33a1-9277-4c19-ae85-788892019566',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1651,6 +1791,7 @@ values
 		'2a710c3c-7f9f-462b-86df-41d08563c809',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1659,6 +1800,7 @@ values
 		'2bf98841-7cde-493c-86b6-a47889303b65',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1667,6 +1809,7 @@ values
 		'2ed5fa12-40d1-4d22-88ee-5e52d373e3aa',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1675,6 +1818,7 @@ values
 		'1a28066b-bfc7-4be8-ac51-87226527820e',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1683,6 +1827,7 @@ values
 		'c952444c-c89f-4105-8e75-cd5156e6d925',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1691,6 +1836,7 @@ values
 		'1269f7f0-d675-4f01-b378-7671b80b1fa7',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1699,6 +1845,7 @@ values
 		'6875a165-77bc-40d4-8430-699f71c3018a',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'eng',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1707,6 +1854,7 @@ values
 		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1715,6 +1863,7 @@ values
 		'1c1aaa6d-f49e-4dca-88a4-b2f417b352a5',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1723,6 +1872,7 @@ values
 		'788c7250-6ce2-445d-85a0-1d13751d64bd',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1731,6 +1881,7 @@ values
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		true,
 		now() - interval '60 days',
 		null
 	),
@@ -1739,6 +1890,7 @@ values
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		true,
 		now() - interval '60 days',
 		null
 	),
@@ -1747,6 +1899,7 @@ values
 		'a76bcc62-879a-4da5-95c1-de11d64bac91',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'hin',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1755,6 +1908,7 @@ values
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1763,6 +1917,7 @@ values
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1771,6 +1926,7 @@ values
 		'b2736292-1137-41db-a453-ad203726d8c5',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1779,6 +1935,7 @@ values
 		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1787,6 +1944,7 @@ values
 		'ddd650c2-00e9-43f1-8624-5a97282087aa',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1795,6 +1953,7 @@ values
 		'7aac8e8f-4de1-41a0-b910-a2c9b80e47f9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1803,6 +1962,7 @@ values
 		'de2ea356-e63d-46f7-8123-2aa9370673ec',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1811,6 +1971,7 @@ values
 		'a2777e37-b02e-4d8b-9a39-1a9ad56af4f2',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1819,6 +1980,7 @@ values
 		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1827,6 +1989,7 @@ values
 		'44bcd224-b4b3-46ce-b260-2136712b0907',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1835,6 +1998,7 @@ values
 		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1843,6 +2007,7 @@ values
 		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1851,6 +2016,7 @@ values
 		'49066ea2-e608-42ab-8817-1f20b0eada03',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1859,6 +2025,7 @@ values
 		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'tam',
+		false,
 		now() - interval '60 days',
 		null
 	),
@@ -1867,6 +2034,7 @@ values
 		'dd039576-9798-422f-b946-ffe86e0d8324',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'hin',
+		false,
 		now() - interval '2 days',
 		null
 	),
@@ -1875,6 +2043,7 @@ values
 		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'kan',
+		false,
 		now() - interval '1 days',
 		null
 	);

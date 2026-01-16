@@ -73,6 +73,84 @@ export function ReviewSingleCard({
 	if (!phrase) return null
 
 	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
+	const isReverse = phrase.only_reverse === true
+
+	// Forward: show phrase, reveal translation
+	// Reverse: show translation, reveal phrase
+	const questionContent =
+		isReverse ?
+			<div className="mb-4 w-full space-y-2">
+				{phrase.translations?.map((trans: TranslationType) => (
+					<div
+						key={trans.id}
+						className="flex items-center justify-center gap-2"
+					>
+						<LangBadge lang={trans.lang} />
+						<div className="me-2 text-2xl font-bold">{trans.text}</div>
+						<Flagged name="text_to_speech">
+							<Button
+								size="icon"
+								variant="secondary"
+								onClick={() => playAudio(trans.text)}
+								aria-label="Play translation"
+							>
+								<Play className="size-4" />
+							</Button>
+						</Flagged>
+					</div>
+				))}
+			</div>
+		:	<div className="mb-4 flex items-center justify-center">
+				<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
+				<Flagged name="text_to_speech">
+					<Button
+						size="icon"
+						variant="secondary"
+						onClick={() => playAudio(phrase.text)}
+						aria-label="Play original phrase"
+					>
+						<Play className="size-4" />
+					</Button>
+				</Flagged>
+			</div>
+
+	const answerContent =
+		isReverse ?
+			<div className="mt-4 flex items-center justify-center">
+				<div className="mr-2 text-xl">{phrase.text}</div>
+				<Flagged name="text_to_speech">
+					<Button
+						size="icon"
+						variant="secondary"
+						onClick={() => playAudio(phrase.text)}
+						aria-label="Play original phrase"
+					>
+						<Play className="size-4" />
+					</Button>
+				</Flagged>
+			</div>
+		:	<>
+				{phrase.translations?.map((trans: TranslationType) => (
+					<div
+						key={trans.id}
+						className="mt-4 flex items-center justify-center gap-2"
+					>
+						<LangBadge lang={trans.lang} />
+						<div className="me-2 text-xl">{trans.text}</div>
+						<Flagged name="text_to_speech">
+							<Button
+								size="icon"
+								variant="secondary"
+								onClick={() => playAudio(trans.text)}
+								aria-label="Play translation"
+							>
+								<Play className="size-4" />
+							</Button>
+						</Flagged>
+					</div>
+				))}
+			</>
+
 	return (
 		<CardlikeFlashcard
 			className="mx-auto flex min-h-[80vh] w-full flex-col"
@@ -80,49 +158,18 @@ export function ReviewSingleCard({
 		>
 			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
 				<ContextMenu phrase={phrase} />
-				<div className="mb-4 flex items-center justify-center">
-					<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
-					<Flagged name="text_to_speech">
-						<Button
-							size="icon"
-							variant="secondary"
-							onClick={() => playAudio(phrase.text)}
-							aria-label="Play original phrase"
-						>
-							<Play className="size-4" />
-						</Button>
-					</Flagged>
-				</div>
+				{questionContent}
 				<Separator />
-
 				<div
 					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
-					{phrase.translations?.map((trans: TranslationType) => (
-						<div
-							key={trans.id}
-							className="mt-4 flex items-center justify-center gap-2"
-						>
-							<LangBadge lang={trans.lang} />
-							<div className="me-2 text-xl">{trans.text}</div>
-							<Flagged name="text_to_speech">
-								<Button
-									size="icon"
-									variant="secondary"
-									onClick={() => playAudio(trans.text)}
-									aria-label="Play translation"
-								>
-									<Play className="size-4" />
-								</Button>
-							</Flagged>
-						</div>
-					))}
+					{answerContent}
 				</div>
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
 					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
-						Show Translation
+						{isReverse ? 'Show Phrase' : 'Show Translation'}
 					</Button>
 				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
 						<Button
