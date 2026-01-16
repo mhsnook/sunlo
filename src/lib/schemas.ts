@@ -225,13 +225,9 @@ export const CardMetaSchema = z.object({
 	lang: LangSchema,
 	status: CardStatusEnumSchema,
 	updated_at: z.string(),
-	current_timestamp: z
-		.string()
-		.default(dayjs().tz('UTC').format('YYYY-MM-DD HH:mm:ss+00')),
 	last_reviewed_at: z.string().nullable().default(null),
 	difficulty: z.number().nullable().default(null),
 	stability: z.number().nullable().default(null),
-	retrievability_now: z.number().nullable().default(null),
 })
 
 export type CardMetaType = z.infer<typeof CardMetaSchema>
