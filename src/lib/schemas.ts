@@ -130,6 +130,8 @@ export const TranslationSchema = z.object({
 	lang: LangSchema,
 	phrase_id: z.string().uuid(),
 	added_by: z.string().uuid().nullable(),
+	archived: z.boolean().default(false),
+	updated_at: z.string().nullable().default(null),
 })
 
 export type TranslationType = z.infer<typeof TranslationSchema>
