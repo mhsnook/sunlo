@@ -1,7 +1,7 @@
 import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
 
 import { ago } from '@/lib/dayjs'
-import { dateDiff, retrievability, roundAndTrim } from '@/lib/utils'
+import { dateDiff, retrievability } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/hooks/use-reviews'
@@ -71,17 +71,18 @@ function CardSection({ card }: { card: CardMetaType }) {
 					<div className="flex flex-col">
 						<span className="font-semibold">Card current variables:</span>
 						<span>
-							Difficulty {roundAndTrim(rev!.difficulty!)}, Stability{' '}
-							{roundAndTrim(rev!.stability!)},{' '}
-							{roundAndTrim(dateDiff(rev!.created_at), 1)} days since last
-							review.
+							Difficulty {rev!.difficulty!.toFixed(2)}, Stability{' '}
+							{rev!.stability!.toFixed(2)},{' '}
+							{dateDiff(rev!.created_at).toFixed(1)} days since last review.
 						</span>
 						<span>
 							Expected retrievability if reviewed now: {Math.round(retr * 100)}%
 						</span>
 						<span>
 							Interval spread for a review this minute:{' '}
-							{intervals(rev!).join(', ')}
+							{intervals(rev!)
+								.map((v) => v.toFixed(2))
+								.join(', ')}
 						</span>
 					</div>
 				</>
@@ -97,15 +98,14 @@ function CardSection({ card }: { card: CardMetaType }) {
 							<p>
 								Expected R:{' '}
 								{r.review_time_retrievability ?
-									roundAndTrim(r.review_time_retrievability)
+									r.review_time_retrievability.toFixed(2)
 								:	'N/A'}
 							</p>
 							<p>
-								Difficulty: {r.difficulty ? roundAndTrim(r.difficulty) : 'N/A'}
+								Difficulty: {r.difficulty ? r.difficulty.toFixed(2) : 'N/A'}
 							</p>
 							<p>
-								Stability: {r.stability ? roundAndTrim(r.stability) : 'N/A'}{' '}
-								from{' '}
+								Stability: {r.stability ? r.stability.toFixed(2) : 'N/A'} from{' '}
 							</p>
 							<span>
 								score: {r.score}
