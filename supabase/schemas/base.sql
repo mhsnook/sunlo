@@ -2203,7 +2203,6 @@ grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
 
-
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
 	"phrase_lang" "text",

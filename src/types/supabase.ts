@@ -1426,6 +1426,7 @@ export type Database = {
 					created_at: string | null
 					id: string | null
 					lang: string | null
+					only_reverse: boolean | null
 					tags: Json | null
 					text: string | null
 				}
