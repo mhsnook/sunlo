@@ -123,15 +123,17 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										size="sm"
 									/>
 								</div>
-								{phrase.translations_mine?.map((trans) => (
-									<div
-										key={trans.id}
-										className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
-									>
-										<LangBadge lang={trans.lang} />
-										<p className="text-md">{trans.text}</p>
-									</div>
-								))}
+								{phrase.translations_mine
+									?.filter((t) => !t.archived)
+									.map((trans) => (
+										<div
+											key={trans.id}
+											className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
+										>
+											<LangBadge lang={trans.lang} />
+											<p className="text-md">{trans.text}</p>
+										</div>
+									))}
 							</div>
 							{!phrase.translations_other.length ? null : (
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>

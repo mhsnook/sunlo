@@ -23,7 +23,7 @@ export function ConfirmDestructiveActionDialog({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>{children[0]}</DialogTrigger>
-			<DialogContent className="@xl:max-w-[425px]">
+			<DialogContent className="@xl:max-w-106">
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					<DialogDescription>{description}</DialogDescription>

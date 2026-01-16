@@ -47,7 +47,7 @@ export function AuthenticatedDialog({
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
 			{isAuth ?
 				children
-			:	<DialogContent className="sm:max-w-[425px]">
+			:	<DialogContent className="sm:max-w-106">
 					<DialogHeader>
 						<DialogTitle>{authTitle}</DialogTitle>
 						<DialogDescription>{authMessage}</DialogDescription>
@@ -107,7 +107,7 @@ export function AuthenticatedDialogContent({
 	}
 
 	return (
-		<DialogContent className="sm:max-w-[425px]">
+		<DialogContent className="sm:max-w-106">
 			<DialogHeader>
 				<DialogTitle>{authTitle}</DialogTitle>
 				<DialogDescription>{authMessage}</DialogDescription>

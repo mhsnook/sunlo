@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Pencil, Trash2, Check, X } from 'lucide-react'
+import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
 
 import {
 	TranslationSchema,
@@ -103,16 +103,16 @@ export function AddTranslationsDialog({
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
 				<Button {...props}>
-					<Pencil className="size-4" /> Add translation
+					<Pencil className="size-4" /> Edit translations
 				</Button>
 			</DialogTrigger>
 			<AuthenticatedDialogContent
 				authTitle="Login to Add Translations"
 				authMessage="You need to be logged in to add translations to phrases."
-				className="w-[92%] max-w-[425px]"
+				className="w-[92%] max-w-106"
 			>
 				<DialogHeader className="text-left">
-					<DialogTitle>Add translations</DialogTitle>
+					<DialogTitle>Manage translations</DialogTitle>
 					<DialogDescription className="space-y-2 text-left">
 						For the phrase &ldquo;{phrase.text}&rdquo;
 					</DialogDescription>
@@ -204,13 +204,17 @@ function TranslationListItem({
 		},
 	})
 
-	const deleteTranslation = useMutation({
-		mutationKey: ['delete-translation', trans.id],
+	const toggleArchiveTranslation = useMutation({
+		mutationKey: [
+			'archive-translation',
+			trans.id,
+			trans.archived ? 'unarchive' : 'archive',
+		],
 		mutationFn: async () => {
-			// Soft delete by setting archived = true
+			// Soft delete by setting archived = true, or un-delete
 			await supabase
 				.from('phrase_translation')
-				.update({ archived: true })
+				.update({ archived: !trans.archived })
 				.eq('id', trans.id)
 				.throwOnError()
 		},
@@ -218,9 +222,11 @@ function TranslationListItem({
 			// Remove the translation from the phrase's translations array
 			phrasesCollection.utils.writeUpdate({
 				id: phrase.id,
-				translations: phrase.translations.filter((t) => t.id !== trans.id),
+				translations: phrase.translations.map((t) =>
+					t.id !== trans.id ? t : { ...t, archived: !trans.archived }
+				),
 			})
-			toast.success('Translation removed')
+			toast.success(`Translation ${trans.archived ? 'un' : ''}archived`)
 		},
 		onError: (error) => {
 			toast.error(error.message)
@@ -271,25 +277,34 @@ function TranslationListItem({
 					</Button>
 				</>
 			:	<>
-					<span className="flex-1">{trans.text}</span>
+					<span
+						className={`flex-1 ${trans.archived ? 'text-muted-foreground line-through' : ''}`}
+					>
+						{trans.text}
+					</span>
 					{isOwner && (
 						<>
+							{trans.archived ? null : (
+								<Button
+									size="icon"
+									variant="ghost"
+									className="size-6"
+									onClick={() => setIsEditing(true)}
+								>
+									<Pencil className="size-3" />
+								</Button>
+							)}
 							<Button
 								size="icon"
 								variant="ghost"
 								className="size-6"
-								onClick={() => setIsEditing(true)}
+								onClick={() => toggleArchiveTranslation.mutate()}
+								disabled={toggleArchiveTranslation.isPending}
 							>
-								<Pencil className="size-3" />
-							</Button>
-							<Button
-								size="icon"
-								variant="ghost"
-								className="text-destructive hover:text-destructive size-6"
-								onClick={() => deleteTranslation.mutate()}
-								disabled={deleteTranslation.isPending}
-							>
-								<Trash2 className="size-3" />
+								{trans.archived ?
+									<Undo2 className="size-3" />
+								:	<Archive className="text-destructive hover:text-destructive size-3" />
+								}
 							</Button>
 						</>
 					)}
