@@ -597,6 +597,15 @@ $$;
 
 alter function "public"."update_phrase_request_upvote_count" () owner to "postgres";
 
+create or replace function "public"."update_phrase_translation_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+    new.updated_at = now();
+    return new;
+end;
+$$;
+
+alter function "public"."update_phrase_translation_updated_at" () owner to "postgres";
+
 set
 	default_tablespace = '';
 
@@ -1176,7 +1185,9 @@ create table if not exists "public"."phrase_translation" (
 	"added_by" "uuid" default "auth"."uid" () not null,
 	"lang" character varying not null,
 	"text_script" "text",
-	"created_at" timestamp with time zone default "now" () not null
+	"created_at" timestamp with time zone default "now" () not null,
+	"archived" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
 );
 
 alter table "public"."phrase_translation" owner to "postgres";
@@ -1544,6 +1555,10 @@ after insert
 or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
 
+create or replace trigger "trigger_update_phrase_translation_updated_at" before
+update on "public"."phrase_translation" for each row
+execute function "public"."update_phrase_translation_updated_at" ();
+
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
@@ -1807,7 +1822,17 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase_translation" for
 select
-	using (true);
+	using (
+		(
+			("archived" = false)
+			or (
+				"added_by" = (
+					select
+						"auth"."uid" () as "uid"
+				)
+			)
+		)
+	);
 
 create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
 select
@@ -2071,6 +2096,26 @@ for update
 with
 	check (("requester_uid" = "auth"."uid" ()));
 
+create policy "Users can update their own translations" on "public"."phrase_translation"
+for update
+	to "authenticated" using (
+		(
+			"added_by" = (
+				select
+					"auth"."uid" () as "uid"
+			)
+		)
+	)
+with
+	check (
+		(
+			"added_by" = (
+				select
+					"auth"."uid" () as "uid"
+			)
+		)
+	);
+
 create policy "Users can view their own chat messages" on "public"."chat_message" for
 select
 	using (
@@ -2228,14 +2273,6 @@ grant all on function "public"."create_playlist_with_links" (
 	"description" "text",
 	"href" "text",
 	"phrases" "jsonb"
-) to "authenticated";
-
-grant all on function "public"."create_playlist_with_links" (
-	"lang" "text",
-	"title" "text",
-	"description" "text",
-	"href" "text",
-	"phrases" "jsonb"
 ) to "service_role";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
@@ -2273,6 +2310,10 @@ grant all on function "public"."update_phrase_request_timestamp" () to "service_
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
+
+grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
 
 grant all on table "public"."chat_message" to "authenticated";
 

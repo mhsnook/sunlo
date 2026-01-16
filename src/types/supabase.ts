@@ -702,6 +702,7 @@ export type Database = {
 			phrase_translation: {
 				Row: {
 					added_by: string
+					archived: boolean
 					created_at: string
 					id: string
 					lang: string
@@ -709,9 +710,11 @@ export type Database = {
 					phrase_id: string
 					text: string
 					text_script: string | null
+					updated_at: string | null
 				}
 				Insert: {
 					added_by?: string
+					archived?: boolean
 					created_at?: string
 					id?: string
 					lang: string
@@ -719,9 +722,11 @@ export type Database = {
 					phrase_id: string
 					text: string
 					text_script?: string | null
+					updated_at?: string | null
 				}
 				Update: {
 					added_by?: string
+					archived?: boolean
 					created_at?: string
 					id?: string
 					lang?: string
@@ -729,6 +734,7 @@ export type Database = {
 					phrase_id?: string
 					text?: string
 					text_script?: string | null
+					updated_at?: string | null
 				}
 				Relationships: [
 					{
