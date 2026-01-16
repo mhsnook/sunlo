@@ -1,4 +1,4 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, Navigate, createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -17,6 +17,7 @@ import {
 import Callout from '@/components/ui/callout'
 
 import supabase from '@/lib/supabase-client'
+import { useAuth } from '@/lib/use-auth'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { uuid } from '@/types/main'
@@ -53,6 +54,8 @@ type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
 	const { referrer } = Route.useSearch()
+	const { isAuth } = useAuth()
+
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
 		mutationFn: async ({ email, password, user_role }: FormInputs) => {
@@ -67,18 +70,27 @@ function SignUp() {
 				},
 			})
 			if (error) {
+				// If user already exists, try to log them in instead
+				if (error.message.toLowerCase().includes('already registered')) {
+					const { data: loginData, error: loginError } =
+						await supabase.auth.signInWithPassword({ email, password })
+					if (loginError) throw loginError
+					return { user: loginData.user, wasLogin: true }
+				}
 				console.log(`Error`, error)
 				throw error
 			}
-			return data
-			// console.log(`form data`, email, user_role)
-			// return { user: { email: '@fake email@' } }
+			return { user: data.user, wasLogin: false }
 		},
 		onSuccess: (data) => {
 			console.log(`Signup form response data`, data)
-			toast.success(
-				`Account created for ${data.user?.email}. Please check your email to confirm.`
-			)
+			if (data.wasLogin) {
+				toast.success(`Welcome back! Logged in as ${data.user?.email}`)
+			} else {
+				toast.success(
+					`Account created for ${data.user?.email}. Please check your email to confirm.`
+				)
+			}
 		},
 	})
 
@@ -95,6 +107,9 @@ function SignUp() {
 			user_role: 'learner',
 		},
 	})
+
+	// Redirect if already logged in (either from wasLogin or regular auth state)
+	if (isAuth) return <Navigate to="/getting-started" from={Route.fullPath} />
 
 	return (
 		<>
