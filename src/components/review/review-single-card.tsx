@@ -9,7 +9,11 @@ import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
-import { useOneReviewToday, useReviewMutation } from '@/hooks/use-reviews'
+import {
+	useLatestReviewForPhrase,
+	useOneReviewToday,
+	useReviewMutation,
+} from '@/hooks/use-reviews'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
 import {
@@ -51,13 +55,15 @@ export function ReviewSingleCard({
 		throw new Error(`Trying to review this card, but can't find it`)
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dayString, pid)
+	const { data: latestReview } = useLatestReviewForPhrase(pid)
 	const closeCard = () => setRevealCard(false)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
 		dayString,
 		closeCard,
 		reviewStage,
-		prevData
+		prevData,
+		latestReview
 	)
 
 	if (!phrase) return null

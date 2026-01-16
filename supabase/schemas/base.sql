@@ -34,10 +34,6 @@ with
 
 alter schema "public" owner to "postgres";
 
-create extension if not exists "plv8"
-with
-	schema "pg_catalog";
-
 create extension if not exists "pg_graphql"
 with
 	schema "graphql";
@@ -377,145 +373,6 @@ alter function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) owner to "postgres";
 
-create or replace function "public"."fsrs_clamp_d" ("difficulty" numeric) returns numeric language "plv8" as $$
-  return Math.min(Math.max(difficulty, 1.0), 10.0);
-$$;
-
-alter function "public"."fsrs_clamp_d" ("difficulty" numeric) owner to "postgres";
-
-create or replace function "public"."fsrs_d_0" ("score" integer) returns numeric language "plv8" as $$
-	const W_4 = 7.1949;
-	const W_5 = 0.5345;
-	return plv8.find_function("fsrs_clamp_d")(W_4 - Math.exp(W_5 * (score - 1.0)) + 1.0);
-$$;
-
-alter function "public"."fsrs_d_0" ("score" integer) owner to "postgres";
-
-create or replace function "public"."fsrs_days_between" (
-	"date_before" timestamp with time zone,
-	"date_after" timestamp with time zone
-) returns numeric language "plv8" as $$
-	// returns interval, in days, rounded to the second
-	return Math.round((new Date(date_after) - new Date(date_before)) / 60 / 60 / 24) / 1000;
-$$;
-
-alter function "public"."fsrs_days_between" (
-	"date_before" timestamp with time zone,
-	"date_after" timestamp with time zone
-) owner to "postgres";
-
-create or replace function "public"."fsrs_delta_d" ("score" integer) returns numeric language "plv8" as $$
-	const W_6 = 1.4604;
-  return -W_6 * (score - 3.0);
-$$;
-
-alter function "public"."fsrs_delta_d" ("score" integer) owner to "postgres";
-
-create or replace function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
-	const W_7 = 0.0046;
-	return plv8.find_function("fsrs_clamp_d")(W_7 * plv8.find_function("fsrs_d_0")(4) + (1.0 - W_7) * plv8.find_function("fsrs_dp")(difficulty, score));
-$$;
-
-alter function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) owner to "postgres";
-
-create or replace function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) returns numeric language "plv8" as $$
-	return difficulty + plv8.find_function("fsrs_delta_d")(score) * ((10.0 - difficulty) / 9.0);
-$$;
-
-alter function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) owner to "postgres";
-
-create or replace function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) returns numeric language "plv8" as $$
-	const f = 19.0 / 81.0;
-	const c = -0.5;
-	return (stability / f) * (Math.pow(desired_retrievability, 1.0 / c) - 1.0);
-$$;
-
-alter function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) owner to "postgres";
-
-create or replace function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) returns numeric language "plv8" as $$
-	const f = 19.0 / 81.0;
-	const c = -0.5;
-	return Math.pow(1.0 + f * (time_in_days / stability), c);
-$$;
-
-alter function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) owner to "postgres";
-
-create or replace function "public"."fsrs_s_0" ("score" integer) returns numeric language "plv8" as $$
-	const W = [0.40255, 1.18385, 3.173, 15.69105];
-	return W[score - 1];
-$$;
-
-alter function "public"."fsrs_s_0" ("score" integer) owner to "postgres";
-
-create or replace function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) returns numeric language "plv8" as $$
-	const W_11 = 1.9395;
-	const W_12 = 0.11;
-	const W_13 = 0.29605;
-	const W_14 = 2.2698;
-	const d_f = Math.pow(difficulty, -W_12);
-	const s_f = Math.pow(stability + 1.0, W_13) - 1.0;
-	const r_f = Math.exp(W_14 * (1.0 - review_time_retrievability));
-	const c_f = W_11;
-	const s_f2 = d_f * s_f * r_f * c_f;
-	return Math.min(s_f2, stability);
-$$;
-
-alter function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) owner to "postgres";
-
-create or replace function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) returns numeric language "plv8" as $$
-	const W_8 = 1.54575;
-	const W_9 = 0.1192;
-	const W_10 = 1.01925;
-	const W_15 = 0.2315;
-	const W_16 = 2.9898;
-	const t_d = 11.0 - difficulty;
-	const t_s = Math.pow(stability, -W_9);
-	const t_r = Math.exp(W_10 * (1.0 - review_time_retrievability)) - 1.0;
-	const h = score === 2 ? W_15 : 1.0;
-	const b = score === 4 ? W_16 : 1.0;
-	const c = Math.exp(W_8);
-	const alpha = 1.0 + t_d * t_s * t_r * h * b * c;
-  return stability * alpha;
-$$;
-
-alter function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) owner to "postgres";
-
-create or replace function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) returns numeric language "plv8" as $$
-	return (score === 1) ?
-			plv8.find_function("fsrs_s_fail")(difficulty, stability, review_time_retrievability)
-		: plv8.find_function("fsrs_s_success")(difficulty, stability, review_time_retrievability, score);
-$$;
-
-alter function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) owner to "postgres";
-
 set
 	default_tablespace = '';
 
@@ -552,86 +409,70 @@ create or replace function "public"."insert_user_card_review" (
 	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
-	"desired_retention" numeric default 0.9
-) returns "public"."user_card_review" language "plv8" as $_$
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric default null::numeric
+) returns "public"."user_card_review" language "plpgsql" security definer as $$
+declare
+	result public.user_card_review;
+	day_session_date date;
+begin
+	-- Convert day_session text to date
+	day_session_date := day_session::date;
 
-//-- auth check may be redundant for permissions but it will help the planner
-//-- we're fetching the most recent review, whether it was today or another day
-const prevReviewQuery = plv8.execute("SELECT id, created_at, difficulty, stability, review_time_retrievability, day_first_review, to_char(day_session, 'YYYY-DD-MM') as day_session FROM public.user_card_review WHERE phrase_id = $1 AND uid = auth.uid() ORDER BY created_at DESC LIMIT 1", [phrase_id])
-//-- throw new Error('prevReviewQuery: ' + JSON.stringify(prevReviewQuery))
+	-- Validate bounds (defense against malicious/buggy clients)
+	if difficulty < 1.0 or difficulty > 10.0 then
+		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
+	end if;
 
-const prev = prevReviewQuery[0] ?? null
+	if stability < 0.0 then
+		raise exception 'Stability % cannot be negative', stability;
+	end if;
 
-const current_timestamp = new Date()
+	if stability > 36500.0 then -- 100 years max
+		raise exception 'Stability % exceeds maximum allowed value', stability;
+	end if;
 
-var calc = {
-	created_at: current_timestamp,
-	difficulty: null,
-	stability: null,
-	review_time_retrievability: null,
-	day_first_review: true,
-}
+	if review_time_retrievability is not null and (review_time_retrievability < 0.0 or review_time_retrievability > 1.0) then
+		raise exception 'Retrievability % out of valid range [0, 1]', review_time_retrievability;
+	end if;
 
-if (!prev) {
-	//-- first review _ever_ gets slightly different calculation
-	calc.stability = plv8.find_function("fsrs_s_0")(score)
-	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
-	calc.review_time_retrievability = null
-}
-else if (prev.day_session === day_session) {
-	// previous review was from today so we do not calculate new values
-	calc.difficulty = prev.difficulty
-	calc.stability = prev.stability
-	calc.review_time_retrievability = prev.review_time_retrievability
-	calc.day_first_review = false
-} else {
-	//-- this is the main calculation block
-	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.created_at, calc.created_at)
-	if (typeof time_between_reviews !== 'number' || time_between_reviews < -1)
-		throw new Error(`Time between reviews is not a number or is less than -1 (can''t have a most recent review in the future). value calculated as: ${time_between_reviews}, for ${prev.created_at} and ${calc.created_at}`)
-	try {
-		calc.review_time_retrievability = plv8.find_function("fsrs_retrievability")(time_between_reviews, prev.stability)
-			if (typeof calc.review_time_retrievability !== 'number' || calc.review_time_retrievability > 1 || calc.review_time_retrievability < 0)
-				throw new Error(`retrievability is not a number or has wrong value: ${calc.review_time_retrievability}`)
-		calc.stability = plv8.find_function("fsrs_stability")(prev.difficulty, prev.stability, calc.review_time_retrievability, score)
-		calc.difficulty = plv8.find_function("fsrs_difficulty")(prev.difficulty, score)
-	} catch(e) {
-		throw new Error(`Something went wrong in the main calc part.` + JSON.stringify([prev, calc]))
-	}
-}
+	if score < 1 or score > 4 then
+		raise exception 'Score % out of valid range [1, 4]', score;
+	end if;
 
-//-- this should all be covered by DB constraints...
-if (typeof calc.stability !== 'number' || typeof calc.difficulty !== 'number' || calc.stability < 0 || calc.difficulty > 10 || calc.difficulty < 1) {
-	throw new Error(`Difficulty or stability is out of range: ${calc.difficulty}, ${calc.stability}`)
-	return null
-}
-
-const insertedResult = plv8.execute(
-	`INSERT INTO public.user_card_review (score, phrase_id, lang, day_session, review_time_retrievability, difficulty, stability, day_first_review) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-	[
-		score,
+	-- Insert the review record
+	insert into public.user_card_review (
 		phrase_id,
 		lang,
+		score,
 		day_session,
-		calc.review_time_retrievability,
-		calc.difficulty,
-		calc.stability,
-		calc.day_first_review
-	]
-);
+		difficulty,
+		stability,
+		review_time_retrievability
+	) values (
+		phrase_id,
+		lang,
+		score,
+		day_session_date,
+		difficulty,
+		stability,
+		review_time_retrievability
+	)
+	returning * into result;
 
-const response = insertedResult[0] ?? null;
-if (!response) throw new Error(`Got all the way to the end and then no row was inserted for ${phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
-return response
-
-$_$;
+	return result;
+end;
+$$;
 
 alter function "public"."insert_user_card_review" (
 	"phrase_id" "uuid",
 	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
-	"desired_retention" numeric
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
 ) owner to "postgres";
 
 create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
@@ -858,73 +699,57 @@ $$;
 
 alter function "public"."update_phrase_request_upvote_count" () owner to "postgres";
 
-create or replace function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) returns "public"."user_card_review" language "plv8" as $_$
+create or replace function "public"."update_user_card_review" (
+	"review_id" "uuid",
+	"score" integer,
+	"difficulty" numeric,
+	"stability" numeric
+) returns "public"."user_card_review" language "plpgsql" security definer as $$
+declare
+	result public.user_card_review;
+begin
+	-- Validate bounds
+	if difficulty < 1.0 or difficulty > 10.0 then
+		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
+	end if;
 
-const reviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE id = $1", [review_id])
-const review = reviewQuery[0] ?? null
-if (!review) throw new Error(`Could not update because we couldn't find a review with ID ${review_id}`)
+	if stability < 0.0 then
+		raise exception 'Stability % cannot be negative', stability;
+	end if;
 
-if (review.day_first_review === false) {
-	//-- if this is not the first review of the day, we will not be updating the stability and difficulty
-	const updatedSecondReview = plv8.execute(
-		`UPDATE public.user_card_review SET score = $1 WHERE id = $2 RETURNING *`,
-		[
-			score,
-			review_id
-		]
-	)
-	return updatedSecondReview[0] ?? null
-}
-//-- otherwise, it is the first of the day and we have to recalculate
-//-- any previous reviews will be from an earlier day, we do not select
-//-- on whether the previous review was the first of the day or not
-const prevReviewQuery = plv8.execute("SELECT * FROM public.user_card_review WHERE phrase_id = $1 AND uid = auth.uid() AND created_at < $2 ORDER BY created_at DESC LIMIT 1", [review.phrase_id, review.created_at])
-const prev = prevReviewQuery[0] ?? null
+	if stability > 36500.0 then
+		raise exception 'Stability % exceeds maximum allowed value', stability;
+	end if;
 
-var calc = {
-	current: review.created_at,
-	review_time_retrievability: review.review_time_retrievability,
-	difficulty: null,
-	stability: null
-}
+	if score < 1 or score > 4 then
+		raise exception 'Score % out of valid range [1, 4]', score;
+	end if;
 
-if (!prev) {
-	calc.stability = plv8.find_function("fsrs_s_0")(score)
-	calc.difficulty = plv8.find_function("fsrs_d_0")(score)
-} else {
-	const time_between_reviews = plv8.find_function("fsrs_days_between")(prev.created_at, calc.current)
-	if (typeof time_between_reviews !== 'number' || time_between_reviews < -1)
-		throw new Error(`Time between reviews is not a number or is less than -1 (can''t have a most recent review in the future). value calculated as: ${time_between_reviews}, for ${prev.created_at} and ${calc.current}`)
-	try {
-		calc.stability = plv8.find_function("fsrs_stability")(prev.difficulty, prev.stability, calc.review_time_retrievability, score)
-		calc.difficulty = plv8.find_function("fsrs_difficulty")(prev.difficulty, score)
-	} catch(e) {
-		throw new Error(`Something went wrong in the main calc part.` + JSON.stringify([prev, calc]))
-	}
-}
+	-- Update the review record
+	update public.user_card_review
+	set
+		score = update_user_card_review.score,
+		difficulty = update_user_card_review.difficulty,
+		stability = update_user_card_review.stability,
+		updated_at = now()
+	where id = review_id
+	  and uid = auth.uid()  -- RLS backup
+	returning * into result;
 
-if (typeof calc.stability !== 'number' || typeof calc.difficulty !== 'number' || calc.stability < 0 || calc.difficulty > 10 || calc.difficulty < 1) {
-	throw new Error(`Difficulty or stability is out of range: ${calc.difficulty}, ${calc.stability}`)
-	return null
-}
+	if result is null then
+		raise exception 'Review % not found or not owned by current user', review_id;
+	end if;
 
-const updatedResult = plv8.execute(
-	`UPDATE public.user_card_review SET score = $1, difficulty = $2, stability = $3 WHERE id = $4 RETURNING *`,
-	[
-		score,
-		calc.difficulty,
-		calc.stability,
-		review_id
-	]
-);
+	return result;
+end;
+$$;
 
-const response = updatedResult[0] ?? null;
-if (!response) throw new Error(`Got all the way to the end and did not manage to update anything. for review ${review_id}, card ${review.phrase_id}, ${score}, prev: ${JSON.stringify(prev)}, calc: ${JSON.stringify(calc)}`)
-return response
-
-$_$;
-
-alter function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) owner to "postgres";
+alter function "public"."update_user_card_review" (
+	"review_id" "uuid",
+	"score" integer,
+	"difficulty" numeric,
+	"stability" numeric
+) owner to "postgres";
 
 create table if not exists "public"."chat_message" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1067,17 +892,23 @@ select
 	"review"."stability",
 	current_timestamp as "current_timestamp",
 	nullif(
-		"public"."fsrs_retrievability" (
+		"power" (
 			(
-				(
-					extract(
-						epoch
-						from
-							(current_timestamp - "review"."created_at")
-					) / (3600)::numeric
-				) / (24)::numeric
+				1.0 + (
+					(
+						(19.0 / 81.0) * (
+							(
+								extract(
+									epoch
+									from
+										(current_timestamp - "review"."created_at")
+								) / 3600.0
+							) / 24.0
+						)
+					) / nullif("review"."stability", (0)::numeric)
+				)
 			),
-			"review"."stability"
+			'-0.5'::numeric
 		),
 		'NaN'::numeric
 	) as "retrievability_now"
@@ -1498,6 +1329,12 @@ create table if not exists "public"."user_profile" (
 	"created_at" timestamp with time zone default "now" () not null,
 	"avatar_path" "text",
 	"languages_known" "jsonb" default '[]'::"jsonb" not null,
+	"font_preference" "text" default 'default'::"text",
+	constraint "user_profile_font_preference_check" check (
+		(
+			"font_preference" = any (array['default'::"text", 'dyslexic'::"text"])
+		)
+	),
 	constraint "username_length" check (("char_length" ("username") >= 3))
 );
 
@@ -2373,8 +2210,18 @@ create policy "Users can view their own chat messages" on "public"."chat_message
 select
 	using (
 		(
-			("auth"."uid" () = "sender_uid")
-			or ("auth"."uid" () = "recipient_uid")
+			(
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "sender_uid"
+			)
+			or (
+				(
+					select
+						"auth"."uid" () as "uid"
+				) = "recipient_uid"
+			)
 		)
 	);
 
@@ -2516,129 +2363,14 @@ grant all on function "public"."create_playlist_with_links" (
 	"description" "text",
 	"href" "text",
 	"phrases" "jsonb"
-) to "service_role";
-
-grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "anon";
-
-grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "authenticated";
-
-grant all on function "public"."fsrs_clamp_d" ("difficulty" numeric) to "service_role";
-
-grant all on function "public"."fsrs_d_0" ("score" integer) to "anon";
-
-grant all on function "public"."fsrs_d_0" ("score" integer) to "authenticated";
-
-grant all on function "public"."fsrs_d_0" ("score" integer) to "service_role";
-
-grant all on function "public"."fsrs_days_between" (
-	"date_before" timestamp with time zone,
-	"date_after" timestamp with time zone
-) to "anon";
-
-grant all on function "public"."fsrs_days_between" (
-	"date_before" timestamp with time zone,
-	"date_after" timestamp with time zone
 ) to "authenticated";
 
-grant all on function "public"."fsrs_days_between" (
-	"date_before" timestamp with time zone,
-	"date_after" timestamp with time zone
-) to "service_role";
-
-grant all on function "public"."fsrs_delta_d" ("score" integer) to "anon";
-
-grant all on function "public"."fsrs_delta_d" ("score" integer) to "authenticated";
-
-grant all on function "public"."fsrs_delta_d" ("score" integer) to "service_role";
-
-grant all on function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "anon";
-
-grant all on function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "authenticated";
-
-grant all on function "public"."fsrs_difficulty" ("difficulty" numeric, "score" integer) to "service_role";
-
-grant all on function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "anon";
-
-grant all on function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "authenticated";
-
-grant all on function "public"."fsrs_dp" ("difficulty" numeric, "score" integer) to "service_role";
-
-grant all on function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) to "anon";
-
-grant all on function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) to "authenticated";
-
-grant all on function "public"."fsrs_interval" ("desired_retrievability" numeric, "stability" numeric) to "service_role";
-
-grant all on function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "anon";
-
-grant all on function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "authenticated";
-
-grant all on function "public"."fsrs_retrievability" ("time_in_days" numeric, "stability" numeric) to "service_role";
-
-grant all on function "public"."fsrs_s_0" ("score" integer) to "anon";
-
-grant all on function "public"."fsrs_s_0" ("score" integer) to "authenticated";
-
-grant all on function "public"."fsrs_s_0" ("score" integer) to "service_role";
-
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "anon";
-
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "authenticated";
-
-grant all on function "public"."fsrs_s_fail" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "service_role";
-
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "anon";
-
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "authenticated";
-
-grant all on function "public"."fsrs_s_success" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "service_role";
-
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "anon";
-
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
-) to "authenticated";
-
-grant all on function "public"."fsrs_stability" (
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"score" integer
+grant all on function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"phrases" "jsonb"
 ) to "service_role";
 
 grant all on table "public"."user_card_review" to "authenticated";
@@ -2650,7 +2382,9 @@ grant all on function "public"."insert_user_card_review" (
 	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
-	"desired_retention" numeric
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
 ) to "authenticated";
 
 grant all on function "public"."insert_user_card_review" (
@@ -2658,7 +2392,9 @@ grant all on function "public"."insert_user_card_review" (
 	"lang" character varying,
 	"score" integer,
 	"day_session" "text",
-	"desired_retention" numeric
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric
 ) to "service_role";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
@@ -2697,9 +2433,19 @@ grant all on function "public"."update_phrase_request_upvote_count" () to "authe
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
 
-grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "authenticated";
+grant all on function "public"."update_user_card_review" (
+	"review_id" "uuid",
+	"score" integer,
+	"difficulty" numeric,
+	"stability" numeric
+) to "authenticated";
 
-grant all on function "public"."update_user_card_review" ("review_id" "uuid", "score" integer) to "service_role";
+grant all on function "public"."update_user_card_review" (
+	"review_id" "uuid",
+	"score" integer,
+	"difficulty" numeric,
+	"stability" numeric
+) to "service_role";
 
 grant all on table "public"."chat_message" to "authenticated";
 
@@ -2726,16 +2472,6 @@ grant all on table "public"."phrase_tag" to "anon";
 grant all on table "public"."phrase_tag" to "authenticated";
 
 grant all on table "public"."phrase_tag" to "service_role";
-
-grant all on table "public"."user_profile" to "authenticated";
-
-grant all on table "public"."user_profile" to "service_role";
-
-grant all on table "public"."public_profile" to "anon";
-
-grant all on table "public"."public_profile" to "authenticated";
-
-grant all on table "public"."public_profile" to "service_role";
 
 grant all on table "public"."tag" to "anon";
 
