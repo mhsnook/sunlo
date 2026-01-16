@@ -1637,60 +1637,15 @@ export type Database = {
 				}
 				Returns: Json
 			}
-			fsrs_clamp_d: { Args: { difficulty: number }; Returns: number }
-			fsrs_d_0: { Args: { score: number }; Returns: number }
-			fsrs_days_between: {
-				Args: { date_after: string; date_before: string }
-				Returns: number
-			}
-			fsrs_delta_d: { Args: { score: number }; Returns: number }
-			fsrs_difficulty: {
-				Args: { difficulty: number; score: number }
-				Returns: number
-			}
-			fsrs_dp: { Args: { difficulty: number; score: number }; Returns: number }
-			fsrs_interval: {
-				Args: { desired_retrievability: number; stability: number }
-				Returns: number
-			}
-			fsrs_retrievability: {
-				Args: { stability: number; time_in_days: number }
-				Returns: number
-			}
-			fsrs_s_0: { Args: { score: number }; Returns: number }
-			fsrs_s_fail: {
-				Args: {
-					difficulty: number
-					review_time_retrievability: number
-					stability: number
-				}
-				Returns: number
-			}
-			fsrs_s_success: {
-				Args: {
-					difficulty: number
-					review_time_retrievability: number
-					score: number
-					stability: number
-				}
-				Returns: number
-			}
-			fsrs_stability: {
-				Args: {
-					difficulty: number
-					review_time_retrievability: number
-					score: number
-					stability: number
-				}
-				Returns: number
-			}
 			insert_user_card_review: {
 				Args: {
 					day_session: string
-					desired_retention?: number
+					difficulty: number
 					lang: string
 					phrase_id: string
+					review_time_retrievability?: number
 					score: number
+					stability: number
 				}
 				Returns: {
 					created_at: string
@@ -1726,7 +1681,12 @@ export type Database = {
 				Returns: Json
 			}
 			update_user_card_review: {
-				Args: { review_id: string; score: number }
+				Args: {
+					difficulty: number
+					review_id: string
+					score: number
+					stability: number
+				}
 				Returns: {
 					created_at: string
 					day_first_review: boolean
