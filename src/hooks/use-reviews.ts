@@ -39,11 +39,7 @@ interface PostReviewInput {
 	lang: string
 	score: Score
 	day_session: string
-	previousReview?: {
-		difficulty: number
-		stability: number
-		createdAt: Date
-	}
+	previousReview?: CardReviewType
 }
 
 const postReview = async (submitData: PostReviewInput) => {
@@ -55,16 +51,20 @@ const postReview = async (submitData: PostReviewInput) => {
 		previousReview,
 	})
 
+	// Direct insert - CHECK constraints on table validate the values
 	const { data } = await supabase
-		.rpc('insert_user_card_review', {
+		.from('user_card_review')
+		.insert({
 			phrase_id,
 			lang,
 			score,
 			day_session,
 			difficulty: fsrs.difficulty,
 			stability: fsrs.stability,
-			review_time_retrievability: fsrs.retrievability ?? undefined,
+			review_time_retrievability: fsrs.retrievability,
 		})
+		.select()
+		.single()
 		.throwOnError()
 
 	return data
@@ -73,11 +73,7 @@ const postReview = async (submitData: PostReviewInput) => {
 interface UpdateReviewInput {
 	review_id: uuid
 	score: Score
-	previousReview?: {
-		difficulty: number
-		stability: number
-		createdAt: Date
-	}
+	previousReview?: CardReviewType
 }
 
 const updateReview = async (submitData: UpdateReviewInput) => {
@@ -89,13 +85,17 @@ const updateReview = async (submitData: UpdateReviewInput) => {
 		previousReview,
 	})
 
+	// Direct update - CHECK constraints on table validate the values
 	const { data } = await supabase
-		.rpc('update_user_card_review', {
-			review_id,
+		.from('user_card_review')
+		.update({
 			score,
 			difficulty: fsrs.difficulty,
 			stability: fsrs.stability,
 		})
+		.eq('id', review_id)
+		.select()
+		.single()
 		.throwOnError()
 
 	return data
@@ -227,17 +227,6 @@ export function useReviewMutation(
 	const { gotoIndex, gotoEnd } = useReviewActions()
 	const nextIndex = useNextValid()
 
-	// Build the previous review data for FSRS calculations
-	// This is the most recent review for this phrase (any day)
-	const previousReviewForFSRS =
-		latestReview?.difficulty != null && latestReview?.stability != null ?
-			{
-				difficulty: latestReview.difficulty,
-				stability: latestReview.stability,
-				createdAt: new Date(latestReview.created_at),
-			}
-		:	undefined
-
 	return useMutation<
 		{ action: string; row: CardReviewType },
 		PostgrestError,
@@ -264,22 +253,16 @@ export function useReviewMutation(
 			if (stage < 3 && prevDataToday?.id) {
 				console.log(`Attempting update with`, { stage, prevDataToday, score })
 				// For updates, we need to recalculate based on the review BEFORE the one we're updating
-				// The previousReviewForFSRS is the latest review, which IS the one we're updating
-				// So we need to use its previous values for the recalculation
-				// Actually, we should use the review before the current one, but that's complex
-				// For now, we'll recalculate as if this is a fresh review with no prior history
+				// The latestReview is the one we're updating, so we pass undefined to treat as first review
 				// This is a simplification - in practice, corrections are rare
 				return {
 					action: 'update',
 					row: await updateReview({
 						score: score as Score,
 						review_id: prevDataToday.id,
-						// Use the previous review's values to recalculate
-						// If this is the first review, previousReviewForFSRS will be undefined
+						// Only use previous review if it's different from the one we're updating
 						previousReview:
-							latestReview?.id !== prevDataToday.id ?
-								previousReviewForFSRS
-							:	undefined,
+							latestReview?.id !== prevDataToday.id ? latestReview : undefined,
 					}),
 				}
 			}
@@ -291,7 +274,7 @@ export function useReviewMutation(
 				lang,
 				score,
 				day_session,
-				previousReviewForFSRS,
+				latestReview,
 			})
 
 			return {
@@ -301,7 +284,7 @@ export function useReviewMutation(
 					phrase_id: pid,
 					lang,
 					day_session,
-					previousReview: previousReviewForFSRS,
+					previousReview: latestReview,
 				}),
 			}
 		},

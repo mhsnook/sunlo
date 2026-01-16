@@ -373,108 +373,6 @@ alter function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) owner to "postgres";
 
-set
-	default_tablespace = '';
-
-set
-	default_table_access_method = "heap";
-
-create table if not exists "public"."user_card_review" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"score" smallint not null,
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric,
-	"created_at" timestamp with time zone default "now" () not null,
-	"updated_at" timestamp with time zone default "now" () not null,
-	"day_session" "date" not null,
-	"lang" character varying not null,
-	"phrase_id" "uuid" not null,
-	"day_first_review" boolean default true not null,
-	constraint "user_card_review_difficulty_check" check (
-		(
-			("difficulty" >= 0.0)
-			and ("difficulty" <= 10.0)
-		)
-	),
-	constraint "user_card_review_score_check" check (("score" = any (array[1, 2, 3, 4]))),
-	constraint "user_card_review_stability_check" check (("stability" >= 0.0))
-);
-
-alter table "public"."user_card_review" owner to "postgres";
-
-create or replace function "public"."insert_user_card_review" (
-	"phrase_id" "uuid",
-	"lang" character varying,
-	"score" integer,
-	"day_session" "text",
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric default null::numeric
-) returns "public"."user_card_review" language "plpgsql" security definer as $$
-declare
-	result public.user_card_review;
-	day_session_date date;
-begin
-	-- Convert day_session text to date
-	day_session_date := day_session::date;
-
-	-- Validate bounds (defense against malicious/buggy clients)
-	if difficulty < 1.0 or difficulty > 10.0 then
-		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
-	end if;
-
-	if stability < 0.0 then
-		raise exception 'Stability % cannot be negative', stability;
-	end if;
-
-	if stability > 36500.0 then -- 100 years max
-		raise exception 'Stability % exceeds maximum allowed value', stability;
-	end if;
-
-	if review_time_retrievability is not null and (review_time_retrievability < 0.0 or review_time_retrievability > 1.0) then
-		raise exception 'Retrievability % out of valid range [0, 1]', review_time_retrievability;
-	end if;
-
-	if score < 1 or score > 4 then
-		raise exception 'Score % out of valid range [1, 4]', score;
-	end if;
-
-	-- Insert the review record
-	insert into public.user_card_review (
-		phrase_id,
-		lang,
-		score,
-		day_session,
-		difficulty,
-		stability,
-		review_time_retrievability
-	) values (
-		phrase_id,
-		lang,
-		score,
-		day_session_date,
-		difficulty,
-		stability,
-		review_time_retrievability
-	)
-	returning * into result;
-
-	return result;
-end;
-$$;
-
-alter function "public"."insert_user_card_review" (
-	"phrase_id" "uuid",
-	"lang" character varying,
-	"score" integer,
-	"day_session" "text",
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) owner to "postgres";
-
 create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
 DECLARE
   v_user_uid uuid := auth.uid();
@@ -699,57 +597,11 @@ $$;
 
 alter function "public"."update_phrase_request_upvote_count" () owner to "postgres";
 
-create or replace function "public"."update_user_card_review" (
-	"review_id" "uuid",
-	"score" integer,
-	"difficulty" numeric,
-	"stability" numeric
-) returns "public"."user_card_review" language "plpgsql" security definer as $$
-declare
-	result public.user_card_review;
-begin
-	-- Validate bounds
-	if difficulty < 1.0 or difficulty > 10.0 then
-		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
-	end if;
+set
+	default_tablespace = '';
 
-	if stability < 0.0 then
-		raise exception 'Stability % cannot be negative', stability;
-	end if;
-
-	if stability > 36500.0 then
-		raise exception 'Stability % exceeds maximum allowed value', stability;
-	end if;
-
-	if score < 1 or score > 4 then
-		raise exception 'Score % out of valid range [1, 4]', score;
-	end if;
-
-	-- Update the review record
-	update public.user_card_review
-	set
-		score = update_user_card_review.score,
-		difficulty = update_user_card_review.difficulty,
-		stability = update_user_card_review.stability,
-		updated_at = now()
-	where id = review_id
-	  and uid = auth.uid()  -- RLS backup
-	returning * into result;
-
-	if result is null then
-		raise exception 'Review % not found or not owned by current user', review_id;
-	end if;
-
-	return result;
-end;
-$$;
-
-alter function "public"."update_user_card_review" (
-	"review_id" "uuid",
-	"score" integer,
-	"difficulty" numeric,
-	"stability" numeric
-) owner to "postgres";
+set
+	default_table_access_method = "heap";
 
 create table if not exists "public"."chat_message" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -847,6 +699,41 @@ alter table "public"."user_card" owner to "postgres";
 comment on table "public"."user_card" is 'Which card is in which deck, and its status';
 
 comment on column "public"."user_card"."uid" is 'The owner user''s ID';
+
+create table if not exists "public"."user_card_review" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"score" smallint not null,
+	"difficulty" numeric,
+	"stability" numeric,
+	"review_time_retrievability" numeric,
+	"created_at" timestamp with time zone default "now" () not null,
+	"updated_at" timestamp with time zone default "now" () not null,
+	"day_session" "date" not null,
+	"lang" character varying not null,
+	"phrase_id" "uuid" not null,
+	"day_first_review" boolean default true not null,
+	constraint "user_card_review_difficulty_check" check (
+		(
+			("difficulty" >= 1.0)
+			and ("difficulty" <= 10.0)
+		)
+	),
+	constraint "user_card_review_retrievability_check" check (
+		(
+			("review_time_retrievability" is null)
+			or (
+				("review_time_retrievability" >= 0.0)
+				and ("review_time_retrievability" <= 1.0)
+			)
+		)
+	),
+	constraint "user_card_review_score_check" check (("score" = any (array[1, 2, 3, 4]))),
+	constraint "user_card_review_stability_check" check (("stability" >= 0.0)),
+	constraint "user_card_review_stability_max_check" check (("stability" <= 36500.0))
+);
+
+alter table "public"."user_card_review" owner to "postgres";
 
 create or replace view "public"."user_card_plus"
 with
@@ -2433,20 +2320,6 @@ grant all on function "public"."update_phrase_request_upvote_count" () to "authe
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
 
-grant all on function "public"."update_user_card_review" (
-	"review_id" "uuid",
-	"score" integer,
-	"difficulty" numeric,
-	"stability" numeric
-) to "authenticated";
-
-grant all on function "public"."update_user_card_review" (
-	"review_id" "uuid",
-	"score" integer,
-	"difficulty" numeric,
-	"stability" numeric
-) to "service_role";
-
 grant all on table "public"."chat_message" to "authenticated";
 
 grant all on table "public"."chat_message" to "service_role";
@@ -2483,15 +2356,19 @@ grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
 
+grant all on table "public"."user_card_review" to "authenticated";
+
+grant all on table "public"."user_card_review" to "service_role";
+
 grant all on table "public"."user_card_plus" to "authenticated";
 
 grant all on table "public"."user_card_plus" to "service_role";
 
+grant all on table "public"."phrase_meta" to "anon";
+
 grant all on table "public"."phrase_meta" to "authenticated";
 
 grant all on table "public"."phrase_meta" to "service_role";
-
-grant all on table "public"."phrase_meta" to "anon";
 
 grant all on table "public"."phrase_playlist" to "anon";
 

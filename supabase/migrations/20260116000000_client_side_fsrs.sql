@@ -1,15 +1,46 @@
 -- Migration: Move FSRS calculations to client-side
 --
 -- This migration:
--- 1. Replaces the PLv8 insert_user_card_review RPC with a simpler PLpgSQL version
---    that accepts pre-calculated FSRS values from the client
--- 2. Replaces the PLv8 update_user_card_review RPC similarly
+-- 1. Adds CHECK constraints for FSRS value validation
+-- 2. Drops the PLv8 insert/update RPCs (clients use direct inserts now)
 -- 3. Updates user_card_plus view to use pure SQL for retrievability calculation
 -- 4. Drops all PLv8 FSRS helper functions
 -- 5. Drops the PLv8 extension
 --
 -- The FSRS algorithm is now implemented in TypeScript at src/lib/fsrs.ts
--- Drop the old PLv8 insert function
+-- Add missing CHECK constraints for FSRS values
+-- (Some already exist: difficulty 0-10, score 1-4, stability >= 0)
+-- Add max stability constraint (100 years = 36500 days)
+alter table public.user_card_review
+drop constraint if exists user_card_review_stability_max_check;
+
+alter table public.user_card_review
+add constraint user_card_review_stability_max_check check (stability <= 36500.0);
+
+-- Add retrievability range constraint
+alter table public.user_card_review
+drop constraint if exists user_card_review_retrievability_check;
+
+alter table public.user_card_review
+add constraint user_card_review_retrievability_check check (
+	review_time_retrievability is null
+	or (
+		review_time_retrievability >= 0.0
+		and review_time_retrievability <= 1.0
+	)
+);
+
+-- Update existing difficulty constraint to use correct range [1, 10] not [0, 10]
+alter table public.user_card_review
+drop constraint if exists user_card_review_difficulty_check;
+
+alter table public.user_card_review
+add constraint user_card_review_difficulty_check check (
+	difficulty >= 1.0
+	and difficulty <= 10.0
+);
+
+-- Drop the old PLv8 insert function (clients now use direct inserts)
 drop function if exists "public"."insert_user_card_review" (
 	"phrase_id" uuid,
 	"lang" character varying,
@@ -18,116 +49,8 @@ drop function if exists "public"."insert_user_card_review" (
 	"desired_retention" numeric
 );
 
--- Create new simplified insert function that accepts pre-calculated values
-create or replace function "public"."insert_user_card_review" (
-	"phrase_id" uuid,
-	"lang" character varying,
-	"score" integer,
-	"day_session" text,
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric default null
-) returns "public"."user_card_review" language plpgsql security definer as $$
-declare
-	result public.user_card_review;
-	day_session_date date;
-begin
-	-- Convert day_session text to date
-	day_session_date := day_session::date;
-
-	-- Validate bounds (defense against malicious/buggy clients)
-	if difficulty < 1.0 or difficulty > 10.0 then
-		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
-	end if;
-
-	if stability < 0.0 then
-		raise exception 'Stability % cannot be negative', stability;
-	end if;
-
-	if stability > 36500.0 then -- 100 years max
-		raise exception 'Stability % exceeds maximum allowed value', stability;
-	end if;
-
-	if review_time_retrievability is not null and (review_time_retrievability < 0.0 or review_time_retrievability > 1.0) then
-		raise exception 'Retrievability % out of valid range [0, 1]', review_time_retrievability;
-	end if;
-
-	if score < 1 or score > 4 then
-		raise exception 'Score % out of valid range [1, 4]', score;
-	end if;
-
-	-- Insert the review record
-	insert into public.user_card_review (
-		phrase_id,
-		lang,
-		score,
-		day_session,
-		difficulty,
-		stability,
-		review_time_retrievability
-	) values (
-		phrase_id,
-		lang,
-		score,
-		day_session_date,
-		difficulty,
-		stability,
-		review_time_retrievability
-	)
-	returning * into result;
-
-	return result;
-end;
-$$;
-
 -- Drop the old PLv8 update function
 drop function if exists "public"."update_user_card_review" ("review_id" uuid, "score" integer);
-
--- Create new simplified update function that accepts pre-calculated values
-create or replace function "public"."update_user_card_review" (
-	"review_id" uuid,
-	"score" integer,
-	"difficulty" numeric,
-	"stability" numeric
-) returns "public"."user_card_review" language plpgsql security definer as $$
-declare
-	result public.user_card_review;
-begin
-	-- Validate bounds
-	if difficulty < 1.0 or difficulty > 10.0 then
-		raise exception 'Difficulty % out of valid range [1, 10]', difficulty;
-	end if;
-
-	if stability < 0.0 then
-		raise exception 'Stability % cannot be negative', stability;
-	end if;
-
-	if stability > 36500.0 then
-		raise exception 'Stability % exceeds maximum allowed value', stability;
-	end if;
-
-	if score < 1 or score > 4 then
-		raise exception 'Score % out of valid range [1, 4]', score;
-	end if;
-
-	-- Update the review record
-	update public.user_card_review
-	set
-		score = update_user_card_review.score,
-		difficulty = update_user_card_review.difficulty,
-		stability = update_user_card_review.stability,
-		updated_at = now()
-	where id = review_id
-	  and uid = auth.uid()  -- RLS backup
-	returning * into result;
-
-	if result is null then
-		raise exception 'Review % not found or not owned by current user', review_id;
-	end if;
-
-	return result;
-end;
-$$;
 
 -- Drop views that depend on user_card_plus (in reverse dependency order)
 drop view if exists public.feed_activities;
