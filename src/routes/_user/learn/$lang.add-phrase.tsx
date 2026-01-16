@@ -387,6 +387,7 @@ function AddPhraseTab() {
 												<Checkbox
 													id="only_reverse"
 													checked={field.value}
+													className="mb-1"
 													onCheckedChange={field.onChange}
 												/>
 											)}

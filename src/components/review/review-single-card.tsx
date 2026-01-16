@@ -75,93 +75,66 @@ export function ReviewSingleCard({
 	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
 	const isReverse = phrase.only_reverse === true
 
-	// Forward: show phrase, reveal translation
-	// Reverse: show translation, reveal phrase
-	const questionContent =
-		isReverse ?
-			<div className="mb-4 w-full space-y-2">
-				{phrase.translations?.map((trans: TranslationType) => (
-					<div
-						key={trans.id}
-						className="flex items-center justify-center gap-2"
-					>
-						<LangBadge lang={trans.lang} />
-						<div className="me-2 text-2xl font-bold">{trans.text}</div>
-						<Flagged name="text_to_speech">
-							<Button
-								size="icon"
-								variant="secondary"
-								onClick={() => playAudio(trans.text)}
-								aria-label="Play translation"
-							>
-								<Play className="size-4" />
-							</Button>
-						</Flagged>
-					</div>
-				))}
+	// Phrase display - consistent styling with quotes like big-phrase-card
+	const phraseDisplay = (
+		<div className="flex items-center justify-center gap-2">
+			<div className="text-center text-2xl font-bold">
+				&ldquo;{phrase.text}&rdquo;
 			</div>
-		:	<div className="mb-4 flex items-center justify-center">
-				<div className="mr-2 text-2xl font-bold">{phrase.text}</div>
-				<Flagged name="text_to_speech">
-					<Button
-						size="icon"
-						variant="secondary"
-						onClick={() => playAudio(phrase.text)}
-						aria-label="Play original phrase"
-					>
-						<Play className="size-4" />
-					</Button>
-				</Flagged>
-			</div>
+			<Flagged name="text_to_speech">
+				<Button
+					size="icon"
+					variant="secondary"
+					onClick={() => playAudio(phrase.text)}
+					aria-label="Play phrase"
+				>
+					<Play className="size-4" />
+				</Button>
+			</Flagged>
+		</div>
+	)
 
-	const answerContent =
-		isReverse ?
-			<div className="mt-4 flex items-center justify-center">
-				<div className="mr-2 text-xl">{phrase.text}</div>
-				<Flagged name="text_to_speech">
-					<Button
-						size="icon"
-						variant="secondary"
-						onClick={() => playAudio(phrase.text)}
-						aria-label="Play original phrase"
-					>
-						<Play className="size-4" />
-					</Button>
-				</Flagged>
-			</div>
-		:	<>
-				{phrase.translations?.map((trans: TranslationType) => (
-					<div
-						key={trans.id}
-						className="mt-4 flex items-center justify-center gap-2"
-					>
-						<LangBadge lang={trans.lang} />
-						<div className="me-2 text-xl">{trans.text}</div>
-						<Flagged name="text_to_speech">
-							<Button
-								size="icon"
-								variant="secondary"
-								onClick={() => playAudio(trans.text)}
-								aria-label="Play translation"
-							>
-								<Play className="size-4" />
-							</Button>
-						</Flagged>
-					</div>
-				))}
-			</>
+	// Translations display - consistent styling with header like big-phrase-card
+	const translationsDisplay = (
+		<div className="w-full space-y-3">
+			<h3 className="text-muted-foreground text-center text-sm font-medium tracking-wide uppercase">
+				Translations
+			</h3>
+			{phrase.translations?.map((trans: TranslationType) => (
+				<div key={trans.id} className="flex items-center justify-center gap-2">
+					<LangBadge lang={trans.lang} />
+					<div className="text-lg">{trans.text}</div>
+					<Flagged name="text_to_speech">
+						<Button
+							size="icon"
+							variant="secondary"
+							onClick={() => playAudio(trans.text)}
+							aria-label="Play translation"
+						>
+							<Play className="size-4" />
+						</Button>
+					</Flagged>
+				</div>
+			))}
+		</div>
+	)
+
+	// Forward: show phrase first, reveal translations
+	// Reverse: show translations first, reveal phrase
+	const questionContent = isReverse ? translationsDisplay : phraseDisplay
+	const answerContent = isReverse ? phraseDisplay : translationsDisplay
 
 	return (
 		<CardlikeFlashcard
 			className="mx-auto flex min-h-[80vh] w-full flex-col"
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
-			<CardContent className="relative flex grow flex-col items-center justify-center pt-0">
+			<CardContent className="relative flex grow flex-col items-center justify-center gap-4 pt-0">
 				<ContextMenu phrase={phrase} />
 				{questionContent}
 				<Separator />
 				<div
-					className={`w-full space-y-2 transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
+					className={`w-full transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
 				>
 					{answerContent}
 				</div>
@@ -169,7 +142,7 @@ export function ReviewSingleCard({
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
 					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
-						{isReverse ? 'Show Phrase' : 'Show Translation'}
+						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
 				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
 						<Button
