@@ -47,7 +47,12 @@ function Title() {
 
 	return (
 		<div className="flex flex-row items-center gap-4">
-			<Button variant="ghost" size="icon" onClick={goBackOrToStringUrl}>
+			<Button
+				variant="ghost"
+				size="icon"
+				onClick={goBackOrToStringUrl}
+				data-testid="navbar-back"
+			>
 				<ChevronLeft />
 				<span className="sr-only">Back</span>
 			</Button>

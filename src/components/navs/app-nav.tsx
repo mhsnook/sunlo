@@ -67,6 +67,7 @@ export function AppNav() {
 									<NavigationMenuLink asChild>
 										<Link
 											{...l.link}
+											data-testid={`appnav-${l.name.toLowerCase().replace(/\s+/g, '-')}`}
 											className="flex flex-row items-center justify-center gap-2 border-b-2 py-1.5 text-sm whitespace-nowrap"
 											activeProps={activeProps}
 											activeOptions={l.inexact ? inexactOptions : activeOptions}
