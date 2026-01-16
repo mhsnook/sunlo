@@ -88,7 +88,8 @@ alter type "public"."translation_input" owner to "postgres";
 
 create type "public"."phrase_with_translations_input" as (
 	"phrase_text" "text",
-	"translations" "public"."translation_input" []
+	"translations" "public"."translation_input" [],
+	"only_reverse" boolean
 );
 
 alter type "public"."phrase_with_translations_input" owner to "postgres";
@@ -100,7 +101,8 @@ create or replace function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text" default null::"text",
 	"translation_text_script" "text" default null::"text",
-	"create_card" boolean default true
+	"create_card" boolean default true,
+	"phrase_only_reverse" boolean default false
 ) returns "json" language "plpgsql" as $$
 DECLARE
     new_phrase public.phrase;
@@ -108,9 +110,9 @@ DECLARE
     new_card public.user_card;
 
 BEGIN
-    -- Insert a new phrase and get the id
-    INSERT INTO public.phrase (text, lang, text_script)
-    VALUES (phrase_text, phrase_lang, phrase_text_script)
+    -- Insert a new phrase with only_reverse flag
+    INSERT INTO public.phrase (text, lang, text_script, only_reverse)
+    VALUES (phrase_text, phrase_lang, phrase_text_script, phrase_only_reverse)
     RETURNING * INTO new_phrase;
 
     -- Insert the translation for the new phrase
@@ -136,7 +138,8 @@ alter function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text",
-	"create_card" boolean
+	"create_card" boolean,
+	"phrase_only_reverse" boolean
 ) owner to "postgres";
 
 create or replace function "public"."add_tags_to_phrase" (
@@ -221,16 +224,16 @@ create or replace function "public"."bulk_add_phrases" (
 ) returns "jsonb" language "plpgsql" as $$
 declare
     phrase_item public.phrase_with_translations_input;
-	 new_phrase public.phrase;
+    new_phrase public.phrase;
     new_translation public.phrase_translation;
     new_phrases public.phrase[] := '{}';
     new_translations public.phrase_translation[] := '{}';
 begin
     foreach phrase_item in array p_phrases
     loop
-        -- Insert the phrase and get the whole new record.
-        insert into public.phrase (lang, text, added_by)
-        values (p_lang, phrase_item.phrase_text, p_user_id)
+        -- Insert the phrase with only_reverse flag
+        insert into public.phrase (lang, text, added_by, only_reverse)
+        values (p_lang, phrase_item.phrase_text, p_user_id, coalesce(phrase_item.only_reverse, false))
         returning * into new_phrase;
 
         new_phrases := array_append(new_phrases, new_phrase);
@@ -665,7 +668,8 @@ create table if not exists "public"."phrase" (
 	"added_by" "uuid" default "auth"."uid" () not null,
 	"lang" character varying not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"text_script" "text"
+	"text_script" "text",
+	"only_reverse" boolean default false not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -673,6 +677,8 @@ alter table "public"."phrase" owner to "postgres";
 comment on column "public"."phrase"."added_by" is 'User who added this card';
 
 comment on column "public"."phrase"."lang" is 'The 3-letter code for the language (iso-369-3)';
+
+comment on column "public"."phrase"."only_reverse" is 'When true, this phrase should only be reviewed in reverse direction (translation -> phrase). Useful for phrases like numbers where the target language is obvious but recalling it is the challenge.';
 
 create table if not exists "public"."phrase_tag" (
 	"phrase_id" "uuid" not null,
@@ -2197,6 +2203,7 @@ grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
 
+
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
 	"phrase_lang" "text",
@@ -2204,7 +2211,8 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text",
-	"create_card" boolean
+	"create_card" boolean,
+	"phrase_only_reverse" boolean
 ) to "authenticated";
 
 grant all on function "public"."add_phrase_translation_card" (
@@ -2214,7 +2222,8 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_lang" "text",
 	"phrase_text_script" "text",
 	"translation_text_script" "text",
-	"create_card" boolean
+	"create_card" boolean,
+	"phrase_only_reverse" boolean
 ) to "service_role";
 
 grant all on function "public"."add_tags_to_phrase" (

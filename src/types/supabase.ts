@@ -332,6 +332,7 @@ export type Database = {
 					created_at: string
 					id: string
 					lang: string
+					only_reverse: boolean
 					text: string
 					text_script: string | null
 				}
@@ -340,6 +341,7 @@ export type Database = {
 					created_at?: string
 					id?: string
 					lang: string
+					only_reverse?: boolean
 					text: string
 					text_script?: string | null
 				}
@@ -348,6 +350,7 @@ export type Database = {
 					created_at?: string
 					id?: string
 					lang?: string
+					only_reverse?: boolean
 					text?: string
 					text_script?: string | null
 				}
@@ -1601,6 +1604,7 @@ export type Database = {
 				Args: {
 					create_card?: boolean
 					phrase_lang: string
+					phrase_only_reverse?: boolean
 					phrase_text: string
 					phrase_text_script?: string
 					translation_lang: string
@@ -1672,6 +1676,7 @@ export type Database = {
 				translations:
 					| Database['public']['CompositeTypes']['translation_input'][]
 					| null
+				only_reverse: boolean | null
 			}
 			translation_input: {
 				lang: string | null

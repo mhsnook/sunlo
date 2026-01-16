@@ -4,10 +4,12 @@ import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
 import { Plus, ChevronUp } from 'lucide-react'
+import { Controller } from 'react-hook-form'
 
 import type { Tables } from '@/types/supabase'
 import type { RPCFunctions } from '@/types/main'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IconSizedLoader } from '@/components/ui/loader'
@@ -27,6 +29,7 @@ const inlinePhraseSchema = z.object({
 	phrase_text: z.string().min(1, 'Enter a phrase'),
 	translation_text: z.string().min(1, 'Enter the translation'),
 	translation_lang: z.string().length(3, 'Select a language'),
+	only_reverse: z.boolean().default(false),
 })
 
 type InlinePhraseFormValues = z.infer<typeof inlinePhraseSchema>
@@ -54,6 +57,7 @@ export function InlinePhraseCreator({
 			phrase_text: '',
 			translation_text: '',
 			translation_lang: preferredTranslationLang,
+			only_reverse: false,
 		},
 	})
 	const invalidateFeed = useInvalidateFeed()
@@ -62,7 +66,10 @@ export function InlinePhraseCreator({
 		mutationFn: async (values: InlinePhraseFormValues) => {
 			const args: RPCFunctions['add_phrase_translation_card']['Args'] = {
 				phrase_lang: lang,
-				...values,
+				phrase_text: values.phrase_text,
+				translation_text: values.translation_text,
+				translation_lang: values.translation_lang,
+				phrase_only_reverse: values.only_reverse,
 			}
 			const { data } = await supabase
 				.rpc('add_phrase_translation_card', args)
@@ -154,6 +161,26 @@ export function InlinePhraseCreator({
 					error={errors.translation_lang}
 					control={control}
 				/>
+
+				<div className="flex items-center gap-2">
+					<Controller
+						control={control}
+						name="only_reverse"
+						render={({ field }) => (
+							<Checkbox
+								id="inline-only-reverse"
+								checked={field.value}
+								onCheckedChange={field.onChange}
+							/>
+						)}
+					/>
+					<Label
+						htmlFor="inline-only-reverse"
+						className="text-muted-foreground cursor-pointer text-sm font-normal"
+					>
+						Only reverse reviews make sense
+					</Label>
+				</div>
 
 				<Button
 					type="submit"

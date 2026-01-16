@@ -78,6 +78,7 @@ const addPhraseSchema = z.object({
 		.string()
 		.length(3, 'Provide a language for the translation'),
 	translation_text: z.string().min(1, 'Please enter the translation'),
+	only_reverse: z.boolean().default(false),
 })
 
 type AddPhraseFormValues = z.infer<typeof addPhraseSchema>
@@ -120,10 +121,13 @@ function AddPhraseTab() {
 		defaultValues: {
 			phrase_text: searchPhrase,
 			translation_lang: preferredTranslationLang,
+			only_reverse: false,
 		},
 	})
 
 	const phraseText = watch('phrase_text')
+	const translationText = watch('translation_text')
+	const onlyReverse = watch('only_reverse')
 	const debouncedText = useDebounce(phraseText, 300)
 
 	useEffect(() => {
@@ -186,6 +190,7 @@ function AddPhraseTab() {
 					translation_lang: variables.translation_lang,
 					translation_text: variables.translation_text,
 					create_card: shouldCreateCard,
+					phrase_only_reverse: variables.only_reverse,
 				})
 				.throwOnError()
 
@@ -243,6 +248,7 @@ function AddPhraseTab() {
 				translation_text: '',
 				translation_lang:
 					rpcResult.translation.lang ?? preferredTranslationLang,
+				only_reverse: false,
 			})
 
 			// Show appropriate success message
@@ -312,6 +318,89 @@ function AddPhraseTab() {
 								error={errors.translation_lang}
 								control={control}
 							/>
+
+							{/* Card Preview Section */}
+							{(phraseText || translationText) && (
+								<div className="space-y-3 pt-2">
+									<Label className="text-muted-foreground text-sm">
+										Review card previews
+									</Label>
+									<div className="grid gap-3 @lg:grid-cols-2">
+										{/* Forward card preview */}
+										<div
+											className={`bg-card rounded-lg border p-3 transition-opacity ${onlyReverse ? 'opacity-40' : ''}`}
+										>
+											<div className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
+												<span>Forward Review</span>
+												{onlyReverse && (
+													<span className="text-muted-foreground text-xs normal-case">
+														(disabled)
+													</span>
+												)}
+											</div>
+											<div className="space-y-2">
+												<div className="text-foreground font-medium">
+													{phraseText || (
+														<span className="text-muted-foreground italic">
+															Phrase text...
+														</span>
+													)}
+												</div>
+												<Separator />
+												<div className="text-muted-foreground text-sm">
+													{translationText || (
+														<span className="italic">Translation...</span>
+													)}
+												</div>
+											</div>
+										</div>
+
+										{/* Reverse card preview */}
+										<div className="bg-card rounded-lg border p-3">
+											<div className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
+												Reverse Review
+											</div>
+											<div className="space-y-2">
+												<div className="text-foreground font-medium">
+													{translationText || (
+														<span className="text-muted-foreground italic">
+															Translation...
+														</span>
+													)}
+												</div>
+												<Separator />
+												<div className="text-muted-foreground text-sm">
+													{phraseText || (
+														<span className="italic">Phrase text...</span>
+													)}
+												</div>
+											</div>
+										</div>
+									</div>
+
+									{/* Only reverse checkbox */}
+									<div className="flex items-center gap-2">
+										<Controller
+											control={control}
+											name="only_reverse"
+											render={({ field }) => (
+												<Checkbox
+													id="only_reverse"
+													checked={field.value}
+													onCheckedChange={field.onChange}
+												/>
+											)}
+										/>
+										<Label
+											htmlFor="only_reverse"
+											className="text-muted-foreground cursor-pointer text-sm font-normal"
+										>
+											Only reverse reviews make sense for this phrase
+										</Label>
+									</div>
+								</div>
+							)}
+
 							{showDeckCheckbox && (
 								<Item variant="outline">
 									<ItemMedia>
