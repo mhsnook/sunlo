@@ -776,29 +776,7 @@ select
 	"card"."updated_at",
 	"review"."created_at" as "last_reviewed_at",
 	"review"."difficulty",
-	"review"."stability",
-	current_timestamp as "current_timestamp",
-	nullif(
-		"power" (
-			(
-				1.0 + (
-					(
-						(19.0 / 81.0) * (
-							(
-								extract(
-									epoch
-									from
-										(current_timestamp - "review"."created_at")
-								) / 3600.0
-							) / 24.0
-						)
-					) / nullif("review"."stability", (0)::numeric)
-				)
-			),
-			'-0.5'::numeric
-		),
-		'NaN'::numeric
-	) as "retrievability_now"
+	"review"."stability"
 from
 	(
 		"public"."user_card" "card"
@@ -2258,30 +2236,6 @@ grant all on function "public"."create_playlist_with_links" (
 	"description" "text",
 	"href" "text",
 	"phrases" "jsonb"
-) to "service_role";
-
-grant all on table "public"."user_card_review" to "authenticated";
-
-grant all on table "public"."user_card_review" to "service_role";
-
-grant all on function "public"."insert_user_card_review" (
-	"phrase_id" "uuid",
-	"lang" character varying,
-	"score" integer,
-	"day_session" "text",
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
-) to "authenticated";
-
-grant all on function "public"."insert_user_card_review" (
-	"phrase_id" "uuid",
-	"lang" character varying,
-	"score" integer,
-	"day_session" "text",
-	"difficulty" numeric,
-	"stability" numeric,
-	"review_time_retrievability" numeric
 ) to "service_role";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
