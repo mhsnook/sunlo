@@ -11,8 +11,9 @@ import {
 	reviewDaysCollection,
 } from '@/lib/collections'
 import { inLastWeek } from '@/lib/dayjs'
-import { mapArrays, sortDecksByActivity } from '@/lib/utils'
+import { dateDiff, mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { useProfile } from './use-profile'
+import { retrievability } from '@/lib/fsrs'
 
 dayjs.extend(isoWeek)
 
@@ -157,12 +158,13 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 						.filter((c) => c.status === 'active' && !c.last_reviewed_at)
 						.map((c) => c.phrase_id),
 					today_active: data
-						.filter(
-							(c) =>
-								!!c.retrievability_now &&
-								c.retrievability_now <= 0.9 &&
-								c.status === 'active'
-						)
+						.filter((c) => {
+							if (c.status !== 'active') return false
+							if (!c.last_reviewed_at || !c.stability) return false
+							const daysSince = dateDiff(c.last_reviewed_at)
+							const r = retrievability(daysSince, c.stability)
+							return r <= 0.9
+						})
 						.map((c) => c.phrase_id),
 				}
 			),
