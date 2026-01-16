@@ -7,6 +7,7 @@ import {
 	Users,
 	Edit,
 	Trash2,
+	RefreshCcwDot,
 } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -79,7 +80,15 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 				<CardHeader>
 					<div className="flex flex-col items-start gap-2">
 						<div className="flex w-full flex-row items-start justify-between gap-2">
-							<LangBadge lang={phrase.lang} />
+							<div className="flex flex-row items-center gap-2">
+								<LangBadge lang={phrase.lang} />
+								{phrase.only_reverse && (
+									<Badge variant="outline" className="gap-1">
+										<RefreshCcwDot className="h-3 w-3" />
+										Reverse only
+									</Badge>
+								)}
+							</div>
 							<div className="flex flex-row items-center gap-2">
 								<Flagged>
 									<Button size="icon" variant="ghost">
