@@ -1,12 +1,16 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { Pencil } from 'lucide-react'
+import { Pencil, Trash2, Check, X } from 'lucide-react'
 
-import { TranslationSchema, type PhraseFullType } from '@/lib/schemas'
+import {
+	TranslationSchema,
+	type PhraseFullType,
+	type TranslationType,
+} from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import {
 	Dialog,
@@ -23,6 +27,8 @@ import TranslationLanguageField from '@/components/fields/translation-language-f
 import TranslationTextField from '@/components/fields/translation-text-field'
 import { phrasesCollection } from '@/lib/collections'
 import { usePreferredTranslationLang } from '@/hooks/use-deck'
+import { useUserId } from '@/lib/use-auth'
+import { Input } from '@/components/ui/input'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -115,12 +121,11 @@ export function AddTranslationsDialog({
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
 						{phrase.translations.map((trans) => (
-							<li key={trans.id}>
-								<span className="mr-2 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
-									{trans.lang}
-								</span>
-								<span>{trans.text}</span>
-							</li>
+							<TranslationListItem
+								key={trans.id}
+								trans={trans}
+								phrase={phrase}
+							/>
 						))}
 					</ol>
 				</div>
@@ -155,5 +160,141 @@ export function AddTranslationsDialog({
 				</form>
 			</AuthenticatedDialogContent>
 		</Dialog>
+	)
+}
+
+// Component for displaying a translation with edit/delete options
+function TranslationListItem({
+	trans,
+	phrase,
+}: {
+	trans: TranslationType
+	phrase: PhraseFullType
+}) {
+	const userId = useUserId()
+	const isOwner = trans.added_by === userId
+	const [isEditing, setIsEditing] = useState(false)
+	const [editText, setEditText] = useState(trans.text)
+
+	const updateTranslation = useMutation({
+		mutationKey: ['update-translation', trans.id],
+		mutationFn: async (newText: string) => {
+			const { data } = await supabase
+				.from('phrase_translation')
+				.update({ text: newText })
+				.eq('id', trans.id)
+				.throwOnError()
+				.select()
+			if (!data) throw new Error('Failed to update translation')
+			return data[0]
+		},
+		onSuccess: (data) => {
+			// Update the translation in the phrase's translations array
+			phrasesCollection.utils.writeUpdate({
+				id: phrase.id,
+				translations: phrase.translations.map((t) =>
+					t.id === trans.id ? TranslationSchema.parse(data) : t
+				),
+			})
+			setIsEditing(false)
+			toast.success('Translation updated')
+		},
+		onError: (error) => {
+			toast.error(error.message)
+		},
+	})
+
+	const deleteTranslation = useMutation({
+		mutationKey: ['delete-translation', trans.id],
+		mutationFn: async () => {
+			// Soft delete by setting archived = true
+			await supabase
+				.from('phrase_translation')
+				.update({ archived: true })
+				.eq('id', trans.id)
+				.throwOnError()
+		},
+		onSuccess: () => {
+			// Remove the translation from the phrase's translations array
+			phrasesCollection.utils.writeUpdate({
+				id: phrase.id,
+				translations: phrase.translations.filter((t) => t.id !== trans.id),
+			})
+			toast.success('Translation removed')
+		},
+		onError: (error) => {
+			toast.error(error.message)
+		},
+	})
+
+	const handleSave = () => {
+		if (editText.trim() && editText !== trans.text) {
+			updateTranslation.mutate(editText.trim())
+		} else {
+			setIsEditing(false)
+		}
+	}
+
+	const handleCancel = () => {
+		setEditText(trans.text)
+		setIsEditing(false)
+	}
+
+	return (
+		<li className="flex items-center gap-2">
+			<span className="shrink-0 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
+				{trans.lang}
+			</span>
+			{isEditing ?
+				<>
+					<Input
+						value={editText}
+						onChange={(e) => setEditText(e.target.value)}
+						className="h-7 flex-1 text-sm"
+					/>
+					<Button
+						size="icon"
+						variant="ghost"
+						className="size-6"
+						onClick={handleSave}
+						disabled={updateTranslation.isPending}
+					>
+						<Check className="size-3" />
+					</Button>
+					<Button
+						size="icon"
+						variant="ghost"
+						className="size-6"
+						onClick={handleCancel}
+					>
+						<X className="size-3" />
+					</Button>
+				</>
+			:	<>
+					<span className="flex-1">{trans.text}</span>
+					{isOwner && (
+						<>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="size-6"
+								onClick={() => setIsEditing(true)}
+							>
+								<Pencil className="size-3" />
+							</Button>
+							<Button
+								size="icon"
+								variant="ghost"
+								className="text-destructive hover:text-destructive size-6"
+								onClick={() => deleteTranslation.mutate()}
+								disabled={deleteTranslation.isPending}
+							>
+								<Trash2 className="size-3" />
+							</Button>
+						</>
+					)}
+				</>
+			}
+		</li>
 	)
 }
