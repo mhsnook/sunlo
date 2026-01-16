@@ -142,6 +142,7 @@ export const PhraseFullSchema = z.object({
 	text: z.string(),
 	lang: LangSchema,
 	added_by: z.string().uuid().nullable(),
+	only_reverse: z.boolean().default(false),
 	avg_difficulty: z.number().nullable().default(null),
 	avg_stability: z.number().nullable().default(null),
 	count_learners: z.number().nullable().default(0),

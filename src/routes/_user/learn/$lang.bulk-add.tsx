@@ -62,6 +62,7 @@ const PhraseWithTranslationsSchema = z.object({
 	translations: z
 		.array(TranslationSchema)
 		.min(1, 'Please add at least one translation'),
+	only_reverse: z.boolean().default(false),
 })
 
 const BulkAddPhrasesSchema = z.object({
@@ -345,6 +346,7 @@ function BulkAddPhrasesPage() {
 										onCheckedChange={(checked) =>
 											setShouldAddToMyDeck(checked === true)
 										}
+										className="mt-2 mb-3"
 									/>
 									<Label htmlFor="add-to-deck" className="cursor-pointer">
 										Add these phrases to my deck for review
@@ -391,6 +393,7 @@ function BulkAddPhrasesPage() {
 const getEmptyPhrase = (lang: string = 'eng') => ({
 	phrase_text: '',
 	translations: [{ lang, text: '' }],
+	only_reverse: false,
 })
 
 function PhraseEntry({
@@ -443,6 +446,26 @@ function PhraseEntry({
 						placeholder="Enter the phrase to learn"
 					/>
 					<ErrorLabel error={errors?.[phraseIndex]?.phrase_text} />
+					<div className="flex items-center gap-2 pt-1">
+						<Controller
+							control={control}
+							name={`phrases.${phraseIndex}.only_reverse`}
+							render={({ field }) => (
+								<Checkbox
+									id={`phrases.${phraseIndex}.only_reverse`}
+									checked={field.value}
+									className="mb-1"
+									onCheckedChange={field.onChange}
+								/>
+							)}
+						/>
+						<Label
+							htmlFor={`phrases.${phraseIndex}.only_reverse`}
+							className="text-muted-foreground cursor-pointer text-sm font-normal"
+						>
+							Only reverse reviews make sense for this phrase
+						</Label>
+					</div>
 				</div>
 			</div>
 
