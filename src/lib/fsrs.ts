@@ -9,6 +9,9 @@
  * - Score: User's self-assessment (1=Again, 2=Hard, 3=Good, 4=Easy)
  */
 
+import { CardReviewType } from './schemas'
+import { dateDiff } from './utils'
+
 // FSRS v5 weights (pre-trained parameters)
 const W = {
 	// Initial stability by score [Again, Hard, Good, Easy]
@@ -40,11 +43,7 @@ export type Score = 1 | 2 | 3 | 4
 
 export interface FSRSInput {
 	score: Score
-	previousReview?: {
-		difficulty: number
-		stability: number
-		createdAt: Date
-	}
+	previousReview?: CardReviewType
 	currentTime?: Date
 	desiredRetention?: number
 }
@@ -182,14 +181,6 @@ function calculateInterval(
 }
 
 /**
- * Calculate days between two dates
- */
-function daysBetween(earlier: Date, later: Date): number {
-	const msPerDay = 24 * 60 * 60 * 1000
-	return (later.getTime() - earlier.getTime()) / msPerDay
-}
-
-/**
  * Main FSRS calculation function
  *
  * Given a score and optional previous review data, calculates:
@@ -210,16 +201,17 @@ export function calculateFSRS(input: FSRSInput): FSRSOutput {
 	let stability: number
 	let currentRetrievability: number | null = null
 
-	if (!previousReview) {
-		// First review of this card
+	if (
+		!previousReview ||
+		previousReview.difficulty === null ||
+		previousReview.stability === null
+	) {
+		// First review of this card (or previous review has no FSRS data)
 		difficulty = initialDifficulty(score)
 		stability = initialStability(score)
 	} else {
-		// Subsequent review
-		const timeSinceLastReview = daysBetween(
-			previousReview.createdAt,
-			currentTime
-		)
+		// Subsequent review with valid FSRS data
+		const timeSinceLastReview = dateDiff(previousReview.created_at, currentTime)
 
 		// Calculate how well we expected to remember this
 		currentRetrievability = retrievability(
@@ -237,14 +229,12 @@ export function calculateFSRS(input: FSRSInput): FSRSOutput {
 		)
 	}
 
-	// Calculate optimal interval
-	// For "Again" (score=1), always use 1 day minimum
-	const rawInterval = calculateInterval(desiredRetention, stability)
-	const interval = score === 1 ? 1 : Math.max(Math.round(rawInterval), 1)
+	// Calculate optimal interval (in days)
+	const interval = Math.max(calculateInterval(desiredRetention, stability), 1)
 
-	// Calculate scheduled date
+	// Calculate scheduled date (uses rounded interval)
 	const scheduledFor = new Date(currentTime)
-	scheduledFor.setDate(scheduledFor.getDate() + interval)
+	scheduledFor.setDate(scheduledFor.getDate() + Math.round(interval))
 
 	return {
 		difficulty,
@@ -290,4 +280,25 @@ export function validateFSRSValues(values: {
 		valid: errors.length === 0,
 		errors,
 	}
+}
+
+/**
+ * Calculate the intervals for all four possible scores
+ * Useful for showing users what each button will do
+ */
+export function intervals(
+	previousReview?: CardReviewType,
+	currentTime: Date = new Date(),
+	desiredRetention: number = 0.9
+): number[] {
+	const scores: Score[] = [1, 2, 3, 4]
+	return scores.map((score) => {
+		const result = calculateFSRS({
+			score,
+			previousReview,
+			currentTime,
+			desiredRetention,
+		})
+		return result.interval
+	})
 }

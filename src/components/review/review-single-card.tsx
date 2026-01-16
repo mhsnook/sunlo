@@ -5,6 +5,8 @@ import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
 
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
+import { formatInterval } from '@/lib/dayjs'
+import { intervals } from '@/lib/fsrs'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
@@ -65,6 +67,8 @@ export function ReviewSingleCard({
 		prevData,
 		latestReview
 	)
+
+	const nextIntervals = intervals(latestReview).map(formatInterval)
 
 	if (!phrase) return null
 
@@ -132,7 +136,7 @@ export function ReviewSingleCard({
 								:	''
 							)}
 						>
-							Again
+							Again ({nextIntervals[0]})
 						</Button>
 						<Button
 							variant="default"
@@ -143,7 +147,7 @@ export function ReviewSingleCard({
 								prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
-							Hard
+							Hard ({nextIntervals[1]})
 						</Button>
 						<Button
 							variant="default"
@@ -154,7 +158,7 @@ export function ReviewSingleCard({
 								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
-							Good
+							Good ({nextIntervals[2]})
 						</Button>
 						<Button
 							variant="default"
@@ -165,7 +169,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 4 })}
 							disabled={isPending}
 						>
-							Easy
+							Easy ({nextIntervals[3]})
 						</Button>
 					</div>
 				}

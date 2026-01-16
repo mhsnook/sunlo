@@ -1637,37 +1637,6 @@ export type Database = {
 				}
 				Returns: Json
 			}
-			insert_user_card_review: {
-				Args: {
-					day_session: string
-					difficulty: number
-					lang: string
-					phrase_id: string
-					review_time_retrievability?: number
-					score: number
-					stability: number
-				}
-				Returns: {
-					created_at: string
-					day_first_review: boolean
-					day_session: string
-					difficulty: number | null
-					id: string
-					lang: string
-					phrase_id: string
-					review_time_retrievability: number | null
-					score: number
-					stability: number | null
-					uid: string
-					updated_at: string
-				}
-				SetofOptions: {
-					from: '*'
-					to: 'user_card_review'
-					isOneToOne: true
-					isSetofReturn: false
-				}
-			}
 			set_comment_upvote: {
 				Args: { p_action: string; p_comment_id: string }
 				Returns: Json
@@ -1679,34 +1648,6 @@ export type Database = {
 			set_phrase_request_upvote: {
 				Args: { p_action: string; p_request_id: string }
 				Returns: Json
-			}
-			update_user_card_review: {
-				Args: {
-					difficulty: number
-					review_id: string
-					score: number
-					stability: number
-				}
-				Returns: {
-					created_at: string
-					day_first_review: boolean
-					day_session: string
-					difficulty: number | null
-					id: string
-					lang: string
-					phrase_id: string
-					review_time_retrievability: number | null
-					score: number
-					stability: number | null
-					uid: string
-					updated_at: string
-				}
-				SetofOptions: {
-					from: '*'
-					to: 'user_card_review'
-					isOneToOne: true
-					isSetofReturn: false
-				}
 			}
 		}
 		Enums: {
