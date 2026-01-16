@@ -154,7 +154,7 @@ test.describe('Deck Workflow Navigation', () => {
 			await settingsLink.first().click()
 
 			// Should be on settings page
-			await expect(page).toHaveURL(/\/learn\/hin\/settings/)
+			await expect(page).toHaveURL(/\/learn\/hin\/deck-settings/)
 		}
 	})
 
