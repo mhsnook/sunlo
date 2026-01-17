@@ -23,9 +23,11 @@ import {
 	decksCollection,
 	friendSummariesCollection,
 	myProfileCollection,
+	myProfileQuery,
 } from '@/lib/collections'
 import { ChatMessageSchema } from '@/lib/schemas'
 import { useFontPreference } from '@/hooks/use-font-preference'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user')({
 	beforeLoad: ({ context }) => {
@@ -43,8 +45,25 @@ export const Route = createFileRoute('/_user')({
 		// If not authenticated, skip user-specific loading
 		if (!context.auth.isAuth) return
 
+		// Use queryClient.ensureQueryData to properly await the profile query
+		// This handles race conditions where auth-context triggered a refetch that's in progress
+		// ensureQueryData will wait for any in-flight query with this key
+		const ensureProfileLoaded = async () => {
+			const profileData = await queryClient.ensureQueryData(myProfileQuery)
+			// Also sync the collection if needed
+			if (
+				profileData &&
+				profileData.length > 0 &&
+				myProfileCollection.size === 0
+			) {
+				await myProfileCollection.utils.refetch()
+			}
+			return profileData
+		}
+
 		// all set: exit early
 		if (myProfileCollection.size === 1) return
+
 		// some weird: start over
 		if (myProfileCollection.status === 'error') {
 			console.log(
@@ -52,17 +71,23 @@ export const Route = createFileRoute('/_user')({
 			)
 			await myProfileCollection.cleanup()
 			await myProfileCollection.preload()
-			// it's loading: wait
 		} else if (myProfileCollection.status !== 'ready') {
+			// it's loading: wait
 			await myProfileCollection.preload()
 		}
-		// -still- no profile: refetch one time
-		if (!myProfileCollection.size) {
-			await myProfileCollection.utils.refetch()
-		}
+
+		// Ensure profile query has completed (handles auth-context refetch race condition)
+		const profileData = await ensureProfileLoaded()
 
 		if (location.pathname !== '/getting-started') {
-			if (!myProfileCollection.size) {
+			// Check both collection AND query data to avoid race conditions
+			if (
+				!myProfileCollection.size &&
+				(!profileData || profileData.length === 0)
+			) {
+				console.log(
+					`Triggering redirect from /_user to /getting-started because no profile found after a few tries`
+				)
 				throw redirect({ to: '/getting-started' })
 			} else {
 				void decksCollection.preload()
