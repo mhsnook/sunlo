@@ -17,6 +17,7 @@ export type Database = {
 					lang: string
 					message_type: Database['public']['Enums']['chat_message_type']
 					phrase_id: string | null
+					playlist_id: string | null
 					recipient_uid: string
 					related_message_id: string | null
 					request_id: string | null
@@ -29,6 +30,7 @@ export type Database = {
 					lang: string
 					message_type: Database['public']['Enums']['chat_message_type']
 					phrase_id?: string | null
+					playlist_id?: string | null
 					recipient_uid: string
 					related_message_id?: string | null
 					request_id?: string | null
@@ -41,6 +43,7 @@ export type Database = {
 					lang?: string
 					message_type?: Database['public']['Enums']['chat_message_type']
 					phrase_id?: string | null
+					playlist_id?: string | null
 					recipient_uid?: string
 					related_message_id?: string | null
 					request_id?: string | null
@@ -73,6 +76,13 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'chat_message_playlist_id_fkey'
+						columns: ['playlist_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_playlist'
 						referencedColumns: ['id']
 					},
 					{
@@ -1666,7 +1676,7 @@ export type Database = {
 		}
 		Enums: {
 			card_status: 'active' | 'learned' | 'skipped'
-			chat_message_type: 'recommendation' | 'accepted' | 'request'
+			chat_message_type: 'recommendation' | 'accepted' | 'request' | 'playlist'
 			friend_request_response:
 				| 'accept'
 				| 'decline'
@@ -2453,7 +2463,7 @@ export const Constants = {
 	public: {
 		Enums: {
 			card_status: ['active', 'learned', 'skipped'],
-			chat_message_type: ['recommendation', 'accepted', 'request'],
+			chat_message_type: ['recommendation', 'accepted', 'request', 'playlist'],
 			friend_request_response: [
 				'accept',
 				'decline',
