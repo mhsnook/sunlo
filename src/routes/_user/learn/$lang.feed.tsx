@@ -1,20 +1,19 @@
 import { Activity, type CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { Construction } from 'lucide-react'
+import { Users } from 'lucide-react'
 
 import type { FeedActivityType } from '@/lib/schemas'
 import { buttonVariants } from '@/components/ui/button-variants'
-import {
-	useMyFriendsRequestsLang,
-	usePopularRequestsLang,
-} from '@/hooks/use-requests'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
-import { RequestItem } from '@/components/requests/request-list-item'
 import languages from '@/lib/languages'
 import { PlusMenu } from '@/components/plus-menu'
-import { useFeedLang } from '@/hooks/use-feed'
+import {
+	useFeedLang,
+	useFriendsFeedLang,
+	usePopularFeedLang,
+} from '@/hooks/use-feed'
 import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
 import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'
@@ -262,17 +261,40 @@ function RecentFeed() {
 
 function FriendsFeed() {
 	const params = Route.useParams()
-	const { data: requests, isLoading } = useMyFriendsRequestsLang(params.lang)
+	const search = Route.useSearch()
+	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+		useFriendsFeedLang(params.lang)
+
+	const feedItems = data?.pages.flat()
+
+	// Default all filters to true
+	const filterRequests = search.filter_requests ?? true
+	const filterPlaylists = search.filter_playlists ?? true
+	const filterPhrases = search.filter_phrases ?? true
+
+	// Apply filters, and group consecutive phrases
+	const groupedItems =
+		!feedItems ?
+			[]
+		:	groupConsecutivePhrases(
+				feedItems.filter((item) => {
+					if (item.type === 'request') return filterRequests
+					if (item.type === 'playlist') return filterPlaylists
+					if (item.type === 'phrase') return filterPhrases
+					return true
+				})
+			)
+
 	return (
-		<div className="space-y-3">
+		<div className="space-y-4">
 			{isLoading ?
-				<p>Loading requests...</p>
-			: !requests || requests.length === 0 ?
-				<Callout Icon={Construction}>
+				<p>Loading feed...</p>
+			: !groupedItems || groupedItems.length === 0 ?
+				<Callout variant="ghost" Icon={Users}>
 					<p className="mb-4 text-lg italic">
 						This feed is empty. Maybe you need to add some friends?
 					</p>
-					<div className="space-y-2 space-x-2">
+					<div className="flex flex-row flex-wrap gap-2">
 						<Link
 							className={buttonVariants()}
 							to="/friends"
@@ -281,68 +303,157 @@ function FriendsFeed() {
 							Search for a friend
 						</Link>
 						<Link
-							className={buttonVariants()}
+							className={buttonVariants({ variant: 'secondary' })}
 							to="/learn/$lang/requests/new"
 							from={Route.fullPath}
 						>
 							Post a request
 						</Link>
+						{(
+							(search.filter_requests ?? true) &&
+							(search.filter_playlists ?? true) &&
+							(search.filter_phrases ?? true)
+						) ?
+							null
+						:	<Link
+								className={buttonVariants({ variant: 'outline' })}
+								search={{}}
+								from={Route.fullPath}
+							>
+								Clear feed filters
+							</Link>}
 					</div>
 				</Callout>
-			:	requests.map((request) => (
-					<RequestItem key={request.id} request={request} />
-				))
+			:	<>
+					{groupedItems.map((item) => (
+						<FeedItem
+							key={
+								'earliest_created_at' in item ?
+									`group-${item.earliest_created_at}`
+								:	item.id
+							}
+							item={item}
+						/>
+					))}
+
+					{hasNextPage ?
+						<Button
+							variant="outline"
+							onClick={() => void fetchNextPage()}
+							disabled={isFetchingNextPage}
+						>
+							{isFetchingNextPage ? 'Loading...' : 'Load More'}
+						</Button>
+					:	<p className="text-muted-foreground my-6 ms-6 italic">
+							This is the end of the feed... how about{' '}
+							<Link
+								to="/friends/invite"
+								from={Route.fullPath}
+								className="s-link-muted"
+							>
+								inviting a friend
+							</Link>{' '}
+							to learn together?
+						</p>
+					}
+				</>
 			}
-			<p className="text-muted-foreground my-6 ms-6 italic">
-				This is the end of the feed... how about{' '}
-				<Link
-					to="/friends/invite"
-					from={Route.fullPath}
-					className="s-link-muted"
-				>
-					inviting a friend
-				</Link>{' '}
-				to learn together?
-			</p>
 		</div>
 	)
 }
 
 function PopularFeed() {
 	const params = Route.useParams()
-	const { data: requests, isLoading } = usePopularRequestsLang(params.lang)
+	const search = Route.useSearch()
+	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
+		usePopularFeedLang(params.lang)
+
+	const feedItems = data?.pages.flat()
+
+	// Default all filters to true
+	const filterRequests = search.filter_requests ?? true
+	const filterPlaylists = search.filter_playlists ?? true
+	const filterPhrases = search.filter_phrases ?? true
+
+	// Apply filters, and group consecutive phrases
+	const groupedItems =
+		!feedItems ?
+			[]
+		:	groupConsecutivePhrases(
+				feedItems.filter((item) => {
+					if (item.type === 'request') return filterRequests
+					if (item.type === 'playlist') return filterPlaylists
+					if (item.type === 'phrase') return filterPhrases
+					return true
+				})
+			)
+
 	return (
-		<div className="space-y-3">
+		<div className="space-y-4">
 			{isLoading ?
-				<p>Loading requests...</p>
-			: !requests || requests.length === 0 ?
-				<div className="p-4">
+				<p>Loading feed...</p>
+			: !groupedItems || groupedItems.length === 0 ?
+				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">
 						This feed is empty. You might have to be the one to lead the way!
 					</p>
-					<Link
-						className={buttonVariants()}
-						to="/learn/$lang/requests/new"
-						from={Route.fullPath}
-					>
-						Post a request for a new phrase
-					</Link>
-				</div>
-			:	requests.map((request) => (
-					<RequestItem key={request.id} request={request} />
-				))
+					<div className="flex flex-row flex-wrap gap-2">
+						<Link
+							className={buttonVariants()}
+							to="/learn/$lang/requests/new"
+							from={Route.fullPath}
+						>
+							Post a request for a new phrase
+						</Link>
+						{(
+							(search.filter_requests ?? true) &&
+							(search.filter_playlists ?? true) &&
+							(search.filter_phrases ?? true)
+						) ?
+							null
+						:	<Link
+								className={buttonVariants({ variant: 'outline' })}
+								search={{}}
+								from={Route.fullPath}
+							>
+								Clear feed filters
+							</Link>}
+					</div>
+				</Callout>
+			:	<>
+					{groupedItems.map((item) => (
+						<FeedItem
+							key={
+								'earliest_created_at' in item ?
+									`group-${item.earliest_created_at}`
+								:	item.id
+							}
+							item={item}
+						/>
+					))}
+
+					{hasNextPage ?
+						<Button
+							variant="outline"
+							onClick={() => void fetchNextPage()}
+							disabled={isFetchingNextPage}
+						>
+							{isFetchingNextPage ? 'Loading...' : 'Load More'}
+						</Button>
+					:	<p className="text-muted-foreground my-6 ms-6 italic">
+							This is the end of the feed... how about{' '}
+							<Link
+								to="/friends/invite"
+								from={Route.fullPath}
+								className="s-link-muted"
+							>
+								inviting a friend
+							</Link>{' '}
+							to learn together?
+						</p>
+					}
+				</>
 			}
-			<p className="text-muted-foreground my-6 ms-6 italic">
-				This is the end of the feed... how about{' '}
-				<Link
-					to="/friends/invite"
-					from={Route.fullPath}
-					className="s-link-muted"
-				>
-					inviting a friend
-				</Link>{' '}
-				to learn together?
-			</p>
 		</div>
 	)
 }
