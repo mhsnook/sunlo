@@ -72,6 +72,8 @@ export function ChatsSidebar() {
 													'sent a recommendation'
 												: thisChatMessage.message_type === 'request' ?
 													'requested a card'
+												: thisChatMessage.message_type === 'playlist' ?
+													'shared a playlist'
 												:	'accepted your recommendation'}
 											</>
 										:	'No messages yet'}

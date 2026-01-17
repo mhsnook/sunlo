@@ -16,6 +16,7 @@ import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
+import { PlaylistPreview } from '@/routes/_user/friends/-playlist-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
@@ -118,6 +119,9 @@ function ChatPage() {
 											{msg.request_id && msg.lang && (
 												<RequestPreview id={msg.request_id} />
 											)}
+											{msg.playlist_id && msg.lang && (
+												<PlaylistPreview id={msg.playlist_id} />
+											)}
 											<div
 												className={cn(
 													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
@@ -141,6 +145,9 @@ function ChatPage() {
 															{isMine ? 'your' : 'their'} deck.
 														</p>
 													</div>
+												)}
+												{msg.message_type === 'playlist' && (
+													<p className="text-sm italic">Shared a playlist.</p>
 												)}
 											</div>
 										</div>
