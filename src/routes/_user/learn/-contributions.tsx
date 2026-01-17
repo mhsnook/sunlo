@@ -6,7 +6,7 @@ import {
 	MessageSquareQuote,
 } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'

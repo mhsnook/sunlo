@@ -4,7 +4,7 @@ import * as z from 'zod'
 import { Users } from 'lucide-react'
 
 import type { FeedActivityType } from '@/lib/schemas'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import languages from '@/lib/languages'

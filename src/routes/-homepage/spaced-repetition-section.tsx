@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Brain, Clock, Target, BarChart3, Calendar, Zap } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 
 export function SpacedRepetitionSection() {
 	return (

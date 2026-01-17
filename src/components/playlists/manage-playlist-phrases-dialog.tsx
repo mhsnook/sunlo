@@ -25,7 +25,7 @@ import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
 import { DialogClose } from '@radix-ui/react-dialog'
-import { buttonVariants } from '../ui/button-variants'
+import { buttonVariants } from '../ui/button'
 
 export function ManagePlaylistPhrasesDialog({
 	playlist,

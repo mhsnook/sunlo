@@ -3,7 +3,7 @@ import { Loader } from '@/components/ui/loader'
 import { useLangPlaylists } from '@/hooks/use-playlists'
 import type { CSSProperties } from 'react'
 import languages from '@/lib/languages'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/')({

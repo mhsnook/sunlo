@@ -1,6 +1,5 @@
 import { Copy } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ButtonProps } from '@/components/ui/button-variants'
+import { Button, type ButtonProps } from '@/components/ui/button'
 import { copyLink } from '@/lib/utils'
 
 export default function CopyLinkButton({

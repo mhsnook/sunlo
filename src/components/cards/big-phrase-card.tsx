@@ -12,7 +12,7 @@ import {
 
 import type { uuid } from '@/types/main'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import {
 	Collapsible,

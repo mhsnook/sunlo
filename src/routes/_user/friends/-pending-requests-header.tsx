@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useRelationInvitations } from '@/hooks/use-friends'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 

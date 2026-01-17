@@ -9,7 +9,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'

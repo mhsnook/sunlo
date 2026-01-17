@@ -1,4 +1,4 @@
-import type { ButtonProps } from '@/components/ui/button-variants'
+import type { ButtonProps } from '@/components/ui/button'
 import { Share } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/button'
