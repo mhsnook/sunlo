@@ -22,6 +22,7 @@ import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { playlistCoverUrlify } from '@/lib/hooks'
 import { cn } from '@/lib/utils'
+import { isEmbeddableUrl } from './playlist-embed'
 
 export function UpdatePlaylistDialog({
 	playlist,
@@ -137,63 +138,67 @@ export function UpdatePlaylistDialog({
 							placeholder="https://..."
 						/>
 					</div>
-					<div className="space-y-2">
-						<Label>Cover Image</Label>
-						<label
-							htmlFor="coverImageEditInput"
-							className={cn(
-								'group border-primary-foresoft/30 hover:border-primary hover:bg-primary/10 relative isolate flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl border text-center',
-								editCoverImagePath && 'h-auto'
-							)}
-						>
-							{editCoverImagePath ?
-								<div className="relative w-full">
-									<img
-										src={playlistCoverUrlify(editCoverImagePath)}
-										alt="Cover preview"
-										className="h-32 w-full rounded-2xl object-cover"
-									/>
-									<div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-										<UploadIcon className="mx-auto mb-1 size-5 text-white" />
-										<span className="text-sm text-white">Click to replace</span>
-									</div>
-								</div>
-							:	<div className="flex flex-col items-center justify-center py-4">
-									{isUploadingImage ?
-										<span className="text-muted-foreground text-sm">
-											Uploading...
-										</span>
-									:	<>
-											<ImageIcon className="text-muted-foreground mx-auto mb-1 size-5" />
-											<span className="text-muted-foreground text-xs">
-												Click to upload a cover image
-											</span>
-										</>
-									}
-								</div>
-							}
-							<Input
-								className="absolute inset-0 z-50 h-full cursor-pointer opacity-0"
-								type="file"
-								id="coverImageEditInput"
-								accept="image/*"
-								onChange={(e) => void handleImageUpload(e)}
-								disabled={isUploadingImage}
-							/>
-						</label>
-						{editCoverImagePath && (
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								onClick={() => setEditCoverImagePath('')}
-								className="text-muted-foreground hover:text-destructive"
+					{!isEmbeddableUrl(editHref) && (
+						<div className="space-y-2">
+							<Label>Cover Image</Label>
+							<label
+								htmlFor="coverImageEditInput"
+								className={cn(
+									'group border-primary-foresoft/30 hover:border-primary hover:bg-primary/10 relative isolate flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl border text-center',
+									editCoverImagePath && 'h-auto'
+								)}
 							>
-								<X className="mr-1 h-4 w-4" />
-								Remove image
-							</Button>
-						)}
-					</div>
+								{editCoverImagePath ?
+									<div className="relative w-full">
+										<img
+											src={playlistCoverUrlify(editCoverImagePath)}
+											alt="Cover preview"
+											className="h-32 w-full rounded-2xl object-cover"
+										/>
+										<div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+											<UploadIcon className="mx-auto mb-1 size-5 text-white" />
+											<span className="text-sm text-white">
+												Click to replace
+											</span>
+										</div>
+									</div>
+								:	<div className="flex flex-col items-center justify-center py-4">
+										{isUploadingImage ?
+											<span className="text-muted-foreground text-sm">
+												Uploading...
+											</span>
+										:	<>
+												<ImageIcon className="text-muted-foreground mx-auto mb-1 size-5" />
+												<span className="text-muted-foreground text-xs">
+													Click to upload a cover image
+												</span>
+											</>
+										}
+									</div>
+								}
+								<Input
+									className="absolute inset-0 z-50 h-full cursor-pointer opacity-0"
+									type="file"
+									id="coverImageEditInput"
+									accept="image/*"
+									onChange={(e) => void handleImageUpload(e)}
+									disabled={isUploadingImage}
+								/>
+							</label>
+							{editCoverImagePath && (
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									onClick={() => setEditCoverImagePath('')}
+									className="text-muted-foreground hover:text-destructive"
+								>
+									<X className="mr-1 h-4 w-4" />
+									Remove image
+								</Button>
+							)}
+						</div>
+					)}
 					<div className="flex gap-2">
 						<Button
 							size="sm"
