@@ -45,12 +45,16 @@ export const Route = createFileRoute('/_user')({
 		// If not authenticated, skip user-specific loading
 		if (!context.auth.isAuth) return
 
-		// Use queryClient.ensureQueryData to properly await the profile query
-		// This handles race conditions where auth-context triggered a refetch that's in progress
-		// ensureQueryData will wait for any in-flight query with this key
-		const ensureProfileLoaded = async () => {
-			const profileData = await queryClient.ensureQueryData(myProfileQuery)
-			// Also sync the collection if needed
+		// Always fetch fresh profile data to avoid race conditions after login
+		// This ensures we have the latest data even if the collection is stale
+		const fetchProfileData = async () => {
+			// Use fetchQuery to always get fresh data, not stale cache
+			const profileData = await queryClient.fetchQuery({
+				...myProfileQuery,
+				// Short stale time to ensure we get fresh data after login
+				staleTime: 1000,
+			})
+			// Sync the collection if query has data but collection doesn't
 			if (
 				profileData &&
 				profileData.length > 0 &&
@@ -61,32 +65,37 @@ export const Route = createFileRoute('/_user')({
 			return profileData
 		}
 
-		// all set: exit early
-		if (myProfileCollection.size === 1) return
+		// If collection is already loaded with data, just preload other collections
+		if (myProfileCollection.size === 1) {
+			if (location.pathname !== '/getting-started') {
+				void decksCollection.preload()
+				void friendSummariesCollection.preload()
+			}
+			return
+		}
 
-		// some weird: start over
+		// Collection not ready - handle various states
 		if (myProfileCollection.status === 'error') {
 			console.log(
 				`myProfileCollection is in an error state. We'll clean it up and reload it.`
 			)
 			await myProfileCollection.cleanup()
-			await myProfileCollection.preload()
-		} else if (myProfileCollection.status !== 'ready') {
-			// it's loading: wait
-			await myProfileCollection.preload()
 		}
 
-		// Ensure profile query has completed (handles auth-context refetch race condition)
-		const profileData = await ensureProfileLoaded()
+		// Fetch profile data - this is the source of truth
+		const profileData = await fetchProfileData()
 
 		if (location.pathname !== '/getting-started') {
-			// Check both collection AND query data to avoid race conditions
+			// Only redirect to getting-started if:
+			// 1. Collection is empty AND
+			// 2. Fresh query returned no data
+			// This avoids false redirects during login race conditions
 			if (
 				!myProfileCollection.size &&
 				(!profileData || profileData.length === 0)
 			) {
 				console.log(
-					`Triggering redirect from /_user to /getting-started because no profile found after a few tries`
+					`Triggering redirect from /_user to /getting-started because no profile found`
 				)
 				throw redirect({ to: '/getting-started' })
 			} else {

@@ -22,6 +22,7 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { removeSbTokens } from '@/lib/utils'
+import { clearUser } from '@/lib/collections'
 
 const data = makeLinks([
 	'/profile',
@@ -35,18 +36,18 @@ export function NavUser() {
 	const { data: profile } = useProfile()
 	const navigate = useNavigate()
 	const signOut = useMutation({
-		mutationFn: async () =>
-			(await supabase.auth.signOut({ scope: 'local' }))?.error,
-		onError: (error) => {
+		mutationFn: async () => {
+			const { error } = await supabase.auth.signOut({ scope: 'local' })
+			// If signOut fails (e.g., 403), manually clear tokens and user data
+			// This can happen when the session is already invalid server-side
 			if (error) {
-				console.log(`auth.signOut error`, error, `clearing session manually`)
+				console.log(`auth.signOut error:`, error, `- clearing session manually`)
 				removeSbTokens()
-				throw error
+				await clearUser()
 			}
+			// Don't throw - we want to navigate home regardless
 		},
 		onSettled: () => {
-			// Don't call clearUser() here - auth-context.tsx already handles it
-			// when SIGNED_OUT event fires. Calling it twice can cause race conditions.
 			void navigate({ to: '/' })
 		},
 	})
