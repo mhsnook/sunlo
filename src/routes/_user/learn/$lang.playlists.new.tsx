@@ -22,6 +22,7 @@ import {
 } from '@/lib/collections'
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
+import { CoverImageField } from '@/components/fields/cover-image-field'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import languages from '@/lib/languages'
@@ -85,6 +86,7 @@ function NewPlaylistPageContent() {
 			title: '',
 			description: '',
 			href: null,
+			cover_image_path: null,
 			phrases: [],
 		},
 	})
@@ -105,6 +107,7 @@ function NewPlaylistPageContent() {
 					title: values.title,
 					description: values.description,
 					href: values.href ?? undefined,
+					cover_image_path: values.cover_image_path ?? undefined,
 					phrases: phrasesWithOrder,
 					lang,
 				})
@@ -239,6 +242,11 @@ function NewPlaylistPageContent() {
 								</p>
 							}
 						</div>
+
+						<CoverImageField
+							control={form.control}
+							error={form.formState.errors.cover_image_path}
+						/>
 
 						<div className="space-y-3">
 							<div className="w-full">

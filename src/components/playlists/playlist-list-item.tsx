@@ -13,6 +13,7 @@ import { useProfile } from '@/hooks/use-profile'
 import { UpdatePlaylistDialog } from './update-playlist-dialog'
 import { ManagePlaylistPhrasesDialog } from './manage-playlist-phrases-dialog'
 import { DeletePlaylistDialog } from './delete-playlist-dialog'
+import { playlistCoverUrlify } from '@/lib/hooks'
 
 export function PlaylistItem({
 	playlist,
@@ -62,6 +63,15 @@ export function PlaylistItem({
 			</div>
 			{playlist.description && (
 				<p className="text-muted-foreground text-sm">{playlist.description}</p>
+			)}
+
+			{/* Cover image (shown when no embed player) */}
+			{playlist.cover_image_path && !playlist.href && (
+				<img
+					src={playlistCoverUrlify(playlist.cover_image_path)}
+					alt={`Cover for ${playlist.title}`}
+					className="h-48 w-full rounded-lg object-cover"
+				/>
 			)}
 
 			{/* Embed player for source material */}

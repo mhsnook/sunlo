@@ -18,6 +18,7 @@ export const PhrasePlaylistSchema = z.object({
 	uid: z.string().uuid(),
 	description: z.string().nullable(),
 	href: z.string().url().nullable(),
+	cover_image_path: z.string().nullable().optional(),
 	title: z.string(),
 	created_at: z.string(),
 	lang: LangSchema,
@@ -54,6 +55,7 @@ export const PhrasePlaylistInsertSchema = z.object({
 	title: z.string().min(1, 'Title is required'),
 	description: z.string().optional(),
 	href: z.string().url().nullable(),
+	cover_image_path: z.string().nullable().optional(),
 	phrases: z.array(PlaylistPhraseLinkIncludedInsertSchema),
 })
 
