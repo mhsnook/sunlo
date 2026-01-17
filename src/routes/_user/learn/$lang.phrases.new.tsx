@@ -25,7 +25,6 @@ import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
 import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
-import TranslationTextField from '@/components/fields/translation-text-field'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
 import {
@@ -50,6 +49,7 @@ import {
 } from '@/hooks/use-deck'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
+import ErrorLabel from '@/components/fields/error-label'
 
 export interface SearchParams {
 	text?: string
@@ -111,7 +111,6 @@ function AddPhraseTab() {
 	const searchPhrase = text || ''
 	const {
 		control,
-		register,
 		handleSubmit,
 		watch,
 		reset,
@@ -120,6 +119,7 @@ function AddPhraseTab() {
 		resolver: zodResolver(addPhraseSchema),
 		defaultValues: {
 			phrase_text: searchPhrase,
+			translation_text: '',
 			translation_lang: preferredTranslationLang,
 			only_reverse: false,
 		},
@@ -310,10 +310,21 @@ function AddPhraseTab() {
 									)}
 								/>
 							</div>
-							<TranslationTextField<AddPhraseFormValues>
-								error={errors.translation_text}
-								register={register}
-							/>
+							<div>
+								<Label htmlFor="translation_text">Translation</Label>
+								<Controller
+									name="translation_text"
+									control={control}
+									render={({ field }) => (
+										<Textarea
+											id="translation_text"
+											{...field}
+											placeholder="Enter the translation"
+										/>
+									)}
+								/>
+								<ErrorLabel error={errors.translation_text} />
+							</div>
 							<TranslationLanguageField<AddPhraseFormValues>
 								error={errors.translation_lang}
 								control={control}
