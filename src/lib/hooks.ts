@@ -11,3 +11,8 @@ export function avatarUrlify(path: string | null | undefined): string {
 			supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl
 		)
 }
+
+// Playlist covers use the same avatars bucket for simplicity
+export function playlistCoverUrlify(path: string | null | undefined): string {
+	return avatarUrlify(path)
+}

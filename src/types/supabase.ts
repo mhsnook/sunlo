@@ -387,6 +387,7 @@ export type Database = {
 			}
 			phrase_playlist: {
 				Row: {
+					cover_image_path: string | null
 					created_at: string
 					deleted: boolean
 					description: string | null
@@ -399,6 +400,7 @@ export type Database = {
 					upvote_count: number
 				}
 				Insert: {
+					cover_image_path?: string | null
 					created_at?: string
 					deleted?: boolean
 					description?: string | null
@@ -411,6 +413,7 @@ export type Database = {
 					upvote_count?: number
 				}
 				Update: {
+					cover_image_path?: string | null
 					created_at?: string
 					deleted?: boolean
 					description?: string | null
@@ -1639,6 +1642,7 @@ export type Database = {
 			}
 			create_playlist_with_links: {
 				Args: {
+					cover_image_path?: string
 					description?: string
 					href?: string
 					lang: string

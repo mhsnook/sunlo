@@ -320,6 +320,7 @@ create or replace function "public"."create_playlist_with_links" (
 	"title" "text",
 	"description" "text" default null::"text",
 	"href" "text" default null::"text",
+	"cover_image_path" "text" default null::"text",
 	"phrases" "jsonb" default '[]'::"jsonb"
 ) returns "json" language "plpgsql" as $$
 DECLARE
@@ -330,8 +331,8 @@ DECLARE
   v_links playlist_phrase_link[] := '{}';
 BEGIN
   -- Insert the playlist
-  INSERT INTO phrase_playlist (title, description, href, lang)
-  VALUES (title, description, href, lang)
+  INSERT INTO phrase_playlist (title, description, href, cover_image_path, lang)
+  VALUES (title, description, href, cover_image_path, lang)
   RETURNING * INTO v_new_playlist;
 
   v_playlist_id := v_new_playlist.id;
@@ -373,6 +374,7 @@ alter function "public"."create_playlist_with_links" (
 	"title" "text",
 	"description" "text",
 	"href" "text",
+	"cover_image_path" "text",
 	"phrases" "jsonb"
 ) owner to "postgres";
 
@@ -878,7 +880,8 @@ create table if not exists "public"."phrase_playlist" (
 	"lang" character varying not null,
 	"upvote_count" integer default 0 not null,
 	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" ()
+	"updated_at" timestamp with time zone default "now" (),
+	"cover_image_path" "text"
 );
 
 alter table "public"."phrase_playlist" owner to "postgres";
@@ -2276,6 +2279,7 @@ grant all on function "public"."create_playlist_with_links" (
 	"title" "text",
 	"description" "text",
 	"href" "text",
+	"cover_image_path" "text",
 	"phrases" "jsonb"
 ) to "authenticated";
 
@@ -2284,6 +2288,7 @@ grant all on function "public"."create_playlist_with_links" (
 	"title" "text",
 	"description" "text",
 	"href" "text",
+	"cover_image_path" "text",
 	"phrases" "jsonb"
 ) to "service_role";
 
