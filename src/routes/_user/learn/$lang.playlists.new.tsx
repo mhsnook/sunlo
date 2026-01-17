@@ -23,6 +23,7 @@ import {
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { CoverImageField } from '@/components/fields/cover-image-field'
+import { isEmbeddableUrl } from '@/components/playlists/playlist-embed'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import languages from '@/lib/languages'
@@ -90,6 +91,10 @@ function NewPlaylistPageContent() {
 			phrases: [],
 		},
 	})
+
+	// Watch href to determine if we should show cover image field
+	const hrefValue = form.watch('href')
+	const showCoverImage = !isEmbeddableUrl(hrefValue)
 
 	const invalidateFeed = useInvalidateFeed()
 	const mutation = useMutation({
@@ -243,10 +248,12 @@ function NewPlaylistPageContent() {
 							}
 						</div>
 
-						<CoverImageField
-							control={form.control}
-							error={form.formState.errors.cover_image_path}
-						/>
+						{showCoverImage && (
+							<CoverImageField
+								control={form.control}
+								error={form.formState.errors.cover_image_path}
+							/>
+						)}
 
 						<div className="space-y-3">
 							<div className="w-full">

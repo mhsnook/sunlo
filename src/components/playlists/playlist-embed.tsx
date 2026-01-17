@@ -2,9 +2,9 @@ interface PlaylistEmbedProps {
 	href: string
 }
 
-type EmbedType = 'youtube' | 'spotify' | 'soundcloud' | 'unknown'
+export type EmbedType = 'youtube' | 'spotify' | 'soundcloud' | 'unknown'
 
-interface EmbedInfo {
+export interface EmbedInfo {
 	type: EmbedType
 	embedUrl: string | null
 }
@@ -12,7 +12,7 @@ interface EmbedInfo {
 const height152 = { height: '152px' } as const
 const height172 = { height: '172px' } as const
 
-function detectEmbedType(url: string): EmbedInfo {
+export function detectEmbedType(url: string): EmbedInfo {
 	try {
 		const urlObj = new URL(url)
 		const hostname = urlObj.hostname.toLowerCase()
@@ -85,6 +85,13 @@ function detectEmbedType(url: string): EmbedInfo {
 		console.error('Error parsing embed URL:', error)
 		return { type: 'unknown', embedUrl: null }
 	}
+}
+
+/** Check if a URL can be embedded (YouTube, Spotify, SoundCloud) */
+export function isEmbeddableUrl(url: string | null | undefined): boolean {
+	if (!url) return false
+	const embedInfo = detectEmbedType(url)
+	return embedInfo.type !== 'unknown' && embedInfo.embedUrl !== null
 }
 
 export function PlaylistEmbed({ href }: PlaylistEmbedProps) {

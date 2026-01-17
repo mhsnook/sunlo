@@ -8,7 +8,7 @@ import { SharePlaylistButton } from './share-playlist-button'
 import { UpvotePlaylist } from './upvote-playlist-button'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
-import { PlaylistEmbed } from './playlist-embed'
+import { PlaylistEmbed, isEmbeddableUrl } from './playlist-embed'
 import { useProfile } from '@/hooks/use-profile'
 import { UpdatePlaylistDialog } from './update-playlist-dialog'
 import { ManagePlaylistPhrasesDialog } from './manage-playlist-phrases-dialog'
@@ -65,8 +65,8 @@ export function PlaylistItem({
 				<p className="text-muted-foreground text-sm">{playlist.description}</p>
 			)}
 
-			{/* Cover image (shown when no embed player) */}
-			{playlist.cover_image_path && !playlist.href && (
+			{/* Cover image (shown when URL is not embeddable) */}
+			{playlist.cover_image_path && !isEmbeddableUrl(playlist.href) && (
 				<img
 					src={playlistCoverUrlify(playlist.cover_image_path)}
 					alt={`Cover for ${playlist.title}`}
