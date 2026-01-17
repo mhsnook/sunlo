@@ -28,7 +28,7 @@ export function CardResultSimple({
 					{phrase.translations?.map((t) => (
 						<li key={t.id} className="flex items-center gap-2 text-sm">
 							<LangBadge lang={t.lang} />
-							<span>&ldquo;{t.text}&rdquo;</span>
+							<span>{t.text}</span>
 						</li>
 					))}
 				</ul>
