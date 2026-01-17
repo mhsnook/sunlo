@@ -64,7 +64,7 @@ alter type "public"."card_status" owner to "postgres";
 
 comment on type "public"."card_status" is 'card status is either active, learned or skipped';
 
-create type "public"."chat_message_type" as enum('recommendation', 'accepted', 'request');
+create type "public"."chat_message_type" as enum('recommendation', 'accepted', 'request', 'playlist');
 
 alter type "public"."chat_message_type" owner to "postgres";
 
@@ -699,6 +699,7 @@ create table if not exists "public"."chat_message" (
 	"content" "jsonb",
 	"lang" character varying not null,
 	"request_id" "uuid",
+	"playlist_id" "uuid",
 	constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
 );
 
@@ -1566,6 +1567,8 @@ add constraint "user_deck_review_state_pkey" primary key ("lang", "uid", "day_se
 alter table only "public"."user_deck"
 add constraint "user_deck_uuid_key" unique ("id");
 
+create index "chat_message_playlist_id_idx" on "public"."chat_message" using "btree" ("playlist_id");
+
 create index "chat_message_recipient_uid_sender_uid_created_at_idx" on "public"."chat_message" using "btree" ("recipient_uid", "sender_uid", "created_at" desc);
 
 create index "chat_message_sender_uid_recipient_uid_created_at_idx" on "public"."chat_message" using "btree" ("sender_uid", "recipient_uid", "created_at" desc);
@@ -1651,6 +1654,9 @@ add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"
 
 alter table only "public"."chat_message"
 add constraint "chat_message_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete set null;
+
+alter table only "public"."chat_message"
+add constraint "chat_message_playlist_id_fkey" foreign key ("playlist_id") references "public"."phrase_playlist" ("id") on delete set null;
 
 alter table only "public"."chat_message"
 add constraint "chat_message_recipient_uid_fkey" foreign key ("recipient_uid") references "public"."user_profile" ("uid") on delete cascade;
