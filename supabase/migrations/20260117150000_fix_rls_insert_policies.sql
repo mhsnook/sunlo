@@ -26,13 +26,16 @@ for insert
 to authenticated
 with check ((select auth.uid()) = added_by);
 
--- 4. Fix user_client_event table: validate uid matches auth.uid() or is null for anon users
+-- 4. Fix user_client_event table: validate uid matches auth.uid()
+-- Uses IS NOT DISTINCT FROM to handle null comparison correctly:
+-- - Anon users (auth.uid() is null) must have uid = null
+-- - Authenticated users must have uid = their auth.uid()
 drop policy if exists "Enable insert for any user" on "public"."user_client_event";
 create policy "Users can log their own events"
 on "public"."user_client_event"
 for insert
 to authenticated, anon
-with check (uid is null or uid = auth.uid());
+with check (uid is not distinct from auth.uid());
 
 -- 5. Fix tag table: validate added_by = auth.uid()
 drop policy if exists "Users can insert tags" on "public"."tag";
