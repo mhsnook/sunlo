@@ -4,7 +4,7 @@ import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import supabase from '@/lib/supabase-client'
 import { ShowError } from '@/components/errors'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_user/profile/change-email-confirm')({
 	component: ChangeEmailConfirmPage,

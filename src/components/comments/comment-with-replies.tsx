@@ -17,7 +17,7 @@ import {
 	PhraseFullFullType,
 	type RequestCommentType,
 } from '@/lib/schemas'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { DialogTrigger } from '@/components/ui/dialog'
 import { phrasesFull } from '@/lib/live-collections'
 

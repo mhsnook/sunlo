@@ -11,8 +11,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'

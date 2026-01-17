@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useRelationInvitations } from '@/hooks/use-friends'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_user/friends/requests')({
 	component: RouteComponent,

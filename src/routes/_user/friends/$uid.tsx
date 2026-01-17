@@ -3,7 +3,7 @@ import { MessagesSquare, User } from 'lucide-react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useOnePublicProfile } from '@/hooks/use-public-profile'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { RelationshipActions } from './-relationship-actions'
 import { avatarUrlify } from '@/lib/hooks'
 import { UserContributions } from '../learn/-contributions'

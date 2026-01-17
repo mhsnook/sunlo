@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Label } from '@/components/ui/label'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useAuth } from '@/lib/use-auth'
 

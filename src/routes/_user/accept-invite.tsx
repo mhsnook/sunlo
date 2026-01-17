@@ -7,8 +7,7 @@ import { ArrowRightLeft } from 'lucide-react'
 import type { PublicProfileType } from '@/lib/schemas'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
-import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { Button, buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import {
 	Card,

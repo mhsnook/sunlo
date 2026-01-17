@@ -2,7 +2,7 @@ import { Github, Heart, Shield, Users, LogIn, UserPlus } from 'lucide-react'
 import BlueskyLogo from '@/components/svg/bluesky-logo'
 import { Link } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 
 export function FooterNavigation() {
 	return (
