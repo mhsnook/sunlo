@@ -18,7 +18,7 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 			</p>
 			<Link
 				className={buttonVariants({ size: 'lg' })}
-				to="/learn/$lang/add-phrase"
+				to="/learn/$lang/phrases/new"
 				params={{ lang }}
 			>
 				<MessageSquarePlus size="48" className="h-12 w-12 grow" />
@@ -39,7 +39,7 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 			<ul className="ms-4 list-disc space-y-4">
 				<li>
 					<Link
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/phrases/new"
 						params={{ lang }}
 						className="s-link"
 					>

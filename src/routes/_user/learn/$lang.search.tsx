@@ -86,7 +86,7 @@ function SearchTab() {
 					</Button>
 					<Button variant="secondary" asChild>
 						<Link
-							to="/learn/$lang/add-phrase"
+							to="/learn/$lang/phrases/new"
 							from={Route.fullPath}
 							search={true}
 						>

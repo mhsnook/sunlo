@@ -223,11 +223,11 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: Logs,
 		},
-		'/learn/$lang/add-phrase': {
+		'/learn/$lang/phrases/new': {
 			name: 'Phrase',
 			title: 'Add a Phrase',
 			link: {
-				to: '/learn/$lang/add-phrase',
+				to: '/learn/$lang/phrases/new',
 				params: { lang },
 			},
 			Icon: MessageSquareQuote,

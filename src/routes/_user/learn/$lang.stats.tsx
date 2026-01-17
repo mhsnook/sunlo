@@ -136,7 +136,7 @@ function DeckOverview() {
 					</Link>
 					<div className="grid w-full grid-cols-1 gap-2 @lg:grid-cols-2 @lg:gap-0">
 						<Link
-							to="/learn/$lang/add-phrase"
+							to="/learn/$lang/phrases/new"
 							from={Route.fullPath}
 							className={cn(
 								buttonVariants({ variant: 'secondary' }),
@@ -257,7 +257,7 @@ function NewLang() {
 						didn't know how. Then text a friend and ask them, and{' '}
 						<Link
 							from={Route.fullPath}
-							to="/learn/$lang/add-phrase"
+							to="/learn/$lang/phrases/new"
 							className="s-link"
 						>
 							make a flash card out of their response
@@ -322,7 +322,7 @@ function Empty() {
 				</p>
 				<div className="flex gap-4">
 					<Link
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/phrases/new"
 						from={Route.fullPath}
 						className={buttonVariants({ variant: 'secondary' })}
 					>

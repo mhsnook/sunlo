@@ -227,7 +227,7 @@ test('test card status', async ({ page }) => {
 	await loginAsTestUser(page)
 
 	// Navigate to form
-	await page.goto('/learn/hin/add-phrase')
+	await page.goto('/learn/hin/phrases/new')
 
 	// Fill out the entire form
 	await page.fill('textarea[name="phrase"]', 'test')

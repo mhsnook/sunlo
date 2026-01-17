@@ -34,7 +34,7 @@ export function PlusMenu({ lang }: { lang: string }) {
 				</DropdownMenuItem>
 				<DropdownMenuItem asChild>
 					<Link
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/phrases/new"
 						params={{ lang }}
 						className="flex w-full items-center gap-2"
 					>

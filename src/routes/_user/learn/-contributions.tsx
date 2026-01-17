@@ -149,7 +149,7 @@ function PhrasesTab(props: { lang?: string; uid: uuid }) {
 				{props.lang && (
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/phrases/new"
 						params={{ lang: props.lang }}
 					>
 						<MessageSquareQuote />

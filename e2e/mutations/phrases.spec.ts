@@ -13,7 +13,7 @@ test.describe.serial('Phrase Mutations', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to the add phrase page
-		await page.goto('/learn/hin/add-phrase')
+		await page.goto('/learn/hin/phrases/new')
 
 		// 3. Fill the form
 		await page.fill('textarea[placeholder*="text of the phrase"]', phraseText)
