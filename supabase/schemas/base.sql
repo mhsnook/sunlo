@@ -852,6 +852,7 @@ select
 	"phrase"."text",
 	"phrase"."created_at",
 	"phrase"."added_by",
+	"phrase"."only_reverse",
 	coalesce("cards"."count_learners", (0)::bigint) as "count_learners",
 	"cards"."avg_difficulty",
 	"cards"."avg_stability",
@@ -914,6 +915,7 @@ select
 	"pr"."created_at",
 	"pr"."lang",
 	"pr"."requester_uid" as "uid",
+	coalesce("pr"."upvote_count", 0) as "popularity",
 	"jsonb_build_object" ('prompt', "pr"."prompt", 'upvote_count', "pr"."upvote_count") as "payload"
 from
 	"public"."phrase_request" "pr"
@@ -926,6 +928,7 @@ select
 	"pp"."created_at",
 	"pp"."lang",
 	"pp"."uid",
+	coalesce("pp"."upvote_count", 0) as "popularity",
 	"jsonb_build_object" (
 		'title',
 		"pp"."title",
@@ -954,6 +957,7 @@ select distinct
 	"p"."created_at",
 	"p"."lang",
 	"p"."added_by" as "uid",
+	coalesce("p"."count_learners", (0)::bigint) as "popularity",
 	"jsonb_build_object" (
 		'text',
 		"p"."text",

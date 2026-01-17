@@ -293,6 +293,93 @@ test.describe('Unified Feed', () => {
 		if (request) await deleteRequest(request.id)
 	})
 
+	test('Popular feed sorts items by popularity descending', async ({
+		page,
+	}) => {
+		await loginAsTestUser(page)
+		const lang = 'hin'
+		const nonce = Math.random().toString(36).substring(7)
+
+		// Create items with different popularity scores
+		const lowPopularityTitle = `Low Pop Request ${nonce}`
+		const medPopularityTitle = `Med Pop Playlist ${nonce}`
+		const highPopularityTitle = `High Pop Request ${nonce}`
+
+		const lowRequest = await createRequest({ lang, prompt: lowPopularityTitle })
+		const medPlaylist = await createPlaylist({
+			lang,
+			title: medPopularityTitle,
+		})
+		const highRequest = await createRequest({
+			lang,
+			prompt: highPopularityTitle,
+		})
+
+		// Set different upvote counts directly in DB
+		await supabase
+			.from('phrase_request')
+			.update({ upvote_count: 1 })
+			.eq('id', lowRequest.id)
+		await supabase
+			.from('phrase_playlist')
+			.update({ upvote_count: 5 })
+			.eq('id', medPlaylist.id)
+		await supabase
+			.from('phrase_request')
+			.update({ upvote_count: 10 })
+			.eq('id', highRequest.id)
+
+		try {
+			// Navigate to feed
+			await page.goto('/learn')
+			await page
+				.getByTestId(`deck-card-${lang}`)
+				.getByTestId(`deck-card-link-${lang}`)
+				.click()
+
+			// Switch to Popular tab
+			await page.getByRole('tab', { name: 'Popular' }).click()
+
+			// Wait for items to be visible
+			await expect(page.getByText(highPopularityTitle).first()).toBeVisible()
+			await expect(page.getByText(medPopularityTitle).first()).toBeVisible()
+			await expect(page.getByText(lowPopularityTitle).first()).toBeVisible()
+
+			// Get positions of our test items using bounding boxes
+			const highPopLoc = page.getByText(highPopularityTitle).first()
+			const medPopLoc = page.getByText(medPopularityTitle).first()
+			const lowPopLoc = page.getByText(lowPopularityTitle).first()
+
+			const highBox = await highPopLoc.boundingBox()
+			const medBox = await medPopLoc.boundingBox()
+			const lowBox = await lowPopLoc.boundingBox()
+
+			// Verify high popularity item appears before medium
+			expect(highBox!.y).toBeLessThan(medBox!.y)
+			// Verify medium popularity item appears before low
+			expect(medBox!.y).toBeLessThan(lowBox!.y)
+
+			// Verify data-popularity attributes have correct values
+			const highPopItem = page
+				.locator(`[data-feed-item]:has-text("${highPopularityTitle}")`)
+				.first()
+			const medPopItem = page
+				.locator(`[data-feed-item]:has-text("${medPopularityTitle}")`)
+				.first()
+			const lowPopItem = page
+				.locator(`[data-feed-item]:has-text("${lowPopularityTitle}")`)
+				.first()
+
+			expect(await highPopItem.getAttribute('data-popularity')).toBe('10')
+			expect(await medPopItem.getAttribute('data-popularity')).toBe('5')
+			expect(await lowPopItem.getAttribute('data-popularity')).toBe('1')
+		} finally {
+			await deleteRequest(lowRequest.id)
+			await deletePlaylist(medPlaylist.id)
+			await deleteRequest(highRequest.id)
+		}
+	})
+
 	test('allows users to upvote playlists', async ({ page }) => {
 		await loginAsTestUser(page)
 		const lang = 'hin'

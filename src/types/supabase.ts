@@ -1328,6 +1328,7 @@ export type Database = {
 					id: string | null
 					lang: string | null
 					payload: Json | null
+					popularity: number | null
 					type: string | null
 					uid: string | null
 				}
