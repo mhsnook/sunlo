@@ -35,9 +35,11 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 
 	const handleTabChange = (value: string) => {
 		void navigate({
-			search: {
+			search: ((prev: Record<string, unknown>) => ({
+				...prev,
 				contributionsTab: value as viewTabName,
-			},
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			})) as any,
 		})
 	}
 

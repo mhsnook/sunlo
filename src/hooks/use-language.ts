@@ -2,7 +2,13 @@ import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
-import type { LangTagType, LanguageType, PhraseFullType } from '@/lib/schemas'
+import type {
+	LangTagType,
+	LanguageType,
+	PhraseFullFilteredType,
+	PhraseFullFullType,
+	PhraseFullType,
+} from '@/lib/schemas'
 import {
 	langTagsCollection,
 	languagesCollection,
@@ -45,7 +51,7 @@ export const useLanguagePhrasesSearch = (
 	queryString: string | undefined,
 	tags?: string[] | null,
 	filteredPids?: pids | null
-): UseLiveQueryResult<PhraseFullType[]> => {
+): UseLiveQueryResult<PhraseFullFilteredType[]> => {
 	const { data: langs } = useLanguagesToShow()
 	return useLiveQuery(
 		(q) => {
@@ -91,7 +97,7 @@ export const useLanguagePhrasesSearch = (
 
 export const useLanguagePhrase = (
 	pid: uuid | null | undefined
-): UseLiveQueryResult<PhraseFullType> =>
+): UseLiveQueryResult<PhraseFullFullType> =>
 	useLiveQuery(
 		(q) =>
 			!pid ? undefined : (

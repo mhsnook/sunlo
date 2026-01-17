@@ -48,7 +48,7 @@ export function useLangPlaylists(
 
 export function useMyPlaylists(): UseLiveQueryResult<PhrasePlaylistType[]> {
 	const userId = useUserId()
-	return useAnyonesPlaylists(userId)
+	return useAnyonesPlaylists(userId!)
 }
 
 export function useOnePlaylist(

@@ -24,18 +24,15 @@ export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
 
 	if (isLoading2) return { status: 'pending', data: undefined }
 	if (!phrase) return { data: null, status: 'not-found' }
-	const partial: PhraseFullFilteredType = {
+	const partial = {
 		...phrase,
 		translations_mine: phrase.translations,
-		translations_other: [],
+		translations_other: [] as Array<TranslationType>,
 	}
 	if (isLoading1) return { data: partial, status: 'partial' }
 	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
-	const phraseFiltered: PhraseFullFilteredType = splitPhraseTranslations(
-		phrase,
-		languagesToShow
-	)
+	const phraseFiltered = splitPhraseTranslations(phrase, languagesToShow)
 
 	return { data: phraseFiltered, status: 'complete' }
 }
@@ -64,10 +61,10 @@ function splitTranslations(
 	}
 }
 
-export function splitPhraseTranslations(
-	phrase: PhraseFullType,
+export function splitPhraseTranslations<T extends PhraseFullType>(
+	phrase: T,
 	languagesToShow: Array<string>
-): PhraseFullFilteredType & {
+): T & {
 	translations_mine: Array<TranslationType>
 	translations_other: Array<TranslationType>
 } {

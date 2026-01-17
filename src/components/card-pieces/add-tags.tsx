@@ -100,7 +100,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	// oxlint-disable-next-line prefer-set-has
 	const phraseTagNames = phrase.tags?.map((t) => t.name) ?? []
 
-	const availableTags = allLangTags
+	const availableTags = (allLangTags ?? [])
 		.filter((t) => !phraseTagNames.includes(t.name))
 		.map((t) => ({ value: t.name, label: t.name }))
 
