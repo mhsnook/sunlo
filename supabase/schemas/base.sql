@@ -611,6 +611,77 @@ $$;
 
 alter function "public"."update_phrase_translation_updated_at" () owner to "postgres";
 
+create or replace function "public"."validate_friend_request_action" () returns "trigger" language "plpgsql" security definer
+set
+	"search_path" to 'public' as $$
+declare
+  v_current_status text;
+  v_pending_by_me boolean;
+begin
+  -- Get current relationship state
+  select
+    status,
+    (most_recent_uid_by = NEW.uid_by)
+  into v_current_status, v_pending_by_me
+  from friend_summary
+  where uid_less = NEW.uid_less and uid_more = NEW.uid_more;
+
+  -- Default if no relationship exists
+  v_current_status := coalesce(v_current_status, 'unconnected');
+  v_pending_by_me := coalesce(v_pending_by_me, false);
+
+  -- Validate and potentially transform action based on current state
+  case NEW.action_type
+    when 'invite' then
+      if v_current_status = 'friends' then
+        raise exception 'Already friends';
+      elsif v_current_status = 'pending' and v_pending_by_me then
+        raise exception 'Friend request already sent';
+      elsif v_current_status = 'pending' and not v_pending_by_me then
+        -- Mutual invite: they already invited me, so my invite = mutual consent → accept
+        NEW.action_type := 'accept';
+      end if;
+
+    when 'accept' then
+      if v_current_status != 'pending' then
+        raise exception 'Cannot accept: no pending friend request';
+      elsif v_pending_by_me then
+        raise exception 'Cannot accept your own friend request';
+      end if;
+
+    when 'decline' then
+      if v_current_status != 'pending' then
+        raise exception 'Cannot decline: no pending friend request';
+      elsif v_pending_by_me then
+        raise exception 'Cannot decline your own friend request (use cancel instead)';
+      end if;
+
+    when 'cancel' then
+      if v_current_status != 'pending' then
+        raise exception 'Cannot cancel: no pending friend request';
+      elsif not v_pending_by_me then
+        raise exception 'Cannot cancel a request you did not send (use decline instead)';
+      end if;
+
+    when 'remove' then
+      if v_current_status != 'friends' then
+        raise exception 'Cannot remove: not currently friends';
+      end if;
+
+    else
+      raise exception 'Invalid action type: %', NEW.action_type;
+  end case;
+
+  return NEW;
+end;
+$$;
+
+alter function "public"."validate_friend_request_action" () owner to "postgres";
+
+comment on function "public"."validate_friend_request_action" () is 'Validates friend request actions to ensure data integrity and consent.
+   Handles mutual invite scenario (both users invite = auto-accept).
+   Prevents invalid state transitions like accepting your own request.';
+
 set
 	default_tablespace = '';
 
@@ -1572,6 +1643,9 @@ create or replace trigger "trigger_update_phrase_translation_updated_at" before
 update on "public"."phrase_translation" for each row
 execute function "public"."update_phrase_translation_updated_at" ();
 
+create or replace trigger "trigger_validate_friend_request_action" before insert on "public"."friend_request_action" for each row
+execute function "public"."validate_friend_request_action" ();
+
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
@@ -1731,9 +1805,60 @@ add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid"
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
-create policy "Anyone can add cards" on "public"."phrase" for insert to "authenticated"
+create policy "Authenticated users can add phrase relations" on "public"."phrase_relation" for insert to "authenticated"
 with
-	check (true);
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "added_by"
+		)
+	);
+
+create policy "Authenticated users can add phrases" on "public"."phrase" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "added_by"
+		)
+	);
+
+create policy "Authenticated users can add translations" on "public"."phrase_translation" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "added_by"
+		)
+	);
+
+create policy "Authenticated users can create tags" on "public"."tag" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "added_by"
+		)
+	);
+
+create policy "Authenticated users can link tags to phrases" on "public"."phrase_tag" for insert to "authenticated"
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "added_by"
+		)
+	);
 
 create policy "Enable delete for users based on uid" on "public"."phrase_playlist" for delete to "authenticated" using (
 	(
@@ -1752,11 +1877,6 @@ create policy "Enable delete for users based on uid" on "public"."playlist_phras
 		) = "uid"
 	)
 );
-
-create policy "Enable insert for any user" on "public"."user_client_event" for insert to "authenticated",
-"anon"
-with
-	check (true);
 
 create policy "Enable insert for authenticated users only" on "public"."user_card_review" for insert to "authenticated"
 with
@@ -1959,14 +2079,6 @@ create policy "Enable users to view their own upvotes" on "public"."phrase_reque
 select
 	to "authenticated" using (("uid" = "auth"."uid" ()));
 
-create policy "Logged in users can add see_also's" on "public"."phrase_relation" for insert to "authenticated"
-with
-	check (true);
-
-create policy "Logged in users can add translations" on "public"."phrase_translation" for insert to "authenticated"
-with
-	check (true);
-
 create policy "Policy with table joins" on "public"."friend_request_action" for insert to "authenticated"
 with
 	check (
@@ -2061,13 +2173,10 @@ with
 		)
 	);
 
-create policy "Users can insert tags" on "public"."tag" for insert
+create policy "Users can log their own events" on "public"."user_client_event" for insert to "authenticated",
+"anon"
 with
-	check (("auth"."role" () = 'authenticated'::"text"));
-
-create policy "Users can link tags to phrases" on "public"."phrase_tag" for insert
-with
-	check (("auth"."role" () = 'authenticated'::"text"));
+	check ((not ("uid" is distinct from "auth"."uid" ())));
 
 create policy "Users can send messages to friends" on "public"."chat_message" for insert
 with
@@ -2331,6 +2440,10 @@ grant all on function "public"."update_phrase_request_upvote_count" () to "servi
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
+
+grant all on function "public"."validate_friend_request_action" () to "authenticated";
+
+grant all on function "public"."validate_friend_request_action" () to "service_role";
 
 grant all on table "public"."chat_message" to "authenticated";
 
