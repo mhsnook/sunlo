@@ -5,58 +5,10 @@ import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	friendSummariesCollection,
 	phraseRequestsCollection,
 } from '@/lib/collections'
 import { CommentPhraseLinkType, PhraseRequestType } from '@/lib/schemas'
 import { mapArrays } from '@/lib/utils'
-
-export function useMyFriendsRequestsLang(
-	lang: string
-): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ request: phraseRequestsCollection })
-				.where(({ request }) => eq(request.lang, lang))
-				.join(
-					{ friend: friendSummariesCollection },
-					({ request, friend }) => eq(friend.uid, request.requester_uid),
-					'inner'
-				)
-				.orderBy(({ request }) => request.created_at, 'desc')
-				.select(({ request }) => ({ ...request })),
-		[lang]
-	)
-}
-
-export function usePopularRequestsLang(
-	lang: string
-): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ request: phraseRequestsCollection })
-				.where(({ request }) => eq(request.lang, lang))
-				.orderBy(({ request }) => request.upvote_count, 'desc')
-				.orderBy(({ request }) => request.created_at, 'desc')
-				.select(({ request }) => ({ ...request })),
-		[lang]
-	)
-}
-
-export function useRequestsLang(
-	lang: string
-): UseLiveQueryResult<PhraseRequestType[]> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ request: phraseRequestsCollection })
-				.where(({ request }) => eq(request.lang, lang))
-				.orderBy(({ request }) => request.created_at, 'desc'),
-		[lang]
-	)
-}
 
 export const useRequestLinksPhraseIds = (
 	requestId: uuid

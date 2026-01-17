@@ -100,6 +100,7 @@ export function usePopularFeedLang(lang: LangType) {
 				.from('feed_activities')
 				.select('*')
 				.eq('lang', lang)
+				.gt('popularity', 2)
 				.order('popularity', { ascending: false })
 				.order('created_at', { ascending: false })
 				.limit(20)
