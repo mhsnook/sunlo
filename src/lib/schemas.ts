@@ -371,6 +371,7 @@ export const FeedActivitySchema = z.object({
 	created_at: z.string(),
 	lang: LangSchema,
 	uid: z.string().uuid(),
+	popularity: z.number(),
 	payload: z.union([
 		FeedActivityPayloadRequestSchema,
 		FeedActivityPayloadPlaylistSchema,

@@ -12,17 +12,31 @@ type PhraseGroup = {
 
 export function FeedItem({ item }: { item: FeedActivityType | PhraseGroup }) {
 	if ('earliest_created_at' in item) {
-		return <FeedPhraseGroupItem items={item.items} />
+		// For phrase groups, use the max popularity of items in the group
+		const maxPopularity = Math.max(...item.items.map((i) => i.popularity))
+		return (
+			<div data-feed-item data-popularity={maxPopularity}>
+				<FeedPhraseGroupItem items={item.items} />
+			</div>
+		)
 	}
 
-	switch (item.type) {
-		case 'request':
-			return <FeedRequestItem item={item} />
-		case 'playlist':
-			return <FeedPlaylistItem item={item} />
-		case 'phrase':
-			return <FeedPhraseItem item={item} />
-		default:
-			return null
-	}
+	const content = (() => {
+		switch (item.type) {
+			case 'request':
+				return <FeedRequestItem item={item} />
+			case 'playlist':
+				return <FeedPlaylistItem item={item} />
+			case 'phrase':
+				return <FeedPhraseItem item={item} />
+			default:
+				return null
+		}
+	})()
+
+	return (
+		<div data-feed-item data-popularity={item.popularity}>
+			{content}
+		</div>
+	)
 }
