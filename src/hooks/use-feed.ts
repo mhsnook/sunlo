@@ -88,28 +88,25 @@ export function useFriendsFeedLang(lang: LangType) {
 	})
 }
 
-// Popular feed: shows activities ordered by upvote count (highest first)
-// Note: phrases don't have upvotes, so they appear after voted items
+// Popular feed: shows activities ordered by popularity (highest first)
+// - Requests and playlists use upvote_count
+// - Phrases use count_learners
 export function usePopularFeedLang(lang: LangType) {
 	return useInfiniteQuery({
 		queryKey: ['feed', 'popular', lang],
 		queryFn: async ({ pageParam }) => {
-			// Order by upvote_count descending, then by created_at as tiebreaker
-			// The payload->>upvote_count extracts the upvote_count from JSON
+			// Order by popularity descending, then by created_at as tiebreaker
 			let query = supabase
 				.from('feed_activities')
 				.select('*')
 				.eq('lang', lang)
-				.order('payload->upvote_count', {
-					ascending: false,
-					nullsFirst: false,
-				})
+				.order('popularity', { ascending: false })
 				.order('created_at', { ascending: false })
 				.limit(20)
 
 			if (pageParam) {
-				// For pagination, we need cursor-based pagination
-				// Using created_at as cursor since upvote_count ordering is complex
+				// For pagination with popularity ordering, we need composite cursor
+				// Using created_at as secondary sort maintains stability
 				query = query.lt('created_at', pageParam)
 			}
 
