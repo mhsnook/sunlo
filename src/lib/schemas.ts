@@ -78,10 +78,14 @@ export const FilterEnumSchema = z.enum([
 
 export type FilterEnumType = z.infer<typeof FilterEnumSchema>
 
+export const SmartSearchSortBySchema = z.enum(['relevance', 'popularity'])
+export type SmartSearchSortByType = z.infer<typeof SmartSearchSortBySchema>
+
 export const PhraseSearchSchema = z.object({
 	text: z.string().optional(),
 	filter: FilterEnumSchema.optional(),
 	tags: z.string().optional(),
+	sort: SmartSearchSortBySchema.optional(),
 })
 
 export type PhraseSearchType = z.infer<typeof PhraseSearchSchema>
