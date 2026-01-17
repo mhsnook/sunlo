@@ -1,5 +1,5 @@
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import {
 	useReviewActions,
@@ -8,6 +8,8 @@ import {
 	useReviewDayString,
 } from '@/hooks/use-review-store'
 import { useReviewsTodayStats } from '@/hooks/use-reviews'
+import { Link } from '@tanstack/react-router'
+import { BarChart3, Plus, Newspaper, Search } from 'lucide-react'
 
 export function WhenComplete() {
 	const lang = useReviewLang()
@@ -98,12 +100,69 @@ export function WhenComplete() {
 							Skip step 3
 						</Button>
 					</>
-				:	<div className="flex h-full flex-col items-center justify-center gap-4 pb-16">
-						<CardTitle className="text-center">Step 3 of 3</CardTitle>
-						<p className="text-center text-lg">
-							You've completed your review for today.
-						</p>
+				:	<div className="flex h-full flex-col items-center justify-center gap-6 pb-16">
 						<SuccessCheckmark />
+						<CardTitle className="text-center">Review Complete!</CardTitle>
+						<p className="text-muted-foreground text-center">
+							You reviewed {stats.reviewed} card
+							{stats.reviewed === 1 ? '' : 's'} today
+							{stats.complete > 0 && (
+								<>
+									{' '}
+									&mdash; {stats.complete} recalled successfully
+									{stats.reviewed > 0 && (
+										<span className="text-primary font-medium">
+											{' '}
+											({Math.round((stats.complete / stats.reviewed) * 100)}%)
+										</span>
+									)}
+								</>
+							)}
+						</p>
+
+						<div className="mt-4 grid w-full max-w-sm gap-3">
+							<Link
+								to="/learn/$lang/feed"
+								params={{ lang }}
+								className={buttonVariants({ variant: 'default', size: 'lg' })}
+							>
+								<Newspaper className="mr-2 h-4 w-4" />
+								Back to Feed
+							</Link>
+							<Link
+								to="/learn/$lang/phrases/new"
+								params={{ lang }}
+								className={buttonVariants({ variant: 'secondary', size: 'lg' })}
+							>
+								<Plus className="mr-2 h-4 w-4" />
+								Add New Phrase
+							</Link>
+							<div className="flex gap-3">
+								<Link
+									to="/learn/$lang/stats"
+									params={{ lang }}
+									className={buttonVariants({
+										variant: 'outline',
+										size: 'lg',
+										className: 'flex-1',
+									})}
+								>
+									<BarChart3 className="mr-2 h-4 w-4" />
+									Stats
+								</Link>
+								<Link
+									to="/learn/browse"
+									className={buttonVariants({
+										variant: 'outline',
+										size: 'lg',
+										className: 'flex-1',
+									})}
+								>
+									<Search className="mr-2 h-4 w-4" />
+									Browse
+								</Link>
+							</div>
+						</div>
 					</div>
 				}
 			</CardContent>
