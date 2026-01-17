@@ -1,0 +1,10 @@
+# Placeholder for Tauri app icons
+# Run `pnpm tauri icon path/to/app-icon.png` to generate icons
+# Required icons:
+# - 32x32.png
+# - 128x128.png
+# - 128x128@2x.png
+# - icon.icns (macOS)
+# - icon.ico (Windows)
+# - android/ (for Android builds)
+# - ios/ (for iOS builds)

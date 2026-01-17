@@ -1,0 +1,11 @@
+{
+	"$schema": "../gen/schemas/mobile-schema.json",
+	"identifier": "mobile",
+	"description": "Capability for mobile platforms",
+	"platforms": ["iOS", "android"],
+	"windows": ["main"],
+	"permissions": [
+		"core:default",
+		"shell:allow-open"
+	]
+}

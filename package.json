@@ -10,6 +10,14 @@
 		"lint": "time oxlint . ; time eslint .",
 		"preview": "vite preview",
 		"start": "node .output/server/index.mjs",
+		"tauri": "tauri",
+		"tauri:dev": "tauri dev",
+		"tauri:build": "tauri build",
+		"tauri:android": "tauri android dev",
+		"tauri:ios": "tauri ios dev",
+		"tauri:android:build": "tauri android build",
+		"tauri:ios:build": "tauri ios build",
+		"tauri:prepare": "cp dist/client/_shell.html dist/client/index.html 2>/dev/null || true",
 		"format": "prettier --write .",
 		"check": "tsc -b",
 		"format:check": "prettier --check .",
@@ -30,6 +38,7 @@
 		"prepare": "husky"
 	},
 	"dependencies": {
+		"@tauri-apps/api": "^2.5.0",
 		"@hookform/resolvers": "^3.10.0",
 		"@radix-ui/react-accordion": "^1.2.12",
 		"@radix-ui/react-alert-dialog": "^1.1.15",
@@ -75,6 +84,7 @@
 		"zustand": "^5.0.9"
 	},
 	"devDependencies": {
+		"@tauri-apps/cli": "^2.5.0",
 		"@eslint/js": "^9.39.2",
 		"@playwright/test": "^1.57.0",
 		"@tailwindcss/container-queries": "^0.1.1",

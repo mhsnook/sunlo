@@ -32,11 +32,22 @@ export function ThemeProvider({
 	storageKey = 'vite-ui-theme',
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(
-		() => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-	)
+	// Use defaultTheme for SSR, then hydrate from localStorage
+	const [theme, setTheme] = useState<Theme>(defaultTheme)
+	const [mounted, setMounted] = useState(false)
+
+	// Hydrate theme from localStorage after mount (client-side only)
+	useEffect(() => {
+		const stored = localStorage.getItem(storageKey) as Theme | null
+		if (stored) {
+			setTheme(stored)
+		}
+		setMounted(true)
+	}, [storageKey])
 
 	useEffect(() => {
+		if (!mounted) return
+
 		const root = window.document.documentElement
 
 		root.classList.remove('light', 'dark')
@@ -52,7 +63,7 @@ export function ThemeProvider({
 		}
 
 		root.classList.add(theme)
-	}, [theme])
+	}, [theme, mounted])
 
 	const value = {
 		theme,
