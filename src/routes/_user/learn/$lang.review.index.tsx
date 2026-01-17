@@ -177,7 +177,7 @@ function ReviewPageContent() {
 							cardsToCreate.map((pid) => ({
 								phrase_id: pid,
 								lang,
-								uid: userId,
+								uid: userId!,
 								status: 'active' as CardStatusEnumType,
 							}))
 						)
@@ -192,7 +192,7 @@ function ReviewPageContent() {
 						.insert({
 							lang,
 							day_session: dayString,
-							uid: userId,
+							uid: userId!,
 							manifest: allCardsForToday,
 						})
 						.throwOnError()

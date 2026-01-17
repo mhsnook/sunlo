@@ -39,7 +39,7 @@ export function ArchiveDeckButton({
 				.from('user_deck')
 				.update({ archived: !archived })
 				.eq('lang', lang)
-				.eq('uid', userId)
+				.eq('uid', userId!)
 				.select()
 				.maybeSingle()
 				.throwOnError()

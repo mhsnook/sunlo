@@ -152,6 +152,12 @@ export const PhraseFullSchema = z.object({
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
 
+// Type returned by splitPhraseTranslations - PhraseFullType with split translations
+export type PhraseWithTranslationSplit = PhraseFullType & {
+	translations_mine: Array<TranslationType>
+	translations_other: Array<TranslationType>
+}
+
 export type PhraseFullFullType = PhraseFullType & {
 	profile: PublicProfileType
 	card?: CardMetaType

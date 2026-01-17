@@ -3,17 +3,16 @@ import {
 	FieldError,
 	FieldValues,
 	Control,
+	FieldErrors,
 } from 'react-hook-form'
 
 type AnyFieldType = {
 	error?: FieldError
 	tabIndex?: number
 }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyArrayFieldType<T extends FieldValues> = {
-	error?: {
-		root?: FieldError
-		[x: number]: Record<string, FieldError | undefined> | undefined
-	}
+	error?: FieldErrors<T>[keyof FieldErrors<T>]
 }
 
 export type FieldProps<T extends FieldValues> = AnyFieldType & {

@@ -82,7 +82,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 											value={langField.value}
 											setValue={langField.onChange}
 											disabled={fields
-												.map((f: LanguageKnownType) => f.lang)
+												.map((f) => (f as unknown as LanguageKnownType).lang)
 												.filter((l) => l !== langField.value)}
 										/>
 									)}
@@ -119,22 +119,31 @@ export function LanguagesKnownField<T extends FieldValues>({
 								<Trash2 className="text-destructive size-4" />
 							</Button>
 						</div>
-						{error?.[index] && (
+						{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+						{(error as any)?.[index] && (
 							<div className="ms-12">
-								<ErrorLabel error={error[index].lang} />
-								<ErrorLabel error={error[index].level} />
+								{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+								<ErrorLabel error={(error as any)[index]?.lang} />
+								{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+								<ErrorLabel error={(error as any)[index]?.level} />
 							</div>
 						)}
 					</Card>
 				))}
-				<ErrorLabel error={error?.root} />
+				{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+				<ErrorLabel error={(error as any)?.root} />
 			</div>
 			<div className="flex w-full flex-row justify-end">
 				<Button
 					type="button"
 					variant="outline"
 					size="sm"
-					onClick={() => append({ lang: '', level: 'proficient' })}
+					onClick={() =>
+						append({
+							lang: '',
+							level: 'proficient',
+						} as unknown as T[ArrayPath<T>][number])
+					}
 					className="mt-0"
 				>
 					Add Language

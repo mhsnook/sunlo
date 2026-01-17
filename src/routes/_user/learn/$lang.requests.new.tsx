@@ -93,7 +93,7 @@ function NewRequestPage() {
 					.insert({
 						prompt,
 						lang,
-						requester_uid: userId,
+						requester_uid: userId!,
 					})
 					.throwOnError()
 					.select()

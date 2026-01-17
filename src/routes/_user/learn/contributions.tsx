@@ -16,5 +16,5 @@ export const Route = createFileRoute('/_user/learn/contributions')({
 
 function RouteComponent() {
 	const userId = useUserId()
-	return <UserContributions uid={userId} />
+	return <UserContributions uid={userId!} />
 }

@@ -29,10 +29,11 @@ export function FeedFilterMenu() {
 			: filterPhrases
 
 		void navigate({
-			search: (prev: typeof search) => ({
+			search: ((prev: Record<string, unknown>) => ({
 				...prev,
 				[filterName]: currentValue ? false : undefined,
-			}),
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			})) as any,
 		})
 	}
 
