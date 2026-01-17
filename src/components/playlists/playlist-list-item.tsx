@@ -1,10 +1,11 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { ExternalLink, LinkIcon } from 'lucide-react'
+import { ExternalLink, Send } from 'lucide-react'
 import { PhrasePlaylistType } from '@/lib/schemas-playlist'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { SharePlaylistButton } from './share-playlist-button'
+import { SendPlaylistToFriendDialog } from './send-playlist-to-friend'
 import { UpvotePlaylist } from './upvote-playlist-button'
 import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
@@ -14,6 +15,7 @@ import { UpdatePlaylistDialog } from './update-playlist-dialog'
 import { ManagePlaylistPhrasesDialog } from './manage-playlist-phrases-dialog'
 import { DeletePlaylistDialog } from './delete-playlist-dialog'
 import { playlistCoverUrlify } from '@/lib/hooks'
+import { Button } from '@/components/ui/button'
 
 export function PlaylistItem({
 	playlist,
@@ -115,28 +117,34 @@ export function PlaylistItem({
 				</div>
 			)}
 
-			<div className="text-muted-foreground flex items-center gap-4 text-sm">
-				<UpvotePlaylist playlist={playlist} />
-				<SharePlaylistButton id={playlist.id} />
-				{!children ?
-					<Link
-						to="/learn/$lang/playlists/$playlistId"
-						className="hover:text-foreground flex items-center gap-1"
-						params={{ lang: playlist.lang, playlistId: playlist.id }}
-					>
-						<LinkIcon className="h-4 w-4" /> Playlist details
-					</Link>
-				: playlist.href ?
-					<a
-						className="hover:text-foreground flex items-center gap-1"
-						href={playlist.href}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						<ExternalLink className="h-4 w-4" />
-						<span>Source link</span>
-					</a>
-				:	null}
+			<div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
+				<div className="flex items-center gap-4">
+					<UpvotePlaylist playlist={playlist} />
+					{children && playlist.href ?
+						<a
+							className="hover:text-foreground flex items-center gap-1 underline"
+							href={playlist.href}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							<ExternalLink className="h-4 w-4" />
+							<span>Source link</span>
+						</a>
+					:	null}
+				</div>
+				<div className="flex items-center gap-2">
+					<SharePlaylistButton id={playlist.id} />
+					<SendPlaylistToFriendDialog id={playlist.id} lang={playlist.lang}>
+						<Button
+							variant="ghost"
+							size="icon"
+							title="Send this playlist to a friend"
+							data-testid="send-playlist-to-friend-button"
+						>
+							<Send className="h-4 w-4" />
+						</Button>
+					</SendPlaylistToFriendDialog>
+				</div>
 			</div>
 			{children && <Separator />}
 			{children}
