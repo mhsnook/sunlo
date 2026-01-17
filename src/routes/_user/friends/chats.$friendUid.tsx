@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
@@ -34,6 +34,8 @@ function ChatPage() {
 	const userId = useUserId()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
+	const scrollAreaRef = useRef<HTMLDivElement>(null)
+	const [isScrolledDown, setIsScrolledDown] = useState(false)
 
 	const messagesQuery = useOneFriendChat(friendUid)
 
@@ -53,6 +55,21 @@ function ChatPage() {
 		scrollToBottom()
 		return () => resizeObserver.disconnect()
 	}, [messagesQuery.data])
+
+	// Track scroll position for shadow indicator
+	useLayoutEffect(() => {
+		const viewport = scrollAreaRef.current?.querySelector(
+			'[data-radix-scroll-area-viewport]'
+		)
+		if (!viewport) return
+
+		const handleScroll = () => {
+			setIsScrolledDown(viewport.scrollTop > 20)
+		}
+
+		viewport.addEventListener('scroll', handleScroll)
+		return () => viewport.removeEventListener('scroll', handleScroll)
+	}, [])
 
 	if (!relation?.profile || messagesQuery.isLoading) {
 		return (
@@ -83,8 +100,15 @@ function ChatPage() {
 					</p>
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
+			<CardContent className="relative min-h-0 flex-1 overflow-hidden p-0">
+				{/* Scroll shadow indicator */}
+				<div
+					className={cn(
+						'pointer-events-none absolute inset-x-0 top-0 z-10 h-8 bg-gradient-to-b from-black/10 to-transparent transition-opacity duration-200',
+						isScrolledDown ? 'opacity-100' : 'opacity-0'
+					)}
+				/>
+				<ScrollArea ref={scrollAreaRef} className="h-full px-4">
 					<div ref={messagesContainerRef} className="space-y-4 pt-4">
 						{!messagesQuery.data?.length ?
 							<EmptyChat profile={relation.profile} />
