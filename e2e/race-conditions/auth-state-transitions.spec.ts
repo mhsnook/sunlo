@@ -302,4 +302,35 @@ test.describe('Collection State Verification', () => {
 		// User profile elements should NOT be visible
 		await expect(page.getByText('GarlicFace')).not.toBeVisible()
 	})
+
+	test('after sign out, home page shows login link not avatar', async ({
+		page,
+	}) => {
+		// Login first
+		await page.goto('/')
+		await loginViaUI(page, TEST_USER_EMAIL, 'password')
+
+		// Wait for profile to load
+		await expect(page.getByText('GarlicFace').first()).toBeVisible({
+			timeout: 5000,
+		})
+
+		// Navigate to home page and verify avatar link is shown (links to /learn)
+		await page.goto('/')
+		const avatarLink = page.locator('a[title="Go to app"]')
+		await expect(avatarLink).toBeVisible({ timeout: 5000 })
+
+		// Sign out
+		await page.goto('/learn')
+		await signOutViaUI(page)
+		await expect(page).toHaveURL('/', { timeout: 10000 })
+
+		// Home page should show login link, NOT the avatar
+		// The login link should have title "Log in"
+		const loginButton = page.locator('a[title="Log in"]')
+		await expect(loginButton).toBeVisible({ timeout: 5000 })
+
+		// Avatar link should NOT be visible
+		await expect(avatarLink).not.toBeVisible()
+	})
 })

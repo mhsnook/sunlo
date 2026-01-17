@@ -434,6 +434,7 @@ export const playlistPhraseLinksCollection = createCollection(
 )
 
 export const clearUser = async () => {
+	// Clean up all user collections
 	await Promise.all([
 		myProfileCollection.cleanup(),
 		decksCollection.cleanup(),
@@ -448,4 +449,8 @@ export const clearUser = async () => {
 		phraseRequestUpvotesCollection.cleanup(),
 		phrasePlaylistUpvotesCollection.cleanup(),
 	])
+
+	// Also clear React Query cache for user queries to prevent stale data
+	// from showing after sign out (e.g., avatar on home page)
+	queryClient.removeQueries({ queryKey: ['user'] })
 }
