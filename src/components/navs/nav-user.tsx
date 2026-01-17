@@ -21,7 +21,6 @@ import { makeLinks } from '@/hooks/links'
 import { avatarUrlify } from '@/lib/hooks'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-import { clearUser } from '@/lib/collections'
 import { removeSbTokens } from '@/lib/utils'
 
 const data = makeLinks([
@@ -45,8 +44,9 @@ export function NavUser() {
 				throw error
 			}
 		},
-		onSettled: async () => {
-			await clearUser()
+		onSettled: () => {
+			// Don't call clearUser() here - auth-context.tsx already handles it
+			// when SIGNED_OUT event fires. Calling it twice can cause race conditions.
 			void navigate({ to: '/' })
 		},
 	})
