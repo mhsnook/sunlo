@@ -3,10 +3,11 @@ import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 
 import type { uuid } from '@/types/main'
+import type { CommentPhraseLinkType } from '@/lib/schemas'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest, useRequestLinksWithComments } from '@/hooks/use-requests'
+import { useRequest } from '@/hooks/use-requests'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
@@ -19,7 +20,11 @@ import { RequestButtonsRow } from '@/components/requests/request-buttons-row'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { WithPhrase } from '@/components/with-phrase'
 import { CommentWithReplies } from '@/components/comments/comment-with-replies'
-import { commentsCollection } from '@/lib/collections'
+import {
+	commentsCollection,
+	commentPhraseLinksCollection,
+} from '@/lib/collections'
+import { mapArrays } from '@/lib/utils'
 import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
@@ -36,6 +41,30 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 })
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
+
+export const useRequestLinksWithComments = (requestId: uuid) => {
+	const { data, isLoading } = useLiveQuery((q) =>
+		q
+			.from({ link: commentPhraseLinksCollection })
+			.where(({ link }) => eq(link.request_id, requestId))
+			.join(
+				{ comment: commentsCollection },
+				({ link, comment }) => eq(link.comment_id, comment.id),
+				'inner'
+			)
+			.select(({ link, comment }) => ({
+				...link,
+				parent_comment_id: comment.parent_comment_id,
+			}))
+	)
+	return {
+		isLoading,
+		data: mapArrays<
+			CommentPhraseLinkType & { parent_comment_id: uuid | null },
+			'phrase_id'
+		>(data, 'phrase_id'),
+	}
+}
 
 function RequestThreadPage() {
 	const params = Route.useParams()

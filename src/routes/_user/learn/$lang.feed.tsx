@@ -375,24 +375,22 @@ function PopularFeed() {
 	const filterPlaylists = search.filter_playlists ?? true
 	const filterPhrases = search.filter_phrases ?? true
 
-	// Apply filters, and group consecutive phrases
-	const groupedItems =
+	// Apply filters only - no grouping for Popular feed to preserve popularity order
+	const filteredItems =
 		!feedItems ?
 			[]
-		:	groupConsecutivePhrases(
-				feedItems.filter((item) => {
-					if (item.type === 'request') return filterRequests
-					if (item.type === 'playlist') return filterPlaylists
-					if (item.type === 'phrase') return filterPhrases
-					return true
-				})
-			)
+		:	feedItems.filter((item) => {
+				if (item.type === 'request') return filterRequests
+				if (item.type === 'playlist') return filterPlaylists
+				if (item.type === 'phrase') return filterPhrases
+				return true
+			})
 
 	return (
 		<div className="space-y-4">
 			{isLoading ?
 				<p>Loading feed...</p>
-			: !groupedItems || groupedItems.length === 0 ?
+			: !filteredItems || filteredItems.length === 0 ?
 				<Callout variant="ghost">
 					<p className="mb-4 text-lg italic">
 						This feed is empty. You might have to be the one to lead the way!
@@ -421,15 +419,8 @@ function PopularFeed() {
 					</div>
 				</Callout>
 			:	<>
-					{groupedItems.map((item) => (
-						<FeedItem
-							key={
-								'earliest_created_at' in item ?
-									`group-${item.earliest_created_at}`
-								:	item.id
-							}
-							item={item}
-						/>
+					{filteredItems.map((item) => (
+						<FeedItem key={item.id} item={item} />
 					))}
 
 					{hasNextPage ?
