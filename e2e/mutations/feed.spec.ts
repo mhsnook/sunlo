@@ -316,17 +316,18 @@ test.describe('Unified Feed', () => {
 		})
 
 		// Set different upvote counts directly in DB
+		// Use high values to ensure test items appear on first page above seed data
 		await supabase
 			.from('phrase_request')
-			.update({ upvote_count: 1 })
+			.update({ upvote_count: 20 })
 			.eq('id', lowRequest.id)
 		await supabase
 			.from('phrase_playlist')
-			.update({ upvote_count: 5 })
+			.update({ upvote_count: 50 })
 			.eq('id', medPlaylist.id)
 		await supabase
 			.from('phrase_request')
-			.update({ upvote_count: 10 })
+			.update({ upvote_count: 100 })
 			.eq('id', highRequest.id)
 
 		try {
@@ -370,9 +371,9 @@ test.describe('Unified Feed', () => {
 				.locator(`[data-feed-item]:has-text("${lowPopularityTitle}")`)
 				.first()
 
-			expect(await highPopItem.getAttribute('data-popularity')).toBe('10')
-			expect(await medPopItem.getAttribute('data-popularity')).toBe('5')
-			expect(await lowPopItem.getAttribute('data-popularity')).toBe('1')
+			expect(await highPopItem.getAttribute('data-popularity')).toBe('100')
+			expect(await medPopItem.getAttribute('data-popularity')).toBe('50')
+			expect(await lowPopItem.getAttribute('data-popularity')).toBe('20')
 		} finally {
 			await deleteRequest(lowRequest.id)
 			await deletePlaylist(medPlaylist.id)
