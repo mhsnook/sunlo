@@ -24,7 +24,7 @@ export function ActivityChart({ lang }: { lang: string }) {
 	const { data } = useDeckActivityChartData(lang)
 
 	return (
-		data.length && (
+		data?.length && (
 			<div className="my-4">
 				<h4 className="text-muted-foreground mb-2 text-center font-semibold">
 					Your Recent Reviews

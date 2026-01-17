@@ -27,8 +27,6 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 		</Callout>
 	)
 }
-const constFilter = { filter: 'language_no_translations' } as const
-
 export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 	return (
 		<Callout Icon={Garlic120}>
@@ -49,14 +47,7 @@ export function LanguageFilteredIsEmpty({ lang }: { lang: string }) {
 					</Link>
 				</li>
 				<li>
-					<Link
-						to="/learn/$lang/feed"
-						// @@TODO -- support this filter? change it?
-
-						params={{ lang }}
-						search={constFilter}
-						className="s-link"
-					>
+					<Link to="/learn/$lang/feed" params={{ lang }} className="s-link">
 						Browse the Requests feed to find new Phrases to learn
 					</Link>{' '}
 				</li>
