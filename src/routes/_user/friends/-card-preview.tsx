@@ -1,16 +1,15 @@
+import { CSSProperties } from 'react'
 import type { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
-import { LinkIcon } from 'lucide-react'
+import { EllipsisVertical } from 'lucide-react'
 
-import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CardContent, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import { CardStatusDropdown } from '@/components/card-pieces/card-status-dropdown'
-import { AddTranslationsDialog } from '@/components/card-pieces/add-translations'
+import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { buttonVariants } from '@/components/ui/button-variants'
 import { Loader } from '@/components/ui/loader'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
-import { CSSProperties } from 'react'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -27,14 +26,12 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 		>
 			{status === 'pending' || !phrase ?
 				<Loader className="my-6" />
-			:	<>
-					<CardHeader className="p-4">
+			:	<CardContent className="flex flex-row space-y-2 p-4">
+					<div className="flex-1">
 						<CardTitle className="text-lg">
 							{phrase.text}{' '}
 							<span className="text-sm font-normal">[{phrase.lang}]</span>
 						</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-2 p-4 pt-0">
 						{chosenTranslation ?
 							<p className="text-muted-foreground">
 								{chosenTranslation.text}{' '}
@@ -47,36 +44,21 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 								help by adding some.
 							</p>
 						}
-						<div className="flex items-center gap-2 text-xs">
-							{/*card?.next_due_at && (
-								<span className="text-muted-foreground">
-									Next review: {ago(card.next_due_at)}
-								</span>
-							)*/}
-						</div>
-						<div className="flex flex-row flex-wrap gap-2">
-							<CardStatusDropdown phrase={phrase} />
-							{!chosenTranslation && (
-								<AddTranslationsDialog
-									size="sm"
-									variant="secondary"
-									phrase={phrase}
-								/>
-							)}
-							<Link
-								to={'/learn/$lang/phrases/$id'}
-								params={{ lang: phrase.lang, id: pid }}
-								className={buttonVariants({
-									variant: 'secondary',
-									size: 'sm',
-								})}
-							>
-								<LinkIcon className="text-muted-foreground" />
-								View phrase
-							</Link>
-						</div>
-					</CardContent>
-				</>
+					</div>
+					<div className="flex grow-0 flex-col flex-wrap justify-start gap-2">
+						<CardStatusHeart phrase={phrase} />
+						<Link
+							to={'/learn/$lang/phrases/$id'}
+							params={{ lang: phrase.lang, id: pid }}
+							className={buttonVariants({
+								variant: 'ghost',
+								size: 'icon',
+							})}
+						>
+							<EllipsisVertical className="text-muted-foreground" />
+						</Link>
+					</div>
+				</CardContent>
 			}
 		</CardlikeFlashcard>
 	)

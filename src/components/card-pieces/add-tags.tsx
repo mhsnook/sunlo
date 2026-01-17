@@ -107,14 +107,14 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="sm">
-					<Pencil className="me-2 h-4 w-4" /> Edit tags
+				<Button variant="outline" size="icon">
+					<Pencil />
 				</Button>
 			</DialogTrigger>
 			<AuthenticatedDialogContent
 				authTitle="Login to Edit Tags"
 				authMessage="You need to be logged in to add tags to phrases."
-				className="sm:max-w-[425px]"
+				className="sm:max-w-106"
 			>
 				<DialogHeader>
 					<DialogTitle>Edit tags</DialogTitle>

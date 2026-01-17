@@ -102,8 +102,8 @@ export function AddTranslationsDialog({
 	return (
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
-				<Button {...props}>
-					<Pencil className="size-4" /> Edit translations
+				<Button {...props} size="icon">
+					<Pencil />
 				</Button>
 			</DialogTrigger>
 			<AuthenticatedDialogContent
