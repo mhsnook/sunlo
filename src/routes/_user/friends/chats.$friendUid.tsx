@@ -13,7 +13,7 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 

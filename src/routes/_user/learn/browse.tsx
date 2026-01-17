@@ -33,8 +33,7 @@ import {
 import { useAuth } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
@@ -99,9 +98,15 @@ function BrowsePage() {
 	}, [debouncedText, searchText, navigate])
 
 	// Parse comma-separated filter strings
-	const selectedTags = tagsFilter ? tagsFilter.split(',').filter(Boolean) : []
-	const selectedLangs =
-		langsFilter ? langsFilter.split(',').filter(Boolean) : []
+	const selectedTags = useMemo(
+		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
+		[tagsFilter]
+	)
+
+	const selectedLangs = useMemo(
+		() => (langsFilter ? langsFilter.split(',').filter(Boolean) : []),
+		[langsFilter]
+	)
 
 	// Get all tags for the filter
 	const { data: allTags } = useLiveQuery((q) =>

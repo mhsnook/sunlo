@@ -21,8 +21,7 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { Button } from '@/components/ui/button'
-import { ButtonProps } from '@/components/ui/button-variants'
+import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import TranslationTextField from '@/components/fields/translation-text-field'
 import { phrasesCollection } from '@/lib/collections'

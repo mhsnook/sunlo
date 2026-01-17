@@ -7,7 +7,7 @@ import {
 	UserPlus,
 } from 'lucide-react'
 import { DeckCard } from './-deck-card'
-import { buttonVariants } from '@/components/ui/button-variants'
+import { buttonVariants } from '@/components/ui/button'
 import { GarlicBroccoli } from '@/components/garlic'
 import { FriendProfiles } from '@/components/friend-profiles'
 import { useDecks } from '@/hooks/use-deck'
