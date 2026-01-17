@@ -41,6 +41,7 @@ export const MessageTypeEnumSchema = z.enum([
 	'request',
 	'recommendation',
 	'accepted',
+	'playlist',
 ])
 
 export const UserContributionsTabs = z.object({
@@ -293,6 +294,7 @@ export const ChatMessageSchema = z.object({
 	message_type: MessageTypeEnumSchema,
 	phrase_id: z.string().uuid().nullable(),
 	request_id: z.string().uuid().nullable(),
+	playlist_id: z.string().uuid().nullable(),
 	related_message_id: z.string().uuid().nullable(),
 	lang: LangSchema,
 })
