@@ -128,8 +128,8 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</div>
 									<AddTranslationsDialog
 										phrase={phrase}
-										variant="outline"
-										size="sm"
+										variant="ghost"
+										size="icon"
 									/>
 								</div>
 								{phrase.translations_mine
