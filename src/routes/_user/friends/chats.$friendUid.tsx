@@ -94,8 +94,10 @@ function ChatPage() {
 									<div
 										key={msg.id}
 										className={cn(
-											'flex items-start gap-2',
-											isMine ? 'justify-end ps-[10%]' : 'justify-start pe-[10%]'
+											'max-w-[80%] items-start gap-2',
+											isMine ?
+												'align-end aps-[10%] ms-auto justify-end'
+											:	'align-start me-auto justify-start pe-[10%]'
 										)}
 									>
 										{!isMine && (
