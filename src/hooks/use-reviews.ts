@@ -39,11 +39,19 @@ interface PostReviewInput {
 	lang: string
 	score: Score
 	day_session: string
+	day_first_review: boolean
 	previousReview?: CardReviewType
 }
 
 const postReview = async (submitData: PostReviewInput) => {
-	const { phrase_id, lang, score, day_session, previousReview } = submitData
+	const {
+		phrase_id,
+		lang,
+		score,
+		day_session,
+		day_first_review,
+		previousReview,
+	} = submitData
 
 	// Calculate FSRS values client-side
 	const fsrs = calculateFSRS({
@@ -59,6 +67,7 @@ const postReview = async (submitData: PostReviewInput) => {
 			lang,
 			score,
 			day_session,
+			day_first_review,
 			difficulty: fsrs.difficulty,
 			stability: fsrs.stability,
 			review_time_retrievability: fsrs.retrievability,
@@ -92,6 +101,7 @@ const updateReview = async (submitData: UpdateReviewInput) => {
 			score,
 			difficulty: fsrs.difficulty,
 			stability: fsrs.stability,
+			updated_at: new Date().toISOString(),
 		})
 		.eq('id', review_id)
 		.select()
@@ -140,7 +150,10 @@ export function useReviewsToday(lang: string, day_session: string) {
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
 					and(eq(review.lang, lang), eq(day_session, review.day_session))
-				),
+				)
+				// Order by created_at ASC so mapArray picks the NEWEST review for each phrase
+				// (mapArray assigns last item for duplicates, so newest must come last)
+				.orderBy(({ review }) => review.created_at, 'asc'),
 		[lang, day_session]
 	)
 	const reviewDayQuery = useReviewDay(lang, day_session)
@@ -234,7 +247,6 @@ export function useReviewMutation(
 	>({
 		mutationKey: ['user', 'review', day_session, pid],
 		mutationFn: async ({ score }: { score: number }) => {
-			// during stages 1 & 2, corrections can be done, but only update only if score changes
 			console.log(`Entering the review mutation:`, {
 				day_session,
 				pid,
@@ -243,40 +255,68 @@ export function useReviewMutation(
 				latestReview,
 				stage,
 			})
-			if (stage < 3 && prevDataToday?.score === score)
-				return {
-					action: 'noop',
-					row: prevDataToday,
-				}
 
-			// @@TODO: this connection between the display UI and the mutation behavior is leaky
-			if (stage < 3 && prevDataToday?.id) {
-				console.log(`Attempting update with`, { stage, prevDataToday, score })
-				// For updates, we need to recalculate based on the review BEFORE the one we're updating
-				// The latestReview is the one we're updating, so we pass undefined to treat as first review
-				// This is a simplification - in practice, corrections are rare
+			// Stage 1-2: First pass through cards + skipped (day_first_review=true)
+			// - If same score as existing review, noop
+			// - If different score and review exists, update it
+			// - Otherwise insert new review
+			if (stage < 3) {
+				if (prevDataToday?.score === score) {
+					return { action: 'noop', row: prevDataToday }
+				}
+				if (prevDataToday?.id) {
+					console.log(`Phase 1-2: Updating existing review`, {
+						prevDataToday,
+						score,
+					})
+					return {
+						action: 'update',
+						row: await updateReview({
+							score: score as Score,
+							review_id: prevDataToday.id,
+							previousReview:
+								latestReview?.id !== prevDataToday.id ?
+									latestReview
+								:	undefined,
+						}),
+					}
+				}
+				// First review for this card today
+				console.log(`Phase 1-2: Creating first review`, { pid, score })
+				return {
+					action: 'insert',
+					row: await postReview({
+						score: score as Score,
+						phrase_id: pid,
+						lang,
+						day_session,
+						day_first_review: true,
+						previousReview: latestReview,
+					}),
+				}
+			}
+
+			// Phase 3+: Re-review of "Again" cards (day_first_review=false)
+			// - If there's already a phase-3 review (day_first_review=false), update it
+			// - Otherwise insert new review with day_first_review=false
+			if (prevDataToday?.day_first_review === false) {
+				console.log(`Phase 3: Updating existing phase-3 review`, {
+					prevDataToday,
+					score,
+				})
 				return {
 					action: 'update',
 					row: await updateReview({
 						score: score as Score,
 						review_id: prevDataToday.id,
-						// Only use previous review if it's different from the one we're updating
-						previousReview:
-							latestReview?.id !== prevDataToday.id ? latestReview : undefined,
+						// Don't recalculate FSRS for phase-3 reviews - they're just for tracking
+						previousReview: undefined,
 					}),
 				}
 			}
-			// standard case: this should return a new review record
-			console.log(`Attempting new review with`, {
-				stage,
-				prevDataToday,
-				pid,
-				lang,
-				score,
-				day_session,
-				latestReview,
-			})
 
+			// First phase-3 review for this card
+			console.log(`Phase 3: Creating phase-3 review`, { pid, score })
 			return {
 				action: 'insert',
 				row: await postReview({
@@ -284,7 +324,8 @@ export function useReviewMutation(
 					phrase_id: pid,
 					lang,
 					day_session,
-					previousReview: latestReview,
+					day_first_review: false,
+					previousReview: undefined, // Don't use FSRS for phase-3 reviews
 				}),
 			}
 		},
@@ -301,14 +342,18 @@ export function useReviewMutation(
 				)
 			}
 
-			if (data.row.score === 1)
+			// Show "Review updated!" for corrections in phases 1-2
+			if (data.action === 'update' && stage < 3) {
+				toast.success('Review updated!', { position: 'bottom-center' })
+			} else if (data.row.score === 1) {
 				toast('okay', { icon: '🤔', position: 'bottom-center' })
-			if (data.row.score === 2)
+			} else if (data.row.score === 2) {
 				toast('okay', { icon: '🤷', position: 'bottom-center' })
-			if (data.row.score === 3)
+			} else if (data.row.score === 3) {
 				toast('got it', { icon: '👍️', position: 'bottom-center' })
-			if (data.row.score === 4)
+			} else if (data.row.score === 4) {
 				toast.success('nice', { position: 'bottom-center' })
+			}
 
 			setTimeout(() => {
 				resetRevealCard()

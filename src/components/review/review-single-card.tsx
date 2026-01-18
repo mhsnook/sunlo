@@ -128,6 +128,7 @@ export function ReviewSingleCard({
 		<CardlikeFlashcard
 			className="mx-auto flex min-h-[80vh] w-full flex-col"
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
+			data-testid={`review-single-card-${pid}`}
 		>
 			<CardContent className="relative flex grow flex-col items-center justify-center gap-4 pt-0">
 				<ContextMenu phrase={phrase} />
@@ -147,6 +148,7 @@ export function ReviewSingleCard({
 				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
 						<Button
 							variant="default"
+							data-testid="review-again-button"
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
@@ -160,6 +162,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
+							data-testid="review-hard-button"
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={cn(
@@ -171,6 +174,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
+							data-testid="review-good-button"
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
@@ -182,6 +186,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
+							data-testid="review-easy-button"
 							className={cn(
 								'bg-blue-500 hover:border-blue-400 hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
