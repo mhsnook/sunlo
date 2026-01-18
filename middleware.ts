@@ -1,23 +1,14 @@
-/**
- * Open Graph Crawler Middleware
- *
- * This middleware intercepts requests from social media crawlers and returns
- * a minimal HTML page with Open Graph meta tags for link previews.
- *
- * The app is a pure SPA (no SSR), so this edge middleware runs separately
- * to serve OG tags to crawlers while the main app remains client-side only.
- *
- * DEPLOYMENT OPTIONS:
- *
- * 1. Cloudflare Pages Functions - Place in functions/_middleware.ts
- * 2. Vercel Edge Middleware - Place in middleware.ts at project root
- * 3. Netlify Edge Functions - Place in netlify/edge-functions/
- *
- * The implementation below uses standard Web APIs (Request/Response)
- * and can be adapted for any edge runtime.
- */
-
 import { createClient } from '@supabase/supabase-js'
+
+export const config = {
+	matcher: [
+		'/learn/:lang',
+		'/learn/:lang/feed',
+		'/learn/:lang/phrases/:id*',
+		'/learn/:lang/playlists/:id*',
+		'/learn/:lang/requests/:id*',
+	],
+}
 
 // Language code to name mapping (subset of most common languages)
 const LANGUAGES: Record<string, string> = {
@@ -84,17 +75,13 @@ function isCrawler(userAgent: string | null): boolean {
 	)
 }
 
-// Route patterns for content that needs Open Graph tags
 const OG_ROUTES = [
 	{ pattern: /^\/learn\/([a-z]{3})\/phrases\/([a-f0-9-]+)$/, type: 'phrase' },
 	{
 		pattern: /^\/learn\/([a-z]{3})\/playlists\/([a-f0-9-]+)$/,
 		type: 'playlist',
 	},
-	{
-		pattern: /^\/learn\/([a-z]{3})\/requests\/([a-f0-9-]+)$/,
-		type: 'request',
-	},
+	{ pattern: /^\/learn\/([a-z]{3})\/requests\/([a-f0-9-]+)$/, type: 'request' },
 	{ pattern: /^\/learn\/([a-z]{3})(\/feed)?$/, type: 'language' },
 ] as const
 
@@ -105,11 +92,49 @@ interface OGData {
 	url: string
 }
 
+function escapeHtml(str: string): string {
+	return str
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;')
+}
+
+function generateOGHtml(data: OGData, baseUrl: string): string {
+	const fullUrl = `${baseUrl}${data.url}`
+	const siteName = 'Sunlo'
+	const defaultImage = `${baseUrl}/images/og-default.png`
+
+	return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>${escapeHtml(data.title)} | ${siteName}</title>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="${siteName}">
+  <meta property="og:title" content="${escapeHtml(data.title)}">
+  <meta property="og:description" content="${escapeHtml(data.description)}">
+  <meta property="og:url" content="${fullUrl}">
+  <meta property="og:image" content="${data.image || defaultImage}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(data.title)}">
+  <meta name="twitter:description" content="${escapeHtml(data.description)}">
+  <meta name="twitter:image" content="${data.image || defaultImage}">
+  <meta http-equiv="refresh" content="0;url=${fullUrl}">
+</head>
+<body>
+  <h1>${escapeHtml(data.title)}</h1>
+  <p>${escapeHtml(data.description)}</p>
+  <a href="${fullUrl}">View on ${siteName}</a>
+</body>
+</html>`
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function fetchOGData(
 	path: string,
-	supabase: any,
-	env: { SUPABASE_URL: string }
+	supabase: any
 ): Promise<OGData | null> {
 	for (const route of OG_ROUTES) {
 		const match = path.match(route.pattern)
@@ -145,9 +170,10 @@ async function fetchOGData(
 
 				if (data) {
 					// Construct cover image URL from Supabase storage
+					const supabaseUrl = process.env.VITE_SUPABASE_URL
 					const imageUrl =
-						data.cover_image_path && env.SUPABASE_URL ?
-							`${env.SUPABASE_URL}/storage/v1/object/public/avatars/${data.cover_image_path}`
+						data.cover_image_path && supabaseUrl ?
+							`${supabaseUrl}/storage/v1/object/public/avatars/${data.cover_image_path}`
 						:	undefined
 
 					return {
@@ -203,71 +229,26 @@ async function fetchOGData(
 	return null
 }
 
-function generateOGHtml(data: OGData, baseUrl: string): string {
-	const fullUrl = `${baseUrl}${data.url}`
-	const siteName = 'Sunlo'
-	const defaultImage = `${baseUrl}/images/og-default.png`
-
-	return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>${escapeHtml(data.title)} | ${siteName}</title>
-
-  <!-- Open Graph -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="${siteName}">
-  <meta property="og:title" content="${escapeHtml(data.title)}">
-  <meta property="og:description" content="${escapeHtml(data.description)}">
-  <meta property="og:url" content="${fullUrl}">
-  <meta property="og:image" content="${data.image || defaultImage}">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(data.title)}">
-  <meta name="twitter:description" content="${escapeHtml(data.description)}">
-  <meta name="twitter:image" content="${data.image || defaultImage}">
-
-  <!-- Redirect non-crawlers to the SPA -->
-  <meta http-equiv="refresh" content="0;url=${fullUrl}">
-</head>
-<body>
-  <h1>${escapeHtml(data.title)}</h1>
-  <p>${escapeHtml(data.description)}</p>
-  <a href="${fullUrl}">View on ${siteName}</a>
-</body>
-</html>`
-}
-
-function escapeHtml(str: string): string {
-	return str
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;')
-}
-
-/**
- * Edge middleware handler
- * Adapt this for your deployment platform (Cloudflare, Vercel, Netlify)
- */
-export async function handleRequest(
-	request: Request,
-	env: { SUPABASE_URL: string; SUPABASE_ANON_KEY: string }
-): Promise<Response | null> {
+export default async function middleware(request: Request) {
 	const userAgent = request.headers.get('user-agent')
 	const url = new URL(request.url)
 	const path = url.pathname
 
-	// Only intercept for crawlers on routes that need OG tags
-	if (!isCrawler(userAgent)) return null
-	if (!OG_ROUTES.some((route) => route.pattern.test(path))) return null
+	// Only intercept for crawlers
+	if (!isCrawler(userAgent)) return
 
-	const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY)
-	const ogData = await fetchOGData(path, supabase, env)
+	const supabaseUrl = process.env.VITE_SUPABASE_URL
+	const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY
 
-	if (!ogData) return null
+	if (!supabaseUrl || !supabaseAnonKey) {
+		console.error('Missing Supabase environment variables')
+		return
+	}
+
+	const supabase = createClient(supabaseUrl, supabaseAnonKey)
+	const ogData = await fetchOGData(path, supabase)
+
+	if (!ogData) return
 
 	const baseUrl = `${url.protocol}//${url.host}`
 	const html = generateOGHtml(ogData, baseUrl)
