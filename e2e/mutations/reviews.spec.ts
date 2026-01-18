@@ -120,8 +120,8 @@ test.describe.serial('Review Mutations', () => {
 
 		// Submit a review with a score of 2 (Hard)
 		await page.getByRole('button', { name: 'Hard' }).click()
-		// Toast shows "okay" for score 2 (Hard)
-		await expect(page.getByText('okay')).toBeVisible()
+		// Toast shows "okay" for score 2 (Hard) - look for toast with role="status"
+		await expect(page.getByRole('status').getByText('okay')).toBeVisible()
 
 		// Verify review record created in DB for this card
 		const { data: dbReview } = await getReviewByPhraseId(
