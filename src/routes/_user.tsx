@@ -43,7 +43,7 @@ export const Route = createFileRoute('/_user')({
 	},
 	loader: async ({ context, location }) => {
 		// If not authenticated, skip user-specific loading
-		if (!context.auth.isAuth) return
+		if (!context.auth?.isAuth) return
 
 		// Always fetch fresh profile data to avoid race conditions after login
 		// This ensures we have the latest data even if the collection is stale

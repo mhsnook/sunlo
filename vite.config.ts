@@ -1,15 +1,21 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import { tanstackStart } from '@tanstack/react-start/plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	return {
 		plugins: [
 			tsconfigPaths(),
-			tanstackRouter({
-				autoCodeSplitting: true,
+			tailwindcss(),
+			tanstackStart({
+				srcDirectory: 'src',
+				// SPA mode globally - crawler middleware handles social previews
+				spa: {
+					enabled: true,
+				},
 			}),
 			react({
 				babel: {
@@ -20,7 +26,7 @@ export default defineConfig(({ mode }) => {
 		build: {
 			chunkSizeWarningLimit: 750,
 		},
-		envPrefix: ['VITE_', 'TAURI_ENV_'],
+		envPrefix: ['VITE_'],
 		server: {
 			host: mode === 'development' ? '0.0.0.0' : false,
 			port: 5173,
@@ -34,9 +40,7 @@ export default defineConfig(({ mode }) => {
 					}
 				:	undefined,
 			watch: {
-				// tell vite to ignore watching `src-tauri`
 				ignored: [
-					'**/src-tauri/**',
 					'**/supabase/**',
 					'.oxlintrc.json',
 					'**/*.md',

@@ -41,11 +41,11 @@ export const Route = createFileRoute('/_auth/signup')({
 		}
 	},
 	beforeLoad: ({ context: { auth } }) => {
-		if (auth.isAuth) {
+		if (auth?.isAuth) {
 			console.log(
 				`Issuing redirect from /signup to /learn because auth.isAuth is true`
 			)
-			return redirect({ to: '/learn' })
+			throw redirect({ to: '/learn' })
 		}
 		return
 	},

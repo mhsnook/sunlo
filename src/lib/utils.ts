@@ -147,6 +147,7 @@ export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
 	e.preventDefault()
 
 export function isNativeAppUserAgent() {
+	if (typeof window === 'undefined') return false
 	return (
 		('standalone' in window.navigator && window.navigator?.standalone) ||
 		window.matchMedia('(display-mode: standalone)').matches
