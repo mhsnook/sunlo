@@ -295,36 +295,38 @@ function BrowsePage() {
 				</div>
 			</div>
 
-			{/* Go to language feed dropdown */}
-			<div className="flex items-center gap-3">
-				<span className="text-muted-foreground">Go to language feed:</span>
-				<Select
-					onValueChange={(lang) => {
-						void navigate({ to: '/learn/$lang/feed', params: { lang } })
-					}}
-				>
-					<SelectTrigger className="w-56 border">
-						<SelectValue placeholder="Select a language" />
-					</SelectTrigger>
-					<SelectContent>
-						{langOptions.map((lang) => (
-							<SelectItem key={lang.value} value={lang.value}>
-								{lang.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			</div>
-
-			{/* Header with auth buttons for non-authenticated users */}
-			{!isAuth && !isSearching && (
-				<div className="flex flex-row items-center justify-end gap-2">
-					<Link to="/login" className={buttonVariants({ variant: 'outline' })}>
-						Sign In
-					</Link>
-					<Link to="/signup" className={buttonVariants()}>
-						Get Started
-					</Link>
+			{/* Go to language feed dropdown + auth buttons */}
+			{!isSearching && (
+				<div className="flex flex-row items-center justify-between gap-4">
+					<div className="flex items-center gap-3">
+						<span className="text-muted-foreground">Go to language feed:</span>
+						<Select
+							onValueChange={(lang) => {
+								void navigate({ to: '/learn/$lang/feed', params: { lang } })
+							}}
+						>
+							<SelectTrigger className="w-56 border">
+								<SelectValue placeholder="Select a language" />
+							</SelectTrigger>
+							<SelectContent>
+								{langOptions.map((lang) => (
+									<SelectItem key={lang.value} value={lang.value}>
+										{lang.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+					{!isAuth && (
+						<div className="flex flex-row items-center gap-2">
+							<Link to="/login" className={buttonVariants({ variant: 'outline' })}>
+								Sign In
+							</Link>
+							<Link to="/signup" className={buttonVariants()}>
+								Get Started
+							</Link>
+						</div>
+					)}
 				</div>
 			)}
 
