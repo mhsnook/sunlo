@@ -111,7 +111,17 @@ const updateReview = async (submitData: UpdateReviewInput) => {
 	return data
 }
 
-function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
+function mapToStats(
+	reviewsMap: ReviewsMap,
+	manifest: pids,
+	allReviews: Array<CardReviewType> = []
+) {
+	// First-try reviews: day_first_review=true reviews only
+	const firstTryReviews = allReviews.filter((r) => r.day_first_review === true)
+	// First-try success: recalled on first attempt (score > 1)
+	const firstTrySuccess = firstTryReviews.filter((r) => r.score > 1).length
+	const firstTryTotal = firstTryReviews.length
+
 	const stats = {
 		reviewed: Object.keys(reviewsMap).length,
 		again: Object.values(reviewsMap).filter((r) => r.score === 1).length,
@@ -122,6 +132,9 @@ function mapToStats(reviewsMap: ReviewsMap, manifest: pids) {
 			-1
 		),
 		firstAgainIndex: getIndexOfNextAgainCard(manifest, reviewsMap, -1),
+		// First-try stats
+		firstTrySuccess,
+		firstTryTotal,
 	}
 
 	const stage: ReviewStages =
@@ -161,6 +174,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 		isLoading: reviewsQuery.isLoading || reviewDayQuery.isLoading,
 		data: {
 			...reviewDayQuery.data,
+			reviews: reviewsQuery.data,
 			reviewsMap: mapArray(reviewsQuery.data, 'phrase_id'),
 		},
 	}
@@ -170,7 +184,11 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 	const query = useReviewsToday(lang, day_session)
 	return {
 		...query,
-		data: mapToStats(query.data.reviewsMap, query.data.manifest ?? []),
+		data: mapToStats(
+			query.data.reviewsMap,
+			query.data.manifest ?? [],
+			query.data.reviews
+		),
 	}
 }
 
