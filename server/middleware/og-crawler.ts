@@ -20,9 +20,11 @@ import { createClient } from '@supabase/supabase-js'
 const CRAWLER_PATTERNS = [
 	'facebookexternalhit',
 	'Facebot',
+	'Instagram',
 	'Twitterbot',
 	'LinkedInBot',
 	'WhatsApp',
+	'Signal',
 	'Slackbot',
 	'TelegramBot',
 	'Discordbot',
