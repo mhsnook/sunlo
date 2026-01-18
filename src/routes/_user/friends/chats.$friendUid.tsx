@@ -73,7 +73,7 @@ function ChatPage() {
 
 	if (!relation?.profile || messagesQuery.isLoading) {
 		return (
-			<Card className="flex h-full flex-col">
+			<Card className="flex h-[calc(100vh-9rem-4px)] flex-col">
 				<Loader />
 			</Card>
 		)
@@ -83,7 +83,7 @@ function ChatPage() {
 	const relAvatarUrl = avatarUrlify(relation?.profile.avatar_path)
 
 	return (
-		<Card className="flex h-full flex-col">
+		<Card className="flex h-[calc(100vh-9rem-4px)] flex-col">
 			<CardHeader className="flex flex-row items-center gap-4 border-b p-4">
 				<Link to="/friends/$uid" params={{ uid: friendUid }}>
 					<Avatar>
