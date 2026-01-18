@@ -20,6 +20,8 @@ import {
 	ExternalLink,
 	Search,
 	X,
+	LogIn,
+	UserPlus,
 } from 'lucide-react'
 
 import {
@@ -31,7 +33,7 @@ import {
 	playlistPhraseLinksCollection,
 } from '@/lib/collections'
 import { useAuth } from '@/lib/use-auth'
-import languages from '@/lib/languages'
+import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
@@ -120,11 +122,6 @@ function BrowsePage() {
 		q.from({ tag: langTagsCollection })
 	)
 
-	// Get all languages for the filter
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q.from({ lang: languagesCollection })
-	)
-
 	const tagOptions = useMemo(
 		() =>
 			[...new Set(allTags?.map((t) => t.name) ?? [])].map((name) => ({
@@ -132,15 +129,6 @@ function BrowsePage() {
 				label: name,
 			})),
 		[allTags]
-	)
-
-	const langOptions = useMemo(
-		() =>
-			(allLanguages ?? []).map((l) => ({
-				value: l.lang,
-				label: l.name,
-			})),
-		[allLanguages]
 	)
 
 	// Find matching tags based on search query (for suggestions)
@@ -160,14 +148,14 @@ function BrowsePage() {
 	const matchingLangSuggestions = useMemo(() => {
 		if (!liveText.trim() || liveText.length < 2) return []
 		const lowerQuery = liveText.toLowerCase()
-		return langOptions
+		return allLanguageOptions
 			.filter(
 				(l) =>
 					l.label.toLowerCase().includes(lowerQuery) &&
 					!selectedLangs.includes(l.value)
 			)
 			.slice(0, 5)
-	}, [liveText, langOptions, selectedLangs])
+	}, [liveText, selectedLangs])
 
 	const isSearching =
 		liveText.trim().length > 0 ||
@@ -278,7 +266,7 @@ function BrowsePage() {
 				<div className="flex flex-col gap-3 @md:flex-row">
 					<div className="flex-1">
 						<FancyMultiSelect
-							options={langOptions}
+							options={allLanguageOptions}
 							selected={selectedLangs}
 							setSelected={setSelectedLangs}
 							placeholder="Filter by language..."
@@ -297,9 +285,9 @@ function BrowsePage() {
 
 			{/* Go to language feed dropdown + auth buttons */}
 			{!isSearching && (
-				<div className="flex flex-row items-center justify-between gap-4">
-					<div className="flex items-center gap-3">
-						<span className="text-muted-foreground">Go to language feed:</span>
+				<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
+					<div className="flex flex-col items-center gap-3 @xl:flex-row">
+						<span className="text-muted-foreground">Go to feed:</span>
 						<Select
 							onValueChange={(lang) => {
 								void navigate({ to: '/learn/$lang/feed', params: { lang } })
@@ -309,7 +297,7 @@ function BrowsePage() {
 								<SelectValue placeholder="Select a language" />
 							</SelectTrigger>
 							<SelectContent>
-								{langOptions.map((lang) => (
+								{allLanguageOptions.map((lang) => (
 									<SelectItem key={lang.value} value={lang.value}>
 										{lang.label}
 									</SelectItem>
@@ -318,11 +306,15 @@ function BrowsePage() {
 						</Select>
 					</div>
 					{!isAuth && (
-						<div className="flex flex-row items-center gap-2">
-							<Link to="/login" className={buttonVariants({ variant: 'outline' })}>
-								Sign In
+						<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
+							<Link
+								to="/login"
+								className={buttonVariants({ variant: 'outline' })}
+							>
+								<LogIn /> Sign In
 							</Link>
 							<Link to="/signup" className={buttonVariants()}>
+								<UserPlus />
 								Get Started
 							</Link>
 						</div>
