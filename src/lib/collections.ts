@@ -130,6 +130,7 @@ export const languagesCollection = createCollection(
 			const { data } = await supabase
 				.from('meta_language')
 				.select()
+				.is('alias_of', null)
 				.throwOnError()
 			return data?.map((item) => LanguageSchema.parse(item)) ?? []
 		},

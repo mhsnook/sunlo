@@ -215,11 +215,13 @@ const allLanguageKeys = Array.from(
 export const allLanguageOptions: Array<{
 	value: keyof typeof languages & string
 	label: string
-}> = allLanguageKeys.map((lang) => {
-	return {
-		value: lang,
-		label: languages[lang],
-	}
-})
+}> = allLanguageKeys
+	.map((lang) => {
+		return {
+			value: lang,
+			label: languages[lang],
+		}
+	})
+	.toSorted((a, b) => (a.label > b.label ? 1 : -1))
 
 export default languages
