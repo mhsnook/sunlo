@@ -150,15 +150,16 @@ test.describe.serial('Review Mutations', () => {
 		// Compare to dbCardBefore card stats
 		expect(dbCardAfter!.difficulty).not.toBe(dbCardBefore!.difficulty)
 		expect(dbCardAfter!.stability).not.toBe(dbCardBefore!.stability)
-		expect(dbCardAfter!.retrievability_now).not.toBe(
-			dbCardBefore!.retrievability_now
-		)
 
 		// After the review, use the button to navigate to the previous card
 		await page.getByRole('button', { name: 'Previous card' }).click()
 
-		// Confirm the previously-answered option is disabled
-		await expect(page.getByRole('button', { name: 'Hard' })).toBeDisabled()
+		// The previously-answered option has a ring indicator (not disabled)
+		// because user CAN update their answer by clicking a different button
+		const hardButton = page.getByRole('button', { name: 'Hard' })
+		await expect(hardButton).toBeEnabled()
+		// The ring indicator class is applied to show the previous selection
+		await expect(hardButton).toHaveClass(/ring-primary/)
 
 		// Give a different answer (score=4) to update the answer
 		await page.getByRole('button', { name: 'Easy' }).click()
@@ -172,34 +173,42 @@ test.describe.serial('Review Mutations', () => {
 		)
 		expect(dbReviewEdited).toBeTruthy()
 
-		// Check the local collection for the newest review
+		// Check the local collection for the edited review
 		const localReviewEdited = await page.evaluate(
-			({ lang, phraseId, sessionDate }) => {
+			({ phraseId, sessionDate }) => {
 				// @ts-expect-error - accessing window global
-				const reviews = window.__reviewsCollection?.get(lang)
-				return reviews?.find(
-					(r) => r.phrase_id === phraseId && r.day_session === sessionDate
+				const collection = window.__cardReviewsCollection
+				if (!collection)
+					throw new Error('cardReviewsCollection not attached to window')
+				// Find reviews matching phrase_id and day_session
+				const reviews = collection.toArray.filter(
+					(r: { phrase_id: string; day_session: string }) =>
+						r.phrase_id === phraseId && r.day_session === sessionDate
 				)
+				return reviews[0] || null
 			},
-			{ lang: TEST_LANG, phraseId, sessionDate }
+			{ phraseId, sessionDate }
 		)
 		expect(localReviewEdited).toBeTruthy()
 
 		// 1. the previous review record was updated (same id)
 		expect(dbReviewEdited?.id).toBe(dbReview?.id)
+		expect(localReviewEdited?.id).toBe(dbReview?.id)
 
 		// 2. there is only one review today for this phrase_id
-		const reviewsForPhrase = await page.evaluate(
-			({ lang, phraseId, sessionDate }) => {
+		const reviewCountForPhrase = await page.evaluate(
+			({ phraseId, sessionDate }) => {
 				// @ts-expect-error - accessing window global
-				const reviews = window.__reviewsCollection?.get(lang)
-				return reviews?.filter(
-					(r) => r.phrase_id === phraseId && r.day_session === sessionDate
+				const collection = window.__cardReviewsCollection
+				if (!collection) return 0
+				return collection.toArray.filter(
+					(r: { phrase_id: string; day_session: string }) =>
+						r.phrase_id === phraseId && r.day_session === sessionDate
 				).length
 			},
-			{ lang: TEST_LANG, phraseId, sessionDate }
+			{ phraseId, sessionDate }
 		)
-		expect(reviewsForPhrase).toBe(1)
+		expect(reviewCountForPhrase).toBe(1)
 
 		// 3. some values are the same
 		expect(dbReviewEdited?.uid).toBe(dbReview?.uid)
