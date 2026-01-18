@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- Materialized view for phrase search with pre-computed search text
 -- This combines phrase text, translations, and tags for efficient searching
-CREATE MATERIALIZED VIEW phrase_search_index AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS phrase_search_index AS
 SELECT
   p.id,
   p.lang,
