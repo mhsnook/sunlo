@@ -8,6 +8,7 @@ import { Badge, LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import SharePhraseButton from '@/components/card-pieces/share-phrase-button'
+import { Users } from 'lucide-react'
 
 export function PhraseAccordionItem({
 	phrase,
@@ -18,7 +19,20 @@ export function PhraseAccordionItem({
 		<AccordionItem value={phrase.id} className="mb-2 rounded px-2 shadow-sm">
 			<div className="ms-3 flex flex-row items-center gap-2">
 				<CardStatusHeart phrase={phrase} />
-				<AccordionTrigger>{phrase.text}</AccordionTrigger>
+
+				<span
+					className="text-muted-foreground/70 flex shrink-0 items-center gap-1 text-xs whitespace-nowrap"
+					title={`${phrase.count_learners} ${phrase.count_learners === 1 ? 'person is' : 'people are'} learning this phrase`}
+				>
+					<Users size={12} />
+					{phrase.count_learners}
+				</span>
+
+				<AccordionTrigger className="min-w-0 flex-1">
+					<div className="flex flex-row items-center gap-2">
+						<span className="truncate">{phrase.text}</span>
+					</div>
+				</AccordionTrigger>
 			</div>
 			<AccordionContent>
 				<div className="space-y-1 pt-2 pl-4">
