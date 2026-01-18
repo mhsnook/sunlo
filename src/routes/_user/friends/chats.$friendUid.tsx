@@ -84,8 +84,8 @@ function ChatPage() {
 				</div>
 			</CardHeader>
 			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-20rem-1px)] px-4">
-					<div ref={messagesContainerRef} className="space-y-4 pt-4">
+				<ScrollArea className="h-[calc(100vh-15rem+2px)] px-4">
+					<div ref={messagesContainerRef} className="space-y-4 pt-4 pb-2">
 						{!messagesQuery.data?.length ?
 							<EmptyChat profile={relation.profile} />
 						:	messagesQuery.data?.map((msg) => {
@@ -97,7 +97,7 @@ function ChatPage() {
 										className={cn(
 											'max-w-[80%] items-start gap-2',
 											isMine ?
-												'align-end aps-[10%] ms-auto justify-end'
+												'align-end ms-auto justify-end ps-[10%]'
 											:	'align-start me-auto justify-start pe-[10%]'
 										)}
 									>
