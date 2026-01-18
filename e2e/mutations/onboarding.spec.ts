@@ -12,10 +12,19 @@ test.describe('Onboarding and Auth Mutations', () => {
 	test.skip('gettingStarted: complete onboarding flow', async ({ page }) => {
 		// TODO: Implement onboarding test
 		// Complete signup
-		// Fill getting started form
-		// Select languages
-		// Set learning goals
-		// Verify profile created with correct data
+		// Fill getting started form (username, languages_known)
+		// After profile creation, should redirect to /welcome
+		// Verify welcome page shows feature explanations
+		// Click through to continue to /learn or /learn/add-deck
+	})
+
+	test.skip('welcomePage: displays features and actions', async ({ page }) => {
+		// TODO: Implement welcome page test
+		// Use login helper with { skipWelcome: false } to stay on welcome page
+		// Verify "What is Sunlo?" section is visible
+		// Verify action cards are present (profile picture, create deck, find friends, help others)
+		// Verify "Requests You Can Help With" shows relevant requests
+		// Click primary CTA and verify navigation
 	})
 
 	test.skip('acceptInvite: accept friend invite during onboarding', async ({

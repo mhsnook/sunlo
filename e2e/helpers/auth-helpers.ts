@@ -43,22 +43,46 @@ export function getTestUserForProject(testInfo: TestInfo): {
 	return browserUserMap[projectName] ?? browserUserMap.chromium
 }
 
+export type LoginOptions = {
+	/** If true (default), automatically dismiss the welcome page if shown */
+	skipWelcome?: boolean
+}
+
 /**
  * Log in with specific credentials
  */
 export async function login(
 	page: Page,
 	email: string,
-	password: string
+	password: string,
+	options: LoginOptions = {}
 ): Promise<void> {
+	const { skipWelcome = true } = options
+
 	await page.goto('/login')
 	await page.fill('input[name="email"]', email)
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')
-	await page.waitForURL(/\/learn/)
-	await expect(
-		page.getByText('Which deck are we studying today?')
-	).toBeVisible()
+
+	// Wait for either /learn or /welcome (for new users after profile creation)
+	await page.waitForURL(/\/(learn|welcome)/)
+
+	// If we landed on welcome page and skipWelcome is true, click through to continue
+	if (skipWelcome && page.url().includes('/welcome')) {
+		// Click the primary CTA button to continue to the main app
+		const continueButton = page.getByRole('link', {
+			name: /(go to my decks|create my first deck|find friends)/i,
+		})
+		await continueButton.click()
+		await page.waitForURL(/\/(learn|friends)/)
+	}
+
+	// For users landing on /learn, verify the expected content
+	if (page.url().includes('/learn')) {
+		await expect(
+			page.getByText('Which deck are we studying today?')
+		).toBeVisible()
+	}
 }
 
 /**
@@ -67,30 +91,43 @@ export async function login(
  */
 export async function loginForProject(
 	page: Page,
-	testInfo: TestInfo
+	testInfo: TestInfo,
+	options: LoginOptions = {}
 ): Promise<void> {
 	const { email } = getTestUserForProject(testInfo)
-	await login(page, email, 'password')
+	await login(page, email, 'password', options)
 }
 
 /**
  * Log in as the default test user (sunloapp@gmail.com)
  * @deprecated Use loginForProject() in navigation tests to avoid DB conflicts
  */
-export async function loginAsTestUser(page: Page): Promise<void> {
-	await login(page, TEST_USER_EMAIL, 'password')
+export async function loginAsTestUser(
+	page: Page,
+	options: LoginOptions = {}
+): Promise<void> {
+	await login(page, TEST_USER_EMAIL, 'password', options)
 }
 
-export async function loginAsFirstUser(page: Page): Promise<void> {
-	await login(page, 'sunloapp+1@gmail.com', 'password')
+export async function loginAsFirstUser(
+	page: Page,
+	options: LoginOptions = {}
+): Promise<void> {
+	await login(page, 'sunloapp+1@gmail.com', 'password', options)
 }
 
-export async function loginAsSecondUser(page: Page): Promise<void> {
-	await login(page, 'sunloapp+2@gmail.com', 'password')
+export async function loginAsSecondUser(
+	page: Page,
+	options: LoginOptions = {}
+): Promise<void> {
+	await login(page, 'sunloapp+2@gmail.com', 'password', options)
 }
 
-export async function loginAsFriendUser(page: Page): Promise<void> {
-	await login(page, 'sunloapp+friend@gmail.com', 'password')
+export async function loginAsFriendUser(
+	page: Page,
+	options: LoginOptions = {}
+): Promise<void> {
+	await login(page, 'sunloapp+friend@gmail.com', 'password', options)
 }
 
 /**
