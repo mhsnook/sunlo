@@ -8,9 +8,8 @@ import toast from 'react-hot-toast'
 import type { TablesInsert } from '@/types/supabase'
 import type { uuid } from '@/types/main'
 import { LanguagesKnownSchema, MyProfileSchema } from '@/lib/schemas'
-import { useAuth } from '@/lib/use-auth'
+import { useUserId } from '@/lib/use-auth'
 import { useProfile } from '@/hooks/use-profile'
-import { useDecks } from '@/hooks/use-deck'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/lib/collections'
 import { Button } from '@/components/ui/button'
@@ -44,18 +43,11 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function GettingStartedPage() {
 	const { referrer }: GettingStartedProps = Route.useSearch()
-	const { userId, userRole } = useAuth()
+	const userId = useUserId()
 	const { data: profile } = useProfile()
-	const { data: decks } = useDecks()
 
-	// If user has decks, go to /learn (not add-deck)
-	// Only send to add-deck if they're a learner with no decks
-	const hasDecks = decks && decks.length > 0
-	const nextPage =
-		referrer ? `/friends/search/${referrer}`
-		: hasDecks ? '/learn'
-		: userRole === 'learner' ? '/learn/add-deck'
-		: '/friends'
+	// After profile creation, go to welcome page (or referrer if invited)
+	const nextPage = referrer ? `/friends/search/${referrer}` : '/welcome'
 
 	return profile ?
 			<Navigate to={nextPage} />
