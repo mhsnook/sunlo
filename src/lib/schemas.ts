@@ -288,11 +288,11 @@ export const ChatMessageSchema = z.object({
 	sender_uid: z.string().uuid(),
 	recipient_uid: z.string().uuid(),
 	message_type: MessageTypeEnumSchema,
-	phrase_id: z.string().uuid().nullable(),
-	request_id: z.string().uuid().nullable(),
-	playlist_id: z.string().uuid().nullable(),
-	related_message_id: z.string().uuid().nullable(),
-	lang: LangSchema,
+	phrase_id: z.string().uuid().nullish(),
+	request_id: z.string().uuid().nullish(),
+	playlist_id: z.string().uuid().nullish(),
+	related_message_id: z.string().uuid().nullish(),
+	lang: LangSchema.nullish(),
 })
 
 export type ChatMessageType = z.infer<typeof ChatMessageSchema>
