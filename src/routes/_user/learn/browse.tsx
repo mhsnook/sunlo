@@ -37,6 +37,13 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import * as z from 'zod'
@@ -286,6 +293,27 @@ function BrowsePage() {
 						/>
 					</div>
 				</div>
+			</div>
+
+			{/* Go to language feed dropdown */}
+			<div className="flex items-center gap-3">
+				<span className="text-muted-foreground">Go to language feed:</span>
+				<Select
+					onValueChange={(lang) => {
+						void navigate({ to: '/learn/$lang/feed', params: { lang } })
+					}}
+				>
+					<SelectTrigger className="w-56 border">
+						<SelectValue placeholder="Select a language" />
+					</SelectTrigger>
+					<SelectContent>
+						{langOptions.map((lang) => (
+							<SelectItem key={lang.value} value={lang.value}>
+								{lang.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 
 			{/* Header with auth buttons for non-authenticated users */}
