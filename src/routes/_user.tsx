@@ -30,6 +30,9 @@ import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user')({
+	// Disable SSR for user routes - they depend on TanStack DB collections
+	// which use useSyncExternalStore without server snapshots
+	ssr: false,
 	beforeLoad: ({ context }) => {
 		// Auth is optional - RLS handles data security
 		// Individual routes can require auth if needed
@@ -43,7 +46,7 @@ export const Route = createFileRoute('/_user')({
 	},
 	loader: async ({ context, location }) => {
 		// If not authenticated, skip user-specific loading
-		if (!context.auth.isAuth) return
+		if (!context.auth?.isAuth) return
 
 		// Always fetch fresh profile data to avoid race conditions after login
 		// This ensures we have the latest data even if the collection is stale

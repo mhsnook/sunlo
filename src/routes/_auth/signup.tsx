@@ -45,9 +45,8 @@ export const Route = createFileRoute('/_auth/signup')({
 			console.log(
 				`Issuing redirect from /signup to /learn because auth.isAuth is true`
 			)
-			return redirect({ to: '/learn' })
+			throw redirect({ to: '/learn' })
 		}
-		return
 	},
 	component: SignUp,
 })

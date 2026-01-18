@@ -21,12 +21,10 @@ export const Route = createFileRoute('/')({
 		// If the app was launched from the user's homescreen shortcut
 		// we should skip the homepage and go straight to learning or login
 		if (isNativeAppUserAgent()) {
-			if (context.auth?.isAuth)
-				redirect({
-					to: '/learn',
-				})
-			else {
-				redirect({ to: '/login' })
+			if (context.auth?.isAuth) {
+				throw redirect({ to: '/learn' })
+			} else {
+				throw redirect({ to: '/login' })
 			}
 		}
 		return context.auth
