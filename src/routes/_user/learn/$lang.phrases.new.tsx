@@ -55,7 +55,7 @@ export interface SearchParams {
 	text?: string
 }
 
-export const Route = createFileRoute('/_user/learn/$lang/add-phrase')({
+export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 	validateSearch: (search: Record<string, unknown>): SearchParams => {
 		return {
 			text: (search?.text as string) ?? '',
@@ -147,7 +147,7 @@ function AddPhraseTab() {
 	const addPhraseMutation = useMutation({
 		mutationFn: async (variables: AddPhraseFormValues) => {
 			if (!userId) {
-				console.log(`Auth guard didn't work in $lang.add-phrase`)
+				console.log(`Auth guard didn't work in $lang.phrases.new`)
 				throw new Error(
 					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
 				)

@@ -3,6 +3,18 @@ Deployments in Jan 2026
 
 **17 Jan, v0.4.9**
 
+- (c2, d2) Feature: Friends feed and Popular feed polymorphic with filters
+- Add "popularity" to the feed-activities view
+- (c1, d1) Move add-phrases route to `learn/$lang/phrases/new`
+- (c2, d2) Feature: Playlists image option
+- (c1, d1) Feature: "You completed your review" nicer screen
+- (c2, d2) Chore: Replace the friend request / accept / cancel logic with a before hook
+- Fix: ALL remaining `tsc -b` errors.
+- Feat: Cover images on Playlists!
+-
+
+
+
 **16h Jan, v0.4.8**
 
 - (c2, d2) DX: GitHub actions for CI/CD

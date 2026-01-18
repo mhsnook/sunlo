@@ -50,7 +50,7 @@ inputs and edge cases.
 - [ ] getting-started.tsx: 90: `mainForm`
 - [ ] chats.$friendUid.recommend.tsx: 42: `sendMessageMutation`
 - [ ] -archive-deck-button.tsx: 36: `mutation`
-- [x] $lang.add-phrase.tsx: 101: `addPhraseMutation`
+- [x] $lang.phrases.new.tsx: 101: `addPhraseMutation`
 - [ ] $lang.bulk-add-tsx: 96: `bulkAddMutation` – works with multiple phrases with multiple translations (and shows the results below)
 - [ ] $lang.deck-settings: 114: `updateDailyGoalMutation`
 - [ ] $lang.deck-settings: 226: `updateDailyGoalMutation`
