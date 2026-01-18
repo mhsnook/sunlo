@@ -226,8 +226,12 @@ test('test with multiple phrases', async ({ page }) => {
 test('test card status', async ({ page }) => {
 	await loginAsTestUser(page)
 
-	// Navigate to form
-	await page.goto('/learn/hin/add-phrase')
+	// ✅ Navigate to destination with clicks and testIds
+	await page.getByTestId('link--deck-hin').click()
+	await page.getByTestId('link--new-phrase').click()
+
+	// ❌ Don't use goto bc it breaks the SPA UX
+	// await page.goto('/learn/hin/phrases/new')
 
 	// Fill out the entire form
 	await page.fill('textarea[name="phrase"]', 'test')

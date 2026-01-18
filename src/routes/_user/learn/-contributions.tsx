@@ -38,8 +38,7 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 			search: ((prev: Record<string, unknown>) => ({
 				...prev,
 				contributionsTab: value as viewTabName,
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			})) as any,
+			})) as never,
 		})
 	}
 
@@ -149,7 +148,7 @@ function PhrasesTab(props: { lang?: string; uid: uuid }) {
 				{props.lang && (
 					<Link
 						className={buttonVariants({ variant: 'outline-primary' }) + ' mt-4'}
-						to="/learn/$lang/add-phrase"
+						to="/learn/$lang/phrases/new"
 						params={{ lang: props.lang }}
 					>
 						<MessageSquareQuote />

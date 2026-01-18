@@ -40,7 +40,7 @@ export function NotEnoughCards({
 
 				<Link
 					className={buttonVariants({ variant: 'outline' })}
-					to="/learn/$lang/add-phrase"
+					to="/learn/$lang/phrases/new"
 					params={{ lang }}
 				>
 					Create new cards
