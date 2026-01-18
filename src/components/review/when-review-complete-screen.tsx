@@ -105,20 +105,33 @@ export function WhenComplete() {
 						<CardTitle className="text-center">Review Complete!</CardTitle>
 						<p className="text-muted-foreground text-center">
 							You reviewed {stats.reviewed} card
-							{stats.reviewed === 1 ? '' : 's'} today
-							{stats.complete > 0 && (
-								<>
+							{stats.reviewed === 1 ? '' : 's'} today.
+						</p>
+						{stats.firstTryTotal > 0 && (
+							<p className="text-muted-foreground text-center">
+								<span className="text-primary font-medium">
+									{stats.firstTrySuccess}
+								</span>{' '}
+								recalled on first try
+								<span className="text-primary font-medium">
 									{' '}
-									&mdash; {stats.complete} recalled successfully
-									{stats.reviewed > 0 && (
+									(
+									{Math.round(
+										(stats.firstTrySuccess / stats.firstTryTotal) * 100
+									)}
+									%)
+								</span>
+								{stats.complete > stats.firstTrySuccess && (
+									<>
+										, {stats.complete} total
 										<span className="text-primary font-medium">
 											{' '}
 											({Math.round((stats.complete / stats.reviewed) * 100)}%)
 										</span>
-									)}
-								</>
-							)}
-						</p>
+									</>
+								)}
+							</p>
+						)}
 
 						<div className="mt-4 grid w-full max-w-sm gap-3">
 							<Link
