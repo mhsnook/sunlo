@@ -42,6 +42,10 @@ create extension if not exists "pg_stat_statements"
 with
 	schema "extensions";
 
+create extension if not exists "pg_trgm"
+with
+	schema "public";
+
 create extension if not exists "pgcrypto"
 with
 	schema "extensions";
@@ -378,6 +382,94 @@ alter function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) owner to "postgres";
 
+create or replace function "public"."refresh_phrase_search_index" () returns "void" language "plpgsql" security definer as $$
+BEGIN
+  REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
+END;
+$$;
+
+alter function "public"."refresh_phrase_search_index" () owner to "postgres";
+
+create or replace function "public"."search_phrases_smart" (
+	"query" "text",
+	"lang_filter" "text",
+	"sort_by" "text" default 'relevance'::"text",
+	"result_limit" integer default 20,
+	"cursor_created_at" timestamp with time zone default null::timestamp with time zone,
+	"cursor_id" "uuid" default null::"uuid"
+) returns table (
+	"id" "uuid",
+	"similarity_score" real,
+	"popularity_score" integer,
+	"created_at" timestamp with time zone
+) language "plpgsql" stable as $$
+DECLARE
+  normalized_query TEXT;
+BEGIN
+  -- Normalize query: lowercase and trim
+  normalized_query := LOWER(TRIM(query));
+
+  -- Early exit for empty or too-short queries
+  IF normalized_query = '' OR LENGTH(normalized_query) < 2 THEN
+    RETURN;
+  END IF;
+
+  RETURN QUERY
+  WITH scored AS (
+    SELECT
+      psi.id,
+      psi.created_at,
+      psi.popularity,
+      -- Compute similarity score with boosts for different match types
+      GREATEST(
+        -- Base trigram similarity
+        similarity(psi.search_text, normalized_query),
+        -- Boost for exact substring matches
+        CASE WHEN psi.search_text ILIKE '%' || normalized_query || '%' THEN 0.4 ELSE 0 END,
+        -- Boost for prefix matches (word starts with query)
+        CASE WHEN psi.search_text ILIKE normalized_query || '%' THEN 0.6 ELSE 0 END,
+        -- Boost for word-boundary matches
+        CASE WHEN psi.search_text ILIKE '% ' || normalized_query || '%' THEN 0.5 ELSE 0 END
+      ) AS sim_score
+    FROM phrase_search_index psi
+    WHERE
+      psi.lang = lang_filter
+      AND (
+        -- Match via substring OR trigram similarity
+        psi.search_text ILIKE '%' || normalized_query || '%'
+        OR similarity(psi.search_text, normalized_query) > 0.1
+      )
+  )
+  SELECT
+    scored.id,
+    scored.sim_score::REAL AS similarity_score,
+    scored.popularity::INT AS popularity_score,
+    scored.created_at
+  FROM scored
+  WHERE
+    -- Cursor-based pagination: skip items we've already seen
+    (cursor_created_at IS NULL AND cursor_id IS NULL)
+    OR (scored.created_at, scored.id) < (cursor_created_at, cursor_id)
+  ORDER BY
+    -- Primary sort by user preference
+    CASE WHEN sort_by = 'relevance' THEN scored.sim_score END DESC NULLS LAST,
+    CASE WHEN sort_by = 'popularity' THEN scored.popularity END DESC NULLS LAST,
+    -- Secondary sort for stable pagination
+    scored.created_at DESC,
+    scored.id DESC
+  LIMIT result_limit;
+END;
+$$;
+
+alter function "public"."search_phrases_smart" (
+	"query" "text",
+	"lang_filter" "text",
+	"sort_by" "text",
+	"result_limit" integer,
+	"cursor_created_at" timestamp with time zone,
+	"cursor_id" "uuid"
+) owner to "postgres";
+
 create or replace function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") returns "json" language "plpgsql" as $$
 DECLARE
   v_user_uid uuid := auth.uid();
@@ -512,6 +604,17 @@ END;
 $$;
 
 alter function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") owner to "postgres";
+
+create or replace function "public"."trigger_refresh_phrase_search" () returns "trigger" language "plpgsql" security definer as $$
+BEGIN
+  -- Use pg_notify to debounce refreshes in production
+  -- For now, refresh immediately (can be optimized later with a background job)
+  PERFORM refresh_phrase_search_index();
+  RETURN NULL;
+END;
+$$;
+
+alter function "public"."trigger_refresh_phrase_search" () owner to "postgres";
 
 create or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1466,10 +1569,53 @@ create table if not exists "public"."user_deck_review_state" (
 alter table "public"."user_deck_review_state" owner to "postgres";
 
 alter table only "public"."phrase"
-add constraint "card_phrase_id_int_key" unique ("id");
+add constraint "card_phrase_pkey" primary key ("id");
+
+create materialized view "public"."phrase_search_index" as
+select
+	"p"."id",
+	"p"."lang",
+	"p"."text",
+	"p"."created_at",
+	coalesce("pm"."count_learners", (0)::bigint) as "popularity",
+	"lower" (
+		(
+			(
+				(
+					(coalesce("p"."text", ''::"text") || ' '::"text") || coalesce("string_agg" (distinct "t"."text", ' '::"text"), ''::"text")
+				) || ' '::"text"
+			) || coalesce("string_agg" (distinct "tag"."name", ' '::"text"), ''::"text")
+		)
+	) as "search_text"
+from
+	(
+		(
+			(
+				(
+					"public"."phrase" "p"
+					left join "public"."phrase_translation" "t" on (
+						(
+							("t"."phrase_id" = "p"."id")
+							and ("t"."archived" = false)
+						)
+					)
+				)
+				left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
+			)
+			left join "public"."tag" on (("tag"."id" = "pt"."tag_id"))
+		)
+		left join "public"."phrase_meta" "pm" on (("pm"."id" = "p"."id"))
+	)
+group by
+	"p"."id",
+	"pm"."count_learners"
+with
+	no data;
+
+alter table "public"."phrase_search_index" owner to "postgres";
 
 alter table only "public"."phrase"
-add constraint "card_phrase_pkey" primary key ("id");
+add constraint "card_phrase_id_int_key" unique ("id");
 
 alter table only "public"."phrase_relation"
 add constraint "card_see_also_pkey" primary key ("id");
@@ -1587,6 +1733,16 @@ create index "idx_comment_request_id" on "public"."request_comment" using "btree
 
 create index "idx_comment_upvotes" on "public"."request_comment" using "btree" ("request_id", "upvote_count" desc);
 
+create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
+
+create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
+
+create index "idx_phrase_search_lang" on "public"."phrase_search_index" using "btree" ("lang");
+
+create index "idx_phrase_search_popularity" on "public"."phrase_search_index" using "btree" ("popularity" desc);
+
+create index "idx_phrase_search_trgm" on "public"."phrase_search_index" using "gin" ("search_text" "public"."gin_trgm_ops");
+
 create index "idx_upvote_comment" on "public"."comment_upvote" using "btree" ("comment_id");
 
 create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid");
@@ -1636,6 +1792,27 @@ create or replace trigger "on_playlist_phrase_link_updated"
 after
 update on "public"."playlist_phrase_link" for each row
 execute function "public"."update_parent_playlist_timestamp" ();
+
+create or replace trigger "refresh_search_on_phrase_change"
+after insert
+or delete
+or
+update on "public"."phrase" for each statement
+execute function "public"."trigger_refresh_phrase_search" ();
+
+create or replace trigger "refresh_search_on_tag_change"
+after insert
+or delete
+or
+update on "public"."phrase_tag" for each statement
+execute function "public"."trigger_refresh_phrase_search" ();
+
+create or replace trigger "refresh_search_on_translation_change"
+after insert
+or delete
+or
+update on "public"."phrase_translation" for each statement
+execute function "public"."trigger_refresh_phrase_search" ();
 
 create or replace trigger "tr_update_comment_upvote_count"
 after insert
@@ -2325,6 +2502,22 @@ grant usage on schema "public" to "authenticated";
 
 grant usage on schema "public" to "service_role";
 
+grant all on function "public"."gtrgm_in" ("cstring") to "postgres";
+
+grant all on function "public"."gtrgm_in" ("cstring") to "anon";
+
+grant all on function "public"."gtrgm_in" ("cstring") to "authenticated";
+
+grant all on function "public"."gtrgm_in" ("cstring") to "service_role";
+
+grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "postgres";
+
+grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "anon";
+
+grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "authenticated";
+
+grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "service_role";
+
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
 	"phrase_lang" "text",
@@ -2407,9 +2600,256 @@ grant all on function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) to "service_role";
 
+grant all on function "public"."gin_extract_query_trgm" (
+	"text",
+	"internal",
+	smallint,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "postgres";
+
+grant all on function "public"."gin_extract_query_trgm" (
+	"text",
+	"internal",
+	smallint,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "anon";
+
+grant all on function "public"."gin_extract_query_trgm" (
+	"text",
+	"internal",
+	smallint,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "authenticated";
+
+grant all on function "public"."gin_extract_query_trgm" (
+	"text",
+	"internal",
+	smallint,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "service_role";
+
+grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "postgres";
+
+grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "anon";
+
+grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "authenticated";
+
+grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "service_role";
+
+grant all on function "public"."gin_trgm_consistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "postgres";
+
+grant all on function "public"."gin_trgm_consistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "anon";
+
+grant all on function "public"."gin_trgm_consistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "authenticated";
+
+grant all on function "public"."gin_trgm_consistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal",
+	"internal"
+) to "service_role";
+
+grant all on function "public"."gin_trgm_triconsistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal"
+) to "postgres";
+
+grant all on function "public"."gin_trgm_triconsistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal"
+) to "anon";
+
+grant all on function "public"."gin_trgm_triconsistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal"
+) to "authenticated";
+
+grant all on function "public"."gin_trgm_triconsistent" (
+	"internal",
+	smallint,
+	"text",
+	integer,
+	"internal",
+	"internal",
+	"internal"
+) to "service_role";
+
+grant all on function "public"."gtrgm_compress" ("internal") to "postgres";
+
+grant all on function "public"."gtrgm_compress" ("internal") to "anon";
+
+grant all on function "public"."gtrgm_compress" ("internal") to "authenticated";
+
+grant all on function "public"."gtrgm_compress" ("internal") to "service_role";
+
+grant all on function "public"."gtrgm_consistent" ("internal", "text", smallint, "oid", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_consistent" ("internal", "text", smallint, "oid", "internal") to "anon";
+
+grant all on function "public"."gtrgm_consistent" ("internal", "text", smallint, "oid", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_consistent" ("internal", "text", smallint, "oid", "internal") to "service_role";
+
+grant all on function "public"."gtrgm_decompress" ("internal") to "postgres";
+
+grant all on function "public"."gtrgm_decompress" ("internal") to "anon";
+
+grant all on function "public"."gtrgm_decompress" ("internal") to "authenticated";
+
+grant all on function "public"."gtrgm_decompress" ("internal") to "service_role";
+
+grant all on function "public"."gtrgm_distance" ("internal", "text", smallint, "oid", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_distance" ("internal", "text", smallint, "oid", "internal") to "anon";
+
+grant all on function "public"."gtrgm_distance" ("internal", "text", smallint, "oid", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_distance" ("internal", "text", smallint, "oid", "internal") to "service_role";
+
+grant all on function "public"."gtrgm_options" ("internal") to "postgres";
+
+grant all on function "public"."gtrgm_options" ("internal") to "anon";
+
+grant all on function "public"."gtrgm_options" ("internal") to "authenticated";
+
+grant all on function "public"."gtrgm_options" ("internal") to "service_role";
+
+grant all on function "public"."gtrgm_penalty" ("internal", "internal", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_penalty" ("internal", "internal", "internal") to "anon";
+
+grant all on function "public"."gtrgm_penalty" ("internal", "internal", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_penalty" ("internal", "internal", "internal") to "service_role";
+
+grant all on function "public"."gtrgm_picksplit" ("internal", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_picksplit" ("internal", "internal") to "anon";
+
+grant all on function "public"."gtrgm_picksplit" ("internal", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_picksplit" ("internal", "internal") to "service_role";
+
+grant all on function "public"."gtrgm_same" ("public"."gtrgm", "public"."gtrgm", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_same" ("public"."gtrgm", "public"."gtrgm", "internal") to "anon";
+
+grant all on function "public"."gtrgm_same" ("public"."gtrgm", "public"."gtrgm", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_same" ("public"."gtrgm", "public"."gtrgm", "internal") to "service_role";
+
+grant all on function "public"."gtrgm_union" ("internal", "internal") to "postgres";
+
+grant all on function "public"."gtrgm_union" ("internal", "internal") to "anon";
+
+grant all on function "public"."gtrgm_union" ("internal", "internal") to "authenticated";
+
+grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
+
+grant all on function "public"."refresh_phrase_search_index" () to "anon";
+
+grant all on function "public"."refresh_phrase_search_index" () to "authenticated";
+
+grant all on function "public"."refresh_phrase_search_index" () to "service_role";
+
+grant all on function "public"."search_phrases_smart" (
+	"query" "text",
+	"lang_filter" "text",
+	"sort_by" "text",
+	"result_limit" integer,
+	"cursor_created_at" timestamp with time zone,
+	"cursor_id" "uuid"
+) to "anon";
+
+grant all on function "public"."search_phrases_smart" (
+	"query" "text",
+	"lang_filter" "text",
+	"sort_by" "text",
+	"result_limit" integer,
+	"cursor_created_at" timestamp with time zone,
+	"cursor_id" "uuid"
+) to "authenticated";
+
+grant all on function "public"."search_phrases_smart" (
+	"query" "text",
+	"lang_filter" "text",
+	"sort_by" "text",
+	"result_limit" integer,
+	"cursor_created_at" timestamp with time zone,
+	"cursor_id" "uuid"
+) to "service_role";
+
+
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
+
+grant all on function "public"."set_limit" (real) to "postgres";
+
+grant all on function "public"."set_limit" (real) to "anon";
+
+grant all on function "public"."set_limit" (real) to "authenticated";
+
+grant all on function "public"."set_limit" (real) to "service_role";
+
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
@@ -2417,31 +2857,89 @@ grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uu
 
 grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
 
-grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "service_role";
-
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
+
+grant all on function "public"."update_parent_playlist_timestamp" () to "anon";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_playlist_timestamp" () to "anon";
+
 grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "anon";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
 
+grant all on function "public"."update_phrase_request_timestamp" () to "anon";
+
 grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_request_upvote_count" () to "anon";
+
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_translation_updated_at" () to "anon";
+
+grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
+
+grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
+
+grant all on function "public"."validate_friend_request_action" () to "authenticated";
+
+grant all on function "public"."validate_friend_request_action" () to "service_role";
+
+grant all on function "public"."word_similarity" ("text", "text") to "postgres";
+
+grant all on function "public"."word_similarity" ("text", "text") to "anon";
+
+grant all on function "public"."word_similarity" ("text", "text") to "authenticated";
+
+grant all on function "public"."word_similarity" ("text", "text") to "service_role";
+
+grant all on function "public"."word_similarity_commutator_op" ("text", "text") to "postgres";
+
+grant all on function "public"."word_similarity_commutator_op" ("text", "text") to "anon";
+
+grant all on function "public"."word_similarity_commutator_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."word_similarity_commutator_op" ("text", "text") to "service_role";
+
+grant all on function "public"."word_similarity_dist_commutator_op" ("text", "text") to "postgres";
+
+grant all on function "public"."word_similarity_dist_commutator_op" ("text", "text") to "anon";
+
+grant all on function "public"."word_similarity_dist_commutator_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."word_similarity_dist_commutator_op" ("text", "text") to "service_role";
+
+grant all on function "public"."word_similarity_dist_op" ("text", "text") to "postgres";
+
+grant all on function "public"."word_similarity_dist_op" ("text", "text") to "anon";
+
+grant all on function "public"."word_similarity_dist_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."word_similarity_dist_op" ("text", "text") to "service_role";
+
+grant all on function "public"."word_similarity_op" ("text", "text") to "postgres";
+
+grant all on function "public"."word_similarity_op" ("text", "text") to "anon";
+
+grant all on function "public"."word_similarity_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."word_similarity_op" ("text", "text") to "service_role";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
@@ -2600,6 +3098,11 @@ grant all on table "public"."user_deck_plus" to "service_role";
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
 grant all on table "public"."user_deck_review_state" to "service_role";
+grant all on table "public"."phrase_search_index" to "anon";
+
+grant all on table "public"."phrase_search_index" to "authenticated";
+
+grant all on table "public"."phrase_search_index" to "service_role";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";

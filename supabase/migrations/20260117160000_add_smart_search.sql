@@ -1,62 +1,65 @@
 -- Enable trigram extension for fuzzy text matching
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+create extension if not exists pg_trgm;
 
 -- Materialized view for phrase search with pre-computed search text
 -- This combines phrase text, translations, and tags for efficient searching
-CREATE MATERIALIZED VIEW IF NOT EXISTS phrase_search_index AS
-SELECT
-  p.id,
-  p.lang,
-  p.text,
-  p.created_at,
-  COALESCE(pm.count_learners, 0) AS popularity,
-  LOWER(
-    COALESCE(p.text, '') || ' ' ||
-    COALESCE(string_agg(DISTINCT t.text, ' '), '') || ' ' ||
-    COALESCE(string_agg(DISTINCT tag.name, ' '), '')
-  ) AS search_text
-FROM phrase p
-LEFT JOIN phrase_translation t ON t.phrase_id = p.id AND t.archived = false
-LEFT JOIN phrase_tag pt ON pt.phrase_id = p.id
-LEFT JOIN tag ON tag.id = pt.tag_id
-LEFT JOIN phrase_meta pm ON pm.id = p.id
-GROUP BY p.id, pm.count_learners;
+create materialized view if not exists phrase_search_index as
+select
+	p.id,
+	p.lang,
+	p.text,
+	p.created_at,
+	coalesce(pm.count_learners, 0) as popularity,
+	lower(
+		coalesce(p.text, '') || ' ' || coalesce(string_agg(distinct t.text, ' '), '') || ' ' || coalesce(string_agg(distinct tag.name, ' '), '')
+	) as search_text
+from
+	phrase p
+	left join phrase_translation t on t.phrase_id = p.id
+	and t.archived = false
+	left join phrase_tag pt on pt.phrase_id = p.id
+	left join tag on tag.id = pt.tag_id
+	left join phrase_meta pm on pm.id = p.id
+group by
+	p.id,
+	pm.count_learners;
 
 -- Create unique index for concurrent refresh
-CREATE UNIQUE INDEX idx_phrase_search_id ON phrase_search_index(id);
+create unique index idx_phrase_search_id on phrase_search_index (id);
 
 -- Index for language filtering
-CREATE INDEX idx_phrase_search_lang ON phrase_search_index(lang);
+create index idx_phrase_search_lang on phrase_search_index (lang);
 
 -- Trigram index for fast fuzzy text matching
-CREATE INDEX idx_phrase_search_trgm ON phrase_search_index USING GIN (search_text gin_trgm_ops);
+create index idx_phrase_search_trgm on phrase_search_index using gin (search_text gin_trgm_ops);
 
 -- Index for popularity sorting
-CREATE INDEX idx_phrase_search_popularity ON phrase_search_index(popularity DESC);
+create index idx_phrase_search_popularity on phrase_search_index (popularity desc);
 
 -- Index for cursor-based pagination
-CREATE INDEX idx_phrase_search_cursor ON phrase_search_index(created_at DESC, id);
+create index idx_phrase_search_cursor on phrase_search_index (created_at desc, id);
 
+-- Grant read access to the materialized view
+grant
+select
+	on phrase_search_index to authenticated,
+	anon;
 
 -- RPC function for smart phrase search with similarity ranking
 -- Supports cursor-based pagination for infinite scroll
-CREATE OR REPLACE FUNCTION search_phrases_smart(
-  query TEXT,
-  lang_filter TEXT,
-  sort_by TEXT DEFAULT 'relevance',
-  result_limit INT DEFAULT 20,
-  cursor_created_at TIMESTAMPTZ DEFAULT NULL,
-  cursor_id UUID DEFAULT NULL
-)
-RETURNS TABLE (
-  id UUID,
-  similarity_score REAL,
-  popularity_score INT,
-  created_at TIMESTAMPTZ
-)
-LANGUAGE plpgsql STABLE
-SECURITY DEFINER
-AS $$
+create or replace function search_phrases_smart (
+	query text,
+	lang_filter text,
+	sort_by text default 'relevance',
+	result_limit int default 20,
+	cursor_created_at timestamptz default null,
+	cursor_id uuid default null
+) returns table (
+	id uuid,
+	similarity_score real,
+	popularity_score int,
+	created_at timestamptz
+) language plpgsql stable as $$
 DECLARE
   normalized_query TEXT;
 BEGIN
@@ -116,35 +119,28 @@ END;
 $$;
 
 -- Grant execute permission to authenticated users
-GRANT EXECUTE ON FUNCTION search_phrases_smart(TEXT, TEXT, TEXT, INT, TIMESTAMPTZ, UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION search_phrases_smart(TEXT, TEXT, TEXT, INT, TIMESTAMPTZ, UUID) TO anon;
+grant
+execute on function search_phrases_smart (text, text, text, int, timestamptz, uuid) to authenticated;
 
+grant
+execute on function search_phrases_smart (text, text, text, int, timestamptz, uuid) to anon;
 
 -- Function to refresh the materialized view
 -- Called after phrase/translation/tag changes
-CREATE OR REPLACE FUNCTION refresh_phrase_search_index()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+create or replace function refresh_phrase_search_index () returns void language plpgsql security definer as $$
 BEGIN
   REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
 END;
 $$;
 
 -- Grant execute permission
-GRANT EXECUTE ON FUNCTION refresh_phrase_search_index() TO service_role;
-
+grant
+execute on function refresh_phrase_search_index () to service_role;
 
 -- Triggers to refresh the search index when data changes
 -- Note: Using CONCURRENTLY requires the unique index we created above
-
 -- Trigger function for phrase changes
-CREATE OR REPLACE FUNCTION trigger_refresh_phrase_search()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
+create or replace function trigger_refresh_phrase_search () returns trigger language plpgsql security definer as $$
 BEGIN
   -- Use pg_notify to debounce refreshes in production
   -- For now, refresh immediately (can be optimized later with a background job)
@@ -155,22 +151,26 @@ $$;
 
 -- Create triggers on relevant tables
 -- These fire AFTER changes to keep the search index up to date
+create trigger refresh_search_on_phrase_change
+after insert
+or
+update
+or delete on phrase for each statement
+execute function trigger_refresh_phrase_search ();
 
-CREATE TRIGGER refresh_search_on_phrase_change
-AFTER INSERT OR UPDATE OR DELETE ON phrase
-FOR EACH STATEMENT
-EXECUTE FUNCTION trigger_refresh_phrase_search();
+create trigger refresh_search_on_translation_change
+after insert
+or
+update
+or delete on phrase_translation for each statement
+execute function trigger_refresh_phrase_search ();
 
-CREATE TRIGGER refresh_search_on_translation_change
-AFTER INSERT OR UPDATE OR DELETE ON phrase_translation
-FOR EACH STATEMENT
-EXECUTE FUNCTION trigger_refresh_phrase_search();
-
-CREATE TRIGGER refresh_search_on_tag_change
-AFTER INSERT OR UPDATE OR DELETE ON phrase_tag
-FOR EACH STATEMENT
-EXECUTE FUNCTION trigger_refresh_phrase_search();
-
+create trigger refresh_search_on_tag_change
+after insert
+or
+update
+or delete on phrase_tag for each statement
+execute function trigger_refresh_phrase_search ();
 
 -- Initial population of the materialized view
-REFRESH MATERIALIZED VIEW phrase_search_index;
+refresh materialized view phrase_search_index;

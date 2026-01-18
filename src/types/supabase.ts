@@ -79,6 +79,13 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
+						foreignKeyName: 'chat_message_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
 						foreignKeyName: 'chat_message_playlist_id_fkey'
 						columns: ['playlist_id']
 						isOneToOne: false
@@ -174,6 +181,13 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -541,6 +555,13 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
+						foreignKeyName: 'phrase_see_also_from_phrase_id_fkey'
+						columns: ['from_phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
 						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
 						columns: ['to_phrase_id']
 						isOneToOne: false
@@ -552,6 +573,13 @@ export type Database = {
 						columns: ['to_phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
+						columns: ['to_phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 				]
@@ -707,6 +735,13 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
+						foreignKeyName: 'phrase_tag_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
 						foreignKeyName: 'phrase_tag_tag_id_fkey'
 						columns: ['tag_id']
 						isOneToOne: false
@@ -795,6 +830,13 @@ export type Database = {
 						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
+					{
+						foreignKeyName: 'phrase_translation_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
 				]
 			}
 			playlist_phrase_link: {
@@ -838,6 +880,13 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1036,6 +1085,13 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
+						foreignKeyName: 'user_card_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
 						foreignKeyName: 'user_card_uid_fkey'
 						columns: ['uid']
 						isOneToOne: false
@@ -1121,6 +1177,13 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'user_card_review_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1475,6 +1538,32 @@ export type Database = {
 					},
 				]
 			}
+			phrase_search_index: {
+				Row: {
+					created_at: string | null
+					id: string | null
+					lang: string | null
+					popularity: number | null
+					search_text: string | null
+					text: string | null
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'phrase_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'language'
+						referencedColumns: ['lang']
+					},
+					{
+						foreignKeyName: 'phrase_lang_fkey'
+						columns: ['lang']
+						isOneToOne: false
+						referencedRelation: 'meta_language'
+						referencedColumns: ['lang']
+					},
+				]
+			}
 			public_profile: {
 				Row: {
 					avatar_path: string | null
@@ -1547,6 +1636,13 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'user_card_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1661,6 +1757,23 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			refresh_phrase_search_index: { Args: never; Returns: undefined }
+			search_phrases_smart: {
+				Args: {
+					cursor_created_at?: string
+					cursor_id?: string
+					lang_filter: string
+					query: string
+					result_limit?: number
+					sort_by?: string
+				}
+				Returns: {
+					created_at: string
+					id: string
+					popularity_score: number
+					similarity_score: number
+				}[]
+			}
 			set_comment_upvote: {
 				Args: { p_action: string; p_comment_id: string }
 				Returns: Json
@@ -1673,6 +1786,8 @@ export type Database = {
 				Args: { p_action: string; p_request_id: string }
 				Returns: Json
 			}
+			show_limit: { Args: never; Returns: number }
+			show_trgm: { Args: { '': string }; Returns: string[] }
 		}
 		Enums: {
 			card_status: 'active' | 'learned' | 'skipped'
