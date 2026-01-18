@@ -1,5 +1,5 @@
 import { useParams } from '@tanstack/react-router'
-import { useRelationInvitations } from '@/hooks/use-friends'
+import { useRelationInvitations, useUnreadChatsCount } from '@/hooks/use-friends'
 
 import { LinkType } from '@/types/main'
 import {
@@ -63,6 +63,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			link: {
 				to: '/friends/chats',
 			},
+			useBadge: () => useUnreadChatsCount(),
 		},
 		'/friends/search': {
 			name: 'Search',

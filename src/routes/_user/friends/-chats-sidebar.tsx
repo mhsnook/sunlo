@@ -1,7 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useAllChats, useRelationFriends } from '@/hooks/use-friends'
+import { Badge } from '@/components/ui/badge'
+import {
+	useAllChats,
+	useRelationFriends,
+	useUnreadMessages,
+} from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
@@ -13,13 +18,27 @@ const linkActiveProps = {
 export function ChatsSidebar() {
 	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
 	const { data: chats, isLoading: isLoadingChats } = useAllChats()
+	const { data: unreadMessages } = useUnreadMessages()
 
-	// Mock sorting by recent activity
-	const sortedFriends = friends?.toSorted((a, b) =>
-		a.most_recent_created_at === b.most_recent_created_at ? 0
-		: a.most_recent_created_at < b.most_recent_created_at ? 1
-		: -1
-	)
+	// Count unread messages per friend
+	const unreadCountByFriend = new Map<string, number>()
+	unreadMessages?.forEach((msg) => {
+		const count = unreadCountByFriend.get(msg.sender_uid) ?? 0
+		unreadCountByFriend.set(msg.sender_uid, count + 1)
+	})
+
+	// Sort by recent activity (prioritize friends with unread messages)
+	const sortedFriends = friends?.toSorted((a, b) => {
+		const aUnread = unreadCountByFriend.get(a.uid) ?? 0
+		const bUnread = unreadCountByFriend.get(b.uid) ?? 0
+		// Friends with unread messages come first
+		if (aUnread > 0 && bUnread === 0) return -1
+		if (bUnread > 0 && aUnread === 0) return 1
+		// Then sort by most recent activity
+		return a.most_recent_created_at === b.most_recent_created_at ? 0
+			: a.most_recent_created_at < b.most_recent_created_at ? 1
+			: -1
+	})
 
 	return (
 		<Card className="flex h-[calc(100vh-5rem-4px)] w-full flex-col">
@@ -40,6 +59,7 @@ export function ChatsSidebar() {
 				:	sortedFriends.map((friend) => {
 						const thisChatMessage =
 							!chats || !chats[friend.uid] ? null : chats[friend.uid].at(-1)
+						const unreadCount = unreadCountByFriend.get(friend.uid)
 						return (
 							<Link
 								key={friend.uid}
@@ -60,8 +80,11 @@ export function ChatsSidebar() {
 									</AvatarFallback>
 								</Avatar>
 								<div className="flex-1 overflow-hidden">
-									<div className="font-semibold">
-										{friend.profile?.username}
+									<div className="flex items-center gap-2 font-semibold">
+										<span>{friend.profile?.username}</span>
+										{unreadCount ?
+											<Badge size="sm">{unreadCount}</Badge>
+										:	null}
 									</div>
 									<p className="text-muted-foreground line-clamp-2 text-xs">
 										{thisChatMessage ?

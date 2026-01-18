@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
@@ -7,7 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
+import {
+	useMarkChatAsRead,
+	useOneFriendChat,
+	useOneRelation,
+} from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
@@ -36,6 +40,18 @@ function ChatPage() {
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 
 	const messagesQuery = useOneFriendChat(friendUid)
+	const markAsRead = useMarkChatAsRead()
+
+	// Mark messages as read when viewing the chat
+	useEffect(() => {
+		if (!messagesQuery.data || !userId) return
+		const hasUnread = messagesQuery.data.some(
+			(msg) => msg.sender_uid === friendUid && !msg.read_at
+		)
+		if (hasUnread) {
+			markAsRead.mutate(friendUid)
+		}
+	}, [messagesQuery.data, friendUid, userId, markAsRead])
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current

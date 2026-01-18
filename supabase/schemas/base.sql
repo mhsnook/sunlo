@@ -221,6 +221,21 @@ $$;
 
 alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "postgres";
 
+create or replace function "public"."mark_chat_as_read" ("friend_uid" "uuid") returns "void" language "plpgsql" security definer
+set
+	search_path = public as $$
+begin
+  update public.chat_message
+  set read_at = now()
+  where
+    recipient_uid = auth.uid()
+    and sender_uid = friend_uid
+    and read_at is null;
+end;
+$$;
+
+alter function "public"."mark_chat_as_read" ("friend_uid" "uuid") owner to "postgres";
+
 create or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
@@ -803,6 +818,7 @@ create table if not exists "public"."chat_message" (
 	"lang" character varying not null,
 	"request_id" "uuid",
 	"playlist_id" "uuid",
+	"read_at" timestamp with time zone,
 	constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
 );
 
@@ -819,6 +835,8 @@ comment on column "public"."chat_message"."phrase_id" is 'If it''s a recommendat
 comment on column "public"."chat_message"."related_message_id" is 'If this message is a reply/reaction to another (e.g. accepting a recommendation).';
 
 comment on column "public"."chat_message"."content" is 'Flexible JSONB for extra data, like the text of an accepted phrase.';
+
+comment on column "public"."chat_message"."read_at" is 'Timestamp when the recipient read the message. Null means unread.';
 
 create table if not exists "public"."comment_phrase_link" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1719,6 +1737,10 @@ create index "chat_message_recipient_uid_sender_uid_created_at_idx" on "public".
 
 create index "chat_message_sender_uid_recipient_uid_created_at_idx" on "public"."chat_message" using "btree" ("sender_uid", "recipient_uid", "created_at" desc);
 
+create index "chat_message_unread_idx" on "public"."chat_message" ("recipient_uid", "read_at")
+where
+	"read_at" is null;
+
 create index "idx_comment_created_at" on "public"."request_comment" using "btree" ("parent_comment_id", "created_at");
 
 create index "idx_comment_parent" on "public"."request_comment" using "btree" ("parent_comment_id");
@@ -2440,6 +2462,22 @@ select
 		)
 	);
 
+create policy "Recipients can mark messages as read" on "public"."chat_message"
+for update
+	using (
+		(
+			select
+				"auth"."uid" ()
+		) = "recipient_uid"
+	)
+with
+	check (
+		(
+			select
+				"auth"."uid" ()
+		) = "recipient_uid"
+	);
+
 alter table "public"."chat_message" enable row level security;
 
 alter table "public"."comment_phrase_link" enable row level security;
@@ -2837,7 +2875,6 @@ grant all on function "public"."search_phrases_smart" (
 	"cursor_id" "uuid"
 ) to "service_role";
 
-
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
@@ -2849,7 +2886,6 @@ grant all on function "public"."set_limit" (real) to "anon";
 grant all on function "public"."set_limit" (real) to "authenticated";
 
 grant all on function "public"."set_limit" (real) to "service_role";
-
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
@@ -3098,6 +3134,7 @@ grant all on table "public"."user_deck_plus" to "service_role";
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
 grant all on table "public"."user_deck_review_state" to "service_role";
+
 grant all on table "public"."phrase_search_index" to "anon";
 
 grant all on table "public"."phrase_search_index" to "authenticated";

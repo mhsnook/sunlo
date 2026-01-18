@@ -3,13 +3,14 @@ import toast from 'react-hot-toast'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { ChatMessageRelType } from '@/lib/schemas'
+import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, isNull, or, useLiveQuery } from '@tanstack/react-db'
 import { chatMessagesCollection } from '@/lib/collections'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, RelationsFullType } from '@/lib/live-collections'
+import { ChatMessageSchema } from '@/lib/schemas'
 
 export const useRelationInvitations = (): UseLiveQueryResult<
 	RelationsFullType[]
@@ -153,4 +154,62 @@ export const useOneFriendChat = (
 				})),
 		[uid]
 	)
+}
+
+// Hook to get unread messages (messages sent to the current user that haven't been read)
+export const useUnreadMessages = (): UseLiveQueryResult<ChatMessageType[]> => {
+	const userId = useUserId()
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ message: chatMessagesCollection })
+				.where(({ message }) =>
+					and(eq(message.recipient_uid, userId), isNull(message.read_at))
+				),
+		[userId]
+	)
+}
+
+// Hook to count unique friends with unread messages (for badge)
+export const useUnreadChatsCount = (): number | undefined => {
+	const { data: unreadMessages } = useUnreadMessages()
+	if (!unreadMessages) return undefined
+	// Count unique sender_uids (friends with unread messages)
+	const uniqueSenders = new Set(unreadMessages.map((m) => m.sender_uid))
+	return uniqueSenders.size || undefined
+}
+
+// Mutation to mark all messages from a friend as read
+export const useMarkChatAsRead = () => {
+	const userId = useUserId()
+	return useMutation({
+		mutationKey: ['user', 'chat_message', 'mark_read'],
+		mutationFn: async (friendUid: uuid) => {
+			// Call the RPC directly with type assertion since types aren't generated yet
+			const { error } = await supabase.rpc(
+				'mark_chat_as_read' as 'are_friends',
+				{ friend_uid: friendUid } as unknown as { uid1: string; uid2: string }
+			)
+			if (error) throw error
+		},
+		onSuccess: (_, friendUid) => {
+			// Update local collection with read_at timestamps
+			const now = new Date().toISOString()
+			const messages = chatMessagesCollection.state
+			messages.forEach((message: ChatMessageType) => {
+				if (
+					message.sender_uid === friendUid &&
+					message.recipient_uid === userId &&
+					!message.read_at
+				) {
+					chatMessagesCollection.utils.writeUpdate(
+						ChatMessageSchema.parse({ ...message, read_at: now })
+					)
+				}
+			})
+		},
+		onError: (error) => {
+			console.log('Error marking chat as read', error)
+		},
+	})
 }
