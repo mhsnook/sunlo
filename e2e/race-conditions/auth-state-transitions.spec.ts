@@ -31,8 +31,20 @@ async function loginViaUI(page: Page, email: string, password: string) {
 	await page.fill('input[name="password"]', password)
 	await page.getByRole('button', { name: /log in/i }).click()
 
-	// Wait for successful redirect to /learn
-	await expect(page).toHaveURL(/\/learn/, { timeout: 10000 })
+	// Wait for either /learn or /welcome (for new users after profile creation)
+	await page.waitForURL(/\/(learn|welcome)/, { timeout: 10000 })
+
+	// If we landed on welcome page, click through to continue
+	if (page.url().includes('/welcome')) {
+		const continueButton = page.getByRole('link', {
+			name: /(go to my decks|create my first deck|find friends)/i,
+		})
+		await continueButton.click()
+		await page.waitForURL(/\/(learn|friends)/)
+	}
+
+	// Verify we're on /learn
+	await expect(page).toHaveURL(/\/learn/, { timeout: 5000 })
 }
 
 // Helper to sign out via the sidebar user dropdown
