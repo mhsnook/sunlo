@@ -9,11 +9,13 @@ Deployments in Jan 2026
 - (c2, d2) Feature: Playlists image option
 - (c1, d1) Feature: "You completed your review" nicer screen
 - (c2, d2) Chore: Replace the friend request / accept / cancel logic with a before hook
-- Fix: ALL remaining `tsc -b` errors.
+- Fix: ALL remaining `tsc -b` errors
 - Feat: Cover images on Playlists!
--
-
-
+- Fix/Refactor: Review cards flow/order is fixed, more declarative, more local-first, w better completion screen
+- Smart search! using trigrams (f094673b6a8205f655630f0c7b3fb875eea140ef)
+- Prevent spoofing uids by updating RLS Insert policies
+- Feat: share playlists in chat
+- Fix: window height in chat window
 
 **16h Jan, v0.4.8**
 

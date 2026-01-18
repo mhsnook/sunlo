@@ -7,6 +7,7 @@ import { Loader } from '@/components/ui/loader'
 import { useRequestLinksPhraseIds, useRequest } from '@/hooks/use-requests'
 import { LangBadge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
+import { MessageCircleHeart } from 'lucide-react'
 
 export function RequestPreview({ id }: { id: uuid }) {
 	const { data: request, isLoading } = useRequest(id)
@@ -24,7 +25,10 @@ export function RequestPreview({ id }: { id: uuid }) {
 			<CardlikeRequest className="relative z-10">
 				<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-4 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
-						<span>Phrase request</span>
+						<span className="flex items-center gap-1">
+							<MessageCircleHeart className="text-muted-foreground" /> Phrase
+							request
+						</span>
 						<LangBadge lang={request.lang} />
 					</CardTitle>
 				</CardHeader>

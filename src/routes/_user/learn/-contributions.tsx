@@ -1,6 +1,6 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
-	Disc3,
+	ListMusic,
 	Logs,
 	MessageCircleHeart,
 	MessageSquareQuote,
@@ -67,7 +67,7 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 							data-testid="contributions-tab--playlists"
 							value="playlists"
 						>
-							<Disc3 size={16} className="me-1" /> Playlists
+							<ListMusic size={16} className="me-1" /> Playlists
 						</TabsTrigger>
 						{/*<TabsTrigger data-testid="contributions-tab--answers" value="answers" disabled>
 							<MessageSquarePlus size={16} className="me-1" /> Answers
@@ -184,7 +184,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 						to="/learn/$lang/playlists"
 						params={{ lang: props.lang }}
 					>
-						<Disc3 />
+						<ListMusic />
 						Browse other {languages[props.lang]} playlists
 					</Link>
 				:	<Link

@@ -6,7 +6,7 @@ import { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import { useOnePlaylist, useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { CardlikeRequest } from '@/components/ui/card-like'
+import { ListMusic } from 'lucide-react'
 
 export function PlaylistPreview({ id }: { id: uuid }) {
 	const { data: playlist, isLoading } = useOnePlaylist(id)
@@ -24,10 +24,12 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 			to={'/learn/$lang/playlists/$playlistId'}
 			params={{ lang: playlist.lang, playlistId: id }}
 		>
-			<CardlikeRequest className="relative z-10">
-				<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-4 border-b px-0 py-4">
+			<div className="bg-card text-card-foreground @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm">
+				<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-0 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
-						<span>Playlist</span>
+						<span className="flex items-center gap-1">
+							<ListMusic className="text-muted-foreground" /> Playlist
+						</span>
 						<div className="flex items-center gap-2">
 							{!isLoadingPhrases && (
 								<Badge variant="outline">
@@ -47,7 +49,7 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 						</p>
 					)}
 				</CardContent>
-			</CardlikeRequest>
+			</div>
 		</Link>
 	)
 }
