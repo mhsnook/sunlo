@@ -41,8 +41,21 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			{ name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
 		],
 		links: [
-			{ rel: 'icon', type: 'image/png', href: '/favicon.png', sizes: '180x180' },
+			{
+				rel: 'icon',
+				type: 'image/png',
+				href: '/favicon.png',
+				sizes: '180x180',
+			},
 			{ rel: 'preload', href: '/images/logo-pair.png', as: 'image' },
+			{
+				rel: 'stylesheet',
+				href: 'https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap',
+			},
+			{
+				rel: 'stylesheet',
+				href: 'https://fonts.cdnfonts.com/css/opendyslexic',
+			},
 		],
 	}),
 })

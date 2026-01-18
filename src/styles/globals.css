@@ -1,6 +1,4 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap');
-@import url('https://fonts.cdnfonts.com/css/opendyslexic');
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
