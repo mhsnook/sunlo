@@ -1,5 +1,5 @@
 import {
-	Disc3,
+	ListMusic,
 	MessageCircleHeart,
 	MessageSquareQuote,
 	PlusIcon,
@@ -48,7 +48,7 @@ export function PlusMenu({ lang }: { lang: string }) {
 						params={{ lang }}
 						className="flex w-full items-center gap-2"
 					>
-						<Disc3 className="size-4" />
+						<ListMusic className="size-4" />
 						<span>New Playlist</span>
 					</Link>
 				</DropdownMenuItem>
