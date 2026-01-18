@@ -45,24 +45,21 @@ export function useCompositePids(lang: string) {
 		.filter((p) => p.translations_mine.length > 0)
 		.map((p) => p.id)
 
+	// Get the pool of selectable phrases (excluding all cards already in deck)
 	const pidsNotInDeck = arrayDifference(pidsICanSee, [deckPids.all])
 
-	// Then, get the pool of selectable phrases
-	const pidsSelectable = arrayDifference(pidsICanSee, [
-		deckPids.reviewed_or_inactive,
-	])
 	// Sort them in various ways
-	const easiest = pidsSelectable.toSorted(
+	const easiest = pidsNotInDeck.toSorted(
 		(pid1, pid2) =>
 			(phrasesMap.get(pid1)?.avg_difficulty ?? 99) -
 			(phrasesMap.get(pid2)?.avg_difficulty ?? 99)
 	)
-	const popular = pidsSelectable.toSorted(
+	const popular = pidsNotInDeck.toSorted(
 		(pid1, pid2) =>
 			(phrasesMap.get(pid2)?.count_learners ?? 0) -
 			(phrasesMap.get(pid1)?.count_learners ?? 0)
 	)
-	const newest = pidsSelectable.toSorted((pid1, pid2) =>
+	const newest = pidsNotInDeck.toSorted((pid1, pid2) =>
 		(
 			(phrasesMap.get(pid2)?.created_at ?? '') >
 			(phrasesMap.get(pid1)?.created_at ?? '')
@@ -82,7 +79,7 @@ export function useCompositePids(lang: string) {
 			newest: newest8,
 		},
 		language: languagePids,
-		language_selectables: pidsSelectable,
+		language_selectables: pidsNotInDeck,
 		language_filtered: pidsICanSee,
 		not_in_deck: pidsNotInDeck,
 		language_no_translations: arrayDifference(languagePids, [pidsICanSee]),
