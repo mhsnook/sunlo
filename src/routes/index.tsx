@@ -13,6 +13,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { cn, isNativeAppUserAgent } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { ClientOnly } from '@/components/client-only'
 
 export const Route = createFileRoute('/')({
 	component: Index,
@@ -36,7 +37,9 @@ function Index() {
 	return (
 		<div className="relative">
 			<div className="fixed top-6 right-6 z-50 flex flex-col items-center gap-2 @xl:flex-row">
-				<UserLogin />
+				<ClientOnly>
+					<UserLogin />
+				</ClientOnly>
 				<BrowseLink />
 				<ThemeToggle />
 			</div>

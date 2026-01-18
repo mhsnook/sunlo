@@ -17,7 +17,7 @@ export const Route = createFileRoute('/_user/friends/$uid')({
 	}),
 	loader: ({ context, params }) => {
 		const { uid } = params
-		const isMine = uid === context.auth.userId
+		const isMine = uid === context.auth?.userId
 		return { uid, isMine }
 	},
 })

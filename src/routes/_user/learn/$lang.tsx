@@ -24,7 +24,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				title: `${languages[lang]} Deck`,
 			},
 			appnav:
-				context.auth.isAuth ?
+				context.auth?.isAuth ?
 					[
 						'/learn/$lang/feed',
 						'/learn/$lang/review',
@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 					]
 				:	['/learn/$lang/feed', '/learn/$lang/search'],
 			contextMenu:
-				context.auth.isAuth ?
+				context.auth?.isAuth ?
 					[
 						'/learn/$lang/search',
 						'/learn/$lang/requests/new',
