@@ -3,7 +3,7 @@ import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/hooks/use-profile'
-import { MessageSquareQuote } from 'lucide-react'
+import { Bookmark, MessageSquareQuote, Users } from 'lucide-react'
 import { CSSProperties } from 'react'
 import { uuid } from '@/types/main'
 
@@ -36,13 +36,14 @@ export function PhraseSummaryLine({
 			<Link
 				to="/learn/$lang/phrases/$id"
 				params={{ lang: item.lang, id: item.id }}
-				className="group-hover:text-foreground inline-flex items-center gap-2 truncate font-medium"
+				className="group-hover:text-foreground inline-flex min-w-0 flex-1 items-center gap-2 font-medium"
 				data-testid={`feed-phrase-link-${item.id}`}
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}
 			>
-				<MessageSquareQuote size={14} />
+				<MessageSquareQuote size={14} className="shrink-0" />
 				<span
+					className="truncate"
 					style={
 						{ viewTransitionName: `phrase-text-${item.id}` } as CSSProperties
 					}
@@ -50,11 +51,27 @@ export function PhraseSummaryLine({
 					&ldquo;{phraseText}&rdquo;
 				</span>
 				{translationCount > 0 && (
-					<span className="text-muted-foreground/70 group-hover:text-foreground text-xs whitespace-nowrap">
+					<span className="text-muted-foreground/70 group-hover:text-foreground shrink-0 text-xs whitespace-nowrap">
 						({translationCount} translation{translationCount === 1 ? '' : 's'})
 					</span>
 				)}
+				{(
+					phrase?.card?.status &&
+					['active', 'learned'].includes(phrase.card.status)
+				) ?
+					<Bookmark className="text-muted-foreground/70 shrink-0" size={12} />
+				:	null}
 			</Link>
+
+			{(phrase.count_learners ?? 0) > 0 && (
+				<span
+					className="text-muted-foreground/70 flex shrink-0 items-center gap-1 text-xs whitespace-nowrap"
+					title={`${phrase.count_learners} ${phrase.count_learners === 1 ? 'person is' : 'people are'} learning this phrase`}
+				>
+					<Users size={12} />
+					{phrase.count_learners}
+				</span>
+			)}
 		</div>
 	)
 }
