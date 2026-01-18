@@ -22,13 +22,25 @@ test('login flow redirects and shows content', async ({ page }) => {
 	await page.fill('input[name="password"]', 'password')
 	await page.click('button[type="submit"]')
 
-	// 6. Expect redirection back to /learn
+	// 6. Wait for either /learn or /welcome after login
+	await page.waitForURL(/\/(learn|welcome)/)
+
+	// 7. If we landed on welcome page, click through to continue
+	if (page.url().includes('/welcome')) {
+		const continueButton = page.getByRole('link', {
+			name: /(go to my decks|create my first deck|find friends)/i,
+		})
+		await continueButton.click()
+		await page.waitForURL(/\/(learn|friends)/)
+	}
+
+	// 8. Verify we're on /learn with expected content
 	await expect(page).toHaveURL(/\/learn/)
 
-	// 7. Verify the presence of 3 active decks and 2 friends
+	// 9. Verify the presence of active decks and friends
 	await expect(page.getByText('Your friends').first()).toBeVisible()
 
-	// Assert 3 active decks
+	// Assert at least some decks
 	const decksGrid = page.locator('#decks-list-grid')
 	await expect(decksGrid).toBeVisible()
 	expect(await decksGrid.locator('> div').count()).toBeGreaterThanOrEqual(3)
