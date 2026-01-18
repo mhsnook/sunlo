@@ -73,7 +73,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 									<ArrowDown className="size-4" />
 								</Button>
 							</div>
-							<div className="flex-1">
+							<div className="min-w-0 flex-1">
 								<Controller
 									control={control}
 									name={`languages_known.${index}.lang` as Path<T>}
@@ -88,27 +88,29 @@ export function LanguagesKnownField<T extends FieldValues>({
 									)}
 								/>
 							</div>
-							<Controller
-								control={control}
-								name={`languages_known.${index}.level` as Path<T>}
-								render={({ field: selectField }) => (
-									<Select
-										onValueChange={selectField.onChange}
-										defaultValue={selectField.value}
-									>
-										<SelectTrigger className="w-[120px]">
-											<SelectValue placeholder="Proficiency" />
-										</SelectTrigger>
-										<SelectContent>
-											{proficiencyLevels.map((level) => (
-												<SelectItem key={level.value} value={level.value}>
-													{level.label}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-								)}
-							/>
+							<div className="w-[120px] shrink-0">
+								<Controller
+									control={control}
+									name={`languages_known.${index}.level` as Path<T>}
+									render={({ field: selectField }) => (
+										<Select
+											onValueChange={selectField.onChange}
+											defaultValue={selectField.value}
+										>
+											<SelectTrigger className="w-full">
+												<SelectValue placeholder="Proficiency" />
+											</SelectTrigger>
+											<SelectContent>
+												{proficiencyLevels.map((level) => (
+													<SelectItem key={level.value} value={level.value}>
+														{level.label}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+									)}
+								/>
+							</div>
 							<Button
 								type="button"
 								variant="ghost"
