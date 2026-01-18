@@ -284,6 +284,16 @@ export const chatMessagesCollection = createCollection(
 				.from('chat_message')
 				.select()
 				.throwOnError()
+			// Debug: Log message counts by sender/recipient
+			if (data) {
+				const { data: userData } = await supabase.auth.getUser()
+				const userId = userData?.user?.id
+				const asSender = data.filter((m) => m.sender_uid === userId).length
+				const asRecipient = data.filter((m) => m.recipient_uid === userId).length
+				console.log(
+					`chatMessagesCollection loaded: ${data.length} total, ${asSender} as sender, ${asRecipient} as recipient, userId: ${userId}`
+				)
+			}
 			return data?.map((item) => ChatMessageSchema.parse(item)) ?? []
 		},
 		getKey: (item: ChatMessageType) => item.id,
