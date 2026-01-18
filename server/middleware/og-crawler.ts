@@ -4,6 +4,9 @@
  * This middleware intercepts requests from social media crawlers and returns
  * a minimal HTML page with Open Graph meta tags for link previews.
  *
+ * The app is a pure SPA (no SSR), so this edge middleware runs separately
+ * to serve OG tags to crawlers while the main app remains client-side only.
+ *
  * DEPLOYMENT OPTIONS:
  *
  * 1. Cloudflare Pages Functions - Place in functions/_middleware.ts

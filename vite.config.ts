@@ -1,21 +1,15 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
-import tailwindcss from '@tailwindcss/vite'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
 	return {
 		plugins: [
 			tsconfigPaths(),
-			tailwindcss(),
-			tanstackStart({
-				srcDirectory: 'src',
-				// SPA mode globally - crawler middleware handles social previews
-				spa: {
-					enabled: true,
-				},
+			tanstackRouter({
+				autoCodeSplitting: true,
 			}),
 			react({
 				babel: {
