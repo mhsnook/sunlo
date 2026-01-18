@@ -23,6 +23,12 @@ import type {
 	LanguageProficiencyEnumType,
 } from '@/lib/schemas'
 import { Card } from '@/components/ui/card'
+import type { FieldError } from 'react-hook-form'
+
+// Type helper for accessing array field errors
+type ArrayFieldErrors = Array<{ lang?: FieldError; level?: FieldError }> & {
+	root?: FieldError
+}
 
 const proficiencyLevels: {
 	value: LanguageProficiencyEnumType
@@ -88,7 +94,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 									)}
 								/>
 							</div>
-							<div className="w-[120px] shrink-0">
+							<div className="w-30 shrink-0">
 								<Controller
 									control={control}
 									name={`languages_known.${index}.level` as Path<T>}
@@ -121,19 +127,15 @@ export function LanguagesKnownField<T extends FieldValues>({
 								<Trash2 className="text-destructive size-4" />
 							</Button>
 						</div>
-						{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-						{(error as any)?.[index] && (
+						{(error as ArrayFieldErrors)?.[index] && (
 							<div className="ms-12">
-								{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-								<ErrorLabel error={(error as any)[index]?.lang} />
-								{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-								<ErrorLabel error={(error as any)[index]?.level} />
+								<ErrorLabel error={(error as ArrayFieldErrors)[index]?.lang} />
+								<ErrorLabel error={(error as ArrayFieldErrors)[index]?.level} />
 							</div>
 						)}
 					</Card>
 				))}
-				{/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-				<ErrorLabel error={(error as any)?.root} />
+				<ErrorLabel error={(error as ArrayFieldErrors)?.root} />
 			</div>
 			<div className="flex w-full flex-row justify-end">
 				<Button

@@ -181,11 +181,12 @@ test.describe.serial('Review Mutations', () => {
 				if (!collection)
 					throw new Error('cardReviewsCollection not attached to window')
 				// Find reviews matching phrase_id and day_session
-				const reviews = collection.toArray.filter(
-					(r: { phrase_id: string; day_session: string }) =>
-						r.phrase_id === phraseId && r.day_session === sessionDate
+				return (
+					collection.toArray.find(
+						(r: { phrase_id: string; day_session: string }) =>
+							r.phrase_id === phraseId && r.day_session === sessionDate
+					) ?? null
 				)
-				return reviews[0] || null
 			},
 			{ phraseId, sessionDate }
 		)

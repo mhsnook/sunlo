@@ -32,8 +32,7 @@ export function FeedFilterMenu() {
 			search: ((prev: Record<string, unknown>) => ({
 				...prev,
 				[filterName]: currentValue ? false : undefined,
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			})) as any,
+			})) as never,
 		})
 	}
 

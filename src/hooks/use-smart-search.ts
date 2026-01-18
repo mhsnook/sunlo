@@ -51,18 +51,14 @@ export function useSmartSearch(
 
 			// Note: search_phrases_smart RPC is defined in migration 20260117150000
 			// TypeScript types will be updated after running `pnpm types`
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const { data, error } = await (supabase.rpc as any)(
-				'search_phrases_smart',
-				{
-					query: debouncedQuery,
-					lang_filter: lang,
-					sort_by: sortBy,
-					result_limit: SEARCH_PAGE_SIZE,
-					cursor_created_at: pageParam?.created_at ?? null,
-					cursor_id: pageParam?.id ?? null,
-				}
-			)
+			const { data, error } = await supabase.rpc('search_phrases_smart', {
+				query: debouncedQuery,
+				lang_filter: lang,
+				sort_by: sortBy,
+				result_limit: SEARCH_PAGE_SIZE,
+				cursor_created_at: pageParam?.created_at,
+				cursor_id: pageParam?.id,
+			})
 
 			if (error) throw error
 			return (data ?? []) as Array<SearchResultRow>

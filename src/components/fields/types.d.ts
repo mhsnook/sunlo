@@ -10,7 +10,6 @@ type AnyFieldType = {
 	error?: FieldError
 	tabIndex?: number
 }
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyArrayFieldType<T extends FieldValues> = {
 	error?: FieldErrors<T>[keyof FieldErrors<T>]
 }
