@@ -1,7 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { useAllChats, useRelationFriends } from '@/hooks/use-friends'
+import { Badge } from '@/components/ui/badge'
+import {
+	useAllChats,
+	useRelationFriends,
+	useUnreadCounts,
+} from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
@@ -13,8 +18,9 @@ const linkActiveProps = {
 export function ChatsSidebar() {
 	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
 	const { data: chats, isLoading: isLoadingChats } = useAllChats()
+	const { data: unreadCounts } = useUnreadCounts()
 
-	// Mock sorting by recent activity
+	// Sort by recent activity
 	const sortedFriends = friends?.toSorted((a, b) =>
 		a.most_recent_created_at === b.most_recent_created_at ? 0
 		: a.most_recent_created_at < b.most_recent_created_at ? 1
@@ -40,6 +46,7 @@ export function ChatsSidebar() {
 				:	sortedFriends.map((friend) => {
 						const thisChatMessage =
 							!chats || !chats[friend.uid] ? null : chats[friend.uid].at(-1)
+						const unreadCount = unreadCounts?.[friend.uid] ?? 0
 						return (
 							<Link
 								key={friend.uid}
@@ -60,10 +67,32 @@ export function ChatsSidebar() {
 									</AvatarFallback>
 								</Avatar>
 								<div className="flex-1 overflow-hidden">
-									<div className="font-semibold">
-										{friend.profile?.username}
+									<div className="flex items-center gap-2">
+										<span
+											className={cn(
+												'font-semibold',
+												unreadCount > 0 && 'text-foreground'
+											)}
+										>
+											{friend.profile?.username}
+										</span>
+										{unreadCount > 0 && (
+											<Badge
+												variant="default"
+												className="h-5 min-w-5 justify-center px-1.5 text-xs"
+											>
+												{unreadCount}
+											</Badge>
+										)}
 									</div>
-									<p className="text-muted-foreground line-clamp-2 text-xs">
+									<p
+										className={cn(
+											'line-clamp-2 text-xs',
+											unreadCount > 0 ?
+												'text-foreground font-medium'
+											:	'text-muted-foreground'
+										)}
+									>
 										{thisChatMessage ?
 											<>
 												{ago(thisChatMessage.created_at)} •{' '}

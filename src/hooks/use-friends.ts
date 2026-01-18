@@ -154,3 +154,59 @@ export const useOneFriendChat = (
 		[uid]
 	)
 }
+
+type UnreadCountsMap = { [key: uuid]: number }
+
+export const useUnreadCounts = (): UseLiveQueryResult<UnreadCountsMap> => {
+	const userId = useUserId()
+	const initialQuery = useLiveQuery((q) =>
+		q
+			.from({ message: chatMessagesCollection })
+			.where(({ message }) =>
+				and(eq(message.recipient_uid, userId), eq(message.is_read, false))
+			)
+	)
+
+	return {
+		...initialQuery,
+		data:
+			!initialQuery.data ? undefined : (
+				initialQuery.data.reduce<UnreadCountsMap>((acc, msg) => {
+					acc[msg.sender_uid] = (acc[msg.sender_uid] ?? 0) + 1
+					return acc
+				}, {})
+			),
+	}
+}
+
+export const useMarkMessagesAsRead = (friendUid: uuid) => {
+	const userId = useUserId()
+
+	return useMutation({
+		mutationKey: ['user', userId, 'chat_message', 'mark_read', friendUid],
+		mutationFn: async () => {
+			const { data } = await supabase
+				.from('chat_message')
+				.update({ is_read: true })
+				.eq('recipient_uid', userId!)
+				.eq('sender_uid', friendUid)
+				.eq('is_read', false)
+				.select()
+				.throwOnError()
+			return data
+		},
+		onSuccess: (data) => {
+			if (data) {
+				data.forEach((msg) => {
+					chatMessagesCollection.utils.writeUpdate({
+						id: msg.id,
+						is_read: true,
+					})
+				})
+			}
+		},
+		onError: (error) => {
+			console.log('Error marking messages as read', error)
+		},
+	})
+}
