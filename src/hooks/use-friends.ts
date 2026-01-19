@@ -141,11 +141,9 @@ export const useOneFriendChat = (
 		(q) =>
 			q
 				.from({ message: chatMessagesCollection })
-				// Use a custom filter function instead of or(eq(), eq()) which seems to have issues
-				.where(({ message }) => {
-					const isFriendSender = message.sender_uid === uid
-					const isFriendRecipient = message.recipient_uid === uid
-					return isFriendSender || isFriendRecipient
+				// Use .fn.where() for custom JS filter since or(eq(), eq()) wasn't matching correctly
+				.fn.where(({ message }) => {
+					return message.sender_uid === uid || message.recipient_uid === uid
 				})
 				.orderBy(({ message }) => message.created_at, 'asc')
 				.fn.select(({ message }) => ({
