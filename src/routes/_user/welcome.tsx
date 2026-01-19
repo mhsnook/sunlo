@@ -1,5 +1,10 @@
 import { type CSSProperties, useMemo } from 'react'
-import { createFileRoute, Link, Navigate } from '@tanstack/react-router'
+import {
+	createFileRoute,
+	Link,
+	Navigate,
+	useNavigate,
+} from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	WalletCards,
@@ -18,10 +23,17 @@ import { useProfile } from '@/hooks/use-profile'
 import { useDecks } from '@/hooks/use-deck'
 import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/lib/collections'
-import languages from '@/lib/languages'
+import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LangBadge } from '@/components/ui/badge'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/welcome')({
@@ -40,6 +52,7 @@ export const Route = createFileRoute('/_user/welcome')({
 const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function WelcomePage() {
+	const navigate = useNavigate()
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks } = useDecks()
 	const { userRole } = useAuth()
@@ -157,6 +170,32 @@ function WelcomePage() {
 						variant="secondary"
 					/>
 				</div>
+			</section>
+
+			{/* Explore a Language */}
+			<section className="bg-card/50 flex flex-col items-center gap-4 rounded-lg border p-6 @md:flex-row @md:justify-between">
+				<div>
+					<h2 className="text-xl font-bold">Explore a Language</h2>
+					<p className="text-muted-foreground">
+						Browse phrases, playlists, and requests in any language
+					</p>
+				</div>
+				<Select
+					onValueChange={(lang) => {
+						void navigate({ to: '/learn/$lang/feed', params: { lang } })
+					}}
+				>
+					<SelectTrigger className="w-56">
+						<SelectValue placeholder="Select a language" />
+					</SelectTrigger>
+					<SelectContent>
+						{allLanguageOptions.map((lang) => (
+							<SelectItem key={lang.value} value={lang.value}>
+								{lang.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</section>
 
 			{/* Requests in Languages You Know */}
