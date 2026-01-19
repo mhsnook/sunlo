@@ -226,6 +226,43 @@ values
 		false,
 		null,
 		false
+	),
+	-- New user without a profile (for testing welcome page flow)
+	(
+		'00000000-0000-0000-0000-000000000000',
+		'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8',
+		'authenticated',
+		'authenticated',
+		'sunloapp+new@gmail.com',
+		'$2a$10$nbkbcyoLi.buagd2DyyT0u4kpYoV.VZh6fSqRWvNxmZkea0XUcybG',
+		now() - interval '1 hour',
+		null,
+		'',
+		null,
+		'',
+		null,
+		'',
+		'',
+		null,
+		now() - interval '1 hour',
+		'{"provider": "email", "providers": ["email"]}',
+		'{"sub": "d4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8", "role": "learner", "email": "sunloapp+new@gmail.com", "email_verified": true, "phone_verified": false}',
+		null,
+		now() - interval '1 hour',
+		now() - interval '1 hour',
+		null,
+		null,
+		'',
+		'',
+		null,
+		'',
+		0,
+		null,
+		'',
+		null,
+		false,
+		null,
+		false
 	);
 
 --
@@ -282,6 +319,17 @@ values
 		now() - interval '1 days',
 		now() - interval '1 days',
 		'c8e68f48-8d91-426e-a1fc-4aefb8d690d3'
+	),
+	-- New user without a profile (for testing welcome page flow)
+	(
+		'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8',
+		'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8',
+		'{"sub": "d4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8", "role": "learner", "email": "sunloapp+new@gmail.com", "email_verified": true, "phone_verified": false}',
+		'email',
+		now() - interval '1 hour',
+		now() - interval '1 hour',
+		now() - interval '1 hour',
+		'e5f6a7b8-c9d0-4e1f-a2b3-c4d5e6f7a8b9'
 	);
 
 --

@@ -7,6 +7,9 @@ export const FIRST_USER_UID = 'a2dfa256-ef7b-41b0-b05a-d97afab8dd21'
 export const FIRST_USER_EMAIL = 'sunloapp+1@gmail.com'
 export const SECOND_USER_UID = 'a32f65e7-a496-4afc-abd3-798d8e6d9ec5'
 export const SECOND_USER_EMAIL = 'sunloapp+2@gmail.com'
+// New user without profile - for testing welcome page / onboarding flow
+export const NEW_USER_UID = 'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8'
+export const NEW_USER_EMAIL = 'sunloapp+new@gmail.com'
 
 // Map browser projects to different test users to avoid DB conflicts
 const browserUserMap: Record<
@@ -49,7 +52,11 @@ export type LoginOptions = {
 }
 
 /**
- * Log in with specific credentials
+ * Log in with specific credentials.
+ * Handles three possible post-login destinations:
+ * - /learn (existing user with profile and decks)
+ * - /welcome (user who just created profile)
+ * - /getting-started (user without profile - needs to create one first)
  */
 export async function login(
 	page: Page,
@@ -64,8 +71,15 @@ export async function login(
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')
 
-	// Wait for either /learn or /welcome (for new users after profile creation)
-	await page.waitForURL(/\/(learn|welcome)/)
+	// Wait for /learn, /welcome, or /getting-started (for users without profile)
+	await page.waitForURL(/\/(learn|welcome|getting-started)/)
+
+	// If user has no profile, they need to complete getting-started first
+	// This is expected for new users - the test should handle profile creation
+	if (page.url().includes('/getting-started')) {
+		// Don't proceed further - let the test handle profile creation
+		return
+	}
 
 	// If we landed on welcome page and skipWelcome is true, click through to continue
 	if (skipWelcome && page.url().includes('/welcome')) {
@@ -128,6 +142,19 @@ export async function loginAsFriendUser(
 	options: LoginOptions = {}
 ): Promise<void> {
 	await login(page, 'sunloapp+friend@gmail.com', 'password', options)
+}
+
+/**
+ * Log in as the new user who has no profile yet.
+ * This user will be redirected to /getting-started to create a profile,
+ * then to /welcome after profile creation.
+ * Use { skipWelcome: false } to stay on the welcome page for testing.
+ */
+export async function loginAsNewUser(
+	page: Page,
+	options: LoginOptions = {}
+): Promise<void> {
+	await login(page, NEW_USER_EMAIL, 'password', options)
 }
 
 /**
