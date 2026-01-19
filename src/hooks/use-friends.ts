@@ -6,7 +6,7 @@ import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { and, eq, isNull, or, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import { chatMessagesCollection } from '@/lib/collections'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, RelationsFullType } from '@/lib/live-collections'
@@ -136,25 +136,17 @@ export const useOneFriendChat = (
 	uid: uuid
 ): UseLiveQueryResult<ChatMessageRelType[]> => {
 	const userId = useUserId()
-	// Debug: Log all messages in collection to see what we're filtering from
-	const allMessages = chatMessagesCollection.state
-	const matchingSender = Array.from(allMessages.values()).filter(
-		(m) => m.sender_uid === uid
-	)
-	const matchingRecipient = Array.from(allMessages.values()).filter(
-		(m) => m.recipient_uid === uid
-	)
-	console.log(
-		`useOneFriendChat debug: friend=${uid}, collection has ${allMessages.size} messages, ${matchingSender.length} where friend is sender, ${matchingRecipient.length} where friend is recipient`
-	)
 
 	const result = useLiveQuery(
 		(q) =>
 			q
 				.from({ message: chatMessagesCollection })
-				.where(({ message }) =>
-					or(eq(message.sender_uid, uid), eq(message.recipient_uid, uid))
-				)
+				// Use a custom filter function instead of or(eq(), eq()) which seems to have issues
+				.where(({ message }) => {
+					const isFriendSender = message.sender_uid === uid
+					const isFriendRecipient = message.recipient_uid === uid
+					return isFriendSender || isFriendRecipient
+				})
 				.orderBy(({ message }) => message.created_at, 'asc')
 				.fn.select(({ message }) => ({
 					...message,
@@ -164,11 +156,7 @@ export const useOneFriendChat = (
 						:	message.sender_uid,
 					isByMe: message.sender_uid === userId,
 				})),
-		[uid]
-	)
-	// Debug: log what the live query returns
-	console.log(
-		`useOneFriendChat result: ${result.data?.length ?? 0} messages returned by live query`
+		[uid, userId]
 	)
 	return result
 }
