@@ -287,23 +287,10 @@ export const chatMessagesCollection = createCollection(
 				console.log(`chatMessagesCollection: No user, returning empty`)
 				return []
 			}
-			// Explicitly filter for messages where user is sender OR recipient
-			// This works around an RLS issue where the OR condition wasn't returning recipient messages
 			const { data } = await supabase
 				.from('chat_message')
 				.select()
-				.or(`sender_uid.eq.${user.id},recipient_uid.eq.${user.id}`)
 				.throwOnError()
-			// Debug: Log message counts by sender/recipient
-			if (data) {
-				const asSender = data.filter((m) => m.sender_uid === user.id).length
-				const asRecipient = data.filter(
-					(m) => m.recipient_uid === user.id
-				).length
-				console.log(
-					`chatMessagesCollection loaded: ${data.length} total, ${asSender} as sender, ${asRecipient} as recipient, userId: ${user.id}`
-				)
-			}
 			return data?.map((item) => ChatMessageSchema.parse(item)) ?? []
 		},
 		getKey: (item: ChatMessageType) => item.id,
