@@ -136,7 +136,19 @@ export const useOneFriendChat = (
 	uid: uuid
 ): UseLiveQueryResult<ChatMessageRelType[]> => {
 	const userId = useUserId()
-	return useLiveQuery(
+	// Debug: Log all messages in collection to see what we're filtering from
+	const allMessages = chatMessagesCollection.state
+	const matchingSender = Array.from(allMessages.values()).filter(
+		(m) => m.sender_uid === uid
+	)
+	const matchingRecipient = Array.from(allMessages.values()).filter(
+		(m) => m.recipient_uid === uid
+	)
+	console.log(
+		`useOneFriendChat debug: friend=${uid}, collection has ${allMessages.size} messages, ${matchingSender.length} where friend is sender, ${matchingRecipient.length} where friend is recipient`
+	)
+
+	const result = useLiveQuery(
 		(q) =>
 			q
 				.from({ message: chatMessagesCollection })
@@ -154,6 +166,11 @@ export const useOneFriendChat = (
 				})),
 		[uid]
 	)
+	// Debug: log what the live query returns
+	console.log(
+		`useOneFriendChat result: ${result.data?.length ?? 0} messages returned by live query`
+	)
+	return result
 }
 
 // Hook to get unread messages (messages sent to the current user that haven't been read)
