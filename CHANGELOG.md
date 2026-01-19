@@ -1,4 +1,91 @@
-## 0.4 - Playlists and the Polymorphic Feed
+# Change Log
+
+## v0.11
+
+_19th Jan, 2026_
+
+-
+
+## v0.10 - Smart Search, DM Playlists, Popularity Feed
+
+_18th Jan, 2026_
+
+- Smart search! using trigrams (f094673b6a8205f655630f0c7b3fb875eea140ef)
+- (c2, d2) Feature: Friends feed and Popular feed polymorphic with filters
+- Add "popularity" to the feed-activities view
+- (c1, d1) Move add-phrases route to `learn/$lang/phrases/new`
+- (c2, d2) Feature: Playlists image option
+- (c1, d1) Feature: "You completed your review" nicer screen
+- (c2, d2) Chore: Replace the friend request / accept / cancel logic with a before hook
+- Fix: ALL remaining `tsc -b` errors
+- Feat: Cover images on Playlists!
+- Fix/Refactor: Review cards flow/order is fixed, more declarative, more local-first, w better completion screen
+- Prevent spoofing uids by updating RLS Insert policies
+- Feat: share playlists in chat
+- Fix: window height in chat window
+
+## v0.9 - Only-Reverse-Reviews, Github Actions CI
+
+_16h Jan, 2026_
+
+- (c2, d2) DX: GitHub actions for CI/CD
+- (c2, d2) DX: Navigating-around-the-app tests
+- (c2, d2) Chore: Retire PLv8, move FSRS to client
+- (c1, d1) Feat: catch login on signup page and show better feedback
+- (c2, d1) Feat: edit or archive translations
+- (c1, d1) Fix: query collection errors on logout/login
+- (c2, d2) Feat: Only-Reverse-Reviews setting for some cards
+- (c2, d2) Fix: Auth state transition bugs (sign out + login race conditions)
+
+## v0.8 - Browse Page
+
+_15th Jan, 2026_
+
+- (c1, d1) A. Fix: Embeds not working in production (bdd0e7e9)
+- (c1, d1) AB. Fix: Poor RLS performance for chat messages (16b3f200)
+- (c1, d1) B. Feature: Add Dyslexie/OpenDyslexic font support (8ca64970)
+- (c1, d2) Feature L: Browse page search box, w filters (bc04dc1a)
+
+## v0.7 - New `phrase_meta` view, More local-first-ian
+
+_14th Jan, 2026_
+
+- (c3, d2) Refactor: meta_phrase_info into phrase_meta, do less, more reliably
+- (c1, d1) Fix: review buttons were all one colour
+- (c1, d1) Fix ago() returning '1 mo ago' for null dates (e723a944)
+- (c1, d1) Fix /learn/undefined should 404 (45b04d8e - prior work)
+- (c1, d1) Fix DialogContent aria-labelledby/description warnings (a73a4fbf)
+- (c1, d1) Make default theme 'light' (85474e8f)
+- (c1, d1) Add 'add to deck' option to bulk-add (746f3073)
+- (c1, d1) Add 'learned' and 'skip' options to review context menu (4da341d1)
+
+## v0.6 - React Compiler, Bookmark Phrases
+
+_12th Jan, 2026_
+
+- (c1, d1) Fix: Loading spinner creating scrollbars
+- (c3, d2) Add: react compiler, remove linter cruft
+- (c1, d1) Chore: Remove these console logs `We expected a userId here`
+- (c1, d1) Fix: convert the PlusMenu to standard shadcn menu
+- (c1, d1) Design: Try font "Instrument Sans"
+- (c1, d1) Design: Use Bookmark\* icons to card status
+- (c1, d1) Feat: throw notFound() for /learn/{whatever}
+- (c1, d1) Changing card status updates the phrase's metadata (count_learners) etc
+
+### v0.5.2 - Hotfix: Drop conflicting RPC for adding phrases
+
+### v0.5.1 - Hotfix: Remove Ugly Theme\*\*
+
+## v0.5 - Public Mode
+
+_10th Jan, 2026_
+
+- (c3, d3) Public mode
+- (c3, d3) When you try to add a phrase but you don't have a deck for that language, a checkbox gives you the option to start learning (or re-activate) that deck, or to create the new phrase without one.
+- (c2, d2) Deck-configurable preferred translation lang
+- (c1, d1) Fix Typescript Errors in Bulk-Add.tsx
+
+## v0.4 - Playlists and the Polymorphic Feed
 
 _January 2026_
 
@@ -12,7 +99,7 @@ The first user will make and publish the playlist, and then other users can choo
 
 Then, the existence of the Playlists, which also need to be displayed on the feed alongside Requests, led us to the creation of a _Feed view_ which combines Requests, Playlists, and also newly created Phrases. This Feed operates differently from our local collections because it doesn't contain the library data, it just shows us an order, essentially returning a Feed Skeleton with some attached metadata for any client-side sorting that may be required. These quasi Feed Skeletons are stored simply in a react query cache.
 
-## 0.3 - Feeds! Recent requests, upvotes, comments, recs
+## v0.3 - Feeds! Recent requests, upvotes, comments, recs
 
 _December 2025_
 
@@ -32,7 +119,7 @@ You can [view new features and views in the screenshots posted on the PR](https:
 
 [Style work and visual language enhancements are also shown and detailed in the PR.](https://github.com/mhsnook/sunlo/pull/252#issuecomment-3679066683)
 
-## 0.2 - Social Features and New Data Management
+## v0.2 - Social Features and New Data Management
 
 _November 2025_
 
@@ -74,7 +161,7 @@ client and server.
 - Use `both-helpers.ts` to query the DB as service role and evaluate the local collection and
   return both, then compare them in the spec.
 
-## 0.1 - The MEP
+## v0.1 - The MEP
 
 _April 2025_
 

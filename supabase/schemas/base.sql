@@ -2837,7 +2837,6 @@ grant all on function "public"."search_phrases_smart" (
 	"cursor_id" "uuid"
 ) to "service_role";
 
-
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
@@ -2849,7 +2848,6 @@ grant all on function "public"."set_limit" (real) to "anon";
 grant all on function "public"."set_limit" (real) to "authenticated";
 
 grant all on function "public"."set_limit" (real) to "service_role";
-
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
@@ -3098,6 +3096,7 @@ grant all on table "public"."user_deck_plus" to "service_role";
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
 grant all on table "public"."user_deck_review_state" to "service_role";
+
 grant all on table "public"."phrase_search_index" to "anon";
 
 grant all on table "public"."phrase_search_index" to "authenticated";

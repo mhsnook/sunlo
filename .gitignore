@@ -30,7 +30,7 @@ dist
 .vercel
 .env*.local
 keystore.properties
-contexts/*
+# contexts/*
 
 # Playwright
 /playwright-report/

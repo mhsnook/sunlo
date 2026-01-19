@@ -45,42 +45,9 @@ will still work properly in production. But the seeds file is not a static set o
 some care must be taken when updating it.
 
 The easiest way to modify the seeds might be simply by hand editing `seed.sql`. You will notice in
-the file, most dates are calculated from a formula like this:
-
-```sql
-insert into
-	"public"."user_card_review" (
-		"id",
-		"uid",
-		"score",
-		"difficulty",
-		"stability",
-		"review_time_retrievability",
-		"created_at",
-		"updated_at",
-		"day_session",
-		"lang",
-		"phrase_id",
-		"day_first_review"
-	)
-values
-	(
-		'4d828aaf-119c-48c8-89c4-c1747e4a6745',
-		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		3,
-		5.282434422319,
-		3.173,
-		null,
-		current_date - 4 + interval '2 minute',
-		current_date - 4 + interval '2 minute',
-		(current_date - 4 + interval '2 minute' - interval '4 hour')::date,
-		'tam',
-		'1f6bac22-b32a-4b77-9857-d2de02b538de',
-		true
-	);
-```
-
-This ensures that whenever we are working on the app, this review was always created four days ago.
+the file, most dates are calculated from a formula like this: `now() - interval '20 hours 30 minutes'`.
+This
+ensures that whenever we are working on the app, this review was always created twenty hours and 30 minutes ago.
 So our features for "recently added cards" and "cards overdue" and so on will always stay in sync.
 Virtually every record in the seed file uses dates and day_session strings constructed in this way.
 
