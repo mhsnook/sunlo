@@ -188,12 +188,13 @@ export const useUnreadChatsCount = (): number | undefined => {
 }
 
 export const markAsRead = createOptimisticAction({
-	onMutate: () => {
-		// we must do some imperative chatMessagesCollection.get for all the correct things
-		// and then items.forEach() update them!
-		// see https://tanstack.com/db/latest/docs/reference/functions/createOptimisticAction
-		// for structure
-		// if we can't do imperative query like this we might instead pass in a list of `msg.id`s
+	onMutate: ({ friendUid, read_at }: { friendUid: uuid; read_at: string }) => {
+		// Find all unread messages from this friend and update them optimistically
+		chatMessagesCollection.forEach((message) => {
+			if (message.sender_uid === friendUid && message.read_at === null) {
+				chatMessagesCollection.utils.writeUpdate({ id: message.id, read_at })
+			}
+		})
 	},
 	mutationFn: async ({
 		friendUid,
@@ -205,7 +206,7 @@ export const markAsRead = createOptimisticAction({
 		await supabase
 			.from('chat_message')
 			.update({ read_at })
-			.eq('friend_uid', friendUid)
+			.eq('sender_uid', friendUid)
 			.is('read_at', null)
 			.throwOnError()
 	},
