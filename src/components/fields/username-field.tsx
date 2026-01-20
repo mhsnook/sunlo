@@ -22,8 +22,6 @@ export default function UsernameField<T extends FieldValues>({
 				placeholder="e.g. Learnie McLearnerson, Helpar1992"
 				{...register('username' as Path<T>)}
 				inputMode="text"
-				// oxlint-disable-next-line tabindex-no-positive
-				tabIndex={1}
 				aria-invalid={!!error}
 				className={error ? 'bg-destructive/20' : ''}
 			/>

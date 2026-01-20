@@ -1,4 +1,5 @@
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import type { CSSProperties } from 'react'
+import { createFileRoute, Navigate, redirect } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -16,7 +17,6 @@ import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { CSSProperties } from 'react'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -31,12 +31,15 @@ export const Route = createFileRoute('/_user/getting-started')({
 			:	{}
 	},
 	component: GettingStartedPage,
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Getting Started',
-			subtitle: 'Set your username and dive in!',
-		},
-	}),
+	beforeLoad: ({ context }) => {
+		if (!context.auth.isAuth) throw redirect({ to: '/login' })
+		return {
+			titleBar: {
+				title: 'Getting Started',
+				subtitle: 'Set your username and dive in!',
+			},
+		}
+	},
 })
 
 const style = { viewTransitionName: `main-area` } as CSSProperties

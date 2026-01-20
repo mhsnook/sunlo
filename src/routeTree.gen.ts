@@ -14,6 +14,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UserRouteImport } from './routes/_user'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserWelcomeRouteImport } from './routes/_user/welcome'
 import { Route as UserProfileRouteImport } from './routes/_user/profile'
 import { Route as UserLearnRouteImport } from './routes/_user/learn'
 import { Route as UserGettingStartedRouteImport } from './routes/_user/getting-started'
@@ -99,6 +100,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const UserWelcomeRoute = UserWelcomeRouteImport.update({
+  id: '/welcome',
+  path: '/welcome',
+  getParentRoute: () => UserRoute,
 } as any)
 const UserProfileRoute = UserProfileRouteImport.update({
   id: '/profile',
@@ -372,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/getting-started': typeof UserGettingStartedRoute
   '/learn': typeof UserLearnRouteWithChildren
   '/profile': typeof UserProfileRouteWithChildren
+  '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/friends/invite': typeof UserFriendsInviteRoute
@@ -424,6 +431,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
   '/getting-started': typeof UserGettingStartedRoute
+  '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/invite': typeof UserFriendsInviteRoute
   '/friends/requests': typeof UserFriendsRequestsRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/_user/getting-started': typeof UserGettingStartedRoute
   '/_user/learn': typeof UserLearnRouteWithChildren
   '/_user/profile': typeof UserProfileRouteWithChildren
+  '/_user/welcome': typeof UserWelcomeRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/_user/friends/invite': typeof UserFriendsInviteRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/getting-started'
     | '/learn'
     | '/profile'
+    | '/welcome'
     | '/friends/$uid'
     | '/friends/chats'
     | '/friends/invite'
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/accept-invite'
     | '/getting-started'
+    | '/welcome'
     | '/friends/$uid'
     | '/friends/invite'
     | '/friends/requests'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/_user/getting-started'
     | '/_user/learn'
     | '/_user/profile'
+    | '/_user/welcome'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
     | '/_user/friends/invite'
@@ -734,6 +746,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_user/welcome': {
+      id: '/_user/welcome'
+      path: '/welcome'
+      fullPath: '/welcome'
+      preLoaderRoute: typeof UserWelcomeRouteImport
+      parentRoute: typeof UserRoute
     }
     '/_user/profile': {
       id: '/_user/profile'
@@ -1276,6 +1295,7 @@ interface UserRouteChildren {
   UserGettingStartedRoute: typeof UserGettingStartedRoute
   UserLearnRoute: typeof UserLearnRouteWithChildren
   UserProfileRoute: typeof UserProfileRouteWithChildren
+  UserWelcomeRoute: typeof UserWelcomeRoute
 }
 
 const UserRouteChildren: UserRouteChildren = {
@@ -1284,6 +1304,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserGettingStartedRoute: UserGettingStartedRoute,
   UserLearnRoute: UserLearnRouteWithChildren,
   UserProfileRoute: UserProfileRouteWithChildren,
+  UserWelcomeRoute: UserWelcomeRoute,
 }
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
