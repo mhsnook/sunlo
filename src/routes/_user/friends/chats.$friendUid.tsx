@@ -38,23 +38,28 @@ function ChatPage() {
 	const userId = useUserId()
 	const bottomRef = useRef<HTMLDivElement>(null)
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
+	// Track which messages we've already sent mark-as-read for
+	const markedAsReadRef = useRef<Set<string>>(new Set())
 
 	const messagesQuery = useOneFriendChat(friendUid)
 
 	// Mark messages as read when viewing the chat
 	useEffect(() => {
 		if (!messagesQuery.data || !userId) return
+
+		// Find unread messages we haven't already processed
 		const unreadMsgs = messagesQuery.data.filter(
-			(msg) => msg.sender_uid === friendUid && !msg.read_at
+			(msg) =>
+				msg.sender_uid === friendUid &&
+				!msg.read_at &&
+				!markedAsReadRef.current.has(msg.id)
 		)
+
 		if (unreadMsgs.length) {
+			// Mark these as processed before sending request
+			unreadMsgs.forEach((msg) => markedAsReadRef.current.add(msg.id))
 			const read_at = new Date().toISOString()
-			/// TODO something like this
-			// use the optimistic transation to do like `markAsRead(friendUid, read_at)`
-			// and then the optimistic transation will be in use-reviews
 			markAsRead({ friendUid, read_at })
-			// if we need to pass the list of msg IDs we can
-			// const msgIds = unreadMsgs.map(m => m.id)
 		}
 	}, [messagesQuery.data, friendUid, userId])
 
