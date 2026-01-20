@@ -2855,41 +2855,115 @@ grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uu
 
 grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
 
+grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "service_role";
+
+grant all on function "public"."show_limit" () to "postgres";
+
+grant all on function "public"."show_limit" () to "anon";
+
+grant all on function "public"."show_limit" () to "authenticated";
+
+grant all on function "public"."show_limit" () to "service_role";
+
+grant all on function "public"."show_trgm" ("text") to "postgres";
+
+grant all on function "public"."show_trgm" ("text") to "anon";
+
+grant all on function "public"."show_trgm" ("text") to "authenticated";
+
+grant all on function "public"."show_trgm" ("text") to "service_role";
+
+grant all on function "public"."similarity" ("text", "text") to "postgres";
+
+grant all on function "public"."similarity" ("text", "text") to "anon";
+
+grant all on function "public"."similarity" ("text", "text") to "authenticated";
+
+grant all on function "public"."similarity" ("text", "text") to "service_role";
+
+grant all on function "public"."similarity_dist" ("text", "text") to "postgres";
+
+grant all on function "public"."similarity_dist" ("text", "text") to "anon";
+
+grant all on function "public"."similarity_dist" ("text", "text") to "authenticated";
+
+grant all on function "public"."similarity_dist" ("text", "text") to "service_role";
+
+grant all on function "public"."similarity_op" ("text", "text") to "postgres";
+
+grant all on function "public"."similarity_op" ("text", "text") to "anon";
+
+grant all on function "public"."similarity_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."similarity_op" ("text", "text") to "service_role";
+
+grant all on function "public"."strict_word_similarity" ("text", "text") to "postgres";
+
+grant all on function "public"."strict_word_similarity" ("text", "text") to "anon";
+
+grant all on function "public"."strict_word_similarity" ("text", "text") to "authenticated";
+
+grant all on function "public"."strict_word_similarity" ("text", "text") to "service_role";
+
+grant all on function "public"."strict_word_similarity_commutator_op" ("text", "text") to "postgres";
+
+grant all on function "public"."strict_word_similarity_commutator_op" ("text", "text") to "anon";
+
+grant all on function "public"."strict_word_similarity_commutator_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."strict_word_similarity_commutator_op" ("text", "text") to "service_role";
+
+grant all on function "public"."strict_word_similarity_dist_commutator_op" ("text", "text") to "postgres";
+
+grant all on function "public"."strict_word_similarity_dist_commutator_op" ("text", "text") to "anon";
+
+grant all on function "public"."strict_word_similarity_dist_commutator_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."strict_word_similarity_dist_commutator_op" ("text", "text") to "service_role";
+
+grant all on function "public"."strict_word_similarity_dist_op" ("text", "text") to "postgres";
+
+grant all on function "public"."strict_word_similarity_dist_op" ("text", "text") to "anon";
+
+grant all on function "public"."strict_word_similarity_dist_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."strict_word_similarity_dist_op" ("text", "text") to "service_role";
+
+grant all on function "public"."strict_word_similarity_op" ("text", "text") to "postgres";
+
+grant all on function "public"."strict_word_similarity_op" ("text", "text") to "anon";
+
+grant all on function "public"."strict_word_similarity_op" ("text", "text") to "authenticated";
+
+grant all on function "public"."strict_word_similarity_op" ("text", "text") to "service_role";
+
+grant all on function "public"."trigger_refresh_phrase_search" () to "authenticated";
+
+grant all on function "public"."trigger_refresh_phrase_search" () to "service_role";
+
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
-
-grant all on function "public"."update_parent_playlist_timestamp" () to "anon";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
 
-grant all on function "public"."update_phrase_playlist_timestamp" () to "anon";
-
 grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
-
-grant all on function "public"."update_phrase_playlist_upvote_count" () to "anon";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
 
-grant all on function "public"."update_phrase_request_timestamp" () to "anon";
-
 grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
-grant all on function "public"."update_phrase_request_upvote_count" () to "anon";
-
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
-
-grant all on function "public"."update_phrase_translation_updated_at" () to "anon";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
@@ -2938,14 +3012,6 @@ grant all on function "public"."word_similarity_op" ("text", "text") to "anon";
 grant all on function "public"."word_similarity_op" ("text", "text") to "authenticated";
 
 grant all on function "public"."word_similarity_op" ("text", "text") to "service_role";
-
-grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
-
-grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
-
-grant all on function "public"."validate_friend_request_action" () to "authenticated";
-
-grant all on function "public"."validate_friend_request_action" () to "service_role";
 
 grant all on table "public"."chat_message" to "authenticated";
 
