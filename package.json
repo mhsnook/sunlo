@@ -25,7 +25,7 @@
 		"seeds:schema": "supabase db dump --local > supabase/schemas/base.sql",
 		"db-reset": "supabase db reset",
 		"db-schema": "pnpm run seeds:schema && pnpm types && pnpm format",
-		"db-full": "supabase db reset && pnpm run seeds:schema",
+		"db-full": "supabase db reset && pnpm run db-schema",
 		"prepare": "husky"
 	},
 	"dependencies": {

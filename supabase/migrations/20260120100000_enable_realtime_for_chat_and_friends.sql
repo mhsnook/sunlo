@@ -1,6 +1,6 @@
 -- Enable realtime for chat_message and friend_request_action tables
 -- This allows clients to subscribe to INSERT/UPDATE/DELETE events via Supabase Realtime
-
+--
 -- Use a DO block to make this idempotent (won't fail if tables already in publication)
 do $$
 begin
