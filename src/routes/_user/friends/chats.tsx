@@ -8,8 +8,11 @@ export const Route = createFileRoute('/_user/friends/chats')({
 			title: 'Chats',
 		},
 	}),
-	loader: async () => {
-		await chatMessagesCollection.preload()
+	loader: async ({ context }) => {
+		// Only preload if authenticated to ensure RLS works correctly
+		if (context.auth.isAuth) {
+			await chatMessagesCollection.preload()
+		}
 		return {
 			SecondSidebar: ChatsSidebar,
 		}
