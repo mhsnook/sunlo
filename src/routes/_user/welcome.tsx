@@ -280,7 +280,7 @@ function ActionCard({
 					<div
 						className={cn(
 							'flex size-10 items-center justify-center rounded-full',
-							isPrimary ? 'bg-primary text-primary-foreground' : 'bg-muted'
+							isPrimary ? 'bg-primary text-white' : 'bg-muted'
 						)}
 					>
 						<Icon className="size-5" />
