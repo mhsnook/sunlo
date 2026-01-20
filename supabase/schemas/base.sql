@@ -803,6 +803,7 @@ create table if not exists "public"."chat_message" (
 	"lang" character varying not null,
 	"request_id" "uuid",
 	"playlist_id" "uuid",
+	"read_at" timestamp with time zone,
 	constraint "uids_are_different" check (("sender_uid" <> "recipient_uid"))
 );
 
@@ -819,6 +820,8 @@ comment on column "public"."chat_message"."phrase_id" is 'If it''s a recommendat
 comment on column "public"."chat_message"."related_message_id" is 'If this message is a reply/reaction to another (e.g. accepting a recommendation).';
 
 comment on column "public"."chat_message"."content" is 'Flexible JSONB for extra data, like the text of an accepted phrase.';
+
+comment on column "public"."chat_message"."read_at" is 'Timestamp when the recipient read the message. Null means unread.';
 
 create table if not exists "public"."comment_phrase_link" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1719,6 +1722,10 @@ create index "chat_message_recipient_uid_sender_uid_created_at_idx" on "public".
 
 create index "chat_message_sender_uid_recipient_uid_created_at_idx" on "public"."chat_message" using "btree" ("sender_uid", "recipient_uid", "created_at" desc);
 
+create index "chat_message_unread_idx" on "public"."chat_message" using "btree" ("recipient_uid", "read_at")
+where
+	("read_at" is null);
+
 create index "idx_comment_created_at" on "public"."request_comment" using "btree" ("parent_comment_id", "created_at");
 
 create index "idx_comment_parent" on "public"."request_comment" using "btree" ("parent_comment_id");
@@ -2292,6 +2299,26 @@ with
 					and ("uid_for" = "uid_less")
 				)
 			)
+		)
+	);
+
+create policy "Recipients can mark messages as read" on "public"."chat_message"
+for update
+	using (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "recipient_uid"
+		)
+	)
+with
+	check (
+		(
+			(
+				select
+					"auth"."uid" () as "uid"
+			) = "recipient_uid"
 		)
 	);
 

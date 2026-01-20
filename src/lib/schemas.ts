@@ -297,6 +297,7 @@ export const ChatMessageSchema = z.object({
 	playlist_id: z.string().uuid().nullable(),
 	related_message_id: z.string().uuid().nullable(),
 	lang: LangSchema,
+	read_at: z.string().nullable().default(null),
 })
 
 export type ChatMessageType = z.infer<typeof ChatMessageSchema>

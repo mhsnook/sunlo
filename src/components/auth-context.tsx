@@ -9,6 +9,7 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import {
+	chatMessagesCollection,
 	clearUser,
 	decksCollection,
 	friendSummariesCollection,
@@ -43,6 +44,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				void myProfileCollection.utils.refetch()
 				void decksCollection.utils.refetch()
 				void friendSummariesCollection.utils.refetch()
+				// Refetch chat messages if previously loaded (for correct RLS filtering)
+				if (chatMessagesCollection.size > 0) {
+					void chatMessagesCollection.utils.refetch()
+				}
 			}
 			setSessionState(session)
 			setIsLoaded(true)

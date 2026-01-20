@@ -3,10 +3,16 @@ import toast from 'react-hot-toast'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { ChatMessageRelType } from '@/lib/schemas'
+import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { and, eq, or, useLiveQuery } from '@tanstack/react-db'
+import {
+	and,
+	createOptimisticAction,
+	eq,
+	isNull,
+	useLiveQuery,
+} from '@tanstack/react-db'
 import { chatMessagesCollection } from '@/lib/collections'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, RelationsFullType } from '@/lib/live-collections'
@@ -135,13 +141,15 @@ export const useOneFriendChat = (
 	uid: uuid
 ): UseLiveQueryResult<ChatMessageRelType[]> => {
 	const userId = useUserId()
-	return useLiveQuery(
+
+	const result = useLiveQuery(
 		(q) =>
 			q
 				.from({ message: chatMessagesCollection })
-				.where(({ message }) =>
-					or(eq(message.sender_uid, uid), eq(message.recipient_uid, uid))
-				)
+				// Use .fn.where() for custom JS filter since or(eq(), eq()) wasn't matching correctly
+				.fn.where(({ message }) => {
+					return message.sender_uid === uid || message.recipient_uid === uid
+				})
 				.orderBy(({ message }) => message.created_at, 'asc')
 				.fn.select(({ message }) => ({
 					...message,
@@ -151,6 +159,54 @@ export const useOneFriendChat = (
 						:	message.sender_uid,
 					isByMe: message.sender_uid === userId,
 				})),
-		[uid]
+		[uid, userId]
+	)
+	return result
+}
+
+// Hook to get unread messages (messages sent to the current user that haven't been read)
+export const useUnreadMessages = (): UseLiveQueryResult<ChatMessageType[]> => {
+	const userId = useUserId()
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ message: chatMessagesCollection })
+				.where(({ message }) =>
+					and(eq(message.recipient_uid, userId), isNull(message.read_at))
+				),
+		[userId]
 	)
 }
+
+// Hook to count unique friends with unread messages (for badge)
+export const useUnreadChatsCount = (): number | undefined => {
+	const { data: unreadMessages } = useUnreadMessages()
+	if (!unreadMessages) return undefined
+	// Count unique sender_uids (friends with unread messages)
+	const uniqueSenders = new Set(unreadMessages.map((m) => m.sender_uid))
+	return uniqueSenders.size || undefined
+}
+
+export const markAsRead = createOptimisticAction({
+	onMutate: () => {
+		// we must do some imperative chatMessagesCollection.get for all the correct things
+		// and then items.forEach() update them!
+		// see https://tanstack.com/db/latest/docs/reference/functions/createOptimisticAction
+		// for structure
+		// if we can't do imperative query like this we might instead pass in a list of `msg.id`s
+	},
+	mutationFn: async ({
+		friendUid,
+		read_at,
+	}: {
+		friendUid: uuid
+		read_at: string
+	}) => {
+		await supabase
+			.from('chat_message')
+			.update({ read_at })
+			.eq('friend_uid', friendUid)
+			.is('read_at', null)
+			.throwOnError()
+	},
+})

@@ -18,6 +18,7 @@ export type Database = {
 					message_type: Database['public']['Enums']['chat_message_type']
 					phrase_id: string | null
 					playlist_id: string | null
+					read_at: string | null
 					recipient_uid: string
 					related_message_id: string | null
 					request_id: string | null
@@ -31,6 +32,7 @@ export type Database = {
 					message_type: Database['public']['Enums']['chat_message_type']
 					phrase_id?: string | null
 					playlist_id?: string | null
+					read_at?: string | null
 					recipient_uid: string
 					related_message_id?: string | null
 					request_id?: string | null
@@ -44,6 +46,7 @@ export type Database = {
 					message_type?: Database['public']['Enums']['chat_message_type']
 					phrase_id?: string | null
 					playlist_id?: string | null
+					read_at?: string | null
 					recipient_uid?: string
 					related_message_id?: string | null
 					request_id?: string | null

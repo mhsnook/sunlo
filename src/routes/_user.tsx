@@ -199,6 +199,7 @@ function UserLayout() {
 					{SecondSidebar ?
 						<div
 							className={`${sidebarExact ? 'flex w-full' : 'hidden'} my-2 @xl:flex @xl:w-80`}
+							style={{ viewTransitionName: 'second-sidebar' }}
 						>
 							<SecondSidebar />
 						</div>
@@ -207,6 +208,7 @@ function UserLayout() {
 					<div
 						id="app-sidebar-layout-outlet"
 						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container my-2 @xl:block`}
+						style={{ viewTransitionName: 'main-content' }}
 					>
 						<Outlet />
 					</div>

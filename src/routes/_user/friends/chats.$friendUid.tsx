@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
@@ -7,7 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
-import { useOneFriendChat, useOneRelation } from '@/hooks/use-friends'
+import {
+	markAsRead,
+	useOneFriendChat,
+	useOneRelation,
+} from '@/hooks/use-friends'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
@@ -36,6 +40,23 @@ function ChatPage() {
 	const messagesContainerRef = useRef<HTMLDivElement>(null)
 
 	const messagesQuery = useOneFriendChat(friendUid)
+
+	// Mark messages as read when viewing the chat
+	useEffect(() => {
+		if (!messagesQuery.data || !userId) return
+		const unreadMsgs = messagesQuery.data.filter(
+			(msg) => msg.sender_uid === friendUid && !msg.read_at
+		)
+		if (unreadMsgs.length) {
+			const read_at = new Date().toISOString()
+			/// TODO something like this
+			// use the optimistic transation to do like `markAsRead(friendUid, read_at)`
+			// and then the optimistic transation will be in use-reviews
+			markAsRead({ friendUid, read_at })
+			// if we need to pass the list of msg IDs we can
+			// const msgIds = unreadMsgs.map(m => m.id)
+		}
+	}, [messagesQuery.data, friendUid, userId])
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current
