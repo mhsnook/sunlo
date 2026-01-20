@@ -201,7 +201,7 @@ async function fetchOGData(
 						:	undefined
 
 					return {
-						title: data.title,
+						title: `${data.title} - ${langName} Playlist`,
 						description:
 							data.description || `A ${langName} learning playlist on Sunlo`,
 						image: imageUrl,
@@ -219,7 +219,7 @@ async function fetchOGData(
 
 				if (data) {
 					return {
-						title: `Translation Request: ${data.prompt.slice(0, 60)}${data.prompt.length > 60 ? '...' : ''}`,
+						title: `${langName} Translation Request`,
 						description: data.prompt,
 						url: path,
 					}
