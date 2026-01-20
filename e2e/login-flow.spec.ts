@@ -22,20 +22,20 @@ test('login flow redirects and shows content', async ({ page }) => {
 	await page.fill('input[name="password"]', 'password')
 	await page.click('button[type="submit"]')
 
-	// 6. Wait for either /learn or /welcome after login
-	await page.waitForURL(/\/(learn|welcome)/)
+	// 6. Wait for redirect to complete after login
+	await page.waitForLoadState('networkidle')
 
-	// 7. If we landed on welcome page, click through to continue
-	if (page.url().includes('/welcome')) {
-		const continueButton = page.getByRole('link', {
-			name: /(go to my decks|create my first deck|find friends)/i,
-		})
-		await continueButton.click()
-		await page.waitForURL(/\/(learn|friends)/)
+	// 7. Navigate to /learn - either we're already there or need to click through
+	const currentUrl = page.url()
+	if (!currentUrl.includes('/learn') || currentUrl.includes('/learn/')) {
+		// We're on welcome/getting-started, click "Go to My Decks"
+		const goToDecksButton = page.getByRole('link', { name: 'Go to My Decks' })
+		await expect(goToDecksButton).toBeVisible({ timeout: 10000 })
+		await goToDecksButton.click()
 	}
 
-	// 8. Verify we're on /learn with expected content
-	await expect(page).toHaveURL(/\/learn/)
+	// 8. Wait for /learn page to load
+	await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 
 	// 9. Verify the presence of active decks and friends
 	await expect(page.getByText('Your friends').first()).toBeVisible()
