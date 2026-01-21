@@ -42,7 +42,7 @@ function ChatsLayout() {
 			{/* Outlet: hidden on small screens when on index, visible otherwise */}
 			<div
 				className={cn(
-					'@container min-h-0 max-w-3xl flex-1',
+					'@container min-h-0 flex-1',
 					isOnIndex ? 'hidden @xl:block' : 'w-full'
 				)}
 				style={{ viewTransitionName: 'main-content' }}

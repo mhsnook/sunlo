@@ -186,7 +186,7 @@ function UserLayout() {
 						id="app-sidebar-layout-outlet"
 						className={
 							showRightSidebar ?
-								'@container min-h-0 w-full flex-1'
+								'@container min-h-0 max-w-4xl flex-1'
 							:	'@xl:w-app @container min-h-0 w-full @xl:block'
 						}
 						style={{ viewTransitionName: 'main-content' }}
