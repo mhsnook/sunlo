@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { toast } from '@/components/ui/sonner'
+import { toastSuccess } from '@/components/ui/sonner'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
@@ -125,9 +125,9 @@ function UserLayout() {
 						newAction.action_type === 'accept' &&
 						newAction.uid_for === userId
 					)
-						toast.success('Friend request accepted')
+						toastSuccess('Friend request accepted')
 					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
-						toast.success('You are now connected')
+						toastSuccess('You are now connected')
 					// console.log(`new friend request action has come in`, payload)
 					void friendSummariesCollection.utils.refetch()
 				}

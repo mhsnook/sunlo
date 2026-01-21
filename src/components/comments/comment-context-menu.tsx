@@ -1,4 +1,4 @@
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Share, Link as LinkIcon, Flag, MoreVertical } from 'lucide-react'
 
 import type { RequestCommentType } from '@/lib/schemas'
@@ -43,7 +43,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 		navigator.clipboard
 			.writeText(commentUrl)
 			.then(() => {
-				toast.success('Link copied to clipboard')
+				toastSuccess('Link copied to clipboard')
 			})
 			.catch(() => {
 				toastError('Failed to copy link')
@@ -52,7 +52,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 
 	const handleReport = () => {
 		// Placeholder for report functionality
-		toast.success(
+		toastSuccess(
 			'Thank you for reporting. We will review this comment shortly.'
 		)
 	}

@@ -67,7 +67,13 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { toast, toastError, toastSuccess } from '@/components/ui/sonner'
+import {
+	toast,
+	toastError,
+	toastSuccess,
+	toastInfo,
+	toastNeutral,
+} from '@/components/ui/sonner'
 
 export const Route = createLazyFileRoute('/components')({
 	component: ComponentsPage,
@@ -108,13 +114,13 @@ function ComponentsPage() {
 							</Button>
 							<Button
 								variant="outline"
-								onClick={() => toast('Neutral message, no icon')}
+								onClick={() => toastNeutral('Neutral message, no icon')}
 							>
 								Neutral Toast
 							</Button>
 							<Button
 								variant="outline"
-								onClick={() => toast.info('Here is some helpful information')}
+								onClick={() => toastInfo('Here is some helpful information')}
 							>
 								Info Toast
 							</Button>

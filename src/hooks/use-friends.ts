@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -87,12 +87,12 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 				.throwOnError()
 		},
 		onSuccess: (_, variable) => {
-			if (variable === 'invite') toast.success('Friend request sent 👍')
+			if (variable === 'invite') toastSuccess('Friend request sent 👍')
 			//if (variable === 'accept')
-			//	toast.success('Accepted invitation. You are now connected 👍')
-			if (variable === 'decline') toast('Declined this invitation')
-			if (variable === 'cancel') toast('Cancelled this invitation')
-			if (variable === 'remove') toast('You are no longer friends')
+			//	toastSuccess('Accepted invitation. You are now connected 👍')
+			if (variable === 'decline') toastNeutral('Declined this invitation')
+			if (variable === 'cancel') toastNeutral('Cancelled this invitation')
+			if (variable === 'remove') toastNeutral('You are no longer friends')
 		},
 		onError: (error, variables) => {
 			console.log(

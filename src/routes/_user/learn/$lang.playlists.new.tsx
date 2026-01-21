@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { useMutation } from '@tanstack/react-query'
 import { Tables } from '@/types/supabase'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -130,7 +130,7 @@ function NewPlaylistPageContent() {
 				)
 			)
 			invalidateFeed(lang)
-			toast.success(`Added new playlist with ${data.links.length} phrases`)
+			toastSuccess(`Added new playlist with ${data.links.length} phrases`)
 			void navigate({
 				to: '/learn/$lang/playlists/$playlistId',
 				params: { lang, playlistId: data.playlist.id },

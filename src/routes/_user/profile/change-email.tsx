@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from '@/components/ui/sonner'
+import { toastSuccess } from '@/components/ui/sonner'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -43,7 +43,7 @@ function ChangeEmailPage() {
 			return { email }
 		},
 		onSuccess: () => {
-			toast.success(
+			toastSuccess(
 				`Request submitted. Please find the confirmation in your email.`
 			)
 		},

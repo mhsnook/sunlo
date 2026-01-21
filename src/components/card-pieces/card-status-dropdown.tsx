@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Bookmark,
 	BookmarkCheck,
@@ -177,10 +177,10 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 					phrase_id: phrase.id,
 					status: variables.status,
 				})
-				toast.success(`Updated card status to "${data.status}"`)
+				toastSuccess(`Updated card status to "${data.status}"`)
 			} else {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
-				toast.success('Added this phrase to your deck')
+				toastSuccess('Added this phrase to your deck')
 			}
 		},
 		onError: (error) => {

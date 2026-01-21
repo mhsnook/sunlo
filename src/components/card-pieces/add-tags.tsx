@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Pencil } from 'lucide-react'
 
@@ -89,7 +89,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 			}
 			setOpen(false)
 			reset({ tags: [] })
-			toast.success('Tags added!')
+			toastSuccess('Tags added!')
 		},
 		onError: (error) => {
 			console.log(`Failed to add tags: ${error.message}`, error)

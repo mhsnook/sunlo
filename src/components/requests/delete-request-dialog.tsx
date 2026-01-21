@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -38,7 +38,7 @@ export function DeleteRequestDialog({
 		},
 		onSuccess: () => {
 			phraseRequestsCollection.utils.writeDelete(request.id)
-			toast.success('Request deleted')
+			toastSuccess('Request deleted')
 			// Navigate away from the deleted request page
 			void navigate({
 				to: '/learn/$lang',

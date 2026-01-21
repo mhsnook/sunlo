@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	ChevronUp,
 	ChevronDown,
@@ -68,7 +68,7 @@ export function ManagePlaylistPhrasesDialog({
 		},
 		onSuccess: (data) => {
 			playlistPhraseLinksCollection.utils.writeInsert(data)
-			toast.success('Phrase added to playlist')
+			toastSuccess('Phrase added to playlist')
 		},
 		onError: (error: Error) => {
 			if (error.message === 'Phrase already in playlist') {
@@ -92,7 +92,7 @@ export function ManagePlaylistPhrasesDialog({
 		},
 		onSuccess: (linkId) => {
 			playlistPhraseLinksCollection.utils.writeDelete(linkId)
-			toast.success('Phrase removed from playlist')
+			toastSuccess('Phrase removed from playlist')
 		},
 		onError: (error: Error) => {
 			toastError(`Failed to remove phrase: ${error.message}`)

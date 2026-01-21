@@ -8,7 +8,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from '@/components/ui/sonner'
+import { toastSuccess } from '@/components/ui/sonner'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -98,10 +98,10 @@ function SignUp() {
 		},
 		onSuccess: (data) => {
 			if (data.wasLogin) {
-				toast.success(`Welcome back! Logged in as ${data.user?.email}`)
+				toastSuccess(`Welcome back! Logged in as ${data.user?.email}`)
 				void navigate({ to: '/learn' })
 			} else {
-				toast.success(
+				toastSuccess(
 					`Account created for ${data.user?.email}. Please check your email to confirm.`
 				)
 			}

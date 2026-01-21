@@ -2,7 +2,7 @@ import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DeckMetaType } from '@/lib/schemas'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
@@ -161,7 +161,7 @@ export function copyLink(url?: string, fallback = true) {
 		navigator.clipboard
 			.writeText(url ?? window?.location?.href)
 			.then(() => {
-				toast.success('Link copied to clipboard')
+				toastSuccess('Link copied to clipboard')
 			})
 			.catch(() => {
 				toastError('Failed to copy link')

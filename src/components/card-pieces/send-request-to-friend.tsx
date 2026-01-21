@@ -1,6 +1,6 @@
 import { type ReactNode, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
@@ -49,7 +49,7 @@ export function SendRequestToFriendDialog({
 		onSuccess: () => {
 			setOpen(false)
 			setUids([])
-			toast.success('Request sent to friend')
+			toastSuccess('Request sent to friend')
 		},
 		onError: () => toastError('Something went wrong'),
 	})
