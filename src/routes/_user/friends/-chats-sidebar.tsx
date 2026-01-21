@@ -43,7 +43,7 @@ export function ChatsSidebar() {
 	})
 
 	return (
-		<Card className="flex h-[calc(100vh-5rem-4px)] w-full flex-col">
+		<Card className="flex h-full w-full flex-col">
 			<CardHeader className="sr-only">
 				<CardTitle>Chats</CardTitle>
 			</CardHeader>

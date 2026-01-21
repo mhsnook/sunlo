@@ -27,11 +27,11 @@ function ChatsLayout() {
 	const isOnIndex = !!indexMatch
 
 	return (
-		<div className="flex flex-1 flex-row gap-2">
+		<div className="flex h-full min-h-0 flex-1 flex-row gap-2">
 			{/* Sidebar: full width on small screens when on index, fixed width on large screens */}
 			<div
 				className={cn(
-					'my-2',
+					'min-h-0',
 					isOnIndex ? 'flex w-full @xl:w-80' : 'hidden @xl:flex @xl:w-80'
 				)}
 				style={{ viewTransitionName: 'second-sidebar' }}
@@ -42,7 +42,7 @@ function ChatsLayout() {
 			{/* Outlet: hidden on small screens when on index, visible otherwise */}
 			<div
 				className={cn(
-					'@container my-2',
+					'@container min-h-0',
 					isOnIndex ? '@xl:w-app hidden @xl:block' : '@xl:w-app w-full'
 				)}
 				style={{ viewTransitionName: 'main-content' }}

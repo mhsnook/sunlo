@@ -192,13 +192,14 @@ function UserLayout() {
 	return (
 		<div className="flex h-screen w-full">
 			<AppSidebar />
-			<SidebarInset className="@container w-full flex-1 flex-col">
+			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
 				<Navbar />
 				<AppNav />
-				<div className="flex flex-1 flex-row gap-2 px-2">
+				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
+				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
 					{SecondSidebar ?
 						<div
-							className={`${sidebarExact ? 'flex w-full' : 'hidden'} my-2 @xl:flex @xl:w-80`}
+							className={`${sidebarExact ? 'flex w-full' : 'hidden'} @xl:flex @xl:w-80`}
 							style={{ viewTransitionName: 'second-sidebar' }}
 						>
 							<SecondSidebar />
@@ -207,7 +208,7 @@ function UserLayout() {
 
 					<div
 						id="app-sidebar-layout-outlet"
-						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container my-2 @xl:block`}
+						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container min-h-0 @xl:block`}
 						style={{ viewTransitionName: 'main-content' }}
 					>
 						<Outlet />

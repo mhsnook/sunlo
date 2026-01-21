@@ -109,8 +109,8 @@ function ChatPage() {
 					</p>
 				</div>
 			</CardHeader>
-			<CardContent className="flex-1 p-0">
-				<ScrollArea className="h-[calc(100vh-15rem+2px)] px-4">
+			<CardContent className="min-h-0 flex-1 p-0">
+				<ScrollArea className="h-full px-4">
 					<div ref={messagesContainerRef} className="space-y-4 pt-4 pb-2">
 						{!messagesQuery.data?.length ?
 							<EmptyChat profile={relation.profile} />
