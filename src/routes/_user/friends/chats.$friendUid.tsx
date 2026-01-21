@@ -1,12 +1,11 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import { Send } from 'lucide-react'
+import { ListMusic, MessageCircleHeart, Plus, WalletCards } from 'lucide-react'
 
 import type { PublicProfileType } from '@/lib/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Input } from '@/components/ui/input'
 import {
 	markAsRead,
 	useOneFriendChat,
@@ -17,10 +16,16 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { CardPreview } from '@/routes/_user/friends/-card-preview'
 import { Loader } from '@/components/ui/loader'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { ago } from '@/lib/dayjs'
 import { RequestPreview } from '@/routes/_user/friends/-request-preview'
 import { PlaylistPreview } from '@/routes/_user/friends/-playlist-preview'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
@@ -187,19 +192,56 @@ function ChatPage() {
 			</CardContent>
 			<div className="border-t p-4">
 				{relation.status === 'friends' ?
-					<div className="relative">
+					<div className="flex items-center gap-2">
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button variant="ghost" size="icon" className="shrink-0">
+									<Plus className="size-5" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="start" className="w-48">
+								<DropdownMenuItem asChild>
+									<Link
+										to="/friends/chats/$friendUid/recommend"
+										from={Route.fullPath}
+										search={{ type: 'phrase' }}
+										className="flex items-center gap-2"
+									>
+										<WalletCards className="size-4" />
+										Phrase
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
+									<Link
+										to="/friends/chats/$friendUid/recommend"
+										from={Route.fullPath}
+										search={{ type: 'request' }}
+										className="flex items-center gap-2"
+									>
+										<MessageCircleHeart className="size-4" />
+										Request
+									</Link>
+								</DropdownMenuItem>
+								<DropdownMenuItem asChild>
+									<Link
+										to="/friends/chats/$friendUid/recommend"
+										from={Route.fullPath}
+										search={{ type: 'playlist' }}
+										className="flex items-center gap-2"
+									>
+										<ListMusic className="size-4" />
+										Playlist
+									</Link>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 						<Link
 							to="/friends/chats/$friendUid/recommend"
 							from={Route.fullPath}
-							className="flex items-center gap-2"
+							search={{ type: 'phrase' }}
+							className="bg-muted text-muted-foreground flex h-10 flex-1 cursor-pointer items-center rounded-2xl px-4 text-sm"
 						>
-							<Input
-								placeholder="Send a phrase recommendation..."
-								className="cursor-pointer"
-							/>
-							<span className={buttonVariants({ size: 'icon' })}>
-								<Send className="h-4 w-4" />
-							</span>
+							Send a recommendation...
 						</Link>
 					</div>
 				:	<p className="text-muted-foreground p-2 text-center italic">

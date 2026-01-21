@@ -107,8 +107,8 @@ export function FancyMultiSelect({
 						</div>
 					:	null}
 					{open && selectables.length > 0 ?
-						<div className="bg-popover text-popover-foreground animate-in absolute top-0 z-10 w-full rounded-md border shadow-md outline-none">
-							<CommandGroup className="h-full overflow-auto">
+						<div className="bg-popover text-popover-foreground animate-in absolute top-0 z-10 max-h-60 w-full overflow-auto rounded-md border shadow-md outline-none">
+							<CommandGroup className="h-full">
 								{selectables.map((option) =>
 									option.label === always ?
 										null
