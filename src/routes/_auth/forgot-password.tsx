@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import toast from 'react-hot-toast'
+import { toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -42,7 +42,7 @@ function ForgotPasswordPage() {
 			// return { user: { email: '@fake email@' } }
 		},
 		onSuccess: (email) => {
-			toast.success(
+			toastSuccess(
 				`Password recovery email sent to ${email}. Please check your email to confirm.`
 			)
 		},

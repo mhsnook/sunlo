@@ -11,7 +11,7 @@ import {
 } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { Plus, Trash2 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
@@ -208,7 +208,7 @@ function BulkAddPhrasesPage() {
 		},
 		onSuccess: ({ rpcResult, newDeck, cards }) => {
 			if (!rpcResult) {
-				toast('No data came back from the database :-/')
+				toastNeutral('No data came back from the database :-/')
 				return
 			}
 
@@ -261,17 +261,17 @@ function BulkAddPhrasesPage() {
 					hasArchivedDeck ?
 						`re-activated your ${languages[lang]} deck`
 					:	`started learning ${languages[lang]}`
-				toast.success(
+				toastSuccess(
 					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.${cardsMessage}`
 				)
 			} else {
-				toast.success(
+				toastSuccess(
 					`${rpcResult.phrases.length} phrases added successfully!${cardsMessage}`
 				)
 			}
 		},
 		onError: (error) => {
-			toast.error(`Error adding phrases: ${error.message}`)
+			toastError(`Error adding phrases: ${error.message}`)
 		},
 	})
 

@@ -1,7 +1,7 @@
 import type { Tables } from '@/types/supabase'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
@@ -47,14 +47,12 @@ export const useNewDeckMutation = () => {
 				to: `/learn/$lang`,
 				params: { lang: variables.lang },
 			}).then(() =>
-				toast.success(
-					`Created a new deck to learn ${languages[variables.lang]}`
-				)
+				toastSuccess(`Created a new deck to learn ${languages[variables.lang]}`)
 			)
 		},
 		onError: (error) => {
 			console.log(`Error creating deck:`, error)
-			toast.error(`Error creating deck: ${error.message}`)
+			toastError(`Error creating deck: ${error.message}`)
 		},
 	})
 

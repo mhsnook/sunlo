@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Send } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -46,10 +46,10 @@ function RouteComponent() {
 		},
 		onSuccess: () => {
 			void navigate({ to: '/friends/chats/$friendUid', params })
-			toast.success('Phrase sent!')
+			toastSuccess('Phrase sent!')
 		},
 		onError: (error) => {
-			toast.error(`Failed to send recommendation: ${error.message}`)
+			toastError(`Failed to send recommendation: ${error.message}`)
 		},
 	})
 

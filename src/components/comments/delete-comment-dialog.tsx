@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -35,10 +35,10 @@ export function DeleteCommentDialog({
 		},
 		onSuccess: () => {
 			commentsCollection.utils.writeDelete(comment.id)
-			toast.success('Comment deleted')
+			toastSuccess('Comment deleted')
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to delete comment: ${error.message}`)
+			toastError(`Failed to delete comment: ${error.message}`)
 		},
 	})
 	return (

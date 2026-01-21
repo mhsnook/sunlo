@@ -1,5 +1,5 @@
 import { type CSSProperties, useState } from 'react'
-import toast from 'react-hot-toast'
+import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { useMutation } from '@tanstack/react-query'
 import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
 
@@ -39,7 +39,7 @@ import { useUserId } from '@/lib/use-auth'
 import { cardsCollection } from '@/lib/collections'
 
 const playAudio = (text: string) => {
-	toast(`Playing audio for: ${text}`)
+	toastNeutral(`Playing audio for: ${text}`)
 	// In a real application, you would trigger audio playback here
 }
 
@@ -227,12 +227,12 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 					data.status === 'learned' ?
 						"Great! This card is now marked as learned and won't appear in your reviews."
 					:	"This card has been skipped and won't appear in your reviews."
-				toast.success(message)
+				toastSuccess(message)
 			}
 			setIsOpen(false)
 		},
 		onError: (error) => {
-			toast.error('Failed to update card status')
+			toastError('Failed to update card status')
 			console.log('Error updating card status', error)
 		},
 	})

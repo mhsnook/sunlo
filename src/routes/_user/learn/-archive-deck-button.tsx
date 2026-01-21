@@ -14,7 +14,7 @@ import { useUserId } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
@@ -49,7 +49,7 @@ export function ArchiveDeckButton({
 			if (!data) return null
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 
-			toast.success(
+			toastSuccess(
 				!data.archived ?
 					'The deck has been re-activated!'
 				:	'The deck has been archived and hidden from your active decks.'
@@ -57,7 +57,7 @@ export function ArchiveDeckButton({
 		},
 		onError: (error) => {
 			if (error) {
-				toast.error(
+				toastError(
 					`Failed to update deck status, we'll just try refreshing the page...`
 				)
 				console.log(error)

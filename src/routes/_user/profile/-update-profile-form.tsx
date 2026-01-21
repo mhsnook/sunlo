@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { toast } from 'react-hot-toast'
+import { toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
@@ -56,7 +56,7 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 				avatar_path: data?.avatar_path ?? null,
 				languages_known: (data?.languages_known as LanguagesKnownType) ?? [],
 			})
-			toast.success(`Successfully updated your profile`)
+			toastSuccess(`Successfully updated your profile`)
 		},
 	})
 

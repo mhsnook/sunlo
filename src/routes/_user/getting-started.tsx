@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { uuid } from '@/types/main'
@@ -114,11 +114,11 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				)
 			console.log(`Success! Profile:`, data)
 			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
-			toast.success('Success!')
+			toastSuccess('Success!')
 		},
 		onError: (error) => {
 			console.log(`Error:`, error)
-			toast.error(`there was some error: ${error.message}`)
+			toastError(`there was some error: ${error.message}`)
 		},
 	})
 

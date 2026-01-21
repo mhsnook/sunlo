@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
-import toast from 'react-hot-toast'
+import { toastSuccess } from '@/components/ui/sonner'
 import { Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -36,7 +36,7 @@ export function InviteFriendForm() {
 			return data
 		},
 		onSuccess: (_, values) => {
-			toast.success(`Invitation sent to ${values.email}.`)
+			toastSuccess(`Invitation sent to ${values.email}.`)
 		},
 	})
 

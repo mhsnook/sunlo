@@ -5,7 +5,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { X } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -211,11 +211,11 @@ function NewCommentForm({
 				params: { lang, id: requestId },
 				search: { showSubthread: parentCommentId },
 			})
-			toast.success(isReply ? 'Reply posted!' : 'Comment posted!')
+			toastSuccess(isReply ? 'Reply posted!' : 'Comment posted!')
 			onSuccess()
 		},
 		onError: (error: Error) => {
-			toast.error(
+			toastError(
 				`Failed to post ${isReply ? 'reply' : 'comment'}: ${error.message}`
 			)
 		},

@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Share, Link as LinkIcon, Flag, MoreVertical } from 'lucide-react'
 
 import type { RequestCommentType } from '@/lib/schemas'
@@ -22,7 +22,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 
 	const handleShare = () => {
 		if (!navigator.share) {
-			toast.error('Sharing is not supported on this device')
+			toastError('Sharing is not supported on this device')
 			return
 		}
 
@@ -32,8 +32,10 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 				text: `Check out this comment${comment.content ? `: ${comment.content.slice(0, 100)}${comment.content.length > 100 ? '...' : ''}` : ''}`,
 				url: commentUrl,
 			})
-			.catch(() => {
-				toast.error('Failed to share')
+			.catch((error: DOMException) => {
+				if (error.name !== 'AbortError') {
+					toastError('Failed to share')
+				}
 			})
 	}
 
@@ -41,16 +43,16 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 		navigator.clipboard
 			.writeText(commentUrl)
 			.then(() => {
-				toast.success('Link copied to clipboard')
+				toastSuccess('Link copied to clipboard')
 			})
 			.catch(() => {
-				toast.error('Failed to copy link')
+				toastError('Failed to copy link')
 			})
 	}
 
 	const handleReport = () => {
 		// Placeholder for report functionality
-		toast.success(
+		toastSuccess(
 			'Thank you for reporting. We will review this comment shortly.'
 		)
 	}

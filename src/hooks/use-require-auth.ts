@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/sonner'
 
 import { useAuth } from '@/lib/use-auth'
 
@@ -14,7 +14,7 @@ export function useRequireAuth() {
 
 	return (action: () => void, message = 'Please log in to continue') => {
 		if (!isAuth) {
-			toast.error(message)
+			toastError(message)
 			void navigate({
 				to: '/login',
 				search: { redirectedFrom: window.location.href },
