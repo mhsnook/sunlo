@@ -42,6 +42,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 						'/learn/$lang/deck-settings',
 					]
 				:	[],
+			rightSidebar: true,
 		}
 	},
 	loader: async () => {

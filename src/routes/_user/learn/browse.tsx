@@ -60,12 +60,17 @@ type BrowseSearchType = z.infer<typeof BrowseSearchSchema>
 
 export const Route = createFileRoute('/_user/learn/browse')({
 	validateSearch: BrowseSearchSchema,
-	beforeLoad: () => ({
+	beforeLoad: ({ context }) => ({
 		titleBar: {
 			title: 'Explore Languages',
 			subtitle:
 				'Browse popular languages, requests, and playlists from our community',
 		},
+		rightSidebar: true,
+		contextMenu:
+			context.auth.isAuth ?
+				['/learn/add-deck', '/learn/contributions', '/learn/quick-search']
+			:	['/login', '/signup'],
 	}),
 	loader: async () => {
 		await languagesCollection.preload()

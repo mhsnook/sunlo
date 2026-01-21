@@ -1,7 +1,12 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
+import {
+	createFileRoute,
+	Outlet,
+	redirect,
+	useMatches,
+} from '@tanstack/react-router'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -9,7 +14,9 @@ import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
+import { RightSidebar } from '@/components/navs/right-sidebar'
 import { useUserId } from '@/lib/use-auth'
+import type { MyRouterContext } from './__root'
 import {
 	chatMessagesCollection,
 	decksCollection,
@@ -102,6 +109,14 @@ export const Route = createFileRoute('/_user')({
 function UserLayout() {
 	const queryClient = useQueryClient()
 	const userId = useUserId()
+	const matches = useMatches()
+
+	// Check if any route wants the right sidebar
+	const rightSidebarMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.rightSidebar
+	)
+	const showRightSidebar = !!(rightSidebarMatch?.context as MyRouterContext)
+		?.rightSidebar
 
 	// Apply user's font preference to the document body
 	useFontPreference()
@@ -169,11 +184,16 @@ function UserLayout() {
 				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
 					<div
 						id="app-sidebar-layout-outlet"
-						className="@xl:w-app @container min-h-0 w-full @xl:block"
+						className={
+							showRightSidebar ?
+								'@container min-h-0 w-full flex-1'
+							:	'@xl:w-app @container min-h-0 w-full @xl:block'
+						}
 						style={{ viewTransitionName: 'main-content' }}
 					>
 						<Outlet />
 					</div>
+					{showRightSidebar && <RightSidebar />}
 				</div>
 			</SidebarInset>
 		</div>
