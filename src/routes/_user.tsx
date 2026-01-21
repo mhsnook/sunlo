@@ -1,15 +1,7 @@
-import { useEffect, type ComponentType } from 'react'
+import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import {
-	createFileRoute,
-	Outlet,
-	type RouteMatch,
-	redirect,
-	useMatches,
-} from '@tanstack/react-router'
-// Note: redirect is still used in the loader for getting-started check
-
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -30,11 +22,10 @@ import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user')({
-	beforeLoad: ({ context }) => {
+	beforeLoad: () => {
 		// Auth is optional - RLS handles data security
 		// Individual routes can require auth if needed
 		return {
-			auth: context.auth,
 			titleBar: {
 				title: 'Learning Home',
 				subtitle: 'Which deck are we studying today?',
@@ -108,28 +99,7 @@ export const Route = createFileRoute('/_user')({
 	pendingComponent: Loader,
 })
 
-type UserLayoutMatch = RouteMatch<
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown,
-	unknown
-> & {
-	loaderData?: {
-		SecondSidebar?: ComponentType
-	}
-}
-
 function UserLayout() {
-	const matches = useMatches()
-	const matchWithSidebar = matches.findLast(
-		(m) => !!(m as UserLayoutMatch)?.loaderData?.SecondSidebar
-	) as UserLayoutMatch | undefined
-	const SecondSidebar = matchWithSidebar?.loaderData?.SecondSidebar
-	const sidebarExact =
-		matchWithSidebar && matchWithSidebar.id === matches.at(-1)?.id.slice(0, -1)
 	const queryClient = useQueryClient()
 	const userId = useUserId()
 
@@ -197,18 +167,9 @@ function UserLayout() {
 				<AppNav />
 				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
 				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
-					{SecondSidebar ?
-						<div
-							className={`${sidebarExact ? 'flex w-full' : 'hidden'} @xl:flex @xl:w-80`}
-							style={{ viewTransitionName: 'second-sidebar' }}
-						>
-							<SecondSidebar />
-						</div>
-					:	null}
-
 					<div
 						id="app-sidebar-layout-outlet"
-						className={`${sidebarExact ? 'hidden' : 'w-full'} @xl:w-app @container min-h-0 @xl:block`}
+						className="@xl:w-app @container min-h-0 w-full @xl:block"
 						style={{ viewTransitionName: 'main-content' }}
 					>
 						<Outlet />
