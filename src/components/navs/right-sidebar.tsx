@@ -15,7 +15,7 @@ export function RightSidebar() {
 	if (!links || !links.length) return null
 
 	return (
-		<aside className="hidden w-64 shrink-0 border-s ps-6 @3xl:block @5xl:w-72 @5xl:ps-8">
+		<aside className="hidden w-64 shrink-0 border-s ps-6 pt-4 @3xl:block @5xl:w-72 @5xl:ps-8">
 			<div className="sticky top-4 space-y-1">
 				<p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
 					Quick Actions
