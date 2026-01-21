@@ -46,9 +46,9 @@ export function toastError(message: string) {
 
 	return toast.custom(
 		(t) => (
-			<div className="flex w-full items-center gap-3 rounded-2xl border border-red-300/60 bg-red-100/90 px-4 py-3 text-red-800 shadow-lg dark:border-red-700/60 dark:bg-red-900/40 dark:text-red-200">
+			<div className="flex w-80 items-center gap-3 rounded-2xl border border-red-300/60 bg-red-100/90 px-4 py-3 text-red-800 shadow-lg dark:border-red-700/60 dark:bg-red-900/40 dark:text-red-200">
 				<span className="flex-1 text-sm font-medium">{message}</span>
-				<div className="flex items-center gap-1">
+				<div className="flex shrink-0 items-center gap-1">
 					<Button
 						variant="ghost"
 						size="icon"
@@ -73,6 +73,7 @@ export function toastError(message: string) {
 		{
 			duration: Infinity,
 			position: 'bottom-right',
+			unstyled: true,
 		}
 	)
 }
