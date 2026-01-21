@@ -11,12 +11,12 @@ export function Toasters() {
 			toastOptions={{
 				classNames: {
 					toast:
-						'bg-card border border-border/50 text-card-foreground shadow-lg rounded-2xl px-4 py-3 gap-3',
+						'bg-card/95 border border-border/40 text-card-foreground shadow-lg rounded-2xl px-4 py-3 gap-3',
 					title: 'text-foreground font-medium',
 					description: 'text-muted-foreground text-sm',
 					success:
-						'bg-green-100/80 dark:bg-green-900/30 border-green-300/60 dark:border-green-700/60 text-green-800 dark:text-green-200 [&_[data-icon]]:text-green-600 dark:[&_[data-icon]]:text-green-400',
-					info: 'bg-blue-100/80 dark:bg-blue-900/30 border-blue-300/60 dark:border-blue-700/60 text-blue-800 dark:text-blue-200 [&_[data-icon]]:text-blue-600 dark:[&_[data-icon]]:text-blue-400',
+						'bg-card/95 border-green-300/60 dark:border-green-700/60 text-green-800 dark:text-green-200 [&_[data-icon]]:text-green-600 dark:[&_[data-icon]]:text-green-400',
+					info: 'bg-card/95 border-blue-300/60 dark:border-blue-700/60 text-blue-800 dark:text-blue-200 [&_[data-icon]]:text-blue-600 dark:[&_[data-icon]]:text-blue-400',
 					error:
 						'bg-red-100/80 dark:bg-red-900/30 border-red-300/60 dark:border-red-700/60 text-red-800 dark:text-red-200 [&_[data-icon]]:text-red-600 dark:[&_[data-icon]]:text-red-400',
 				},
@@ -74,6 +74,7 @@ export function toastError(message: string) {
 			duration: Infinity,
 			position: 'bottom-right',
 			unstyled: true,
+			className: '!bg-transparent !border-0 !shadow-none !p-0',
 		}
 	)
 }
