@@ -68,7 +68,6 @@ import {
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
-	toast,
 	toastError,
 	toastSuccess,
 	toastInfo,

@@ -2,7 +2,7 @@
 
 ## v0.11
 
-_20th Jan, 2026_
+_21st Jan, 2026_
 
 - Feature: Social media previews (using edge middleware)
 - Feature: Chat messages have read/unread
