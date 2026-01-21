@@ -10,6 +10,10 @@ _20th Jan, 2026_
 - Fix: Second sidebar was hiding sometimes, and too complex
 - Fix: The scrollable areas weren't constraining/flexing just right
 - DX: Improve tests, log redirects
+- Feature: Full width interfaces! Right sidebar "Quick actions"
+- Polish: Group & style the Response Buttons row
+- Chore: Convert all toasts to Sonner
+- Feature: Copyable, persistent toasts, particularly for errors
 
 ## v0.10 - Smart Search, DM Playlists, Popularity Feed
 

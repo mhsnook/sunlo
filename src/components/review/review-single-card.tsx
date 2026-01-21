@@ -145,14 +145,14 @@ export function ReviewSingleCard({
 					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
-				:	<div className="mb-3 grid w-full grid-cols-4 gap-2">
+				:	<div className="mb-3 grid w-full max-w-160 grid-cols-4">
 						<Button
 							variant="default"
 							data-testid="review-again-button"
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
-								'bg-red-600! hover:border-red-400! hover:bg-red-700!',
+								'rounded-none rounded-l-2xl border-red-600! bg-red-600! hover:border-white! hover:bg-red-700!',
 								prevData?.score === 1 && reviewStage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
@@ -166,7 +166,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={cn(
-								'bg-gray-100! text-gray-700! hover:border-gray-400! hover:bg-gray-200!',
+								'rounded-none border-gray-200! bg-gray-200! text-gray-700! hover:border-white! hover:bg-gray-300!',
 								prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
@@ -178,7 +178,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
-								'bg-green-500! hover:border-green-400! hover:bg-green-600!',
+								'rounded-none border-green-500! bg-green-500! hover:border-white! hover:bg-green-600!',
 								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
@@ -188,7 +188,7 @@ export function ReviewSingleCard({
 							variant="default"
 							data-testid="review-easy-button"
 							className={cn(
-								'bg-blue-500 hover:border-blue-400 hover:bg-blue-600',
+								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! hover:border-white! hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 							onClick={() => mutate({ score: 4 })}
