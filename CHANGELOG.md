@@ -9,6 +9,7 @@ _20th Jan, 2026_
 - Feature: Welcome page now welcomes new users
 - Fix: Second sidebar was hiding sometimes, and too complex
 - Fix: The scrollable areas weren't constraining/flexing just right
+- DX: Improve tests, log redirects
 
 ## v0.10 - Smart Search, DM Playlists, Popularity Feed
 

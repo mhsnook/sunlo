@@ -147,7 +147,13 @@ test.describe.serial('Chat Messages', () => {
 	})
 
 	test('Opening a chat marks messages as read', async ({ page }) => {
-		// Create an unread message for GarlicFace from Best Frin
+		// Log in as GarlicFace FIRST so collection syncs
+		await loginAsTestUser(page)
+
+		// Wait for collections to sync
+		await page.waitForLoadState('networkidle')
+
+		// Now create an unread message - realtime subscription will catch it
 		const { data: message } = await supabase
 			.from('chat_message')
 			.insert({
@@ -164,11 +170,11 @@ test.describe.serial('Chat Messages', () => {
 			createdMessageIds.push(message.id)
 		}
 
-		// Log in as GarlicFace
-		await loginAsTestUser(page)
+		// Small delay for realtime to propagate
+		await page.waitForTimeout(500)
 
 		// Navigate to Chats
-		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await page.getByTestId('sidebar-link--friends-chats').click()
 
 		await expect(page).toHaveURL('/friends/chats')
 
@@ -177,19 +183,25 @@ test.describe.serial('Chat Messages', () => {
 		await expect(bestFrinChat).toBeVisible()
 		await bestFrinChat.click()
 
-		// Wait for chat to load
+		// Wait for chat page to load
 		await expect(page).toHaveURL(/\/friends\/chats\//)
 
-		// Wait a moment for the mark-as-read mutation to complete
-		await page.waitForTimeout(1000)
+		// Wait for chat content to render (proves collection has synced)
+		await expect(page.getByText('Best Frin')).toBeVisible()
 
-		// Verify the message is now marked as read in the database
-		const { data: readMessage } = await supabase
-			.from('chat_message')
-			.select('read_at')
-			.eq('id', message!.id)
-			.single()
-
-		expect(readMessage?.read_at).not.toBeNull()
+		// Poll for the message to be marked as read (mutation may take a moment)
+		await expect
+			.poll(
+				async () => {
+					const { data: readMessage } = await supabase
+						.from('chat_message')
+						.select('read_at')
+						.eq('id', message!.id)
+						.single()
+					return readMessage?.read_at
+				},
+				{ timeout: 5000, intervals: [500, 1000, 1000] }
+			)
+			.not.toBeNull()
 	})
 })
