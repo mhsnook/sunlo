@@ -2,9 +2,11 @@
 
 ## v0.11
 
-_19th Jan, 2026_
+_20th Jan, 2026_
 
--
+- Add social media previews with edge middleware
+- Add read receipts to chat messages
+- Add realtime table initialisation to migrations
 
 ## v0.10 - Smart Search, DM Playlists, Popularity Feed
 

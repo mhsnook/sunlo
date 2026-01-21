@@ -82,6 +82,21 @@ onSuccess: (data) => {
   `utils.writeUpdate` the new record. It remains to be seen how they affect performance when the
   system has more users, so be mindful.
 
+## Deployment
+
+The app is deployed to **Vercel**.
+
+### Vercel-Specific Features
+
+**Social Previews (Open Graph):** The app uses
+[Vercel Edge Middleware](https://vercel.com/docs/functions/edge-middleware)
+(`middleware.ts`) to serve Open Graph meta tags to social media crawlers. Since the app is
+a pure SPA with no SSR, this middleware intercepts crawler requests and returns a minimal
+HTML page with OG tags for link previews on Facebook, Twitter, LinkedIn, WhatsApp, etc.
+
+This feature **only works on Vercel** - if you deploy elsewhere, social link previews will
+not work without implementing an equivalent solution for your platform.
+
 ## Using Tauri for Native Apps
 
 It has always been our intention to cross-compile the JS app for use in a Tauri shell to make
