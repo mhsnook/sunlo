@@ -18,6 +18,7 @@ import {
 	phraseRequestsCollection,
 } from '@/lib/collections'
 import languages, { allLanguageOptions } from '@/lib/languages'
+import { useLanguagesToShow } from '@/hooks/use-profile'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -52,9 +53,17 @@ function RouteComponent() {
 	const { type } = Route.useSearch()
 	const userId = useUserId()
 	const navigate = useNavigate({ from: Route.fullPath })
+	const { data: languagesToShow } = useLanguagesToShow()
 
 	const [liveText, setLiveText] = useState('')
 	const [selectedLangs, setSelectedLangs] = useState<Array<string>>([])
+
+	// Pre-populate with user's languages on mount
+	useEffect(() => {
+		if (languagesToShow?.length && selectedLangs.length === 0) {
+			setSelectedLangs(languagesToShow)
+		}
+	}, [languagesToShow, selectedLangs.length])
 
 	const handleClose = () => {
 		void navigate({
