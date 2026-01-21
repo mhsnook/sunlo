@@ -267,3 +267,10 @@
 		--font-sans: var(--font-dyslexic);
 	}
 }
+
+/* Wider sidebar on large screens */
+@media (min-width: 1536px) {
+	[data-slot='sidebar'] {
+		--sidebar-width: 18rem;
+	}
+}
