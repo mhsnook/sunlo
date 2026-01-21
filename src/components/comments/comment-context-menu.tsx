@@ -32,8 +32,10 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 				text: `Check out this comment${comment.content ? `: ${comment.content.slice(0, 100)}${comment.content.length > 100 ? '...' : ''}` : ''}`,
 				url: commentUrl,
 			})
-			.catch(() => {
-				toastError('Failed to share')
+			.catch((error: DOMException) => {
+				if (error.name !== 'AbortError') {
+					toastError('Failed to share')
+				}
 			})
 	}
 

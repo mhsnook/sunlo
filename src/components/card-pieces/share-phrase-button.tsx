@@ -25,8 +25,10 @@ export default function SharePhraseButton({
 				text: `Check out this phrase in ${languages[phrase.lang]}: ${phrase.text}`,
 				url: `${window.location.origin}/learn/${phrase.lang}/${phrase.id}`,
 			})
-			.catch(() => {
-				toastError('Failed to share')
+			.catch((error: DOMException) => {
+				if (error.name !== 'AbortError') {
+					toastError('Failed to share')
+				}
 			})
 	}
 

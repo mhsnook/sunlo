@@ -1,5 +1,6 @@
 import { Toaster as Sonner, toast } from 'sonner'
 import { Copy, X } from 'lucide-react'
+import { Button } from './button'
 
 // Single Toaster - default position top-right, only errors go bottom-right
 export function Toasters() {
@@ -10,27 +11,24 @@ export function Toasters() {
 			toastOptions={{
 				classNames: {
 					toast:
-						'bg-card border border-border text-card-foreground shadow-lg rounded-2xl p-4 gap-3',
+						'bg-card border border-border/50 text-card-foreground shadow-lg rounded-2xl px-4 py-3 gap-3',
 					title: 'text-foreground font-medium',
 					description: 'text-muted-foreground text-sm',
 					success:
-						'bg-green-50 dark:bg-green-950/50 border-green-200 dark:border-green-800 text-green-900 dark:text-green-100 [&_[data-icon]]:text-green-600 dark:[&_[data-icon]]:text-green-400',
-					info: 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100 [&_[data-icon]]:text-blue-600 dark:[&_[data-icon]]:text-blue-400',
+						'bg-green-100/80 dark:bg-green-900/30 border-green-300/60 dark:border-green-700/60 text-green-800 dark:text-green-200 [&_[data-icon]]:text-green-600 dark:[&_[data-icon]]:text-green-400',
+					info: 'bg-blue-100/80 dark:bg-blue-900/30 border-blue-300/60 dark:border-blue-700/60 text-blue-800 dark:text-blue-200 [&_[data-icon]]:text-blue-600 dark:[&_[data-icon]]:text-blue-400',
 					error:
-						'bg-red-50 dark:bg-red-950/50 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100 [&_[data-icon]]:text-red-600 dark:[&_[data-icon]]:text-red-400',
-					actionButton:
-						'bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-3 py-1.5 text-sm font-medium',
-					cancelButton:
-						'bg-muted hover:bg-muted/80 rounded-xl px-2 py-1.5 text-muted-foreground',
+						'bg-red-100/80 dark:bg-red-900/30 border-red-300/60 dark:border-red-700/60 text-red-800 dark:text-red-200 [&_[data-icon]]:text-red-600 dark:[&_[data-icon]]:text-red-400',
 				},
 			}}
 		/>
 	)
 }
 
-// Custom error toast with copy and dismiss buttons - persists, stacks bottom-right
+// Custom error toast with copy and dismiss icon buttons - persists, stacks bottom-right
 export function toastError(message: string) {
-	const copyToClipboard = async () => {
+	const copyToClipboard = async (e: React.MouseEvent) => {
+		e.stopPropagation()
 		try {
 			await navigator.clipboard.writeText(message)
 			toast.success('Copied to clipboard')
@@ -46,27 +44,37 @@ export function toastError(message: string) {
 		}
 	}
 
-	return toast.error(message, {
-		duration: Infinity,
-		position: 'bottom-right',
-		action: {
-			label: (
-				<span className="flex items-center gap-1.5 font-medium">
-					<Copy className="size-3.5" />
-					Copy
-				</span>
-			) as unknown as string,
-			onClick: copyToClipboard,
-		},
-		cancel: {
-			label: (
-				<span className="flex items-center">
-					<X className="size-4" />
-				</span>
-			) as unknown as string,
-			onClick: () => {},
-		},
-	})
+	return toast.custom(
+		(t) => (
+			<div className="flex w-full items-center gap-3 rounded-2xl border border-red-300/60 bg-red-100/90 px-4 py-3 text-red-800 shadow-lg dark:border-red-700/60 dark:bg-red-900/40 dark:text-red-200">
+				<span className="flex-1 text-sm font-medium">{message}</span>
+				<div className="flex items-center gap-1">
+					<Button
+						variant="ghost"
+						size="icon"
+						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
+						onClick={copyToClipboard}
+						title="Copy error"
+					>
+						<Copy className="size-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
+						onClick={() => toast.dismiss(t)}
+						title="Dismiss"
+					>
+						<X className="size-4" />
+					</Button>
+				</div>
+			</div>
+		),
+		{
+			duration: Infinity,
+			position: 'bottom-right',
+		}
+	)
 }
 
 // Success toast helper - auto-dismiss, top-right (uses defaults)

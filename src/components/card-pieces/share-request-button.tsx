@@ -31,8 +31,10 @@ export function ShareRequestButton({
 				text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
 				url: `${window.location.origin}/learn/${request.lang}/requests/${request.id}`,
 			})
-			.catch(() => {
-				toastError('Failed to share')
+			.catch((error: DOMException) => {
+				if (error.name !== 'AbortError') {
+					toastError('Failed to share')
+				}
 			})
 	}
 
