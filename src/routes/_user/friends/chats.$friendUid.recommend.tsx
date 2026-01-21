@@ -5,14 +5,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import toast from 'react-hot-toast'
 import { useDebounce } from '@uidotdev/usehooks'
 import { useInView } from 'react-intersection-observer'
-import {
-	ListMusic,
-	MessageCircleHeart,
-	Search,
-	Send,
-	WalletCards,
-	X,
-} from 'lucide-react'
+import { ListMusic, MessageCircleHeart, Search, Send, WalletCards, X } from 'lucide-react'
 import * as z from 'zod'
 
 import type { uuid } from '@/types/main'
@@ -24,6 +17,7 @@ import {
 	phrasePlaylistsCollection,
 	phraseRequestsCollection,
 } from '@/lib/collections'
+import languages, { allLanguageOptions } from '@/lib/languages'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -33,17 +27,14 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { FancyMultiSelect } from '@/components/ui/multi-select'
 import PermalinkButton from '@/components/permalink-button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSmartSearch } from '@/hooks/use-smart-search'
 import Callout from '@/components/ui/callout'
 import { Loader } from '@/components/ui/loader'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import languages from '@/lib/languages'
 
 const RecommendSearchSchema = z.object({
 	type: z.enum(['phrase', 'request', 'playlist']).default('phrase'),
@@ -62,20 +53,13 @@ function RouteComponent() {
 	const userId = useUserId()
 	const navigate = useNavigate({ from: Route.fullPath })
 
-	const [lang, setLang] = useState<string>('')
-	const [searchTerm, setSearchTerm] = useState('')
+	const [liveText, setLiveText] = useState('')
+	const [selectedLangs, setSelectedLangs] = useState<Array<string>>([])
 
 	const handleClose = () => {
 		void navigate({
 			to: '/friends/chats/$friendUid',
 			params,
-		})
-	}
-
-	const handleTabChange = (value: string) => {
-		void navigate({
-			search: { type: value as 'phrase' | 'request' | 'playlist' },
-			replace: true,
 		})
 	}
 
@@ -127,99 +111,86 @@ function RouteComponent() {
 		})
 	}
 
+	const title =
+		type === 'phrase' ? 'Send a phrase'
+		: type === 'request' ? 'Share a request'
+		: 'Share a playlist'
+
+	const Icon =
+		type === 'phrase' ? WalletCards
+		: type === 'request' ? MessageCircleHeart
+		: ListMusic
+
 	return (
 		<Dialog open={true} onOpenChange={(open) => !open && handleClose()}>
 			<DialogContent className="flex max-h-[95vh] flex-col overflow-hidden">
 				<DialogHeader>
-					<DialogTitle>Send to friend</DialogTitle>
+					<DialogTitle className="flex items-center gap-2">
+						<Icon className="size-5" />
+						{title}
+					</DialogTitle>
 					<DialogDescription className="sr-only">
-						Search for content to send to your friend
+						Search for {type}s to send to your friend
 					</DialogDescription>
 				</DialogHeader>
-				<Tabs
-					value={type}
-					onValueChange={handleTabChange}
-					className="flex min-h-0 flex-1 flex-col"
-				>
-					<TabsList className="grid w-full grid-cols-3">
-						<TabsTrigger value="phrase" className="gap-1.5">
-							<WalletCards className="size-4" />
-							<span className="hidden @sm:inline">Phrase</span>
-						</TabsTrigger>
-						<TabsTrigger value="request" className="gap-1.5">
-							<MessageCircleHeart className="size-4" />
-							<span className="hidden @sm:inline">Request</span>
-						</TabsTrigger>
-						<TabsTrigger value="playlist" className="gap-1.5">
-							<ListMusic className="size-4" />
-							<span className="hidden @sm:inline">Playlist</span>
-						</TabsTrigger>
-					</TabsList>
 
-					<div className="flex flex-col gap-4 py-4">
-						<Label>
-							<p className="mb-2">Language filter</p>
-							<SelectOneOfYourLanguages value={lang} setValue={setLang} />
-						</Label>
-						<Label>
-							<p className="mb-2">Search</p>
-							<div className="relative">
-								<Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-								<Input
-									placeholder="Search..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="ps-9 pe-9"
-								/>
-								{searchTerm && (
-									<button
-										type="button"
-										onClick={() => setSearchTerm('')}
-										className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
-									>
-										<X className="size-4" />
-									</button>
-								)}
-							</div>
-						</Label>
+				{/* Search controls - same style as Browse page */}
+				<div className="space-y-3">
+					<div className="relative">
+						<Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+						<Input
+							type="search"
+							placeholder={`Search ${type}s...`}
+							value={liveText}
+							onChange={(e) => setLiveText(e.target.value)}
+							className="ps-9 pe-9 [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
+						/>
+						{liveText && (
+							<button
+								type="button"
+								onClick={() => setLiveText('')}
+								className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
+							>
+								<X className="size-4" />
+								<span className="sr-only">Clear search</span>
+							</button>
+						)}
 					</div>
+					<FancyMultiSelect
+						options={allLanguageOptions}
+						selected={selectedLangs}
+						setSelected={setSelectedLangs}
+						placeholder="Filter by language..."
+					/>
+				</div>
 
-					<TabsContent
-						value="phrase"
-						className="mt-0 min-h-0 flex-1 overflow-hidden"
-					>
+				{/* Results based on type */}
+				<div className="min-h-0 flex-1 overflow-hidden pt-4">
+					{type === 'phrase' && (
 						<PhraseSearchResults
-							lang={lang}
-							query={searchTerm}
+							query={liveText}
+							selectedLangs={selectedLangs}
 							onSelect={handleSendPhrase}
 							isPending={sendMessageMutation.isPending}
 						/>
-					</TabsContent>
-
-					<TabsContent
-						value="request"
-						className="mt-0 min-h-0 flex-1 overflow-hidden"
-					>
+					)}
+					{type === 'request' && (
 						<RequestSearchResults
-							lang={lang}
-							query={searchTerm}
+							query={liveText}
+							selectedLangs={selectedLangs}
 							onSelect={handleSendRequest}
 							isPending={sendMessageMutation.isPending}
 						/>
-					</TabsContent>
-
-					<TabsContent
-						value="playlist"
-						className="mt-0 min-h-0 flex-1 overflow-hidden"
-					>
+					)}
+					{type === 'playlist' && (
 						<PlaylistSearchResults
-							lang={lang}
-							query={searchTerm}
+							query={liveText}
+							selectedLangs={selectedLangs}
 							onSelect={handleSendPlaylist}
 							isPending={sendMessageMutation.isPending}
 						/>
-					</TabsContent>
-				</Tabs>
+					)}
+				</div>
 			</DialogContent>
 		</Dialog>
 	)
@@ -227,16 +198,19 @@ function RouteComponent() {
 
 // Phrase search using smart trigram search
 function PhraseSearchResults({
-	lang,
 	query,
+	selectedLangs,
 	onSelect,
 	isPending,
 }: {
-	lang: string
 	query: string
+	selectedLangs: Array<string>
 	onSelect: (id: uuid, lang: string) => void
 	isPending: boolean
 }) {
+	// For smart search, we pass single lang or empty string
+	const lang = selectedLangs.length === 1 ? selectedLangs[0] : ''
+
 	const {
 		data: results,
 		isLoading,
@@ -245,6 +219,12 @@ function PhraseSearchResults({
 		fetchNextPage,
 		isFetchingNextPage,
 	} = useSmartSearch(lang, query, 'relevance')
+
+	// Filter by multiple langs client-side if more than one selected
+	const filteredResults = useMemo(() => {
+		if (selectedLangs.length <= 1) return results
+		return results.filter((p) => selectedLangs.includes(p.lang))
+	}, [results, selectedLangs])
 
 	// Infinite scroll trigger
 	const { ref: loadMoreRef, inView } = useInView({
@@ -260,9 +240,7 @@ function PhraseSearchResults({
 
 	if (!query || query.length < 2) {
 		return (
-			<Callout variant="ghost" className="my-4">
-				Enter at least 2 characters to search
-			</Callout>
+			<Callout variant="ghost">Enter at least 2 characters to search</Callout>
 		)
 	}
 
@@ -270,21 +248,17 @@ function PhraseSearchResults({
 		return <Loader className="my-8" />
 	}
 
-	if (isEmpty) {
-		return (
-			<Callout variant="ghost" className="my-4">
-				No phrases found
-			</Callout>
-		)
+	if (isEmpty || filteredResults.length === 0) {
+		return <Callout variant="ghost">No phrases found</Callout>
 	}
 
 	return (
 		<ScrollArea className="h-full">
 			<div className="flex flex-col gap-2 pb-4">
 				<p className="text-muted-foreground text-xs italic">
-					{results.length} result{results.length !== 1 ? 's' : ''}
+					{filteredResults.length} result{filteredResults.length !== 1 ? 's' : ''}
 				</p>
-				{results.map((phrase) => (
+				{filteredResults.map((phrase) => (
 					<PhraseResultItem
 						key={phrase.id}
 						phrase={phrase}
@@ -343,17 +317,17 @@ function PhraseResultItem({
 
 // Request search using client-side filtering
 function RequestSearchResults({
-	lang,
 	query,
+	selectedLangs,
 	onSelect,
 	isPending,
 }: {
-	lang: string
 	query: string
+	selectedLangs: Array<string>
 	onSelect: (id: uuid, lang: string) => void
 	isPending: boolean
 }) {
-	const debouncedQuery = useDebounce(query, 300)
+	const debouncedQuery = useDebounce(query, 150)
 	const lowerQuery = debouncedQuery.toLowerCase().trim()
 
 	const { data: allRequests, isLoading } = useLiveQuery((q) =>
@@ -367,7 +341,9 @@ function RequestSearchResults({
 		return allRequests
 			.filter((req) => {
 				// Language filter
-				if (lang && req.lang !== lang) return false
+				if (selectedLangs.length > 0 && !selectedLangs.includes(req.lang)) {
+					return false
+				}
 				// Text search
 				if (lowerQuery) {
 					return req.prompt.toLowerCase().includes(lowerQuery)
@@ -376,26 +352,22 @@ function RequestSearchResults({
 			})
 			.sort((a, b) => (b.upvote_count ?? 0) - (a.upvote_count ?? 0))
 			.slice(0, 20)
-	}, [allRequests, lang, lowerQuery])
+	}, [allRequests, selectedLangs, lowerQuery])
 
 	if (isLoading) {
 		return <Loader className="my-8" />
 	}
 
-	if (!query && !lang) {
+	if (!query && selectedLangs.length === 0) {
 		return (
-			<Callout variant="ghost" className="my-4">
+			<Callout variant="ghost">
 				Enter search terms or select a language
 			</Callout>
 		)
 	}
 
 	if (filteredRequests.length === 0) {
-		return (
-			<Callout variant="ghost" className="my-4">
-				No requests found
-			</Callout>
-		)
+		return <Callout variant="ghost">No requests found</Callout>
 	}
 
 	return (
@@ -444,17 +416,17 @@ function RequestSearchResults({
 
 // Playlist search using client-side filtering
 function PlaylistSearchResults({
-	lang,
 	query,
+	selectedLangs,
 	onSelect,
 	isPending,
 }: {
-	lang: string
 	query: string
+	selectedLangs: Array<string>
 	onSelect: (id: uuid, lang: string) => void
 	isPending: boolean
 }) {
-	const debouncedQuery = useDebounce(query, 300)
+	const debouncedQuery = useDebounce(query, 150)
 	const lowerQuery = debouncedQuery.toLowerCase().trim()
 
 	const { data: allPlaylists, isLoading } = useLiveQuery((q) =>
@@ -468,7 +440,9 @@ function PlaylistSearchResults({
 		return allPlaylists
 			.filter((playlist) => {
 				// Language filter
-				if (lang && playlist.lang !== lang) return false
+				if (selectedLangs.length > 0 && !selectedLangs.includes(playlist.lang)) {
+					return false
+				}
 				// Text search
 				if (lowerQuery) {
 					const searchText = [playlist.title, playlist.description ?? '']
@@ -480,26 +454,22 @@ function PlaylistSearchResults({
 			})
 			.sort((a, b) => (b.upvote_count ?? 0) - (a.upvote_count ?? 0))
 			.slice(0, 20)
-	}, [allPlaylists, lang, lowerQuery])
+	}, [allPlaylists, selectedLangs, lowerQuery])
 
 	if (isLoading) {
 		return <Loader className="my-8" />
 	}
 
-	if (!query && !lang) {
+	if (!query && selectedLangs.length === 0) {
 		return (
-			<Callout variant="ghost" className="my-4">
+			<Callout variant="ghost">
 				Enter search terms or select a language
 			</Callout>
 		)
 	}
 
 	if (filteredPlaylists.length === 0) {
-		return (
-			<Callout variant="ghost" className="my-4">
-				No playlists found
-			</Callout>
-		)
+		return <Callout variant="ghost">No playlists found</Callout>
 	}
 
 	return (
