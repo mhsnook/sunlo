@@ -71,8 +71,8 @@ export async function login(
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')
 
-	// Wait for /learn, /welcome, or /getting-started (for users without profile)
-	await page.waitForURL(/\/(learn|welcome|getting-started)/)
+	// Wait for redirect to complete
+	await page.waitForLoadState('networkidle')
 
 	// If user has no profile, they need to complete getting-started first
 	// This is expected for new users - the test should handle profile creation
@@ -81,14 +81,12 @@ export async function login(
 		return
 	}
 
-	// If we landed on welcome page and skipWelcome is true, click through to continue
-	if (skipWelcome && page.url().includes('/welcome')) {
-		// Click the primary CTA button to continue to the main app
-		const continueButton = page.getByRole('link', {
-			name: /(go to my decks|create my first deck|find friends)/i,
-		})
-		await continueButton.click()
-		await page.waitForURL(/\/(learn|friends)/)
+	// If we landed on welcome page and skipWelcome is true, navigate to /learn
+	if (skipWelcome && !page.url().match(/\/learn$/)) {
+		const goToDecksButton = page.getByRole('link', { name: 'Go to My Decks' })
+		await expect(goToDecksButton).toBeVisible({ timeout: 10000 })
+		await goToDecksButton.click()
+		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 	}
 
 	// For users landing on /learn, verify the expected content
@@ -161,8 +159,8 @@ export async function loginAsNewUser(
  * Log out the current user
  */
 export async function logout(page: Page): Promise<void> {
-	// Navigate to profile and click logout
-	await page.goto('/profile')
-	await page.click('button:has-text("Log out")')
-	await page.waitForURL(/\/login/)
+	// open the user nav and click logout
+	await page.getByTestId('sidebar-user-menu-trigger').click()
+	await page.getByTestId('sidebar-signout-button').click()
+	await page.waitForURL('/')
 }

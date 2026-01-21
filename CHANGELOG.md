@@ -4,9 +4,12 @@
 
 _20th Jan, 2026_
 
-- Add social media previews with edge middleware
-- Add read receipts to chat messages
-- Add realtime table initialisation to migrations
+- Feature: Social media previews (using edge middleware)
+- Feature: Chat messages have read/unread
+- Feature: Welcome page now welcomes new users
+- Fix: Second sidebar was hiding sometimes, and too complex
+- Fix: The scrollable areas weren't constraining/flexing just right
+- DX: Improve tests, log redirects
 
 ## v0.10 - Smart Search, DM Playlists, Popularity Feed
 
