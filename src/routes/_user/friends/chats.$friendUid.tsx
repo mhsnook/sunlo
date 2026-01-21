@@ -192,15 +192,14 @@ function ChatPage() {
 			</CardContent>
 			<div className="border-t p-4">
 				{relation.status === 'friends' ?
-					<div className="flex items-center justify-center gap-2">
+					<div className="flex items-center gap-2">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button size="lg" className="gap-2">
+								<Button variant="ghost" size="icon" className="shrink-0">
 									<Plus className="size-5" />
-									Send something
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent align="center" className="w-56">
+							<DropdownMenuContent align="start" className="w-48">
 								<DropdownMenuItem asChild>
 									<Link
 										to="/friends/chats/$friendUid/recommend"
@@ -209,7 +208,7 @@ function ChatPage() {
 										className="flex items-center gap-2"
 									>
 										<WalletCards className="size-4" />
-										Send a phrase
+										Phrase
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
@@ -220,7 +219,7 @@ function ChatPage() {
 										className="flex items-center gap-2"
 									>
 										<MessageCircleHeart className="size-4" />
-										Share a request
+										Request
 									</Link>
 								</DropdownMenuItem>
 								<DropdownMenuItem asChild>
@@ -231,11 +230,19 @@ function ChatPage() {
 										className="flex items-center gap-2"
 									>
 										<ListMusic className="size-4" />
-										Share a playlist
+										Playlist
 									</Link>
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
+						<Link
+							to="/friends/chats/$friendUid/recommend"
+							from={Route.fullPath}
+							search={{ type: 'phrase' }}
+							className="bg-muted text-muted-foreground flex h-10 flex-1 cursor-pointer items-center rounded-2xl px-4 text-sm"
+						>
+							Send a recommendation...
+						</Link>
 					</div>
 				:	<p className="text-muted-foreground p-2 text-center italic">
 						You must be friends to chat.
