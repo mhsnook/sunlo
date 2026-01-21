@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -46,7 +47,7 @@ export function DeleteRequestDialog({
 			})
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to delete request: ${error.message}`)
+			toastError(`Failed to delete request: ${error.message}`)
 		},
 	})
 	return (

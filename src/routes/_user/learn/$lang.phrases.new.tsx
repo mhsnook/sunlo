@@ -5,6 +5,7 @@ import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { useDebounce } from '@uidotdev/usehooks'
 import { NotebookPen, Search } from 'lucide-react'
 
@@ -271,7 +272,7 @@ function AddPhraseTab() {
 			}
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				`There was an error submitting this new phrase: ${error.message}`
 			)
 			console.log(`Error:`, error)

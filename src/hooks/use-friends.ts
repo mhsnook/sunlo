@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -100,7 +101,7 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 				error,
 				variables
 			)
-			toast.error(`Something went wrong with this interaction`)
+			toastError(`Something went wrong with this interaction`)
 		},
 	})
 }

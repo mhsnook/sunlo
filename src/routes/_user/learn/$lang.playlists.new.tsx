@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useMutation } from '@tanstack/react-query'
 import { Tables } from '@/types/supabase'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -138,7 +139,7 @@ function NewPlaylistPageContent() {
 		},
 		onError: (error) => {
 			console.error(error)
-			toast.error('There was an error creating your playlist')
+			toastError('There was an error creating your playlist')
 		},
 	})
 

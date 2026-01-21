@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { toast } from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/lib/collections'
 import {
@@ -30,7 +31,7 @@ export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 			toast.success('Display preference updated')
 		},
 		onError: (error) => {
-			toast.error('Failed to update preference')
+			toastError('Failed to update preference')
 			console.log('Error', error)
 		},
 	})

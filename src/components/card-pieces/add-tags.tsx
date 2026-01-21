@@ -4,6 +4,7 @@ import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import supabase from '@/lib/supabase-client'
 import { Pencil } from 'lucide-react'
 
@@ -93,7 +94,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 		},
 		onError: (error) => {
 			console.log(`Failed to add tags: ${error.message}`, error)
-			toast.error(`Failed to add tags: ${error.message}`)
+			toastError(`Failed to add tags: ${error.message}`)
 		},
 	})
 

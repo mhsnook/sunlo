@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { uuid } from '@/types/main'
@@ -113,7 +114,7 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 		},
 		onError: (error) => {
 			console.log(`Error:`, error)
-			toast.error(`there was some error: ${error.message}`)
+			toastError(`there was some error: ${error.message}`)
 		},
 	})
 

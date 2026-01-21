@@ -13,6 +13,7 @@ import { PhraseRequestSchema, type PhraseRequestType } from '@/lib/schemas'
 import { Textarea } from '../ui/textarea'
 import { phraseRequestsCollection } from '@/lib/collections'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 
@@ -45,7 +46,7 @@ export function UpdateRequestDialog({
 			)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update request: ${error.message}`)
+			toastError(`Failed to update request: ${error.message}`)
 		},
 	})
 

@@ -1,7 +1,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
 import { count, eq } from '@tanstack/db'
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { ThumbsUp } from 'lucide-react'
 
 import { commentsCollection, commentUpvotesCollection } from '@/lib/collections'
@@ -61,7 +61,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update upvote: ${error.message}`)
+			toastError(`Failed to update upvote: ${error.message}`)
 		},
 	})
 

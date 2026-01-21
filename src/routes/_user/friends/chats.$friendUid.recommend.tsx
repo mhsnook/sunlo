@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { Send } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -49,7 +50,7 @@ function RouteComponent() {
 			toast.success('Phrase sent!')
 		},
 		onError: (error) => {
-			toast.error(`Failed to send recommendation: ${error.message}`)
+			toastError(`Failed to send recommendation: ${error.message}`)
 		},
 	})
 

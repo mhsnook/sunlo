@@ -1,5 +1,6 @@
 import { type CSSProperties, useState } from 'react'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { useMutation } from '@tanstack/react-query'
 import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
 
@@ -232,7 +233,7 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 			setIsOpen(false)
 		},
 		onError: (error) => {
-			toast.error('Failed to update card status')
+			toastError('Failed to update card status')
 			console.log('Error updating card status', error)
 		},
 	})

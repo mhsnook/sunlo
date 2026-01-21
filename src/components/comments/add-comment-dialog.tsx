@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { X } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -215,7 +216,7 @@ function NewCommentForm({
 			onSuccess()
 		},
 		onError: (error: Error) => {
-			toast.error(
+			toastError(
 				`Failed to post ${isReply ? 'reply' : 'comment'}: ${error.message}`
 			)
 		},

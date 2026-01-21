@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { Share } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -15,7 +15,7 @@ export function NativeShareButton({
 		void navigator.share(shareData).catch((error: DOMException | TypeError) => {
 			if (error.name !== 'AbortError') {
 				console.log(`Some error has occurred while sharing.`, error)
-				toast.error(
+				toastError(
 					`Some error has occurred while trying to open your device's share screen 🙈 Sorry. Please try something else.`
 				)
 			}

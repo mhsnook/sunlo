@@ -2,6 +2,7 @@ import type { Tables } from '@/types/supabase'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
@@ -54,7 +55,7 @@ export const useNewDeckMutation = () => {
 		},
 		onError: (error) => {
 			console.log(`Error creating deck:`, error)
-			toast.error(`Error creating deck: ${error.message}`)
+			toastError(`Error creating deck: ${error.message}`)
 		},
 	})
 

@@ -1,6 +1,6 @@
 import type { ButtonProps } from '@/components/ui/button'
 import { Share } from 'lucide-react'
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
 import { PhraseFullFilteredType } from '@/lib/schemas'
@@ -26,7 +26,7 @@ export default function SharePhraseButton({
 				url: `${window.location.origin}/learn/${phrase.lang}/${phrase.id}`,
 			})
 			.catch(() => {
-				toast.error('Failed to share')
+				toastError('Failed to share')
 			})
 	}
 

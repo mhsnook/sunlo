@@ -18,6 +18,7 @@ import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { phrasePlaylistsCollection } from '@/lib/collections'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { playlistCoverUrlify } from '@/lib/hooks'
@@ -60,7 +61,7 @@ export function UpdatePlaylistDialog({
 			setEditCoverImagePath(data.path)
 			toast.success('Image uploaded')
 		} catch (error) {
-			toast.error('Failed to upload image')
+			toastError('Failed to upload image')
 			console.error(error)
 		} finally {
 			setIsUploadingImage(false)
@@ -92,7 +93,7 @@ export function UpdatePlaylistDialog({
 			)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update playlist: ${error.message}`)
+			toastError(`Failed to update playlist: ${error.message}`)
 		},
 	})
 

@@ -15,6 +15,7 @@ import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
@@ -57,7 +58,7 @@ export function ArchiveDeckButton({
 		},
 		onError: (error) => {
 			if (error) {
-				toast.error(
+				toastError(
 					`Failed to update deck status, we'll just try refreshing the page...`
 				)
 				console.log(error)

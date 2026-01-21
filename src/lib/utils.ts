@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { DeckMetaType } from '@/lib/schemas'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 import { useState } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
@@ -154,7 +155,7 @@ export function isNativeAppUserAgent() {
 }
 
 export function copyLink(url?: string, fallback = true) {
-	if (!navigator?.clipboard) toast.error('Failed to copy link')
+	if (!navigator?.clipboard) toastError('Failed to copy link')
 	if (!fallback && !url) {
 		throw new Error('No url to copy')
 	} else
@@ -164,7 +165,7 @@ export function copyLink(url?: string, fallback = true) {
 				toast.success('Link copied to clipboard')
 			})
 			.catch(() => {
-				toast.error('Failed to copy link')
+				toastError('Failed to copy link')
 			})
 }
 

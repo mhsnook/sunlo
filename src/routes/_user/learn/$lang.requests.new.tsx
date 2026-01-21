@@ -5,6 +5,7 @@ import * as z from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/error-toast'
 
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
@@ -113,7 +114,7 @@ function NewRequestPage() {
 		},
 		onError: (error) => {
 			console.error(error)
-			toast.error('There was an error creating your request.')
+			toastError('There was an error creating your request.')
 		},
 	})
 
