@@ -66,7 +66,6 @@ export const Route = createFileRoute('/_user/learn/browse')({
 			subtitle:
 				'Browse popular languages, requests, and playlists from our community',
 		},
-		rightSidebar: true,
 		contextMenu:
 			context.auth.isAuth ?
 				['/learn/add-deck', '/learn/contributions', '/learn/quick-search']

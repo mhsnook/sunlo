@@ -6,6 +6,7 @@ import {
 	Outlet,
 	redirect,
 	useMatches,
+	useParams,
 } from '@tanstack/react-router'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
@@ -16,6 +17,7 @@ import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { useUserId } from '@/lib/use-auth'
+import { makeLinks } from '@/hooks/links'
 import type { MyRouterContext } from './__root'
 import {
 	chatMessagesCollection,
@@ -110,13 +112,15 @@ function UserLayout() {
 	const queryClient = useQueryClient()
 	const userId = useUserId()
 	const matches = useMatches()
+	const { lang } = useParams({ strict: false })
 
-	// Check if any route wants the right sidebar
-	const rightSidebarMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.rightSidebar
+	// Show right sidebar if there's a contextMenu with items
+	const contextMenuMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.contextMenu
 	)
-	const showRightSidebar = !!(rightSidebarMatch?.context as MyRouterContext)
-		?.rightSidebar
+	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
+		?.contextMenu
+	const hasContextMenu = makeLinks(contextMenu, lang).length > 0
 
 	// Apply user's font preference to the document body
 	useFontPreference()
@@ -184,16 +188,12 @@ function UserLayout() {
 				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
 					<div
 						id="app-sidebar-layout-outlet"
-						className={
-							showRightSidebar ?
-								'@container min-h-0 max-w-4xl flex-1'
-							:	'@xl:w-app @container min-h-0 w-full @xl:block'
-						}
+						className="@container min-h-0 max-w-4xl flex-1"
 						style={{ viewTransitionName: 'main-content' }}
 					>
 						<Outlet />
 					</div>
-					{showRightSidebar && <RightSidebar />}
+					{hasContextMenu && <RightSidebar />}
 				</div>
 			</SidebarInset>
 		</div>

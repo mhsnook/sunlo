@@ -19,7 +19,7 @@ import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
-		rightSidebar: false, // Focused review mode - no distractions
+		contextMenu: [], // Focused review mode - no distractions
 	}),
 	component: ReviewPage,
 	loader: async () => {

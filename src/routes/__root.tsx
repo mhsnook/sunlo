@@ -21,7 +21,6 @@ export interface MyRouterContext {
 	titleBar?: TitleBar
 	appnav?: string[]
 	contextMenu?: string[]
-	rightSidebar?: boolean
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

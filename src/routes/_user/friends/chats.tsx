@@ -8,7 +8,6 @@ export const Route = createFileRoute('/_user/friends/chats')({
 		titleBar: {
 			title: 'Chats',
 		},
-		rightSidebar: true, // Use wide layout (no right sidebar renders since no contextMenu)
 	}),
 	loader: async ({ context }) => {
 		// Only preload if authenticated to ensure RLS works correctly
