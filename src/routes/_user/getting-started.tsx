@@ -32,7 +32,12 @@ export const Route = createFileRoute('/_user/getting-started')({
 	},
 	component: GettingStartedPage,
 	beforeLoad: ({ context }) => {
-		if (!context.auth.isAuth) throw redirect({ to: '/login' })
+		if (!context.auth.isAuth) {
+			console.log(
+				'Issuing redirect to /login from /getting-started page bc not logged in'
+			)
+			throw redirect({ to: '/login' })
+		}
 		return {
 			titleBar: {
 				title: 'Getting Started',

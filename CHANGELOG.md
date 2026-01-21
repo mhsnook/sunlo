@@ -2,9 +2,13 @@
 
 ## v0.11
 
-_19th Jan, 2026_
+_20th Jan, 2026_
 
--
+- Feature: Social media previews (using edge middleware)
+- Feature: Chat messages have read/unread
+- Feature: Welcome page now welcomes new users
+- Fix: Second sidebar was hiding sometimes, and too complex
+- Fix: The scrollable areas weren't constraining/flexing just right
 
 ## v0.10 - Smart Search, DM Playlists, Popularity Feed
 

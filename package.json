@@ -7,7 +7,7 @@
 		"dev": "vite --host",
 		"scan": "vite --host & pnpx react-scan@latest localhost:5173",
 		"build": "vite build",
-		"lint": "time oxlint . ; time eslint .",
+		"lint": "oxlint . && eslint .",
 		"preview": "vite preview",
 		"format": "prettier --write .",
 		"check": "tsc -b",
