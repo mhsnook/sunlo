@@ -74,13 +74,19 @@ export function AddCommentDialog({
 	lang,
 	parentCommentId,
 	children,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
 }: {
 	requestId: uuid
 	lang: string
 	parentCommentId?: uuid
 	children?: ReactNode
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) {
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = controlledOpen ?? internalOpen
+	const setOpen = controlledOnOpenChange ?? setInternalOpen
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (

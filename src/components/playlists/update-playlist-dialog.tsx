@@ -1,4 +1,4 @@
-import { ChangeEvent, useState } from 'react'
+import { ChangeEvent, ReactNode, useState } from 'react'
 import { Edit, ImageIcon, UploadIcon, X } from 'lucide-react'
 import {
 	Dialog,
@@ -26,8 +26,14 @@ import { isEmbeddableUrl } from './playlist-embed'
 
 export function UpdatePlaylistDialog({
 	playlist,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
+	children,
 }: {
 	playlist: PhrasePlaylistType
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
+	children?: ReactNode
 }) {
 	const [editTitle, setEditTitle] = useState(playlist.title)
 	const [editDescription, setEditDescription] = useState(
@@ -38,7 +44,9 @@ export function UpdatePlaylistDialog({
 		playlist.cover_image_path ?? ''
 	)
 
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = controlledOpen ?? internalOpen
+	const setOpen = controlledOnOpenChange ?? setInternalOpen
 	const [isUploadingImage, setIsUploadingImage] = useState(false)
 
 	const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -98,11 +106,13 @@ export function UpdatePlaylistDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" title="Update playlist">
-					<Edit className="h-4 w-4" />
-				</Button>
-			</DialogTrigger>
+			{children ?? (
+				<DialogTrigger asChild>
+					<Button variant="ghost" size="icon" title="Update playlist">
+						<Edit className="h-4 w-4" />
+					</Button>
+				</DialogTrigger>
+			)}
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Edit Playlist</DialogTitle>

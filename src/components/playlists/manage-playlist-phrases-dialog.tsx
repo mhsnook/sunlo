@@ -29,10 +29,16 @@ import { buttonVariants } from '../ui/button'
 
 export function ManagePlaylistPhrasesDialog({
 	playlist,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
 }: {
 	playlist: PhrasePlaylistType
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) {
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = controlledOpen ?? internalOpen
+	const setOpen = controlledOnOpenChange ?? setInternalOpen
 	const { data: phrasesData } = useOnePlaylistPhrases(playlist.id)
 
 	// Track which phrase IDs are already in the playlist
@@ -186,16 +192,20 @@ export function ManagePlaylistPhrasesDialog({
 		}
 	}
 
+	const isControlled = controlledOpen !== undefined
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<Button
-				variant="ghost"
-				size="icon"
-				title="Manage phrases"
-				onClick={() => setOpen(true)}
-			>
-				<ListMusic className="h-4 w-4" />
-			</Button>
+			{!isControlled && (
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Manage phrases"
+					onClick={() => setOpen(true)}
+				>
+					<ListMusic className="h-4 w-4" />
+				</Button>
+			)}
 			<DialogContent className="max-h-[80vh] max-w-2xl">
 				<DialogHeader>
 					<DialogTitle>Manage Phrases</DialogTitle>

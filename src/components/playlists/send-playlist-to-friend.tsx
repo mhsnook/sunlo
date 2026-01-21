@@ -20,13 +20,19 @@ export function SendPlaylistToFriendDialog({
 	lang,
 	id,
 	children,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
 }: {
 	lang: string
 	id: uuid
 	children: ReactNode
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) {
 	const userId = useUserId()
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = controlledOpen ?? internalOpen
+	const setOpen = controlledOnOpenChange ?? setInternalOpen
 	const [uids, setUids] = useState<uuid[]>([])
 	const { isReady } = useAllChats()
 	const sendPlaylistToFriendMutation = useMutation({

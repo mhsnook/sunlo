@@ -20,10 +20,16 @@ import { useNavigate } from '@tanstack/react-router'
 
 export function DeletePlaylistDialog({
 	playlist,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
 }: {
 	playlist: PhrasePlaylistType
+	open?: boolean
+	onOpenChange?: (open: boolean) => void
 }) {
-	const [open, setOpen] = useState(false)
+	const [internalOpen, setInternalOpen] = useState(false)
+	const open = controlledOpen ?? internalOpen
+	const setOpen = controlledOnOpenChange ?? setInternalOpen
 	const navigate = useNavigate()
 
 	// Delete playlist mutation
@@ -49,16 +55,20 @@ export function DeletePlaylistDialog({
 			toastError(`Failed to delete playlist: ${error.message}`)
 		},
 	})
+	const isControlled = controlledOpen !== undefined
+
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
-			<Button
-				variant="ghost"
-				size="icon"
-				title="Delete playlist"
-				onClick={() => setOpen(true)}
-			>
-				<Trash2 className="h-4 w-4" />
-			</Button>
+			{!isControlled && (
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Delete playlist"
+					onClick={() => setOpen(true)}
+				>
+					<Trash2 className="h-4 w-4" />
+				</Button>
+			)}
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete playlist?</AlertDialogTitle>
