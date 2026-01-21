@@ -1,7 +1,7 @@
 import type { ChangeEvent } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { FieldValues, Path, useController } from 'react-hook-form'
-import { toast } from 'react-hot-toast'
+import { toastSuccess } from '@/components/ui/sonner'
 import type { ControlledFieldProps } from '@/components/fields/types'
 import { Label } from '@/components/ui/label'
 import supabase from '@/lib/supabase-client'
@@ -72,7 +72,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 		},
 		onSuccess: (data) => {
 			console.log(`onSuccess for uploading avatar`, data)
-			toast.success(`Avatar uploaded...`)
+			toastSuccess(`Avatar uploaded...`)
 		},
 	})
 	const url = avatarUrlify(avatar_path)

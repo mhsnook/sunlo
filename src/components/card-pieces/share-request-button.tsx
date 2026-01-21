@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/sonner'
 import { Share } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -31,8 +31,10 @@ export function ShareRequestButton({
 				text: `Check out this request for a phrase in ${languages[request.lang]}: ${request.prompt}`,
 				url: `${window.location.origin}/learn/${request.lang}/requests/${request.id}`,
 			})
-			.catch(() => {
-				toast.error('Failed to share')
+			.catch((error: DOMException) => {
+				if (error.name !== 'AbortError') {
+					toastError('Failed to share')
+				}
 			})
 	}
 

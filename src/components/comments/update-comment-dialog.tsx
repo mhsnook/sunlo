@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { RequestCommentSchema, type RequestCommentType } from '@/lib/schemas'
 import { Textarea } from '../ui/textarea'
 import { commentsCollection } from '@/lib/collections'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 
@@ -39,11 +39,11 @@ export function UpdateCommentDialog({
 		},
 		onSuccess: (data: RequestCommentType) => {
 			setOpen(false)
-			toast.success('Comment updated!')
+			toastSuccess('Comment updated!')
 			commentsCollection.utils.writeUpdate(RequestCommentSchema.parse(data))
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update comment: ${error.message}`)
+			toastError(`Failed to update comment: ${error.message}`)
 		},
 	})
 

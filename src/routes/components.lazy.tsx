@@ -67,6 +67,13 @@ import {
 	PopoverTrigger,
 } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import {
+	toast,
+	toastError,
+	toastSuccess,
+	toastInfo,
+	toastNeutral,
+} from '@/components/ui/sonner'
 
 export const Route = createLazyFileRoute('/components')({
 	component: ComponentsPage,
@@ -77,6 +84,66 @@ function ComponentsPage() {
 		<div className="container mx-auto p-4">
 			<h1 className="mb-6 text-3xl font-bold">ShadCN Component Showcase</h1>
 			<div className="grid grid-cols-1 gap-6 @3xl:grid-cols-2 @5xl:grid-cols-3">
+				{/* Toasts */}
+				<Card>
+					<CardHeader>
+						<CardTitle>Toasts (Sonner)</CardTitle>
+						<CardDescription>
+							Success/info go top-right, errors go bottom-right and persist
+						</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<div className="flex flex-wrap gap-2">
+							<Button
+								variant="outline"
+								onClick={() =>
+									toastSuccess('Success! Your changes were saved.')
+								}
+							>
+								Success Toast
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() =>
+									toastError(
+										'Error: Something went wrong while processing your request.'
+									)
+								}
+							>
+								Error Toast
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() => toastNeutral('Neutral message, no icon')}
+							>
+								Neutral Toast
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() => toastInfo('Here is some helpful information')}
+							>
+								Info Toast
+							</Button>
+							<Button
+								variant="outline"
+								onClick={() => {
+									toastError('First error - will stack')
+									setTimeout(
+										() => toastError('Second error - stacks below'),
+										100
+									)
+									setTimeout(
+										() => toastError('Third error - keeps stacking'),
+										200
+									)
+								}}
+							>
+								Stack 3 Errors
+							</Button>
+						</div>
+					</CardContent>
+				</Card>
+
 				{/* Accordion */}
 				<Card>
 					<CardHeader>

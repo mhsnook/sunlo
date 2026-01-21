@@ -5,7 +5,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import {
 	Briefcase,
@@ -158,10 +158,10 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(data)
 			reset(data)
-			toast.success('Your deck settings have been updated.')
+			toastSuccess('Your deck settings have been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Daily Goal Form deck settings update error`, { error })
@@ -271,10 +271,10 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(data)
 			reset(data)
-			toast.success('Your deck settings have been updated.')
+			toastSuccess('Your deck settings have been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Language Goal Form deck settings update error`, { error })
@@ -363,10 +363,10 @@ function PreferredTranslationLanguageForm({
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(data)
 			setSelectedLang(data.preferred_translation_lang)
-			toast.success('Your preferred translation language has been updated.')
+			toastSuccess('Your preferred translation language has been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Preferred translation lang update error`, { error })

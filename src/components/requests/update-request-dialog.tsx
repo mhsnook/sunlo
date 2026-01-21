@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import { PhraseRequestSchema, type PhraseRequestType } from '@/lib/schemas'
 import { Textarea } from '../ui/textarea'
 import { phraseRequestsCollection } from '@/lib/collections'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 
@@ -39,13 +39,13 @@ export function UpdateRequestDialog({
 		},
 		onSuccess: (data: PhraseRequestType) => {
 			setOpen(false)
-			toast.success('Request updated!')
+			toastSuccess('Request updated!')
 			phraseRequestsCollection.utils.writeUpdate(
 				PhraseRequestSchema.parse(data)
 			)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update request: ${error.message}`)
+			toastError(`Failed to update request: ${error.message}`)
 		},
 	})
 

@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useDebounce } from '@uidotdev/usehooks'
 import { NotebookPen, Search } from 'lucide-react'
 
@@ -257,21 +257,21 @@ function AddPhraseTab() {
 					hasArchivedDeck ?
 						`re-activated your ${languages[lang]} deck`
 					:	`started learning ${languages[lang]}`
-				toast.success(
+				toastSuccess(
 					`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
 				)
 			} else if (createdCard) {
-				toast.success(
+				toastSuccess(
 					'New phrase has been added to the public library and will appear in your next review'
 				)
 			} else {
-				toast.success(
+				toastSuccess(
 					'Phrase has been added to the public library (not added to your deck)'
 				)
 			}
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				`There was an error submitting this new phrase: ${error.message}`
 			)
 			console.log(`Error:`, error)

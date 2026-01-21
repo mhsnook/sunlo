@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import {
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
@@ -382,7 +382,7 @@ export function useReviewMutation(
 			}, 1000)
 		},
 		onError: (error) => {
-			toast.error(`There was an error posting your review: ${error.message}`)
+			toastError(`There was an error posting your review: ${error.message}`)
 			console.log(`Error posting review:`, error)
 		},
 	})

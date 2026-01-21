@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
@@ -109,11 +109,11 @@ function NewRequestPage() {
 				to: '/learn/$lang/requests/$id',
 				params: { lang, id: data.id },
 			})
-			toast.success('Your request has been created!')
+			toastSuccess('Your request has been created!')
 		},
 		onError: (error) => {
 			console.error(error)
-			toast.error('There was an error creating your request.')
+			toastError('There was an error creating your request.')
 		},
 	})
 

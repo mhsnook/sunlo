@@ -17,7 +17,7 @@ import { Textarea } from '../ui/textarea'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
 import { phrasePlaylistsCollection } from '@/lib/collections'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { playlistCoverUrlify } from '@/lib/hooks'
@@ -58,9 +58,9 @@ export function UpdatePlaylistDialog({
 
 			if (error) throw error
 			setEditCoverImagePath(data.path)
-			toast.success('Image uploaded')
+			toastSuccess('Image uploaded')
 		} catch (error) {
-			toast.error('Failed to upload image')
+			toastError('Failed to upload image')
 			console.error(error)
 		} finally {
 			setIsUploadingImage(false)
@@ -86,13 +86,13 @@ export function UpdatePlaylistDialog({
 		},
 		onSuccess: (data: PhrasePlaylistType) => {
 			setOpen(false)
-			toast.success('Playlist updated!')
+			toastSuccess('Playlist updated!')
 			phrasePlaylistsCollection.utils.writeUpdate(
 				PhrasePlaylistSchema.parse(data)
 			)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update playlist: ${error.message}`)
+			toastError(`Failed to update playlist: ${error.message}`)
 		},
 	})
 

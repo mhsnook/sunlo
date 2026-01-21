@@ -85,6 +85,7 @@ export function NavUser() {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
+							data-testid="sidebar-user-menu-trigger"
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
 						>
 							<Avatar>
@@ -121,6 +122,7 @@ export function NavUser() {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							onClick={() => signOut.mutate()}
+							data-testid="sidebar-signout-button"
 							disabled={!isAuth || signOut.isPending}
 						>
 							<LogOut />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -38,7 +38,7 @@ export function DeletePlaylistDialog({
 		},
 		onSuccess: () => {
 			phrasePlaylistsCollection.utils.writeDelete(playlist.id)
-			toast.success('Playlist deleted')
+			toastSuccess('Playlist deleted')
 			// Navigate away from the deleted playlist page
 			void navigate({
 				to: '/learn/$lang',
@@ -46,7 +46,7 @@ export function DeletePlaylistDialog({
 			})
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to delete playlist: ${error.message}`)
+			toastError(`Failed to delete playlist: ${error.message}`)
 		},
 	})
 	return (

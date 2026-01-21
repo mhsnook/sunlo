@@ -3,7 +3,7 @@ import type { pids } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastSuccess } from '@/components/ui/sonner'
 import {
 	BookOpen,
 	CalendarClock,
@@ -245,7 +245,7 @@ function ReviewPageContent() {
 					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
 			initLocalReviewState(lang, dayString, data.countCards)
-			toast.success(
+			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)
 		},

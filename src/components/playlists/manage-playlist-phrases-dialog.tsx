@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	ChevronUp,
 	ChevronDown,
@@ -68,13 +68,13 @@ export function ManagePlaylistPhrasesDialog({
 		},
 		onSuccess: (data) => {
 			playlistPhraseLinksCollection.utils.writeInsert(data)
-			toast.success('Phrase added to playlist')
+			toastSuccess('Phrase added to playlist')
 		},
 		onError: (error: Error) => {
 			if (error.message === 'Phrase already in playlist') {
-				toast.error('Phrase is already in this playlist')
+				toastError('Phrase is already in this playlist')
 			} else {
-				toast.error(`Failed to add phrase: ${error.message}`)
+				toastError(`Failed to add phrase: ${error.message}`)
 			}
 		},
 	})
@@ -92,10 +92,10 @@ export function ManagePlaylistPhrasesDialog({
 		},
 		onSuccess: (linkId) => {
 			playlistPhraseLinksCollection.utils.writeDelete(linkId)
-			toast.success('Phrase removed from playlist')
+			toastSuccess('Phrase removed from playlist')
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to remove phrase: ${error.message}`)
+			toastError(`Failed to remove phrase: ${error.message}`)
 		},
 	})
 
@@ -148,7 +148,7 @@ export function ManagePlaylistPhrasesDialog({
 			playlistPhraseLinksCollection.utils.writeUpdate(data.target)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to reorder: ${error.message}`)
+			toastError(`Failed to reorder: ${error.message}`)
 		},
 	})
 
@@ -169,7 +169,7 @@ export function ManagePlaylistPhrasesDialog({
 			playlistPhraseLinksCollection.utils.writeUpdate(data)
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update link: ${error.message}`)
+			toastError(`Failed to update link: ${error.message}`)
 		},
 	})
 
