@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
 import { Send } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'

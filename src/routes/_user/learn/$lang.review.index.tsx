@@ -3,7 +3,7 @@ import type { pids } from '@/types/main'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
 import {
 	BookOpen,
 	CalendarClock,

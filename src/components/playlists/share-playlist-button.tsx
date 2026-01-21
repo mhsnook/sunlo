@@ -1,4 +1,4 @@
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/sonner'
 import { Share } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -18,7 +18,7 @@ export function SharePlaylistButton({ id }: { id: uuid }) {
 				url: `${window.location.origin}/learn/${playlist?.lang}/playlists/${playlist?.id}`,
 			})
 			.catch(() => {
-				toast.error('Failed to share')
+				toastError('Failed to share')
 			})
 	}
 

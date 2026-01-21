@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-router'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
 import { ChevronLeft } from 'lucide-react'
 
 import { Button, buttonVariants } from '@/components/ui/button'

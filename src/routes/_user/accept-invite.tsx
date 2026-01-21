@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
@@ -68,7 +68,7 @@ function AcceptInvitePage() {
 		},
 		onSuccess: () => toast.success('Response successful'), // now redirect somewhere?,
 		onError: (error) => {
-			toast.error('An error has occurred')
+			toastError('An error has occurred')
 			console.log(`The error accepting the friend invite:`, error)
 		},
 	})

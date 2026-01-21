@@ -5,7 +5,7 @@ import { PostgrestError } from '@supabase/supabase-js'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 
 import {
 	Briefcase,
@@ -161,7 +161,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			toast.success('Your deck settings have been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Daily Goal Form deck settings update error`, { error })
@@ -274,7 +274,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			toast.success('Your deck settings have been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Language Goal Form deck settings update error`, { error })
@@ -366,7 +366,7 @@ function PreferredTranslationLanguageForm({
 			toast.success('Your preferred translation language has been updated.')
 		},
 		onError: (error) => {
-			toast.error(
+			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
 			console.log(`Preferred translation lang update error`, { error })

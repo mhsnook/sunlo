@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import {
 	Bookmark,
 	BookmarkCheck,
@@ -184,8 +184,8 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 			}
 		},
 		onError: (error) => {
-			if (phrase.card) toast.error('There was an error updating this card')
-			else toast.error('There was an error adding this card to your deck')
+			if (phrase.card) toastError('There was an error updating this card')
+			else toastError('There was an error adding this card to your deck')
 			console.log(`error upserting card`, error)
 		},
 	})

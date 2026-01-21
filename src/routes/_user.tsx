@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toast } from '@/components/ui/sonner'
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'

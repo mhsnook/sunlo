@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import { Plus, ChevronUp } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 
@@ -103,7 +103,7 @@ export function InlinePhraseCreator({
 			onPhraseCreated(data.phrase.id)
 		},
 		onError: (error) => {
-			toast.error(`Failed to create phrase: ${error.message}`)
+			toastError(`Failed to create phrase: ${error.message}`)
 		},
 	})
 

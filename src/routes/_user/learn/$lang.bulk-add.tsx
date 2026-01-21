@@ -11,7 +11,7 @@ import {
 } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import { Plus, Trash2 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
@@ -271,7 +271,7 @@ function BulkAddPhrasesPage() {
 			}
 		},
 		onError: (error) => {
-			toast.error(`Error adding phrases: ${error.message}`)
+			toastError(`Error adding phrases: ${error.message}`)
 		},
 	})
 

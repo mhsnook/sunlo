@@ -3,7 +3,7 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
-import toast from 'react-hot-toast'
+import { toast, toastError } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
 
 import {
@@ -90,7 +90,7 @@ export function AddTranslationsDialog({
 			toast.success(`Translation added for ${phrase.text}`)
 		},
 		onError: (error) => {
-			toast.error(error.message)
+			toastError(error.message)
 		},
 	})
 	if (addTranslation.error)
@@ -199,7 +199,7 @@ function TranslationListItem({
 			toast.success('Translation updated')
 		},
 		onError: (error) => {
-			toast.error(error.message)
+			toastError(error.message)
 		},
 	})
 
@@ -228,7 +228,7 @@ function TranslationListItem({
 			toast.success(`Translation ${trans.archived ? 'un' : ''}archived`)
 		},
 		onError: (error) => {
-			toast.error(error.message)
+			toastError(error.message)
 		},
 	})
 

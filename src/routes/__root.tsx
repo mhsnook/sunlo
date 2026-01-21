@@ -5,7 +5,7 @@ import {
 	Outlet,
 	useNavigate,
 } from '@tanstack/react-router'
-import { Toaster } from 'react-hot-toast'
+import { Toasters } from '@/components/ui/sonner'
 
 import type { AuthState } from '@/lib/use-auth'
 import { SidebarProvider } from '@/components/ui/sidebar'
@@ -34,7 +34,7 @@ function RootComponent() {
 			<div className="@container mx-auto w-full">
 				<Outlet />
 			</div>
-			<Toaster position="top-center" />
+			<Toasters />
 		</SidebarProvider>
 	)
 }

@@ -1,7 +1,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
 import { count, eq } from '@tanstack/db'
-import toast from 'react-hot-toast'
+import { toastError } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
 import {
@@ -64,7 +64,7 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 			}
 		},
 		onError: (error: Error) => {
-			toast.error(`Failed to update upvote: ${error.message}`)
+			toastError(`Failed to update upvote: ${error.message}`)
 		},
 	})
 
