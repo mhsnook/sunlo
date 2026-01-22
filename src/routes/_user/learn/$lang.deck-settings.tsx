@@ -33,6 +33,11 @@ import { Tables } from '@/types/supabase'
 import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
+import {
+	useDeckSettingsIntro,
+	DeckSettingsIntro,
+	DeckSettingsCallout,
+} from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -44,6 +49,8 @@ function DeckSettingsPage() {
 	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
+	const { isOpen, showCallout, handleClose, handleReopen } =
+		useDeckSettingsIntro()
 
 	// Require auth for deck settings
 	if (!isAuth) {
@@ -60,34 +67,46 @@ function DeckSettingsPage() {
 		else throw new Error(`No deck found for language "${lang}"`)
 
 	return (
-		<Card style={style}>
-			<CardHeader>
-				<CardTitle>Deck Settings</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-6">
-				{!meta.archived ?
-					<>
-						<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
-						<DailyGoalForm
-							lang={meta.lang}
-							daily_review_goal={meta.daily_review_goal}
-						/>
-						<PreferredTranslationLanguageForm
-							lang={meta.lang}
-							preferred_translation_lang={meta.preferred_translation_lang}
-						/>
-					</>
-				:	null}
-				<CardHeader className="rounded shadow">
-					<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
-						<span>
-							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
-						</span>
-						<ArchiveDeckButton lang={meta.lang} archived={meta.archived} />
-					</CardTitle>
+		<>
+			{/* Settings intro dialog for first-time visitors */}
+			<DeckSettingsIntro open={isOpen} onClose={handleClose} />
+
+			{/* Small callout for returning users */}
+			{showCallout && (
+				<div className="mb-4">
+					<DeckSettingsCallout onShowMore={handleReopen} />
+				</div>
+			)}
+
+			<Card style={style}>
+				<CardHeader>
+					<CardTitle>Deck Settings</CardTitle>
 				</CardHeader>
-			</CardContent>
-		</Card>
+				<CardContent className="space-y-6">
+					{!meta.archived ?
+						<>
+							<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
+							<DailyGoalForm
+								lang={meta.lang}
+								daily_review_goal={meta.daily_review_goal}
+							/>
+							<PreferredTranslationLanguageForm
+								lang={meta.lang}
+								preferred_translation_lang={meta.preferred_translation_lang}
+							/>
+						</>
+					:	null}
+					<CardHeader className="rounded shadow">
+						<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
+							<span>
+								{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
+							</span>
+							<ArchiveDeckButton lang={meta.lang} archived={meta.archived} />
+						</CardTitle>
+					</CardHeader>
+				</CardContent>
+			</Card>
+		</>
 	)
 }
 
