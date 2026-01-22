@@ -28,14 +28,14 @@ const TEST_USERS = [
 type TestUser = (typeof TEST_USERS)[number]
 
 // ============================================================================
-// MESSAGE BUS - For coordination between personas
+// MESSAGE BUS - For coordination between actors
 // ============================================================================
 
 type MessageHandler = (payload?: unknown) => Promise<void> | void
 
 /**
- * MessageBus enables coordination between personas via named events.
- * Personas can emit messages and register watchers that fire when messages arrive.
+ * MessageBus enables coordination between actors via named events.
+ * Actors can emit messages and register watchers that fire when messages arrive.
  */
 export class MessageBus {
 	private handlers = new Map<string, Set<MessageHandler>>()
@@ -122,10 +122,10 @@ type ActionFn = (page: Page, locator?: Locator) => Promise<Locator | void>
  */
 export class ActionChain {
 	private actions: ActionFn[] = []
-	private persona: Persona
+	private actor: Actor
 
-	constructor(persona: Persona, initialAction?: ActionFn) {
-		this.persona = persona
+	constructor(actor: Actor, initialAction?: ActionFn) {
+		this.actor = actor
 		if (initialAction) {
 			this.actions.push(initialAction)
 		}
@@ -316,7 +316,7 @@ export class ActionChain {
 	 * Execute all accumulated actions
 	 */
 	async fire(): Promise<void> {
-		const page = this.persona.page
+		const page = this.actor.page
 		let currentLocator: Locator | undefined
 
 		for (const action of this.actions) {
@@ -332,15 +332,15 @@ export class ActionChain {
 	 */
 	async fireAndEmit(message: string): Promise<void> {
 		await this.fire()
-		await this.persona.emit(message)
+		await this.actor.emit(message)
 	}
 }
 
 // ============================================================================
-// PERSONA - The main actor class
+// ACTOR - The main test user class
 // ============================================================================
 
-export interface PersonaOptions {
+export interface ActorOptions {
 	user: TestUser
 	browser: Browser
 	messageBus: MessageBus
@@ -348,10 +348,10 @@ export interface PersonaOptions {
 }
 
 /**
- * Persona represents a test user with their own browser context and page.
- * Personas can perform actions and coordinate via the message bus.
+ * Actor represents a test user with their own browser context and page.
+ * Actors can perform actions and coordinate via the message bus.
  */
-export class Persona {
+export class Actor {
 	readonly id: string
 	readonly username: string
 	readonly email: string
@@ -364,7 +364,7 @@ export class Persona {
 	private baseURL: string
 	private watchers: Array<() => void> = []
 
-	constructor(options: PersonaOptions) {
+	constructor(options: ActorOptions) {
 		this.id = options.user.uid
 		this.username = options.user.username
 		this.email = options.user.email
@@ -375,12 +375,12 @@ export class Persona {
 	}
 
 	/**
-	 * Get the page for this persona (creates context if needed)
+	 * Get the page for this actor (creates context if needed)
 	 */
 	get page(): Page {
 		if (!this._page) {
 			throw new Error(
-				`Persona ${this.username} has not been initialized. Call init() first.`
+				`Actor ${this.username} has not been initialized. Call init() first.`
 			)
 		}
 		return this._page
@@ -392,14 +392,14 @@ export class Persona {
 	get context(): BrowserContext {
 		if (!this._context) {
 			throw new Error(
-				`Persona ${this.username} has not been initialized. Call init() first.`
+				`Actor ${this.username} has not been initialized. Call init() first.`
 			)
 		}
 		return this._context
 	}
 
 	/**
-	 * Initialize the persona with a fresh browser context
+	 * Initialize the actor with a fresh browser context
 	 */
 	async init(): Promise<void> {
 		this._context = await this.browser.newContext({
@@ -418,7 +418,7 @@ export class Persona {
 	}
 
 	/**
-	 * Log in as this persona
+	 * Log in as this actor
 	 */
 	async login(): Promise<void> {
 		await login(this.page, this.email, 'password')
@@ -557,7 +557,7 @@ export class Persona {
 	 */
 	watchFor(
 		trigger: string | (() => Promise<void>),
-		callback: string | ((persona: Persona) => Promise<void>)
+		callback: string | ((actor: Actor) => Promise<void>)
 	): void {
 		const handler = async () => {
 			// Execute callback
@@ -582,7 +582,7 @@ export class Persona {
 	 * Execute an action when a message is received
 	 */
 	when(message: string): {
-		then: (fn: (persona: Persona) => Promise<void>) => void
+		then: (fn: (actor: Actor) => Promise<void>) => void
 	} {
 		return {
 			then: (fn) => {
@@ -597,7 +597,7 @@ export class Persona {
 	// ========================================================================
 
 	/**
-	 * Clean up this persona's resources
+	 * Clean up this actor's resources
 	 */
 	async cleanup(): Promise<void> {
 		// Unsubscribe all watchers
@@ -616,30 +616,30 @@ export class Persona {
 }
 
 // ============================================================================
-// PERSONAS FACTORY
+// ACTORS FACTORY
 // ============================================================================
 
-export interface PersonasConfig {
+export interface ActorsConfig {
 	browser: Browser
 	baseURL?: string
 }
 
-export interface PersonasResult {
-	personas: Persona[]
+export interface ActorsResult {
+	actors: Actor[]
 	messageBus: MessageBus
 	cleanup: () => Promise<void>
 }
 
 /**
- * Create multiple personas for multi-user testing
+ * Create multiple actors for multi-user testing
  *
  * @param config - Browser and configuration
- * @param count - Number of personas to create (default: 2)
- * @returns Array of Persona instances with shared MessageBus
+ * @param count - Number of actors to create (default: 2)
+ * @returns Array of Actor instances with shared MessageBus
  *
  * Example:
  * ```ts
- * const { personas: [user1, user2], cleanup } = await createPersonas({ browser }, 2)
+ * const { actors: [user1, user2], cleanup } = await createActors({ browser }, 2)
  * try {
  *   await user1.login()
  *   await user2.login()
@@ -649,47 +649,47 @@ export interface PersonasResult {
  * }
  * ```
  */
-export async function createPersonas(
-	config: PersonasConfig,
+export async function createActors(
+	config: ActorsConfig,
 	count = 2
-): Promise<PersonasResult> {
+): Promise<ActorsResult> {
 	if (count > TEST_USERS.length) {
 		throw new Error(
-			`Cannot create ${count} personas. Only ${TEST_USERS.length} test users available.`
+			`Cannot create ${count} actors. Only ${TEST_USERS.length} test users available.`
 		)
 	}
 
 	const messageBus = new MessageBus()
 	const baseURL = config.baseURL ?? 'http://localhost:5173'
 
-	const personas: Persona[] = []
+	const actors: Actor[] = []
 
 	for (let i = 0; i < count; i++) {
-		const persona = new Persona({
+		const actor = new Actor({
 			user: TEST_USERS[i],
 			browser: config.browser,
 			messageBus,
 			baseURL,
 		})
-		await persona.init()
-		personas.push(persona)
+		await actor.init()
+		actors.push(actor)
 	}
 
 	const cleanup = async () => {
-		await Promise.all(personas.map((p) => p.cleanup()))
+		await Promise.all(actors.map((a) => a.cleanup()))
 		messageBus.clear()
 	}
 
-	return { personas, messageBus, cleanup }
+	return { actors, messageBus, cleanup }
 }
 
 /**
- * Playwright test fixture helper for using personas in tests
+ * Playwright test fixture helper for using actors in tests
  *
  * Example:
  * ```ts
  * test('friend request flow', async ({ browser }) => {
- *   const { personas: [user1, user2], cleanup } = await createPersonas({ browser })
+ *   const { actors: [user1, user2], cleanup } = await createActors({ browser })
  *
  *   try {
  *     await user1.login()

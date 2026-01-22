@@ -1,11 +1,11 @@
 /**
- * Friend Request Flow - Multi-persona test example
+ * Friend Request Flow - Multi-actor test example
  *
- * This test demonstrates the persona-based testing framework for scenarios
+ * This test demonstrates the actor-based testing framework for scenarios
  * that involve multiple users interacting with each other in real-time.
  */
-import { test, expect } from '@playwright/test'
-import { createPersonas, Persona } from '../helpers/personas'
+import { test } from '@playwright/test'
+import { createActors } from '../helpers/actors'
 import { supabase } from '../helpers/db-helpers'
 
 test.describe('Friend Request Flow', () => {
@@ -20,8 +20,8 @@ test.describe('Friend Request Flow', () => {
 	})
 
 	test('user can send and receive friend request', async ({ browser }) => {
-		const { personas, cleanup } = await createPersonas({ browser }, 2)
-		const [user1, user2] = personas
+		const { actors, cleanup } = await createActors({ browser }, 2)
+		const [user1, user2] = actors
 
 		try {
 			// Both users log in
@@ -62,20 +62,17 @@ test.describe('Friend Request Flow', () => {
 	})
 
 	test('coordinated friend request with message bus', async ({ browser }) => {
-		const { personas, messageBus, cleanup } = await createPersonas(
-			{ browser },
-			2
-		)
-		const [user1, user2] = personas
+		const { actors, cleanup } = await createActors({ browser }, 2)
+		const [user1, user2] = actors
 
 		try {
 			// Both users log in
 			await Promise.all([user1.login(), user2.login()])
 
 			// Set up coordination: when user2 sees request, they'll accept
-			user2.watchFor('friend request sent', async (persona) => {
-				await persona.openBrowserTo('/friends')
-				await persona
+			user2.watchFor('friend request sent', async (actor) => {
+				await actor.openBrowserTo('/friends')
+				await actor
 					.seeId('pending-requests-section')
 					.thenSeeId(`friend-request-${user1.id}`)
 					.clickId('accept-request')
@@ -104,8 +101,8 @@ test.describe('Friend Request Flow', () => {
 	})
 
 	test('chat message exchange between friends', async ({ browser }) => {
-		const { personas, cleanup } = await createPersonas({ browser }, 2)
-		const [user1, user2] = personas
+		const { actors, cleanup } = await createActors({ browser }, 2)
+		const [user1, user2] = actors
 
 		try {
 			await Promise.all([user1.login(), user2.login()])
@@ -143,7 +140,7 @@ test.describe('Friend Request Flow', () => {
  * This is closer to the original syntax requested in the issue:
  *
  * ```ts
- * const [user1, user2] = personas()
+ * const [user1, user2] = actors()
  *
  * // Register callback before action happens
  * user1.watchFor(
@@ -161,8 +158,8 @@ test.describe('Friend Request Flow', () => {
  *
  * user1.watchFor(
  *   'user2 accepts request',
- *   async (persona) =>
- *     persona.click('a')
+ *   async (actor) =>
+ *     actor.clickLink('a')
  *       .thenSeeId('friend-management-page-container')
  *       .thenSeeId('friends-list-container')
  *       .thenReadText(user2.username)
