@@ -502,20 +502,34 @@ const mutation = useMutation<DeckRow, PostgrestError, DeckGoalFormInputs>({
 
 - Test files in `/e2e/` directory
 - **NEVER use `page.goto()`** - it bypasses TanStack Router and breaks cache
-- **Always click through UI** using buttons and links
 - Create reusable navigation functions in `goto-helpers.ts`
 
-Example:
+#### Navigate through the UI
+
+Using buttons and links; never use `goto` (except in the very first part of the script) because we need to know that the cache is updating correctly, and a `goto` will cause a full refetch of all data.
 
 ```typescript
 // ✅ Correct - preserves router state
-await page
-	.locator('nav[data-slot=navigation-menu]')
-	.getByRole('link', { name: /feed/i })
-	.click()
+await page.getByTestId('app-nav-menu').getByTestId('nav-link--feed').click()
 
 // ❌ Wrong - breaks router cache
 await page.goto('/learn/hin/feed')
+```
+
+## Use UI Semantics for Test Selectors
+
+When writing tests, instead of using names or exacty display text for the user, use testids like "affirm-community-norms-button", and add them into the markup as a cue that will help devs understand the purpose and expectations for the page they're working with.
+
+```
+		// Dialog should close and we should see the welcome content
+		await expect(welcomeHeader).toBeVisible({ timeout: 5000 })
+
+		// ✅🙌 using UI semantics
+		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible()
+
+		// ❌🙅 using exact page text
+		await expect(page.getByText('What is Sunlo?')).toBeVisible()
+
 ```
 
 ## Additional Libraries
