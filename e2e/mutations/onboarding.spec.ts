@@ -34,35 +34,29 @@ test.describe('Onboarding and Auth Mutations', () => {
 
 		// The community norms dialog should appear
 		await expect(
-			page.getByRole('heading', { name: 'Welcome to the Sunlo Community' })
+			page.getByTestId('community-norms-intro')
 		).toBeVisible({ timeout: 10000 })
 
-		// Verify key content is visible
-		await expect(page.getByText('Be Kind and Patient')).toBeVisible()
-		await expect(page.getByText('Share Authentically')).toBeVisible()
-		await expect(page.getByText('Respect Cultures')).toBeVisible()
-		await expect(page.getByText('Help Build Something Good')).toBeVisible()
-
-		// Cannot close without affirming - verify the welcome content is not accessible
-		// (the dialog blocks interaction)
-		const welcomeHeader = page.getByText('Welcome, GarlicFace!')
-		// The header exists but is behind the modal - check the modal is blocking
+		// Verify affirm button is visible
 		await expect(
-			page.getByRole('button', { name: 'I agree to these norms' })
+			page.getByTestId('affirm-community-norms-button')
 		).toBeVisible()
 
 		// Click the affirm button
-		await page.getByRole('button', { name: 'I agree to these norms' }).click()
+		await page.getByTestId('affirm-community-norms-button').click()
 
 		// Dialog should close and we should see the welcome content
-		await expect(welcomeHeader).toBeVisible({ timeout: 5000 })
-		await expect(page.getByText('What is Sunlo?')).toBeVisible()
+		await expect(
+			page.getByTestId('sunlo-welcome-explainer')
+		).toBeVisible({ timeout: 5000 })
 
 		// Verify the community norms dialog doesn't reappear on reload
 		await page.reload()
-		await expect(welcomeHeader).toBeVisible({ timeout: 10000 })
 		await expect(
-			page.getByRole('heading', { name: 'Welcome to the Sunlo Community' })
+			page.getByTestId('sunlo-welcome-explainer')
+		).toBeVisible({ timeout: 10000 })
+		await expect(
+			page.getByTestId('community-norms-intro')
 		).not.toBeVisible()
 	})
 

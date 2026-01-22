@@ -94,7 +94,10 @@ function WelcomePage() {
 			</header>
 
 			{/* What is Sunlo Section */}
-			<section className="bg-card/50 rounded-lg border p-6">
+			<section
+				className="bg-card/50 rounded-lg border p-6"
+				data-testid="sunlo-welcome-explainer"
+			>
 				<h2 className="mb-4 text-xl font-bold">What is Sunlo?</h2>
 				<p className="text-muted-foreground mb-6">
 					Sunlo is a social flashcard app that helps you learn languages through
