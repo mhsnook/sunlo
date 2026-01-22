@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import {
-	markAsRead,
+	useMarkAsRead,
 	useOneFriendChat,
 	useOneRelation,
 } from '@/hooks/use-friends'
@@ -42,6 +42,7 @@ function ChatPage() {
 	const markedAsReadRef = useRef<Set<string>>(new Set())
 
 	const messagesQuery = useOneFriendChat(friendUid)
+	const markAsRead = useMarkAsRead()
 
 	// Mark messages as read when viewing the chat
 	useEffect(() => {
@@ -59,9 +60,9 @@ function ChatPage() {
 			// Mark these as processed before sending request
 			unreadMsgs.forEach((msg) => markedAsReadRef.current.add(msg.id))
 			const read_at = new Date().toISOString()
-			markAsRead({ friendUid, recipientUid: userId, read_at })
+			markAsRead.mutate({ friendUid, recipientUid: userId, read_at })
 		}
-	}, [messagesQuery.data, friendUid, userId])
+	}, [messagesQuery.data, friendUid, userId, markAsRead])
 
 	useLayoutEffect(() => {
 		const container = messagesContainerRef.current

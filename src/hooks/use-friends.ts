@@ -6,13 +6,7 @@ import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import {
-	and,
-	createOptimisticAction,
-	eq,
-	isNull,
-	useLiveQuery,
-} from '@tanstack/react-db'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import { chatMessagesCollection } from '@/lib/collections'
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, RelationsFullType } from '@/lib/live-collections'
@@ -187,42 +181,47 @@ export const useUnreadChatsCount = (): number | undefined => {
 	return uniqueSenders.size || undefined
 }
 
-export const markAsRead = createOptimisticAction({
-	onMutate: ({
-		friendUid,
-		recipientUid,
-		read_at,
-	}: {
-		friendUid: uuid
-		recipientUid: uuid
-		read_at: string
-	}) => {
-		// Find all unread messages from this friend and update them optimistically
-		chatMessagesCollection.forEach((message) => {
-			if (
-				message.sender_uid === friendUid &&
-				message.recipient_uid === recipientUid &&
-				message.read_at === null
-			) {
-				chatMessagesCollection.utils.writeUpdate({ id: message.id, read_at })
-			}
-		})
-	},
-	mutationFn: async ({
-		friendUid,
-		recipientUid,
-		read_at,
-	}: {
-		friendUid: uuid
-		recipientUid: uuid
-		read_at: string
-	}) => {
-		await supabase
-			.from('chat_message')
-			.update({ read_at })
-			.eq('sender_uid', friendUid)
-			.eq('recipient_uid', recipientUid)
-			.is('read_at', null)
-			.throwOnError()
-	},
-})
+export const useMarkAsRead = () => {
+	return useMutation({
+		mutationFn: async ({
+			friendUid,
+			recipientUid,
+			read_at,
+		}: {
+			friendUid: uuid
+			recipientUid: uuid
+			read_at: string
+		}) => {
+			await supabase
+				.from('chat_message')
+				.update({ read_at })
+				.eq('sender_uid', friendUid)
+				.eq('recipient_uid', recipientUid)
+				.is('read_at', null)
+				.throwOnError()
+		},
+		onMutate: ({ friendUid, recipientUid, read_at }) => {
+			// Optimistically update all unread messages from this friend
+			chatMessagesCollection.utils.writeBatch(() => {
+				chatMessagesCollection.forEach((message) => {
+					if (
+						message.sender_uid === friendUid &&
+						message.recipient_uid === recipientUid &&
+						message.read_at === null
+					) {
+						chatMessagesCollection.utils.writeUpdate({
+							id: message.id,
+							read_at,
+						})
+					}
+				})
+			})
+		},
+		/*
+		onSettled: async () => {
+			// Sync the data back after success or failure
+			await chatMessagesCollection.utils.refetch()
+		},
+		*/
+	})
+}
