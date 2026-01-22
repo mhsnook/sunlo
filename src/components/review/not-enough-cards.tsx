@@ -6,12 +6,10 @@ import { Link } from '@tanstack/react-router'
 export function NotEnoughCards({
 	lang,
 	countNeeded,
-	newCardsCount,
 	totalCards,
 }: {
 	lang: string
 	countNeeded: number
-	newCardsCount: number
 	totalCards: number
 }) {
 	const noCards = totalCards === 0
@@ -48,7 +46,7 @@ export function NotEnoughCards({
 			</div>
 			{noCards ? null : (
 				<>
-					Or click the big button below and get started with the {newCardsCount}{' '}
+					Or click the big button below and get started with the {totalCards}{' '}
 					cards you have.
 				</>
 			)}
