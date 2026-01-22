@@ -12,7 +12,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
-import { OctogonMinusDangerBadge } from '@/components/ui/badge'
+import { OctagonMinus } from 'lucide-react'
 import { TitleBar } from '@/types/main'
 
 export interface MyRouterContext {
@@ -45,8 +45,8 @@ function NotFoundComponent() {
 		void navigate({ to: '..' })
 	}
 	return (
-		<div className="flex h-full w-full items-center justify-center py-10">
-			<Callout variant="problem" Icon={OctogonMinusDangerBadge}>
+		<div className="flex h-full w-full items-center justify-center p-4">
+			<Callout variant="problem" Icon={OctagonMinus}>
 				<div className="flex flex-col gap-4">
 					<h1 className="text-2xl">404: Page not found</h1>
 					<p>We did not find a page matching that URL</p>
