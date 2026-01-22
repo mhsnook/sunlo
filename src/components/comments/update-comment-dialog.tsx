@@ -9,12 +9,12 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { MutationButton } from '@/components/ui/mutation-button'
 import { RequestCommentSchema, type RequestCommentType } from '@/lib/schemas'
 import { Textarea } from '../ui/textarea'
 import { commentsCollection } from '@/lib/collections'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
-import { useMutation } from '@tanstack/react-query'
+import { useMutationWithFeedback } from '@/hooks/use-mutation-feedback'
 
 export function UpdateCommentDialog({
 	comment,
@@ -24,28 +24,31 @@ export function UpdateCommentDialog({
 	const [editContent, setEditContent] = useState(comment.content)
 
 	const [open, setOpen] = useState(false)
-	// Update comment mutation
-	const mutation = useMutation({
-		mutationFn: async (content: string) => {
-			const { data, error } = await supabase
-				.from('request_comment')
-				.update({ content })
-				.eq('id', comment.id)
-				.select()
-				.single()
+	// Update comment mutation with visual feedback
+	const mutation = useMutationWithFeedback(
+		{
+			mutationFn: async (content: string) => {
+				const { data, error } = await supabase
+					.from('request_comment')
+					.update({ content })
+					.eq('id', comment.id)
+					.select()
+					.single()
 
-			if (error) throw error
-			return data
+				if (error) throw error
+				return data
+			},
+			onSuccess: (data: RequestCommentType) => {
+				setOpen(false)
+				commentsCollection.utils.writeUpdate(RequestCommentSchema.parse(data))
+			},
 		},
-		onSuccess: (data: RequestCommentType) => {
-			setOpen(false)
-			toastSuccess('Comment updated!')
-			commentsCollection.utils.writeUpdate(RequestCommentSchema.parse(data))
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update comment: ${error.message}`)
-		},
-	})
+		{
+			successMessage: 'Comment updated!',
+			errorMessage: (error) => `Failed to update comment: ${error.message}`,
+			enableRetry: true,
+		}
+	)
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -68,13 +71,13 @@ export function UpdateCommentDialog({
 						rows={4}
 					/>
 					<div className="flex gap-2">
-						<Button
+						<MutationButton
 							size="sm"
 							onClick={() => mutation.mutate(editContent)}
-							disabled={mutation.isPending}
+							{...mutation.buttonProps}
 						>
-							{mutation.isPending ? 'Saving...' : 'Save'}
-						</Button>
+							Save
+						</MutationButton>
 						<Button
 							size="sm"
 							variant="ghost"
