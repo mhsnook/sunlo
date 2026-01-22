@@ -1,43 +1,11 @@
-import { useState } from 'react'
 import { Heart, Users, Shield, Sparkles } from 'lucide-react'
 import { IntroSheet } from '@/components/intro-sheet'
-import { useIntroSeen, INTRO_KEYS } from '@/hooks/use-intro-seen'
-
-/**
- * Hook to manage the community norms intro state.
- * This one requires AFFIRMATION, not just seeing.
- */
-export function useCommunityNormsIntro() {
-	const { status, affirmed, markAffirmed } = useIntroSeen(
-		INTRO_KEYS.communityNorms
-	)
-	const [isOpen, setIsOpen] = useState(status === 'unseen')
-
-	const handleAffirm = () => {
-		markAffirmed()
-		setIsOpen(false)
-	}
-
-	const handleReopen = () => setIsOpen(true)
-
-	return {
-		isOpen,
-		affirmed,
-		needsAffirmation: !affirmed,
-		handleAffirm,
-		handleReopen,
-	}
-}
 
 interface CommunityNormsIntroProps {
 	open: boolean
 	onAffirm: () => void
 }
 
-/**
- * Community norms affirmation sheet.
- * This one REQUIRES affirmation - users can't just close it.
- */
 export function CommunityNormsIntro({
 	open,
 	onAffirm,

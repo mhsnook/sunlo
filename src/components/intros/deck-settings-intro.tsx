@@ -1,38 +1,11 @@
-import { useState } from 'react'
 import { IntroSheet } from '@/components/intro-sheet'
 import { IntroCallout } from '@/components/intro-callout'
-import { useIntroSeen, INTRO_KEYS } from '@/hooks/use-intro-seen'
-
-/**
- * Hook to manage the deck settings intro state.
- */
-export function useDeckSettingsIntro() {
-	const { status, markSeen } = useIntroSeen(INTRO_KEYS.deckSettings)
-	const [isOpen, setIsOpen] = useState(status === 'unseen')
-
-	const handleClose = () => {
-		markSeen()
-		setIsOpen(false)
-	}
-
-	const handleReopen = () => setIsOpen(true)
-
-	return {
-		isOpen,
-		showCallout: status !== 'unseen',
-		handleClose,
-		handleReopen,
-	}
-}
 
 interface DeckSettingsIntroProps {
 	open: boolean
 	onClose: () => void
 }
 
-/**
- * Full intro sheet for deck settings.
- */
 export function DeckSettingsIntro({ open, onClose }: DeckSettingsIntroProps) {
 	return (
 		<IntroSheet
@@ -98,9 +71,6 @@ interface DeckSettingsCalloutProps {
 	onShowMore: () => void
 }
 
-/**
- * Small callout for returning users.
- */
 export function DeckSettingsCallout({ onShowMore }: DeckSettingsCalloutProps) {
 	return (
 		<IntroCallout onShowMore={onShowMore}>

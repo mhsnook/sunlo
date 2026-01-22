@@ -1,44 +1,16 @@
-import { useState } from 'react'
 import { Link, useParams } from '@tanstack/react-router'
 import { Construction, Contact, Logs, MessageSquarePlus } from 'lucide-react'
 import { IntroSheet } from '@/components/intro-sheet'
 import { IntroCallout } from '@/components/intro-callout'
-import { useIntroSeen, INTRO_KEYS } from '@/hooks/use-intro-seen'
 import { useLanguageMeta } from '@/hooks/use-language'
 import { buttonVariants } from '@/components/ui/button'
 import languages from '@/lib/languages'
-
-/**
- * Hook to manage the new deck intro state.
- * Returns open state, handlers, and whether to show the callout instead.
- */
-export function useDeckNewIntro() {
-	const { status, markSeen } = useIntroSeen(INTRO_KEYS.deckNew)
-	const [isOpen, setIsOpen] = useState(status === 'unseen')
-
-	const handleClose = () => {
-		markSeen()
-		setIsOpen(false)
-	}
-
-	const handleReopen = () => setIsOpen(true)
-
-	return {
-		isOpen,
-		showCallout: status !== 'unseen',
-		handleClose,
-		handleReopen,
-	}
-}
 
 interface DeckNewIntroProps {
 	open: boolean
 	onClose: () => void
 }
 
-/**
- * Full intro sheet for new decks.
- */
 export function DeckNewIntro({ open, onClose }: DeckNewIntroProps) {
 	const { lang } = useParams({ strict: false })
 	const { data: languageMeta } = useLanguageMeta(lang ?? '')
@@ -127,9 +99,6 @@ interface DeckNewCalloutProps {
 	onShowMore: () => void
 }
 
-/**
- * Small callout for returning users who've seen the intro.
- */
 export function DeckNewCallout({ onShowMore }: DeckNewCalloutProps) {
 	const { lang } = useParams({ strict: false })
 	const { data: languageMeta } = useLanguageMeta(lang ?? '')
