@@ -45,6 +45,8 @@ import {
 	DailyReviewStateSchema,
 } from '@/lib/schemas'
 import { cardsCollection, reviewDaysCollection } from '@/lib/collections'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { ReviewIntro, ReviewCallout } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -78,6 +80,8 @@ function ReviewPageContent() {
 	const { data: deckPids } = useDeckPids(lang)
 	const initLocalReviewState = useInitialiseReviewStore()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
+
+	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('review')
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 
@@ -266,152 +270,170 @@ function ReviewPageContent() {
 		)
 
 	return (
-		<Card>
-			<CardHeader>
-				<CardTitle className="flex flex-row justify-between">
-					<div>Get Ready to review your {languages[lang]} cards</div>
-				</CardTitle>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				<p className="text-muted-foreground max-w-2xl text-lg">
-					Your personalized review session is prepared and waiting for you.
-					Here's what to expect...
-				</p>
-				{recs.language.length === 0 ?
-					<LanguageIsEmpty lang={lang} />
-				: recs.language_filtered.length === 0 ?
-					<LanguageFilteredIsEmpty lang={lang} />
-				:	<>
-						<div className="flex flex-row flex-wrap gap-4 text-sm">
-							<Card className="grow basis-40">
-								<CardHeader className="pb-2">
-									<CardTitle className="flex items-center gap-2 text-xl">
-										Total Cards
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
-										<BookOpen />
-										{allCardsForToday.length}
-									</p>
-									<p className="text-muted-foreground">
-										cards to work on today
-									</p>
-								</CardContent>
-							</Card>
-							<Card className="grow basis-40">
-								<CardHeader className="pb-2">
-									<CardTitle className="text-xl">Scheduled</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
-										<CalendarClock />
-										<span>{deckPids.today_active.length}</span>
-									</p>
-									<p className="text-muted-foreground">
-										scheduled based on past reviews
-									</p>
-								</CardContent>
-							</Card>
-							<Card className="grow basis-40">
-								<CardHeader className="pb-2">
-									<CardTitle className="text-xl">New Phrases</CardTitle>
-								</CardHeader>
-								<CardContent>
-									<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
-										<MessageSquarePlus />
-										<span>{freshCards.length}</span>
-									</p>
-									<p className="text-muted-foreground">
-										cards you haven't reviewed before
-									</p>
-								</CardContent>
-							</Card>
+		<>
+			{/* Review intro dialog for first-time reviewers */}
+			<ReviewIntro open={isOpen} onClose={handleClose} />
 
-							<Card className="grow basis-40">
-								<CardHeader className="pb-2">
-									<CardTitle className="flex items-center gap-2 text-xl">
-										<MessageSquare className="text-primary" />
-										Sources
-									</CardTitle>
-								</CardHeader>
-								<CardContent className="space-y-2">
-									<Flagged
-										name="friend_recommendations"
-										className="flex items-center justify-between"
-									>
-										<span className="text-muted-foreground">Friend recs:</span>
-										<Badge variant="outline">{friendRecsSelected.length}</Badge>
-									</Flagged>
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">Sunlo's recs:</span>
-										<Badge variant="outline">{algoRecsSelected.length}</Badge>
-									</div>
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">
-											From your deck:
-										</span>
-										<Badge variant="outline">
-											{cardsUnreviewedActiveSelected.length}
-										</Badge>
-									</div>
+			{/* Small callout for returning users */}
+			{showCallout && (
+				<div className="mb-4">
+					<ReviewCallout onShowMore={handleReopen} />
+				</div>
+			)}
 
-									<div className="flex items-center justify-between">
-										<span className="text-muted-foreground">
-											Public library:
-										</span>
-										<Badge variant="outline">
-											{libraryPhrasesSelected.length}
-										</Badge>
-									</div>
-								</CardContent>
-							</Card>
-						</div>
-						{!(meta.daily_review_goal > allCardsForToday.length) ? null : (
-							<NotEnoughCards
-								lang={lang}
-								countNeeded={meta.daily_review_goal}
-								newCardsCount={freshCards.length}
-								totalCards={allCardsForToday.length}
-							/>
-						)}
-						<div className="flex basis-80 flex-row flex-wrap justify-items-stretch gap-4">
-							<Drawer>
-								<DrawerTrigger asChild>
-									<Button
-										className="grow font-normal"
-										variant="secondary"
-										size="lg"
-										disabled={algosEmpty}
-									>
-										<Sparkles /> Recommendations ({algosInitialCount})
-									</Button>
-								</DrawerTrigger>
-								<SelectPhrasesToAddToReview
+			<Card>
+				<CardHeader>
+					<CardTitle className="flex flex-row justify-between">
+						<div>Get Ready to review your {languages[lang]} cards</div>
+					</CardTitle>
+				</CardHeader>
+				<CardContent className="space-y-4">
+					<p className="text-muted-foreground max-w-2xl text-lg">
+						Your personalized review session is prepared and waiting for you.
+						Here's what to expect...
+					</p>
+					{recs.language.length === 0 ?
+						<LanguageIsEmpty lang={lang} />
+					: recs.language_filtered.length === 0 ?
+						<LanguageFilteredIsEmpty lang={lang} />
+					:	<>
+							<div className="flex flex-row flex-wrap gap-4 text-sm">
+								<Card className="grow basis-40">
+									<CardHeader className="pb-2">
+										<CardTitle className="flex items-center gap-2 text-xl">
+											Total Cards
+										</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
+											<BookOpen />
+											{allCardsForToday.length}
+										</p>
+										<p className="text-muted-foreground">
+											cards to work on today
+										</p>
+									</CardContent>
+								</Card>
+								<Card className="grow basis-40">
+									<CardHeader className="pb-2">
+										<CardTitle className="text-xl">Scheduled</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
+											<CalendarClock />
+											<span>{deckPids.today_active.length}</span>
+										</p>
+										<p className="text-muted-foreground">
+											scheduled based on past reviews
+										</p>
+									</CardContent>
+								</Card>
+								<Card className="grow basis-40">
+									<CardHeader className="pb-2">
+										<CardTitle className="text-xl">New Phrases</CardTitle>
+									</CardHeader>
+									<CardContent>
+										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
+											<MessageSquarePlus />
+											<span>{freshCards.length}</span>
+										</p>
+										<p className="text-muted-foreground">
+											cards you haven't reviewed before
+										</p>
+									</CardContent>
+								</Card>
+
+								<Card className="grow basis-40">
+									<CardHeader className="pb-2">
+										<CardTitle className="flex items-center gap-2 text-xl">
+											<MessageSquare className="text-primary" />
+											Sources
+										</CardTitle>
+									</CardHeader>
+									<CardContent className="space-y-2">
+										<Flagged
+											name="friend_recommendations"
+											className="flex items-center justify-between"
+										>
+											<span className="text-muted-foreground">
+												Friend recs:
+											</span>
+											<Badge variant="outline">
+												{friendRecsSelected.length}
+											</Badge>
+										</Flagged>
+										<div className="flex items-center justify-between">
+											<span className="text-muted-foreground">
+												Sunlo's recs:
+											</span>
+											<Badge variant="outline">{algoRecsSelected.length}</Badge>
+										</div>
+										<div className="flex items-center justify-between">
+											<span className="text-muted-foreground">
+												From your deck:
+											</span>
+											<Badge variant="outline">
+												{cardsUnreviewedActiveSelected.length}
+											</Badge>
+										</div>
+
+										<div className="flex items-center justify-between">
+											<span className="text-muted-foreground">
+												Public library:
+											</span>
+											<Badge variant="outline">
+												{libraryPhrasesSelected.length}
+											</Badge>
+										</div>
+									</CardContent>
+								</Card>
+							</div>
+							{!(meta.daily_review_goal > allCardsForToday.length) ? null : (
+								<NotEnoughCards
 									lang={lang}
-									algoRecsSelected={algoRecsSelected}
-									setAlgoRecsSelected={setAlgoRecsSelected}
-									algoRecsFiltered={algoRecsFiltered}
-									// countOfCardsDesired={countNeeded2}
+									countNeeded={meta.daily_review_goal}
+									newCardsCount={freshCards.length}
+									totalCards={allCardsForToday.length}
 								/>
-							</Drawer>
-							<Button
-								onClick={(e) => {
-									e.preventDefault()
-									e.stopPropagation()
-									mutate()
-								}}
-								size="lg"
-								disabled={isPending || allCardsForToday.length === 0}
-								className="grow"
-							>
-								<Rocket className="h-5 w-5" />
-								Start Today's Review
-							</Button>
-						</div>
-					</>
-				}
-			</CardContent>
-		</Card>
+							)}
+							<div className="flex basis-80 flex-row flex-wrap justify-items-stretch gap-4">
+								<Drawer>
+									<DrawerTrigger asChild>
+										<Button
+											className="grow font-normal"
+											variant="secondary"
+											size="lg"
+											disabled={algosEmpty}
+										>
+											<Sparkles /> Recommendations ({algosInitialCount})
+										</Button>
+									</DrawerTrigger>
+									<SelectPhrasesToAddToReview
+										lang={lang}
+										algoRecsSelected={algoRecsSelected}
+										setAlgoRecsSelected={setAlgoRecsSelected}
+										algoRecsFiltered={algoRecsFiltered}
+										// countOfCardsDesired={countNeeded2}
+									/>
+								</Drawer>
+								<Button
+									onClick={(e) => {
+										e.preventDefault()
+										e.stopPropagation()
+										mutate()
+									}}
+									size="lg"
+									disabled={isPending || allCardsForToday.length === 0}
+									className="grow"
+								>
+									<Rocket className="h-5 w-5" />
+									Start Today's Review
+								</Button>
+							</div>
+						</>
+					}
+				</CardContent>
+			</Card>
+		</>
 	)
 }
