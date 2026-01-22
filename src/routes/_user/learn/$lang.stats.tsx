@@ -25,11 +25,8 @@ import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrase
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import { CSSProperties } from 'react'
-import {
-	useDeckNewIntro,
-	DeckNewIntro,
-	DeckNewCallout,
-} from '@/components/intros'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { DeckNewIntro, DeckNewCallout } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/stats')({
 	component: WelcomePage,
@@ -40,7 +37,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function WelcomePage() {
 	const { lang } = Route.useParams()
 	const { data: deck, isReady } = useDeckMeta(lang)
-	const { isOpen, showCallout, handleClose, handleReopen } = useDeckNewIntro()
+	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('deck-new')
 
 	if (isReady && !deck) throw new Error("Could not load this deck's data")
 	if (!deck) return null

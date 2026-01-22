@@ -35,10 +35,8 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import {
-	useCommunityNormsIntro,
-	CommunityNormsIntro,
-} from '@/components/intros'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { CommunityNormsIntro } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/welcome')({
 	component: WelcomePage,
@@ -60,7 +58,9 @@ function WelcomePage() {
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks } = useDecks()
 	const { userRole } = useAuth()
-	const { isOpen, needsAffirmation, handleAffirm } = useCommunityNormsIntro()
+	const { isOpen, needsAffirmation, handleAffirm } = useIntro('community-norms', {
+		requireAffirmation: true,
+	})
 
 	// Redirect to getting-started if no profile
 	if (!profileLoading && !profile) {

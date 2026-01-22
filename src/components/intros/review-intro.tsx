@@ -1,38 +1,11 @@
-import { useState } from 'react'
 import { IntroSheet } from '@/components/intro-sheet'
 import { IntroCallout } from '@/components/intro-callout'
-import { useIntroSeen, INTRO_KEYS } from '@/hooks/use-intro-seen'
-
-/**
- * Hook to manage the review intro state.
- */
-export function useReviewIntro() {
-	const { status, markSeen } = useIntroSeen(INTRO_KEYS.review)
-	const [isOpen, setIsOpen] = useState(status === 'unseen')
-
-	const handleClose = () => {
-		markSeen()
-		setIsOpen(false)
-	}
-
-	const handleReopen = () => setIsOpen(true)
-
-	return {
-		isOpen,
-		showCallout: status !== 'unseen',
-		handleClose,
-		handleReopen,
-	}
-}
 
 interface ReviewIntroProps {
 	open: boolean
 	onClose: () => void
 }
 
-/**
- * Full intro sheet explaining how reviews work.
- */
 export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 	return (
 		<IntroSheet
@@ -97,9 +70,6 @@ interface ReviewCalloutProps {
 	onShowMore: () => void
 }
 
-/**
- * Small callout for returning users.
- */
 export function ReviewCallout({ onShowMore }: ReviewCalloutProps) {
 	return (
 		<IntroCallout onShowMore={onShowMore}>

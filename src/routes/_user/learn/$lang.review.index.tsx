@@ -45,7 +45,8 @@ import {
 	DailyReviewStateSchema,
 } from '@/lib/schemas'
 import { cardsCollection, reviewDaysCollection } from '@/lib/collections'
-import { useReviewIntro, ReviewIntro, ReviewCallout } from '@/components/intros'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { ReviewIntro, ReviewCallout } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	component: ReviewPageSetup,
@@ -80,7 +81,7 @@ function ReviewPageContent() {
 	const initLocalReviewState = useInitialiseReviewStore()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
 
-	const { isOpen, showCallout, handleClose, handleReopen } = useReviewIntro()
+	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('review')
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
 

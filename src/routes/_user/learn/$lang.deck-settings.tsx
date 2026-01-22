@@ -33,11 +33,8 @@ import { Tables } from '@/types/supabase'
 import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
-import {
-	useDeckSettingsIntro,
-	DeckSettingsIntro,
-	DeckSettingsCallout,
-} from '@/components/intros'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { DeckSettingsIntro, DeckSettingsCallout } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -50,7 +47,7 @@ function DeckSettingsPage() {
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
 	const { isOpen, showCallout, handleClose, handleReopen } =
-		useDeckSettingsIntro()
+		useIntro('deck-settings')
 
 	// Require auth for deck settings
 	if (!isAuth) {
