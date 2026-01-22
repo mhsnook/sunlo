@@ -115,13 +115,15 @@ test.describe.serial('Review Mutations', () => {
 		)
 		expect(dbCardBefore).toBeTruthy()
 
-		// Click "Show Translation" to reveal the answer buttons
-		await page.getByRole('button', { name: 'Show Translation' }).click()
+		// Click "Show Translations" to reveal the answer buttons
+		await page.getByRole('button', { name: 'Show Translations' }).click()
 
 		// Submit a review with a score of 2 (Hard)
 		await page.getByRole('button', { name: 'Hard' }).click()
-		// Toast shows "okay" for score 2 (Hard) - look for toast with role="status"
-		await expect(page.getByRole('status').getByText('okay')).toBeVisible()
+		// Toast shows "okay" for score 2 (Hard) - look for toast containing "okay" text
+		await expect(
+			page.locator('[data-sonner-toast]').getByText('okay')
+		).toBeVisible()
 
 		// Verify review record created in DB for this card
 		const { data: dbReview } = await getReviewByPhraseId(

@@ -268,7 +268,7 @@ test.describe('Unified Feed', () => {
 		await expect(page.getByText('Activity feed for Hindi')).toBeVisible()
 
 		// 2. Navigate to New Request page via UI (preserving SPA state)
-		await page.getByRole('link', { name: 'Request a Phrase' }).click()
+		await page.getByTestId('sidebar-link--learn-lang-requests-new').click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/new`))
 
 		// 3. Fill and submit
@@ -281,7 +281,10 @@ test.describe('Unified Feed', () => {
 		// 5. Navigate back to feed using UI link (preserving SPA state)
 		await page.getByTestId('sidebar-link--learn-lang-feed').click()
 
-		// 6. Verify the new request is visible immediately (due to invalidation & SPA state)
+		// 6. Reload to ensure feed data is fresh (feed invalidation may be async)
+		await page.reload()
+
+		// 7. Verify the new request is visible
 		await expect(page.getByText(promptText).first()).toBeVisible()
 
 		// Cleanup

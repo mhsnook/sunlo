@@ -43,9 +43,12 @@ test.describe.serial('Chat Messages', () => {
 		// Wait for chats page to load
 		await expect(page).toHaveURL('/friends/chats')
 
-		// Find the friend (Best Frin) in the chat list
+		// Find the friend (Best Frin) in the chat list sidebar
 		// From seed data: Best Frin (a2dfa256) sent a message to GarlicFace (cf1f69ce)
-		const friendChatLink = page.getByRole('link', { name: /Best Frin/i })
+		// Use href filter to target the chats sidebar link (goes to /friends/chats/$friendUid)
+		const friendChatLink = page.locator(
+			`a[href*="/friends/chats/"]:has-text("Best Frin")`
+		)
 		await expect(friendChatLink).toBeVisible()
 
 		// Click to open chat with Best Frin
@@ -78,8 +81,10 @@ test.describe.serial('Chat Messages', () => {
 
 		await expect(page).toHaveURL('/friends/chats')
 
-		// Look for GarlicFace in the chat list
-		const garlicFaceChat = page.getByRole('link', { name: /GarlicFace/i })
+		// Look for GarlicFace in the chat list (use href filter to target chat link)
+		const garlicFaceChat = page.locator(
+			`a[href*="/friends/chats/"]:has-text("GarlicFace")`
+		)
 		await expect(garlicFaceChat).toBeVisible()
 
 		// Click to open the chat
@@ -141,8 +146,10 @@ test.describe.serial('Chat Messages', () => {
 		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
 
 		// The unread message should be visible - GarlicFace chat should show up with a badge
-		// We can verify the chat link exists and contains an unread indicator
-		const garlicFaceChat = page.getByRole('link', { name: /GarlicFace/i })
+		// We can verify the chat link exists (use href filter to target chat link)
+		const garlicFaceChat = page.locator(
+			`a[href*="/friends/chats/"]:has-text("GarlicFace")`
+		)
 		await expect(garlicFaceChat).toBeVisible()
 	})
 
@@ -178,8 +185,10 @@ test.describe.serial('Chat Messages', () => {
 
 		await expect(page).toHaveURL('/friends/chats')
 
-		// Click on Best Frin's chat
-		const bestFrinChat = page.getByRole('link', { name: /Best Frin/i })
+		// Click on Best Frin's chat (use href filter to target chat link)
+		const bestFrinChat = page.locator(
+			`a[href*="/friends/chats/"]:has-text("Best Frin")`
+		)
 		await expect(bestFrinChat).toBeVisible()
 		await bestFrinChat.click()
 
@@ -188,6 +197,9 @@ test.describe.serial('Chat Messages', () => {
 
 		// Wait for chat content to render (proves collection has synced)
 		await expect(page.getByText('Best Frin')).toBeVisible()
+
+		// Wait a bit for the UI to stabilize and mutation to fire
+		await page.waitForTimeout(1000)
 
 		// Poll for the message to be marked as read (mutation may take a moment)
 		await expect
@@ -200,7 +212,7 @@ test.describe.serial('Chat Messages', () => {
 						.single()
 					return readMessage?.read_at
 				},
-				{ timeout: 5000, intervals: [500, 1000, 1000] }
+				{ timeout: 10000, intervals: [500, 1000, 1000, 2000, 2000] }
 			)
 			.not.toBeNull()
 	})

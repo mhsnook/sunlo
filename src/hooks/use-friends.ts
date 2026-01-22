@@ -188,25 +188,40 @@ export const useUnreadChatsCount = (): number | undefined => {
 }
 
 export const markAsRead = createOptimisticAction({
-	onMutate: ({ friendUid, read_at }: { friendUid: uuid; read_at: string }) => {
+	onMutate: ({
+		friendUid,
+		recipientUid,
+		read_at,
+	}: {
+		friendUid: uuid
+		recipientUid: uuid
+		read_at: string
+	}) => {
 		// Find all unread messages from this friend and update them optimistically
 		chatMessagesCollection.forEach((message) => {
-			if (message.sender_uid === friendUid && message.read_at === null) {
+			if (
+				message.sender_uid === friendUid &&
+				message.recipient_uid === recipientUid &&
+				message.read_at === null
+			) {
 				chatMessagesCollection.utils.writeUpdate({ id: message.id, read_at })
 			}
 		})
 	},
 	mutationFn: async ({
 		friendUid,
+		recipientUid,
 		read_at,
 	}: {
 		friendUid: uuid
+		recipientUid: uuid
 		read_at: string
 	}) => {
 		await supabase
 			.from('chat_message')
 			.update({ read_at })
 			.eq('sender_uid', friendUid)
+			.eq('recipient_uid', recipientUid)
 			.is('read_at', null)
 			.throwOnError()
 	},

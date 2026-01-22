@@ -288,15 +288,15 @@ test.describe('Playlist Mutations', () => {
 				.locator('button[role="checkbox"]')
 			await phraseCheckbox.click()
 
-			// Close the phrase selector
-			await page.getByRole('button', { name: 'Done' }).click()
+			// Add the selected phrase(s) to the playlist
+			await page.getByRole('button', { name: /Add.*flashcard/i }).click()
 
 			// 8. Wait for success toast
 			await expect(page.getByText('Phrase added to playlist')).toBeVisible()
 
-			// 9. Verify phrase appears in manage dialog
+			// 9. Verify phrase appears in manage dialog (use first match)
 			await expect(
-				page.getByText(phraseToAdd.phrase.text, { exact: false })
+				page.getByText(phraseToAdd.phrase.text, { exact: false }).first()
 			).toBeVisible()
 
 			// 10. Verify link in database

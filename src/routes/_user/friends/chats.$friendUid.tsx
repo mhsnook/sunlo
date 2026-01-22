@@ -59,7 +59,7 @@ function ChatPage() {
 			// Mark these as processed before sending request
 			unreadMsgs.forEach((msg) => markedAsReadRef.current.add(msg.id))
 			const read_at = new Date().toISOString()
-			markAsRead({ friendUid, read_at })
+			markAsRead({ friendUid, recipientUid: userId, read_at })
 		}
 	}, [messagesQuery.data, friendUid, userId])
 

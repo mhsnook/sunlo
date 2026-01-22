@@ -22,6 +22,9 @@ test.describe('Card Status Mutations', () => {
 			throw new Error('Failed to create sample phrase before test')
 
 		try {
+			// Reload to refresh collections with the newly created phrase
+			await page.reload()
+
 			// Navigate to feed via UI
 			await page
 				.getByTestId(`deck-card-hin`)
@@ -146,6 +149,9 @@ test.describe('Card Status Mutations', () => {
 		try {
 			if (!phraseId)
 				throw new Error('Phrase ID not found after supposedly creating phrase')
+
+			// Reload to refresh collections with the newly created phrase
+			await page.reload()
 
 			// Navigate to deck feed via UI
 			await page

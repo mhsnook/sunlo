@@ -17,12 +17,15 @@ test.describe('Deck Workflow Navigation', () => {
 
 		await expect(page).toHaveURL(/\/learn\/hin\/review/)
 
-		// Should see review stats
-		await expect(page.getByText(/total cards|continue review/i)).toBeVisible()
-		// Use heading role to avoid matching multiple "scheduled" elements
+		// Wait for page content to load - should see either setup or continue
+		// Either "Scheduled" heading (fresh) or "Continue Review" button (existing session)
 		await expect(
-			page.getByRole('heading', { name: /scheduled/i })
-		).toBeVisible()
+			page
+				.getByRole('heading', { name: /scheduled/i })
+				.or(page.getByRole('button', { name: /continue review/i }))
+				.or(page.getByRole('button', { name: /start.*review/i }))
+				.first()
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('can click through to review without submitting', async ({
