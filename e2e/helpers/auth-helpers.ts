@@ -1,4 +1,5 @@
 import { expect, Page, TestInfo } from '@playwright/test'
+import { markAllIntrosAffirmed } from './collection-helpers'
 
 // Test user credentials and IDs from seed data
 export const TEST_USER_UID = 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18'
@@ -49,6 +50,8 @@ export function getTestUserForProject(testInfo: TestInfo): {
 export type LoginOptions = {
 	/** If true (default), automatically dismiss the welcome page if shown */
 	skipWelcome?: boolean
+	/** If true (default), pre-affirm all intro dialogs to prevent them blocking tests */
+	skipIntros?: boolean
 }
 
 /**
@@ -64,9 +67,15 @@ export async function login(
 	password: string,
 	options: LoginOptions = {}
 ): Promise<void> {
-	const { skipWelcome = true } = options
+	const { skipWelcome = true, skipIntros = true } = options
 
 	await page.goto('/login')
+
+	// Pre-affirm all intro dialogs to prevent them from blocking tests
+	if (skipIntros) {
+		await markAllIntrosAffirmed(page)
+	}
+
 	await page.fill('input[name="email"]', email)
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')

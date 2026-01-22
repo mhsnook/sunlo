@@ -35,6 +35,8 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { CommunityNormsIntro } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/welcome')({
 	component: WelcomePage,
@@ -56,6 +58,9 @@ function WelcomePage() {
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks } = useDecks()
 	const { userRole } = useAuth()
+	const { isOpen, needsAffirmation, handleAffirm } = useIntro('community-norms', {
+		requireAffirmation: true,
+	})
 
 	// Redirect to getting-started if no profile
 	if (!profileLoading && !profile) {
@@ -67,6 +72,11 @@ function WelcomePage() {
 
 	return (
 		<main style={style} className="space-y-8 pb-12">
+			{/* Community norms affirmation - required before using the app */}
+			{needsAffirmation && (
+				<CommunityNormsIntro open={isOpen} onAffirm={handleAffirm} />
+			)}
+
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
 				<div className="from-primary/20 to-primary/5 mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
@@ -84,7 +94,10 @@ function WelcomePage() {
 			</header>
 
 			{/* What is Sunlo Section */}
-			<section className="bg-card/50 rounded-lg border p-6">
+			<section
+				className="bg-card/50 rounded-lg border p-6"
+				data-testid="sunlo-welcome-explainer"
+			>
 				<h2 className="mb-4 text-xl font-bold">What is Sunlo?</h2>
 				<p className="text-muted-foreground mb-6">
 					Sunlo is a social flashcard app that helps you learn languages through
