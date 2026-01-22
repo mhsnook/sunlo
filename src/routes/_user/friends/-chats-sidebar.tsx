@@ -7,6 +7,7 @@ import {
 	useRelationFriends,
 	useUnreadMessages,
 } from '@/hooks/use-friends'
+import { ChatMessageType } from '@/lib/schemas'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
@@ -20,11 +21,17 @@ export function ChatsSidebar() {
 	const { data: chats, isLoading: isLoadingChats } = useAllChats()
 	const { data: unreadMessages } = useUnreadMessages()
 
-	// Count unread messages per friend
+	// Count unread messages per friend and track the oldest unread message
 	const unreadCountByFriend = new Map<string, number>()
+	const oldestUnreadByFriend = new Map<string, ChatMessageType>()
 	unreadMessages?.forEach((msg) => {
 		const count = unreadCountByFriend.get(msg.sender_uid) ?? 0
 		unreadCountByFriend.set(msg.sender_uid, count + 1)
+		// Keep the oldest unread message (first one we see, or replace if older)
+		const existing = oldestUnreadByFriend.get(msg.sender_uid)
+		if (!existing || msg.created_at < existing.created_at) {
+			oldestUnreadByFriend.set(msg.sender_uid, msg)
+		}
 	})
 
 	// Sort by recent activity (prioritize friends with unread messages)
@@ -59,8 +66,12 @@ export function ChatsSidebar() {
 						You have no friends to chat with yet.
 					</p>
 				:	sortedFriends.map((friend) => {
-						const thisChatMessage =
+						// Prefer showing the oldest unread message, otherwise show most recent
+						const oldestUnread = oldestUnreadByFriend.get(friend.uid)
+						const mostRecentMessage =
 							!chats || !chats[friend.uid] ? null : chats[friend.uid].at(-1)
+						const thisChatMessage = oldestUnread ?? mostRecentMessage
+						const isUnreadPreview = !!oldestUnread
 						const unreadCount = unreadCountByFriend.get(friend.uid)
 						return (
 							<Link
@@ -88,11 +99,21 @@ export function ChatsSidebar() {
 											<Badge size="sm">{unreadCount}</Badge>
 										:	null}
 									</div>
-									<p className="text-muted-foreground line-clamp-2 text-xs">
+									<p
+										className={cn(
+											'line-clamp-2 text-xs',
+											isUnreadPreview ?
+												'text-foreground font-medium'
+											:	'text-muted-foreground'
+										)}
+									>
 										{thisChatMessage ?
 											<>
 												{ago(thisChatMessage.created_at)} •{' '}
-												{thisChatMessage.isByMe ? 'you ' : 'they '}
+												{/* Unread messages are always from the friend */}
+												{'isByMe' in thisChatMessage && thisChatMessage.isByMe ?
+													'you '
+												:	'they '}
 												{thisChatMessage.message_type === 'recommendation' ?
 													'sent a recommendation'
 												: thisChatMessage.message_type === 'request' ?
