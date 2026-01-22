@@ -371,7 +371,6 @@ function ReviewPageContent() {
 							<NotEnoughCards
 								lang={lang}
 								countNeeded={meta.daily_review_goal}
-								newCardsCount={freshCards.length}
 								totalCards={allCardsForToday.length}
 							/>
 						)}
