@@ -22,6 +22,7 @@ export default function EmailField<T extends FieldValues>({
 				type="email"
 				className={error ? 'bg-destructive/20' : ''}
 				placeholder="email@domain"
+				data-testid="email-input"
 			/>
 			<ErrorLabel error={error} />
 		</div>

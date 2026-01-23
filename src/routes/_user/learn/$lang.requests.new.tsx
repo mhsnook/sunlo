@@ -139,6 +139,7 @@ function NewRequestPage() {
 			<CardContent>
 				<Form {...form}>
 					<form
+						data-testid="new-request-form"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={form.handleSubmit((data) =>
 							createRequestMutation.mutate(data)

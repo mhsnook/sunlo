@@ -71,6 +71,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 				:	<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							<SidebarMenuButton
+								data-testid="deck-switcher-button"
 								size="lg"
 								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
 							>
@@ -121,7 +122,11 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 									</div>
 								</Link>
 							</DropdownMenuItem>
-							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
+							<DropdownMenuItem
+								data-testid="new-deck-menu-item"
+								asChild
+								className="cursor-pointer gap-2 p-2"
+							>
 								<Link to="/learn/add-deck" onClick={setClosedMobile}>
 									<div className="bg-background flex size-6 items-center justify-center rounded border">
 										<Plus />

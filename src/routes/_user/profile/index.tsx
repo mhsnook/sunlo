@@ -22,7 +22,7 @@ function ProfilePage() {
 	if (!profile) return <Navigate to={`/getting-started`} />
 
 	return (
-		<main className="flex flex-col gap-6 px-px">
+		<main data-testid="profile-page" className="flex flex-col gap-6 px-px">
 			<AvatarSection />
 
 			<Card>
