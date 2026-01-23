@@ -75,6 +75,7 @@ export function ChatsSidebar() {
 						const unreadCount = unreadCountByFriend.get(friend.uid)
 						return (
 							<Link
+								data-testid="friend-chat-link"
 								key={friend.uid}
 								to="/friends/chats/$friendUid"
 								params={{ friendUid: friend.uid }}
@@ -96,7 +97,9 @@ export function ChatsSidebar() {
 									<div className="flex items-center gap-2 font-semibold">
 										<span>{friend.profile?.username}</span>
 										{unreadCount ?
-											<Badge size="sm">{unreadCount}</Badge>
+											<Badge data-testid="unread-badge" size="sm">
+												{unreadCount}
+											</Badge>
 										:	null}
 									</div>
 									<p

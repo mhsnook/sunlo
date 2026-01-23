@@ -27,7 +27,7 @@ function Page() {
 	const uid = Route.useRouteContext().auth.userId!
 
 	return (
-		<main style={style}>
+		<main style={style} data-testid="contributions-page">
 			<UserContributions uid={uid} lang={params.lang} />
 		</main>
 	)

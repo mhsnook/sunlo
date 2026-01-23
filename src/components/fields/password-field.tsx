@@ -22,6 +22,7 @@ export default function PasswordField<T extends FieldValues>({
 				className={error ? 'bg-destructive/20' : ''}
 				type="password"
 				placeholder="* * * * * * * *"
+				data-testid="password-input"
 			/>
 			<ErrorLabel error={error} />
 		</div>
