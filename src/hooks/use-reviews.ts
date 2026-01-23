@@ -399,3 +399,25 @@ export const useOneCardReviews = (
 				.orderBy(({ review }) => review.created_at, 'asc'),
 		[pid]
 	)
+
+/**
+ * Returns the number of cards remaining in an active review session for a language.
+ * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
+ */
+export function useActiveReviewRemaining(
+	lang: string,
+	day_session: string
+): number | null {
+	const { data } = useReviewsTodayStats(lang, day_session)
+
+	// No manifest means no review session has started
+	if (!data?.count) return null
+
+	// Calculate remaining based on stage
+	// Stage < 3: we're in first pass, remaining = unreviewed
+	// Stage >= 3: we're in re-review pass, remaining = again cards
+	// Stage 5 means complete
+	if (data.inferred.stage === 5) return 0
+	if (data.inferred.stage >= 3) return data.again
+	return data.unreviewed
+}

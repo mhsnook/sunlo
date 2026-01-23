@@ -96,6 +96,25 @@ export function todayString() {
 	return `${now.getFullYear()}-${makeItHave2Digits(now.getMonth() + 1)}-${makeItHave2Digits(now.getDate())}`
 }
 
+/**
+ * Calculate hours until the next 4am (when the day session resets)
+ */
+export function hoursUntil4am(): number {
+	const now = new Date()
+	const next4am = new Date(now)
+
+	// Set to 4am today
+	next4am.setHours(4, 0, 0, 0)
+
+	// If we're past 4am today, move to 4am tomorrow
+	if (now >= next4am) {
+		next4am.setDate(next4am.getDate() + 1)
+	}
+
+	const diffMs = next4am.getTime() - now.getTime()
+	return Math.ceil(diffMs / (1000 * 60 * 60))
+}
+
 export function min0(num: number) {
 	return Math.max(0, num)
 }
