@@ -261,7 +261,20 @@
 		@apply border-border;
 	}
 	body {
-		@apply text-foreground bg-gray-50 dark:bg-gray-800;
+		@apply text-foreground bg-background;
+		background-image: radial-gradient(
+			circle,
+			hsl(var(--hue) 40% 70% / 0.4) 1px,
+			transparent 1px
+		);
+		background-size: 20px 20px;
+	}
+	.dark body {
+		background-image: radial-gradient(
+			circle,
+			hsl(var(--hue) 30% 40% / 0.3) 1px,
+			transparent 1px
+		);
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);
