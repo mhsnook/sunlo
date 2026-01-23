@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react'
 import { NavMain } from '@/components/navs/nav-main'
 import { NavUser } from '@/components/navs/nav-user'
 import { DeckSwitcher } from '@/components/navs/deck-switcher'
+import { ActiveReviewCallout } from '@/components/navs/active-review-callout'
 import {
 	Sidebar,
 	SidebarContent,
@@ -20,6 +21,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 				<DeckSwitcher lang={lang} />
 			</SidebarHeader>
 			<SidebarContent>
+				<ActiveReviewCallout currentLang={lang} />
 				<NavMain lang={lang} />
 			</SidebarContent>
 			<SidebarFooter>

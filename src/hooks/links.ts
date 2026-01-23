@@ -3,6 +3,8 @@ import {
 	useRelationInvitations,
 	useUnreadChatsCount,
 } from '@/hooks/use-friends'
+import { useActiveReviewRemaining } from '@/hooks/use-reviews'
+import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'
 import {
@@ -217,6 +219,14 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: Rocket,
+			useBadge: () => {
+				const remaining = useActiveReviewRemaining(
+					lang as string,
+					todayString()
+				)
+				// Show badge only when there's an active review with remaining cards
+				return remaining && remaining > 0 ? remaining : undefined
+			},
 		},
 		'/learn/$lang/feed': {
 			name: `Feed`,

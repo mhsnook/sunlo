@@ -105,7 +105,8 @@ function CardSection({ card }: { card: CardMetaType }) {
 								Difficulty: {r.difficulty ? r.difficulty.toFixed(2) : 'N/A'}
 							</p>
 							<p>
-								Stability: {r.stability ? r.stability.toFixed(2) : 'N/A'} from{' '}
+								Stability: {r.stability ? r.stability.toFixed(2) : 'N/A'}{' '}
+								from{' '}
 							</p>
 							<span>
 								score: {r.score}

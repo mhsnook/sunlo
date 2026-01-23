@@ -3,6 +3,7 @@ import { createFileRoute, Outlet, notFound } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
 import { setTheme } from '@/lib/deck-themes'
+import { todayString } from '@/lib/utils'
 import {
 	cardReviewsCollection,
 	cardsCollection,
@@ -11,6 +12,7 @@ import {
 	reviewDaysCollection,
 } from '@/lib/collections'
 import { useDeckMeta } from '@/hooks/use-deck'
+import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
@@ -62,6 +64,8 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 function LanguageLayout() {
 	const params = Route.useParams()
 	const { data: deck } = useDeckMeta(params.lang)
+	const dayString = todayString()
+
 	useEffect(() => {
 		if (typeof deck?.theme === 'number')
 			setTheme(document.documentElement, deck?.theme ?? undefined)
@@ -69,5 +73,10 @@ function LanguageLayout() {
 			setTheme()
 		}
 	}, [deck?.theme])
-	return <Outlet />
+
+	return (
+		<ReviewStoreProvider lang={params.lang} dayString={dayString}>
+			<Outlet />
+		</ReviewStoreProvider>
+	)
 }
