@@ -172,4 +172,6 @@ export async function logout(page: Page): Promise<void> {
 	await page.getByTestId('sidebar-user-menu-trigger').click()
 	await page.getByTestId('sidebar-signout-button').click()
 	await page.waitForURL('/')
+	// Wait for page to fully load before any subsequent navigation
+	await page.waitForLoadState('networkidle')
 }

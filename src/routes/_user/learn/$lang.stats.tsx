@@ -37,7 +37,8 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function WelcomePage() {
 	const { lang } = Route.useParams()
 	const { data: deck, isReady } = useDeckMeta(lang)
-	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('deck-new')
+	const { isOpen, showCallout, handleClose, handleReopen } =
+		useIntro('deck-new')
 
 	if (isReady && !deck) throw new Error("Could not load this deck's data")
 	if (!deck) return null

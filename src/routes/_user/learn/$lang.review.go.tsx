@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
 	useCardIndex,
 	useNextValid,
+	usePreviewSeen,
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
@@ -14,6 +15,7 @@ import { useReviewDay } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
+import { NewCardsPreview } from '@/components/review/new-cards-preview'
 import { Button } from '@/components/ui/button'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 
@@ -34,10 +36,16 @@ function ReviewPage() {
 	const dayString = useReviewDayString()
 	const { data: day, isLoading } = useReviewDay(lang, dayString)
 	const stage = useReviewStage()
+	const previewSeen = usePreviewSeen()
 
 	if (isLoading) return <Loader />
 	if (!day?.manifest?.length || !stage)
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} /> // works for some reason
+
+	// Show preview of new cards before starting review (only in stage 1)
+	if (stage === 1 && !previewSeen) {
+		return <NewCardsPreview manifest={day.manifest} />
+	}
 
 	return (
 		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
