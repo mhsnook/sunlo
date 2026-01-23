@@ -260,8 +260,8 @@
 	* {
 		@apply border-border;
 	}
-	body {
-		@apply text-foreground bg-background;
+	html {
+		@apply bg-background;
 		background-image: radial-gradient(
 			circle,
 			hsl(var(--hue) 40% 70% / 0.4) 1px,
@@ -269,12 +269,15 @@
 		);
 		background-size: 20px 20px;
 	}
-	.dark body {
+	.dark html {
 		background-image: radial-gradient(
 			circle,
 			hsl(var(--hue) 30% 40% / 0.3) 1px,
 			transparent 1px
 		);
+	}
+	body {
+		@apply text-foreground;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);
