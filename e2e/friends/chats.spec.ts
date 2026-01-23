@@ -6,6 +6,7 @@ import {
 	TEST_USER_UID,
 	FIRST_USER_UID,
 } from '../helpers/auth-helpers'
+import { markAllIntrosAffirmed } from '../helpers/collection-helpers'
 import { supabase } from '../helpers/db-helpers'
 
 // Test users from seed data:
@@ -36,6 +37,9 @@ test.describe.serial('Chat Messages', () => {
 		page,
 	}) => {
 		await loginAsTestUser(page)
+
+		// Pre-affirm all intro dialogs to prevent them from blocking tests
+		await markAllIntrosAffirmed(page)
 
 		// Navigate to Chats via sidebar
 		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
@@ -140,17 +144,21 @@ test.describe.serial('Chat Messages', () => {
 
 		// Now log out and log in as Best Frin to verify unread badge
 		await logout(page)
+		// Small delay to let auth state settle before next login
+		await page.waitForTimeout(500)
 		await loginAsFirstUser(page)
 
 		// Navigate to Chats
 		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await expect(page).toHaveURL('/friends/chats')
 
 		// The unread message should be visible - GarlicFace chat should show up with a badge
 		// We can verify the chat link exists (use href filter to target chat link)
 		const garlicFaceChat = page.locator(
 			`a[href*="/friends/chats/"]:has-text("GarlicFace")`
 		)
-		await expect(garlicFaceChat).toBeVisible()
+		// Increase timeout for chat list to load, especially in Firefox
+		await expect(garlicFaceChat).toBeVisible({ timeout: 10000 })
 	})
 
 	test('Opening a chat marks messages as read', async ({ page }) => {
@@ -196,7 +204,7 @@ test.describe.serial('Chat Messages', () => {
 		await expect(page).toHaveURL(/\/friends\/chats\//)
 
 		// Wait for chat content to render (proves collection has synced)
-		await expect(page.getByText('Best Frin')).toBeVisible()
+		await expect(page.getByText('Best Frin').first()).toBeVisible()
 
 		// Wait a bit for the UI to stabilize and mutation to fire
 		await page.waitForTimeout(1000)

@@ -15,6 +15,8 @@ const DEFAULT_PROPS = {
 	countCards: -1,
 	stage: 0 as ReviewStages,
 	currentCardIndex: -1,
+	newCardPids: [] as pids,
+	previewSeen: false,
 }
 
 type ReviewProps = typeof DEFAULT_PROPS
@@ -28,10 +30,12 @@ type ReviewActions = {
 	gotoNext: () => void
 	gotoEnd: () => void
 	gotoPrevious: () => void
+	markPreviewSeen: () => void
 	init: (
 		lang: string,
 		dayString: string,
 		countCards: number,
+		newCardPids?: pids,
 		stage?: ReviewStages,
 		index?: number
 	) => void
@@ -78,11 +82,13 @@ export function createReviewStore(lang: string, dayString: string) {
 							set((state) => ({
 								currentCardIndex: state.countCards,
 							})),
+						markPreviewSeen: () => set({ previewSeen: true }),
 
 						init: (
 							lang: string,
 							dayString: string,
 							countCards: number,
+							newCardPids: pids = [],
 							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
@@ -98,6 +104,8 @@ export function createReviewStore(lang: string, dayString: string) {
 									lang,
 									dayString,
 									countCards,
+									newCardPids,
+									previewSeen: false,
 									stage,
 									currentCardIndex: index,
 								}
@@ -112,6 +120,8 @@ export function createReviewStore(lang: string, dayString: string) {
 						countCards: state.countCards,
 						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
+						newCardPids: state.newCardPids,
+						previewSeen: state.previewSeen,
 					}),
 				}
 			)
@@ -185,4 +195,12 @@ export const useInitialiseReviewStore = (): ReviewActions['init'] => {
 
 export const useReviewActions = (): ReviewActions => {
 	return useReviewStore((state) => state.actions)
+}
+
+export const useNewCardPids = (): pids => {
+	return useReviewStore((state) => state.newCardPids)
+}
+
+export const usePreviewSeen = (): boolean => {
+	return useReviewStore((state) => state.previewSeen)
 }

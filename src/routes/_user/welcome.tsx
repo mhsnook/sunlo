@@ -58,9 +58,12 @@ function WelcomePage() {
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks } = useDecks()
 	const { userRole } = useAuth()
-	const { isOpen, needsAffirmation, handleAffirm } = useIntro('community-norms', {
-		requireAffirmation: true,
-	})
+	const { isOpen, needsAffirmation, handleAffirm } = useIntro(
+		'community-norms',
+		{
+			requireAffirmation: true,
+		}
+	)
 
 	// Redirect to getting-started if no profile
 	if (!profileLoading && !profile) {

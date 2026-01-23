@@ -1,5 +1,6 @@
 import { test, expect, Page } from '@playwright/test'
 import { TEST_USER_EMAIL, TEST_USER_UID } from '../helpers/auth-helpers'
+import { markAllIntrosAffirmed } from '../helpers/collection-helpers'
 
 /**
  * These tests verify auth state transitions including:
@@ -25,6 +26,9 @@ async function loginViaUI(page: Page, email: string, password: string) {
 	}
 
 	await expect(page).toHaveURL(/\/login/)
+
+	// Pre-affirm all intro dialogs to prevent them from blocking tests
+	await markAllIntrosAffirmed(page)
 
 	// Fill in credentials
 	await page.fill('input[name="email"]', email)

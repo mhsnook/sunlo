@@ -215,6 +215,7 @@ function ReviewPageContent() {
 				countCards: allCardsForToday.length,
 				countCardsFresh: freshCards.length,
 				countCardsCreated: newCards.length,
+				freshCardPids: freshCards,
 				newCards,
 				reviewDay,
 			}
@@ -248,7 +249,8 @@ function ReviewPageContent() {
 				throw new Error(
 					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
-			initLocalReviewState(lang, dayString, data.countCards)
+			// Pass the fresh (new) card pids for the preview feature
+			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
 			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)

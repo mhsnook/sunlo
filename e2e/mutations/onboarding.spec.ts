@@ -33,9 +33,9 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await page.goto('/welcome')
 
 		// The community norms dialog should appear
-		await expect(
-			page.getByTestId('community-norms-intro')
-		).toBeVisible({ timeout: 10000 })
+		await expect(page.getByTestId('community-norms-intro')).toBeVisible({
+			timeout: 10000,
+		})
 
 		// Verify affirm button is visible
 		await expect(
@@ -46,18 +46,16 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await page.getByTestId('affirm-community-norms-button').click()
 
 		// Dialog should close and we should see the welcome content
-		await expect(
-			page.getByTestId('sunlo-welcome-explainer')
-		).toBeVisible({ timeout: 5000 })
+		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible({
+			timeout: 5000,
+		})
 
 		// Verify the community norms dialog doesn't reappear on reload
 		await page.reload()
-		await expect(
-			page.getByTestId('sunlo-welcome-explainer')
-		).toBeVisible({ timeout: 10000 })
-		await expect(
-			page.getByTestId('community-norms-intro')
-		).not.toBeVisible()
+		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible({
+			timeout: 10000,
+		})
+		await expect(page.getByTestId('community-norms-intro')).not.toBeVisible()
 	})
 
 	test.skip('welcomePage: displays features and actions', async ({ page }) => {
