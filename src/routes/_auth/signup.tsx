@@ -24,21 +24,21 @@ import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/use-auth'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { uuid } from '@/types/main'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
 import EmailField from '@/components/fields/email-field'
 import PasswordField from '@/components/fields/password-field'
 import { UserRoleField } from './-user-role-field'
 
-type SignUpProps = {
-	referrer?: uuid
-}
+const SearchSchema = z.object({
+	referrer: z.string().uuid().optional(),
+})
+
+type SignUpProps = z.infer<typeof SearchSchema>
 
 export const Route = createFileRoute('/_auth/signup')({
 	validateSearch: (search: Record<string, unknown>): SignUpProps => {
-		return {
-			referrer: (search.referrer as uuid) || undefined,
-		}
+		const result = SearchSchema.safeParse(search)
+		return result.success ? result.data : {}
 	},
 	beforeLoad: ({ context: { auth } }) => {
 		if (auth.isAuth) {
