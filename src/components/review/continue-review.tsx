@@ -75,6 +75,7 @@ export function ContinueReview({
 							lang,
 							dayString,
 							reviewStats.count,
+							[], // newCardPids - not available when continuing a review
 							reviewStats.inferred.stage,
 							reviewStats.inferred.index
 						)
