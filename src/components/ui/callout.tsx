@@ -34,14 +34,14 @@ export default function Callout({
 		<div
 			{...props}
 			className={cn(
-				'@container flex flex-col items-start gap-4 rounded border px-[5%] @lg:flex-row',
+				'flex flex-col items-start gap-4 rounded border px-[5%] @lg:flex-row',
 				variants[variant],
 				sizes[size],
 				className
 			)}
 		>
 			{!Icon ? null : (
-				<div className="w-6cqw bg-foreground/10 aspect-square rounded-full p-2">
+				<div className="bg-foreground/10 flex size-12 shrink-0 items-center justify-center rounded-full p-2 [&>svg]:size-6">
 					<Icon />
 				</div>
 			)}
