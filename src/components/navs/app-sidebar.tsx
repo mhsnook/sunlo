@@ -21,7 +21,7 @@ export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
 				<DeckSwitcher lang={lang} />
 			</SidebarHeader>
 			<SidebarContent>
-				<ActiveReviewCallout />
+				<ActiveReviewCallout currentLang={lang} />
 				<NavMain lang={lang} />
 			</SidebarContent>
 			<SidebarFooter>
