@@ -1,8 +1,12 @@
 import { test, expect } from '@playwright/test'
+import { markAllIntrosAffirmed } from './helpers/collection-helpers'
 
 test('login flow redirects and shows content', async ({ page }) => {
 	// 1. Navigate to /learn - should now be accessible without login
 	await page.goto('/learn')
+
+	// Pre-affirm all intro dialogs to prevent them blocking the test
+	await markAllIntrosAffirmed(page)
 
 	// 2. Verify we can see the page (no redirect to login)
 	await expect(page).toHaveURL(/\/learn/)
