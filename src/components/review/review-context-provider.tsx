@@ -33,3 +33,15 @@ export function useReviewStore<T>(selector: (state: ReviewState) => T): T {
 	if (!store) throw new Error('Missing ReviewStoreContext in the tree')
 	return useStore(store, selector)
 }
+
+/**
+ * Optional version of useReviewStore that returns null if outside context.
+ * Useful for components that may or may not be inside a ReviewStoreProvider.
+ */
+export function useReviewStoreOptional<T>(
+	selector: (state: ReviewState) => T
+): T | null {
+	const store = useContext(ReviewStoreContext)
+	const value = useStore(store!, selector)
+	return store ? value : null
+}
