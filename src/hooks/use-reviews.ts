@@ -403,6 +403,8 @@ export const useOneCardReviews = (
 /**
  * Returns the number of cards remaining in an active review session for a language.
  * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
+ *
+ * Checks the persisted store stage to handle user skips correctly.
  */
 export function useActiveReviewRemaining(
 	lang: string,
@@ -413,11 +415,33 @@ export function useActiveReviewRemaining(
 	// No manifest means no review session has started
 	if (!data?.count) return null
 
-	// Calculate remaining based on stage
-	// Stage < 3: we're in first pass, remaining = unreviewed
-	// Stage >= 3: we're in re-review pass, remaining = again cards
-	// Stage 5 means complete
-	if (data.inferred.stage === 5) return 0
-	if (data.inferred.stage >= 3) return data.again
+	// Check if user has skipped/completed via the persisted store
+	// The store key format is: sunlo-review:${lang}-${dayString}
+	const storeKey = `sunlo-review:${lang}-${day_session}`
+	let storeStage: number | null = null
+	try {
+		const stored = localStorage.getItem(storeKey)
+		if (stored) {
+			const parsed = JSON.parse(stored) as {
+				state?: { stage?: number }
+			} | null
+			storeStage =
+				typeof parsed?.state?.stage === 'number' ? parsed.state.stage : null
+		}
+	} catch {
+		// Ignore localStorage errors
+	}
+
+	// Use store stage if available, otherwise use inferred stage
+	const effectiveStage = storeStage ?? data.inferred.stage
+
+	// Stage 5 means truly complete (all reviewed, none need re-review)
+	// Stage 2+ means user skipped unreviewed cards
+	// Stage 4+ means user skipped re-review cards
+	if (effectiveStage >= 5) return 0
+	if (effectiveStage >= 4) return 0 // User skipped re-reviews
+	if (effectiveStage >= 3) return data.again > 0 ? data.again : 0
+	if (effectiveStage >= 2) return 0 // User skipped unreviewed cards
+
 	return data.unreviewed
 }
