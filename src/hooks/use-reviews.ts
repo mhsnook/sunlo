@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
@@ -400,6 +401,72 @@ export const useOneCardReviews = (
 		[pid]
 	)
 
+interface PersistedReviewState {
+	stage: number | null
+	currentCardIndex: number | null
+	countCards: number | null
+}
+
+function getPersistedReviewState(storeKey: string): PersistedReviewState {
+	try {
+		const stored = localStorage.getItem(storeKey)
+		if (stored) {
+			const parsed = JSON.parse(stored) as {
+				state?: { stage?: number; currentCardIndex?: number; countCards?: number }
+			} | null
+			return {
+				stage:
+					typeof parsed?.state?.stage === 'number' ? parsed.state.stage : null,
+				currentCardIndex:
+					typeof parsed?.state?.currentCardIndex === 'number' ?
+						parsed.state.currentCardIndex
+					:	null,
+				countCards:
+					typeof parsed?.state?.countCards === 'number' ?
+						parsed.state.countCards
+					:	null,
+			}
+		}
+	} catch {
+		// Ignore localStorage errors
+	}
+	return { stage: null, currentCardIndex: null, countCards: null }
+}
+
+/**
+ * Hook to reactively read persisted review store state.
+ * Uses useSyncExternalStore for proper React 18+ external store subscription.
+ */
+function usePersistedReviewState(storeKey: string): PersistedReviewState {
+	const subscribe = React.useCallback(
+		(callback: () => void) => {
+			// Listen for storage events (cross-tab changes)
+			const handleStorage = (e: StorageEvent) => {
+				if (e.key === storeKey) callback()
+			}
+			window.addEventListener('storage', handleStorage)
+
+			// Also poll periodically for same-tab changes since zustand persist
+			// doesn't fire storage events for same-tab updates
+			const interval = setInterval(callback, 500)
+
+			return () => {
+				window.removeEventListener('storage', handleStorage)
+				clearInterval(interval)
+			}
+		},
+		[storeKey]
+	)
+
+	const getSnapshot = React.useCallback(
+		() => JSON.stringify(getPersistedReviewState(storeKey)),
+		[storeKey]
+	)
+
+	const serialized = React.useSyncExternalStore(subscribe, getSnapshot)
+	return JSON.parse(serialized) as PersistedReviewState
+}
+
 /**
  * Returns the number of cards remaining in an active review session for a language.
  * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
@@ -415,21 +482,21 @@ export function useActiveReviewRemaining(
 	// No manifest means no review session has started
 	if (!data?.count) return null
 
+	// If all cards reviewed and none need re-review, truly complete
+	if (data.complete === data.count) return 0
+
 	// Check if user has skipped/completed via the persisted store
-	// The store key format is: sunlo-review:${lang}-${dayString}
 	const storeKey = `sunlo-review:${lang}-${day_session}`
-	let storeStage: number | null = null
-	try {
-		const stored = localStorage.getItem(storeKey)
-		if (stored) {
-			const parsed = JSON.parse(stored) as {
-				state?: { stage?: number }
-			} | null
-			storeStage =
-				typeof parsed?.state?.stage === 'number' ? parsed.state.stage : null
-		}
-	} catch {
-		// Ignore localStorage errors
+	const { stage: storeStage, currentCardIndex, countCards } =
+		usePersistedReviewState(storeKey)
+
+	// If user has navigated to/past the end, they're done with this session
+	if (
+		currentCardIndex !== null &&
+		countCards !== null &&
+		currentCardIndex >= countCards
+	) {
+		return 0
 	}
 
 	// Use store stage if available, otherwise use inferred stage
@@ -437,6 +504,7 @@ export function useActiveReviewRemaining(
 
 	// Stage 5 means truly complete (all reviewed, none need re-review)
 	// Stage 2+ means user skipped unreviewed cards
+	// Stage 3+ with no again cards means done with re-reviews
 	// Stage 4+ means user skipped re-review cards
 	if (effectiveStage >= 5) return 0
 	if (effectiveStage >= 4) return 0 // User skipped re-reviews
