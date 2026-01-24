@@ -1,4 +1,3 @@
-import * as React from 'react'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
@@ -11,6 +10,7 @@ import {
 	useReviewActions,
 	useReviewLang,
 } from './use-review-store'
+import { useReviewStoreOptional } from '@/components/review/review-context-provider'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
@@ -401,83 +401,23 @@ export const useOneCardReviews = (
 		[pid]
 	)
 
-interface PersistedReviewState {
-	stage: number | null
-	currentCardIndex: number | null
-	countCards: number | null
-}
-
-function getPersistedReviewState(storeKey: string): PersistedReviewState {
-	try {
-		const stored = localStorage.getItem(storeKey)
-		if (stored) {
-			const parsed = JSON.parse(stored) as {
-				state?: { stage?: number; currentCardIndex?: number; countCards?: number }
-			} | null
-			return {
-				stage:
-					typeof parsed?.state?.stage === 'number' ? parsed.state.stage : null,
-				currentCardIndex:
-					typeof parsed?.state?.currentCardIndex === 'number' ?
-						parsed.state.currentCardIndex
-					:	null,
-				countCards:
-					typeof parsed?.state?.countCards === 'number' ?
-						parsed.state.countCards
-					:	null,
-			}
-		}
-	} catch {
-		// Ignore localStorage errors
-	}
-	return { stage: null, currentCardIndex: null, countCards: null }
-}
-
-/**
- * Hook to reactively read persisted review store state.
- * Uses useSyncExternalStore for proper React 18+ external store subscription.
- */
-function usePersistedReviewState(storeKey: string): PersistedReviewState {
-	const subscribe = React.useCallback(
-		(callback: () => void) => {
-			// Listen for storage events (cross-tab changes)
-			const handleStorage = (e: StorageEvent) => {
-				if (e.key === storeKey) callback()
-			}
-			window.addEventListener('storage', handleStorage)
-
-			// Also poll periodically for same-tab changes since zustand persist
-			// doesn't fire storage events for same-tab updates
-			const interval = setInterval(callback, 500)
-
-			return () => {
-				window.removeEventListener('storage', handleStorage)
-				clearInterval(interval)
-			}
-		},
-		[storeKey]
-	)
-
-	const getSnapshot = React.useCallback(
-		() => JSON.stringify(getPersistedReviewState(storeKey)),
-		[storeKey]
-	)
-
-	const serialized = React.useSyncExternalStore(subscribe, getSnapshot)
-	return JSON.parse(serialized) as PersistedReviewState
-}
-
 /**
  * Returns the number of cards remaining in an active review session for a language.
  * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
  *
- * Checks the persisted store stage to handle user skips correctly.
+ * Uses the review store directly when in a language context (inside ReviewStoreProvider).
  */
 export function useActiveReviewRemaining(
 	lang: string,
-	day_session: string
+	_day_session: string
 ): number | null {
-	const { data } = useReviewsTodayStats(lang, day_session)
+	const { data } = useReviewsTodayStats(lang, _day_session)
+
+	// Get store state directly (will be null if outside ReviewStoreProvider)
+	const storeStage = useReviewStoreOptional((s) => s.stage)
+	const storeLang = useReviewStoreOptional((s) => s.lang)
+	const currentCardIndex = useReviewStoreOptional((s) => s.currentCardIndex)
+	const countCards = useReviewStoreOptional((s) => s.countCards)
 
 	// No manifest means no review session has started
 	if (!data?.count) return null
@@ -485,13 +425,12 @@ export function useActiveReviewRemaining(
 	// If all cards reviewed and none need re-review, truly complete
 	if (data.complete === data.count) return 0
 
-	// Check if user has skipped/completed via the persisted store
-	const storeKey = `sunlo-review:${lang}-${day_session}`
-	const { stage: storeStage, currentCardIndex, countCards } =
-		usePersistedReviewState(storeKey)
+	// Only use store values if we're in the matching language context
+	const storeMatchesLang = storeLang === lang
 
 	// If user has navigated to/past the end, they're done with this session
 	if (
+		storeMatchesLang &&
 		currentCardIndex !== null &&
 		countCards !== null &&
 		currentCardIndex >= countCards
@@ -499,8 +438,9 @@ export function useActiveReviewRemaining(
 		return 0
 	}
 
-	// Use store stage if available, otherwise use inferred stage
-	const effectiveStage = storeStage ?? data.inferred.stage
+	// Use store stage if available and matches, otherwise use inferred stage
+	const effectiveStage =
+		storeMatchesLang && storeStage !== null ? storeStage : data.inferred.stage
 
 	// Stage 5 means truly complete (all reviewed, none need re-review)
 	// Stage 2+ means user skipped unreviewed cards
