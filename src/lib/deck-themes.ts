@@ -19,7 +19,7 @@ export const themes: ThemeType[] = [
 	// 335 is adjacent to our true red, 355 is true red, 015 is adjacent
 	// this one just looks bad in dark mode bc the bg colour is bluish
 	// { name: 'brick', hue: 30, hueOff: 50, hueAccent: 30 },
-	{ name: 'sand', hue: 55, hueOff: 35, hueAccent: 55 },
+	// { name: 'sand', hue: 55, hueOff: 35, hueAccent: 55 },
 	// 75 looks sick, 95 and 115 look like owl
 	// 135 is adjacent to true green
 	// 155 is our true green,
