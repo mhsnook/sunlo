@@ -80,13 +80,14 @@ export function ActiveReviewCallout({
 
 	if (deckLangs.length === 0) return null
 
-	// If in a language context, only show that language's review
+	// If in a language context AND that language has an active review, show only that language
+	// Otherwise, show all languages with active reviews
 	const lang = currentLang ? String(currentLang) : undefined
+	const currentLangHasActiveReview = lang && activeReviews.has(lang)
+
 	const activeList =
-		lang ?
-			activeReviews.has(lang) ?
-				[{ lang, remaining: activeReviews.get(lang)! }]
-			:	[]
+		currentLangHasActiveReview ?
+			[{ lang, remaining: activeReviews.get(lang)! }]
 		:	Array.from(activeReviews.entries()).map(([lang, remaining]) => ({
 				lang,
 				remaining,
@@ -105,7 +106,7 @@ export function ActiveReviewCallout({
 					hoursLeft={hoursLeft}
 					setClosedMobile={setClosedMobile}
 					sidebarOpen={open}
-					singleLanguageMode={!!lang}
+					singleLanguageMode={!!currentLangHasActiveReview}
 				/>
 			)}
 		</>
