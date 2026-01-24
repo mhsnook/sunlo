@@ -24,6 +24,17 @@ export interface MyRouterContext {
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
+	head: () => ({
+		meta: [
+			{ charSet: 'utf-8' },
+			{ name: 'viewport', content: 'width=device-width, initial-scale=1' },
+			{ title: 'Sunlo: Social Language Learning' },
+		],
+		links: [
+			{ rel: 'icon', type: 'image/png', href: '/favicon.png', sizes: '180x180' },
+			{ rel: 'preload', href: '/images/logo-pair.png', as: 'image' },
+		],
+	}),
 	component: RootComponent,
 	notFoundComponent: NotFoundComponent,
 })
