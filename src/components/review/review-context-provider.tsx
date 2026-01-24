@@ -1,4 +1,11 @@
-import { createContext, PropsWithChildren, useContext, useRef } from 'react'
+import {
+	createContext,
+	PropsWithChildren,
+	useCallback,
+	useContext,
+	useRef,
+	useSyncExternalStore,
+} from 'react'
 import { useStore } from 'zustand'
 import {
 	createReviewStore,
@@ -36,12 +43,25 @@ export function useReviewStore<T>(selector: (state: ReviewState) => T): T {
 
 /**
  * Optional version of useReviewStore that returns null if outside context.
- * Useful for components that may or may not be inside a ReviewStoreProvider.
+ * Uses useSyncExternalStore directly to handle null store case.
  */
 export function useReviewStoreOptional<T>(
 	selector: (state: ReviewState) => T
 ): T | null {
 	const store = useContext(ReviewStoreContext)
-	const value = useStore(store!, selector)
-	return store ? value : null
+
+	const subscribe = useCallback(
+		(callback: () => void) => {
+			if (!store) return () => {}
+			return store.subscribe(callback)
+		},
+		[store]
+	)
+
+	const getSnapshot = useCallback(() => {
+		if (!store) return null
+		return selector(store.getState())
+	}, [store, selector])
+
+	return useSyncExternalStore(subscribe, getSnapshot)
 }
