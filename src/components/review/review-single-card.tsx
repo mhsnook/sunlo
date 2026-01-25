@@ -142,7 +142,11 @@ export function ReviewSingleCard({
 			</CardContent>
 			<CardFooter className="flex flex-col">
 				{!showAnswers ?
-					<Button className="mb-3 w-full" onClick={() => setRevealCard(true)}>
+					<Button
+						data-testid="reveal-answer-button"
+						className="mb-3 w-full"
+						onClick={() => setRevealCard(true)}
+					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
 				:	<div className="mb-3 grid w-full max-w-160 grid-cols-4">

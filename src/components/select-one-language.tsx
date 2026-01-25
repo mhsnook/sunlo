@@ -32,6 +32,7 @@ export function SelectOneLanguage({
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild className="w-full">
 				<Button
+					data-testid="language-selector-button"
 					variant="outline"
 					tabIndex={tabIndex}
 					role="combobox"
@@ -62,7 +63,11 @@ export function SelectOneLanguage({
 						)
 					}}
 				>
-					<CommandInput placeholder="Search language..." className="my-1" />
+					<CommandInput
+						placeholder="Search language..."
+						className="my-1"
+						data-testid="language-search-input"
+					/>
 					<CommandList>
 						<CommandEmpty>No language found.</CommandEmpty>
 						<CommandGroup>
@@ -75,6 +80,7 @@ export function SelectOneLanguage({
 										setOpen(false)
 									}}
 									disabled={disabled?.includes(language.value)}
+									data-testid={`language-option-${language.value}`}
 								>
 									<Check
 										className={`mr-2 size-4 ${value === language.value ? 'opacity-100' : 'opacity-0'}`}

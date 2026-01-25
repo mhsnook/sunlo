@@ -418,6 +418,7 @@ function ReviewPageContent() {
 									/>
 								</Drawer>
 								<Button
+									data-testid="start-review-button"
 									onClick={(e) => {
 										e.preventDefault()
 										e.stopPropagation()

@@ -27,7 +27,10 @@ function ChatsLayout() {
 	const isOnIndex = !!indexMatch
 
 	return (
-		<div className="flex h-full min-h-0 flex-1 flex-row gap-2">
+		<div
+			data-testid="chats-page"
+			className="flex h-full min-h-0 flex-1 flex-row gap-2"
+		>
 			{/* Sidebar: full width on small screens when on index, fixed width on large screens */}
 			<div
 				className={cn(

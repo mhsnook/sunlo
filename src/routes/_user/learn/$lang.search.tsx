@@ -101,7 +101,7 @@ function SearchTab() {
 	}
 
 	return (
-		<Card>
+		<Card data-testid="search-page">
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
 					<Sparkles className="size-5" />
@@ -115,6 +115,7 @@ function SearchTab() {
 				<div>
 					<Label htmlFor="phrase">Phrase</Label>
 					<Input
+						data-testid="search-input"
 						placeholder="Enter a phrase to search or add"
 						onChange={(e) => setLiveText(e.target.value)}
 						defaultValue={searchText}
