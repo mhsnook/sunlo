@@ -48,7 +48,11 @@ function ReviewPage() {
 	}
 
 	return (
-		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
+		<FlashCardReviewSession
+			data-testid="review-session-page"
+			manifest={day.manifest}
+			dayString={dayString}
+		/>
 	)
 }
 

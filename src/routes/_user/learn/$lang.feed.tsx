@@ -125,7 +125,7 @@ function DeckFeedPage() {
 	const params = Route.useParams()
 	const activeTab = search.feed ?? 'newest'
 	return (
-		<main style={style}>
+		<main data-testid="deck-feed-page" style={style}>
 			<div className="mb-2 flex flex-row items-center justify-between gap-2">
 				<Tabs
 					className="w-full"
@@ -136,7 +136,9 @@ function DeckFeedPage() {
 						<TabsList>
 							<TabsTrigger value="newest">Newest</TabsTrigger>
 							<TabsTrigger value="friends">Friends</TabsTrigger>
-							<TabsTrigger value="popular">Popular</TabsTrigger>
+							<TabsTrigger value="popular" data-testid="feed-tab-popular">
+								Popular
+							</TabsTrigger>
 						</TabsList>
 						<div className="flex items-center gap-2">
 							<FeedFilterMenu />

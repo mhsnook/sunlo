@@ -31,7 +31,7 @@ function PlaylistPage() {
 	const { data: rows } = useOnePlaylistPhrases(playlistId)
 
 	return (
-		<main style={style}>
+		<main style={style} data-testid="playlist-detail-page">
 			{isLoading ?
 				<Loader />
 			: !playlist ?

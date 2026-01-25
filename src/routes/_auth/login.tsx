@@ -78,7 +78,7 @@ function LoginForm() {
 
 	return (
 		<Card
-			className="mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]"
+			className="mx-auto mt-[10cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]"
 			style={style}
 		>
 			<CardHeader>
@@ -86,6 +86,7 @@ function LoginForm() {
 			</CardHeader>
 			<CardContent>
 				<form
+					data-testid="login-form"
 					role="form"
 					noValidate
 					className="space-y-4"
@@ -108,6 +109,7 @@ function LoginForm() {
 					</fieldset>
 					<div className="flex flex-row justify-between">
 						<Button
+							data-testid="login-submit-button"
 							type="submit"
 							disabled={isSubmitting}
 							// oxlint-disable-next-line tabindex-no-positive

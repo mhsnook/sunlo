@@ -79,6 +79,7 @@ function NewDeckFormInner() {
 				</CardHeader>
 				<CardContent>
 					<form
+						data-testid="add-deck-form"
 						name="new-deck"
 						noValidate
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -114,6 +115,7 @@ function NewDeckFormInner() {
 						<ErrorLabel error={errors.lang} />
 						<div className="flex flex-col items-center justify-between @lg:flex-row">
 							<Button
+								data-testid="start-learning-button"
 								type="submit"
 								variant="default"
 								size="lg"

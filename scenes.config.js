@@ -2,7 +2,7 @@ import { defineConfig } from '@scenetest/cli'
 
 export default defineConfig({
 	baseUrl: 'http://localhost:5173',
-	scenes: './scenes',
+	scenes: './scenetest',
 
 	// Define test users/actors
 	casts: [
