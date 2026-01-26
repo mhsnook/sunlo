@@ -24,6 +24,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 
 	return (
 		<div
+			role="link"
 			className="cursor-pointer"
 			onClick={handlePlaylistClick}
 			onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
