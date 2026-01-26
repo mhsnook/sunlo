@@ -14,6 +14,7 @@
 		"format:check": "prettier --check .",
 		"scene": "scenetest",
 		"test": "playwright test",
+		"test:ci": "SKIP_DB_RESET=1 playwright test --config=playwright.ci.config.ts e2e/navigations e2e/example.spec.ts e2e/login-flow.spec.ts",
 		"test:nav": "SKIP_DB_RESET=1 playwright test e2e/navigations e2e/example.spec.ts e2e/login-flow.spec.ts --fully-parallel",
 		"test-quick": "SKIP_DB_RESET=1 playwright test --ui e2e/navigations e2e/example.spec.ts e2e/login-flow.spec.ts  --fully-parallel",
 		"test:ui": "playwright test --ui",
