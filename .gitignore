@@ -35,4 +35,4 @@ keystore.properties
 # Scenetest, Playwright
 /playwright-report/
 /test-results/
-/scenetest-reports/
+/scenetest/.reports/
