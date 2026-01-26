@@ -99,7 +99,7 @@ export function UpdatePlaylistDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" title="Update playlist">
+				<Button variant="ghost" size="icon" aria-label="Update playlist">
 					<Edit className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
