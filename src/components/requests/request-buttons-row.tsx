@@ -32,7 +32,11 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				*/}
 				<Flagged>
 					<div className="flex flex-row items-center gap-2">
-						<Button variant="ghost" size="icon" title="Repost this request">
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label="Repost this request"
+						>
 							<Repeat />
 						</Button>
 						<span className="@max-sm:sr-only">
@@ -51,7 +55,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 							<Button
 								variant="ghost"
 								size="icon"
-								title="Add a comment"
+								aria-label="Add a comment"
 								data-testid="add-comment-trigger"
 							>
 								<MessagesSquare />
@@ -115,7 +119,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						<Button
 							variant="ghost"
 							size="icon"
-							title="Send this request to a friend"
+							aria-label="Send this request to a friend"
 							data-testid="send-to-friend-button"
 						>
 							<Send />

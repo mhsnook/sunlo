@@ -138,7 +138,7 @@ export function PlaylistItem({
 						<Button
 							variant="ghost"
 							size="icon"
-							title="Send this playlist to a friend"
+							aria-label="Send this playlist to a friend"
 							data-testid="send-playlist-to-friend-button"
 						>
 							<Send className="h-4 w-4" />

@@ -34,7 +34,13 @@ export default function SharePhraseButton({
 
 	if (!phrase || !navigator.share) return null
 	return (
-		<Button onClick={sharePhrase} variant={variant} size={size} {...props}>
+		<Button
+			onClick={sharePhrase}
+			variant={variant}
+			size={size}
+			aria-label="Share phrase"
+			{...props}
+		>
 			<Share className="h-4 w-4" />
 			{size !== 'icon' && <span className="hidden @md:block">{text}</span>}
 		</Button>
