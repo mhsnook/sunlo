@@ -200,6 +200,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 					// oxlint-disable-next-line click-events-have-key-events
 					<div
 						role="link"
+						tabIndex={0}
 						key={playlist.id}
 						className="cursor-pointer hover:shadow"
 						onClick={(e) => {
@@ -210,6 +211,14 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 								to: '/learn/$lang/playlists/$playlistId',
 								params: { lang: playlist.lang, playlistId: playlist.id },
 							})
+						}}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter') {
+								void navigate({
+									to: '/learn/$lang/playlists/$playlistId',
+									params: { lang: playlist.lang, playlistId: playlist.id },
+								})
+							}
 						}}
 					>
 						<PlaylistItem playlist={playlist} />

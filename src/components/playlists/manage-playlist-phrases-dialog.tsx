@@ -191,7 +191,7 @@ export function ManagePlaylistPhrasesDialog({
 			<Button
 				variant="ghost"
 				size="icon"
-				title="Manage phrases"
+				aria-label="Manage phrases"
 				onClick={() => setOpen(true)}
 			>
 				<ListMusic className="h-4 w-4" />
@@ -220,6 +220,7 @@ export function ManagePlaylistPhrasesDialog({
 												variant="ghost"
 												size="icon"
 												className="h-6 w-6"
+												aria-label="Move phrase up"
 												disabled={index === 0 || reorderMutation.isPending}
 												onClick={() =>
 													reorderMutation.mutate({
@@ -235,6 +236,7 @@ export function ManagePlaylistPhrasesDialog({
 												variant="ghost"
 												size="icon"
 												className="h-6 w-6"
+												aria-label="Move phrase down"
 												disabled={
 													index === phrasesData.length - 1 ||
 													reorderMutation.isPending
@@ -278,6 +280,7 @@ export function ManagePlaylistPhrasesDialog({
 											onClick={() => removePhraseMutation.mutate(item.link.id)}
 											variant="ghost"
 											size="icon"
+											aria-label="Remove phrase"
 											disabled={removePhraseMutation.isPending}
 										>
 											<Trash2 className="h-4 w-4" />

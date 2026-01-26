@@ -54,7 +54,7 @@ export function DeletePlaylistDialog({
 			<Button
 				variant="ghost"
 				size="icon"
-				title="Delete playlist"
+				aria-label="Delete playlist"
 				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />

@@ -162,6 +162,7 @@ export function ShowSelected({
 							<Button
 								size="icon"
 								variant="badge-outline"
+								aria-label={`Remove ${option.label}`}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {
 										handleUnselect(value)

@@ -107,7 +107,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="icon">
+				<Button variant="outline" size="icon" aria-label="Edit tags">
 					<Pencil />
 				</Button>
 			</DialogTrigger>
