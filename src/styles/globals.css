@@ -169,6 +169,16 @@
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 
+	/* Mutation button animations */
+	--animate-mutation-pulse: mutation-pulse 1.5s ease-in-out infinite;
+	--animate-mutation-success: mutation-success 0.4s ease-out forwards;
+	--animate-mutation-success-fade: mutation-success-fade 0.8s ease-out forwards;
+	--animate-mutation-error: mutation-error 0.5s ease-out;
+	--animate-mutation-check: mutation-check 0.4s
+		cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	--animate-mutation-x: mutation-x 0.3s ease-out forwards;
+	--animate-mutation-highlight: mutation-highlight 2s ease-out;
+
 	@keyframes accordion-down {
 		from {
 			height: 0;
@@ -183,6 +193,116 @@
 		}
 		to {
 			height: 0;
+		}
+	}
+
+	/* Mutation button: gentle pulse while pending */
+	@keyframes mutation-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+			box-shadow: 0 0 0 0 hsl(var(--hue) 60% 60% / 0.4);
+		}
+		50% {
+			opacity: 0.9;
+			transform: scale(1.01);
+			box-shadow: 0 0 0 6px hsl(var(--hue) 60% 60% / 0);
+		}
+	}
+
+	/* Mutation button: success state entrance */
+	@keyframes mutation-success {
+		0% {
+			box-shadow: 0 0 0 0 hsl(142 76% 36% / 0.6);
+		}
+		50% {
+			box-shadow: 0 0 0 8px hsl(142 76% 36% / 0.3);
+		}
+		100% {
+			box-shadow: 0 0 0 4px hsl(142 76% 36% / 0.15);
+		}
+	}
+
+	/* Mutation button: success fade back to normal */
+	@keyframes mutation-success-fade {
+		0% {
+			box-shadow: 0 0 0 4px hsl(142 76% 36% / 0.15);
+		}
+		100% {
+			box-shadow: 0 0 0 0 hsl(142 76% 36% / 0);
+		}
+	}
+
+	/* Mutation button: error shake */
+	@keyframes mutation-error {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		10%,
+		30%,
+		50%,
+		70%,
+		90% {
+			transform: translateX(-4px);
+		}
+		20%,
+		40%,
+		60%,
+		80% {
+			transform: translateX(4px);
+		}
+	}
+
+	/* Mutation button: checkmark pop-in */
+	@keyframes mutation-check {
+		0% {
+			opacity: 0;
+			transform: scale(0) rotate(-45deg);
+		}
+		50% {
+			opacity: 1;
+			transform: scale(1.2) rotate(0deg);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1) rotate(0deg);
+		}
+	}
+
+	/* Mutation button: X mark entrance */
+	@keyframes mutation-x {
+		0% {
+			opacity: 0;
+			transform: scale(0);
+		}
+		60% {
+			opacity: 1;
+			transform: scale(1.1);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+
+	/* Mutation button: highlight when scrolled to from toast */
+	@keyframes mutation-highlight {
+		0% {
+			box-shadow:
+				0 0 0 0 hsl(var(--hue) 80% 50% / 0.8),
+				0 0 20px 10px hsl(var(--hue) 80% 50% / 0.4);
+		}
+		25% {
+			box-shadow:
+				0 0 0 4px hsl(var(--hue) 80% 50% / 0.6),
+				0 0 30px 15px hsl(var(--hue) 80% 50% / 0.2);
+		}
+		100% {
+			box-shadow:
+				0 0 0 0 hsl(var(--hue) 80% 50% / 0),
+				0 0 0 0 hsl(var(--hue) 80% 50% / 0);
 		}
 	}
 }
