@@ -72,7 +72,7 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
 			<Button
 				variant={hasUpvoted ? 'outline-primary' : 'ghost'}
-				title={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}
+				aria-label={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}
 				size="icon"
 				data-testid="upvote-playlist-button"
 				onClick={(e) => {

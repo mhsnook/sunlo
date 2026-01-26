@@ -274,6 +274,7 @@ function NewPlaylistPageContent() {
 												variant="ghost"
 												size="icon"
 												className="h-6 w-6"
+												aria-label="Move phrase up"
 												disabled={index === 0}
 												onClick={() => movePhrase(index, 'up')}
 											>
@@ -284,6 +285,7 @@ function NewPlaylistPageContent() {
 												variant="ghost"
 												size="icon"
 												className="h-6 w-6"
+												aria-label="Move phrase down"
 												disabled={index === selectedPhrases.length - 1}
 												onClick={() => movePhrase(index, 'down')}
 											>
@@ -316,6 +318,7 @@ function NewPlaylistPageContent() {
 											onClick={() => removePhrase(phrase.phrase_id)}
 											variant="destructive-outline"
 											size="icon"
+											aria-label="Remove phrase"
 										>
 											<Trash className="h-4 w-4" />
 										</Button>

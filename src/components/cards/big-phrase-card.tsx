@@ -91,10 +91,14 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							</div>
 							<div className="flex flex-row items-center gap-2">
 								<Flagged>
-									<Button size="icon" variant="ghost">
+									<Button
+										size="icon"
+										variant="ghost"
+										aria-label="Delete phrase"
+									>
 										<Trash2 />
 									</Button>
-									<Button size="icon" variant="ghost">
+									<Button size="icon" variant="ghost" aria-label="Edit phrase">
 										<Edit />
 									</Button>
 								</Flagged>

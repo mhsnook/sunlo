@@ -434,6 +434,7 @@ function PhraseEntry({
 							type="button"
 							variant="ghost"
 							size="icon"
+							aria-label="Remove phrase"
 							onClick={() => removePhrase(phraseIndex)}
 							disabled={disableRemove}
 						>
@@ -493,6 +494,7 @@ function PhraseEntry({
 								variant="ghost"
 								size="icon"
 								onClick={() => removeTranslation(translationIndex)}
+								aria-label="Remove translation"
 								disabled={translationFields.length === 1}
 							>
 								<Trash2 className="text-destructive size-4" />
