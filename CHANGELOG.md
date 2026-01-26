@@ -1,5 +1,19 @@
 # Change Log
 
+## v0.12 - Show intro notices, add scenetest-js, peruse new cards, highlight ongoing review
+
+_26th Jan, 2026_
+
+- Add intro/onboarding system with useIntro hook, fix tests (bfbbf83d)
+- Highlight active/ongoing review in sidebar and nav (fb4d8675)
+- Add "peruse new cards" interface before review (0841b035)
+- Remove yellow/gold (sand) theme from rotation (888ee649)
+- Fix layout and display issues: 404 page, card count, button breakpoints (84226546)
+- Fix select dropdown not scrolling when content overflows viewport (f3438ab8)
+- Improve accessibility: aria-labels, role=link, keyboard support (a410afe0)
+- Show unread message in chat preview instead of most recent (46188118)
+- DX: Add scenetest-js, actors, scenes, lots of test labels (700d2c32)
+
 ## v0.11
 
 _21st Jan, 2026_
