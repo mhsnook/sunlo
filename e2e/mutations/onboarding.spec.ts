@@ -3,7 +3,7 @@ import { loginAsTestUser } from '../helpers/auth-helpers'
 import { clearAllIntroStates } from '../helpers/collection-helpers'
 
 test.describe('Onboarding and Auth Mutations', () => {
-	test.skip('signupMutation: create new account', async ({ _page }) => {
+	test.skip('signupMutation: create new account', async ({ page: _page }) => {
 		// TODO: Implement signup test
 		// Navigate to signup
 		// Fill form and submit
@@ -11,7 +11,9 @@ test.describe('Onboarding and Auth Mutations', () => {
 		// Verify confirmation email sent
 	})
 
-	test.skip('gettingStarted: complete onboarding flow', async ({ _page }) => {
+	test.skip('gettingStarted: complete onboarding flow', async ({
+		page: _page,
+	}) => {
 		// TODO: Implement onboarding test
 		// Complete signup
 		// Fill getting started form (username, languages_known)
@@ -58,7 +60,9 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await expect(page.getByTestId('community-norms-intro')).not.toBeVisible()
 	})
 
-	test.skip('welcomePage: displays features and actions', async ({ _page }) => {
+	test.skip('welcomePage: displays features and actions', async ({
+		page: _page,
+	}) => {
 		// TODO: Implement welcome page test
 		// Use login helper with { skipWelcome: false } to stay on welcome page
 		// Verify "What is Sunlo?" section is visible
@@ -68,7 +72,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 	})
 
 	test.skip('acceptInvite: accept friend invite during onboarding', async ({
-		_page,
+		page: _page,
 	}) => {
 		// TODO: Implement accept invite test
 		// Navigate with invite code
@@ -76,7 +80,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 		// Verify friend connection created
 	})
 
-	test.skip('useSignOut: logout user', async ({ _page }) => {
+	test.skip('useSignOut: logout user', async ({ page: _page }) => {
 		// TODO: Implement logout test
 		// Login first
 		// Logout
@@ -85,7 +89,9 @@ test.describe('Onboarding and Auth Mutations', () => {
 		// Verify redirect to login
 	})
 
-	test.skip('forgotPassword: password recovery flow', async ({ _page }) => {
+	test.skip('forgotPassword: password recovery flow', async ({
+		page: _page,
+	}) => {
 		// TODO: Implement password recovery test
 		// Navigate to forgot password
 		// Submit email
