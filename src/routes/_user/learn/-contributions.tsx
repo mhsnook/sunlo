@@ -199,6 +199,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 				{playlists.map((playlist) => (
 					// oxlint-disable-next-line click-events-have-key-events
 					<div
+						role="link"
 						key={playlist.id}
 						className="cursor-pointer hover:shadow"
 						onClick={(e) => {
