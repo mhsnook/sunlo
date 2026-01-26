@@ -128,6 +128,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/login': {
 			name: 'Log in',
+			title: 'Sign In',
 			link: {
 				to: '/login',
 			},
@@ -166,6 +167,7 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/signup': {
 			name: 'Sign up',
+			title: 'Get Started',
 			link: {
 				to: '/signup',
 			},
