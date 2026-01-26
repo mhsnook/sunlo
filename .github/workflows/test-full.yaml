@@ -1,10 +1,10 @@
-name: Tests
+name: Full Test Suite
 
 on:
-  push:
-    branches: [next]
-  pull_request:
-    branches: [next, main]
+  workflow_dispatch:
+  schedule:
+    # Monday 6am UTC
+    - cron: '0 6 * * 1'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -13,7 +13,7 @@ concurrency:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
@@ -49,13 +49,13 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
-      - name: Install Playwright Chromium
+      - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Install Playwright dependencies (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+        run: pnpm exec playwright install-deps
 
       # Cache Docker images for Supabase
       - name: Cache Docker images
@@ -72,8 +72,8 @@ jobs:
           echo "VITE_SUPABASE_ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY')" >> $GITHUB_ENV
           echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r '.SERVICE_ROLE_KEY')" >> $GITHUB_ENV
 
-      - name: Run navigation tests (chromium, parallel)
-        run: pnpm test:ci
+      - name: Run full test suite (all browsers)
+        run: pnpm test
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
