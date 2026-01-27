@@ -19,7 +19,7 @@ export default defineConfig({
 	/* Default to single worker for mutation tests; nav scripts override via --workers=auto */
 	workers: 1,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
-	reporter: 'html',
+	reporter: 'list',
 
 	/* Path to the global setup file. */
 	globalSetup: './e2e/global-setup.ts',
@@ -32,10 +32,10 @@ export default defineConfig({
 		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
 		trace: 'on-first-retry',
 
-		launchOptions: {
+		/*launchOptions: {
 			// 5 milliseconds delay (enough for react to tick) between actions
 			slowMo: 5,
-		},
+		},*/
 	},
 
 	/* Configure projects for major browsers */

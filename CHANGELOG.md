@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.13 - Tiny deploy
+
+_28th Jan, 2026_
+
+- Make the scenetest specs work
+
 ## v0.12 - Show intro notices, add scenetest-js, peruse new cards, highlight ongoing review
 
 _26th Jan, 2026_
