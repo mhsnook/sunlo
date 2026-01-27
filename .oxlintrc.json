@@ -8,6 +8,9 @@
 		"jsx-a11y",
 		"react-perf"
 	],
+	"rules": {
+		"jsx-a11y/prefer-tag-over-role": "warn"
+	},
 	"categories": {
 		"correctness": "error",
 		"suspicious": "warn",
