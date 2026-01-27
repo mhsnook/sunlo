@@ -27,7 +27,7 @@ export function NotEnoughCards({
 				}
 				.
 			</p>
-			<div className="my-2 flex flex-col gap-2 @xl:flex-row">
+			<div className="my-2 flex flex-wrap gap-2">
 				<Link
 					className={buttonVariants({ variant: 'outline' })}
 					to="/learn/$lang/feed"
