@@ -47,8 +47,18 @@ test.describe.serial('Review Mutations', () => {
 		// Wait for toast message
 		await expect(page.getByText(/Ready to go!/i)).toBeVisible()
 
-		// Should navigate to review go page (first card)
+		// Should navigate to review go page
 		await page.waitForURL(/\/learn\/hin\/review\/go/)
+
+		// Expect to see the new cards preview screen (either with new cards or the "no new cards" variant)
+		const previewNewCards = page.getByText('Preview New Cards')
+		const noNewCards = page.getByText("No new cards in today's review")
+		await expect(previewNewCards.or(noNewCards)).toBeVisible()
+
+		// Click "Start Review" to proceed past the preview
+		const startReviewButton = page.getByRole('button', { name: 'Start Review' })
+		await startReviewButton.scrollIntoViewIfNeeded()
+		await startReviewButton.click()
 
 		// Verify we're on a card review page
 		await expect(page.getByText(/Card \d+ of \d+/)).toBeVisible()
@@ -89,9 +99,27 @@ test.describe.serial('Review Mutations', () => {
 		await loginAsTestUser(page)
 		// Navigate to Hindi deck page
 		await goToDeckPage(page, TEST_LANG)
-		// We expect to see this "Continue Review" because we started it already in test step 0
-		// await expect(page.getByText('Continue Review'))
-		await page.getByText('Continue Review').click()
+		// We expect "Continue Review" because the session was created in test step 0
+		const continueBtn = page.getByRole('button', { name: 'Continue Review' })
+		await expect(continueBtn).toBeVisible({ timeout: 10000 })
+		await continueBtn.click()
+
+		// After clicking Continue Review, wait for navigation to /review/go
+		await expect(page).toHaveURL(/\/learn\/hin\/review\/go/, { timeout: 10000 })
+
+		// Handle the new cards preview screen (previewSeen resets per browser session)
+		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
+		const cardNav = page.getByText(/Card \d+ of \d+/)
+		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
+		if (await startReviewBtn.isVisible()) {
+			await startReviewBtn.scrollIntoViewIfNeeded()
+			await startReviewBtn.click()
+		}
+
+		// Wait for the card review UI to be ready
+		await expect(page.getByText(/Card \d+ of \d+/)).toBeVisible({
+			timeout: 10000,
+		})
 
 		// Grab the review's phrase_id
 		// open the context menu

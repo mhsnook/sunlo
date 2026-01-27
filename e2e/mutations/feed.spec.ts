@@ -424,8 +424,8 @@ test.describe('Unified Feed', () => {
 			// 7. Verify upvote count increased to 1
 			await expect(upvoteArea).toContainText('1')
 
-			// 8. Verify button state changed (title changes to "Remove vote")
-			await expect(upvoteButton).toHaveAttribute('title', 'Remove vote')
+			// 8. Verify button state changed (aria-label changes to "Remove vote")
+			await expect(upvoteButton).toHaveAttribute('aria-label', 'Remove vote')
 
 			// 9. Verify upvote in database
 			const { data: upvoteInDb } = await supabase

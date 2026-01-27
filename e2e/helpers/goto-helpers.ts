@@ -3,8 +3,10 @@ import languages from '../../src/lib/languages'
 
 export async function goToDeckPage(page, lang: string) {
 	// Navigate to Hindi deck page
-	await expect(page.getByText(languages[lang])).toBeVisible()
-	await page.getByText(languages[lang]).click()
+	await expect(
+		page.getByTestId('decks-list-grid').getByText(languages[lang])
+	).toBeVisible()
+	await page.getByTestId('decks-list-grid').getByText(languages[lang]).click()
 
 	// Should be on the deck feed page now
 	await expect(page).toHaveURL(`/learn/${lang}/feed`)

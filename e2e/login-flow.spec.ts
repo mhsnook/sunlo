@@ -45,7 +45,7 @@ test('login flow redirects and shows content', async ({ page }) => {
 	await expect(page.getByText('Your friends').first()).toBeVisible()
 
 	// Assert at least some decks
-	const decksGrid = page.locator('#decks-list-grid')
+	const decksGrid = page.getByTestId('decks-list-grid')
 	await expect(decksGrid).toBeVisible()
 	expect(await decksGrid.locator('> div').count()).toBeGreaterThanOrEqual(3)
 
