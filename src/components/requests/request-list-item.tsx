@@ -29,7 +29,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	return !request ? null : (
 			<CardlikeRequest
 				role="link"
-				className="hover:bg-primary/0 group cursor-pointer hover:shadow"
+				className="group cursor-pointer hover:shadow"
 				style={{ viewTransitionName: `request-${request.id}` } as CSSProperties}
 				onClick={handleRequestClick}
 				onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
