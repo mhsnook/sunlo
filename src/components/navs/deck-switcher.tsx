@@ -3,11 +3,11 @@ import { Link } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	ChevronsUpDown,
-	GalleryHorizontalEnd,
 	Globe,
 	Home,
 	Plus,
 	Users,
+	WalletCards,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -75,8 +75,8 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								size="lg"
 								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
 							>
-								<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
-									<GalleryHorizontalEnd />
+								<div className="bg-primary rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl text-white">
+									<WalletCards />
 								</div>
 								<div className="grid flex-1 text-left text-sm leading-tight">
 									<span className="truncate font-semibold">
