@@ -9,14 +9,14 @@ dotenv.config()
  */
 export default defineConfig({
 	testDir: './e2e',
-	/* Run tests in files in parallel - DISABLED to prevent cleanup race conditions */
-	/* Each browser project runs fully (including afterAll cleanup) before next browser starts */
+	/* Defaults to serial to prevent cleanup race conditions in mutation tests. */
+	/* Read-only test scripts (test:nav) override via CLI with --fully-parallel --workers=auto */
 	fullyParallel: false,
 	/* Fail the build on CI if you accidentally left test.only in the source code. */
 	forbidOnly: !!process.env.CI,
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
-	/* Use single worker to prevent test conflicts from parallel execution */
+	/* Default to single worker for mutation tests; nav scripts override via --workers=auto */
 	workers: 1,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: 'html',
