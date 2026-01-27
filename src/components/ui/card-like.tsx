@@ -8,7 +8,7 @@ export const CardlikeRequest = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
 	<Card
 		className={cn(
-			'bg-background @container rounded-none border shadow-none inset-shadow-sm',
+			'bg-background/50 @container rounded border shadow-none inset-shadow-sm',
 			className
 		)}
 		{...props}
