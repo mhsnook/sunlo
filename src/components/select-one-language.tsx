@@ -70,7 +70,7 @@ export function SelectOneLanguage({
 					/>
 					<CommandList>
 						<CommandEmpty>No language found.</CommandEmpty>
-						<CommandGroup>
+						<CommandGroup data-testid="language-options">
 							{allLanguageOptions.map((language) => (
 								<CommandItem
 									key={language.value}
@@ -80,7 +80,7 @@ export function SelectOneLanguage({
 										setOpen(false)
 									}}
 									disabled={disabled?.includes(language.value)}
-									data-testid={`language-option-${language.value}`}
+									data-key={language.value}
 								>
 									<Check
 										className={`mr-2 size-4 ${value === language.value ? 'opacity-100' : 'opacity-0'}`}

@@ -128,7 +128,8 @@ export function ReviewSingleCard({
 		<CardlikeFlashcard
 			className="mx-auto flex min-h-[80vh] w-full flex-col"
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
-			data-testid={`review-single-card-${pid}`}
+			data-name="flashcard"
+			data-key={pid}
 		>
 			<CardContent className="relative flex grow flex-col items-center justify-center gap-4 pt-0">
 				<ContextMenu phrase={phrase} />
@@ -149,10 +150,13 @@ export function ReviewSingleCard({
 					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
-				:	<div className="mb-3 grid w-full max-w-160 grid-cols-4">
+				:	<div
+						data-name="answer-buttons-row"
+						className="mb-3 grid w-full max-w-160 grid-cols-4"
+					>
 						<Button
 							variant="default"
-							data-testid="review-again-button"
+							data-testid="rating-again-button"
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
@@ -166,7 +170,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
-							data-testid="review-hard-button"
+							data-testid="rating-hard-button"
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={cn(
@@ -178,7 +182,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
-							data-testid="review-good-button"
+							data-testid="rating-good-button"
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
@@ -190,7 +194,7 @@ export function ReviewSingleCard({
 						</Button>
 						<Button
 							variant="default"
-							data-testid="review-easy-button"
+							data-testid="rating-easy-button"
 							className={cn(
 								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! hover:border-white! hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''

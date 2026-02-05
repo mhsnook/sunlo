@@ -215,6 +215,8 @@ export function CardStatusDropdown({
 						variant="secondary"
 						size="sm"
 						className="m-0 min-w-28 justify-between px-1.5"
+						data-name="card-status-dropdown"
+						data-key={phrase.id}
 					>
 						<span className="flex items-center justify-center [&_svg]:size-4">
 							{cardMutation.isSuccess ?
@@ -235,6 +237,7 @@ export function CardStatusDropdown({
 					: !card ?
 						<DropdownMenuItem
 							onClick={() => cardMutation.mutate({ status: 'active' })}
+							aria-label="add-to-deck-option"
 						>
 							<StatusSpan choice="nocard" />
 						</DropdownMenuItem>
@@ -246,6 +249,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'active' })
 								}
 								className={card?.status === 'active' ? 'bg-primary/30' : ''}
+								aria-label="activate-card-option"
 							>
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
@@ -256,6 +260,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'learned' })
 								}
 								className={card?.status === 'learned' ? 'bg-primary/30' : ''}
+								aria-label="set-learned-option"
 							>
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
@@ -266,6 +271,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'skipped' })
 								}
 								className={card?.status === 'skipped' ? 'bg-primary/30' : ''}
+								aria-label="ignore-card-option"
 							>
 								<StatusSpan choice="skipped" />
 							</DropdownMenuItem>
@@ -288,6 +294,8 @@ export function CardStatusHeart({
 		<Button
 			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
 			size="icon"
+			data-name="card-status-heart"
+			data-key={phrase.id}
 			onClick={() =>
 				requireAuth(
 					() => mutation.mutate({ status: statusToPost }),

@@ -25,7 +25,10 @@ export function WhenComplete() {
 		: 'c'
 
 	return (
-		<Card className="mx-auto flex min-h-[80vh] w-full flex-col items-center justify-center pt-12">
+		<Card
+			className="mx-auto flex min-h-[80vh] w-full flex-col items-center justify-center pt-12"
+			data-testid="review-complete-page"
+		>
 			<CardContent className="flex grow flex-col justify-center gap-6">
 				{showWhich === 'a' ?
 					<>
