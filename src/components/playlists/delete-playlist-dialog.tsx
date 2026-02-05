@@ -55,11 +55,12 @@ export function DeletePlaylistDialog({
 				variant="ghost"
 				size="icon"
 				aria-label="Delete playlist"
+				data-testid="delete-playlist-button"
 				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />
 			</Button>
-			<AlertDialogContent>
+			<AlertDialogContent data-testid="delete-playlist-dialog">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete playlist?</AlertDialogTitle>
 					<AlertDialogDescription>
@@ -72,6 +73,7 @@ export function DeletePlaylistDialog({
 					<AlertDialogAction
 						disabled={mutation.isPending}
 						onClick={() => mutation.mutate()}
+						data-testid="confirm-delete-button"
 						className="bg-destructive text-destructive-foreground"
 					>
 						Delete

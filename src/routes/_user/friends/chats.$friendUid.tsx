@@ -112,7 +112,11 @@ function ChatPage() {
 			</CardHeader>
 			<CardContent className="min-h-0 flex-1 p-0">
 				<ScrollArea className="h-full px-4">
-					<div ref={messagesContainerRef} className="space-y-4 pt-4 pb-2">
+					<div
+						ref={messagesContainerRef}
+						className="space-y-4 pt-4 pb-2"
+						data-testid="chat-messages-container"
+					>
 						{!messagesQuery.data?.length ?
 							<EmptyChat profile={relation.profile} />
 						:	messagesQuery.data?.map((msg) => {
@@ -121,6 +125,7 @@ function ChatPage() {
 								return (
 									<div
 										key={msg.id}
+										data-testid="chat-message-bubble"
 										className={cn(
 											'max-w-[80%] items-start gap-2',
 											isMine ?

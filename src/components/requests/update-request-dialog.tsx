@@ -52,11 +52,16 @@ export function UpdateRequestDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" title="Update request">
+				<Button
+					variant="ghost"
+					size="icon"
+					title="Update request"
+					data-testid="update-request-button"
+				>
 					<Edit className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent data-testid="edit-request-dialog">
 				<DialogHeader>
 					<DialogTitle>Edit Request</DialogTitle>
 					<DialogDescription className="sr-only">
@@ -65,6 +70,7 @@ export function UpdateRequestDialog({
 				</DialogHeader>
 				<div className="mt-2 space-y-2">
 					<Textarea
+						data-testid="edit-request-prompt-input"
 						value={editPrompt}
 						onChange={(e) => setEditPrompt(e.target.value)}
 						rows={4}
@@ -73,6 +79,7 @@ export function UpdateRequestDialog({
 						<Button
 							size="sm"
 							onClick={() => mutation.mutate(editPrompt)}
+							data-testid="save-request-button"
 							disabled={mutation.isPending}
 						>
 							{mutation.isPending ? 'Saving...' : 'Save'}
