@@ -9,7 +9,7 @@ export function FriendProfiles() {
 	const { data, isLoading } = useRelationFriends()
 	return (
 		<>
-			<Card>
+			<Card data-testid="friends-section">
 				<CardHeader>
 					<CardTitle>Your friends</CardTitle>
 				</CardHeader>

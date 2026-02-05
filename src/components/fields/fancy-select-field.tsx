@@ -49,6 +49,7 @@ export function FancySelectField<T extends FieldValues>({
 						/>
 						<Label
 							htmlFor={`${name}-${option.value}`}
+							data-key={String(option.value)}
 							className={cn(
 								`flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors`,
 								String(value) === String(option.value) ?

@@ -40,7 +40,7 @@ export const Route = createFileRoute('/')({
 
 function Index() {
 	return (
-		<div className="relative">
+		<div className="relative" data-testid="landing-page">
 			<div className="fixed top-6 right-6 z-50 flex flex-col items-center gap-2 @xl:flex-row">
 				<UserLogin />
 				<BrowseLink />
@@ -65,6 +65,7 @@ function BrowseLink() {
 			from={Route.fullPath}
 			to="/learn/browse"
 			title="Browse the library"
+			data-testid="browse-languages-link"
 		>
 			<Compass className="h-5 w-5" />
 			<span className="sr-only">Browse the library</span>

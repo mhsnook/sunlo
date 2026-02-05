@@ -55,11 +55,12 @@ export function DeleteRequestDialog({
 				variant="ghost"
 				size="icon"
 				title="Delete request"
+				data-name="delete-request-button"
 				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />
 			</Button>
-			<AlertDialogContent>
+			<AlertDialogContent data-testid="delete-request-dialog">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete request?</AlertDialogTitle>
 					<AlertDialogDescription>
@@ -72,6 +73,7 @@ export function DeleteRequestDialog({
 					<AlertDialogAction
 						disabled={mutation.isPending}
 						onClick={() => mutation.mutate()}
+						data-testid="confirm-delete-button"
 						className="bg-destructive text-destructive-foreground"
 					>
 						Delete

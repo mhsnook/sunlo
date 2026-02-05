@@ -203,7 +203,7 @@ function BrowsePage() {
 	}
 
 	return (
-		<main style={style} className="space-y-8 pb-12">
+		<main style={style} className="space-y-8 pb-12" data-testid="browse-page">
 			{/* Search Box */}
 			<div className="space-y-3">
 				<div className="relative">
@@ -674,7 +674,10 @@ function LanguagesSection() {
 			</div>
 
 			{viewMode === 'grid' ?
-				<div className="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3">
+				<div
+					className="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3"
+					data-testid="language-card-list"
+				>
 					{topLanguages.map((lang) => (
 						<LanguageCard
 							key={lang.lang}
@@ -686,7 +689,10 @@ function LanguagesSection() {
 						/>
 					))}
 				</div>
-			:	<div className="divide-y rounded-lg border">
+			:	<div
+					className="divide-y rounded-lg border"
+					data-testid="language-card-list"
+				>
 					{topLanguages.map((lang) => (
 						<LanguageListItem
 							key={lang.lang}
@@ -717,7 +723,7 @@ function LanguageCard({
 	phrases: number
 }) {
 	return (
-		<Card>
+		<Card data-key={lang}>
 			<CardHeader className="pb-2">
 				<div className="flex items-center gap-3">
 					<LangBadge lang={lang} />
@@ -783,7 +789,10 @@ function LanguageListItem({
 	phrases: number
 }) {
 	return (
-		<div className="flex flex-row items-center justify-between gap-4 p-4">
+		<div
+			className="flex flex-row items-center justify-between gap-4 p-4"
+			data-key={lang}
+		>
 			<div className="flex items-center gap-3">
 				<LangBadge lang={lang} />
 				<span className="font-medium">{name}</span>
