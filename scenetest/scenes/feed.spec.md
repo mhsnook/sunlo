@@ -2,30 +2,28 @@
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - see deck-feed-page
 - see feed-item-list
 - see feed-item-request
+- up
+- see feed-item-list
 - see feed-item-playlist
+- up
+- see feed-item-list
 - see feed-item-phrase
 
 # learner switches to popular tab on feed
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - see deck-feed-page
 - click feed-tab-popular
 - see feed-item-list
@@ -34,13 +32,10 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - see feed-item-playlist
 - click upvote-playlist-button
 - seeText 1
@@ -51,13 +46,10 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - see deck-feed-page
 - see feed-item-list
 - scrollToBottom
@@ -68,16 +60,15 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
+- up
 - click sidebar-link--friends-chats
 - see chats-page
 - see friend-chat-list
 - click friend-chat-link
+- up
 - see chat-messages-container
 - see chat-message-bubble
 
@@ -85,10 +76,7 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
 - click sidebar-link--friends-chats
