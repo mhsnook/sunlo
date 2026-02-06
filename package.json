@@ -26,7 +26,7 @@
 		"seeds:schema": "supabase db dump --local > supabase/schemas/base.sql",
 		"db-reset": "supabase db reset",
 		"db-schema": "pnpm run seeds:schema && pnpm types && pnpm format",
-		"db-full": "supabase db reset && pnpm run db-schema",
+		"db-full": "supabase db reset && `pnpm run db-schema",
 		"prepare": "husky"
 	},
 	"dependencies": {
@@ -76,9 +76,9 @@
 	"devDependencies": {
 		"@eslint/js": "^9.39.2",
 		"@playwright/test": "^1.57.0",
-		"@scenetest/checks-react": "^0.1.0",
-		"@scenetest/scenes": "^0.1.0",
-		"@scenetest/vite-plugin": "^0.1.0",
+		"@scenetest/checks-react": "link:../scenetest/packages/checks-react",
+		"@scenetest/scenes": "link:../scenetest/packages/scenes",
+		"@scenetest/vite-plugin": "link:../scenetest/packages/vite-plugin",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/line-clamp": "^0.4.4",
 		"@tailwindcss/postcss": "^4.1.18",
@@ -102,6 +102,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
 		"oxlint": "^1.33.0",
+		"playwright": "^1.58.1",
 		"postcss": "^8.5.6",
 		"prettier": "3.3.3",
 		"prettier-plugin-sql": "^0.19.2",

@@ -1,84 +1,117 @@
 # learner creates a new deck
 
+cleanup: supabase.from('user_deck').delete().eq('uid', '[learner.key]').eq('lang', 'spa')
+
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
-- see decks-list-grid
+- see deck-card-hin
+- up
 - click deck-switcher-button
 - click new-deck-menu-item
 - see add-deck-form
 - click language-selector-button
+- up
 - typeInto language-search-input Spanish
 - click language-options spa
+- up
 - click start-learning-button
-- seeToast toast-deck-created
+- up
+- seeToast toast-success
 - see deck-feed-page
 
 # learner updates daily review goal
 
+cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', 'hin')
+
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
-- see decks-list-grid
-- click decks-list-grid hin
+- see deck-card-hin
+- click deck-link
+- up
+- see deck-feed-page
+- up
 - click top-right-context-menu
 - click deck-settings-menu-item
+- up
 - see deck-settings-page
-- click review-goal-options 10
+- up
+- click deck-settings-intro-dismiss
+- see deck-settings-page
+- see review-goal-options
+- click 10
+- up
 - click update-daily-goal-button
-- seeToast toast-settings-updated
+- up
+- seeToast toast-success
 
 # learner updates learning goal
 
+cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid', '[learner.key]').eq('lang', 'hin')
+
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
-- see decks-list-grid
-- click decks-list-grid hin
+- see deck-card-hin
+- click deck-link
+- up
+- see deck-feed-page
+- up
 - click top-right-context-menu
 - click deck-settings-menu-item
+- up
 - see deck-settings-page
-- click learning-goal-options family
+- up
+- click deck-settings-intro-dismiss
+- see deck-settings-page
+- see learning-goal-options
+- click family
+- up
 - click update-goal-button
-- seeToast toast-settings-updated
+- up
+- seeToast toast-success
 
 # learner archives and restores a deck
 
+cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[learner.key]').eq('lang', 'hin')
+
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
-- see decks-list-grid
-- click decks-list-grid spa
+- see deck-card-hin
+- click deck-link
+- up
 - click top-right-context-menu
 - click deck-settings-menu-item
+- up
+- see deck-settings-page
+- up
+- click deck-settings-intro-dismiss
 - click archive-deck-button
 - see archive-confirmation-dialog
 - click confirm-archive-button
-- seeToast toast-deck-archived
-- click back-to-all-decks-link
-- notSee decks-list-grid spa
+- up
+- seeToast toast-success
+- up
+- openTo /learn
+- see decks-list-grid
+- notSee deck-card-hin
+- up
 - click view-archived-decks-link
-- see decks-list-grid spa
-- click decks-list-grid spa deck-link
+- up
+- see deck-card-hin
+- click deck-link
+- up
 - click top-right-context-menu
 - click deck-settings-menu-item
+- up
 - click restore-deck-button
 - see restore-confirmation-dialog
 - click confirm-restore-button
-- seeToast toast-deck-restored
+- up
+- seeToast toast-success

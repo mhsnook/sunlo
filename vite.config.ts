@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => {
 					'**/.github',
 					'**/dist',
 					'**/node_modules',
+					'**/scenetest/**',
 				],
 			},
 		},

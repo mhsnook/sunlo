@@ -58,7 +58,11 @@ export function NavUser() {
 			<SidebarMenu>
 				<SidebarMenuItem>
 					<SidebarMenuButton asChild>
-						<Link to="/login" onClick={setClosedMobile}>
+						<Link
+							to="/login"
+							data-testid="login-link"
+							onClick={setClosedMobile}
+						>
 							<LogIn className="size-4" />
 							<span>Log in</span>
 						</Link>

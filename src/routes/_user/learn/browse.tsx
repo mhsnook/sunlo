@@ -767,6 +767,7 @@ function LanguageCard({
 					to="/learn/$lang/feed"
 					params={{ lang }}
 					className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+					data-testid="explore-language-link"
 				>
 					Explore {languages[lang] ?? name}
 				</Link>
