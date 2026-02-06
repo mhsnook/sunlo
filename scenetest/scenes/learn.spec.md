@@ -2,13 +2,10 @@
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin
+- click hin deck-link
 - click sidebar-link--learn-lang-feed
 - see deck-feed-page
 - click sidebar-link--learn-lang-review
@@ -22,45 +19,36 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - see deck-feed-page
-- click back-to-decks-link
+- click sidebar-link--learn
 - see decks-list-grid
-- click decks-list-grid tam deck-link
+- click tam deck-link
 - see deck-feed-page
 
 # learner accesses profile from user menu
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
 - click sidebar-user-menu-trigger
 - click profile-menu-item
 - see profile-page
-- seeText 'Display Preferences'
+- seeText Display Preferences
 
 # learner uses search functionality
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - click sidebar-link--learn-lang-search
 - see search-page
 - typeInto search-input hello
@@ -70,58 +58,49 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - click feed-phrase-link
 - see phrase-detail-page
 - click card-status-dropdown
 - seeText 'Not in deck'
 - click add-to-deck-option
-- seeToast toast-phrase-added
+- seeToast toast-success
 
 # learner changes card status through all states
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - click feed-phrase-link
 - see phrase-detail-page
 - click card-status-dropdown
 - seeText Active
 - click set-learned-option
-- seeToast toast-status-updated
+- seeToast toast-success
 - click card-status-dropdown
 - click ignore-card-option
-- seeToast toast-status-updated
+- seeToast toast-success
 - click card-status-dropdown
 - click activate-card-option
-- seeToast toast-status-updated
+- seeToast toast-success
 
 # learner starts a review session
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
-- click decks-list-grid hin deck-link
+- click hin deck-link
 - click sidebar-link--learn-lang-review
 - see review-setup-page
-- seeText 'Total cards'
+- seeText Total cards
 - see start-review-button
 - click start-review-button
 - see review-session-page
@@ -131,11 +110,9 @@ learner:
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn/hin/review
+- see review-setup-page
 - click start-review-button
 - see review-session-page
 - see flashcard

@@ -2,44 +2,29 @@
 
 learner:
 
-- openTo /login
-- see login-form
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
-- see welcome-page
-- click go-to-decks-button
+- login
 - see decks-list-grid
+- up
 - see friends-section
 
 # new user completes onboarding and affirms community norms
 
 new-user:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
-- openTo /welcome
-- see welcome-page
-- see community-norms-dialog
-- click affirm-community-norms-button
-- see sunlo-welcome-explainer
-- click go-to-decks-button
-- see decks-list-grid
+- login
+- see getting-started-page
 
 # user signs out and is redirected to home
 
 learner:
 
-- openTo /login
-- typeInto email-input [self.email]
-- typeInto password-input [self.password]
-- click login-submit-button
+- login
 - openTo /learn
 - see decks-list-grid
+- up
 - click sidebar-user-menu-trigger
 - click sidebar-signout-button
+- up
 - see login-link
 - notSee sidebar-user-menu-trigger
 
@@ -50,10 +35,13 @@ visitor:
 - openTo /
 - see landing-page
 - click browse-languages-link
+- up
 - see browse-page
 - see language-card-list
-- click language-card-list hin
-- see language-detail-page
+- see hin
+- click explore-language-link
+- up
+- see deck-feed-page
 
 # visitor sees login prompt on protected pages
 
@@ -62,4 +50,5 @@ visitor:
 - openTo /learn
 - see logged-out-learn-page
 - see browse-languages-prompt
+- up
 - see login-link

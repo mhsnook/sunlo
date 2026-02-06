@@ -32,7 +32,9 @@ test.describe('Card Status Mutations', () => {
 				.click()
 
 			// Navigate to the phrase page via feed link
-			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+			await page
+				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.click()
 
 			// The phrase should be visible
 			await expect(page.getByText(phrase!.text)).toBeVisible()
@@ -160,7 +162,9 @@ test.describe('Card Status Mutations', () => {
 				.click()
 
 			// Navigate to the phrase detail page directly from the feed
-			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+			await page
+				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.click()
 			await expect(page).toHaveURL(new RegExp(`/learn/hin/phrases/${phraseId}`))
 
 			// Verify the phrase is visible
@@ -212,7 +216,9 @@ test.describe('Card Status Mutations', () => {
 				.click()
 
 			// Navigate to the phrase page via feed link
-			await page.getByTestId(`feed-phrase-link-${phraseId}`).click()
+			await page
+				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.click()
 
 			// Create a card
 			await page.click('button:has-text("Not in deck")')

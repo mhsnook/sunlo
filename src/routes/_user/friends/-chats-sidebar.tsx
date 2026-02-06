@@ -54,7 +54,10 @@ export function ChatsSidebar() {
 			<CardHeader className="sr-only">
 				<CardTitle>Chats</CardTitle>
 			</CardHeader>
-			<CardContent className="flex flex-1 flex-col gap-2 overflow-y-auto p-2">
+			<CardContent
+				data-testid="friend-chat-list"
+				className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
+			>
 				{isLoadingFriends || isLoadingChats ?
 					<>
 						<ChatSkeleton />
