@@ -44,8 +44,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			await expect(page.getByText(requestText).first()).toBeVisible()
@@ -119,8 +119,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI (start from home/learn)
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 6. Verify the phrase is NOT visible as a standalone activity (the "A new Phrase" text)
@@ -179,8 +179,8 @@ test.describe('Unified Feed', () => {
 		try {
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 3. Verify the playlist is visible, with "2 phrases" badge
@@ -224,8 +224,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Verify first page is visible
@@ -263,15 +263,15 @@ test.describe('Unified Feed', () => {
 		// 1. Go to Feed initially
 		await expect(page).toHaveURL(`/learn`)
 		await page
-			.getByTestId(`deck-card-${lang}`)
-			.getByTestId(`deck-card-link-${lang}`)
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
 			.click()
 		await expect(
 			page.getByText(`Activity feed for ${TEST_LANG_DISPLAY}`)
 		).toBeVisible()
 
 		// 2. Navigate to New Request page via UI (preserving SPA state)
-		await page.getByTestId('sidebar-link--learn-lang-requests-new').click()
+		await page.locator('a[data-key="/learn/$lang/requests/new"]').click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/new`))
 
 		// 3. Fill and submit
@@ -282,7 +282,7 @@ test.describe('Unified Feed', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/`))
 
 		// 5. Navigate back to feed using UI link (preserving SPA state)
-		await page.getByTestId('sidebar-link--learn-lang-feed').click()
+		await page.locator('a[data-key="/learn/$lang/feed"]').click()
 
 		// 6. Reload to ensure feed data is fresh (feed invalidation may be async)
 		await page.reload()
@@ -340,8 +340,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Switch to Popular tab
@@ -403,8 +403,8 @@ test.describe('Unified Feed', () => {
 			// 2. Navigate to feed
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 3. Verify playlist is visible in feed
