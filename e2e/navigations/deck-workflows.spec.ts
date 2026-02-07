@@ -1,21 +1,27 @@
 import { test, expect } from '@playwright/test'
-import { loginForProject, getTestUserForProject } from '../helpers/auth-helpers'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import { deleteMostRecentReviewState } from '../helpers/db-helpers'
+import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Deck Workflow Navigation', () => {
-	test.beforeEach(async ({ page }, testInfo) => {
-		// Each browser uses a different test user to avoid DB conflicts
-		await loginForProject(page, testInfo)
+	test.beforeEach(async ({ page }) => {
+		// storageState provides auth; just navigate to /learn
+		await page.goto('/learn')
+		await expect(
+			page.getByText('Which deck are we studying today?')
+		).toBeVisible()
 	})
 
 	test('review setup page loads with stats', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Navigate to review using data-testid
 		await page.getByTestId('appnav-review').click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/review/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review`))
 
 		// Wait for page content to load - should see either setup or continue
 		// Either "Scheduled" heading (fresh) or "Continue Review" button (existing session)
@@ -33,8 +39,10 @@ test.describe('Deck Workflow Navigation', () => {
 	}, testInfo) => {
 		const { uid } = getTestUserForProject(testInfo)
 
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Navigate to review using data-testid
 		await page.getByTestId('appnav-review').click()
@@ -47,7 +55,7 @@ test.describe('Deck Workflow Navigation', () => {
 		await startButton.click()
 
 		// Should be on review/go page
-		await expect(page).toHaveURL(/\/learn\/hin\/review\/go/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`))
 
 		// Should see a card
 		await expect(page.getByText(/card \d+ of \d+/i)).toBeVisible()
@@ -56,29 +64,33 @@ test.describe('Deck Workflow Navigation', () => {
 		// Navigate away without submitting - use the back button (review page has no appnav)
 		await page.getByTestId('navbar-back').click()
 
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Clean up the review state record created by starting the review
-		await deleteMostRecentReviewState(uid, 'hin')
+		await deleteMostRecentReviewState(uid, TEST_LANG)
 	})
 
 	test('search page loads from deck nav', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Click search in nav using data-testid
 		await page.getByTestId('appnav-search').click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/search/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
 	})
 
 	test('feed page loads with content', async ({ page }) => {
-		// Go to Hindi feed
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Should be on feed by default
-		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 
 		// Feed should have content visible in the app outlet
 		const appOutlet = page.locator('#app-sidebar-layout-outlet')
@@ -92,9 +104,11 @@ test.describe('Deck Workflow Navigation', () => {
 	})
 
 	test('feed tabs switch content', async ({ page }) => {
-		// Go to Hindi feed
-		await page.getByText('Hindi').first().click()
-		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 
 		// Try switching tabs if they exist
 		const tabs = page.getByRole('tablist')
@@ -103,20 +117,22 @@ test.describe('Deck Workflow Navigation', () => {
 			if ((await popularTab.count()) > 0) {
 				await popularTab.click()
 				// Page should still work
-				await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+				await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 			}
 
 			const recentTab = page.getByRole('tab', { name: /recent/i })
 			if ((await recentTab.count()) > 0) {
 				await recentTab.click()
-				await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+				await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 			}
 		}
 	})
 
 	test('add phrase page loads for authenticated user', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Look for add phrase link
 		const addLink = page.getByRole('link', { name: /add.*phrase|new.*phrase/i })
@@ -124,7 +140,9 @@ test.describe('Deck Workflow Navigation', () => {
 			await addLink.first().click()
 
 			// Should be on add phrase page
-			await expect(page).toHaveURL(/\/learn\/hin\/(add|new|phrase)/)
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/(add|new|phrase)`)
+			)
 
 			// Should see form elements
 			await expect(
@@ -134,8 +152,10 @@ test.describe('Deck Workflow Navigation', () => {
 	})
 
 	test('deck settings page loads', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Look for settings link (might be in a menu)
 		const settingsLink = page.getByRole('link', { name: /settings/i })
@@ -143,32 +163,38 @@ test.describe('Deck Workflow Navigation', () => {
 			await settingsLink.first().click()
 
 			// Should be on settings page
-			await expect(page).toHaveURL(/\/learn\/hin\/deck-settings/)
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/deck-settings`)
+			)
 		}
 	})
 
 	test('bulk add page loads', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').first().click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Navigate to bulk add if link exists
 		const bulkAddLink = page.getByRole('link', { name: /bulk.*add/i })
 		if ((await bulkAddLink.count()) > 0) {
 			await bulkAddLink.click()
-			await expect(page).toHaveURL(/\/learn\/hin\/bulk-add/)
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/bulk-add`))
 		}
 	})
 
 	test('navigation between multiple decks preserves state', async ({
 		page,
 	}) => {
-		// Go to Hindi
-		await page.getByText('Hindi').first().click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Go to search page using data-testid
 		await page.getByTestId('appnav-search').click()
-		await expect(page).toHaveURL(/\/learn\/hin\/search/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
 
 		// Go back to learn page via sidebar - use the link with title "All Decks"
 		// (The /learn link is in "Learning center" section with title "All Decks")
@@ -181,12 +207,15 @@ test.describe('Deck Workflow Navigation', () => {
 			await spanishLink.first().click()
 			await expect(page).toHaveURL(/\/learn\/spa/)
 
-			// Go back to learn page and then Hindi
+			// Go back to learn page and then back to test lang
 			await page.getByRole('link', { name: /all decks/i }).click()
 			await expect(page).toHaveURL('/learn')
 
-			await page.getByText('Hindi').first().click()
-			await expect(page).toHaveURL(/\/learn\/hin/)
+			await page
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
+				.click()
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 		}
 	})
 })

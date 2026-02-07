@@ -40,19 +40,37 @@ export default defineConfig({
 
 	/* Configure projects for major browsers */
 	projects: [
+		/* Setup project: authenticates test users and saves storageState */
+		{
+			name: 'setup',
+			testMatch: /auth\.setup\.ts/,
+		},
+
 		{
 			name: 'chromium',
-			use: { ...devices['Desktop Chrome'] },
+			use: {
+				...devices['Desktop Chrome'],
+				storageState: '.auth/user-chromium.json',
+			},
+			dependencies: ['setup'],
 		},
 
 		{
 			name: 'firefox',
-			use: { ...devices['Desktop Firefox'] },
+			use: {
+				...devices['Desktop Firefox'],
+				storageState: '.auth/user-firefox.json',
+			},
+			dependencies: ['setup'],
 		},
 
 		{
 			name: 'webkit',
-			use: { ...devices['Desktop Safari'] },
+			use: {
+				...devices['Desktop Safari'],
+				storageState: '.auth/user-webkit.json',
+			},
+			dependencies: ['setup'],
 		},
 	],
 

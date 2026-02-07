@@ -1,10 +1,14 @@
 import { test, expect } from '@playwright/test'
-import { loginForProject, getTestUserForProject } from '../helpers/auth-helpers'
+import { getTestUserForProject } from '../helpers/auth-helpers'
+import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Logged In Navigation', () => {
-	test.beforeEach(async ({ page }, testInfo) => {
-		// Each browser uses a different test user to avoid DB conflicts
-		await loginForProject(page, testInfo)
+	test.beforeEach(async ({ page }) => {
+		// storageState provides auth; just navigate to /learn
+		await page.goto('/learn')
+		await expect(
+			page.getByText('Which deck are we studying today?')
+		).toBeVisible()
 	})
 
 	test('deck list shows on learn page', async ({ page }) => {
@@ -12,7 +16,7 @@ test.describe('Logged In Navigation', () => {
 		await expect(page).toHaveURL(/\/learn/)
 
 		// Should see deck list grid
-		const decksGrid = page.locator('#decks-list-grid')
+		const decksGrid = page.getByTestId('decks-list-grid')
 		await expect(decksGrid).toBeVisible()
 
 		// Should have at least one deck
@@ -21,11 +25,13 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('can navigate to each deck and see stats', async ({ page }) => {
-		// Click on Hindi deck
-		await page.getByText('Hindi').click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Should be on deck feed
-		await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 
 		// Navigate to review page via nav
 		await page
@@ -33,16 +39,18 @@ test.describe('Logged In Navigation', () => {
 			.getByRole('link', { name: /review/i })
 			.click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/review/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review`))
 
 		// Should see review stats
 		await expect(page.getByText(/total cards/i)).toBeVisible()
 	})
 
 	test('sidebar navigation works within a deck', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Test each nav link in the sidebar
 		const nav = page.locator('nav[data-slot=navigation-menu]')
@@ -51,21 +59,21 @@ test.describe('Logged In Navigation', () => {
 		const browseLink = nav.getByRole('link', { name: /browse/i })
 		if ((await browseLink.count()) > 0) {
 			await browseLink.click()
-			await expect(page).toHaveURL(/\/learn\/hin\/browse/)
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/browse`))
 		}
 
 		// Feed link
 		const feedLink = nav.getByRole('link', { name: /feed/i })
 		if ((await feedLink.count()) > 0) {
 			await feedLink.click()
-			await expect(page).toHaveURL(/\/learn\/hin\/feed/)
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/feed`))
 		}
 
 		// Review link
 		const reviewLink = nav.getByRole('link', { name: /review/i })
 		if ((await reviewLink.count()) > 0) {
 			await reviewLink.click()
-			await expect(page).toHaveURL(/\/learn\/hin\/review/)
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review`))
 		}
 	})
 
@@ -96,9 +104,11 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('can switch between decks', async ({ page }) => {
-		// Go to Hindi first
-		await page.getByText('Hindi').click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Navigate back to deck list - click the "back" or home link
 		// The sidebar should have a way to get back to deck selection
@@ -122,8 +132,10 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('search page shows phrase cards', async ({ page }) => {
-		// Go to Hindi deck
-		await page.getByText('Hindi').click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 
 		// Navigate to search (deck-specific navigation)
 		await page
@@ -131,7 +143,7 @@ test.describe('Logged In Navigation', () => {
 			.getByRole('link', { name: /search/i })
 			.click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/search/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
 
 		// Should see phrase cards or search interface
 		const appOutlet = page.locator('#app-sidebar-layout-outlet')
@@ -139,14 +151,16 @@ test.describe('Logged In Navigation', () => {
 	})
 
 	test('search functionality works', async ({ page }) => {
-		// Go to Hindi search page
-		await page.getByText('Hindi').click()
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
 		await page
 			.locator('nav[data-slot=navigation-menu]')
 			.getByRole('link', { name: /search/i })
 			.click()
 
-		await expect(page).toHaveURL(/\/learn\/hin\/search/)
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
 
 		// Find search input
 		const searchInput = page.getByPlaceholder(/search/i)
@@ -158,7 +172,7 @@ test.describe('Logged In Navigation', () => {
 			await page.waitForTimeout(500)
 
 			// Page should still be functional (no crash)
-			await expect(page).toHaveURL(/\/learn\/hin\/search/)
+			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
 		}
 	})
 })

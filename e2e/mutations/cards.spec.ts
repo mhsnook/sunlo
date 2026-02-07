@@ -1,17 +1,18 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import { TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getCardByPhraseId,
 	createPhrase,
 	deletePhrase,
 } from '../helpers/db-helpers'
+import { TEST_LANG } from '../helpers/test-constants'
 
 test.describe('Card Status Mutations', () => {
 	test('Add card, change status via dropdown', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		const phrase = (
 			await createPhrase({
-				lang: 'hin',
+				lang: TEST_LANG,
 				text: 'Card status toggle test phrase' + Math.random(),
 				translationText: 'Card status toggle test translation' + Math.random(),
 			})
@@ -27,8 +28,8 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to feed via UI
 			await page
-				.getByTestId(`deck-card-hin`)
-				.getByTestId(`deck-card-link-hin`)
+				.getByTestId(`deck-card-${TEST_LANG}`)
+				.getByTestId(`deck-card-link-${TEST_LANG}`)
 				.click()
 
 			// Navigate to the phrase page via feed link
@@ -128,7 +129,9 @@ test.describe('Card Status Mutations', () => {
 
 			// 8. Verify card appears in library - navigate via sidebar
 			await page.getByTestId('sidebar-link--learn-lang-contributions').click()
-			await expect(page).toHaveURL(/\/learn\/hin\/contributions/)
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/contributions`)
+			)
 			await page.getByTestId('contributions-tab--phrases').click()
 			await expect(page.getByText(phrase.text)).toBeVisible()
 		} finally {
@@ -138,11 +141,11 @@ test.describe('Card Status Mutations', () => {
 	})
 
 	test('Toggle heart icon', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// 1. Create a standalone phrase via API AFTER login (so collections sync properly)
 		const { phrase } = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Heart toggle test phrase',
 			translationText: 'Heart toggle test translation',
 		})
@@ -157,15 +160,17 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to deck feed via UI
 			await page
-				.getByTestId(`deck-card-hin`)
-				.getByTestId(`deck-card-link-hin`)
+				.getByTestId(`deck-card-${TEST_LANG}`)
+				.getByTestId(`deck-card-link-${TEST_LANG}`)
 				.click()
 
 			// Navigate to the phrase detail page directly from the feed
 			await page
 				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
 				.click()
-			await expect(page).toHaveURL(new RegExp(`/learn/hin/phrases/${phraseId}`))
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/phrases/${phraseId}`)
+			)
 
 			// Verify the phrase is visible
 			await expect(page.getByText(phrase.text)).toBeVisible()
@@ -195,11 +200,11 @@ test.describe('Card Status Mutations', () => {
 	})
 
 	test('Verify CardMetaSchema parsing', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// 1. Create a phrase via API (after login so feed can see it)
 		const { phrase } = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Schema parsing test phrase ' + Math.random(),
 			translationText: 'Schema test translation ' + Math.random(),
 		})
@@ -211,8 +216,8 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to feed via UI
 			await page
-				.getByTestId(`deck-card-hin`)
-				.getByTestId(`deck-card-link-hin`)
+				.getByTestId(`deck-card-${TEST_LANG}`)
+				.getByTestId(`deck-card-link-${TEST_LANG}`)
 				.click()
 
 			// Navigate to the phrase page via feed link
@@ -276,7 +281,7 @@ test.describe('Card Status Mutations', () => {
 			expect(updatedCard).toMatchObject({
 				phrase_id: phraseId,
 				status: 'learned', // Status should be updated
-				lang: 'hin',
+				lang: TEST_LANG,
 				uid: TEST_USER_UID,
 			})
 
