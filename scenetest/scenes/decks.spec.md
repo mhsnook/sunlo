@@ -39,7 +39,7 @@ learner:
 - up
 - see deck-settings-page
 - up
-- click deck-settings-intro-dismiss
+- click button-dismiss-intro-message
 - see deck-settings-page
 - see review-goal-options
 - click 10
@@ -66,7 +66,7 @@ learner:
 - up
 - see deck-settings-page
 - up
-- click deck-settings-intro-dismiss
+- click button-dismiss-intro-message
 - see deck-settings-page
 - see learning-goal-options
 - click family
@@ -91,7 +91,7 @@ learner:
 - up
 - see deck-settings-page
 - up
-- click deck-settings-intro-dismiss
+- click @button-dismiss-intro-message
 - click archive-deck-button
 - see archive-confirmation-dialog
 - click confirm-archive-button

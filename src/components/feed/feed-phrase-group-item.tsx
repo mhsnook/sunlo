@@ -37,7 +37,7 @@ export function PhraseSummaryLine({
 				to="/learn/$lang/phrases/$id"
 				params={{ lang: item.lang, id: item.id }}
 				className="group-hover:text-foreground inline-flex min-w-0 flex-1 items-center gap-2 font-medium"
-				data-testid="feed-phrase-link"
+				data-name="feed-phrase-link"
 				data-key={item.id}
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}

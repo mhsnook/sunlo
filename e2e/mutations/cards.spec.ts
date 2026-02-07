@@ -5,7 +5,7 @@ import {
 	createPhrase,
 	deletePhrase,
 } from '../helpers/db-helpers'
-import { TEST_LANG } from '../helpers/test-constants'
+import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Card Status Mutations', () => {
 	test('Add card, change status via dropdown', async ({ page }) => {
@@ -28,13 +28,13 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to feed via UI
 			await page
-				.getByTestId(`deck-card-${TEST_LANG}`)
-				.getByTestId(`deck-card-link-${TEST_LANG}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Navigate to the phrase page via feed link
 			await page
-				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.locator(`[data-name="feed-phrase-link"][data-key="${phraseId}"]`)
 				.click()
 
 			// The phrase should be visible
@@ -128,7 +128,7 @@ test.describe('Card Status Mutations', () => {
 			})
 
 			// 8. Verify card appears in library - navigate via sidebar
-			await page.getByTestId('sidebar-link--learn-lang-contributions').click()
+			await page.locator('a[data-key="/learn/$lang/contributions"]').click()
 			await expect(page).toHaveURL(
 				new RegExp(`/learn/${TEST_LANG}/contributions`)
 			)
@@ -160,13 +160,13 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to deck feed via UI
 			await page
-				.getByTestId(`deck-card-${TEST_LANG}`)
-				.getByTestId(`deck-card-link-${TEST_LANG}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Navigate to the phrase detail page directly from the feed
 			await page
-				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.locator(`[data-name="feed-phrase-link"][data-key="${phraseId}"]`)
 				.click()
 			await expect(page).toHaveURL(
 				new RegExp(`/learn/${TEST_LANG}/phrases/${phraseId}`)
@@ -216,13 +216,13 @@ test.describe('Card Status Mutations', () => {
 
 			// Navigate to feed via UI
 			await page
-				.getByTestId(`deck-card-${TEST_LANG}`)
-				.getByTestId(`deck-card-link-${TEST_LANG}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Navigate to the phrase page via feed link
 			await page
-				.locator(`[data-testid="feed-phrase-link"][data-key="${phraseId}"]`)
+				.locator(`[data-name="feed-phrase-link"][data-key="${phraseId}"]`)
 				.click()
 
 			// Create a card
