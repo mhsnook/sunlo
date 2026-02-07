@@ -38,7 +38,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await page.goto('/welcome')
 
 		// The community norms dialog should appear
-		await expect(page.getByTestId('community-norms-intro')).toBeVisible({
+		await expect(page.getByTestId('intro-message-section')).toBeVisible({
 			timeout: 10000,
 		})
 
@@ -60,7 +60,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible({
 			timeout: 10000,
 		})
-		await expect(page.getByTestId('community-norms-intro')).not.toBeVisible()
+		await expect(page.getByTestId('intro-message-section')).not.toBeVisible()
 	})
 
 	test.skip('welcomePage: displays features and actions', async ({

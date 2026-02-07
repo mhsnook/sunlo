@@ -42,7 +42,7 @@ test.describe.serial('Chat Messages', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to Chats via sidebar
-		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await page.locator('a[data-key="/friends/chats"]').click()
 
 		// Wait for chats page to load
 		await expect(page).toHaveURL('/friends/chats')
@@ -81,7 +81,7 @@ test.describe.serial('Chat Messages', () => {
 		await loginAsFirstUser(page)
 
 		// Navigate to Chats
-		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await page.locator('a[data-key="/friends/chats"]').click()
 
 		await expect(page).toHaveURL('/friends/chats')
 
@@ -112,7 +112,7 @@ test.describe.serial('Chat Messages', () => {
 		await loginAsTestUser(page)
 
 		// Navigate to Chats
-		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await page.locator('a[data-key="/friends/chats"]').click()
 
 		await expect(page).toHaveURL('/friends/chats')
 
@@ -149,7 +149,7 @@ test.describe.serial('Chat Messages', () => {
 		await loginAsFirstUser(page)
 
 		// Navigate to Chats
-		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
+		await page.locator('a[data-key="/friends/chats"]').click()
 		await expect(page).toHaveURL('/friends/chats')
 
 		// The unread message should be visible - GarlicFace chat should show up with a badge
@@ -189,7 +189,7 @@ test.describe.serial('Chat Messages', () => {
 		await page.waitForTimeout(500)
 
 		// Navigate to Chats
-		await page.getByTestId('sidebar-link--friends-chats').click()
+		await page.locator('a[data-key="/friends/chats"]').click()
 
 		await expect(page).toHaveURL('/friends/chats')
 

@@ -230,7 +230,10 @@ test.describe.serial('Deck Mutations', () => {
 		// Click the archived deck to navigate to it
 		await page.getByRole('link', { name: /view archived decks/i }).click()
 		await expect(page.getByTestId('deck-card-spa')).toBeVisible()
-		await page.getByTestId('deck-card-link-spa').click()
+		await page
+			.getByTestId('deck-card-spa')
+			.getByRole('link', { name: 'deck-link' })
+			.click()
 		// Navigate to deck settings
 		await page.locator('#top-right-context-menu').click()
 
