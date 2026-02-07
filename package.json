@@ -75,7 +75,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.39.2",
-		"@playwright/test": "^1.57.0",
+		"@playwright/test": "^1.58.2",
 		"@scenetest/checks-react": "link:../scenetest/packages/checks-react",
 		"@scenetest/scenes": "link:../scenetest/packages/scenes",
 		"@scenetest/vite-plugin": "link:../scenetest/packages/vite-plugin",
@@ -102,7 +102,7 @@
 		"husky": "^9.1.7",
 		"lint-staged": "^16.2.7",
 		"oxlint": "^1.33.0",
-		"playwright": "^1.58.1",
+		"playwright": "^1.58.2",
 		"postcss": "^8.5.6",
 		"prettier": "3.3.3",
 		"prettier-plugin-sql": "^0.19.2",

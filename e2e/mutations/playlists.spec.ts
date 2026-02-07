@@ -1,15 +1,12 @@
 import { test, expect } from '@playwright/test'
-import {
-	loginAsTestUser,
-	FIRST_USER_UID,
-	TEST_USER_UID,
-} from '../helpers/auth-helpers'
+import { FIRST_USER_UID, TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	createPlaylist,
 	deletePlaylist,
 	createPhrase,
 	supabase,
 } from '../helpers/db-helpers'
+import { TEST_LANG } from '../helpers/test-constants'
 
 test.describe('Playlist Mutations', () => {
 	test('update playlist: edit title, description, and href', async ({
@@ -19,16 +16,16 @@ test.describe('Playlist Mutations', () => {
 		const originalTitle = `Original playlist title ${Math.random()}`
 		const originalDescription = 'Original description'
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: originalTitle,
 			description: originalDescription,
 		})
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the playlist page
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 
 			// Verify original title and description are visible
 			await expect(page.getByText(originalTitle)).toBeVisible()
@@ -109,15 +106,15 @@ test.describe('Playlist Mutations', () => {
 		// 1. Create a playlist via API
 		const playlistTitle = `Playlist to be deleted ${Math.random()}`
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: playlistTitle,
 		})
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the playlist page
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 
 			// Verify playlist is visible
 			await expect(page.getByText(playlistTitle)).toBeVisible()
@@ -139,7 +136,7 @@ test.describe('Playlist Mutations', () => {
 			await expect(page.getByText('Playlist deleted')).toBeVisible()
 
 			// 6. Should navigate away from the deleted playlist page
-			await page.waitForURL('/learn/hin/feed')
+			await page.waitForURL(`/learn/${TEST_LANG}/feed`)
 
 			// 7. Verify playlist is not in local collection
 			const playlistInCollection = await page.evaluate(
@@ -174,7 +171,7 @@ test.describe('Playlist Mutations', () => {
 		const { data: otherUserPlaylist } = await supabase
 			.from('phrase_playlist')
 			.insert({
-				lang: 'hin',
+				lang: TEST_LANG,
 				title: playlistTitle,
 				uid: FIRST_USER_UID,
 			})
@@ -183,11 +180,11 @@ test.describe('Playlist Mutations', () => {
 
 		expect(otherUserPlaylist).toBeTruthy()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the playlist page as TEST_USER (not the owner)
-			await page.goto(`/learn/hin/playlists/${otherUserPlaylist!.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${otherUserPlaylist!.id}`)
 
 			// Verify playlist is visible
 			await expect(page.getByText(playlistTitle)).toBeVisible()
@@ -210,24 +207,24 @@ test.describe('Playlist Mutations', () => {
 	test('manage phrases: add phrase to existing playlist', async ({ page }) => {
 		// 1. Create some phrases via API
 		const phrase1 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Initial phrase 1',
 			translationText: 'Translation 1',
 		})
 		const phrase2 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Initial phrase 2',
 			translationText: 'Translation 2',
 		})
 		const phraseToAdd = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Phrase to add',
 			translationText: 'Translation to add',
 		})
 
 		// 2. Create a playlist with 2 phrases via API
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: `Test playlist ${Math.random()}`,
 		})
 
@@ -250,11 +247,11 @@ test.describe('Playlist Mutations', () => {
 			])
 			.throwOnError()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 3. Navigate to playlist page
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 
 			// Verify initial phrases are visible (use .first() since phrase text appears multiple times)
 			await expect(
@@ -335,24 +332,24 @@ test.describe('Playlist Mutations', () => {
 	test('manage phrases: remove phrase from playlist', async ({ page }) => {
 		// 1. Create phrases
 		const phrase1 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Phrase 1',
 			translationText: 'Translation 1',
 		})
 		const phrase2 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Phrase to remove',
 			translationText: 'Translation to remove',
 		})
 		const phrase3 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Phrase 3',
 			translationText: 'Translation 3',
 		})
 
 		// 2. Create playlist with 3 phrases
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: `Test playlist ${Math.random()}`,
 		})
 
@@ -383,11 +380,11 @@ test.describe('Playlist Mutations', () => {
 
 		const linkToRemove = links![1]
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 3. Navigate to playlist page
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 
 			// 4. Click "Manage Phrases" button
 			await page.getByRole('button', { name: 'Manage phrases' }).click()
@@ -451,24 +448,24 @@ test.describe('Playlist Mutations', () => {
 	test('manage phrases: reorder phrases', async ({ page }) => {
 		// 1. Create phrases
 		const phrase1 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'First phrase',
 			translationText: 'Translation 1',
 		})
 		const phrase2 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Second phrase',
 			translationText: 'Translation 2',
 		})
 		const phrase3 = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Third phrase',
 			translationText: 'Translation 3',
 		})
 
 		// 2. Create playlist
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: `Test playlist ${Math.random()}`,
 		})
 
@@ -497,11 +494,11 @@ test.describe('Playlist Mutations', () => {
 			.select()
 			.throwOnError()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 3. Navigate and open manage dialog
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 			await page.getByRole('button', { name: 'Manage phrases' }).click()
 
 			// 4. Click "Move Down" on first phrase
@@ -541,13 +538,13 @@ test.describe('Playlist Mutations', () => {
 	test('manage phrases: edit phrase href', async ({ page }) => {
 		// 1. Create phrase and playlist
 		const phrase = await createPhrase({
-			lang: 'hin',
+			lang: TEST_LANG,
 			text: 'Test phrase',
 			translationText: 'Test translation',
 		})
 
 		const playlist = await createPlaylist({
-			lang: 'hin',
+			lang: TEST_LANG,
 			title: `Test playlist ${Math.random()}`,
 		})
 
@@ -564,11 +561,11 @@ test.describe('Playlist Mutations', () => {
 			.single()
 			.throwOnError()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate and open manage dialog
-			await page.goto(`/learn/hin/playlists/${playlist.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${playlist.id}`)
 			await page.getByRole('button', { name: 'Manage phrases' }).click()
 
 			// 3. Enter href in input field
@@ -606,7 +603,7 @@ test.describe('Playlist Mutations', () => {
 		const { data: otherUserPlaylist } = await supabase
 			.from('phrase_playlist')
 			.insert({
-				lang: 'hin',
+				lang: TEST_LANG,
 				title: playlistTitle,
 				uid: FIRST_USER_UID,
 			})
@@ -615,11 +612,11 @@ test.describe('Playlist Mutations', () => {
 
 		expect(otherUserPlaylist).toBeTruthy()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the playlist page as TEST_USER (not the owner)
-			await page.goto(`/learn/hin/playlists/${otherUserPlaylist!.id}`)
+			await page.goto(`/learn/${TEST_LANG}/playlists/${otherUserPlaylist!.id}`)
 
 			// Verify playlist is visible
 			await expect(page.getByText(playlistTitle)).toBeVisible()

@@ -2,7 +2,7 @@ import { expect } from '@playwright/test'
 import languages from '../../src/lib/languages'
 
 export async function goToDeckPage(page, lang: string) {
-	// Navigate to Hindi deck page
+	// Navigate to the deck page for the given language
 	await expect(
 		page.getByTestId('decks-list-grid').getByText(languages[lang])
 	).toBeVisible()

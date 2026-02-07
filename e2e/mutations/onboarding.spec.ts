@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test'
 import { loginAsTestUser } from '../helpers/auth-helpers'
 import { clearAllIntroStates } from '../helpers/collection-helpers'
 
+// Onboarding tests need a fresh browser to test the full auth flow
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('Onboarding and Auth Mutations', () => {
 	test.skip('signupMutation: create new account', async ({ page: _page }) => {
 		// TODO: Implement signup test

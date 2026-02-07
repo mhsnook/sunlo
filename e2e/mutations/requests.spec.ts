@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test'
-import {
-	loginAsTestUser,
-	TEST_USER_UID,
-	FIRST_USER_UID,
-} from '../helpers/auth-helpers'
+import { TEST_USER_UID, FIRST_USER_UID } from '../helpers/auth-helpers'
 import {
 	createRequest,
 	deleteRequest,
@@ -12,15 +8,16 @@ import {
 	getPhrase,
 	supabase,
 } from '../helpers/db-helpers'
+import { TEST_LANG } from '../helpers/test-constants'
 
 test.describe('Phrase Request Mutations', () => {
 	test('createRequestMutation: create new phrase request', async ({ page }) => {
 		// 1. Create an initial request via API for context (so the page isn't empty)
 		const contextRequest = await createRequest({
-			lang: 'hin',
+			lang: TEST_LANG,
 			prompt: 'How do I say context request?',
 		})
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		const contextPrompt = contextRequest?.prompt
 		expect(contextPrompt).toBeTruthy()
 		expect(contextPrompt.includes('How do I say context request?')).toBeTruthy()
@@ -28,13 +25,15 @@ test.describe('Phrase Request Mutations', () => {
 		try {
 			// 2. Navigate to requests index page first
 			// @@TODO @@TEMP make this parameter work?
-			await page.goto('/learn/hin/contributions?contributionsTab=requests')
+			await page.goto(
+				`/learn/${TEST_LANG}/contributions?contributionsTab=requests`
+			)
 
 			// Verify context request is visible
 			await expect(page.getByText(contextPrompt)).toBeVisible()
 
 			// Click the "New request" button
-			await page.click('a[href="/learn/hin/requests/new"]')
+			await page.click(`a[href="/learn/${TEST_LANG}/requests/new"]`)
 
 			// 3. Create a new request via UI
 			const newPrompt = `How do I say test request - form - ${Math.random()}?`
@@ -51,7 +50,9 @@ test.describe('Phrase Request Mutations', () => {
 			).toBeVisible()
 
 			// Should navigate back to requests index
-			await expect(page).toHaveURL(new RegExp(`/learn/hin/requests/[a-f0-9-]+`))
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/requests/[a-f0-9-]+`)
+			)
 
 			// 4. Verify the new request is showing up on the index page
 			await expect(page.getByText(newPrompt)).toBeVisible()
@@ -70,14 +71,14 @@ test.describe('Phrase Request Mutations', () => {
 
 			expect(requestInCollection).toBeTruthy()
 			expect(requestInCollection?.prompt).toBe(newPrompt)
-			expect(requestInCollection?.lang).toBe('hin')
+			expect(requestInCollection?.lang).toBe(TEST_LANG)
 			expect(requestInCollection?.requester_uid).toBe(TEST_USER_UID)
 
 			// 6. Verify request in database
 			const { data: dbRequest } = await getRequest(requestId!)
 			expect(dbRequest).toBeTruthy()
 			expect(dbRequest?.prompt).toBe(newPrompt)
-			expect(dbRequest?.lang).toBe('hin')
+			expect(dbRequest?.lang).toBe(TEST_LANG)
 			expect(dbRequest?.requester_uid).toBe(TEST_USER_UID)
 
 			// 7. Verify data matches between DB and collection
@@ -103,15 +104,15 @@ test.describe('Phrase Request Mutations', () => {
 		// 1. Create a pending request via API
 		const fulfillPrompt = `How do I say "fulfill test" in a fun way?`
 		const request = await createRequest({
-			lang: 'hin',
+			lang: TEST_LANG,
 			prompt: fulfillPrompt,
 		})
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the specific request page
-			await page.goto(`/learn/hin/requests/${request.id}`)
+			await page.goto(`/learn/${TEST_LANG}/requests/${request.id}`)
 
 			// Verify request is visible and unfulfilled
 			await expect(page.getByText(fulfillPrompt)).toBeVisible()
@@ -155,14 +156,14 @@ test.describe('Phrase Request Mutations', () => {
 
 			expect(phraseInCollection).toBeTruthy()
 			expect(phraseInCollection?.text).toBe(phraseText)
-			expect(phraseInCollection?.lang).toBe('hin')
+			expect(phraseInCollection?.lang).toBe(TEST_LANG)
 			expect(phraseInCollection?.request_id).toBe(request.id)
 
 			// 6. Verify phrase in database
 			const { data: dbPhrase } = await getPhrase(phraseId!)
 			expect(dbPhrase).toBeTruthy()
 			expect(dbPhrase?.text).toBe(phraseText)
-			expect(dbPhrase?.lang).toBe('hin')
+			expect(dbPhrase?.lang).toBe(TEST_LANG)
 			// expect(dbPhrase?.request_id).toBe(request.id)
 
 			// 7. Verify request updated in database
@@ -203,7 +204,7 @@ test.describe('Phrase Request Mutations', () => {
 	}) => {
 		// 1. Create a request and a comment
 		const request = await createRequest({
-			lang: 'hin',
+			lang: TEST_LANG,
 			prompt: 'Test request for comment context menu',
 		})
 
@@ -222,11 +223,11 @@ test.describe('Phrase Request Mutations', () => {
 		expect(commentError).toBeNull()
 		expect(comment).toBeTruthy()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the request page
-			await page.goto(`/learn/hin/requests/${request.id}`)
+			await page.goto(`/learn/${TEST_LANG}/requests/${request.id}`)
 
 			// Verify comment is visible
 			await expect(page.getByText(commentContent)).toBeVisible()
@@ -264,7 +265,9 @@ test.describe('Phrase Request Mutations', () => {
 					navigator.clipboard.readText()
 				)
 				if (clipboardText) {
-					expect(clipboardText).toContain(`/learn/hin/requests/${request.id}`)
+					expect(clipboardText).toContain(
+						`/learn/${TEST_LANG}/requests/${request.id}`
+					)
 					expect(clipboardText).toContain(`showSubthread=${comment!.id}`)
 				}
 			} catch /*(error)*/ {
@@ -295,15 +298,15 @@ test.describe('Phrase Request Mutations', () => {
 		// 1. Create a request via API
 		const originalPrompt = `Original request prompt ${Math.random()}`
 		const request = await createRequest({
-			lang: 'hin',
+			lang: TEST_LANG,
 			prompt: originalPrompt,
 		})
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the request page
-			await page.goto(`/learn/hin/requests/${request.id}`)
+			await page.goto(`/learn/${TEST_LANG}/requests/${request.id}`)
 
 			// Verify original prompt is visible
 			await expect(page.getByText(originalPrompt)).toBeVisible()
@@ -362,15 +365,15 @@ test.describe('Phrase Request Mutations', () => {
 		// 1. Create a request via API
 		const requestPrompt = `Request to be deleted ${Math.random()}`
 		const request = await createRequest({
-			lang: 'hin',
+			lang: TEST_LANG,
 			prompt: requestPrompt,
 		})
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the request page
-			await page.goto(`/learn/hin/requests/${request.id}`)
+			await page.goto(`/learn/${TEST_LANG}/requests/${request.id}`)
 
 			// Verify request is visible
 			await expect(page.getByText(requestPrompt)).toBeVisible()
@@ -392,7 +395,7 @@ test.describe('Phrase Request Mutations', () => {
 			await expect(page.getByText('Request deleted')).toBeVisible()
 
 			// 6. Should navigate away from the deleted request page
-			await page.waitForURL('/learn/hin/feed')
+			await page.waitForURL(`/learn/${TEST_LANG}/feed`)
 
 			// 7. Verify request is not in local collection
 			const requestInCollection = await page.evaluate(
@@ -425,7 +428,7 @@ test.describe('Phrase Request Mutations', () => {
 		const { data: otherUserRequest } = await supabase
 			.from('phrase_request')
 			.insert({
-				lang: 'hin',
+				lang: TEST_LANG,
 				prompt: requestPrompt,
 				requester_uid: FIRST_USER_UID,
 			})
@@ -434,11 +437,11 @@ test.describe('Phrase Request Mutations', () => {
 
 		expect(otherUserRequest).toBeTruthy()
 
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		try {
 			// 2. Navigate to the request page as TEST_USER (not the owner)
-			await page.goto(`/learn/hin/requests/${otherUserRequest!.id}`)
+			await page.goto(`/learn/${TEST_LANG}/requests/${otherUserRequest!.id}`)
 
 			// Verify request is visible
 			await expect(page.getByText(requestPrompt)).toBeVisible()

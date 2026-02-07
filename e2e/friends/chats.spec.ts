@@ -6,8 +6,11 @@ import {
 	TEST_USER_UID,
 	FIRST_USER_UID,
 } from '../helpers/auth-helpers'
-import { markAllIntrosAffirmed } from '../helpers/collection-helpers'
 import { supabase } from '../helpers/db-helpers'
+import { TEST_LANG } from '../helpers/test-constants'
+
+// Chat tests switch between users, so they need a fresh browser state
+test.use({ storageState: { cookies: [], origins: [] } })
 
 // Test users from seed data:
 // GarlicFace (sunloapp@gmail.com) - TEST_USER_UID: cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18
@@ -37,9 +40,6 @@ test.describe.serial('Chat Messages', () => {
 		page,
 	}) => {
 		await loginAsTestUser(page)
-
-		// Pre-affirm all intro dialogs to prevent them from blocking tests
-		await markAllIntrosAffirmed(page)
 
 		// Navigate to Chats via sidebar
 		await page.locator('[data-testid="sidebar-link--friends-chats"]').click()
@@ -123,7 +123,7 @@ test.describe.serial('Chat Messages', () => {
 				sender_uid: TEST_USER_UID,
 				recipient_uid: FIRST_USER_UID,
 				message_type: 'recommendation',
-				lang: 'hin',
+				lang: TEST_LANG,
 				phrase_id: null,
 			})
 			.select()
@@ -175,7 +175,7 @@ test.describe.serial('Chat Messages', () => {
 				sender_uid: FIRST_USER_UID,
 				recipient_uid: TEST_USER_UID,
 				message_type: 'recommendation',
-				lang: 'hin',
+				lang: TEST_LANG,
 				phrase_id: null,
 			})
 			.select()
