@@ -5,7 +5,11 @@ const prettierConfig = {
 	singleQuote: true,
 	trailingComma: 'es5',
 	experimentalTernaries: true,
-	plugins: ['prettier-plugin-tailwindcss', 'prettier-plugin-sql'],
+	plugins: [
+		'@prettier/plugin-oxc',
+		'prettier-plugin-tailwindcss',
+		'prettier-plugin-sql',
+	],
 }
 
 /** @type {import('prettier-plugin-sql').SqlBaseOptions} */
