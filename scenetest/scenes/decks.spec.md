@@ -6,7 +6,7 @@ learner:
 
 - login
 - openTo /learn
-- see deck-card-hin
+- see deck-card-[team.lang]
 - up
 - click deck-switcher-button
 - click new-deck-menu-item
@@ -23,13 +23,13 @@ learner:
 
 # learner updates daily review goal
 
-cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', 'hin')
+cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', 'kan')
 
 learner:
 
 - login
 - openTo /learn
-- see deck-card-hin
+- see deck-card-[team.lang]
 - click deck-link
 - up
 - see deck-feed-page
@@ -50,13 +50,13 @@ learner:
 
 # learner updates learning goal
 
-cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid', '[learner.key]').eq('lang', 'hin')
+cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid', '[learner.key]').eq('lang', 'kan')
 
 learner:
 
 - login
 - openTo /learn
-- see deck-card-hin
+- see deck-card-[team.lang]
 - click deck-link
 - up
 - see deck-feed-page
@@ -77,13 +77,13 @@ learner:
 
 # learner archives and restores a deck
 
-cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[learner.key]').eq('lang', 'hin')
+cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[learner.key]').eq('lang', 'kan')
 
 learner:
 
 - login
 - openTo /learn
-- see deck-card-hin
+- see deck-card-[team.lang]
 - click deck-link
 - up
 - click top-right-context-menu
@@ -100,11 +100,11 @@ learner:
 - up
 - openTo /learn
 - see decks-list-grid
-- notSee deck-card-hin
+- notSee deck-card-[team.lang]
 - up
 - click view-archived-decks-link
 - up
-- see deck-card-hin
+- see deck-card-[team.lang]
 - click deck-link
 - up
 - click top-right-context-menu
