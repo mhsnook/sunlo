@@ -283,7 +283,7 @@ function ReviewPageContent() {
 				</div>
 			)}
 
-			<Card>
+			<Card data-testid="review-setup-page">
 				<CardHeader>
 					<CardTitle className="flex flex-row justify-between">
 						<div>Get Ready to review your {languages[lang]} cards</div>

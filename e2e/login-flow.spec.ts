@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { markAllIntrosAffirmed } from './helpers/collection-helpers'
 
+// This test verifies the login flow from a logged-out state
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test('login flow redirects and shows content', async ({ page }) => {
 	// 1. Navigate to /learn - should now be accessible without login
 	await page.goto('/learn')

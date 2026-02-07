@@ -59,7 +59,11 @@ function GettingStartedPage() {
 
 	return profile ?
 			<Navigate to={nextPage} />
-		:	<main className="w-app px-[5cqw] py-10" style={style}>
+		:	<main
+				className="w-app px-[5cqw] py-10"
+				style={style}
+				data-testid="getting-started-page"
+			>
 				<div className="my-4 space-y-4 text-center">
 					<h1 className="d1">Welcome to Sunlo</h1>
 					<div className="mx-auto inline-flex shrink flex-row items-center gap-4">

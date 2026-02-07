@@ -16,7 +16,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function RouteComponent() {
 	const { id } = Route.useParams()
 	return (
-		<main style={style}>
+		<main style={style} data-testid="phrase-detail-page">
 			<BigPhraseCard pid={id} />
 		</main>
 	)

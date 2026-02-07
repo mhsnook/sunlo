@@ -237,7 +237,12 @@ function SmartSearchResults({
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
-			<Accordion type="single" collapsible className="w-full">
+			<Accordion
+				type="single"
+				collapsible
+				className="w-full"
+				data-testid="search-results"
+			>
 				{filteredResults.map((phrase) => (
 					<PhraseAccordionItem key={phrase.id} phrase={phrase} />
 				))}

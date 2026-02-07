@@ -58,7 +58,11 @@ export function NavUser() {
 			<SidebarMenu>
 				<SidebarMenuItem>
 					<SidebarMenuButton asChild>
-						<Link to="/login" onClick={setClosedMobile}>
+						<Link
+							to="/login"
+							data-testid="login-link"
+							onClick={setClosedMobile}
+						>
 							<LogIn className="size-4" />
 							<span>Log in</span>
 						</Link>
@@ -110,7 +114,11 @@ export function NavUser() {
 						<DropdownMenuGroup>
 							{data?.map((item) => (
 								<DropdownMenuItem key={item.link.to} asChild>
-									<Link to={item.link.to} onClick={setClosedMobile}>
+									<Link
+										to={item.link.to}
+										data-key={item.link.to}
+										onClick={setClosedMobile}
+									>
 										{item.Icon ?
 											<item.Icon />
 										:	null}

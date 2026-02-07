@@ -26,6 +26,7 @@ export function PlusMenu({ lang }: { lang: string }) {
 					<Link
 						to="/learn/$lang/requests/new"
 						params={{ lang }}
+						data-testid="new-request-link"
 						className="flex w-full items-center gap-2"
 					>
 						<MessageCircleHeart className="size-4" />

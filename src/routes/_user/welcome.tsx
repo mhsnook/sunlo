@@ -74,7 +74,7 @@ function WelcomePage() {
 	const isLearner = userRole === 'learner'
 
 	return (
-		<main style={style} className="space-y-8 pb-12">
+		<main style={style} className="space-y-8 pb-12" data-testid="welcome-page">
 			{/* Community norms affirmation - required before using the app */}
 			{needsAffirmation && (
 				<CommunityNormsIntro open={isOpen} onAffirm={handleAffirm} />
@@ -227,6 +227,7 @@ function WelcomePage() {
 						:	'/friends'
 					}
 					className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+					data-testid="go-to-decks-button"
 				>
 					{hasDecks ?
 						'Go to My Decks'

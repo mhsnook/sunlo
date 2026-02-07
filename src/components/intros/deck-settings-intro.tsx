@@ -15,6 +15,8 @@ export function DeckSettingsIntro({ open, onClose }: DeckSettingsIntroProps) {
 			description="Customize your learning experience."
 			actionLabel="Got it"
 			onAction={onClose}
+			data-testid="deck-settings-intro"
+			actionTestId="deck-settings-intro-dismiss"
 		>
 			<div className="space-y-4">
 				<div className="space-y-2">

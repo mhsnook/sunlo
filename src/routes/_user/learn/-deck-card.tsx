@@ -18,7 +18,7 @@ import { DeckMetaType } from '@/lib/schemas'
 
 export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (
-		<div style={getThemeCss(deck.theme)}>
+		<div style={getThemeCss(deck.theme)} data-key={deck.lang}>
 			<Card
 				data-testid={`deck-card-${deck.lang}`}
 				className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
@@ -27,7 +27,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 					<Link
 						className="grow"
 						to="/learn/$lang"
-						data-testid={`deck-card-link-${deck.lang}`}
+						aria-label="deck-link"
 						params={{ lang: deck.lang }}
 					>
 						<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">

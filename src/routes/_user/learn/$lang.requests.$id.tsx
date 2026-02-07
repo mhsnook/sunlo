@@ -82,7 +82,7 @@ function RequestThreadPage() {
 		)
 
 	return (
-		<main style={style}>
+		<main style={style} data-testid="request-detail-page">
 			<CardlikeRequest
 				data-request-id={request.id}
 				data-testid="request-permalink-card"

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import { TEST_USER_UID } from '../helpers/auth-helpers'
 import { getPhrase, getCardByPhraseId } from '../helpers/db-helpers'
+import { TEST_LANG } from '../helpers/test-constants'
 
 const phraseText = 'Accha, theek hai'
 const phraseTranslation = 'okay, sounds good'
@@ -10,10 +11,10 @@ test.describe.serial('Phrase Mutations', () => {
 		page,
 	}) => {
 		// 1. Login
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// Navigate to the add phrase page
-		await page.goto('/learn/hin/phrases/new')
+		await page.goto(`/learn/${TEST_LANG}/phrases/new`)
 
 		// 3. Fill the form
 		await page.fill('textarea[placeholder*="text of the phrase"]', phraseText)
@@ -36,7 +37,9 @@ test.describe.serial('Phrase Mutations', () => {
 		const successSection = page
 			.locator('h3:has-text("Successfully Added")')
 			.locator('..')
-		const phraseLink = successSection.locator('a[href*="/learn/hin/"]').first()
+		const phraseLink = successSection
+			.locator(`a[href*="/learn/${TEST_LANG}/"]`)
+			.first()
 		const href = await phraseLink.getAttribute('href')
 		const phraseId = href?.split('/').pop()
 
@@ -47,7 +50,7 @@ test.describe.serial('Phrase Mutations', () => {
 		expect(phraseError).toBeNull()
 		expect(dbPhrase).toMatchObject({
 			text: phraseText,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 		expect(dbPhrase?.translations).toHaveLength(1)
 		expect(dbPhrase?.translations[0]).toMatchObject({
@@ -63,7 +66,7 @@ test.describe.serial('Phrase Mutations', () => {
 		expect(cardError).toBeNull()
 		expect(dbCard).toMatchObject({
 			phrase_id: phraseId,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 
 		// 9. Test that form was reset
@@ -80,7 +83,7 @@ test.describe.serial('Phrase Mutations', () => {
 	test('bulkAddMutation: add multiple phrases with translations', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// Define test data - weather phrase with 2 translations, food phrase with 1
 		const phrase1 = {
 			text: 'aaj mosam kaisa hai?',
@@ -98,7 +101,7 @@ test.describe.serial('Phrase Mutations', () => {
 		// -- removed this because a counts-based approach won't be safe from parallel tests
 
 		// 2. Navigate to bulk add page
-		await page.goto('/learn/hin/bulk-add')
+		await page.goto(`/learn/${TEST_LANG}/bulk-add`)
 
 		// 3. Fill first phrase (the form starts with one empty phrase)
 		await page
@@ -159,7 +162,9 @@ test.describe.serial('Phrase Mutations', () => {
 		const successSection = page
 			.locator('h3:has-text("Successfully Added")')
 			.locator('..')
-		const phraseLinks = successSection.locator('a[href*="/learn/hin/"]')
+		const phraseLinks = successSection.locator(
+			`a[href*="/learn/${TEST_LANG}/"]`
+		)
 
 		// Should have 2 phrase links
 		await expect(phraseLinks).toHaveCount(2)
@@ -179,7 +184,7 @@ test.describe.serial('Phrase Mutations', () => {
 		expect(error1).toBeNull()
 		expect(dbPhrase1).toMatchObject({
 			text: phrase1.text,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 		expect(dbPhrase1?.translations).toHaveLength(2)
 		expect(dbPhrase1?.translations).toEqual(
@@ -200,7 +205,7 @@ test.describe.serial('Phrase Mutations', () => {
 		expect(error2).toBeNull()
 		expect(dbPhrase2).toMatchObject({
 			text: phrase2.text,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 		expect(dbPhrase2?.translations).toHaveLength(1)
 		expect(dbPhrase2?.translations[0]).toMatchObject({
@@ -236,14 +241,14 @@ test.describe.serial('Phrase Mutations', () => {
 		expect(collectionPhrase1).toMatchObject({
 			id: phraseId1,
 			text: phrase1.text,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 		expect(collectionPhrase1?.translations).toHaveLength(2)
 
 		expect(collectionPhrase2).toMatchObject({
 			id: phraseId2,
 			text: phrase2.text,
-			lang: 'hin',
+			lang: TEST_LANG,
 		})
 		expect(collectionPhrase2?.translations).toHaveLength(1)
 	})
@@ -251,7 +256,7 @@ test.describe.serial('Phrase Mutations', () => {
 	test.skip('addTranslation: add translation to existing phrase', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement add translation test
 		// Navigate to a phrase detail page
 		// Click "Add translation" button
@@ -260,7 +265,7 @@ test.describe.serial('Phrase Mutations', () => {
 	})
 
 	test.skip('addTagsMutation: add tags to phrase', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement add tags test
 		// Navigate to a phrase
 		// Add tags through the UI
@@ -270,7 +275,7 @@ test.describe.serial('Phrase Mutations', () => {
 	test.skip('sendPhraseToFriendMutation: share phrase with friend', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement phrase sharing test
 		// This requires having a friend in the DB
 		// Navigate to phrase

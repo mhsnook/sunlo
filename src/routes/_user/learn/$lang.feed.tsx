@@ -193,7 +193,7 @@ function RecentFeed() {
 			)
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !groupedItems || groupedItems.length === 0 ?
@@ -238,6 +238,7 @@ function RecentFeed() {
 						<Button
 							variant="outline"
 							onClick={() => void fetchNextPage()}
+							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
 							className={hasNextPage ? 'opacity-100' : 'opacity-0'}
 						>
@@ -288,7 +289,7 @@ function FriendsFeed() {
 			)
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !groupedItems || groupedItems.length === 0 ?
@@ -342,6 +343,7 @@ function FriendsFeed() {
 						<Button
 							variant="outline"
 							onClick={() => void fetchNextPage()}
+							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
@@ -389,7 +391,7 @@ function PopularFeed() {
 			})
 
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !filteredItems || filteredItems.length === 0 ?
@@ -429,6 +431,7 @@ function PopularFeed() {
 						<Button
 							variant="outline"
 							onClick={() => void fetchNextPage()}
+							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}

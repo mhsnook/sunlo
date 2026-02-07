@@ -15,7 +15,11 @@ export function FeedItem({ item }: { item: FeedActivityType | PhraseGroup }) {
 		// For phrase groups, use the max popularity of items in the group
 		const maxPopularity = Math.max(...item.items.map((i) => i.popularity))
 		return (
-			<div data-feed-item data-popularity={maxPopularity}>
+			<div
+				data-feed-item
+				data-popularity={maxPopularity}
+				data-name="feed-item-phrase"
+			>
 				<FeedPhraseGroupItem items={item.items} />
 			</div>
 		)
@@ -35,7 +39,11 @@ export function FeedItem({ item }: { item: FeedActivityType | PhraseGroup }) {
 	})()
 
 	return (
-		<div data-feed-item data-popularity={item.popularity}>
+		<div
+			data-feed-item
+			data-popularity={item.popularity}
+			data-name={`feed-item-${item.type}`}
+		>
 			{content}
 		</div>
 	)

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import { TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	createRequest,
 	createPlaylist,
@@ -9,13 +9,14 @@ import {
 	deletePhrase,
 	supabase,
 } from '../helpers/db-helpers'
+import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Unified Feed', () => {
 	test('displays requests, playlists, and phrases in chronological order', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
 		const requestText = `Chron Order Request ${nonce}`
 		const playlistText = `Chron Order Playlist ${nonce}`
@@ -43,8 +44,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			await expect(page.getByText(requestText).first()).toBeVisible()
@@ -72,9 +73,9 @@ test.describe('Unified Feed', () => {
 	test('displays phrase provenance correctly (linked to request)', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		const nonce = Math.random().toString(36).substring(7)
-		const lang = 'hin'
+		const lang = TEST_LANG
 		const phraseText = `Provenance Phrase ${nonce}`
 		const translationText = `Provenance Translation Text ${nonce}`
 		const translationLang = 'eng'
@@ -118,8 +119,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI (start from home/learn)
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 6. Verify the phrase is NOT visible as a standalone activity (the "A new Phrase" text)
@@ -143,8 +144,8 @@ test.describe('Unified Feed', () => {
 	test('folds playlist phrases into the playlist activity', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
 		const playlistTitle = `Folding Playlist ${nonce}`
 		const phrase1Text = `Folded Phrase 1 ${nonce}`
@@ -178,8 +179,8 @@ test.describe('Unified Feed', () => {
 		try {
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 3. Verify the playlist is visible, with "2 phrases" badge
@@ -202,8 +203,8 @@ test.describe('Unified Feed', () => {
 	})
 
 	test('supports infinite scrolling', async ({ page }) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 
 		// 1. Create many requests to ensure we have enough for pagination
 		// Default page size is likely 20 or similar.
@@ -223,8 +224,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed via UI
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Verify first page is visible
@@ -254,21 +255,23 @@ test.describe('Unified Feed', () => {
 	test('updates feed immediately after creating a request through UI', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
 		const promptText = `UI Sync Request ${nonce}`
 
 		// 1. Go to Feed initially
 		await expect(page).toHaveURL(`/learn`)
 		await page
-			.getByTestId(`deck-card-${lang}`)
-			.getByTestId(`deck-card-link-${lang}`)
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
 			.click()
-		await expect(page.getByText('Activity feed for Hindi')).toBeVisible()
+		await expect(
+			page.getByText(`Activity feed for ${TEST_LANG_DISPLAY}`)
+		).toBeVisible()
 
 		// 2. Navigate to New Request page via UI (preserving SPA state)
-		await page.getByTestId('sidebar-link--learn-lang-requests-new').click()
+		await page.locator('a[data-key="/learn/$lang/requests/new"]').click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/new`))
 
 		// 3. Fill and submit
@@ -279,7 +282,7 @@ test.describe('Unified Feed', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/`))
 
 		// 5. Navigate back to feed using UI link (preserving SPA state)
-		await page.getByTestId('sidebar-link--learn-lang-feed').click()
+		await page.locator('a[data-key="/learn/$lang/feed"]').click()
 
 		// 6. Reload to ensure feed data is fresh (feed invalidation may be async)
 		await page.reload()
@@ -299,8 +302,8 @@ test.describe('Unified Feed', () => {
 	test('Popular feed sorts items by popularity descending', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
 
 		// Create items with different popularity scores
@@ -337,8 +340,8 @@ test.describe('Unified Feed', () => {
 			// Navigate to feed
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// Switch to Popular tab
@@ -385,8 +388,8 @@ test.describe('Unified Feed', () => {
 	})
 
 	test('allows users to upvote playlists', async ({ page }) => {
-		await loginAsTestUser(page)
-		const lang = 'hin'
+		await page.goto('/learn')
+		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
 		const playlistTitle = `Upvote Test Playlist ${nonce}`
 
@@ -400,8 +403,8 @@ test.describe('Unified Feed', () => {
 			// 2. Navigate to feed
 			await page.goto('/learn')
 			await page
-				.getByTestId(`deck-card-${lang}`)
-				.getByTestId(`deck-card-link-${lang}`)
+				.getByTestId('decks-list-grid')
+				.getByText(TEST_LANG_DISPLAY)
 				.click()
 
 			// 3. Verify playlist is visible in feed

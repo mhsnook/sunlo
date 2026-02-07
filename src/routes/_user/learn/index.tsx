@@ -32,7 +32,11 @@ function Page() {
 	// For non-authenticated users, show browse prompt
 	if (!isAuth) {
 		return (
-			<main className="w-full space-y-6" style={style}>
+			<main
+				className="w-full space-y-6"
+				style={style}
+				data-testid="logged-out-learn-page"
+			>
 				<div className="px-4 @lg:px-6 @xl:px-8">
 					<BrowsePrompt />
 				</div>
@@ -55,6 +59,7 @@ function Page() {
 					<Link
 						className="s-link-muted flex flex-row items-center gap-1 text-sm"
 						to="/learn/archived"
+						data-testid="view-archived-decks-link"
 					>
 						<Archive size={14} />
 						<span>View archived decks</span>{' '}
@@ -104,6 +109,7 @@ function AllDecksArchived() {
 				</Link>
 				<Link
 					to="/learn/archived"
+					data-testid="view-archived-decks-link"
 					className={buttonVariants({ variant: 'secondary', size: 'lg' })}
 				>
 					<Archive size={14} /> View archived decks{' '}
@@ -116,7 +122,10 @@ function AllDecksArchived() {
 
 function BrowsePrompt() {
 	return (
-		<div className="space-y-6 py-6 text-center">
+		<div
+			className="space-y-6 py-6 text-center"
+			data-testid="browse-languages-prompt"
+		>
 			<GarlicBroccoli />
 			<h2 className="text-xl font-bold">Welcome to Sunlo</h2>
 			<p className="text-muted-foreground mb-4">

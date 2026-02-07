@@ -36,3 +36,4 @@ keystore.properties
 /playwright-report/
 /test-results/
 /scenetest/.reports/
+/.auth/

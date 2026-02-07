@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import { TEST_USER_UID } from '../helpers/auth-helpers'
 import { getDeck, deleteDeck } from '../helpers/db-helpers'
 
 const TEST_LANG = 'spa' // Spanish
@@ -14,7 +14,7 @@ test.describe.serial('Deck Mutations', () => {
 
 	// maybe we should find and delete if present
 	test('Create new deck', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// Click deck-switcher in sidebar → "New deck"
 		await page.click('button:has-text("Choose a deck")') // Opens deck switcher
@@ -65,7 +65,7 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	test('Update daily review count', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
 		await page.locator('#top-right-context-menu').click()
@@ -111,7 +111,7 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	test('Update deck goal/motivation', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// Navigate to the learn page where decks are shown
 		await expect(page).toHaveURL('/learn')
@@ -165,7 +165,7 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	test('Archive deck', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// Navigate to deck settings
 		await expect(page.getByText('Spanish')).toBeVisible()
@@ -225,12 +225,15 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	test('Unarchive deck', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
 		// Click the archived deck to navigate to it
 		await page.getByRole('link', { name: /view archived decks/i }).click()
 		await expect(page.getByTestId('deck-card-spa')).toBeVisible()
-		await page.getByTestId('deck-card-link-spa').click()
+		await page
+			.getByTestId('deck-card-spa')
+			.getByRole('link', { name: 'deck-link' })
+			.click()
 		// Navigate to deck settings
 		await page.locator('#top-right-context-menu').click()
 

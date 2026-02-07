@@ -5360,6 +5360,34 @@ values
 		now() - interval '10 days',
 		'active',
 		'hin'
+	),
+	-- Kannada cards for sunloapp@gmail.com (cf1f69ce)
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a1b2c3d4-1111-2222-3333-444455556666',
+		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
+		now() - interval '12 days',
+		now() - interval '12 days',
+		'active',
+		'kan'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b2c3d4e5-2222-3333-4444-555566667777',
+		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
+		now() - interval '11 days',
+		now() - interval '11 days',
+		'active',
+		'kan'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c3d4e5f6-3333-4444-5555-666677778888',
+		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
+		now() - interval '10 days',
+		now() - interval '10 days',
+		'active',
+		'kan'
 	);
 
 --
@@ -5381,6 +5409,13 @@ values
 		(current_date - 4 + interval '30 hour' - interval '4 hour')::date,
 		current_date - 4 + interval '30 hour',
 		'["fd535752-d602-4ab8-8656-9e11692f30fc", "163d7f57-a76f-4e5b-9346-1de5cfeba7d8", "93d5d050-e9af-4652-9c76-9dc2a232640a", "fa26ba78-a7a3-49f8-8516-034424477dec", "c3c81fa4-9c63-4569-b9b6-9c931ee3154f", "ed70550e-da8a-44dc-8bfd-69965375b7f9", "c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9", "b2736292-1137-41db-a453-ad203726d8c5", "a875f6e4-a8cc-4f68-baf3-ca2aea273568", "a00febfd-e6d6-40bc-a3b8-e31563410db8", "97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68", "4b7b3741-16ce-4ce8-a9b8-70556451a8e5", "49066ea2-e608-42ab-8817-1f20b0eada03", "4677f15a-1cd9-40a3-876c-30662c5eec3f", "44bcd224-b4b3-46ce-b260-2136712b0907"]'
+	),
+	(
+		'kan',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		(current_date - 4 + interval '30 minute' - interval '4 hour')::date,
+		current_date - 4 + interval '30 minute',
+		'["b9e3edac-de8b-4796-b436-a0cded08d2ae", "c1cc1a36-1b77-41bf-9a05-6e7914d256e2", "b7247f31-3758-47ea-bdf8-1c2a7ff161ed"]'
 	);
 
 --
@@ -5904,6 +5939,49 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'44bcd224-b4b3-46ce-b260-2136712b0907',
+		true
+	),
+	-- Kannada card reviews for sunloapp@gmail.com (cf1f69ce)
+	(
+		'd1e2f3a4-1111-2222-3333-444455556666',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '35 minute',
+		current_date - 4 + interval '35 minute',
+		(current_date - 4 + interval '35 minute' - interval '4 hour')::date,
+		'kan',
+		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
+		true
+	),
+	(
+		'e2f3a4b5-2222-3333-4444-555566667777',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '36 minute',
+		current_date - 4 + interval '36 minute',
+		(current_date - 4 + interval '36 minute' - interval '4 hour')::date,
+		'kan',
+		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
+		true
+	),
+	(
+		'f3a4b5c6-3333-4444-5555-666677778888',
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		3,
+		5.282434422319,
+		3.173,
+		null,
+		current_date - 4 + interval '37 minute',
+		current_date - 4 + interval '37 minute',
+		(current_date - 4 + interval '37 minute' - interval '4 hour')::date,
+		'kan',
+		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
 		true
 	);
 

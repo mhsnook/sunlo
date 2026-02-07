@@ -1,6 +1,10 @@
 import { test, expect, Page } from '@playwright/test'
 import { TEST_USER_EMAIL, TEST_USER_UID } from '../helpers/auth-helpers'
 import { markAllIntrosAffirmed } from '../helpers/collection-helpers'
+import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
+
+// These tests verify auth state transitions from a fresh browser state
+test.use({ storageState: { cookies: [], origins: [] } })
 
 /**
  * These tests verify auth state transitions including:
@@ -119,7 +123,9 @@ test.describe('Auth State Transitions', () => {
 		})
 
 		// Verify we can see decks (collection loaded)
-		await expect(page.getByText('Hindi').first()).toBeVisible()
+		await expect(
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible()
 	})
 
 	test('sign out clears session and redirects to home', async ({ page }) => {
@@ -166,7 +172,9 @@ test.describe('Auth State Transitions', () => {
 		await expect(page.getByText('GarlicFace').first()).toBeVisible({
 			timeout: 5000,
 		})
-		await expect(page.getByText('Hindi').first()).toBeVisible()
+		await expect(
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible()
 
 		// Auth state should still be valid
 		const authState = await getAuthState(page)
@@ -207,11 +215,18 @@ test.describe('Auth State Transitions', () => {
 
 		// Decks should be loaded - this is the key test
 		// If decks don't show up, the collection wasn't loaded properly
-		await expect(page.getByText('Hindi').first()).toBeVisible({ timeout: 5000 })
+		await expect(
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible({
+			timeout: 5000,
+		})
 
 		// Navigate to a deck to verify cards collection loads
-		await page.getByText('Hindi').first().click()
-		await expect(page).toHaveURL(/\/learn\/hin/)
+		await page
+			.getByTestId('decks-list-grid')
+			.getByText(TEST_LANG_DISPLAY)
+			.click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 	})
 })
 
@@ -292,7 +307,9 @@ test.describe('Collection State Verification', () => {
 		})
 
 		// Verify decks are shown
-		await expect(page.getByText('Hindi').first()).toBeVisible()
+		await expect(
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible()
 	})
 
 	test('after sign out, sidebar shows login/signup links', async ({ page }) => {

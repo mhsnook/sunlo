@@ -76,7 +76,10 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 						<span>Share</span>
 					</DropdownMenuItem>
 				)}
-				<DropdownMenuItem onClick={handleCopyPermalink}>
+				<DropdownMenuItem
+					onClick={handleCopyPermalink}
+					data-testid="copy-link-menu-item"
+				>
 					<LinkIcon className="mr-2 h-4 w-4" />
 					<span>Copy link</span>
 				</DropdownMenuItem>

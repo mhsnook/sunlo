@@ -75,7 +75,7 @@ function DeckSettingsPage() {
 				</div>
 			)}
 
-			<Card style={style}>
+			<Card style={style} data-testid="deck-settings-page">
 				<CardHeader>
 					<CardTitle>Deck Settings</CardTitle>
 				</CardHeader>
@@ -193,6 +193,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
+					data-testid="review-goal-options"
 					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					onSubmit={handleSubmit((data) =>
 						updateDailyGoalMutation.mutate(data)
@@ -206,7 +207,11 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 						options={dailyReviewGoalOptions}
 					/>
 					<div className="space-x-2">
-						<Button type="submit" disabled={!isDirty}>
+						<Button
+							type="submit"
+							disabled={!isDirty}
+							data-testid="update-daily-goal-button"
+						>
 							Update your daily goal
 						</Button>
 						<Button
@@ -307,6 +312,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			<CardContent>
 				<form
 					noValidate
+					data-testid="learning-goal-options"
 					// eslint-disable-next-line @typescript-eslint/no-misused-promises
 					onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutate(data))}
 					className="space-y-4"
@@ -318,7 +324,11 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 						options={learningGoalOptions}
 					/>
 					<div className="space-x-2">
-						<Button type="submit" disabled={!isDirty}>
+						<Button
+							type="submit"
+							disabled={!isDirty}
+							data-testid="update-goal-button"
+						>
 							Update your goal
 						</Button>
 						<Button

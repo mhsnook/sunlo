@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test'
 import { loginAsTestUser } from '../helpers/auth-helpers'
 import { clearAllIntroStates } from '../helpers/collection-helpers'
 
+// Onboarding tests need a fresh browser to test the full auth flow
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('Onboarding and Auth Mutations', () => {
 	test.skip('signupMutation: create new account', async ({ page: _page }) => {
 		// TODO: Implement signup test
@@ -35,7 +38,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await page.goto('/welcome')
 
 		// The community norms dialog should appear
-		await expect(page.getByTestId('community-norms-intro')).toBeVisible({
+		await expect(page.getByTestId('intro-message-section')).toBeVisible({
 			timeout: 10000,
 		})
 
@@ -57,7 +60,7 @@ test.describe('Onboarding and Auth Mutations', () => {
 		await expect(page.getByTestId('sunlo-welcome-explainer')).toBeVisible({
 			timeout: 10000,
 		})
-		await expect(page.getByTestId('community-norms-intro')).not.toBeVisible()
+		await expect(page.getByTestId('intro-message-section')).not.toBeVisible()
 	})
 
 	test.skip('welcomePage: displays features and actions', async ({

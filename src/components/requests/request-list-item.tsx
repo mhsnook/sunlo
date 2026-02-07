@@ -37,7 +37,7 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 					else return
 				}}
 				tabIndex={0}
-				data-testid={`request-item-${request.id}`}
+				data-testid="request-item"
 			>
 				<RequestHeader request={request} />
 				<CardContent>

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAsTestUser, TEST_USER_UID } from '../helpers/auth-helpers'
+import { TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getReviewSessionState,
 	getCardByPhraseId,
@@ -9,8 +9,7 @@ import {
 import { getReviewSessionBoth } from '../helpers/both-helpers'
 import { todayString } from '../../src/lib/utils'
 import { goToDeckPage } from '../helpers/goto-helpers'
-
-const TEST_LANG = 'hin' // Hindi - has test data
+import { TEST_LANG } from '../helpers/test-constants'
 
 test.describe.serial('Review Mutations', () => {
 	const sessionDate = todayString()
@@ -31,9 +30,9 @@ test.describe.serial('Review Mutations', () => {
 	})
 
 	test('0. create daily review session', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 
-		// Navigate to Hindi deck page
+		// Navigate to deck page
 		await goToDeckPage(page, TEST_LANG)
 
 		// Verify we are on the setup page
@@ -48,7 +47,7 @@ test.describe.serial('Review Mutations', () => {
 		await expect(page.getByText(/Ready to go!/i)).toBeVisible()
 
 		// Should navigate to review go page
-		await page.waitForURL(/\/learn\/hin\/review\/go/)
+		await page.waitForURL(new RegExp(`/learn/${TEST_LANG}/review/go`))
 
 		// Expect to see the new cards preview screen (either with new cards or the "no new cards" variant)
 		const previewNewCards = page.getByText('Preview New Cards')
@@ -96,8 +95,8 @@ test.describe.serial('Review Mutations', () => {
 	test('1. useReviewMutation: submit first card review, edit it', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
-		// Navigate to Hindi deck page
+		await page.goto('/learn')
+		// Navigate to deck page
 		await goToDeckPage(page, TEST_LANG)
 		// We expect "Continue Review" because the session was created in test step 0
 		const continueBtn = page.getByRole('button', { name: 'Continue Review' })
@@ -105,7 +104,9 @@ test.describe.serial('Review Mutations', () => {
 		await continueBtn.click()
 
 		// After clicking Continue Review, wait for navigation to /review/go
-		await expect(page).toHaveURL(/\/learn\/hin\/review\/go/, { timeout: 10000 })
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`), {
+			timeout: 10000,
+		})
 
 		// Handle the new cards preview screen (previewSeen resets per browser session)
 		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
@@ -260,7 +261,7 @@ test.describe.serial('Review Mutations', () => {
 	test.skip('2. useReviewMutation: submit reviews in stage 1', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement multiple reviews test
 		// Continue in-progress review session, expect the page to open to the second card (because the first has been reviewed already in step 1)
 		// Submit reviews for each card in the list, giving some cards a score of 1 (and remember which ones), and skipping other cards (remember which ones)
@@ -272,7 +273,7 @@ test.describe.serial('Review Mutations', () => {
 	})
 
 	test.skip('3. End of review stage 1 through stage 3', async ({ page }) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement edit review test
 		// Continue in-progress review session
 		// Expect it to be on the screen that says "Step 2 of 3" and "Review Skipepd cards"
@@ -291,7 +292,7 @@ test.describe.serial('Review Mutations', () => {
 	test.skip('4. useReviewMutation: verify FSRS algorithm calculations', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement FSRS verification test
 		// Review a card with known initial state
 		// Submit review with specific score
@@ -303,7 +304,7 @@ test.describe.serial('Review Mutations', () => {
 	test.skip('5. useReviewMutation: handle review session interruption', async ({
 		page,
 	}) => {
-		await loginAsTestUser(page)
+		await page.goto('/learn')
 		// TODO: Implement session interruption test
 		// Start review session
 		// Submit some reviews

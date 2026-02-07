@@ -48,11 +48,7 @@ function ReviewPage() {
 	}
 
 	return (
-		<FlashCardReviewSession
-			data-testid="review-session-page"
-			manifest={day.manifest}
-			dayString={dayString}
-		/>
+		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
 	)
 }
 
@@ -71,7 +67,10 @@ function FlashCardReviewSession({
 	const atTheEnd = currentCardIndex === manifest.length
 
 	return (
-		<div className="flex-col items-center justify-center gap-2 py-2">
+		<div
+			className="flex-col items-center justify-center gap-2 py-2"
+			data-testid="review-session-page"
+		>
 			<div className="mb-2 flex flex-col items-center justify-center gap-2">
 				<div className="flex min-h-10 flex-row items-center justify-center">
 					{!atTheEnd && reviewStage === 1 ?

@@ -99,11 +99,16 @@ export function UpdatePlaylistDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" aria-label="Update playlist">
+				<Button
+					variant="ghost"
+					size="icon"
+					aria-label="Update playlist"
+					data-testid="update-playlist-button"
+				>
 					<Edit className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
-			<DialogContent>
+			<DialogContent data-testid="edit-playlist-dialog">
 				<DialogHeader>
 					<DialogTitle>Edit Playlist</DialogTitle>
 					<DialogDescription className="sr-only">
@@ -115,6 +120,7 @@ export function UpdatePlaylistDialog({
 						<Label htmlFor="playlist-title">Title</Label>
 						<Input
 							id="playlist-title"
+							data-testid="playlist-title-input"
 							value={editTitle}
 							onChange={(e) => setEditTitle(e.target.value)}
 						/>
@@ -123,6 +129,7 @@ export function UpdatePlaylistDialog({
 						<Label htmlFor="playlist-description">Description</Label>
 						<Textarea
 							id="playlist-description"
+							data-testid="playlist-description-input"
 							value={editDescription}
 							onChange={(e) => setEditDescription(e.target.value)}
 							rows={3}
@@ -132,6 +139,7 @@ export function UpdatePlaylistDialog({
 						<Label htmlFor="playlist-href">Source URL</Label>
 						<Input
 							id="playlist-href"
+							data-testid="playlist-href-input"
 							type="url"
 							value={editHref}
 							onChange={(e) => setEditHref(e.target.value)}
@@ -204,6 +212,7 @@ export function UpdatePlaylistDialog({
 							size="sm"
 							onClick={() => mutation.mutate()}
 							disabled={mutation.isPending || !editTitle.trim()}
+							data-testid="save-playlist-button"
 						>
 							{mutation.isPending ? 'Saving...' : 'Save'}
 						</Button>
