@@ -114,7 +114,11 @@ export function NavUser() {
 						<DropdownMenuGroup>
 							{data?.map((item) => (
 								<DropdownMenuItem key={item.link.to} asChild>
-									<Link to={item.link.to} onClick={setClosedMobile}>
+									<Link
+										to={item.link.to}
+										data-key={item.link.to}
+										onClick={setClosedMobile}
+									>
 										{item.Icon ?
 											<item.Icon />
 										:	null}

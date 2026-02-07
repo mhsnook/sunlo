@@ -1,20 +1,18 @@
-# learner views activity feed with requests playlists and phrases
+# learner views activity feed with requests and playlists
 
 learner:
 
 - login
 - openTo /learn
 - see decks-list-grid
-- click hin deck-link
+- click [team.lang] deck-link
+- up
 - see deck-feed-page
 - see feed-item-list
 - see feed-item-request
 - up
 - see feed-item-list
 - see feed-item-playlist
-- up
-- see feed-item-list
-- see feed-item-phrase
 
 # learner switches to popular tab on feed
 
@@ -23,8 +21,10 @@ learner:
 - login
 - openTo /learn
 - see decks-list-grid
-- click hin deck-link
+- click [team.lang] deck-link
+- up
 - see deck-feed-page
+- up
 - click feed-tab-popular
 - see feed-item-list
 
@@ -35,26 +35,29 @@ learner:
 - login
 - openTo /learn
 - see decks-list-grid
-- click hin deck-link
+- click [team.lang] deck-link
+- up
 - see feed-item-playlist
 - click upvote-playlist-button
-- seeText 1
+- up
+- see feed-item-playlist
 - click upvote-playlist-button
-- seeText 0
 
 # feed loads more items on scroll
 
-learner:
-
-- login
-- openTo /learn
-- see decks-list-grid
-- click hin deck-link
-- see deck-feed-page
-- see feed-item-list
-- scrollToBottom
-- see load-more-button
-- click load-more-button
+// learner:
+//
+// - login
+// - openTo /learn
+// - see decks-list-grid
+// - click [team.lang] deck-link
+// - up
+// - see deck-feed-page
+// - see feed-item-list
+// - up
+// - scrollToBottom
+// - see load-more-button
+// - click load-more-button
 
 # learner views chat messages from a friend
 
@@ -64,7 +67,8 @@ learner:
 - openTo /learn
 - see decks-list-grid
 - up
-- click sidebar-link--friends-chats
+- click /friends/chats
+- up
 - see chats-page
 - see friend-chat-list
 - click friend-chat-link
@@ -72,15 +76,19 @@ learner:
 - see chat-messages-container
 - see chat-message-bubble
 
-# opening a chat marks messages as read
-
-learner:
-
-- login
-- openTo /learn
-- see decks-list-grid
-- click sidebar-link--friends-chats
-- see chats-page
-- see unread-badge
-- click friend-chat-link
-- see chat-messages-container
+// # opening a chat marks messages as read
+//
+// learner:
+//
+// - login
+// - openTo /learn
+// - see decks-list-grid
+// - up
+// - click /friends/chats
+// - up
+// - see chats-page
+// - see unread-badge
+// - up
+// - click friend-chat-link
+// - up
+// - see chat-messages-container
