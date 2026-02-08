@@ -54,7 +54,7 @@ export function DeleteRequestDialog({
 			<Button
 				variant="ghost"
 				size="icon"
-				title="Delete request"
+				aria-label="Button to delete requests"
 				data-name="delete-request-button"
 				onClick={() => setOpen(true)}
 			>

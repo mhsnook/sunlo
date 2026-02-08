@@ -412,7 +412,7 @@ test.describe('Unified Feed', () => {
 
 			// 4. Find the upvote button for this playlist
 			const playlistCard = page.locator(
-				`div.bg-card:has-text("${playlistTitle}")`
+				`[data-feed-item]:has-text("${playlistTitle}")`
 			)
 			const upvoteButton = playlistCard.getByTestId('upvote-playlist-button')
 
@@ -457,9 +457,9 @@ test.describe('Unified Feed', () => {
 			// 12. Verify count decreased back to 0
 			await expect(upvoteArea).toContainText('0')
 
-			// 13. Verify button state changed back (title changes back to "Vote up this playlist")
+			// 13. Verify button state changed back (aria-label changes back to "Vote up this playlist")
 			await expect(upvoteButton).toHaveAttribute(
-				'title',
+				'aria-label',
 				'Vote up this playlist'
 			)
 

@@ -19,7 +19,6 @@ export function CommunityNormsIntro({
 			requireAffirmation
 			actionLabel="I agree to these norms"
 			onAction={onAffirm}
-			data-testid="community-norms-intro"
 			actionTestId="affirm-community-norms-button"
 		>
 			<div className="space-y-4">

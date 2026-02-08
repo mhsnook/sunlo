@@ -35,9 +35,7 @@ interface IntroSheetProps {
 	skipLabel?: string
 	/** Called when user clicks skip */
 	onSkip?: () => void
-	/** Test ID for the container */
-	'data-testid'?: string
-	/** Test ID for the action button */
+	/** data-testid for the action button */
 	actionTestId?: string
 }
 
@@ -57,7 +55,6 @@ export function IntroSheet({
 	onAction,
 	skipLabel,
 	onSkip,
-	'data-testid': testId,
 	actionTestId,
 }: IntroSheetProps) {
 	const isMobile = useIsMobile()
@@ -84,7 +81,7 @@ export function IntroSheet({
 	if (isMobile) {
 		return (
 			<Drawer open={open} onOpenChange={handleOpenChange}>
-				<DrawerContent data-testid={testId}>
+				<DrawerContent data-testid="intro-message-section">
 					<DrawerHeader className="text-left">
 						<DrawerTitle>{title}</DrawerTitle>
 						{description && (
@@ -96,6 +93,7 @@ export function IntroSheet({
 						<Button
 							onClick={handleAction}
 							className="w-full"
+							aria-label="button-dismiss-intro-message"
 							data-testid={actionTestId}
 						>
 							{actionLabel}
@@ -120,8 +118,8 @@ export function IntroSheet({
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent
+				data-testid="intro-message-section"
 				className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
-				data-testid={testId}
 				onInteractOutside={
 					requireAffirmation ? (e) => e.preventDefault() : undefined
 				}

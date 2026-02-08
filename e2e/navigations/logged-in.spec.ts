@@ -41,8 +41,12 @@ test.describe('Logged In Navigation', () => {
 
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review`))
 
-		// Should see review stats
-		await expect(page.getByText(/total cards/i)).toBeVisible()
+		// Should see review content - either setup page or continue review page
+		await expect(
+			page
+				.getByTestId('review-setup-page')
+				.or(page.getByRole('button', { name: /continue review/i }))
+		).toBeVisible()
 	})
 
 	test('sidebar navigation works within a deck', async ({ page }) => {
