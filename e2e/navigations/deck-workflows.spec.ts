@@ -57,6 +57,15 @@ test.describe('Deck Workflow Navigation', () => {
 		// Should be on review/go page
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`))
 
+		// Handle the preview new cards screen if it appears
+		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
+		const cardNav = page.getByText(/card \d+ of \d+/i)
+		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
+		if (await startReviewBtn.isVisible()) {
+			await startReviewBtn.scrollIntoViewIfNeeded()
+			await startReviewBtn.click()
+		}
+
 		// Should see a card
 		await expect(page.getByText(/card \d+ of \d+/i)).toBeVisible()
 

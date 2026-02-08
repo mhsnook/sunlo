@@ -137,6 +137,11 @@ test.describe.serial('Review Mutations', () => {
 		// Close the context menu by pressing Escape
 		await page.keyboard.press('Escape')
 
+		// Scope card-specific selectors to this card (all cards are in DOM, only current one visible)
+		const currentCard = page.locator(
+			`[data-name="flashcard"][data-key="${phraseId}"]`
+		)
+
 		// Grab the card from the DB before review
 		const { data: dbCardBefore } = await getCardByPhraseId(
 			phraseId!,
@@ -144,11 +149,20 @@ test.describe.serial('Review Mutations', () => {
 		)
 		expect(dbCardBefore).toBeTruthy()
 
-		// Click "Show Translations" to reveal the answer buttons
-		await page.getByRole('button', { name: 'Show Translations' }).click()
+		// Wait for the flashcard content to load (phrase data may still be syncing)
+		await expect(currentCard).toBeVisible({ timeout: 15000 })
+
+		// Click "Show Translations" to reveal the answer buttons (may already be shown
+		// if the card was previously reviewed in test 0, since prevData auto-reveals)
+		const revealBtn = currentCard.getByTestId('reveal-answer-button')
+		const answerBtns = currentCard.locator('[data-name="answer-buttons-row"]')
+		await expect(revealBtn.or(answerBtns)).toBeVisible({ timeout: 10000 })
+		if (await revealBtn.isVisible()) {
+			await revealBtn.click()
+		}
 
 		// Submit a review with a score of 2 (Hard)
-		await page.getByRole('button', { name: 'Hard' }).click()
+		await currentCard.getByTestId('rating-hard-button').click()
 		// Toast shows "okay" for score 2 (Hard) - look for toast containing "okay" text
 		await expect(
 			page.locator('[data-sonner-toast]').getByText('okay')
@@ -185,15 +199,21 @@ test.describe.serial('Review Mutations', () => {
 		// After the review, use the button to navigate to the previous card
 		await page.getByRole('button', { name: 'Previous card' }).click()
 
+		// Hide scenetest dev panel that can intercept clicks near bottom of page
+		await page.evaluate(() => {
+			const panel = document.getElementById('scenetest-panel')
+			if (panel) panel.style.display = 'none'
+		})
+
 		// The previously-answered option has a ring indicator (not disabled)
 		// because user CAN update their answer by clicking a different button
-		const hardButton = page.getByRole('button', { name: 'Hard' })
+		const hardButton = currentCard.getByTestId('rating-hard-button')
 		await expect(hardButton).toBeEnabled()
 		// The ring indicator class is applied to show the previous selection
 		await expect(hardButton).toHaveClass(/ring-primary/)
 
 		// Give a different answer (score=4) to update the answer
-		await page.getByRole('button', { name: 'Easy' }).click()
+		await currentCard.getByTestId('rating-easy-button').click()
 		await expect(page.getByText('Review updated!')).toBeVisible()
 
 		// Check the database for the newest review
