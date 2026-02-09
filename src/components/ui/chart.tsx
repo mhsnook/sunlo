@@ -102,14 +102,27 @@ const ChartTooltip = RechartsPrimitive.Tooltip
 
 const ChartTooltipContent = React.forwardRef<
 	HTMLDivElement,
-	React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-		React.ComponentProps<'div'> & {
-			hideLabel?: boolean
-			hideIndicator?: boolean
-			indicator?: 'line' | 'dot' | 'dashed'
-			nameKey?: string
-			labelKey?: string
-		}
+	/* oxlint-disable typescript-eslint/no-explicit-any -- recharts tooltip content props use `any` for runtime-injected values */
+	React.ComponentProps<'div'> & {
+		active?: boolean
+		payload?: Array<Record<string, any>>
+		label?: React.ReactNode
+		labelFormatter?: (label: any, payload: any) => React.ReactNode
+		formatter?: (
+			value: any,
+			name: any,
+			item: any,
+			index: number,
+			payload: any
+		) => React.ReactNode
+		/* oxlint-enable typescript-eslint/no-explicit-any */
+		labelClassName?: string
+		hideLabel?: boolean
+		hideIndicator?: boolean
+		indicator?: 'line' | 'dot' | 'dashed'
+		nameKey?: string
+		labelKey?: string
+	}
 >(
 	(
 		{
@@ -132,7 +145,7 @@ const ChartTooltipContent = React.forwardRef<
 		const { config } = useChart()
 
 		const tooltipLabel = React.useMemo(() => {
-			if (hideLabel || !payload?.length) {
+			if (hideLabel || !payload || !payload.length) {
 				return null
 			}
 
@@ -167,7 +180,7 @@ const ChartTooltipContent = React.forwardRef<
 			labelKey,
 		])
 
-		if (!active || !payload?.length) {
+		if (!active || !payload || !payload.length) {
 			return null
 		}
 
@@ -186,13 +199,14 @@ const ChartTooltipContent = React.forwardRef<
 					{payload.map((item, index) => {
 						const key = `${nameKey || item.name || item.dataKey || 'value'}`
 						const itemConfig = getPayloadConfigFromPayload(config, item, key)
-						// eslint-disable-next-line
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 						const indicatorColor: string =
-							// eslint-disable-next-line
+							// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 							color || item.payload.fill || item.color
 
 						return (
 							<div
+								// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 								key={item.dataKey}
 								className={cn(
 									'[&>svg]:text-muted-foreground flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5',
@@ -200,7 +214,6 @@ const ChartTooltipContent = React.forwardRef<
 								)}
 							>
 								{formatter && item?.value !== undefined && item.name ?
-									// eslint-disable-next-line
 									formatter(item.value, item.name, item, index, item.payload)
 								:	<>
 										{itemConfig?.icon ?
@@ -240,6 +253,7 @@ const ChartTooltipContent = React.forwardRef<
 											</div>
 											{item.value && (
 												<span className="text-foreground font-mono font-medium tabular-nums">
+													{/* eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */}
 													{item.value.toLocaleString()}
 												</span>
 											)}
@@ -261,7 +275,10 @@ const ChartLegend = RechartsPrimitive.Legend
 const ChartLegendContent = React.forwardRef<
 	HTMLDivElement,
 	React.ComponentProps<'div'> &
-		Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
+		Pick<
+			RechartsPrimitive.DefaultLegendContentProps,
+			'payload' | 'verticalAlign'
+		> & {
 			hideIcon?: boolean
 			nameKey?: string
 		}
@@ -272,7 +289,7 @@ const ChartLegendContent = React.forwardRef<
 	) => {
 		const { config } = useChart()
 
-		if (!payload?.length) {
+		if (!payload || !payload.length) {
 			return null
 		}
 
@@ -286,13 +303,11 @@ const ChartLegendContent = React.forwardRef<
 				)}
 			>
 				{payload.map((item) => {
-					// eslint-disable-next-line
-					const key = `${nameKey || item.dataKey || 'value'}`
+					const key = `${nameKey || String(item.dataKey) || 'value'}`
 					const itemConfig = getPayloadConfigFromPayload(config, item, key)
 
 					return (
 						<div
-							// eslint-disable-next-line
 							key={item.value}
 							className={cn(
 								'[&>svg]:text-muted-foreground flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3'
