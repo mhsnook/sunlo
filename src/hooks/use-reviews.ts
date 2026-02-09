@@ -10,7 +10,6 @@ import {
 	useReviewActions,
 	useReviewLang,
 } from './use-review-store'
-import { useReviewStoreOptional } from '@/components/review/review-context-provider'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
@@ -393,19 +392,13 @@ export const useOneCardReviews = (
  * Returns the number of cards remaining in an active review session for a language.
  * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
  *
- * Uses the review store directly when in a language context (inside ReviewStoreProvider).
+ * Derives remaining count from server state (review records) only.
  */
 export function useActiveReviewRemaining(
 	lang: string,
-	_day_session: string
+	day_session: string
 ): number | null {
-	const { data } = useReviewsTodayStats(lang, _day_session)
-
-	// Get store state directly (will be null if outside ReviewStoreProvider)
-	const storeStage = useReviewStoreOptional((s) => s.stage)
-	const storeLang = useReviewStoreOptional((s) => s.lang)
-	const currentCardIndex = useReviewStoreOptional((s) => s.currentCardIndex)
-	const countCards = useReviewStoreOptional((s) => s.countCards)
+	const { data } = useReviewsTodayStats(lang, day_session)
 
 	// No manifest means no review session has started
 	if (!data?.count) return null
@@ -413,31 +406,8 @@ export function useActiveReviewRemaining(
 	// If all cards reviewed and none need re-review, truly complete
 	if (data.complete === data.count) return 0
 
-	// Only use store values if we're in the matching language context
-	const storeMatchesLang = storeLang === lang
-
-	// If user has navigated to/past the end, they're done with this session
-	if (
-		storeMatchesLang &&
-		currentCardIndex !== null &&
-		countCards !== null &&
-		currentCardIndex >= countCards
-	) {
-		return 0
-	}
-
-	// Use store stage if available and matches, otherwise use inferred stage
-	const effectiveStage =
-		storeMatchesLang && storeStage !== null ? storeStage : data.inferred.stage
-
-	// Stage 5 means truly complete (all reviewed, none need re-review)
-	// Stage 2+ means user skipped unreviewed cards
-	// Stage 3+ with no again cards means done with re-reviews
-	// Stage 4+ means user skipped re-review cards
-	if (effectiveStage >= 5) return 0
-	if (effectiveStage >= 4) return 0 // User skipped re-reviews
-	if (effectiveStage >= 3) return data.again > 0 ? data.again : 0
-	if (effectiveStage >= 2) return 0 // User skipped unreviewed cards
-
+	// inferred.stage is 1 (still reviewing), 4 (has agains), or 5 (complete)
+	if (data.inferred.stage >= 5) return 0
+	if (data.inferred.stage >= 4) return data.again
 	return data.unreviewed
 }
