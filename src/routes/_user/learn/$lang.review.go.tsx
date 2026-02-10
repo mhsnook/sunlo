@@ -68,24 +68,49 @@ function FlashCardReviewSession({
 
 	const atTheEnd = currentCardIndex === manifest.length
 
-	// Animation state: 'idle' | 'slide-out' | 'slide-in'
-	const [slideClass, setSlideClass] = useState('')
+	// Animation: phase tracks 'idle' | 'out' | 'in', outClass picks the direction
+	const [anim, setAnim] = useState<{ phase: string; outClass: string }>({
+		phase: 'idle',
+		outClass: '',
+	})
 	const pendingNavRef = useRef<(() => void) | null>(null)
+	const isAnimating = anim.phase !== 'idle'
 
-	const triggerSlide = useCallback((navigate: () => void) => {
-		pendingNavRef.current = navigate
-		setSlideClass('animate-slide-out-left')
-	}, [])
+	const animateTransition = useCallback(
+		(navigate: () => void, direction: 'left' | 'right' = 'left') => {
+			if (isAnimating) return
+			pendingNavRef.current = navigate
+			setAnim({
+				phase: 'out',
+				outClass:
+					direction === 'left' ?
+						'animate-card-out-left'
+					:	'animate-card-out-right',
+			})
+		},
+		[isAnimating]
+	)
+
+	// The mutation calls triggerSlide — always exits left (scored = moving forward)
+	const triggerSlide = useCallback(
+		(navigate: () => void) => animateTransition(navigate, 'left'),
+		[animateTransition]
+	)
 
 	const handleAnimationEnd = useCallback(() => {
-		if (slideClass === 'animate-slide-out-left') {
+		if (anim.phase === 'out') {
 			pendingNavRef.current?.()
 			pendingNavRef.current = null
-			setSlideClass('animate-slide-in-right')
+			setAnim({ phase: 'in', outClass: '' })
 		} else {
-			setSlideClass('')
+			setAnim({ phase: 'idle', outClass: '' })
 		}
-	}, [slideClass])
+	}, [anim.phase])
+
+	const animClass =
+		anim.phase === 'out' ? anim.outClass
+		: anim.phase === 'in' ? 'animate-card-pop-in'
+		: ''
 
 	return (
 		<div
@@ -99,8 +124,8 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={gotoPrevious}
-								disabled={currentCardIndex === 0}
+								onClick={() => animateTransition(gotoPrevious, 'right')}
+								disabled={currentCardIndex === 0 || isAnimating}
 								aria-label="Previous card"
 							>
 								<ChevronLeft className="size-4" />
@@ -111,8 +136,8 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={gotoNext}
-								disabled={atTheEnd}
+								onClick={() => animateTransition(gotoNext, 'left')}
+								disabled={atTheEnd || isAnimating}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
@@ -123,7 +148,10 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={() => gotoIndex(nextValidIndex)}
+							onClick={() =>
+								animateTransition(() => gotoIndex(nextValidIndex), 'left')
+							}
+							disabled={isAnimating}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
@@ -133,7 +161,8 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="back one card"
-							onClick={gotoPrevious}
+							onClick={() => animateTransition(gotoPrevious, 'right')}
+							disabled={isAnimating}
 							className="ps-2 pe-4"
 						>
 							<ChevronLeft className="size-4" /> Back one card
@@ -150,7 +179,7 @@ function FlashCardReviewSession({
 					{manifest.map((pid, i) => (
 						<div
 							key={pid}
-							className={`w-full ${i === currentCardIndex ? `block ${slideClass}` : 'hidden'}`}
+							className={`w-full ${i === currentCardIndex ? `block ${animClass}` : 'hidden'}`}
 							onAnimationEnd={
 								i === currentCardIndex ? handleAnimationEnd : undefined
 							}
