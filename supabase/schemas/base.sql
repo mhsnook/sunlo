@@ -1566,7 +1566,8 @@ create table if not exists "public"."user_deck_review_state" (
 	"uid" "uuid" default "auth"."uid" () not null,
 	"day_session" "date" not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"manifest" "jsonb"
+	"manifest" "jsonb",
+	"stage" smallint default 1 not null
 );
 
 alter table "public"."user_deck_review_state" owner to "postgres";
@@ -2188,6 +2189,10 @@ with
 			) = "uid"
 		)
 	);
+
+create policy "Enable users to update their own data" on "public"."user_deck_review_state"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()));
 
 create policy "Enable users to update their own data only" on "public"."user_card_review"
 for update

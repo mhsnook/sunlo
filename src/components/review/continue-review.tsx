@@ -28,9 +28,8 @@ export function ContinueReview({
 	const initLocalReviewState = useInitialiseReviewStore()
 
 	const progressString =
-		reviewStats.inferred.stage === 5 ?
-			`All ${reviewStats.complete} cards complete!`
-		: reviewStats.inferred.stage >= 3 ?
+		reviewStats.stage === 5 ? `All ${reviewStats.complete} cards complete!`
+		: reviewStats.stage >= 3 ?
 			`${reviewStats.again} remaining out of ${reviewStats.count} cards today`
 		:	`${reviewStats.complete} reviewed out of ${reviewStats.count} cards today`
 	return (
@@ -52,7 +51,7 @@ export function ContinueReview({
 						You've set up a review with {reviewStats.count} cards in it, but you
 						haven't started reviewing yet. Go ahead and get started!
 					</p>
-				: reviewStats.inferred.stage === 1 ?
+				: reviewStats.stage === 1 ?
 					<p>
 						Today's review session has {reviewStats.count} cards in it, and
 						you've reviewed {reviewStats?.reviewed ?? 0} of them. Continue where
@@ -76,8 +75,8 @@ export function ContinueReview({
 							dayString,
 							reviewStats.count,
 							[], // newCardPids - not available when continuing a review
-							reviewStats.inferred.stage,
-							reviewStats.inferred.index
+							reviewStats.stage,
+							reviewStats.index
 						)
 					}
 				>

@@ -17,6 +17,7 @@ import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
 	CardReviewType,
+	DailyReviewStateSchema,
 	DailyReviewStateType,
 } from '@/lib/schemas'
 import { calculateFSRS, type Score } from '@/lib/fsrs'
@@ -154,8 +155,6 @@ function mapToStats(
 	}
 }
 
-export type ReviewStats = ReturnType<typeof mapToStats>
-
 export function useReviewsToday(lang: string, day_session: string) {
 	const reviewsQuery = useLiveQuery(
 		(q) =>
@@ -182,15 +181,24 @@ export function useReviewsToday(lang: string, day_session: string) {
 
 export function useReviewsTodayStats(lang: string, day_session: string) {
 	const query = useReviewsToday(lang, day_session)
+	const computed = mapToStats(
+		query.data.reviewsMap,
+		query.data.manifest ?? [],
+		query.data.reviews
+	)
+	// Use server-persisted stage when available, fall back to inferred
+	const stage = (query.data.stage as ReviewStages) ?? computed.inferred.stage
+	const index =
+		stage >= 5 ? computed.count
+		: stage >= 3 ? computed.firstAgainIndex
+		: computed.firstUnreviewedIndex
 	return {
 		...query,
-		data: mapToStats(
-			query.data.reviewsMap,
-			query.data.manifest ?? [],
-			query.data.reviews
-		),
+		data: { ...computed, stage, index },
 	}
 }
+
+export type ReviewStats = ReturnType<typeof useReviewsTodayStats>['data']
 
 export function useReviewDay(
 	lang: string,
@@ -389,10 +397,34 @@ export const useOneCardReviews = (
 	)
 
 /**
+ * Persist a stage transition to the server.
+ * Call alongside the Zustand store action for responsive UI + durable state.
+ */
+export function useUpdateReviewStage(lang: string, day_session: string) {
+	return useMutation({
+		mutationFn: async (stage: ReviewStages) => {
+			const { data } = await supabase
+				.from('user_deck_review_state')
+				.update({ stage })
+				.eq('lang', lang)
+				.eq('day_session', day_session)
+				.select()
+				.single()
+				.throwOnError()
+			return data
+		},
+		onSuccess: (data) => {
+			reviewDaysCollection.utils.writeUpdate(DailyReviewStateSchema.parse(data))
+		},
+		onError: (error) => {
+			console.log('Error updating review stage:', error)
+		},
+	})
+}
+
+/**
  * Returns the number of cards remaining in an active review session for a language.
  * Returns null if no review has started today, 0 if complete, or remaining count if in progress.
- *
- * Derives remaining count from server state (review records) only.
  */
 export function useActiveReviewRemaining(
 	lang: string,
@@ -400,14 +432,9 @@ export function useActiveReviewRemaining(
 ): number | null {
 	const { data } = useReviewsTodayStats(lang, day_session)
 
-	// No manifest means no review session has started
 	if (!data?.count) return null
-
-	// If all cards reviewed and none need re-review, truly complete
 	if (data.complete === data.count) return 0
-
-	// inferred.stage is 1 (still reviewing), 4 (has agains), or 5 (complete)
-	if (data.inferred.stage >= 5) return 0
-	if (data.inferred.stage >= 4) return data.again
+	if (data.stage >= 5) return 0
+	if (data.stage >= 3) return data.again > 0 ? data.again : 0
 	return data.unreviewed
 }
