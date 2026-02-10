@@ -109,7 +109,6 @@
 		"prettier": "^3.6.0",
 		"prettier-plugin-sql": "^0.19.2",
 		"prettier-plugin-tailwindcss": "^0.6.14",
-		"supabase": "^2.76.6",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3",
@@ -117,6 +116,9 @@
 		"vite": "^7.3.0",
 		"vite-tsconfig-paths": "^5.1.4",
 		"vitest": "^4.0.18"
+	},
+	"optionalDependencies": {
+		"supabase": "^2.76.6"
 	},
 	"packageManager": "pnpm@10.25.0"
 }
