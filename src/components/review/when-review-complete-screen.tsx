@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { SuccessCheckmark } from '@/components/success-checkmark'
@@ -7,22 +8,33 @@ import {
 	useReviewLang,
 	useReviewDayString,
 } from '@/hooks/use-review-store'
-import { useReviewsTodayStats } from '@/hooks/use-reviews'
+import { useReviewsTodayStats, useUpdateReviewStage } from '@/hooks/use-reviews'
 import { Link } from '@tanstack/react-router'
 import { BarChart3, Plus, Newspaper, Search } from 'lucide-react'
 
 export function WhenComplete() {
 	const lang = useReviewLang()
 	const dayString = useReviewDayString()
-	const stage = useReviewStage()
+	const storeStage = useReviewStage()
 	const actions = useReviewActions()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
+	const updateStage = useUpdateReviewStage(lang, dayString)
 	if (!stats) return null
+
+	// Prefer ephemeral store stage (responsive) with server stage as fallback (cold load)
+	const stage = storeStage || stats.stage
 
 	const showWhich =
 		stats.unreviewed && stage < 2 ? 'a'
 		: stats.again && stage < 4 ? 'b'
 		: 'c'
+
+	// When the user naturally finishes (no skip button), persist stage 5
+	useEffect(() => {
+		if (showWhich === 'c' && stats.stage < 5) {
+			updateStage.mutate(5)
+		}
+	}, [showWhich, stats.stage]) // eslint-disable-line react-hooks/exhaustive-deps
 
 	return (
 		<Card
@@ -45,6 +57,7 @@ export function WhenComplete() {
 							size="lg"
 							onClick={() => {
 								actions.gotoReviewUnreviewed(stats.firstUnreviewedIndex)
+								updateStage.mutate(2)
 							}}
 						>
 							Review Skipped cards ({stats.unreviewed})
@@ -52,7 +65,10 @@ export function WhenComplete() {
 						<Button
 							size="lg"
 							variant="secondary"
-							onClick={actions.skipReviewUnreviewed}
+							onClick={() => {
+								actions.skipReviewUnreviewed()
+								updateStage.mutate(3)
+							}}
 						>
 							Skip step 2
 						</Button>
@@ -70,6 +86,7 @@ export function WhenComplete() {
 							size="lg"
 							onClick={() => {
 								actions.gotoReviewAgains(stats.firstAgainIndex)
+								updateStage.mutate(4)
 							}}
 						>
 							Review cards ({stats.again})
@@ -98,7 +115,10 @@ export function WhenComplete() {
 						<Button
 							variant="secondary"
 							size="lg"
-							onClick={actions.skipReviewAgains}
+							onClick={() => {
+								actions.skipReviewAgains()
+								updateStage.mutate(5)
+							}}
 						>
 							Skip step 3
 						</Button>

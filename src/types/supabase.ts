@@ -1336,6 +1336,7 @@ export type Database = {
 					day_session: string
 					lang: string
 					manifest: Json | null
+					stage: number
 					uid: string
 				}
 				Insert: {
@@ -1343,6 +1344,7 @@ export type Database = {
 					day_session: string
 					lang: string
 					manifest?: Json | null
+					stage?: number
 					uid?: string
 				}
 				Update: {
@@ -1350,6 +1352,7 @@ export type Database = {
 					day_session?: string
 					lang?: string
 					manifest?: Json | null
+					stage?: number
 					uid?: string
 				}
 				Relationships: [

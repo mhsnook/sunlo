@@ -266,7 +266,7 @@ function ReviewPageContent() {
 	// when the manifest is present, skip this page, go to a better one
 	if (stats?.count)
 		return (
-			stats?.complete === stats?.count ? <WhenComplete />
+			stats.complete === stats.count || stats.stage >= 5 ? <WhenComplete />
 			: stage ? <Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
 			: <ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
 		)
