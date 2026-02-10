@@ -12,16 +12,25 @@ export function Toasters() {
 const baseToastClass =
 	'flex w-72 items-center gap-3 rounded-2xl border px-4 py-3 shadow-lg'
 
-// Success toast - green, auto-dismiss, top-right
+// Success toast - neutral theme colors, auto-dismiss, top-right
 export function toastSuccess(message: string) {
 	return toast.custom(
-		() => (
+		(t) => (
 			<div
 				data-testid="toast-success"
-				className={`${baseToastClass} border-green-400/60 bg-green-100/90 text-green-800 dark:border-green-600/60 dark:bg-green-900/40 dark:text-green-200`}
+				className={`${baseToastClass} w-80 border-border/60 bg-card/95 text-card-foreground`}
 			>
-				<CheckCircle className="size-5 shrink-0 text-green-600 dark:text-green-400" />
+				<CheckCircle className="size-5 shrink-0 text-primary-foresoft" />
 				<span className="flex-1 text-sm font-medium">{message}</span>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="size-7 text-muted-foreground hover:bg-muted hover:text-foreground"
+					onClick={() => toast.dismiss(t)}
+					title="Dismiss"
+				>
+					<X className="size-4" />
+				</Button>
 			</div>
 		),
 		{
