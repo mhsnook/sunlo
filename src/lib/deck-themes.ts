@@ -1,38 +1,32 @@
 import type { CSSProperties } from 'react'
 
+// All hue values are OKLCH hue angles (0-360)
 const noDeckTheme = {
 	name: 'purple',
-	hue: 260,
-	hueOff: 220,
-	hueAccent: 160,
+	hue: 300,
+	hueOff: 270,
+	hueAccent: 175,
 }
 
 export type ThemeType = typeof noDeckTheme
 
 export const themes: ThemeType[] = [
-	{ name: 'cyan', hue: 205, hueOff: 225, hueAccent: 205 },
-	{ name: 'ocean', hue: 230, hueOff: 210, hueAccent: 230 },
-	// 255 is adjacent to true purple
-	// 275 is our true purple
-	{ name: 'hotpink', hue: 300, hueOff: 320, hueAccent: 300 },
-	{ name: 'blush', hue: 325, hueOff: 305, hueAccent: 325 },
-	// 335 is adjacent to our true red, 355 is true red, 015 is adjacent
-	// this one just looks bad in dark mode bc the bg colour is bluish
-	// { name: 'brick', hue: 30, hueOff: 50, hueAccent: 30 },
-	// { name: 'sand', hue: 55, hueOff: 35, hueAccent: 55 },
-	// 75 looks sick, 95 and 115 look like owl
-	// 135 is adjacent to true green
-	// 155 is our true green,
-	// 175 would seem too close, but human eyes are good at green
-	{ name: 'teal', hue: 180, hueOff: 200, hueAccent: 180 },
+	{ name: 'cyan', hue: 230, hueOff: 250, hueAccent: 230 },
+	{ name: 'ocean', hue: 260, hueOff: 245, hueAccent: 260 },
+	// OKLCH ~300 is our true purple
+	{ name: 'hotpink', hue: 335, hueOff: 350, hueAccent: 335 },
+	{ name: 'blush', hue: 355, hueOff: 340, hueAccent: 355 },
+	// OKLCH ~25 is red, ~55 is orange, ~85-100 is yellow
+	// ~140 is green, ~175 is teal, ~195 is cyan
+	{ name: 'teal', hue: 195, hueOff: 215, hueAccent: 195 },
 ]
 
 export const getThemeCss = (index?: number) => {
 	const theme = typeof index === 'number' ? themes[index] : noDeckTheme
 	return {
-		'--hue': theme?.hue,
-		'--hue-off': theme?.hueOff,
-		'--hue-accent': theme?.hueAccent,
+		'--h': theme?.hue,
+		'--h-off': theme?.hueOff,
+		'--h-accent': theme?.hueAccent,
 	} as CSSProperties
 }
 
@@ -40,9 +34,9 @@ export function setTheme(element?: HTMLElement, index?: number) {
 	const theme = typeof index === 'number' ? themes[index] : noDeckTheme
 	const el = element ?? document.documentElement
 
-	el.style.setProperty('--hue', String(theme.hue))
-	el.style.setProperty('--hue-off', String(theme.hueOff))
-	el.style.setProperty('--hue-accent', String(theme.hueAccent))
+	el.style.setProperty('--h', String(theme.hue))
+	el.style.setProperty('--h-off', String(theme.hueOff))
+	el.style.setProperty('--h-accent', String(theme.hueAccent))
 }
 
 export type ThemeCSS = CSSProperties
