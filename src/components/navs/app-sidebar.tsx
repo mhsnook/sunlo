@@ -13,10 +13,17 @@ import {
 import { useParams } from '@tanstack/react-router'
 import { ModeToggle } from '@/components/navs/mode-toggle'
 
-export function AppSidebar({ ...props }: ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+	focusMode,
+	...props
+}: ComponentProps<typeof Sidebar> & { focusMode?: boolean }) {
 	const { lang } = useParams({ strict: false })
 	return (
-		<Sidebar collapsible="icon" variant="floating" {...props}>
+		<Sidebar
+			collapsible={focusMode ? 'offcanvas' : 'icon'}
+			variant="floating"
+			{...props}
+		>
 			<SidebarHeader>
 				<DeckSwitcher lang={lang} />
 			</SidebarHeader>
