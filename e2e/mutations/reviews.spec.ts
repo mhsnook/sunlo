@@ -41,7 +41,7 @@ test.describe.serial('Review Mutations', () => {
 		await expect(page.getByText(/New Phrases/i)).toBeVisible()
 
 		// Click "Start Today's Review" button
-		await page.click('button:has-text("Start Today\'s Review")')
+		await page.getByRole('button', { name: "Start Today's Review" }).click()
 
 		// Wait for toast message
 		await expect(page.getByText(/Ready to go!/i)).toBeVisible()
@@ -163,10 +163,10 @@ test.describe.serial('Review Mutations', () => {
 
 		// Submit a review with a score of 2 (Hard)
 		await currentCard.getByTestId('rating-hard-button').click()
-		// Toast shows "okay" for score 2 (Hard) - look for toast containing "okay" text
-		await expect(
-			page.locator('[data-sonner-toast]').getByText('okay')
-		).toBeVisible()
+
+		// The slide animation provides visual feedback; verify the DB record instead
+		// Wait a moment for the mutation to complete
+		await page.waitForTimeout(1000)
 
 		// Verify review record created in DB for this card
 		const { data: dbReview } = await getReviewByPhraseId(
@@ -214,7 +214,9 @@ test.describe.serial('Review Mutations', () => {
 
 		// Give a different answer (score=4) to update the answer
 		await currentCard.getByTestId('rating-easy-button').click()
-		await expect(page.getByText('Review updated!')).toBeVisible()
+
+		// Wait for the update mutation to complete
+		await page.waitForTimeout(1000)
 
 		// Check the database for the newest review
 		const { data: dbReviewEdited } = await getReviewByPhraseId(

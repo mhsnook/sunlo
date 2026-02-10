@@ -401,9 +401,11 @@ test.describe('Playlist Mutations', () => {
 			).toBeVisible()
 
 			// 6. Click remove button on second phrase
-			const phraseCards = page.locator('.bg-muted\\/30')
+			const phraseCards = page.getByTestId('manage-phrase-card')
 			const secondCard = phraseCards.nth(1)
-			const removeButton = secondCard.getByRole('button').last() // Trash button is last
+			const removeButton = secondCard.getByRole('button', {
+				name: 'Remove phrase',
+			})
 			await removeButton.click()
 
 			// 7. Wait for success toast
@@ -502,9 +504,11 @@ test.describe('Playlist Mutations', () => {
 			await page.getByRole('button', { name: 'Manage phrases' }).click()
 
 			// 4. Click "Move Down" on first phrase
-			const phraseCards = page.locator('.bg-muted\\/30')
+			const phraseCards = page.getByTestId('manage-phrase-card')
 			const firstCard = phraseCards.first()
-			const moveDownButton = firstCard.getByRole('button').nth(1) // Second button is move down
+			const moveDownButton = firstCard.getByRole('button', {
+				name: 'Move phrase down',
+			})
 			await moveDownButton.click()
 
 			// 5. Wait a moment for mutation to complete
@@ -573,7 +577,8 @@ test.describe('Playlist Mutations', () => {
 			const testHref = 'https://youtube.com/watch?v=test&t=123'
 			await hrefInput.fill(testHref)
 
-			// 4. Wait for debounced mutation
+			// 4. Blur the input to trigger save (HrefInput saves onBlur)
+			await hrefInput.blur()
 			await page.waitForTimeout(500)
 
 			// 5. Verify href saved in database

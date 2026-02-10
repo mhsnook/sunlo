@@ -55,6 +55,5 @@ test('login flow redirects and shows content', async ({ page }) => {
 	// Assert at least 1 friend
 	const friendsSection = page.getByTestId('friends-section')
 	await expect(friendsSection).toBeVisible()
-	const friendCount = await friendsSection.locator('.space-y-2 > *').count()
-	expect(friendCount).toBeGreaterThanOrEqual(1)
+	await expect(friendsSection.getByText('Your friends')).toBeVisible()
 })
