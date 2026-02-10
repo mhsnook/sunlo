@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
-import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
+import { toastError } from '@/components/ui/sonner'
 import {
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
@@ -252,7 +252,8 @@ export function useReviewMutation(
 	resetRevealCard: () => void,
 	stage: number,
 	prevDataToday: CardReviewType | undefined,
-	latestReview: CardReviewType | undefined
+	latestReview: CardReviewType | undefined,
+	triggerSlide: (navigate: () => void) => void
 ) {
 	const currentCardIndex = useCardIndex()
 	const lang = useReviewLang()
@@ -361,26 +362,13 @@ export function useReviewMutation(
 				)
 			}
 
-			// Show "Review updated!" for corrections in phases 1-2
-			if (data.action === 'update' && stage < 3) {
-				toastSuccess('Review updated!')
-			} else if (data.row.score === 1) {
-				toastNeutral('okay', { icon: '🤔' })
-			} else if (data.row.score === 2) {
-				toastNeutral('okay', { icon: '🤷' })
-			} else if (data.row.score === 3) {
-				toastNeutral('got it', { icon: '👍️' })
-			} else if (data.row.score === 4) {
-				toastSuccess('nice')
-			}
-
-			setTimeout(() => {
+			triggerSlide(() => {
 				resetRevealCard()
 				// if the next is the same as current, it means we're on the final card, which
 				// is the only situation where the out-of-date nextIndex needs to be corrected
 				if (nextIndex === currentCardIndex && data.row.score > 1) gotoEnd()
 				else gotoIndex(nextIndex)
-			}, 1000)
+			})
 		},
 		onError: (error) => {
 			toastError(`There was an error posting your review: ${error.message}`)

@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from 'react'
 import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
@@ -67,6 +68,25 @@ function FlashCardReviewSession({
 
 	const atTheEnd = currentCardIndex === manifest.length
 
+	// Animation state: 'idle' | 'slide-out' | 'slide-in'
+	const [slideClass, setSlideClass] = useState('')
+	const pendingNavRef = useRef<(() => void) | null>(null)
+
+	const triggerSlide = useCallback((navigate: () => void) => {
+		pendingNavRef.current = navigate
+		setSlideClass('animate-slide-out-left')
+	}, [])
+
+	const handleAnimationEnd = useCallback(() => {
+		if (slideClass === 'animate-slide-out-left') {
+			pendingNavRef.current?.()
+			pendingNavRef.current = null
+			setSlideClass('animate-slide-in-right')
+		} else {
+			setSlideClass('')
+		}
+	}, [slideClass])
+
 	return (
 		<div
 			className="flex-col items-center justify-center gap-2 py-2"
@@ -121,7 +141,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="flex flex-col items-center justify-center gap-2">
+			<div className="flex flex-col items-center justify-center gap-2 overflow-hidden">
 				<div className={atTheEnd ? 'w-full' : 'hidden'}>
 					<WhenComplete />
 				</div>
@@ -130,12 +150,16 @@ function FlashCardReviewSession({
 					{manifest.map((pid, i) => (
 						<div
 							key={pid}
-							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
+							className={`w-full ${i === currentCardIndex ? `block ${slideClass}` : 'hidden'}`}
+							onAnimationEnd={
+								i === currentCardIndex ? handleAnimationEnd : undefined
+							}
 						>
 							<ReviewSingleCard
 								pid={pid}
 								reviewStage={reviewStage}
 								dayString={dayString}
+								triggerSlide={triggerSlide}
 							/>
 						</div>
 					))}
