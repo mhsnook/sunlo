@@ -9,10 +9,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--hue: 270;
+	--hue: 300;
 	--hue-off: 250;
 	--hue-accent: 152;
-	--c-high: 0.12;
+	--c-high: 0.22;
 	--c-low: 0.025;
 	--l-1: 37%;
 	--l-2: 44%;
@@ -57,7 +57,7 @@
 }
 
 .dark {
-	--c-high: 0.1;
+	--c-high: 0.18;
 	--c-low: 0.025;
 	--l-1: 98%;
 	--l-2: 80%;
