@@ -114,6 +114,11 @@ function UserLayout() {
 	const matches = useMatches()
 	const { lang } = useParams({ strict: false })
 
+	// Check if any route has enabled focus mode (e.g. review/go)
+	const focusMode = matches.some(
+		(m) => (m.context as MyRouterContext)?.focusMode
+	)
+
 	// Show right sidebar if there's a contextMenu with items
 	const contextMenuMatch = matches.findLast(
 		(m) => (m.context as MyRouterContext)?.contextMenu
@@ -180,10 +185,10 @@ function UserLayout() {
 
 	return (
 		<div className="flex h-screen w-full">
-			<AppSidebar />
+			{!focusMode && <AppSidebar />}
 			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
 				<Navbar />
-				<AppNav />
+				{!focusMode && <AppNav />}
 				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
 				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
 					<div
@@ -193,7 +198,7 @@ function UserLayout() {
 					>
 						<Outlet />
 					</div>
-					{hasContextMenu && <RightSidebar />}
+					{hasContextMenu && !focusMode && <RightSidebar />}
 				</div>
 			</SidebarInset>
 		</div>
