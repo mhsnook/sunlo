@@ -19,9 +19,8 @@ export const themes: ThemeType[] = [
 	{ name: 'hotpink', hue: 325, hueOff: 345, hueAccent: 325 },
 	{ name: 'blush', hue: 355, hueOff: 335, hueAccent: 355 },
 	// 15 is true red, 30 is orange
-	// brick/sand could work better with oklch perceptual uniformity
 	// { name: 'brick', hue: 40, hueOff: 60, hueAccent: 40 },
-	// { name: 'sand', hue: 70, hueOff: 50, hueAccent: 70 },
+	{ name: 'sand', hue: 70, hueOff: 50, hueAccent: 70 },
 	// 120 is yellow-green, 150 is our true green
 	// 175 is green-teal
 	{ name: 'teal', hue: 185, hueOff: 210, hueAccent: 185 },
