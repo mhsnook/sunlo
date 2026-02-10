@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
-import { toast, toastError } from '@/components/ui/sonner'
+import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import {
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
@@ -363,15 +363,15 @@ export function useReviewMutation(
 
 			// Show "Review updated!" for corrections in phases 1-2
 			if (data.action === 'update' && stage < 3) {
-				toast.success('Review updated!', { position: 'bottom-center' })
+				toastSuccess('Review updated!')
 			} else if (data.row.score === 1) {
-				toast('okay', { icon: '🤔', position: 'bottom-center' })
+				toastNeutral('okay', { icon: '🤔' })
 			} else if (data.row.score === 2) {
-				toast('okay', { icon: '🤷', position: 'bottom-center' })
+				toastNeutral('okay', { icon: '🤷' })
 			} else if (data.row.score === 3) {
-				toast('got it', { icon: '👍️', position: 'bottom-center' })
+				toastNeutral('got it', { icon: '👍️' })
 			} else if (data.row.score === 4) {
-				toast.success('nice', { position: 'bottom-center' })
+				toastSuccess('nice')
 			}
 
 			setTimeout(() => {
