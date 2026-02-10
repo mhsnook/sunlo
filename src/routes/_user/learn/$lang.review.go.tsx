@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
 	useCardIndex,
 	useNextValid,
-	usePreviewSeen,
 	useReviewActions,
 	useReviewDayString,
 	useReviewLang,
@@ -36,14 +35,13 @@ function ReviewPage() {
 	const dayString = useReviewDayString()
 	const { data: day, isLoading } = useReviewDay(lang, dayString)
 	const stage = useReviewStage()
-	const previewSeen = usePreviewSeen()
 
 	if (isLoading) return <Loader />
-	if (!day?.manifest?.length || !stage)
-		return <Navigate to="/learn/$lang/review" from={Route.fullPath} /> // works for some reason
+	if (!day?.manifest?.length || stage === null)
+		return <Navigate to="/learn/$lang/review" from={Route.fullPath} />
 
-	// Show preview of new cards before starting review (only in stage 1)
-	if (stage === 1 && !previewSeen) {
+	// Stage 0: preview new cards before starting
+	if (stage === 0) {
 		return <NewCardsPreview manifest={day.manifest} />
 	}
 
@@ -97,7 +95,7 @@ function FlashCardReviewSession({
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					: !atTheEnd && reviewStage > 1 ?
+					: !atTheEnd && (reviewStage ?? 0) > 1 ?
 						<Button
 							size="sm"
 							variant="ghost"

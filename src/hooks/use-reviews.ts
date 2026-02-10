@@ -23,14 +23,15 @@ import {
 import { calculateFSRS, type Score } from '@/lib/fsrs'
 
 /*
-	0. not yet initialised
+	null: not yet initialised
+	0. preview new cards
 	1. doing the first review
 	2. going back for unreviewed
 	3. skip unreviewed and see screen asking to re-review
 	4. doing re-reviews
 	5. skip re-reviews and end
 */
-export type ReviewStages = 0 | 1 | 2 | 3 | 4 | 5
+export type ReviewStages = null | 0 | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
 	[key: uuid]: CardReviewType
 }

@@ -13,10 +13,9 @@ const DEFAULT_PROPS = {
 	lang: '',
 	dayString: '',
 	countCards: -1,
-	stage: 0 as ReviewStages,
+	stage: null as ReviewStages,
 	currentCardIndex: -1,
-	newCardPids: [] as pids,
-	previewSeen: false,
+	newCardPids: null as pids | null,
 }
 
 type ReviewProps = typeof DEFAULT_PROPS
@@ -30,15 +29,15 @@ type ReviewActions = {
 	gotoNext: () => void
 	gotoEnd: () => void
 	gotoPrevious: () => void
-	markPreviewSeen: () => void
-	init: (
-		lang: string,
-		dayString: string,
-		countCards: number,
-		newCardPids?: pids,
-		stage?: ReviewStages,
+	startReview: () => void
+	init: (params: {
+		lang: string
+		dayString: string
+		countCards: number
+		newCardPids?: pids | null
+		stage?: ReviewStages
 		index?: number
-	) => void
+	}) => void
 }
 
 export type ReviewState = ReviewProps & {
@@ -82,16 +81,16 @@ export function createReviewStore(lang: string, dayString: string) {
 							set((state) => ({
 								currentCardIndex: state.countCards,
 							})),
-						markPreviewSeen: () => set({ previewSeen: true }),
+						startReview: () => set({ stage: 1 }),
 
-						init: (
-							lang: string,
-							dayString: string,
-							countCards: number,
-							newCardPids: pids = [],
-							stage: ReviewStages = 1,
-							index: number = 0
-						) =>
+						init: ({
+							lang,
+							dayString,
+							countCards,
+							newCardPids = null,
+							stage = 0,
+							index = 0,
+						}) =>
 							set((state) => {
 								// if the lang doesn't match, we have an error
 								if (lang !== state.lang || dayString !== state.dayString)
@@ -99,13 +98,12 @@ export function createReviewStore(lang: string, dayString: string) {
 										'Mismatching language or dayString between params and current store state'
 									)
 								// ensure we only init once
-								if (state.stage) return state
+								if (state.stage !== null) return state
 								return {
 									lang,
 									dayString,
 									countCards,
 									newCardPids,
-									previewSeen: false,
 									stage,
 									currentCardIndex: index,
 								}
@@ -121,7 +119,6 @@ export function createReviewStore(lang: string, dayString: string) {
 						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
 						newCardPids: state.newCardPids,
-						previewSeen: state.previewSeen,
 					}),
 				}
 			)
@@ -136,7 +133,7 @@ export function useNextValid(): number {
 	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
 	const { manifest, reviewsMap } = reviewsData
-	return stage < 3 ?
+	return (stage ?? 0) < 3 ?
 			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
 		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
@@ -197,10 +194,6 @@ export const useReviewActions = (): ReviewActions => {
 	return useReviewStore((state) => state.actions)
 }
 
-export const useNewCardPids = (): pids => {
+export const useNewCardPids = (): pids | null => {
 	return useReviewStore((state) => state.newCardPids)
-}
-
-export const usePreviewSeen = (): boolean => {
-	return useReviewStore((state) => state.previewSeen)
 }

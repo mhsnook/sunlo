@@ -62,10 +62,12 @@ function PreviewCard({ pid }: { pid: uuid }) {
 export function NewCardsPreview({ manifest }: { manifest: pids }) {
 	const { lang } = useParams({ strict: false })
 	const newCardPids = useNewCardPids()
-	const { markPreviewSeen } = useReviewActions()
+	const { startReview } = useReviewActions()
 
 	// Filter manifest to only show new cards in the order they appear in manifest
-	const newCardsInOrder = manifest.filter((pid) => newCardPids.includes(pid))
+	const newCardsInOrder = manifest.filter(
+		(pid) => newCardPids?.includes(pid)
+	)
 
 	if (newCardsInOrder.length === 0) {
 		// No new cards to preview - show helpful guidance
@@ -131,7 +133,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				</div>
 
 				<div className="flex justify-center">
-					<Button onClick={markPreviewSeen} size="lg" className="min-w-48">
+					<Button onClick={startReview} size="lg" className="min-w-48">
 						Start Review
 					</Button>
 				</div>
@@ -160,7 +162,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 			</div>
 
 			<div className="bg-muted mt-auto flex justify-center border-t p-4">
-				<Button onClick={markPreviewSeen} size="lg" className="min-w-48">
+				<Button onClick={startReview} size="lg" className="min-w-48">
 					Start Review
 				</Button>
 			</div>

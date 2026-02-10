@@ -49,7 +49,7 @@ export function ReviewSingleCard({
 	dayString,
 }: {
 	pid: uuid
-	reviewStage: number
+	reviewStage: number | null
 	dayString: string
 }) {
 	const { data: phrase, status } = usePhrase(pid)

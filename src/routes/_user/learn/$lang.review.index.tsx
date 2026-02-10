@@ -250,7 +250,12 @@ function ReviewPageContent() {
 					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
 			// Pass the fresh (new) card pids for the preview feature
-			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
+			initLocalReviewState({
+				lang,
+				dayString,
+				countCards: data.countCards,
+				newCardPids: data.freshCardPids,
+			})
 			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)
@@ -267,8 +272,9 @@ function ReviewPageContent() {
 	if (stats?.count)
 		return (
 			stats?.complete === stats?.count ? <WhenComplete />
-			: stage ? <Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
-			: <ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
+			: stage !== null ?
+				<Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
+			:	<ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
 		)
 
 	return (

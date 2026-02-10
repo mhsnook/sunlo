@@ -71,14 +71,13 @@ export function ContinueReview({
 				<Button
 					size="lg"
 					onClick={() =>
-						initLocalReviewState(
+						initLocalReviewState({
 							lang,
 							dayString,
-							reviewStats.count,
-							[], // newCardPids - not available when continuing a review
-							reviewStats.inferred.stage,
-							reviewStats.inferred.index
-						)
+							countCards: reviewStats.count,
+							stage: reviewStats.inferred.stage,
+							index: reviewStats.inferred.index,
+						})
 					}
 				>
 					Continue Review

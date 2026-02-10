@@ -108,7 +108,7 @@ test.describe.serial('Review Mutations', () => {
 			timeout: 10000,
 		})
 
-		// Handle the new cards preview screen (previewSeen resets per browser session)
+		// Handle the new cards preview screen (stage 0 resets per browser session)
 		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
 		const cardNav = page.getByText(/Card \d+ of \d+/)
 		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
