@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import type { PhrasePlaylistType } from '@/lib/schemas-playlist'
+import { type PhrasePlaylistType, validateUrl } from '@/lib/schemas-playlist'
 import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/lib/collections'
 import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
@@ -27,6 +27,49 @@ import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
 import { DialogClose } from '@radix-ui/react-dialog'
 import { buttonVariants } from '../ui/button'
+
+/** Controlled href input that validates on blur and only fires the mutation when valid */
+function HrefInput({
+	initialValue,
+	onSave,
+}: {
+	initialValue: string | null
+	onSave: (href: string) => void
+}) {
+	const [value, setValue] = useState(initialValue ?? '')
+	const [error, setError] = useState<string | null>(null)
+	const savedRef = useRef(initialValue ?? '')
+
+	const handleBlur = () => {
+		// Nothing changed, skip
+		if (value === savedRef.current) return
+		const urlError = validateUrl(value)
+		setError(urlError)
+		if (urlError) return
+		savedRef.current = value
+		onSave(value)
+	}
+
+	return (
+		<div>
+			<div className="flex items-center gap-2">
+				<LinkIcon className="text-muted-foreground ms-2 h-4 w-4 shrink-0" />
+				<Input
+					type="url"
+					placeholder="Timestamp link (optional)"
+					value={value}
+					onChange={(e) => {
+						setValue(e.target.value)
+						if (error) setError(validateUrl(e.target.value))
+					}}
+					onBlur={handleBlur}
+					className={`h-8 text-sm ${error ? 'border-red-500' : ''}`}
+				/>
+			</div>
+			{error && <p className="ms-8 mt-1 text-xs text-red-500">{error}</p>}
+		</div>
+	)
+}
 
 export function ManagePlaylistPhrasesDialog({
 	playlist,
@@ -265,19 +308,15 @@ export function ManagePlaylistPhrasesDialog({
 											<PhraseSummaryLine item={item.phrase} />
 
 											{/* Href input for timestamp */}
-											<div className="mt-2 flex items-center gap-2">
-												<LinkIcon className="text-muted-foreground ms-2 h-4 w-4 shrink-0" />
-												<Input
-													type="url"
-													placeholder="Timestamp link (optional)"
-													value={item.link.href ?? ''}
-													onChange={(e) =>
+											<div className="mt-2">
+												<HrefInput
+													initialValue={item.link.href}
+													onSave={(href) =>
 														updateHrefMutation.mutate({
 															linkId: item.link.id,
-															href: e.target.value,
+															href,
 														})
 													}
-													className="h-8 text-sm"
 												/>
 											</div>
 										</div>
