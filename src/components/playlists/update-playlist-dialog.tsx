@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button'
 import {
 	PhrasePlaylistSchema,
 	type PhrasePlaylistType,
+	validateUrl,
 } from '@/lib/schemas-playlist'
 import { Textarea } from '../ui/textarea'
 import { Input } from '../ui/input'
@@ -38,6 +39,7 @@ export function UpdatePlaylistDialog({
 		playlist.cover_image_path ?? ''
 	)
 
+	const [hrefError, setHrefError] = useState<string | null>(null)
 	const [open, setOpen] = useState(false)
 	const [isUploadingImage, setIsUploadingImage] = useState(false)
 
@@ -66,6 +68,13 @@ export function UpdatePlaylistDialog({
 			setIsUploadingImage(false)
 		}
 	}
+	const handleSave = () => {
+		const urlError = validateUrl(editHref)
+		setHrefError(urlError)
+		if (urlError) return
+		mutation.mutate()
+	}
+
 	// Update playlist mutation
 	const mutation = useMutation({
 		mutationFn: async () => {
@@ -142,9 +151,14 @@ export function UpdatePlaylistDialog({
 							data-testid="playlist-href-input"
 							type="url"
 							value={editHref}
-							onChange={(e) => setEditHref(e.target.value)}
+							onChange={(e) => {
+								setEditHref(e.target.value)
+								if (hrefError) setHrefError(validateUrl(e.target.value))
+							}}
+							className={hrefError ? 'border-red-500' : ''}
 							placeholder="https://..."
 						/>
+						{hrefError && <p className="text-sm text-red-500">{hrefError}</p>}
 					</div>
 					{!isEmbeddableUrl(editHref) && (
 						<div className="space-y-2">
@@ -210,7 +224,7 @@ export function UpdatePlaylistDialog({
 					<div className="flex gap-2">
 						<Button
 							size="sm"
-							onClick={() => mutation.mutate()}
+							onClick={handleSave}
 							disabled={mutation.isPending || !editTitle.trim()}
 							data-testid="save-playlist-button"
 						>
@@ -225,6 +239,7 @@ export function UpdatePlaylistDialog({
 								setEditDescription(playlist.description ?? '')
 								setEditHref(playlist.href ?? '')
 								setEditCoverImagePath(playlist.cover_image_path ?? '')
+								setHrefError(null)
 							}}
 						>
 							Cancel
