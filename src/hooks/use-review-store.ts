@@ -105,7 +105,7 @@ export function createReviewStore(lang: string, dayString: string) {
 									dayString,
 									countCards,
 									newCardPids,
-									previewSeen: false,
+									previewSeen: newCardPids.length === 0,
 									stage,
 									currentCardIndex: index,
 								}
