@@ -83,6 +83,7 @@ function NewPlaylistPageContent() {
 
 	const form = useForm<PhrasePlaylistInsertType>({
 		resolver: zodResolver(PhrasePlaylistInsertSchema),
+		mode: 'onBlur',
 		defaultValues: {
 			title: '',
 			description: '',
