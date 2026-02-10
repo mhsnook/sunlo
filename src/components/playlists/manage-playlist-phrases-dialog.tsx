@@ -23,6 +23,7 @@ import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/lib/collections'
 import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
+import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
 import { DialogClose } from '@radix-ui/react-dialog'
 import { buttonVariants } from '../ui/button'
@@ -33,6 +34,7 @@ export function ManagePlaylistPhrasesDialog({
 	playlist: PhrasePlaylistType
 }) {
 	const [open, setOpen] = useState(false)
+	const [showCreateForm, setShowCreateForm] = useState(false)
 	const { data: phrasesData } = useOnePlaylistPhrases(playlist.id)
 
 	// Track which phrase IDs are already in the playlist
@@ -302,19 +304,41 @@ export function ManagePlaylistPhrasesDialog({
 					</div>
 				</ScrollArea>
 
-				{/* Add phrases button */}
-				<div className="flex flex-row justify-between gap-2 border-t pt-4">
-					<SelectPhrasesForComment
-						lang={playlist.lang}
-						selectedPhraseIds={currentPhraseIds}
-						onSelectionChange={handleSelectionChange}
-						maxPhrases={null}
-						triggerText={
-							phrasesData && phrasesData.length > 0 ?
-								'+ Add more phrases'
-							:	'Add phrases to your playlist'
-						}
-					/>
+				{/* Inline phrase creator */}
+				{showCreateForm && (
+					<div className="border-t pt-4">
+						<InlinePhraseCreator
+							lang={playlist.lang}
+							onPhraseCreated={(phraseId) => {
+								addPhraseMutation.mutate(phraseId)
+								setShowCreateForm(false)
+							}}
+							onCancel={() => setShowCreateForm(false)}
+						/>
+					</div>
+				)}
+
+				{/* Action buttons */}
+				<div className="flex flex-row flex-wrap justify-between gap-2 border-t pt-4">
+					<div className="flex flex-row flex-wrap gap-2">
+						{!showCreateForm && (
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setShowCreateForm(true)}
+								data-testid="create-phrase-for-playlist"
+							>
+								+ Create new phrase
+							</Button>
+						)}
+						<SelectPhrasesForComment
+							lang={playlist.lang}
+							selectedPhraseIds={currentPhraseIds}
+							onSelectionChange={handleSelectionChange}
+							maxPhrases={null}
+							triggerText="Add existing phrases"
+						/>
+					</div>
 					<DialogClose className={buttonVariants()}>Finish</DialogClose>
 				</div>
 			</DialogContent>
