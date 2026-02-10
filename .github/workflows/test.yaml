@@ -97,7 +97,7 @@ jobs:
       # Run navigation tests only (fast, no db mutations)
       # Only chromium in CI for speed; full browser matrix can be run locally
       - name: Run navigation tests
-        run: pnpm test:nav -- --project=chromium
+        run: SKIP_DB_RESET=1 pnpm exec playwright test e2e/navigations e2e/example.spec.ts e2e/login-flow.spec.ts --fully-parallel --workers=100% --project=chromium
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
