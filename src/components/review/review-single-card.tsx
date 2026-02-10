@@ -145,7 +145,7 @@ export function ReviewSingleCard({
 				{!showAnswers ?
 					<Button
 						data-testid="reveal-answer-button"
-						className="mb-3 w-full"
+						className="mb-3 w-full max-w-160"
 						onClick={() => setRevealCard(true)}
 					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
