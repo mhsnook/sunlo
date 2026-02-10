@@ -37,7 +37,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
@@ -69,15 +69,15 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Install Playwright dependencies (cached browsers)
         if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps
+        run: pnpm exec playwright install-deps chromium
 
       # Cache Docker images for Supabase
       - name: Cache Docker images
@@ -95,9 +95,9 @@ jobs:
           echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r '.SERVICE_ROLE_KEY')" >> $GITHUB_ENV
 
       # Run navigation tests only (fast, no db mutations)
-      # Full test suite can be run manually or after improving test parallelization
+      # Only chromium in CI for speed; full browser matrix can be run locally
       - name: Run navigation tests
-        run: pnpm test:nav
+        run: pnpm test:nav -- --project=chromium
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

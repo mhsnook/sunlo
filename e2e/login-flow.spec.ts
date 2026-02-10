@@ -50,15 +50,11 @@ test('login flow redirects and shows content', async ({ page }) => {
 	// Assert at least some decks
 	const decksGrid = page.getByTestId('decks-list-grid')
 	await expect(decksGrid).toBeVisible()
-	expect(await decksGrid.locator('> div').count()).toBeGreaterThanOrEqual(3)
+	expect(await decksGrid.locator('> *').count()).toBeGreaterThanOrEqual(3)
 
 	// Assert at least 1 friend
-	await expect(page.getByText('Your friends')).toBeVisible()
-	const friendsCardElement = page.locator('.border', {
-		hasText: 'Your friends',
-	})
-	const friendCount = await friendsCardElement
-		.locator('.space-y-2 > div')
-		.count()
+	const friendsSection = page.getByTestId('friends-section')
+	await expect(friendsSection).toBeVisible()
+	const friendCount = await friendsSection.locator('.space-y-2 > *').count()
 	expect(friendCount).toBeGreaterThanOrEqual(1)
 })
