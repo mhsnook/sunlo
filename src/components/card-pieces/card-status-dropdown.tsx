@@ -62,9 +62,7 @@ const statusStrings = {
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
-		icon: () => (
-			<BookmarkCheck className="text-green-600" aria-hidden="true" />
-		),
+		icon: () => <BookmarkCheck className="text-green-600" aria-hidden="true" />,
 	},
 	skipped: {
 		short: 'Skipped',
