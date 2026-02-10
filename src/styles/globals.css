@@ -13,7 +13,7 @@
 	--h-off: 270;
 	--h-accent: 175;
 	--c-hi: 0.22;
-	--c-lo: 0.04;
+	--c-lo: 0.08;
 	--L-1: 0.35;
 	--L-2: 0.45;
 	--L-3: 0.58;
@@ -57,8 +57,8 @@
 }
 
 .dark {
-	--c-hi: 0.18;
-	--c-lo: 0.04;
+	--c-hi: 0.22;
+	--c-lo: 0.08;
 	--L-1: 0.95;
 	--L-2: 0.82;
 	--L-3: 0.5;
@@ -130,11 +130,11 @@
 	--color-primary-foreground: oklch(var(--L-1) var(--c-lo) var(--h));
 	--color-primary-foresoft: oklch(var(--L-2) var(--c-hi) var(--h));
 	--color-primary: oklch(var(--L-3) var(--c-hi) var(--h));
-	--color-primary-invert: oklch(var(--L-4) var(--c-hi) var(--h));
+	--color-primary-invert: oklch(var(--L-4) var(--c-lo) var(--h));
 	--color-accent-foreground: oklch(var(--L-1) var(--c-lo) var(--h-accent));
 	--color-accent-foresoft: oklch(var(--L-2) var(--c-hi) var(--h-accent));
 	--color-accent: oklch(var(--L-3) var(--c-hi) var(--h-accent));
-	--color-accent-invert: oklch(var(--L-4) var(--c-hi) var(--h-accent));
+	--color-accent-invert: oklch(var(--L-4) var(--c-lo) var(--h-accent));
 	--color-secondary: oklch(var(--L-sec) var(--c-sec) var(--h-off));
 	--color-secondary-foreground: oklch(
 		var(--L-sec-f) var(--c-sec-f) var(--h-off)
