@@ -61,15 +61,12 @@ test.describe.serial('Chat Messages', () => {
 		// Wait for chat to load
 		await expect(page).toHaveURL(/\/friends\/chats\//)
 
-		// The chat should show messages - verify there are some messages visible
-		// From seed data, there should be a message from Best Frin to GarlicFace
-		const messageArea = page
-			.locator('[ref="messagesContainerRef"]')
-			.or(page.locator('.space-y-4'))
-		await expect(messageArea).toBeVisible()
+		// Verify chat messages container loaded with messages
+		const messageContainer = page.getByTestId('chat-messages-container')
+		await expect(messageContainer).toBeVisible()
 
 		// Verify we can see at least one message bubble
-		const messageBubbles = page.locator('.rounded-b-2xl')
+		const messageBubbles = page.getByTestId('chat-message-bubble')
 		const count = await messageBubbles.count()
 		expect(count).toBeGreaterThan(0)
 	})
@@ -98,7 +95,7 @@ test.describe.serial('Chat Messages', () => {
 		await expect(page).toHaveURL(/\/friends\/chats\//)
 
 		// Wait for messages to load - there should be messages from seed data
-		const messageBubbles = page.locator('.rounded-b-2xl')
+		const messageBubbles = page.getByTestId('chat-message-bubble')
 		await expect(messageBubbles.first()).toBeVisible()
 
 		const count = await messageBubbles.count()
@@ -162,13 +159,8 @@ test.describe.serial('Chat Messages', () => {
 	})
 
 	test('Opening a chat marks messages as read', async ({ page }) => {
-		// Log in as GarlicFace FIRST so collection syncs
-		await loginAsTestUser(page)
-
-		// Wait for collections to sync
-		await page.waitForLoadState('networkidle')
-
-		// Now create an unread message - realtime subscription will catch it
+		// Create an unread message BEFORE logging in, so it's included in the
+		// initial collection sync (avoids relying on realtime for delivery)
 		const { data: message } = await supabase
 			.from('chat_message')
 			.insert({
@@ -185,31 +177,29 @@ test.describe.serial('Chat Messages', () => {
 			createdMessageIds.push(message.id)
 		}
 
-		// Small delay for realtime to propagate
-		await page.waitForTimeout(500)
+		// Verify message starts unread
+		expect(message!.read_at).toBeNull()
 
-		// Navigate to Chats
+		// Log in as GarlicFace - collection sync will load all messages including the new one
+		await loginAsTestUser(page)
+
+		// Navigate to Best Frin's chat
 		await page.locator('a[data-key="/friends/chats"]').click()
-
 		await expect(page).toHaveURL('/friends/chats')
 
-		// Click on Best Frin's chat (use href filter to target chat link)
 		const bestFrinChat = page.locator(
 			`a[href*="/friends/chats/"]:has-text("Best Frin")`
 		)
-		await expect(bestFrinChat).toBeVisible()
+		await expect(bestFrinChat).toBeVisible({ timeout: 10000 })
 		await bestFrinChat.click()
 
-		// Wait for chat page to load
+		// Wait for chat page to fully load with messages
 		await expect(page).toHaveURL(/\/friends\/chats\//)
+		const messageBubbles = page.getByTestId('chat-message-bubble')
+		await expect(messageBubbles.first()).toBeVisible({ timeout: 10000 })
 
-		// Wait for chat content to render (proves collection has synced)
-		await expect(page.getByText('Best Frin').first()).toBeVisible()
-
-		// Wait a bit for the UI to stabilize and mutation to fire
-		await page.waitForTimeout(1000)
-
-		// Poll for the message to be marked as read (mutation may take a moment)
+		// Poll for the message to be marked as read
+		// The chat page's useEffect detects unread messages and fires markAsRead mutation
 		await expect
 			.poll(
 				async () => {
@@ -220,7 +210,7 @@ test.describe.serial('Chat Messages', () => {
 						.single()
 					return readMessage?.read_at
 				},
-				{ timeout: 10000, intervals: [500, 1000, 1000, 2000, 2000] }
+				{ timeout: 15000, intervals: [500, 1000, 1000, 2000, 2000, 3000] }
 			)
 			.not.toBeNull()
 	})

@@ -349,7 +349,7 @@ test.describe('Collection State Verification', () => {
 
 		// Navigate to home page and verify avatar link is shown (links to /learn)
 		await page.goto('/')
-		const avatarLink = page.locator('a[title="Go to app"]')
+		const avatarLink = page.getByTestId('homepage-app-link')
 		await expect(avatarLink).toBeVisible({ timeout: 5000 })
 
 		// Sign out
@@ -358,8 +358,7 @@ test.describe('Collection State Verification', () => {
 		await expect(page).toHaveURL('/', { timeout: 10000 })
 
 		// Home page should show login link, NOT the avatar
-		// The login link should have title "Log in"
-		const loginButton = page.locator('a[title="Log in"]')
+		const loginButton = page.getByTestId('homepage-login-link')
 		await expect(loginButton).toBeVisible({ timeout: 5000 })
 
 		// Avatar link should NOT be visible

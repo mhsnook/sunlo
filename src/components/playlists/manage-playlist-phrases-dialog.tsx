@@ -260,6 +260,7 @@ export function ManagePlaylistPhrasesDialog({
 								<div
 									key={item.link.id}
 									className="bg-muted/30 rounded border p-3"
+									data-testid="manage-phrase-card"
 								>
 									<div className="flex items-start gap-2">
 										{/* Reorder buttons */}

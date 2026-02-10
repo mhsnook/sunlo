@@ -105,6 +105,7 @@ function UserLogin() {
 				)}
 				from={Route.fullPath}
 				to="/login"
+				data-testid="homepage-login-link"
 			>
 				<LogIn className="h-5 w-5 scale-100 rotate-0 text-slate-800 transition-all dark:text-slate-200" />
 				<span className="sr-only">Log in</span>
@@ -118,6 +119,7 @@ function UserLogin() {
 				className="ring-offset-background rounded-squircle focus-visible:ring-ring border-border/50 inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
 				from={Route.fullPath}
 				to="/learn"
+				data-testid="homepage-app-link"
 			>
 				{profile ?
 					<Avatar className="size-12">
