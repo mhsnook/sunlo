@@ -47,10 +47,12 @@ export function ReviewSingleCard({
 	pid,
 	reviewStage,
 	dayString,
+	triggerSlide,
 }: {
 	pid: uuid
 	reviewStage: number
 	dayString: string
+	triggerSlide: (navigate: () => void) => void
 }) {
 	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'not-found')
@@ -65,7 +67,8 @@ export function ReviewSingleCard({
 		closeCard,
 		reviewStage,
 		prevData,
-		latestReview
+		latestReview,
+		triggerSlide
 	)
 
 	const nextIntervals = intervals(latestReview).map(formatInterval)

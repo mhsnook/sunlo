@@ -21,6 +21,7 @@ export interface MyRouterContext {
 	titleBar?: TitleBar
 	appnav?: string[]
 	contextMenu?: string[]
+	focusMode?: boolean
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

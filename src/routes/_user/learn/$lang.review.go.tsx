@@ -1,3 +1,4 @@
+import { useCallback, useRef, useState } from 'react'
 import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
@@ -21,7 +22,8 @@ import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
-		contextMenu: [], // Focused review mode - no distractions
+		contextMenu: [],
+		focusMode: true,
 	}),
 	component: ReviewPage,
 	loader: async () => {
@@ -66,6 +68,50 @@ function FlashCardReviewSession({
 
 	const atTheEnd = currentCardIndex === manifest.length
 
+	// Animation: phase tracks 'idle' | 'out' | 'in', outClass picks the direction
+	const [anim, setAnim] = useState<{ phase: string; outClass: string }>({
+		phase: 'idle',
+		outClass: '',
+	})
+	const pendingNavRef = useRef<(() => void) | null>(null)
+	const isAnimating = anim.phase !== 'idle'
+
+	const animateTransition = useCallback(
+		(navigate: () => void, direction: 'left' | 'right' = 'left') => {
+			if (isAnimating) return
+			pendingNavRef.current = navigate
+			setAnim({
+				phase: 'out',
+				outClass:
+					direction === 'left' ?
+						'animate-card-out-left'
+					:	'animate-card-out-right',
+			})
+		},
+		[isAnimating]
+	)
+
+	// The mutation calls triggerSlide — always exits left (scored = moving forward)
+	const triggerSlide = useCallback(
+		(navigate: () => void) => animateTransition(navigate, 'left'),
+		[animateTransition]
+	)
+
+	const handleAnimationEnd = useCallback(() => {
+		if (anim.phase === 'out') {
+			pendingNavRef.current?.()
+			pendingNavRef.current = null
+			setAnim({ phase: 'in', outClass: '' })
+		} else {
+			setAnim({ phase: 'idle', outClass: '' })
+		}
+	}, [anim.phase])
+
+	const animClass =
+		anim.phase === 'out' ? anim.outClass
+		: anim.phase === 'in' ? 'animate-card-pop-in'
+		: ''
+
 	return (
 		<div
 			className="flex-col items-center justify-center gap-2 py-2"
@@ -78,8 +124,8 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={gotoPrevious}
-								disabled={currentCardIndex === 0}
+								onClick={() => animateTransition(gotoPrevious, 'right')}
+								disabled={currentCardIndex === 0 || isAnimating}
 								aria-label="Previous card"
 							>
 								<ChevronLeft className="size-4" />
@@ -90,8 +136,8 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={gotoNext}
-								disabled={atTheEnd}
+								onClick={() => animateTransition(gotoNext, 'left')}
+								disabled={atTheEnd || isAnimating}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
@@ -102,7 +148,10 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="skip for today"
-							onClick={() => gotoIndex(nextValidIndex)}
+							onClick={() =>
+								animateTransition(() => gotoIndex(nextValidIndex), 'left')
+							}
+							disabled={isAnimating}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
@@ -112,7 +161,8 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="back one card"
-							onClick={gotoPrevious}
+							onClick={() => animateTransition(gotoPrevious, 'right')}
+							disabled={isAnimating}
 							className="ps-2 pe-4"
 						>
 							<ChevronLeft className="size-4" /> Back one card
@@ -120,7 +170,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="flex flex-col items-center justify-center gap-2">
+			<div className="flex flex-col items-center justify-center gap-2 overflow-hidden">
 				<div className={atTheEnd ? 'w-full' : 'hidden'}>
 					<WhenComplete />
 				</div>
@@ -129,12 +179,16 @@ function FlashCardReviewSession({
 					{manifest.map((pid, i) => (
 						<div
 							key={pid}
-							className={`w-full ${i === currentCardIndex ? 'block' : 'hidden'}`}
+							className={`w-full ${i === currentCardIndex ? `block ${animClass}` : 'hidden'}`}
+							onAnimationEnd={
+								i === currentCardIndex ? handleAnimationEnd : undefined
+							}
 						>
 							<ReviewSingleCard
 								pid={pid}
 								reviewStage={reviewStage}
 								dayString={dayString}
+								triggerSlide={triggerSlide}
 							/>
 						</div>
 					))}

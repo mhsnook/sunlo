@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import {
 	createFileRoute,
@@ -10,7 +10,7 @@ import {
 import { toastSuccess } from '@/components/ui/sonner'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
-import { SidebarInset } from '@/components/ui/sidebar'
+import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
@@ -114,6 +114,24 @@ function UserLayout() {
 	const matches = useMatches()
 	const { lang } = useParams({ strict: false })
 
+	// Check if any route has enabled focus mode (e.g. review/go)
+	const focusMode = matches.some(
+		(m) => (m.context as MyRouterContext)?.focusMode
+	)
+
+	// Auto-collapse sidebar when entering focus mode, restore when leaving
+	const { setOpen, open } = useSidebar()
+	const savedOpenState = useRef(open)
+	useEffect(() => {
+		if (focusMode) {
+			savedOpenState.current = open
+			setOpen(false)
+		} else {
+			setOpen(savedOpenState.current)
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [focusMode])
+
 	// Show right sidebar if there's a contextMenu with items
 	const contextMenuMatch = matches.findLast(
 		(m) => (m.context as MyRouterContext)?.contextMenu
@@ -180,7 +198,7 @@ function UserLayout() {
 
 	return (
 		<div className="flex h-screen w-full">
-			<AppSidebar />
+			<AppSidebar focusMode={focusMode} />
 			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
 				<Navbar />
 				<AppNav />
