@@ -110,10 +110,7 @@ describe('round', () => {
 
 describe('dateDiff', () => {
 	it('calculates difference in days', () => {
-		const diff = dateDiff(
-			'2025-01-01T00:00:00Z',
-			'2025-01-11T00:00:00Z'
-		)
+		const diff = dateDiff('2025-01-01T00:00:00Z', '2025-01-11T00:00:00Z')
 		expect(diff).toBeCloseTo(10, 1)
 	})
 
@@ -123,10 +120,7 @@ describe('dateDiff', () => {
 	})
 
 	it('handles fractional days', () => {
-		const diff = dateDiff(
-			'2025-01-01T00:00:00Z',
-			'2025-01-01T12:00:00Z'
-		)
+		const diff = dateDiff('2025-01-01T00:00:00Z', '2025-01-01T12:00:00Z')
 		expect(diff).toBeCloseTo(0.5, 2)
 	})
 
@@ -137,10 +131,7 @@ describe('dateDiff', () => {
 	})
 
 	it('returns negative for reverse order', () => {
-		const diff = dateDiff(
-			'2025-01-11T00:00:00Z',
-			'2025-01-01T00:00:00Z'
-		)
+		const diff = dateDiff('2025-01-11T00:00:00Z', '2025-01-01T00:00:00Z')
 		expect(diff).toBeCloseTo(-10, 1)
 	})
 })
@@ -166,7 +157,7 @@ describe('arrayUnion', () => {
 			['b', 'c'],
 			['c', 'd'],
 		])
-		expect(result.sort()).toEqual(['a', 'b', 'c', 'd'])
+		expect(result.toSorted()).toEqual(['a', 'b', 'c', 'd'])
 	})
 
 	it('returns empty for empty arrays', () => {
@@ -207,7 +198,7 @@ describe('sortDecksByCreation', () => {
 			{ created_at: '2025-01-01', lang: 'spa' },
 			{ created_at: '2025-02-01', lang: 'tam' },
 		]
-		const sorted = [...decks].sort(sortDecksByCreation)
+		const sorted = [...decks].toSorted(sortDecksByCreation)
 		expect(sorted[0].lang).toBe('spa')
 		expect(sorted[1].lang).toBe('tam')
 		expect(sorted[2].lang).toBe('hin')
@@ -218,18 +209,20 @@ describe('sortDecksByCreation', () => {
 			{ created_at: '2025-01-01', lang: 'tam' },
 			{ created_at: '2025-01-01', lang: 'hin' },
 		]
-		const sorted = [...decks].sort(sortDecksByCreation)
+		const sorted = [...decks].toSorted(sortDecksByCreation)
 		expect(sorted[0].lang).toBe('hin')
 		expect(sorted[1].lang).toBe('tam')
 	})
 })
 
 describe('sortDecksByActivity', () => {
-	const makeDeck = (overrides: Partial<{
-		created_at: string
-		most_recent_review_at: string | null
-		lang: string
-	}>) =>
+	const makeDeck = (
+		overrides: Partial<{
+			created_at: string
+			most_recent_review_at: string | null
+			lang: string
+		}>
+	) =>
 		({
 			created_at: '2025-01-01',
 			most_recent_review_at: null,
@@ -243,7 +236,7 @@ describe('sortDecksByActivity', () => {
 			makeDeck({ most_recent_review_at: '2025-03-01', lang: 'spa' }),
 			makeDeck({ most_recent_review_at: '2025-02-01', lang: 'tam' }),
 		]
-		const sorted = [...decks].sort(sortDecksByActivity)
+		const sorted = [...decks].toSorted(sortDecksByActivity)
 		expect(sorted[0].lang).toBe('spa')
 		expect(sorted[1].lang).toBe('tam')
 		expect(sorted[2].lang).toBe('hin')
@@ -254,7 +247,7 @@ describe('sortDecksByActivity', () => {
 			makeDeck({ created_at: '2025-01-01', lang: 'hin' }),
 			makeDeck({ created_at: '2025-03-01', lang: 'spa' }),
 		]
-		const sorted = [...decks].sort(sortDecksByActivity)
+		const sorted = [...decks].toSorted(sortDecksByActivity)
 		expect(sorted[0].lang).toBe('spa')
 	})
 })

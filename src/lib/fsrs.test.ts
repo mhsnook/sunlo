@@ -5,14 +5,11 @@ import {
 	intervals,
 	retrievability,
 	type Score,
-	type FSRSOutput,
 } from './fsrs'
 import type { CardReviewType } from './schemas'
 
 // Helper to make a mock previous review
-function mockReview(
-	overrides: Partial<CardReviewType> = {}
-): CardReviewType {
+function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
 	return {
 		id: '00000000-0000-0000-0000-000000000001',
 		created_at: '2025-01-01T12:00:00Z',
@@ -49,9 +46,7 @@ describe('calculateFSRS', () => {
 			)
 
 			for (let i = 1; i < results.length; i++) {
-				expect(results[i].stability).toBeGreaterThan(
-					results[i - 1].stability
-				)
+				expect(results[i].stability).toBeGreaterThan(results[i - 1].stability)
 			}
 		})
 
@@ -61,9 +56,7 @@ describe('calculateFSRS', () => {
 			)
 
 			for (let i = 1; i < results.length; i++) {
-				expect(results[i].difficulty).toBeLessThan(
-					results[i - 1].difficulty
-				)
+				expect(results[i].difficulty).toBeLessThan(results[i - 1].difficulty)
 			}
 		})
 

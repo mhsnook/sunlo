@@ -2404,7 +2404,9 @@ with
 
 create policy "Users can update own comments" on "public"."request_comment"
 for update
-	to "authenticated" using (("uid" = "auth"."uid" ()));
+	to "authenticated" using (("uid" = "auth"."uid" ()))
+with
+	check (("uid" = "auth"."uid" ()));
 
 create policy "Users can update their own playlists" on "public"."phrase_playlist"
 for update
@@ -2554,6 +2556,17 @@ grant all on function "public"."add_phrase_translation_card" (
 	"translation_text_script" "text",
 	"create_card" boolean,
 	"phrase_only_reverse" boolean
+) to "anon";
+
+grant all on function "public"."add_phrase_translation_card" (
+	"phrase_text" "text",
+	"phrase_lang" "text",
+	"translation_text" "text",
+	"translation_lang" "text",
+	"phrase_text_script" "text",
+	"translation_text_script" "text",
+	"create_card" boolean,
+	"phrase_only_reverse" boolean
 ) to "authenticated";
 
 grant all on function "public"."add_phrase_translation_card" (
@@ -2571,6 +2584,12 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_phrase_id" "uuid",
 	"p_lang" character varying,
 	"p_tags" "text" []
+) to "anon";
+
+grant all on function "public"."add_tags_to_phrase" (
+	"p_phrase_id" "uuid",
+	"p_lang" character varying,
+	"p_tags" "text" []
 ) to "authenticated";
 
 grant all on function "public"."add_tags_to_phrase" (
@@ -2578,6 +2597,8 @@ grant all on function "public"."add_tags_to_phrase" (
 	"p_lang" character varying,
 	"p_tags" "text" []
 ) to "service_role";
+
+grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "authenticated";
 
@@ -2587,6 +2608,12 @@ grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"
+) to "anon";
+
+grant all on function "public"."bulk_add_phrases" (
+	"p_lang" character,
+	"p_phrases" "public"."phrase_with_translations_input" [],
+	"p_user_id" "uuid"
 ) to "authenticated";
 
 grant all on function "public"."bulk_add_phrases" (
@@ -2600,6 +2627,13 @@ grant all on function "public"."create_comment_with_phrases" (
 	"p_content" "text",
 	"p_parent_comment_id" "uuid",
 	"p_phrase_ids" "uuid" []
+) to "anon";
+
+grant all on function "public"."create_comment_with_phrases" (
+	"p_request_id" "uuid",
+	"p_content" "text",
+	"p_parent_comment_id" "uuid",
+	"p_phrase_ids" "uuid" []
 ) to "authenticated";
 
 grant all on function "public"."create_comment_with_phrases" (
@@ -2608,6 +2642,15 @@ grant all on function "public"."create_comment_with_phrases" (
 	"p_parent_comment_id" "uuid",
 	"p_phrase_ids" "uuid" []
 ) to "service_role";
+
+grant all on function "public"."create_playlist_with_links" (
+	"lang" "text",
+	"title" "text",
+	"description" "text",
+	"href" "text",
+	"cover_image_path" "text",
+	"phrases" "jsonb"
+) to "anon";
 
 grant all on function "public"."create_playlist_with_links" (
 	"lang" "text",
@@ -2864,6 +2907,8 @@ grant all on function "public"."search_phrases_smart" (
 	"cursor_id" "uuid"
 ) to "service_role";
 
+grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "anon";
+
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_comment_upvote" ("p_comment_id" "uuid", "p_action" "text") to "service_role";
@@ -2876,9 +2921,13 @@ grant all on function "public"."set_limit" (real) to "authenticated";
 
 grant all on function "public"."set_limit" (real) to "service_role";
 
+grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "anon";
+
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "authenticated";
 
 grant all on function "public"."set_phrase_playlist_upvote" ("p_playlist_id" "uuid", "p_action" "text") to "service_role";
+
+grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "anon";
 
 grant all on function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") to "authenticated";
 
@@ -2964,37 +3013,55 @@ grant all on function "public"."strict_word_similarity_op" ("text", "text") to "
 
 grant all on function "public"."strict_word_similarity_op" ("text", "text") to "service_role";
 
+grant all on function "public"."trigger_refresh_phrase_search" () to "anon";
+
 grant all on function "public"."trigger_refresh_phrase_search" () to "authenticated";
 
 grant all on function "public"."trigger_refresh_phrase_search" () to "service_role";
+
+grant all on function "public"."update_comment_upvote_count" () to "anon";
 
 grant all on function "public"."update_comment_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_comment_upvote_count" () to "service_role";
 
+grant all on function "public"."update_parent_playlist_timestamp" () to "anon";
+
 grant all on function "public"."update_parent_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_parent_playlist_timestamp" () to "service_role";
+
+grant all on function "public"."update_phrase_playlist_timestamp" () to "anon";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_playlist_upvote_count" () to "anon";
+
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_playlist_upvote_count" () to "service_role";
+
+grant all on function "public"."update_phrase_request_timestamp" () to "anon";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_timestamp" () to "service_role";
 
+grant all on function "public"."update_phrase_request_upvote_count" () to "anon";
+
 grant all on function "public"."update_phrase_request_upvote_count" () to "authenticated";
 
 grant all on function "public"."update_phrase_request_upvote_count" () to "service_role";
 
+grant all on function "public"."update_phrase_translation_updated_at" () to "anon";
+
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
+
+grant all on function "public"."validate_friend_request_action" () to "anon";
 
 grant all on function "public"."validate_friend_request_action" () to "authenticated";
 
@@ -3040,6 +3107,8 @@ grant all on function "public"."word_similarity_op" ("text", "text") to "authent
 
 grant all on function "public"."word_similarity_op" ("text", "text") to "service_role";
 
+grant all on table "public"."chat_message" to "anon";
+
 grant all on table "public"."chat_message" to "authenticated";
 
 grant all on table "public"."chat_message" to "service_role";
@@ -3049,6 +3118,8 @@ grant all on table "public"."comment_phrase_link" to "anon";
 grant all on table "public"."comment_phrase_link" to "authenticated";
 
 grant all on table "public"."comment_phrase_link" to "service_role";
+
+grant all on table "public"."comment_upvote" to "anon";
 
 grant all on table "public"."comment_upvote" to "authenticated";
 
@@ -3072,6 +3143,8 @@ grant all on table "public"."tag" to "authenticated";
 
 grant all on table "public"."tag" to "service_role";
 
+grant all on table "public"."user_card" to "anon";
+
 grant all on table "public"."user_card" to "authenticated";
 
 grant all on table "public"."user_card" to "service_role";
@@ -3079,6 +3152,10 @@ grant all on table "public"."user_card" to "service_role";
 grant all on table "public"."user_card_review" to "authenticated";
 
 grant all on table "public"."user_card_review" to "service_role";
+
+grant all on table "public"."user_card_review" to "anon";
+
+grant all on table "public"."user_card_plus" to "anon";
 
 grant all on table "public"."user_card_plus" to "authenticated";
 
@@ -3120,6 +3197,8 @@ grant all on table "public"."friend_request_action" to "authenticated";
 
 grant all on table "public"."friend_request_action" to "service_role";
 
+grant all on table "public"."friend_summary" to "anon";
+
 grant all on table "public"."friend_summary" to "authenticated";
 
 grant all on table "public"."friend_summary" to "service_role";
@@ -3129,6 +3208,8 @@ grant all on table "public"."language" to "anon";
 grant all on table "public"."language" to "authenticated";
 
 grant all on table "public"."language" to "service_role";
+
+grant all on table "public"."user_deck" to "anon";
 
 grant all on table "public"."user_deck" to "authenticated";
 
@@ -3140,6 +3221,8 @@ grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
 
+grant all on table "public"."phrase_playlist_upvote" to "anon";
+
 grant all on table "public"."phrase_playlist_upvote" to "authenticated";
 
 grant all on table "public"."phrase_playlist_upvote" to "service_role";
@@ -3150,6 +3233,8 @@ grant all on table "public"."phrase_relation" to "authenticated";
 
 grant all on table "public"."phrase_relation" to "service_role";
 
+grant all on table "public"."phrase_request_upvote" to "anon";
+
 grant all on table "public"."phrase_request_upvote" to "authenticated";
 
 grant all on table "public"."phrase_request_upvote" to "service_role";
@@ -3159,6 +3244,8 @@ grant all on table "public"."phrase_translation" to "anon";
 grant all on table "public"."phrase_translation" to "authenticated";
 
 grant all on table "public"."phrase_translation" to "service_role";
+
+grant all on table "public"."user_profile" to "anon";
 
 grant all on table "public"."user_profile" to "authenticated";
 
@@ -3182,9 +3269,13 @@ grant all on table "public"."user_client_event" to "authenticated";
 
 grant all on table "public"."user_client_event" to "service_role";
 
+grant all on table "public"."user_deck_plus" to "anon";
+
 grant all on table "public"."user_deck_plus" to "authenticated";
 
 grant all on table "public"."user_deck_plus" to "service_role";
+
+grant all on table "public"."user_deck_review_state" to "anon";
 
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
