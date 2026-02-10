@@ -50,7 +50,7 @@ interface AdvancedVars {
 
 const defaultLightVars: AdvancedVars = {
 	cHi: 0.22,
-	cLo: 0.04,
+	cLo: 0.08,
 	L1: 0.35,
 	L2: 0.45,
 	L3: 0.58,
@@ -62,8 +62,8 @@ const defaultLightVars: AdvancedVars = {
 }
 
 const defaultDarkVars: AdvancedVars = {
-	cHi: 0.18,
-	cLo: 0.04,
+	cHi: 0.22,
+	cLo: 0.08,
 	L1: 0.95,
 	L2: 0.82,
 	L3: 0.5,
