@@ -63,7 +63,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 				<Button
 					variant="ghost"
 					size="icon"
-					title="More options"
+					aria-label="More options"
 					data-testid="comment-context-menu-trigger"
 				>
 					<MoreVertical className="h-4 w-4" />

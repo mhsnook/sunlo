@@ -55,7 +55,7 @@ export function UpdateRequestDialog({
 				<Button
 					variant="ghost"
 					size="icon"
-					title="Update request"
+					aria-label="Update request"
 					data-testid="update-request-button"
 				>
 					<Edit className="h-4 w-4" />

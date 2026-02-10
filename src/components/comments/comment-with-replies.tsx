@@ -131,7 +131,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							parentCommentId={comment.id}
 						>
 							<DialogTrigger
-								title="Add a reply"
+								aria-label="Add a reply"
 								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
 							>
 								<MessagesSquare />

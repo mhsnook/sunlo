@@ -11,14 +11,12 @@ export default function PermalinkButton({
 	variant = 'ghost',
 	size = 'sm',
 	className,
-	title,
 	link,
 	...props
 }: {
 	text?: string
 	className?: string
 	link?: boolean
-	title?: string
 } & LinkProps &
 	VariantProps<typeof buttonVariants>) {
 	return !to ? null : (
@@ -27,7 +25,6 @@ export default function PermalinkButton({
 				params={params}
 				className={cn(link ? '' : buttonVariants({ variant, size }), className)}
 				preload="intent"
-				title={title}
 				{...props}
 			>
 				{text === '' ?

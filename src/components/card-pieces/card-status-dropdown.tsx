@@ -52,7 +52,7 @@ const statusStrings = {
 		icon: () => (
 			<Bookmark
 				className="fill-purple-600/50 text-purple-600"
-				aria-label="Active"
+				aria-hidden="true"
 			/>
 		),
 	},
@@ -63,7 +63,7 @@ const statusStrings = {
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
 		icon: () => (
-			<BookmarkCheck className="text-green-600" aria-label="Learned" />
+			<BookmarkCheck className="text-green-600" aria-hidden="true" />
 		),
 	},
 	skipped: {
@@ -72,7 +72,7 @@ const statusStrings = {
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
-		icon: () => <BookmarkX aria-label="Skipped" />,
+		icon: () => <BookmarkX aria-hidden="true" />,
 	},
 	nocard: {
 		short: 'Not in deck',
@@ -80,7 +80,7 @@ const statusStrings = {
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => <BookmarkPlus className="opacity-50" aria-label="Add card" />,
+		icon: () => <BookmarkPlus className="opacity-50" aria-hidden="true" />,
 	},
 	nodeck: {
 		short: 'Start deck',
@@ -88,7 +88,7 @@ const statusStrings = {
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
-		icon: () => <PlusCircle aria-label="Start learning" />,
+		icon: () => <PlusCircle aria-hidden="true" />,
 	},
 }
 
@@ -237,7 +237,7 @@ export function CardStatusDropdown({
 					: !card ?
 						<DropdownMenuItem
 							onClick={() => cardMutation.mutate({ status: 'active' })}
-							aria-label="add-to-deck-option"
+							data-testid="add-to-deck-option"
 						>
 							<StatusSpan choice="nocard" />
 						</DropdownMenuItem>
@@ -249,7 +249,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'active' })
 								}
 								className={card?.status === 'active' ? 'bg-primary/30' : ''}
-								aria-label="activate-card-option"
+								data-testid="activate-card-option"
 							>
 								<StatusSpan choice="active" />
 							</DropdownMenuItem>
@@ -260,7 +260,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'learned' })
 								}
 								className={card?.status === 'learned' ? 'bg-primary/30' : ''}
-								aria-label="set-learned-option"
+								data-testid="set-learned-option"
 							>
 								<StatusSpan choice="learned" />
 							</DropdownMenuItem>
@@ -271,7 +271,7 @@ export function CardStatusDropdown({
 									:	cardMutation.mutate({ status: 'skipped' })
 								}
 								className={card?.status === 'skipped' ? 'bg-primary/30' : ''}
-								aria-label="ignore-card-option"
+								data-testid="ignore-card-option"
 							>
 								<StatusSpan choice="skipped" />
 							</DropdownMenuItem>
@@ -302,7 +302,7 @@ export function CardStatusHeart({
 					'Please log in to add phrases to your library'
 				)
 			}
-			title={
+			aria-label={
 				phrase.card?.status === 'active' ?
 					'Skip this phrase (remove it from your active deck)'
 				:	'Learn this phrase (add to your active deck)'

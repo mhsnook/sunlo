@@ -93,7 +93,6 @@ export function IntroSheet({
 						<Button
 							onClick={handleAction}
 							className="w-full"
-							aria-label="button-dismiss-intro-message"
 							data-testid={actionTestId}
 						>
 							{actionLabel}

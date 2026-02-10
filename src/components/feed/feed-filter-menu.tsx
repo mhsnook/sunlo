@@ -49,7 +49,7 @@ export function FeedFilterMenu() {
 				<Button
 					variant="ghost"
 					size="icon"
-					title="Filter feed content"
+					aria-label="Filter feed content"
 					data-testid="feed-filter-button"
 				>
 					<Filter className="h-4 w-4" />

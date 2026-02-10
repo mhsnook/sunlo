@@ -27,7 +27,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 					<Link
 						className="grow"
 						to="/learn/$lang"
-						aria-label="deck-link"
+						data-testid="deck-link"
 						params={{ lang: deck.lang }}
 					>
 						<CardTitle className="text-primary-foresoft flex flex-row justify-between gap-2 text-xl">
@@ -44,6 +44,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								to="/learn/$lang/review"
 								className={buttonVariants({ size: 'icon' })}
 								params={{ lang: deck.lang }}
+								aria-label="Start review"
 							>
 								<Rocket />
 							</Link>

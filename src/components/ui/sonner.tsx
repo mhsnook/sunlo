@@ -106,7 +106,7 @@ export function toastError(message: string) {
 						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onClick={copyToClipboard}
-						title="Copy error"
+						aria-label="Copy error"
 					>
 						<Copy className="size-4" />
 					</Button>
@@ -115,7 +115,7 @@ export function toastError(message: string) {
 						size="icon"
 						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
 						onClick={() => toast.dismiss(t)}
-						title="Dismiss"
+						aria-label="Dismiss"
 					>
 						<X className="size-4" />
 					</Button>
