@@ -45,7 +45,7 @@ export function ShareRequestButton({
 			variant={variant}
 			size={size}
 			className={className}
-			title="Share request"
+			aria-label="Share request"
 			data-testid="share-request-button"
 			{...props}
 		>

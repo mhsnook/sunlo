@@ -26,7 +26,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							variant="default"
 							className="size-8"
 							size="icon"
-							title="Send friend request"
+							aria-label="Send friend request"
 							onClick={() => inviteResponseMutation.mutate('invite')}
 						>
 							<Send className="mt-[0.1rem] mr-[0.1rem] size-6" />
@@ -37,7 +37,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								variant="default"
 								className="size-8"
 								size="icon"
-								title="Accept pending invitation"
+								aria-label="Accept pending invitation"
 								onClick={() => inviteResponseMutation.mutate('accept')}
 							>
 								<ThumbsUp />
@@ -50,13 +50,13 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 									variant="secondary"
 									className="size-8"
 									size="icon"
-									title="Decline pending invitation"
+									aria-label="Decline pending invitation"
 								>
 									<X className="size-6 p-0" />
 								</Button>
 								<Button
 									variant="destructive"
-									title="Confirm: Decline friend request"
+									aria-label="Confirm: Decline friend request"
 									onClick={() => inviteResponseMutation.mutate('decline')}
 								>
 									{inviteResponseMutation.isPending ?
@@ -76,13 +76,13 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								variant="secondary"
 								className="size-8"
 								size="icon"
-								title="Cancel friend request"
+								aria-label="Cancel friend request"
 							>
 								<X className="size-6 p-0" />
 							</Button>
 							<Button
 								variant="destructive"
-								title="Confirm: Cancel friend request"
+								aria-label="Confirm: Cancel friend request"
 								onClick={() => inviteResponseMutation.mutate('cancel')}
 							>
 								{inviteResponseMutation.isPending ?

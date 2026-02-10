@@ -31,11 +31,10 @@ export function SharePlaylistButton({ id }: { id: uuid }) {
 			variant="ghost"
 			size="icon"
 			onClick={sharePlaylist}
-			title="Share playlist"
+			aria-label="Share playlist"
 			data-testid="share-playlist-button"
 		>
 			<Share className="h-4 w-4" />
-			<span className="sr-only">Share</span>
 		</Button>
 	)
 }

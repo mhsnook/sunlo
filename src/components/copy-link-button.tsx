@@ -22,7 +22,7 @@ export default function CopyLinkButton({
 			onClick={copy}
 			variant={variant}
 			size={size}
-			title="Copy link"
+			aria-label="Copy link"
 			data-testid="copy-link-button"
 			{...props}
 		>

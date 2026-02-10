@@ -254,11 +254,10 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				<Button
 					variant="ghost"
 					size="icon"
-					title="Open context menu"
+					aria-label="Open context menu"
 					className="absolute top-4 right-4"
 				>
 					<MoreVertical />
-					<span className="sr-only">Open context menu</span>
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">

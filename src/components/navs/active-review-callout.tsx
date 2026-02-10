@@ -134,7 +134,7 @@ function CalloutContent({
 				params={{ lang: activeReviews[0].lang }}
 				onClick={setClosedMobile}
 				className="bg-primary/20 hover:bg-primary/30 text-primary mx-auto flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
-				title="Active review in progress"
+				aria-label="Active review in progress"
 			>
 				<Rocket className="h-4 w-4" />
 			</Link>

@@ -47,7 +47,6 @@ export function UnderConstructionNotice() {
 
 								<a
 									href="mailto:sunloapp@gmail.com"
-									title="email us at sunloapp@gmail.com"
 									className="hover:text-foreground text-muted-foreground inline-flex items-center gap-2 text-sm transition-colors"
 								>
 									<Mail className="h-4 w-4" />
