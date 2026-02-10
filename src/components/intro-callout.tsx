@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface IntroCalloutProps {
-	children: React.ReactNode
+	children: ReactNode
 	className?: string
 	/** Called when user clicks to see more info */
 	onShowMore?: () => void
