@@ -11,9 +11,9 @@ Three attributes, each with a clear role:
 | ------------------------- | ------------------------------------- | ------------------------------- |
 | One-of-a-kind element     | `data-testid="login-form"`            | `login-form`                    |
 | List container            | `data-testid="decks-list-grid"`       | `decks-list-grid`               |
-| Interactive element       | `aria-label="save-button"`            | `save-button`                   |
+| Interactive element       | `data-testid="save-button"`           | `save-button`                   |
 | Item inside a list        | `data-key={lang}`                     | `decks-list-grid hin`           |
-| Action inside a list item | `aria-label="deck-link"`              | `decks-list-grid hin deck-link` |
+| Action inside a list item | `data-testid="deck-link"`             | `decks-list-grid hin deck-link` |
 | Items with no wrapper     | `data-name="tab" data-key="settings"` | `tab settings`                  |
 
 ### List items: container + `data-key`
@@ -26,7 +26,7 @@ instance.
 <div data-testid="decks-list-grid">
 	{decks.map((deck) => (
 		<div data-key={deck.lang}>
-			<a aria-label="deck-link" href={`/learn/${deck.lang}`}>
+			<a data-testid="deck-link" href={`/learn/${deck.lang}`}>
 				{deck.name}
 			</a>
 		</div>
@@ -69,7 +69,7 @@ natural wrapper element to label.
 | ---------------------------------- | ----------- | ------------------- | ------------------------------------------------------------- |
 | `decks-list-grid`                  | data-testid | Learn page          | Grid container for deck cards                                 |
 | `decks-list-grid {lang}`           | data-key    | Deck card           | Item inside grid (e.g. `decks-list-grid hin`)                 |
-| `decks-list-grid {lang} deck-link` | aria-label  | Deck card           | Link to deck feed (e.g. `decks-list-grid hin deck-link`)      |
+| `decks-list-grid {lang} deck-link` | data-testid | Deck card           | Link to deck feed (e.g. `decks-list-grid hin deck-link`)      |
 | `deck-switcher-button`             | data-testid | Sidebar             | Button to open deck switcher                                  |
 | `new-deck-menu-item`               | data-testid | Deck switcher       | "New deck" option                                             |
 | `add-deck-form`                    | data-testid | Add deck page       | Form container                                                |
@@ -82,6 +82,7 @@ natural wrapper element to label.
 | `top-right-context-menu`           | data-testid | Navbar              | Context menu trigger                                          |
 | `deck-settings-menu-item`          | data-testid | Context menu        | Link to deck settings                                         |
 | `deck-settings-page`               | data-testid | Deck settings route | Settings page container                                       |
+| `dismiss-deck-settings-intro`      | data-testid | Deck settings intro | Button to dismiss settings intro sheet                        |
 | `review-goal-options`              | data-testid | Settings form       | Container for review goal radios                              |
 | `review-goal-options {n}`          | data-key    | Settings form       | Radio for review goal (e.g. `review-goal-options 10`)         |
 | `update-daily-goal-button`         | data-testid | Settings form       | Button to save review goal                                    |
