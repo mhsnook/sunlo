@@ -7,3 +7,4 @@ src/*.gen.ts
 out
 src-tauri/target
 src-tauri/gen
+scenetest-reports
