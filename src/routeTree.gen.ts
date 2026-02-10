@@ -65,10 +65,16 @@ import { Route as UserLearnLangPhrasesNewRouteImport } from './routes/_user/lear
 import { Route as UserLearnLangPhrasesIdRouteImport } from './routes/_user/learn/$lang.phrases.$id'
 import { Route as UserFriendsChatsFriendUidRecommendRouteImport } from './routes/_user/friends/chats.$friendUid.recommend'
 
+const ThemesLazyRouteImport = createFileRoute('/themes')()
 const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
 
+const ThemesLazyRoute = ThemesLazyRouteImport.update({
+  id: '/themes',
+  path: '/themes',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/themes.lazy').then((d) => d.Route))
 const RequestRemovalLazyRoute = RequestRemovalLazyRouteImport.update({
   id: '/request-removal',
   path: '/request-removal',
@@ -369,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
+  '/themes': typeof ThemesLazyRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -417,7 +424,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
-  '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
+  '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
 }
 export interface FileRoutesByTo {
@@ -425,6 +432,7 @@ export interface FileRoutesByTo {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
+  '/themes': typeof ThemesLazyRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -477,6 +485,7 @@ export interface FileRoutesById {
   '/components': typeof ComponentsLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
+  '/themes': typeof ThemesLazyRoute
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
+    | '/themes'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -583,7 +593,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
     | '/learn/$lang/playlists/'
-    | '/learn/$lang/requests'
+    | '/learn/$lang/requests/'
     | '/learn/$lang/review/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -591,6 +601,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
+    | '/themes'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/components'
     | '/privacy-policy'
     | '/request-removal'
+    | '/themes'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/set-new-password'
@@ -701,10 +713,18 @@ export interface RootRouteChildren {
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
+  ThemesLazyRoute: typeof ThemesLazyRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/themes': {
+      id: '/themes'
+      path: '/themes'
+      fullPath: '/themes'
+      preLoaderRoute: typeof ThemesLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request-removal': {
       id: '/request-removal'
       path: '/request-removal'
@@ -729,14 +749,14 @@ declare module '@tanstack/react-router' {
     '/_user': {
       id: '/_user'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof UserRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_auth': {
       id: '/_auth'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -1030,7 +1050,7 @@ declare module '@tanstack/react-router' {
     '/_user/learn/$lang/requests/': {
       id: '/_user/learn/$lang/requests/'
       path: '/requests'
-      fullPath: '/learn/$lang/requests'
+      fullPath: '/learn/$lang/requests/'
       preLoaderRoute: typeof UserLearnLangRequestsIndexRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
@@ -1316,6 +1336,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComponentsLazyRoute: ComponentsLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
+  ThemesLazyRoute: ThemesLazyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
