@@ -1,5 +1,20 @@
 # Change Log
 
+## v0.14 -
+
+- OKLCH colours and /themes manager
+- Add Vitest
+- Add focus mode for reviews with no sidebar
+- Center content area and balance right-hand sidebar
+- Improve: work on flakey tests, aria labels, semantic IDs
+- Polish: Improve sonner style (all in bottom right, info toasts persist)
+- Fix: Address a couple security issues
+- Improve: Stop _inferring_ review stage and just record it
+- Fix Playlist URL validation
+- Reduce clicks required to add a phrase to a playlist
+- Add slide animation to review cards
+- Fix Supabase post-install failure
+
 ## v0.13 - Tiny deploy
 
 _28th Jan, 2026_

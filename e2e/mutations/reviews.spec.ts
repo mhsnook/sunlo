@@ -1,3 +1,4 @@
+// oxlint-disable no-await-in-loop
 import { test, expect } from '@playwright/test'
 import { TEST_USER_UID } from '../helpers/auth-helpers'
 import {
