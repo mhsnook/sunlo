@@ -45,12 +45,15 @@ import {
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
+import { SuggestCorrectionDialog } from '@/components/card-pieces/suggest-correction-dialog'
+import { useUserId } from '@/lib/use-auth'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
 	const [isOpen, setIsOpen] = useState(false)
 	const [showAllProvenance, setShowAllProvenance] = useState(false)
 	const provenanceItems = usePhraseProvenance(pid)
+	const userId = useUserId()
 
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) return <PhraseNotFound />
@@ -141,10 +144,13 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									.map((trans) => (
 										<div
 											key={trans.id}
-											className="flex flex-row items-baseline justify-start gap-2 space-y-2 rounded"
+											className="flex flex-row items-center justify-start gap-2 rounded"
 										>
 											<LangBadge lang={trans.lang} />
-											<p className="text-md">{trans.text}</p>
+											<p className="text-md flex-1">{trans.text}</p>
+											{trans.added_by !== userId && (
+												<SuggestCorrectionDialog translation={trans} />
+											)}
 										</div>
 									))}
 							</div>
@@ -165,11 +171,16 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									<CollapsibleContent className="space-y-3">
 										{phrase.translations_other.map((trans) => (
 											<div key={trans.id} className="bg-muted rounded-lg p-3">
-												<div className="flex items-center justify-between">
-													<p className="text-md">{trans.text}</p>
-													<Badge variant="outline">
-														{languages[trans.lang]}
-													</Badge>
+												<div className="flex items-center justify-between gap-2">
+													<p className="text-md flex-1">{trans.text}</p>
+													<div className="flex items-center gap-1">
+														{trans.added_by !== userId && (
+															<SuggestCorrectionDialog translation={trans} />
+														)}
+														<Badge variant="outline">
+															{languages[trans.lang]}
+														</Badge>
+													</div>
 												</div>
 											</div>
 										))}

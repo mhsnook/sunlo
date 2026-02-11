@@ -341,6 +341,41 @@ export const CommentUpvoteSchema = z.object({
 
 export type CommentUpvoteType = z.infer<typeof CommentUpvoteSchema>
 
+export const TranslationSuggestionStatusEnumSchema = z.enum([
+	'pending',
+	'accepted',
+	'dismissed',
+])
+
+export const TranslationSuggestionSchema = z.object({
+	id: z.string().uuid(),
+	translation_id: z.string().uuid(),
+	phrase_id: z.string().uuid(),
+	uid: z.string().uuid(),
+	text: z.string().nullable().default(null),
+	comment: z.string(),
+	status: TranslationSuggestionStatusEnumSchema,
+	created_at: z.string(),
+	responded_at: z.string().nullable().default(null),
+})
+
+export type TranslationSuggestionType = z.infer<
+	typeof TranslationSuggestionSchema
+>
+
+export const NotificationTypeEnumSchema = z.enum(['translation_suggestion'])
+
+export const NotificationSchema = z.object({
+	id: z.string().uuid(),
+	uid: z.string().uuid(),
+	type: NotificationTypeEnumSchema,
+	reference_id: z.string().uuid(),
+	is_read: z.boolean().default(false),
+	created_at: z.string(),
+})
+
+export type NotificationType = z.infer<typeof NotificationSchema>
+
 export const FeedActivityTypeEnumSchema = z.enum([
 	'request',
 	'playlist',

@@ -382,6 +382,27 @@ alter function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) owner to "postgres";
 
+create or replace function "public"."notify_translation_owner" () returns "trigger" language "plpgsql" security definer as $$
+declare
+    translation_owner uuid;
+begin
+    -- Look up the owner of the translation being suggested on
+    select added_by into translation_owner
+    from "public"."phrase_translation"
+    where id = NEW.translation_id;
+
+    -- Only create notification if the owner exists and isn't the suggester
+    if translation_owner is not null and translation_owner != NEW.uid then
+        insert into "public"."notification" (uid, type, reference_id)
+        values (translation_owner, 'translation_suggestion', NEW.id);
+    end if;
+
+    return NEW;
+end;
+$$;
+
+alter function "public"."notify_translation_owner" () owner to "postgres";
+
 create or replace function "public"."refresh_phrase_search_index" () returns "void" language "plpgsql" security definer as $$
 BEGIN
   REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
@@ -1341,6 +1362,17 @@ from
 
 alter table "public"."meta_language" owner to "postgres";
 
+create table if not exists "public"."notification" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid" "uuid" not null,
+	"type" "text" not null,
+	"reference_id" "uuid" not null,
+	"is_read" boolean default false not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."notification" owner to "postgres";
+
 create table if not exists "public"."phrase_playlist_upvote" (
 	"playlist_id" "uuid" not null,
 	"uid" "uuid" default "auth"."uid" () not null,
@@ -1431,6 +1463,27 @@ create table if not exists "public"."request_comment" (
 );
 
 alter table "public"."request_comment" owner to "postgres";
+
+create table if not exists "public"."translation_suggestion" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"translation_id" "uuid" not null,
+	"phrase_id" "uuid" not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"text" "text",
+	"comment" "text" not null,
+	"status" "text" default 'pending'::"text" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"responded_at" timestamp with time zone,
+	constraint "translation_suggestion_status_check" check (
+		(
+			"status" = any (
+				array['pending'::"text", 'accepted'::"text", 'dismissed'::"text"]
+			)
+		)
+	)
+);
+
+alter table "public"."translation_suggestion" owner to "postgres";
 
 create table if not exists "public"."user_client_event" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1651,6 +1704,9 @@ add constraint "language_code2_key" unique ("lang");
 alter table only "public"."language"
 add constraint "language_pkey" primary key ("lang");
 
+alter table only "public"."notification"
+add constraint "notification_pkey" primary key ("id");
+
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
@@ -1689,6 +1745,9 @@ add constraint "tag_name_lang_key" unique ("name", "lang");
 
 alter table only "public"."tag"
 add constraint "tag_pkey" primary key ("id");
+
+alter table only "public"."translation_suggestion"
+add constraint "translation_suggestion_pkey" primary key ("id");
 
 alter table only "public"."comment_upvote"
 add constraint "unique_user_comment_upvote" unique ("comment_id", "uid");
@@ -1827,6 +1886,10 @@ after insert
 or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
 
+create or replace trigger "trigger_notify_on_translation_suggestion"
+after insert on "public"."translation_suggestion" for each row
+execute function "public"."notify_translation_owner" ();
+
 create or replace trigger "trigger_update_phrase_translation_updated_at" before
 update on "public"."phrase_translation" for each row
 execute function "public"."update_phrase_translation_updated_at" ();
@@ -1881,6 +1944,9 @@ add constraint "friend_request_action_uid_less_fkey" foreign key ("uid_less") re
 
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_more_fkey" foreign key ("uid_more") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_uid_fkey" foreign key ("uid") references "auth"."users" ("id");
 
 alter table only "public"."phrase"
 add constraint "phrase_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
@@ -1956,6 +2022,15 @@ add constraint "tag_added_by_fkey" foreign key ("added_by") references "public".
 
 alter table only "public"."tag"
 add constraint "tag_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
+
+alter table only "public"."translation_suggestion"
+add constraint "translation_suggestion_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."translation_suggestion"
+add constraint "translation_suggestion_translation_id_fkey" foreign key ("translation_id") references "public"."phrase_translation" ("id") on delete cascade;
+
+alter table only "public"."translation_suggestion"
+add constraint "translation_suggestion_uid_fkey" foreign key ("uid") references "auth"."users" ("id");
 
 alter table only "public"."user_card"
 add constraint "user_card_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete cascade;
@@ -2050,6 +2125,14 @@ with
 			) = "added_by"
 		)
 	);
+
+create policy "Authenticated users can suggest corrections" on "public"."translation_suggestion" for insert to "authenticated"
+with
+	check (("uid" = "auth"."uid" ()));
+
+create policy "Authenticated users can view suggestions" on "public"."translation_suggestion" for
+select
+	to "authenticated" using (true);
 
 create policy "Enable delete for users based on uid" on "public"."phrase_playlist" for delete to "authenticated" using (
 	(
@@ -2327,6 +2410,30 @@ with
 		)
 	);
 
+create policy "System can insert notifications" on "public"."notification" for insert to "authenticated"
+with
+	check (true);
+
+create policy "Translation owners can respond to suggestions" on "public"."translation_suggestion"
+for update
+	to "authenticated" using (
+		(
+			exists (
+				select
+					1
+				from
+					"public"."phrase_translation"
+				where
+					(
+						(
+							"phrase_translation"."id" = "translation_suggestion"."translation_id"
+						)
+						and ("phrase_translation"."added_by" = "auth"."uid" ())
+					)
+			)
+		)
+	);
+
 create policy "User can view and update their own profile" on "public"."user_profile" to "authenticated" using (("uid" = "auth"."uid" ()))
 with
 	check (("uid" = "auth"."uid" ()));
@@ -2413,6 +2520,10 @@ for update
 with
 	check (("uid" = "auth"."uid" ()));
 
+create policy "Users can update own notifications" on "public"."notification"
+for update
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Users can update their own playlists" on "public"."phrase_playlist"
 for update
 	to "authenticated" using (
@@ -2455,6 +2566,10 @@ with
 		)
 	);
 
+create policy "Users can view own notifications" on "public"."notification" for
+select
+	to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Users can view their own chat messages" on "public"."chat_message" for
 select
 	using (
@@ -2484,6 +2599,8 @@ alter table "public"."friend_request_action" enable row level security;
 
 alter table "public"."language" enable row level security;
 
+alter table "public"."notification" enable row level security;
+
 alter table "public"."phrase" enable row level security;
 
 alter table "public"."phrase_playlist" enable row level security;
@@ -2506,6 +2623,8 @@ alter table "public"."request_comment" enable row level security;
 
 alter table "public"."tag" enable row level security;
 
+alter table "public"."translation_suggestion" enable row level security;
+
 alter table "public"."user_card" enable row level security;
 
 alter table "public"."user_card_review" enable row level security;
@@ -2525,6 +2644,9 @@ add table only "public"."chat_message";
 
 alter publication "supabase_realtime"
 add table only "public"."friend_request_action";
+
+alter publication "supabase_realtime"
+add table only "public"."notification";
 
 revoke usage on schema "public"
 from
@@ -2879,6 +3001,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
+grant all on function "public"."notify_translation_owner" () to "anon";
+
+grant all on function "public"."notify_translation_owner" () to "authenticated";
+
+grant all on function "public"."notify_translation_owner" () to "service_role";
+
 grant all on function "public"."refresh_phrase_search_index" () to "anon";
 
 grant all on function "public"."refresh_phrase_search_index" () to "authenticated";
@@ -3226,6 +3354,12 @@ grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
 
+grant all on table "public"."notification" to "anon";
+
+grant all on table "public"."notification" to "authenticated";
+
+grant all on table "public"."notification" to "service_role";
+
 grant all on table "public"."phrase_playlist_upvote" to "anon";
 
 grant all on table "public"."phrase_playlist_upvote" to "authenticated";
@@ -3267,6 +3401,12 @@ grant all on table "public"."request_comment" to "anon";
 grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
+
+grant all on table "public"."translation_suggestion" to "anon";
+
+grant all on table "public"."translation_suggestion" to "authenticated";
+
+grant all on table "public"."translation_suggestion" to "service_role";
 
 grant all on table "public"."user_client_event" to "anon";
 

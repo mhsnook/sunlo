@@ -3,11 +3,13 @@ import {
 	useRelationInvitations,
 	useUnreadChatsCount,
 } from '@/hooks/use-friends'
+import { useUnreadNotificationsCount } from '@/hooks/use-notifications'
 import { useActiveReviewRemaining } from '@/hooks/use-reviews'
 import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'
 import {
+	Bell,
 	ChartBarDecreasing,
 	CircleStar,
 	Compass,
@@ -140,6 +142,15 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/privacy-policy',
 			},
 			Icon: FileText,
+		},
+		'/notifications': {
+			name: 'Notifications',
+			title: 'Notifications',
+			Icon: Bell,
+			link: {
+				to: '/notifications',
+			},
+			useBadge: () => useUnreadNotificationsCount(),
 		},
 		'/profile': {
 			name: 'Profile',
