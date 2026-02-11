@@ -21,7 +21,7 @@ export const Route = createFileRoute('/_user/learn')({
 
 function LearnLayout() {
 	return (
-		<div className="space-y-4">
+		<div className="h-full space-y-4">
 			<PendingRequestsHeader shy />
 			<Outlet />
 		</div>

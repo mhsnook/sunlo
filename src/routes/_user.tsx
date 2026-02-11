@@ -119,6 +119,11 @@ function UserLayout() {
 		(m) => (m.context as MyRouterContext)?.focusMode
 	)
 
+	// Check if any route requests wider content (e.g. chats)
+	const wideContent = matches.some(
+		(m) => (m.context as MyRouterContext)?.wideContent
+	)
+
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()
 	const savedOpenState = useRef(open)
@@ -200,16 +205,20 @@ function UserLayout() {
 		<div className="flex h-screen w-full">
 			<AppSidebar focusMode={focusMode} />
 			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
-				<Navbar />
-				<AppNav />
 				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
-				<div className="flex min-h-0 flex-1 flex-row gap-2 p-2">
+				<div className="flex min-h-0 flex-1 flex-row">
 					<div
-						id="app-sidebar-layout-outlet"
-						className="@container min-h-0 max-w-4xl flex-1"
-						style={{ viewTransitionName: 'main-content' }}
+						className={`mx-auto flex min-h-0 flex-1 flex-col ${wideContent ? 'max-w-6xl' : 'max-w-4xl'}`}
 					>
-						<Outlet />
+						<Navbar />
+						<AppNav />
+						<div
+							id="app-sidebar-layout-outlet"
+							className="@container min-h-0 flex-1 p-2"
+							style={{ viewTransitionName: 'main-content' }}
+						>
+							<Outlet />
+						</div>
 					</div>
 					{hasContextMenu && <RightSidebar />}
 				</div>

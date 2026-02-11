@@ -9,7 +9,7 @@ import type { MyRouterContext } from '@/routes/__root'
 
 export default function Navbar() {
 	return (
-		<nav className="flex items-center justify-between gap-4 border-b px-2 py-3">
+		<nav className="flex items-center justify-between gap-4 border-b px-2 py-3" style={{ viewTransitionName: 'navbar' }}>
 			<div className="flex h-12 items-center">
 				<Title />
 			</div>
