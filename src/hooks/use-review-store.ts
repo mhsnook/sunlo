@@ -1,5 +1,5 @@
 import { createStore } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 import type { pids } from '@/types/main'
 import {
@@ -47,67 +47,83 @@ export type ReviewStore = ReturnType<typeof createReviewStore>
 
 export function createReviewStore(lang: string, dayString: string) {
 	return createStore<ReviewState>()(
-		devtools((set) => ({
-			...DEFAULT_PROPS,
-			lang,
-			dayString,
-			actions: {
-				skipReviewUnreviewed: () => set({ stage: 3 }),
-				skipReviewAgains: () => set({ stage: 5 }),
+		devtools(
+			persist(
+				(set) => ({
+					...DEFAULT_PROPS,
+					lang,
+					dayString,
+					actions: {
+						skipReviewUnreviewed: () => set({ stage: 3 }),
+						skipReviewAgains: () => set({ stage: 5 }),
 
-				gotoReviewUnreviewed: (i: number) =>
-					set({
-						stage: 2,
-						currentCardIndex: i,
-					}),
-				gotoReviewAgains: (i: number) =>
-					set({
-						stage: 4,
-						currentCardIndex: i,
-					}),
-				gotoIndex: (i) => set({ currentCardIndex: i }),
-				gotoNext: () =>
-					set((state) => ({
-						currentCardIndex: state.currentCardIndex + 1,
-					})),
-				gotoPrevious: () =>
-					set((state) => ({
-						currentCardIndex: state.currentCardIndex - 1,
-					})),
-				gotoEnd: () =>
-					set((state) => ({
-						currentCardIndex: state.countCards,
-					})),
-				markPreviewSeen: () => set({ previewSeen: true }),
+						gotoReviewUnreviewed: (i: number) =>
+							set({
+								stage: 2,
+								currentCardIndex: i,
+							}),
+						gotoReviewAgains: (i: number) =>
+							set({
+								stage: 4,
+								currentCardIndex: i,
+							}),
+						gotoIndex: (i) => set({ currentCardIndex: i }),
+						gotoNext: () =>
+							set((state) => ({
+								currentCardIndex: state.currentCardIndex + 1,
+							})),
+						gotoPrevious: () =>
+							set((state) => ({
+								currentCardIndex: state.currentCardIndex - 1,
+							})),
+						gotoEnd: () =>
+							set((state) => ({
+								currentCardIndex: state.countCards,
+							})),
+						markPreviewSeen: () => set({ previewSeen: true }),
 
-				init: (
-					lang: string,
-					dayString: string,
-					countCards: number,
-					newCardPids: pids = [],
-					stage: ReviewStages = 1,
-					index: number = 0
-				) =>
-					set((state) => {
-						// if the lang doesn't match, we have an error
-						if (lang !== state.lang || dayString !== state.dayString)
-							throw new Error(
-								'Mismatching language or dayString between params and current store state'
-							)
-						// ensure we only init once
-						if (state.stage) return state
-						return {
-							lang,
-							dayString,
-							countCards,
-							newCardPids,
-							previewSeen: false,
-							stage,
-							currentCardIndex: index,
-						}
+						init: (
+							lang: string,
+							dayString: string,
+							countCards: number,
+							newCardPids: pids = [],
+							stage: ReviewStages = 1,
+							index: number = 0
+						) =>
+							set((state) => {
+								// if the lang doesn't match, we have an error
+								if (lang !== state.lang || dayString !== state.dayString)
+									throw new Error(
+										'Mismatching language or dayString between params and current store state'
+									)
+								// ensure we only init once
+								if (state.stage) return state
+								return {
+									lang,
+									dayString,
+									countCards,
+									newCardPids,
+									previewSeen: false,
+									stage,
+									currentCardIndex: index,
+								}
+							}),
+					},
+				}),
+				{
+					name: `sunlo-review:${lang}-${dayString}`,
+					partialize: (state) => ({
+						lang: state.lang,
+						dayString: state.dayString,
+						countCards: state.countCards,
+						stage: state.stage,
+						currentCardIndex: state.currentCardIndex,
+						newCardPids: state.newCardPids,
+						previewSeen: state.previewSeen,
 					}),
-			},
-		}))
+				}
+			)
+		)
 	)
 }
 
