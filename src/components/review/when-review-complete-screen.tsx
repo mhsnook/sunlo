@@ -19,22 +19,23 @@ export function WhenComplete() {
 	const actions = useReviewActions()
 	const { data: stats } = useReviewsTodayStats(lang, dayString)
 	const updateStage = useUpdateReviewStage(lang, dayString)
-	if (!stats) return null
 
 	// Prefer ephemeral store stage (responsive) with server stage as fallback (cold load)
-	const stage = storeStage || stats.stage
+	const stage = storeStage || stats?.stage
 
 	const showWhich =
-		stats.unreviewed && stage < 2 ? 'a'
-		: stats.again && stage < 4 ? 'b'
+		stats?.unreviewed && stage < 2 ? 'a'
+		: stats?.again && stage < 5 ? 'b'
 		: 'c'
 
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
-		if (showWhich === 'c' && stats.stage < 5) {
+		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
 			updateStage.mutate(5)
 		}
-	}, [showWhich, stats.stage]) // eslint-disable-line react-hooks/exhaustive-deps
+	}, [showWhich, stats?.stage])  
+
+	if (!stats) return null
 
 	return (
 		<Card
