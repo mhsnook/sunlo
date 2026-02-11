@@ -114,10 +114,10 @@ function FlashCardReviewSession({
 
 	return (
 		<div
-			className="flex-col items-center justify-center gap-2 py-2"
+			className="flex h-full flex-col gap-2 py-2"
 			data-testid="review-session-page"
 		>
-			<div className="mb-2 flex flex-col items-center justify-center gap-2">
+			<div className="flex flex-col items-center justify-center gap-2">
 				<div className="flex min-h-10 flex-row items-center justify-center">
 					{!atTheEnd && reviewStage === 1 ?
 						<>
@@ -170,16 +170,16 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="flex flex-col items-center justify-center gap-2 overflow-hidden">
+			<div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden">
 				<div className={atTheEnd ? 'w-full' : 'hidden'}>
 					<WhenComplete />
 				</div>
 
-				<div className={!atTheEnd ? 'w-full' : 'hidden'}>
+				<div className={!atTheEnd ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
 					{manifest.map((pid, i) => (
 						<div
 							key={pid}
-							className={`w-full ${i === currentCardIndex ? `block ${animClass}` : 'hidden'}`}
+							className={i === currentCardIndex ? `flex min-h-0 flex-1 flex-col ${animClass}` : 'hidden'}
 							onAnimationEnd={
 								i === currentCardIndex ? handleAnimationEnd : undefined
 							}

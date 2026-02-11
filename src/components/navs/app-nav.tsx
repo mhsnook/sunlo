@@ -55,6 +55,7 @@ export function AppNav() {
 
 			<div
 				className={`sticky z-30 mt-1 border-b bg-gray-50 transition-colors dark:bg-gray-800 ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
+				style={{ viewTransitionName: 'appnav' }}
 			>
 				<ScrollArea className="w-app">
 					<NavigationMenu className="mt-2 mb-1">
