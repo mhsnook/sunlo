@@ -5,7 +5,6 @@ import {
 	Outlet,
 	redirect,
 	useMatches,
-	useParams,
 } from '@tanstack/react-router'
 import { toastSuccess } from '@/components/ui/sonner'
 import type { Tables } from '@/types/supabase'
@@ -17,7 +16,6 @@ import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { useUserId } from '@/lib/use-auth'
-import { makeLinks } from '@/hooks/links'
 import type { MyRouterContext } from './__root'
 import {
 	chatMessagesCollection,
@@ -112,8 +110,6 @@ function UserLayout() {
 	const queryClient = useQueryClient()
 	const userId = useUserId()
 	const matches = useMatches()
-	const { lang } = useParams({ strict: false })
-
 	// Check if any route has enabled focus mode (e.g. review/go)
 	const focusMode = matches.some(
 		(m) => (m.context as MyRouterContext)?.focusMode
@@ -137,13 +133,6 @@ function UserLayout() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [focusMode])
 
-	// Show right sidebar if there's a contextMenu with items
-	const contextMenuMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.contextMenu
-	)
-	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
-		?.contextMenu
-	const hasContextMenu = makeLinks(contextMenu, lang).length > 0
 
 	// Apply user's font preference to the document body
 	useFontPreference()
@@ -220,7 +209,7 @@ function UserLayout() {
 							<Outlet />
 						</div>
 					</div>
-					{hasContextMenu && <RightSidebar />}
+					<RightSidebar />
 				</div>
 			</SidebarInset>
 		</div>
