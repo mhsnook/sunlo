@@ -58,7 +58,7 @@ natural wrapper element to label.
 | `community-norms-dialog`        | data-testid | Welcome page           | Community norms intro dialog            |
 | `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                  |
 | `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming         |
-| `go-to-decks-button`            | data-testid | Welcome page           | Link to /learn                          |
+| `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                          |
 | `sidebar-user-menu-trigger`     | data-testid | Sidebar                | User avatar/menu button                 |
 | `sidebar-signout-button`        | data-testid | User menu              | Sign out button                         |
 | `profile-menu-item`             | data-testid | User menu              | Link to profile                         |

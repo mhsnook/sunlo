@@ -219,23 +219,34 @@ function WelcomePage() {
 
 			{/* Continue Button */}
 			<div className="flex flex-col items-center gap-4 pt-4">
-				<Link
-					to={
-						hasDecks ? '/learn'
-						: isLearner ?
-							'/learn/add-deck'
-						:	'/friends'
-					}
-					className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
-					data-testid="go-to-decks-button"
-				>
-					{hasDecks ?
-						'Go to My Decks'
-					: isLearner ?
-						'Create My First Deck'
-					:	'Find Friends'}
-					<ArrowRight className="size-4" />
-				</Link>
+				{hasDecks ?
+					<Link
+						to={'/learn'}
+						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						data-testid="go-to-decks-link"
+					>
+						Go to My Decks
+						<ArrowRight className="size-4" />
+					</Link>
+				: isLearner ?
+					<Link
+						to={'/learn/add-deck'}
+						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						data-testid="create-decks-button"
+					>
+						Create My First Deck
+						<ArrowRight className="size-4" />
+					</Link>
+				:	<Link
+						to={'/friends'}
+						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
+						data-testid="go-to-friends-link"
+					>
+						Find Friends
+						<ArrowRight className="size-4" />
+					</Link>
+				}
+
 				<p className="text-muted-foreground text-sm">
 					You can always come back to this page from your profile.
 				</p>
