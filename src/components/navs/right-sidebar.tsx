@@ -13,7 +13,7 @@ export function RightSidebar() {
 	const links = useLinks(contextMenu)
 
 	return (
-		<aside className="hidden w-(--sidebar-width) shrink-0 self-start sticky top-4 ps-8 pt-4 @3xl:block">
+		<aside className="sticky top-4 hidden w-(--sidebar-width) shrink-0 self-start ps-8 pt-4 @3xl:block">
 			{links?.length ?
 				<div className="space-y-1">
 					<p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">

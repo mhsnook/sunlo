@@ -170,7 +170,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-4 -m-4">
+			<div className="-m-4 flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-4">
 				<div className={atTheEnd ? 'w-full' : 'hidden'}>
 					<WhenComplete />
 				</div>
@@ -179,7 +179,11 @@ function FlashCardReviewSession({
 					{manifest.map((pid, i) => (
 						<div
 							key={pid}
-							className={i === currentCardIndex ? `flex min-h-0 flex-1 flex-col ${animClass}` : 'hidden'}
+							className={
+								i === currentCardIndex ?
+									`flex min-h-0 flex-1 flex-col ${animClass}`
+								:	'hidden'
+							}
 							onAnimationEnd={
 								i === currentCardIndex ? handleAnimationEnd : undefined
 							}
