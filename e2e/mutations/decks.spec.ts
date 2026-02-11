@@ -184,6 +184,12 @@ test.describe.serial('Deck Mutations', () => {
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
 
+		// Hide scenetest dev panel that can intercept clicks near bottom of page
+		await page.evaluate(() => {
+			const panel = document.getElementById('scenetest-panel')
+			if (panel) panel.style.display = 'none'
+		})
+
 		// Click archive button to open confirmation dialog
 		await page.getByRole('button', { name: 'Archive' }).click()
 
