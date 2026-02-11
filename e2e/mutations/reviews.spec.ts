@@ -5,6 +5,7 @@ import {
 	getCardByPhraseId,
 	getReviewByPhraseId,
 	cleanupReviewSession,
+	supabase,
 } from '../helpers/db-helpers'
 import { getReviewSessionBoth } from '../helpers/both-helpers'
 import { todayString } from '../../src/lib/utils'
@@ -280,35 +281,302 @@ test.describe.serial('Review Mutations', () => {
 		expect(dbReviewEdited?.updated_at).not.toBe(dbReview?.updated_at)
 	})
 
-	test.skip('2. useReviewMutation: submit reviews in stage 1', async ({
+	test('2. complete stage 1 reviews and reach stage transition', async ({
 		page,
 	}) => {
 		await page.goto('/learn')
-		// TODO: Implement multiple reviews test
-		// Continue in-progress review session, expect the page to open to the second card (because the first has been reviewed already in step 1)
-		// Submit reviews for each card in the list, giving some cards a score of 1 (and remember which ones), and skipping other cards (remember which ones)
-		// Verify all reviews are recorded in DB and local collection
-		// Verify session state updates correctly
-		// Expect us to get to the screen that says "Step 2 of 3" and "Review Skipepd cards"
-		// Expect the number of "skipped" cards listed on this page matches what we know we skipped
-		// Expect the local collection and DB to have the same number of reviews as today's manifest lengh minus the number of skipped cards
+		await goToDeckPage(page, TEST_LANG)
+
+		// Continue the in-progress review session from test 1
+		const continueBtn = page.getByRole('button', { name: 'Continue Review' })
+		await expect(continueBtn).toBeVisible({ timeout: 10000 })
+		await continueBtn.click()
+
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`), {
+			timeout: 10000,
+		})
+
+		// Handle new cards preview if it appears
+		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
+		const cardNav = page.getByText(/Card \d+ of \d+/)
+		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
+		if (await startReviewBtn.isVisible()) {
+			await startReviewBtn.scrollIntoViewIfNeeded()
+			await startReviewBtn.click()
+		}
+
+		// Get the manifest so we know the total card count
+		const { data: sessionState } = await getReviewSessionState(
+			TEST_USER_UID,
+			TEST_LANG,
+			sessionDate
+		)
+		expect(sessionState).toBeTruthy()
+		const manifest: string[] = sessionState!.manifest as string[]
+		expect(manifest.length).toBeGreaterThan(0)
+
+		// Review every remaining card, alternating scores:
+		// - every 3rd card gets score 1 (Again) so we have "again" cards for test 3
+		// - the rest get score 3 (Good)
+		const againPhraseIds: string[] = []
+		const goodPhraseIds: string[] = []
+		const completeScreen = page.getByTestId('review-complete-page')
+
+		for (let i = 0; i < manifest.length; i++) {
+			// Check if we've reached the stage-complete screen
+			const isComplete = await completeScreen
+				.isVisible({ timeout: 800 })
+				.catch(() => false)
+			if (isComplete) break
+
+			// Find the currently visible flashcard (scoped to its non-hidden parent)
+			const currentCard = page
+				.locator('div:not(.hidden) > [data-name="flashcard"]')
+				.first()
+			const isCardVisible = await currentCard
+				.isVisible({ timeout: 5000 })
+				.catch(() => false)
+			if (!isCardVisible) break
+
+			const phraseId = await currentCard.getAttribute('data-key')
+			if (!phraseId) break
+
+			// Check if this card was already reviewed (test 1 reviewed the first card)
+			const { data: existingReview } = await getReviewByPhraseId(
+				phraseId,
+				TEST_USER_UID,
+				sessionDate
+			)
+			if (existingReview) {
+				// Already reviewed — skip forward via Next card button
+				const nextBtn = page.getByRole('button', { name: 'Next card' })
+				if (await nextBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+					await nextBtn.click()
+					await page.waitForTimeout(400)
+					continue
+				}
+			}
+
+			// Reveal answer if needed (scoped to current card)
+			const revealBtn = currentCard.getByTestId('reveal-answer-button')
+			const answerBtns = currentCard.locator('[data-name="answer-buttons-row"]')
+			if (await revealBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+				await revealBtn.click()
+			}
+			await expect(answerBtns).toBeVisible({ timeout: 5000 })
+
+			// Score: every 3rd unreviewed card gets "Again" (1), rest get "Good" (3)
+			const useAgain = (goodPhraseIds.length + againPhraseIds.length) % 3 === 2
+			if (useAgain) {
+				await currentCard.getByTestId('rating-again-button').click()
+				againPhraseIds.push(phraseId)
+			} else {
+				await currentCard.getByTestId('rating-good-button').click()
+				goodPhraseIds.push(phraseId)
+			}
+
+			// Wait for the slide animation to complete
+			await page.waitForTimeout(600)
+		}
+
+		// We should now be on the stage-complete screen
+		await expect(completeScreen).toBeVisible({ timeout: 10000 })
+
+		// Verify the DB has the correct number of reviews
+		const { data: allReviews } = await supabase
+			.from('user_card_review')
+			.select()
+			.eq('uid', TEST_USER_UID)
+			.eq('lang', TEST_LANG)
+			.eq('day_session', sessionDate)
+
+		expect(allReviews).toBeTruthy()
+		expect(allReviews!.length).toBe(manifest.length)
+
+		// Check DB stage — should NOT be 5 yet (we still have "again" cards)
+		const { data: stateAfterStage1 } = await getReviewSessionState(
+			TEST_USER_UID,
+			TEST_LANG,
+			sessionDate
+		)
+		expect(stateAfterStage1).toBeTruthy()
+		// Stage should be 1 still (first pass complete, but server hasn't been told to advance)
+		// The WhenComplete component should show "Step 3 of 3" with "Review cards" button
+		expect(stateAfterStage1!.stage).toBeLessThan(5)
+
+		// Verify the screen shows the "again" cards prompt (Step 3 of 3)
+		// (Step 2 is skipped when there are no unreviewed cards)
+		if (againPhraseIds.length > 0) {
+			await expect(page.getByText('Step 3 of 3')).toBeVisible({
+				timeout: 5000,
+			})
+			await expect(
+				page.getByRole('button', {
+					name: new RegExp(`Review cards \\(${againPhraseIds.length}\\)`),
+				})
+			).toBeVisible()
+		}
 	})
 
-	test.skip('3. End of review stage 1 through stage 3', async ({ page }) => {
+	test('3. review "again" cards (stage 4) and verify DB stage correctness', async ({
+		page,
+	}) => {
 		await page.goto('/learn')
-		// TODO: Implement edit review test
-		// Continue in-progress review session
-		// Expect it to be on the screen that says "Step 2 of 3" and "Review Skipepd cards"
-		// Click "Review Skipped cards" button
-		// Verify the card is in our list of skipped cards from step
-		// Review each skipped card, confirming it's in our list, adding to the list of "Again" cards whenever we answer (1)
-		// Confirm the new reviews are in the database and collection
-		// Expect to land up on the final page that says "Step 3 of 3" and "Review cards (XX)"
-		// Expect the number of cards it says I have to review is equal to the number of cards we answered (1) for
-		// Click the button to review the other cards, mark them all (3)
-		// Confirm that each new review created a new review with day_first_review=false
-		// Confirm the second reviews have the same difficulty and stability as their first-review counterparts, but different score
-		// Expect the page to say "You've completed your review for today."
+		await goToDeckPage(page, TEST_LANG)
+
+		// We should see ContinueReview since the session exists from test 2
+		const continueBtn = page.getByRole('button', { name: 'Continue Review' })
+		await expect(continueBtn).toBeVisible({ timeout: 10000 })
+		await continueBtn.click()
+
+		// Should navigate to /review/go
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`), {
+			timeout: 10000,
+		})
+
+		// Handle new cards preview if it appears (stage 1 + fresh previewSeen state)
+		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
+		const completeScreen = page.getByTestId('review-complete-page')
+		await expect(startReviewBtn.or(completeScreen)).toBeVisible({
+			timeout: 10000,
+		})
+		if (await startReviewBtn.isVisible()) {
+			await startReviewBtn.scrollIntoViewIfNeeded()
+			await startReviewBtn.click()
+		}
+
+		// Now we should see the WhenComplete screen (atTheEnd because all cards reviewed)
+		await expect(completeScreen).toBeVisible({ timeout: 10000 })
+
+		// Count "again" cards from DB (day_first_review=true, score=1)
+		const { data: againReviews } = await supabase
+			.from('user_card_review')
+			.select()
+			.eq('uid', TEST_USER_UID)
+			.eq('lang', TEST_LANG)
+			.eq('day_session', sessionDate)
+			.eq('day_first_review', true)
+			.eq('score', 1)
+
+		const againCount = againReviews?.length ?? 0
+		expect(againCount).toBeGreaterThan(0)
+
+		// Verify the "Review cards" button shows the correct count
+		const reviewAgainBtn = page.getByRole('button', {
+			name: new RegExp(`Review cards \\(${againCount}\\)`),
+		})
+		await expect(reviewAgainBtn).toBeVisible({ timeout: 5000 })
+
+		// Check DB stage BEFORE clicking "Review cards"
+		const { data: stateBefore } = await getReviewSessionState(
+			TEST_USER_UID,
+			TEST_LANG,
+			sessionDate
+		)
+		expect(stateBefore!.stage).toBeLessThan(5)
+
+		// Click "Review cards" to enter stage 4
+		await reviewAgainBtn.click()
+
+		// Wait for the stage mutation and UI to settle
+		await page.waitForTimeout(1500)
+
+		// CRITICAL ASSERTION: DB stage should be 4, NOT 5
+		// This is the bug we fixed — previously the useEffect in WhenComplete
+		// would immediately write stage 5 when entering stage 4
+		await expect
+			.poll(
+				async () => {
+					const { data } = await getReviewSessionState(
+						TEST_USER_UID,
+						TEST_LANG,
+						sessionDate
+					)
+					return data?.stage
+				},
+				{ timeout: 5000, intervals: [500, 1000, 1000] }
+			)
+			.toBe(4)
+
+		// We should be looking at a flashcard (not the complete screen)
+		const currentCard = page
+			.locator('div:not(.hidden) > [data-name="flashcard"]')
+			.first()
+		await expect(currentCard).toBeVisible({ timeout: 10000 })
+
+		// Re-review all "again" cards with score 3 (Good)
+		const reReviewedPhraseIds: string[] = []
+
+		for (let i = 0; i < againCount + 2; i++) {
+			// Check if we've reached the complete screen
+			const completeVisible = await completeScreen
+				.isVisible({ timeout: 800 })
+				.catch(() => false)
+			if (completeVisible) break
+
+			const card = page
+				.locator('div:not(.hidden) > [data-name="flashcard"]')
+				.first()
+			const isCardVisible = await card
+				.isVisible({ timeout: 2000 })
+				.catch(() => false)
+			if (!isCardVisible) break
+
+			const phraseId = await card.getAttribute('data-key')
+			if (!phraseId) break
+
+			// Reveal answer if needed (scoped to current card)
+			const revealBtn = card.getByTestId('reveal-answer-button')
+			const answerBtns = card.locator('[data-name="answer-buttons-row"]')
+			if (await revealBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+				await revealBtn.click()
+			}
+			await expect(answerBtns).toBeVisible({ timeout: 5000 })
+
+			// Score all re-reviews as "Good" (3)
+			await card.getByTestId('rating-good-button').click()
+			reReviewedPhraseIds.push(phraseId)
+
+			// Wait for slide animation
+			await page.waitForTimeout(600)
+		}
+
+		// Should have re-reviewed all "again" cards
+		expect(reReviewedPhraseIds.length).toBe(againCount)
+
+		// Should now be on the "Review Complete" screen
+		await expect(completeScreen).toBeVisible({ timeout: 10000 })
+		await expect(page.getByText('Review Complete!')).toBeVisible()
+
+		// Verify DB stage is now 5 (truly complete)
+		await expect
+			.poll(
+				async () => {
+					const { data } = await getReviewSessionState(
+						TEST_USER_UID,
+						TEST_LANG,
+						sessionDate
+					)
+					return data?.stage
+				},
+				{ timeout: 5000, intervals: [500, 1000, 1000] }
+			)
+			.toBe(5)
+
+		// Verify re-reviews were created with day_first_review=false
+		for (const phraseId of reReviewedPhraseIds) {
+			const { data: reReviews } = await supabase
+				.from('user_card_review')
+				.select()
+				.eq('phrase_id', phraseId)
+				.eq('uid', TEST_USER_UID)
+				.eq('day_session', sessionDate)
+				.eq('day_first_review', false)
+
+			expect(reReviews).toBeTruthy()
+			expect(reReviews!.length).toBe(1)
+			expect(reReviews![0].score).toBe(3)
+		}
 	})
 
 	test.skip('4. useReviewMutation: verify FSRS algorithm calculations', async ({

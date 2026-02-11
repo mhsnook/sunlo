@@ -130,9 +130,8 @@ function UserLayout() {
 		} else {
 			setOpen(savedOpenState.current)
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		 
 	}, [focusMode])
-
 
 	// Apply user's font preference to the document body
 	useFontPreference()
