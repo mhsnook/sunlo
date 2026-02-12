@@ -103,7 +103,7 @@ export function ReviewSingleCard({
 			<h3 className="text-muted-foreground text-center text-sm font-medium tracking-wide uppercase">
 				Translations
 			</h3>
-			{phrase.translations?.map((trans: TranslationType) => (
+			{phrase.translations_mine?.map((trans: TranslationType) => (
 				<div key={trans.id} className="flex items-center justify-center gap-2">
 					<LangBadge lang={trans.lang} />
 					<div className="text-lg">{trans.text}</div>
@@ -129,14 +129,14 @@ export function ReviewSingleCard({
 
 	return (
 		<CardlikeFlashcard
-			className="mx-auto flex min-h-[80vh] w-full flex-col"
+			className="mx-auto flex h-full w-full flex-col"
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 			data-name="flashcard"
 			data-key={pid}
 		>
-			<CardContent className="relative flex grow flex-col items-center justify-center gap-4 pt-0">
+			<CardContent className="relative flex grow flex-col items-center justify-center gap-4">
 				<ContextMenu phrase={phrase} />
-				{questionContent}
+				<div className="pt-16">{questionContent}</div>
 				<Separator />
 				<div
 					className={`w-full transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
