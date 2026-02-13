@@ -119,12 +119,6 @@ export function IntroSheet({
 			<DialogContent
 				data-testid="intro-message-section"
 				className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
-				onInteractOutside={
-					requireAffirmation ? (e) => e.preventDefault() : undefined
-				}
-				onEscapeKeyDown={
-					requireAffirmation ? (e) => e.preventDefault() : undefined
-				}
 			>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
