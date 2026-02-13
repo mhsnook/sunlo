@@ -33,7 +33,7 @@ export function WhenComplete() {
 		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
 			updateStage.mutate(5)
 		}
-	}, [showWhich, stats?.stage])  
+	}, [showWhich, stats?.stage])
 
 	if (!stats) return null
 

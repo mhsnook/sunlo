@@ -130,7 +130,6 @@ function UserLayout() {
 		} else {
 			setOpen(savedOpenState.current)
 		}
-		 
 	}, [focusMode])
 
 	// Apply user's font preference to the document body

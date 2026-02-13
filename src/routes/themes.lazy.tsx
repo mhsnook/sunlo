@@ -444,12 +444,12 @@ function ThemesPage() {
 	}
 
 	const copyOne = () => {
-		navigator.clipboard.writeText(JSON.stringify(editTheme, null, '\t'))
+		void navigator.clipboard.writeText(JSON.stringify(editTheme, null, '\t'))
 		toastSuccess('Copied theme JSON')
 	}
 
 	const copyAll = () => {
-		navigator.clipboard.writeText(JSON.stringify(themeList, null, '\t'))
+		void navigator.clipboard.writeText(JSON.stringify(themeList, null, '\t'))
 		toastSuccess('Copied all themes JSON')
 	}
 

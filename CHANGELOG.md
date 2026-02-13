@@ -2,7 +2,7 @@
 
 ## v0.14 - Dynamic Themes, Vitest, Focus mode, Nicer Toasts, Simplify Review Flow
 
-_10th Feb, 2026_
+_13th Feb, 2026_
 
 - OKLCH colours and /themes manager [#362](https://github.com/mhsnook/sunlo/pull/362)
 - Add Vitest [#363](https://github.com/mhsnook/sunlo/pull/363)
