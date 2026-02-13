@@ -1,19 +1,21 @@
 # Change Log
 
-## v0.14 -
+## v0.14 - Dynamic Themes, Vitest, Focus mode, Nicer Toasts, Simplify Review Flow
 
-- OKLCH colours and /themes manager
-- Add Vitest
-- Add focus mode for reviews with no sidebar
-- Center content area and balance right-hand sidebar
-- Improve: work on flakey tests, aria labels, semantic IDs
-- Polish: Improve sonner style (all in bottom right, info toasts persist)
-- Fix: Address a couple security issues
-- Improve: Stop _inferring_ review stage and just record it
-- Fix Playlist URL validation
-- Reduce clicks required to add a phrase to a playlist
-- Add slide animation to review cards
-- Fix Supabase post-install failure
+_10th Feb, 2026_
+
+- OKLCH colours and /themes manager [#362](https://github.com/mhsnook/sunlo/pull/362)
+- Add Vitest [#363](https://github.com/mhsnook/sunlo/pull/363)
+- Add focus mode for reviews with no sidebar [#355](https://github.com/mhsnook/sunlo/pull/355)
+- Center content area and balance right-hand sidebar [#356](https://github.com/mhsnook/sunlo/pull/356)
+- Improve: work on flakey tests, aria labels, semantic IDs [#360](https://github.com/mhsnook/sunlo/pull/360)
+- Polish: Improve sonner style (all in bottom right, info toasts persist) [#352](https://github.com/mhsnook/sunlo/pull/352)
+- Fix: Address a couple security issues [#368](https://github.com/mhsnook/sunlo/pull/368)
+- Improve: Stop _inferring_ review stage and just record it [#357](https://github.com/mhsnook/sunlo/pull/357)
+- Fix Playlist URL validation [#361](https://github.com/mhsnook/sunlo/pull/361)
+- Reduce clicks required to add a phrase to a playlist [#358](https://github.com/mhsnook/sunlo/pull/358)
+- Add slide animation to review cards [#359](https://github.com/mhsnook/sunlo/pull/359)
+- Fix Supabase post-install failure [#366](https://github.com/mhsnook/sunlo/pull/366)
 
 ## v0.13 - Tiny deploy
 
