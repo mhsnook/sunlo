@@ -86,13 +86,13 @@ describe('mapArrays', () => {
 
 describe('round', () => {
 	it('rounds to 2 decimal places by default', () => {
-		expect(round(3.14159)).toBe(3.14)
+		expect(round(3.13371)).toBe(3.13)
 	})
 
 	it('rounds to specified places', () => {
-		expect(round(3.14159, 3)).toBe(3.142)
-		expect(round(3.14159, 0)).toBe(3)
-		expect(round(3.14159, 1)).toBe(3.1)
+		expect(round(3.13371, 3)).toBe(3.133)
+		expect(round(3.13371, 0)).toBe(3)
+		expect(round(3.13371, 1)).toBe(3.1)
 	})
 
 	it('handles zero', () => {
@@ -101,6 +101,7 @@ describe('round', () => {
 
 	it('handles negative numbers', () => {
 		expect(round(-3.456, 1)).toBe(-3.5)
+		expect(round(-3.546, 1)).toBe(-3.5)
 	})
 
 	it('handles whole numbers', () => {

@@ -33,6 +33,7 @@ export function WhenComplete() {
 		if (showWhich === 'c' && stats?.stage && stats.stage < 5) {
 			updateStage.mutate(5)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [showWhich, stats?.stage])
 
 	if (!stats) return null
