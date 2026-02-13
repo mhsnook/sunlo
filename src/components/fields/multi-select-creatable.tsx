@@ -64,10 +64,7 @@ export function MultiSelectCreatable({
 						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
-				<PopoverContent
-					id="popover-content"
-					className="w-[--radix-popover-trigger-width] p-0"
-				>
+				<PopoverContent id="popover-content" className="w-[--anchor-width] p-0">
 					<Command>
 						<CommandInput
 							placeholder="Search or create tag..."

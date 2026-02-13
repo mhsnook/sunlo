@@ -73,7 +73,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 							<SidebarMenuButton
 								data-testid="deck-switcher-button"
 								size="lg"
-								className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
+								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
 							>
 								<div className="bg-primary rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl text-white">
 									<WalletCards />
@@ -87,7 +87,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 							</SidebarMenuButton>
 						</DropdownMenuTrigger>
 						<DropdownMenuContent
-							className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+							className="w-(--anchor-width) min-w-56 rounded-lg"
 							align="start"
 							side={isMobile ? 'bottom' : 'right'}
 							sideOffset={4}
@@ -163,7 +163,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="lg"
-							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
+							className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
 						>
 							<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
 								<Globe />
@@ -177,7 +177,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className="max-h-[60vh] w-(--radix-dropdown-menu-trigger-width) min-w-56 overflow-y-auto rounded-lg"
+						className="max-h-[60vh] w-(--anchor-width) min-w-56 overflow-y-auto rounded-lg"
 						align="start"
 						side={isMobile ? 'bottom' : 'right'}
 						sideOffset={4}

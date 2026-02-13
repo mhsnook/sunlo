@@ -71,7 +71,7 @@ test.describe.serial('Deck Mutations', () => {
 		await page.locator('#top-right-context-menu').click()
 		// Click context menu in navbar → "Settings"
 		await page
-			.locator('[data-radix-menu-content]')
+			.getByRole('menu')
 			.getByText('Deck Settings', { exact: true })
 			.click()
 
@@ -122,13 +122,8 @@ test.describe.serial('Deck Mutations', () => {
 		await page.locator('#top-right-context-menu').click()
 
 		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
-		await page.waitForSelector('[data-radix-menu-content]', {
-			state: 'visible',
-		})
-		await page
-			.locator('[data-radix-menu-content]')
-			.getByText('Deck Settings')
-			.click()
+		await expect(page.getByRole('menu')).toBeVisible()
+		await page.getByRole('menu').getByText('Deck Settings').click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
@@ -173,13 +168,8 @@ test.describe.serial('Deck Mutations', () => {
 		await page.locator('#top-right-context-menu').click()
 
 		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
-		await page.waitForSelector('[data-radix-menu-content]', {
-			state: 'visible',
-		})
-		await page
-			.locator('[data-radix-menu-content]')
-			.getByText('Deck Settings')
-			.click()
+		await expect(page.getByRole('menu')).toBeVisible()
+		await page.getByRole('menu').getByText('Deck Settings').click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
@@ -241,13 +231,8 @@ test.describe.serial('Deck Mutations', () => {
 		await page.locator('#top-right-context-menu').click()
 
 		// Wait for dropdown menu to open and be visible, then click Deck Settings in the menu
-		await page.waitForSelector('[data-radix-menu-content]', {
-			state: 'visible',
-		})
-		await page
-			.locator('[data-radix-menu-content]')
-			.getByText('Deck Settings')
-			.click()
+		await expect(page.getByRole('menu')).toBeVisible()
+		await page.getByRole('menu').getByText('Deck Settings').click()
 
 		// Should be on deck settings page
 		await expect(page.locator('main').getByText('Deck Settings')).toBeVisible()
