@@ -34,6 +34,10 @@ import {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	TranslationSuggestionSchema,
+	type TranslationSuggestionType,
+	NotificationSchema,
+	type NotificationType,
 } from './schemas'
 import {
 	PhrasePlaylistSchema,
@@ -434,6 +438,43 @@ export const playlistPhraseLinksCollection = createCollection(
 	})
 )
 
+export const translationSuggestionsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'translation_suggestions',
+		queryKey: ['public', 'translation_suggestion'],
+		queryFn: async () => {
+			console.log(`Loading translationSuggestionsCollection`)
+			const { data } = await supabase
+				.from('translation_suggestion')
+				.select()
+				.throwOnError()
+			return data?.map((item) => TranslationSuggestionSchema.parse(item)) ?? []
+		},
+		getKey: (item: TranslationSuggestionType) => item.id,
+		queryClient,
+		schema: TranslationSuggestionSchema,
+	})
+)
+
+export const notificationsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'notifications',
+		queryKey: ['user', 'notification'],
+		queryFn: async () => {
+			console.log(`Loading notificationsCollection`)
+			const { data } = await supabase
+				.from('notification')
+				.select()
+				.throwOnError()
+			return data?.map((item) => NotificationSchema.parse(item)) ?? []
+		},
+		getKey: (item: NotificationType) => item.id,
+		queryClient,
+		startSync: false,
+		schema: NotificationSchema,
+	})
+)
+
 export const clearUser = async () => {
 	// Clean up all user collections
 	await Promise.all([
@@ -449,6 +490,7 @@ export const clearUser = async () => {
 		commentUpvotesCollection.cleanup(),
 		phraseRequestUpvotesCollection.cleanup(),
 		phrasePlaylistUpvotesCollection.cleanup(),
+		notificationsCollection.cleanup(),
 	])
 
 	// Also clear React Query cache for user queries to prevent stale data

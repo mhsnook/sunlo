@@ -28,6 +28,7 @@ import { phrasesCollection } from '@/lib/collections'
 import { usePreferredTranslationLang } from '@/hooks/use-deck'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
+import { SuggestCorrectionDialog } from '@/components/card-pieces/suggest-correction-dialog'
 
 const AddTranslationsInputs = z.object({
 	translation_lang: z.string().length(3),
@@ -281,7 +282,7 @@ function TranslationListItem({
 					>
 						{trans.text}
 					</span>
-					{isOwner && (
+					{isOwner ?
 						<>
 							{trans.archived ? null : (
 								<Button
@@ -306,7 +307,7 @@ function TranslationListItem({
 								}
 							</Button>
 						</>
-					)}
+					:	<SuggestCorrectionDialog translation={trans} />}
 				</>
 			}
 		</li>

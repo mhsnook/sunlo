@@ -353,6 +353,33 @@ export type Database = {
 				}
 				Relationships: []
 			}
+			notification: {
+				Row: {
+					created_at: string
+					id: string
+					is_read: boolean
+					reference_id: string
+					type: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					id?: string
+					is_read?: boolean
+					reference_id: string
+					type: string
+					uid: string
+				}
+				Update: {
+					created_at?: string
+					id?: string
+					is_read?: boolean
+					reference_id?: string
+					type?: string
+					uid?: string
+				}
+				Relationships: []
+			}
 			phrase: {
 				Row: {
 					added_by: string
@@ -1013,6 +1040,71 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
+					},
+				]
+			}
+			translation_suggestion: {
+				Row: {
+					comment: string
+					created_at: string
+					id: string
+					phrase_id: string
+					responded_at: string | null
+					status: string
+					text: string | null
+					translation_id: string
+					uid: string
+				}
+				Insert: {
+					comment: string
+					created_at?: string
+					id?: string
+					phrase_id: string
+					responded_at?: string | null
+					status?: string
+					text?: string | null
+					translation_id: string
+					uid?: string
+				}
+				Update: {
+					comment?: string
+					created_at?: string
+					id?: string
+					phrase_id?: string
+					responded_at?: string | null
+					status?: string
+					text?: string | null
+					translation_id?: string
+					uid?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'translation_suggestion_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'translation_suggestion_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'translation_suggestion_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'translation_suggestion_translation_id_fkey'
+						columns: ['translation_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_translation'
+						referencedColumns: ['id']
 					},
 				]
 			}
