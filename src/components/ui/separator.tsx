@@ -1,17 +1,14 @@
-import * as React from 'react'
-import * as SeparatorPrimitive from '@radix-ui/react-separator'
+import { Separator as SeparatorPrimitive } from '@base-ui/react/separator'
 
 import { cn } from '@/lib/utils'
 
 const Separator = ({
 	className,
 	orientation = 'horizontal',
-	decorative = true,
 	...props
-}: React.ComponentProps<typeof SeparatorPrimitive.Root>) => (
-	<SeparatorPrimitive.Root
+}: SeparatorPrimitive.Props) => (
+	<SeparatorPrimitive
 		data-slot="separator"
-		decorative={decorative}
 		orientation={orientation}
 		className={cn(
 			'bg-primary-foresoft/30 shrink-0',
@@ -21,6 +18,5 @@ const Separator = ({
 		{...props}
 	/>
 )
-Separator.displayName = SeparatorPrimitive.Root.displayName
 
 export { Separator }

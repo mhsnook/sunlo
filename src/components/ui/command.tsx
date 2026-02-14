@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { type DialogProps } from '@radix-ui/react-dialog'
 import { Command as CommandPrimitive } from 'cmdk'
 import { Search } from 'lucide-react'
 
@@ -19,9 +18,13 @@ const Command = ({
 		{...props}
 	/>
 )
-Command.displayName = CommandPrimitive.displayName
 
-const CommandDialog = ({ children, ...props }: DialogProps) => {
+const CommandDialog = ({
+	children,
+	...props
+}: Omit<React.ComponentProps<typeof Dialog>, 'children'> & {
+	children?: React.ReactNode
+}) => {
 	return (
 		<Dialog {...props}>
 			<DialogContent className="overflow-hidden p-0 shadow-lg">
@@ -50,8 +53,6 @@ const CommandInput = ({
 	</div>
 )
 
-CommandInput.displayName = CommandPrimitive.Input.displayName
-
 const CommandList = ({
 	className,
 	...props
@@ -63,8 +64,6 @@ const CommandList = ({
 	/>
 )
 
-CommandList.displayName = CommandPrimitive.List.displayName
-
 const CommandEmpty = ({
 	...props
 }: React.ComponentProps<typeof CommandPrimitive.Empty>) => (
@@ -74,8 +73,6 @@ const CommandEmpty = ({
 		{...props}
 	/>
 )
-
-CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
 const CommandGroup = ({
 	className,
@@ -91,8 +88,6 @@ const CommandGroup = ({
 	/>
 )
 
-CommandGroup.displayName = CommandPrimitive.Group.displayName
-
 const CommandSeparator = ({
 	className,
 	...props
@@ -103,7 +98,6 @@ const CommandSeparator = ({
 		{...props}
 	/>
 )
-CommandSeparator.displayName = CommandPrimitive.Separator.displayName
 
 const CommandItem = ({
 	className,
@@ -119,8 +113,6 @@ const CommandItem = ({
 	/>
 )
 
-CommandItem.displayName = CommandPrimitive.Item.displayName
-
 const CommandShortcut = ({
 	className,
 	...props
@@ -135,7 +127,6 @@ const CommandShortcut = ({
 		/>
 	)
 }
-CommandShortcut.displayName = 'CommandShortcut'
 
 export {
 	Command,

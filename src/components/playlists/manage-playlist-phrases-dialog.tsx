@@ -25,7 +25,7 @@ import { useOnePlaylistPhrases } from '@/hooks/use-playlists'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { PhraseSummaryLine } from '../feed/feed-phrase-group-item'
-import { DialogClose } from '@radix-ui/react-dialog'
+import { DialogClose } from '@/components/ui/dialog'
 import { buttonVariants } from '../ui/button'
 
 /** Controlled href input that validates on blur and only fires the mutation when valid */

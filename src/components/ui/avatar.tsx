@@ -1,12 +1,8 @@
-import * as React from 'react'
-import * as AvatarPrimitive from '@radix-ui/react-avatar'
+import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
 
 import { cn } from '@/lib/utils'
 
-const Avatar = ({
-	className,
-	...props
-}: React.ComponentProps<typeof AvatarPrimitive.Root>) => (
+const Avatar = ({ className, ...props }: AvatarPrimitive.Root.Props) => (
 	<AvatarPrimitive.Root
 		data-slot="avatar"
 		className={cn(
@@ -16,24 +12,19 @@ const Avatar = ({
 		{...props}
 	/>
 )
-Avatar.displayName = AvatarPrimitive.Root.displayName
 
-const AvatarImage = ({
-	className,
-	...props
-}: React.ComponentProps<typeof AvatarPrimitive.Image>) => (
+const AvatarImage = ({ className, ...props }: AvatarPrimitive.Image.Props) => (
 	<AvatarPrimitive.Image
 		data-slot="avatar-image"
 		className={cn('aspect-square h-full w-full object-cover', className)}
 		{...props}
 	/>
 )
-AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
 const AvatarFallback = ({
 	className,
 	...props
-}: React.ComponentProps<typeof AvatarPrimitive.Fallback>) => (
+}: AvatarPrimitive.Fallback.Props) => (
 	<AvatarPrimitive.Fallback
 		data-slot="avatar-fallback"
 		className={cn(
@@ -43,6 +34,5 @@ const AvatarFallback = ({
 		{...props}
 	/>
 )
-AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
 export { Avatar, AvatarImage, AvatarFallback }

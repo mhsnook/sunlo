@@ -90,7 +90,7 @@ export function NavUser() {
 						<SidebarMenuButton
 							size="lg"
 							data-testid="sidebar-user-menu-trigger"
-							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-xl shadow"
+							className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
 						>
 							<Avatar>
 								<AvatarImage src={avatarUrl} alt={profile?.username} />
@@ -106,7 +106,7 @@ export function NavUser() {
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className="w-(--radix-dropdown-menu-trigger-width) min-w-56"
+						className="w-(--anchor-width) min-w-56"
 						side={isMobile ? 'bottom' : 'right'}
 						align="end"
 						sideOffset={4}
