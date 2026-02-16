@@ -267,8 +267,9 @@ function ReviewPageContent() {
 	if (stats?.count)
 		return (
 			stats.complete === stats.count || stats.stage >= 5 ? <WhenComplete />
-			: stage ? <Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
-			: <ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
+			: stage !== null ?
+				<Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
+			:	<ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
 		)
 
 	return (
