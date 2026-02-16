@@ -8,6 +8,7 @@ import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'
 import {
+	BarChart3,
 	ChartBarDecreasing,
 	CircleStar,
 	Compass,
@@ -116,6 +117,14 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 			Icon: CircleStar,
 			link: {
 				to: '/learn/contributions',
+			},
+		},
+		'/learn/library': {
+			name: 'Library Data',
+			title: 'Library Data',
+			Icon: BarChart3,
+			link: {
+				to: '/learn/library',
 			},
 		},
 		'/learn/quick-search': {
