@@ -8,7 +8,13 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { useReviewActions, useNewCardPids } from '@/hooks/use-review-store'
+import {
+	useReviewActions,
+	useNewCardPids,
+	useReviewLang,
+	useReviewDayString,
+} from '@/hooks/use-review-store'
+import { useUpdateReviewStage } from '@/hooks/use-reviews'
 import type { pids, uuid } from '@/types/main'
 import type { TranslationType } from '@/lib/schemas'
 
@@ -62,10 +68,20 @@ function PreviewCard({ pid }: { pid: uuid }) {
 export function NewCardsPreview({ manifest }: { manifest: pids }) {
 	const { lang } = useParams({ strict: false })
 	const newCardPids = useNewCardPids()
-	const { markPreviewSeen } = useReviewActions()
+	const { startReview } = useReviewActions()
+	const reviewLang = useReviewLang()
+	const dayString = useReviewDayString()
+	const updateStage = useUpdateReviewStage(reviewLang, dayString)
+
+	const handleStartReview = () => {
+		startReview()
+		updateStage.mutate(1)
+	}
 
 	// Filter manifest to only show new cards in the order they appear in manifest
-	const newCardsInOrder = manifest.filter((pid) => newCardPids.includes(pid))
+	const newCardsInOrder = manifest.filter(
+		(pid) => newCardPids?.includes(pid)
+	)
 
 	if (newCardsInOrder.length === 0) {
 		// No new cards to preview - show helpful guidance
@@ -131,7 +147,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				</div>
 
 				<div className="flex justify-center">
-					<Button onClick={markPreviewSeen} size="lg" className="min-w-48">
+					<Button onClick={handleStartReview} size="lg" className="min-w-48">
 						Start Review
 					</Button>
 				</div>
@@ -160,7 +176,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 			</div>
 
 			<div className="bg-muted mt-auto flex justify-center border-t p-4">
-				<Button onClick={markPreviewSeen} size="lg" className="min-w-48">
+				<Button onClick={handleStartReview} size="lg" className="min-w-48">
 					Start Review
 				</Button>
 			</div>
