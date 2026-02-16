@@ -68,8 +68,13 @@ export const Route = createFileRoute('/_user/learn/browse')({
 		},
 		contextMenu:
 			context.auth.isAuth ?
-				['/learn/add-deck', '/learn/contributions', '/learn/quick-search']
-			:	['/login', '/signup'],
+				[
+					'/learn/library',
+					'/learn/add-deck',
+					'/learn/contributions',
+					'/learn/quick-search',
+				]
+			:	['/learn/library', '/login', '/signup'],
 	}),
 	loader: async () => {
 		await languagesCollection.preload()
