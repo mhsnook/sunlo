@@ -50,7 +50,7 @@ export function ReviewSingleCard({
 	triggerSlide,
 }: {
 	pid: uuid
-	reviewStage: number
+	reviewStage: number | null
 	dayString: string
 	triggerSlide: (navigate: () => void) => void
 }) {
