@@ -119,12 +119,12 @@ const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/contributions',
 			},
 		},
-		'/learn/library': {
-			name: 'Library Data',
+		'/learn/browse/charts': {
+			name: 'Charts',
 			title: 'Library Data',
 			Icon: BarChart3,
 			link: {
-				to: '/learn/library',
+				to: '/learn/browse/charts',
 			},
 		},
 		'/learn/quick-search': {

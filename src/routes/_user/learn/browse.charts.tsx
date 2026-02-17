@@ -3,13 +3,6 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { BarChart3 } from 'lucide-react'
 
 import {
-	languagesCollection,
-	langTagsCollection,
-	phrasesCollection,
-	phraseRequestsCollection,
-	phrasePlaylistsCollection,
-} from '@/lib/collections'
-import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -27,30 +20,13 @@ import {
 	useLanguageSelector,
 } from '@/components/library-charts'
 
-export const Route = createFileRoute('/_user/learn/library')({
-	beforeLoad: ({ context }) => ({
-		titleBar: {
-			title: 'Library Data',
-			subtitle: 'Visualizations of our public phrase library',
-		},
-		contextMenu:
-			context.auth.isAuth ?
-				['/learn/browse', '/learn/contributions']
-			:	['/learn/browse', '/login'],
-	}),
-	loader: async () => {
-		await languagesCollection.preload()
-		await langTagsCollection.preload()
-		await phrasesCollection.preload()
-		await phraseRequestsCollection.preload()
-		await phrasePlaylistsCollection.preload()
-	},
-	component: LibraryPage,
+export const Route = createFileRoute('/_user/learn/browse/charts')({
+	component: ChartsPage,
 })
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
 
-function LibraryPage() {
+function ChartsPage() {
 	const { availableLanguages, activeLang, setSelectedLang } =
 		useLanguageSelector()
 
