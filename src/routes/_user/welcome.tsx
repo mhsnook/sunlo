@@ -319,14 +319,14 @@ function ActionCard({
 			<CardContent className="space-y-4">
 				<p className="text-muted-foreground text-sm">{description}</p>
 				{disabled ?
-					<Button variant="outline" disabled className="w-full">
+					<Button variant="soft" disabled className="w-full">
 						{linkText}
 					</Button>
 				:	<Link
 						to={linkTo}
 						className={cn(
 							buttonVariants({
-								variant: isPrimary ? 'default' : 'outline',
+								variant: isPrimary ? 'default' : 'soft',
 							}),
 							'w-full'
 						)}
@@ -405,7 +405,7 @@ function RequestsYouCanHelp() {
 				<div className="mt-4 text-center">
 					<Link
 						to="/learn/browse"
-						className={buttonVariants({ variant: 'outline', size: 'sm' })}
+						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						See More Requests
 					</Link>

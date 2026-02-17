@@ -55,7 +55,7 @@ export function SelectOneOfYourLanguages({
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild className={cn('w-full', className)}>
 				<Button
-					variant="outline"
+					variant="soft"
 					role="combobox"
 					aria-controls={id}
 					aria-expanded={open}

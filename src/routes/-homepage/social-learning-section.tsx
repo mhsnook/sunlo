@@ -231,7 +231,7 @@ export function SocialLearningSection() {
 									target="_blank"
 									rel="noopener noreferrer"
 									className={cn(
-										buttonVariants({ variant: 'outline' }),
+										buttonVariants({ variant: 'soft' }),
 										'border-2 border-white/30 bg-transparent px-8 py-6 text-lg font-semibold text-white hover:bg-white/10'
 									)}
 								>

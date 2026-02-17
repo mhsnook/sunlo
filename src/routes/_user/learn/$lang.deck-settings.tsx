@@ -454,7 +454,7 @@ function PreferredTranslationLanguageForm({
 						Reset
 					</Button>
 					{preferred_translation_lang && (
-						<Button variant="outline" onClick={handleClearOverride}>
+						<Button variant="soft" onClick={handleClearOverride}>
 							Use profile default
 						</Button>
 					)}

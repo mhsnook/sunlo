@@ -29,7 +29,7 @@ export function NotEnoughCards({
 			</p>
 			<div className="my-2 flex flex-wrap gap-2">
 				<Link
-					className={buttonVariants({ variant: 'outline' })}
+					className={buttonVariants({ variant: 'soft' })}
 					to="/learn/$lang/feed"
 					params={{ lang }}
 				>
@@ -37,7 +37,7 @@ export function NotEnoughCards({
 				</Link>
 
 				<Link
-					className={buttonVariants({ variant: 'outline' })}
+					className={buttonVariants({ variant: 'soft' })}
 					to="/learn/$lang/phrases/new"
 					params={{ lang }}
 				>

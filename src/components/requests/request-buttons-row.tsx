@@ -85,7 +85,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						}
 						className={buttonVariants({
 							variant:
-								search.show === 'answers-only' ? 'outline-primary' : 'ghost',
+								search.show === 'answers-only' ? 'soft' : 'ghost',
 							size: 'icon',
 						})}
 					>

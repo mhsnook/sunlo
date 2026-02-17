@@ -179,7 +179,7 @@ export function WhenComplete() {
 									to="/learn/$lang/stats"
 									params={{ lang }}
 									className={buttonVariants({
-										variant: 'outline',
+										variant: 'soft',
 										size: 'lg',
 										className: 'flex-1',
 									})}
@@ -190,7 +190,7 @@ export function WhenComplete() {
 								<Link
 									to="/learn/browse"
 									className={buttonVariants({
-										variant: 'outline',
+										variant: 'soft',
 										size: 'lg',
 										className: 'flex-1',
 									})}

@@ -152,7 +152,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 									<CollapsibleTrigger
 										className={cn(
-											buttonVariants({ variant: 'outline', size: 'sm' }),
+											buttonVariants({ variant: 'soft', size: 'sm' }),
 											isOpen ? 'my-3' : 'mt-3'
 										)}
 									>
@@ -233,19 +233,19 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
-					variant="outline"
+					variant="soft"
 					size="icon"
 					text=""
 				/>
 				<SharePhraseButton
 					text=""
 					phrase={phrase}
-					variant="outline"
+					variant="soft"
 					size="icon"
 				/>
 				<SendPhraseToFriendButton
 					phrase={phrase}
-					variant="outline"
+					variant="soft"
 					text=""
 					size="icon"
 				/>
@@ -270,7 +270,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						</div>
 						{hasMore && !showAllProvenance && (
 							<Button
-								variant="outline"
+								variant="soft"
 								size="sm"
 								onClick={() => setShowAllProvenance(true)}
 							>

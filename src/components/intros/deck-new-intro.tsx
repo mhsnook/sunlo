@@ -72,20 +72,20 @@ export function DeckNewIntro({ open, onClose }: DeckNewIntroProps) {
 					<Link
 						to="/learn/$lang/feed"
 						params={{ lang: lang ?? '' }}
-						className={buttonVariants({ variant: 'outline', size: 'sm' })}
+						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						<Logs className="size-4" /> Browse Feed
 					</Link>
 					<Link
 						to="/learn/$lang/phrases/new"
 						params={{ lang: lang ?? '' }}
-						className={buttonVariants({ variant: 'outline', size: 'sm' })}
+						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						<MessageSquarePlus className="size-4" /> Add Phrase
 					</Link>
 					<Link
 						to="/friends"
-						className={buttonVariants({ variant: 'outline', size: 'sm' })}
+						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						<Contact className="size-4" /> Invite Friends
 					</Link>

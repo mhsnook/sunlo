@@ -84,7 +84,7 @@ export function SelectPhrasesForComment({
 			<DialogTrigger asChild>
 				<Button
 					type="button"
-					variant="outline"
+					variant="soft"
 					disabled={isMaxReached}
 					data-testid="open-phrase-picker"
 				>

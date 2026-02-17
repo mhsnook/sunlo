@@ -53,21 +53,21 @@ function NotFoundComponent() {
 					<h1 className="text-2xl">404: Page not found</h1>
 					<p>We did not find a page matching that URL</p>
 					<div className="flex flex-row flex-wrap gap-2">
-						<Button onClick={goBack} variant="outline">
+						<Button onClick={goBack} variant="soft">
 							Go Back
 						</Button>
-						<Link to="/" className={buttonVariants({ variant: 'outline' })}>
+						<Link to="/" className={buttonVariants({ variant: 'soft' })}>
 							Go home
 						</Link>
 						<Link
 							to="/learn"
-							className={buttonVariants({ variant: 'outline' })}
+							className={buttonVariants({ variant: 'soft' })}
 						>
 							Learning dashboard
 						</Link>
 						<Link
 							to="/profile"
-							className={buttonVariants({ variant: 'outline' })}
+							className={buttonVariants({ variant: 'soft' })}
 						>
 							Your profile
 						</Link>

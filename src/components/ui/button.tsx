@@ -11,22 +11,14 @@ const buttonVariants = cva(
 			variant: {
 				default:
 					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
-				accent:
-					'bg-accent-foresoft dark:bg-accent text-white hover:opacity-90 aria-expanded:bg-accent-foresoft/60 border border-background dark:text-white hover:border-accent-foresoft',
+				soft: 'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
 				secondary:
 					'bg-secondary text-secondary-foreground/80 hover:bg-primary-invert/50 border border-secondary-foreground/5',
-				destructive:
-					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				'destructive-outline':
+				red: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+				'red-soft':
 					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
 				ghost:
 					'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
-				outline:
-					'border border-primary-foresoft/10 hover:border-primary-foresoft/30 bg-card/50 hover:bg-background text-primary-foresoft',
-				'outline-primary':
-					'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
-				'outline-accent':
-					'border border-accent-foresoft/40 bg-accent/10 hover:bg-accent/30 text-accent-foreground hover:text-accent-foresoft dark:bg-accent-invert/40 dark:hover:bg-accent-invert/50',
 				'badge-outline':
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
 				'dashed-w-full':

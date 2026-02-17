@@ -311,7 +311,7 @@ function BulkAddPhrasesPage() {
 							<div className="flex justify-between">
 								<Button
 									type="button"
-									variant="outline"
+									variant="soft"
 									onClick={() =>
 										append(getEmptyPhrase(preferredTranslationLang))
 									}
@@ -528,7 +528,7 @@ function PhraseEntry({
 			</div>
 			<Button
 				type="button"
-				variant="outline"
+				variant="soft"
 				onClick={() =>
 					appendTranslation({
 						lang: preferredTranslationLang,
