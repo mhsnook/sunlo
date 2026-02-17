@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback, type MouseEvent } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import {
 	Bar,
@@ -239,6 +240,16 @@ interface TreemapItem {
 	fill: string
 }
 
+interface TreemapContentProps extends TreemapItem {
+	x: number
+	y: number
+	width: number
+	height: number
+	totalPhrases: number
+	onHover: (item: TreemapItem | null, e: MouseEvent<SVGElement>) => void
+	onClick: (tagName: string) => void
+}
+
 function TreemapContent({
 	x,
 	y,
@@ -247,9 +258,19 @@ function TreemapContent({
 	name,
 	size,
 	fill,
-}: TreemapItem & { x: number; y: number; width: number; height: number }) {
+	totalPhrases,
+	onHover,
+	onClick,
+}: TreemapContentProps) {
+	const pct = totalPhrases > 0 ? ((size / totalPhrases) * 100).toFixed(1) : '0'
 	return (
-		<g>
+		<g
+			className="cursor-pointer"
+			onMouseEnter={(e) => onHover({ name, size, fill }, e)}
+			onMouseMove={(e) => onHover({ name, size, fill }, e)}
+			onMouseLeave={(e) => onHover(null, e)}
+			onClick={() => onClick(name)}
+		>
 			<rect
 				x={x}
 				y={y}
@@ -260,30 +281,41 @@ function TreemapContent({
 				strokeWidth={2}
 				rx={3}
 			/>
+			{/* Hover highlight overlay */}
+			<rect
+				x={x}
+				y={y}
+				width={width}
+				height={height}
+				fill="white"
+				opacity={0}
+				rx={3}
+				className="transition-opacity hover:opacity-15"
+			/>
 			{width > 40 && height > 24 && (
 				<text
 					x={x + width / 2}
-					y={y + height / 2 - (height > 40 ? 6 : 0)}
+					y={y + height / 2 - (height > 44 ? 8 : 0)}
 					textAnchor="middle"
 					dominantBaseline="central"
-					className="text-xs font-medium"
+					className="pointer-events-none text-xs font-medium"
 					fill="white"
 					style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
 				>
 					{width > 60 ? name : name.slice(0, 6)}
 				</text>
 			)}
-			{height > 40 && width > 50 && (
+			{height > 44 && width > 50 && (
 				<text
 					x={x + width / 2}
-					y={y + height / 2 + 12}
+					y={y + height / 2 + 10}
 					textAnchor="middle"
 					dominantBaseline="central"
-					className="text-[10px]"
+					className="pointer-events-none text-[10px]"
 					fill="rgba(255,255,255,0.7)"
 					style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
 				>
-					{size} phrases
+					{size} phrases ({pct}%)
 				</text>
 			)}
 		</g>
@@ -291,6 +323,13 @@ function TreemapContent({
 }
 
 export function TagTreemap({ lang }: { lang: string }) {
+	const navigate = useNavigate()
+	const [tooltip, setTooltip] = useState<{
+		item: TreemapItem
+		x: number
+		y: number
+	} | null>(null)
+
 	const { data: allPhrases } = useLiveQuery(
 		(q) =>
 			q
@@ -299,15 +338,17 @@ export function TagTreemap({ lang }: { lang: string }) {
 		[lang]
 	)
 
-	const treemapData = useMemo(() => {
-		if (!allPhrases?.length) return []
+	const { treemapData, totalTagged } = useMemo(() => {
+		if (!allPhrases?.length) return { treemapData: [], totalTagged: 0 }
 		const tagCounts = new Map<string, number>()
+		let tagged = 0
 		for (const phrase of allPhrases) {
+			if (phrase.tags?.length) tagged++
 			for (const tag of phrase.tags ?? []) {
 				tagCounts.set(tag.name, (tagCounts.get(tag.name) ?? 0) + 1)
 			}
 		}
-		return Array.from(tagCounts.entries())
+		const data = Array.from(tagCounts.entries())
 			.toSorted((a, b) => b[1] - a[1])
 			.slice(0, 30)
 			.map(([name, size], i) => ({
@@ -315,7 +356,29 @@ export function TagTreemap({ lang }: { lang: string }) {
 				size,
 				fill: TREEMAP_COLORS[i % TREEMAP_COLORS.length],
 			}))
+		return { treemapData: data, totalTagged: tagged }
 	}, [allPhrases])
+
+	const handleHover = useCallback(
+		(item: TreemapItem | null, e: MouseEvent<SVGElement>) => {
+			if (!item) {
+				setTooltip(null)
+				return
+			}
+			setTooltip({ item, x: e.clientX, y: e.clientY })
+		},
+		[]
+	)
+
+	const handleClick = useCallback(
+		(tagName: string) => {
+			void navigate({
+				to: '/learn/browse',
+				search: { tags: tagName, langs: lang },
+			})
+		},
+		[navigate, lang]
+	)
 
 	if (!treemapData.length) {
 		return (
@@ -326,26 +389,50 @@ export function TagTreemap({ lang }: { lang: string }) {
 	}
 
 	return (
-		<ResponsiveContainer width="100%" height={350}>
-			<Treemap
-				data={treemapData}
-				dataKey="size"
-				aspectRatio={4 / 3}
-				stroke="var(--background)"
-				// oxlint-disable-next-line jsx-no-jsx-as-prop
-				content={
-					<TreemapContent
-						name=""
-						size={0}
-						fill=""
-						x={0}
-						y={0}
-						width={0}
-						height={0}
-					/>
-				}
-			/>
-		</ResponsiveContainer>
+		<div className="relative">
+			<ResponsiveContainer width="100%" height={350}>
+				<Treemap
+					data={treemapData}
+					dataKey="size"
+					aspectRatio={4 / 3}
+					stroke="var(--background)"
+					// oxlint-disable-next-line jsx-no-jsx-as-prop
+					content={
+						<TreemapContent
+							name=""
+							size={0}
+							fill=""
+							x={0}
+							y={0}
+							width={0}
+							height={0}
+							totalPhrases={totalTagged}
+							onHover={handleHover}
+							onClick={handleClick}
+						/>
+					}
+				/>
+			</ResponsiveContainer>
+			{tooltip && (
+				<div
+					className="bg-background pointer-events-none fixed z-50 rounded-lg border px-3 py-2 text-sm shadow-xl"
+					style={{
+						left: tooltip.x + 12,
+						top: tooltip.y - 10,
+					}}
+				>
+					<p className="font-semibold">{tooltip.item.name}</p>
+					<p className="text-muted-foreground">
+						{tooltip.item.size} phrases (
+						{totalTagged > 0 ?
+							((tooltip.item.size / totalTagged) * 100).toFixed(1)
+						:	0}
+						%)
+					</p>
+					<p className="text-primary mt-1 text-xs">Click to browse phrases</p>
+				</div>
+			)}
+		</div>
 	)
 }
 
