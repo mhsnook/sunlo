@@ -31,7 +31,6 @@ import { Route as UserProfileChangePasswordRouteImport } from './routes/_user/pr
 import { Route as UserProfileChangeEmailConfirmRouteImport } from './routes/_user/profile/change-email-confirm'
 import { Route as UserProfileChangeEmailRouteImport } from './routes/_user/profile/change-email'
 import { Route as UserLearnQuickSearchRouteImport } from './routes/_user/learn/quick-search'
-import { Route as UserLearnLibraryRouteImport } from './routes/_user/learn/library'
 import { Route as UserLearnContributionsRouteImport } from './routes/_user/learn/contributions'
 import { Route as UserLearnBrowseRouteImport } from './routes/_user/learn/browse'
 import { Route as UserLearnArchivedRouteImport } from './routes/_user/learn/archived'
@@ -42,8 +41,10 @@ import { Route as UserFriendsRequestsRouteImport } from './routes/_user/friends/
 import { Route as UserFriendsInviteRouteImport } from './routes/_user/friends/invite'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
+import { Route as UserLearnBrowseIndexRouteImport } from './routes/_user/learn/browse.index'
 import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
+import { Route as UserLearnBrowseChartsRouteImport } from './routes/_user/learn/browse.charts'
 import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
 import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
@@ -195,11 +196,6 @@ const UserLearnQuickSearchRoute = UserLearnQuickSearchRouteImport.update({
   path: '/quick-search',
   getParentRoute: () => UserLearnRoute,
 } as any)
-const UserLearnLibraryRoute = UserLearnLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => UserLearnRoute,
-} as any)
 const UserLearnContributionsRoute = UserLearnContributionsRouteImport.update({
   id: '/contributions',
   path: '/contributions',
@@ -250,6 +246,11 @@ const UserFriendsUidRoute = UserFriendsUidRouteImport.update({
   path: '/$uid',
   getParentRoute: () => UserFriendsRoute,
 } as any)
+const UserLearnBrowseIndexRoute = UserLearnBrowseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserLearnBrowseRoute,
+} as any)
 const UserLearnLangIndexRoute = UserLearnLangIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -259,6 +260,11 @@ const UserFriendsChatsIndexRoute = UserFriendsChatsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserFriendsChatsRoute,
+} as any)
+const UserLearnBrowseChartsRoute = UserLearnBrowseChartsRouteImport.update({
+  id: '/charts',
+  path: '/charts',
+  getParentRoute: () => UserLearnBrowseRoute,
 } as any)
 const UserLearnLangStatsRoute = UserLearnLangStatsRouteImport.update({
   id: '/stats',
@@ -400,9 +406,8 @@ export interface FileRoutesByFullPath {
   '/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
-  '/learn/browse': typeof UserLearnBrowseRoute
+  '/learn/browse': typeof UserLearnBrowseRouteWithChildren
   '/learn/contributions': typeof UserLearnContributionsRoute
-  '/learn/library': typeof UserLearnLibraryRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -420,8 +425,10 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
+  '/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/learn/browse/': typeof UserLearnBrowseIndexRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -453,9 +460,7 @@ export interface FileRoutesByTo {
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
-  '/learn/browse': typeof UserLearnBrowseRoute
   '/learn/contributions': typeof UserLearnContributionsRoute
-  '/learn/library': typeof UserLearnLibraryRoute
   '/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -471,8 +476,10 @@ export interface FileRoutesByTo {
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
+  '/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
+  '/learn/browse': typeof UserLearnBrowseIndexRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -512,9 +519,8 @@ export interface FileRoutesById {
   '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
   '/_user/learn/archived': typeof UserLearnArchivedRoute
-  '/_user/learn/browse': typeof UserLearnBrowseRoute
+  '/_user/learn/browse': typeof UserLearnBrowseRouteWithChildren
   '/_user/learn/contributions': typeof UserLearnContributionsRoute
-  '/_user/learn/library': typeof UserLearnLibraryRoute
   '/_user/learn/quick-search': typeof UserLearnQuickSearchRoute
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
   '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
@@ -532,8 +538,10 @@ export interface FileRoutesById {
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/_user/learn/$lang/stats': typeof UserLearnLangStatsRoute
+  '/_user/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
+  '/_user/learn/browse/': typeof UserLearnBrowseIndexRoute
   '/_user/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/_user/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/_user/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -574,7 +582,6 @@ export interface FileRouteTypes {
     | '/learn/archived'
     | '/learn/browse'
     | '/learn/contributions'
-    | '/learn/library'
     | '/learn/quick-search'
     | '/profile/change-email'
     | '/profile/change-email-confirm'
@@ -592,8 +599,10 @@ export interface FileRouteTypes {
     | '/learn/$lang/review'
     | '/learn/$lang/search'
     | '/learn/$lang/stats'
+    | '/learn/browse/charts'
     | '/friends/chats/'
     | '/learn/$lang/'
+    | '/learn/browse/'
     | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/phrases/$id'
     | '/learn/$lang/phrases/new'
@@ -625,9 +634,7 @@ export interface FileRouteTypes {
     | '/friends/search'
     | '/learn/add-deck'
     | '/learn/archived'
-    | '/learn/browse'
     | '/learn/contributions'
-    | '/learn/library'
     | '/learn/quick-search'
     | '/profile/change-email'
     | '/profile/change-email-confirm'
@@ -643,8 +650,10 @@ export interface FileRouteTypes {
     | '/learn/$lang/feed'
     | '/learn/$lang/search'
     | '/learn/$lang/stats'
+    | '/learn/browse/charts'
     | '/friends/chats'
     | '/learn/$lang'
+    | '/learn/browse'
     | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/phrases/$id'
     | '/learn/$lang/phrases/new'
@@ -685,7 +694,6 @@ export interface FileRouteTypes {
     | '/_user/learn/archived'
     | '/_user/learn/browse'
     | '/_user/learn/contributions'
-    | '/_user/learn/library'
     | '/_user/learn/quick-search'
     | '/_user/profile/change-email'
     | '/_user/profile/change-email-confirm'
@@ -703,8 +711,10 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
     | '/_user/learn/$lang/stats'
+    | '/_user/learn/browse/charts'
     | '/_user/friends/chats/'
     | '/_user/learn/$lang/'
+    | '/_user/learn/browse/'
     | '/_user/friends/chats/$friendUid/recommend'
     | '/_user/learn/$lang/phrases/$id'
     | '/_user/learn/$lang/phrases/new'
@@ -898,13 +908,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnQuickSearchRouteImport
       parentRoute: typeof UserLearnRoute
     }
-    '/_user/learn/library': {
-      id: '/_user/learn/library'
-      path: '/library'
-      fullPath: '/learn/library'
-      preLoaderRoute: typeof UserLearnLibraryRouteImport
-      parentRoute: typeof UserLearnRoute
-    }
     '/_user/learn/contributions': {
       id: '/_user/learn/contributions'
       path: '/contributions'
@@ -975,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsUidRouteImport
       parentRoute: typeof UserFriendsRoute
     }
+    '/_user/learn/browse/': {
+      id: '/_user/learn/browse/'
+      path: '/'
+      fullPath: '/learn/browse/'
+      preLoaderRoute: typeof UserLearnBrowseIndexRouteImport
+      parentRoute: typeof UserLearnBrowseRoute
+    }
     '/_user/learn/$lang/': {
       id: '/_user/learn/$lang/'
       path: '/'
@@ -988,6 +998,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/friends/chats/'
       preLoaderRoute: typeof UserFriendsChatsIndexRouteImport
       parentRoute: typeof UserFriendsChatsRoute
+    }
+    '/_user/learn/browse/charts': {
+      id: '/_user/learn/browse/charts'
+      path: '/charts'
+      fullPath: '/learn/browse/charts'
+      preLoaderRoute: typeof UserLearnBrowseChartsRouteImport
+      parentRoute: typeof UserLearnBrowseRoute
     }
     '/_user/learn/$lang/stats': {
       id: '/_user/learn/$lang/stats'
@@ -1286,13 +1303,26 @@ const UserLearnLangRouteWithChildren = UserLearnLangRoute._addFileChildren(
   UserLearnLangRouteChildren,
 )
 
+interface UserLearnBrowseRouteChildren {
+  UserLearnBrowseChartsRoute: typeof UserLearnBrowseChartsRoute
+  UserLearnBrowseIndexRoute: typeof UserLearnBrowseIndexRoute
+}
+
+const UserLearnBrowseRouteChildren: UserLearnBrowseRouteChildren = {
+  UserLearnBrowseChartsRoute: UserLearnBrowseChartsRoute,
+  UserLearnBrowseIndexRoute: UserLearnBrowseIndexRoute,
+}
+
+const UserLearnBrowseRouteWithChildren = UserLearnBrowseRoute._addFileChildren(
+  UserLearnBrowseRouteChildren,
+)
+
 interface UserLearnRouteChildren {
   UserLearnLangRoute: typeof UserLearnLangRouteWithChildren
   UserLearnAddDeckRoute: typeof UserLearnAddDeckRoute
   UserLearnArchivedRoute: typeof UserLearnArchivedRoute
-  UserLearnBrowseRoute: typeof UserLearnBrowseRoute
+  UserLearnBrowseRoute: typeof UserLearnBrowseRouteWithChildren
   UserLearnContributionsRoute: typeof UserLearnContributionsRoute
-  UserLearnLibraryRoute: typeof UserLearnLibraryRoute
   UserLearnQuickSearchRoute: typeof UserLearnQuickSearchRoute
   UserLearnIndexRoute: typeof UserLearnIndexRoute
 }
@@ -1301,9 +1331,8 @@ const UserLearnRouteChildren: UserLearnRouteChildren = {
   UserLearnLangRoute: UserLearnLangRouteWithChildren,
   UserLearnAddDeckRoute: UserLearnAddDeckRoute,
   UserLearnArchivedRoute: UserLearnArchivedRoute,
-  UserLearnBrowseRoute: UserLearnBrowseRoute,
+  UserLearnBrowseRoute: UserLearnBrowseRouteWithChildren,
   UserLearnContributionsRoute: UserLearnContributionsRoute,
-  UserLearnLibraryRoute: UserLearnLibraryRoute,
   UserLearnQuickSearchRoute: UserLearnQuickSearchRoute,
   UserLearnIndexRoute: UserLearnIndexRoute,
 }
