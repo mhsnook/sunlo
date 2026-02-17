@@ -94,7 +94,7 @@ function ComponentsPage() {
 					<CardContent>
 						<div className="flex flex-wrap gap-2">
 							<Button
-								variant="outline"
+								variant="soft"
 								onClick={() =>
 									toastSuccess('Success! Your changes were saved.')
 								}
@@ -102,7 +102,7 @@ function ComponentsPage() {
 								Success Toast
 							</Button>
 							<Button
-								variant="outline"
+								variant="soft"
 								onClick={() =>
 									toastError(
 										'Error: Something went wrong while processing your request.'
@@ -112,19 +112,19 @@ function ComponentsPage() {
 								Error Toast
 							</Button>
 							<Button
-								variant="outline"
+								variant="soft"
 								onClick={() => toastNeutral('Neutral message, no icon')}
 							>
 								Neutral Toast
 							</Button>
 							<Button
-								variant="outline"
+								variant="soft"
 								onClick={() => toastInfo('Here is some helpful information')}
 							>
 								Info Toast
 							</Button>
 							<Button
-								variant="outline"
+								variant="soft"
 								onClick={() => {
 									toastError('First error - will stack')
 									setTimeout(
@@ -168,7 +168,7 @@ function ComponentsPage() {
 					<CardContent>
 						<AlertDialog>
 							<AlertDialogTrigger asChild>
-								<Button variant="outline">Show Alert</Button>
+								<Button variant="soft">Show Alert</Button>
 							</AlertDialogTrigger>
 							<AlertDialogContent>
 								<AlertDialogHeader>
@@ -194,18 +194,13 @@ function ComponentsPage() {
 					<CardContent>
 						<div className="flex flex-wrap gap-2">
 							<Button size="lg" className="w-full">
-								Primary Button
+								Default
 							</Button>
-							<Button size="lg" variant="accent" className="w-full">
-								Accent Button
-							</Button>
-							<Button variant="outline-primary">Primary soft</Button>
-							<Button variant="outline-accent">Accent soft</Button>
+							<Button variant="soft">Soft</Button>
 							<Button variant="secondary">Secondary</Button>
+							<Button variant="red">Red</Button>
+							<Button variant="red-soft">Red Soft</Button>
 							<Button variant="ghost">Ghost</Button>
-							<Button variant="outline">Outline</Button>
-							<Button variant="destructive">Destructive</Button>
-							<Button variant="destructive-outline">Dest Outl</Button>
 						</div>
 					</CardContent>
 				</Card>
@@ -235,7 +230,7 @@ function ComponentsPage() {
 					</CardContent>
 					<CardFooter className="flex gap-2">
 						<Button>Submit</Button>
-						<Button variant="outline">Cancel</Button>
+						<Button variant="soft">Cancel</Button>
 					</CardFooter>
 				</Card>
 
@@ -285,7 +280,7 @@ function ComponentsPage() {
 					<CardContent>
 						<Dialog>
 							<DialogTrigger asChild>
-								<Button variant="outline">Open Dialog</Button>
+								<Button variant="soft">Open Dialog</Button>
 							</DialogTrigger>
 							<DialogContent>
 								<DialogHeader>
@@ -310,7 +305,7 @@ function ComponentsPage() {
 					<CardContent>
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
-								<Button variant="outline">Open Menu</Button>
+								<Button variant="soft">Open Menu</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
 								<DropdownMenuLabel>My Account</DropdownMenuLabel>
@@ -372,7 +367,7 @@ function ComponentsPage() {
 					<CardContent>
 						<Popover>
 							<PopoverTrigger asChild>
-								<Button variant="outline">Open popover</Button>
+								<Button variant="soft">Open popover</Button>
 							</PopoverTrigger>
 							<PopoverContent className="w-80">
 								<div className="grid gap-4">

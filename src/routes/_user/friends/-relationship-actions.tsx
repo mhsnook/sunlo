@@ -25,11 +25,11 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				title="Would you like to remove this friendship?"
 				description="You won't be able to see each other's decks or progress any more."
 			>
-				<Button variant="outline" className="hover:bg-destructive/30">
+				<Button variant="soft" className="hover:bg-destructive/30">
 					<UserCheck />
 					Friends
 				</Button>
-				<Button variant="destructive" onClick={() => action.mutate('remove')}>
+				<Button variant="red" onClick={() => action.mutate('remove')}>
 					<UserMinus />
 					Unfriend
 				</Button>
@@ -50,7 +50,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 						<X />
 					</Button>
 					<Button
-						variant="destructive"
+						variant="red"
 						onClick={() => action.mutate('decline')}
 					>
 						Confirm
@@ -62,10 +62,10 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 				title="Cancel your friend request?"
 				description=""
 			>
-				<Button variant="outline" className="hover:bg-destructive/30">
+				<Button variant="soft" className="hover:bg-destructive/30">
 					<UserCheck /> Requested
 				</Button>
-				<Button variant="destructive" onClick={() => action.mutate('cancel')}>
+				<Button variant="red" onClick={() => action.mutate('cancel')}>
 					Cancel request
 				</Button>
 			</ConfirmDestructiveActionDialog>

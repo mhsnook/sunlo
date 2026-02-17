@@ -61,10 +61,10 @@ export function PhraseAccordionItem({
 						<PermalinkButton
 							to="/learn/$lang/phrases/$id"
 							params={{ lang: phrase.lang, id: phrase.id }}
-							variant="outline-accent"
+							variant="soft"
 							text="View details"
 						/>
-						<SharePhraseButton phrase={phrase} variant="outline-accent" />
+						<SharePhraseButton phrase={phrase} variant="soft" />
 					</div>
 				</div>
 			</AccordionContent>

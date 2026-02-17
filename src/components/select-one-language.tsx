@@ -33,7 +33,7 @@ export function SelectOneLanguage({
 			<PopoverTrigger asChild className="w-full">
 				<Button
 					data-testid="language-selector-button"
-					variant="outline"
+					variant="soft"
 					tabIndex={tabIndex}
 					role="combobox"
 					size={size}

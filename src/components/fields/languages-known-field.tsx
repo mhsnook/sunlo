@@ -140,7 +140,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 			<div className="flex w-full flex-row justify-end">
 				<Button
 					type="button"
-					variant="outline"
+					variant="soft"
 					size="sm"
 					onClick={() =>
 						append({

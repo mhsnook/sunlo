@@ -364,7 +364,7 @@ export function ManagePlaylistPhrasesDialog({
 						{!showCreateForm && (
 							<Button
 								type="button"
-								variant="outline"
+								variant="soft"
 								onClick={() => setShowCreateForm(true)}
 								data-testid="create-phrase-for-playlist"
 							>

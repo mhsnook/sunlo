@@ -87,7 +87,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							from={Route.fullPath}
 							aria-disabled="true"
 							className={`${buttonVariants({
-								variant: 'outline',
+								variant: 'soft',
 							})} -mt-2 aspect-square @max-lg:px-2`}
 						>
 							<Search className="size-3" />

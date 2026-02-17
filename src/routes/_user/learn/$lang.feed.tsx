@@ -236,7 +236,7 @@ function RecentFeed() {
 
 					{hasNextPage ?
 						<Button
-							variant="outline"
+							variant="soft"
 							onClick={() => void fetchNextPage()}
 							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
@@ -319,7 +319,7 @@ function FriendsFeed() {
 						) ?
 							null
 						:	<Link
-								className={buttonVariants({ variant: 'outline' })}
+								className={buttonVariants({ variant: 'soft' })}
 								search={{}}
 								from={Route.fullPath}
 							>
@@ -341,7 +341,7 @@ function FriendsFeed() {
 
 					{hasNextPage ?
 						<Button
-							variant="outline"
+							variant="soft"
 							onClick={() => void fetchNextPage()}
 							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
@@ -414,7 +414,7 @@ function PopularFeed() {
 						) ?
 							null
 						:	<Link
-								className={buttonVariants({ variant: 'outline' })}
+								className={buttonVariants({ variant: 'soft' })}
 								search={{}}
 								from={Route.fullPath}
 							>
@@ -429,7 +429,7 @@ function PopularFeed() {
 
 					{hasNextPage ?
 						<Button
-							variant="outline"
+							variant="soft"
 							onClick={() => void fetchNextPage()}
 							data-testid="load-more-button"
 							disabled={isFetchingNextPage}

@@ -54,7 +54,7 @@ export function MultiSelectCreatable({
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
 					<Button
-						variant="outline"
+						variant="soft"
 						role="combobox"
 						aria-expanded={open}
 						aria-controls="popover-content"

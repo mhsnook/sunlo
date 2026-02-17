@@ -73,7 +73,7 @@ export function ArchiveDeckButton({
 			<AlertDialogTrigger asChild className={className}>
 				{archived ?
 					<Button
-						variant="outline-primary"
+						variant="soft"
 						disabled={!archived}
 						data-testid="restore-deck-button"
 					>
@@ -81,7 +81,7 @@ export function ArchiveDeckButton({
 						Restore deck
 					</Button>
 				:	<Button
-						variant="destructive-outline"
+						variant="red-soft"
 						disabled={!!archived}
 						data-testid="archive-deck-button"
 					>
@@ -124,7 +124,7 @@ export function ArchiveDeckButton({
 							Restore
 						</AlertDialogAction>
 					:	<AlertDialogAction
-							className={buttonVariants({ variant: 'destructive' })}
+							className={buttonVariants({ variant: 'red' })}
 							onClick={() => mutation.mutate()}
 							data-testid="confirm-archive-button"
 						>

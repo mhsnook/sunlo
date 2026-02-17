@@ -108,7 +108,7 @@ export function HeroSection() {
 							<Link
 								to="/learn/browse"
 								className={cn(
-									buttonVariants({ size: 'lg', variant: 'outline' }),
+									buttonVariants({ size: 'lg', variant: 'soft' }),
 									'group border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>
@@ -129,7 +129,7 @@ export function HeroSection() {
 							<Link
 								to="/login"
 								className={cn(
-									buttonVariants({ size: 'lg', variant: 'outline' }),
+									buttonVariants({ size: 'lg', variant: 'soft' }),
 									'group border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'
 								)}
 							>

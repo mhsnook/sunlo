@@ -91,7 +91,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 							to="/learn/$lang/playlists"
 							params={{ lang: lang! }}
 							className={buttonVariants({
-								variant: 'outline',
+								variant: 'soft',
 								className: 'justify-start',
 							})}
 						>
@@ -102,7 +102,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 							to="/learn/$lang/feed"
 							params={{ lang: lang! }}
 							className={buttonVariants({
-								variant: 'outline',
+								variant: 'soft',
 								className: 'justify-start',
 							})}
 						>
@@ -113,7 +113,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 							to="/learn/$lang/phrases/new"
 							params={{ lang: lang! }}
 							className={buttonVariants({
-								variant: 'outline',
+								variant: 'soft',
 								className: 'justify-start',
 							})}
 						>

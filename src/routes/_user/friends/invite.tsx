@@ -85,7 +85,7 @@ function InviteFriendPage() {
 								<CopyLinkButton
 									size="lg"
 									className="w-full"
-									variant="outline-accent"
+									variant="soft"
 									url={share.url}
 								/>
 							</CardContent>

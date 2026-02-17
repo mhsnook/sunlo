@@ -160,21 +160,21 @@ function MiniDeckCard() {
 function ButtonSamples() {
 	return (
 		<div className="flex flex-wrap gap-1.5">
-			<Button size="sm">Primary</Button>
-			<Button size="sm" variant="accent">
-				Accent
+			<Button size="sm">Default</Button>
+			<Button size="sm" variant="soft">
+				Soft
 			</Button>
 			<Button size="sm" variant="secondary">
 				Secondary
 			</Button>
-			<Button size="sm" variant="outline-primary">
-				Outline
+			<Button size="sm" variant="red">
+				Red
+			</Button>
+			<Button size="sm" variant="red-soft">
+				Red Soft
 			</Button>
 			<Button size="sm" variant="ghost">
 				Ghost
-			</Button>
-			<Button size="sm" variant="destructive">
-				Destructive
 			</Button>
 		</div>
 	)

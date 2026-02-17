@@ -290,7 +290,7 @@ export function CardStatusHeart({
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
-			variant={phrase.card?.status === 'active' ? 'outline-primary' : 'ghost'}
+			variant={phrase.card?.status === 'active' ? 'soft' : 'ghost'}
 			size="icon"
 			data-name="card-status-heart"
 			data-key={phrase.id}

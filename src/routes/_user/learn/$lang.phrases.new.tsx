@@ -454,7 +454,7 @@ function AddPhraseTab() {
 									to="/learn/$lang/search"
 									from={Route.fullPath}
 									search={searchPlusText}
-									className={buttonVariants({ variant: 'outline' })}
+									className={buttonVariants({ variant: 'soft' })}
 								>
 									<Search size={16} />
 									Search phrases
@@ -463,7 +463,7 @@ function AddPhraseTab() {
 								<Link
 									to="/learn/$lang/bulk-add"
 									from={Route.fullPath}
-									className={buttonVariants({ variant: 'outline' })}
+									className={buttonVariants({ variant: 'soft' })}
 								>
 									Bulk add phrases
 								</Link>
