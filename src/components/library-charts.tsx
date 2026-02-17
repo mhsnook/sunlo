@@ -246,27 +246,41 @@ function TreemapContent({
 	height,
 	name,
 	size,
+	fill,
 }: TreemapItem & { x: number; y: number; width: number; height: number }) {
-	if (width < 40 || height < 24) return null
 	return (
 		<g>
-			<text
-				x={x + width / 2}
-				y={y + height / 2 - (height > 40 ? 6 : 0)}
-				textAnchor="middle"
-				dominantBaseline="central"
-				className="fill-white text-xs font-medium"
-				style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-			>
-				{width > 60 ? name : name.slice(0, 6)}
-			</text>
+			<rect
+				x={x}
+				y={y}
+				width={width}
+				height={height}
+				fill={fill}
+				stroke="var(--background)"
+				strokeWidth={2}
+				rx={3}
+			/>
+			{width > 40 && height > 24 && (
+				<text
+					x={x + width / 2}
+					y={y + height / 2 - (height > 40 ? 6 : 0)}
+					textAnchor="middle"
+					dominantBaseline="central"
+					className="text-xs font-medium"
+					fill="white"
+					style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+				>
+					{width > 60 ? name : name.slice(0, 6)}
+				</text>
+			)}
 			{height > 40 && width > 50 && (
 				<text
 					x={x + width / 2}
 					y={y + height / 2 + 12}
 					textAnchor="middle"
 					dominantBaseline="central"
-					className="fill-white/70 text-[10px]"
+					className="text-[10px]"
+					fill="rgba(255,255,255,0.7)"
 					style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
 				>
 					{size} phrases
