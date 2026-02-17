@@ -100,7 +100,7 @@ export function IntroSheet({
 						{!requireAffirmation && skipLabel && (
 							<DrawerClose asChild>
 								<Button
-									variant="outline"
+									variant="soft"
 									onClick={handleSkip}
 									className="w-full"
 								>
@@ -127,7 +127,7 @@ export function IntroSheet({
 				<div className="space-y-4 py-4">{children}</div>
 				<DialogFooter className="gap-2 sm:gap-0">
 					{!requireAffirmation && skipLabel && (
-						<Button variant="outline" onClick={handleSkip}>
+						<Button variant="soft" onClick={handleSkip}>
 							{skipLabel}
 						</Button>
 					)}

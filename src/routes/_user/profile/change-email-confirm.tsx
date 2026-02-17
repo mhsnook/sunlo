@@ -48,7 +48,7 @@ function ChangeEmailConfirmPage() {
 								<Link
 									to="/profile/change-email"
 									from={Route.fullPath}
-									className={buttonVariants({ variant: 'outline' })}
+									className={buttonVariants({ variant: 'soft' })}
 								>
 									Try the change-email form again
 								</Link>

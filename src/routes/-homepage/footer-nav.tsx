@@ -90,7 +90,7 @@ export function FooterNavigation() {
 								</Link>
 								<Link
 									className={cn(
-										buttonVariants({ variant: 'outline' }),
+										buttonVariants({ variant: 'soft' }),
 										'font-space-grotesk w-full border-2 border-slate-600 bg-transparent font-semibold text-slate-300 transition-all duration-300 hover:bg-slate-800 hover:text-white'
 									)}
 									to="/login"

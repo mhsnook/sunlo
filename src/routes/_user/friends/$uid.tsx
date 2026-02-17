@@ -69,7 +69,7 @@ function ProfilePage() {
 							<RelationshipActions uid_for={uid} />
 							{profile.relation?.status === 'friends' && (
 								<Link
-									className={buttonVariants({ variant: 'outline' })}
+									className={buttonVariants({ variant: 'soft' })}
 									to="/friends/chats/$friendUid"
 									from={Route.fullPath}
 									params={{ friendUid: profile.uid }}

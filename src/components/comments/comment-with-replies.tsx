@@ -143,7 +143,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					{replyCount > 0 && (
 						<Link
 							className={buttonVariants({
-								variant: showSubthread ? 'outline-primary' : 'ghost',
+								variant: showSubthread ? 'soft' : 'ghost',
 								size: 'sm',
 							})}
 							to={'.'}

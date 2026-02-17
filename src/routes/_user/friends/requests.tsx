@@ -30,7 +30,7 @@ function RouteComponent() {
 								aria-disabled="true"
 								className={buttonVariants({
 									size: 'sm',
-									variant: 'outline',
+									variant: 'soft',
 								})}
 							>
 								<Contact className="size-3" />{' '}

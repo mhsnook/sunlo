@@ -43,7 +43,7 @@ function PlaylistPage() {
 								{rows?.length ?? 0} flashcards in this playlist
 							</h3>
 							<Flagged>
-								<Button variant="outline-primary">
+								<Button variant="soft">
 									<HeartPlus />
 									Add all {rows?.length} flashcards
 								</Button>
