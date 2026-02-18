@@ -268,7 +268,7 @@ export const DailyReviewStateSchema = z.object({
 	day_session: z.string().length(10),
 	lang: LangSchema,
 	manifest: z.array(z.string().uuid()).nullable(),
-	stage: z.number().int().min(0).max(5).default(0),
+	stage: z.number().int().min(0).max(5).default(1),
 	uid: z.string().uuid(),
 })
 

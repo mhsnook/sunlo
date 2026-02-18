@@ -1,6 +1,6 @@
 import type { pids } from '@/types/main'
 
-import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastSuccess } from '@/components/ui/sonner'
@@ -71,6 +71,7 @@ function ReviewPageSetup() {
 // Inner component contains all the hooks - only rendered when authenticated
 function ReviewPageContent() {
 	const { lang } = Route.useParams()
+	const navigate = useNavigate()
 	const dayString = useReviewDayString()
 	const stage = useReviewStage()
 	const userId = useUserId()
@@ -254,6 +255,8 @@ function ReviewPageContent() {
 			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)
+			// Navigate to preview page for new cards before starting review
+			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
 		},
 	})
 

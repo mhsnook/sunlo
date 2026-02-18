@@ -58,6 +58,7 @@ import { Route as UserFriendsChatsFriendUidRouteImport } from './routes/_user/fr
 import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
 import { Route as UserLearnLangRequestsIndexRouteImport } from './routes/_user/learn/$lang.requests.index'
 import { Route as UserLearnLangPlaylistsIndexRouteImport } from './routes/_user/learn/$lang.playlists.index'
+import { Route as UserLearnLangReviewPreviewRouteImport } from './routes/_user/learn/$lang.review.preview'
 import { Route as UserLearnLangReviewGoRouteImport } from './routes/_user/learn/$lang.review.go'
 import { Route as UserLearnLangRequestsNewRouteImport } from './routes/_user/learn/$lang.requests.new'
 import { Route as UserLearnLangRequestsIdRouteImport } from './routes/_user/learn/$lang.requests.$id'
@@ -337,6 +338,12 @@ const UserLearnLangPlaylistsIndexRoute =
     path: '/',
     getParentRoute: () => UserLearnLangPlaylistsRoute,
   } as any)
+const UserLearnLangReviewPreviewRoute =
+  UserLearnLangReviewPreviewRouteImport.update({
+    id: '/preview',
+    path: '/preview',
+    getParentRoute: () => UserLearnLangReviewRoute,
+  } as any)
 const UserLearnLangReviewGoRoute = UserLearnLangReviewGoRouteImport.update({
   id: '/go',
   path: '/go',
@@ -437,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
   '/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
   '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
@@ -488,6 +496,7 @@ export interface FileRoutesByTo {
   '/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
   '/learn/$lang/playlists': typeof UserLearnLangPlaylistsIndexRoute
   '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
@@ -550,6 +559,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang/requests/$id': typeof UserLearnLangRequestsIdRoute
   '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
+  '/_user/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
   '/_user/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
   '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
@@ -611,6 +621,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
+    | '/learn/$lang/review/preview'
     | '/learn/$lang/playlists/'
     | '/learn/$lang/requests/'
     | '/learn/$lang/review/'
@@ -662,6 +673,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/$id'
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
+    | '/learn/$lang/review/preview'
     | '/learn/$lang/playlists'
     | '/learn/$lang/requests'
     | '/learn/$lang/review'
@@ -723,6 +735,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/requests/$id'
     | '/_user/learn/$lang/requests/new'
     | '/_user/learn/$lang/review/go'
+    | '/_user/learn/$lang/review/preview'
     | '/_user/learn/$lang/playlists/'
     | '/_user/learn/$lang/requests/'
     | '/_user/learn/$lang/review/'
@@ -1097,6 +1110,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangPlaylistsIndexRouteImport
       parentRoute: typeof UserLearnLangPlaylistsRoute
     }
+    '/_user/learn/$lang/review/preview': {
+      id: '/_user/learn/$lang/review/preview'
+      path: '/preview'
+      fullPath: '/learn/$lang/review/preview'
+      preLoaderRoute: typeof UserLearnLangReviewPreviewRouteImport
+      parentRoute: typeof UserLearnLangReviewRoute
+    }
     '/_user/learn/$lang/review/go': {
       id: '/_user/learn/$lang/review/go'
       path: '/go'
@@ -1254,11 +1274,13 @@ const UserLearnLangPlaylistsRouteWithChildren =
 
 interface UserLearnLangReviewRouteChildren {
   UserLearnLangReviewGoRoute: typeof UserLearnLangReviewGoRoute
+  UserLearnLangReviewPreviewRoute: typeof UserLearnLangReviewPreviewRoute
   UserLearnLangReviewIndexRoute: typeof UserLearnLangReviewIndexRoute
 }
 
 const UserLearnLangReviewRouteChildren: UserLearnLangReviewRouteChildren = {
   UserLearnLangReviewGoRoute: UserLearnLangReviewGoRoute,
+  UserLearnLangReviewPreviewRoute: UserLearnLangReviewPreviewRoute,
   UserLearnLangReviewIndexRoute: UserLearnLangReviewIndexRoute,
 }
 

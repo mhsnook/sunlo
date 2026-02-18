@@ -15,7 +15,6 @@ import { useReviewDay } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
-import { NewCardsPreview } from '@/components/review/new-cards-preview'
 import { Button } from '@/components/ui/button'
 import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
 
@@ -41,11 +40,6 @@ function ReviewPage() {
 	if (isLoading) return <Loader />
 	if (!day?.manifest?.length || stage === null)
 		return <Navigate to="/learn/$lang/review" from={Route.fullPath} />
-
-	// Stage 0: preview new cards before starting
-	if (stage === 0) {
-		return <NewCardsPreview manifest={day.manifest} />
-	}
 
 	return (
 		<FlashCardReviewSession manifest={day.manifest} dayString={dayString} />
@@ -188,7 +182,7 @@ function FlashCardReviewSession({
 						>
 							<ReviewSingleCard
 								pid={pid}
-								reviewStage={reviewStage}
+								reviewStage={reviewStage ?? 1}
 								dayString={dayString}
 								triggerSlide={triggerSlide}
 							/>
