@@ -129,7 +129,7 @@ function ChartsPage() {
 					</p>
 					<Link
 						to="/learn/browse"
-						className={buttonVariants({ variant: 'outline' })}
+						className={buttonVariants({ variant: 'soft' })}
 					>
 						Browse Languages
 					</Link>

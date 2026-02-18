@@ -294,7 +294,7 @@ function BrowsePage() {
 						<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
 							<Link
 								to="/login"
-								className={buttonVariants({ variant: 'outline' })}
+								className={buttonVariants({ variant: 'soft' })}
 							>
 								<LogIn /> Sign In
 							</Link>
@@ -747,7 +747,7 @@ function LanguageCard({
 				<Link
 					to="/learn/$lang/feed"
 					params={{ lang }}
-					className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
 					data-testid="explore-language-link"
 				>
 					Explore {languages[lang] ?? name}
@@ -792,7 +792,7 @@ function LanguageListItem({
 				<Link
 					to="/learn/$lang/feed"
 					params={{ lang }}
-					className={buttonVariants({ variant: 'outline', size: 'sm' })}
+					className={buttonVariants({ variant: 'soft', size: 'sm' })}
 				>
 					Explore
 				</Link>
@@ -860,7 +860,7 @@ function RequestCard({
 				<Link
 					to="/learn/$lang/requests/$id"
 					params={{ lang: request.lang, id: request.id }}
-					className={buttonVariants({ variant: 'outline', size: 'sm' })}
+					className={buttonVariants({ variant: 'soft', size: 'sm' })}
 				>
 					View Details
 				</Link>
@@ -972,7 +972,7 @@ function PlaylistCard({
 				<Link
 					to="/learn/$lang/playlists/$playlistId"
 					params={{ lang: playlist.lang, playlistId: playlist.id }}
-					className={cn(buttonVariants({ variant: 'outline' }), 'w-full')}
+					className={cn(buttonVariants({ variant: 'soft' }), 'w-full')}
 				>
 					Start Learning
 				</Link>
@@ -994,7 +994,7 @@ function CTASection() {
 				</Link>
 				<Link
 					to="/login"
-					className={buttonVariants({ variant: 'outline', size: 'lg' })}
+					className={buttonVariants({ variant: 'soft', size: 'lg' })}
 				>
 					Learn More
 				</Link>
