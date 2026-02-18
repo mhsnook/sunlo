@@ -121,7 +121,7 @@ function LoginForm() {
 						<Link
 							to="/signup"
 							from={Route.fullPath}
-							className={buttonVariants({ variant: 'secondary' })}
+							className={buttonVariants({ variant: 'neutral' })}
 							// oxlint-disable-next-line tabindex-no-positive
 							tabIndex={4}
 						>

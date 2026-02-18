@@ -235,7 +235,7 @@ const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 		</div>
 		<p>
 			<Link
-				className={buttonVariants({ variant: 'secondary' })}
+				className={buttonVariants({ variant: 'neutral' })}
 				to="/friends/$uid"
 				from={Route.fullPath}
 				params={{ uid: profile.uid }}

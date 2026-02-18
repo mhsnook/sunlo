@@ -142,10 +142,10 @@ function MiniDeckCard() {
 			</CardContent>
 			<CardFooter className="block w-full space-y-4 p-4 pt-0">
 				<div className="flex flex-row flex-wrap gap-2">
-					<Button variant="secondary" className="grow basis-40">
+					<Button variant="neutral" className="grow basis-40">
 						<HouseHeart /> Deck Home
 					</Button>
-					<Button variant="secondary" className="grow basis-60">
+					<Button variant="neutral" className="grow basis-60">
 						<Logs /> Browse Feed
 					</Button>
 				</div>
@@ -164,8 +164,8 @@ function ButtonSamples() {
 			<Button size="sm" variant="soft">
 				Soft
 			</Button>
-			<Button size="sm" variant="secondary">
-				Secondary
+			<Button size="sm" variant="neutral">
+				Neutral
 			</Button>
 			<Button size="sm" variant="red">
 				Red
@@ -583,11 +583,11 @@ function ThemesPage() {
 			<div className="bg-card space-y-3 rounded-xl border p-4 shadow">
 				<h2 className="text-lg font-semibold">Export</h2>
 				<div className="flex gap-2">
-					<Button variant="secondary" onClick={copyOne}>
+					<Button variant="neutral" onClick={copyOne}>
 						<Copy className="size-4" />
 						Copy Selected Theme
 					</Button>
-					<Button variant="secondary" onClick={copyAll}>
+					<Button variant="neutral" onClick={copyAll}>
 						<Copy className="size-4" />
 						Copy All Themes
 					</Button>

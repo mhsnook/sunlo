@@ -12,8 +12,8 @@ const buttonVariants = cva(
 				default:
 					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
 				soft: 'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
-				secondary:
-					'bg-secondary text-secondary-foreground/80 hover:bg-primary-invert/50 border border-secondary-foreground/5',
+				neutral:
+					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
 				red: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 				'red-soft':
 					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',

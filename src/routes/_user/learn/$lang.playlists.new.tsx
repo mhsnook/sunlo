@@ -345,7 +345,7 @@ function NewPlaylistPageContent() {
 							<Button
 								type="button"
 								onClick={() => window.history.back()}
-								variant="secondary"
+								variant="neutral"
 							>
 								Cancel
 							</Button>

@@ -67,7 +67,7 @@ export function AuthenticatedDialog({
 							</Link>
 							<Link
 								to="/signup"
-								className={buttonVariants({ variant: 'secondary' })}
+								className={buttonVariants({ variant: 'neutral' })}
 							>
 								Create account
 							</Link>
@@ -127,7 +127,7 @@ export function AuthenticatedDialogContent({
 					</Link>
 					<Link
 						to="/signup"
-						className={buttonVariants({ variant: 'secondary' })}
+						className={buttonVariants({ variant: 'neutral' })}
 					>
 						Create account
 					</Link>
