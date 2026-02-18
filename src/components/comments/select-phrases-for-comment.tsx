@@ -132,7 +132,7 @@ export function SelectPhrasesForComment({
 									type="button"
 									variant="dashed"
 									onClick={() => setShowCreateForm(true)}
-									className="mb-2"
+									className="mb-2 w-full"
 								>
 									<Plus className="mr-2 h-4 w-4" />
 									Create new phrase
