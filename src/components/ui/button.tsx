@@ -36,7 +36,7 @@ const buttonVariants = cva(
 				variant: 'solid',
 				intent: 'primary',
 				className:
-					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
+					'bg-6-hi-primary text-white hover:opacity-90 aria-expanded:opacity-70 border border-lc-0',
 			},
 			{
 				variant: 'solid',
@@ -55,7 +55,7 @@ const buttonVariants = cva(
 				variant: 'soft',
 				intent: 'primary',
 				className:
-					'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
+					'bg-1-mlo-primary text-7-hi-primary border border-2-mlo-primary hover:bg-lc-2',
 			},
 			{
 				variant: 'soft',

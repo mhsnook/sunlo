@@ -1,14 +1,22 @@
 @import 'tailwindcss';
+@import 'tailwind-oklch';
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap');
 @import url('https://fonts.cdnfonts.com/css/opendyslexic');
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
 @plugin 'tailwindcss-animate';
+@plugin 'tailwind-oklch/plugin';
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
+	/* tailwind-oklch hue overrides */
+	--hue-primary: 300;
+	--hue-accent: 175;
+	--hue-neutral: 270;
+	--hue-danger: 25;
+
 	--h: 300;
 	--h-off: 270;
 	--h-accent: 175;
