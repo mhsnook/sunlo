@@ -233,19 +233,19 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
-					variant="soft"
+					variant="ghost"
 					size="icon"
 					text=""
 				/>
 				<SharePhraseButton
 					text=""
 					phrase={phrase}
-					variant="soft"
+					variant="ghost"
 					size="icon"
 				/>
 				<SendPhraseToFriendButton
 					phrase={phrase}
-					variant="soft"
+					variant="ghost"
 					text=""
 					size="icon"
 				/>
