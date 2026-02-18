@@ -70,6 +70,7 @@ import { Route as UserFriendsChatsFriendUidRecommendRouteImport } from './routes
 const ThemesLazyRouteImport = createFileRoute('/themes')()
 const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
+const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
 
 const ThemesLazyRoute = ThemesLazyRouteImport.update({
@@ -91,6 +92,11 @@ const PrivacyPolicyLazyRoute = PrivacyPolicyLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/privacy-policy.lazy').then((d) => d.Route),
 )
+const MicrocopyLazyRoute = MicrocopyLazyRouteImport.update({
+  id: '/microcopy',
+  path: '/microcopy',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/microcopy.lazy').then((d) => d.Route))
 const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   id: '/components',
   path: '/components',
@@ -385,6 +391,7 @@ const UserFriendsChatsFriendUidRecommendRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/components': typeof ComponentsLazyRoute
+  '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/themes': typeof ThemesLazyRoute
@@ -444,6 +451,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/components': typeof ComponentsLazyRoute
+  '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/themes': typeof ThemesLazyRoute
@@ -498,6 +506,7 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
   '/components': typeof ComponentsLazyRoute
+  '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
   '/themes': typeof ThemesLazyRoute
@@ -559,6 +568,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/components'
+    | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
     | '/themes'
@@ -618,6 +628,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/components'
+    | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
     | '/themes'
@@ -671,6 +682,7 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_user'
     | '/components'
+    | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
     | '/themes'
@@ -733,6 +745,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
   ComponentsLazyRoute: typeof ComponentsLazyRoute
+  MicrocopyLazyRoute: typeof MicrocopyLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
   ThemesLazyRoute: typeof ThemesLazyRoute
@@ -759,6 +772,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy-policy'
       fullPath: '/privacy-policy'
       preLoaderRoute: typeof PrivacyPolicyLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/microcopy': {
+      id: '/microcopy'
+      path: '/microcopy'
+      fullPath: '/microcopy'
+      preLoaderRoute: typeof MicrocopyLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/components': {
@@ -1384,6 +1404,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
   ComponentsLazyRoute: ComponentsLazyRoute,
+  MicrocopyLazyRoute: MicrocopyLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
   ThemesLazyRoute: ThemesLazyRoute,
