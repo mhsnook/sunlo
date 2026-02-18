@@ -112,7 +112,7 @@ export function ArchiveDeckButton({
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel
-						className={buttonVariants({ variant: 'secondary' })}
+						className={buttonVariants({ variant: 'neutral' })}
 					>
 						Cancel
 					</AlertDialogCancel>

@@ -379,9 +379,6 @@ import { todayString } from '@/lib/dayjs'
 ### Component Styling Patterns
 
 ```typescript
-// Buttons
-<Button variant="default">Click me</Button>
-
 // Links styled as buttons
 <Link to="/path" className={buttonVariants({ variant: "default" })}>Go</Link>
 
@@ -391,6 +388,29 @@ import { todayString } from '@/lib/dayjs'
 // Always use generic components for consistency
 <Input /> <Textarea /> <Button />
 ```
+
+### Button Variants
+
+We use a deliberate set of button variants. Choose based on the action's role, not its visual weight:
+
+| Variant | Role | Example uses |
+|---------|------|--------------|
+| `default` | **Primary action** — the thing you most want the user to do | Save, Submit, Create account, Confirm |
+| `neutral` | **Paired counterpart** to default or red — cancel, go back, reset | Cancel, Go back, Reset, Dismiss |
+| `soft` | **Optional initiation** — opens a flow the user may choose to start | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
+| `ghost` | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles |
+| `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel | Archive, Delete (confirmation dialogs) |
+
+**Key principles:**
+
+- **Default + neutral** is the standard button pair for forms and confirmation dialogs
+- **Red + neutral** replaces default + neutral when the primary action is destructive
+- **Soft** is for _optionally initiating_ a secondary flow (e.g. opening a dialog that itself has default/neutral buttons inside). It sits between ghost and default in visual weight
+- **Ghost** is the workhorse for icon buttons and utility actions. Use it for anything that should be tappable but visually quiet
+- **Ghost → soft for active state**: When a ghost button has a toggle/active state (e.g. bookmark saved, filter active), switch to `soft` to indicate the active state:
+  ```typescript
+  variant={isActive ? 'soft' : 'ghost'}
+  ```
 
 ## Component Conventions
 

@@ -46,7 +46,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 					title="Decline this friend request?"
 					description="You can still invite them to be friends later."
 				>
-					<Button variant="secondary">
+					<Button variant="neutral">
 						<X />
 					</Button>
 					<Button

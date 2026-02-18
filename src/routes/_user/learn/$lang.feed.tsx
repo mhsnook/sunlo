@@ -306,7 +306,7 @@ function FriendsFeed() {
 							Search for a friend
 						</Link>
 						<Link
-							className={buttonVariants({ variant: 'secondary' })}
+							className={buttonVariants({ variant: 'neutral' })}
 							to="/learn/$lang/requests/new"
 							from={Route.fullPath}
 						>

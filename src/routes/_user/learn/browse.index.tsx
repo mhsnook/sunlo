@@ -636,7 +636,7 @@ function LanguagesSection() {
 				</div>
 				<div className="flex gap-1 rounded-lg border p-1">
 					<Button
-						variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+						variant={viewMode === 'grid' ? 'neutral' : 'ghost'}
 						size="sm"
 						onClick={() => setViewMode('grid')}
 					>
@@ -644,7 +644,7 @@ function LanguagesSection() {
 						<span className="sr-only">Grid View</span>
 					</Button>
 					<Button
-						variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+						variant={viewMode === 'list' ? 'neutral' : 'ghost'}
 						size="sm"
 						onClick={() => setViewMode('list')}
 					>

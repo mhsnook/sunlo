@@ -65,7 +65,7 @@ export function WhenComplete() {
 						</Button>
 						<Button
 							size="lg"
-							variant="secondary"
+							variant="neutral"
 							onClick={() => {
 								actions.skipReviewUnreviewed()
 								updateStage.mutate(3)
@@ -114,7 +114,7 @@ export function WhenComplete() {
 							as many senses as you can.
 						</p>
 						<Button
-							variant="secondary"
+							variant="neutral"
 							size="lg"
 							onClick={() => {
 								actions.skipReviewAgains()
@@ -169,7 +169,7 @@ export function WhenComplete() {
 							<Link
 								to="/learn/$lang/phrases/new"
 								params={{ lang }}
-								className={buttonVariants({ variant: 'secondary', size: 'lg' })}
+								className={buttonVariants({ variant: 'neutral', size: 'lg' })}
 							>
 								<Plus className="mr-2 h-4 w-4" />
 								Add New Phrase

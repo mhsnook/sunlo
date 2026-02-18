@@ -215,7 +215,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 							Update your daily goal
 						</Button>
 						<Button
-							variant="secondary"
+							variant="neutral"
 							type="button"
 							onClick={() => reset()}
 							disabled={!isDirty}
@@ -332,7 +332,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 							Update your goal
 						</Button>
 						<Button
-							variant="secondary"
+							variant="neutral"
 							type="button"
 							onClick={() => reset()}
 							disabled={!isDirty}
@@ -450,7 +450,7 @@ function PreferredTranslationLanguageForm({
 					<Button onClick={handleSave} disabled={!isDirty}>
 						Save preference
 					</Button>
-					<Button variant="secondary" onClick={handleReset} disabled={!isDirty}>
+					<Button variant="neutral" onClick={handleReset} disabled={!isDirty}>
 						Reset
 					</Button>
 					{preferred_translation_lang && (

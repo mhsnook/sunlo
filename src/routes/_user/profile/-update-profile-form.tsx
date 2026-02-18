@@ -98,7 +98,7 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 					<Button
 						type="button"
 						onClick={() => reset()}
-						variant="secondary"
+						variant="neutral"
 						disabled={updateProfile.isPending || !isDirty}
 					>
 						Reset

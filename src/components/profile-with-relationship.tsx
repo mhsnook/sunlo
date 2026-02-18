@@ -47,7 +47,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								description="Please confirm whether you'd like to decline this invitation"
 							>
 								<Button
-									variant="secondary"
+									variant="neutral"
 									className="size-8"
 									size="icon"
 									aria-label="Decline pending invitation"
@@ -73,7 +73,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							description={`Please confirm whether you'd like to cancel this friend request`}
 						>
 							<Button
-								variant="secondary"
+								variant="neutral"
 								className="size-8"
 								size="icon"
 								aria-label="Cancel friend request"

@@ -149,7 +149,7 @@ export function AddTranslationsDialog({
 						/>
 					</fieldset>
 					<DialogFooter className="flex flex-row justify-between">
-						<Button disabled={isSubmitting} variant="secondary">
+						<Button disabled={isSubmitting} variant="neutral">
 							Cancel
 						</Button>
 						<Button disabled={isSubmitting || !isValid} variant="default">

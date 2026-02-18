@@ -106,7 +106,7 @@ function AcceptInvitePage() {
 					</Button>
 					<Button
 						size="lg"
-						variant="secondary"
+						variant="neutral"
 						onClick={() =>
 							acceptOrDeclineMutation.mutate({ action: 'decline' })
 						}
