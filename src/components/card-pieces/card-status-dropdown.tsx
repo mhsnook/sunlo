@@ -31,6 +31,7 @@ import {
 	PhraseFullFullType,
 } from '@/lib/schemas'
 import { Tables } from '@/types/supabase'
+import type { ActionCopy } from '@/types/main'
 
 type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType
 interface CardStatusDropdownProps {
@@ -42,19 +43,16 @@ interface CardStatusDropdownProps {
 type LearningStatus = 'active' | 'skipped' | 'learned'
 type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
-export const statusStrings = {
+export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 	active: {
 		short: 'Active',
 		long: 'Card is in your deck',
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card added',
-		icon: () => (
-			<Bookmark
-				className="fill-purple-600/50 text-purple-600"
-				aria-hidden="true"
-			/>
-		),
+		failed: 'There was an error updating this card',
+		Icon: Bookmark,
+		iconClassName: 'fill-purple-600/50 text-purple-600',
 	},
 	learned: {
 		short: 'Learned',
@@ -62,7 +60,9 @@ export const statusStrings = {
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
-		icon: () => <BookmarkCheck className="text-green-600" aria-hidden="true" />,
+		failed: 'There was an error updating this card',
+		Icon: BookmarkCheck,
+		iconClassName: 'text-green-600',
 	},
 	skipped: {
 		short: 'Skipped',
@@ -70,7 +70,9 @@ export const statusStrings = {
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
-		icon: () => <BookmarkX aria-hidden="true" />,
+		failed: 'There was an error updating this card',
+		Icon: BookmarkX,
+		iconClassName: '',
 	},
 	nocard: {
 		short: 'Not in deck',
@@ -78,7 +80,9 @@ export const statusStrings = {
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
-		icon: () => <BookmarkPlus className="opacity-50" aria-hidden="true" />,
+		failed: 'There was an error adding this card to your deck',
+		Icon: BookmarkPlus,
+		iconClassName: 'opacity-50',
 	},
 	nodeck: {
 		short: 'Start deck',
@@ -86,14 +90,23 @@ export const statusStrings = {
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
-		icon: () => <PlusCircle aria-hidden="true" />,
+		failed: 'There was an error updating this deck',
+		Icon: PlusCircle,
+		iconClassName: '',
 	},
+}
+
+function StatusIcon({ choice }: { choice: ShowableActions }) {
+	const { Icon, iconClassName } = statusStrings[choice]
+	return <Icon className={iconClassName} aria-hidden="true" />
 }
 
 function StatusSpan({ choice }: { choice: ShowableActions }) {
 	return (
 		<div className="flex flex-row items-center gap-2 py-1 pe-2">
-			<span className="h-5 w-5">{statusStrings[choice].icon()}</span>
+			<span className="h-5 w-5">
+				<StatusIcon choice={choice} />
+			</span>
 			<div>
 				<p className="font-bold">{statusStrings[choice].action}</p>
 				<p className="text-opacity-80 text-sm">
@@ -219,7 +232,7 @@ export function CardStatusDropdown({
 						<span className="flex items-center justify-center [&_svg]:size-4">
 							{cardMutation.isSuccess ?
 								<CheckCircle className="text-green-500" />
-							:	statusStrings[choice].icon()}{' '}
+							:	<StatusIcon choice={choice} />}{' '}
 						</span>
 						<span className="me-1">{statusStrings[choice].short}</span>
 						<ChevronDown size={12} />
