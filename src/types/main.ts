@@ -13,7 +13,25 @@ export type Tag = {
 }
 
 export type SelectOption = { value: string; label: string }
-// Don't keep using these. use the framework's types for links and routes
+
+// Base microcopy type: short label (with icon) + long label (standalone)
+// Used as the foundation for nav links, action buttons, status labels, etc.
+export type Microcopy = {
+	short: string
+	long?: string
+	Icon?: LucideIcon
+	iconClassName?: string
+}
+
+// For actions with imperative verb forms and success/error feedback
+export type ActionCopy = Microcopy & {
+	action?: string // imperative label ("Add to deck", "Skip this phrase")
+	actionSecond?: string // helper text for the action
+	done?: string // success/confirmation toast text
+	failed?: string // error toast text
+}
+
+// TODO: migrate LinkType to extend Microcopy (rename name→short, title→long)
 export type LinkType = {
 	name: string
 	title?: string
@@ -22,7 +40,6 @@ export type LinkType = {
 		to: string
 		params?: Route['types']['params']
 	}
-	// TODO enum these for the caller
 	Icon?: LucideIcon
 	useBadge?: () => number | string | boolean | undefined | null
 }

@@ -186,7 +186,9 @@ function CardStatusSection() {
 						<Card key={key}>
 							<CardHeader className="pb-2">
 								<div className="flex items-center gap-2">
-									<span className="[&_svg]:size-5">{s.icon()}</span>
+									<span className="[&_svg]:size-5">
+										<s.Icon className={s.iconClassName} aria-hidden="true" />
+									</span>
 									<CardTitle className="text-base">{key}</CardTitle>
 								</div>
 							</CardHeader>
@@ -204,6 +206,8 @@ function CardStatusSection() {
 									<span className="text-xs">{s.actionSecond}</span>
 									<span className="text-muted-foreground text-xs">done</span>
 									<span>{s.done}</span>
+									<span className="text-muted-foreground text-xs">failed</span>
+									<span className="text-xs">{s.failed}</span>
 								</div>
 							</CardContent>
 						</Card>
