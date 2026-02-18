@@ -35,7 +35,7 @@ import {
 } from 'lucide-react'
 import languages, { LangKey } from '@/lib/languages'
 
-const links = (lang?: LangKey): Record<string, LinkType> => {
+export const links = (lang?: LangKey): Record<string, LinkType> => {
 	const constantLinks = {
 		'/': {
 			name: 'Home',
