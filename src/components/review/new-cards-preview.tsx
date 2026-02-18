@@ -1,6 +1,6 @@
 import { type CSSProperties } from 'react'
 import { Eye, Headphones, Library, Sparkles } from 'lucide-react'
-import { Link, useParams } from '@tanstack/react-router'
+import { Link, useNavigate, useParams } from '@tanstack/react-router'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
@@ -8,13 +8,7 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import {
-	useReviewActions,
-	useNewCardPids,
-	useReviewLang,
-	useReviewDayString,
-} from '@/hooks/use-review-store'
-import { useUpdateReviewStage } from '@/hooks/use-reviews'
+import { useNewCardPids } from '@/hooks/use-review-store'
 import type { pids, uuid } from '@/types/main'
 import type { TranslationType } from '@/lib/schemas'
 
@@ -68,20 +62,14 @@ function PreviewCard({ pid }: { pid: uuid }) {
 export function NewCardsPreview({ manifest }: { manifest: pids }) {
 	const { lang } = useParams({ strict: false })
 	const newCardPids = useNewCardPids()
-	const { startReview } = useReviewActions()
-	const reviewLang = useReviewLang()
-	const dayString = useReviewDayString()
-	const updateStage = useUpdateReviewStage(reviewLang, dayString)
+	const navigate = useNavigate()
 
 	const handleStartReview = () => {
-		startReview()
-		updateStage.mutate(1)
+		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
 	// Filter manifest to only show new cards in the order they appear in manifest
-	const newCardsInOrder = manifest.filter(
-		(pid) => newCardPids?.includes(pid)
-	)
+	const newCardsInOrder = manifest.filter((pid) => newCardPids?.includes(pid))
 
 	if (newCardsInOrder.length === 0) {
 		// No new cards to preview - show helpful guidance
