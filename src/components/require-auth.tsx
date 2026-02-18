@@ -136,7 +136,7 @@ function AuthGate({ message }: { message: string }) {
 
 							<Link
 								to="/signup"
-								className={buttonVariants({ variant: 'neutral' })}
+								className={buttonVariants({ intent: 'neutral' })}
 							>
 								Create account
 							</Link>

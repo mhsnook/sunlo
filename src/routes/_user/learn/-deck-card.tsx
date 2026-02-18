@@ -68,7 +68,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 						:	<Link
 								to="/learn/$lang"
 								className={cn(
-									buttonVariants({ variant: 'neutral' }),
+									buttonVariants({ intent: 'neutral' }),
 									'grow basis-40'
 								)}
 								params={{ lang: deck.lang }}
@@ -81,7 +81,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 							<Link
 								to="/learn/$lang/feed"
 								className={cn(
-									buttonVariants({ variant: 'neutral' }),
+									buttonVariants({ intent: 'neutral' }),
 									`grow basis-60`
 								)}
 								params={{ lang: deck.lang }}

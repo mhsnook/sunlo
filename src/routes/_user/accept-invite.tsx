@@ -106,7 +106,7 @@ function AcceptInvitePage() {
 					</Button>
 					<Button
 						size="lg"
-						variant="neutral"
+						intent="neutral"
 						onClick={() =>
 							acceptOrDeclineMutation.mutate({ action: 'decline' })
 						}
@@ -174,7 +174,7 @@ const ShowAccepted = ({
 						to="/friends/$uid"
 						from={Route.fullPath}
 						params={{ uid: friend.uid }}
-						className={buttonVariants({ variant: 'default' })}
+						className={buttonVariants()}
 					>
 						Check out their profile
 					</Link>

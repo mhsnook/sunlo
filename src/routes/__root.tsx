@@ -59,16 +59,10 @@ function NotFoundComponent() {
 						<Link to="/" className={buttonVariants({ variant: 'soft' })}>
 							Go home
 						</Link>
-						<Link
-							to="/learn"
-							className={buttonVariants({ variant: 'soft' })}
-						>
+						<Link to="/learn" className={buttonVariants({ variant: 'soft' })}>
 							Learning dashboard
 						</Link>
-						<Link
-							to="/profile"
-							className={buttonVariants({ variant: 'soft' })}
-						>
+						<Link to="/profile" className={buttonVariants({ variant: 'soft' })}>
 							Your profile
 						</Link>
 					</div>

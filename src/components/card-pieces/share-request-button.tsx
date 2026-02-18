@@ -17,9 +17,6 @@ export function ShareRequestButton({
 }: {
 	id: uuid
 	text?: string
-	variant?: string
-	size?: string
-	className?: string
 } & ButtonProps) {
 	const { data: request } = useRequest(id)
 

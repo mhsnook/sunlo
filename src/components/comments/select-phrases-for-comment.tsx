@@ -130,7 +130,7 @@ export function SelectPhrasesForComment({
 							{!showCreateForm && (
 								<Button
 									type="button"
-									variant="dashed-w-full"
+									variant="dashed"
 									onClick={() => setShowCreateForm(true)}
 									className="mb-2"
 								>

@@ -12,8 +12,6 @@ export default function CopyLinkButton({
 }: {
 	url?: string
 	text?: string
-	variant?: string
-	size?: string
 	collapse?: boolean
 } & ButtonProps) {
 	const copy = () => copyLink(url)

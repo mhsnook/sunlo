@@ -81,7 +81,8 @@ export function ArchiveDeckButton({
 						Restore deck
 					</Button>
 				:	<Button
-						variant="red-soft"
+						intent="destructive"
+						variant="soft"
 						disabled={!!archived}
 						data-testid="archive-deck-button"
 					>
@@ -111,9 +112,7 @@ export function ArchiveDeckButton({
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
-					<AlertDialogCancel
-						className={buttonVariants({ variant: 'neutral' })}
-					>
+					<AlertDialogCancel className={buttonVariants({ intent: 'neutral' })}>
 						Cancel
 					</AlertDialogCancel>
 					{archived ?
@@ -124,7 +123,7 @@ export function ArchiveDeckButton({
 							Restore
 						</AlertDialogAction>
 					:	<AlertDialogAction
-							className={buttonVariants({ variant: 'red' })}
+							className={buttonVariants({ intent: 'destructive' })}
 							onClick={() => mutation.mutate()}
 							data-testid="confirm-archive-button"
 						>

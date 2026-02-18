@@ -326,7 +326,7 @@ function ActionCard({
 						to={linkTo}
 						className={cn(
 							buttonVariants({
-								variant: isPrimary ? 'default' : 'soft',
+								variant: isPrimary ? 'solid' : 'soft',
 							}),
 							'w-full'
 						)}

@@ -92,7 +92,7 @@ function ForgotPasswordPage() {
 							<Button disabled={recoveryMutation.isPending}>Submit</Button>
 							<Link
 								to="/login"
-								className={buttonVariants({ variant: 'neutral' })}
+								className={buttonVariants({ intent: 'neutral' })}
 							>
 								Back to login
 							</Link>

@@ -161,7 +161,7 @@ export function ShowSelected({
 							{option.label}
 							<Button
 								size="icon"
-								variant="badge-outline"
+								variant="badge"
 								aria-label={`Remove ${option.label}`}
 								onKeyDown={(e) => {
 									if (e.key === 'Enter') {

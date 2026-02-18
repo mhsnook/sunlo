@@ -162,7 +162,6 @@ function CalloutContent({
 					params={{ lang }}
 					onClick={setClosedMobile}
 					className={buttonVariants({
-						variant: 'default',
 						size: 'sm',
 						className: 'mt-2 w-full',
 					})}

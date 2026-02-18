@@ -61,13 +61,13 @@ export function AuthenticatedDialog({
 							<Link
 								to="/login"
 								search={{ redirectedFrom: window.location.href }}
-								className={buttonVariants({ variant: 'default' })}
+								className={buttonVariants()}
 							>
 								Log in
 							</Link>
 							<Link
 								to="/signup"
-								className={buttonVariants({ variant: 'neutral' })}
+								className={buttonVariants({ intent: 'neutral' })}
 							>
 								Create account
 							</Link>
@@ -121,14 +121,11 @@ export function AuthenticatedDialogContent({
 					<Link
 						to="/login"
 						search={{ redirectedFrom: window.location.href }}
-						className={buttonVariants({ variant: 'default' })}
+						className={buttonVariants()}
 					>
 						Log in
 					</Link>
-					<Link
-						to="/signup"
-						className={buttonVariants({ variant: 'neutral' })}
-					>
+					<Link to="/signup" className={buttonVariants({ intent: 'neutral' })}>
 						Create account
 					</Link>
 				</div>

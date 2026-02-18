@@ -65,7 +65,7 @@ export function WhenComplete() {
 						</Button>
 						<Button
 							size="lg"
-							variant="neutral"
+							intent="neutral"
 							onClick={() => {
 								actions.skipReviewUnreviewed()
 								updateStage.mutate(3)
@@ -114,7 +114,7 @@ export function WhenComplete() {
 							as many senses as you can.
 						</p>
 						<Button
-							variant="neutral"
+							intent="neutral"
 							size="lg"
 							onClick={() => {
 								actions.skipReviewAgains()
@@ -161,7 +161,7 @@ export function WhenComplete() {
 							<Link
 								to="/learn/$lang/feed"
 								params={{ lang }}
-								className={buttonVariants({ variant: 'default', size: 'lg' })}
+								className={buttonVariants({ size: 'lg' })}
 							>
 								<Newspaper className="mr-2 h-4 w-4" />
 								Back to Feed
@@ -169,7 +169,7 @@ export function WhenComplete() {
 							<Link
 								to="/learn/$lang/phrases/new"
 								params={{ lang }}
-								className={buttonVariants({ variant: 'neutral', size: 'lg' })}
+								className={buttonVariants({ intent: 'neutral', size: 'lg' })}
 							>
 								<Plus className="mr-2 h-4 w-4" />
 								Add New Phrase

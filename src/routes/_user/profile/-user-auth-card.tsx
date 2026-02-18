@@ -18,7 +18,7 @@ export default function UserAuthCard() {
 				/>
 				<Link
 					to="/profile/change-email"
-					className={buttonVariants({ variant: 'neutral' })}
+					className={buttonVariants({ intent: 'neutral' })}
 				>
 					Change
 				</Link>
@@ -29,7 +29,7 @@ export default function UserAuthCard() {
 
 				<Link
 					to="/profile/change-password"
-					className={buttonVariants({ variant: 'neutral' })}
+					className={buttonVariants({ intent: 'neutral' })}
 				>
 					Change
 				</Link>

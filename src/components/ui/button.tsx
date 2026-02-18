@@ -9,20 +9,19 @@ const buttonVariants = cva(
 	{
 		variants: {
 			variant: {
-				default:
-					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
-				soft: 'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
-				neutral:
-					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
-				red: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-				'red-soft':
-					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
+				solid: '',
+				soft: '',
 				ghost:
-					'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
-				'badge-outline':
-					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
-				'dashed-w-full':
+					'text-muted-foreground hover:bg-primary/10 hover:text-foreground shadow-none',
+				badge:
+					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary shadow-none',
+				dashed:
 					'w-full border-2 border-dashed border-border/50 hover:border-border hover:text-foreground shadow-none hover:shadow-sm',
+			},
+			intent: {
+				primary: '',
+				neutral: '',
+				destructive: '',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2',
@@ -31,8 +30,43 @@ const buttonVariants = cva(
 				icon: 'size-8 rounded-xl rounded-squircle shrink-0 aspect-square',
 			},
 		},
+		compoundVariants: [
+			// Solid variants
+			{
+				variant: 'solid',
+				intent: 'primary',
+				className:
+					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
+			},
+			{
+				variant: 'solid',
+				intent: 'neutral',
+				className:
+					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
+			},
+			{
+				variant: 'solid',
+				intent: 'destructive',
+				className:
+					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+			},
+			// Soft variants
+			{
+				variant: 'soft',
+				intent: 'primary',
+				className:
+					'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
+			},
+			{
+				variant: 'soft',
+				intent: 'destructive',
+				className:
+					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
+			},
+		],
 		defaultVariants: {
-			variant: 'default',
+			variant: 'solid',
+			intent: 'primary',
 			size: 'default',
 		},
 	}
@@ -50,6 +84,7 @@ export { buttonVariants }
 const Button = ({
 	className,
 	variant,
+	intent,
 	size,
 	asChild = false,
 	...props
@@ -57,7 +92,7 @@ const Button = ({
 	const Comp = asChild ? Slot : 'button'
 	return (
 		<Comp
-			className={cn(buttonVariants({ variant, size }), className)}
+			className={cn(buttonVariants({ variant, intent, size }), className)}
 			data-slot="button"
 			{...props}
 		/>

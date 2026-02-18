@@ -117,7 +117,6 @@ function NewDeckFormInner() {
 							<Button
 								data-testid="start-learning-button"
 								type="submit"
-								variant="default"
 								size="lg"
 								className="my-4"
 								disabled={createNewDeck.isPending || !isValid}
@@ -129,7 +128,7 @@ function NewDeckFormInner() {
 
 							<Link
 								to={`/friends/search`}
-								className={buttonVariants({ variant: 'neutral' })}
+								className={buttonVariants({ intent: 'neutral' })}
 							>
 								Find your friends and contacts
 							</Link>

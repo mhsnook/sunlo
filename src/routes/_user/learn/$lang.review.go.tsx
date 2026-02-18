@@ -115,7 +115,6 @@ function FlashCardReviewSession({
 						<>
 							<Button
 								size="icon"
-								variant="default"
 								onClick={() => animateTransition(gotoPrevious, 'right')}
 								disabled={currentCardIndex === 0 || isAnimating}
 								aria-label="Previous card"
@@ -127,7 +126,6 @@ function FlashCardReviewSession({
 							</div>
 							<Button
 								size="icon"
-								variant="default"
 								onClick={() => animateTransition(gotoNext, 'left')}
 								disabled={atTheEnd || isAnimating}
 								aria-label="Next card"

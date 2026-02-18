@@ -14,8 +14,6 @@ export default function SharePhraseButton({
 }: {
 	phrase: PhraseFullFilteredType
 	text?: string
-	variant?: string
-	size?: string
 } & ButtonProps) {
 	const sharePhrase = () => {
 		if (!phrase) return

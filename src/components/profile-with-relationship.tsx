@@ -23,7 +23,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 						</span>
 					: !profile.relation || profile.relation.status === 'unconnected' ?
 						<Button
-							variant="default"
 							className="size-8"
 							size="icon"
 							aria-label="Send friend request"
@@ -34,7 +33,6 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 					: profile.relation.status === 'pending' && isMostRecentByThem ?
 						<>
 							<Button
-								variant="default"
 								className="size-8"
 								size="icon"
 								aria-label="Accept pending invitation"
@@ -47,7 +45,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								description="Please confirm whether you'd like to decline this invitation"
 							>
 								<Button
-									variant="neutral"
+									intent="neutral"
 									className="size-8"
 									size="icon"
 									aria-label="Decline pending invitation"
@@ -55,7 +53,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 									<X className="size-6 p-0" />
 								</Button>
 								<Button
-									variant="red"
+									intent="destructive"
 									aria-label="Confirm: Decline friend request"
 									onClick={() => inviteResponseMutation.mutate('decline')}
 								>
@@ -73,7 +71,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 							description={`Please confirm whether you'd like to cancel this friend request`}
 						>
 							<Button
-								variant="neutral"
+								intent="neutral"
 								className="size-8"
 								size="icon"
 								aria-label="Cancel friend request"
@@ -81,7 +79,7 @@ export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 								<X className="size-6 p-0" />
 							</Button>
 							<Button
-								variant="red"
+								intent="destructive"
 								aria-label="Confirm: Cancel friend request"
 								onClick={() => inviteResponseMutation.mutate('cancel')}
 							>

@@ -87,7 +87,7 @@ export function ReviewSingleCard({
 			<Flagged name="text_to_speech">
 				<Button
 					size="icon"
-					variant="neutral"
+					intent="neutral"
 					onClick={() => playAudio(phrase.text)}
 					aria-label="Play phrase"
 				>
@@ -110,7 +110,7 @@ export function ReviewSingleCard({
 					<Flagged name="text_to_speech">
 						<Button
 							size="icon"
-							variant="neutral"
+							intent="neutral"
 							onClick={() => playAudio(trans.text)}
 							aria-label="Play translation"
 						>
@@ -158,7 +158,6 @@ export function ReviewSingleCard({
 						className="mb-3 grid w-full max-w-160 grid-cols-4"
 					>
 						<Button
-							variant="default"
 							data-testid="rating-again-button"
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
@@ -172,7 +171,6 @@ export function ReviewSingleCard({
 							Again ({nextIntervals[0]})
 						</Button>
 						<Button
-							variant="default"
 							data-testid="rating-hard-button"
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
@@ -184,7 +182,6 @@ export function ReviewSingleCard({
 							Hard ({nextIntervals[1]})
 						</Button>
 						<Button
-							variant="default"
 							data-testid="rating-good-button"
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
@@ -196,7 +193,6 @@ export function ReviewSingleCard({
 							Good ({nextIntervals[2]})
 						</Button>
 						<Button
-							variant="default"
 							data-testid="rating-easy-button"
 							className={cn(
 								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! hover:border-white! hover:bg-blue-600',

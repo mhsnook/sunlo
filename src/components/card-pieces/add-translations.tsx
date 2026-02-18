@@ -149,12 +149,10 @@ export function AddTranslationsDialog({
 						/>
 					</fieldset>
 					<DialogFooter className="flex flex-row justify-between">
-						<Button disabled={isSubmitting} variant="neutral">
+						<Button disabled={isSubmitting} intent="neutral">
 							Cancel
 						</Button>
-						<Button disabled={isSubmitting || !isValid} variant="default">
-							Add translation
-						</Button>
+						<Button disabled={isSubmitting || !isValid}>Add translation</Button>
 					</DialogFooter>
 				</form>
 			</AuthenticatedDialogContent>

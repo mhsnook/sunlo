@@ -406,7 +406,7 @@ function ReviewPageContent() {
 									<DrawerTrigger asChild>
 										<Button
 											className="grow font-normal"
-											variant="neutral"
+											intent="neutral"
 											size="lg"
 											disabled={algosEmpty}
 										>

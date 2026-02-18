@@ -110,7 +110,7 @@ function AllDecksArchived() {
 				<Link
 					to="/learn/archived"
 					data-testid="view-archived-decks-link"
-					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
+					className={buttonVariants({ intent: 'neutral', size: 'lg' })}
 				>
 					<Archive size={14} /> View archived decks{' '}
 					<ChevronsRight className="h-6 w-5" />
@@ -139,7 +139,7 @@ function BrowsePrompt() {
 				</Link>
 				<Link
 					to="/learn/browse"
-					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
+					className={buttonVariants({ intent: 'neutral', size: 'lg' })}
 				>
 					<Compass size={14} /> Browse languages
 					<ChevronsRight className="h-6 w-5" />

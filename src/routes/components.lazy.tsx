@@ -197,9 +197,11 @@ function ComponentsPage() {
 								Default
 							</Button>
 							<Button variant="soft">Soft</Button>
-							<Button variant="neutral">Neutral</Button>
-							<Button variant="red">Red</Button>
-							<Button variant="red-soft">Red Soft</Button>
+							<Button intent="neutral">Neutral</Button>
+							<Button intent="destructive">Red</Button>
+							<Button intent="destructive" variant="soft">
+								Red Soft
+							</Button>
 							<Button variant="ghost">Ghost</Button>
 						</div>
 					</CardContent>

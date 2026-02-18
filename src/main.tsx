@@ -33,7 +33,7 @@ const router = createRouter({
 	defaultErrorComponent: ({ error, reset }) => (
 		<ShowError show={!!error}>
 			<p>Error: {error?.message}</p>
-			<Button variant="red-soft" onClick={() => reset()}>
+			<Button intent="destructive" variant="soft" onClick={() => reset()}>
 				Refresh the page
 			</Button>
 		</ShowError>

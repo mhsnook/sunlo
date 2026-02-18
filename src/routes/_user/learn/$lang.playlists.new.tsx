@@ -317,7 +317,8 @@ function NewPlaylistPageContent() {
 										<Button
 											type="button"
 											onClick={() => removePhrase(phrase.phrase_id)}
-											variant="red-soft"
+											intent="destructive"
+											variant="soft"
 											size="icon"
 											aria-label="Remove phrase"
 										>
@@ -345,7 +346,7 @@ function NewPlaylistPageContent() {
 							<Button
 								type="button"
 								onClick={() => window.history.back()}
-								variant="neutral"
+								intent="neutral"
 							>
 								Cancel
 							</Button>

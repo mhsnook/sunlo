@@ -99,7 +99,7 @@ function ChangeEmailPage() {
 							</Button>
 							<Link
 								to="/profile"
-								className={buttonVariants({ variant: 'neutral' })}
+								className={buttonVariants({ intent: 'neutral' })}
 							>
 								Back to profile
 							</Link>

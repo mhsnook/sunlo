@@ -30,7 +30,7 @@ export function ConfirmDestructiveActionDialog({
 				</DialogHeader>
 				<DialogFooter className="gap-2">
 					<DialogClose asChild>
-						<Button variant="neutral">Go back</Button>
+						<Button intent="neutral">Go back</Button>
 					</DialogClose>
 					{children[1]}
 				</DialogFooter>

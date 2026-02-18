@@ -146,20 +146,14 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 						<Link
 							to="/learn/$lang/feed"
 							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
-							)}
+							className={cn(buttonVariants({ size: 'lg' }), 'grow basis-120')}
 						>
 							<Logs /> Browse the {languages[lang]} feed
 						</Link>
 					:	<Link
 							to="/learn/$lang/review"
 							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
-							)}
+							className={cn(buttonVariants({ size: 'lg' }), 'grow basis-120')}
 						>
 							<Rocket /> Review my {languages[lang]} flashcards
 						</Link>
@@ -169,7 +163,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/phrases/new"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'neutral' }),
+								buttonVariants({ intent: 'neutral' }),
 								'@lg:rounded-r-none'
 							)}
 						>
@@ -180,7 +174,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/requests/new"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'neutral' }),
+								buttonVariants({ intent: 'neutral' }),
 								'@lg:rounded-l-none'
 							)}
 						>
@@ -192,7 +186,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 						<Link
 							to="/friends"
 							className={cn(
-								buttonVariants({ variant: 'neutral' }),
+								buttonVariants({ intent: 'neutral' }),
 								'grow basis-40'
 							)}
 						>
@@ -203,7 +197,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/feed"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'neutral' }),
+								buttonVariants({ intent: 'neutral' }),
 								'grow basis-40'
 							)}
 						>
@@ -258,7 +252,7 @@ function DeckSettings() {
 				<Link
 					to="/learn/$lang/deck-settings"
 					from={Route.fullPath}
-					className={buttonVariants({ variant: 'neutral' })}
+					className={buttonVariants({ intent: 'neutral' })}
 				>
 					Update Settings
 				</Link>
