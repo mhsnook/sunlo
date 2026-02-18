@@ -33,8 +33,7 @@ import { Tables } from '@/types/supabase'
 import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
-import { useIntro } from '@/hooks/use-intro-seen'
-import { DeckSettingsIntro, DeckSettingsCallout } from '@/components/intros'
+import { InfoDialog } from '@/components/info-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -46,8 +45,6 @@ function DeckSettingsPage() {
 	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
-	const { isOpen, showCallout, handleClose, handleReopen } =
-		useIntro('deck-settings')
 
 	// Require auth for deck settings
 	if (!isAuth) {
@@ -64,46 +61,43 @@ function DeckSettingsPage() {
 		else throw new Error(`No deck found for language "${lang}"`)
 
 	return (
-		<>
-			{/* Settings intro dialog for first-time visitors */}
-			<DeckSettingsIntro open={isOpen} onClose={handleClose} />
-
-			{/* Small callout for returning users */}
-			{showCallout && (
-				<div className="mb-4">
-					<DeckSettingsCallout onShowMore={handleReopen} />
-				</div>
-			)}
-
-			<Card style={style} data-testid="deck-settings-page">
-				<CardHeader>
-					<CardTitle>Deck Settings</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-6">
-					{!meta.archived ?
-						<>
-							<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
-							<DailyGoalForm
-								lang={meta.lang}
-								daily_review_goal={meta.daily_review_goal}
-							/>
-							<PreferredTranslationLanguageForm
-								lang={meta.lang}
-								preferred_translation_lang={meta.preferred_translation_lang}
-							/>
-						</>
-					:	null}
-					<CardHeader className="rounded shadow">
-						<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
-							<span>
-								{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
-							</span>
+		<Card style={style} data-testid="deck-settings-page">
+			<CardHeader>
+				<CardTitle>Deck Settings</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				{!meta.archived ?
+					<>
+						<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
+						<DailyGoalForm
+							lang={meta.lang}
+							daily_review_goal={meta.daily_review_goal}
+						/>
+						<PreferredTranslationLanguageForm
+							lang={meta.lang}
+							preferred_translation_lang={meta.preferred_translation_lang}
+						/>
+					</>
+				:	null}
+				<CardHeader className="rounded shadow">
+					<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
+						<span>
+							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
+						</span>
+						<span className="flex items-center gap-1">
+							<InfoDialog title="Archive Deck">
+								<p>
+									If you want to pause learning this language, you can archive
+									the deck. Your progress is saved and you can reactivate
+									anytime.
+								</p>
+							</InfoDialog>
 							<ArchiveDeckButton lang={meta.lang} archived={meta.archived} />
-						</CardTitle>
-					</CardHeader>
-				</CardContent>
-			</Card>
-		</>
+						</span>
+					</CardTitle>
+				</CardHeader>
+			</CardContent>
+		</Card>
 	)
 }
 
@@ -186,8 +180,44 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 	return (
 		<div className="rounded shadow">
 			<CardHeader className="pb-0">
-				<CardTitle>
+				<CardTitle className="flex items-center justify-between">
 					<span className="h4">Your daily goal</span>
+					<InfoDialog title="Daily Goal">
+						<p>
+							This controls how many <em>new</em> cards you see each day. A
+							higher number means faster progress but more daily reviews. Most
+							learners do well with 10-15 new cards per day.
+						</p>
+						<div className="mx-2 space-y-3">
+							<div className="bg-primary/5 flex items-start gap-3 rounded-2xl px-4 py-3">
+								<Cat className="text-primary mt-0.5 size-7 shrink-0" />
+								<div>
+									<p className="font-semibold">Relaxed — 10 new cards</p>
+									<p className="text-foreground/70">
+										~45 total reviews per day
+									</p>
+								</div>
+							</div>
+							<div className="bg-primary/5 flex items-start gap-3 rounded-2xl px-4 py-3">
+								<IceCreamBowl className="text-primary mt-0.5 size-7 shrink-0" />
+								<div>
+									<p className="font-semibold">Standard — 15 new cards</p>
+									<p className="text-foreground/70">
+										~80 total reviews per day
+									</p>
+								</div>
+							</div>
+							<div className="bg-primary/5 flex items-start gap-3 rounded-2xl px-4 py-3">
+								<Rocket className="text-primary mt-0.5 size-7 shrink-0" />
+								<div>
+									<p className="font-semibold">Serious — 20 new cards</p>
+									<p className="text-foreground/70">
+										~125 total reviews per day
+									</p>
+								</div>
+							</div>
+						</div>
+					</InfoDialog>
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -305,8 +335,15 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 	return (
 		<div className="rounded shadow">
 			<CardHeader className="pb-0">
-				<CardTitle>
+				<CardTitle className="flex items-center justify-between">
 					<span className="h4">Your learning goals</span>
+					<InfoDialog title="Learning Goal">
+						<p>
+							This helps us understand your motivation and may influence content
+							recommendations in the future. Choose what best describes why
+							you're learning this language.
+						</p>
+					</InfoDialog>
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
@@ -422,8 +459,15 @@ function PreferredTranslationLanguageForm({
 	return (
 		<div className="rounded shadow">
 			<CardHeader className="pb-0">
-				<CardTitle>
+				<CardTitle className="flex items-center justify-between">
 					<span className="h4">Preferred translation language</span>
+					<InfoDialog title="Translation Language">
+						<p>
+							By default, translations show in your profile's primary language.
+							If you want this deck to show translations in a different language
+							(e.g., Spanish instead of English), you can override it here.
+						</p>
+					</InfoDialog>
 				</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-4">
