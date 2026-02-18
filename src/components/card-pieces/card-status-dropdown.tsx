@@ -210,7 +210,7 @@ export function CardStatusDropdown({
 			<DropdownMenu>
 				<DropdownMenuTrigger className={className} asChild>
 					<Button
-						variant="secondary"
+						variant={card?.status === 'active' ? 'soft' : 'ghost'}
 						size="sm"
 						className="m-0 min-w-28 justify-between px-1.5"
 						data-name="card-status-dropdown"
