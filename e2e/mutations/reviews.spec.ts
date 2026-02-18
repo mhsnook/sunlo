@@ -48,15 +48,15 @@ test.describe.serial('Review Mutations', () => {
 		// Wait for toast message
 		await expect(page.getByText(/Ready to go!/i)).toBeVisible()
 
-		// Should navigate to review go page
-		await page.waitForURL(new RegExp(`/learn/${TEST_LANG}/review/go`))
+		// Should navigate to review preview page
+		await page.waitForURL(new RegExp(`/learn/${TEST_LANG}/review/preview`))
 
 		// Expect to see the new cards preview screen (either with new cards or the "no new cards" variant)
 		const previewNewCards = page.getByText('Preview New Cards')
 		const noNewCards = page.getByText("No new cards in today's review")
 		await expect(previewNewCards.or(noNewCards)).toBeVisible()
 
-		// Click "Start Review" to proceed past the preview
+		// Click "Start Review" to proceed to the actual review
 		const startReviewButton = page.getByRole('button', { name: 'Start Review' })
 		await startReviewButton.scrollIntoViewIfNeeded()
 		await startReviewButton.click()
@@ -105,19 +105,10 @@ test.describe.serial('Review Mutations', () => {
 		await expect(continueBtn).toBeVisible({ timeout: 10000 })
 		await continueBtn.click()
 
-		// After clicking Continue Review, wait for navigation to /review/go
+		// After clicking Continue Review, wait for navigation to /review/go (skips preview)
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`), {
 			timeout: 10000,
 		})
-
-		// Handle the new cards preview screen (stage 0 resets per browser session)
-		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
-		const cardNav = page.getByText(/Card \d+ of \d+/)
-		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
-		if (await startReviewBtn.isVisible()) {
-			await startReviewBtn.scrollIntoViewIfNeeded()
-			await startReviewBtn.click()
-		}
 
 		// Wait for the card review UI to be ready
 		await expect(page.getByText(/Card \d+ of \d+/)).toBeVisible({
@@ -297,15 +288,6 @@ test.describe.serial('Review Mutations', () => {
 			timeout: 10000,
 		})
 
-		// Handle new cards preview if it appears
-		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
-		const cardNav = page.getByText(/Card \d+ of \d+/)
-		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
-		if (await startReviewBtn.isVisible()) {
-			await startReviewBtn.scrollIntoViewIfNeeded()
-			await startReviewBtn.click()
-		}
-
 		// Get the manifest so we know the total card count
 		const { data: sessionState } = await getReviewSessionState(
 			TEST_USER_UID,
@@ -435,18 +417,10 @@ test.describe.serial('Review Mutations', () => {
 			timeout: 10000,
 		})
 
-		// Handle new cards preview if it appears (stage 1 + fresh previewSeen state)
-		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
+		// Continue goes directly to /review/go — no preview screen
 		const completeScreen = page.getByTestId('review-complete-page')
-		await expect(startReviewBtn.or(completeScreen)).toBeVisible({
-			timeout: 10000,
-		})
-		if (await startReviewBtn.isVisible()) {
-			await startReviewBtn.scrollIntoViewIfNeeded()
-			await startReviewBtn.click()
-		}
 
-		// Now we should see the WhenComplete screen (atTheEnd because all cards reviewed)
+		// Should see the WhenComplete screen (atTheEnd because all cards reviewed)
 		await expect(completeScreen).toBeVisible({ timeout: 10000 })
 
 		// Count "again" cards from DB (day_first_review=true, score=1)

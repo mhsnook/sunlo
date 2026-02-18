@@ -24,14 +24,13 @@ import { calculateFSRS, type Score } from '@/lib/fsrs'
 
 /*
 	null: not yet initialised (zustand store only)
-	0. preview new cards
 	1. doing the first review
 	2. going back for unreviewed
 	3. skip unreviewed and see screen asking to re-review
 	4. doing re-reviews
 	5. skip re-reviews and end
 */
-export type ReviewStages = null | 0 | 1 | 2 | 3 | 4 | 5
+export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
 	[key: uuid]: CardReviewType
 }
@@ -403,7 +402,7 @@ export const useOneCardReviews = (
  */
 export function useUpdateReviewStage(lang: string, day_session: string) {
 	return useMutation({
-		mutationFn: async (stage: ReviewStages) => {
+		mutationFn: async (stage: number) => {
 			const { data } = await supabase
 				.from('user_deck_review_state')
 				.update({ stage })

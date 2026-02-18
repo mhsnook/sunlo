@@ -1567,7 +1567,7 @@ create table if not exists "public"."user_deck_review_state" (
 	"day_session" "date" not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"manifest" "jsonb",
-	"stage" smallint default 0 not null
+	"stage" smallint default 1 not null
 );
 
 alter table "public"."user_deck_review_state" owner to "postgres";

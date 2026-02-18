@@ -54,10 +54,12 @@ test.describe('Deck Workflow Navigation', () => {
 		await expect(startButton).toBeVisible()
 		await startButton.click()
 
-		// Should be on review/go page
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review/go`))
+		// Should be on review/preview or review/go page depending on fresh vs continue
+		await expect(page).toHaveURL(
+			new RegExp(`/learn/${TEST_LANG}/review/(preview|go)`)
+		)
 
-		// Handle the preview new cards screen if it appears
+		// Handle the preview new cards screen if it appears (fresh start lands on /preview)
 		const startReviewBtn = page.getByRole('button', { name: 'Start Review' })
 		const cardNav = page.getByText(/card \d+ of \d+/i)
 		await expect(startReviewBtn.or(cardNav)).toBeVisible({ timeout: 10000 })
@@ -66,7 +68,7 @@ test.describe('Deck Workflow Navigation', () => {
 			await startReviewBtn.click()
 		}
 
-		// Should see a card
+		// Should see a card on review/go
 		await expect(page.getByText(/card \d+ of \d+/i)).toBeVisible()
 
 		// DON'T click any review buttons - just verify the page loaded

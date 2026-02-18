@@ -27,7 +27,6 @@ type ReviewActions = {
 	gotoNext: () => void
 	gotoEnd: () => void
 	gotoPrevious: () => void
-	startReview: () => void
 	init: (
 		lang: string,
 		dayString: string,
@@ -79,14 +78,13 @@ export function createReviewStore(lang: string, dayString: string) {
 							set((state) => ({
 								currentCardIndex: state.countCards,
 							})),
-						startReview: () => set({ stage: 1 }),
 
 						init: (
 							lang: string,
 							dayString: string,
 							countCards: number,
 							newCardPids: pids | null = null,
-							stage: ReviewStages = 0,
+							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
 							set((state) => {
