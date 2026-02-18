@@ -87,7 +87,7 @@ export function ReviewSingleCard({
 			<Flagged name="text_to_speech">
 				<Button
 					size="icon"
-					variant="secondary"
+					variant="neutral"
 					onClick={() => playAudio(phrase.text)}
 					aria-label="Play phrase"
 				>
@@ -110,7 +110,7 @@ export function ReviewSingleCard({
 					<Flagged name="text_to_speech">
 						<Button
 							size="icon"
-							variant="secondary"
+							variant="neutral"
 							onClick={() => playAudio(trans.text)}
 							aria-label="Play translation"
 						>

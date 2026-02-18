@@ -169,7 +169,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/phrases/new"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'secondary' }),
+								buttonVariants({ variant: 'neutral' }),
 								'@lg:rounded-r-none'
 							)}
 						>
@@ -180,7 +180,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/requests/new"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'secondary' }),
+								buttonVariants({ variant: 'neutral' }),
 								'@lg:rounded-l-none'
 							)}
 						>
@@ -192,7 +192,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 						<Link
 							to="/friends"
 							className={cn(
-								buttonVariants({ variant: 'secondary' }),
+								buttonVariants({ variant: 'neutral' }),
 								'grow basis-40'
 							)}
 						>
@@ -203,7 +203,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							to="/learn/$lang/feed"
 							from={Route.fullPath}
 							className={cn(
-								buttonVariants({ variant: 'secondary' }),
+								buttonVariants({ variant: 'neutral' }),
 								'grow basis-40'
 							)}
 						>
@@ -258,7 +258,7 @@ function DeckSettings() {
 				<Link
 					to="/learn/$lang/deck-settings"
 					from={Route.fullPath}
-					className={buttonVariants({ variant: 'secondary' })}
+					className={buttonVariants({ variant: 'neutral' })}
 				>
 					Update Settings
 				</Link>

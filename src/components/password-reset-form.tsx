@@ -81,7 +81,7 @@ export function PasswordResetForm() {
 						</Button>
 						<Link
 							to="/profile"
-							className={buttonVariants({ variant: 'secondary' })}
+							className={buttonVariants({ variant: 'neutral' })}
 						>
 							Back to profile
 						</Link>
