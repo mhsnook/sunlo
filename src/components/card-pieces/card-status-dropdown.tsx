@@ -42,7 +42,7 @@ interface CardStatusDropdownProps {
 type LearningStatus = 'active' | 'skipped' | 'learned'
 type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
-const statusStrings = {
+export const statusStrings = {
 	active: {
 		short: 'Active',
 		long: 'Card is in your deck',
