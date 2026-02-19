@@ -194,10 +194,10 @@ function CardStatusSection() {
 							</CardHeader>
 							<CardContent className="space-y-1 text-sm">
 								<div className="grid grid-cols-[5.5rem_1fr] gap-x-2 gap-y-0.5">
-									<span className="text-muted-foreground text-xs">short</span>
-									<span className="font-medium">{s.short}</span>
-									<span className="text-muted-foreground text-xs">long</span>
-									<span>{s.long}</span>
+									<span className="text-muted-foreground text-xs">name</span>
+									<span className="font-medium">{s.name}</span>
+									<span className="text-muted-foreground text-xs">title</span>
+									<span>{s.title}</span>
 									<span className="text-muted-foreground text-xs">action</span>
 									<span>{s.action}</span>
 									<span className="text-muted-foreground text-xs">

@@ -45,8 +45,8 @@ type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
 export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 	active: {
-		short: 'Active',
-		long: 'Card is in your deck',
+		name: 'Active',
+		title: 'Card is in your deck',
 		action: 'Activate card',
 		actionSecond: 'Add it to your active learning deck',
 		done: 'Card added',
@@ -55,8 +55,8 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		iconClassName: 'fill-purple-600/50 text-purple-600',
 	},
 	learned: {
-		short: 'Learned',
-		long: 'Inactive (learned)',
+		name: 'Learned',
+		title: 'Inactive (learned)',
 		action: 'Set "learned"',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Marked "learned"',
@@ -65,8 +65,8 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		iconClassName: 'text-green-600',
 	},
 	skipped: {
-		short: 'Skipped',
-		long: 'Inactive (skipped)',
+		name: 'Skipped',
+		title: 'Inactive (skipped)',
 		action: 'Ignore card',
 		actionSecond: 'This will remove the card from your daily rotation',
 		done: 'Ignoring card',
@@ -75,8 +75,8 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		iconClassName: '',
 	},
 	nocard: {
-		short: 'Not in deck',
-		long: 'Not in your deck',
+		name: 'Not in deck',
+		title: 'Not in your deck',
 		action: 'Add to deck',
 		actionSecond: 'This will add the card to your deck with status "active"',
 		done: 'Card removed',
@@ -85,8 +85,8 @@ export const statusStrings: Record<ShowableActions, Required<ActionCopy>> = {
 		iconClassName: 'opacity-50',
 	},
 	nodeck: {
-		short: 'Start deck',
-		long: 'Not learning language',
+		name: 'Start deck',
+		title: 'Not learning language',
 		action: 'Start new language',
 		actionSecond: 'Create a new deck to learn this language',
 		done: 'Deck archived',
@@ -234,7 +234,7 @@ export function CardStatusDropdown({
 								<CheckCircle className="text-green-500" />
 							:	<StatusIcon choice={choice} />}{' '}
 						</span>
-						<span className="me-1">{statusStrings[choice].short}</span>
+						<span className="me-1">{statusStrings[choice].name}</span>
 						<ChevronDown size={12} />
 					</Button>
 				</DropdownMenuTrigger>
