@@ -5,23 +5,24 @@ import { cn } from '@/lib/utils'
 import { Slot } from '@/lib/slot'
 
 const buttonVariants = cva(
-	'shadow inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default transition-opacity [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+	'shadow inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 cursor-pointer disabled:cursor-default [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 	{
 		variants: {
 			variant: {
-				solid: '',
-				soft: '',
+				solid:
+					'bg-lc-7 bg-c-hi text-lc-0 text-c-lo border border-lc-1 border-c-lo hover:bg-lc-8 aria-expanded:opacity-70',
+				soft: 'bg-lc-1 bg-c-mlo text-lc-7 text-c-hi border border-lc-2 border-c-mlo hover:bg-lc-2',
 				ghost:
-					'text-muted-foreground hover:bg-primary/10 hover:text-foreground shadow-none',
+					'text-lc-6 text-c-lo shadow-none hover:bg-lc-1 hover:bg-c-lo hover:text-lc-8',
 				badge:
-					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary shadow-none',
+					'rounded shadow-none bg-lc-1 bg-c-lo text-lc-7 text-c-lo border border-lc-3 border-c-lo hover:border-c-mid focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',
 				dashed:
-					'border-2 border-dashed border-border/50 hover:border-border hover:text-foreground shadow-none hover:shadow-sm',
+					'border-2 border-dashed border-lc-2 border-c-lo hover:border-lc-4 hover:text-lc-9 shadow-none hover:shadow-sm',
 			},
 			intent: {
 				primary: '',
-				neutral: '',
-				destructive: '',
+				neutral: 'bg-h-neutral text-h-neutral border-h-neutral',
+				destructive: 'bg-h-danger text-h-danger border-h-danger',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2',
@@ -30,40 +31,6 @@ const buttonVariants = cva(
 				icon: 'size-8 rounded-xl rounded-squircle shrink-0 aspect-square',
 			},
 		},
-		compoundVariants: [
-			// Solid variants
-			{
-				variant: 'solid',
-				intent: 'primary',
-				className:
-					'bg-6-hi-primary text-white hover:opacity-90 aria-expanded:opacity-70 border border-lc-0',
-			},
-			{
-				variant: 'solid',
-				intent: 'neutral',
-				className:
-					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
-			},
-			{
-				variant: 'solid',
-				intent: 'destructive',
-				className:
-					'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-			},
-			// Soft variants
-			{
-				variant: 'soft',
-				intent: 'primary',
-				className:
-					'bg-1-mlo-primary text-7-hi-primary border border-2-mlo-primary hover:bg-lc-2',
-			},
-			{
-				variant: 'soft',
-				intent: 'destructive',
-				className:
-					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
-			},
-		],
 		defaultVariants: {
 			variant: 'solid',
 			intent: 'primary',
