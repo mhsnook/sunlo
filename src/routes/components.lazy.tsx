@@ -1,3 +1,4 @@
+import React from 'react'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import {
 	Accordion,
@@ -192,18 +193,7 @@ function ComponentsPage() {
 						<CardTitle>Button</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<div className="flex flex-wrap gap-2">
-							<Button size="lg" className="w-full">
-								Default
-							</Button>
-							<Button variant="soft">Soft</Button>
-							<Button intent="neutral">Neutral</Button>
-							<Button intent="destructive">Red</Button>
-							<Button intent="destructive" variant="soft">
-								Red Soft
-							</Button>
-							<Button variant="neutral">Neutral</Button>
-						</div>
+						<ButtonGrid />
 					</CardContent>
 				</Card>
 
@@ -430,6 +420,32 @@ function ComponentsPage() {
 					</CardContent>
 				</Card>
 			</div>
+		</div>
+	)
+}
+
+const variants = ['solid', 'soft', 'neutral', 'badge', 'dashed'] as const
+const intents = ['primary', 'neutral', 'destructive'] as const
+
+function ButtonGrid() {
+	return (
+		<div className="grid grid-cols-[auto_repeat(3,1fr)] items-center gap-x-3 gap-y-2">
+			<div />
+			{intents.map((intent) => (
+				<p key={intent} className="text-center text-xs font-medium opacity-60">
+					{intent}
+				</p>
+			))}
+			{variants.map((variant) => (
+				<React.Fragment key={variant}>
+					<p className="text-xs font-medium opacity-60">{variant}</p>
+					{intents.map((intent) => (
+						<Button key={intent} size="sm" variant={variant} intent={intent}>
+							{variant}/{intent}
+						</Button>
+					))}
+				</React.Fragment>
+			))}
 		</div>
 	)
 }

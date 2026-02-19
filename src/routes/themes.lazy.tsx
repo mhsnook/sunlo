@@ -1,5 +1,5 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
-import { useState, type CSSProperties } from 'react'
+import React, { useState, type CSSProperties } from 'react'
 import { themes as defaultThemes, type ThemeType } from '@/lib/deck-themes'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -158,24 +158,26 @@ function MiniDeckCard() {
 }
 
 function ButtonSamples() {
+	const variants = ['solid', 'soft', 'neutral', 'badge', 'dashed'] as const
+	const intents = ['primary', 'neutral', 'destructive'] as const
 	return (
-		<div className="flex flex-wrap gap-1.5">
-			<Button size="sm">Default</Button>
-			<Button size="sm" variant="soft">
-				Soft
-			</Button>
-			<Button size="sm" intent="neutral">
-				Neutral
-			</Button>
-			<Button size="sm" intent="destructive">
-				Red
-			</Button>
-			<Button size="sm" intent="destructive" variant="soft">
-				Red Soft
-			</Button>
-			<Button size="sm" variant="neutral">
-				Neutral
-			</Button>
+		<div className="grid grid-cols-[auto_repeat(3,1fr)] items-center gap-x-3 gap-y-1.5">
+			<div />
+			{intents.map((intent) => (
+				<p key={intent} className="text-center text-xs font-medium opacity-60">
+					{intent}
+				</p>
+			))}
+			{variants.map((variant) => (
+				<React.Fragment key={variant}>
+					<p className="text-xs font-medium opacity-60">{variant}</p>
+					{intents.map((intent) => (
+						<Button key={intent} size="sm" variant={variant} intent={intent}>
+							{variant}/{intent}
+						</Button>
+					))}
+				</React.Fragment>
+			))}
 		</div>
 	)
 }
