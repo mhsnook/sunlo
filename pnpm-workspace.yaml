@@ -6,6 +6,3 @@ onlyBuiltDependencies:
   - esbuild
   - supabase
   - unrs-resolver
-
-patchedDependencies:
-  tailwind-oklch: patches/tailwind-oklch.patch
