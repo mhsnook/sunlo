@@ -31,16 +31,12 @@ export type ActionCopy = Microcopy & {
 	failed?: string // error toast text
 }
 
-// TODO: migrate LinkType to extend Microcopy
-export type LinkType = {
-	name: string
-	title?: string
+export type LinkType = Microcopy & {
 	inexact?: boolean
 	link: {
 		to: string
 		params?: Route['types']['params']
 	}
-	Icon?: LucideIcon
 	useBadge?: () => number | string | boolean | undefined | null
 }
 export type MenuType = LinkType & {
