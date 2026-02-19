@@ -35,7 +35,8 @@ import {
 import { useAuth } from '@/lib/use-auth'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { FancyMultiSelect } from '@/components/ui/multi-select'
@@ -588,8 +589,6 @@ function StatsSection() {
 }
 
 function LanguagesSection() {
-	const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-
 	const { data: allLanguages } = useLiveQuery((q) =>
 		q
 			.from({ lang: languagesCollection })
@@ -627,65 +626,61 @@ function LanguagesSection() {
 
 	return (
 		<section>
-			<div className="mb-4 flex flex-row items-start justify-between">
-				<div>
-					<h2 className="text-2xl font-bold">Most Active Languages</h2>
-					<p className="text-muted-foreground">
-						Start learning with our most popular language communities
-					</p>
+			<Tabs defaultValue="grid">
+				<div className="mb-4 flex flex-row items-start justify-between">
+					<div>
+						<h2 className="text-2xl font-bold">Most Active Languages</h2>
+						<p className="text-muted-foreground">
+							Start learning with our most popular language communities
+						</p>
+					</div>
+					<TabsList>
+						<TabsTrigger value="grid">
+							<LayoutGrid className="size-4" />
+							<span className="sr-only">Grid View</span>
+						</TabsTrigger>
+						<TabsTrigger value="list">
+							<List className="size-4" />
+							<span className="sr-only">List View</span>
+						</TabsTrigger>
+					</TabsList>
 				</div>
-				<div className="flex gap-1 rounded-lg border p-1">
-					<Button
-						variant={viewMode === 'grid' ? 'neutral' : 'ghost'}
-						size="sm"
-						onClick={() => setViewMode('grid')}
-					>
-						<LayoutGrid className="size-4" />
-						<span className="sr-only">Grid View</span>
-					</Button>
-					<Button
-						variant={viewMode === 'list' ? 'neutral' : 'ghost'}
-						size="sm"
-						onClick={() => setViewMode('list')}
-					>
-						<List className="size-4" />
-						<span className="sr-only">List View</span>
-					</Button>
-				</div>
-			</div>
 
-			{viewMode === 'grid' ?
-				<div
-					className="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3"
-					data-testid="language-card-list"
-				>
-					{topLanguages.map((lang) => (
-						<LanguageCard
-							key={lang.lang}
-							lang={lang.lang}
-							name={lang.name}
-							learners={lang.learners ?? 0}
-							requests={requestsByLang[lang.lang] ?? 0}
-							phrases={phrasesByLang[lang.lang] ?? 0}
-						/>
-					))}
-				</div>
-			:	<div
-					className="divide-y rounded-lg border"
-					data-testid="language-card-list"
-				>
-					{topLanguages.map((lang) => (
-						<LanguageListItem
-							key={lang.lang}
-							lang={lang.lang}
-							name={lang.name}
-							learners={lang.learners ?? 0}
-							requests={requestsByLang[lang.lang] ?? 0}
-							phrases={phrasesByLang[lang.lang] ?? 0}
-						/>
-					))}
-				</div>
-			}
+				<TabsContent value="grid">
+					<div
+						className="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3"
+						data-testid="language-card-list"
+					>
+						{topLanguages.map((lang) => (
+							<LanguageCard
+								key={lang.lang}
+								lang={lang.lang}
+								name={lang.name}
+								learners={lang.learners ?? 0}
+								requests={requestsByLang[lang.lang] ?? 0}
+								phrases={phrasesByLang[lang.lang] ?? 0}
+							/>
+						))}
+					</div>
+				</TabsContent>
+				<TabsContent value="list">
+					<div
+						className="divide-y rounded-lg border"
+						data-testid="language-card-list"
+					>
+						{topLanguages.map((lang) => (
+							<LanguageListItem
+								key={lang.lang}
+								lang={lang.lang}
+								name={lang.name}
+								learners={lang.learners ?? 0}
+								requests={requestsByLang[lang.lang] ?? 0}
+								phrases={phrasesByLang[lang.lang] ?? 0}
+							/>
+						))}
+					</div>
+				</TabsContent>
+			</Tabs>
 		</section>
 	)
 }
