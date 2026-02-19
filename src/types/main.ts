@@ -14,11 +14,11 @@ export type Tag = {
 
 export type SelectOption = { value: string; label: string }
 
-// Base microcopy type: short label (with icon) + long label (standalone)
+// Base microcopy type: name (compact, with icon) + title (descriptive, standalone)
 // Used as the foundation for nav links, action buttons, status labels, etc.
 export type Microcopy = {
-	short: string
-	long?: string
+	name: string
+	title?: string
 	Icon?: LucideIcon
 	iconClassName?: string
 }
@@ -31,7 +31,7 @@ export type ActionCopy = Microcopy & {
 	failed?: string // error toast text
 }
 
-// TODO: migrate LinkType to extend Microcopy (rename name→short, title→long)
+// TODO: migrate LinkType to extend Microcopy
 export type LinkType = {
 	name: string
 	title?: string
