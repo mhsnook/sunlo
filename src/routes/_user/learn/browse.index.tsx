@@ -293,10 +293,7 @@ function BrowsePage() {
 					</div>
 					{!isAuth && (
 						<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
-							<Link
-								to="/login"
-								className={buttonVariants({ variant: 'soft' })}
-							>
+							<Link to="/login" className={buttonVariants({ variant: 'soft' })}>
 								<LogIn /> Sign In
 							</Link>
 							<Link to="/signup" className={buttonVariants()}>
@@ -589,8 +586,6 @@ function StatsSection() {
 }
 
 function LanguagesSection() {
-	const [viewMode, setViewMode] = useState('grid')
-
 	const { data: allLanguages } = useLiveQuery((q) =>
 		q
 			.from({ lang: languagesCollection })
@@ -628,7 +623,7 @@ function LanguagesSection() {
 
 	return (
 		<section>
-			<Tabs value={viewMode} onValueChange={setViewMode}>
+			<Tabs defaultValue="grid">
 				<div className="mb-4 flex flex-row items-start justify-between">
 					<div>
 						<h2 className="text-2xl font-bold">Most Active Languages</h2>
