@@ -1,0 +1,229 @@
+diff --git a/index.css b/index.css
+index ddc6dde9aed950d7ac6e857f3b394a3dc1dd0deb..e43f73d9d3bcc9e4be59aef3843b38841ec88392 100644
+--- a/index.css
++++ b/index.css
+@@ -165,17 +165,17 @@
+ 
+ @utility bg-lc-* {
+   --bg-l: --value(--l-*);
+-  background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
++  background-color: oklch(calc(var(--bg-l)) calc(var(--bg-c)) var(--bg-h));
+ }
+ 
+ @utility bg-c-* {
+   --bg-c: --value(--c-*);
+-  background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
++  background-color: oklch(calc(var(--bg-l)) calc(var(--bg-c)) var(--bg-h));
+ }
+ 
+ @utility bg-h-* {
+   --bg-h: --value(--hue-*);
+-  background-color: oklch(var(--bg-l) var(--bg-c) var(--bg-h));
++  background-color: oklch(calc(var(--bg-l)) calc(var(--bg-c)) var(--bg-h));
+ }
+ 
+ /* ── Background LC Adjustments ───────────────────────────────────────
+@@ -184,29 +184,29 @@
+ 
+ @utility bg-lc-up-* {
+   --bg-l-adj: --value(--lc-adj-*);
+-  background-color: oklch(clamp(0, calc(var(--bg-l) + var(--lc-dir) * var(--bg-l-adj)), 1) var(--bg-c) var(--bg-h));
++  background-color: oklch(clamp(0, calc(var(--bg-l) + var(--lc-dir) * var(--bg-l-adj)), 1) calc(var(--bg-c)) var(--bg-h));
+ }
+ 
+ @utility bg-lc-down-* {
+   --bg-l-adj: --value(--lc-adj-*);
+-  background-color: oklch(clamp(0, calc(var(--bg-l) - var(--lc-dir) * var(--bg-l-adj)), 1) var(--bg-c) var(--bg-h));
++  background-color: oklch(clamp(0, calc(var(--bg-l) - var(--lc-dir) * var(--bg-l-adj)), 1) calc(var(--bg-c)) var(--bg-h));
+ }
+ 
+ /* ── Text ────────────────────────────────────────────────────────────── */
+ 
+ @utility text-lc-* {
+   --tx-l: --value(--l-*);
+-  color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
++  color: oklch(calc(var(--tx-l)) calc(var(--tx-c)) var(--tx-h));
+ }
+ 
+ @utility text-c-* {
+   --tx-c: --value(--c-*);
+-  color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
++  color: oklch(calc(var(--tx-l)) calc(var(--tx-c)) var(--tx-h));
+ }
+ 
+ @utility text-h-* {
+   --tx-h: --value(--hue-*);
+-  color: oklch(var(--tx-l) var(--tx-c) var(--tx-h));
++  color: oklch(calc(var(--tx-l)) calc(var(--tx-c)) var(--tx-h));
+ }
+ 
+ /* ── Text LC Adjustments ─────────────────────────────────────────────
+@@ -215,65 +215,65 @@
+ 
+ @utility text-lc-up-* {
+   --tx-l-adj: --value(--lc-adj-*);
+-  color: oklch(clamp(0, calc(var(--tx-l) + var(--lc-dir) * var(--tx-l-adj)), 1) var(--tx-c) var(--tx-h));
++  color: oklch(clamp(0, calc(var(--tx-l) + var(--lc-dir) * var(--tx-l-adj)), 1) calc(var(--tx-c)) var(--tx-h));
+ }
+ 
+ @utility text-lc-down-* {
+   --tx-l-adj: --value(--lc-adj-*);
+-  color: oklch(clamp(0, calc(var(--tx-l) - var(--lc-dir) * var(--tx-l-adj)), 1) var(--tx-c) var(--tx-h));
++  color: oklch(clamp(0, calc(var(--tx-l) - var(--lc-dir) * var(--tx-l-adj)), 1) calc(var(--tx-c)) var(--tx-h));
+ }
+ 
+ /* ── Border ──────────────────────────────────────────────────────────── */
+ 
+ @utility border-lc-* {
+   --bd-l: --value(--l-*);
+-  border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
++  border-color: oklch(calc(var(--bd-l)) calc(var(--bd-c)) var(--bd-h));
+ }
+ 
+ @utility border-c-* {
+   --bd-c: --value(--c-*);
+-  border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
++  border-color: oklch(calc(var(--bd-l)) calc(var(--bd-c)) var(--bd-h));
+ }
+ 
+ @utility border-h-* {
+   --bd-h: --value(--hue-*);
+-  border-color: oklch(var(--bd-l) var(--bd-c) var(--bd-h));
++  border-color: oklch(calc(var(--bd-l)) calc(var(--bd-c)) var(--bd-h));
+ }
+ 
+ /* ── Accent Color ────────────────────────────────────────────────────── */
+ 
+ @utility accent-lc-* {
+   --ac-l: --value(--l-*);
+-  accent-color: oklch(var(--ac-l) var(--ac-c) var(--ac-h));
++  accent-color: oklch(calc(var(--ac-l)) calc(var(--ac-c)) var(--ac-h));
+ }
+ 
+ @utility accent-c-* {
+   --ac-c: --value(--c-*);
+-  accent-color: oklch(var(--ac-l) var(--ac-c) var(--ac-h));
++  accent-color: oklch(calc(var(--ac-l)) calc(var(--ac-c)) var(--ac-h));
+ }
+ 
+ @utility accent-h-* {
+   --ac-h: --value(--hue-*);
+-  accent-color: oklch(var(--ac-l) var(--ac-c) var(--ac-h));
++  accent-color: oklch(calc(var(--ac-l)) calc(var(--ac-c)) var(--ac-h));
+ }
+ 
+ /* ── Gradient From ───────────────────────────────────────────────────── */
+ 
+ @utility from-lc-* {
+   --gf-l: --value(--l-*);
+-  --tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
++  --tw-gradient-from: oklch(calc(var(--gf-l)) calc(var(--gf-c)) var(--gf-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+ @utility from-c-* {
+   --gf-c: --value(--c-*);
+-  --tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
++  --tw-gradient-from: oklch(calc(var(--gf-l)) calc(var(--gf-c)) var(--gf-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+ @utility from-h-* {
+   --gf-h: --value(--hue-*);
+-  --tw-gradient-from: oklch(var(--gf-l) var(--gf-c) var(--gf-h));
++  --tw-gradient-from: oklch(calc(var(--gf-l)) calc(var(--gf-c)) var(--gf-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+@@ -281,19 +281,19 @@
+ 
+ @utility to-lc-* {
+   --gt-l: --value(--l-*);
+-  --tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
++  --tw-gradient-to: oklch(calc(var(--gt-l)) calc(var(--gt-c)) var(--gt-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+ @utility to-c-* {
+   --gt-c: --value(--c-*);
+-  --tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
++  --tw-gradient-to: oklch(calc(var(--gt-l)) calc(var(--gt-c)) var(--gt-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+ @utility to-h-* {
+   --gt-h: --value(--hue-*);
+-  --tw-gradient-to: oklch(var(--gt-l) var(--gt-c) var(--gt-h));
++  --tw-gradient-to: oklch(calc(var(--gt-l)) calc(var(--gt-c)) var(--gt-h));
+   --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+ }
+ 
+@@ -301,32 +301,32 @@
+ 
+ @utility shadow-lc-* {
+   --sh-l: --value(--l-*);
+-  --tw-shadow-color: oklch(var(--sh-l) var(--sh-c) var(--sh-h));
++  --tw-shadow-color: oklch(calc(var(--sh-l)) calc(var(--sh-c)) var(--sh-h));
+ }
+ 
+ @utility shadow-c-* {
+   --sh-c: --value(--c-*);
+-  --tw-shadow-color: oklch(var(--sh-l) var(--sh-c) var(--sh-h));
++  --tw-shadow-color: oklch(calc(var(--sh-l)) calc(var(--sh-c)) var(--sh-h));
+ }
+ 
+ @utility shadow-h-* {
+   --sh-h: --value(--hue-*);
+-  --tw-shadow-color: oklch(var(--sh-l) var(--sh-c) var(--sh-h));
++  --tw-shadow-color: oklch(calc(var(--sh-l)) calc(var(--sh-c)) var(--sh-h));
+ }
+ 
+ /* ── Border Bottom ───────────────────────────────────────────────────── */
+ 
+ @utility border-b-lc-* {
+   --bdb-l: --value(--l-*);
+-  border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
++  border-bottom-color: oklch(calc(var(--bdb-l)) calc(var(--bdb-c)) var(--bdb-h));
+ }
+ 
+ @utility border-b-c-* {
+   --bdb-c: --value(--c-*);
+-  border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
++  border-bottom-color: oklch(calc(var(--bdb-l)) calc(var(--bdb-c)) var(--bdb-h));
+ }
+ 
+ @utility border-b-h-* {
+   --bdb-h: --value(--hue-*);
+-  border-bottom-color: oklch(var(--bdb-l) var(--bdb-c) var(--bdb-h));
++  border-bottom-color: oklch(calc(var(--bdb-l)) calc(var(--bdb-c)) var(--bdb-h));
+ }
+diff --git a/plugin.js b/plugin.js
+index 5f799473e1faecce1ad13862d2f4b53059b0ee77..00c4951184bd1c858f22fa4f2e356ada13cf6678 100644
+--- a/plugin.js
++++ b/plugin.js
+@@ -35,7 +35,7 @@ module.exports = function ({ addUtilities }) {
+             [prop.vars[0]]: `var(--l-${l})`,
+             [prop.vars[1]]: `var(--c-${c})`,
+             [prop.vars[2]]: `var(--hue-${h})`,
+-            [prop.css]: `oklch(var(${prop.vars[0]}) var(${prop.vars[1]}) var(${prop.vars[2]}))`,
++            [prop.css]: `oklch(calc(var(${prop.vars[0]})) calc(var(${prop.vars[1]})) var(${prop.vars[2]}))`,
+           };
+         }
+       }
+@@ -53,14 +53,14 @@ module.exports = function ({ addUtilities }) {
+           '--gf-l': `var(--l-${l})`,
+           '--gf-c': `var(--c-${c})`,
+           '--gf-h': `var(--hue-${h})`,
+-          '--tw-gradient-from': `oklch(var(--gf-l) var(--gf-c) var(--gf-h))`,
++          '--tw-gradient-from': `oklch(calc(var(--gf-l)) calc(var(--gf-c)) var(--gf-h))`,
+           '--tw-gradient-stops': stopsExpr,
+         };
+         utilities[`.to-${l}-${c}-${h}`] = {
+           '--gt-l': `var(--l-${l})`,
+           '--gt-c': `var(--c-${c})`,
+           '--gt-h': `var(--hue-${h})`,
+-          '--tw-gradient-to': `oklch(var(--gt-l) var(--gt-c) var(--gt-h))`,
++          '--tw-gradient-to': `oklch(calc(var(--gt-l)) calc(var(--gt-c)) var(--gt-h))`,
+           '--tw-gradient-stops': stopsExpr,
+         };
+       }

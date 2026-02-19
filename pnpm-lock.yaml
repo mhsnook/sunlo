@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  tailwind-oklch:
+    hash: 88497ed9ebf5653af4f6634a2fd55e7a6c0a8076bef5b493c0f6fc1374ffc938
+    path: patches/tailwind-oklch.patch
+
 importers:
 
   .:
@@ -73,7 +78,7 @@ importers:
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwind-oklch:
         specifier: ^0.3.0
-        version: 0.3.0(tailwindcss@4.1.18)
+        version: 0.3.0(patch_hash=88497ed9ebf5653af4f6634a2fd55e7a6c0a8076bef5b493c0f6fc1374ffc938)(tailwindcss@4.1.18)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
@@ -6433,7 +6438,7 @@ snapshots:
 
   tailwind-merge@2.6.0: {}
 
-  tailwind-oklch@0.3.0(tailwindcss@4.1.18):
+  tailwind-oklch@0.3.0(patch_hash=88497ed9ebf5653af4f6634a2fd55e7a6c0a8076bef5b493c0f6fc1374ffc938)(tailwindcss@4.1.18):
     dependencies:
       tailwindcss: 4.1.18
 
