@@ -33,13 +33,13 @@ export function SelectOneLanguage({
 			<PopoverTrigger asChild className="w-full">
 				<Button
 					data-testid="language-selector-button"
-					variant="soft"
+					variant="ghost"
 					tabIndex={tabIndex}
 					role="combobox"
 					size={size}
 					aria-expanded={open}
 					aria-controls={id}
-					className={`placeholder:text-muted-foreground text-foreground justify-between font-normal ${hasError ? 'border-destructive' : ''}`}
+					className={`placeholder:text-muted-foreground text-foreground justify-between border font-normal ${hasError ? 'border-destructive' : ''}`}
 				>
 					{value ?
 						allLanguageOptions.find((language) => language.value === value)

@@ -372,9 +372,18 @@ import { todayString } from '@/lib/dayjs'
 - Use `cn()` function for conditional class name concatenation
 - Use **"start" and "end"** instead of "left" and "right" for RTL support
 - Use `@container` queries when relevant for component portability across different-sized containers
+- **Use standard Tailwind classes** instead of arbitrary values when a standard class exists (e.g. use `z-50` not `z-[50]`, `z-100` not `z-[100]`)
 - **Border radius**:
   - Interactive elements (links, buttons, inputs): `rounded-2xl`
   - Non-interactive elements (cards): `rounded`
+
+### Base UI Data Attributes
+
+This project uses `@base-ui/react` (NOT Radix) for low-level primitives. Base UI uses different data attributes than Radix:
+
+- **Tabs**: Selected tab gets `data-active` (use `data-[active]:` in Tailwind). NOT `data-selected` or `data-state="active"`.
+- **Select**: Similar pattern — check Base UI docs for the correct attribute names before styling.
+- Always verify the actual data attribute names in `node_modules/@base-ui/react/esm/` type definition files when creating or modifying UI components.
 
 ### Component Styling Patterns
 
@@ -393,13 +402,13 @@ import { todayString } from '@/lib/dayjs'
 
 We use a deliberate set of button variants. Choose based on the action's role, not its visual weight:
 
-| Variant | Role | Example uses |
-|---------|------|--------------|
-| `default` | **Primary action** — the thing you most want the user to do | Save, Submit, Create account, Confirm |
-| `neutral` | **Paired counterpart** to default or red — cancel, go back, reset | Cancel, Go back, Reset, Dismiss |
-| `soft` | **Optional initiation** — opens a flow the user may choose to start | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
-| `ghost` | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles |
-| `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel | Archive, Delete (confirmation dialogs) |
+| Variant            | Role                                                                         | Example uses                                                                                              |
+| ------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `default`          | **Primary action** — the thing you most want the user to do                  | Save, Submit, Create account, Confirm                                                                     |
+| `neutral`          | **Paired counterpart** to default or red — cancel, go back, reset            | Cancel, Go back, Reset, Dismiss                                                                           |
+| `soft`             | **Optional initiation** — opens a flow the user may choose to start          | "Show translations", "Add to deck" (collapsible triggers, dialog openers that lead to a save/cancel pair) |
+| `ghost`            | **Ambient/utility actions** — always available but not calling for attention | Icon buttons (edit, delete, share, copy), toolbar actions, nav toggles                                    |
+| `red` / `red-soft` | **Destructive primary action** — paired with `neutral` for cancel            | Archive, Delete (confirmation dialogs)                                                                    |
 
 **Key principles:**
 
