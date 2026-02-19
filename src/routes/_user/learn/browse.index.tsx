@@ -1,12 +1,5 @@
-import {
-	type CSSProperties,
-	type SetStateAction,
-	useState,
-	useMemo,
-	useEffect,
-} from 'react'
+import { type CSSProperties } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useDebounce } from '@uidotdev/usehooks'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Globe,
@@ -19,14 +12,12 @@ import {
 	List,
 	ExternalLink,
 	Search,
-	X,
 	LogIn,
 	UserPlus,
 } from 'lucide-react'
 
 import {
 	languagesCollection,
-	langTagsCollection,
 	phraseRequestsCollection,
 	phrasePlaylistsCollection,
 	phrasesCollection,
@@ -38,8 +29,6 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { FancyMultiSelect } from '@/components/ui/multi-select'
 import {
 	Select,
 	SelectContent,
@@ -49,18 +38,8 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
-import * as z from 'zod'
-
-const BrowseSearchSchema = z.object({
-	q: z.string().optional(),
-	langs: z.string().optional(),
-	tags: z.string().optional(),
-})
-
-type BrowseSearchType = z.infer<typeof BrowseSearchSchema>
 
 export const Route = createFileRoute('/_user/learn/browse/')({
-	validateSearch: BrowseSearchSchema,
 	component: BrowsePage,
 })
 
@@ -69,463 +48,79 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 function BrowsePage() {
 	const { isAuth } = useAuth()
 	const navigate = useNavigate({ from: Route.fullPath })
-	const {
-		q: searchText,
-		langs: langsFilter,
-		tags: tagsFilter,
-	} = Route.useSearch()
-
-	// Local state for live typing (debounced to URL)
-	const [liveText, setLiveText] = useState(searchText ?? '')
-	const debouncedText = useDebounce(liveText, 150)
-
-	// Sync debounced text to URL
-	useEffect(() => {
-		if (debouncedText !== searchText) {
-			void navigate({
-				search: (prev) => ({
-					...prev,
-					q: debouncedText || undefined,
-				}),
-				replace: true,
-			})
-		}
-	}, [debouncedText, searchText, navigate])
-
-	// Parse comma-separated filter strings
-	const selectedTags = useMemo(
-		() => (tagsFilter ? tagsFilter.split(',').filter(Boolean) : []),
-		[tagsFilter]
-	)
-
-	const selectedLangs = useMemo(
-		() => (langsFilter ? langsFilter.split(',').filter(Boolean) : []),
-		[langsFilter]
-	)
-
-	// Get all tags for the filter
-	const { data: allTags } = useLiveQuery((q) =>
-		q.from({ tag: langTagsCollection })
-	)
-
-	const tagOptions = useMemo(
-		() =>
-			[...new Set(allTags?.map((t) => t.name) ?? [])].map((name) => ({
-				value: name,
-				label: name,
-			})),
-		[allTags]
-	)
-
-	// Find matching tags based on search query (for suggestions)
-	const matchingTagSuggestions = useMemo(() => {
-		if (!liveText.trim() || liveText.length < 2) return []
-		const lowerQuery = liveText.toLowerCase()
-		return tagOptions
-			.filter(
-				(t) =>
-					t.label.toLowerCase().includes(lowerQuery) &&
-					!selectedTags.includes(t.value)
-			)
-			.slice(0, 5)
-	}, [liveText, tagOptions, selectedTags])
-
-	// Find matching languages based on search query (for suggestions)
-	const matchingLangSuggestions = useMemo(() => {
-		if (!liveText.trim() || liveText.length < 2) return []
-		const lowerQuery = liveText.toLowerCase()
-		return allLanguageOptions
-			.filter(
-				(l) =>
-					l.label.toLowerCase().includes(lowerQuery) &&
-					!selectedLangs.includes(l.value)
-			)
-			.slice(0, 5)
-	}, [liveText, selectedLangs])
-
-	const isSearching =
-		liveText.trim().length > 0 ||
-		selectedTags.length > 0 ||
-		selectedLangs.length > 0
-
-	const setSelectedTags = (value: SetStateAction<Array<string>>) => {
-		void navigate({
-			search: (prev: BrowseSearchType) => {
-				const newTags =
-					typeof value === 'function' ? value(selectedTags) : value
-				return {
-					...prev,
-					tags: newTags.length ? newTags.join(',') : undefined,
-				}
-			},
-			replace: true,
-		})
-	}
-
-	const setSelectedLangs = (value: SetStateAction<Array<string>>) => {
-		void navigate({
-			search: (prev: BrowseSearchType) => {
-				const newLangs =
-					typeof value === 'function' ? value(selectedLangs) : value
-				return {
-					...prev,
-					langs: newLangs.length ? newLangs.join(',') : undefined,
-				}
-			},
-			replace: true,
-		})
-	}
-
-	const addTagFilter = (tag: string) => {
-		setSelectedTags((prev) => [...prev, tag])
-	}
-
-	const addLangFilter = (lang: string) => {
-		setSelectedLangs((prev) => [...prev, lang])
-	}
 
 	return (
 		<main style={style} className="space-y-8 pb-12" data-testid="browse-page">
-			{/* Search Box */}
-			<div className="space-y-3">
-				<div className="relative">
-					<Search className="text-muted-foreground absolute top-1/2 left-4 size-5 -translate-y-1/2" />
-					<Input
-						type="search"
-						placeholder="Search phrases, playlists, and requests..."
-						value={liveText}
-						onChange={(e) => setLiveText(e.target.value)}
-						className="h-14 rounded-2xl ps-12 pe-4 text-lg [&::-ms-clear]:hidden [&::-webkit-search-cancel-button]:hidden"
-					/>
-					{liveText && (
-						<button
-							type="button"
-							onClick={() => setLiveText('')}
-							className="text-muted-foreground hover:text-foreground absolute top-1/2 right-4 -translate-y-1/2"
-						>
-							<X className="size-5" />
-							<span className="sr-only">Clear search</span>
-						</button>
-					)}
-				</div>
-
-				{/* Suggestion chips for matching languages and tags */}
-				{(matchingLangSuggestions.length > 0 ||
-					matchingTagSuggestions.length > 0) && (
-					<div className="flex flex-col items-start gap-2">
-						{matchingLangSuggestions.length > 0 && (
-							<div className="inline-flex flex-row items-center gap-2">
-								<span className="text-muted-foreground text-sm">
-									Languages:
-								</span>
-								{matchingLangSuggestions.map((lang) => (
-									<button
-										key={lang.value}
-										type="button"
-										onClick={() => addLangFilter(lang.value)}
-										className="bg-primary/10 text-primary hover:bg-primary/20 line-clamp-1 max-w-40 truncate rounded-full px-3 py-1 text-sm transition-colors"
-									>
-										+ {lang.label}
-									</button>
-								))}
-							</div>
-						)}
-						{matchingTagSuggestions.length > 0 && (
-							<div className="inline-flex flex-row items-center gap-2">
-								<span className="text-muted-foreground text-sm">Tags:</span>
-								{matchingTagSuggestions.map((tag) => (
-									<button
-										key={tag.value}
-										type="button"
-										onClick={() => addTagFilter(tag.value)}
-										className="bg-accent/50 text-accent-foreground hover:bg-accent/70 max-w-40 truncate rounded-full px-3 py-1 text-sm transition-colors"
-									>
-										+ {tag.label}
-									</button>
-								))}
-							</div>
-						)}
-					</div>
-				)}
-
-				{/* Filter controls */}
-				<div className="flex flex-col gap-3 @md:flex-row">
-					<div className="flex-1">
-						<FancyMultiSelect
-							options={allLanguageOptions}
-							selected={selectedLangs}
-							setSelected={setSelectedLangs}
-							placeholder="Filter by language..."
-						/>
-					</div>
-					<div className="flex-1">
-						<FancyMultiSelect
-							options={tagOptions}
-							selected={selectedTags}
-							setSelected={setSelectedTags}
-							placeholder="Filter by tags..."
-						/>
-					</div>
-				</div>
-			</div>
+			{/* Search Trigger */}
+			<button
+				type="button"
+				onClick={() =>
+					void navigate({
+						search: (prev) => ({ ...prev, search: true }),
+						replace: true,
+					})
+				}
+				className="border-primary-foresoft/30 hover:border-primary bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
+				data-testid="browse-search-trigger"
+			>
+				<Search className="text-muted-foreground size-5" />
+				<span className="text-muted-foreground flex-1 text-start text-base">
+					Search...
+				</span>
+				<kbd className="bg-muted text-muted-foreground rounded-lg border px-2 py-0.5 text-xs">
+					Ctrl+K
+				</kbd>
+			</button>
 
 			{/* Go to language feed dropdown + auth buttons */}
-			{!isSearching && (
-				<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
-					<div className="flex flex-col items-center gap-3 @xl:flex-row">
-						<span className="text-muted-foreground">Go to feed:</span>
-						<Select
-							onValueChange={(lang) => {
-								void navigate({ to: '/learn/$lang/feed', params: { lang } })
-							}}
-						>
-							<SelectTrigger className="w-56 border">
-								<SelectValue placeholder="Select a language" />
-							</SelectTrigger>
-							<SelectContent>
-								{allLanguageOptions.map((lang) => (
-									<SelectItem key={lang.value} value={lang.value}>
-										{lang.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-					{!isAuth && (
-						<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
-							<Link to="/login" className={buttonVariants({ variant: 'soft' })}>
-								<LogIn /> Sign In
-							</Link>
-							<Link to="/signup" className={buttonVariants()}>
-								<UserPlus />
-								Get Started
-							</Link>
-						</div>
-					)}
+			<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
+				<div className="flex flex-col items-center gap-3 @xl:flex-row">
+					<span className="text-muted-foreground">Go to feed:</span>
+					<Select
+						onValueChange={(lang) => {
+							void navigate({ to: '/learn/$lang/feed', params: { lang } })
+						}}
+					>
+						<SelectTrigger className="w-56 border">
+							<SelectValue placeholder="Select a language" />
+						</SelectTrigger>
+						<SelectContent>
+							{allLanguageOptions.map((lang) => (
+								<SelectItem key={lang.value} value={lang.value}>
+									{lang.label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 				</div>
-			)}
-
-			{isSearching ?
-				<SearchResultsSection
-					query={liveText}
-					selectedTags={selectedTags}
-					selectedLangs={selectedLangs}
-				/>
-			:	<>
-					{/* Stats Section */}
-					<StatsSection />
-
-					{/* Most Active Languages */}
-					<LanguagesSection />
-
-					{/* Popular Requests */}
-					<PopularRequestsSection />
-
-					{/* Trending Playlists */}
-					<TrendingPlaylistsSection />
-
-					{/* CTA Section */}
-					{!isAuth && <CTASection />}
-				</>
-			}
-		</main>
-	)
-}
-
-function SearchResultsSection({
-	query,
-	selectedTags,
-	selectedLangs,
-}: {
-	query: string
-	selectedTags: Array<string>
-	selectedLangs: Array<string>
-}) {
-	const lowerQuery = query.toLowerCase().trim()
-
-	// Search phrases
-	const { data: allPhrases } = useLiveQuery((q) =>
-		q.from({ phrase: phrasesCollection })
-	)
-
-	// Search requests
-	const { data: allRequests } = useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
-	)
-
-	// Search playlists
-	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
-	)
-
-	// Filter results based on search query, tags, and languages
-	const matchingPhrases = useMemo(() => {
-		if (!allPhrases) return []
-		return allPhrases
-			.filter((phrase) => {
-				// Language filter
-				if (selectedLangs.length > 0 && !selectedLangs.includes(phrase.lang)) {
-					return false
-				}
-				// Tag filter
-				if (selectedTags.length > 0) {
-					const phraseTags = new Set((phrase.tags ?? []).map((t) => t.name))
-					if (!selectedTags.some((t) => phraseTags.has(t))) {
-						return false
-					}
-				}
-				// Text search (only if there's a query)
-				if (lowerQuery) {
-					const searchText = [
-						phrase.text,
-						...(phrase.translations?.map((t) => t.text) ?? []),
-						...(phrase.tags ?? []).map((t) => t.name),
-					]
-						.join(' ')
-						.toLowerCase()
-					return searchText.includes(lowerQuery)
-				}
-				return true
-			})
-			.slice(0, 10)
-	}, [allPhrases, lowerQuery, selectedTags, selectedLangs])
-
-	const matchingRequests = useMemo(() => {
-		if (!allRequests) return []
-		return allRequests
-			.filter((req) => {
-				// Language filter
-				if (selectedLangs.length > 0 && !selectedLangs.includes(req.lang)) {
-					return false
-				}
-				// Text search (only if there's a query)
-				if (lowerQuery) {
-					return req.prompt.toLowerCase().includes(lowerQuery)
-				}
-				return true
-			})
-			.slice(0, 6)
-	}, [allRequests, lowerQuery, selectedLangs])
-
-	const matchingPlaylists = useMemo(() => {
-		if (!allPlaylists) return []
-		return allPlaylists
-			.filter((playlist) => {
-				// Language filter
-				if (
-					selectedLangs.length > 0 &&
-					!selectedLangs.includes(playlist.lang)
-				) {
-					return false
-				}
-				// Text search (only if there's a query)
-				if (lowerQuery) {
-					const searchText = [playlist.title, playlist.description ?? '']
-						.join(' ')
-						.toLowerCase()
-					return searchText.includes(lowerQuery)
-				}
-				return true
-			})
-			.slice(0, 6)
-	}, [allPlaylists, lowerQuery, selectedLangs])
-
-	const totalResults =
-		matchingPhrases.length + matchingRequests.length + matchingPlaylists.length
-
-	// Build filter description
-	const filterParts: Array<string> = []
-	if (query) filterParts.push(`"${query}"`)
-	if (selectedLangs.length > 0)
-		filterParts.push(`${selectedLangs.length} language(s)`)
-	if (selectedTags.length > 0) filterParts.push(`${selectedTags.length} tag(s)`)
-	const filterDescription = filterParts.join(', ')
-
-	if (totalResults === 0) {
-		return (
-			<div className="py-12 text-center">
-				<p className="text-muted-foreground text-lg">
-					No results found{filterDescription ? ` for ${filterDescription}` : ''}
-				</p>
-				<p className="text-muted-foreground mt-2 text-sm">
-					Try different search terms or filters
-				</p>
+				{!isAuth && (
+					<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">
+						<Link to="/login" className={buttonVariants({ variant: 'soft' })}>
+							<LogIn /> Sign In
+						</Link>
+						<Link to="/signup" className={buttonVariants()}>
+							<UserPlus />
+							Get Started
+						</Link>
+					</div>
+				)}
 			</div>
-		)
-	}
 
-	return (
-		<div className="space-y-8">
-			<p className="text-muted-foreground">
-				Found {totalResults} result{totalResults !== 1 ? 's' : ''}
-				{filterDescription ? ` for ${filterDescription}` : ''}
-			</p>
+			{/* Stats Section */}
+			<StatsSection />
 
-			{/* Matching Phrases */}
-			{matchingPhrases.length > 0 && (
-				<section>
-					<h2 className="mb-4 text-xl font-bold">
-						Phrases ({matchingPhrases.length})
-					</h2>
-					<div className="divide-y rounded-lg border">
-						{matchingPhrases.map((phrase) => (
-							<Link
-								key={phrase.id}
-								to="/learn/$lang/phrases/$id"
-								params={{ lang: phrase.lang, id: phrase.id }}
-								className="hover:bg-muted/50 flex items-center gap-3 p-4 transition-colors"
-							>
-								<LangBadge lang={phrase.lang} />
-								<div className="min-w-0 flex-1">
-									<p className="truncate font-medium">{phrase.text}</p>
-									{phrase.translations?.[0] && (
-										<p className="text-muted-foreground truncate text-sm">
-											{phrase.translations[0].text}
-										</p>
-									)}
-								</div>
-							</Link>
-						))}
-					</div>
-				</section>
-			)}
+			{/* Most Active Languages */}
+			<LanguagesSection />
 
-			{/* Matching Requests */}
-			{matchingRequests.length > 0 && (
-				<section>
-					<h2 className="mb-4 text-xl font-bold">
-						Requests ({matchingRequests.length})
-					</h2>
-					<div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
-						{matchingRequests.map((request) => (
-							<RequestCard key={request.id} request={request} />
-						))}
-					</div>
-				</section>
-			)}
+			{/* Popular Requests */}
+			<PopularRequestsSection />
 
-			{/* Matching Playlists */}
-			{matchingPlaylists.length > 0 && (
-				<section>
-					<h2 className="mb-4 text-xl font-bold">
-						Playlists ({matchingPlaylists.length})
-					</h2>
-					<div className="grid grid-cols-1 gap-4 @md:grid-cols-2 @xl:grid-cols-3">
-						{matchingPlaylists.map((playlist) => (
-							<PlaylistCard
-								key={playlist.id}
-								playlist={playlist}
-								phraseCount={0}
-							/>
-						))}
-					</div>
-				</section>
-			)}
-		</div>
+			{/* Trending Playlists */}
+			<TrendingPlaylistsSection />
+
+			{/* CTA Section */}
+			{!isAuth && <CTASection />}
+		</main>
 	)
 }
 
