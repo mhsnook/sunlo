@@ -101,7 +101,7 @@ function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger id="top-right-context-menu" asChild>
-				<Button className="me-2" variant="ghost" size="icon">
+				<Button className="me-2" variant="neutral" size="icon">
 					<MoreVertical />
 					<span className="sr-only">Open menu</span>
 				</Button>

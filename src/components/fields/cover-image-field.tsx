@@ -133,7 +133,7 @@ function CoverImageEditor({
 			{url && (
 				<Button
 					type="button"
-					variant="ghost"
+					variant="neutral"
 					size="sm"
 					onClick={handleRemove}
 					className="text-muted-foreground hover:text-destructive self-start"

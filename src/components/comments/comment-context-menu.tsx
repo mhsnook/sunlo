@@ -61,7 +61,7 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					aria-label="More options"
 					data-testid="comment-context-menu-trigger"

@@ -220,7 +220,7 @@ function SmartSearchResults({
 				</p>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="sm" className="gap-2">
+						<Button variant="neutral" size="sm" className="gap-2">
 							<ArrowDownWideNarrow className="size-4" />
 							Sort: {sortBy === 'relevance' ? 'Relevance' : 'Popularity'}
 						</Button>

@@ -132,7 +132,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						>
 							<DialogTrigger
 								aria-label="Add a reply"
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								className={buttonVariants({ variant: 'neutral', size: 'icon' })}
 							>
 								<MessagesSquare />
 							</DialogTrigger>
@@ -143,7 +143,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					{replyCount > 0 && (
 						<Link
 							className={buttonVariants({
-								variant: showSubthread ? 'soft' : 'ghost',
+								variant: showSubthread ? 'soft' : 'neutral',
 								size: 'sm',
 							})}
 							to={'.'}

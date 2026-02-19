@@ -62,7 +62,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 							<div className="flex flex-col">
 								<Button
 									type="button"
-									variant="ghost"
+									variant="neutral"
 									size="icon"
 									onClick={() => move(index, index - 1)}
 									disabled={index === 0}
@@ -71,7 +71,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 								</Button>
 								<Button
 									type="button"
-									variant="ghost"
+									variant="neutral"
 									size="icon"
 									onClick={() => move(index, index + 1)}
 									disabled={index === fields.length - 1}
@@ -119,7 +119,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 							</div>
 							<Button
 								type="button"
-								variant="ghost"
+								variant="neutral"
 								size="icon"
 								onClick={() => remove(index)}
 								disabled={fields.length === 1}

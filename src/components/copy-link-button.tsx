@@ -5,7 +5,7 @@ import { copyLink } from '@/lib/utils'
 export default function CopyLinkButton({
 	url,
 	text = 'Copy Link',
-	variant = 'ghost',
+	variant = 'neutral',
 	size = 'sm',
 	collapse = true,
 	...props

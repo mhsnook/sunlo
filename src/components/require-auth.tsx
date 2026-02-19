@@ -98,7 +98,7 @@ function AuthGate({ message }: { message: string }) {
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<Button
-							variant="ghost"
+							variant="neutral"
 							size="icon"
 							onClick={handleGoBack}
 							className="shrink-0"

@@ -8,7 +8,7 @@ import { PhraseFullFilteredType } from '@/lib/schemas'
 export default function SharePhraseButton({
 	phrase,
 	text = 'Share phrase',
-	variant = 'ghost',
+	variant = 'neutral',
 	size = 'sm',
 	...props
 }: {

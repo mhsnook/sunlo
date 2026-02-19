@@ -39,7 +39,7 @@ export function CardResultSimple({
 					<PermalinkButton
 						to="/learn/$lang/phrases/$id"
 						params={{ lang: phrase.lang, id: phrase.id }}
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						aria-label="View full phrase info"
 						text=""

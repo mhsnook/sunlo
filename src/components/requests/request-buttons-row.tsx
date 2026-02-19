@@ -33,7 +33,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				<Flagged>
 					<div className="flex flex-row items-center gap-2">
 						<Button
-							variant="ghost"
+							variant="neutral"
 							size="icon"
 							aria-label="Repost this request"
 						>
@@ -53,7 +53,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 					<AddCommentDialog requestId={request.id} lang={request.lang}>
 						<DialogTrigger asChild>
 							<Button
-								variant="ghost"
+								variant="neutral"
 								size="icon"
 								aria-label="Add a comment"
 								data-testid="add-comment-trigger"
@@ -84,7 +84,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 							:	answersOnly
 						}
 						className={buttonVariants({
-							variant: search.show === 'answers-only' ? 'soft' : 'ghost',
+							variant: search.show === 'answers-only' ? 'soft' : 'neutral',
 							size: 'icon',
 						})}
 					>
@@ -104,19 +104,19 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				<div className="flex flex-row items-center gap-2">
 					<CopyLinkButton
 						url={`${window.location.host}/learn/${request.lang}/requests/${request.id}`}
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						text=""
 					/>
 					<ShareRequestButton
 						id={request.id}
 						lang={request.lang}
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 					/>
 					<SendRequestToFriendDialog id={request.id} lang={request.lang}>
 						<Button
-							variant="ghost"
+							variant="neutral"
 							size="icon"
 							aria-label="Send this request to a friend"
 							data-testid="send-to-friend-button"

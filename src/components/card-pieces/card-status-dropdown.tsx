@@ -223,7 +223,7 @@ export function CardStatusDropdown({
 			<DropdownMenu>
 				<DropdownMenuTrigger className={className} asChild>
 					<Button
-						variant={card?.status === 'active' ? 'soft' : 'ghost'}
+						variant={card?.status === 'active' ? 'soft' : 'neutral'}
 						size="sm"
 						className="m-0 min-w-28 justify-between px-1.5"
 						data-name="card-status-dropdown"
@@ -303,7 +303,7 @@ export function CardStatusHeart({
 	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
-			variant={phrase.card?.status === 'active' ? 'soft' : 'ghost'}
+			variant={phrase.card?.status === 'active' ? 'soft' : 'neutral'}
 			size="icon"
 			data-name="card-status-heart"
 			data-key={phrase.id}

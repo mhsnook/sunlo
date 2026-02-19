@@ -71,7 +71,7 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 	return (
 		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
 			<Button
-				variant={hasUpvoted ? 'soft' : 'ghost'}
+				variant={hasUpvoted ? 'soft' : 'neutral'}
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this request'}
 				size="icon"
 				data-testid="upvote-request-button"

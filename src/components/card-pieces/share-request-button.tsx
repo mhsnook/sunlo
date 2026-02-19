@@ -10,7 +10,7 @@ import { useRequest } from '@/hooks/use-requests'
 export function ShareRequestButton({
 	id,
 	text = 'Share request',
-	variant = 'ghost',
+	variant = 'neutral',
 	size = 'sm',
 	className = '',
 	...props

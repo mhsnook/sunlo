@@ -47,7 +47,7 @@ export function FeedFilterMenu() {
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					aria-label="Filter feed content"
 					data-testid="feed-filter-button"

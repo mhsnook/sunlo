@@ -44,7 +44,7 @@ export function DeleteCommentDialog({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
-				variant="ghost"
+				variant="neutral"
 				size="icon"
 				aria-label="Delete comment"
 				onClick={() => setOpen(true)}

@@ -248,7 +248,7 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					aria-label="Open context menu"
 					className="absolute top-4 right-4"

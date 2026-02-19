@@ -234,7 +234,7 @@ export function ManagePlaylistPhrasesDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<Button
-				variant="ghost"
+				variant="neutral"
 				size="icon"
 				aria-label="Manage phrases"
 				data-testid="manage-phrases-button"
@@ -267,7 +267,7 @@ export function ManagePlaylistPhrasesDialog({
 										<div className="flex flex-col gap-1">
 											<Button
 												type="button"
-												variant="ghost"
+												variant="neutral"
 												size="icon"
 												className="h-6 w-6"
 												aria-label="Move phrase up"
@@ -284,7 +284,7 @@ export function ManagePlaylistPhrasesDialog({
 											</Button>
 											<Button
 												type="button"
-												variant="ghost"
+												variant="neutral"
 												size="icon"
 												className="h-6 w-6"
 												aria-label="Move phrase down"
@@ -326,7 +326,7 @@ export function ManagePlaylistPhrasesDialog({
 										<Button
 											type="button"
 											onClick={() => removePhraseMutation.mutate(item.link.id)}
-											variant="ghost"
+											variant="neutral"
 											size="icon"
 											aria-label="Remove phrase"
 											data-name="remove-phrase-button"

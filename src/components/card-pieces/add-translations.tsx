@@ -257,7 +257,7 @@ function TranslationListItem({
 					/>
 					<Button
 						size="icon"
-						variant="ghost"
+						variant="neutral"
 						className="size-6"
 						onClick={handleSave}
 						disabled={updateTranslation.isPending}
@@ -266,7 +266,7 @@ function TranslationListItem({
 					</Button>
 					<Button
 						size="icon"
-						variant="ghost"
+						variant="neutral"
 						className="size-6"
 						onClick={handleCancel}
 					>
@@ -284,7 +284,7 @@ function TranslationListItem({
 							{trans.archived ? null : (
 								<Button
 									size="icon"
-									variant="ghost"
+									variant="neutral"
 									className="size-6"
 									onClick={() => setIsEditing(true)}
 								>
@@ -293,7 +293,7 @@ function TranslationListItem({
 							)}
 							<Button
 								size="icon"
-								variant="ghost"
+								variant="neutral"
 								className="size-6"
 								onClick={() => toggleArchiveTranslation.mutate()}
 								disabled={toggleArchiveTranslation.isPending}

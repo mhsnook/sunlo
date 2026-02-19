@@ -52,7 +52,7 @@ export function DeleteRequestDialog({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
-				variant="ghost"
+				variant="neutral"
 				size="icon"
 				aria-label="Delete request"
 				data-name="delete-request-button"

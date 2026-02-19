@@ -277,7 +277,7 @@ function NewCommentForm({
 								<div key={pid} className="relative px-2">
 									<Button
 										type="button"
-										variant="ghost"
+										variant="neutral"
 										size="icon"
 										className="border-border absolute top-5 right-1 h-6 w-6 backdrop-blur-xs"
 										onClick={() => handleRemovePhrase(pid)}

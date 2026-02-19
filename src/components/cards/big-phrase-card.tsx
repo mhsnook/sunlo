@@ -93,12 +93,16 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<Flagged>
 									<Button
 										size="icon"
-										variant="ghost"
+										variant="neutral"
 										aria-label="Delete phrase"
 									>
 										<Trash2 />
 									</Button>
-									<Button size="icon" variant="ghost" aria-label="Edit phrase">
+									<Button
+										size="icon"
+										variant="neutral"
+										aria-label="Edit phrase"
+									>
 										<Edit />
 									</Button>
 								</Flagged>
@@ -132,7 +136,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</div>
 									<AddTranslationsDialog
 										phrase={phrase}
-										variant="ghost"
+										variant="neutral"
 										size="icon"
 									/>
 								</div>
@@ -233,19 +237,19 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 			<div className="flex w-full flex-row flex-wrap justify-start gap-4 px-2 py-3">
 				<CopyLinkButton
 					url={`${window.location.host}/learn/${phrase.lang}/phrases/${pid}`}
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					text=""
 				/>
 				<SharePhraseButton
 					text=""
 					phrase={phrase}
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 				/>
 				<SendPhraseToFriendButton
 					phrase={phrase}
-					variant="ghost"
+					variant="neutral"
 					text=""
 					size="icon"
 				/>

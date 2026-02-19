@@ -31,7 +31,7 @@ export default function ExtraInfo({
 						<Ellipsis className="size-4" />
 						Show details
 					</span>
-				:	<Button variant="ghost" size="icon">
+				:	<Button variant="neutral" size="icon">
 						<Ellipsis className="size-4" />
 						<span className="sr-only">Show more</span>
 					</Button>

@@ -8,7 +8,7 @@ export default function PermalinkButton({
 	to,
 	params,
 	text = 'Permalink',
-	variant = 'ghost',
+	variant = 'neutral',
 	size = 'sm',
 	className,
 	link,

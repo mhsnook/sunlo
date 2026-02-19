@@ -272,7 +272,7 @@ function NewPlaylistPageContent() {
 										<div className="flex flex-col gap-1">
 											<Button
 												type="button"
-												variant="ghost"
+												variant="neutral"
 												size="icon"
 												className="h-6 w-6"
 												aria-label="Move phrase up"
@@ -283,7 +283,7 @@ function NewPlaylistPageContent() {
 											</Button>
 											<Button
 												type="button"
-												variant="ghost"
+												variant="neutral"
 												size="icon"
 												className="h-6 w-6"
 												aria-label="Move phrase down"

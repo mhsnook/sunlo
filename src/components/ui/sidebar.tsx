@@ -253,7 +253,7 @@ const SidebarTrigger = ({
 		<Button
 			data-slot="sidebar-trigger"
 			data-sidebar="trigger"
-			variant="ghost"
+			variant="neutral"
 			size="icon"
 			className={`${className} z-50`}
 			onClick={onButtonClick}

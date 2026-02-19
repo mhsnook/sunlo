@@ -17,7 +17,7 @@ export function PlusMenu({ lang }: { lang: string }) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon">
+				<Button variant="neutral" size="icon">
 					<PlusIcon />
 				</Button>
 			</DropdownMenuTrigger>

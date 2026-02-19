@@ -18,7 +18,7 @@ export function PendingRequestsHeader({ shy = false }) {
 		:	<div>
 				<Link
 					className={cn(
-						buttonVariants({ variant: 'ghost' }),
+						buttonVariants({ variant: 'neutral' }),
 						'grow-0 justify-start'
 					)}
 					to="/friends/requests"

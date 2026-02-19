@@ -173,8 +173,8 @@ function ButtonSamples() {
 			<Button size="sm" intent="destructive" variant="soft">
 				Red Soft
 			</Button>
-			<Button size="sm" variant="ghost">
-				Ghost
+			<Button size="sm" variant="neutral">
+				Neutral
 			</Button>
 		</div>
 	)
@@ -549,7 +549,7 @@ function ThemesPage() {
 				<Collapsible className="mt-4">
 					<CollapsibleTrigger asChild>
 						<Button
-							variant="ghost"
+							variant="neutral"
 							className="gap-2 [&[data-state=open]>svg]:rotate-180"
 						>
 							Advanced: Lightness &amp; Chroma

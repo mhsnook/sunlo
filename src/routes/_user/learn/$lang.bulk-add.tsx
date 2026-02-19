@@ -432,7 +432,7 @@ function PhraseEntry({
 						</Label>
 						<Button
 							type="button"
-							variant="ghost"
+							variant="neutral"
 							size="icon"
 							aria-label="Remove phrase"
 							onClick={() => removePhrase(phraseIndex)}
@@ -491,7 +491,7 @@ function PhraseEntry({
 							/>
 							<Button
 								type="button"
-								variant="ghost"
+								variant="neutral"
 								size="icon"
 								onClick={() => removeTranslation(translationIndex)}
 								aria-label="Remove translation"

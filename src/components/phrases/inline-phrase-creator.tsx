@@ -111,7 +111,7 @@ export function InlinePhraseCreator({
 		<div className="bg-muted/30 rounded-lg border p-4">
 			<div className="mb-3 flex items-center justify-between">
 				<h4 className="font-medium">Create New Phrase</h4>
-				<Button type="button" variant="ghost" size="sm" onClick={onCancel}>
+				<Button type="button" variant="neutral" size="sm" onClick={onCancel}>
 					<ChevronUp className="h-4 w-4" />
 					Cancel
 				</Button>

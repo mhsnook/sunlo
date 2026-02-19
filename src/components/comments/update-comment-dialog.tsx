@@ -50,7 +50,7 @@ export function UpdateCommentDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" aria-label="Update comment">
+				<Button variant="neutral" size="icon" aria-label="Update comment">
 					<Edit className="h-4 w-4" />
 				</Button>
 			</DialogTrigger>
@@ -77,7 +77,7 @@ export function UpdateCommentDialog({
 						</Button>
 						<Button
 							size="sm"
-							variant="ghost"
+							variant="neutral"
 							onClick={() => {
 								setOpen(false)
 								setEditContent(comment.content)

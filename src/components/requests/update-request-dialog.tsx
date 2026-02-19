@@ -53,7 +53,7 @@ export function UpdateRequestDialog({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					aria-label="Update request"
 					data-testid="update-request-button"
@@ -86,7 +86,7 @@ export function UpdateRequestDialog({
 						</Button>
 						<Button
 							size="sm"
-							variant="ghost"
+							variant="neutral"
 							onClick={() => {
 								setOpen(false)
 								setEditPrompt(request.prompt)

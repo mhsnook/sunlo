@@ -51,7 +51,7 @@ function Title() {
 	return (
 		<div className="flex flex-row items-center gap-4">
 			<Button
-				variant="ghost"
+				variant="neutral"
 				size="icon"
 				onClick={goBackOrToStringUrl}
 				data-testid="navbar-back"

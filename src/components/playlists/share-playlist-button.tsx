@@ -28,7 +28,7 @@ export function SharePlaylistButton({ id }: { id: uuid }) {
 
 	return (
 		<Button
-			variant="ghost"
+			variant="neutral"
 			size="icon"
 			onClick={sharePlaylist}
 			aria-label="Share playlist"

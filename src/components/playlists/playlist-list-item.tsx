@@ -136,7 +136,7 @@ export function PlaylistItem({
 					<SharePlaylistButton id={playlist.id} />
 					<SendPlaylistToFriendDialog id={playlist.id} lang={playlist.lang}>
 						<Button
-							variant="ghost"
+							variant="neutral"
 							size="icon"
 							aria-label="Send this playlist to a friend"
 							data-testid="send-playlist-to-friend-button"

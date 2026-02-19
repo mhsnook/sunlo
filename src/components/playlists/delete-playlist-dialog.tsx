@@ -52,7 +52,7 @@ export function DeletePlaylistDialog({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
-				variant="ghost"
+				variant="neutral"
 				size="icon"
 				aria-label="Delete playlist"
 				data-testid="delete-playlist-button"

@@ -109,7 +109,7 @@ export function UpdatePlaylistDialog({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button
-					variant="ghost"
+					variant="neutral"
 					size="icon"
 					aria-label="Update playlist"
 					data-testid="update-playlist-button"
@@ -210,7 +210,7 @@ export function UpdatePlaylistDialog({
 							{editCoverImagePath && (
 								<Button
 									type="button"
-									variant="ghost"
+									variant="neutral"
 									size="sm"
 									onClick={() => setEditCoverImagePath('')}
 									className="text-muted-foreground hover:text-destructive"
@@ -232,7 +232,7 @@ export function UpdatePlaylistDialog({
 						</Button>
 						<Button
 							size="sm"
-							variant="ghost"
+							variant="neutral"
 							onClick={() => {
 								setOpen(false)
 								setEditTitle(playlist.title)

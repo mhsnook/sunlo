@@ -68,7 +68,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 	return (
 		<div className="flex flex-row items-center gap-2 text-sm">
 			<Button
-				variant={hasUpvoted ? 'soft' : 'ghost'}
+				variant={hasUpvoted ? 'soft' : 'neutral'}
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this comment'}
 				size="icon"
 				onClick={(e) => {

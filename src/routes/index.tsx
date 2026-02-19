@@ -59,7 +59,7 @@ function BrowseLink() {
 	return (
 		<Link
 			className={cn(
-				buttonVariants({ variant: 'ghost', size: 'icon' }),
+				buttonVariants({ variant: 'neutral', size: 'icon' }),
 				'border-border/50 h-12 w-12 rounded-full border bg-white/10 text-slate-800 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:text-slate-200 dark:hover:bg-black/50'
 			)}
 			from={Route.fullPath}
@@ -78,7 +78,7 @@ function ThemeToggle() {
 
 	return (
 		<Button
-			variant="ghost"
+			variant="neutral"
 			size="icon"
 			onClick={toggle}
 			className="border-border/50 h-12 w-12 rounded-full border bg-white/10 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
@@ -100,7 +100,7 @@ function UserLogin() {
 		return (
 			<Link
 				className={cn(
-					buttonVariants({ variant: 'ghost', size: 'icon' }),
+					buttonVariants({ variant: 'neutral', size: 'icon' }),
 					'border-border/50 h-12 w-12 rounded-full border bg-white/10 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50'
 				)}
 				from={Route.fullPath}

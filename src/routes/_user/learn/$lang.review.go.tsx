@@ -136,7 +136,7 @@ function FlashCardReviewSession({
 					: !atTheEnd && (reviewStage ?? 0) > 1 ?
 						<Button
 							size="sm"
-							variant="ghost"
+							variant="neutral"
 							aria-label="skip for today"
 							onClick={() =>
 								animateTransition(() => gotoIndex(nextValidIndex), 'left')
@@ -149,7 +149,7 @@ function FlashCardReviewSession({
 					: reviewStage === 1 ?
 						<Button
 							size="sm"
-							variant="ghost"
+							variant="neutral"
 							aria-label="back one card"
 							onClick={() => animateTransition(gotoPrevious, 'right')}
 							disabled={isAnimating}

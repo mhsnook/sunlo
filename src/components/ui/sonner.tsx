@@ -88,7 +88,7 @@ export function toastInfo(message: string) {
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						className="size-7 text-blue-600 hover:bg-blue-200/50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-800/50 dark:hover:text-blue-300"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -98,7 +98,7 @@ export function toastInfo(message: string) {
 						<Copy className="size-4" />
 					</Button>
 					<Button
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						className="size-7 text-blue-600 hover:bg-blue-200/50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-800/50 dark:hover:text-blue-300"
 						onClick={() => toast.dismiss(t)}
@@ -129,7 +129,7 @@ export function toastError(message: string) {
 				<span className="flex-1 text-sm">{message}</span>
 				<div className="flex shrink-0 items-center gap-1">
 					<Button
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
@@ -139,7 +139,7 @@ export function toastError(message: string) {
 						<Copy className="size-4" />
 					</Button>
 					<Button
-						variant="ghost"
+						variant="neutral"
 						size="icon"
 						className="size-7 text-red-600 hover:bg-red-200/50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-800/50 dark:hover:text-red-300"
 						onClick={() => toast.dismiss(t)}

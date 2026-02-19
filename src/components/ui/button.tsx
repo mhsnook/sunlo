@@ -12,7 +12,7 @@ const buttonVariants = cva(
 				solid:
 					'bg-lc-7 bg-c-hi text-lc-0 text-c-lo border border-lc-1 border-c-lo hover:bg-lc-8 aria-expanded:opacity-70',
 				soft: 'bg-lc-1 bg-c-mlo text-lc-7 text-c-hi border border-lc-2 border-c-mlo hover:bg-lc-2',
-				ghost:
+				neutral:
 					'text-lc-6 text-c-lo shadow-none hover:bg-lc-1 hover:bg-c-lo hover:text-lc-8',
 				badge:
 					'rounded shadow-none bg-lc-1 bg-c-lo text-lc-7 text-c-lo border border-lc-3 border-c-lo hover:border-c-mid focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2',

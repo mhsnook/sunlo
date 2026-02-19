@@ -202,7 +202,7 @@ function ComponentsPage() {
 							<Button intent="destructive" variant="soft">
 								Red Soft
 							</Button>
-							<Button variant="ghost">Ghost</Button>
+							<Button variant="neutral">Neutral</Button>
 						</div>
 					</CardContent>
 				</Card>
