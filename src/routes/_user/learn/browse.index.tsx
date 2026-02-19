@@ -589,6 +589,8 @@ function StatsSection() {
 }
 
 function LanguagesSection() {
+	const [viewMode, setViewMode] = useState('grid')
+
 	const { data: allLanguages } = useLiveQuery((q) =>
 		q
 			.from({ lang: languagesCollection })
@@ -626,7 +628,7 @@ function LanguagesSection() {
 
 	return (
 		<section>
-			<Tabs defaultValue="grid">
+			<Tabs value={viewMode} onValueChange={setViewMode}>
 				<div className="mb-4 flex flex-row items-start justify-between">
 					<div>
 						<h2 className="text-2xl font-bold">Most Active Languages</h2>
