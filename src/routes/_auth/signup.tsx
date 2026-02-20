@@ -161,20 +161,14 @@ function SignUp() {
 								<EmailField<FormInputs>
 									register={register}
 									error={errors.email}
-									// oxlint-disable-next-line tabindex-no-positive
-									tabIndex={1}
 								/>
 								<PasswordField<FormInputs>
 									register={register}
 									error={errors.password}
-									// oxlint-disable-next-line tabindex-no-positive
-									tabIndex={2}
 								/>
 								<UserRoleField<FormInputs>
 									control={control}
 									error={errors.user_role}
-									// oxlint-disable-next-line tabindex-no-positive
-									tabIndex={3}
 								/>
 							</fieldset>
 							<div className="flex flex-row justify-between">

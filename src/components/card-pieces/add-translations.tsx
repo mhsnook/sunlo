@@ -140,8 +140,6 @@ export function AddTranslationsDialog({
 						<TranslationLanguageField
 							control={control}
 							error={errors.translation_lang}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={1}
 						/>
 						<TranslationTextField
 							register={register}

@@ -94,17 +94,10 @@ function LoginForm() {
 					onSubmit={handleSubmit((data) => loginMutation.mutate(data))}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-						<EmailField<FormInputs>
-							register={register}
-							error={errors.email}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={1}
-						/>
+						<EmailField<FormInputs> register={register} error={errors.email} />
 						<PasswordField<FormInputs>
 							register={register}
 							error={errors.password}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={2}
 						/>
 					</fieldset>
 					<div className="flex flex-row justify-between">
@@ -112,8 +105,6 @@ function LoginForm() {
 							data-testid="login-submit-button"
 							type="submit"
 							disabled={isSubmitting}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={3}
 						>
 							Log in
 						</Button>
@@ -122,8 +113,6 @@ function LoginForm() {
 							to="/signup"
 							from={Route.fullPath}
 							className={buttonVariants({ variant: 'neutral' })}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={4}
 						>
 							Create account
 						</Link>
@@ -138,8 +127,6 @@ function LoginForm() {
 							to="/forgot-password"
 							from={Route.fullPath}
 							className="s-link text-sm"
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={5}
 						>
 							Forgot password?
 						</Link>
