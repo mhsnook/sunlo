@@ -99,11 +99,7 @@ export function IntroSheet({
 						</Button>
 						{!requireAffirmation && skipLabel && (
 							<DrawerClose asChild>
-								<Button
-									variant="soft"
-									onClick={handleSkip}
-									className="w-full"
-								>
+								<Button variant="soft" onClick={handleSkip} className="w-full">
 									{skipLabel}
 								</Button>
 							</DrawerClose>
