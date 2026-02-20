@@ -111,9 +111,7 @@ export function ArchiveDeckButton({
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
-					<AlertDialogCancel
-						className={buttonVariants({ variant: 'neutral' })}
-					>
+					<AlertDialogCancel className={buttonVariants({ variant: 'neutral' })}>
 						Cancel
 					</AlertDialogCancel>
 					{archived ?
