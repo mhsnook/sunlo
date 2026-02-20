@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, type UseMutationResult } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
@@ -73,52 +73,6 @@ function AcceptInvitePage() {
 		},
 	})
 
-	const AcceptInviteForm = () => {
-		return (
-			<>
-				{profile ?
-					<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
-						<img
-							src={avatarUrlify(profile.avatar_path)}
-							width=""
-							className="mx-auto max-w-32 shrink rounded-xl"
-							alt={`Your avatar`}
-						/>
-						{friend ?
-							<>
-								<ArrowRightLeft className="mx-auto opacity-70" />
-								<img
-									src={avatarUrlify(friend.avatar_path)}
-									className="mx-auto max-w-32 shrink rounded-xl"
-									alt={`${friend.username}'s avatar`}
-								/>
-							</>
-						:	null}
-					</div>
-				:	null}
-				<div className="flex flex-row justify-center gap-4">
-					<Button
-						size="lg"
-						onClick={() => acceptOrDeclineMutation.mutate({ action: 'accept' })}
-						disabled={acceptOrDeclineMutation.isPending}
-					>
-						Accept invitation
-					</Button>
-					<Button
-						size="lg"
-						variant="neutral"
-						onClick={() =>
-							acceptOrDeclineMutation.mutate({ action: 'decline' })
-						}
-						disabled={acceptOrDeclineMutation.isPending}
-					>
-						Ignore
-					</Button>
-				</div>
-			</>
-		)
-	}
-
 	return (
 		<main className="w-app flex h-screen flex-col justify-center p-2 pb-20">
 			{isLoading ?
@@ -141,7 +95,11 @@ function AcceptInvitePage() {
 								text="Something went wrong"
 							/>
 						: !acceptOrDeclineMutation.isSuccess ?
-							<AcceptInviteForm />
+							<AcceptInviteForm
+								profile={profile}
+								friend={friend}
+								acceptOrDeclineMutation={acceptOrDeclineMutation}
+							/>
 						: acceptOrDeclineMutation.variables.action === 'accept' ?
 							<ShowAccepted friend={friend} />
 						:	<ShowDeclined />}
@@ -149,6 +107,62 @@ function AcceptInvitePage() {
 				</Card>
 			}
 		</main>
+	)
+}
+
+function AcceptInviteForm({
+	profile,
+	friend,
+	acceptOrDeclineMutation,
+}: {
+	profile: { avatar_path: string | null } | null | undefined
+	friend: PublicProfileType | null | undefined
+	acceptOrDeclineMutation: UseMutationResult<
+		unknown,
+		Error,
+		{ action: 'decline' | 'accept' }
+	>
+}) {
+	return (
+		<>
+			{profile ?
+				<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
+					<img
+						src={avatarUrlify(profile.avatar_path)}
+						width=""
+						className="mx-auto max-w-32 shrink rounded-xl"
+						alt={`Your avatar`}
+					/>
+					{friend ?
+						<>
+							<ArrowRightLeft className="mx-auto opacity-70" />
+							<img
+								src={avatarUrlify(friend.avatar_path)}
+								className="mx-auto max-w-32 shrink rounded-xl"
+								alt={`${friend.username}'s avatar`}
+							/>
+						</>
+					:	null}
+				</div>
+			:	null}
+			<div className="flex flex-row justify-center gap-4">
+				<Button
+					size="lg"
+					onClick={() => acceptOrDeclineMutation.mutate({ action: 'accept' })}
+					disabled={acceptOrDeclineMutation.isPending}
+				>
+					Accept invitation
+				</Button>
+				<Button
+					size="lg"
+					variant="neutral"
+					onClick={() => acceptOrDeclineMutation.mutate({ action: 'decline' })}
+					disabled={acceptOrDeclineMutation.isPending}
+				>
+					Ignore
+				</Button>
+			</div>
+		</>
 	)
 }
 
