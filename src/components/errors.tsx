@@ -132,8 +132,9 @@ function Logger({
 				}
 			}
 			if (values) {
-				if ('password' in values) values.password = '***'
-				context.values = values
+				const safeValues = { ...values }
+				if ('password' in safeValues) safeValues.password = '***'
+				context.values = safeValues
 			}
 
 			const row = {

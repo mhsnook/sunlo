@@ -6,8 +6,10 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { User } from 'lucide-react'
 import { avatarUrlify } from '@/lib/hooks'
 
+const EMPTY_UIDS: uuid[] = []
+
 export function SelectMultipleFriends({
-	uids = [],
+	uids = EMPTY_UIDS,
 	setUids,
 }: {
 	uids: uuid[]

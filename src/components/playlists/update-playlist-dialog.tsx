@@ -58,15 +58,18 @@ export function UpdatePlaylistDialog({
 				.from('avatars')
 				.upload(filename, file, { cacheControl: '3600', upsert: true })
 
-			if (error) throw error
-			setEditCoverImagePath(data.path)
-			toastSuccess('Image uploaded')
+			if (error) {
+				toastError('Failed to upload image')
+				console.error(error)
+			} else {
+				setEditCoverImagePath(data.path)
+				toastSuccess('Image uploaded')
+			}
 		} catch (error) {
 			toastError('Failed to upload image')
 			console.error(error)
-		} finally {
-			setIsUploadingImage(false)
 		}
+		setIsUploadingImage(false)
 	}
 	const handleSave = () => {
 		const urlError = validateUrl(editHref)
