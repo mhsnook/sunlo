@@ -84,8 +84,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 							:	answersOnly
 						}
 						className={buttonVariants({
-							variant:
-								search.show === 'answers-only' ? 'soft' : 'ghost',
+							variant: search.show === 'answers-only' ? 'soft' : 'ghost',
 							size: 'icon',
 						})}
 					>

@@ -49,10 +49,7 @@ export function RelationshipActions({ uid_for }: { uid_for: uuid }) {
 					<Button variant="neutral">
 						<X />
 					</Button>
-					<Button
-						variant="red"
-						onClick={() => action.mutate('decline')}
-					>
+					<Button variant="red" onClick={() => action.mutate('decline')}>
 						Confirm
 					</Button>
 				</ConfirmDestructiveActionDialog>
