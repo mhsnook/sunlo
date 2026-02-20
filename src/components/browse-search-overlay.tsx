@@ -206,10 +206,14 @@ export default function BrowseSearchOverlay({
 		lowerQuery,
 	])
 
-	// Reset selected index when results change
-	useEffect(() => {
+	// Reset selected index when results change (setState during render is the
+	// React-recommended pattern for derived state — avoids a cascading re-render)
+	const resetKey = `${results.length}-${activeFilter}-${lowerQuery}`
+	const [prevResetKey, setPrevResetKey] = useState(resetKey)
+	if (resetKey !== prevResetKey) {
+		setPrevResetKey(resetKey)
 		setSelectedIndex(0)
-	}, [results.length, activeFilter, lowerQuery])
+	}
 
 	// Navigate to a result by clicking the link element
 	const openResult = useCallback((index: number) => {
@@ -296,7 +300,7 @@ export default function BrowseSearchOverlay({
 				</div>
 
 				{/* Search Input */}
-				<div className="p-3" onKeyDown={handleKeyDown}>
+				<div className="p-3" role="search" onKeyDown={handleKeyDown}>
 					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
 						<Search className="text-muted-foreground size-5 shrink-0" />
 						<input
