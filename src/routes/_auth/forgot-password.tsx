@@ -84,8 +84,6 @@ function ForgotPasswordPage() {
 							<EmailField<FormInputs>
 								register={register}
 								error={errors.email}
-								// oxlint-disable-next-line tabindex-no-positive
-								tabIndex={1}
 							/>
 						</fieldset>
 						<div className="flex flex-row justify-between">

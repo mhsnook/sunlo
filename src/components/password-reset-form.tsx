@@ -68,12 +68,7 @@ export function PasswordResetForm() {
 					onSubmit={handleSubmit((data) => changeMutation.mutate(data))}
 				>
 					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-						<PasswordField
-							register={register}
-							error={errors.password}
-							// oxlint-disable-next-line tabindex-no-positive
-							tabIndex={1}
-						/>
+						<PasswordField register={register} error={errors.password} />
 					</fieldset>
 					<div className="flex flex-row justify-between">
 						<Button disabled={changeMutation.isPending || !isValid}>
