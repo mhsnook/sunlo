@@ -66,7 +66,7 @@ export function NavMain({ lang }: { lang?: string }) {
 			{deckMenu && lang && lang in languages && (
 				<div
 					className={
-						!open && !isMobile ? 'px-0.5' : 'border-primary/50 border-b px-2'
+						!open && !isMobile ? 'px-0.5' : 'border-4-mlo-primary border-b px-2'
 					}
 				>
 					{!isDeckFound && isAuth ?
@@ -74,7 +74,7 @@ export function NavMain({ lang }: { lang?: string }) {
 					:	<OneSidebarMenu
 							menu={deckMenu}
 							title=""
-							className="bg-primary/10 mb-2 rounded-xl"
+							className="bg-1-mlo-primary mb-2 rounded-xl"
 						/>
 					}
 				</div>

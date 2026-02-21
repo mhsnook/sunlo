@@ -82,7 +82,7 @@ function WelcomePage() {
 
 			{/* Welcome Header */}
 			<header className="space-y-4 text-center">
-				<div className="from-primary/20 to-primary/5 mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
+				<div className="from-2-mlo-primary to-0-lo-primary mx-auto flex size-20 items-center justify-center rounded-full bg-gradient-to-br">
 					<Sparkles className="text-primary size-10" />
 				</div>
 				<div>
@@ -266,7 +266,7 @@ function FeatureItem({
 }) {
 	return (
 		<div className="flex gap-3">
-			<div className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
+			<div className="bg-1-mlo-primary text-primary flex size-10 shrink-0 items-center justify-center rounded-full">
 				<Icon className="size-5" />
 			</div>
 			<div>
@@ -300,7 +300,7 @@ function ActionCard({
 		<Card
 			className={cn(
 				'transition-shadow hover:shadow-md',
-				isPrimary && 'border-primary/50 bg-primary/5'
+				isPrimary && 'border-4-mlo-primary bg-0-lo-primary'
 			)}
 		>
 			<CardHeader className="pb-2">
@@ -308,7 +308,7 @@ function ActionCard({
 					<div
 						className={cn(
 							'flex size-10 items-center justify-center rounded-full',
-							isPrimary ? 'bg-primary text-white' : 'bg-muted'
+							isPrimary ? 'bg-primary text-primary-foreground' : 'bg-muted'
 						)}
 					>
 						<Icon className="size-5" />

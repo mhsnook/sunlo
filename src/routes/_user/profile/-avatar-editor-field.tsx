@@ -81,7 +81,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 		<div className="flex flex-col gap-2">
 			<Label
 				htmlFor="avatarUploadInput"
-				className="group border-primary-foresoft/30 hover:border-primary hover:bg-primary/10 relative isolate flex h-40 flex-col items-center rounded-2xl border text-center"
+				className="group border-3-mlo-primary hover:border-primary hover:bg-1-mlo-primary relative isolate flex h-40 flex-col items-center rounded-2xl border text-center"
 			>
 				{!url ? null : (
 					<div className="z-10 mx-auto my-2 grid aspect-square size-36">

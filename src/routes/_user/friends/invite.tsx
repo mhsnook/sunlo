@@ -28,7 +28,7 @@ function InviteFriendPage() {
 	return (
 		<main className="mx-auto max-w-4xl space-y-12 px-4 py-8 @lg:px-6 @xl:px-8">
 			<div className="text-center">
-				<div className="bg-primary/10 text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
+				<div className="bg-1-mlo-primary text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
 					<Sparkles className="h-4 w-4" />
 					<span>Grow your learning network</span>
 				</div>
@@ -50,7 +50,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="bg-primary/10 group-hover:bg-primary/20 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="bg-1-mlo-primary group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Share className="text-primary h-6 w-6" />
 									</div>
 									<div>
@@ -70,7 +70,7 @@ function InviteFriendPage() {
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
 							<CardContent className="p-8">
 								<div className="mb-6 flex items-center space-x-3">
-									<div className="bg-accent/50 group-hover:bg-accent flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<div className="bg-1-mlo-accent group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
 										<Copy className="text-accent-foreground h-6 w-6" />
 									</div>
 									<div>
@@ -84,7 +84,7 @@ function InviteFriendPage() {
 								</div>
 								<CopyLinkButton
 									size="lg"
-									className="w-full"
+									className="border-3-mid-accent bg-1-mlo-accent text-accent-foresoft hover:bg-lc-up-1 w-full"
 									variant="soft"
 									url={share.url}
 								/>
@@ -106,16 +106,14 @@ function InviteFriendPage() {
 						{/* Email */}
 						<a
 							href={`mailto:?subject=${encodeURIComponent(share.data.title)}&body=${encodeURIComponent(share.data.text)}`}
-							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:border-blue-300 hover:bg-blue-50 dark:hover:border-blue-900 dark:hover:bg-blue-950/20"
+							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100/50 transition-colors group-hover:bg-blue-100 dark:bg-blue-900/50 dark:group-hover:bg-blue-900">
-									<Mail className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+								<div className="bg-1-mlo-info group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<Mail className="text-6-hi-info h-6 w-6" />
 								</div>
 								<div>
-									<h3 className="text-foreground font-semibold transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">
-										Email
-									</h3>
+									<h3 className="text-foreground font-semibold">Email</h3>
 									<p className="text-muted-foreground text-sm">
 										Send via email
 									</p>
@@ -126,16 +124,14 @@ function InviteFriendPage() {
 						{/* WhatsApp */}
 						<a
 							href={`whatsapp://send?text=${encodeURIComponent(share.data.text)}`}
-							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:border-emerald-900 dark:hover:bg-emerald-950/20"
+							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
-								<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100/50 transition-colors group-hover:bg-emerald-100 dark:bg-emerald-900/50 dark:group-hover:bg-emerald-900">
-									<MessageSquare className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+								<div className="bg-1-mlo-success group-hover:bg-lc-up-1 flex h-12 w-12 items-center justify-center rounded-xl transition-colors">
+									<MessageSquare className="text-6-hi-success h-6 w-6" />
 								</div>
 								<div>
-									<h3 className="text-foreground font-semibold transition-colors group-hover:text-emerald-600 dark:group-hover:text-emerald-400">
-										WhatsApp
-									</h3>
+									<h3 className="text-foreground font-semibold">WhatsApp</h3>
 									<p className="text-muted-foreground text-sm">
 										Share on WhatsApp
 									</p>
@@ -145,14 +141,14 @@ function InviteFriendPage() {
 						{share.can ? null : (
 							<button
 								onClick={share.copyUrl}
-								className="group border-border/50 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:border-amber-300 hover:bg-amber-50 dark:hover:border-amber-900 dark:hover:bg-amber-950/20"
+								className="group border-border/50 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 							>
 								<div className="flex items-center space-x-3">
-									<div className="flex aspect-square h-12 w-12 items-center justify-center rounded-xl bg-amber-100/50 transition-colors group-hover:bg-amber-100 dark:bg-amber-900/50 dark:group-hover:bg-amber-900">
-										<Copy className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+									<div className="bg-1-mlo-warning group-hover:bg-lc-up-1 flex aspect-square h-12 w-12 items-center justify-center rounded-xl transition-colors">
+										<Copy className="text-6-hi-warning h-6 w-6" />
 									</div>
 									<div>
-										<h3 className="text-foreground text-lg font-semibold transition-colors group-hover:text-amber-600 dark:group-hover:text-amber-400">
+										<h3 className="text-foreground text-lg font-semibold">
 											Copy Link
 										</h3>
 										<p className="text-muted-foreground text-sm">

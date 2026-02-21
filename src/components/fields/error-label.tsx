@@ -7,7 +7,5 @@ export default function ErrorLabel({
 }) {
 	return !error?.message ?
 			null
-		:	<p className="text-destructive mt-2 text-sm dark:text-red-400">
-				{error.message}
-			</p>
+		:	<p className="text-destructive mt-2 text-sm">{error.message}</p>
 }

@@ -10,15 +10,15 @@ const buttonVariants = cva(
 		variants: {
 			variant: {
 				default:
-					'bg-primary-foresoft dark:bg-primary text-white hover:opacity-90 aria-expanded:bg-primary-foresoft/60 border border-background dark:text-white hover:border-primary-foresoft',
-				soft: 'border border-primary-foresoft/40 bg-primary/10 hover:bg-primary/30 text-primary-foresoft hover:text-primary-foresoft dark:bg-primary-invert/40 dark:hover:bg-primary-invert/50',
+					'bg-5-mhi-primary text-primary-foreground hover:opacity-90 aria-expanded:bg-5-mid-primary border border-background hover:border-primary-foresoft',
+				soft: 'border border-3-mid-primary bg-1-mlo-primary hover:bg-lc-up-1 text-primary-foresoft hover:text-primary-foresoft',
 				neutral:
 					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
 				red: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
 				'red-soft':
 					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
 				ghost:
-					'text-muted-foreground hover:bg-primary/10 hover:text-foreground',
+					'text-muted-foreground hover:bg-1-mlo-primary hover:text-foreground',
 				'badge-outline':
 					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
 				'dashed-w-full':

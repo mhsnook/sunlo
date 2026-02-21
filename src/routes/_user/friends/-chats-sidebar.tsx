@@ -13,7 +13,7 @@ import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
 
 const linkActiveProps = {
-	className: 'bg-accent/20 text-accent-foreground',
+	className: 'bg-1-mlo-accent text-accent-foreground',
 }
 
 export function ChatsSidebar() {
@@ -83,7 +83,7 @@ export function ChatsSidebar() {
 								to="/friends/chats/$friendUid"
 								params={{ friendUid: friend.uid }}
 								className={cn(
-									'hover:bg-accent/30 hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
+									'hover:bg-1-mlo-accent hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
 								)}
 								activeProps={linkActiveProps}
 							>

@@ -309,7 +309,7 @@ const SidebarInset = ({
 		<main
 			data-slot="sidebar-inset"
 			className={cn(
-				'relative flex min-h-svh flex-1 flex-col bg-gray-50 dark:bg-gray-800',
+				'bg-base-lo-neutral relative flex min-h-svh flex-1 flex-col',
 				'peer-data-[variant=inset]:min-h-[calc(100svh-(--spacing(4)))] md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2',
 				className
 			)}

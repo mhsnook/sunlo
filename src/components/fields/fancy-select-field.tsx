@@ -53,15 +53,15 @@ export function FancySelectField<T extends FieldValues>({
 							className={cn(
 								`flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors`,
 								String(value) === String(option.value) ?
-									'bg-primary/20 border-primary-foresoft/30'
-								:	'hover:bg-primary/10 hover:border-input'
+									'bg-1-mlo-primary border-2-mlo-primary'
+								:	'hover:bg-base-mlo-primary hover:border-input'
 							)}
 						>
 							{option.Icon && (
 								<span
 									className={`transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2 ${
 										String(value) === String(option.value) ?
-											'bg-primary-foresoft text-white'
+											'bg-primary-foresoft text-primary-foreground'
 										:	''
 									}`}
 								>

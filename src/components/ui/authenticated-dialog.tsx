@@ -125,10 +125,7 @@ export function AuthenticatedDialogContent({
 					>
 						Log in
 					</Link>
-					<Link
-						to="/signup"
-						className={buttonVariants({ variant: 'neutral' })}
-					>
+					<Link to="/signup" className={buttonVariants({ variant: 'neutral' })}>
 						Create account
 					</Link>
 				</div>

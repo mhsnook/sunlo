@@ -29,7 +29,7 @@ export function TapCardToSelect({
 		<CardlikeFlashcard
 			onClick={() => toggleCardSelection(pid)}
 			key={pid}
-			className={`hover:bg-primary/10 cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : ''}`}
+			className={`hover:bg-1-mlo-primary cursor-pointer transition-all ${isSelected ? 'border-primary bg-0-lo-primary' : ''}`}
 			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 		>
 			<CardHeader className="p-3 pb-0">

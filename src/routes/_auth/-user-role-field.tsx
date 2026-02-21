@@ -8,8 +8,8 @@ import ErrorLabel from '@/components/fields/error-label'
 const outer = 'flex flex-row gap-2 items-center',
 	inner =
 		'flex-col gap-2 flex w-full cursor-pointer items-center rounded border p-4 transition-colors',
-	selected = 'bg-primary/20 border-primary-foresoft/30 hover:border-primary',
-	unselected = 'hover:bg-primary/10 border-input'
+	selected = 'bg-1-mlo-primary border-2-mlo-primary hover:border-primary',
+	unselected = 'hover:bg-base-mlo-primary border-input'
 
 export function UserRoleField<T extends FieldValues>({
 	control,
