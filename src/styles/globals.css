@@ -1,100 +1,89 @@
 @import 'tailwindcss';
+@import 'tailwind-oklch';
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans&display=swap');
 @import url('https://fonts.cdnfonts.com/css/opendyslexic');
 
 @plugin '@tailwindcss/typography';
 @plugin '@tailwindcss/container-queries';
 @plugin 'tailwindcss-animate';
+@plugin 'tailwind-oklch/plugin';
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-	--h: 300;
-	--h-off: 270;
-	--h-accent: 175;
-	--c-hi: 0.22;
-	--c-lo: 0.08;
-	--L-1: 0.35;
-	--L-2: 0.45;
-	--L-3: 0.58;
-	--L-4: 0.9;
-	--c-sec: 0.008;
-	--L-sec: 0.97;
-	--c-sec-f: 0.03;
-	--L-sec-f: 0.22;
+/* Override plugin default hues to match Sunlo's palette */
+@theme {
+	--hue-primary: 300;
+	--hue-accent: 175;
+	--hue-neutral: 270;
+}
 
-	--background: oklch(0.96 0.02 var(--h));
-	--foreground: oklch(0.3 0.06 var(--h));
+/* Static tokens: light mode (default) */
+:root {
+	--background: oklch(0.96 0.02 var(--hue-primary));
+	--foreground: oklch(0.3 0.06 var(--hue-primary));
 	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.15 0.02 var(--h-off));
+	--card-foreground: oklch(0.15 0.02 var(--hue-neutral));
 	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.15 0.02 var(--h-off));
-	--secondary: oklch(0.97 0.005 var(--h-off));
-	--secondary-foreground: oklch(0.22 0.03 var(--h-off));
-	--muted: oklch(0.97 0.005 var(--h-off));
-	--muted-foreground: oklch(0.55 0.01 var(--h-off));
+	--popover-foreground: oklch(0.15 0.02 var(--hue-neutral));
+	--secondary: oklch(0.97 0.005 var(--hue-neutral));
+	--secondary-foreground: oklch(0.22 0.03 var(--hue-neutral));
+	--muted: oklch(0.97 0.005 var(--hue-neutral));
+	--muted-foreground: oklch(0.55 0.01 var(--hue-neutral));
 	--destructive: oklch(0.55 0.18 25);
 	--destructive-foreground: oklch(0.98 0.005 250);
-	--border: oklch(0.85 0.03 var(--h));
-	--input: oklch(0.93 0.005 var(--h-off));
-	--ring: oklch(0.58 0.22 var(--h));
+	--border: oklch(0.85 0.03 var(--hue-primary));
+	--input: oklch(0.93 0.005 var(--hue-neutral));
+	--ring: oklch(0.58 0.22 var(--hue-primary));
 	--chart-1: oklch(0.55 0.22 295);
 	--chart-2: oklch(0.55 0.1 185);
 	--chart-3: oklch(0.38 0.05 240);
 	--chart-4: oklch(0.78 0.14 85);
 	--chart-5: oklch(0.75 0.16 55);
 	--sidebar-background: oklch(0.98 0 0);
-	--sidebar-foreground: oklch(0.35 0.01 var(--h-off));
-	--sidebar-primary: oklch(0.2 0.01 var(--h-off));
+	--sidebar-foreground: oklch(0.35 0.01 var(--hue-neutral));
+	--sidebar-primary: oklch(0.2 0.01 var(--hue-neutral));
 	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.97 0.005 var(--h-accent));
+	--sidebar-accent: oklch(0.97 0.005 var(--hue-accent));
 	--sidebar-accent-foreground: oklch(0.2 0.01 260);
-	--sidebar-border: oklch(0.93 0.005 var(--h-off));
-	--sidebar-ring: oklch(0.6 0.22 var(--h-off));
+	--sidebar-border: oklch(0.93 0.005 var(--hue-neutral));
+	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
 	--shadow-color-1: rgba(0, 0, 0, 0.05);
 	--shadow-color-2: rgba(0, 0, 0, 0.1);
 	--shadow-color-3: rgba(0, 0, 0, 0.25);
 }
 
+/* Static tokens: dark mode
+   Keep luminance within the plugin's 0.12–0.92 range to avoid
+   blown-out whites. Target ≤0.87 for body text, ≤0.84 for secondary. */
 .dark {
-	--c-hi: 0.22;
-	--c-lo: 0.08;
-	--L-1: 0.95;
-	--L-2: 0.82;
-	--L-3: 0.5;
-	--L-4: 0.28;
-	--c-sec: 0.02;
-	--c-sec-f: 0.01;
-	--L-sec: 0.28;
-	--L-sec-f: 0.98;
-	--background: oklch(0.22 0.03 var(--h));
-	--foreground: oklch(0.9 0.06 var(--h));
-	--card: oklch(0.2 0.05 var(--h-off));
-	--card-foreground: oklch(0.92 0.05 var(--h));
-	--popover: oklch(0.15 0.03 var(--h-off));
-	--popover-foreground: oklch(0.98 0.005 var(--h-off));
-	--secondary: oklch(0.28 0.02 var(--h-off));
-	--secondary-foreground: oklch(0.98 0.005 var(--h-off));
-	--muted: oklch(0.28 0.02 var(--h-off));
-	--muted-foreground: oklch(0.7 0.01 var(--h-off));
+	--background: oklch(0.22 0.03 var(--hue-primary));
+	--foreground: oklch(0.84 0.04 var(--hue-primary));
+	--card: oklch(0.2 0.05 var(--hue-neutral));
+	--card-foreground: oklch(0.84 0.04 var(--hue-primary));
+	--popover: oklch(0.15 0.03 var(--hue-neutral));
+	--popover-foreground: oklch(0.84 0.005 var(--hue-neutral));
+	--secondary: oklch(0.28 0.02 var(--hue-neutral));
+	--secondary-foreground: oklch(0.84 0.005 var(--hue-neutral));
+	--muted: oklch(0.28 0.02 var(--hue-neutral));
+	--muted-foreground: oklch(0.65 0.01 var(--hue-neutral));
 	--destructive: oklch(0.42 0.18 25);
-	--destructive-foreground: oklch(0.98 0.005 250);
-	--border: oklch(0.42 0.04 var(--h));
-	--input: oklch(0.28 0.02 var(--h-off));
-	--ring: oklch(0.55 0.18 var(--h));
+	--destructive-foreground: oklch(0.92 0.005 250);
+	--border: oklch(0.42 0.04 var(--hue-primary));
+	--input: oklch(0.28 0.02 var(--hue-neutral));
+	--ring: oklch(0.55 0.18 var(--hue-primary));
 	--chart-1: oklch(0.5 0.18 295);
 	--chart-2: oklch(0.58 0.1 170);
 	--chart-3: oklch(0.68 0.16 55);
 	--chart-4: oklch(0.58 0.18 310);
 	--chart-5: oklch(0.58 0.18 355);
-	--sidebar-background: oklch(0.2 0.01 var(--h-off));
-	--sidebar-foreground: oklch(0.97 0.005 var(--h-off));
-	--sidebar-primary: oklch(0.55 0.18 var(--h-off));
-	--sidebar-primary-foreground: oklch(1 0 0);
-	--sidebar-accent: oklch(0.25 0.005 var(--h-accent));
-	--sidebar-accent-foreground: oklch(0.97 0.005 var(--h-accent));
-	--sidebar-border: oklch(0.25 0.005 var(--h));
-	--sidebar-ring: oklch(0.6 0.22 var(--h-off));
+	--sidebar-background: oklch(0.2 0.01 var(--hue-neutral));
+	--sidebar-foreground: oklch(0.84 0.005 var(--hue-neutral));
+	--sidebar-primary: oklch(0.55 0.18 var(--hue-neutral));
+	--sidebar-primary-foreground: oklch(0.92 0 0);
+	--sidebar-accent: oklch(0.25 0.005 var(--hue-accent));
+	--sidebar-accent-foreground: oklch(0.84 0.005 var(--hue-accent));
+	--sidebar-border: oklch(0.25 0.005 var(--hue-primary));
+	--sidebar-ring: oklch(0.6 0.22 var(--hue-neutral));
 	--shadow-color-1: rgba(255, 255, 255, 0.05);
 	--shadow-color-2: rgba(255, 255, 255, 0.1);
 	--shadow-color-3: rgba(255, 255, 255, 0.25);
@@ -130,18 +119,27 @@
 	--color-ring: var(--ring);
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
-	--color-primary-foreground: oklch(var(--L-1) var(--c-lo) var(--h));
-	--color-primary-foresoft: oklch(var(--L-2) var(--c-hi) var(--h));
-	--color-primary: oklch(var(--L-3) var(--c-hi) var(--h));
-	--color-primary-invert: oklch(var(--L-4) var(--c-lo) var(--h));
-	--color-accent-foreground: oklch(var(--L-1) var(--c-lo) var(--h-accent));
-	--color-accent-foresoft: oklch(var(--L-2) var(--c-hi) var(--h-accent));
-	--color-accent: oklch(var(--L-3) var(--c-hi) var(--h-accent));
-	--color-accent-invert: oklch(var(--L-4) var(--c-lo) var(--h-accent));
-	--color-secondary: oklch(var(--L-sec) var(--c-sec) var(--h-off));
-	--color-secondary-foreground: oklch(
-		var(--L-sec-f) var(--c-sec-f) var(--h-off)
+
+	/* "On-primary" text — always near-white regardless of mode.
+	   These surfaces (l-5, l-7) are always saturated and mid-to-dark,
+	   so the text must sit at the opposite (light) end. Fixed L=0.93
+	   avoids pure-white harshness while providing strong contrast. */
+	--color-primary-foreground: oklch(0.93 0.02 var(--hue-primary));
+	--color-primary-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-primary));
+	--color-primary: oklch(var(--l-5) var(--c-hi) var(--hue-primary));
+
+	/* Accent tokens — foreground auto-flips because it's used as body
+	   text (language names, links), not just on colored surfaces. */
+	--color-accent-foreground: oklch(
+		var(--l-fore) var(--c-mlo) var(--hue-accent)
 	);
+	--color-accent-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-accent));
+	--color-accent: oklch(var(--l-5) var(--c-hi) var(--hue-accent));
+	--color-accent-invert: oklch(var(--l-2) var(--c-mlo) var(--hue-accent));
+
+	/* Static tokens — separate light/dark definitions above */
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
 	--color-destructive: var(--destructive);
 	--color-destructive-foreground: var(--destructive-foreground);
 	--color-muted: var(--muted);
@@ -238,34 +236,23 @@
 	@apply decoration-primary/30 flex-shrink-0 underline-offset-4 hover:underline;
 }
 
-/* @utility h1 {
-  @apply my-4 text-3xl @xl:text-4xl @3xl:text-5xl @5xl:text-6xl; // font-display;
-  & .sub {
-    @apply text-lg @xl:text-xl @3xl:text-2xl;
-  }
-}
-@utility sub {
-  .h1 & {
-    @apply text-lg @xl:text-xl @3xl:text-2xl;
-  }
-} */
 @utility d1 {
 	@apply my-4 text-4xl font-thin tracking-tight @xl:text-[3rem] @3xl:text-[4rem] @5xl:text-[5rem];
 }
 @utility h2 {
-	@apply my-4 text-2xl @3xl:text-3xl @5xl:text-4xl; /* font-display;*/
+	@apply my-4 text-2xl @3xl:text-3xl @5xl:text-4xl;
 }
 @utility d2 {
-	@apply text-3xl @xl:text-4xl @3xl:text-5xl @5xl:text-6xl; /* font-display;*/
+	@apply text-3xl @xl:text-4xl @3xl:text-5xl @5xl:text-6xl;
 }
 @utility h3 {
-	@apply mt-1 mb-3 text-xl @3xl:text-2xl; /* font-display;*/
+	@apply mt-1 mb-3 text-xl @3xl:text-2xl;
 	& > p {
 		@apply text-sm opacity-80 @3xl:text-base;
 	}
 }
 @utility h4 {
-	@apply my-2 text-lg @3xl:text-xl; /* font-display;*/
+	@apply my-2 text-lg @3xl:text-xl;
 }
 @utility h5 {
 	@apply my-2 text-lg font-bold;
@@ -294,7 +281,7 @@
 		@apply border-border;
 	}
 	body {
-		@apply text-foreground bg-gray-50 dark:bg-gray-800;
+		@apply bg-base-lo-neutral text-foreground;
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);

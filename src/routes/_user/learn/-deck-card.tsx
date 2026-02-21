@@ -23,7 +23,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 				data-testid={`deck-card-${deck.lang}`}
 				className="@container relative overflow-hidden transition-all duration-200 hover:-translate-y-0.5"
 			>
-				<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4 text-white">
+				<CardHeader className="from-1-mlo-primary to-2-mid-primary flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4">
 					<Link
 						className="grow"
 						to="/learn/$lang"

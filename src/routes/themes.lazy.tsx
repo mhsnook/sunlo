@@ -13,18 +13,12 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import {
 	Copy,
 	Plus,
 	Trash2,
 	Rocket,
 	HouseHeart,
 	Logs,
-	ChevronDown,
 	Hourglass,
 	WalletCards,
 } from 'lucide-react'
@@ -34,95 +28,86 @@ export const Route = createLazyFileRoute('/themes')({
 	component: ThemesPage,
 })
 
-// Advanced L/C variables (per mode, separate from ThemeType)
-interface AdvancedVars {
-	cHi: number
-	cLo: number
-	L1: number
-	L2: number
-	L3: number
-	L4: number
-	cSec: number
-	cSecF: number
-	LSec: number
-	LSecF: number
-}
-
-const defaultLightVars: AdvancedVars = {
-	cHi: 0.22,
-	cLo: 0.08,
-	L1: 0.35,
-	L2: 0.45,
-	L3: 0.58,
-	L4: 0.9,
-	cSec: 0.008,
-	cSecF: 0.03,
-	LSec: 0.97,
-	LSecF: 0.22,
-}
-
-const defaultDarkVars: AdvancedVars = {
-	cHi: 0.22,
-	cLo: 0.08,
-	L1: 0.95,
-	L2: 0.82,
-	L3: 0.5,
-	L4: 0.28,
-	cSec: 0.02,
-	cSecF: 0.01,
-	LSec: 0.28,
-	LSecF: 0.98,
-}
-
-// Base L/C + hue variables that go inline on every panel
-function baseVars(theme: ThemeType, vars: AdvancedVars): CSSProperties {
+// Hue variables that go inline on every panel
+function hueVars(theme: ThemeType): CSSProperties {
 	return {
-		'--h': theme.hue,
-		'--h-off': theme.hueOff,
-		'--h-accent': theme.hueAccent,
-		'--c-hi': vars.cHi,
-		'--c-lo': vars.cLo,
-		'--L-1': vars.L1,
-		'--L-2': vars.L2,
-		'--L-3': vars.L3,
-		'--L-4': vars.L4,
-		'--c-sec': vars.cSec,
-		'--c-sec-f': vars.cSecF,
-		'--L-sec': vars.LSec,
-		'--L-sec-f': vars.LSecF,
+		'--hue-primary': theme.hue,
+		'--hue-neutral': theme.hueOff,
+		'--hue-accent': theme.hueAccent,
 	} as CSSProperties
 }
 
-// Light panel also needs semantic vars re-declared because
-// :root pre-resolves var(--h) at compute time. Re-declaring
-// them here lets them pick up the inline --h value.
+// Both panels need oklch luminance vars force-declared because the plugin
+// uses :root:not(.dark) / @theme to flip them — a nested div can't trigger that.
+const lightOklchVars: CSSProperties = {
+	'--lc-dir': '-1',
+	'--lc-range-start': '0.95',
+	'--lc-range-end': '0.15',
+	'--l-0': '0.95',
+	'--l-1': '0.87',
+	'--l-2': '0.79',
+	'--l-3': '0.71',
+	'--l-4': '0.63',
+	'--l-5': '0.55',
+	'--l-6': '0.47',
+	'--l-7': '0.39',
+	'--l-8': '0.31',
+	'--l-9': '0.23',
+	'--l-10': '0.15',
+	'--l-base': '0.95',
+	'--l-fore': '0.15',
+	'--l-none': '1',
+	'--l-full': '0',
+} as CSSProperties
+
+// Light panel also needs semantic vars re-declared because :root pre-resolves
+// var(--hue-primary) at compute time. Re-declaring them here lets them
+// pick up the inline --hue-primary value.
 const lightSemanticVars: CSSProperties = {
-	'--background': 'oklch(0.96 0.02 var(--h))',
-	'--foreground': 'oklch(0.30 0.06 var(--h))',
+	'--background': 'oklch(0.96 0.02 var(--hue-primary))',
+	'--foreground': 'oklch(0.30 0.06 var(--hue-primary))',
 	'--card': 'oklch(1.00 0 0)',
-	'--card-foreground': 'oklch(0.15 0.02 var(--h-off))',
+	'--card-foreground': 'oklch(0.15 0.02 var(--hue-neutral))',
 	'--popover': 'oklch(1.00 0 0)',
-	'--popover-foreground': 'oklch(0.15 0.02 var(--h-off))',
-	'--secondary': 'oklch(0.97 0.005 var(--h-off))',
-	'--secondary-foreground': 'oklch(0.22 0.03 var(--h-off))',
-	'--muted': 'oklch(0.97 0.005 var(--h-off))',
-	'--muted-foreground': 'oklch(0.55 0.01 var(--h-off))',
-	'--border': 'oklch(0.85 0.03 var(--h))',
-	'--input': 'oklch(0.93 0.005 var(--h-off))',
-	'--ring': 'oklch(0.58 0.22 var(--h))',
+	'--popover-foreground': 'oklch(0.15 0.02 var(--hue-neutral))',
+	'--secondary': 'oklch(0.97 0.005 var(--hue-neutral))',
+	'--secondary-foreground': 'oklch(0.22 0.03 var(--hue-neutral))',
+	'--muted': 'oklch(0.97 0.005 var(--hue-neutral))',
+	'--muted-foreground': 'oklch(0.55 0.01 var(--hue-neutral))',
+	'--border': 'oklch(0.85 0.03 var(--hue-primary))',
+	'--input': 'oklch(0.93 0.005 var(--hue-neutral))',
+	'--ring': 'oklch(0.58 0.22 var(--hue-primary))',
 	'--destructive': 'oklch(0.63 0.26 25)',
 	'--destructive-foreground': 'oklch(0.98 0.005 250)',
 } as CSSProperties
 
-// The dark panel gets semantic vars from the .dark CSS rule, which
-// re-declares them and picks up the inline --h. No extra work needed.
+const darkOklchVars: CSSProperties = {
+	'--lc-dir': '1',
+	'--lc-range-start': '0.12',
+	'--lc-range-end': '0.92',
+	'--l-0': '0.12',
+	'--l-1': '0.20',
+	'--l-2': '0.28',
+	'--l-3': '0.36',
+	'--l-4': '0.44',
+	'--l-5': '0.52',
+	'--l-6': '0.60',
+	'--l-7': '0.68',
+	'--l-8': '0.76',
+	'--l-9': '0.84',
+	'--l-10': '0.92',
+	'--l-base': '0.12',
+	'--l-fore': '0.92',
+	'--l-none': '0',
+	'--l-full': '1',
+} as CSSProperties
 
 // ---------- Showcase components using real UI primitives ----------
 
 function MiniDeckCard() {
 	return (
 		<Card className="@container relative overflow-hidden">
-			<CardHeader className="from-primary/10 to-primary-foresoft/30 flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4">
+			<CardHeader className="from-1-mlo-primary to-2-mid-primary flex flex-row items-center justify-between gap-6 bg-gradient-to-br p-4">
 				<CardTitle className="text-primary-foresoft text-xl">
 					Sample Language
 				</CardTitle>
@@ -216,16 +201,14 @@ function InputSample() {
 function ThemeShowcase({
 	theme,
 	mode,
-	vars,
 }: {
 	theme: ThemeType
 	mode: 'light' | 'dark'
-	vars: AdvancedVars
 }) {
 	const style =
 		mode === 'light' ?
-			{ ...baseVars(theme, vars), ...lightSemanticVars }
-		:	baseVars(theme, vars)
+			{ ...hueVars(theme), ...lightOklchVars, ...lightSemanticVars }
+		:	{ ...hueVars(theme), ...darkOklchVars }
 
 	return (
 		<div
@@ -281,112 +264,6 @@ function HueSlider({
 	)
 }
 
-function AdvancedVarInput({
-	label,
-	value,
-	onChange,
-	min = 0,
-	max = 1,
-	step = 0.01,
-}: {
-	label: string
-	value: number
-	onChange: (v: number) => void
-	min?: number
-	max?: number
-	step?: number
-}) {
-	return (
-		<div className="flex items-center gap-2">
-			<label className="w-16 shrink-0 font-mono text-xs">{label}</label>
-			<input
-				type="number"
-				min={min}
-				max={max}
-				step={step}
-				value={value}
-				onChange={(e) => onChange(Number(e.target.value))}
-				className="bg-input text-foreground w-20 rounded border px-2 py-1 font-mono text-xs"
-			/>
-		</div>
-	)
-}
-
-function AdvancedVarsPanel({
-	label,
-	vars,
-	onChange,
-}: {
-	label: string
-	vars: AdvancedVars
-	onChange: (vars: AdvancedVars) => void
-}) {
-	const set = (key: keyof AdvancedVars, value: number) =>
-		onChange({ ...vars, [key]: value })
-
-	return (
-		<div className="space-y-2">
-			<h3 className="text-sm font-semibold">{label}</h3>
-			<div className="grid grid-cols-2 gap-x-4 gap-y-1">
-				<AdvancedVarInput
-					label="c-hi"
-					value={vars.cHi}
-					onChange={(v) => set('cHi', v)}
-					max={0.4}
-				/>
-				<AdvancedVarInput
-					label="c-lo"
-					value={vars.cLo}
-					onChange={(v) => set('cLo', v)}
-					max={0.2}
-				/>
-				<AdvancedVarInput
-					label="L-1"
-					value={vars.L1}
-					onChange={(v) => set('L1', v)}
-				/>
-				<AdvancedVarInput
-					label="L-2"
-					value={vars.L2}
-					onChange={(v) => set('L2', v)}
-				/>
-				<AdvancedVarInput
-					label="L-3"
-					value={vars.L3}
-					onChange={(v) => set('L3', v)}
-				/>
-				<AdvancedVarInput
-					label="L-4"
-					value={vars.L4}
-					onChange={(v) => set('L4', v)}
-				/>
-				<AdvancedVarInput
-					label="c-sec"
-					value={vars.cSec}
-					onChange={(v) => set('cSec', v)}
-					max={0.2}
-				/>
-				<AdvancedVarInput
-					label="c-sec-f"
-					value={vars.cSecF}
-					onChange={(v) => set('cSecF', v)}
-					max={0.2}
-				/>
-				<AdvancedVarInput
-					label="L-sec"
-					value={vars.LSec}
-					onChange={(v) => set('LSec', v)}
-				/>
-				<AdvancedVarInput
-					label="L-sec-f"
-					value={vars.LSecF}
-					onChange={(v) => set('LSecF', v)}
-				/>
-			</div>
-		</div>
-	)
-}
-
 // ---------- Main page ----------
 
 function ThemesPage() {
@@ -403,8 +280,6 @@ function ThemesPage() {
 				hueAccent: 175,
 			}
 	)
-	const [lightVars, setLightVars] = useState<AdvancedVars>(defaultLightVars)
-	const [darkVars, setDarkVars] = useState<AdvancedVars>(defaultDarkVars)
 
 	const selectTheme = (idx: number) => {
 		setSelectedIdx(idx)
@@ -471,7 +346,7 @@ function ThemesPage() {
 						onClick={() => selectTheme(i)}
 						className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium shadow transition ${
 							i === selectedIdx ?
-								'border-primary bg-primary/10 text-primary-foresoft'
+								'border-primary bg-1-mlo-primary text-primary-foresoft'
 							:	'border-border bg-card text-card-foreground hover:bg-muted'
 						}`}
 					>
@@ -544,39 +419,12 @@ function ThemesPage() {
 
 					<Button onClick={applyChanges}>Apply Changes to List</Button>
 				</div>
-
-				{/* Advanced: L/C variables */}
-				<Collapsible className="mt-4">
-					<CollapsibleTrigger asChild>
-						<Button
-							variant="ghost"
-							className="gap-2 [&[data-state=open]>svg]:rotate-180"
-						>
-							Advanced: Lightness &amp; Chroma
-							<ChevronDown className="size-4 transition-transform" />
-						</Button>
-					</CollapsibleTrigger>
-					<CollapsibleContent className="mt-3">
-						<div className="grid gap-6 sm:grid-cols-2">
-							<AdvancedVarsPanel
-								label="Light Mode"
-								vars={lightVars}
-								onChange={setLightVars}
-							/>
-							<AdvancedVarsPanel
-								label="Dark Mode"
-								vars={darkVars}
-								onChange={setDarkVars}
-							/>
-						</div>
-					</CollapsibleContent>
-				</Collapsible>
 			</div>
 
 			{/* Showcase: light and dark side by side */}
 			<div className="flex gap-4 max-sm:flex-col">
-				<ThemeShowcase theme={editTheme} mode="light" vars={lightVars} />
-				<ThemeShowcase theme={editTheme} mode="dark" vars={darkVars} />
+				<ThemeShowcase theme={editTheme} mode="light" />
+				<ThemeShowcase theme={editTheme} mode="dark" />
 			</div>
 
 			{/* JSON output */}

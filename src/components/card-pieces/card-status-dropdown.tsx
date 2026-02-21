@@ -259,7 +259,7 @@ export function CardStatusDropdown({
 										false
 									:	cardMutation.mutate({ status: 'active' })
 								}
-								className={card?.status === 'active' ? 'bg-primary/30' : ''}
+								className={card?.status === 'active' ? 'bg-2-mid-primary' : ''}
 								data-testid="activate-card-option"
 							>
 								<StatusSpan choice="active" />
@@ -270,7 +270,7 @@ export function CardStatusDropdown({
 										false
 									:	cardMutation.mutate({ status: 'learned' })
 								}
-								className={card?.status === 'learned' ? 'bg-primary/30' : ''}
+								className={card?.status === 'learned' ? 'bg-2-mid-primary' : ''}
 								data-testid="set-learned-option"
 							>
 								<StatusSpan choice="learned" />
@@ -281,7 +281,7 @@ export function CardStatusDropdown({
 										false
 									:	cardMutation.mutate({ status: 'skipped' })
 								}
-								className={card?.status === 'skipped' ? 'bg-primary/30' : ''}
+								className={card?.status === 'skipped' ? 'bg-2-mid-primary' : ''}
 								data-testid="ignore-card-option"
 							>
 								<StatusSpan choice="skipped" />

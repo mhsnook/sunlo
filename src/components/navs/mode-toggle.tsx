@@ -46,7 +46,7 @@ export function ModeToggle() {
 						sideOffset={4}
 					>
 						<DropdownMenuItem
-							className={theme === 'light' ? 'bg-primary/10' : ''}
+							className={theme === 'light' ? 'bg-1-mlo-primary' : ''}
 							onClick={setLight}
 						>
 							{theme === 'light' ?
@@ -55,7 +55,7 @@ export function ModeToggle() {
 							Light
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={theme === 'dark' ? 'bg-primary/10' : ''}
+							className={theme === 'dark' ? 'bg-1-mlo-primary' : ''}
 							onClick={setDark}
 						>
 							{theme === 'dark' ?
@@ -64,7 +64,7 @@ export function ModeToggle() {
 							Dark
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							className={theme === 'system' ? 'bg-primary/10' : ''}
+							className={theme === 'system' ? 'bg-1-mlo-primary' : ''}
 							onClick={setSystem}
 						>
 							{theme === 'system' ?

@@ -20,7 +20,7 @@ export function AvatarIconRow({
 			<Link
 				to="/friends/$uid"
 				params={{ uid }}
-				className="hover:bg-primary/10 hover:border-primary/20 flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
+				className="hover:bg-1-mlo-primary hover:border-2-mlo-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
 			>
 				{avatarUrl ?
 					<img

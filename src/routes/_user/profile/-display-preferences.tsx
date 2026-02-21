@@ -58,8 +58,8 @@ export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 					className={cn(
 						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
 						currentPref === 'default' ?
-							'border-primary bg-primary/10'
-						:	'border-border hover:border-primary/50'
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<span className="font-instrument block font-medium">Default</span>
@@ -74,8 +74,8 @@ export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 					className={cn(
 						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
 						currentPref === 'dyslexic' ?
-							'border-primary bg-primary/10'
-						:	'border-border hover:border-primary/50'
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<span className="font-dyslexic block font-medium">

@@ -153,7 +153,7 @@ export function SelectPhrasesForComment({
 											htmlFor={`select-phrase-${phrase.id}`}
 											className={`flex items-start gap-3 rounded-lg border p-3 pb-1 transition-colors ${
 												isSelected ?
-													'border-primary bg-primary/5'
+													'border-primary bg-0-lo-primary'
 												:	'hover:bg-muted/50'
 											} ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
 											onClick={(e) => {

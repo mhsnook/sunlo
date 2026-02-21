@@ -54,7 +54,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 					</ol>
 				</div>
 
-				<div className="bg-primary/5 rounded-lg border p-3 text-sm">
+				<div className="bg-0-lo-primary rounded-lg border p-3 text-sm">
 					<p className="font-medium">Tip: Consistency beats intensity</p>
 					<p className="text-muted-foreground mt-1">
 						10 minutes every day is better than an hour once a week. Try to

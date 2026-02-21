@@ -34,7 +34,7 @@ export function SelectMultipleFriends({
 				.map((f) => (
 					<label
 						key={f.uid}
-						className={`${uids.includes(f.uid) ? 'bg-primary/10 outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
+						className={`${uids.includes(f.uid) ? 'bg-1-mlo-primary outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
 					>
 						<div className="flex flex-row items-center gap-2">
 							{f.profile.avatar_path ?

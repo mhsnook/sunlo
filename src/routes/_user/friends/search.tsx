@@ -126,5 +126,5 @@ function SearchProfiles() {
 }
 
 const BigGarlic = () => (
-	<Garlic className="bg-primary-foresoft/20 w-20 rounded-full p-3 @xl:p-4" />
+	<Garlic className="bg-2-mlo-primary w-20 rounded-full p-3 @xl:p-4" />
 )

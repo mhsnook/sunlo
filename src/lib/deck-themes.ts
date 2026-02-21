@@ -24,9 +24,9 @@ export const themes: ThemeType[] = [
 export const getThemeCss = (index?: number) => {
 	const theme = typeof index === 'number' ? themes[index] : noDeckTheme
 	return {
-		'--h': theme?.hue,
-		'--h-off': theme?.hueOff,
-		'--h-accent': theme?.hueAccent,
+		'--hue-primary': theme?.hue,
+		'--hue-neutral': theme?.hueOff,
+		'--hue-accent': theme?.hueAccent,
 	} as CSSProperties
 }
 
@@ -34,9 +34,9 @@ export function setTheme(element?: HTMLElement, index?: number) {
 	const theme = typeof index === 'number' ? themes[index] : noDeckTheme
 	const el = element ?? document.documentElement
 
-	el.style.setProperty('--h', String(theme.hue))
-	el.style.setProperty('--h-off', String(theme.hueOff))
-	el.style.setProperty('--h-accent', String(theme.hueAccent))
+	el.style.setProperty('--hue-primary', String(theme.hue))
+	el.style.setProperty('--hue-neutral', String(theme.hueOff))
+	el.style.setProperty('--hue-accent', String(theme.hueAccent))
 }
 
 export type ThemeCSS = CSSProperties
