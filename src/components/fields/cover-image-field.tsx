@@ -84,7 +84,7 @@ function CoverImageEditor({
 			<Label
 				htmlFor="coverImageUploadInput"
 				className={cn(
-					'group border-primary-foresoft/30 hover:border-primary hover:bg-primary/10 relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
+					'group border-3-mlo-primary hover:border-primary hover:bg-1-mlo-primary relative isolate flex h-32 flex-col items-center justify-center rounded-2xl border text-center',
 					url && 'h-auto'
 				)}
 			>

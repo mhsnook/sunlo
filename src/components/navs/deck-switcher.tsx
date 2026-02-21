@@ -75,7 +75,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 								size="lg"
 								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
 							>
-								<div className="bg-primary rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl text-white">
+								<div className="bg-primary rounded-squircle text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
 									<WalletCards />
 								</div>
 								<div className="grid flex-1 text-left text-sm leading-tight">

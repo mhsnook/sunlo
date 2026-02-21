@@ -376,8 +376,8 @@ export default function BrowseSearchOverlay({
 											className={cn(
 												'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
 												selectedLangs.includes(l.code) ?
-													'bg-primary-foresoft dark:bg-primary border-transparent text-white'
-												:	'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground'
+													'bg-primary-foresoft text-primary-foreground border-transparent'
+												:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
 											)}
 										>
 											{l.name}
@@ -453,7 +453,7 @@ function SearchResultLink({
 }) {
 	const className = cn(
 		'flex items-center gap-3 px-4 py-2.5 transition-colors',
-		isSelected ? 'bg-primary/10' : 'hover:bg-primary/5'
+		isSelected ? 'bg-1-mlo-primary' : 'hover:bg-0-lo-primary'
 	)
 
 	const inner = (

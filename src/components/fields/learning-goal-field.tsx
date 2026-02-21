@@ -22,8 +22,8 @@ export function LearningGoalField<T extends FieldValues>({
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
 						value === 'moving' ?
-							'bg-primary/20 border-primary-foresoft/30'
-						:	'hover:bg-primary/10 hover:border-input'
+							'bg-1-mlo-primary border-2-mlo-primary'
+						:	'hover:bg-base-mlo-primary hover:border-input'
 					)}
 				>
 					<GraduationCap
@@ -43,8 +43,8 @@ export function LearningGoalField<T extends FieldValues>({
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
 						value === 'family' ?
-							'bg-primary/20 border-primary-foresoft/30'
-						:	'hover:bg-primary/10 hover:border-input'
+							'bg-1-mlo-primary border-2-mlo-primary'
+						:	'hover:bg-base-mlo-primary hover:border-input'
 					)}
 				>
 					<Users
@@ -65,8 +65,8 @@ export function LearningGoalField<T extends FieldValues>({
 					className={cn(
 						`flex w-full cursor-pointer items-center rounded border border-transparent p-4 transition-colors`,
 						value === 'visiting' ?
-							'bg-primary/20 border-primary-foresoft/30'
-						:	'hover:bg-primary/10 hover:border-input'
+							'bg-1-mlo-primary border-2-mlo-primary'
+						:	'hover:bg-base-mlo-primary hover:border-input'
 					)}
 				>
 					<Briefcase

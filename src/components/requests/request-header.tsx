@@ -11,7 +11,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 	const isOwner = profile?.uid === request.requester_uid
 
 	return (
-		<CardHeader className="border-primary-foresoft/20 mb-6 border-b pb-4">
+		<CardHeader className="border-2-lo-primary mb-6 border-b pb-4">
 			<div className="flex flex-row items-center justify-between gap-2">
 				<UidPermalink
 					uid={request.requester_uid}

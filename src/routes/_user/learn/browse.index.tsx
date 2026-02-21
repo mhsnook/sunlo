@@ -60,7 +60,7 @@ function BrowsePage() {
 						replace: true,
 					})
 				}
-				className="border-primary-foresoft/30 hover:border-primary bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
+				className="border-3-mlo-primary hover:border-primary bg-card/50 flex h-12 w-full items-center gap-3 rounded-2xl border px-4 transition-colors"
 				data-testid="browse-search-trigger"
 			>
 				<Search className="text-muted-foreground size-5" />
@@ -166,7 +166,7 @@ function StatsSection() {
 			{stats.map((stat) => (
 				<Card key={stat.label} className="bg-card/30">
 					<CardContent className="flex flex-row items-center gap-4 p-6">
-						<div className="bg-primary/10 text-primary rounded-full p-3">
+						<div className="bg-1-mlo-primary text-primary rounded-full p-3">
 							<stat.icon className="size-6" />
 						</div>
 						<div>
@@ -570,7 +570,7 @@ function PlaylistCard({
 
 function CTASection() {
 	return (
-		<section className="bg-primary/5 rounded-lg border p-8 text-center">
+		<section className="bg-0-lo-primary rounded-lg border p-8 text-center">
 			<h2 className="text-2xl font-bold">Ready to start learning?</h2>
 			<p className="text-muted-foreground mt-2">
 				Join our community of language learners today

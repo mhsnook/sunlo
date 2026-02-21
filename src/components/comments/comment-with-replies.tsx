@@ -70,7 +70,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		<div
 			className={`${
 				isHighlighted ?
-					'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4'
+					'bg-2-mid-primary ring-primary-foresoft/60 ring ring-offset-4'
 				: showSubthread ? 'outline-primary rounded-lg outline'
 				: ''
 			} p-4`}
@@ -168,7 +168,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 				{/* Replies */}
 				{showSubthread && replies && replies.length > 0 && (
-					<div className="border-primary-foresoft/30 mt-3 space-y-3">
+					<div className="border-3-mlo-primary mt-3 space-y-3">
 						<Separator />
 						<div className="divide-y">
 							{replies.map(({ reply }) => (
@@ -219,7 +219,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-4 ${isHighlighted ? 'bg-primary/30 ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
+			className={`mt-4 ${isHighlighted ? 'bg-2-mid-primary ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">

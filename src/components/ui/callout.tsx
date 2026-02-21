@@ -10,7 +10,7 @@ type CalloutProps = PropsWithChildren & {
 }
 
 const variants = {
-	default: 'bg-primary/20 border-primary/50',
+	default: 'bg-2-mlo-primary border-4-mlo-primary',
 	problem: 'bg-destructive/20 border-destructive/50',
 	ghost: 'border text-muted-foreground bg-muted',
 }

@@ -23,7 +23,7 @@ export function RequestPreview({ id }: { id: uuid }) {
 	return (
 		<Link to={'/learn/$lang/requests/$id'} params={{ lang: request.lang, id }}>
 			<CardlikeRequest className="relative z-10">
-				<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-4 border-b px-0 py-4">
+				<CardHeader className="border-b-3-mlo-primary mx-4 mb-4 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 						<span className="flex items-center gap-1">
 							<MessageCircleHeart className="text-muted-foreground" /> Phrase

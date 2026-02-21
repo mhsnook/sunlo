@@ -25,7 +25,7 @@ export function PlaylistPreview({ id }: { id: uuid }) {
 			params={{ lang: playlist.lang, playlistId: id }}
 		>
 			<div className="bg-card text-card-foreground @container relative z-10 flex flex-col gap-3 rounded-lg border py-0 shadow-sm">
-				<CardHeader className="border-b-primary-foresoft/30 mx-4 mb-0 border-b px-0 py-4">
+				<CardHeader className="border-b-3-mlo-primary mx-4 mb-0 border-b px-0 py-4">
 					<CardTitle className="flex flex-row items-center justify-between gap-1 text-lg">
 						<span className="flex items-center gap-1">
 							<ListMusic className="text-muted-foreground" /> Playlist
