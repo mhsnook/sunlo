@@ -13,16 +13,16 @@ const buttonVariants = cva(
 					'bg-5-mhi-primary text-primary-foreground hover:opacity-90 aria-expanded:bg-5-mid-primary border border-background hover:border-primary-foresoft',
 				soft: 'border border-3-mid-primary bg-1-mlo-primary hover:bg-lc-up-1 text-primary-foresoft hover:text-primary-foresoft',
 				neutral:
-					'bg-secondary text-secondary-foreground/80 hover:bg-secondary-foreground/10 border border-secondary-foreground/5',
-				red: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+					'bg-secondary text-8-mid-neutral hover:bg-2-lo-neutral border border-1-lo-neutral',
+				red: 'bg-destructive text-destructive-foreground hover:opacity-90',
 				'red-soft':
-					'border border-destructive text-destructive bg-destructive-foreground/80 hover:bg-destructive hover:text-destructive-foreground',
+					'border border-destructive text-destructive bg-1-lo-danger hover:bg-destructive hover:text-destructive-foreground',
 				ghost:
 					'text-muted-foreground hover:bg-1-mlo-primary hover:text-foreground',
 				'badge-outline':
-					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-foreground/80 bg-foreground/5 hover:border-primary',
+					'rounded inline-flex border-border items-center border transition-colors focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 text-8-mid-neutral bg-0-lo-neutral hover:border-primary',
 				'dashed-w-full':
-					'w-full border-2 border-dashed border-border/50 hover:border-border hover:text-foreground shadow-none hover:shadow-sm',
+					'w-full border-2 border-dashed border-1-lo-primary hover:border-border hover:text-foreground shadow-none hover:shadow-sm',
 			},
 			size: {
 				default: 'h-10 rounded-2xl px-5 py-2 gap-2',
