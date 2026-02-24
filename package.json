@@ -102,12 +102,11 @@
 		"vitest": "^4.0.18"
 	},
 	"optionalDependencies": {
-		"supabase": "^2.76.6"
+		"supabase": "^2.76.14"
 	},
 	"packageManager": "pnpm@10.25.0",
 	"pnpm": {
 		"overrides": {
-			"tar": ">=7.5.8",
 			"minimatch": ">=10.2.1",
 			"ajv": ">=6.14.0 <7"
 		}
