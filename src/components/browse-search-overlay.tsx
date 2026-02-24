@@ -447,10 +447,8 @@ function SearchResultLink({
 	showType: boolean
 	onMouseEnter: () => void
 }) {
-	const className = cn(
-		'flex items-center gap-3 px-4 py-2.5 transition-colors',
-		isSelected ? 'bg-1-mlo-primary' : 'hover:bg-0-lo-primary'
-	)
+	const className =
+		'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-lc-up-2 data-[selected=true]:bg-lc-up-2'
 
 	const inner = (
 		<>
