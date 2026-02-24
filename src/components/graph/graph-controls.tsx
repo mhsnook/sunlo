@@ -45,10 +45,10 @@ export default function GraphControls({
 				<p className="text-muted-foreground text-xs">
 					{clusterCount} clusters from {phraseCount} phrases —{' '}
 					{threshold < 0.4 ?
-						'very fine-grained'
+						'broad categories'
 					: threshold < 0.55 ?
 						'moderate grouping'
-					:	'broad categories'}
+					:	'very fine-grained'}
 				</p>
 			</div>
 			<Tabs

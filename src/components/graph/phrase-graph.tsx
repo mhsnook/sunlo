@@ -17,7 +17,7 @@ import BubbleGraphView from './bubble-graph-view'
 import { Loader } from '@/components/ui/loader'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { IntroSheet } from '@/components/intro-sheet'
-import { IntroCallout } from '@/components/intro-callout'
+
 import { Button } from '@/components/ui/button'
 import { BrainCircuit, Lock, Network, Wifi } from 'lucide-react'
 
@@ -34,8 +34,7 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 	const [progress, setProgress] = useState<EmbeddingProgress | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
-	const { isOpen, showCallout, handleClose, handleReopen } =
-		useIntro('phrase-graph')
+	const { isOpen, showCallout, handleClose } = useIntro('phrase-graph')
 	const [started, setStarted] = useState(showCallout)
 
 	const handleStart = () => {
@@ -232,12 +231,6 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 
 	return (
 		<div className="flex h-full flex-col gap-4">
-			{showCallout && (
-				<IntroCallout onShowMore={handleReopen}>
-					Phrases are grouped by semantic similarity using a local AI model.
-				</IntroCallout>
-			)}
-
 			<GraphControls
 				view={view}
 				onViewChange={setView}
