@@ -39,6 +39,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				context.auth.isAuth ?
 					[
 						'/learn/$lang/search',
+						'/learn/$lang/graph',
 						'/learn/$lang/requests/new',
 						'/learn/$lang/phrases/new',
 						'/learn/$lang/deck-settings',

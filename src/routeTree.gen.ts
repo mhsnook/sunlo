@@ -49,6 +49,7 @@ import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$la
 import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
 import { Route as UserLearnLangPlaylistsRouteImport } from './routes/_user/learn/$lang.playlists'
+import { Route as UserLearnLangGraphRouteImport } from './routes/_user/learn/$lang.graph'
 import { Route as UserLearnLangFeedRouteImport } from './routes/_user/learn/$lang.feed'
 import { Route as UserLearnLangDeckSettingsRouteImport } from './routes/_user/learn/$lang.deck-settings'
 import { Route as UserLearnLangContributionsRouteImport } from './routes/_user/learn/$lang.contributions'
@@ -293,6 +294,11 @@ const UserLearnLangPlaylistsRoute = UserLearnLangPlaylistsRouteImport.update({
   path: '/playlists',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
+const UserLearnLangGraphRoute = UserLearnLangGraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => UserLearnLangRoute,
+} as any)
 const UserLearnLangFeedRoute = UserLearnLangFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
@@ -435,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
+  '/learn/$lang/graph': typeof UserLearnLangGraphRoute
   '/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
@@ -490,6 +497,7 @@ export interface FileRoutesByTo {
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
+  '/learn/$lang/graph': typeof UserLearnLangGraphRoute
   '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/learn/browse/charts': typeof UserLearnBrowseChartsRoute
@@ -552,6 +560,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/_user/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/_user/learn/$lang/feed': typeof UserLearnLangFeedRoute
+  '/_user/learn/$lang/graph': typeof UserLearnLangGraphRoute
   '/_user/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
@@ -615,6 +624,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/feed'
+    | '/learn/$lang/graph'
     | '/learn/$lang/playlists'
     | '/learn/$lang/review'
     | '/learn/$lang/search'
@@ -670,6 +680,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/feed'
+    | '/learn/$lang/graph'
     | '/learn/$lang/search'
     | '/learn/$lang/stats'
     | '/learn/browse/charts'
@@ -731,6 +742,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/contributions'
     | '/_user/learn/$lang/deck-settings'
     | '/_user/learn/$lang/feed'
+    | '/_user/learn/$lang/graph'
     | '/_user/learn/$lang/playlists'
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/search'
@@ -1067,6 +1079,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangPlaylistsRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
+    '/_user/learn/$lang/graph': {
+      id: '/_user/learn/$lang/graph'
+      path: '/graph'
+      fullPath: '/learn/$lang/graph'
+      preLoaderRoute: typeof UserLearnLangGraphRouteImport
+      parentRoute: typeof UserLearnLangRoute
+    }
     '/_user/learn/$lang/feed': {
       id: '/_user/learn/$lang/feed'
       path: '/feed'
@@ -1312,6 +1331,7 @@ interface UserLearnLangRouteChildren {
   UserLearnLangContributionsRoute: typeof UserLearnLangContributionsRoute
   UserLearnLangDeckSettingsRoute: typeof UserLearnLangDeckSettingsRoute
   UserLearnLangFeedRoute: typeof UserLearnLangFeedRoute
+  UserLearnLangGraphRoute: typeof UserLearnLangGraphRoute
   UserLearnLangPlaylistsRoute: typeof UserLearnLangPlaylistsRouteWithChildren
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
   UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
@@ -1329,6 +1349,7 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangContributionsRoute: UserLearnLangContributionsRoute,
   UserLearnLangDeckSettingsRoute: UserLearnLangDeckSettingsRoute,
   UserLearnLangFeedRoute: UserLearnLangFeedRoute,
+  UserLearnLangGraphRoute: UserLearnLangGraphRoute,
   UserLearnLangPlaylistsRoute: UserLearnLangPlaylistsRouteWithChildren,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
   UserLearnLangSearchRoute: UserLearnLangSearchRoute,

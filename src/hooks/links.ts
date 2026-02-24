@@ -25,6 +25,7 @@ import {
 	MessageCircleHeart,
 	MessageSquareQuote,
 	MessagesSquare,
+	Network,
 	Newspaper,
 	Rocket,
 	Search,
@@ -274,6 +275,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: MessageCircleHeart,
+		},
+		'/learn/$lang/graph': {
+			name: 'Phrase Map',
+			title: `${languages[lang]} Phrase Map`,
+			link: {
+				to: '/learn/$lang/graph',
+				params: { lang },
+			},
+			Icon: Network,
 		},
 		'/learn/$lang/playlists': {
 			name: 'Playlists',
