@@ -135,7 +135,7 @@
 	);
 	--color-accent-foresoft: oklch(var(--l-7) var(--c-hi) var(--hue-accent));
 	--color-accent: oklch(var(--l-5) var(--c-hi) var(--hue-accent));
-	--color-accent-invert: oklch(var(--l-2) var(--c-mlo) var(--hue-accent));
+	--color-accent-invert: oklch(var(--l-1) var(--c-mid) var(--hue-accent));
 
 	/* Static tokens — separate light/dark definitions above */
 	--color-secondary: var(--secondary);
