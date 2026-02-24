@@ -37,11 +37,11 @@ export function ActivityChart({ lang }: { lang: string }) {
 							tickLine={false}
 							tickMargin={10}
 							axisLine={false}
-							stroke="hsl(var(--muted-foreground))"
+							stroke="var(--muted-foreground)"
 						/>
 						<YAxis
 							allowDecimals={false}
-							stroke="hsl(var(--muted-foreground))"
+							stroke="var(--muted-foreground)"
 							tickLine={false}
 							axisLine={false}
 							width={24}

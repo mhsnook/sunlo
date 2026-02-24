@@ -78,7 +78,7 @@ export function LanguageComparisonChart() {
 					type="number"
 					tickLine={false}
 					axisLine={false}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 				/>
 				<YAxis
 					type="category"
@@ -86,7 +86,7 @@ export function LanguageComparisonChart() {
 					tickLine={false}
 					axisLine={false}
 					width={80}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 					tick={{ fontSize: 12 }}
 				/>
 				<ChartTooltip
@@ -159,12 +159,12 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 					name="Difficulty"
 					domain={[0, 10]}
 					tickLine={false}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 					label={{
 						value: 'Difficulty',
 						position: 'insideBottom',
 						offset: -10,
-						style: { fill: 'hsl(var(--muted-foreground))' },
+						style: { fill: 'var(--muted-foreground)' },
 					}}
 				/>
 				<YAxis
@@ -172,12 +172,12 @@ export function DifficultyPopularityScatter({ lang }: { lang: string }) {
 					dataKey="learners"
 					name="Learners"
 					tickLine={false}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 					label={{
 						value: 'Learners',
 						angle: -90,
 						position: 'insideLeft',
-						style: { fill: 'hsl(var(--muted-foreground))' },
+						style: { fill: 'var(--muted-foreground)' },
 					}}
 				/>
 				<ZAxis
@@ -516,19 +516,19 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 					dataKey="range"
 					tickLine={false}
 					axisLine={false}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 					label={{
 						value: 'Difficulty Score',
 						position: 'insideBottom',
 						offset: -10,
-						style: { fill: 'hsl(var(--muted-foreground))' },
+						style: { fill: 'var(--muted-foreground)' },
 					}}
 				/>
 				<YAxis
 					allowDecimals={false}
 					tickLine={false}
 					axisLine={false}
-					stroke="hsl(var(--muted-foreground))"
+					stroke="var(--muted-foreground)"
 					width={40}
 				/>
 				<ChartTooltip
