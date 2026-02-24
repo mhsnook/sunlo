@@ -15,6 +15,11 @@ import GraphControls, { type GraphView } from './graph-controls'
 import ForceGraphView from './force-graph-view'
 import BubbleGraphView from './bubble-graph-view'
 import { Loader } from '@/components/ui/loader'
+import { useIntro } from '@/hooks/use-intro-seen'
+import { IntroSheet } from '@/components/intro-sheet'
+import { IntroCallout } from '@/components/intro-callout'
+import { Button } from '@/components/ui/button'
+import { BrainCircuit, Lock, Network, Wifi } from 'lucide-react'
 
 interface PhraseGraphProps {
 	phrases: Array<PhraseFullType>
@@ -29,15 +34,24 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 	const [progress, setProgress] = useState<EmbeddingProgress | null>(null)
 	const [error, setError] = useState<string | null>(null)
 
+	const { isOpen, showCallout, handleClose, handleReopen } =
+		useIntro('phrase-graph')
+	const [started, setStarted] = useState(showCallout)
+
+	const handleStart = () => {
+		handleClose()
+		setStarted(true)
+	}
+
 	// Build phrase lookup map
 	const phraseMap = useMemo(
 		() => new Map(phrases.map((p) => [p.id, p])),
 		[phrases]
 	)
 
-	// Generate embeddings on mount / when phrases change
+	// Generate embeddings only after user opts in
 	useEffect(() => {
-		if (phrases.length === 0) return
+		if (!started || phrases.length === 0) return
 
 		let cancelled = false
 
@@ -62,12 +76,16 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 		return () => {
 			cancelled = true
 		}
-	}, [phrases, lang])
+	}, [started, phrases, lang])
 
 	// Compute clusters and edges based on threshold
 	const { clusters, edges, clusterMap } = useMemo(() => {
 		if (embeddings.length === 0)
-			return { clusters: [], edges: [], clusterMap: new Map<string, number>() }
+			return {
+				clusters: [],
+				edges: [],
+				clusterMap: new Map<string, number>(),
+			}
 
 		const clusters = hierarchicalClustering(embeddings, threshold)
 		const edgeThreshold = Math.max(threshold - 0.1, 0.15)
@@ -88,7 +106,81 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 		[navigate, lang]
 	)
 
-	// Loading state
+	if (phrases.length === 0) {
+		return (
+			<p className="text-muted-foreground py-12 text-center text-sm">
+				No phrases available for this language yet.
+			</p>
+		)
+	}
+
+	// Consent gate — show intro and landing state before starting
+	if (!started) {
+		return (
+			<>
+				<IntroSheet
+					open={isOpen}
+					onOpenChange={(o) => !o && handleClose()}
+					title="Phrase Map"
+					description="Explore how phrases in your language connect by meaning."
+					actionLabel="Load phrase map"
+					onAction={handleStart}
+				>
+					<div className="space-y-4">
+						<div className="flex items-start gap-3">
+							<BrainCircuit className="text-primary mt-0.5 size-5 shrink-0" />
+							<div>
+								<p className="text-sm font-medium">
+									AI-powered semantic analysis
+								</p>
+								<p className="text-muted-foreground text-sm">
+									A small language model analyzes the meaning of each phrase and
+									groups similar ones together into clusters you can explore.
+								</p>
+							</div>
+						</div>
+						<div className="flex items-start gap-3">
+							<Wifi className="text-primary mt-0.5 size-5 shrink-0" />
+							<div>
+								<p className="text-sm font-medium">
+									~30 MB download on first visit
+								</p>
+								<p className="text-muted-foreground text-sm">
+									The model is downloaded once and cached in your browser for
+									future visits.
+								</p>
+							</div>
+						</div>
+						<div className="flex items-start gap-3">
+							<Lock className="text-primary mt-0.5 size-5 shrink-0" />
+							<div>
+								<p className="text-sm font-medium">
+									Runs entirely in your browser
+								</p>
+								<p className="text-muted-foreground text-sm">
+									No data is sent to any server — the model runs locally on your
+									device.
+								</p>
+							</div>
+						</div>
+					</div>
+				</IntroSheet>
+
+				<div className="flex flex-col items-center justify-center gap-6 py-20">
+					<Network className="text-muted-foreground/40 size-16" />
+					<div className="text-center">
+						<p className="text-lg font-medium">Phrase Map</p>
+						<p className="text-muted-foreground mt-1 text-sm">
+							See how {phrases.length} phrases connect by meaning
+						</p>
+					</div>
+					<Button onClick={handleStart}>Load phrase map</Button>
+				</div>
+			</>
+		)
+	}
+
+	// Error state
 	if (error) {
 		return (
 			<div className="flex flex-col items-center justify-center gap-3 py-20">
@@ -103,6 +195,7 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 		)
 	}
 
+	// Loading state
 	if (
 		progress &&
 		progress.stage !== 'done' &&
@@ -137,16 +230,14 @@ export default function PhraseGraph({ phrases, lang }: PhraseGraphProps) {
 		)
 	}
 
-	if (phrases.length === 0) {
-		return (
-			<p className="text-muted-foreground py-12 text-center text-sm">
-				No phrases available for this language yet.
-			</p>
-		)
-	}
-
 	return (
 		<div className="flex h-full flex-col gap-4">
+			{showCallout && (
+				<IntroCallout onShowMore={handleReopen}>
+					Phrases are grouped by semantic similarity using a local AI model.
+				</IntroCallout>
+			)}
+
 			<GraphControls
 				view={view}
 				onViewChange={setView}
