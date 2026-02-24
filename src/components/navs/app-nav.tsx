@@ -28,7 +28,8 @@ const activeProps = {
 const activeOptions = { exact: true, includeSearch: false } as const
 const inexactOptions = { exact: false, includeSearch: false } as const
 const inactiveProps = {
-	className: 'border-transparent text-muted-foreground',
+	className:
+		'border-transparent text-muted-foreground hover:text-7-mhi-primary',
 } as const
 
 export function AppNav() {
