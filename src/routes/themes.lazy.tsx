@@ -21,19 +21,10 @@ import {
 	Logs,
 	Hourglass,
 	WalletCards,
-	Sun,
-	Moon,
-	MonitorCog,
 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
-import { useTheme } from '@/components/theme-provider'
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export const Route = createLazyFileRoute('/themes')({
 	component: ThemesPage,
@@ -218,7 +209,6 @@ function HueSlider({
 // ---------- Main page ----------
 
 function ThemesPage() {
-	const { setTheme } = useTheme()
 	const [themeList, setThemeList] = useState<Array<ThemeType>>([
 		...defaultThemes,
 	])
@@ -289,29 +279,7 @@ function ThemesPage() {
 						OKLCH color system &mdash; edit themes and preview live
 					</p>
 				</div>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button variant="ghost" size="icon">
-							<Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-							<Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-							<span className="sr-only">Toggle theme</span>
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end">
-						<DropdownMenuItem onClick={() => setTheme('light')}>
-							<Sun className="mr-2 size-4" />
-							Light
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => setTheme('dark')}>
-							<Moon className="mr-2 size-4" />
-							Dark
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => setTheme('system')}>
-							<MonitorCog className="mr-2 size-4" />
-							System
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
+				<ThemeToggle />
 			</div>
 
 			{/* Theme picker */}
