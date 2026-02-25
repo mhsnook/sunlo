@@ -23,6 +23,7 @@ import {
 	WalletCards,
 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
+import { Separator } from '@/components/ui/separator'
 
 export const Route = createLazyFileRoute('/themes')({
 	component: ThemesPage,
@@ -144,24 +145,43 @@ function MiniDeckCard() {
 
 function ButtonSamples() {
 	return (
-		<div className="flex flex-wrap gap-1.5">
-			<Button size="sm">Default</Button>
-			<Button size="sm" variant="soft">
-				Soft
-			</Button>
-			<Button size="sm" variant="neutral">
-				Neutral
-			</Button>
-			<Button size="sm" variant="red">
-				Red
-			</Button>
-			<Button size="sm" variant="red-soft">
-				Red Soft
-			</Button>
-			<Button size="sm" variant="ghost">
-				Ghost
-			</Button>
-		</div>
+		<>
+			<div className="flex flex-wrap gap-1.5">
+				<Button size="sm">Default</Button>
+				<Button size="sm" variant="soft">
+					Soft
+				</Button>
+				<Button size="sm" variant="neutral">
+					Neutral
+				</Button>
+				<Button size="sm" variant="red">
+					Red
+				</Button>
+				<Button size="sm" variant="red-soft">
+					Red Soft
+				</Button>
+				<Button size="sm" variant="ghost">
+					Ghost
+				</Button>
+				<Button variant="badge-outline" size="sm">
+					badge outline
+				</Button>
+				<Button variant="dashed-w-full">dashed w full</Button>
+			</div>
+			<Separator />
+			<div className="flex flex-wrap gap-1.5">
+				<Button>Default</Button>
+				<Button variant="soft">Soft</Button>
+				<Button variant="neutral">Neutral</Button>
+				<Button variant="red">Red</Button>
+				<Button variant="red-soft">Red Soft</Button>
+				<Button variant="ghost">Ghost</Button>
+				<Button variant="badge-outline">badge outline</Button>
+				<Button variant="dashed-w-full" className="h-20">
+					dashed w full
+				</Button>
+			</div>
+		</>
 	)
 }
 
