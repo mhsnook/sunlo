@@ -2,9 +2,10 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import { useState, type CSSProperties } from 'react'
 import { themes as defaultThemes, type ThemeType } from '@/lib/deck-themes'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Badge, LangBadge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import {
 	Card,
 	CardContent,
@@ -12,6 +13,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
+import { CardlikeFlashcard } from '@/components/ui/card-like'
+import Callout from '@/components/ui/callout'
 import {
 	Copy,
 	Plus,
@@ -21,6 +24,13 @@ import {
 	Logs,
 	Hourglass,
 	WalletCards,
+	X,
+	Send,
+	Star,
+	Sparkles,
+	Info,
+	CheckCircle,
+	AlertTriangle,
 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
@@ -154,17 +164,307 @@ function InputSample() {
 	)
 }
 
+function FlashcardFormSample() {
+	const [tags, setTags] = useState<Array<string>>(['greeting', 'beginner'])
+	const [tagInput, setTagInput] = useState('')
+
+	const addTag = () => {
+		const t = tagInput.trim().toLowerCase()
+		if (t && !tags.includes(t)) setTags((prev) => [...prev, t])
+		setTagInput('')
+	}
+
+	return (
+		<CardlikeFlashcard>
+			<CardHeader className="pb-2">
+				<CardTitle className="text-lg">New Flashcard</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-3">
+				<div className="space-y-1">
+					<Label>Phrase</Label>
+					<Input placeholder="வணக்கம்" />
+				</div>
+				<div className="space-y-1">
+					<Label>Translation</Label>
+					<Textarea placeholder="Hello / Greetings" className="min-h-[60px]" />
+				</div>
+				<div className="space-y-1">
+					<Label>Tags</Label>
+					<div className="flex gap-2">
+						<Input
+							placeholder="Add a tag..."
+							value={tagInput}
+							onChange={(e) => setTagInput(e.target.value)}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter') {
+									e.preventDefault()
+									addTag()
+								}
+							}}
+							className="flex-1"
+						/>
+						<Button
+							variant="soft"
+							size="sm"
+							className="shrink-0"
+							onClick={addTag}
+						>
+							<Plus className="size-3" /> Add
+						</Button>
+					</div>
+					<div className="flex flex-wrap gap-1 pt-1">
+						{tags.map((tag) => (
+							<Badge key={tag} variant="outline" size="lg">
+								{tag}
+								<button
+									onClick={() =>
+										setTags((prev) => prev.filter((t) => t !== tag))
+									}
+									className="text-muted-foreground hover:text-foreground ms-0.5 -me-1 rounded-full p-0.5 transition-colors"
+								>
+									<X className="size-3" />
+								</button>
+							</Badge>
+						))}
+					</div>
+				</div>
+			</CardContent>
+			<CardFooter className="flex gap-2 pt-0">
+				<Button>
+					<Send /> Submit
+				</Button>
+				<Button variant="neutral">Cancel</Button>
+			</CardFooter>
+		</CardlikeFlashcard>
+	)
+}
+
+function InvertedShowcase() {
+	return (
+		<div className="bg-5-mhi-primary rounded-xl p-6 shadow-lg">
+			<div className="mx-auto max-w-lg space-y-4">
+				<div className="flex items-center gap-3">
+					<div className="bg-0-mlo-primary flex size-10 items-center justify-center rounded-full">
+						<Sparkles className="text-5-hi-primary size-5" />
+					</div>
+					<div>
+						<h3 className="text-0-mlo-primary text-lg font-semibold">
+							Streak Milestone
+						</h3>
+						<p className="text-1-mlo-primary text-sm">
+							You&apos;ve studied 7 days in a row!
+						</p>
+					</div>
+				</div>
+				<Separator className="bg-0-mlo-primary opacity-20" />
+				<div className="grid grid-cols-3 gap-3 text-center">
+					{[
+						{ label: 'Cards reviewed', value: '142' },
+						{ label: 'Accuracy', value: '87%' },
+						{ label: 'Streak', value: '7 days' },
+					].map(({ label, value }) => (
+						<div key={label} className="space-y-1">
+							<p className="text-0-mlo-primary text-xl font-bold">{value}</p>
+							<p className="text-2-lo-primary text-xs">{label}</p>
+						</div>
+					))}
+				</div>
+				<Button className="bg-0-mlo-primary text-5-hi-primary hover:bg-1-lo-primary w-full border-transparent shadow-md">
+					<Star className="size-4" /> Keep it going!
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+function LuminanceScale() {
+	const stops = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
+	return (
+		<div className="space-y-2">
+			<p className="text-sm font-medium">Luminance contrast scale</p>
+			<div className="flex gap-1">
+				{stops.map((l) => (
+					<div key={l} className="flex-1 text-center">
+						<div className={`bg-${l}-mid-primary mb-1 h-8 rounded`} />
+						<span className="text-muted-foreground text-[10px]">{l}</span>
+					</div>
+				))}
+			</div>
+			<div className="flex gap-1">
+				{(['lo', 'mlo', 'mid', 'mhi', 'hi'] as const).map((c) => (
+					<div key={c} className="flex-1 text-center">
+						<div className={`bg-5-${c}-primary mb-1 h-8 rounded`} />
+						<span className="text-muted-foreground text-[10px]">{c}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+function HueSwatches() {
+	const hues = [
+		'primary',
+		'accent',
+		'neutral',
+		'success',
+		'warning',
+		'danger',
+		'info',
+	] as const
+	return (
+		<div className="space-y-2">
+			<p className="text-sm font-medium">Hue palette</p>
+			<div className="flex flex-wrap gap-2">
+				{hues.map((h) => (
+					<div key={h} className="space-y-1 text-center">
+						<div className="flex gap-0.5">
+							<div className={`bg-2-mlo-${h} size-8 rounded`} />
+							<div className={`bg-5-mid-${h} size-8 rounded`} />
+							<div className={`bg-7-hi-${h} size-8 rounded`} />
+						</div>
+						<span className="text-muted-foreground text-[10px]">{h}</span>
+					</div>
+				))}
+			</div>
+		</div>
+	)
+}
+
+function CalloutSamples() {
+	return (
+		<div className="space-y-2">
+			<Callout Icon={Info} size="sm">
+				<p className="text-sm font-medium">Default callout</p>
+				<p className="text-sm opacity-80">
+					Helpful context for the user about their learning progress.
+				</p>
+			</Callout>
+			<Callout variant="problem" Icon={AlertTriangle} size="sm">
+				<p className="text-sm font-medium">Problem callout</p>
+				<p className="text-sm opacity-80">
+					Something needs your attention before continuing.
+				</p>
+			</Callout>
+			<Callout variant="ghost" Icon={CheckCircle} size="sm">
+				<p className="text-sm font-medium">Ghost callout</p>
+				<p className="text-sm opacity-80">A subtle informational message.</p>
+			</Callout>
+		</div>
+	)
+}
+
+function MiniFlashcardPreview() {
+	return (
+		<CardlikeFlashcard className="max-w-sm">
+			<CardContent className="space-y-2 p-4">
+				<div className="flex items-start justify-between">
+					<div>
+						<p className="text-lg font-medium">வணக்கம்</p>
+						<p className="text-muted-foreground text-sm">Hello / Greetings</p>
+					</div>
+					<LangBadge lang="tam" />
+				</div>
+				<Separator />
+				<div className="flex flex-wrap gap-1">
+					<Badge variant="outline" size="sm">
+						greeting
+					</Badge>
+					<Badge variant="outline" size="sm">
+						beginner
+					</Badge>
+				</div>
+				<div className="flex gap-1 pt-1">
+					<Button size="sm" variant="ghost">
+						<Star /> Save
+					</Button>
+					<Button size="sm" variant="ghost">
+						<Send /> Share
+					</Button>
+				</div>
+			</CardContent>
+		</CardlikeFlashcard>
+	)
+}
+
+function InteractiveStates() {
+	const [bookmarked, setBookmarked] = useState(false)
+	const [rating, setRating] = useState<number | null>(null)
+
+	return (
+		<div className="space-y-3">
+			<p className="text-sm font-medium">Interactive states</p>
+			<div className="flex items-center gap-2">
+				<span className="text-muted-foreground text-sm">Toggle state:</span>
+				<Button
+					variant={bookmarked ? 'soft' : 'ghost'}
+					size="sm"
+					onClick={() => setBookmarked(!bookmarked)}
+				>
+					<Star className={bookmarked ? 'fill-current' : 'fill-transparent'} />
+					{bookmarked ? 'Saved' : 'Save'}
+				</Button>
+			</div>
+			<div className="flex items-center gap-2">
+				<span className="text-muted-foreground text-sm">Rating buttons:</span>
+				<div className="inline-flex overflow-hidden rounded-2xl border">
+					{['Again', 'Hard', 'Good', 'Easy'].map((label, i) => (
+						<button
+							key={label}
+							onClick={() => setRating(i)}
+							className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+								rating === i ?
+									'bg-5-mhi-primary text-0-mlo-primary'
+								:	'hover:bg-1-mlo-primary'
+							} ${i > 0 ? 'border-s' : ''}`}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			</div>
+		</div>
+	)
+}
+
 function ThemeShowcase({ theme }: { theme: ThemeType }) {
 	return (
 		<div
-			className="bg-background text-foreground space-y-3 rounded-xl p-3"
+			className="bg-background text-foreground space-y-4 rounded-xl p-4"
 			style={hueVars(theme)}
 		>
-			<MiniDeckCard />
+			{/* Row 1: Deck card + flashcard form side by side */}
+			<div className="grid gap-4 sm:grid-cols-2">
+				<MiniDeckCard />
+				<FlashcardFormSample />
+			</div>
+
+			{/* Inverted showcase */}
+			<InvertedShowcase />
+
+			{/* Row 2: Mini flashcard + callouts */}
+			<div className="grid gap-4 sm:grid-cols-2">
+				<MiniFlashcardPreview />
+				<CalloutSamples />
+			</div>
+
+			{/* Color system */}
+			<div className="bg-card space-y-4 rounded-lg border p-4">
+				<LuminanceScale />
+				<Separator />
+				<HueSwatches />
+			</div>
+
+			{/* Buttons, badges, text */}
 			<ButtonSamples />
-			<BadgeSamples />
-			<TextSamples />
-			<InputSample />
+			<div className="grid gap-4 sm:grid-cols-3">
+				<BadgeSamples />
+				<TextSamples />
+				<InputSample />
+			</div>
+
+			{/* Interactive states */}
+			<InteractiveStates />
 		</div>
 	)
 }
