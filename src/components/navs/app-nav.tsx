@@ -11,7 +11,6 @@ import {
 } from '@/components/ui/navigation-menu'
 import { LinkType } from '@/types/main'
 import { useLinks } from '@/hooks/links'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
 import { TinyBadge } from '@/components/ui/badge'
 import {
 	DropdownMenu,
@@ -58,7 +57,7 @@ export function AppNav() {
 				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
-				<ScrollArea className="w-app">
+				<div className="scrollbar-none w-0 grow overflow-x-auto">
 					<NavigationMenu className="mt-2 mb-1">
 						<NavigationMenuList className="flex w-full flex-row">
 							{links.map((l: LinkType) => (
@@ -84,8 +83,7 @@ export function AppNav() {
 							))}
 						</NavigationMenuList>
 					</NavigationMenu>
-					<ScrollBar orientation="horizontal" />
-				</ScrollArea>
+				</div>
 				<ContextMenu contextMenu={contextMenu} />
 			</div>
 		</>
