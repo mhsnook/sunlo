@@ -26,14 +26,16 @@ import {
 	WalletCards,
 	X,
 	Send,
-	Star,
+	Bookmark,
 	Sparkles,
+	Star,
 	Info,
 	CheckCircle,
 	AlertTriangle,
 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ThemeToggle } from '@/components/theme-toggle'
 
 export const Route = createLazyFileRoute('/themes')({
@@ -182,7 +184,7 @@ function FlashcardFormSample() {
 			<CardContent className="space-y-3">
 				<div className="space-y-1">
 					<Label>Phrase</Label>
-					<Input placeholder="வணக்கம்" />
+					<Input placeholder="vanakkam" />
 				</div>
 				<div className="space-y-1">
 					<Label>Translation</Label>
@@ -277,53 +279,63 @@ function InvertedShowcase() {
 	)
 }
 
-function LuminanceScale() {
-	const stops = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as const
-	return (
-		<div className="space-y-2">
-			<p className="text-sm font-medium">Luminance contrast scale</p>
-			<div className="flex gap-1">
-				{stops.map((l) => (
-					<div key={l} className="flex-1 text-center">
-						<div className={`bg-${l}-mid-primary mb-1 h-8 rounded`} />
-						<span className="text-muted-foreground text-[10px]">{l}</span>
-					</div>
-				))}
-			</div>
-			<div className="flex gap-1">
-				{(['lo', 'mlo', 'mid', 'mhi', 'hi'] as const).map((c) => (
-					<div key={c} className="flex-1 text-center">
-						<div className={`bg-5-${c}-primary mb-1 h-8 rounded`} />
-						<span className="text-muted-foreground text-[10px]">{c}</span>
-					</div>
-				))}
-			</div>
-		</div>
-	)
-}
-
 function HueSwatches() {
 	const hues = [
-		'primary',
-		'accent',
-		'neutral',
-		'success',
-		'warning',
-		'danger',
-		'info',
-	] as const
+		{
+			name: 'primary',
+			light: 'bg-2-mlo-primary',
+			mid: 'bg-5-mid-primary',
+			vivid: 'bg-7-hi-primary',
+		},
+		{
+			name: 'accent',
+			light: 'bg-2-mlo-accent',
+			mid: 'bg-5-mid-accent',
+			vivid: 'bg-7-hi-accent',
+		},
+		{
+			name: 'neutral',
+			light: 'bg-2-mlo-neutral',
+			mid: 'bg-5-mid-neutral',
+			vivid: 'bg-7-hi-neutral',
+		},
+		{
+			name: 'success',
+			light: 'bg-2-mlo-success',
+			mid: 'bg-5-mid-success',
+			vivid: 'bg-7-hi-success',
+		},
+		{
+			name: 'warning',
+			light: 'bg-2-mlo-warning',
+			mid: 'bg-5-mid-warning',
+			vivid: 'bg-7-hi-warning',
+		},
+		{
+			name: 'danger',
+			light: 'bg-2-mlo-danger',
+			mid: 'bg-5-mid-danger',
+			vivid: 'bg-7-hi-danger',
+		},
+		{
+			name: 'info',
+			light: 'bg-2-mlo-info',
+			mid: 'bg-5-mid-info',
+			vivid: 'bg-7-hi-info',
+		},
+	]
 	return (
 		<div className="space-y-2">
 			<p className="text-sm font-medium">Hue palette</p>
 			<div className="flex flex-wrap gap-2">
 				{hues.map((h) => (
-					<div key={h} className="space-y-1 text-center">
+					<div key={h.name} className="space-y-1 text-center">
 						<div className="flex gap-0.5">
-							<div className={`bg-2-mlo-${h} size-8 rounded`} />
-							<div className={`bg-5-mid-${h} size-8 rounded`} />
-							<div className={`bg-7-hi-${h} size-8 rounded`} />
+							<div className={`${h.light} size-8 rounded`} />
+							<div className={`${h.mid} size-8 rounded`} />
+							<div className={`${h.vivid} size-8 rounded`} />
 						</div>
-						<span className="text-muted-foreground text-[10px]">{h}</span>
+						<span className="text-muted-foreground text-[10px]">{h.name}</span>
 					</div>
 				))}
 			</div>
@@ -355,15 +367,32 @@ function CalloutSamples() {
 }
 
 function MiniFlashcardPreview() {
+	const [saved, setSaved] = useState(false)
 	return (
 		<CardlikeFlashcard className="max-w-sm">
 			<CardContent className="space-y-2 p-4">
 				<div className="flex items-start justify-between">
 					<div>
-						<p className="text-lg font-medium">வணக்கம்</p>
+						<p className="text-lg font-medium">vanakkam</p>
 						<p className="text-muted-foreground text-sm">Hello / Greetings</p>
 					</div>
-					<LangBadge lang="tam" />
+					<div className="flex items-center gap-1">
+						<Button
+							variant={saved ? 'soft' : 'ghost'}
+							size="icon"
+							onClick={() => setSaved(!saved)}
+							aria-label={saved ? 'Remove from your deck' : 'Add to your deck'}
+						>
+							<Bookmark
+								className={
+									saved ?
+										'fill-purple-600/50 text-purple-600'
+									:	'text-muted-foreground'
+								}
+							/>
+						</Button>
+						<LangBadge lang="tam" />
+					</div>
 				</div>
 				<Separator />
 				<div className="flex flex-wrap gap-1">
@@ -374,14 +403,6 @@ function MiniFlashcardPreview() {
 						beginner
 					</Badge>
 				</div>
-				<div className="flex gap-1 pt-1">
-					<Button size="sm" variant="ghost">
-						<Star /> Save
-					</Button>
-					<Button size="sm" variant="ghost">
-						<Send /> Share
-					</Button>
-				</div>
 			</CardContent>
 		</CardlikeFlashcard>
 	)
@@ -389,39 +410,51 @@ function MiniFlashcardPreview() {
 
 function InteractiveStates() {
 	const [bookmarked, setBookmarked] = useState(false)
-	const [rating, setRating] = useState<number | null>(null)
 
 	return (
-		<div className="space-y-3">
+		<div className="space-y-4">
 			<p className="text-sm font-medium">Interactive states</p>
-			<div className="flex items-center gap-2">
-				<span className="text-muted-foreground text-sm">Toggle state:</span>
+			<div className="flex items-center gap-3">
+				<span className="text-muted-foreground text-sm">Bookmark toggle:</span>
 				<Button
 					variant={bookmarked ? 'soft' : 'ghost'}
-					size="sm"
+					size="icon"
 					onClick={() => setBookmarked(!bookmarked)}
+					aria-label={bookmarked ? 'Remove bookmark' : 'Bookmark'}
 				>
-					<Star className={bookmarked ? 'fill-current' : 'fill-transparent'} />
-					{bookmarked ? 'Saved' : 'Save'}
+					<Bookmark
+						className={
+							bookmarked ?
+								'fill-purple-600/50 text-purple-600'
+							:	'text-muted-foreground'
+						}
+					/>
 				</Button>
 			</div>
-			<div className="flex items-center gap-2">
-				<span className="text-muted-foreground text-sm">Rating buttons:</span>
-				<div className="inline-flex overflow-hidden rounded-2xl border">
-					{['Again', 'Hard', 'Good', 'Easy'].map((label, i) => (
-						<button
-							key={label}
-							onClick={() => setRating(i)}
-							className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-								rating === i ?
-									'bg-5-mhi-primary text-0-mlo-primary'
-								:	'hover:bg-1-mlo-primary'
-							} ${i > 0 ? 'border-s' : ''}`}
-						>
-							{label}
-						</button>
-					))}
-				</div>
+			<div className="space-y-2">
+				<span className="text-muted-foreground text-sm">Tabs:</span>
+				<Tabs defaultValue="feed">
+					<TabsList>
+						<TabsTrigger value="feed">Feed</TabsTrigger>
+						<TabsTrigger value="browse">Browse</TabsTrigger>
+						<TabsTrigger value="review">Review</TabsTrigger>
+					</TabsList>
+					<TabsContent value="feed">
+						<p className="text-muted-foreground px-1 pt-1 text-sm">
+							Recent activity from friends and the community.
+						</p>
+					</TabsContent>
+					<TabsContent value="browse">
+						<p className="text-muted-foreground px-1 pt-1 text-sm">
+							Explore phrases and playlists by topic.
+						</p>
+					</TabsContent>
+					<TabsContent value="review">
+						<p className="text-muted-foreground px-1 pt-1 text-sm">
+							Practice your cards with spaced repetition.
+						</p>
+					</TabsContent>
+				</Tabs>
 			</div>
 		</div>
 	)
@@ -450,8 +483,6 @@ function ThemeShowcase({ theme }: { theme: ThemeType }) {
 
 			{/* Color system */}
 			<div className="bg-card space-y-4 rounded-lg border p-4">
-				<LuminanceScale />
-				<Separator />
 				<HueSwatches />
 			</div>
 
