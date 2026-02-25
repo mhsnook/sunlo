@@ -74,7 +74,7 @@ export function NavMain({ lang }: { lang?: string }) {
 					:	<OneSidebarMenu
 							menu={deckMenu}
 							title=""
-							className="bg-1-mlo-primary mb-2 rounded-xl"
+							className="bg-0-lo-primary mb-2 rounded-xl"
 						/>
 					}
 				</div>
