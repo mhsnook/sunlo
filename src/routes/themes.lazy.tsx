@@ -2,7 +2,7 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import { useState, type CSSProperties } from 'react'
 import { themes as defaultThemes, type ThemeType } from '@/lib/deck-themes'
 import { Button } from '@/components/ui/button'
-import { Badge, LangBadge } from '@/components/ui/badge'
+import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -295,9 +295,9 @@ function HueSwatches() {
 		},
 		{
 			name: 'neutral',
-			light: 'bg-2-mlo-neutral',
-			mid: 'bg-5-mid-neutral',
-			vivid: 'bg-7-hi-neutral',
+			light: 'bg-2-lo-neutral',
+			mid: 'bg-5-lo-neutral',
+			vivid: 'bg-7-mlo-neutral',
 		},
 		{
 			name: 'success',
@@ -366,48 +366,6 @@ function CalloutSamples() {
 	)
 }
 
-function MiniFlashcardPreview() {
-	const [saved, setSaved] = useState(false)
-	return (
-		<CardlikeFlashcard className="max-w-sm">
-			<CardContent className="space-y-2 p-4">
-				<div className="flex items-start justify-between">
-					<div>
-						<p className="text-lg font-medium">vanakkam</p>
-						<p className="text-muted-foreground text-sm">Hello / Greetings</p>
-					</div>
-					<div className="flex items-center gap-1">
-						<Button
-							variant={saved ? 'soft' : 'ghost'}
-							size="icon"
-							onClick={() => setSaved(!saved)}
-							aria-label={saved ? 'Remove from your deck' : 'Add to your deck'}
-						>
-							<Bookmark
-								className={
-									saved ?
-										'fill-purple-600/50 text-purple-600'
-									:	'text-muted-foreground'
-								}
-							/>
-						</Button>
-						<LangBadge lang="tam" />
-					</div>
-				</div>
-				<Separator />
-				<div className="flex flex-wrap gap-1">
-					<Badge variant="outline" size="sm">
-						greeting
-					</Badge>
-					<Badge variant="outline" size="sm">
-						beginner
-					</Badge>
-				</div>
-			</CardContent>
-		</CardlikeFlashcard>
-	)
-}
-
 function InteractiveStates() {
 	const [bookmarked, setBookmarked] = useState(false)
 
@@ -472,12 +430,9 @@ function ThemeShowcase({ theme }: { theme: ThemeType }) {
 				<FlashcardFormSample />
 			</div>
 
-			{/* Inverted showcase */}
-			<InvertedShowcase />
-
-			{/* Row 2: Mini flashcard + callouts */}
+			{/* Inverted showcase + callouts */}
 			<div className="grid gap-4 sm:grid-cols-2">
-				<MiniFlashcardPreview />
+				<InvertedShowcase />
 				<CalloutSamples />
 			</div>
 
