@@ -195,13 +195,13 @@ function UserLayout() {
 				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
 				<div className="flex min-h-0 flex-1 flex-row">
 					<div
-						className={`mx-auto flex min-h-0 flex-1 flex-col ${wideContent ? 'max-w-6xl' : 'max-w-4xl'}`}
+						className={`mx-auto flex min-h-0 flex-1 flex-col overflow-y-auto ${wideContent ? 'max-w-6xl' : 'max-w-4xl'}`}
 					>
 						<Navbar />
 						<AppNav />
 						<div
 							id="app-sidebar-layout-outlet"
-							className="@container min-h-0 flex-1 p-2"
+							className="@container flex grow flex-col p-2 pb-8"
 							style={{ viewTransitionName: 'main-content' }}
 						>
 							<Outlet />
