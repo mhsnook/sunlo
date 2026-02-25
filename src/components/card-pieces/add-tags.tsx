@@ -5,7 +5,7 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
-import { Pencil } from 'lucide-react'
+import { Tags } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -108,7 +108,7 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<Button variant="ghost" size="icon" aria-label="Edit tags">
-					<Pencil />
+					<Tags />
 				</Button>
 			</DialogTrigger>
 			<AuthenticatedDialogContent
