@@ -21,9 +21,19 @@ import {
 	Logs,
 	Hourglass,
 	WalletCards,
+	Sun,
+	Moon,
+	MonitorCog,
 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
 import { Separator } from '@/components/ui/separator'
+import { useTheme } from '@/components/theme-provider'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 export const Route = createLazyFileRoute('/themes')({
 	component: ThemesPage,
@@ -37,71 +47,6 @@ function hueVars(theme: ThemeType): CSSProperties {
 		'--hue-accent': theme.hueAccent,
 	} as CSSProperties
 }
-
-// Both panels need oklch luminance vars force-declared because the plugin
-// uses :root:not(.dark) / @theme to flip them — a nested div can't trigger that.
-const lightOklchVars: CSSProperties = {
-	'--lc-dir': '-1',
-	'--lc-range-start': '0.95',
-	'--lc-range-end': '0.15',
-	'--l-0': '0.95',
-	'--l-1': '0.87',
-	'--l-2': '0.79',
-	'--l-3': '0.71',
-	'--l-4': '0.63',
-	'--l-5': '0.55',
-	'--l-6': '0.47',
-	'--l-7': '0.39',
-	'--l-8': '0.31',
-	'--l-9': '0.23',
-	'--l-10': '0.15',
-	'--l-base': '0.95',
-	'--l-fore': '0.15',
-	'--l-none': '1',
-	'--l-full': '0',
-} as CSSProperties
-
-// Light panel also needs semantic vars re-declared because :root pre-resolves
-// var(--hue-primary) at compute time. Re-declaring them here lets them
-// pick up the inline --hue-primary value.
-const lightSemanticVars: CSSProperties = {
-	'--background': 'oklch(0.96 0.02 var(--hue-primary))',
-	'--foreground': 'oklch(0.30 0.06 var(--hue-primary))',
-	'--card': 'oklch(1.00 0 0)',
-	'--card-foreground': 'oklch(0.15 0.02 var(--hue-neutral))',
-	'--popover': 'oklch(1.00 0 0)',
-	'--popover-foreground': 'oklch(0.15 0.02 var(--hue-neutral))',
-	'--secondary': 'oklch(0.97 0.005 var(--hue-neutral))',
-	'--secondary-foreground': 'oklch(0.22 0.03 var(--hue-neutral))',
-	'--muted': 'oklch(0.97 0.005 var(--hue-neutral))',
-	'--muted-foreground': 'oklch(0.55 0.01 var(--hue-neutral))',
-	'--border': 'oklch(0.85 0.03 var(--hue-primary))',
-	'--input': 'oklch(0.93 0.005 var(--hue-neutral))',
-	'--ring': 'oklch(0.58 0.22 var(--hue-primary))',
-	'--destructive': 'oklch(0.63 0.26 25)',
-	'--destructive-foreground': 'oklch(0.98 0.005 250)',
-} as CSSProperties
-
-const darkOklchVars: CSSProperties = {
-	'--lc-dir': '1',
-	'--lc-range-start': '0.12',
-	'--lc-range-end': '0.92',
-	'--l-0': '0.12',
-	'--l-1': '0.20',
-	'--l-2': '0.28',
-	'--l-3': '0.36',
-	'--l-4': '0.44',
-	'--l-5': '0.52',
-	'--l-6': '0.60',
-	'--l-7': '0.68',
-	'--l-8': '0.76',
-	'--l-9': '0.84',
-	'--l-10': '0.92',
-	'--l-base': '0.12',
-	'--l-fore': '0.92',
-	'--l-none': '0',
-	'--l-full': '1',
-} as CSSProperties
 
 // ---------- Showcase components using real UI primitives ----------
 
@@ -218,26 +163,12 @@ function InputSample() {
 	)
 }
 
-function ThemeShowcase({
-	theme,
-	mode,
-}: {
-	theme: ThemeType
-	mode: 'light' | 'dark'
-}) {
-	const style =
-		mode === 'light' ?
-			{ ...hueVars(theme), ...lightOklchVars, ...lightSemanticVars }
-		:	{ ...hueVars(theme), ...darkOklchVars }
-
+function ThemeShowcase({ theme }: { theme: ThemeType }) {
 	return (
 		<div
-			className={`bg-background text-foreground flex-1 space-y-3 rounded-xl p-3 ${mode === 'dark' ? 'dark' : ''}`}
-			style={style}
+			className="bg-background text-foreground space-y-3 rounded-xl p-3"
+			style={hueVars(theme)}
 		>
-			<p className="text-xs font-semibold tracking-wider uppercase opacity-60">
-				{mode}
-			</p>
 			<MiniDeckCard />
 			<ButtonSamples />
 			<BadgeSamples />
@@ -287,6 +218,7 @@ function HueSlider({
 // ---------- Main page ----------
 
 function ThemesPage() {
+	const { setTheme } = useTheme()
 	const [themeList, setThemeList] = useState<Array<ThemeType>>([
 		...defaultThemes,
 	])
@@ -350,19 +282,43 @@ function ThemesPage() {
 
 	return (
 		<div className="mx-auto max-w-5xl space-y-6 p-4">
-			<div>
-				<h1 className="text-3xl font-bold">Theme Editor</h1>
-				<p className="text-muted-foreground text-sm">
-					OKLCH color system &mdash; edit themes and preview in light and dark
-					mode side by side
-				</p>
+			<div className="flex items-start justify-between">
+				<div>
+					<h1 className="text-3xl font-bold">Theme Editor</h1>
+					<p className="text-muted-foreground text-sm">
+						OKLCH color system &mdash; edit themes and preview live
+					</p>
+				</div>
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button variant="ghost" size="icon">
+							<Sun className="size-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+							<Moon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+							<span className="sr-only">Toggle theme</span>
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="end">
+						<DropdownMenuItem onClick={() => setTheme('light')}>
+							<Sun className="mr-2 size-4" />
+							Light
+						</DropdownMenuItem>
+						<DropdownMenuItem onClick={() => setTheme('dark')}>
+							<Moon className="mr-2 size-4" />
+							Dark
+						</DropdownMenuItem>
+						<DropdownMenuItem onClick={() => setTheme('system')}>
+							<MonitorCog className="mr-2 size-4" />
+							System
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
 			</div>
 
 			{/* Theme picker */}
 			<div className="flex flex-wrap gap-2">
-				{themeList.map((theme, i) => (
+				{themeList.map((t, i) => (
 					<button
-						key={`${theme.name}-${i}`}
+						key={`${t.name}-${i}`}
 						onClick={() => selectTheme(i)}
 						className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium shadow transition ${
 							i === selectedIdx ?
@@ -373,10 +329,10 @@ function ThemesPage() {
 						<span
 							className="size-4 rounded-full shadow-xs"
 							style={{
-								background: `oklch(0.58 0.22 ${theme.hue})`,
+								background: `oklch(0.58 0.22 ${t.hue})`,
 							}}
 						/>
-						{theme.name}
+						{t.name}
 					</button>
 				))}
 				<button
@@ -441,11 +397,8 @@ function ThemesPage() {
 				</div>
 			</div>
 
-			{/* Showcase: light and dark side by side */}
-			<div className="flex gap-4 max-sm:flex-col">
-				<ThemeShowcase theme={editTheme} mode="light" />
-				<ThemeShowcase theme={editTheme} mode="dark" />
-			</div>
+			{/* Showcase */}
+			<ThemeShowcase theme={editTheme} />
 
 			{/* JSON output */}
 			<div className="bg-card space-y-3 rounded-xl border p-4 shadow">
