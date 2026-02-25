@@ -76,8 +76,8 @@ importers:
         specifier: ^1.7.0
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwind-oklch:
-        specifier: ^0.3.0
-        version: 0.3.0(tailwindcss@4.1.18)
+        specifier: ^0.4.0
+        version: 0.4.0(tailwindcss@4.1.18)
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
@@ -3178,8 +3178,8 @@ packages:
   tailwind-merge@2.6.0:
     resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
 
-  tailwind-oklch@0.3.0:
-    resolution: {integrity: sha512-7ox4AYfTl1Y2Wjv2x6+/7Cr3RORoUSk+Pq7w9ba0bxEkWDzXSjuddbM60OL2Om0JPGILsPOWR6UQGlwMvRusWw==}
+  tailwind-oklch@0.4.0:
+    resolution: {integrity: sha512-CE82fDEF8YElLYNYU7lnZU9Gdu0rR5h53nLo8qnvpq6cblbziNyIE3QaoZK7LYMrinCLXvhuP3XCQE4pfOmrWw==}
     peerDependencies:
       tailwindcss: '>=4.0.0'
 
@@ -6419,7 +6419,7 @@ snapshots:
 
   tailwind-merge@2.6.0: {}
 
-  tailwind-oklch@0.3.0(tailwindcss@4.1.18):
+  tailwind-oklch@0.4.0(tailwindcss@4.1.18):
     dependencies:
       tailwindcss: 4.1.18
 
