@@ -351,7 +351,17 @@ function ComponentsPage() {
 								<NavigationMenuItem>
 									<NavigationMenuTrigger>Item One</NavigationMenuTrigger>
 									<NavigationMenuContent>
-										<NavigationMenuLink>Link</NavigationMenuLink>
+										<NavigationMenuLink>Link 1</NavigationMenuLink>
+										<NavigationMenuLink>Link 2</NavigationMenuLink>
+									</NavigationMenuContent>
+								</NavigationMenuItem>
+							</NavigationMenuList>
+							<NavigationMenuList>
+								<NavigationMenuItem>
+									<NavigationMenuTrigger>Item Two</NavigationMenuTrigger>
+									<NavigationMenuContent>
+										<NavigationMenuLink>Link A</NavigationMenuLink>
+										<NavigationMenuLink>Link B</NavigationMenuLink>
 									</NavigationMenuContent>
 								</NavigationMenuItem>
 							</NavigationMenuList>
