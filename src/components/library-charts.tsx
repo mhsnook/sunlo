@@ -548,24 +548,17 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 
 // ─── Language Selector ──────────────────────────────────────────
 
-export function useLanguageSelector() {
+export function useAvailableLanguages() {
 	const { data: allLanguages } = useLiveQuery((q) =>
 		q
 			.from({ lang: languagesCollection })
 			.orderBy(({ lang }) => lang.phrases_to_learn, 'desc')
 	)
 
-	const availableLanguages = useMemo(
+	return useMemo(
 		() => (allLanguages ?? []).filter((l) => (l.phrases_to_learn ?? 0) > 0),
 		[allLanguages]
 	)
-
-	const [selectedLang, setSelectedLang] = useState<string>('')
-
-	// Default to most popular language
-	const activeLang = selectedLang || availableLanguages[0]?.lang || ''
-
-	return { availableLanguages, activeLang, setSelectedLang }
 }
 
 // ─── Library Summary Stats ──────────────────────────────────────
