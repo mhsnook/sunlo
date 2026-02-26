@@ -391,7 +391,7 @@ function BulkAddPhrasesPage() {
 							<div className="flex flex-1 flex-col gap-4">
 								<div className="space-y-1">
 									<div className="flex items-center justify-between">
-										<Label className="text-base">
+										<Label className="text-base" data-testid="staged-count">
 											{stagedPhrases.length} phrase
 											{stagedPhrases.length === 1 ? '' : 's'} ready
 										</Label>
@@ -473,7 +473,10 @@ function BulkAddPhrasesPage() {
 									text="There was an error submitting your phrases"
 								/>
 							</div>
-						:	<div className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-lg text-center">
+						:	<div
+								className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-lg text-center"
+								data-testid="empty-state-hint"
+							>
 								<p className="text-muted-foreground text-sm">
 									Type a phrase and translation above, then press{' '}
 									<Kbd>Enter</Kbd> to add it to the list.
@@ -487,12 +490,12 @@ function BulkAddPhrasesPage() {
 
 						{/* Successfully added */}
 						{successfullyAddedPhrases.length > 0 && (
-							<div className="my-6">
+							<div className="my-6" data-testid="success-section">
 								<Separator className="my-6" />
 								<h3 className="mb-4 text-lg font-semibold">
 									Successfully Added
 								</h3>
-								<div className="space-y-2">
+								<div className="space-y-2" data-testid="success-phrase-list">
 									{successfullyAddedPhrases.map((pid) => (
 										<WithPhrase
 											key={pid}
@@ -641,15 +644,24 @@ function StagedPhraseRow({
 	onRemove: () => void
 }) {
 	return (
-		<div className="group hover:bg-muted/30 flex items-center gap-2 px-3 py-2">
+		<div
+			className="group hover:bg-muted/30 flex items-center gap-2 px-3 py-2"
+			data-testid={`staged-row-${phrase.id}`}
+		>
 			<div className="flex min-w-0 flex-1 flex-col gap-0.5 @lg:flex-row @lg:items-baseline @lg:gap-2">
-				<span className="truncate font-medium @lg:w-1/2 @lg:shrink-0">
+				<span
+					className="truncate font-medium @lg:w-1/2 @lg:shrink-0"
+					data-testid="staged-phrase-text"
+				>
 					{phrase.phrase_text}
 				</span>
 				<span className="text-muted-foreground hidden shrink-0 @lg:inline">
 					&rarr;
 				</span>
-				<span className="text-muted-foreground truncate text-sm @lg:w-1/2 @lg:shrink-0">
+				<span
+					className="text-muted-foreground truncate text-sm @lg:w-1/2 @lg:shrink-0"
+					data-testid="staged-translation-text"
+				>
 					{phrase.translations.map((t) => t.text).join(', ')}
 				</span>
 			</div>
