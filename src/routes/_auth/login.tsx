@@ -41,7 +41,7 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function LoginForm() {
 	// we use this hook instead of loader data so it reacts to the login event
-	const { isAuth } = useAuth()
+	const { isAuth, isReady } = useAuth()
 	const { redirectedFrom } = Route.useSearch()
 
 	const loginMutation = useMutation({
@@ -73,7 +73,7 @@ function LoginForm() {
 
 	// console.log('form state', form.state, loginMutation)
 
-	if (isAuth)
+	if (isReady && isAuth)
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (
