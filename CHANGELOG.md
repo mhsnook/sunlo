@@ -1,5 +1,41 @@
 # Change Log
 
+## v0.15 - Base UI Migration, Library Charts, Button System, OKLCH Color System
+
+_26th Feb, 2026_
+
+### Major Changes
+
+- Migrate from Radix UI to Base UI primitives
+- Integrate tailwind-oklch plugin and migrate entire color system
+- Consolidate button variants to a deliberate 5-variant model (default, neutral, soft, ghost, red)
+- Add library data visualizations page with 4 interactive charts (treemap, histogram, scatter, bar)
+
+### Features
+
+- Add browse search overlay with Ctrl+K shortcut
+- Add /microcopy route to display all action labels and icons
+- Upgrade bulk-add: staging list UX, spreadsheet import, and responsive layout
+- Move library charts under /learn/browse/charts as a sub-route
+- Add scenetest CI job to test workflow
+
+### Improvements
+
+- Clarify and harden logic for navigating review stages
+- Refactor info boxes on deck settings page to per-section dialogs
+- Add hover state to inactive app-nav links with increased chroma/contrast
+- Lighten nav deck menu background
+- Remove positive tabIndex values from forms for better accessibility
+- Define Microcopy/ActionCopy types and adopt in statusStrings
+
+### Fixes
+
+- Fix navbar horizontal overflow causing page scroll
+- Fix app layout scroll: outlet grows naturally, pages scroll on overflow
+- Fix chart text invisible in dark mode
+- Fix React Compiler errors and correctness issues
+- Fix dependency vulnerabilities (supabase, eslint deps)
+
 ## v0.14 - Dynamic Themes, Vitest, Focus mode, Nicer Toasts, Simplify Review Flow
 
 _13th Feb, 2026_
