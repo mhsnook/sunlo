@@ -80,29 +80,30 @@ export async function login(
 	await page.fill('input[name="password"]', password)
 	await page.click('button[type="submit"]')
 
-	// Wait for redirect to complete
-	await page.waitForLoadState('networkidle')
+	// Wait for post-login content: decks grid, welcome page, or getting-started
+	const decksGrid = page.getByTestId('decks-list-grid')
+	const welcomePage = page.getByTestId('welcome-page')
+	const gettingStarted = page.getByTestId('getting-started-page')
+	await expect(decksGrid.or(welcomePage).or(gettingStarted)).toBeVisible({
+		timeout: 20000,
+	})
 
 	// If user has no profile, they need to complete getting-started first
-	// This is expected for new users - the test should handle profile creation
-	if (page.url().includes('/getting-started')) {
-		// Don't proceed further - let the test handle profile creation
+	if (await gettingStarted.isVisible()) {
 		return
 	}
 
 	// If we landed on welcome page and skipWelcome is true, navigate to /learn
-	if (skipWelcome && !page.url().match(/\/learn$/)) {
-		const goToDecksButton = page.getByRole('link', { name: 'Go to My Decks' })
-		await expect(goToDecksButton).toBeVisible({ timeout: 10000 })
-		await goToDecksButton.click()
+	if (skipWelcome && (await welcomePage.isVisible())) {
+		await page.getByRole('link', { name: 'Go to My Decks' }).click()
 		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 	}
 
 	// For users landing on /learn, verify the expected content
-	if (page.url().includes('/learn')) {
-		await expect(
-			page.getByText('Which deck are we studying today?')
-		).toBeVisible()
+	if (page.url().match(/\/learn$/)) {
+		await expect(page.getByTestId('decks-list-grid')).toBeVisible({
+			timeout: 10000,
+		})
 	}
 }
 
