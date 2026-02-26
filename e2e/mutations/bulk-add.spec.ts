@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	getPhrase,
 	getCardByPhraseId,
@@ -24,9 +24,11 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await page.goto('/learn')
 		await page.goto(`/learn/${TEST_LANG}/bulk-add`)
 
-		// Page title visible
+		// Page title visible (matches both h1 navbar and h3 card title)
 		await expect(
-			page.getByRole('heading', { name: new RegExp(`Bulk Add.*Phrases`) })
+			page
+				.getByRole('heading', { name: new RegExp(`Bulk Add.*Phrases`) })
+				.first()
 		).toBeVisible()
 
 		// Inline add bar is present with both inputs
@@ -39,9 +41,7 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await expect(addBar.getByTestId('inline-add-button')).toBeDisabled()
 
 		// Empty-state hint should be visible (no staged phrases yet)
-		await expect(
-			page.getByText(/Type a phrase and translation above/i)
-		).toBeVisible()
+		await expect(page.getByTestId('empty-state-hint')).toBeVisible()
 
 		// Staged phrases list should NOT be present yet
 		await expect(page.getByTestId('staged-phrases-list')).not.toBeVisible()
@@ -67,15 +67,23 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.press('Enter')
 
 		// Staged list should now appear with 1 phrase
-		await expect(page.getByTestId('staged-phrases-list')).toBeVisible()
-		await expect(page.getByText('1 phrase ready')).toBeVisible()
-		await expect(page.getByText('namaste duniya')).toBeVisible()
-		await expect(page.getByText('hello world')).toBeVisible()
+		const stagingList = page.getByTestId('staged-phrases-list')
+		await expect(stagingList).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'1 phrase ready'
+		)
+
+		// Verify phrase text and translation are in the staging list
+		const row = stagingList.locator('> div').first()
+		await expect(row.getByTestId('staged-phrase-text')).toContainText(
+			'namaste duniya'
+		)
+		await expect(row.getByTestId('staged-translation-text')).toContainText(
+			'hello world'
+		)
 
 		// Empty-state hint should be gone
-		await expect(
-			page.getByText(/Type a phrase and translation above/i)
-		).not.toBeVisible()
+		await expect(page.getByTestId('empty-state-hint')).not.toBeVisible()
 
 		// Inputs should be cleared and phrase input re-focused
 		await expect(phraseInput).toHaveValue('')
@@ -96,7 +104,9 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill('first sentence')
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('1 phrase ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'1 phrase ready'
+		)
 
 		// Add second phrase
 		await phraseInput.fill('doosra vakya')
@@ -104,12 +114,19 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill('second sentence')
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('2 phrases ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'2 phrases ready'
+		)
 
 		// Both phrases should be in the staging list
 		const stagingList = page.getByTestId('staged-phrases-list')
-		await expect(stagingList.getByText('pehla vakya')).toBeVisible()
-		await expect(stagingList.getByText('doosra vakya')).toBeVisible()
+		const rows = stagingList.locator('> div')
+		await expect(rows.first().getByTestId('staged-phrase-text')).toContainText(
+			'pehla vakya'
+		)
+		await expect(rows.nth(1).getByTestId('staged-phrase-text')).toContainText(
+			'doosra vakya'
+		)
 	})
 
 	test('can add phrase via Add button instead of Enter', async ({ page }) => {
@@ -135,8 +152,13 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await addButton.click()
 
 		// Phrase should be staged
-		await expect(page.getByText('1 phrase ready')).toBeVisible()
-		await expect(page.getByText('button vakya')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'1 phrase ready'
+		)
+		const stagingList = page.getByTestId('staged-phrases-list')
+		await expect(
+			stagingList.locator('> div').first().getByTestId('staged-phrase-text')
+		).toContainText('button vakya')
 	})
 
 	test('can remove a staged phrase', async ({ page }) => {
@@ -158,7 +180,9 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill('remove this one')
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('2 phrases ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'2 phrases ready'
+		)
 
 		// Click the remove button on the second phrase row
 		const stagingList = page.getByTestId('staged-phrases-list')
@@ -167,9 +191,15 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await secondRow.getByLabel('Remove phrase').click()
 
 		// Should now show 1 phrase
-		await expect(page.getByText('1 phrase ready')).toBeVisible()
-		await expect(page.getByText('rakhne wala')).toBeVisible()
-		await expect(page.getByText('hatane wala')).not.toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'1 phrase ready'
+		)
+		const firstRow = stagingList.locator('> div').first()
+		await expect(firstRow.getByTestId('staged-phrase-text')).toContainText(
+			'rakhne wala'
+		)
+		// Second row should be gone (only 1 row remains)
+		await expect(stagingList.locator('> div')).toHaveCount(1)
 	})
 
 	test('clear all removes all staged phrases', async ({ page }) => {
@@ -191,16 +221,16 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill('two')
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('2 phrases ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'2 phrases ready'
+		)
 
 		// Click "Clear all"
 		await page.getByRole('button', { name: /clear all/i }).click()
 
 		// Staging list should be gone, empty state should return
 		await expect(page.getByTestId('staged-phrases-list')).not.toBeVisible()
-		await expect(
-			page.getByText(/Type a phrase and translation above/i)
-		).toBeVisible()
+		await expect(page.getByTestId('empty-state-hint')).toBeVisible()
 	})
 
 	test('can edit a staged phrase via dialog', async ({ page }) => {
@@ -217,7 +247,9 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill('wrong sentence')
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('1 phrase ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'1 phrase ready'
+		)
 
 		// Click edit on the phrase row
 		const stagingList = page.getByTestId('staged-phrases-list')
@@ -247,9 +279,13 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await expect(
 			page.getByRole('heading', { name: /edit phrase/i })
 		).not.toBeVisible()
-		await expect(page.getByText('sahi vakya')).toBeVisible()
-		await expect(page.getByText('correct sentence')).toBeVisible()
-		await expect(page.getByText('galt vakya')).not.toBeVisible()
+		const editedRow = stagingList.locator('> div').first()
+		await expect(editedRow.getByTestId('staged-phrase-text')).toContainText(
+			'sahi vakya'
+		)
+		await expect(
+			editedRow.getByTestId('staged-translation-text')
+		).toContainText('correct sentence')
 	})
 
 	test('Escape key clears the inline inputs', async ({ page }) => {
@@ -272,7 +308,9 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await expect(translationInput).toHaveValue('')
 	})
 
-	test('submit staged phrases and verify success', async ({ page }) => {
+	test('submit staged phrases and verify success', async ({
+		page,
+	}, testInfo) => {
 		await page.goto('/learn')
 		await page.goto(`/learn/${TEST_LANG}/bulk-add`)
 
@@ -297,29 +335,24 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		await translationInput.fill(phrase2Translation)
 		await translationInput.press('Enter')
 
-		await expect(page.getByText('2 phrases ready')).toBeVisible()
+		await expect(page.getByTestId('staged-count')).toContainText(
+			'2 phrases ready'
+		)
 
 		// Click submit
 		await page.getByTestId('submit-staged-phrases').click()
 
-		// Wait for success toast
-		await expect(page.getByText(/2 phrases added successfully/i)).toBeVisible({
-			timeout: 15000,
-		})
+		// Wait for Successfully Added section
+		const successSection = page.getByTestId('success-section')
+		await expect(successSection).toBeVisible({ timeout: 15000 })
 
 		// Staging list should be cleared
 		await expect(page.getByTestId('staged-phrases-list')).not.toBeVisible()
 
-		// Successfully Added section should appear
-		await expect(page.getByText('Successfully Added')).toBeVisible()
-
 		// Get phrase IDs from the success section links and verify database
-		const successSection = page
-			.locator('h3:has-text("Successfully Added")')
-			.locator('..')
-		const phraseLinks = successSection.locator(
-			`a[href*="/learn/${TEST_LANG}/"]`
-		)
+		const phraseLinks = successSection
+			.getByTestId('success-phrase-list')
+			.locator(`a[href*="/learn/${TEST_LANG}/"]`)
 		await expect(phraseLinks).toHaveCount(2)
 
 		const href1 = await phraseLinks.first().getAttribute('href')
@@ -332,7 +365,8 @@ test.describe.serial('Bulk Add Phrases (new inline-add UI)', () => {
 		expect(dbPhrase1?.translations).toHaveLength(1)
 
 		// Verify card was created (user has an active deck for TEST_LANG)
-		const { data: dbCard } = await getCardByPhraseId(phraseId1!, TEST_USER_UID)
+		const { uid } = getTestUserForProject(testInfo)
+		const { data: dbCard } = await getCardByPhraseId(phraseId1!, uid)
 		expect(dbCard).toBeTruthy()
 		expect(dbCard).toMatchObject({
 			phrase_id: phraseId1,
