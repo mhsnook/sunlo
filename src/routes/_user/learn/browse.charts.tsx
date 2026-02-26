@@ -57,7 +57,12 @@ function ChartsPage() {
 					<span className="text-muted-foreground text-sm font-medium">
 						Explore data for:
 					</span>
-					<Select value={activeLang} onValueChange={setSelectedLang}>
+					<Select
+						value={activeLang}
+						onValueChange={(value) => {
+							if (value !== null) setSelectedLang(value)
+						}}
+					>
 						<SelectTrigger className="w-60 border">
 							<SelectValue placeholder="Select a language" />
 						</SelectTrigger>

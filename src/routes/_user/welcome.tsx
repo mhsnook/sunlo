@@ -198,7 +198,8 @@ function WelcomePage() {
 				</div>
 				<Select
 					onValueChange={(lang) => {
-						void navigate({ to: '/learn/$lang/feed', params: { lang } })
+						if (typeof lang === 'string')
+							void navigate({ to: '/learn/$lang/feed', params: { lang } })
 					}}
 				>
 					<SelectTrigger className="w-56">

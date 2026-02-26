@@ -1221,34 +1221,34 @@ function MicrocopyPage() {
 			</div>
 
 			<div className="flex flex-wrap gap-2">
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#nav-links">Nav Links</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#card-status">Card Status</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#create">Create Content</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#share">Share / Send</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#edit">Edit / Save</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#destructive">Destructive</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#auth">Auth</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#friends">Friends</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#a11y">Accessibility</a>
 				</Button>
-				<Button variant="outline" size="sm" asChild>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#issues">Issues</a>
 				</Button>
 			</div>
