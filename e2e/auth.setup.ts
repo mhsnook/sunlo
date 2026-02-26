@@ -29,20 +29,8 @@ for (const { email, storagePath } of users) {
 		await page.fill('input[name="password"]', 'password')
 		await page.click('button[type="submit"]')
 
-		// Wait for redirect to complete
-		await page.waitForLoadState('networkidle')
-
-		// If we landed on welcome or getting-started, navigate to /learn
-		if (!page.url().match(/\/learn$/)) {
-			const goToDecksButton = page.getByRole('link', {
-				name: 'Go to My Decks',
-			})
-			await expect(goToDecksButton).toBeVisible({ timeout: 10000 })
-			await goToDecksButton.click()
-		}
-
-		// Verify we're on /learn
-		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
+		// Wait for deterministic redirect: login → profile loads → isReady → Navigate → /learn
+		await expect(page).toHaveURL(/\/learn$/, { timeout: 20000 })
 
 		// Save storage state (cookies + localStorage including auth tokens and intro states)
 		await page.context().storageState({ path: storagePath })

@@ -67,7 +67,7 @@ type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
 	const { referrer } = Route.useSearch()
-	const { isAuth } = useAuth()
+	const { isAuth, isReady } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
@@ -123,7 +123,7 @@ function SignUp() {
 	})
 
 	// Redirect if already logged in (either from wasLogin or regular auth state)
-	if (isAuth) {
+	if (isReady && isAuth) {
 		console.log(
 			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
 		)

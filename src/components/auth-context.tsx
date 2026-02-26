@@ -20,6 +20,7 @@ import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
+	const [isReady, setIsReady] = useState(false)
 
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
@@ -41,16 +42,22 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			// (not on token refresh or other events that already have a user)
 			const isLoggingIn = !sessionState?.user.id && session?.user.id
 			if (isLoggingIn) {
-				void myProfileCollection.utils.refetch()
+				// Profile must load before isReady goes true so the _user loader
+				// finds the profile collection populated (avoids race condition).
+				void myProfileCollection.utils.refetch().then(() => setIsReady(true))
 				void decksCollection.utils.refetch()
 				void friendSummariesCollection.utils.refetch()
 				// Refetch chat messages if previously loaded (for correct RLS filtering)
 				if (chatMessagesCollection.size > 0) {
 					void chatMessagesCollection.utils.refetch()
 				}
+				setSessionState(session)
+				setIsLoaded(true)
+				return
 			}
 			setSessionState(session)
 			setIsLoaded(true)
+			setIsReady(true)
 		}
 	)
 
@@ -71,6 +78,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		isLoaded ?
 			({
 				isAuth: sessionState?.user.role === 'authenticated',
+				isReady,
 				userId: sessionState?.user.id ?? null,
 				userEmail: sessionState?.user.email ?? null,
 				userRole:
