@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import * as z from 'zod'
 import { BarChart3 } from 'lucide-react'
 
 import {
@@ -17,18 +18,33 @@ import {
 	TagTreemap,
 	DifficultyHistogram,
 	LibrarySummaryStats,
-	useLanguageSelector,
+	useAvailableLanguages,
 } from '@/components/library-charts'
 
+const ChartsSearchParams = z.object({
+	lang: z.string().optional(),
+})
+
 export const Route = createFileRoute('/_user/learn/browse/charts')({
+	validateSearch: ChartsSearchParams,
 	component: ChartsPage,
 })
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function ChartsPage() {
-	const { availableLanguages, activeLang, setSelectedLang } =
-		useLanguageSelector()
+	const navigate = Route.useNavigate()
+	const { lang: searchLang } = Route.useSearch()
+	const availableLanguages = useAvailableLanguages()
+	const activeLang = searchLang || availableLanguages[0]?.lang || ''
+	const activeLanguage = availableLanguages.find((l) => l.lang === activeLang)
+
+	const setSelectedLang = (value: string) => {
+		void navigate({
+			search: (prev) => ({ ...prev, lang: value }),
+			replace: true,
+		})
+	}
 
 	return (
 		<main style={style} className="space-y-10 pb-16" data-testid="library-page">
@@ -64,12 +80,14 @@ function ChartsPage() {
 						}}
 					>
 						<SelectTrigger className="w-60 border">
-							<SelectValue placeholder="Select a language" />
+							{activeLanguage ?
+								`${activeLanguage.name} (${activeLanguage.lang})`
+							:	<SelectValue placeholder="Select a language" />}
 						</SelectTrigger>
 						<SelectContent>
 							{availableLanguages.map((lang) => (
 								<SelectItem key={lang.lang} value={lang.lang}>
-									{lang.name} ({lang.phrases_to_learn ?? 0} phrases)
+									{lang.name} ({lang.lang})
 								</SelectItem>
 							))}
 						</SelectContent>
