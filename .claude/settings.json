@@ -28,6 +28,14 @@
 					{
 						"type": "command",
 						"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/block-directional-classes.sh"
+					},
+					{
+						"type": "command",
+						"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/suggest-url-state.sh"
+					},
+					{
+						"type": "command",
+						"command": "$CLAUDE_PROJECT_DIR/.claude/hooks/suggest-test-selectors.sh"
 					}
 				]
 			}
