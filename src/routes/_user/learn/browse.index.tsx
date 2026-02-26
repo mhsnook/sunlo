@@ -78,7 +78,8 @@ function BrowsePage() {
 					<span className="text-muted-foreground">Go to feed:</span>
 					<Select
 						onValueChange={(lang) => {
-							void navigate({ to: '/learn/$lang/feed', params: { lang } })
+							if (typeof lang === 'string')
+								void navigate({ to: '/learn/$lang/feed', params: { lang } })
 						}}
 					>
 						<SelectTrigger className="w-56 border">
