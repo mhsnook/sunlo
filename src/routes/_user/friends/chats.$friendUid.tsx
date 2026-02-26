@@ -200,7 +200,7 @@ function ChatPage() {
 							className="flex items-center gap-2"
 						>
 							<Input
-								placeholder="Send a phrase recommendation..."
+								placeholder="Send a phrase, playlist, or request..."
 								className="cursor-pointer"
 							/>
 							<span className={buttonVariants({ size: 'icon' })}>
