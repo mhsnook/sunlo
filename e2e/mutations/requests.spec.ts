@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { TEST_USER_UID, FIRST_USER_UID } from '../helpers/auth-helpers'
+import { FIRST_USER_UID, getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	createRequest,
 	deleteRequest,
@@ -11,7 +11,10 @@ import {
 import { TEST_LANG } from '../helpers/test-constants'
 
 test.describe('Phrase Request Mutations', () => {
-	test('createRequestMutation: create new phrase request', async ({ page }) => {
+	test('createRequestMutation: create new phrase request', async ({
+		page,
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create an initial request via API for context (so the page isn't empty)
 		const contextRequest = await createRequest({
 			lang: TEST_LANG,
@@ -72,14 +75,14 @@ test.describe('Phrase Request Mutations', () => {
 			expect(requestInCollection).toBeTruthy()
 			expect(requestInCollection?.prompt).toBe(newPrompt)
 			expect(requestInCollection?.lang).toBe(TEST_LANG)
-			expect(requestInCollection?.requester_uid).toBe(TEST_USER_UID)
+			expect(requestInCollection?.requester_uid).toBe(uid)
 
 			// 6. Verify request in database
 			const { data: dbRequest } = await getRequest(requestId!)
 			expect(dbRequest).toBeTruthy()
 			expect(dbRequest?.prompt).toBe(newPrompt)
 			expect(dbRequest?.lang).toBe(TEST_LANG)
-			expect(dbRequest?.requester_uid).toBe(TEST_USER_UID)
+			expect(dbRequest?.requester_uid).toBe(uid)
 
 			// 7. Verify data matches between DB and collection
 			expect(dbRequest).toMatchObject({
@@ -201,7 +204,8 @@ test.describe('Phrase Request Mutations', () => {
 	test('comment context menu: share and copy permalink', async ({
 		page,
 		context,
-	}) => {
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create a request and a comment
 		const request = await createRequest({
 			lang: TEST_LANG,
@@ -214,7 +218,7 @@ test.describe('Phrase Request Mutations', () => {
 			.from('request_comment')
 			.insert({
 				request_id: request.id,
-				uid: TEST_USER_UID,
+				uid: uid,
 				content: commentContent,
 			})
 			.select()

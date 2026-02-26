@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	getCardByPhraseId,
 	createPhrase,
@@ -8,7 +8,8 @@ import {
 import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Card Status Mutations', () => {
-	test('Add card, change status via dropdown', async ({ page }) => {
+	test('Add card, change status via dropdown', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 		const phrase = (
 			await createPhrase({
@@ -58,7 +59,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify card was created with status 'active'
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, uid)
 				expect(card?.status).toBe('active')
 			})
 
@@ -85,7 +86,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed in database (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, uid)
 				expect(card?.status).toBe('learned')
 			})
 
@@ -105,7 +106,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed to skipped (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, uid)
 				expect(card?.status).toBe('skipped')
 			})
 
@@ -123,7 +124,7 @@ test.describe('Card Status Mutations', () => {
 
 			// Verify status changed back to active (with retry)
 			expect(async () => {
-				const { data: card } = await getCardByPhraseId(phraseId!, TEST_USER_UID)
+				const { data: card } = await getCardByPhraseId(phraseId!, uid)
 				expect(card?.status).toBe('active')
 			})
 
@@ -140,7 +141,8 @@ test.describe('Card Status Mutations', () => {
 		}
 	})
 
-	test('Toggle heart icon', async ({ page }) => {
+	test('Toggle heart icon', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// 1. Create a standalone phrase via API AFTER login (so collections sync properly)
@@ -190,7 +192,7 @@ test.describe('Card Status Mutations', () => {
 			expect(cardInCollection?.status).toBe('active')
 
 			// Also verify in DB
-			const { data: card } = await getCardByPhraseId(phraseId, TEST_USER_UID)
+			const { data: card } = await getCardByPhraseId(phraseId, uid)
 			expect(card).toBeTruthy()
 			expect(card?.status).toBe('active')
 		} finally {
@@ -199,7 +201,8 @@ test.describe('Card Status Mutations', () => {
 		}
 	})
 
-	test('Verify CardMetaSchema parsing', async ({ page }) => {
+	test('Verify CardMetaSchema parsing', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// 1. Create a phrase via API (after login so feed can see it)
@@ -240,10 +243,7 @@ test.describe('Card Status Mutations', () => {
 			expect(cardInCollection?.status).toBe('active')
 
 			// 3. Get the card from DB and verify it was fetched successfully
-			const { data: card, error } = await getCardByPhraseId(
-				phraseId,
-				TEST_USER_UID
-			)
+			const { data: card, error } = await getCardByPhraseId(phraseId, uid)
 
 			expect(error).toBeNull()
 			expect(card).toBeTruthy()
@@ -274,7 +274,7 @@ test.describe('Card Status Mutations', () => {
 			// 6. Fetch updated card and verify it still parses correctly
 			const { data: updatedCard, error: updateError } = await getCardByPhraseId(
 				phraseId,
-				TEST_USER_UID
+				uid
 			)
 
 			expect(updateError).toBeNull()
@@ -282,7 +282,7 @@ test.describe('Card Status Mutations', () => {
 				phrase_id: phraseId,
 				status: 'learned', // Status should be updated
 				lang: TEST_LANG,
-				uid: TEST_USER_UID,
+				uid: uid,
 			})
 
 			// Verify basic fields are still present after update
