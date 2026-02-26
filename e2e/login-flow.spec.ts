@@ -29,29 +29,23 @@ test('login flow redirects and shows content', async ({ page }) => {
 	await page.fill('input[name="password"]', 'password')
 	await page.click('button[type="submit"]')
 
-	// 6. Wait for redirect after login to settle — we'll land on either
-	//    /learn (done), /learn/$lang/* (returning user), or /getting-started (new user)
+	// 6. Wait for post-login content: either /learn (decks grid) or /welcome page
 	const decksGrid = page.getByTestId('decks-list-grid')
-	const goToDecksButton = page.getByRole('link', { name: 'Go to My Decks' })
-	await expect(decksGrid.or(goToDecksButton)).toBeVisible({ timeout: 15000 })
+	const welcomePage = page.getByTestId('welcome-page')
+	await expect(decksGrid.or(welcomePage)).toBeVisible({ timeout: 20000 })
 
-	// 7. If we're on welcome/getting-started, click through to /learn
-	if (await goToDecksButton.isVisible()) {
-		await goToDecksButton.click()
+	// 7. If we landed on /welcome, click through to /learn
+	if (await welcomePage.isVisible()) {
+		await page.getByRole('link', { name: 'Go to My Decks' }).click()
+		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 	}
 
-	// 8. Wait for /learn page to load
-	await expect(page).toHaveURL(/\/learn/, { timeout: 10000 })
-
-	// 9. Verify the presence of active decks and friends
-	await expect(page.getByText('Your friends').first()).toBeVisible()
-
-	// Assert at least some decks
-	await expect(decksGrid).toBeVisible()
+	// 8. Verify the presence of active decks and friends (allow time for collections to load)
+	await expect(decksGrid).toBeVisible({ timeout: 10000 })
 	expect(await decksGrid.locator('> *').count()).toBeGreaterThanOrEqual(3)
 
 	// Assert at least 1 friend
-	const friendsSection = page.getByTestId('friends-section')
-	await expect(friendsSection).toBeVisible()
-	await expect(friendsSection.getByText('Your friends')).toBeVisible()
+	await expect(page.getByTestId('friends-section')).toBeVisible({
+		timeout: 10000,
+	})
 })

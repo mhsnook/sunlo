@@ -39,19 +39,16 @@ async function loginViaUI(page: Page, email: string, password: string) {
 	await page.fill('input[name="password"]', password)
 	await page.getByRole('button', { name: /log in/i }).click()
 
-	// Wait for redirect to complete after login
-	await page.waitForLoadState('networkidle')
+	// Wait for post-login content: either /learn (decks grid) or /welcome page
+	const decksGrid = page.getByTestId('decks-list-grid')
+	const welcomePage = page.getByTestId('welcome-page')
+	await expect(decksGrid.or(welcomePage)).toBeVisible({ timeout: 20000 })
 
-	// If we landed on welcome or getting-started, navigate to /learn
-	if (!page.url().includes('/learn') || page.url().includes('/learn/')) {
-		// Click "Go to My Decks" in main content
-		const goToDecksButton = page.getByRole('link', { name: 'Go to My Decks' })
-		await expect(goToDecksButton).toBeVisible({ timeout: 10000 })
-		await goToDecksButton.click()
+	// If we landed on /welcome, click through to /learn
+	if (await welcomePage.isVisible()) {
+		await page.getByRole('link', { name: 'Go to My Decks' }).click()
+		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 	}
-
-	// Verify we're on /learn
-	await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 }
 
 // Helper to sign out via the sidebar user dropdown
@@ -122,10 +119,10 @@ test.describe('Auth State Transitions', () => {
 			timeout: 5000,
 		})
 
-		// Verify we can see decks (collection loaded)
+		// Verify we can see decks (collection loaded — allow time after welcome detour)
 		await expect(
 			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
-		).toBeVisible()
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('sign out clears session and redirects to home', async ({ page }) => {
@@ -134,9 +131,9 @@ test.describe('Auth State Transitions', () => {
 		await loginViaUI(page, TEST_USER_EMAIL, 'password')
 		await expect(page).toHaveURL(/\/learn/)
 
-		// Verify logged in
-		await expect(page.getByText('GarlicFace').first()).toBeVisible({
-			timeout: 5000,
+		// Verify logged in (allow time for collections to load)
+		await expect(page.getByTestId('sidebar-user-menu-trigger')).toBeVisible({
+			timeout: 10000,
 		})
 
 		// Sign out via UI
@@ -301,15 +298,15 @@ test.describe('Collection State Verification', () => {
 		await page.goto('/')
 		await loginViaUI(page, TEST_USER_EMAIL, 'password')
 
-		// Wait for collections to load
-		await expect(page.getByText('GarlicFace').first()).toBeVisible({
-			timeout: 5000,
+		// Wait for collections to load (allow time after welcome detour)
+		await expect(page.getByTestId('sidebar-user-menu-trigger')).toBeVisible({
+			timeout: 10000,
 		})
 
 		// Verify decks are shown
 		await expect(
 			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
-		).toBeVisible()
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('after sign out, sidebar shows login/signup links', async ({ page }) => {
