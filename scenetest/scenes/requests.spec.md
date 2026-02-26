@@ -17,7 +17,7 @@
 
 // # learner edits their request
 //
-// cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+// cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: '[team.lang]', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
 //
 // learner:
 //
@@ -39,7 +39,7 @@
 
 # learner deletes their request
 
-cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: '[team.lang]', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
 
 learner:
 

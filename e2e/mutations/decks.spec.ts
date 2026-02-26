@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { test, expect, TestInfo } from '@playwright/test'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import { getDeck, deleteDeck } from '../helpers/db-helpers'
 
 const TEST_LANG = 'spa' // Spanish
@@ -7,13 +7,15 @@ const TEST_LANG = 'spa' // Spanish
 // Tests run in sequence - each builds on the previous one
 test.describe.serial('Deck Mutations', () => {
 	// if there is a Spanish deck already present, delete it
-	test.beforeAll(async () => {
-		const { data: deck } = await getDeck(TEST_LANG, TEST_USER_UID)
-		if (deck) await deleteDeck(TEST_LANG, TEST_USER_UID)
+	test.beforeAll(async (_fixtures, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
+		const { data: deck } = await getDeck(TEST_LANG, uid)
+		if (deck) await deleteDeck(TEST_LANG, uid)
 	})
 
 	// maybe we should find and delete if present
-	test('Create new deck', async ({ page }) => {
+	test('Create new deck', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// Click deck-switcher in sidebar → "New deck"
@@ -55,16 +57,17 @@ test.describe.serial('Deck Mutations', () => {
 
 		expect(deckInCollection).toBeTruthy()
 		expect(deckInCollection?.lang).toBe(TEST_LANG)
-		expect(deckInCollection?.uid).toBe(TEST_USER_UID)
+		expect(deckInCollection?.uid).toBe(uid)
 
 		// Verify deck in DB
-		const { data: dbDeck } = await getDeck(TEST_LANG, TEST_USER_UID)
+		const { data: dbDeck } = await getDeck(TEST_LANG, uid)
 		expect(dbDeck).toBeTruthy()
 		expect(dbDeck?.lang).toBe(TEST_LANG)
-		expect(dbDeck?.uid).toBe(TEST_USER_UID)
+		expect(dbDeck?.uid).toBe(uid)
 	})
 
-	test('Update daily review count', async ({ page }) => {
+	test('Update daily review count', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 		await expect(page.getByText('Spanish')).toBeVisible()
 		await page.getByText('Spanish').click()
@@ -106,11 +109,12 @@ test.describe.serial('Deck Mutations', () => {
 		expect(deckInCollection?.daily_review_goal).toBe(10)
 
 		// Verify daily_review_goal updated in DB
-		const { data: dbDeck } = await getDeck(TEST_LANG, TEST_USER_UID)
+		const { data: dbDeck } = await getDeck(TEST_LANG, uid)
 		expect(dbDeck?.daily_review_goal).toBe(10)
 	})
 
-	test('Update deck goal/motivation', async ({ page }) => {
+	test('Update deck goal/motivation', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// Navigate to the learn page where decks are shown
@@ -155,11 +159,12 @@ test.describe.serial('Deck Mutations', () => {
 		expect(deckInCollection?.learning_goal).toBe('family')
 
 		// Verify learning_goal updated in DB
-		const { data: dbDeck } = await getDeck(TEST_LANG, TEST_USER_UID)
+		const { data: dbDeck } = await getDeck(TEST_LANG, uid)
 		expect(dbDeck?.learning_goal).toBe('family')
 	})
 
-	test('Archive deck', async ({ page }) => {
+	test('Archive deck', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// Navigate to deck settings
@@ -181,7 +186,7 @@ test.describe.serial('Deck Mutations', () => {
 		})
 
 		// Click archive button to open confirmation dialog
-		await page.getByRole('button', { name: 'Archive' }).click()
+		await page.getByRole('button', { name: 'Archive deck' }).click()
 
 		// Wait for the alert dialog to appear
 		await expect(page.getByRole('alertdialog')).toBeVisible()
@@ -189,7 +194,7 @@ test.describe.serial('Deck Mutations', () => {
 		// Click the Archive button in the dialog to confirm
 		await page
 			.getByRole('alertdialog')
-			.getByRole('button', { name: 'Archive' })
+			.getByRole('button', { name: 'Archive deck' })
 			.click()
 
 		// Wait for confirmation toast
@@ -216,11 +221,12 @@ test.describe.serial('Deck Mutations', () => {
 		expect(deckInCollection?.archived).toBe(true)
 
 		// Verify archived: true in DB
-		const { data: dbDeck } = await getDeck(TEST_LANG, TEST_USER_UID)
+		const { data: dbDeck } = await getDeck(TEST_LANG, uid)
 		expect(dbDeck?.archived).toBe(true)
 	})
 
-	test('Unarchive deck', async ({ page }) => {
+	test('Unarchive deck', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 
 		// Click the archived deck to navigate to it
@@ -261,7 +267,7 @@ test.describe.serial('Deck Mutations', () => {
 		expect(deckInCollection?.archived).toBe(false)
 
 		// Verify archived: false in DB
-		const { data: dbDeck } = await getDeck(TEST_LANG, TEST_USER_UID)
+		const { data: dbDeck } = await getDeck(TEST_LANG, uid)
 		expect(dbDeck?.archived).toBe(false)
 
 		// Click link to go to /learn index
@@ -272,7 +278,8 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	// Cleanup: delete the test deck after all tests complete
-	test.afterAll(async () => {
-		await deleteDeck(TEST_LANG, TEST_USER_UID)
+	test.afterAll(async (_fixtures, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
+		await deleteDeck(TEST_LANG, uid)
 	})
 })

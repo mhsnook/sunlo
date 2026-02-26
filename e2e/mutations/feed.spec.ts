@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	createRequest,
 	createPlaylist,
@@ -72,7 +72,8 @@ test.describe('Unified Feed', () => {
 
 	test('displays phrase provenance correctly (linked to request)', async ({
 		page,
-	}) => {
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 		const nonce = Math.random().toString(36).substring(7)
 		const lang = TEST_LANG
@@ -100,7 +101,7 @@ test.describe('Unified Feed', () => {
 			.from('request_comment')
 			.insert({
 				request_id: request.id,
-				uid: TEST_USER_UID,
+				uid: uid,
 				content: 'Linked phrase here',
 			})
 			.select()
@@ -111,7 +112,7 @@ test.describe('Unified Feed', () => {
 				request_id: request.id,
 				comment_id: comment.id,
 				phrase_id: phrase.id,
-				uid: TEST_USER_UID,
+				uid: uid,
 			})
 		}
 
@@ -143,7 +144,8 @@ test.describe('Unified Feed', () => {
 	})
 	test('folds playlist phrases into the playlist activity', async ({
 		page,
-	}) => {
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
@@ -172,8 +174,8 @@ test.describe('Unified Feed', () => {
 		})
 
 		await supabase.from('playlist_phrase_link').insert([
-			{ playlist_id: playlist.id, phrase_id: phrase1.id, uid: TEST_USER_UID },
-			{ playlist_id: playlist.id, phrase_id: phrase2.id, uid: TEST_USER_UID },
+			{ playlist_id: playlist.id, phrase_id: phrase1.id, uid: uid },
+			{ playlist_id: playlist.id, phrase_id: phrase2.id, uid: uid },
 		])
 
 		try {
@@ -387,7 +389,8 @@ test.describe('Unified Feed', () => {
 		}
 	})
 
-	test('allows users to upvote playlists', async ({ page }) => {
+	test('allows users to upvote playlists', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		await page.goto('/learn')
 		const lang = TEST_LANG
 		const nonce = Math.random().toString(36).substring(7)
@@ -435,12 +438,12 @@ test.describe('Unified Feed', () => {
 				.from('phrase_playlist_upvote')
 				.select()
 				.eq('playlist_id', playlist.id)
-				.eq('uid', TEST_USER_UID)
+				.eq('uid', uid)
 				.single()
 
 			expect(upvoteInDb).toBeTruthy()
 			expect(upvoteInDb?.playlist_id).toBe(playlist.id)
-			expect(upvoteInDb?.uid).toBe(TEST_USER_UID)
+			expect(upvoteInDb?.uid).toBe(uid)
 
 			// 10. Verify upvote_count updated in playlist table
 			const { data: updatedPlaylist } = await supabase
@@ -468,7 +471,7 @@ test.describe('Unified Feed', () => {
 				.from('phrase_playlist_upvote')
 				.select()
 				.eq('playlist_id', playlist.id)
-				.eq('uid', TEST_USER_UID)
+				.eq('uid', uid)
 				.maybeSingle()
 
 			expect(removedUpvote).toBeNull()

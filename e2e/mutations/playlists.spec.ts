@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { FIRST_USER_UID, TEST_USER_UID } from '../helpers/auth-helpers'
+import { FIRST_USER_UID, getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	createPlaylist,
 	deletePlaylist,
@@ -204,7 +204,10 @@ test.describe('Playlist Mutations', () => {
 		}
 	})
 
-	test('manage phrases: add phrase to existing playlist', async ({ page }) => {
+	test('manage phrases: add phrase to existing playlist', async ({
+		page,
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create some phrases via API
 		const phrase1 = await createPhrase({
 			lang: TEST_LANG,
@@ -236,13 +239,13 @@ test.describe('Playlist Mutations', () => {
 					playlist_id: playlist.id,
 					phrase_id: phrase1.phrase.id,
 					order: 1,
-					uid: TEST_USER_UID,
+					uid,
 				},
 				{
 					playlist_id: playlist.id,
 					phrase_id: phrase2.phrase.id,
 					order: 2,
-					uid: TEST_USER_UID,
+					uid,
 				},
 			])
 			.throwOnError()
@@ -329,7 +332,10 @@ test.describe('Playlist Mutations', () => {
 		}
 	})
 
-	test('manage phrases: remove phrase from playlist', async ({ page }) => {
+	test('manage phrases: remove phrase from playlist', async ({
+		page,
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create phrases
 		const phrase1 = await createPhrase({
 			lang: TEST_LANG,
@@ -360,19 +366,19 @@ test.describe('Playlist Mutations', () => {
 					playlist_id: playlist.id,
 					phrase_id: phrase1.phrase.id,
 					order: 1,
-					uid: TEST_USER_UID,
+					uid,
 				},
 				{
 					playlist_id: playlist.id,
 					phrase_id: phrase2.phrase.id,
 					order: 2,
-					uid: TEST_USER_UID,
+					uid,
 				},
 				{
 					playlist_id: playlist.id,
 					phrase_id: phrase3.phrase.id,
 					order: 3,
-					uid: TEST_USER_UID,
+					uid,
 				},
 			])
 			.select()
@@ -447,7 +453,8 @@ test.describe('Playlist Mutations', () => {
 		}
 	})
 
-	test('manage phrases: reorder phrases', async ({ page }) => {
+	test('manage phrases: reorder phrases', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create phrases
 		const phrase1 = await createPhrase({
 			lang: TEST_LANG,
@@ -478,19 +485,19 @@ test.describe('Playlist Mutations', () => {
 					playlist_id: playlist.id,
 					phrase_id: phrase1.phrase.id,
 					order: 1,
-					uid: TEST_USER_UID,
+					uid,
 				},
 				{
 					playlist_id: playlist.id,
 					phrase_id: phrase2.phrase.id,
 					order: 2,
-					uid: TEST_USER_UID,
+					uid,
 				},
 				{
 					playlist_id: playlist.id,
 					phrase_id: phrase3.phrase.id,
 					order: 3,
-					uid: TEST_USER_UID,
+					uid,
 				},
 			])
 			.select()
@@ -539,7 +546,8 @@ test.describe('Playlist Mutations', () => {
 		}
 	})
 
-	test('manage phrases: edit phrase href', async ({ page }) => {
+	test('manage phrases: edit phrase href', async ({ page }, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
 		// 1. Create phrase and playlist
 		const phrase = await createPhrase({
 			lang: TEST_LANG,
@@ -559,7 +567,7 @@ test.describe('Playlist Mutations', () => {
 				phrase_id: phrase.phrase.id,
 				order: 1,
 				href: null,
-				uid: TEST_USER_UID,
+				uid,
 			})
 			.select()
 			.single()
