@@ -136,12 +136,10 @@ export function SpreadsheetImportDialog({
 			</DialogTrigger>
 			<DialogContent className="max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
-					<DialogTitle className="flex items-center justify-between">
-						<span>
-							{step === 'paste' ?
-								'Paste from Spreadsheet'
-							:	'Map Columns & Review'}
-						</span>
+					<DialogTitle className="flex items-center gap-1">
+						{step === 'paste' ?
+							'Paste from Spreadsheet'
+						:	'Map Columns & Review'}
 						{step === 'paste' && (
 							<InfoDialog title="Spreadsheet Import Format">
 								<p>
