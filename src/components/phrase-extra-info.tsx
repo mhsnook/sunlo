@@ -1,11 +1,12 @@
-import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
+import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import type { CardMetaType } from '@/features/deck/schemas'
 
 import { ago } from '@/lib/dayjs'
 import { dateDiff, retrievability } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
-import { useOneCardReviews } from '@/hooks/use-reviews'
-import { intervals } from '@/lib/fsrs'
+import { useOneCardReviews } from '@/features/review/hooks'
+import { intervals } from '@/features/review/fsrs'
 
 export default function PhraseExtraInfo({
 	phrase,

@@ -1,11 +1,11 @@
-import { useLanguagePhrase } from '@/hooks/use-language'
-import { useLanguagesToShow } from '@/hooks/use-profile'
+import { useLanguagePhrase } from '@/features/phrases/hooks'
+import { useLanguagesToShow } from '@/features/profile/hooks'
 import type { uuid } from '@/types/main'
 import type {
 	PhraseFullFilteredType,
 	PhraseFullType,
 	TranslationType,
-} from '@/lib/schemas'
+} from '@/features/phrases/schemas'
 
 export type CompositePhraseQueryResults =
 	| { status: 'pending'; data: undefined }

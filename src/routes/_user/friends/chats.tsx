@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, useMatch } from '@tanstack/react-router'
 import { ChatsSidebar } from './-chats-sidebar'
-import { chatMessagesCollection } from '@/lib/collections'
+import { chatMessagesCollection } from '@/features/social/collections'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/chats')({

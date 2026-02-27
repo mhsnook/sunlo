@@ -28,9 +28,9 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import languages from '@/lib/languages'
-import { useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/features/languages/hooks'
 import { Separator } from '@/components/ui/separator'
-import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
+import { PhraseSearchSchema, PhraseSearchType } from '@/features/phrases/schemas'
 import {
 	useSmartSearch,
 	type SmartSearchSortBy,

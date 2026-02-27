@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
-import { useLangPlaylists } from '@/hooks/use-playlists'
+import { useLangPlaylists } from '@/features/playlists/hooks'
 import type { CSSProperties } from 'react'
 import languages from '@/lib/languages'
 import { buttonVariants } from '@/components/ui/button'

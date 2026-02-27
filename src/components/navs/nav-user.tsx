@@ -15,14 +15,14 @@ import {
 	useSidebar,
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/lib/use-auth'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
 import { avatarUrlify } from '@/lib/hooks'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { removeSbTokens } from '@/lib/utils'
-import { clearUser } from '@/lib/collections'
+import { clearUser } from '@/lib/collections/clear-user'
 
 const data = makeLinks([
 	'/profile',

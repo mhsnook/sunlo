@@ -23,12 +23,10 @@ import {
 	MessageCircleHeart,
 } from 'lucide-react'
 
-import {
-	phrasesCollection,
-	phraseRequestsCollection,
-	phrasePlaylistsCollection,
-} from '@/lib/collections'
-import { useDecks } from '@/hooks/use-deck'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { useDecks } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { LangBadge } from '@/components/ui/badge'
 import { SelectOneLanguage } from '@/components/select-one-language'

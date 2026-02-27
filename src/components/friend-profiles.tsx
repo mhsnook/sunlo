@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useRelationFriends } from '@/hooks/use-friends'
+import { useRelationFriends } from '@/features/social/hooks'
 import { Loader } from '@/components/ui/loader'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 

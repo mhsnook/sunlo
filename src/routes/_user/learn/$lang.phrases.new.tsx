@@ -27,18 +27,11 @@ import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
-import {
-	CardMetaSchema,
-	DeckMetaSchema,
-	PhraseFullSchema,
-	TranslationSchema,
-} from '@/lib/schemas'
-import {
-	cardsCollection,
-	decksCollection,
-	phrasesCollection,
-} from '@/lib/collections'
-import { useInvalidateFeed } from '@/hooks/use-feed'
+import { PhraseFullSchema, TranslationSchema } from '@/features/phrases/schemas'
+import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
+import { useInvalidateFeed } from '@/features/feed/hooks'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { Separator } from '@/components/ui/separator'
@@ -46,7 +39,7 @@ import {
 	useDeckMeta,
 	useDecks,
 	usePreferredTranslationLang,
-} from '@/hooks/use-deck'
+} from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
 import ErrorLabel from '@/components/fields/error-label'

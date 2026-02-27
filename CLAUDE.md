@@ -113,14 +113,14 @@ This app uses a **reactive collection-based architecture** instead of traditiona
 ```
 Supabase Database
         ↓
-Collections (src/lib/collections.ts)
+Collections (src/features/<domain>/collections.ts)
         ↓
 Live Queries (useLiveQuery hooks)
         ↓
 React Components
 ```
 
-**Collections** are the single source of truth for all data. They're defined in `src/lib/collections.ts` using `createCollection()` with Zod schemas for validation. Loading strategies:
+**Collections** are the single source of truth for all data. They're defined in each feature's `collections.ts` using `createCollection()` with Zod schemas for validation. Loading strategies:
 
 - Load **whole tables** for user collections (RLS filters automatically)
 - Use **on-demand** subsets in live queries for public data
@@ -135,7 +135,7 @@ React Components
 Example:
 
 ```typescript
-// From hooks/use-deck.ts
+// From features/deck/hooks.ts
 export const useDeckCards = (lang: string) =>
 	useLiveQuery(
 		(q) =>
@@ -194,6 +194,28 @@ const mutation = useMutation({
 
 ### Key Directories
 
+- `src/features/` - **Feature modules** (schemas, collections, hooks, and barrel files per domain)
+  - `profile/` - User profiles, identity, language preferences (`schemas.ts`, `collections.ts`, `hooks.ts`)
+  - `languages/` - Language metadata, tags, `LangSchema` (`schemas.ts`, `collections.ts`, `hooks.ts`)
+  - `phrases/` - Phrases, translations, search, provenance (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
+  - `deck/` - Decks, cards, deck mutations (`schemas.ts`, `collections.ts`, `hooks.ts`, `mutations.ts`)
+  - `review/` - Review sessions, FSRS algorithm, review store (`schemas.ts`, `collections.ts`, `hooks.ts`, `store.ts`, `fsrs.ts`)
+  - `requests/` - Phrase requests & upvotes (`schemas.ts`, `collections.ts`, `hooks.tsx`)
+  - `comments/` - Comment system (`schemas.ts`, `collections.ts`)
+  - `social/` - Friends, chat, public profiles (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
+  - `playlists/` - Playlists & phrase links (`schemas.ts`, `collections.ts`, `hooks.ts`)
+  - `feed/` - Activity feed (`schemas.ts`, `hooks.ts`)
+  - `contributions/` - User contributions views (`schemas.ts`, `hooks.ts`)
+- `src/lib/` - Cross-cutting utilities
+  - `collections/clear-user.ts` - Clears all user collections on logout
+  - `supabase-client.ts` - Supabase client setup
+  - `query-client.ts` - TanStack Query configuration
+  - `use-auth.ts` - Authentication state
+  - `dayjs.ts`, `utils.ts`, `languages.ts` - Cross-cutting utilities
+- `src/hooks/` - Cross-domain composite hooks
+  - `composite-phrase.ts`, `composite-pids.ts` - Multi-domain data hooks
+  - `use-smart-search.ts` - Search across phrases/requests/playlists
+  - `links.ts`, `use-mobile.tsx`, `use-require-auth.ts` - Utility hooks
 - `src/routes/` - File-based routing structure
   - `_auth.tsx` - Auth layout (login, signup)
   - `_user.tsx` - Protected routes requiring authentication
@@ -203,17 +225,60 @@ const mutation = useMutation({
   - `feed/` - Feed display components
   - `cards/`, `requests/`, `playlists/` - Feature-specific components
   - `fields/` - Reusable form field components
-- `src/hooks/` - Custom React hooks (use-deck, use-requests, etc.)
-- `src/lib/` - Core utilities and configuration
-  - `collections.ts` - All TanStack DB collections
-  - `live-collections.ts` - Computed/joined collection views
-  - `schemas.ts` - Zod validation schemas
-  - `supabase-client.ts` - Supabase client setup
-  - `query-client.ts` - TanStack Query configuration
-  - `use-auth.ts` - Authentication state
 - `supabase/schemas/` - Database schema definitions
 - `supabase/migrations/` - Database migrations
 - `supabase/seed.sql` - Seed data
+
+### Feature Module Pattern
+
+The codebase uses a **"deep module" architecture** (inspired by Ousterhout's _A Philosophy of Software Design_). Each feature domain is a self-contained directory under `src/features/` containing its own schemas, collections, hooks, and a barrel file (`index.ts`) that exports the public API.
+
+**Directory structure per feature:**
+
+```
+src/features/<domain>/
+  schemas.ts      — Zod schemas and inferred types
+  collections.ts  — TanStack DB collections
+  hooks.ts        — React hooks (useLiveQuery, useMutation)
+  index.ts        — Barrel file (public API re-exports)
+  # Some features also have:
+  live.ts         — Live query definitions (phrases, social)
+  mutations.ts    — Mutation hooks (deck)
+  store.ts        — Zustand store (review)
+  fsrs.ts         — FSRS algorithm (review)
+```
+
+**Import conventions:**
+
+```typescript
+// ✅ Consumer code (routes, components) — import from the barrel
+import { useDeckMeta, type DeckMetaType } from '@/features/deck'
+import { useLanguagePhrases } from '@/features/phrases'
+
+// ✅ Cross-domain wiring (one feature importing from another) — import from specific files
+import { decksCollection } from '@/features/deck/collections'
+import { DeckMetaSchema } from '@/features/deck/schemas'
+
+// ✅ Intra-feature imports — use relative paths
+import { CardReviewSchema } from './schemas'
+import { cardReviewsCollection } from './collections'
+```
+
+**Feature domains and what they contain:**
+
+| Domain          | Schemas                                 | Collections                                         | Key Hooks                              |
+| --------------- | --------------------------------------- | --------------------------------------------------- | -------------------------------------- |
+| `profile`       | PublicProfile, MyProfile, LanguageKnown | publicProfiles, myProfile                           | useAuth, useProfile                    |
+| `languages`     | Language, LangTag, LangSchema           | languages, langTags                                 | useLanguageMeta, useLanguageTags       |
+| `phrases`       | PhraseFull, Translation, PhraseSearch   | phrases, phrasesFull (live)                         | useLanguagePhrases, usePhrase          |
+| `deck`          | DeckMeta, CardMeta                      | decks, cards                                        | useDeckMeta, useDeckCards, useDeckPids |
+| `review`        | CardReview, DailyReviewState            | cardReviews, reviewDays                             | useReviewsToday, useReviewMutation     |
+| `requests`      | PhraseRequest                           | phraseRequests                                      | useRequest, useRequestCounts           |
+| `comments`      | RequestComment, CommentPhraseLink       | comments, commentPhraseLinks                        | (inline in components)                 |
+| `social`        | FriendSummary, ChatMessage              | friendSummaries, chatMessages, relationsFull (live) | useRelationFriends, useAllChats        |
+| `playlists`     | PhrasePlaylist, PlaylistPhraseLink      | phrasePlaylists, playlistPhraseLinks                | useOnePlaylist, useLangPlaylists       |
+| `feed`          | FeedActivity                            | (uses React Query)                                  | useFeedLang                            |
+| `contributions` | UserContributionsTabs                   | (uses other collections)                            | useAnyonesPhraseRequests               |
 
 ### Routing Conventions
 
@@ -324,7 +389,7 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 - **Zod schemas**: PascalCase (e.g., `PhraseFullSchema`, `DeckMetaSchema`)
 - **Database fields**: snake_case to match Postgres (e.g., `created_at`, `phrase_id`)
 - **Components**: PascalCase, files are kebab-case (e.g., `UserProfile` in `user-profile.tsx`)
-- **Hooks**: Prefix with `use-` (e.g., `use-deck.ts`, `use-requests.tsx`)
+- **Hooks**: Feature hooks live in `features/<domain>/hooks.ts`; cross-cutting hooks in `src/hooks/` use `use-` prefix
 - **Language codes**: Use `lang` variable name for 3-letter codes
 - **Phrase IDs**: Use `pid` when passing phrase_id as prop or variable
 - **Type definitions**: Files with only TypeScript definitions use `*.d.ts` extension
@@ -339,6 +404,14 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 ### Import Patterns
 
 ```typescript
+// Feature public API (preferred for consumer code)
+import { useDeckMeta, type DeckMetaType } from '@/features/deck'
+import { useLanguagePhrases } from '@/features/phrases'
+
+// Feature internals (for cross-domain wiring)
+import { decksCollection } from '@/features/deck/collections'
+import { DeckMetaSchema } from '@/features/deck/schemas'
+
 // Supabase client
 import supabase from '@/lib/supabase-client'
 

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs'
 
-import type { ReviewStats } from '@/hooks/use-reviews'
-import { useInitialiseReviewStore } from '@/hooks/use-review-store'
+import type { ReviewStats } from '@/features/review/hooks'
+import { useInitialiseReviewStore } from '@/features/review/store'
 import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
 import {

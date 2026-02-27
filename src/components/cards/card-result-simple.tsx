@@ -1,7 +1,7 @@
 import PermalinkButton from '@/components/permalink-button'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
-import { PhraseFullFilteredType, PhraseFullFullType } from '@/lib/schemas'
+import { PhraseFullFilteredType, PhraseFullFullType } from '@/features/phrases/schemas'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { CSSProperties } from 'react'
 

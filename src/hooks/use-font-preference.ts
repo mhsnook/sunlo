@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 
 const FONT_PREF_KEY = 'sunlo-font-preference'
 

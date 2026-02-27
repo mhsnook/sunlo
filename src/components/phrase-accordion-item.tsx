@@ -1,4 +1,4 @@
-import type { PhraseFullFilteredType } from '@/lib/schemas'
+import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import {
 	AccordionContent,
 	AccordionItem,

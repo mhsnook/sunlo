@@ -5,8 +5,8 @@ import {
 	intervals,
 	retrievability,
 	type Score,
-} from './fsrs'
-import type { CardReviewType } from './schemas'
+} from '@/features/review/fsrs'
+import type { CardReviewType } from '@/features/review/schemas'
 
 // Helper to make a mock previous review
 function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {

@@ -24,9 +24,9 @@ import {
 	useInitialiseReviewStore,
 	useReviewDayString,
 	useReviewStage,
-} from '@/hooks/use-review-store'
+} from '@/features/review/store'
 import { arrayDifference, arrayUnion, min0 } from '@/lib/utils'
-import { useDeckMeta, useDeckPids } from '@/hooks/use-deck'
+import { useDeckMeta, useDeckPids } from '@/features/deck/hooks'
 import supabase from '@/lib/supabase-client'
 import {
 	LanguageIsEmpty,
@@ -35,16 +35,14 @@ import {
 import { NotEnoughCards } from '@/components/review/not-enough-cards'
 import { SelectPhrasesToAddToReview } from '@/components/review/select-phrases-to-add-to-review'
 import { useUserId } from '@/lib/use-auth'
-import { useReviewsTodayStats } from '@/hooks/use-reviews'
+import { useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
-import {
-	CardMetaSchema,
-	CardStatusEnumType,
-	DailyReviewStateSchema,
-} from '@/lib/schemas'
-import { cardsCollection, reviewDaysCollection } from '@/lib/collections'
+import { CardMetaSchema, CardStatusEnumType } from '@/features/deck/schemas'
+import { DailyReviewStateSchema } from '@/features/review/schemas'
+import { cardsCollection } from '@/features/deck/collections'
+import { reviewDaysCollection } from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
 

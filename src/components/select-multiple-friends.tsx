@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react'
-import { useRelationFriends } from '@/hooks/use-friends'
+import { useRelationFriends } from '@/features/social/hooks'
 import { Loader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
 import { Checkbox } from '@/components/ui/checkbox'
