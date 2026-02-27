@@ -23,7 +23,7 @@ import {
 } from '@/lib/schemas'
 import { phrasesCollection, cardsCollection } from '@/lib/collections'
 import { useInvalidateFeed } from '@/hooks/use-feed'
-import { usePreferredTranslationLang } from '@/hooks/use-deck'
+import { usePreferredTranslationLang, useDecks } from '@/hooks/use-deck'
 
 const inlinePhraseSchema = z.object({
 	phrase_text: z.string().min(1, 'Enter a phrase'),
@@ -46,6 +46,8 @@ export function InlinePhraseCreator({
 	onCancel,
 }: InlinePhraseCreatorProps) {
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
+	const { data: decks } = useDecks()
+	const hasDeck = decks?.some((d) => d.lang === lang) ?? false
 	const {
 		register,
 		control,
@@ -70,6 +72,7 @@ export function InlinePhraseCreator({
 				translation_text: values.translation_text,
 				translation_lang: values.translation_lang,
 				phrase_only_reverse: values.only_reverse,
+				create_card: hasDeck,
 			}
 			const { data } = await supabase
 				.rpc('add_phrase_translation_card', args)
@@ -78,7 +81,7 @@ export function InlinePhraseCreator({
 			return data as {
 				phrase: Tables<'phrase'>
 				translation: Tables<'phrase_translation'>
-				card: Tables<'user_card'>
+				card: Tables<'user_card'> | null
 			}
 		},
 		onSuccess: (data) => {
@@ -99,7 +102,9 @@ export function InlinePhraseCreator({
 				})
 			}
 			invalidateFeed(lang)
-			toastSuccess('Phrase created and added to your deck')
+			toastSuccess(
+				data.card ? 'Phrase created and added to your deck' : 'Phrase created'
+			)
 			onPhraseCreated(data.phrase.id)
 		},
 		onError: (error) => {
