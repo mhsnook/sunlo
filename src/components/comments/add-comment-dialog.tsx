@@ -30,13 +30,13 @@ import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/comments'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
 	RequestCommentSchema,
 	RequestCommentType,
-} from '@/lib/schemas'
+} from '@/lib/schemas/comments'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/hooks/use-requests'
 import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'

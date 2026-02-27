@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
-import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas/requests'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
 import { useOneRandomly } from '@/lib/utils'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 

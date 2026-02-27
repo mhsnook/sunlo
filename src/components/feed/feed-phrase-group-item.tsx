@@ -1,4 +1,4 @@
-import { FeedActivityType } from '@/lib/schemas'
+import { FeedActivityType } from '@/lib/schemas/feed'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'

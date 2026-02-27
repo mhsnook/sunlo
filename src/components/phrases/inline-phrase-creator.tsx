@@ -16,12 +16,10 @@ import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import {
-	PhraseFullSchema,
-	TranslationSchema,
-	CardMetaSchema,
-} from '@/lib/schemas'
-import { phrasesCollection, cardsCollection } from '@/lib/collections'
+import { PhraseFullSchema, TranslationSchema } from '@/lib/schemas/phrases'
+import { CardMetaSchema } from '@/lib/schemas/deck'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { cardsCollection } from '@/lib/collections/deck'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import { usePreferredTranslationLang, useDecks } from '@/hooks/use-deck'
 

@@ -21,12 +21,10 @@ import { useLanguageTags } from '@/hooks/use-language'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
-import { langTagsCollection, phrasesCollection } from '@/lib/collections'
-import {
-	LangTagSchema,
-	LangTagType,
-	PhraseFullFilteredType,
-} from '@/lib/schemas'
+import { langTagsCollection } from '@/lib/collections/languages'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { LangTagSchema, LangTagType } from '@/lib/schemas/languages'
+import { PhraseFullFilteredType } from '@/lib/schemas/phrases'
 import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({

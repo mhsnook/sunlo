@@ -3,13 +3,16 @@ import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas'
+import type { ChatMessageRelType, ChatMessageType } from '@/lib/schemas/social'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
-import { chatMessagesCollection } from '@/lib/collections'
+import { chatMessagesCollection } from '@/lib/collections/social'
 import { mapArrays } from '@/lib/utils'
-import { relationsFull, RelationsFullType } from '@/lib/live-collections'
+import {
+	relationsFull,
+	type RelationsFullType,
+} from '@/lib/collections/live-social'
 
 export const useRelationInvitations = (): UseLiveQueryResult<
 	RelationsFullType[]

@@ -30,7 +30,7 @@ import {
 import languages from '@/lib/languages'
 import { useLanguageTags } from '@/hooks/use-language'
 import { Separator } from '@/components/ui/separator'
-import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas'
+import { PhraseSearchSchema, PhraseSearchType } from '@/lib/schemas/phrases'
 import {
 	useSmartSearch,
 	type SmartSearchSortBy,

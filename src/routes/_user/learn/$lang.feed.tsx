@@ -3,7 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Users } from 'lucide-react'
 
-import type { FeedActivityType } from '@/lib/schemas'
+import type { FeedActivityType } from '@/lib/schemas/feed'
 import { buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'

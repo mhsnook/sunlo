@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ExternalLink, Send } from 'lucide-react'
-import { PhrasePlaylistType } from '@/lib/schemas-playlist'
+import { PhrasePlaylistType } from '@/lib/schemas/playlists'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { useOnePlaylistPhrases } from '@/hooks/use-playlists'

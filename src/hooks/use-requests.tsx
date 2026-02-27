@@ -5,9 +5,10 @@ import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	phraseRequestsCollection,
-} from '@/lib/collections'
-import { CommentPhraseLinkType, PhraseRequestType } from '@/lib/schemas'
+} from '@/lib/collections/comments'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
+import type { CommentPhraseLinkType } from '@/lib/schemas/comments'
+import type { PhraseRequestType } from '@/lib/schemas/requests'
 import { mapArrays } from '@/lib/utils'
 
 export const useRequestLinksPhraseIds = (

@@ -1,7 +1,7 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { DeckMetaType } from '@/lib/schemas'
+import type { DeckMetaType } from '@/lib/schemas/deck'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
 

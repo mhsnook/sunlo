@@ -11,7 +11,7 @@ import { DialogTrigger } from '@/components/ui/dialog'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/hooks/use-requests'
 import { UpvoteRequest } from './upvote-request-button'
-import { PhraseRequestType } from '@/lib/schemas'
+import { PhraseRequestType } from '@/lib/schemas/requests'
 
 const showThread = { show: 'thread' } as const
 const answersOnly = { show: 'answers-only' } as const

@@ -18,8 +18,8 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
-import { decksCollection } from '@/lib/collections'
-import { DeckMetaRawSchema } from '@/lib/schemas'
+import { decksCollection } from '@/lib/collections/deck'
+import { DeckMetaRawSchema } from '@/lib/schemas/deck'
 
 export function ArchiveDeckButton({
 	lang,

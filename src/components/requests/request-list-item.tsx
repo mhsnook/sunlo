@@ -1,5 +1,5 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
-import { PhraseRequestType } from '@/lib/schemas'
+import { PhraseRequestType } from '@/lib/schemas/requests'
 import { useRequestLinksPhraseIds } from '@/hooks/use-requests'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'

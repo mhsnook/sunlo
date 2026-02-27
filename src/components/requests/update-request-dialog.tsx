@@ -9,9 +9,9 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { PhraseRequestSchema, type PhraseRequestType } from '@/lib/schemas'
+import { PhraseRequestSchema, type PhraseRequestType } from '@/lib/schemas/requests'
 import { Textarea } from '../ui/textarea'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'

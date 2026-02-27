@@ -1,4 +1,4 @@
-import { FeedActivityType } from '@/lib/schemas'
+import { FeedActivityType } from '@/lib/schemas/feed'
 import { FeedRequestItem } from './feed-request-item'
 import { FeedPlaylistItem } from './feed-playlist-item'
 import { FeedPhraseItem } from './feed-phrase-item'

@@ -27,17 +27,10 @@ import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
-import {
-	CardMetaSchema,
-	DeckMetaSchema,
-	PhraseFullSchema,
-	TranslationSchema,
-} from '@/lib/schemas'
-import {
-	cardsCollection,
-	decksCollection,
-	phrasesCollection,
-} from '@/lib/collections'
+import { PhraseFullSchema, TranslationSchema } from '@/lib/schemas/phrases'
+import { CardMetaSchema, DeckMetaSchema } from '@/lib/schemas/deck'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { cardsCollection, decksCollection } from '@/lib/collections/deck'
 import { useInvalidateFeed } from '@/hooks/use-feed'
 import { WithPhrase } from '@/components/with-phrase'
 import { CardResultSimple } from '@/components/cards/card-result-simple'

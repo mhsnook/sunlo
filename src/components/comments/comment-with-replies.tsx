@@ -9,17 +9,14 @@ import { CardResultSimple } from '@/components/cards/card-result-simple'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	publicProfilesCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/comments'
+import { publicProfilesCollection } from '@/lib/collections/auth'
 import { useUserId } from '@/lib/use-auth'
-import {
-	CommentPhraseLinkType,
-	PhraseFullFullType,
-	type RequestCommentType,
-} from '@/lib/schemas'
+import { CommentPhraseLinkType, type RequestCommentType } from '@/lib/schemas/comments'
+import { PhraseFullFullType } from '@/lib/schemas/phrases'
 import { buttonVariants } from '@/components/ui/button'
 import { DialogTrigger } from '@/components/ui/dialog'
-import { phrasesFull } from '@/lib/live-collections'
+import { phrasesFull } from '@/lib/collections/live-phrases'
 
 import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'

@@ -21,7 +21,7 @@ import { ControlledArrayFieldProps } from './types'
 import type {
 	LanguageKnownType,
 	LanguageProficiencyEnumType,
-} from '@/lib/schemas'
+} from '@/lib/schemas/auth'
 import { Card } from '@/components/ui/card'
 import type { FieldError } from 'react-hook-form'
 

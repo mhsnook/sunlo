@@ -1,5 +1,5 @@
 import * as z from 'zod'
-import { LangSchema } from './schemas'
+import { LangSchema } from './shared'
 
 export const PlaylistPhraseLinkSchema = z.object({
 	id: z.string().uuid(),

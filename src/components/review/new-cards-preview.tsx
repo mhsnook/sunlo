@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useDeckPids } from '@/hooks/use-deck'
 import type { pids, uuid } from '@/types/main'
-import type { TranslationType } from '@/lib/schemas'
+import type { TranslationType } from '@/lib/schemas/phrases'
 
 function PreviewCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)

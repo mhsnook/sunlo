@@ -19,13 +19,12 @@ import { RightSidebar } from '@/components/navs/right-sidebar'
 import { useUserId } from '@/lib/use-auth'
 import type { MyRouterContext } from './__root'
 import {
-	chatMessagesCollection,
-	decksCollection,
-	friendSummariesCollection,
 	myProfileCollection,
 	myProfileQuery,
-} from '@/lib/collections'
-import { ChatMessageSchema } from '@/lib/schemas'
+} from '@/lib/collections/auth'
+import { decksCollection } from '@/lib/collections/deck'
+import { friendSummariesCollection, chatMessagesCollection } from '@/lib/collections/social'
+import { ChatMessageSchema } from '@/lib/schemas/social'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 

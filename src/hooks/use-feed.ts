@@ -1,8 +1,9 @@
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import supabase from '@/lib/supabase-client'
-import { FeedActivitySchema, type LangType } from '@/lib/schemas'
-import { friendSummariesCollection } from '@/lib/collections'
+import { FeedActivitySchema } from '@/lib/schemas/feed'
+import type { LangType } from '@/lib/schemas/shared'
+import { friendSummariesCollection } from '@/lib/collections/social'
 
 export const FEED_QUERY_KEY = ['feed']
 

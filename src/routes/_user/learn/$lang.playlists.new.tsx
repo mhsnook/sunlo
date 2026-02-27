@@ -12,14 +12,14 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
 	PhrasePlaylistInsertSchema,
-	PhrasePlaylistInsertType,
+	type PhrasePlaylistInsertType,
 	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
-} from '@/lib/schemas-playlist'
+} from '@/lib/schemas/playlists'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/playlists'
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { CoverImageField } from '@/components/fields/cover-image-field'

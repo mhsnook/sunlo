@@ -5,8 +5,8 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
-import { decksCollection } from '@/lib/collections'
-import { DeckMetaSchema } from '@/lib/schemas'
+import { decksCollection } from '@/lib/collections/deck'
+import { DeckMetaSchema } from '@/lib/schemas/deck'
 import { useDecks } from '@/hooks/use-deck'
 
 async function postNewDeck(lang: string) {

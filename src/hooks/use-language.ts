@@ -2,23 +2,26 @@ import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
+import type { LangTagType, LanguageType } from '@/lib/schemas/languages'
 import type {
-	LangTagType,
-	LanguageType,
 	PhraseFullFilteredType,
 	PhraseFullFullType,
 	PhraseFullType,
-} from '@/lib/schemas'
+} from '@/lib/schemas/phrases'
 import {
 	langTagsCollection,
 	languagesCollection,
+} from '@/lib/collections/languages'
+import {
 	playlistPhraseLinksCollection,
 	phrasePlaylistsCollection,
+} from '@/lib/collections/playlists'
+import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-	phraseRequestsCollection,
-} from '@/lib/collections'
-import { phrasesFull } from '@/lib/live-collections'
+} from '@/lib/collections/comments'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
+import { phrasesFull } from '@/lib/collections/live-phrases'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import { useUserId } from '@/lib/use-auth'

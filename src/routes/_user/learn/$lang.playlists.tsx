@@ -1,7 +1,7 @@
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/playlists'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists')({

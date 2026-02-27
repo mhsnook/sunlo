@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useDecks } from '@/hooks/use-deck'
 import { useAuth } from '@/lib/use-auth'
-import { languagesCollection } from '@/lib/collections'
+import { languagesCollection } from '@/lib/collections/languages'
 import languages from '@/lib/languages'
 
 const useDeckMenuData = () => {

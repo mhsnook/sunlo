@@ -1,4 +1,5 @@
-import type { CardMetaType, PhraseFullFilteredType } from '@/lib/schemas'
+import type { PhraseFullFilteredType } from '@/lib/schemas/phrases'
+import type { CardMetaType } from '@/lib/schemas/deck'
 
 import { ago } from '@/lib/dayjs'
 import { dateDiff, retrievability } from '@/lib/utils'

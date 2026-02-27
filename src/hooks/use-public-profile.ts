@@ -1,8 +1,7 @@
-import {
-	friendSummariesCollection,
-	publicProfilesCollection,
-} from '@/lib/collections'
-import { FriendSummaryType, PublicProfileType } from '@/lib/schemas'
+import { publicProfilesCollection } from '@/lib/collections/auth'
+import { friendSummariesCollection } from '@/lib/collections/social'
+import type { FriendSummaryType } from '@/lib/schemas/social'
+import type { PublicProfileType } from '@/lib/schemas/auth'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'

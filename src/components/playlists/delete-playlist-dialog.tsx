@@ -13,9 +13,9 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { PhrasePlaylistType } from '@/lib/schemas-playlist'
+import { PhrasePlaylistType } from '@/lib/schemas/playlists'
 import supabase from '@/lib/supabase-client'
-import { phrasePlaylistsCollection } from '@/lib/collections'
+import { phrasePlaylistsCollection } from '@/lib/collections/playlists'
 import { useNavigate } from '@tanstack/react-router'
 
 export function DeletePlaylistDialog({

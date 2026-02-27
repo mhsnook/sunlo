@@ -28,7 +28,7 @@ import {
 	FancySelectOption,
 } from '@/components/fields/fancy-select-field'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
-import { decksCollection } from '@/lib/collections'
+import { decksCollection } from '@/lib/collections/deck'
 import { Tables } from '@/types/supabase'
 import { useProfile } from '@/hooks/use-profile'
 import languages from '@/lib/languages'

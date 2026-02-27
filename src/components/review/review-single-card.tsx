@@ -26,17 +26,14 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
-import {
-	CardMetaSchema,
-	PhraseFullFilteredType,
-	TranslationType,
-} from '@/lib/schemas'
+import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas/phrases'
+import { CardMetaSchema } from '@/lib/schemas/deck'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { cardsCollection } from '@/lib/collections'
+import { cardsCollection } from '@/lib/collections/deck'
 
 const playAudio = (text: string) => {
 	toastNeutral(`Playing audio for: ${text}`)

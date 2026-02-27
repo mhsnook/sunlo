@@ -4,7 +4,7 @@ import { useLanguagePhrases } from '@/hooks/use-language'
 import { arrayDifference } from '@/lib/utils'
 import { useLanguagesToShow } from '@/hooks/use-profile'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import type { PhraseFullType } from '@/lib/schemas'
+import type { PhraseFullType } from '@/lib/schemas/phrases'
 
 /**
  * This hook computes the top recommended phrases for a user, and other

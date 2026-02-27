@@ -3,13 +3,13 @@ import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids, UseLiveQueryResult } from '@/types/main'
-import type { CardMetaType, CardReviewType, DeckMetaType } from '@/lib/schemas'
+import type { CardMetaType, DeckMetaType } from '@/lib/schemas/deck'
+import type { CardReviewType } from '@/lib/schemas/review'
+import { decksCollection, cardsCollection } from '@/lib/collections/deck'
 import {
 	cardReviewsCollection,
-	cardsCollection,
-	decksCollection,
 	reviewDaysCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/review'
 import { inLastWeek } from '@/lib/dayjs'
 import { dateDiff, mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { useProfile } from './use-profile'
