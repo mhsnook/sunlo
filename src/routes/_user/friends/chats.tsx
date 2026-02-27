@@ -9,6 +9,7 @@ export const Route = createFileRoute('/_user/friends/chats')({
 			title: 'Chats',
 		},
 		wideContent: true,
+		fixedHeight: true,
 	}),
 	loader: async ({ context }) => {
 		// Only preload if authenticated to ensure RLS works correctly
