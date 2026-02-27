@@ -23,18 +23,12 @@ import { usePreferredTranslationLang } from '@/hooks/use-deck'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import {
-	CardMetaSchema,
-	DeckMetaSchema,
-	LangTagSchema,
-	PhraseFullSchema,
-} from '@/lib/schemas'
-import {
-	cardsCollection,
-	decksCollection,
-	langTagsCollection,
-	phrasesCollection,
-} from '@/lib/collections'
+import { PhraseFullSchema } from '@/lib/schemas/phrases'
+import { CardMetaSchema, DeckMetaSchema } from '@/lib/schemas/deck'
+import { LangTagSchema } from '@/lib/schemas/languages'
+import { langTagsCollection } from '@/lib/collections/languages'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { cardsCollection, decksCollection } from '@/lib/collections/deck'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'

@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
-import { myProfileCollection } from '@/lib/collections'
+import { myProfileCollection } from '@/lib/collections/auth'
 import {
 	FontPreferenceType,
 	MyProfileSchema,
 	MyProfileType,
-} from '@/lib/schemas'
+} from '@/lib/schemas/auth'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 

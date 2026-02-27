@@ -1,12 +1,11 @@
+import { phrasesCollection } from './lib/collections/phrases'
+import { cardsCollection, decksCollection } from './lib/collections/deck'
 import {
 	cardReviewsCollection,
-	cardsCollection,
-	decksCollection,
-	phrasePlaylistsCollection,
-	phraseRequestsCollection,
-	phrasesCollection,
 	reviewDaysCollection,
-} from './lib/collections'
+} from './lib/collections/review'
+import { phraseRequestsCollection } from './lib/collections/requests'
+import { phrasePlaylistsCollection } from './lib/collections/playlists'
 
 // Expose collections to window in dev/test mode for E2E testing
 if (

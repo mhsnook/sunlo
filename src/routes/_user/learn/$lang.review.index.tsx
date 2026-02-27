@@ -39,12 +39,10 @@ import { useReviewsTodayStats } from '@/hooks/use-reviews'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
-import {
-	CardMetaSchema,
-	CardStatusEnumType,
-	DailyReviewStateSchema,
-} from '@/lib/schemas'
-import { cardsCollection, reviewDaysCollection } from '@/lib/collections'
+import { CardMetaSchema, CardStatusEnumType } from '@/lib/schemas/deck'
+import { DailyReviewStateSchema } from '@/lib/schemas/review'
+import { cardsCollection } from '@/lib/collections/deck'
+import { reviewDaysCollection } from '@/lib/collections/review'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
 

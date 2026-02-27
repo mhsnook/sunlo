@@ -1,7 +1,7 @@
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Share, Link as LinkIcon, Flag, MoreVertical } from 'lucide-react'
 
-import type { RequestCommentType } from '@/lib/schemas'
+import type { RequestCommentType } from '@/lib/schemas/comments'
 import {
 	DropdownMenu,
 	DropdownMenuContent,

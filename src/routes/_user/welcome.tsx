@@ -22,7 +22,7 @@ import {
 import { useProfile } from '@/hooks/use-profile'
 import { useDecks } from '@/hooks/use-deck'
 import { useAuth } from '@/lib/use-auth'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'

@@ -1,4 +1,4 @@
-import { PhraseRequestType } from '@/lib/schemas'
+import { PhraseRequestType } from '@/lib/schemas/requests'
 import { CardDescription, CardHeader } from '@/components/ui/card'
 import { UidPermalink } from '../card-pieces/user-permalink'
 import { LangBadge } from '@/components/ui/badge'

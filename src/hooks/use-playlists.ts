@@ -1,16 +1,16 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { PhraseFullFullType } from '@/lib/schemas'
+import type { PhraseFullFullType } from '@/lib/schemas/phrases'
 import type {
 	PhrasePlaylistType,
 	PlaylistPhraseLinkType,
-} from '@/lib/schemas-playlist'
+} from '@/lib/schemas/playlists'
 
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections'
-import { phrasesFull } from '@/lib/live-collections'
+} from '@/lib/collections/playlists'
+import { phrasesFull } from '@/lib/collections/live-phrases'
 import { useUserId } from '@/lib/use-auth'
 
 export function useAnyonesPlaylists(

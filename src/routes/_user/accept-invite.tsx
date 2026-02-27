@@ -4,7 +4,7 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
-import type { PublicProfileType } from '@/lib/schemas'
+import type { PublicProfileType } from '@/lib/schemas/auth'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button, buttonVariants } from '@/components/ui/button'

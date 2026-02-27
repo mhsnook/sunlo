@@ -12,7 +12,7 @@ import { GarlicBroccoli } from '@/components/garlic'
 import { FriendProfiles } from '@/components/friend-profiles'
 import { useDecks } from '@/hooks/use-deck'
 import { useAuth } from '@/lib/use-auth'
-import { decksCollection } from '@/lib/collections'
+import { decksCollection } from '@/lib/collections/deck'
 import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/')({

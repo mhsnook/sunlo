@@ -4,13 +4,10 @@ import { createFileRoute, Outlet, notFound } from '@tanstack/react-router'
 import languages from '@/lib/languages'
 import { setTheme } from '@/lib/deck-themes'
 import { todayString } from '@/lib/utils'
-import {
-	cardReviewsCollection,
-	cardsCollection,
-	langTagsCollection,
-	phrasesCollection,
-	reviewDaysCollection,
-} from '@/lib/collections'
+import { langTagsCollection } from '@/lib/collections/languages'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { cardsCollection } from '@/lib/collections/deck'
+import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections/review'
 import { useDeckMeta } from '@/hooks/use-deck'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 

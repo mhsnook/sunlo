@@ -113,14 +113,14 @@ This app uses a **reactive collection-based architecture** instead of traditiona
 ```
 Supabase Database
         ↓
-Collections (src/lib/collections.ts)
+Collections (src/lib/collections/<domain>.ts)
         ↓
 Live Queries (useLiveQuery hooks)
         ↓
 React Components
 ```
 
-**Collections** are the single source of truth for all data. They're defined in `src/lib/collections.ts` using `createCollection()` with Zod schemas for validation. Loading strategies:
+**Collections** are the single source of truth for all data. They're defined in `src/lib/collections/` by domain using `createCollection()` with Zod schemas for validation. Loading strategies:
 
 - Load **whole tables** for user collections (RLS filters automatically)
 - Use **on-demand** subsets in live queries for public data
@@ -194,6 +194,26 @@ const mutation = useMutation({
 
 ### Key Directories
 
+- `src/features/` - **Feature barrel files** (narrow public APIs per domain)
+  - `auth/` - Authentication, profiles, user identity
+  - `languages/` - Language metadata, tags, static data
+  - `phrases/` - Phrases, translations, search, provenance
+  - `deck/` - Decks, cards, deck mutations
+  - `review/` - Review sessions, FSRS algorithm, review store
+  - `requests/` - Phrase requests & upvotes
+  - `comments/` - Comment system
+  - `social/` - Friends, chat, public profiles
+  - `playlists/` - Playlists & phrase links
+  - `feed/` - Activity feed
+  - `contributions/` - User contributions views
+- `src/lib/` - Core utilities and domain-split data layer
+  - `schemas/` - Zod schemas split by domain (auth, deck, phrases, review, etc.)
+  - `collections/` - TanStack DB collections split by domain
+  - `supabase-client.ts` - Supabase client setup
+  - `query-client.ts` - TanStack Query configuration
+  - `use-auth.ts` - Authentication state
+  - `dayjs.ts`, `utils.ts`, `languages.ts` - Cross-cutting utilities
+- `src/hooks/` - Custom React hooks (implementation files for feature barrels)
 - `src/routes/` - File-based routing structure
   - `_auth.tsx` - Auth layout (login, signup)
   - `_user.tsx` - Protected routes requiring authentication
@@ -203,17 +223,41 @@ const mutation = useMutation({
   - `feed/` - Feed display components
   - `cards/`, `requests/`, `playlists/` - Feature-specific components
   - `fields/` - Reusable form field components
-- `src/hooks/` - Custom React hooks (use-deck, use-requests, etc.)
-- `src/lib/` - Core utilities and configuration
-  - `collections.ts` - All TanStack DB collections
-  - `live-collections.ts` - Computed/joined collection views
-  - `schemas.ts` - Zod validation schemas
-  - `supabase-client.ts` - Supabase client setup
-  - `query-client.ts` - TanStack Query configuration
-  - `use-auth.ts` - Authentication state
 - `supabase/schemas/` - Database schema definitions
 - `supabase/migrations/` - Database migrations
 - `supabase/seed.sql` - Seed data
+
+### Feature Module Pattern
+
+The codebase uses a **"gray box" modular architecture**. Each feature domain has a barrel file (`features/<domain>/index.ts`) that re-exports only the public API (hooks, types, mutation hooks) from the underlying implementation files in `lib/schemas/`, `lib/collections/`, and `hooks/`.
+
+**Import convention:** Prefer importing from `@/features/<domain>` when you need the public API. Import from `@/lib/schemas/<domain>` or `@/lib/collections/<domain>` directly only when building internal wiring within that domain.
+
+```typescript
+// ✅ Consumer code (routes, components)
+import { useDeckMeta, type DeckMetaType } from '@/features/deck'
+import { useLanguagePhrases } from '@/features/phrases'
+
+// ✅ Internal domain wiring (hooks, collections that need cross-domain access)
+import { decksCollection } from '@/lib/collections/deck'
+import { DeckMetaSchema } from '@/lib/schemas/deck'
+```
+
+**Feature domains and what they contain:**
+
+| Domain | Schemas | Collections | Key Hooks |
+|--------|---------|------------|-----------|
+| `auth` | PublicProfile, MyProfile, LanguageKnown | publicProfiles, myProfile | useAuth, useProfile |
+| `languages` | Language, LangTag, LangSchema | languages, langTags | useLanguageMeta, useLanguageTags |
+| `phrases` | PhraseFull, Translation, PhraseSearch | phrases, phrasesFull (live) | useLanguagePhrases, usePhrase, useSmartSearch |
+| `deck` | DeckMeta, CardMeta | decks, cards | useDeckMeta, useDeckCards, useDeckPids |
+| `review` | CardReview, DailyReviewState | cardReviews, reviewDays | useReviewsToday, useReviewMutation |
+| `requests` | PhraseRequest | phraseRequests | useRequest, useRequestCounts |
+| `comments` | RequestComment, CommentPhraseLink | comments, commentPhraseLinks | (inline in components) |
+| `social` | FriendSummary, ChatMessage | friendSummaries, chatMessages, relationsFull (live) | useRelationFriends, useAllChats |
+| `playlists` | PhrasePlaylist, PlaylistPhraseLink | phrasePlaylists, playlistPhraseLinks | useOnePlaylist, useLangPlaylists |
+| `feed` | FeedActivity | (uses React Query) | useFeedLang |
+| `contributions` | UserContributionsTabs | (uses other collections) | useAnyonesPhraseRequests |
 
 ### Routing Conventions
 

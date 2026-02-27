@@ -23,13 +23,10 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import { useDecks } from '@/hooks/use-deck'
 import { Button } from '@/components/ui/button'
-import { cardsCollection, phrasesCollection } from '@/lib/collections'
-import {
-	CardMetaSchema,
-	CardMetaType,
-	PhraseFullFilteredType,
-	PhraseFullFullType,
-} from '@/lib/schemas'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { cardsCollection } from '@/lib/collections/deck'
+import { CardMetaSchema, CardMetaType } from '@/lib/schemas/deck'
+import { PhraseFullFilteredType, PhraseFullFullType } from '@/lib/schemas/phrases'
 import { Tables } from '@/types/supabase'
 import type { ActionCopy } from '@/types/main'
 

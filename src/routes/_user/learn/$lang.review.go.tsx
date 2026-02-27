@@ -16,7 +16,7 @@ import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
-import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
+import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections/review'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({

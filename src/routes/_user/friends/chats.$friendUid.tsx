@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
-import type { PublicProfileType } from '@/lib/schemas'
+import type { PublicProfileType } from '@/lib/schemas/auth'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'

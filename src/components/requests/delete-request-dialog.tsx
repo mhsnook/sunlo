@@ -13,9 +13,9 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { PhraseRequestType } from '@/lib/schemas'
+import { PhraseRequestType } from '@/lib/schemas/requests'
 import supabase from '@/lib/supabase-client'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
 import { useNavigate } from '@tanstack/react-router'
 
 export function DeleteRequestDialog({

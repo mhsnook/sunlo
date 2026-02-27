@@ -1,7 +1,5 @@
-import {
-	friendSummariesCollection,
-	publicProfilesCollection,
-} from '@/lib/collections'
+import { publicProfilesCollection } from '@/lib/collections/auth'
+import { friendSummariesCollection } from '@/lib/collections/social'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { RequireAuth } from '@/components/require-auth'
 

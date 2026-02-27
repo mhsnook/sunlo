@@ -7,7 +7,7 @@ import {
 import { useReviewDay } from '@/hooks/use-reviews'
 import { Loader } from '@/components/ui/loader'
 import { NewCardsPreview } from '@/components/review/new-cards-preview'
-import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
+import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections/review'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 	beforeLoad: () => ({

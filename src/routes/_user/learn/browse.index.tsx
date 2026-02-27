@@ -16,13 +16,13 @@ import {
 	UserPlus,
 } from 'lucide-react'
 
+import { languagesCollection } from '@/lib/collections/languages'
+import { phrasesCollection } from '@/lib/collections/phrases'
+import { phraseRequestsCollection } from '@/lib/collections/requests'
 import {
-	languagesCollection,
-	phraseRequestsCollection,
 	phrasePlaylistsCollection,
-	phrasesCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/playlists'
 import { useAuth } from '@/lib/use-auth'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'

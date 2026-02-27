@@ -3,7 +3,7 @@ import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 
 import type { uuid } from '@/types/main'
-import type { CommentPhraseLinkType } from '@/lib/schemas'
+import type { CommentPhraseLinkType } from '@/lib/schemas/comments'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
@@ -23,7 +23,7 @@ import { CommentWithReplies } from '@/components/comments/comment-with-replies'
 import {
 	commentsCollection,
 	commentPhraseLinksCollection,
-} from '@/lib/collections'
+} from '@/lib/collections/comments'
 import { mapArrays } from '@/lib/utils'
 import { CSSProperties } from 'react'
 

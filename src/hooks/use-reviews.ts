@@ -12,14 +12,17 @@ import {
 } from './use-review-store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
-import { cardReviewsCollection, reviewDaysCollection } from '@/lib/collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+} from '@/lib/collections/review'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
-	CardReviewType,
+	type CardReviewType,
 	DailyReviewStateSchema,
-	DailyReviewStateType,
-} from '@/lib/schemas'
+	type DailyReviewStateType,
+} from '@/lib/schemas/review'
 import { calculateFSRS, type Score } from '@/lib/fsrs'
 
 /*

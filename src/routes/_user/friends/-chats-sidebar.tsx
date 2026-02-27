@@ -7,7 +7,7 @@ import {
 	useRelationFriends,
 	useUnreadMessages,
 } from '@/hooks/use-friends'
-import { ChatMessageType } from '@/lib/schemas'
+import { ChatMessageType } from '@/lib/schemas/social'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'

@@ -1,8 +1,8 @@
 import { useLiveQuery } from '@tanstack/react-db'
-import { myProfileCollection } from '@/lib/collections'
+import { myProfileCollection } from '@/lib/collections/auth'
 import { useDecks } from '@/hooks/use-deck'
-import { MyProfileType } from '@/lib/schemas'
-import { UseLiveQueryResult } from '@/types/main'
+import type { MyProfileType } from '@/lib/schemas/auth'
+import type { UseLiveQueryResult } from '@/types/main'
 
 export const useProfile = (): UseLiveQueryResult<MyProfileType> =>
 	useLiveQuery((q) => q.from({ profile: myProfileCollection }).findOne())

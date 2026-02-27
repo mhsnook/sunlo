@@ -5,7 +5,7 @@ import type {
 	PhraseFullFilteredType,
 	PhraseFullType,
 	TranslationType,
-} from '@/lib/schemas'
+} from '@/lib/schemas/phrases'
 
 export type CompositePhraseQueryResults =
 	| { status: 'pending'; data: undefined }

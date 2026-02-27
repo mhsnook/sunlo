@@ -13,11 +13,11 @@ import {
 	PhrasePlaylistSchema,
 	type PhrasePlaylistType,
 	validateUrl,
-} from '@/lib/schemas-playlist'
+} from '@/lib/schemas/playlists'
 import { Textarea } from '../ui/textarea'
 import { Input } from '../ui/input'
 import { Label } from '../ui/label'
-import { phrasePlaylistsCollection } from '@/lib/collections'
+import { phrasePlaylistsCollection } from '@/lib/collections/playlists'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
