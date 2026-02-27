@@ -14,7 +14,10 @@ export {
 } from './schemas'
 
 // Collections
-export { friendSummariesCollection, chatMessagesCollection } from './collections'
+export {
+	friendSummariesCollection,
+	chatMessagesCollection,
+} from './collections'
 
 // Live collections
 export { relationsFull, type RelationsFullType } from './live'
@@ -31,6 +34,7 @@ export {
 	useUnreadMessages,
 	useUnreadChatsCount,
 	useMarkAsRead,
+	useSocialRealtime,
 } from './hooks'
 
 export {
