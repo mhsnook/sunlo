@@ -1,18 +1,23 @@
+import { useEffect } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 
-import type { TablesInsert } from '@/types/supabase'
+import type { Tables, TablesInsert } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { ChatMessageRelType, ChatMessageType } from './schemas'
+import {
+	ChatMessageSchema,
+	type ChatMessageRelType,
+	type ChatMessageType,
+} from './schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
-import { chatMessagesCollection } from './collections'
-import { mapArrays } from '@/lib/utils'
 import {
-	relationsFull,
-	type RelationsFullType,
-} from './live'
+	chatMessagesCollection,
+	friendSummariesCollection,
+} from './collections'
+import { mapArrays } from '@/lib/utils'
+import { relationsFull, type RelationsFullType } from './live'
 
 export const useRelationInvitations = (): UseLiveQueryResult<
 	RelationsFullType[]
@@ -227,4 +232,60 @@ export const useMarkAsRead = () => {
 		},
 		*/
 	})
+}
+
+/** Subscribe to realtime friend-request and chat-message events. */
+export const useSocialRealtime = () => {
+	const userId = useUserId()
+
+	useEffect(() => {
+		if (!userId) return
+
+		const friendRequestChannel = supabase
+			.channel('friend-request-action-realtime')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'friend_request_action',
+				},
+				(payload) => {
+					const newAction = payload.new as Tables<'friend_request_action'>
+					if (
+						newAction.action_type === 'accept' &&
+						newAction.uid_for === userId
+					)
+						toastSuccess('Friend request accepted')
+					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
+						toastSuccess('You are now connected')
+					void friendSummariesCollection.utils.refetch()
+				}
+			)
+			.subscribe()
+
+		const chatChannel = supabase
+			.channel('user-chats')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'chat_message',
+				},
+				(payload) => {
+					const newMessage = payload.new as Tables<'chat_message'>
+					console.log(`new chat`, newMessage)
+					chatMessagesCollection.utils.writeInsert(
+						ChatMessageSchema.parse(newMessage)
+					)
+				}
+			)
+			.subscribe()
+
+		return () => {
+			void supabase.removeChannel(friendRequestChannel)
+			void supabase.removeChannel(chatChannel)
+		}
+	}, [userId])
 }
