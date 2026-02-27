@@ -21,15 +21,12 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
-import { useDecks } from '@/hooks/use-deck'
+import { useDecks } from '@/features/deck/hooks'
 import { Button } from '@/components/ui/button'
-import { cardsCollection, phrasesCollection } from '@/lib/collections'
-import {
-	CardMetaSchema,
-	CardMetaType,
-	PhraseFullFilteredType,
-	PhraseFullFullType,
-} from '@/lib/schemas'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { cardsCollection } from '@/features/deck/collections'
+import { CardMetaSchema, CardMetaType } from '@/features/deck/schemas'
+import { PhraseFullFilteredType, PhraseFullFullType } from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
 import type { ActionCopy } from '@/types/main'
 

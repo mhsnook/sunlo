@@ -27,10 +27,10 @@ import {
 } from '@/components/ui/form'
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
-import { PhraseRequestSchema, PhraseRequestType } from '@/lib/schemas'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { PhraseRequestSchema, PhraseRequestType } from '@/features/requests/schemas'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import { useOneRandomly } from '@/lib/utils'
-import { useInvalidateFeed } from '@/hooks/use-feed'
+import { useInvalidateFeed } from '@/features/feed/hooks'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: NewRequestPage,

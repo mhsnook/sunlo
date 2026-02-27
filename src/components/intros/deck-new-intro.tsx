@@ -2,7 +2,7 @@ import { Link, useParams } from '@tanstack/react-router'
 import { Construction, Contact, Logs, MessageSquarePlus } from 'lucide-react'
 import { IntroSheet } from '@/components/intro-sheet'
 import { IntroCallout } from '@/components/intro-callout'
-import { useLanguageMeta } from '@/hooks/use-language'
+import { useLanguageMeta } from '@/features/languages/hooks'
 import { buttonVariants } from '@/components/ui/button'
 import languages from '@/lib/languages'
 

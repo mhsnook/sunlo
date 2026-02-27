@@ -16,14 +16,12 @@ import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import {
-	PhraseFullSchema,
-	TranslationSchema,
-	CardMetaSchema,
-} from '@/lib/schemas'
-import { phrasesCollection, cardsCollection } from '@/lib/collections'
-import { useInvalidateFeed } from '@/hooks/use-feed'
-import { usePreferredTranslationLang, useDecks } from '@/hooks/use-deck'
+import { PhraseFullSchema, TranslationSchema } from '@/features/phrases/schemas'
+import { CardMetaSchema } from '@/features/deck/schemas'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { cardsCollection } from '@/features/deck/collections'
+import { useInvalidateFeed } from '@/features/feed/hooks'
+import { usePreferredTranslationLang, useDecks } from '@/features/deck/hooks'
 
 const inlinePhraseSchema = z.object({
 	phrase_text: z.string().min(1, 'Enter a phrase'),

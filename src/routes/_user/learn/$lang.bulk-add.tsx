@@ -19,27 +19,21 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
-import { usePreferredTranslationLang } from '@/hooks/use-deck'
+import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import {
-	CardMetaSchema,
-	DeckMetaSchema,
-	LangTagSchema,
-	PhraseFullSchema,
-} from '@/lib/schemas'
-import {
-	cardsCollection,
-	decksCollection,
-	langTagsCollection,
-	phrasesCollection,
-} from '@/lib/collections'
+import { PhraseFullSchema } from '@/features/phrases/schemas'
+import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
+import { LangTagSchema } from '@/features/languages/schemas'
+import { langTagsCollection } from '@/features/languages/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
-import { useInvalidateFeed } from '@/hooks/use-feed'
-import { useDeckMeta, useDecks } from '@/hooks/use-deck'
+import { useInvalidateFeed } from '@/features/feed/hooks'
+import { useDeckMeta, useDecks } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import {
 	SpreadsheetImportDialog,
@@ -53,7 +47,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
-import { useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/features/languages/hooks'
 
 type BulkAddPhrasesResponse = {
 	phrases: Array<Tables<'phrase'>>

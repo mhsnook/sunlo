@@ -12,20 +12,20 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
 	PhrasePlaylistInsertSchema,
-	PhrasePlaylistInsertType,
+	type PhrasePlaylistInsertType,
 	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
-} from '@/lib/schemas-playlist'
+} from '@/features/playlists/schemas'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections'
+} from '@/features/playlists/collections'
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from '@/components/playlists/playlist-embed'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
-import { useInvalidateFeed } from '@/hooks/use-feed'
+import { useInvalidateFeed } from '@/features/feed/hooks'
 import languages from '@/lib/languages'
 import {
 	Card,

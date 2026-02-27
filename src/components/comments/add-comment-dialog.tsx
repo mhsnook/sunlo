@@ -30,15 +30,15 @@ import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-} from '@/lib/collections'
+} from '@/features/comments/collections'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
 	RequestCommentSchema,
 	RequestCommentType,
-} from '@/lib/schemas'
+} from '@/features/comments/schemas'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
-import { useRequest } from '@/hooks/use-requests'
+import { useRequest } from '@/features/requests/hooks'
 import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'

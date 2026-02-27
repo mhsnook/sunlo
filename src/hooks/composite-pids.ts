@@ -1,10 +1,10 @@
 import type { pids, uuid } from '@/types/main'
-import { useDeckPids } from '@/hooks/use-deck'
-import { useLanguagePhrases } from '@/hooks/use-language'
+import { useDeckPids } from '@/features/deck/hooks'
+import { useLanguagePhrases } from '@/features/phrases/hooks'
 import { arrayDifference } from '@/lib/utils'
-import { useLanguagesToShow } from '@/hooks/use-profile'
+import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import type { PhraseFullType } from '@/lib/schemas'
+import type { PhraseFullType } from '@/features/phrases/schemas'
 
 /**
  * This hook computes the top recommended phrases for a user, and other

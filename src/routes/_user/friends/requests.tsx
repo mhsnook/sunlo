@@ -4,7 +4,7 @@ import { Contact } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { useRelationInvitations } from '@/hooks/use-friends'
+import { useRelationInvitations } from '@/features/social/hooks'
 import { buttonVariants } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_user/friends/requests')({

@@ -1,12 +1,8 @@
-import { createContext, PropsWithChildren, useContext, useRef } from 'react'
-import { useStore } from 'zustand'
+import { PropsWithChildren, useRef } from 'react'
 import {
 	createReviewStore,
-	ReviewState,
-	ReviewStore,
-} from '@/hooks/use-review-store'
-
-const ReviewStoreContext = createContext<ReviewStore | null>(null)
+	ReviewStoreContext,
+} from '@/features/review/store'
 
 export function ReviewStoreProvider({
 	lang,
@@ -26,10 +22,4 @@ export function ReviewStoreProvider({
 			{children}
 		</ReviewStoreContext.Provider>
 	)
-}
-
-export function useReviewStore<T>(selector: (state: ReviewState) => T): T {
-	const store = useContext(ReviewStoreContext)
-	if (!store) throw new Error('Missing ReviewStoreContext in the tree')
-	return useStore(store, selector)
 }

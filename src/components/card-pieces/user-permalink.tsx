@@ -3,9 +3,9 @@ import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { useOnePublicProfile } from '@/features/social/public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 
 export function TinySelfAvatar({ className }: { className?: string }) {
 	const { data } = useProfile()

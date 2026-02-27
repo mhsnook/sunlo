@@ -17,16 +17,14 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { useLanguageTags } from '@/hooks/use-language'
+import { useLanguageTags } from '@/features/languages/hooks'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
-import { langTagsCollection, phrasesCollection } from '@/lib/collections'
-import {
-	LangTagSchema,
-	LangTagType,
-	PhraseFullFilteredType,
-} from '@/lib/schemas'
+import { langTagsCollection } from '@/features/languages/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { LangTagSchema, LangTagType } from '@/features/languages/schemas'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
 
 const addTagsSchema = z.object({

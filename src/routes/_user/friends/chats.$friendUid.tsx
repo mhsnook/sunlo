@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import { Send } from 'lucide-react'
 
-import type { PublicProfileType } from '@/lib/schemas'
+import type { PublicProfileType } from '@/features/profile/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -11,7 +11,7 @@ import {
 	useMarkAsRead,
 	useOneFriendChat,
 	useOneRelation,
-} from '@/hooks/use-friends'
+} from '@/features/social/hooks'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'

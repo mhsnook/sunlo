@@ -8,9 +8,9 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { useDeckPids } from '@/hooks/use-deck'
+import { useDeckPids } from '@/features/deck/hooks'
 import type { pids, uuid } from '@/types/main'
-import type { TranslationType } from '@/lib/schemas'
+import type { TranslationType } from '@/features/phrases/schemas'
 
 function PreviewCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)

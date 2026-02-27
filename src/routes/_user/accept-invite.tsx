@@ -4,7 +4,7 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
-import type { PublicProfileType } from '@/lib/schemas'
+import type { PublicProfileType } from '@/features/profile/schemas'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -19,10 +19,10 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { Loader } from '@/components/ui/loader'
 import { avatarUrlify } from '@/lib/hooks'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { useOnePublicProfile } from '@/features/social/public-profile'
 
 const SearchSchema = z.object({
 	uid_by: z.string().uuid(),

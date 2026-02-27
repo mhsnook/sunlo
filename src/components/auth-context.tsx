@@ -8,13 +8,10 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase from '@/lib/supabase-client'
-import {
-	chatMessagesCollection,
-	clearUser,
-	decksCollection,
-	friendSummariesCollection,
-	myProfileCollection,
-} from '@/lib/collections'
+import { myProfileCollection } from '@/features/profile/collections'
+import { decksCollection } from '@/features/deck/collections'
+import { chatMessagesCollection, friendSummariesCollection } from '@/features/social/collections'
+import { clearUser } from '@/lib/collections/clear-user'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 export function AuthProvider({ children }: PropsWithChildren) {

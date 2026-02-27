@@ -4,10 +4,10 @@ import { inArray } from '@tanstack/db'
 import { useDebounce } from '@uidotdev/usehooks'
 
 import supabase from '@/lib/supabase-client'
-import { phrasesFull } from '@/lib/live-collections'
-import { useLanguagesToShow } from '@/hooks/use-profile'
+import { phrasesFull } from '@/features/phrases/live'
+import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import type { PhraseFullFilteredType } from '@/lib/schemas'
+import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 export type SmartSearchSortBy = 'relevance' | 'popularity'
 

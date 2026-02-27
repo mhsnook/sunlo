@@ -41,7 +41,7 @@ import { Button } from '@/components/ui/button'
 import {
 	usePhraseProvenance,
 	type PhraseProvenanceItem as PhraseProvenanceItemType,
-} from '@/hooks/use-language'
+} from '@/features/phrases/hooks'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'

@@ -2,8 +2,8 @@ import { memo, type ReactElement } from 'react'
 import { useDebounce } from '@uidotdev/usehooks'
 
 import type { pids } from '@/types/main'
-import { useLanguagePhrasesSearch } from '@/hooks/use-language'
-import { PhraseFullFilteredType } from '@/lib/schemas'
+import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 import { Accordion } from '@/components/ui/accordion'
 import Callout from '@/components/ui/callout'

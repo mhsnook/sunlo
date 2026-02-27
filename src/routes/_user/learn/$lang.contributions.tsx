@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { phraseRequestsCollection } from '@/lib/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 
 import { UserContributions } from './-contributions'
 import type { CSSProperties } from 'react'
-import { UserContributionsTabs } from '@/lib/schemas'
+import { UserContributionsTabs } from '@/features/contributions/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 	validateSearch: UserContributionsTabs,

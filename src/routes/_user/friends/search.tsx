@@ -21,7 +21,7 @@ import { ProfileWithRelationship } from '@/components/profile-with-relationship'
 import { useUserId } from '@/lib/use-auth'
 import { nullSubmit } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
-import { useSearchProfilesByUsername } from '@/hooks/use-public-profile'
+import { useSearchProfilesByUsername } from '@/features/social/public-profile'
 
 const SearchSchema = z.object({
 	query: z.string().optional(),
