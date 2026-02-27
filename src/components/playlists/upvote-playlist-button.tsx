@@ -7,11 +7,11 @@ import { ThumbsUp } from 'lucide-react'
 import {
 	phrasePlaylistsCollection,
 	phrasePlaylistUpvotesCollection,
-} from '@/lib/collections/playlists'
+} from '@/features/playlists/collections'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import { PhrasePlaylistType } from '@/lib/schemas/playlists'
+import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {

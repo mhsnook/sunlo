@@ -17,9 +17,9 @@ import {
 import type { TablesInsert } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { phrasesCollection } from '@/lib/collections/phrases'
-import { phraseRequestsCollection } from '@/lib/collections/requests'
-import { phrasePlaylistsCollection } from '@/lib/collections/playlists'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 
 import {
 	Dialog,

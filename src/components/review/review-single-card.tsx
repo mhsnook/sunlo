@@ -6,7 +6,7 @@ import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
-import { intervals } from '@/lib/fsrs'
+import { intervals } from '@/features/review/fsrs'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
@@ -15,7 +15,7 @@ import {
 	useLatestReviewForPhrase,
 	useOneReviewToday,
 	useReviewMutation,
-} from '@/hooks/use-reviews'
+} from '@/features/review/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
 import {
@@ -26,14 +26,14 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
-import { PhraseFullFilteredType, TranslationType } from '@/lib/schemas/phrases'
-import { CardMetaSchema } from '@/lib/schemas/deck'
+import { PhraseFullFilteredType, TranslationType } from '@/features/phrases/schemas'
+import { CardMetaSchema } from '@/features/deck/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { cardsCollection } from '@/lib/collections/deck'
+import { cardsCollection } from '@/features/deck/collections'
 
 const playAudio = (text: string) => {
 	toastNeutral(`Playing audio for: ${text}`)

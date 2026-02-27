@@ -19,10 +19,10 @@ import {
 	Globe,
 } from 'lucide-react'
 
-import { useProfile } from '@/hooks/use-profile'
-import { useDecks } from '@/hooks/use-deck'
+import { useProfile } from '@/features/profile/hooks'
+import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
-import { phraseRequestsCollection } from '@/lib/collections/requests'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'

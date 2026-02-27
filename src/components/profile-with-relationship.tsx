@@ -2,10 +2,10 @@ import { Check, Send, ThumbsUp, UserCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { AvatarIconRow } from '@/components/ui/avatar-icon'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
-import { useFriendRequestAction } from '@/hooks/use-friends'
+import { useFriendRequestAction } from '@/features/social/hooks'
 import { IconSizedLoader } from '@/components/ui/loader'
 import { uuid } from '@/types/main'
-import { useOnePublicProfile } from '@/hooks/use-public-profile'
+import { useOnePublicProfile } from '@/features/social/public-profile'
 
 export function ProfileWithRelationship({ uid }: { uid: uuid }) {
 	const { data: profile } = useOnePublicProfile(uid)

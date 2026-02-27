@@ -18,7 +18,7 @@ import {
 	CommandSeparator,
 } from '@/components/ui/command'
 import { cn } from '@/lib/utils'
-import { useLanguagesToShow } from '@/hooks/use-profile'
+import { useLanguagesToShow } from '@/features/profile/hooks'
 
 const filterFunction = (value: string, search: string) => {
 	search = search.toLocaleLowerCase()

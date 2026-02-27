@@ -14,7 +14,7 @@ import { ArchiveDeckButton } from './-archive-deck-button'
 import { cn } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import { getThemeCss } from '@/lib/deck-themes'
-import { DeckMetaType } from '@/lib/schemas/deck'
+import { DeckMetaType } from '@/features/deck/schemas'
 
 export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (

@@ -3,7 +3,7 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 import { Users } from 'lucide-react'
 
-import type { FeedActivityType } from '@/lib/schemas/feed'
+import type { FeedActivityType } from '@/features/feed/schemas'
 import { buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
@@ -13,7 +13,7 @@ import {
 	useFeedLang,
 	useFriendsFeedLang,
 	usePopularFeedLang,
-} from '@/hooks/use-feed'
+} from '@/features/feed/hooks'
 import { FeedItem } from '@/components/feed/feed-item'
 import { Button } from '@/components/ui/button'
 import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'

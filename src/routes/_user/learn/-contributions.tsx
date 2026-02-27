@@ -13,11 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	useAnyonesPhraseRequests,
 	useAnyonesPhrases,
-} from '@/hooks/use-contributions'
+} from '@/features/contributions/hooks'
 
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { useAnyonesPlaylists } from '@/hooks/use-playlists'
+import { useAnyonesPlaylists } from '@/features/playlists/hooks'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'

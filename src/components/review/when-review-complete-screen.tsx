@@ -7,8 +7,8 @@ import {
 	useReviewStage,
 	useReviewLang,
 	useReviewDayString,
-} from '@/hooks/use-review-store'
-import { useReviewsTodayStats, useUpdateReviewStage } from '@/hooks/use-reviews'
+} from '@/features/review/store'
+import { useReviewsTodayStats, useUpdateReviewStage } from '@/features/review/hooks'
 import { Link } from '@tanstack/react-router'
 import { BarChart3, Plus, Newspaper, Search } from 'lucide-react'
 

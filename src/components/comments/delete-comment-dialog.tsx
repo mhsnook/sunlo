@@ -13,9 +13,9 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/lib/schemas/comments'
+import { RequestCommentType } from '@/features/comments/schemas'
 import supabase from '@/lib/supabase-client'
-import { commentsCollection } from '@/lib/collections/comments'
+import { commentsCollection } from '@/features/comments/collections'
 
 export function DeleteCommentDialog({
 	comment,

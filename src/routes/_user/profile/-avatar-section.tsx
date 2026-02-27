@@ -1,4 +1,4 @@
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { avatarUrlify } from '@/lib/hooks'
 import { User } from 'lucide-react'
 

@@ -1,7 +1,7 @@
-import { FeedActivityType } from '@/lib/schemas/feed'
+import { FeedActivityType } from '@/features/feed/schemas'
 import { RequestItem } from '@/components/requests/request-list-item'
 
-import { useRequest } from '@/hooks/use-requests'
+import { useRequest } from '@/features/requests/hooks'
 
 export function FeedRequestItem({ item }: { item: FeedActivityType }) {
 	const { data: request } = useRequest(item.id)

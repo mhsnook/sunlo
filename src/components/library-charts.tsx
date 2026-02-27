@@ -21,10 +21,10 @@ import {
 	ChartTooltipContent,
 	type ChartConfig,
 } from '@/components/ui/chart'
-import { languagesCollection, langTagsCollection } from '@/lib/collections/languages'
-import { phrasesCollection } from '@/lib/collections/phrases'
-import { phraseRequestsCollection } from '@/lib/collections/requests'
-import { phrasePlaylistsCollection } from '@/lib/collections/playlists'
+import { languagesCollection, langTagsCollection } from '@/features/languages/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import languages from '@/lib/languages'
 
 // ─── Chart 1: Language Comparison ────────────────────────────────

@@ -14,7 +14,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import { Button } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
-import { useAllChats } from '@/hooks/use-friends'
+import { useAllChats } from '@/features/social/hooks'
 
 export function SendPlaylistToFriendDialog({
 	lang,
