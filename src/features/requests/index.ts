@@ -8,13 +8,13 @@ export {
 	PhraseRequestUpvoteSchema,
 	type PhraseRequestUpvoteType,
 	PhraseRequestStatusEnumSchema,
-} from '@/lib/schemas/requests'
+} from './schemas'
 
 // Collections
 export {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
-} from '@/lib/collections/requests'
+} from './collections'
 
 // Hooks
 export {
@@ -23,4 +23,4 @@ export {
 	useRequestLinksPhraseIds,
 	useRequestLinksWithComments,
 	type FulfillRequestResponse,
-} from '@/hooks/use-requests'
+} from './hooks'

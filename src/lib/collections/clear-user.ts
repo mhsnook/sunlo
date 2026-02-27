@@ -1,14 +1,20 @@
-import { myProfileCollection } from './auth'
-import { decksCollection, cardsCollection } from './deck'
-import { cardReviewsCollection, reviewDaysCollection } from './review'
-import { friendSummariesCollection, chatMessagesCollection } from './social'
+import { myProfileCollection } from '@/features/profile/collections'
+import { decksCollection, cardsCollection } from '@/features/deck/collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+} from '@/features/review/collections'
+import {
+	friendSummariesCollection,
+	chatMessagesCollection,
+} from '@/features/social/collections'
 import {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
-} from './comments'
-import { phraseRequestUpvotesCollection } from './requests'
-import { phrasePlaylistUpvotesCollection } from './playlists'
+} from '@/features/comments/collections'
+import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
+import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
 import { queryClient } from '@/lib/query-client'
 
 export const clearUser = async () => {

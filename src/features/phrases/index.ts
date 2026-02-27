@@ -16,13 +16,13 @@ export {
 	type FilterEnumType,
 	SmartSearchSortBySchema,
 	type SmartSearchSortByType,
-} from '@/lib/schemas/phrases'
+} from './schemas'
 
 // Collections
-export { phrasesCollection } from '@/lib/collections/phrases'
+export { phrasesCollection } from './collections'
 
 // Live collections
-export { phrasesFull } from '@/lib/collections/live-phrases'
+export { phrasesFull } from './live'
 
 // Hooks
 export {
@@ -36,7 +36,7 @@ export {
 	type PhraseProvenanceItem,
 	type PhraseProvenancePlaylist,
 	type PhraseProvenanceComment,
-} from '@/hooks/use-language'
+} from './hooks'
 
 export {
 	usePhrase,

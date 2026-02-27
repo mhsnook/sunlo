@@ -11,10 +11,10 @@ export {
 	type CardMetaType,
 	CardStatusEnumSchema,
 	type CardStatusEnumType,
-} from '@/lib/schemas/deck'
+} from './schemas'
 
 // Collections
-export { decksCollection, cardsCollection } from '@/lib/collections/deck'
+export { decksCollection, cardsCollection } from './collections'
 
 // Hooks
 export {
@@ -26,7 +26,7 @@ export {
 	useDeckActivityChartData,
 	usePreferredTranslationLang,
 	type DeckPids,
-} from '@/hooks/use-deck'
+} from './hooks'
 
 // Mutations
-export { useNewDeckMutation } from '@/lib/mutate-deck'
+export { useNewDeckMutation } from './mutations'

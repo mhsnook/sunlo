@@ -14,14 +14,14 @@ export {
 	PlaylistPhraseLinkIncludedInsertSchema,
 	type PlaylistPhraseLinkIncludedInsertType,
 	validateUrl,
-} from '@/lib/schemas/playlists'
+} from './schemas'
 
 // Collections
 export {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
 	phrasePlaylistUpvotesCollection,
-} from '@/lib/collections/playlists'
+} from './collections'
 
 // Hooks
 export {
@@ -30,4 +30,4 @@ export {
 	useMyPlaylists,
 	useOnePlaylist,
 	useOnePlaylistPhrases,
-} from '@/hooks/use-playlists'
+} from './hooks'

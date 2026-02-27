@@ -2,8 +2,8 @@ import { useParams } from '@tanstack/react-router'
 import {
 	useRelationInvitations,
 	useUnreadChatsCount,
-} from '@/hooks/use-friends'
-import { useActiveReviewRemaining } from '@/hooks/use-reviews'
+} from '@/features/social/hooks'
+import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'

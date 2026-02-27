@@ -2,10 +2,7 @@
 // Public API for the contributions domain
 
 // Schemas & types
-export { UserContributionsTabs } from '@/lib/schemas/contributions'
+export { UserContributionsTabs } from './schemas'
 
 // Hooks
-export {
-	useAnyonesPhraseRequests,
-	useAnyonesPhrases,
-} from '@/hooks/use-contributions'
+export { useAnyonesPhraseRequests, useAnyonesPhrases } from './hooks'

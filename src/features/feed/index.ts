@@ -10,7 +10,7 @@ export {
 	FeedActivityPayloadPlaylistSchema,
 	FeedActivityPayloadPhraseSchema,
 	FeedActivityPayloadPhraseSourceSchema,
-} from '@/lib/schemas/feed'
+} from './schemas'
 
 // Hooks
 export {
@@ -19,4 +19,4 @@ export {
 	usePopularFeedLang,
 	useInvalidateFeed,
 	FEED_QUERY_KEY,
-} from '@/hooks/use-feed'
+} from './hooks'
