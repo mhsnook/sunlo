@@ -11,10 +11,17 @@ export function RightSidebar() {
 	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
 		?.contextMenu
 	const links = useLinks(contextMenu)
+	const fixedHeight = matches.some(
+		(m) => (m.context as MyRouterContext)?.fixedHeight
+	)
+
+	// In fixedHeight mode (chats, review), hide when empty to reclaim space.
+	// In default mode, render the empty placeholder for visual consistency.
+	if (!links?.length && fixedHeight) return null
 
 	return (
 		<aside className="sticky top-4 hidden w-(--sidebar-width) shrink-0 self-start ps-8 pt-4 @3xl:block">
-			{links?.length ?
+			{!links?.length ? null : (
 				<div className="space-y-1">
 					<p className="text-muted-foreground mb-3 text-xs font-medium tracking-wide uppercase">
 						Quick Actions
@@ -38,7 +45,7 @@ export function RightSidebar() {
 						</Link>
 					))}
 				</div>
-			:	null}
+			)}
 		</aside>
 	)
 }
