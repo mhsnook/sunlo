@@ -1,4 +1,6 @@
+import { createContext, useContext } from 'react'
 import { createStore } from 'zustand'
+import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
 import type { pids } from '@/types/main'
@@ -7,7 +9,6 @@ import {
 	type ReviewStages,
 	useReviewsToday,
 } from './use-reviews'
-import { useReviewStore } from '@/components/review/review-context-provider'
 
 const DEFAULT_PROPS = {
 	lang: '',
@@ -120,6 +121,14 @@ export function createReviewStore(lang: string, dayString: string) {
 			)
 		)
 	)
+}
+
+export const ReviewStoreContext = createContext<ReviewStore | null>(null)
+
+export function useReviewStore<T>(selector: (state: ReviewState) => T): T {
+	const store = useContext(ReviewStoreContext)
+	if (!store) throw new Error('Missing ReviewStoreContext in the tree')
+	return useStore(store, selector)
 }
 
 export function useNextValid(): number {

@@ -39,9 +39,8 @@ export {
 	useNextValid,
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
+	useReviewStore,
 } from '@/hooks/use-review-store'
-
-export { useReviewStore } from '@/components/review/review-context-provider'
 
 // Algorithm
 export { calculateFSRS, retrievability, type Score } from '@/lib/fsrs'
