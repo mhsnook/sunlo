@@ -11,19 +11,13 @@ export {
 	FriendRequestResponseEnumSchema,
 	FriendStatusEnumSchema,
 	MessageTypeEnumSchema,
-} from '@/lib/schemas/social'
+} from './schemas'
 
 // Collections
-export {
-	friendSummariesCollection,
-	chatMessagesCollection,
-} from '@/lib/collections/social'
+export { friendSummariesCollection, chatMessagesCollection } from './collections'
 
 // Live collections
-export {
-	relationsFull,
-	type RelationsFullType,
-} from '@/lib/collections/live-social'
+export { relationsFull, type RelationsFullType } from './live'
 
 // Hooks
 export {
@@ -37,9 +31,9 @@ export {
 	useUnreadMessages,
 	useUnreadChatsCount,
 	useMarkAsRead,
-} from '@/hooks/use-friends'
+} from './hooks'
 
 export {
 	useSearchProfilesByUsername,
 	useOnePublicProfile,
-} from '@/hooks/use-public-profile'
+} from './public-profile'

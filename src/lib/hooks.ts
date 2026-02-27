@@ -1,4 +1,4 @@
-import { useDecks } from '@/hooks/use-deck'
+import { useDecks } from '@/features/deck/hooks'
 import supabase from './supabase-client'
 
 export function useDeckLangs() {

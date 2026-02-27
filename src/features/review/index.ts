@@ -7,13 +7,10 @@ export {
 	type CardReviewType,
 	DailyReviewStateSchema,
 	type DailyReviewStateType,
-} from '@/lib/schemas/review'
+} from './schemas'
 
 // Collections
-export {
-	cardReviewsCollection,
-	reviewDaysCollection,
-} from '@/lib/collections/review'
+export { cardReviewsCollection, reviewDaysCollection } from './collections'
 
 // Hooks
 export {
@@ -29,7 +26,7 @@ export {
 	type ReviewStages,
 	type ReviewsMap,
 	type ReviewStats,
-} from '@/hooks/use-reviews'
+} from './hooks'
 
 // Store
 export {
@@ -40,7 +37,7 @@ export {
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
 	useReviewStore,
-} from '@/hooks/use-review-store'
+} from './store'
 
 // Algorithm
-export { calculateFSRS, retrievability, type Score } from '@/lib/fsrs'
+export { calculateFSRS, retrievability, type Score } from './fsrs'

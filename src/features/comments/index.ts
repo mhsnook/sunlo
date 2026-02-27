@@ -9,11 +9,11 @@ export {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
-} from '@/lib/schemas/comments'
+} from './schemas'
 
 // Collections
 export {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
-} from '@/lib/collections/comments'
+} from './collections'
