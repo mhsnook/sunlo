@@ -407,10 +407,12 @@ function SendableResult({
 		: 'request'
 
 	return (
-		<div
-			className={cn(
-				'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-lc-up-2'
-			)}
+		<button
+			type="button"
+			onClick={onSend}
+			disabled={disabled}
+			data-testid={`send-${result.type}-${result.id}`}
+			className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-lc-up-2 disabled:opacity-50"
 		>
 			<LangBadge lang={result.lang} />
 			<div className="min-w-0 flex-1">
@@ -427,16 +429,7 @@ function SendableResult({
 					{typeLabel}
 				</span>
 			)}
-			<Button
-				size="icon"
-				variant="ghost"
-				onClick={onSend}
-				disabled={disabled}
-				aria-label={`Send ${typeLabel}`}
-				data-testid={`send-${result.type}-${result.id}`}
-			>
-				<Send className="size-4" />
-			</Button>
-		</div>
+			<Send className="text-muted-foreground size-4 shrink-0" />
+		</button>
 	)
 }
