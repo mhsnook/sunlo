@@ -1,30 +1,25 @@
 import { useEffect, useRef } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import {
 	createFileRoute,
 	Outlet,
 	redirect,
 	useMatches,
 } from '@tanstack/react-router'
-import { toastSuccess } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
-import type { Tables } from '@/types/supabase'
-import supabase from '@/lib/supabase-client'
 import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
 import { AppNav } from '@/components/navs/app-nav'
 import { RightSidebar } from '@/components/navs/right-sidebar'
-import { useUserId } from '@/lib/use-auth'
 import type { MyRouterContext } from './__root'
 import {
 	myProfileCollection,
 	myProfileQuery,
 } from '@/features/profile/collections'
 import { decksCollection } from '@/features/deck/collections'
-import { friendSummariesCollection, chatMessagesCollection } from '@/features/social/collections'
-import { ChatMessageSchema } from '@/features/social/schemas'
+import { friendSummariesCollection } from '@/features/social/collections'
+import { useSocialRealtime } from '@/features/social'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
@@ -107,8 +102,6 @@ export const Route = createFileRoute('/_user')({
 })
 
 function UserLayout() {
-	const queryClient = useQueryClient()
-	const userId = useUserId()
 	const matches = useMatches()
 	// Check if any route has enabled focus mode (e.g. review/go)
 	const focusMode = matches.some(
@@ -142,58 +135,8 @@ function UserLayout() {
 	// Apply user's font preference to the document body
 	useFontPreference()
 
-	// Only set up realtime subscriptions when authenticated
-	useEffect(() => {
-		if (!userId) return
-
-		const friendRequestChannel = supabase
-			.channel('friend-request-action-realtime')
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'friend_request_action',
-				},
-				(payload) => {
-					const newAction = payload.new as Tables<'friend_request_action'>
-					if (
-						newAction.action_type === 'accept' &&
-						newAction.uid_for === userId
-					)
-						toastSuccess('Friend request accepted')
-					if (newAction.action_type === 'accept' && newAction.uid_by === userId)
-						toastSuccess('You are now connected')
-					// console.log(`new friend request action has come in`, payload)
-					void friendSummariesCollection.utils.refetch()
-				}
-			)
-			.subscribe()
-
-		const chatChannel = supabase
-			.channel('user-chats')
-			.on(
-				'postgres_changes',
-				{
-					event: 'INSERT',
-					schema: 'public',
-					table: 'chat_message',
-				},
-				(payload) => {
-					const newMessage = payload.new as Tables<'chat_message'>
-					console.log(`new chat`, newMessage)
-					chatMessagesCollection.utils.writeInsert(
-						ChatMessageSchema.parse(newMessage)
-					)
-				}
-			)
-			.subscribe()
-
-		return () => {
-			void supabase.removeChannel(friendRequestChannel)
-			void supabase.removeChannel(chatChannel)
-		}
-	}, [userId, queryClient])
+	// Subscribe to realtime friend-request and chat-message events
+	useSocialRealtime()
 
 	return (
 		<div
