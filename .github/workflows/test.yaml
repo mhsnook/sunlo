@@ -77,14 +77,16 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      # Cache Docker images for Supabase
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.5.0
+      # Cache Docker layers for Supabase
+      - name: Cache Docker layers
+        uses: jpribyl/action-docker-layer-caching@v0.1.1
         with:
-          key: docker-${{ runner.os }}-supabase
+          key: docker-layers-${{ runner.os }}-supabase-${{ hashFiles('supabase/config.toml') }}
+          restore-keys: docker-layers-${{ runner.os }}-supabase-
+        continue-on-error: true
 
       - name: Start Supabase
-        run: supabase start
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor,edge-runtime,inbucket
 
       - name: Set up environment variables
         run: |
@@ -149,14 +151,16 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: pnpm exec playwright install-deps chromium
 
-      # Cache Docker images for Supabase
-      - name: Cache Docker images
-        uses: ScribeMD/docker-cache@0.5.0
+      # Cache Docker layers for Supabase
+      - name: Cache Docker layers
+        uses: jpribyl/action-docker-layer-caching@v0.1.1
         with:
-          key: docker-${{ runner.os }}-supabase
+          key: docker-layers-${{ runner.os }}-supabase-${{ hashFiles('supabase/config.toml') }}
+          restore-keys: docker-layers-${{ runner.os }}-supabase-
+        continue-on-error: true
 
       - name: Start Supabase
-        run: supabase start
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor,edge-runtime,inbucket
 
       - name: Set up environment variables
         run: |
