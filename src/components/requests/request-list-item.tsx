@@ -1,6 +1,6 @@
 import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
-import { PhraseRequestType } from '@/lib/schemas/requests'
-import { useRequestLinksPhraseIds } from '@/hooks/use-requests'
+import { PhraseRequestType } from '@/features/requests/schemas'
+import { useRequestLinksPhraseIds } from '@/features/requests/hooks'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'

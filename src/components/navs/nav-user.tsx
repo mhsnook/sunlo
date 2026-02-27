@@ -15,7 +15,7 @@ import {
 	useSidebar,
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/lib/use-auth'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { makeLinks } from '@/hooks/links'
 import { avatarUrlify } from '@/lib/hooks'

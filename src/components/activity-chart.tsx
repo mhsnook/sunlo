@@ -7,7 +7,7 @@ import {
 	ChartLegendContent,
 	type ChartConfig,
 } from '@/components/ui/chart'
-import { useDeckActivityChartData } from '@/hooks/use-deck'
+import { useDeckActivityChartData } from '@/features/deck/hooks'
 
 const chartConfig = {
 	total: {

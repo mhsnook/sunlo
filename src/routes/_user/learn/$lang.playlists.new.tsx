@@ -15,17 +15,17 @@ import {
 	type PhrasePlaylistInsertType,
 	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
-} from '@/lib/schemas/playlists'
+} from '@/features/playlists/schemas'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections/playlists'
+} from '@/features/playlists/collections'
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
 import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from '@/components/playlists/playlist-embed'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
-import { useInvalidateFeed } from '@/hooks/use-feed'
+import { useInvalidateFeed } from '@/features/feed/hooks'
 import languages from '@/lib/languages'
 import {
 	Card,

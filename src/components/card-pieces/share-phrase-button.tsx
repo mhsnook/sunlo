@@ -3,7 +3,7 @@ import { Share } from 'lucide-react'
 import { toastError } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { PhraseFullFilteredType } from '@/lib/schemas/phrases'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
 export default function SharePhraseButton({
 	phrase,

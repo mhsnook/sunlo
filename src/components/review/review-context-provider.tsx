@@ -2,7 +2,7 @@ import { PropsWithChildren, useRef } from 'react'
 import {
 	createReviewStore,
 	ReviewStoreContext,
-} from '@/hooks/use-review-store'
+} from '@/features/review/store'
 
 export function ReviewStoreProvider({
 	lang,

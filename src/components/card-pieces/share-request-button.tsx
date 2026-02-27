@@ -5,7 +5,7 @@ import type { uuid } from '@/types/main'
 import type { ButtonProps } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import languages from '@/lib/languages'
-import { useRequest } from '@/hooks/use-requests'
+import { useRequest } from '@/features/requests/hooks'
 
 export function ShareRequestButton({
 	id,

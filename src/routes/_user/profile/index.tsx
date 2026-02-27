@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card'
 import AvatarSection from '@/routes/_user/profile/-avatar-section'
 import UserAuthCard from '@/routes/_user/profile/-user-auth-card'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { UpdateProfileForm } from './-update-profile-form'
 import { DisplayPreferences } from './-display-preferences'
 

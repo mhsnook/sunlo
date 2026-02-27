@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { useProfile } from '@/hooks/use-profile'
+import { useProfile } from '@/features/profile/hooks'
 import { NativeShareButton } from '@/components/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { copyLink } from '@/lib/utils'

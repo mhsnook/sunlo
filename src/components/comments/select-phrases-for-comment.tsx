@@ -5,7 +5,7 @@ import type { uuid } from '@/types/main'
 import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrasesSearch } from '@/hooks/use-language'
+import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
 	Dialog,

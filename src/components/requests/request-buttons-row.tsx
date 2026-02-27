@@ -9,9 +9,9 @@ import { buttonVariants } from '@/components/ui/button'
 import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
 import { DialogTrigger } from '@/components/ui/dialog'
 import Flagged from '@/components/flagged'
-import { useRequestCounts } from '@/hooks/use-requests'
+import { useRequestCounts } from '@/features/requests/hooks'
 import { UpvoteRequest } from './upvote-request-button'
-import { PhraseRequestType } from '@/lib/schemas/requests'
+import { PhraseRequestType } from '@/features/requests/schemas'
 
 const showThread = { show: 'thread' } as const
 const answersOnly = { show: 'answers-only' } as const

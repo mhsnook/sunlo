@@ -15,8 +15,8 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
 import { VariantProps } from 'class-variance-authority'
-import { PhraseFullFilteredType } from '@/lib/schemas/phrases'
-import { useAllChats } from '@/hooks/use-friends'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import { useAllChats } from '@/features/social/hooks'
 
 export function SendPhraseToFriendButton({
 	phrase,

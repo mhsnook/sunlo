@@ -7,11 +7,11 @@ import { ThumbsUp } from 'lucide-react'
 import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
-} from '@/lib/collections/requests'
+} from '@/features/requests/collections'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import { PhraseRequestType } from '@/lib/schemas/requests'
+import { PhraseRequestType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {

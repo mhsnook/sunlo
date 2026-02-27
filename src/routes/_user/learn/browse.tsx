@@ -2,13 +2,13 @@ import { useCallback, useEffect } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
 
-import { languagesCollection, langTagsCollection } from '@/lib/collections/languages'
-import { phrasesCollection } from '@/lib/collections/phrases'
-import { phraseRequestsCollection } from '@/lib/collections/requests'
+import { languagesCollection, langTagsCollection } from '@/features/languages/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
-} from '@/lib/collections/playlists'
+} from '@/features/playlists/collections'
 import BrowseSearchOverlay from '@/components/browse-search-overlay'
 
 const BrowseSearchParams = z.object({

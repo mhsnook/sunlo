@@ -3,7 +3,7 @@ import { Share } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
 import languages from '@/lib/languages'
-import { useOnePlaylist } from '@/hooks/use-playlists'
+import { useOnePlaylist } from '@/features/playlists/hooks'
 import { Button } from '@/components/ui/button'
 
 export function SharePlaylistButton({ id }: { id: uuid }) {

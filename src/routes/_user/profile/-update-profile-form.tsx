@@ -12,12 +12,12 @@ import {
 	LanguagesKnownType,
 	MyProfileSchema,
 	MyProfileType,
-} from '@/lib/schemas/auth'
+} from '@/features/profile/schemas'
 import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { AvatarEditorField } from '@/routes/_user/profile/-avatar-editor-field'
-import { myProfileCollection } from '@/lib/collections/auth'
+import { myProfileCollection } from '@/features/profile/collections'
 
 const ProfileEditFormSchema = z.object({
 	username: z

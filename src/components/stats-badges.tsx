@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { ago } from '@/lib/dayjs'
-import { useDeckMeta, useDeckPids } from '@/hooks/use-deck'
+import { useDeckMeta, useDeckPids } from '@/features/deck/hooks'
 
 export function DeckStatsBadges({ lang }: { lang: string }) {
 	const { data: deckMeta } = useDeckMeta(lang)

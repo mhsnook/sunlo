@@ -3,7 +3,7 @@ import { ThumbsUp, UserCheck, UserMinus, X } from 'lucide-react'
 import type { uuid } from '@/types/main'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
 import { Button } from '@/components/ui/button'
-import { useFriendRequestAction, useOneRelation } from '@/hooks/use-friends'
+import { useFriendRequestAction, useOneRelation } from '@/features/social/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { IconSizedLoader } from '@/components/ui/loader'
 

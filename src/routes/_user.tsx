@@ -21,10 +21,10 @@ import type { MyRouterContext } from './__root'
 import {
 	myProfileCollection,
 	myProfileQuery,
-} from '@/lib/collections/auth'
-import { decksCollection } from '@/lib/collections/deck'
-import { friendSummariesCollection, chatMessagesCollection } from '@/lib/collections/social'
-import { ChatMessageSchema } from '@/lib/schemas/social'
+} from '@/features/profile/collections'
+import { decksCollection } from '@/features/deck/collections'
+import { friendSummariesCollection, chatMessagesCollection } from '@/features/social/collections'
+import { ChatMessageSchema } from '@/features/social/schemas'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
