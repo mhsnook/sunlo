@@ -7,6 +7,7 @@ import {
 	useMatches,
 } from '@tanstack/react-router'
 import { toastSuccess } from '@/components/ui/sonner'
+import { cn } from '@/lib/utils'
 import type { Tables } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
@@ -120,6 +121,13 @@ function UserLayout() {
 		(m) => (m.context as MyRouterContext)?.wideContent
 	)
 
+	// Check if any route requests fixed-height layout (e.g. chats, review)
+	// Layout A (default): page flows naturally, one browser scrollbar
+	// Layout B (fixedHeight): viewport-locked container with internal scroll
+	const fixedHeight = matches.some(
+		(m) => (m.context as MyRouterContext)?.fixedHeight
+	)
+
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()
 	const savedOpenState = useRef(open)
@@ -189,19 +197,27 @@ function UserLayout() {
 	}, [userId, queryClient])
 
 	return (
-		<div className="flex h-screen w-full">
+		<div
+			className={cn('flex w-full', fixedHeight ? 'h-screen' : 'min-h-screen')}
+		>
 			<AppSidebar focusMode={focusMode} />
 			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
-				{/* min-h-0 is critical: allows flex children to shrink below content size for scrolling */}
-				<div className="flex min-h-0 flex-1 flex-row">
+				<div className={cn('flex flex-1 flex-row', fixedHeight && 'min-h-0')}>
 					<div
-						className={`mx-auto flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden overflow-y-auto ${wideContent ? 'max-w-6xl' : 'max-w-4xl'}`}
+						className={cn(
+							'mx-auto flex min-w-0 flex-1 flex-col overflow-x-hidden',
+							wideContent ? 'max-w-6xl' : 'max-w-4xl',
+							fixedHeight && 'min-h-0 overflow-y-auto'
+						)}
 					>
 						<Navbar />
 						<AppNav />
 						<div
 							id="app-sidebar-layout-outlet"
-							className="@container flex grow flex-col p-2 pb-8"
+							className={cn(
+								'@container flex grow flex-col p-2',
+								fixedHeight ? 'min-h-0' : 'pb-8'
+							)}
 							style={{ viewTransitionName: 'main-content' }}
 						>
 							<Outlet />

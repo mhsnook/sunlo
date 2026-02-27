@@ -22,6 +22,7 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
 		contextMenu: [],
 		focusMode: true,
+		fixedHeight: true,
 	}),
 	component: ReviewPage,
 	loader: async () => {
