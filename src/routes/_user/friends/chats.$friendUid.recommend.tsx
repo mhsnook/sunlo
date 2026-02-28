@@ -34,7 +34,7 @@ import { LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { cn } from '@/lib/utils'
+
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 
 type ContentFilter = 'phrases' | 'playlists' | 'requests'
@@ -395,11 +395,9 @@ function SendableResult({
 	disabled: boolean
 }) {
 	const typeIcon =
-		result.type === 'phrases' ?
-			<MessageSquareQuote className="size-3.5" />
-		: result.type === 'playlists' ?
-			<ListMusic className="size-3.5" />
-		:	<MessageCircleHeart className="size-3.5" />
+		result.type === 'phrases' ? <MessageSquareQuote className="size-3.5" />
+		: result.type === 'playlists' ? <ListMusic className="size-3.5" />
+		: <MessageCircleHeart className="size-3.5" />
 
 	const typeLabel =
 		result.type === 'phrases' ? 'phrase'
@@ -412,7 +410,7 @@ function SendableResult({
 			onClick={onSend}
 			disabled={disabled}
 			data-testid={`send-${result.type}-${result.id}`}
-			className="flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors hover:bg-lc-up-2 disabled:opacity-50"
+			className="hover:bg-lc-up-2 flex w-full items-center gap-3 px-4 py-2.5 text-start transition-colors disabled:opacity-50"
 		>
 			<LangBadge lang={result.lang} />
 			<div className="min-w-0 flex-1">

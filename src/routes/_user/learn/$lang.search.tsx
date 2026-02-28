@@ -35,6 +35,10 @@ import {
 	useSmartSearch,
 	type SmartSearchSortBy,
 } from '@/hooks/use-smart-search'
+import {
+	useHybridSearch,
+	type HybridSearchSortBy,
+} from '@/hooks/use-hybrid-search'
 import { Accordion } from '@/components/ui/accordion'
 import Callout from '@/components/ui/callout'
 import { Loader } from '@/components/ui/loader'
@@ -155,6 +159,9 @@ function SearchTab() {
 	)
 }
 
+const SEMANTIC_SEARCH_ENABLED =
+	import.meta.env.VITE_ENABLE_SEMANTIC_SEARCH === 'true'
+
 function SmartSearchResults({
 	lang,
 	query,
@@ -168,6 +175,14 @@ function SmartSearchResults({
 	setSortBy: (value: string) => void
 	selectedTags: string[]
 }) {
+	// Use hybrid search when semantic search is enabled, otherwise fall back to trigram-only
+	const smartSearch = useSmartSearch(lang, query, sortBy)
+	const hybridSearch = useHybridSearch(
+		lang,
+		query,
+		sortBy as HybridSearchSortBy
+	)
+
 	const {
 		data: results,
 		isLoading,
@@ -175,7 +190,7 @@ function SmartSearchResults({
 		hasNextPage,
 		fetchNextPage,
 		isFetchingNextPage,
-	} = useSmartSearch(lang, query, sortBy)
+	} = SEMANTIC_SEARCH_ENABLED ? hybridSearch : smartSearch
 
 	// Infinite scroll trigger
 	const { ref: loadMoreRef, inView } = useInView({
