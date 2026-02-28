@@ -59,6 +59,47 @@ file like this: `pnpm run seeds:data`, or modify this command per your needs:
 Then, be prepared to heavily curate this file because the seeding process will not have any
 knowledge of our approach to dates, and your PR will be rejected if your seeds do not follow it.
 
+## Semantic Search & Embeddings
+
+The app supports hybrid search combining text matching (trigram) with semantic vector search (pgvector). Each phrase gets a single embedding vector that bundles its text, all translations (with language tags), and tags — so searching "getting coffee" in English can find the Spanish phrase "me gustaría un café".
+
+### Setup
+
+Edge functions need an API key for embedding generation. The system uses an OpenAI-compatible endpoint (currently OpenRouter).
+
+```bash
+# Copy and fill in your API key
+cp supabase/functions/.env.example supabase/functions/.env
+```
+
+Also set these in your root `.env`:
+
+- `VITE_ENABLE_SEMANTIC_SEARCH="true"` — switches the search page to hybrid mode (trigram-only by default)
+
+### Generating Embeddings
+
+Embeddings are generated automatically when phrases, translations, or tags change (via database triggers that queue items for processing). To vectorize existing data:
+
+```bash
+# Backfill all phrases missing embeddings (up to 1000)
+pnpm run embed:backfill
+
+# Then export seeds with embeddings included
+pnpm run seeds:data
+```
+
+### Edge Functions
+
+Located in `supabase/functions/`:
+
+- **embed-phrase** — generates embeddings for specific phrases or backfills all missing ones
+- **process-embedding-queue** — processes the automatic queue (triggered by phrase/translation/tag changes)
+- **search-hybrid** — orchestrates hybrid search (embeds the query, runs trigram + vector search, fuses results with Reciprocal Rank Fusion)
+
+### Swapping the Embedding Model
+
+The active model is stored in the `embedding_config` table (currently `qwen/qwen3-embedding-8b` via OpenRouter, 1024 dimensions). To switch models: update the config row, then re-run `pnpm run embed:backfill` to regenerate all vectors.
+
 ## The React App
 
 - This app is a full SPA as an architectural choice so that we can use Tauri to compile it to
