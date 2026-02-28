@@ -48,7 +48,13 @@ For **Preview** environment (used by all non-production branches):
 | `VITE_SUPABASE_ANON_KEY` | Matching anon key | Yes |
 | `NODE_VERSION` | `22` | No |
 
-> **Preview branch keys:** Cloudflare Pages lets you set separate env vars for Production vs Preview. If you want *per-branch* environment overrides (e.g. a `staging` branch with its own Supabase project), you can use branch-specific environment variables in the Cloudflare dashboard under Settings → Environment variables → Preview → Add variable → specify "Branch" filter.
+> **Preview branch keys:** Cloudflare Pages lets you set separate env vars for **Production** vs **Preview** in the dashboard (Settings → Environment variables). All preview branches share the same Preview env vars — there is no per-branch filtering in the dashboard.
+>
+> If you need **per-branch overrides** (e.g. a `staging` branch pointing at a different Supabase project), you have two options:
+> 1. **GitHub Actions deploy:** Use `wrangler pages deploy` in a CI workflow that sets env vars conditionally based on the branch name, instead of using Cloudflare's built-in Git integration.
+> 2. **Runtime binding:** Use a Cloudflare Pages Function that reads branch info from the deployment URL (`<branch>.sunlo.pages.dev`) and selects the appropriate config at runtime — though this only works for server-side (Functions) env vars, not build-time `VITE_` vars.
+>
+> For most setups, the Production/Preview split is sufficient: production uses your live Supabase project, and all preview branches share the same Supabase project (either the same live one, or a dedicated staging project).
 
 ### 1c. Configure production branch
 
@@ -169,13 +175,12 @@ Cloudflare Pages automatically creates preview deployments for every push to non
 - `https://<commit-hash>.<project>.pages.dev`
 - `https://<branch>.<project>.pages.dev`
 
-### 4b. Branch-specific environment variables
+### 4b. Preview environment variables
 
-For branch-specific Supabase keys (e.g., staging vs production):
+Cloudflare Pages supports **Production** and **Preview** env var scopes in the dashboard. All preview branches share the same set of Preview env vars.
 
-1. Go to Cloudflare Pages → Settings → Environment variables
-2. Under **Preview**, add variables with **branch filters**
-3. Example: set `VITE_SUPABASE_URL` for the `staging` branch to point to a staging Supabase project
+- If all preview branches should use the same Supabase project (typical), just set the Preview env vars once in the dashboard.
+- If you need different env vars per branch, you'd need to switch to a **GitHub Actions + `wrangler pages deploy`** workflow instead of the built-in Git integration (see Phase 1b for details).
 
 ### 4c. Preview deploy access control (optional)
 
