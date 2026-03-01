@@ -102,15 +102,17 @@ export function FooterNavigation() {
 
 							{/* Community stats */}
 							<div className="mt-6 rounded-lg border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-								<div className="mb-2 flex items-center gap-2 text-sm text-slate-300">
+								<div className="mb-1 flex items-center gap-2 text-sm text-slate-300">
 									<Users className="h-4 w-4 text-blue-400" />
 									<span className="font-medium">Join our community</span>
 								</div>
-								<div className="font-space-grotesk text-2xl font-bold text-white">
-									5+
-								</div>
-								<div className="text-sm text-slate-400">
-									Active learners worldwide
+								<div className="flex items-baseline gap-2">
+									<span className="font-space-grotesk text-xl font-bold text-white">
+										50+
+									</span>
+									<span className="text-sm text-slate-400">
+										active learners worldwide
+									</span>
 								</div>
 							</div>
 						</div>

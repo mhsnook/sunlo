@@ -271,6 +271,9 @@
 }
 
 @layer base {
+	html {
+		font-size: 112.5%; /* 18px base — bump from the 16px default */
+	}
 	body {
 		padding-top: env(safe-area-inset-top);
 		padding-bottom: env(safe-area-inset-bottom);
