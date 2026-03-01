@@ -74,6 +74,7 @@ export function ArchiveDeckButton({
 				{archived ?
 					<Button
 						variant="soft"
+						size="sm"
 						disabled={!archived}
 						data-testid="restore-deck-button"
 					>
@@ -82,6 +83,7 @@ export function ArchiveDeckButton({
 					</Button>
 				:	<Button
 						variant="red-soft"
+						size="sm"
 						disabled={!!archived}
 						data-testid="archive-deck-button"
 					>

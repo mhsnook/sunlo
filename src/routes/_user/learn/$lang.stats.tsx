@@ -88,6 +88,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							aria-disabled="true"
 							className={`${buttonVariants({
 								variant: 'soft',
+								size: 'sm',
 							})} -mt-2 aspect-square @max-lg:px-2`}
 						>
 							<Search className="size-3" />

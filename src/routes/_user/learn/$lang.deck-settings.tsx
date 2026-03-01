@@ -81,7 +81,7 @@ function DeckSettingsPage() {
 				:	null}
 				<CardHeader className="rounded shadow">
 					<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
-						<span>
+						<span className="h4">
 							{meta.archived ? 'Reactivate deck' : 'Archive your deck'}
 						</span>
 						<span className="flex items-center gap-1">

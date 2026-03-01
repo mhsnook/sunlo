@@ -139,24 +139,26 @@ export function HeroSection() {
 						</div>
 
 						{/* Trust indicators */}
-						<div className="text-muted-foreground flex flex-col items-center justify-center gap-6 text-sm sm:flex-row">
-							<div className="flex items-center gap-2">
+						<div className="text-muted-foreground flex flex-wrap items-center justify-center gap-x-1 gap-y-1 text-xs sm:text-sm">
+							<div className="flex items-center gap-1.5">
 								<div className="flex">
 									{[0, 1, 2, 3, 4].map((i) => (
 										<Star
 											key={i}
-											className="h-4 w-4 fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300"
+											className="h-3 w-3 fill-yellow-500 text-yellow-500 dark:fill-yellow-300 dark:text-yellow-300"
 										/>
 									))}
 								</div>
 								<span>Loved by learners</span>
 							</div>
-							<div className="flex items-center gap-2">
-								<Users className="h-4 w-4" />
-								<span>Join 5+ active learners</span>
+							<span className="opacity-40">·</span>
+							<div className="flex items-center gap-1.5">
+								<Users className="h-3 w-3" />
+								<span>5+ active learners</span>
 							</div>
-							<div className="flex items-center gap-2">
-								<Heart className="h-4 w-4" />
+							<span className="opacity-40">·</span>
+							<div className="flex items-center gap-1.5">
+								<Heart className="h-3 w-3" />
 								<span>Free forever</span>
 							</div>
 						</div>
