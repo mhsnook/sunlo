@@ -1,5 +1,6 @@
 import { get, set } from 'idb-keyval'
 import type { PhraseFullType } from './schemas'
+import supabase from './supabase-client'
 
 const MODEL_NAME = 'Xenova/all-MiniLM-L6-v2'
 const CACHE_VERSION = 1
@@ -158,6 +159,57 @@ export async function generateEmbeddings(
 	})
 
 	return results
+}
+
+/**
+ * Fetch pre-computed embeddings from the server for a language.
+ * Returns null if the RPC fails (e.g. table doesn't exist yet).
+ */
+export async function fetchServerEmbeddings(
+	lang: string
+): Promise<Array<PhraseEmbedding> | null> {
+	try {
+		const { data, error } = await (
+			supabase.rpc as (
+				fn: string,
+				args: Record<string, unknown>
+			) => ReturnType<typeof supabase.rpc>
+		)('get_phrase_embeddings', { p_lang: lang })
+		if (error || !data) return null
+		return (data as Array<{ phrase_id: string; embedding: string }>).map(
+			(row) => ({
+				phraseId: row.phrase_id,
+				vector: JSON.parse(row.embedding) as Array<number>,
+			})
+		)
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Sync client-computed embeddings to the server in batches.
+ * Serializes vectors as pgvector-compatible strings.
+ */
+export async function syncEmbeddingsToServer(
+	embeddings: Array<PhraseEmbedding>
+): Promise<void> {
+	const BATCH_SIZE = 100
+	for (let i = 0; i < embeddings.length; i += BATCH_SIZE) {
+		const batch = embeddings.slice(i, i + BATCH_SIZE)
+		const payload = batch.map((e) => ({
+			phrase_id: e.phraseId,
+			vector: `[${e.vector.join(',')}]`,
+		}))
+		await (
+			supabase.rpc as (
+				fn: string,
+				args: Record<string, unknown>
+			) => ReturnType<typeof supabase.rpc>
+		)('upsert_phrase_embeddings', {
+			p_embeddings: JSON.stringify(payload),
+		})
+	}
 }
 
 /** Cosine similarity between two normalized vectors (just dot product) */
