@@ -123,7 +123,8 @@ Deno.serve(async (req) => {
 
 		// Generate embeddings
 		const embeddings = await generateEmbeddings(
-			embeddingInputs.map((e) => e.text)
+			embeddingInputs.map((e) => e.text),
+			{ model: config.model_name, dimensions: config.dimensions }
 		)
 
 		// Store embeddings

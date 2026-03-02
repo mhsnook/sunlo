@@ -48,10 +48,20 @@ Deno.serve(async (req) => {
 
 		const supabase = createAdminClient()
 
+		// Get active embedding config for model/dimensions
+		const { data: config } = await supabase
+			.from('embedding_config')
+			.select('model_name, dimensions')
+			.eq('is_active', true)
+			.single()
+
 		// Generate query embedding
 		let queryEmbedding: Array<number> | null = null
 		try {
-			const embeddings = await generateEmbeddings([query])
+			const embeddings = await generateEmbeddings([query], {
+				model: config?.model_name,
+				dimensions: config?.dimensions,
+			})
 			queryEmbedding = embeddings[0]
 		} catch (embeddingError) {
 			// If embedding fails, fall back to trigram-only search

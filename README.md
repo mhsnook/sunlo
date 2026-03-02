@@ -65,11 +65,15 @@ The app supports hybrid search combining text matching (trigram) with semantic v
 
 ### Setup
 
-Edge functions need an API key for embedding generation. The system uses an OpenAI-compatible endpoint (currently OpenRouter).
+Edge functions need an API key for embedding generation. The system uses any OpenAI-compatible embedding endpoint — by default, **Cloudflare Workers AI** with the `bge-m3` model (multilingual, 1024 dimensions, free tier available).
+
+1. Get your Cloudflare Account ID from the dashboard
+2. Create an API token with **Workers AI > Read** permission
+3. Configure the edge function env:
 
 ```bash
-# Copy and fill in your API key
 cp supabase/functions/.env.example supabase/functions/.env
+# Fill in EMBEDDING_API_URL (with your account ID) and EMBEDDING_API_KEY
 ```
 
 Also set these in your root `.env`:
@@ -98,7 +102,7 @@ Located in `supabase/functions/`:
 
 ### Swapping the Embedding Model
 
-The active model is stored in the `embedding_config` table (currently `qwen/qwen3-embedding-8b` via OpenRouter, 1024 dimensions). To switch models: update the config row, then re-run `pnpm run embed:backfill` to regenerate all vectors.
+The active model is stored in the `embedding_config` table (currently `@cf/baai/bge-m3` via Cloudflare Workers AI, 1024 dimensions). Any OpenAI-compatible endpoint works — see `.env.example` for an OpenRouter alternative. To switch models: update the config row and env vars, then re-run `pnpm run embed:backfill` to regenerate all vectors.
 
 ## The React App
 

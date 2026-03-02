@@ -1,7 +1,7 @@
 /**
  * OpenAI-compatible embedding client.
- * Works with OpenRouter, Mistral, OpenAI, or any OpenAI-compatible endpoint.
- * Provider is configured via environment variables.
+ * Works with Cloudflare Workers AI, OpenRouter, OpenAI, or any
+ * OpenAI-compatible endpoint. Provider is configured via environment variables.
  */
 
 interface EmbeddingResponse {
@@ -12,17 +12,30 @@ interface EmbeddingResponse {
 
 export async function generateEmbeddings(
 	texts: Array<string>,
-	model?: string
+	options?: { model?: string; dimensions?: number }
 ): Promise<Array<Array<number>>> {
-	const apiUrl =
-		Deno.env.get('EMBEDDING_API_URL') ??
-		'https://openrouter.ai/api/v1/embeddings'
+	const apiUrl = Deno.env.get('EMBEDDING_API_URL')
 	const apiKey = Deno.env.get('EMBEDDING_API_KEY')
 	const modelName =
-		model ?? Deno.env.get('EMBEDDING_MODEL') ?? 'qwen/qwen3-embedding-8b'
+		options?.model ?? Deno.env.get('EMBEDDING_MODEL') ?? '@cf/baai/bge-m3'
 
+	if (!apiUrl) {
+		throw new Error(
+			'EMBEDDING_API_URL is not set. See supabase/functions/.env.example'
+		)
+	}
 	if (!apiKey) {
-		throw new Error('EMBEDDING_API_KEY is not set')
+		throw new Error(
+			'EMBEDDING_API_KEY is not set. See supabase/functions/.env.example'
+		)
+	}
+
+	const body: Record<string, unknown> = {
+		model: modelName,
+		input: texts,
+	}
+	if (options?.dimensions) {
+		body.dimensions = options.dimensions
 	}
 
 	const response = await fetch(apiUrl, {
@@ -31,11 +44,7 @@ export async function generateEmbeddings(
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${apiKey}`,
 		},
-		body: JSON.stringify({
-			model: modelName,
-			input: texts,
-			dimensions: 1024,
-		}),
+		body: JSON.stringify(body),
 	})
 
 	if (!response.ok) {

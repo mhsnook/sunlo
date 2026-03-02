@@ -33,7 +33,8 @@ async function processBatch(
 	supabase: ReturnType<typeof createAdminClient>
 ): Promise<BatchResult> {
 	const embeddings = await generateEmbeddings(
-		embeddingInputs.map((e) => e.text)
+		embeddingInputs.map((e) => e.text),
+		{ model: config.model_name, dimensions: config.dimensions }
 	)
 
 	const rows = embeddingInputs.map((input, idx) => ({
