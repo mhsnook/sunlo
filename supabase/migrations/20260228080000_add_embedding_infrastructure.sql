@@ -31,7 +31,7 @@ comment on table public.embedding_config is 'Tracks which embedding model produc
 insert into
 	embedding_config (model_name, model_provider, dimensions, is_active)
 values
-	('qwen/qwen3-embedding-8b', 'openrouter', 1024, true);
+	('@cf/baai/bge-m3', 'cloudflare-workers-ai', 1024, true);
 
 -- ============================================================================
 -- phrase_embedding: stores vector embeddings for each phrase
