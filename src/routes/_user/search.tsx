@@ -21,6 +21,7 @@ import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import PermalinkButton from '@/components/permalink-button'
 import allLanguages from '@/lib/languages'
+import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { cn } from '@/lib/utils'
 import { phrasesFull } from '@/features/phrases/live'
 import {
@@ -29,20 +30,9 @@ import {
 } from '@/features/languages/collections'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import type { LanguageType } from '@/features/languages/schemas'
+import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 
-// --- Types ---
-
-interface SearchFilter {
-	type: 'lang' | 'tag'
-	value: string
-	label: string
-}
-
-interface ParsedSearch {
-	suggestions: Array<SearchFilter>
-	effectiveText: string
-}
+import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
 
 // --- Route ---
 
@@ -387,24 +377,7 @@ function EmptyResults() {
 	)
 }
 
-function PhraseResultCard({
-	phrase,
-}: {
-	phrase: {
-		id: string
-		text: string
-		lang: string
-		tags?: Array<{ id: string; name: string }> | null
-		count_learners?: number | null
-		translations_mine?: Array<{
-			id: string
-			text: string
-			lang: string
-		}>
-		translations_other?: Array<{ id: string; text: string; lang: string }>
-		translations?: Array<{ id: string; text: string; lang: string }>
-	}
-}) {
+function PhraseResultCard({ phrase }: { phrase: PhraseFullFilteredType }) {
 	// Prefer user's languages, fall back to English, then any translation
 	const translations =
 		phrase.translations_mine?.length ? phrase.translations_mine
@@ -472,7 +445,7 @@ function WelcomeState({
 	onSelectLanguage: (code: string, name: string) => void
 	onSelectLangTag: (lang: string, tagName: string) => void
 	languages: Array<LanguageType>
-	tags: Array<{ name: string; lang: string }>
+	tags: Array<LangTagType>
 }) {
 	return (
 		<div className="flex h-full flex-col items-center justify-center space-y-8 p-6">
@@ -537,7 +510,7 @@ function QuickFiltersPanel({
 	onClose,
 }: {
 	languages: Array<LanguageType>
-	tags: Array<{ name: string; lang: string }>
+	tags: Array<LangTagType>
 	langFilter: string | undefined
 	filters: Array<SearchFilter>
 	onAddFilter: (filter: SearchFilter) => void
@@ -639,92 +612,4 @@ function QuickFiltersPanel({
 			)}
 		</div>
 	)
-}
-
-// --- Helpers ---
-
-const PREPOSITIONS = new Set(['in', 'for', 'about', 'the', 'a'])
-
-/**
- * Parse input text to:
- * 1. Detect language/tag names and offer them as clickable filter suggestions
- * 2. Strip words matching EXPLICIT (already-applied) filter labels from the
- *    search text so results stay consistent before and after clicking a filter
- *
- * Suggested filters are NOT auto-applied — the user must click to activate them.
- */
-function parseSearchInput(
-	text: string,
-	existingFilters: Array<SearchFilter>,
-	availableTagNames: Array<string>
-): ParsedSearch {
-	const trimmed = text.trim()
-	if (!trimmed) {
-		return { suggestions: [], effectiveText: '' }
-	}
-
-	const words = trimmed.toLowerCase().split(/\s+/)
-	const suggestions: Array<SearchFilter> = []
-	const wordsToStrip = new Set<string>()
-
-	const existingLangs = new Set(
-		existingFilters.filter((f) => f.type === 'lang').map((f) => f.value)
-	)
-	const existingTags = new Set(
-		existingFilters.filter((f) => f.type === 'tag').map((f) => f.value)
-	)
-
-	// Strip words that match explicit (already-applied) filter labels
-	for (const filter of existingFilters) {
-		const labelLower = filter.label.toLowerCase()
-		for (const word of words) {
-			if (
-				word.length >= 3 &&
-				(labelLower.startsWith(word) || labelLower === word)
-			) {
-				wordsToStrip.add(word)
-			}
-		}
-	}
-
-	// Detect language names in text → show as suggestions (not auto-applied)
-	for (const [code, name] of Object.entries(allLanguages)) {
-		if (existingLangs.has(code)) continue
-		const nameLower = name.toLowerCase()
-		const matched = words.find(
-			(w) =>
-				w.length >= 3 &&
-				!wordsToStrip.has(w) &&
-				(nameLower.startsWith(w) || nameLower === w)
-		)
-		if (matched) {
-			suggestions.push({ type: 'lang', value: code, label: name })
-			break // only suggest one language
-		}
-	}
-
-	// Detect tag names in text → show as suggestions (not auto-applied)
-	for (const tagName of availableTagNames) {
-		if (existingTags.has(tagName)) continue
-		const tagLower = tagName.toLowerCase()
-		const matched = words.find(
-			(w) => w.length >= 3 && !wordsToStrip.has(w) && tagLower.startsWith(w)
-		)
-		if (matched) {
-			suggestions.push({ type: 'tag', value: tagName, label: tagName })
-		}
-	}
-
-	// Build effective text: strip only explicit filter words (+ prepositions
-	// that become orphaned connectors after stripping)
-	const hasStrips = wordsToStrip.size > 0
-	const effectiveText = words
-		.filter((w) => !wordsToStrip.has(w) && !(hasStrips && PREPOSITIONS.has(w)))
-		.join(' ')
-		.trim()
-
-	return {
-		suggestions: suggestions.slice(0, 3),
-		effectiveText,
-	}
 }
