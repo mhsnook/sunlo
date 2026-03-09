@@ -160,7 +160,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
-								'rounded-none rounded-l-2xl border-red-600! bg-red-600! hover:border-white! hover:bg-red-700!',
+								'rounded-none rounded-l-2xl border-red-600! bg-red-600! text-white hover:border-white! hover:bg-red-700!',
 								prevData?.score === 1 && reviewStage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
@@ -186,7 +186,7 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
-								'rounded-none border-green-500! bg-green-500! hover:border-white! hover:bg-green-600!',
+								'rounded-none border-green-500! bg-green-500! text-white hover:border-white! hover:bg-green-600!',
 								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
@@ -196,7 +196,7 @@ export function ReviewSingleCard({
 							variant="default"
 							data-testid="rating-easy-button"
 							className={cn(
-								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! hover:border-white! hover:bg-blue-600',
+								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! text-white hover:border-white! hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 							onClick={() => mutate({ score: 4 })}
