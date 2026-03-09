@@ -44,7 +44,7 @@ function ReviewRemainingLink({
 			<span className="text-xs font-medium group-hover:underline">
 				{languages[lang]}
 			</span>
-			<span className="text-primary group-hover:text-primary/80 text-xs font-bold">
+			<span className="text-5-mlo-primary group-hover:text-lc-up-1 text-xs font-bold">
 				{remaining} left
 			</span>
 		</Link>
@@ -133,7 +133,7 @@ function CalloutContent({
 				to="/learn/$lang/review"
 				params={{ lang: activeReviews[0].lang }}
 				onClick={setClosedMobile}
-				className="bg-2-mlo-primary hover:bg-lc-up-1 text-primary mx-auto flex h-8 w-8 items-center justify-center rounded-lg transition-colors"
+				className="text-5-mid-primary hover:bg-lc-up-1 mx-auto flex h-8 w-8 items-center justify-center rounded-lg bg-white transition-colors"
 				aria-label="Active review in progress"
 			>
 				<Rocket className="h-4 w-4" />
@@ -145,10 +145,10 @@ function CalloutContent({
 	if (singleLanguageMode) {
 		const { lang, remaining } = activeReviews[0]
 		return (
-			<div className="bg-1-mlo-primary border-2-mlo-primary mx-2 mb-2 rounded-xl border p-3">
+			<div className="border-lc-[87] border-c-[6] border-h-primary bg-lc-[93] bg-c-[4] bg-h-primary mx-2 mb-2 rounded-xl border p-3">
 				<div className="flex items-center gap-2">
-					<div className="bg-2-mlo-primary rounded-lg p-1.5">
-						<Rocket className="text-primary h-4 w-4" />
+					<div className="rounded-lg bg-white p-1.5">
+						<Rocket className="text-5-mid-primary h-4 w-4" />
 					</div>
 					<div className="flex-1">
 						<p className="text-sm font-semibold">{remaining} cards left</p>
@@ -164,7 +164,7 @@ function CalloutContent({
 					className={buttonVariants({
 						variant: 'default',
 						size: 'sm',
-						className: 'mt-2 w-full',
+						className: 'mt-2 w-full text-white',
 					})}
 				>
 					Continue review
@@ -175,10 +175,10 @@ function CalloutContent({
 
 	// Multi-language mode: show all with clickable links
 	return (
-		<div className="bg-1-mlo-primary border-2-mlo-primary mx-2 mb-2 rounded-xl border p-3">
+		<div className="border-lc-[87] border-c-[6] border-h-primary bg-lc-[93] bg-c-[4] bg-h-primary mx-2 mb-2 rounded-xl border p-3">
 			<div className="flex items-center gap-2">
-				<div className="bg-2-mlo-primary rounded-lg p-1.5">
-					<Rocket className="text-primary h-4 w-4" />
+				<div className="rounded-lg bg-white p-1.5">
+					<Rocket className="text-5-mid-primary h-4 w-4" />
 				</div>
 				<span className="text-sm font-semibold">Finish your review</span>
 			</div>
