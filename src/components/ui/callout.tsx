@@ -11,7 +11,7 @@ type CalloutProps = PropsWithChildren & {
 
 const variants = {
 	default: 'bg-1-mlo-primary border-3-mlo-primary',
-	problem: 'bg-destructive/20 border-destructive/50',
+	problem: 'bg-1-mlo-danger border-3-mlo-danger',
 	ghost: 'border text-muted-foreground bg-muted',
 }
 
@@ -41,7 +41,7 @@ export default function Callout({
 			)}
 		>
 			{!Icon ? null : (
-				<div className="bg-foreground/10 flex size-12 shrink-0 items-center justify-center rounded-full p-2 [&>svg]:size-6">
+				<div className="bg-1-lo-neutral flex size-12 shrink-0 items-center justify-center rounded-full p-2 [&>svg]:size-6">
 					<Icon />
 				</div>
 			)}
