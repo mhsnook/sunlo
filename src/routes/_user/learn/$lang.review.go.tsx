@@ -16,7 +16,10 @@ import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
 import { Button } from '@/components/ui/button'
-import { cardReviewsCollection, reviewDaysCollection } from '@/features/review/collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+} from '@/features/review/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
@@ -62,16 +65,20 @@ function FlashCardReviewSession({
 	const atTheEnd = currentCardIndex === manifest.length
 
 	// Animation: phase tracks 'idle' | 'out' | 'in', outClass picks the direction
+	// Animations are interruptible — rapid clicks immediately complete pending
+	// navigation and start a new transition, so buttons are never blocked.
 	const [anim, setAnim] = useState<{ phase: string; outClass: string }>({
 		phase: 'idle',
 		outClass: '',
 	})
 	const pendingNavRef = useRef<(() => void) | null>(null)
-	const isAnimating = anim.phase !== 'idle'
 
 	const animateTransition = useCallback(
 		(navigate: () => void, direction: 'left' | 'right' = 'left') => {
-			if (isAnimating) return
+			// If already animating, immediately complete the pending navigation
+			if (pendingNavRef.current) {
+				pendingNavRef.current()
+			}
 			pendingNavRef.current = navigate
 			setAnim({
 				phase: 'out',
@@ -81,7 +88,7 @@ function FlashCardReviewSession({
 					:	'animate-card-out-right',
 			})
 		},
-		[isAnimating]
+		[]
 	)
 
 	// The mutation calls triggerSlide — always exits left (scored = moving forward)
@@ -118,7 +125,7 @@ function FlashCardReviewSession({
 								size="icon"
 								variant="default"
 								onClick={() => animateTransition(gotoPrevious, 'right')}
-								disabled={currentCardIndex === 0 || isAnimating}
+								disabled={currentCardIndex === 0}
 								aria-label="Previous card"
 							>
 								<ChevronLeft className="size-4" />
@@ -130,7 +137,7 @@ function FlashCardReviewSession({
 								size="icon"
 								variant="default"
 								onClick={() => animateTransition(gotoNext, 'left')}
-								disabled={atTheEnd || isAnimating}
+								disabled={atTheEnd}
 								aria-label="Next card"
 							>
 								<ChevronRight className="size-4" />
@@ -144,7 +151,6 @@ function FlashCardReviewSession({
 							onClick={() =>
 								animateTransition(() => gotoIndex(nextValidIndex), 'left')
 							}
-							disabled={isAnimating}
 							className="ps-4 pe-2"
 						>
 							Skip for today <ChevronRight className="size-4" />
@@ -155,7 +161,6 @@ function FlashCardReviewSession({
 							variant="ghost"
 							aria-label="back one card"
 							onClick={() => animateTransition(gotoPrevious, 'right')}
-							disabled={isAnimating}
 							className="ps-2 pe-4"
 						>
 							<ChevronLeft className="size-4" /> Back one card

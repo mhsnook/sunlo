@@ -1,5 +1,16 @@
-import { expect } from '@playwright/test'
+import { expect, Page } from '@playwright/test'
 import languages from '../../src/lib/languages'
+
+/**
+ * Navigate to /learn by visiting the base URL and waiting for the decks grid.
+ * This is the one place where page.goto is acceptable (initial page load).
+ */
+export async function goToLearnPage(page: Page) {
+	await page.goto('/learn')
+	await expect(page.getByTestId('decks-list-grid')).toBeVisible({
+		timeout: 10000,
+	})
+}
 
 export async function goToDeckPage(page, lang: string) {
 	// Navigate to the deck page for the given language
