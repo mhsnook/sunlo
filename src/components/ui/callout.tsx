@@ -11,8 +11,14 @@ type CalloutProps = PropsWithChildren & {
 
 const variants = {
 	default: 'bg-1-mlo-primary border-3-mlo-primary',
-	problem: 'bg-1-mlo-danger border-3-mlo-danger',
+	problem: 'hue-danger bg-lc-[97] bg-c-[3] border-lc-[88] border-c-[6]',
 	ghost: 'border text-muted-foreground bg-muted',
+}
+
+const iconCircleVariants = {
+	default: 'bg-lc-[97] bg-c-[2]',
+	problem: 'border border-lc-[82] border-c-[9] bg-none-lo',
+	ghost: 'bg-1-lo-neutral',
 }
 
 const sizes = {
@@ -41,7 +47,12 @@ export default function Callout({
 			)}
 		>
 			{!Icon ? null : (
-				<div className="bg-1-lo-neutral flex size-12 shrink-0 items-center justify-center rounded-full p-2 [&>svg]:size-6">
+				<div
+					className={cn(
+						'flex size-12 shrink-0 items-center justify-center rounded-2xl p-2 [&>svg]:size-6',
+						iconCircleVariants[variant]
+					)}
+				>
 					<Icon />
 				</div>
 			)}
