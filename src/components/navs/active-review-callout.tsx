@@ -113,6 +113,10 @@ export function ActiveReviewCallout({
 	)
 }
 
+const calloutCard =
+	'border-lc-[87] border-c-[6] border-h-primary bg-lc-[93] bg-c-[4] bg-h-primary mx-2 mb-2 rounded-xl border p-3'
+const iconCircle = 'rounded-lg bg-white p-1.5'
+
 function CalloutContent({
 	activeReviews,
 	hoursLeft,
@@ -145,9 +149,9 @@ function CalloutContent({
 	if (singleLanguageMode) {
 		const { lang, remaining } = activeReviews[0]
 		return (
-			<div className="border-lc-[87] border-c-[6] border-h-primary bg-lc-[93] bg-c-[4] bg-h-primary mx-2 mb-2 rounded-xl border p-3">
+			<div className={calloutCard}>
 				<div className="flex items-center gap-2">
-					<div className="rounded-lg bg-white p-1.5">
+					<div className={iconCircle}>
 						<Rocket className="text-5-mid-primary h-4 w-4" />
 					</div>
 					<div className="flex-1">
@@ -164,7 +168,7 @@ function CalloutContent({
 					className={buttonVariants({
 						variant: 'default',
 						size: 'sm',
-						className: 'mt-2 w-full text-white',
+						className: 'mt-2 w-full',
 					})}
 				>
 					Continue review
@@ -175,9 +179,9 @@ function CalloutContent({
 
 	// Multi-language mode: show all with clickable links
 	return (
-		<div className="border-lc-[87] border-c-[6] border-h-primary bg-lc-[93] bg-c-[4] bg-h-primary mx-2 mb-2 rounded-xl border p-3">
+		<div className={calloutCard}>
 			<div className="flex items-center gap-2">
-				<div className="rounded-lg bg-white p-1.5">
+				<div className={iconCircle}>
 					<Rocket className="text-5-mid-primary h-4 w-4" />
 				</div>
 				<span className="text-sm font-semibold">Finish your review</span>
