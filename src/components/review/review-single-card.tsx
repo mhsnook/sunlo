@@ -1,7 +1,13 @@
 import { type CSSProperties, useState } from 'react'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { useMutation } from '@tanstack/react-query'
-import { BookmarkCheck, BookmarkX, MoreVertical, Play } from 'lucide-react'
+import {
+	BookmarkCheck,
+	BookmarkX,
+	MoreVertical,
+	Play,
+	Send,
+} from 'lucide-react'
 
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
@@ -25,8 +31,11 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
-import { PhraseFullFilteredType, TranslationType } from '@/features/phrases/schemas'
+import { SendPhraseToFriendDialog } from '@/components/card-pieces/send-phrase-to-friend'
+import {
+	PhraseFullFilteredType,
+	TranslationType,
+} from '@/features/phrases/schemas'
 import { CardMetaSchema } from '@/features/deck/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
@@ -213,6 +222,7 @@ export function ReviewSingleCard({
 
 function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	const [isOpen, setIsOpen] = useState(false)
+	const [sendChatOpen, setSendChatOpen] = useState(false)
 	const userId = useUserId()
 
 	const cardStatusMutation = useMutation({
@@ -246,56 +256,65 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	})
 
 	return (
-		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label="Open context menu"
-					className="absolute top-4 right-4"
-				>
-					<MoreVertical />
-				</Button>
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end" className="w-56">
-				<DropdownMenuItem
-					onClick={() => cardStatusMutation.mutate('learned')}
-					disabled={cardStatusMutation.isPending}
-				>
-					<BookmarkCheck className="mr-2 h-4 w-4 text-green-600" />
-					I've learned this
-				</DropdownMenuItem>
-				<DropdownMenuItem
-					onClick={() => cardStatusMutation.mutate('skipped')}
-					disabled={cardStatusMutation.isPending}
-				>
-					<BookmarkX className="mr-2 h-4 w-4" />
-					Skip this card
-				</DropdownMenuItem>
-				<DropdownMenuSeparator />
-				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-					<PermalinkButton
-						to={'/learn/$lang/phrases/$id'}
-						params={{ lang: phrase.lang, id: phrase.id }}
-						className="w-full px-2 py-1.5"
-						link
-					/>
-				</DropdownMenuItem>
-				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-					<SendPhraseToFriendButton
-						phrase={phrase}
-						link
-						className="w-full px-2 py-1.5"
-					/>
-				</DropdownMenuItem>
-				<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-					<PhraseExtraInfo
-						phrase={phrase}
-						link
-						className="w-full px-2 py-1.5"
-					/>
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<>
+			<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="Open context menu"
+						className="absolute top-4 right-4"
+					>
+						<MoreVertical />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end" className="w-56">
+					<DropdownMenuItem
+						onClick={() => cardStatusMutation.mutate('learned')}
+						disabled={cardStatusMutation.isPending}
+					>
+						<BookmarkCheck className="me-2 h-4 w-4 text-green-600" />
+						I've learned this
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={() => cardStatusMutation.mutate('skipped')}
+						disabled={cardStatusMutation.isPending}
+					>
+						<BookmarkX className="me-2 h-4 w-4" />
+						Skip this card
+					</DropdownMenuItem>
+					<DropdownMenuSeparator />
+					<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
+						<PermalinkButton
+							to={'/learn/$lang/phrases/$id'}
+							params={{ lang: phrase.lang, id: phrase.id }}
+							className="w-full px-2 py-1.5"
+							link
+						/>
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={() => {
+							setIsOpen(false)
+							setSendChatOpen(true)
+						}}
+					>
+						<Send className="me-2 h-4 w-4" />
+						Send in chat
+					</DropdownMenuItem>
+					<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
+						<PhraseExtraInfo
+							phrase={phrase}
+							link
+							className="w-full px-2 py-1.5"
+						/>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+			<SendPhraseToFriendDialog
+				phrase={phrase}
+				open={sendChatOpen}
+				onOpenChange={setSendChatOpen}
+			/>
+		</>
 	)
 }

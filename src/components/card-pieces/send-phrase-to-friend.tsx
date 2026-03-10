@@ -18,23 +18,14 @@ import { VariantProps } from 'class-variance-authority'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAllChats } from '@/features/social/hooks'
 
-export function SendPhraseToFriendButton({
-	phrase,
-	link,
-	className,
-	text = 'Send in chat',
-	...props
-}: {
-	phrase: PhraseFullFilteredType
-	link?: boolean
-	className?: string
-	text?: string
-} & VariantProps<typeof buttonVariants>) {
+function useSendPhraseToFriendMutation(
+	phrase: PhraseFullFilteredType,
+	setOpen: (open: boolean) => void
+) {
 	const userId = useUserId()
-	const [open, setOpen] = useState(false)
 	const [uids, setUids] = useState<uuid[]>([])
 	const { isReady } = useAllChats()
-	const sendPhraseToFriendMutation = useMutation({
+	const mutation = useMutation({
 		mutationKey: ['send-phrase-to-friend', phrase.lang, phrase.id],
 		mutationFn: async (friendUids: uuid[]) => {
 			if (!userId) throw new Error('User not logged in')
@@ -58,6 +49,55 @@ export function SendPhraseToFriendButton({
 		},
 		onError: () => toastError('Something went wrong'),
 	})
+	return { mutation, uids, setUids, isReady }
+}
+
+function SendDialogContent({
+	phrase,
+	setOpen,
+}: {
+	phrase: PhraseFullFilteredType
+	setOpen: (open: boolean) => void
+}) {
+	const { mutation, uids, setUids, isReady } = useSendPhraseToFriendMutation(
+		phrase,
+		setOpen
+	)
+	return (
+		<AuthenticatedDialogContent
+			authTitle="Login to Send"
+			authMessage="You need to be logged in to send phrases to friends."
+		>
+			<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>
+			<DialogDescription className="sr-only">
+				Select 1 or more friends from the list below to send this phrase to your
+				in-app chat
+			</DialogDescription>
+			<SelectMultipleFriends uids={uids} setUids={setUids} />
+
+			<Button
+				disabled={!uids.length || !isReady}
+				onClick={() => mutation.mutate(uids)}
+			>
+				<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
+			</Button>
+		</AuthenticatedDialogContent>
+	)
+}
+
+export function SendPhraseToFriendButton({
+	phrase,
+	link,
+	className,
+	text = 'Send in chat',
+	...props
+}: {
+	phrase: PhraseFullFilteredType
+	link?: boolean
+	className?: string
+	text?: string
+} & VariantProps<typeof buttonVariants>) {
+	const [open, setOpen] = useState(false)
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -74,24 +114,23 @@ export function SendPhraseToFriendButton({
 					</Button>
 				}
 			</DialogTrigger>
-			<AuthenticatedDialogContent
-				authTitle="Login to Send"
-				authMessage="You need to be logged in to send phrases to friends."
-			>
-				<DialogTitle className="h3 font-bold">Send to friends</DialogTitle>
-				<DialogDescription className="sr-only">
-					Select 1 or more friends from the list below to send this phrase to
-					your in-app chat
-				</DialogDescription>
-				<SelectMultipleFriends uids={uids} setUids={setUids} />
+			<SendDialogContent phrase={phrase} setOpen={setOpen} />
+		</Dialog>
+	)
+}
 
-				<Button
-					disabled={!uids.length || !isReady}
-					onClick={() => sendPhraseToFriendMutation.mutate(uids)}
-				>
-					<Send /> Send to {uids.length} friend{uids.length === 1 ? '' : 's'}
-				</Button>
-			</AuthenticatedDialogContent>
+export function SendPhraseToFriendDialog({
+	phrase,
+	open,
+	onOpenChange,
+}: {
+	phrase: PhraseFullFilteredType
+	open: boolean
+	onOpenChange: (open: boolean) => void
+}) {
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<SendDialogContent phrase={phrase} setOpen={onOpenChange} />
 		</Dialog>
 	)
 }
