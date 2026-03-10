@@ -4,8 +4,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 import { Slot } from '@/lib/slot'
 
-const solids =
-	'bg-5-mhi text-0-mlo text-1-mid hover:text-lc-down-1 hover:bg-lc-up-1'
+const solids = 'bg-5-mhi text-white hover:bg-lc-up-1'
 const softs = 'bg-1-mlo text-7-mid hover:bg-lc-down-1 hover:text-lc-up-1'
 
 const buttonVariants = cva(
