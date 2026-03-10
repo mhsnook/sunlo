@@ -226,6 +226,14 @@
 	@apply w-full max-w-[40rem];
 }
 
+@utility scrollbar-none {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
 @utility s-link {
 	@apply decoration-primary-foresoft hover:decoration-primary-foresoft/50 text-primary-foresoft cursor-pointer underline decoration-dashed decoration-1 underline-offset-2 transition-all hover:decoration-solid hover:decoration-2 hover:underline-offset-1;
 }

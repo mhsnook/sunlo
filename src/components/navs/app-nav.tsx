@@ -54,12 +54,12 @@ export function AppNav() {
 			<div ref={ref}></div>
 
 			<div
-				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2 ps-2`}
+				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
 				<div className="scrollbar-none w-0 grow overflow-x-auto">
 					<NavigationMenu className="mt-2 mb-1">
-						<NavigationMenuList className="flex w-full flex-row">
+						<NavigationMenuList className="flex w-full flex-row justify-start ps-2">
 							{links.map((l: LinkType) => (
 								<NavigationMenuItem
 									className="hover:bg-1-mlo-primary rounded-xl px-3"
