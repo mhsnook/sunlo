@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
@@ -64,53 +64,16 @@ function FlashCardReviewSession({
 
 	const atTheEnd = currentCardIndex === manifest.length
 
-	// Animation: phase tracks 'idle' | 'out' | 'in', outClass picks the direction
-	// Animations are interruptible — rapid clicks immediately complete pending
-	// navigation and start a new transition, so buttons are never blocked.
-	const [anim, setAnim] = useState<{ phase: string; outClass: string }>({
-		phase: 'idle',
-		outClass: '',
-	})
-	const pendingNavRef = useRef<(() => void) | null>(null)
+	// Animation is purely decorative — navigation happens immediately on click.
+	// The animKey counter forces a fresh pop-in animation on each card change.
+	const [animKey, setAnimKey] = useState(0)
 
-	const animateTransition = useCallback(
-		(navigate: () => void, direction: 'left' | 'right' = 'left') => {
-			// If already animating, immediately complete the pending navigation
-			if (pendingNavRef.current) {
-				pendingNavRef.current()
-			}
-			pendingNavRef.current = navigate
-			setAnim({
-				phase: 'out',
-				outClass:
-					direction === 'left' ?
-						'animate-card-out-left'
-					:	'animate-card-out-right',
-			})
-		},
-		[]
-	)
+	const animateAndNavigate = useCallback((navigate: () => void) => {
+		navigate()
+		setAnimKey((k) => k + 1)
+	}, [])
 
-	// The mutation calls triggerSlide — always exits left (scored = moving forward)
-	const triggerSlide = useCallback(
-		(navigate: () => void) => animateTransition(navigate, 'left'),
-		[animateTransition]
-	)
-
-	const handleAnimationEnd = useCallback(() => {
-		if (anim.phase === 'out') {
-			pendingNavRef.current?.()
-			pendingNavRef.current = null
-			setAnim({ phase: 'in', outClass: '' })
-		} else {
-			setAnim({ phase: 'idle', outClass: '' })
-		}
-	}, [anim.phase])
-
-	const animClass =
-		anim.phase === 'out' ? anim.outClass
-		: anim.phase === 'in' ? 'animate-card-pop-in'
-		: ''
+	const triggerSlide = animateAndNavigate
 
 	return (
 		<div
@@ -124,7 +87,7 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={() => animateTransition(gotoPrevious, 'right')}
+								onClick={() => animateAndNavigate(gotoPrevious)}
 								disabled={currentCardIndex === 0}
 								aria-label="Previous card"
 							>
@@ -136,7 +99,7 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={() => animateTransition(gotoNext, 'left')}
+								onClick={() => animateAndNavigate(gotoNext)}
 								disabled={atTheEnd}
 								aria-label="Next card"
 							>
@@ -149,7 +112,7 @@ function FlashCardReviewSession({
 							variant="ghost"
 							aria-label="skip for today"
 							onClick={() =>
-								animateTransition(() => gotoIndex(nextValidIndex), 'left')
+								animateAndNavigate(() => gotoIndex(nextValidIndex))
 							}
 							className="ps-4 pe-2"
 						>
@@ -160,7 +123,7 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="back one card"
-							onClick={() => animateTransition(gotoPrevious, 'right')}
+							onClick={() => animateAndNavigate(gotoPrevious)}
 							className="ps-2 pe-4"
 						>
 							<ChevronLeft className="size-4" /> Back one card
@@ -176,14 +139,11 @@ function FlashCardReviewSession({
 				<div className={!atTheEnd ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
 					{manifest.map((pid, i) => (
 						<div
-							key={pid}
+							key={`${pid}-${animKey}`}
 							className={
 								i === currentCardIndex ?
-									`flex min-h-0 flex-1 flex-col ${animClass}`
+									'animate-card-pop-in flex min-h-0 flex-1 flex-col'
 								:	'hidden'
-							}
-							onAnimationEnd={
-								i === currentCardIndex ? handleAnimationEnd : undefined
 							}
 						>
 							<ReviewSingleCard
