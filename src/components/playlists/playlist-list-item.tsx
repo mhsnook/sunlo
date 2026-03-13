@@ -33,7 +33,7 @@ export function PlaylistItem({
 			style={{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties}
 			className="bg-card text-card-foreground @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
 		>
-			<div className="flex flex-row items-center justify-between gap-2">
+			<div className="flex flex-col gap-2 @sm:flex-row @sm:items-center @sm:justify-between">
 				<UidPermalink
 					uid={playlist.uid}
 					action="created a Playlist"

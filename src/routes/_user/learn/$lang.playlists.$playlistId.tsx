@@ -38,7 +38,7 @@ function PlaylistPage() {
 				<Show404 />
 			:	<div className="space-y-4">
 					<PlaylistItem playlist={playlist}>
-						<div className="flex w-full flex-row items-center justify-between gap-2">
+						<div className="flex w-full flex-col gap-2 @sm:flex-row @sm:items-center @sm:justify-between">
 							<h3 className="h3">
 								{rows?.length ?? 0} flashcards in this playlist
 							</h3>
