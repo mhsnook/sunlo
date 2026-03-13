@@ -243,7 +243,7 @@ export function ManagePlaylistPhrasesDialog({
 				<ListMusic className="h-4 w-4" />
 			</Button>
 			<DialogContent
-				className="max-h-[80vh] max-w-2xl"
+				className="max-w-2xl"
 				data-testid="manage-phrases-dialog"
 			>
 				<DialogHeader>
@@ -253,7 +253,7 @@ export function ManagePlaylistPhrasesDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<ScrollArea className="max-h-[50vh] pr-4">
+				<ScrollArea className="min-h-0 shrink pr-4">
 					<div className="space-y-3">
 						{phrasesData && phrasesData.length > 0 ?
 							phrasesData.map((item, index) => (
