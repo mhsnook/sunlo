@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
@@ -65,15 +65,29 @@ function FlashCardReviewSession({
 	const atTheEnd = currentCardIndex === manifest.length
 
 	// Animation is purely decorative — navigation happens immediately on click.
-	// The animKey counter forces a fresh pop-in animation on each card change.
+	// prevIndex tracks which card to show the exit animation on.
 	const [animKey, setAnimKey] = useState(0)
+	const [exitClass, setExitClass] = useState('')
+	const prevIndexRef = useRef(-1)
 
-	const animateAndNavigate = useCallback((navigate: () => void) => {
-		navigate()
-		setAnimKey((k) => k + 1)
-	}, [])
+	const animateAndNavigate = useCallback(
+		(navigate: () => void, direction: 'left' | 'right' = 'left') => {
+			prevIndexRef.current = currentCardIndex
+			setExitClass(
+				direction === 'left' ?
+					'animate-card-out-left'
+				:	'animate-card-out-right'
+			)
+			navigate()
+			setAnimKey((k) => k + 1)
+		},
+		[currentCardIndex]
+	)
 
-	const triggerSlide = animateAndNavigate
+	const triggerSlide = useCallback(
+		(navigate: () => void) => animateAndNavigate(navigate, 'left'),
+		[animateAndNavigate]
+	)
 
 	return (
 		<div
@@ -87,7 +101,7 @@ function FlashCardReviewSession({
 							<Button
 								size="icon"
 								variant="default"
-								onClick={() => animateAndNavigate(gotoPrevious)}
+								onClick={() => animateAndNavigate(gotoPrevious, 'right')}
 								disabled={currentCardIndex === 0}
 								aria-label="Previous card"
 							>
@@ -123,7 +137,7 @@ function FlashCardReviewSession({
 							size="sm"
 							variant="ghost"
 							aria-label="back one card"
-							onClick={() => animateAndNavigate(gotoPrevious)}
+							onClick={() => animateAndNavigate(gotoPrevious, 'right')}
 							className="ps-2 pe-4"
 						>
 							<ChevronLeft className="size-4" /> Back one card
@@ -143,6 +157,8 @@ function FlashCardReviewSession({
 							className={
 								i === currentCardIndex ?
 									'animate-card-pop-in flex min-h-0 flex-1 flex-col'
+								: i === prevIndexRef.current ?
+									`pointer-events-none absolute inset-4 ${exitClass}`
 								:	'hidden'
 							}
 						>
