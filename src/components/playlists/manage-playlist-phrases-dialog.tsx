@@ -243,7 +243,7 @@ export function ManagePlaylistPhrasesDialog({
 				<ListMusic className="h-4 w-4" />
 			</Button>
 			<DialogContent
-				className="max-h-[80vh] max-w-2xl"
+				className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden"
 				data-testid="manage-phrases-dialog"
 			>
 				<DialogHeader>
@@ -253,7 +253,7 @@ export function ManagePlaylistPhrasesDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<ScrollArea className="max-h-[50vh] pr-4">
+				<ScrollArea className="min-h-0 flex-1 pr-4">
 					<div className="space-y-3">
 						{phrasesData && phrasesData.length > 0 ?
 							phrasesData.map((item, index) => (
@@ -342,21 +342,21 @@ export function ManagePlaylistPhrasesDialog({
 							</p>
 						}
 					</div>
-				</ScrollArea>
 
-				{/* Inline phrase creator */}
-				{showCreateForm && (
-					<div className="border-t pt-4">
-						<InlinePhraseCreator
-							lang={playlist.lang}
-							onPhraseCreated={(phraseId) => {
-								addPhraseMutation.mutate(phraseId)
-								setShowCreateForm(false)
-							}}
-							onCancel={() => setShowCreateForm(false)}
-						/>
-					</div>
-				)}
+					{/* Inline phrase creator */}
+					{showCreateForm && (
+						<div className="border-t pt-4">
+							<InlinePhraseCreator
+								lang={playlist.lang}
+								onPhraseCreated={(phraseId) => {
+									addPhraseMutation.mutate(phraseId)
+									setShowCreateForm(false)
+								}}
+								onCancel={() => setShowCreateForm(false)}
+							/>
+						</div>
+					)}
+				</ScrollArea>
 
 				{/* Action buttons */}
 				<div className="flex flex-row flex-wrap justify-between gap-2 border-t pt-4">
