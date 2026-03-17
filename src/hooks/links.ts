@@ -32,7 +32,9 @@ import {
 	Share,
 	UserPen,
 	UserPlus,
+	Bell,
 } from 'lucide-react'
+import { useUnreadNotificationsCount } from '@/hooks/use-notifications'
 import languages, { LangKey } from '@/lib/languages'
 
 export const links = (lang?: LangKey): Record<string, LinkType> => {
@@ -181,6 +183,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/signup',
 			},
 			Icon: UserPlus,
+		},
+		'/notifications': {
+			name: 'Notifications',
+			title: 'Notifications',
+			link: {
+				to: '/notifications',
+			},
+			Icon: Bell,
+			useBadge: () => useUnreadNotificationsCount(),
 		},
 	}
 	if (!lang) return constantLinks

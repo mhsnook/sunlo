@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
+import { SuggestCorrectionDialog } from '@/components/card-pieces/suggest-correction-dialog'
 
 import {
 	TranslationSchema,
@@ -279,7 +280,7 @@ function TranslationListItem({
 					>
 						{trans.text}
 					</span>
-					{isOwner && (
+					{isOwner ?
 						<>
 							{trans.archived ? null : (
 								<Button
@@ -304,7 +305,7 @@ function TranslationListItem({
 								}
 							</Button>
 						</>
-					)}
+					:	<SuggestCorrectionDialog translation={trans} />}
 				</>
 			}
 		</li>

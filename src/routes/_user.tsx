@@ -23,8 +23,9 @@ import {
 	friendSummariesCollection,
 	myProfileCollection,
 	myProfileQuery,
+	notificationsCollection,
 } from '@/lib/collections'
-import { ChatMessageSchema } from '@/lib/schemas'
+import { ChatMessageSchema, NotificationSchema } from '@/lib/schemas'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
@@ -68,6 +69,7 @@ export const Route = createFileRoute('/_user')({
 			if (location.pathname !== '/getting-started') {
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
+				void notificationsCollection.preload()
 			}
 			return
 		}
@@ -99,6 +101,7 @@ export const Route = createFileRoute('/_user')({
 			} else {
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
+				void notificationsCollection.preload()
 			}
 		}
 	},
@@ -163,6 +166,24 @@ function UserLayout() {
 			)
 			.subscribe()
 
+		const notificationChannel = supabase
+			.channel('user-notifications')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'notification',
+				},
+				(payload) => {
+					const newNotification = payload.new as Tables<'notification'>
+					notificationsCollection.utils.writeInsert(
+						NotificationSchema.parse(newNotification)
+					)
+				}
+			)
+			.subscribe()
+
 		const chatChannel = supabase
 			.channel('user-chats')
 			.on(
@@ -185,6 +206,7 @@ function UserLayout() {
 		return () => {
 			void supabase.removeChannel(friendRequestChannel)
 			void supabase.removeChannel(chatChannel)
+			void supabase.removeChannel(notificationChannel)
 		}
 	}, [userId, queryClient])
 
