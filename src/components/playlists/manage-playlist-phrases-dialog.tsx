@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { type PhrasePlaylistType, validateUrl } from '@/features/playlists/schemas'
 import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
@@ -253,7 +252,7 @@ export function ManagePlaylistPhrasesDialog({
 					</DialogDescription>
 				</DialogHeader>
 
-				<ScrollArea className="min-h-0 flex-1 pr-4">
+				<div className="min-h-0 flex-1 overflow-y-auto pr-4">
 					<div className="space-y-3">
 						{phrasesData && phrasesData.length > 0 ?
 							phrasesData.map((item, index) => (
@@ -356,7 +355,7 @@ export function ManagePlaylistPhrasesDialog({
 							/>
 						</div>
 					)}
-				</ScrollArea>
+				</div>
 
 				{/* Action buttons */}
 				<div className="flex flex-row flex-wrap justify-between gap-2 border-t pt-4">
