@@ -95,9 +95,7 @@ function groupConsecutivePhrases(items: FeedActivityType[]): GroupedFeedItem[] {
 
 const SearchSchema = z.object({
 	feed: z.enum(['newest', 'friends', 'popular']).optional(),
-	filter_requests: z.boolean().optional(),
-	filter_playlists: z.boolean().optional(),
-	filter_phrases: z.boolean().optional(),
+	filter_type: z.enum(['request', 'playlist', 'phrase']).optional(),
 })
 
 export const Route = createFileRoute('/_user/learn/$lang/feed')({
@@ -132,16 +130,18 @@ function DeckFeedPage() {
 					value={activeTab}
 					onValueChange={handleValueChange}
 				>
-					<div className="mb-4 flex flex-row items-center justify-between gap-2">
-						<TabsList>
-							<TabsTrigger value="newest">Newest</TabsTrigger>
-							<TabsTrigger value="friends">Friends</TabsTrigger>
-							<TabsTrigger value="popular" data-testid="feed-tab-popular">
-								Popular
-							</TabsTrigger>
-						</TabsList>
-						<div className="flex items-center gap-2">
+					<div className="mb-4 flex items-start gap-2">
+						<div className="flex flex-1 flex-wrap items-center gap-2">
+							<TabsList>
+								<TabsTrigger value="newest">Newest</TabsTrigger>
+								<TabsTrigger value="friends">Friends</TabsTrigger>
+								<TabsTrigger value="popular" data-testid="feed-tab-popular">
+									Popular
+								</TabsTrigger>
+							</TabsList>
 							<FeedFilterMenu />
+						</div>
+						<div className="mt-1">
 							<PlusMenu lang={params.lang} />
 						</div>
 					</div>
@@ -174,22 +174,16 @@ function RecentFeed() {
 
 	const feedItems = data?.pages.flat()
 
-	// Default all filters to true
-	const filterRequests = search.filter_requests ?? true
-	const filterPlaylists = search.filter_playlists ?? true
-	const filterPhrases = search.filter_phrases ?? true
+	const filterType = search.filter_type
 
 	// Apply filters, and group consecutive phrases
 	const groupedItems =
 		!feedItems ?
 			[]
 		:	groupConsecutivePhrases(
-				feedItems.filter((item) => {
-					if (item.type === 'request') return filterRequests
-					if (item.type === 'playlist') return filterPlaylists
-					if (item.type === 'phrase') return filterPhrases
-					return true
-				})
+				feedItems.filter((item) =>
+					filterType === undefined || item.type === filterType
+				)
 			)
 
 	return (
@@ -207,19 +201,15 @@ function RecentFeed() {
 						>
 							Post a request for a new phrase
 						</Link>
-						{(
-							(search.filter_requests ?? true) &&
-							(search.filter_playlists ?? true) &&
-							(search.filter_phrases ?? true)
-						) ?
-							null
-						:	<Link
+						{filterType !== undefined && (
+							<Link
 								className={buttonVariants()}
 								search={{}}
 								from={Route.fullPath}
 							>
 								Clear feed filters
-							</Link>}
+							</Link>
+						)}
 					</div>
 				</Callout>
 			:	<>
@@ -270,22 +260,16 @@ function FriendsFeed() {
 
 	const feedItems = data?.pages.flat()
 
-	// Default all filters to true
-	const filterRequests = search.filter_requests ?? true
-	const filterPlaylists = search.filter_playlists ?? true
-	const filterPhrases = search.filter_phrases ?? true
+	const filterType = search.filter_type
 
 	// Apply filters, and group consecutive phrases
 	const groupedItems =
 		!feedItems ?
 			[]
 		:	groupConsecutivePhrases(
-				feedItems.filter((item) => {
-					if (item.type === 'request') return filterRequests
-					if (item.type === 'playlist') return filterPlaylists
-					if (item.type === 'phrase') return filterPhrases
-					return true
-				})
+				feedItems.filter((item) =>
+					filterType === undefined || item.type === filterType
+				)
 			)
 
 	return (
@@ -312,19 +296,15 @@ function FriendsFeed() {
 						>
 							Post a request
 						</Link>
-						{(
-							(search.filter_requests ?? true) &&
-							(search.filter_playlists ?? true) &&
-							(search.filter_phrases ?? true)
-						) ?
-							null
-						:	<Link
+						{filterType !== undefined && (
+							<Link
 								className={buttonVariants({ variant: 'soft' })}
 								search={{}}
 								from={Route.fullPath}
 							>
 								Clear feed filters
-							</Link>}
+							</Link>
+						)}
 					</div>
 				</Callout>
 			:	<>
@@ -374,21 +354,15 @@ function PopularFeed() {
 
 	const feedItems = data?.pages.flat()
 
-	// Default all filters to true
-	const filterRequests = search.filter_requests ?? true
-	const filterPlaylists = search.filter_playlists ?? true
-	const filterPhrases = search.filter_phrases ?? true
+	const filterType = search.filter_type
 
 	// Apply filters only - no grouping for Popular feed to preserve popularity order
 	const filteredItems =
 		!feedItems ?
 			[]
-		:	feedItems.filter((item) => {
-				if (item.type === 'request') return filterRequests
-				if (item.type === 'playlist') return filterPlaylists
-				if (item.type === 'phrase') return filterPhrases
-				return true
-			})
+		:	feedItems.filter((item) =>
+				filterType === undefined || item.type === filterType
+			)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
@@ -407,19 +381,15 @@ function PopularFeed() {
 						>
 							Post a request for a new phrase
 						</Link>
-						{(
-							(search.filter_requests ?? true) &&
-							(search.filter_playlists ?? true) &&
-							(search.filter_phrases ?? true)
-						) ?
-							null
-						:	<Link
+						{filterType !== undefined && (
+							<Link
 								className={buttonVariants({ variant: 'soft' })}
 								search={{}}
 								from={Route.fullPath}
 							>
 								Clear feed filters
-							</Link>}
+							</Link>
+						)}
 					</div>
 				</Callout>
 			:	<>

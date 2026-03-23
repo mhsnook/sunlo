@@ -1,47 +1,60 @@
-import { Filter } from 'lucide-react'
+import { Check, Filter } from 'lucide-react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
 import {
 	DropdownMenu,
-	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
 	DropdownMenuLabel,
+	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useIsMobile } from '@/hooks/use-mobile'
+
+type FilterType = 'request' | 'playlist' | 'phrase'
 
 export function FeedFilterMenu() {
 	const navigate = useNavigate()
 	const search = useSearch({ strict: false })
+	const filterType = search.filter_type as FilterType | undefined
+	const activeValue = filterType ?? 'all'
+	const isMobile = useIsMobile()
 
-	// Default all filters to true if not specified
-	const filterRequests = search.filter_requests ?? true
-	const filterPlaylists = search.filter_playlists ?? true
-	const filterPhrases = search.filter_phrases ?? true
-
-	const toggleFilter = (
-		filterName: 'filter_requests' | 'filter_playlists' | 'filter_phrases'
-	) => {
-		const currentValue =
-			filterName === 'filter_requests' ? filterRequests
-			: filterName === 'filter_playlists' ? filterPlaylists
-			: filterPhrases
-
+	const setFilter = (value: string) => {
 		void navigate({
 			search: ((prev: Record<string, unknown>) => ({
 				...prev,
-				[filterName]: currentValue ? false : undefined,
+				filter_type: value === 'all' ? undefined : value,
 			})) as never,
 		})
 	}
 
-	// Count active filters
-	const activeFilterCount = [
-		filterRequests,
-		filterPlaylists,
-		filterPhrases,
-	].filter(Boolean).length
+	if (!isMobile) {
+		return (
+			<Tabs
+				value={activeValue}
+				onValueChange={setFilter}
+				data-testid="feed-filter-menu"
+			>
+				<TabsList>
+					<TabsTrigger value="all" data-testid="feed-filter-all">
+						All
+					</TabsTrigger>
+					<TabsTrigger value="request" data-testid="feed-filter-request">
+						Requests
+					</TabsTrigger>
+					<TabsTrigger value="playlist" data-testid="feed-filter-playlist">
+						Playlists
+					</TabsTrigger>
+					<TabsTrigger value="phrase" data-testid="feed-filter-phrase">
+						New Phrases
+					</TabsTrigger>
+				</TabsList>
+			</Tabs>
+		)
+	}
 
 	return (
 		<DropdownMenu>
@@ -53,35 +66,28 @@ export function FeedFilterMenu() {
 					data-testid="feed-filter-button"
 				>
 					<Filter className="h-4 w-4" />
-					{activeFilterCount < 3 && (
-						<span className="sr-only">
-							{activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'}{' '}
-							active
-						</span>
-					)}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuLabel>Show content types</DropdownMenuLabel>
+				<DropdownMenuLabel>Show content type</DropdownMenuLabel>
 				<DropdownMenuSeparator />
-				<DropdownMenuCheckboxItem
-					checked={filterRequests}
-					onCheckedChange={() => toggleFilter('filter_requests')}
-				>
-					Requests
-				</DropdownMenuCheckboxItem>
-				<DropdownMenuCheckboxItem
-					checked={filterPlaylists}
-					onCheckedChange={() => toggleFilter('filter_playlists')}
-				>
-					Playlists
-				</DropdownMenuCheckboxItem>
-				<DropdownMenuCheckboxItem
-					checked={filterPhrases}
-					onCheckedChange={() => toggleFilter('filter_phrases')}
-				>
-					New Phrases
-				</DropdownMenuCheckboxItem>
+				{(
+					[
+						['all', 'All items'],
+						['request', 'Requests'],
+						['playlist', 'Playlists'],
+						['phrase', 'New Phrases'],
+					] as const
+				).map(([value, label]) => (
+					<DropdownMenuItem key={value} onClick={() => setFilter(value)}>
+						<Check
+							className={
+								activeValue === value ? 'opacity-100' : 'opacity-0'
+							}
+						/>
+						{label}
+					</DropdownMenuItem>
+				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)
