@@ -1,12 +1,9 @@
 import { Activity, type CSSProperties } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { Users } from 'lucide-react'
 
 import type { FeedActivityType } from '@/features/feed/schemas'
-import { buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import Callout from '@/components/ui/callout'
 import languages from '@/lib/languages'
 import { PlusMenu } from '@/components/plus-menu'
 import {
@@ -15,6 +12,7 @@ import {
 	usePopularFeedLang,
 } from '@/features/feed/hooks'
 import { FeedItem } from '@/components/feed/feed-item'
+import { FeedEmptyState } from '@/components/feed/feed-empty-state'
 import { Button } from '@/components/ui/button'
 import { FeedFilterMenu } from '@/components/feed/feed-filter-menu'
 
@@ -191,27 +189,12 @@ function RecentFeed() {
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !groupedItems || groupedItems.length === 0 ?
-				<Callout variant="ghost">
-					<p className="mb-4 text-lg italic">This feed is empty.</p>
-					<div className="flex flex-row gap-2">
-						<Link
-							className={buttonVariants()}
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-						>
-							Post a request for a new phrase
-						</Link>
-						{filterType !== undefined && (
-							<Link
-								className={buttonVariants()}
-								search={{}}
-								from={Route.fullPath}
-							>
-								Clear feed filters
-							</Link>
-						)}
-					</div>
-				</Callout>
+				<FeedEmptyState
+					feedItems={feedItems}
+					filterType={filterType}
+					feedTab="newest"
+					lang={params.lang}
+				/>
 			:	<>
 					{groupedItems.map((item) => (
 						<FeedItem
@@ -277,36 +260,12 @@ function FriendsFeed() {
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !groupedItems || groupedItems.length === 0 ?
-				<Callout variant="ghost" Icon={Users}>
-					<p className="mb-4 text-lg italic">
-						This feed is empty. Maybe you need to add some friends?
-					</p>
-					<div className="flex flex-row flex-wrap gap-2">
-						<Link
-							className={buttonVariants()}
-							to="/friends"
-							from={Route.fullPath}
-						>
-							Search for a friend
-						</Link>
-						<Link
-							className={buttonVariants({ variant: 'neutral' })}
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-						>
-							Post a request
-						</Link>
-						{filterType !== undefined && (
-							<Link
-								className={buttonVariants({ variant: 'soft' })}
-								search={{}}
-								from={Route.fullPath}
-							>
-								Clear feed filters
-							</Link>
-						)}
-					</div>
-				</Callout>
+				<FeedEmptyState
+					feedItems={feedItems}
+					filterType={filterType}
+					feedTab="friends"
+					lang={params.lang}
+				/>
 			:	<>
 					{groupedItems.map((item) => (
 						<FeedItem
@@ -369,29 +328,12 @@ function PopularFeed() {
 			{isLoading ?
 				<p>Loading feed...</p>
 			: !filteredItems || filteredItems.length === 0 ?
-				<Callout variant="ghost">
-					<p className="mb-4 text-lg italic">
-						This feed is empty. You might have to be the one to lead the way!
-					</p>
-					<div className="flex flex-row flex-wrap gap-2">
-						<Link
-							className={buttonVariants()}
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-						>
-							Post a request for a new phrase
-						</Link>
-						{filterType !== undefined && (
-							<Link
-								className={buttonVariants({ variant: 'soft' })}
-								search={{}}
-								from={Route.fullPath}
-							>
-								Clear feed filters
-							</Link>
-						)}
-					</div>
-				</Callout>
+				<FeedEmptyState
+					feedItems={feedItems}
+					filterType={filterType}
+					feedTab="popular"
+					lang={params.lang}
+				/>
 			:	<>
 					{filteredItems.map((item) => (
 						<FeedItem key={item.id} item={item} />
