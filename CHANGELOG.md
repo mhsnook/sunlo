@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.16 - Phrase Finder, Feature Module Refactor, Review Polish
+## v0.16 - Feed Composer, Phrase Finder, Feature Module Refactor, Review Polish
 
 _25th Mar, 2026_
 
@@ -12,6 +12,7 @@ _25th Mar, 2026_
 
 ### Features
 
+- Add feed composer at top of feed — click to post a community request inline, or jump to phrase/playlist creation
 - Enhance chat recommend dialog to support phrases, playlists, and requests (not just phrases)
 - Persist charts language selection in URL search param
 - Add desktop filter tabs to feed with mobile dropdown fallback
