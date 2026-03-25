@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test'
-import { DailyReviewStateSchema } from '../../src/lib/schemas'
+import { DailyReviewStateSchema } from '../../src/features/review/schemas'
 import { getReviewSessionState } from './db-helpers'
 import { getReviewSessionLocal } from './collection-helpers'
 

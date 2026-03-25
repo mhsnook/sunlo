@@ -83,6 +83,7 @@ function ReviewPageContent() {
 	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('review')
 
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
+	const [sessionJustCreated, setSessionJustCreated] = useState(false)
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
@@ -224,15 +225,6 @@ function ReviewPageContent() {
 			if (!data) throw new Error('No data returned from mutation')
 			if (!data.reviewDay)
 				throw new Error('No daily session data returned from mutation')
-
-			// add new records to local db collections
-			data.newCards.forEach((c) => {
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
-			})
-			if (data.reviewDay)
-				reviewDaysCollection.utils.writeInsert(
-					DailyReviewStateSchema.parse(data.reviewDay)
-				)
 			if (data.newCards.length !== cardsToCreate.length)
 				throw new Error(
 					`Error creating new cards for today's review. Expected ${cardsToCreate.length} but got back ${data.newCards.length}.`
@@ -248,12 +240,22 @@ function ReviewPageContent() {
 				throw new Error(
 					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
 				)
-			// Pass the fresh (new) card pids for the preview feature
+
+			// add new records to local db collections
+			data.newCards.forEach((c) => {
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
+			})
+			reviewDaysCollection.utils.writeInsert(
+				DailyReviewStateSchema.parse(data.reviewDay)
+			)
+			// Init the store and navigate to preview. Set sessionJustCreated so the
+			// redirect condition (stats.count && stage !== null → /go) doesn't fire
+			// in the same render batch as the reviewDay collection write above.
 			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
+			setSessionJustCreated(true)
 			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)
-			// Navigate to preview page for new cards before starting review
 			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
 		},
 	})
@@ -265,7 +267,9 @@ function ReviewPageContent() {
 		throw new Error('Pids/recs should not be null here :/, even once')
 
 	// when the manifest is present, skip this page, go to a better one
-	if (stats?.count)
+	// sessionJustCreated prevents this redirect from racing with the post-creation
+	// navigate({ to: '/preview' }) call in the mutation's onSettled handler
+	if (stats?.count && !sessionJustCreated)
 		return (
 			stats.complete === stats.count || stats.stage >= 5 ? <WhenComplete />
 			: stage !== null ?

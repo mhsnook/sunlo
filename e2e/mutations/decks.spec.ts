@@ -7,7 +7,7 @@ const TEST_LANG = 'spa' // Spanish
 // Tests run in sequence - each builds on the previous one
 test.describe.serial('Deck Mutations', () => {
 	// if there is a Spanish deck already present, delete it
-	test.beforeAll(async (_fixtures, workerInfo) => {
+	test.beforeAll(async (_fixtures: never, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		const { data: deck } = await getDeck(TEST_LANG, uid)
 		if (deck) await deleteDeck(TEST_LANG, uid)
@@ -186,16 +186,13 @@ test.describe.serial('Deck Mutations', () => {
 		})
 
 		// Click archive button to open confirmation dialog
-		await page.getByRole('button', { name: 'Archive deck' }).click()
+		await page.getByTestId('archive-deck-button').click()
 
 		// Wait for the alert dialog to appear
 		await expect(page.getByRole('alertdialog')).toBeVisible()
 
 		// Click the Archive button in the dialog to confirm
-		await page
-			.getByRole('alertdialog')
-			.getByRole('button', { name: 'Archive deck' })
-			.click()
+		await page.getByTestId('confirm-archive-button').click()
 
 		// Wait for confirmation toast
 		await expect(page.getByText(/deck has been archived/i)).toBeVisible()
@@ -278,7 +275,7 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	// Cleanup: delete the test deck after all tests complete
-	test.afterAll(async (_fixtures, workerInfo) => {
+	test.afterAll(async (_fixtures: never, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		await deleteDeck(TEST_LANG, uid)
 	})
