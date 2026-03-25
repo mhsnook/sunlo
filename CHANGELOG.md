@@ -1,5 +1,42 @@
 # Change Log
 
+## v0.16 - Phrase Finder, Feature Module Refactor, Review Polish
+
+_25th Mar, 2026_
+
+### Major Changes
+
+- Add chat-style Phrase Finder search page at `/search` with tag/language filters and smart search input
+- Refactor codebase into deep module architecture — schemas, collections, and hooks moved into per-domain `src/features/` directories
+- Simplify card navigation: remove animation state machine, make transitions interruptible for rapid clicking
+
+### Features
+
+- Enhance chat recommend dialog to support phrases, playlists, and requests (not just phrases)
+- Persist charts language selection in URL search param
+- Add desktop filter tabs to feed with mobile dropdown fallback
+- Add suggest-fixup-commit pre-tool hook for better git hygiene
+
+### Improvements
+
+- Upgrade tailwind-oklch to v0.5.0 for improved color vibrancy
+- Increase base font size from 16px to 18px across the app
+- Move realtime subscriptions into `useSocialRealtime` hook
+- Hide right sidebar when there are no context menu links
+- Improve callout styling: lighter problem variant, hue inheritance
+- Fix app-nav horizontal overflow: hide scrollbar and prevent first link clipping
+- Use white text on Again, Good, and Easy review buttons
+- Make entire result row clickable in chat recommend dialog
+- Skip card creation when user has no deck for the language
+
+### Fixes
+
+- Fix send-in-chat modal flashing and disappearing from review screen
+- Fix double scrollbar by introducing fixedHeight layout mode
+- Fix manage phrases dialog scrolling (replace ScrollArea with plain div)
+- Fix tag-word stripping bug in search input parser
+- Cache Docker layers and exclude unnecessary Supabase services in CI
+
 ## v0.15 - Base UI Migration, Library Charts, Button System, OKLCH Color System
 
 _26th Feb, 2026_

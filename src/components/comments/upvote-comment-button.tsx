@@ -4,7 +4,10 @@ import { count, eq } from '@tanstack/db'
 import { toastError } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
-import { commentsCollection, commentUpvotesCollection } from '@/features/comments/collections'
+import {
+	commentsCollection,
+	commentUpvotesCollection,
+} from '@/features/comments/collections'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'

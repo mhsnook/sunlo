@@ -12,7 +12,10 @@ import {
 } from '@/features/comments/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { useUserId } from '@/lib/use-auth'
-import { CommentPhraseLinkType, type RequestCommentType } from '@/features/comments/schemas'
+import {
+	CommentPhraseLinkType,
+	type RequestCommentType,
+} from '@/features/comments/schemas'
 import { PhraseFullFullType } from '@/features/phrases/schemas'
 import { buttonVariants } from '@/components/ui/button'
 import { DialogTrigger } from '@/components/ui/dialog'

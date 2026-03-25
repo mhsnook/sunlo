@@ -181,8 +181,8 @@ function RecentFeed() {
 		!feedItems ?
 			[]
 		:	groupConsecutivePhrases(
-				feedItems.filter((item) =>
-					filterType === undefined || item.type === filterType
+				feedItems.filter(
+					(item) => filterType === undefined || item.type === filterType
 				)
 			)
 
@@ -267,8 +267,8 @@ function FriendsFeed() {
 		!feedItems ?
 			[]
 		:	groupConsecutivePhrases(
-				feedItems.filter((item) =>
-					filterType === undefined || item.type === filterType
+				feedItems.filter(
+					(item) => filterType === undefined || item.type === filterType
 				)
 			)
 
@@ -360,8 +360,8 @@ function PopularFeed() {
 	const filteredItems =
 		!feedItems ?
 			[]
-		:	feedItems.filter((item) =>
-				filterType === undefined || item.type === filterType
+		:	feedItems.filter(
+				(item) => filterType === undefined || item.type === filterType
 			)
 
 	return (

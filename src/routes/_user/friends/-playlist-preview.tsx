@@ -4,7 +4,10 @@ import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
-import { useOnePlaylist, useOnePlaylistPhrases } from '@/features/playlists/hooks'
+import {
+	useOnePlaylist,
+	useOnePlaylistPhrases,
+} from '@/features/playlists/hooks'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { ListMusic } from 'lucide-react'
 

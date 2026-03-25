@@ -26,7 +26,10 @@ import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { CardMetaSchema, CardMetaType } from '@/features/deck/schemas'
-import { PhraseFullFilteredType, PhraseFullFullType } from '@/features/phrases/schemas'
+import {
+	PhraseFullFilteredType,
+	PhraseFullFullType,
+} from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
 import type { ActionCopy } from '@/types/main'
 

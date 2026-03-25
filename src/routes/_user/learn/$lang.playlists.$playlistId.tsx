@@ -2,7 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import type { CSSProperties } from 'react'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import { Loader } from '@/components/ui/loader'
-import { useOnePlaylist, useOnePlaylistPhrases } from '@/features/playlists/hooks'
+import {
+	useOnePlaylist,
+	useOnePlaylistPhrases,
+} from '@/features/playlists/hooks'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
