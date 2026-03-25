@@ -316,10 +316,8 @@ test.describe.serial('Review Mutations', () => {
 				.catch(() => false)
 			if (isComplete) break
 
-			// Find the currently visible flashcard (scoped to its non-hidden parent)
-			const currentCard = page
-				.locator('div:not(.hidden) > [data-name="flashcard"]')
-				.first()
+			// Find the current flashcard
+			const currentCard = page.locator('[data-name="flashcard"]').first()
 			const isCardVisible = await currentCard
 				.isVisible({ timeout: 5000 })
 				.catch(() => false)
@@ -478,9 +476,7 @@ test.describe.serial('Review Mutations', () => {
 			.toBe(4)
 
 		// We should be looking at a flashcard (not the complete screen)
-		const currentCard = page
-			.locator('div:not(.hidden) > [data-name="flashcard"]')
-			.first()
+		const currentCard = page.locator('[data-name="flashcard"]').first()
 		await expect(currentCard).toBeVisible({ timeout: 10000 })
 
 		// Re-review all "again" cards with score 3 (Good)
@@ -493,9 +489,7 @@ test.describe.serial('Review Mutations', () => {
 				.catch(() => false)
 			if (completeVisible) break
 
-			const card = page
-				.locator('div:not(.hidden) > [data-name="flashcard"]')
-				.first()
+			const card = page.locator('[data-name="flashcard"]').first()
 			const isCardVisible = await card
 				.isVisible({ timeout: 2000 })
 				.catch(() => false)
