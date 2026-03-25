@@ -131,29 +131,20 @@ function FlashCardReviewSession({
 				</div>
 			</div>
 			<div className="-m-4 flex min-h-0 flex-1 flex-col gap-2 overflow-hidden p-4">
-				<div className={atTheEnd ? 'w-full' : 'hidden'}>
+				{atTheEnd ?
 					<WhenComplete />
-				</div>
-
-				<div className={!atTheEnd ? 'flex min-h-0 flex-1 flex-col' : 'hidden'}>
-					{manifest.map((pid, i) => (
-						<div
-							key={`${pid}-${animKey}`}
-							className={
-								i === currentCardIndex ?
-									'animate-card-pop-in flex min-h-0 flex-1 flex-col'
-								:	'hidden'
-							}
-						>
-							<ReviewSingleCard
-								pid={pid}
-								reviewStage={reviewStage ?? 1}
-								dayString={dayString}
-								triggerSlide={triggerSlide}
-							/>
-						</div>
-					))}
-				</div>
+				:	<div
+						key={`${manifest[currentCardIndex]}-${animKey}`}
+						className="animate-card-pop-in flex min-h-0 flex-1 flex-col"
+					>
+						<ReviewSingleCard
+							pid={manifest[currentCardIndex]}
+							reviewStage={reviewStage ?? 1}
+							dayString={dayString}
+							triggerSlide={triggerSlide}
+						/>
+					</div>
+				}
 			</div>
 		</div>
 	)
