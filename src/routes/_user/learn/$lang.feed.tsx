@@ -8,7 +8,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import Callout from '@/components/ui/callout'
 import languages from '@/lib/languages'
-import { PlusMenu } from '@/components/plus-menu'
+import { FeedComposer } from '@/components/feed/feed-composer'
 import {
 	useFeedLang,
 	useFriendsFeedLang,
@@ -141,10 +141,8 @@ function DeckFeedPage() {
 							</TabsList>
 							<FeedFilterMenu />
 						</div>
-						<div className="mt-1">
-							<PlusMenu lang={params.lang} />
-						</div>
 					</div>
+					<FeedComposer lang={params.lang} />
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>
 							<RecentFeed />
