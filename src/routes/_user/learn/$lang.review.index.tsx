@@ -1,7 +1,7 @@
 import type { pids } from '@/types/main'
 
 import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastSuccess } from '@/components/ui/sonner'
 import {
@@ -82,8 +82,8 @@ function ReviewPageContent() {
 
 	const { isOpen, showCallout, handleClose, handleReopen } = useIntro('review')
 
+	const sessionJustCreatedRef = useRef(false)
 	const [algoRecsSelected, setAlgoRecsSelected] = useState<pids>([])
-	const [sessionJustCreated, setSessionJustCreated] = useState(false)
 
 	// 2.
 	// haven't built this feature yet, is why it's blank array
@@ -248,14 +248,11 @@ function ReviewPageContent() {
 			reviewDaysCollection.utils.writeInsert(
 				DailyReviewStateSchema.parse(data.reviewDay)
 			)
-			// Init the store and navigate to preview. Set sessionJustCreated so the
-			// redirect condition (stats.count && stage !== null → /go) doesn't fire
-			// in the same render batch as the reviewDay collection write above.
 			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
-			setSessionJustCreated(true)
 			toastSuccess(
 				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
 			)
+			sessionJustCreatedRef.current = true
 			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
 		},
 	})
@@ -267,9 +264,8 @@ function ReviewPageContent() {
 		throw new Error('Pids/recs should not be null here :/, even once')
 
 	// when the manifest is present, skip this page, go to a better one
-	// sessionJustCreated prevents this redirect from racing with the post-creation
-	// navigate({ to: '/preview' }) call in the mutation's onSettled handler
-	if (stats?.count && !sessionJustCreated)
+	// useRef guard: set synchronously in onSettled before React batch re-render, prevents redirect racing with navigate to /preview
+	if (stats?.count && !sessionJustCreatedRef.current)
 		return (
 			stats.complete === stats.count || stats.stage >= 5 ? <WhenComplete />
 			: stage !== null ?
