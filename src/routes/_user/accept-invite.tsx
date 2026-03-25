@@ -128,7 +128,7 @@ function AcceptInviteForm({
 			{profile ?
 				<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 					<img
-						src={avatarUrlify(profile.avatar_path)}
+						src={avatarUrlify(profile.avatar_path, 128)}
 						width=""
 						className="mx-auto max-w-32 shrink rounded-xl"
 						alt={`Your avatar`}
@@ -137,7 +137,7 @@ function AcceptInviteForm({
 						<>
 							<ArrowRightLeft className="mx-auto opacity-70" />
 							<img
-								src={avatarUrlify(friend.avatar_path)}
+								src={avatarUrlify(friend.avatar_path, 128)}
 								className="mx-auto max-w-32 shrink rounded-xl"
 								alt={`${friend.username}'s avatar`}
 							/>
