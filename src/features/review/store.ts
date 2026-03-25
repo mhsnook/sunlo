@@ -4,11 +4,7 @@ import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
 import type { pids } from '@/types/main'
-import {
-	type ReviewsMap,
-	type ReviewStages,
-	useReviewsToday,
-} from './hooks'
+import { type ReviewsMap, type ReviewStages, useReviewsToday } from './hooks'
 
 const DEFAULT_PROPS = {
 	lang: '',

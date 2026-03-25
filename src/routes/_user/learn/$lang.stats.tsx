@@ -18,7 +18,11 @@ import {
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
-import { useDeckMeta, useDeckPids, useDeckRoutineStats } from '@/features/deck/hooks'
+import {
+	useDeckMeta,
+	useDeckPids,
+	useDeckRoutineStats,
+} from '@/features/deck/hooks'
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrases'

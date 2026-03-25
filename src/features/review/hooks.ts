@@ -12,10 +12,7 @@ import {
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
-import {
-	cardReviewsCollection,
-	reviewDaysCollection,
-} from './collections'
+import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,

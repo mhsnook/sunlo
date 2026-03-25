@@ -21,7 +21,10 @@ import {
 	ChartTooltipContent,
 	type ChartConfig,
 } from '@/components/ui/chart'
-import { languagesCollection, langTagsCollection } from '@/features/languages/collections'
+import {
+	languagesCollection,
+	langTagsCollection,
+} from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'

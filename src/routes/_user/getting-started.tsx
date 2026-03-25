@@ -8,7 +8,10 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { TablesInsert } from '@/types/supabase'
 import type { uuid } from '@/types/main'
-import { LanguagesKnownSchema, MyProfileSchema } from '@/features/profile/schemas'
+import {
+	LanguagesKnownSchema,
+	MyProfileSchema,
+} from '@/features/profile/schemas'
 import { useUserId } from '@/lib/use-auth'
 import { useProfile } from '@/features/profile/hooks'
 import supabase from '@/lib/supabase-client'

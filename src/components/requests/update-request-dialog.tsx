@@ -9,7 +9,10 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { PhraseRequestSchema, type PhraseRequestType } from '@/features/requests/schemas'
+import {
+	PhraseRequestSchema,
+	type PhraseRequestType,
+} from '@/features/requests/schemas'
 import { Textarea } from '../ui/textarea'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'

@@ -1,9 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
-import {
-	PhraseFullSchema,
-	type PhraseFullType,
-} from './schemas'
+import { PhraseFullSchema, type PhraseFullType } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 

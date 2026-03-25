@@ -7,7 +7,10 @@ import { todayString } from '@/lib/utils'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { cardReviewsCollection, reviewDaysCollection } from '@/features/review/collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+} from '@/features/review/collections'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 

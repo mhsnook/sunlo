@@ -2,7 +2,10 @@ import { useCallback, useEffect } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
 
-import { languagesCollection, langTagsCollection } from '@/features/languages/collections'
+import {
+	languagesCollection,
+	langTagsCollection,
+} from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import {

@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { type PhrasePlaylistType, validateUrl } from '@/features/playlists/schemas'
+import {
+	type PhrasePlaylistType,
+	validateUrl,
+} from '@/features/playlists/schemas'
 import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { useOnePlaylistPhrases } from '@/features/playlists/hooks'

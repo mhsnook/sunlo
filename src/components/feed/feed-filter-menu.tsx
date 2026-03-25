@@ -81,9 +81,7 @@ export function FeedFilterMenu() {
 				).map(([value, label]) => (
 					<DropdownMenuItem key={value} onClick={() => setFilter(value)}>
 						<Check
-							className={
-								activeValue === value ? 'opacity-100' : 'opacity-0'
-							}
+							className={activeValue === value ? 'opacity-100' : 'opacity-0'}
 						/>
 						{label}
 					</DropdownMenuItem>
