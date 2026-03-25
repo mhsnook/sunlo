@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { test, expect, TestInfo } from '@playwright/test'
+import { getTestUserForProject } from '../helpers/auth-helpers'
 import {
 	getReviewSessionState,
 	cleanupReviewSession,
@@ -11,18 +11,22 @@ import { TEST_LANG } from '../helpers/test-constants'
 test.describe.serial('Review Card Navigation', () => {
 	const sessionDate = todayString()
 
-	test.beforeAll(async () => {
+	// oxlint-disable-next-line no-empty-pattern
+	test.beforeAll(async ({}, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		const { data: existingSession } = await getReviewSessionState(
-			TEST_USER_UID,
+			uid,
 			TEST_LANG,
 			sessionDate
 		)
 		if (existingSession) {
-			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
+			await cleanupReviewSession(uid, TEST_LANG, sessionDate)
 		}
 	})
-	test.afterAll(async () => {
-		await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
+	// oxlint-disable-next-line no-empty-pattern
+	test.afterAll(async ({}, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
+		await cleanupReviewSession(uid, TEST_LANG, sessionDate)
 	})
 
 	test('rapid card navigation is not blocked by animations', async ({

@@ -7,7 +7,8 @@ const TEST_LANG = 'spa' // Spanish
 // Tests run in sequence - each builds on the previous one
 test.describe.serial('Deck Mutations', () => {
 	// if there is a Spanish deck already present, delete it
-	test.beforeAll(async (_fixtures: never, workerInfo) => {
+	// oxlint-disable-next-line no-empty-pattern
+	test.beforeAll(async ({}, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		const { data: deck } = await getDeck(TEST_LANG, uid)
 		if (deck) await deleteDeck(TEST_LANG, uid)
@@ -275,7 +276,8 @@ test.describe.serial('Deck Mutations', () => {
 	})
 
 	// Cleanup: delete the test deck after all tests complete
-	test.afterAll(async (_fixtures: never, workerInfo) => {
+	// oxlint-disable-next-line no-empty-pattern
+	test.afterAll(async ({}, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		await deleteDeck(TEST_LANG, uid)
 	})
