@@ -224,7 +224,7 @@ const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
 			{profile.avatar_path ?
 				<img
-					src={avatarUrlify(profile.avatar_path)}
+					src={avatarUrlify(profile.avatar_path, 128)}
 					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 					className="size-32 rounded-full object-cover"
 				/>

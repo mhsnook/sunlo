@@ -75,7 +75,7 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 			toastSuccess(`Avatar uploaded...`)
 		},
 	})
-	const url = avatarUrlify(avatar_path)
+	const url = avatarUrlify(avatar_path, 144)
 
 	return (
 		<div className="flex flex-col gap-2">
