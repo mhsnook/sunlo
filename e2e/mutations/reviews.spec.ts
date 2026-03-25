@@ -1,6 +1,6 @@
 // oxlint-disable no-await-in-loop
-import { test, expect } from '@playwright/test'
-import { TEST_USER_UID } from '../helpers/auth-helpers'
+import { test, expect, TestInfo } from '@playwright/test'
+import { getTestUserForProject, TEST_USER_UID } from '../helpers/auth-helpers'
 import {
 	getReviewSessionState,
 	getCardByPhraseId,
@@ -17,18 +17,22 @@ test.describe.serial('Review Mutations', () => {
 	const sessionDate = todayString()
 
 	// Cleanup any existing review session before starting
-	test.beforeAll(async () => {
+	// oxlint-disable-next-line no-empty-pattern
+	test.beforeAll(async ({}, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		const { data: existingSession } = await getReviewSessionState(
-			TEST_USER_UID,
+			uid,
 			TEST_LANG,
 			sessionDate
 		)
 		if (existingSession) {
-			await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
+			await cleanupReviewSession(uid, TEST_LANG, sessionDate)
 		}
 	})
-	test.afterAll(async () => {
-		await cleanupReviewSession(TEST_USER_UID, TEST_LANG, sessionDate)
+	// oxlint-disable-next-line no-empty-pattern
+	test.afterAll(async ({}, workerInfo) => {
+		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
+		await cleanupReviewSession(uid, TEST_LANG, sessionDate)
 	})
 
 	test('0. create daily review session', async ({ page }) => {
@@ -52,8 +56,8 @@ test.describe.serial('Review Mutations', () => {
 		await page.waitForURL(new RegExp(`/learn/${TEST_LANG}/review/preview`))
 
 		// Expect to see the new cards preview screen (either with new cards or the "no new cards" variant)
-		const previewNewCards = page.getByText('Preview New Cards')
-		const noNewCards = page.getByText("No new cards in today's review")
+		const previewNewCards = page.getByTestId('new-cards-preview')
+		const noNewCards = page.getByTestId('no-new-cards-preview')
 		await expect(previewNewCards.or(noNewCards)).toBeVisible()
 
 		// Click "Start Review" to proceed to the actual review
