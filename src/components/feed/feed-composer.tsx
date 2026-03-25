@@ -8,7 +8,6 @@ import { Link } from '@tanstack/react-router'
 
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { useIsAuthenticated } from '@/components/require-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import {
@@ -30,17 +29,16 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import {
 	Dialog,
-	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
 
 export function FeedComposer({ lang }: { lang: string }) {
 	const [open, setOpen] = useState(false)
-	const isAuth = useIsAuthenticated()
 	const userId = useUserId()
 	const placeholder = useOneRandomly(requestPromptPlaceholders)
 	const invalidateFeed = useInvalidateFeed()
@@ -119,7 +117,11 @@ export function FeedComposer({ lang }: { lang: string }) {
 					</Link>
 				</div>
 
-				<DialogContent data-testid="new-request-dialog">
+				<AuthenticatedDialogContent
+					data-testid="new-request-dialog"
+					authTitle="Post a Request"
+					authMessage="You need to sign in to post requests to the public feed."
+				>
 					<DialogHeader>
 						<DialogTitle>Post a Request</DialogTitle>
 						<DialogDescription>
@@ -127,49 +129,41 @@ export function FeedComposer({ lang }: { lang: string }) {
 							one for everyone to learn.
 						</DialogDescription>
 					</DialogHeader>
-					{isAuth ?
-						<Form {...form}>
-							<form
-								data-testid="feed-composer-form"
-								// eslint-disable-next-line @typescript-eslint/no-misused-promises
-								onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-								className="space-y-3"
+					<Form {...form}>
+						<form
+							data-testid="feed-composer-form"
+							// eslint-disable-next-line @typescript-eslint/no-misused-promises
+							onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+							className="space-y-3"
+						>
+							<FormField
+								control={form.control}
+								name="prompt"
+								render={({ field }) => (
+									<FormItem>
+										<FormControl>
+											<Textarea
+												data-testid="feed-composer-prompt"
+												placeholder={`ex: "${placeholder}"`}
+												autoFocus
+												rows={4}
+												{...field}
+											/>
+										</FormControl>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<Button
+								type="submit"
+								data-testid="feed-composer-submit"
+								disabled={mutation.isPending}
 							>
-								<FormField
-									control={form.control}
-									name="prompt"
-									render={({ field }) => (
-										<FormItem>
-											<FormControl>
-												<Textarea
-													data-testid="feed-composer-prompt"
-													placeholder={`ex: "${placeholder}"`}
-													autoFocus
-													rows={4}
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<Button
-									type="submit"
-									data-testid="feed-composer-submit"
-									disabled={mutation.isPending}
-								>
-									{mutation.isPending ? 'Posting...' : 'Post Request'}
-								</Button>
-							</form>
-						</Form>
-					:	<p className="text-muted-foreground text-sm">
-							<Link to="/login" className="s-link">
-								Sign in
-							</Link>{' '}
-							to post a community request.
-						</p>
-					}
-				</DialogContent>
+								{mutation.isPending ? 'Posting...' : 'Post Request'}
+							</Button>
+						</form>
+					</Form>
+				</AuthenticatedDialogContent>
 			</Dialog>
 		</div>
 	)
