@@ -14,7 +14,7 @@ export default function AvatarSection() {
 					{!profile?.avatar_path ?
 						<User size={144} />
 					:	<img
-							src={avatarUrlify(profile.avatar_path)}
+							src={avatarUrlify(profile.avatar_path, 144)}
 							alt="Your profile pic"
 							className="size-36 rounded-full object-cover"
 						/>
