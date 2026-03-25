@@ -130,7 +130,8 @@ function DeckFeedPage() {
 					value={activeTab}
 					onValueChange={handleValueChange}
 				>
-					<div className="mb-4 flex items-start gap-2">
+					<FeedComposer lang={params.lang} />
+				<div className="mb-4 flex items-start gap-2">
 						<div className="flex flex-1 flex-wrap items-center gap-2">
 							<TabsList>
 								<TabsTrigger value="newest">Newest</TabsTrigger>
@@ -142,7 +143,6 @@ function DeckFeedPage() {
 							<FeedFilterMenu />
 						</div>
 					</div>
-					<FeedComposer lang={params.lang} />
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>
 							<RecentFeed />
