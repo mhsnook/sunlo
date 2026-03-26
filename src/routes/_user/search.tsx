@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import * as z from 'zod'
 import { useDebounce } from '@uidotdev/usehooks'
 import { eq, ilike } from '@tanstack/db'
+import { escapeIlikeInput } from '@/lib/utils'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
@@ -147,7 +148,7 @@ function SearchPage() {
 			}
 			if (effectiveText.length >= 2) {
 				query = query.where(({ phrase }) =>
-					ilike(phrase.searchableText, `%${effectiveText}%`)
+					ilike(phrase.searchableText, `%${escapeIlikeInput(effectiveText)}%`)
 				)
 			}
 			if (tagFilters.length > 0) {
