@@ -2,6 +2,7 @@ import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
+import { escapeIlikeInput } from '@/lib/utils'
 import type {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
@@ -50,7 +51,7 @@ export const useLanguagePhrasesSearch = (
 			}
 			if (queryString) {
 				query = query.where(({ phrase }) =>
-					ilike(phrase.searchableText, `%${queryString}%`)
+					ilike(phrase.searchableText, `%${escapeIlikeInput(queryString)}%`)
 				)
 			}
 			if (filteredPids) {

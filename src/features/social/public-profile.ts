@@ -5,6 +5,7 @@ import type { PublicProfileType } from '@/features/profile/schemas'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
+import { escapeIlikeInput } from '@/lib/utils'
 
 export const useSearchProfilesByUsername = (
 	query: string
@@ -15,7 +16,7 @@ export const useSearchProfilesByUsername = (
 				undefined
 			:	q
 					.from({ profile: publicProfilesCollection })
-					.where(({ profile }) => ilike(profile.username, `%${query}%`)),
+					.where(({ profile }) => ilike(profile.username, `%${escapeIlikeInput(query)}%`)),
 		[query]
 	)
 }
