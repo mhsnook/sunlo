@@ -9,16 +9,6 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
-/**
- * Escape special regex characters in a string so it can be safely
- * interpolated into a TanStack DB `ilike` pattern (which uses regex
- * internally). Without this, characters like `?`, `+`, `(`, etc. in
- * user search input would break the pattern.
- */
-export function escapeIlikeInput(str: string): string {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
 	arr: ReadonlyArray<T> | undefined | null,
 	key: K
