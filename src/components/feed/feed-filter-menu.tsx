@@ -1,4 +1,4 @@
-import { Check, Filter } from 'lucide-react'
+import { Check, ListFilter } from 'lucide-react'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
@@ -10,17 +10,23 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useIsMobile } from '@/hooks/use-mobile'
 
 type FilterType = 'request' | 'playlist' | 'phrase'
+
+const filterOptions = [
+	['all', 'All types'],
+	['request', 'Requests'],
+	['playlist', 'Playlists'],
+	['phrase', 'New Phrases'],
+] as const
 
 export function FeedFilterMenu() {
 	const navigate = useNavigate()
 	const search = useSearch({ strict: false })
 	const filterType = search.filter_type as FilterType | undefined
 	const activeValue = filterType ?? 'all'
-	const isMobile = useIsMobile()
+	const activeLabel =
+		filterOptions.find(([v]) => v === activeValue)?.[1] ?? 'All types'
 
 	const setFilter = (value: string) => {
 		void navigate({
@@ -31,54 +37,24 @@ export function FeedFilterMenu() {
 		})
 	}
 
-	if (!isMobile) {
-		return (
-			<Tabs
-				value={activeValue}
-				onValueChange={setFilter}
-				data-testid="feed-filter-menu"
-			>
-				<TabsList>
-					<TabsTrigger value="all" data-testid="feed-filter-all">
-						All
-					</TabsTrigger>
-					<TabsTrigger value="request" data-testid="feed-filter-request">
-						Requests
-					</TabsTrigger>
-					<TabsTrigger value="playlist" data-testid="feed-filter-playlist">
-						Playlists
-					</TabsTrigger>
-					<TabsTrigger value="phrase" data-testid="feed-filter-phrase">
-						New Phrases
-					</TabsTrigger>
-				</TabsList>
-			</Tabs>
-		)
-	}
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button
 					variant="ghost"
-					size="icon"
+					size="sm"
 					aria-label="Filter feed content"
 					data-testid="feed-filter-button"
+					className="text-muted-foreground gap-1 text-xs"
 				>
-					<Filter className="h-4 w-4" />
+					<ListFilter className="size-3.5" />
+					{activeLabel}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuLabel>Show content type</DropdownMenuLabel>
 				<DropdownMenuSeparator />
-				{(
-					[
-						['all', 'All items'],
-						['request', 'Requests'],
-						['playlist', 'Playlists'],
-						['phrase', 'New Phrases'],
-					] as const
-				).map(([value, label]) => (
+				{filterOptions.map(([value, label]) => (
 					<DropdownMenuItem key={value} onClick={() => setFilter(value)}>
 						<Check
 							className={activeValue === value ? 'opacity-100' : 'opacity-0'}
