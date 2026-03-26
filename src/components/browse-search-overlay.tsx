@@ -41,11 +41,9 @@ interface SearchResult {
 }
 
 export default function BrowseSearchOverlay({
-	open,
 	onClose,
 	initialLangs,
 }: {
-	open: boolean
 	onClose: () => void
 	initialLangs?: Array<string>
 }) {
@@ -58,15 +56,6 @@ export default function BrowseSearchOverlay({
 	)
 	const [langsExpanded, setLangsExpanded] = useState(!initialLangs?.length)
 	const [selectedIndex, setSelectedIndex] = useState(0)
-
-	// Reset state when modal opens
-	useEffect(() => {
-		if (open) {
-			setSelectedLangs(initialLangs ?? [])
-			setLangsExpanded(!initialLangs?.length)
-			setQuery('')
-		}
-	}, [open, initialLangs])
 
 	const debouncedQuery = useDebounce(query, 150)
 	const lowerQuery = debouncedQuery.toLowerCase().trim()
@@ -210,13 +199,11 @@ export default function BrowseSearchOverlay({
 		[results, selectedIndex, openResult]
 	)
 
-	// Focus input when dialog opens
+	// Focus input on mount
 	useEffect(() => {
-		if (open) {
-			const t = setTimeout(() => inputRef.current?.focus(), 50)
-			return () => clearTimeout(t)
-		}
-	}, [open])
+		const t = setTimeout(() => inputRef.current?.focus(), 50)
+		return () => clearTimeout(t)
+	}, [])
 
 	// Scroll selected item into view
 	useEffect(() => {
@@ -252,7 +239,7 @@ export default function BrowseSearchOverlay({
 	const showResults = hasQuery
 
 	return (
-		<Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+		<Dialog open onOpenChange={(o) => !o && onClose()}>
 			<DialogContent
 				className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0"
 				data-testid="browse-search-overlay"

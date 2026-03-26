@@ -81,17 +81,18 @@ test.describe('Deck Workflow Navigation', () => {
 		await deleteMostRecentReviewState(uid, TEST_LANG)
 	})
 
-	test('search page loads from deck nav', async ({ page }) => {
+	test('search modal opens from deck nav', async ({ page }) => {
 		await page
 			.getByTestId('decks-list-grid')
 			.getByText(TEST_LANG_DISPLAY)
 			.click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
-		// Click search in nav using data-testid
-		await page.getByTestId('appnav-search').click()
+		// Click search icon button in nav
+		await page.getByTestId('appnav-search-button').click()
 
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
+		// Search overlay modal should be visible
+		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 	})
 
 	test('feed page loads with content', async ({ page }) => {
@@ -203,9 +204,13 @@ test.describe('Deck Workflow Navigation', () => {
 			.click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
-		// Go to search page using data-testid
-		await page.getByTestId('appnav-search').click()
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
+		// Open search modal using icon button
+		await page.getByTestId('appnav-search-button').click()
+		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
+
+		// Close search modal
+		await page.keyboard.press('Escape')
+		await expect(page.getByTestId('browse-search-overlay')).not.toBeVisible()
 
 		// Go back to learn page via sidebar - use the link with title "All Decks"
 		// (The /learn link is in "Learning center" section with title "All Decks")
