@@ -241,12 +241,14 @@ export default function BrowseSearchOverlay({
 	return (
 		<Dialog open onOpenChange={(o) => !o && onClose()}>
 			<DialogContent
-				className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0"
+				className={`flex max-h-[80vh] ${!hasQuery ? 'max-w-xl gap-2 p-4' : 'gap-0 p-0'} flex-col overflow-hidden`}
 				data-testid="browse-search-overlay"
 			>
 				{/* Heading */}
 				<div className="px-4 pt-4 pb-0">
-					<DialogTitle className="text-muted-foreground text-sm font-medium">
+					<DialogTitle
+						className={`text-muted-foreground ${hasQuery ? 'text-sm' : 'text-xl'} font-medium`}
+					>
 						Search the public library
 					</DialogTitle>
 				</div>
@@ -261,7 +263,7 @@ export default function BrowseSearchOverlay({
 							placeholder="Search phrases, playlists, requests..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							className="placeholder:text-muted-foreground flex-1 bg-transparent text-base outline-none"
+							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-muted-foreground flex-1 bg-transparent outline-none`}
 							data-testid="browse-search-input"
 							onKeyDown={handleKeyDown}
 						/>
