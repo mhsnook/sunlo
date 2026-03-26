@@ -32,6 +32,7 @@ import {
 	Share,
 	UserPen,
 	UserPlus,
+	UserSearch,
 } from 'lucide-react'
 import languages, { LangKey } from '@/lib/languages'
 
@@ -74,7 +75,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/friends/search': {
 			name: 'Search',
 			title: 'Search Profiles',
-			Icon: Search,
+			Icon: UserSearch,
 			link: {
 				to: '/friends/search',
 			},
