@@ -81,11 +81,12 @@ function LearnLayout() {
 		<div className="h-full space-y-4">
 			<PendingRequestsHeader shy />
 			<Outlet />
-			<BrowseSearchOverlay
-				open={!!isSearchOpen}
-				onClose={closeSearch}
-				initialLangs={initialLangs}
-			/>
+			{isSearchOpen && (
+				<BrowseSearchOverlay
+					onClose={closeSearch}
+					initialLangs={initialLangs}
+				/>
+			)}
 		</div>
 	)
 }
