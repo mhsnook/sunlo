@@ -84,11 +84,6 @@ function AddPhraseTab() {
 	const { text } = Route.useSearch()
 	const userId = useUserId()
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
-	const searchPlusText = (search: SearchParams) => ({
-		...search,
-		text,
-	})
-
 	const [newPhrases, setNewPhrases] = useState<uuid[]>([])
 
 	// Deck status detection
@@ -444,9 +439,9 @@ function AddPhraseTab() {
 									Save and add another
 								</Button>
 								<Link
-									to="/learn/$lang/search"
-									from={Route.fullPath}
-									search={searchPlusText}
+									to="/learn/$lang/feed"
+									params={{ lang }}
+									search={{ search: true }}
 									className={buttonVariants({ variant: 'soft' })}
 								>
 									<Search size={16} />

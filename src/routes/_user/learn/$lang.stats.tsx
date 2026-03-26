@@ -87,8 +87,9 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							{deckIsNew ? `Your ${languages[lang]} Deck` : 'Deck Home'}
 						</span>
 						<Link
-							to="/learn/$lang/search"
-							from={Route.fullPath}
+							to="/learn/$lang/feed"
+							params={{ lang }}
+							search={{ search: true }}
 							aria-disabled="true"
 							className={`${buttonVariants({
 								variant: 'soft',

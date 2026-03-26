@@ -16,15 +16,10 @@ const deckLinks = [
 	'/learn/$lang/stats',
 	'/learn/$lang/phrases/new',
 	'/learn/$lang/requests/new',
-	'/learn/$lang/search',
 	'/learn/$lang/deck-settings',
 ]
 // Simplified deck menu for public browsing (no deck required)
-const publicDeckLinks = [
-	'/learn/$lang/feed',
-	// '/learn/$lang/playlists',
-	'/learn/$lang/search',
-]
+const publicDeckLinks = ['/learn/$lang/feed']
 const friendsMenu = makeLinks([
 	'/friends',
 	'/friends/chats',

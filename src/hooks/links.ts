@@ -199,8 +199,12 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			name: `Search`,
 			title: `Quick Search ${languages[lang]}`,
 			link: {
-				to: '/learn/$lang/search',
+				to: '/learn/$lang/feed',
 				params: { lang },
+				search: (prev: Record<string, unknown>) => ({
+					...prev,
+					search: true,
+				}),
 			},
 			Icon: Search,
 		},
