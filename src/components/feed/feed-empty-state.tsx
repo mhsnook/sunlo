@@ -151,7 +151,7 @@ function getFilterAction(filterType: FilterType) {
 		},
 		phrase: {
 			label: 'Add a phrase',
-			to: '/learn/$lang/search',
+			to: '/learn/$lang/phrases/new',
 			icon: BookOpen,
 		},
 	}
