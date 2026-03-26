@@ -1,8 +1,16 @@
+import { ExternalLink } from 'lucide-react'
+
 interface PlaylistEmbedProps {
 	href: string
 }
 
-export type EmbedType = 'youtube' | 'spotify' | 'soundcloud' | 'unknown'
+export type EmbedType =
+	| 'youtube'
+	| 'spotify'
+	| 'soundcloud'
+	| 'instagram'
+	| 'tiktok'
+	| 'unknown'
 
 export interface EmbedInfo {
 	type: EmbedType
@@ -23,7 +31,9 @@ export function detectEmbedType(url: string): EmbedInfo {
 
 			if (hostname.includes('youtube.com')) {
 				// Handle various YouTube URL formats
-				if (urlObj.pathname.includes('/watch')) {
+				if (urlObj.pathname.includes('/shorts/')) {
+					videoId = urlObj.pathname.split('/shorts/')[1]?.split('?')[0]
+				} else if (urlObj.pathname.includes('/watch')) {
 					videoId = urlObj.searchParams.get('v')
 				} else if (urlObj.pathname.includes('/embed/')) {
 					videoId = urlObj.pathname.split('/embed/')[1]?.split('?')[0]
@@ -80,6 +90,19 @@ export function detectEmbedType(url: string): EmbedInfo {
 			}
 		}
 
+		// Instagram (reels, posts, stories) — no iframe embed available
+		if (
+			hostname.includes('instagram.com') ||
+			hostname.includes('instagr.am')
+		) {
+			return { type: 'instagram', embedUrl: null }
+		}
+
+		// TikTok — no iframe embed available
+		if (hostname.includes('tiktok.com')) {
+			return { type: 'tiktok', embedUrl: null }
+		}
+
 		return { type: 'unknown', embedUrl: null }
 	} catch (error) {
 		console.error('Error parsing embed URL:', error)
@@ -94,11 +117,34 @@ export function isEmbeddableUrl(url: string | null | undefined): boolean {
 	return embedInfo.type !== 'unknown' && embedInfo.embedUrl !== null
 }
 
+const platformLabels: Record<string, string> = {
+	instagram: 'Instagram',
+	tiktok: 'TikTok',
+}
+
 export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 	const embedInfo = detectEmbedType(href)
 
-	if (embedInfo.type === 'unknown' || !embedInfo.embedUrl) {
+	if (embedInfo.type === 'unknown') {
 		return null
+	}
+
+	// Recognized platforms without iframe embed support
+	if (!embedInfo.embedUrl) {
+		const label = platformLabels[embedInfo.type] ?? embedInfo.type
+		return (
+			<a
+				href={href}
+				target="_blank"
+				rel="noopener noreferrer"
+				className="flex items-center gap-2 rounded-2xl bg-1-mlo-neutral px-4 py-3 text-sm text-7-mid-neutral no-underline transition-colors hover:bg-2-mlo-neutral"
+			>
+				<ExternalLink className="size-4 shrink-0" />
+				<span>
+					Watch on <strong>{label}</strong>
+				</span>
+			</a>
+		)
 	}
 
 	return (
