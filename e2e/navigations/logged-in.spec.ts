@@ -135,48 +135,40 @@ test.describe('Logged In Navigation', () => {
 		}
 	})
 
-	test('search page shows phrase cards', async ({ page }) => {
+	test('search modal opens from deck nav', async ({ page }) => {
 		await page
 			.getByTestId('decks-list-grid')
 			.getByText(TEST_LANG_DISPLAY)
 			.click()
 
-		// Navigate to search (deck-specific navigation)
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /search/i })
-			.click()
+		// Click search icon button in the app nav
+		await page.getByTestId('appnav-search-button').click()
 
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
-
-		// Should see phrase cards or search interface
-		const appOutlet = page.locator('#app-sidebar-layout-outlet')
-		await expect(appOutlet).toBeVisible()
+		// Search overlay modal should be visible
+		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 	})
 
-	test('search functionality works', async ({ page }) => {
+	test('search functionality works in modal', async ({ page }) => {
 		await page
 			.getByTestId('decks-list-grid')
 			.getByText(TEST_LANG_DISPLAY)
 			.click()
-		await page
-			.locator('nav[data-slot=navigation-menu]')
-			.getByRole('link', { name: /search/i })
-			.click()
 
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
+		// Open search modal
+		await page.getByTestId('appnav-search-button').click()
+		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 
-		// Find search input
-		const searchInput = page.getByPlaceholder(/search/i)
-		if ((await searchInput.count()) > 0) {
-			// Type a search term
-			await searchInput.fill('hello')
+		// Find search input inside the modal
+		const searchInput = page.getByTestId('browse-search-input')
+		await expect(searchInput).toBeVisible()
 
-			// Wait a moment for debounce
-			await page.waitForTimeout(500)
+		// Type a search term
+		await searchInput.fill('hello')
 
-			// Page should still be functional (no crash)
-			await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/search`))
-		}
+		// Wait a moment for debounce
+		await page.waitForTimeout(500)
+
+		// Modal should still be open and functional
+		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 	})
 })
