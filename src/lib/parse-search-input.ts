@@ -39,7 +39,10 @@ export function parseSearchInput(
 		return { suggestions: [], effectiveText: '' }
 	}
 
-	const words = trimmed.toLowerCase().split(/\s+/)
+	const words = trimmed
+		.toLowerCase()
+		.split(/[\s,.!?;:'"()[\]{}]+/)
+		.filter(Boolean)
 	const suggestions: Array<SearchFilter> = []
 	const wordsToStrip = new Set<string>()
 

@@ -137,4 +137,31 @@ describe('parseSearchInput', () => {
 		const result = parseSearchInput('in', noFilters, noTags)
 		expect(result.suggestions).toEqual([])
 	})
+
+	// --- Punctuation handling ---
+
+	it('suggests a language when punctuation is glued to the word', () => {
+		const result = parseSearchInput('kannada?', noFilters, noTags)
+		const langSuggestion = result.suggestions.find((s) => s.type === 'lang')
+		expect(langSuggestion).toBeDefined()
+		expect(langSuggestion!.label).toBe('Kannada')
+	})
+
+	it('suggests a language with trailing period', () => {
+		const result = parseSearchInput('hindi.', noFilters, noTags)
+		const langSuggestion = result.suggestions.find((s) => s.type === 'lang')
+		expect(langSuggestion).toBeDefined()
+		expect(langSuggestion!.label).toBe('Hindi')
+	})
+
+	it('suggests a language with trailing exclamation', () => {
+		const result = parseSearchInput(
+			'calling a cab in kannada!',
+			noFilters,
+			noTags
+		)
+		const langSuggestion = result.suggestions.find((s) => s.type === 'lang')
+		expect(langSuggestion).toBeDefined()
+		expect(langSuggestion!.label).toBe('Kannada')
+	})
 })
