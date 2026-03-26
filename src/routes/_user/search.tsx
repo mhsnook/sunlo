@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
+import * as z from 'zod'
 import { useDebounce } from '@uidotdev/usehooks'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
@@ -36,8 +37,14 @@ import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
 
 // --- Route ---
 
+const SearchParams = z.object({
+	q: z.string().optional(),
+	langs: z.string().optional(),
+})
+
 export const Route = createFileRoute('/_user/search')({
 	component: SearchPage,
+	validateSearch: SearchParams,
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Phrase Finder',
@@ -51,9 +58,19 @@ export const Route = createFileRoute('/_user/search')({
 // --- Main Component ---
 
 function SearchPage() {
-	const [inputText, setInputText] = useState('')
+	const { q: initialQuery, langs: initialLangs } = Route.useSearch()
+
+	const [inputText, setInputText] = useState(initialQuery ?? '')
 	const debouncedText = useDebounce(inputText, 150)
-	const [filters, setFilters] = useState<Array<SearchFilter>>([])
+	const [filters, setFilters] = useState<Array<SearchFilter>>(() => {
+		if (!initialLangs) return []
+		const langCodes = initialLangs.split(',').filter((l) => l in allLanguages)
+		return langCodes.map((code) => ({
+			type: 'lang' as const,
+			value: code,
+			label: allLanguages[code] ?? code,
+		}))
+	})
 	const [showQuickFilters, setShowQuickFilters] = useState(false)
 	const scrollRef = useRef<HTMLDivElement>(null)
 
