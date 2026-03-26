@@ -36,6 +36,9 @@ export type LinkType = Microcopy & {
 	link: {
 		to: string
 		params?: Route['types']['params']
+		search?:
+			| Record<string, unknown>
+			| ((prev: Record<string, unknown>) => Record<string, unknown>)
 	}
 	useBadge?: () => number | string | boolean | undefined | null
 }

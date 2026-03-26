@@ -47,7 +47,6 @@ import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$la
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
 import { Route as UserLearnBrowseChartsRouteImport } from './routes/_user/learn/browse.charts'
 import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
-import { Route as UserLearnLangSearchRouteImport } from './routes/_user/learn/$lang.search'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
 import { Route as UserLearnLangPlaylistsRouteImport } from './routes/_user/learn/$lang.playlists'
 import { Route as UserLearnLangFeedRouteImport } from './routes/_user/learn/$lang.feed'
@@ -284,11 +283,6 @@ const UserLearnLangStatsRoute = UserLearnLangStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => UserLearnLangRoute,
 } as any)
-const UserLearnLangSearchRoute = UserLearnLangSearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => UserLearnLangRoute,
-} as any)
 const UserLearnLangReviewRoute = UserLearnLangReviewRouteImport.update({
   id: '/review',
   path: '/review',
@@ -444,7 +438,6 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
-  '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
@@ -498,7 +491,6 @@ export interface FileRoutesByTo {
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
   '/learn/$lang/deck-settings': typeof UserLearnLangDeckSettingsRoute
   '/learn/$lang/feed': typeof UserLearnLangFeedRoute
-  '/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
@@ -563,7 +555,6 @@ export interface FileRoutesById {
   '/_user/learn/$lang/feed': typeof UserLearnLangFeedRoute
   '/_user/learn/$lang/playlists': typeof UserLearnLangPlaylistsRouteWithChildren
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
-  '/_user/learn/$lang/search': typeof UserLearnLangSearchRoute
   '/_user/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/_user/learn/browse/charts': typeof UserLearnBrowseChartsRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
@@ -627,7 +618,6 @@ export interface FileRouteTypes {
     | '/learn/$lang/feed'
     | '/learn/$lang/playlists'
     | '/learn/$lang/review'
-    | '/learn/$lang/search'
     | '/learn/$lang/stats'
     | '/learn/browse/charts'
     | '/friends/chats/'
@@ -681,7 +671,6 @@ export interface FileRouteTypes {
     | '/learn/$lang/contributions'
     | '/learn/$lang/deck-settings'
     | '/learn/$lang/feed'
-    | '/learn/$lang/search'
     | '/learn/$lang/stats'
     | '/learn/browse/charts'
     | '/friends/chats'
@@ -745,7 +734,6 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/feed'
     | '/_user/learn/$lang/playlists'
     | '/_user/learn/$lang/review'
-    | '/_user/learn/$lang/search'
     | '/_user/learn/$lang/stats'
     | '/_user/learn/browse/charts'
     | '/_user/friends/chats/'
@@ -1065,13 +1053,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangStatsRouteImport
       parentRoute: typeof UserLearnLangRoute
     }
-    '/_user/learn/$lang/search': {
-      id: '/_user/learn/$lang/search'
-      path: '/search'
-      fullPath: '/learn/$lang/search'
-      preLoaderRoute: typeof UserLearnLangSearchRouteImport
-      parentRoute: typeof UserLearnLangRoute
-    }
     '/_user/learn/$lang/review': {
       id: '/_user/learn/$lang/review'
       path: '/review'
@@ -1333,7 +1314,6 @@ interface UserLearnLangRouteChildren {
   UserLearnLangFeedRoute: typeof UserLearnLangFeedRoute
   UserLearnLangPlaylistsRoute: typeof UserLearnLangPlaylistsRouteWithChildren
   UserLearnLangReviewRoute: typeof UserLearnLangReviewRouteWithChildren
-  UserLearnLangSearchRoute: typeof UserLearnLangSearchRoute
   UserLearnLangStatsRoute: typeof UserLearnLangStatsRoute
   UserLearnLangIndexRoute: typeof UserLearnLangIndexRoute
   UserLearnLangPhrasesIdRoute: typeof UserLearnLangPhrasesIdRoute
@@ -1350,7 +1330,6 @@ const UserLearnLangRouteChildren: UserLearnLangRouteChildren = {
   UserLearnLangFeedRoute: UserLearnLangFeedRoute,
   UserLearnLangPlaylistsRoute: UserLearnLangPlaylistsRouteWithChildren,
   UserLearnLangReviewRoute: UserLearnLangReviewRouteWithChildren,
-  UserLearnLangSearchRoute: UserLearnLangSearchRoute,
   UserLearnLangStatsRoute: UserLearnLangStatsRoute,
   UserLearnLangIndexRoute: UserLearnLangIndexRoute,
   UserLearnLangPhrasesIdRoute: UserLearnLangPhrasesIdRoute,
