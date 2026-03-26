@@ -135,6 +135,14 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: Search,
 		},
+		'/search': {
+			name: 'Search',
+			title: 'Phrase Finder',
+			link: {
+				to: '/search',
+			},
+			Icon: Search,
+		},
 		'/login': {
 			name: 'Log in',
 			title: 'Sign In',
