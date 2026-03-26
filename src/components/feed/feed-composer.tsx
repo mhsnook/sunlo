@@ -48,7 +48,11 @@ export function FeedComposer({ lang }: { lang: string }) {
 		defaultValues: { prompt: '' },
 	})
 
-	const mutation = useMutation<PhraseRequestType, PostgrestError, RequestPhraseFormInputs>({
+	const mutation = useMutation<
+		PhraseRequestType,
+		PostgrestError,
+		RequestPhraseFormInputs
+	>({
 		mutationFn: async ({ prompt }) => {
 			return (
 				await supabase
@@ -60,7 +64,9 @@ export function FeedComposer({ lang }: { lang: string }) {
 			).data!
 		},
 		onSuccess: (data) => {
-			phraseRequestsCollection.utils.writeInsert(PhraseRequestSchema.parse(data))
+			phraseRequestsCollection.utils.writeInsert(
+				PhraseRequestSchema.parse(data)
+			)
 			invalidateFeed(lang)
 			form.reset()
 			setOpen(false)
@@ -73,7 +79,7 @@ export function FeedComposer({ lang }: { lang: string }) {
 	})
 
 	return (
-		<div className="mb-4 rounded border bg-card/50 p-3 shadow-sm">
+		<div className="bg-card/50 mb-4 rounded border p-3 shadow-sm">
 			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogTrigger asChild>
 					<button
@@ -145,7 +151,6 @@ export function FeedComposer({ lang }: { lang: string }) {
 											<Textarea
 												data-testid="feed-composer-prompt"
 												placeholder={`ex: "${placeholder}"`}
-												autoFocus
 												rows={4}
 												{...field}
 											/>

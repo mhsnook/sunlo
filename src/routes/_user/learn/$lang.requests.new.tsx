@@ -44,7 +44,6 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	}),
 })
 
-
 function NewRequestPage() {
 	const isAuth = useIsAuthenticated()
 	const { lang } = Route.useParams()
