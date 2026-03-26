@@ -1,4 +1,5 @@
 import { Activity, type CSSProperties } from 'react'
+import { Logs } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
@@ -110,6 +111,9 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
+const feedTabClass =
+	'data-[active]:bg-transparent data-[active]:shadow-none data-[active]:border-none data-[active]:text-foreground text-muted-foreground rounded-none border-none px-2 py-1 text-xs font-medium'
+
 function DeckFeedPage() {
 	const navigate = Route.useNavigate()
 	const handleValueChange = (value: string) => {
@@ -129,17 +133,26 @@ function DeckFeedPage() {
 					onValueChange={handleValueChange}
 				>
 					<FeedComposer lang={params.lang} />
-				<div className="mb-4 flex items-start gap-2">
-						<div className="flex flex-1 flex-wrap items-center gap-2">
-							<TabsList>
-								<TabsTrigger value="newest">Newest</TabsTrigger>
-								<TabsTrigger value="friends">Friends</TabsTrigger>
-								<TabsTrigger value="popular" data-testid="feed-tab-popular">
+					<div className="mb-3 flex items-center justify-between">
+						<div className="flex items-center gap-1">
+							<Logs className="text-muted-foreground ms-1 size-3.5" />
+							<TabsList className="h-auto gap-0 border-none bg-transparent p-0 shadow-none inset-shadow-none">
+								<TabsTrigger value="newest" className={feedTabClass}>
+									Newest
+								</TabsTrigger>
+								<TabsTrigger value="friends" className={feedTabClass}>
+									Friends
+								</TabsTrigger>
+								<TabsTrigger
+									value="popular"
+									data-testid="feed-tab-popular"
+									className={feedTabClass}
+								>
 									Popular
 								</TabsTrigger>
 							</TabsList>
-							<FeedFilterMenu />
 						</div>
+						<FeedFilterMenu />
 					</div>
 					<TabsContent value="newest">
 						<Activity mode={activeTab === 'newest' ? 'visible' : 'hidden'}>

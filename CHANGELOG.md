@@ -15,6 +15,7 @@ _25th Mar, 2026_
 - Add feed composer at top of feed — click to post a community request inline, or jump to phrase/playlist creation
 - Enhance chat recommend dialog to support phrases, playlists, and requests (not just phrases)
 - Persist charts language selection in URL search param
+- Simplify feed filter controls: lightweight text buttons for sort mode, compact dropdown for content type filter
 - Add desktop filter tabs to feed with mobile dropdown fallback
 - Add suggest-fixup-commit pre-tool hook for better git hygiene
 
