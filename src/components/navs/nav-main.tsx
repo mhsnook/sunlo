@@ -45,8 +45,8 @@ const learnMenuPublic = makeLinks([
 	'/learn/browse/charts',
 	'/learn/add-deck',
 ])
-const siteMenu = makeLinks(['/', '/login', '/signup', '/privacy-policy'])
-const siteMenuLoggedIn = makeLinks(['/', '/profile', '/privacy-policy'])
+const siteMenu = makeLinks(['/', '/search', '/login', '/signup', '/privacy-policy'])
+const siteMenuLoggedIn = makeLinks(['/', '/search', '/profile', '/privacy-policy'])
 
 export function NavMain({ lang }: { lang?: string }) {
 	const { isAuth } = useAuth()
