@@ -18,9 +18,7 @@ import {
 	ArrowDown,
 	CornerDownLeft,
 	Command,
-	MessageSquareQuote,
-	ListMusic,
-	MessageCircleHeart,
+	ArrowRight,
 } from 'lucide-react'
 
 import { phrasesCollection } from '@/features/phrases/collections'
@@ -30,52 +28,49 @@ import { useDecks } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { LangBadge } from '@/components/ui/badge'
 import { SelectOneLanguage } from '@/components/select-one-language'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 
-type ContentFilter = 'phrases' | 'playlists' | 'requests'
-
-interface SearchResultBase {
+interface SearchResult {
 	id: string
 	lang: string
 	title: string
 	subtitle: string | null
+	type: 'phrase' | 'playlist' | 'request'
+	playlistId?: string
 }
-
-interface PhraseResult extends SearchResultBase {
-	type: 'phrases'
-}
-
-interface PlaylistResult extends SearchResultBase {
-	type: 'playlists'
-	playlistId: string
-}
-
-interface RequestResult extends SearchResultBase {
-	type: 'requests'
-}
-
-type SearchResult = PhraseResult | PlaylistResult | RequestResult
 
 export default function BrowseSearchOverlay({
 	open,
 	onClose,
+	initialLangs,
 }: {
 	open: boolean
 	onClose: () => void
+	initialLangs?: Array<string>
 }) {
 	const inputRef = useRef<HTMLInputElement>(null)
 	const listRef = useRef<HTMLDivElement>(null)
 
 	const [query, setQuery] = useState('')
-	const [activeFilter, setActiveFilter] = useState<ContentFilter | null>(null)
-	const [selectedLangs, setSelectedLangs] = useState<Array<string>>([])
-	const [langsExpanded, setLangsExpanded] = useState(true)
+	const [selectedLangs, setSelectedLangs] = useState<Array<string>>(
+		initialLangs ?? []
+	)
+	const [langsExpanded, setLangsExpanded] = useState(!initialLangs?.length)
 	const [selectedIndex, setSelectedIndex] = useState(0)
+
+	// Reset state when modal opens
+	useEffect(() => {
+		if (open) {
+			setSelectedLangs(initialLangs ?? [])
+			setLangsExpanded(!initialLangs?.length)
+			setQuery('')
+		}
+	}, [open, initialLangs])
 
 	const debouncedQuery = useDebounce(query, 150)
 	const lowerQuery = debouncedQuery.toLowerCase().trim()
+	const hasQuery = lowerQuery.length > 0
 
 	// Get user's deck languages
 	const { data: userDecks } = useDecks()
@@ -87,7 +82,7 @@ export default function BrowseSearchOverlay({
 		[userDecks]
 	)
 
-	// Build the list of language pills to show (user langs + any manually added)
+	// Build the list of language pills (user langs + manually added)
 	const [extraLangs, setExtraLangs] = useState<
 		Array<{ code: string; name: string }>
 	>([])
@@ -116,82 +111,59 @@ export default function BrowseSearchOverlay({
 			.where(({ playlist }) => eq(playlist.deleted, false))
 	)
 
-	// Filter and search results
+	// Search and filter results
 	const results = useMemo((): Array<SearchResult> => {
+		if (!hasQuery) return []
+
 		const items: Array<SearchResult> = []
 		const langSet = selectedLangs.length > 0 ? new Set(selectedLangs) : null
 
-		if (activeFilter === null || activeFilter === 'phrases') {
-			const matching =
-				allPhrases
-					?.filter((phrase) => {
-						if (langSet && !langSet.has(phrase.lang)) return false
-						if (!lowerQuery) return true
-						const searchText = [
-							phrase.text,
-							...(phrase.translations?.map((t) => t.text) ?? []),
-						]
-							.join(' ')
-							.toLowerCase()
-						return searchText.includes(lowerQuery)
-					})
-					.slice(0, 8) ?? []
+		const matchesQuery = (text: string) =>
+			!lowerQuery || text.toLowerCase().includes(lowerQuery)
 
-			for (const phrase of matching) {
-				items.push({
-					id: phrase.id,
-					type: 'phrases',
-					lang: phrase.lang,
-					title: phrase.text,
-					subtitle: phrase.translations?.[0]?.text ?? null,
-				})
-			}
+		for (const phrase of allPhrases ?? []) {
+			if (langSet && !langSet.has(phrase.lang)) continue
+			const searchText = [
+				phrase.text,
+				...(phrase.translations?.map((t) => t.text) ?? []),
+			].join(' ')
+			if (!matchesQuery(searchText)) continue
+			items.push({
+				id: phrase.id,
+				type: 'phrase',
+				lang: phrase.lang,
+				title: phrase.text,
+				subtitle: phrase.translations?.[0]?.text ?? null,
+			})
+			if (items.length >= 20) return items
 		}
 
-		if (activeFilter === null || activeFilter === 'playlists') {
-			const matching =
-				allPlaylists
-					?.filter((playlist) => {
-						if (langSet && !langSet.has(playlist.lang)) return false
-						if (!lowerQuery) return true
-						const searchText = [playlist.title, playlist.description ?? '']
-							.join(' ')
-							.toLowerCase()
-						return searchText.includes(lowerQuery)
-					})
-					.slice(0, 8) ?? []
-
-			for (const playlist of matching) {
-				items.push({
-					id: playlist.id,
-					type: 'playlists',
-					lang: playlist.lang,
-					title: playlist.title,
-					subtitle: playlist.description,
-					playlistId: playlist.id,
-				})
-			}
+		for (const playlist of allPlaylists ?? []) {
+			if (langSet && !langSet.has(playlist.lang)) continue
+			if (!matchesQuery([playlist.title, playlist.description ?? ''].join(' ')))
+				continue
+			items.push({
+				id: playlist.id,
+				type: 'playlist',
+				lang: playlist.lang,
+				title: playlist.title,
+				subtitle: playlist.description,
+				playlistId: playlist.id,
+			})
+			if (items.length >= 20) return items
 		}
 
-		if (activeFilter === null || activeFilter === 'requests') {
-			const matching =
-				allRequests
-					?.filter((req) => {
-						if (langSet && !langSet.has(req.lang)) return false
-						if (!lowerQuery) return true
-						return req.prompt.toLowerCase().includes(lowerQuery)
-					})
-					.slice(0, 8) ?? []
-
-			for (const req of matching) {
-				items.push({
-					id: req.id,
-					type: 'requests',
-					lang: req.lang,
-					title: req.prompt,
-					subtitle: `${req.upvote_count} upvotes`,
-				})
-			}
+		for (const req of allRequests ?? []) {
+			if (langSet && !langSet.has(req.lang)) continue
+			if (!matchesQuery(req.prompt)) continue
+			items.push({
+				id: req.id,
+				type: 'request',
+				lang: req.lang,
+				title: req.prompt,
+				subtitle: `${req.upvote_count} upvotes`,
+			})
+			if (items.length >= 20) return items
 		}
 
 		return items
@@ -199,14 +171,13 @@ export default function BrowseSearchOverlay({
 		allPhrases,
 		allPlaylists,
 		allRequests,
-		activeFilter,
 		selectedLangs,
 		lowerQuery,
+		hasQuery,
 	])
 
-	// Reset selected index when results change (setState during render is the
-	// React-recommended pattern for derived state — avoids a cascading re-render)
-	const resetKey = `${results.length}-${activeFilter}-${lowerQuery}`
+	// Reset selected index when results change
+	const resetKey = `${results.length}-${lowerQuery}`
 	const [prevResetKey, setPrevResetKey] = useState(resetKey)
 	if (resetKey !== prevResetKey) {
 		setPrevResetKey(resetKey)
@@ -220,7 +191,7 @@ export default function BrowseSearchOverlay({
 		links[index]?.click()
 	}, [])
 
-	// Keyboard handling within the dialog
+	// Keyboard handling
 	const handleKeyDown = useCallback(
 		(e: ReactKeyboardEvent) => {
 			if (e.key === 'ArrowDown') {
@@ -242,7 +213,6 @@ export default function BrowseSearchOverlay({
 	// Focus input when dialog opens
 	useEffect(() => {
 		if (open) {
-			// Small delay to let Dialog finish rendering
 			const t = setTimeout(() => inputRef.current?.focus(), 50)
 			return () => clearTimeout(t)
 		}
@@ -255,7 +225,7 @@ export default function BrowseSearchOverlay({
 		selected?.scrollIntoView({ block: 'nearest' })
 	}, [selectedIndex])
 
-	// Toggle a language filter
+	// Language filter actions
 	const toggleLang = (langCode: string) => {
 		setSelectedLangs((prev) =>
 			prev.includes(langCode) ?
@@ -264,7 +234,6 @@ export default function BrowseSearchOverlay({
 		)
 	}
 
-	// Add a language from the combobox
 	const [addLangValue, setAddLangValue] = useState('')
 	const handleAddLanguage = useCallback((langCode: string) => {
 		if (!langCode) return
@@ -273,16 +242,14 @@ export default function BrowseSearchOverlay({
 			if (prev.some((l) => l.code === langCode)) return prev
 			return [...prev, { code: langCode, name }]
 		})
-		setSelectedLangs((prev) =>
-			prev.includes(langCode) ? prev : [...prev, langCode]
-		)
-		// Reset the combobox after a tick so the popover closes
+		setSelectedLangs((prev) => {
+			if (prev.includes(langCode)) return prev
+			return [...prev, langCode]
+		})
 		setTimeout(() => setAddLangValue(''), 0)
 	}, [])
 
-	const hasQuery = lowerQuery.length > 0
-	const showResults =
-		hasQuery || activeFilter !== null || selectedLangs.length > 0
+	const showResults = hasQuery
 
 	return (
 		<Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -290,7 +257,7 @@ export default function BrowseSearchOverlay({
 				className="flex max-h-[80vh] flex-col gap-0 overflow-hidden p-0"
 				data-testid="browse-search-overlay"
 			>
-				{/* Heading row — dialog's built-in X sits here */}
+				{/* Heading */}
 				<div className="px-4 pt-4 pb-0">
 					<DialogTitle className="text-muted-foreground text-sm font-medium">
 						Search the public library
@@ -323,75 +290,51 @@ export default function BrowseSearchOverlay({
 					</div>
 				</div>
 
-				{/* Filter Tabs */}
-				<div className="border-b px-4 py-2.5">
-					<Tabs
-						value={activeFilter ?? 'all'}
-						onValueChange={(v) =>
-							setActiveFilter(v === 'all' ? null : (v as ContentFilter))
-						}
-					>
-						<TabsList>
-							<TabsTrigger value="all">All</TabsTrigger>
-							<TabsTrigger value="phrases">
-								<MessageSquareQuote className="me-1 size-4" />
-								Phrases
-							</TabsTrigger>
-							<TabsTrigger value="playlists">
-								<ListMusic className="me-1 size-4" />
-								Playlists
-							</TabsTrigger>
-							<TabsTrigger value="requests">
-								<MessageCircleHeart className="me-1 size-4" />
-								Requests
-							</TabsTrigger>
-						</TabsList>
-					</Tabs>
-				</div>
+				{/* Languages — only after typing */}
+				{hasQuery && (
+					<div className="border-b px-4 py-2.5">
+						<button
+							type="button"
+							className="text-muted-foreground hover:text-foreground flex w-full items-center justify-between text-sm font-medium"
+							onClick={() => setLangsExpanded((prev) => !prev)}
+						>
+							<span>Languages</span>
+							{langsExpanded ?
+								<ChevronUp className="size-4" />
+							:	<ChevronDown className="size-4" />}
+						</button>
 
-				{/* Languages Section */}
-				<div className="border-b px-4 py-2.5">
-					<button
-						type="button"
-						className="text-muted-foreground hover:text-foreground flex w-full items-center justify-between text-sm font-medium"
-						onClick={() => setLangsExpanded((prev) => !prev)}
-					>
-						<span>Languages</span>
-						{langsExpanded ?
-							<ChevronUp className="size-4" />
-						:	<ChevronDown className="size-4" />}
-					</button>
-
-					{langsExpanded && (
-						<div className="mt-2 space-y-2">
-							{displayLangs.length > 0 && (
-								<div className="flex flex-wrap gap-1.5">
-									{displayLangs.map((l) => (
-										<button
-											key={l.code}
-											type="button"
-											onClick={() => toggleLang(l.code)}
-											className={cn(
-												'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-												selectedLangs.includes(l.code) ?
-													'bg-primary-foresoft text-primary-foreground border-transparent'
-												:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
-											)}
-										>
-											{l.name}
-										</button>
-									))}
-								</div>
-							)}
-							<SelectOneLanguage
-								value={addLangValue}
-								setValue={handleAddLanguage}
-								disabled={displayLangs.map((l) => l.code)}
-								size="default"
-							/>
-						</div>
-					)}
-				</div>
+						{langsExpanded && (
+							<div className="mt-2 space-y-2">
+								{displayLangs.length > 0 && (
+									<div className="flex flex-wrap gap-1.5">
+										{displayLangs.map((l) => (
+											<button
+												key={l.code}
+												type="button"
+												onClick={() => toggleLang(l.code)}
+												className={cn(
+													'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+													selectedLangs.includes(l.code) ?
+														'bg-primary-foresoft text-primary-foreground border-transparent'
+													:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
+												)}
+											>
+												{l.name}
+											</button>
+										))}
+									</div>
+								)}
+								<SelectOneLanguage
+									value={addLangValue}
+									setValue={handleAddLanguage}
+									disabled={displayLangs.map((l) => l.code)}
+									size="default"
+								/>
+							</div>
+						)}
+					</div>
+				)}
 
 				{/* Results */}
 				{showResults && (
@@ -409,7 +352,6 @@ export default function BrowseSearchOverlay({
 									key={`${result.type}-${result.id}`}
 									result={result}
 									isSelected={index === selectedIndex}
-									showType={activeFilter === null}
 									onMouseEnter={() => setSelectedIndex(index)}
 								/>
 							))
@@ -417,22 +359,39 @@ export default function BrowseSearchOverlay({
 					</div>
 				)}
 
-				{/* Keyboard Shortcuts Footer */}
-				<div className="text-muted-foreground bg-muted/30 flex items-center gap-4 border-t px-4 py-2 text-xs">
-					<span className="inline-flex items-center gap-1">
-						<ArrowUp className="size-3" />
-						<ArrowDown className="size-3" />
-						Navigate
-					</span>
-					<span className="inline-flex items-center gap-1">
-						<CornerDownLeft className="size-3" />
-						Open
-					</span>
-					<span className="inline-flex items-center gap-1">
-						<Command className="size-3" />K Toggle
-					</span>
-					<span>Esc Close</span>
-				</div>
+				{/* Footer — only after typing */}
+				{hasQuery && (
+					<div className="text-muted-foreground bg-muted/30 flex items-center gap-4 border-t px-4 py-2 text-xs">
+						<span className="inline-flex items-center gap-1">
+							<ArrowUp className="size-3" />
+							<ArrowDown className="size-3" />
+							Navigate
+						</span>
+						<span className="inline-flex items-center gap-1">
+							<CornerDownLeft className="size-3" />
+							Open
+						</span>
+						<span className="inline-flex items-center gap-1">
+							<Command className="size-3" />K Toggle
+						</span>
+						<span>Esc Close</span>
+						<Link
+							to="/search"
+							search={{
+								q: lowerQuery || undefined,
+								langs:
+									selectedLangs.length > 0 ?
+										selectedLangs.join(',')
+									:	undefined,
+							}}
+							className="hover:text-foreground ms-auto inline-flex items-center gap-1 font-medium"
+							onClick={onClose}
+						>
+							View all results
+							<ArrowRight className="size-3" />
+						</Link>
+					</div>
+				)}
 			</DialogContent>
 		</Dialog>
 	)
@@ -441,12 +400,10 @@ export default function BrowseSearchOverlay({
 function SearchResultLink({
 	result,
 	isSelected,
-	showType,
 	onMouseEnter,
 }: {
 	result: SearchResult
 	isSelected: boolean
-	showType: boolean
 	onMouseEnter: () => void
 }) {
 	const className =
@@ -463,40 +420,36 @@ function SearchResultLink({
 					</p>
 				)}
 			</div>
-			{showType && (
-				<span className="text-muted-foreground shrink-0 text-xs capitalize">
-					{result.type === 'phrases' ?
-						'phrase'
-					: result.type === 'playlists' ?
-						'playlist'
-					:	'request'}
-				</span>
-			)}
+			<span className="text-muted-foreground shrink-0 text-xs capitalize">
+				{result.type}
+			</span>
 		</>
 	)
 
-	if (result.type === 'phrases') {
+	const linkProps = {
+		'data-selected': isSelected,
+		className,
+		onMouseEnter,
+	} as const
+
+	if (result.type === 'phrase') {
 		return (
 			<Link
 				to="/learn/$lang/phrases/$id"
 				params={{ lang: result.lang, id: result.id }}
-				data-selected={isSelected}
-				className={className}
-				onMouseEnter={onMouseEnter}
+				{...linkProps}
 			>
 				{inner}
 			</Link>
 		)
 	}
 
-	if (result.type === 'playlists') {
+	if (result.type === 'playlist') {
 		return (
 			<Link
 				to="/learn/$lang/playlists/$playlistId"
-				params={{ lang: result.lang, playlistId: result.playlistId }}
-				data-selected={isSelected}
-				className={className}
-				onMouseEnter={onMouseEnter}
+				params={{ lang: result.lang, playlistId: result.playlistId! }}
+				{...linkProps}
 			>
 				{inner}
 			</Link>
@@ -507,9 +460,7 @@ function SearchResultLink({
 		<Link
 			to="/learn/$lang/requests/$id"
 			params={{ lang: result.lang, id: result.id }}
-			data-selected={isSelected}
-			className={className}
-			onMouseEnter={onMouseEnter}
+			{...linkProps}
 		>
 			{inner}
 		</Link>
