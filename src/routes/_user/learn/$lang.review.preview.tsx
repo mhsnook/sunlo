@@ -19,9 +19,10 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 	}),
 	component: PreviewPage,
 	loader: async () => {
-		const daysLoaded = reviewDaysCollection.preload()
-		const reviewsLoaded = cardReviewsCollection.preload()
-		await Promise.all([daysLoaded, reviewsLoaded])
+		await Promise.all([
+			reviewDaysCollection.preload(),
+			cardReviewsCollection.preload(),
+		])
 	},
 })
 

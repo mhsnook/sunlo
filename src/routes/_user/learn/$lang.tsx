@@ -46,16 +46,12 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		}
 	},
 	loader: async () => {
-		const langTagsPromise = langTagsCollection.preload()
-		const daysPromise = reviewDaysCollection.preload()
-		const reviewsPromise = cardReviewsCollection.preload()
-		const phrasesPromise = phrasesCollection.preload()
-		void cardsCollection.preload()
 		await Promise.all([
-			langTagsPromise,
-			daysPromise,
-			reviewsPromise,
-			phrasesPromise,
+			langTagsCollection.preload(),
+			reviewDaysCollection.preload(),
+			cardReviewsCollection.preload(),
+			phrasesCollection.preload(),
+			cardsCollection.preload(),
 		])
 	},
 })
