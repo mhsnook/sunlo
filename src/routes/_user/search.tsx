@@ -2,7 +2,6 @@ import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useDebounce } from '@uidotdev/usehooks'
 import { eq, ilike } from '@tanstack/db'
-import { escapeIlikeInput } from '@/lib/utils'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
@@ -131,7 +130,7 @@ function SearchPage() {
 			}
 			if (effectiveText.length >= 2) {
 				query = query.where(({ phrase }) =>
-					ilike(phrase.searchableText, `%${escapeIlikeInput(effectiveText)}%`)
+					ilike(phrase.searchableText, `%${effectiveText}%`)
 				)
 			}
 			if (tagFilters.length > 0) {
