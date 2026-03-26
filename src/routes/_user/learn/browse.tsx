@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 
 import {
 	languagesCollection,
@@ -25,12 +25,13 @@ export const Route = createFileRoute('/_user/learn/browse')({
 			:	['/login', '/signup'],
 	}),
 	loader: async () => {
-		await languagesCollection.preload()
-		await langTagsCollection.preload()
-		await phraseRequestsCollection.preload()
-		await phrasePlaylistsCollection.preload()
-		await phrasesCollection.preload()
-		await playlistPhraseLinksCollection.preload()
+		await Promise.all([
+			languagesCollection.preload(),
+			langTagsCollection.preload(),
+			phraseRequestsCollection.preload(),
+			phrasePlaylistsCollection.preload(),
+			phrasesCollection.preload(),
+			playlistPhraseLinksCollection.preload(),
+		])
 	},
-	component: () => <Outlet />,
 })
