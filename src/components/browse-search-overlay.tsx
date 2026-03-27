@@ -12,8 +12,7 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
 	X,
-	ChevronDown,
-	ChevronUp,
+	Plus,
 	ArrowUp,
 	ArrowDown,
 	CornerDownLeft,
@@ -54,7 +53,6 @@ export default function BrowseSearchOverlay({
 	const [selectedLangs, setSelectedLangs] = useState<Array<string>>(
 		initialLangs ?? []
 	)
-	const [langsExpanded, setLangsExpanded] = useState(true)
 	const [selectedIndex, setSelectedIndex] = useState(0)
 
 	const debouncedQuery = useDebounce(query, 150)
@@ -284,49 +282,39 @@ export default function BrowseSearchOverlay({
 					</div>
 				</div>
 
-				{/* Languages — only after typing */}
-				{hasQuery && (
-					<div className="border-b px-4 py-2.5">
-						<button
-							type="button"
-							className="text-muted-foreground hover:text-foreground flex w-full items-center justify-between text-sm font-medium"
-							onClick={() => setLangsExpanded((prev) => !prev)}
-						>
-							<span>Languages</span>
-							{langsExpanded ?
-								<ChevronUp className="size-4" />
-							:	<ChevronDown className="size-4" />}
-						</button>
-
-						{langsExpanded && (
-							<div className="mt-2 space-y-2">
-								{displayLangs.length > 0 && (
-									<div className="flex flex-wrap gap-1.5">
-										{displayLangs.map((l) => (
-											<button
-												key={l.code}
-												type="button"
-												onClick={() => toggleLang(l.code)}
-												className={cn(
-													'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-													selectedLangs.includes(l.code) ?
-														'bg-primary-foresoft text-primary-foreground border-transparent'
-													:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
-												)}
-											>
-												{l.name}
-											</button>
-										))}
-									</div>
+				{/* Language pills */}
+				{hasQuery && displayLangs.length > 0 && (
+					<div className="flex flex-wrap gap-1.5 border-b px-4 py-2.5">
+						{displayLangs.map((l) => (
+							<button
+								key={l.code}
+								type="button"
+								onClick={() => toggleLang(l.code)}
+								className={cn(
+									'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+									selectedLangs.includes(l.code) ?
+										'bg-primary-foresoft text-primary-foreground border-transparent'
+									:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
 								)}
-								<SelectOneLanguage
-									value={addLangValue}
-									setValue={handleAddLanguage}
-									disabled={displayLangs.map((l) => l.code)}
-									size="default"
-								/>
-							</div>
-						)}
+							>
+								{l.name}
+							</button>
+						))}
+						<SelectOneLanguage
+							value={addLangValue}
+							setValue={handleAddLanguage}
+							disabled={displayLangs.map((l) => l.code)}
+							popoverAlign="start"
+							trigger={
+								<button
+									type="button"
+									className="border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
+								>
+									<Plus className="size-3" />
+									more
+								</button>
+							}
+						/>
 					</div>
 				)}
 
@@ -460,3 +448,4 @@ function SearchResultLink({
 		</Link>
 	)
 }
+
