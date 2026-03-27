@@ -1,5 +1,31 @@
 # Change Log
 
+## v0.17 - Unified Search, Language Filter Pills, Social Media Embeds
+
+_27th Mar, 2026_
+
+### Major Changes
+
+- Unify search: replace deck search page with a modal, lifted to `/learn` layout and accessible from main navigation
+- Replace expand/collapse language sections with inline pills + "more" button for a cleaner filter UI
+
+### Features
+
+- Add YouTube Shorts, Instagram, and TikTok support to playlist embeds
+- Accept `q` and `langs` search params on `/search` page for deep-linkable searches
+- Progressive disclosure in search overlay: blank command palette until user types
+
+### Improvements
+
+- Make the empty-query search flyout more informative and visually engaging
+- Await data fetches in parallel for faster load times
+
+### Fixes
+
+- Fix search filter breaking on special characters like `?`
+- Fix search input parsing to strip punctuation from tokens
+- Fix language filter pills not reflecting URL-derived language on load
+
 ## v0.16 - Feed Composer, Phrase Finder, Feature Module Refactor, Review Polish
 
 _25th Mar, 2026_
