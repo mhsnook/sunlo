@@ -54,7 +54,7 @@ export default function BrowseSearchOverlay({
 	const [selectedLangs, setSelectedLangs] = useState<Array<string>>(
 		initialLangs ?? []
 	)
-	const [langsExpanded, setLangsExpanded] = useState(!initialLangs?.length)
+	const [langsExpanded, setLangsExpanded] = useState(true)
 	const [selectedIndex, setSelectedIndex] = useState(0)
 
 	const debouncedQuery = useDebounce(query, 150)
@@ -77,13 +77,18 @@ export default function BrowseSearchOverlay({
 	>([])
 	const displayLangs = useMemo(() => {
 		const base = userLangs.length > 0 ? [...userLangs] : []
+		for (const code of selectedLangs) {
+			if (!base.some((l) => l.code === code)) {
+				base.push({ code, name: languages[code] ?? code })
+			}
+		}
 		for (const extra of extraLangs) {
 			if (!base.some((l) => l.code === extra.code)) {
 				base.push(extra)
 			}
 		}
 		return base
-	}, [userLangs, extraLangs])
+	}, [userLangs, extraLangs, selectedLangs])
 
 	// Collections data
 	const { data: allPhrases } = useLiveQuery((q) =>
