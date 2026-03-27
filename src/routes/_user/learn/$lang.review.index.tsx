@@ -169,7 +169,7 @@ function ReviewPageContent() {
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
 			console.log(
-				`Starting mutation to create ${allCardsForToday.length} cards`,
+				`Starting mutation to review ${allCardsForToday.length} cards today, creating ${cardsToCreate.length} new card records`,
 				{ cardsToCreate }
 			)
 			const { data: newCards } =
@@ -183,25 +183,29 @@ function ReviewPageContent() {
 								lang,
 								uid: userId!,
 								status: 'active' as CardStatusEnumType,
-							}))
+							})),
+							{ onConflict: 'uid,phrase_id', ignoreDuplicates: true }
 						)
 						.select()
 						.throwOnError()
 
-			const { data: reviewDay } =
-				newCards.length !== cardsToCreate.length ?
-					{ data: null }
-				:	await supabase
-						.from('user_deck_review_state')
-						.insert({
-							lang,
-							day_session: dayString,
-							uid: userId!,
-							manifest: allCardsForToday,
-						})
-						.throwOnError()
-						.select()
-						.single()
+			const skippedDuplicates = cardsToCreate.length - newCards.length
+			if (skippedDuplicates > 0)
+				console.warn(
+					`${skippedDuplicates} cards already existed in DB (local collection was stale) — skipped duplicates gracefully`
+				)
+
+			const { data: reviewDay } = await supabase
+				.from('user_deck_review_state')
+				.insert({
+					lang,
+					day_session: dayString,
+					uid: userId!,
+					manifest: allCardsForToday,
+				})
+				.throwOnError()
+				.select()
+				.single()
 
 			if (
 				!Array.isArray(reviewDay?.manifest) ||
@@ -215,6 +219,7 @@ function ReviewPageContent() {
 				countCards: allCardsForToday.length,
 				countCardsFresh: freshCards.length,
 				countCardsCreated: newCards.length,
+				countCardsAlreadyExisted: skippedDuplicates,
 				freshCardPids: freshCards,
 				newCards,
 				reviewDay,
@@ -225,10 +230,6 @@ function ReviewPageContent() {
 			if (!data) throw new Error('No data returned from mutation')
 			if (!data.reviewDay)
 				throw new Error('No daily session data returned from mutation')
-			if (data.newCards.length !== cardsToCreate.length)
-				throw new Error(
-					`Error creating new cards for today's review. Expected ${cardsToCreate.length} but got back ${data.newCards.length}.`
-				)
 			if (!Array.isArray(data.reviewDay.manifest))
 				throw new Error(
 					`Error creating today's review session: server returned type "${typeof data.reviewDay.manifest}"`
@@ -249,9 +250,11 @@ function ReviewPageContent() {
 				DailyReviewStateSchema.parse(data.reviewDay)
 			)
 			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
-			toastSuccess(
-				`Ready to go! ${data.countCardsCreated} to study today, ${data.countCardsFresh} fresh new cards ready to go.`
-			)
+			const toastMessage =
+				data.countCardsAlreadyExisted > 0 ?
+					`Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
+				:	`Ready to go! ${data.countCardsCreated} new cards, ${data.countCards} total for today.`
+			toastSuccess(toastMessage)
 			sessionJustCreatedRef.current = true
 			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
 		},
