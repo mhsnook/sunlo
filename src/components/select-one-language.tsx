@@ -1,4 +1,4 @@
-import { useId, useState } from 'react'
+import { type ReactNode, useId, useState } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
 import type { ControlledInputProps } from './fields/types'
@@ -25,30 +25,40 @@ export function SelectOneLanguage({
 	disabled,
 	tabIndex,
 	size = 'default',
-}: ControlledInputProps & { size?: 'default' | 'lg' }) {
+	trigger,
+	popoverAlign = 'center',
+}: ControlledInputProps & {
+	size?: 'default' | 'lg'
+	trigger?: ReactNode
+	popoverAlign?: 'start' | 'center' | 'end'
+}) {
 	const [open, setOpen] = useState(false)
 	const id = useId()
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild className="w-full">
-				<Button
-					data-testid="language-selector-button"
-					variant="ghost"
-					tabIndex={tabIndex}
-					role="combobox"
-					size={size}
-					aria-expanded={open}
-					aria-controls={id}
-					className={`placeholder:text-muted-foreground text-foreground justify-between border font-normal ${hasError ? 'border-destructive' : ''}`}
-				>
-					{value ?
-						allLanguageOptions.find((language) => language.value === value)
-							?.label
-					:	'Select language...'}
-					<ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent id={id} className="p-0">
+			{trigger ?
+				<PopoverTrigger asChild>{trigger}</PopoverTrigger>
+			:	<PopoverTrigger asChild className="w-full">
+					<Button
+						data-testid="language-selector-button"
+						variant="ghost"
+						tabIndex={tabIndex}
+						role="combobox"
+						size={size}
+						aria-expanded={open}
+						aria-controls={id}
+						className={`placeholder:text-muted-foreground text-foreground justify-between border font-normal ${hasError ? 'border-destructive' : ''}`}
+					>
+						{value ?
+							allLanguageOptions.find(
+								(language) => language.value === value
+							)?.label
+						:	'Select language...'}
+						<ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
+					</Button>
+				</PopoverTrigger>
+			}
+			<PopoverContent id={id} className="p-0" align={popoverAlign}>
 				<Command
 					filter={(value, search) => {
 						search = search.toLocaleLowerCase()
@@ -83,7 +93,7 @@ export function SelectOneLanguage({
 									data-key={language.value}
 								>
 									<Check
-										className={`mr-2 size-4 ${value === language.value ? 'opacity-100' : 'opacity-0'}`}
+										className={`me-2 size-4 ${value === language.value ? 'opacity-100' : 'opacity-0'}`}
 									/>
 									{language.label} ({language.value})
 								</CommandItem>
