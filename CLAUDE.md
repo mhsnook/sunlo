@@ -83,6 +83,37 @@ pnpm run seeds:apply
 3. Run `pnpm run seeds:schema` to update base.sql (review carefully!), update supabase types, run formatter
 4. Run `pnpm run types` to regenerate TypeScript types
 
+## Deployment Strategy
+
+We use **trunk-based development with a migration gate** — two deployment tracks, not two long-lived branches.
+
+### The two tracks
+
+| Track | Trigger | Risk profile | Ceremony |
+| --- | --- | --- | --- |
+| **Fast track** (UI-only) | PR merges to `main` | Low blast radius, reversible | Deploy at will, drop a one-liner in changelog |
+| **Migration track** (schema changes) | PR into `next` branch | Expensive to reverse, needs review | Human review gate, batch release notes |
+
+### Decision rule
+
+> **Does this PR touch a migration file?**
+> - **No** → merge to `main`, deploy when ready.
+> - **Yes** → PR into `next`, hold for review, merge `next` → `main` when the batch is ready.
+
+### Workflow
+
+1. **Feature without migration** → PR → merge to `main` → deploy → one-liner changelog entry (doesn't need to be same day)
+2. **Feature with migration** → PR into `next` → accumulates with other migration PRs → human reviews full picture → merge `next` into `main` → deploy → write proper release notes
+3. **Version bumps** → only when cutting a `next` → `main` release. Use datestamps (e.g. `2026-03-27`) as release identifiers, not semver. Tag these merges with `git tag`.
+
+### Guidelines
+
+- **Don't let `next` get stale.** If it's been open >2 weeks, either ship it or break the migrations into smaller pieces.
+- **Tag `next` → `main` merges** even informally — `git tag` is cheap and makes the deployment log reconstructable.
+- **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/dated release entries for migration-track batches.
+- **No semver.** We're not publishing packages. Datestamps or sequential names are sufficient.
+- **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
+
 ## Architecture Overview
 
 ### Philosophy
