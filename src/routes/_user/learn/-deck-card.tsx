@@ -75,7 +75,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 									params={{ lang: deck.lang }}
 								>
 									<Logs />
-									{deck.language} Feed
+									Browse Feed
 								</Link>
 								<Link
 									to="/learn/$lang/manage-deck"
