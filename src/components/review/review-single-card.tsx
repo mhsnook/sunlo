@@ -169,13 +169,16 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 1 })}
 							disabled={isPending}
 							className={cn(
-								'rounded-none rounded-l-2xl border-red-600! bg-red-600! text-white hover:border-white! hover:bg-red-700!',
+								'h-auto flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
 								prevData?.score === 1 && reviewStage < 4 ?
 									'ring-primary ring-2 ring-offset-3'
 								:	''
 							)}
 						>
-							Again ({nextIntervals[0]})
+							<span>Again</span>
+							<span className="text-xs font-normal opacity-80">
+								{nextIntervals[0]}
+							</span>
 						</Button>
 						<Button
 							variant="default"
@@ -183,11 +186,14 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 2 })}
 							disabled={isPending}
 							className={cn(
-								'rounded-none border-gray-200! bg-gray-200! text-gray-700! hover:border-white! hover:bg-gray-300!',
+								'h-auto flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
 								prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
-							Hard ({nextIntervals[1]})
+							<span>Hard</span>
+							<span className="text-xs font-normal opacity-60">
+								{nextIntervals[1]}
+							</span>
 						</Button>
 						<Button
 							variant="default"
@@ -195,23 +201,29 @@ export function ReviewSingleCard({
 							onClick={() => mutate({ score: 3 })}
 							disabled={isPending}
 							className={cn(
-								'rounded-none border-green-500! bg-green-500! text-white hover:border-white! hover:bg-green-600!',
+								'h-auto flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
 								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 						>
-							Good ({nextIntervals[2]})
+							<span>Good</span>
+							<span className="text-xs font-normal opacity-80">
+								{nextIntervals[2]}
+							</span>
 						</Button>
 						<Button
 							variant="default"
 							data-testid="rating-easy-button"
 							className={cn(
-								'rounded-none rounded-r-2xl border-blue-500 bg-blue-500! text-white hover:border-white! hover:bg-blue-600',
+								'h-auto flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
 							onClick={() => mutate({ score: 4 })}
 							disabled={isPending}
 						>
-							Easy ({nextIntervals[3]})
+							<span>Easy</span>
+							<span className="text-xs font-normal opacity-80">
+								{nextIntervals[3]}
+							</span>
 						</Button>
 					</div>
 				}
