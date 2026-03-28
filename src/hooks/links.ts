@@ -20,6 +20,7 @@ import {
 	HouseHeart,
 	Lock,
 	LogIn,
+	List,
 	Logs,
 	Mail,
 	MessageCircleHeart,
@@ -278,6 +279,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: CircleStar,
+		},
+		'/learn/$lang/manage-deck': {
+			name: 'Cards',
+			title: 'Manage Deck',
+			link: {
+				to: '/learn/$lang/manage-deck',
+				params: { lang },
+			},
+			Icon: List,
 		},
 		'/learn/$lang/requests/new': {
 			name: 'Request',

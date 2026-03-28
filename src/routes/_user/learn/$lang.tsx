@@ -38,6 +38,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			contextMenu:
 				context.auth.isAuth ?
 					[
+						'/learn/$lang/manage-deck',
 						'/learn/$lang/requests/new',
 						'/learn/$lang/phrases/new',
 						'/learn/$lang/deck-settings',
