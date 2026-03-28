@@ -328,9 +328,7 @@ function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 			{/* Last Review */}
 			<td className="px-3 py-2 text-center">
 				{daysSinceReview != null ?
-					<span
-						className={`text-sm tabular-nums ${daysSinceReview > 14 ? 'text-7-hi-warning' : 'text-muted-foreground'}`}
-					>
+					<span className="text-muted-foreground text-sm tabular-nums">
 						{daysSinceReview === 0 ?
 							'today'
 						: daysSinceReview === 1 ?
