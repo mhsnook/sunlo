@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import { Archive, Rocket, HouseHeart, Logs } from 'lucide-react'
+import { Archive, Rocket, Logs, TableProperties } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -65,31 +65,31 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								lang={deck.lang}
 								archived={deck.archived}
 							/>
-						:	<Link
-								to="/learn/$lang"
-								className={cn(
-									buttonVariants({ variant: 'neutral' }),
-									'grow basis-40'
-								)}
-								params={{ lang: deck.lang }}
-							>
-								<HouseHeart />
-								Deck Home
-							</Link>
+						:	<>
+								<Link
+									to="/learn/$lang/feed"
+									className={cn(
+										buttonVariants({ variant: 'neutral' }),
+										`grow basis-40`
+									)}
+									params={{ lang: deck.lang }}
+								>
+									<Logs />
+									Browse Feed
+								</Link>
+								<Link
+									to="/learn/$lang/manage-deck"
+									className={cn(
+										buttonVariants({ variant: 'neutral' }),
+										`grow basis-40`
+									)}
+									params={{ lang: deck.lang }}
+								>
+									<TableProperties />
+									Manage Deck
+								</Link>
+							</>
 						}
-						{!deck.archived ?
-							<Link
-								to="/learn/$lang/feed"
-								className={cn(
-									buttonVariants({ variant: 'neutral' }),
-									`grow basis-60`
-								)}
-								params={{ lang: deck.lang }}
-							>
-								<Logs />
-								Browse Feed
-							</Link>
-						:	null}
 					</div>
 					{/* Subtle stats footer */}
 					<div className="text-muted-foreground border-t pt-2 text-xs">

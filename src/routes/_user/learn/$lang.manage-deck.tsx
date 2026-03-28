@@ -10,6 +10,8 @@ import {
 	Bookmark,
 	BookmarkCheck,
 	BookmarkX,
+	ChevronRight,
+	ExternalLink,
 	Filter,
 } from 'lucide-react'
 
@@ -25,7 +27,7 @@ import { CardMetaSchema, type CardMetaType } from '@/features/deck/schemas'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { dateDiff } from '@/lib/utils'
+import { cn, dateDiff } from '@/lib/utils'
 import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
@@ -94,7 +96,7 @@ function ManageDeckPage() {
 	)
 }
 
-function ManageDeckTable({ lang }: { lang: string }) {
+function useCardData(lang: string) {
 	const { data: cards, isLoading: cardsLoading } = useDeckCards(lang)
 	const { data: phrases, isLoading: phrasesLoading } = useLiveQuery(
 		(q) =>
@@ -158,7 +160,31 @@ function ManageDeckTable({ lang }: { lang: string }) {
 		}
 	}
 
-	if (cardsLoading || phrasesLoading) {
+	return {
+		cards,
+		sortedCards,
+		isLoading: cardsLoading || phrasesLoading,
+		sortField,
+		sortDir,
+		statusFilter,
+		setStatusFilter,
+		handleSort,
+	}
+}
+
+function ManageDeckTable({ lang }: { lang: string }) {
+	const {
+		cards,
+		sortedCards,
+		isLoading,
+		sortField,
+		sortDir,
+		statusFilter,
+		setStatusFilter,
+		handleSort,
+	} = useCardData(lang)
+
+	if (isLoading) {
 		return (
 			<div className="text-muted-foreground py-12 text-center text-sm">
 				Loading your cards...
@@ -175,7 +201,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 	}
 
 	return (
-		<div className="space-y-4" data-testid="manage-deck-table">
+		<div className="@container space-y-4" data-testid="manage-deck-table">
 			{/* Filter bar */}
 			<div className="flex flex-wrap items-center gap-2">
 				<Filter className="text-muted-foreground size-4" />
@@ -195,8 +221,15 @@ function ManageDeckTable({ lang }: { lang: string }) {
 				))}
 			</div>
 
-			{/* Table */}
-			<div className="overflow-x-auto rounded-lg border">
+			{/* Mobile: tap-to-expand list */}
+			<div className="space-y-1 @md:hidden">
+				{sortedCards.map((card) => (
+					<MobileCardRow key={card.id} card={card} lang={lang} />
+				))}
+			</div>
+
+			{/* Desktop: full table */}
+			<div className="hidden overflow-x-auto rounded-lg border @md:block">
 				<table className="w-full text-sm">
 					<thead>
 						<tr className="bg-1-lo-neutral border-b">
@@ -234,7 +267,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 					</thead>
 					<tbody>
 						{sortedCards.map((card) => (
-							<CardRow key={card.id} card={card} lang={lang} />
+							<DesktopCardRow key={card.id} card={card} lang={lang} />
 						))}
 					</tbody>
 				</table>
@@ -246,6 +279,105 @@ function ManageDeckTable({ lang }: { lang: string }) {
 		</div>
 	)
 }
+
+/* ── Mobile: expandable card row ─────────────────────────────── */
+
+function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
+	const [open, setOpen] = useState(false)
+	const StatusIconComponent = statusIcon[card.status]
+	const daysSinceReview =
+		card.last_reviewed_at ? Math.floor(dateDiff(card.last_reviewed_at)) : null
+	const difficultyDisplay =
+		card.difficulty != null ? (card.difficulty * 10).toFixed(1) : null
+	const difficultyColor =
+		card.difficulty == null ? 'text-muted-foreground'
+		: card.difficulty < 0.4 ? 'text-7-hi-success'
+		: card.difficulty < 0.7 ? 'text-7-hi-warning'
+		: 'text-7-hi-danger'
+
+	return (
+		<div
+			className={cn(
+				'rounded-lg border transition-colors',
+				open ? 'bg-0-lo-neutral' : 'hover:bg-0-lo-neutral'
+			)}
+			data-testid="manage-deck-row"
+		>
+			{/* Tap target: phrase + status icon */}
+			<button
+				onClick={() => setOpen((o) => !o)}
+				className="flex w-full items-center gap-3 px-3 py-2.5 text-start"
+			>
+				<StatusIconComponent
+					className={cn('size-4 shrink-0', statusColors[card.status])}
+				/>
+				<span className="min-w-0 flex-1 text-sm font-medium">
+					{card.phrase_text}
+				</span>
+				<ChevronRight
+					className={cn(
+						'text-muted-foreground size-4 shrink-0 transition-transform',
+						open && 'rotate-90'
+					)}
+				/>
+			</button>
+
+			{/* Expanded details */}
+			{open && (
+				<div className="space-y-3 border-t px-3 pt-2 pb-3">
+					{/* Stats row */}
+					<div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+						<span className="text-muted-foreground">
+							Status:{' '}
+							<span
+								className={cn(
+									'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium',
+									statusColors[card.status],
+									statusBgColors[card.status]
+								)}
+							>
+								{card.status}
+							</span>
+						</span>
+						<span className="text-muted-foreground">
+							Reviewed:{' '}
+							<span className="text-foreground tabular-nums">
+								{daysSinceReview != null ?
+									daysSinceReview === 0 ?
+										'today'
+									: daysSinceReview === 1 ?
+										'1 day ago'
+									:	`${daysSinceReview}d ago`
+								:	'never'}
+							</span>
+						</span>
+						<span className="text-muted-foreground">
+							Difficulty:{' '}
+							<span className={cn('font-medium tabular-nums', difficultyColor)}>
+								{difficultyDisplay ?? '—'}
+							</span>
+						</span>
+					</div>
+
+					{/* Actions */}
+					<div className="flex flex-wrap items-center gap-2">
+						<CardStatusActions card={card} />
+						<Link
+							to="/learn/$lang/phrases/$id"
+							params={{ lang, id: card.phrase_id }}
+							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
+						>
+							<ExternalLink className="size-3" />
+							View phrase
+						</Link>
+					</div>
+				</div>
+			)}
+		</div>
+	)
+}
+
+/* ── Desktop: table header ───────────────────────────────────── */
 
 function SortableHeader({
 	label,
@@ -274,9 +406,10 @@ function SortableHeader({
 		<th className={className}>
 			<button
 				onClick={() => onSort(field)}
-				className={`hover:text-foreground flex w-full items-center gap-1.5 px-3 py-2.5 font-medium transition-colors ${
+				className={cn(
+					'hover:text-foreground flex w-full items-center gap-1.5 px-3 py-2.5 font-medium transition-colors',
 					isActive ? 'text-foreground' : 'text-muted-foreground'
-				}`}
+				)}
 			>
 				{label}
 				<Icon className="size-3.5" />
@@ -285,7 +418,15 @@ function SortableHeader({
 	)
 }
 
-function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
+/* ── Desktop: table row ──────────────────────────────────────── */
+
+function DesktopCardRow({
+	card,
+	lang,
+}: {
+	card: CardWithPhrase
+	lang: string
+}) {
 	const StatusIconComponent = statusIcon[card.status]
 	const daysSinceReview =
 		card.last_reviewed_at ? Math.floor(dateDiff(card.last_reviewed_at)) : null
@@ -318,7 +459,11 @@ function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 			{/* Status */}
 			<td className="px-3 py-2">
 				<span
-					className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusColors[card.status]} ${statusBgColors[card.status]}`}
+					className={cn(
+						'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
+						statusColors[card.status],
+						statusBgColors[card.status]
+					)}
 				>
 					<StatusIconComponent className="size-3" />
 					{card.status}
@@ -328,9 +473,7 @@ function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 			{/* Last Review */}
 			<td className="px-3 py-2 text-center">
 				{daysSinceReview != null ?
-					<span
-						className={`text-sm tabular-nums ${daysSinceReview > 14 ? 'text-7-hi-warning' : 'text-muted-foreground'}`}
-					>
+					<span className="text-muted-foreground text-sm tabular-nums">
 						{daysSinceReview === 0 ?
 							'today'
 						: daysSinceReview === 1 ?
@@ -344,7 +487,7 @@ function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 			<td className="px-3 py-2 text-center">
 				{difficultyDisplay != null ?
 					<span
-						className={`text-sm font-medium tabular-nums ${difficultyColor}`}
+						className={cn('text-sm font-medium tabular-nums', difficultyColor)}
 					>
 						{difficultyDisplay}
 					</span>
@@ -358,6 +501,8 @@ function CardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 		</tr>
 	)
 }
+
+/* ── Shared: status change buttons ───────────────────────────── */
 
 function CardStatusActions({ card }: { card: CardWithPhrase }) {
 	const userId = useUserId()
@@ -399,7 +544,7 @@ function CardStatusActions({ card }: { card: CardWithPhrase }) {
 	]
 
 	return (
-		<div className="flex items-center justify-end gap-1">
+		<div className="flex items-center gap-1">
 			{buttons
 				.filter((b) => b.status !== card.status)
 				.map((b) => (
