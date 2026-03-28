@@ -41,6 +41,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 						'/learn/$lang/manage-deck',
 						'/learn/$lang/requests/new',
 						'/learn/$lang/phrases/new',
+						'/learn/$lang/playlists/new',
 						'/learn/$lang/deck-settings',
 					]
 				:	[],

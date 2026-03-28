@@ -20,9 +20,10 @@ import {
 	HouseHeart,
 	Lock,
 	LogIn,
-	List,
+	ListPlus,
 	Logs,
 	Mail,
+	TableProperties,
 	MessageCircleHeart,
 	MessageSquareQuote,
 	MessagesSquare,
@@ -287,7 +288,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/$lang/manage-deck',
 				params: { lang },
 			},
-			Icon: List,
+			Icon: TableProperties,
 		},
 		'/learn/$lang/requests/new': {
 			name: 'Request',
@@ -306,6 +307,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				params: { lang },
 			},
 			Icon: Logs,
+		},
+		'/learn/$lang/playlists/new': {
+			name: 'Playlist',
+			title: 'New Playlist',
+			link: {
+				to: '/learn/$lang/playlists/new',
+				params: { lang },
+			},
+			Icon: ListPlus,
 		},
 	}
 
