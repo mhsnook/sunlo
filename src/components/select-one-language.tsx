@@ -50,9 +50,8 @@ export function SelectOneLanguage({
 						className={`placeholder:text-muted-foreground text-foreground justify-between border font-normal ${hasError ? 'border-destructive' : ''}`}
 					>
 						{value ?
-							allLanguageOptions.find(
-								(language) => language.value === value
-							)?.label
+							allLanguageOptions.find((language) => language.value === value)
+								?.label
 						:	'Select language...'}
 						<ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
 					</Button>

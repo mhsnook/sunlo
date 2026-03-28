@@ -89,14 +89,15 @@ We use **trunk-based development with a migration gate** — two deployment trac
 
 ### The two tracks
 
-| Track | Trigger | Risk profile | Ceremony |
-| --- | --- | --- | --- |
-| **Fast track** (UI-only) | PR merges to `main` | Low blast radius, reversible | Deploy at will, drop a one-liner in changelog |
-| **Migration track** (schema changes) | PR into `next` branch | Expensive to reverse, needs review | Human review gate, batch release notes |
+| Track                                | Trigger               | Risk profile                       | Ceremony                                      |
+| ------------------------------------ | --------------------- | ---------------------------------- | --------------------------------------------- |
+| **Fast track** (UI-only)             | PR merges to `main`   | Low blast radius, reversible       | Deploy at will, drop a one-liner in changelog |
+| **Migration track** (schema changes) | PR into `next` branch | Expensive to reverse, needs review | Human review gate, batch release notes        |
 
 ### Decision rule
 
 > **Does this PR touch a migration file?**
+>
 > - **No** → merge to `main`, deploy when ready.
 > - **Yes** → PR into `next`, hold for review, merge `next` → `main` when the batch is ready.
 

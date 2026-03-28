@@ -91,10 +91,7 @@ export function detectEmbedType(url: string): EmbedInfo {
 		}
 
 		// Instagram (reels, posts, stories) — no iframe embed available
-		if (
-			hostname.includes('instagram.com') ||
-			hostname.includes('instagr.am')
-		) {
+		if (hostname.includes('instagram.com') || hostname.includes('instagr.am')) {
 			return { type: 'instagram', embedUrl: null }
 		}
 
@@ -137,7 +134,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 				href={href}
 				target="_blank"
 				rel="noopener noreferrer"
-				className="flex items-center gap-2 rounded-2xl bg-1-mlo-neutral px-4 py-3 text-sm text-7-mid-neutral no-underline transition-colors hover:bg-2-mlo-neutral"
+				className="bg-1-mlo-neutral text-7-mid-neutral hover:bg-2-mlo-neutral flex items-center gap-2 rounded-2xl px-4 py-3 text-sm no-underline transition-colors"
 			>
 				<ExternalLink className="size-4 shrink-0" />
 				<span>
