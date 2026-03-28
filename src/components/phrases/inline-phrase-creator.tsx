@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -54,21 +54,38 @@ export function InlinePhraseCreator({
 	// Key + overrideLang drive remounting with fresh defaultValues
 	const [formKey, setFormKey] = useState(0)
 	const [overrideLang, setOverrideLang] = useState<string | null>(null)
+	// Hold the container height stable during remount to prevent layout shift
+	const wrapperRef = useRef<HTMLDivElement>(null)
+	const [holdHeight, setHoldHeight] = useState<number | undefined>(undefined)
 
 	return (
-		<InlinePhraseForm
-			key={formKey}
-			lang={lang}
-			defaultTranslationLang={overrideLang ?? preferredTranslationLang}
-			submitLabel={submitLabel}
-			allowAddAnother={allowAddAnother}
-			onPhraseCreated={onPhraseCreated}
-			onCancel={onCancel}
-			onAddAnother={(translationLang) => {
-				setOverrideLang(translationLang)
-				setFormKey((k) => k + 1)
-			}}
-		/>
+		<div
+			ref={wrapperRef}
+			style={holdHeight ? { minHeight: holdHeight } : undefined}
+		>
+			<InlinePhraseForm
+				key={formKey}
+				lang={lang}
+				defaultTranslationLang={overrideLang ?? preferredTranslationLang}
+				submitLabel={submitLabel}
+				allowAddAnother={allowAddAnother}
+				onPhraseCreated={onPhraseCreated}
+				onCancel={onCancel}
+				onAddAnother={(translationLang) => {
+					// Capture current height before remounting
+					if (wrapperRef.current) {
+						setHoldHeight(wrapperRef.current.offsetHeight)
+					}
+					setOverrideLang(translationLang)
+					setFormKey((k) => k + 1)
+					// Release the held height after the new form settles
+					requestAnimationFrame(() => {
+						requestAnimationFrame(() => setHoldHeight(undefined))
+					})
+				}}
+				animate={formKey > 0}
+			/>
+		</div>
 	)
 }
 
@@ -80,6 +97,7 @@ function InlinePhraseForm({
 	onPhraseCreated,
 	onCancel,
 	onAddAnother,
+	animate,
 }: {
 	lang: string
 	defaultTranslationLang: string
@@ -88,6 +106,7 @@ function InlinePhraseForm({
 	onPhraseCreated: (phraseId: string) => void
 	onCancel: () => void
 	onAddAnother: (translationLang: string) => void
+	animate: boolean
 }) {
 	const { data: decks } = useDecks()
 	const hasDeck = decks?.some((d) => d.lang === lang) ?? false
@@ -157,7 +176,9 @@ function InlinePhraseForm({
 	})
 
 	return (
-		<div className="bg-muted/30 rounded-lg border p-4">
+		<div
+			className={`bg-muted/30 rounded-lg border p-4${animate ? ' animate-in fade-in duration-300' : ''}`}
+		>
 			<div className="mb-3 flex items-center justify-between">
 				<h4 className="font-medium">Create New Phrase</h4>
 				<Button type="button" variant="ghost" size="sm" onClick={onCancel}>
