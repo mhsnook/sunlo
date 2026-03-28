@@ -352,9 +352,10 @@ export function ManagePlaylistPhrasesDialog({
 								lang={playlist.lang}
 								onPhraseCreated={(phraseId) => {
 									addPhraseMutation.mutate(phraseId)
-									setShowCreateForm(false)
 								}}
 								onCancel={() => setShowCreateForm(false)}
+								submitLabel="Add phrase to playlist"
+								allowAddAnother
 							/>
 						</div>
 					)}

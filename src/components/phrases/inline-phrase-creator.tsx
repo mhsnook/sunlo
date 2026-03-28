@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
@@ -36,27 +37,72 @@ interface InlinePhraseCreatorProps {
 	lang: string
 	onPhraseCreated: (phraseId: string) => void
 	onCancel: () => void
+	/** Label for the primary submit button. Defaults to "Create and select phrase". */
+	submitLabel?: string
+	/** When true, shows a secondary "Save & add another" button that resets the form. */
+	allowAddAnother?: boolean
 }
 
 export function InlinePhraseCreator({
 	lang,
 	onPhraseCreated,
 	onCancel,
+	submitLabel = 'Create and select phrase',
+	allowAddAnother = false,
 }: InlinePhraseCreatorProps) {
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
+	// Key + overrideLang drive remounting with fresh defaultValues
+	const [formKey, setFormKey] = useState(0)
+	const [overrideLang, setOverrideLang] = useState<string | null>(null)
+
+	return (
+		<InlinePhraseForm
+			key={formKey}
+			lang={lang}
+			defaultTranslationLang={overrideLang ?? preferredTranslationLang}
+			submitLabel={submitLabel}
+			allowAddAnother={allowAddAnother}
+			onPhraseCreated={onPhraseCreated}
+			onCancel={onCancel}
+			onAddAnother={(translationLang) => {
+				setOverrideLang(translationLang)
+				setFormKey((k) => k + 1)
+			}}
+		/>
+	)
+}
+
+function InlinePhraseForm({
+	lang,
+	defaultTranslationLang,
+	submitLabel,
+	allowAddAnother,
+	onPhraseCreated,
+	onCancel,
+	onAddAnother,
+}: {
+	lang: string
+	defaultTranslationLang: string
+	submitLabel: string
+	allowAddAnother: boolean
+	onPhraseCreated: (phraseId: string) => void
+	onCancel: () => void
+	onAddAnother: (translationLang: string) => void
+}) {
 	const { data: decks } = useDecks()
 	const hasDeck = decks?.some((d) => d.lang === lang) ?? false
 	const {
 		register,
 		control,
 		handleSubmit,
+		getValues,
 		formState: { errors },
 	} = useForm<InlinePhraseFormValues>({
 		resolver: zodResolver(inlinePhraseSchema),
 		defaultValues: {
 			phrase_text: '',
 			translation_text: '',
-			translation_lang: preferredTranslationLang,
+			translation_lang: defaultTranslationLang,
 			only_reverse: false,
 		},
 	})
@@ -124,7 +170,9 @@ export function InlinePhraseCreator({
 				noValidate
 				onSubmit={(e) => {
 					e.stopPropagation()
-					void handleSubmit((data) => mutation.mutate(data))(e)
+					void handleSubmit((data) =>
+						mutation.mutate(data, { onSuccess: () => onCancel() })
+					)(e)
 				}}
 				className="space-y-3"
 			>
@@ -185,17 +233,38 @@ export function InlinePhraseCreator({
 					</Label>
 				</div>
 
-				<Button
-					type="submit"
-					size="sm"
-					disabled={mutation.isPending}
-					className="w-full"
-				>
-					{mutation.isPending ?
-						<IconSizedLoader />
-					:	<Plus className="h-4 w-4" />}
-					Create and Select Phrase
-				</Button>
+				<div className="flex gap-2">
+					<Button
+						type="submit"
+						size="sm"
+						disabled={mutation.isPending}
+						className="flex-1"
+					>
+						{mutation.isPending ?
+							<IconSizedLoader />
+						:	<Plus className="h-4 w-4" />}
+						{submitLabel}
+					</Button>
+					{allowAddAnother && (
+						<Button
+							type="button"
+							variant="soft"
+							size="sm"
+							disabled={mutation.isPending}
+							onClick={() => {
+								void handleSubmit((formData) => {
+									mutation.mutate(formData, {
+										onSuccess: () => {
+											onAddAnother(getValues('translation_lang'))
+										},
+									})
+								})()
+							}}
+						>
+							Save & add another
+						</Button>
+					)}
+				</div>
 			</form>
 		</div>
 	)

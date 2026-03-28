@@ -1,5 +1,6 @@
-import type { CSSProperties, ReactNode } from 'react'
-import { ExternalLink, Send } from 'lucide-react'
+import { useState, type CSSProperties, type ReactNode } from 'react'
+import { ExternalLink, Plus, Send } from 'lucide-react'
+import { useMutation } from '@tanstack/react-query'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
@@ -16,6 +17,10 @@ import { ManagePlaylistPhrasesDialog } from './manage-playlist-phrases-dialog'
 import { DeletePlaylistDialog } from './delete-playlist-dialog'
 import { playlistCoverUrlify } from '@/lib/hooks'
 import { Button } from '@/components/ui/button'
+import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
+import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
+import supabase from '@/lib/supabase-client'
+import { toastSuccess, toastError } from '@/components/ui/sonner'
 
 export function PlaylistItem({
 	playlist,
@@ -27,6 +32,37 @@ export function PlaylistItem({
 	const { data } = useOnePlaylistPhrases(playlist.id)
 	const { data: profile } = useProfile()
 	const isOwner = profile?.uid === playlist.uid
+	const [showAddPhrase, setShowAddPhrase] = useState(false)
+
+	// Mutation to link a newly created phrase to this playlist
+	const linkPhraseMutation = useMutation({
+		mutationFn: async (phraseId: string) => {
+			const maxOrder = Math.max(
+				...(data?.map((p) => p.link.order || 0) ?? [0]),
+				0
+			)
+			const { data: linkData, error } = await supabase
+				.from('playlist_phrase_link')
+				.insert({
+					playlist_id: playlist.id,
+					phrase_id: phraseId,
+					order: maxOrder + 1,
+					href: null,
+				})
+				.select()
+				.single()
+			if (error) throw error
+			return linkData
+		},
+		onSuccess: (linkData) => {
+			playlistPhraseLinksCollection.utils.writeInsert(linkData)
+			toastSuccess('Phrase added to playlist')
+		},
+		onError: (error: Error) => {
+			toastError(`Failed to link phrase: ${error.message}`)
+			console.log('Error', error)
+		},
+	})
 
 	return (
 		<div
@@ -76,51 +112,81 @@ export function PlaylistItem({
 				/>
 			)}
 
-			{/* Embed player for source material */}
-			{playlist.href && <PlaylistEmbed href={playlist.href} />}
+			{/* Embed player for source material — always sticky */}
+			{playlist.href && (
+				<div className="sticky top-0 z-10">
+					<PlaylistEmbed href={playlist.href} />
+				</div>
+			)}
 
 			{/* Track list of linked phrases */}
-			{data && data.length > 0 && (
-				<div className="text-muted-foreground flex flex-col gap-1 text-sm">
-					{data.map(({ phrase }, index) => (
-						<Link
-							key={phrase.id}
-							to="/learn/$lang/phrases/$id"
-							params={{ lang: phrase.lang, id: phrase.id }}
-							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+			<div className="text-muted-foreground flex flex-col gap-1 text-sm">
+				{data?.map(({ phrase }, index) => (
+					<Link
+						key={phrase.id}
+						to="/learn/$lang/phrases/$id"
+						params={{ lang: phrase.lang, id: phrase.id }}
+						className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+					>
+						<span className="text-muted-foreground/50 w-6 text-end text-xs">
+							{index + 1}
+						</span>
+						<span
+							className="truncate font-medium"
+							style={
+								{
+									viewTransitionName: `phrase-text-${phrase.id}`,
+								} as CSSProperties
+							}
 						>
-							<span className="text-muted-foreground/50 w-6 text-right text-xs">
-								{index + 1}
+							&ldquo;
+							{phrase.text.length > 60 ?
+								`${phrase.text.slice(0, 60)}...`
+							:	phrase.text}
+							&rdquo;
+						</span>
+						{phrase.translations && phrase.translations.length > 0 && (
+							<span className="text-muted-foreground/70 ms-auto text-xs whitespace-nowrap">
+								{phrase.translations.length} translation
+								{phrase.translations.length === 1 ? '' : 's'}
 							</span>
-							<span
-								className="truncate font-medium"
-								style={
-									{
-										viewTransitionName: `phrase-text-${phrase.id}`,
-									} as CSSProperties
-								}
-							>
-								&ldquo;
-								{phrase.text.length > 60 ?
-									`${phrase.text.slice(0, 60)}...`
-								:	phrase.text}
-								&rdquo;
-							</span>
-							{phrase.translations && phrase.translations.length > 0 && (
-								<span className="text-muted-foreground/70 ml-auto text-xs whitespace-nowrap">
-									{phrase.translations.length} translation
-									{phrase.translations.length === 1 ? '' : 's'}
-								</span>
-							)}
-						</Link>
-					))}
-				</div>
+						)}
+					</Link>
+				))}
+
+				{/* Add phrase row — inline with the track list */}
+				{isOwner && !showAddPhrase && (
+					<button
+						type="button"
+						onClick={() => setShowAddPhrase(true)}
+						className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+						data-testid="add-phrase-to-playlist-button"
+					>
+						<span className="flex w-6 justify-end">
+							<Plus className="h-3 w-3" />
+						</span>
+						<span className="font-medium">Add phrase</span>
+					</button>
+				)}
+			</div>
+
+			{/* Inline phrase creator — between track list and social buttons */}
+			{isOwner && showAddPhrase && (
+				<InlinePhraseCreator
+					lang={playlist.lang}
+					onPhraseCreated={(phraseId) => {
+						linkPhraseMutation.mutate(phraseId)
+					}}
+					onCancel={() => setShowAddPhrase(false)}
+					submitLabel="Add phrase to playlist"
+					allowAddAnother
+				/>
 			)}
 
 			<div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
 				<div className="flex items-center gap-4">
 					<UpvotePlaylist playlist={playlist} />
-					{children && playlist.href ?
+					{playlist.href ?
 						<a
 							className="hover:text-foreground flex items-center gap-1 underline"
 							href={playlist.href}
