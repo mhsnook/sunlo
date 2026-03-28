@@ -448,4 +448,3 @@ function SearchResultLink({
 		</Link>
 	)
 }
-
