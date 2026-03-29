@@ -1,32 +1,8 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
 import { ListMusic, MessageCircleHeart, MessageSquareQuote } from 'lucide-react'
 import { Link } from '@tanstack/react-router'
 
-import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/use-auth'
-import { useInvalidateFeed } from '@/features/feed/hooks'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import {
-	PhraseRequestSchema,
-	PhraseRequestType,
-	RequestPhraseFormSchema,
-	type RequestPhraseFormInputs,
-	requestPromptPlaceholders,
-} from '@/features/requests/schemas'
-import { useOneRandomly } from '@/lib/utils'
 import { Button, buttonVariants } from '@/components/ui/button'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormMessage,
-} from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
 import {
 	Dialog,
 	DialogDescription,
@@ -35,48 +11,10 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { toastSuccess, toastError } from '@/components/ui/sonner'
+import { RequestForm } from '@/components/requests/request-form'
 
 export function FeedComposer({ lang }: { lang: string }) {
 	const [open, setOpen] = useState(false)
-	const userId = useUserId()
-	const placeholder = useOneRandomly(requestPromptPlaceholders)
-	const invalidateFeed = useInvalidateFeed()
-
-	const form = useForm<RequestPhraseFormInputs>({
-		resolver: zodResolver(RequestPhraseFormSchema),
-		defaultValues: { prompt: '' },
-	})
-
-	const mutation = useMutation<
-		PhraseRequestType,
-		PostgrestError,
-		RequestPhraseFormInputs
-	>({
-		mutationFn: async ({ prompt }) => {
-			return (
-				await supabase
-					.from('phrase_request')
-					.insert({ prompt, lang, requester_uid: userId! })
-					.throwOnError()
-					.select()
-					.single()
-			).data!
-		},
-		onSuccess: (data) => {
-			phraseRequestsCollection.utils.writeInsert(
-				PhraseRequestSchema.parse(data)
-			)
-			invalidateFeed(lang)
-			form.reset()
-			setOpen(false)
-			toastSuccess('Your request has been posted!')
-		},
-		onError: (error) => {
-			console.error(error)
-			toastError('There was an error posting your request.')
-		},
-	})
 
 	return (
 		<div className="bg-card/50 mb-4 rounded border p-3 shadow-sm">
@@ -135,39 +73,14 @@ export function FeedComposer({ lang }: { lang: string }) {
 							one for everyone to learn.
 						</DialogDescription>
 					</DialogHeader>
-					<Form {...form}>
-						<form
-							data-testid="feed-composer-form"
-							// eslint-disable-next-line @typescript-eslint/no-misused-promises
-							onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-							className="space-y-3"
-						>
-							<FormField
-								control={form.control}
-								name="prompt"
-								render={({ field }) => (
-									<FormItem>
-										<FormControl>
-											<Textarea
-												data-testid="feed-composer-prompt"
-												placeholder={`ex: "${placeholder}"`}
-												rows={4}
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<Button
-								type="submit"
-								data-testid="feed-composer-submit"
-								disabled={mutation.isPending}
-							>
-								{mutation.isPending ? 'Posting...' : 'Post Request'}
-							</Button>
-						</form>
-					</Form>
+					<RequestForm
+						lang={lang}
+						onSuccess={() => setOpen(false)}
+						formTestId="feed-composer-form"
+						inputTestId="feed-composer-prompt"
+						submitTestId="feed-composer-submit"
+						rows={4}
+					/>
 				</AuthenticatedDialogContent>
 			</Dialog>
 		</div>
