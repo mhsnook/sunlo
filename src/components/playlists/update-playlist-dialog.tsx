@@ -1,5 +1,5 @@
-import { ChangeEvent, useState } from 'react'
-import { Edit, ImageIcon, UploadIcon, X } from 'lucide-react'
+import { useState } from 'react'
+import { Edit } from 'lucide-react'
 import {
 	Dialog,
 	DialogContent,
@@ -21,8 +21,7 @@ import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
-import { playlistCoverUrlify } from '@/lib/hooks'
-import { cn } from '@/lib/utils'
+import { CoverImageEditor } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from './playlist-embed'
 
 export function UpdatePlaylistDialog({
@@ -41,36 +40,7 @@ export function UpdatePlaylistDialog({
 
 	const [hrefError, setHrefError] = useState<string | null>(null)
 	const [open, setOpen] = useState(false)
-	const [isUploadingImage, setIsUploadingImage] = useState(false)
 
-	const handleImageUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-		if (!event.target.files || event.target.files.length === 0) return
-		setIsUploadingImage(true)
-		try {
-			const file = event.target.files[0]
-			const nameparts = file.name.split('.')
-			const ext = nameparts.pop()
-			const slug = nameparts.join('.').replaceAll(' ', '-')
-			const timeHash = Math.round(file.lastModified * 0.000001).toString(16)
-			const filename = `playlist-${slug}-${timeHash}.${ext}`
-
-			const { data, error } = await supabase.storage
-				.from('avatars')
-				.upload(filename, file, { cacheControl: '3600', upsert: true })
-
-			if (error) {
-				toastError('Failed to upload image')
-				console.error(error)
-			} else {
-				setEditCoverImagePath(data.path)
-				toastSuccess('Image uploaded')
-			}
-		} catch (error) {
-			toastError('Failed to upload image')
-			console.error(error)
-		}
-		setIsUploadingImage(false)
-	}
 	const handleSave = () => {
 		const urlError = validateUrl(editHref)
 		setHrefError(urlError)
@@ -166,62 +136,12 @@ export function UpdatePlaylistDialog({
 					{!isEmbeddableUrl(editHref) && (
 						<div className="space-y-2">
 							<Label>Cover Image</Label>
-							<label
-								htmlFor="coverImageEditInput"
-								className={cn(
-									'group border-3-mlo-primary hover:border-primary hover:bg-1-mlo-primary relative isolate flex h-24 cursor-pointer flex-col items-center justify-center rounded-2xl border text-center',
-									editCoverImagePath && 'h-auto'
-								)}
-							>
-								{editCoverImagePath ?
-									<div className="relative w-full">
-										<img
-											src={playlistCoverUrlify(editCoverImagePath)}
-											alt="Cover preview"
-											className="h-32 w-full rounded-2xl object-cover"
-										/>
-										<div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-											<UploadIcon className="mx-auto mb-1 size-5 text-white" />
-											<span className="text-sm text-white">
-												Click to replace
-											</span>
-										</div>
-									</div>
-								:	<div className="flex flex-col items-center justify-center py-4">
-										{isUploadingImage ?
-											<span className="text-muted-foreground text-sm">
-												Uploading...
-											</span>
-										:	<>
-												<ImageIcon className="text-muted-foreground mx-auto mb-1 size-5" />
-												<span className="text-muted-foreground text-xs">
-													Click to upload a cover image
-												</span>
-											</>
-										}
-									</div>
+							<CoverImageEditor
+								cover_image_path={editCoverImagePath}
+								onUpload={(path) =>
+									setEditCoverImagePath(path ?? '')
 								}
-								<Input
-									className="absolute inset-0 z-50 h-full cursor-pointer opacity-0"
-									type="file"
-									id="coverImageEditInput"
-									accept="image/*"
-									onChange={(e) => void handleImageUpload(e)}
-									disabled={isUploadingImage}
-								/>
-							</label>
-							{editCoverImagePath && (
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									onClick={() => setEditCoverImagePath('')}
-									className="text-muted-foreground hover:text-destructive"
-								>
-									<X className="mr-1 h-4 w-4" />
-									Remove image
-								</Button>
-							)}
+							/>
 						</div>
 					)}
 					<div className="flex gap-2">
