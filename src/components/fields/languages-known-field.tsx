@@ -57,26 +57,28 @@ export function LanguagesKnownField<T extends FieldValues>({
 			</p>
 			<div className="space-y-2">
 				{fields.map((field, index) => (
-					<Card key={field.id} className="space-y-2 p-2">
-						<div className="flex items-center gap-2">
+					<Card key={field.id} className="@container space-y-2 p-2">
+						<div className="flex items-center gap-1 @lg:gap-2">
 							<div className="flex flex-col">
 								<Button
 									type="button"
 									variant="ghost"
 									size="icon"
+									className="size-7 @lg:size-9"
 									onClick={() => move(index, index - 1)}
 									disabled={index === 0}
 								>
-									<ArrowUp className="size-4" />
+									<ArrowUp className="size-3 @lg:size-4" />
 								</Button>
 								<Button
 									type="button"
 									variant="ghost"
 									size="icon"
+									className="size-7 @lg:size-9"
 									onClick={() => move(index, index + 1)}
 									disabled={index === fields.length - 1}
 								>
-									<ArrowDown className="size-4" />
+									<ArrowDown className="size-3 @lg:size-4" />
 								</Button>
 							</div>
 							<div className="min-w-0 flex-1">
@@ -94,7 +96,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 									)}
 								/>
 							</div>
-							<div className="w-30 shrink-0">
+							<div className="w-24 shrink-0 @lg:w-30">
 								<Controller
 									control={control}
 									name={`languages_known.${index}.level` as Path<T>}
@@ -103,8 +105,8 @@ export function LanguagesKnownField<T extends FieldValues>({
 											onValueChange={selectField.onChange}
 											defaultValue={selectField.value}
 										>
-											<SelectTrigger className="w-full">
-												<SelectValue placeholder="Proficiency" />
+											<SelectTrigger className="w-full text-xs @lg:text-sm">
+												<SelectValue placeholder="Level" />
 											</SelectTrigger>
 											<SelectContent>
 												{proficiencyLevels.map((level) => (
@@ -121,6 +123,7 @@ export function LanguagesKnownField<T extends FieldValues>({
 								type="button"
 								variant="ghost"
 								size="icon"
+								className="shrink-0"
 								onClick={() => remove(index)}
 								disabled={fields.length === 1}
 							>
