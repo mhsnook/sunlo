@@ -153,9 +153,9 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 					<span className="font-medium">Preview Unreviewed Cards</span>
 				</div>
 				<p className="text-muted-foreground max-w-md text-sm">
-					Scroll through your {unreviewedInOrder.length} unreviewed card
-					{unreviewedInOrder.length === 1 ? '' : 's'} before starting. Take a
-					moment to familiarize yourself with them!
+					Here are today&apos;s {unreviewedInOrder.length} new card
+					{unreviewedInOrder.length === 1 ? '' : 's'} you&apos;ve never seen
+					before. Take a moment to look them over once before you begin.
 				</p>
 			</div>
 
