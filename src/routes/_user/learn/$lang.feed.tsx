@@ -4,13 +4,18 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
 import type { FeedActivityType } from '@/features/feed/schemas'
+import type { FeedFilterType } from '@/features/feed/hooks'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import languages from '@/lib/languages'
 import { FeedComposer } from '@/components/feed/feed-composer'
 import {
 	useFeedLang,
+	useFilteredFeedLang,
 	useFriendsFeedLang,
+	useFilteredFriendsFeedLang,
+	useFriendUids,
 	usePopularFeedLang,
+	useFilteredPopularFeedLang,
 } from '@/features/feed/hooks'
 import { FeedItem } from '@/components/feed/feed-item'
 import { FeedEmptyState } from '@/components/feed/feed-empty-state'
@@ -90,6 +95,58 @@ function groupConsecutivePhrases(items: FeedActivityType[]): GroupedFeedItem[] {
 			new Date(getEffectiveCreatedAt(b)).getTime() -
 			new Date(getEffectiveCreatedAt(a)).getTime()
 	)
+}
+
+// Merge client-filtered items from the unfiltered query with server-filtered backfill.
+// Client-filtered items appear instantly; server items fill in older results.
+function mergeFilteredFeed(
+	unfilteredItems: Array<FeedActivityType> | undefined,
+	filterType: FeedFilterType | undefined,
+	filteredQuery: {
+		data: { pages: Array<Array<FeedActivityType>> } | undefined
+		hasNextPage: boolean
+		fetchNextPage: () => void
+		isFetchingNextPage: boolean
+		isLoading: boolean
+	}
+) {
+	const allUnfiltered = unfilteredItems ?? []
+
+	// No filter active — just use unfiltered items as-is
+	if (!filterType) {
+		return { items: allUnfiltered }
+	}
+
+	// Client-side filter from already-loaded unfiltered pages
+	const clientFiltered = allUnfiltered.filter(
+		(item) => item.type === filterType
+	)
+
+	// Server-filtered backfill
+	const serverFiltered = filteredQuery.data?.pages.flat() ?? []
+
+	// Merge + dedupe by ID, sort by created_at DESC
+	const seen = new Set<string>()
+	const merged = [...clientFiltered, ...serverFiltered]
+		.filter((item) => {
+			if (seen.has(item.id)) return false
+			seen.add(item.id)
+			return true
+		})
+		.toSorted(
+			(a, b) =>
+				new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+		)
+
+	return {
+		items: merged,
+		hasNextPage: filteredQuery.hasNextPage,
+		fetchNextPage: filteredQuery.fetchNextPage,
+		isFetchingNextPage: filteredQuery.isFetchingNextPage,
+		// Only show loading if we have zero client results AND server is still loading
+		isBackfillLoading:
+			clientFiltered.length === 0 && filteredQuery.isLoading,
+	}
 }
 
 const SearchSchema = z.object({
@@ -178,30 +235,41 @@ function DeckFeedPage() {
 function RecentFeed() {
 	const params = Route.useParams()
 	const search = Route.useSearch()
-	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-		useFeedLang(params.lang)
-
-	const feedItems = data?.pages.flat()
-
 	const filterType = search.filter_type
 
-	// Apply filters, and group consecutive phrases
+	// Main unfiltered query (always runs)
+	const mainQuery = useFeedLang(params.lang)
+	const unfilteredItems = mainQuery.data?.pages.flat()
+
+	// Filtered backfill query (only when filter active)
+	const filteredQuery = useFilteredFeedLang(params.lang, filterType)
+
+	// Merge: instant client-filtered + server backfill
+	const merged = mergeFilteredFeed(unfilteredItems, filterType, filteredQuery)
+
+	// Group consecutive phrases
 	const groupedItems =
-		!feedItems ?
-			[]
-		:	groupConsecutivePhrases(
-				feedItems.filter(
-					(item) => filterType === undefined || item.type === filterType
-				)
-			)
+		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
+
+	// Use main query pagination when unfiltered, filtered query pagination when filtered
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
+	const isLoading =
+		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
-			: !groupedItems || groupedItems.length === 0 ?
+			: groupedItems.length === 0 ?
 				<FeedEmptyState
-					feedItems={feedItems}
 					filterType={filterType}
 					feedTab="newest"
 					lang={params.lang}
@@ -224,7 +292,6 @@ function RecentFeed() {
 							onClick={() => void fetchNextPage()}
 							data-testid="load-more-button"
 							disabled={isFetchingNextPage}
-							className={hasNextPage ? 'opacity-100' : 'opacity-0'}
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
@@ -249,30 +316,48 @@ function RecentFeed() {
 function FriendsFeed() {
 	const params = Route.useParams()
 	const search = Route.useSearch()
-	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-		useFriendsFeedLang(params.lang)
-
-	const feedItems = data?.pages.flat()
-
 	const filterType = search.filter_type
 
-	// Apply filters, and group consecutive phrases
+	// Main unfiltered friends query (always runs)
+	const mainQuery = useFriendsFeedLang(params.lang)
+	const unfilteredItems = mainQuery.data?.pages.flat()
+
+	// Need friend UIDs for filtered query
+	const { data: friends } = useFriendUids()
+	const friendUids = friends?.map((f) => f.uid) ?? []
+
+	// Filtered backfill query (only when filter active)
+	const filteredQuery = useFilteredFriendsFeedLang(
+		params.lang,
+		filterType,
+		friendUids
+	)
+
+	// Merge: instant client-filtered + server backfill
+	const merged = mergeFilteredFeed(unfilteredItems, filterType, filteredQuery)
+
+	// Group consecutive phrases
 	const groupedItems =
-		!feedItems ?
-			[]
-		:	groupConsecutivePhrases(
-				feedItems.filter(
-					(item) => filterType === undefined || item.type === filterType
-				)
-			)
+		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
+
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
+	const isLoading =
+		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
-			: !groupedItems || groupedItems.length === 0 ?
+			: groupedItems.length === 0 ?
 				<FeedEmptyState
-					feedItems={feedItems}
 					filterType={filterType}
 					feedTab="friends"
 					lang={params.lang}
@@ -319,34 +404,43 @@ function FriendsFeed() {
 function PopularFeed() {
 	const params = Route.useParams()
 	const search = Route.useSearch()
-	const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } =
-		usePopularFeedLang(params.lang)
-
-	const feedItems = data?.pages.flat()
-
 	const filterType = search.filter_type
 
-	// Apply filters only - no grouping for Popular feed to preserve popularity order
-	const filteredItems =
-		!feedItems ?
-			[]
-		:	feedItems.filter(
-				(item) => filterType === undefined || item.type === filterType
-			)
+	// Main unfiltered popular query (always runs)
+	const mainQuery = usePopularFeedLang(params.lang)
+	const unfilteredItems = mainQuery.data?.pages.flat()
+
+	// Filtered backfill query (only when filter active)
+	const filteredQuery = useFilteredPopularFeedLang(params.lang, filterType)
+
+	// Merge: instant client-filtered + server backfill
+	// No grouping for Popular feed to preserve popularity order
+	const merged = mergeFilteredFeed(unfilteredItems, filterType, filteredQuery)
+
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
+	const isLoading =
+		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
 			{isLoading ?
 				<p>Loading feed...</p>
-			: !filteredItems || filteredItems.length === 0 ?
+			: merged.items.length === 0 ?
 				<FeedEmptyState
-					feedItems={feedItems}
 					filterType={filterType}
 					feedTab="popular"
 					lang={params.lang}
 				/>
 			:	<>
-					{filteredItems.map((item) => (
+					{merged.items.map((item) => (
 						<FeedItem key={item.id} item={item} />
 					))}
 

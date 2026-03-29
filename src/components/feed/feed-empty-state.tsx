@@ -2,7 +2,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { ListPlus, MessageSquarePlus, BookOpen, Users } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
-import type { FeedActivityType } from '@/features/feed/schemas'
 
 type FilterType = 'request' | 'playlist' | 'phrase'
 
@@ -13,12 +12,10 @@ const filterLabels: Record<FilterType, string> = {
 }
 
 export function FeedEmptyState({
-	feedItems,
 	filterType,
 	feedTab,
 	lang,
 }: {
-	feedItems: Array<FeedActivityType> | undefined
 	filterType: FilterType | undefined
 	feedTab: 'newest' | 'friends' | 'popular'
 	lang: string
@@ -34,23 +31,8 @@ export function FeedEmptyState({
 		})
 	}
 
-	// Count items by type from the unfiltered feed
-	const typeCounts: Record<FilterType, number> = {
-		request: 0,
-		playlist: 0,
-		phrase: 0,
-	}
-	for (const item of feedItems ?? []) {
-		typeCounts[item.type as FilterType]++
-	}
-	const totalItems = (feedItems ?? []).length
-
-	// Filtered to a specific type but nothing matches, while other types exist
-	if (filterType && totalItems > 0) {
-		const otherTypes = (Object.keys(typeCounts) as Array<FilterType>).filter(
-			(t) => t !== filterType && typeCounts[t] > 0
-		)
-
+	// Filtered to a specific type but nothing matches
+	if (filterType) {
 		const action = getFilterAction(filterType)
 		const Icon = action.icon
 
@@ -59,21 +41,12 @@ export function FeedEmptyState({
 				<p className="italic">
 					No {filterLabels[filterType]} in this feed yet.
 				</p>
-				{otherTypes.length > 0 && (
-					<p className="text-sm">
-						There{' '}
-						{otherTypes.length === 1 ?
-							`are ${typeCounts[otherTypes[0]]} ${filterLabels[otherTypes[0]]}`
-						:	otherTypes
-								.map((t) => `${typeCounts[t]} ${filterLabels[t]}`)
-								.join(' and ')
-						}{' '}
-						to see though!{' '}
-						<button onClick={clearFilters} className="s-link cursor-pointer">
-							Clear filters
-						</button>
-					</p>
-				)}
+				<p className="text-sm">
+					<button onClick={clearFilters} className="s-link cursor-pointer">
+						Clear filters
+					</button>{' '}
+					to see all activity.
+				</p>
 				<div className="mt-4">
 					<Link
 						className={buttonVariants({ variant: 'soft', size: 'sm' })}
