@@ -81,7 +81,7 @@ export function PlaylistItem({
 					timeValue={playlist.created_at}
 				/>
 
-				<div className="flex items-center gap-2">
+				<div className="flex flex-col-reverse items-end gap-2 @sm:flex-row @sm:items-center">
 					{isOwner && (
 						<>
 							<UpdatePlaylistDialog playlist={playlist} />
