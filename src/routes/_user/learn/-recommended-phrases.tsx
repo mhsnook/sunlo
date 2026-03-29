@@ -1,9 +1,10 @@
+import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 
 import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
-import { useCompositePids } from '@/hooks/composite-pids'
+import { CompositePids, useCompositePids } from '@/hooks/composite-pids'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
@@ -34,12 +35,20 @@ const PhraseSection = ({ description, pids, Icon }: PhraseSectionProps) => {
 export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 	const recommendations = useCompositePids(lang)
 
-	if (!recommendations) return null
+	// Snapshot top8 on first load so the list stays stable when
+	// the user bookmarks cards (which changes deckPids reactively)
+	const stableTop8 = useRef<CompositePids['top8'] | null>(null)
+	if (stableTop8.current === null && recommendations) {
+		stableTop8.current = recommendations.top8
+	}
 
+	if (!stableTop8.current) return null
+
+	const top8 = stableTop8.current
 	const hasRecommendations =
-		recommendations.top8.popular.length > 0 ||
-		recommendations.top8.newest.length > 0 ||
-		recommendations.top8.easiest.length > 0
+		top8.popular.length > 0 ||
+		top8.newest.length > 0 ||
+		top8.easiest.length > 0
 
 	return !hasRecommendations ?
 			<p className="text-muted-foreground mx-4 text-sm italic">
@@ -62,17 +71,17 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 				<CardContent className="space-y-4">
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
-						pids={recommendations.top8.popular.slice(0, 4)}
+						pids={top8.popular.slice(0, 4)}
 						Icon={TrendingUp}
 					/>
 					<PhraseSection
 						description="Newly added"
-						pids={recommendations.top8.newest.slice(0, 4)}
+						pids={top8.newest.slice(0, 4)}
 						Icon={Brain}
 					/>
 					<PhraseSection
 						description="Broaden your vocabulary"
-						pids={recommendations.top8.easiest.slice(0, 4)}
+						pids={top8.easiest.slice(0, 4)}
 						Icon={Carrot}
 					/>
 				</CardContent>
