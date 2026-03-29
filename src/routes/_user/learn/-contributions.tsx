@@ -221,7 +221,7 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 							}
 						}}
 					>
-						<PlaylistItem playlist={playlist} />
+						<PlaylistItem playlist={playlist} compact />
 					</div>
 				))}
 			</div>
