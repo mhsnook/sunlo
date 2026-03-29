@@ -14,6 +14,7 @@ import {
 	type RequestPhraseFormInputs,
 	requestPromptPlaceholders,
 } from '@/features/requests/schemas'
+import { useRequest } from '@/features/requests/hooks'
 import { useOneRandomly } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,17 +28,22 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import Callout from '@/components/ui/callout'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
+import type { uuid } from '@/types/main'
 
 export function RequestForm({
 	lang,
+	requestId,
 	onSuccess,
+	onCancel,
 	formTestId = 'new-request-form',
 	inputTestId = 'request-prompt-input',
 	submitTestId = 'post-request-button',
 	rows,
 }: {
 	lang: string
+	requestId?: uuid
 	onSuccess?: (data: PhraseRequestType) => void
+	onCancel?: () => void
 	formTestId?: string
 	inputTestId?: string
 	submitTestId?: string
@@ -46,10 +52,12 @@ export function RequestForm({
 	const userId = useUserId()
 	const placeholder = useOneRandomly(requestPromptPlaceholders)
 	const invalidateFeed = useInvalidateFeed()
+	const { data: request } = useRequest(requestId ?? '')
+	const isEditing = !!requestId
 
 	const form = useForm<RequestPhraseFormInputs>({
 		resolver: zodResolver(RequestPhraseFormSchema),
-		defaultValues: { prompt: '' },
+		defaultValues: { prompt: request?.prompt ?? '' },
 	})
 
 	const mutation = useMutation<
@@ -58,27 +66,44 @@ export function RequestForm({
 		RequestPhraseFormInputs
 	>({
 		mutationFn: async ({ prompt }) => {
-			return (
-				await supabase
+			if (isEditing) {
+				const { data } = await supabase
 					.from('phrase_request')
-					.insert({ prompt, lang, requester_uid: userId! })
+					.update({ prompt })
+					.eq('id', requestId)
 					.throwOnError()
 					.select()
 					.single()
-			).data!
+				return data!
+			}
+			const { data } = await supabase
+				.from('phrase_request')
+				.insert({ prompt, lang, requester_uid: userId! })
+				.throwOnError()
+				.select()
+				.single()
+			return data!
 		},
 		onSuccess: (data) => {
-			phraseRequestsCollection.utils.writeInsert(
-				PhraseRequestSchema.parse(data)
-			)
-			invalidateFeed(lang)
+			const parsed = PhraseRequestSchema.parse(data)
+			if (isEditing) {
+				phraseRequestsCollection.utils.writeUpdate(parsed)
+				toastSuccess('Request updated!')
+			} else {
+				phraseRequestsCollection.utils.writeInsert(parsed)
+				invalidateFeed(lang)
+				toastSuccess('Your request has been posted!')
+			}
 			form.reset()
-			toastSuccess('Your request has been posted!')
 			onSuccess?.(data)
 		},
 		onError: (error) => {
 			console.error(error)
-			toastError('There was an error posting your request.')
+			toastError(
+				isEditing ?
+					'There was an error updating your request.'
+				:	'There was an error posting your request.'
+			)
 		},
 	})
 
@@ -101,7 +126,7 @@ export function RequestForm({
 							<FormControl>
 								<Textarea
 									data-testid={inputTestId}
-									placeholder={`ex: "${placeholder}"`}
+									placeholder={isEditing ? undefined : `ex: "${placeholder}"`}
 									rows={rows}
 									{...field}
 								/>
@@ -121,13 +146,32 @@ export function RequestForm({
 						<p>{mutation.error.message}</p>
 					</Callout>
 				)}
-				<Button
-					type="submit"
-					data-testid={submitTestId}
-					disabled={mutation.isPending}
-				>
-					{mutation.isPending ? 'Posting...' : 'Post Request'}
-				</Button>
+				<div className="flex gap-2">
+					<Button
+						type="submit"
+						size={isEditing ? 'sm' : 'default'}
+						data-testid={submitTestId}
+						disabled={mutation.isPending}
+					>
+						{mutation.isPending ?
+							isEditing ?
+								'Saving...'
+							:	'Posting...'
+						: isEditing ?
+							'Save'
+						:	'Post Request'}
+					</Button>
+					{onCancel && (
+						<Button
+							size="sm"
+							type="button"
+							variant="neutral"
+							onClick={onCancel}
+						>
+							Cancel
+						</Button>
+					)}
+				</div>
 			</form>
 		</Form>
 	)
