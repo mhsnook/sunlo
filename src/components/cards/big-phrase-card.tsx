@@ -1,5 +1,5 @@
 import { type CSSProperties, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useRouter } from '@tanstack/react-router'
 import {
 	ChevronsUpDown,
 	MessagesSquare,
@@ -285,9 +285,18 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 }
 
 function PhraseNotFound() {
+	const router = useRouter()
 	return (
 		<Callout variant="problem" Icon={DestructiveOctagon}>
 			<p>We couldn't find that phrase. Please check your link and try again.</p>
+			<Button
+				variant="neutral"
+				size="sm"
+				className="mt-2"
+				onClick={() => router.history.back()}
+			>
+				Go back
+			</Button>
 		</Callout>
 	)
 }
