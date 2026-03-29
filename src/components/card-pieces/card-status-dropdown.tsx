@@ -309,12 +309,14 @@ export function CardStatusHeart({
 			data-name="card-status-heart"
 			data-key={phrase.id}
 			disabled={mutation.isPending}
-			onClick={() =>
+			onClick={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
 				requireAuth(
 					() => mutation.mutate({ status: statusToPost }),
 					'Please log in to add phrases to your library'
 				)
-			}
+			}}
 			aria-label={
 				phrase.card?.status === 'active' ?
 					'Skip this phrase (remove it from your active deck)'
