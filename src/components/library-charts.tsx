@@ -66,7 +66,7 @@ export function LanguageComparisonChart() {
 	if (!chartData.length) return null
 
 	return (
-		<ChartContainer config={langChartConfig} className="h-[400px] w-full">
+		<ChartContainer config={langChartConfig} className="h-100 w-full">
 			<BarChart
 				accessibilityLayer
 				data={chartData}
@@ -398,6 +398,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 					stroke="var(--background)"
 					// oxlint-disable-next-line jsx-no-jsx-as-prop
 					content={
+						// oxlint-disable-next-line jsx-no-jsx-as-prop
 						<TreemapContent
 							name=""
 							size={0}
@@ -509,7 +510,7 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 	}
 
 	return (
-		<ChartContainer config={histogramConfig} className="h-[300px] w-full">
+		<ChartContainer config={histogramConfig} className="h-75 w-full">
 			<BarChart accessibilityLayer data={histogramData} margin={{ bottom: 20 }}>
 				<CartesianGrid vertical={false} />
 				<XAxis
