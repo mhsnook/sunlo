@@ -1,3 +1,4 @@
+// oxlint-disable no-await-in-loop
 /**
  * Vercel Edge Middleware for Social Previews
  *

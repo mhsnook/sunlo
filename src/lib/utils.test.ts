@@ -1,3 +1,4 @@
+// oxlint-disable approx-constant
 import { describe, it, expect } from 'vitest'
 import {
 	mapArray,
