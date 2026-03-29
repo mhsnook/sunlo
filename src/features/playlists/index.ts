@@ -11,6 +11,8 @@ export {
 	type PhrasePlaylistUpvoteType,
 	PhrasePlaylistInsertSchema,
 	type PhrasePlaylistInsertType,
+	PhrasePlaylistUpdateSchema,
+	type PhrasePlaylistUpdateType,
 	PlaylistPhraseLinkIncludedInsertSchema,
 	type PlaylistPhraseLinkIncludedInsertType,
 	validateUrl,

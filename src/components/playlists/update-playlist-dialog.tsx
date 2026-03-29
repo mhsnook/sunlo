@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Edit } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	Dialog,
 	DialogContent,
@@ -11,17 +13,18 @@ import {
 import { Button } from '@/components/ui/button'
 import {
 	PhrasePlaylistSchema,
+	PhrasePlaylistUpdateSchema,
 	type PhrasePlaylistType,
-	validateUrl,
+	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
-import { Textarea } from '../ui/textarea'
-import { Input } from '../ui/input'
-import { Label } from '../ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
-import { CoverImageEditor } from '@/components/fields/cover-image-field'
+import { CoverImageField } from '@/components/fields/cover-image-field'
 import { isEmbeddableUrl } from './playlist-embed'
 
 export function UpdatePlaylistDialog({
@@ -29,35 +32,31 @@ export function UpdatePlaylistDialog({
 }: {
 	playlist: PhrasePlaylistType
 }) {
-	const [editTitle, setEditTitle] = useState(playlist.title)
-	const [editDescription, setEditDescription] = useState(
-		playlist.description ?? ''
-	)
-	const [editHref, setEditHref] = useState(playlist.href ?? '')
-	const [editCoverImagePath, setEditCoverImagePath] = useState(
-		playlist.cover_image_path ?? ''
-	)
-
-	const [hrefError, setHrefError] = useState<string | null>(null)
 	const [open, setOpen] = useState(false)
 
-	const handleSave = () => {
-		const urlError = validateUrl(editHref)
-		setHrefError(urlError)
-		if (urlError) return
-		mutation.mutate()
-	}
+	const form = useForm<PhrasePlaylistUpdateType>({
+		resolver: zodResolver(PhrasePlaylistUpdateSchema),
+		mode: 'onBlur',
+		defaultValues: {
+			title: playlist.title,
+			description: playlist.description ?? '',
+			href: playlist.href,
+			cover_image_path: playlist.cover_image_path ?? null,
+		},
+	})
 
-	// Update playlist mutation
+	const hrefValue = form.watch('href')
+	const showCoverImage = !isEmbeddableUrl(hrefValue)
+
 	const mutation = useMutation({
-		mutationFn: async () => {
+		mutationFn: async (values: PhrasePlaylistUpdateType) => {
 			const { data, error } = await supabase
 				.from('phrase_playlist')
 				.update({
-					title: editTitle,
-					description: editDescription || null,
-					href: editHref || null,
-					cover_image_path: editCoverImagePath || null,
+					title: values.title,
+					description: values.description || null,
+					href: values.href || null,
+					cover_image_path: values.cover_image_path || null,
 				})
 				.eq('id', playlist.id)
 				.select()
@@ -75,11 +74,25 @@ export function UpdatePlaylistDialog({
 		},
 		onError: (error: Error) => {
 			toastError(`Failed to update playlist: ${error.message}`)
+			console.log('Error', error)
 		},
 	})
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog
+			open={open}
+			onOpenChange={(isOpen) => {
+				setOpen(isOpen)
+				if (isOpen) {
+					form.reset({
+						title: playlist.title,
+						description: playlist.description ?? '',
+						href: playlist.href,
+						cover_image_path: playlist.cover_image_path ?? null,
+					})
+				}
+			}}
+		>
 			<DialogTrigger asChild>
 				<Button
 					variant="ghost"
@@ -97,23 +110,34 @@ export function UpdatePlaylistDialog({
 						Edit the playlist title, description, and source URL
 					</DialogDescription>
 				</DialogHeader>
-				<div className="mt-2 space-y-4">
+				<form
+					noValidate
+					// eslint-disable-next-line @typescript-eslint/no-misused-promises
+					onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+					className="mt-2 space-y-4"
+				>
 					<div className="space-y-2">
 						<Label htmlFor="playlist-title">Title</Label>
 						<Input
 							id="playlist-title"
 							data-testid="playlist-title-input"
-							value={editTitle}
-							onChange={(e) => setEditTitle(e.target.value)}
+							className={
+								form.formState.errors.title ? 'border-red-500' : ''
+							}
+							{...form.register('title')}
 						/>
+						{form.formState.errors.title && (
+							<p className="text-sm text-red-500">
+								{form.formState.errors.title.message}
+							</p>
+						)}
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="playlist-description">Description</Label>
 						<Textarea
 							id="playlist-description"
 							data-testid="playlist-description-input"
-							value={editDescription}
-							onChange={(e) => setEditDescription(e.target.value)}
+							{...form.register('description')}
 							rows={3}
 						/>
 					</div>
@@ -123,32 +147,29 @@ export function UpdatePlaylistDialog({
 							id="playlist-href"
 							data-testid="playlist-href-input"
 							type="url"
-							value={editHref}
-							onChange={(e) => {
-								setEditHref(e.target.value)
-								if (hrefError) setHrefError(validateUrl(e.target.value))
-							}}
-							className={hrefError ? 'border-red-500' : ''}
+							className={
+								form.formState.errors.href ? 'border-red-500' : ''
+							}
+							{...form.register('href')}
 							placeholder="https://..."
 						/>
-						{hrefError && <p className="text-sm text-red-500">{hrefError}</p>}
+						{form.formState.errors.href && (
+							<p className="text-sm text-red-500">
+								{form.formState.errors.href.message}
+							</p>
+						)}
 					</div>
-					{!isEmbeddableUrl(editHref) && (
-						<div className="space-y-2">
-							<Label>Cover Image</Label>
-							<CoverImageEditor
-								cover_image_path={editCoverImagePath}
-								onUpload={(path) =>
-									setEditCoverImagePath(path ?? '')
-								}
-							/>
-						</div>
+					{showCoverImage && (
+						<CoverImageField
+							control={form.control}
+							error={form.formState.errors.cover_image_path}
+						/>
 					)}
 					<div className="flex gap-2">
 						<Button
 							size="sm"
-							onClick={handleSave}
-							disabled={mutation.isPending || !editTitle.trim()}
+							type="submit"
+							disabled={mutation.isPending || !form.formState.isValid}
 							data-testid="save-playlist-button"
 						>
 							{mutation.isPending ? 'Saving...' : 'Save'}
@@ -156,19 +177,16 @@ export function UpdatePlaylistDialog({
 						<Button
 							size="sm"
 							variant="ghost"
+							type="button"
 							onClick={() => {
 								setOpen(false)
-								setEditTitle(playlist.title)
-								setEditDescription(playlist.description ?? '')
-								setEditHref(playlist.href ?? '')
-								setEditCoverImagePath(playlist.cover_image_path ?? '')
-								setHrefError(null)
+								form.reset()
 							}}
 						>
 							Cancel
 						</Button>
 					</div>
-				</div>
+				</form>
 			</DialogContent>
 		</Dialog>
 	)

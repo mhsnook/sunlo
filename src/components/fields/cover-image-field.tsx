@@ -46,7 +46,7 @@ interface CoverImageEditorProps {
 	onUpload: (path: string | null) => void
 }
 
-export function CoverImageEditor({
+function CoverImageEditor({
 	cover_image_path,
 	onUpload,
 }: CoverImageEditorProps) {
