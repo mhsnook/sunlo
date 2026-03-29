@@ -255,7 +255,7 @@ const SidebarTrigger = ({
 			data-sidebar="trigger"
 			variant="ghost"
 			size="icon"
-			className={`${className} z-50`}
+			className={`${className} z-30`}
 			onClick={onButtonClick}
 			{...props}
 		>
