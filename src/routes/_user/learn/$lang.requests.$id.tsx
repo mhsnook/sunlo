@@ -112,9 +112,6 @@ function RequestThreadPage() {
 				{search.show === 'answers-only' ?
 					<AnswersOnlyView />
 				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
-				<p className="text-muted-foreground mb-6 px-4 italic">
-					This is the end of the thread.
-				</p>
 			</Collapsible>
 		</main>
 	)
@@ -140,48 +137,55 @@ function AnswersOnlyView() {
 	const phraseIds = Object.keys(linksWithCommentsMap)
 
 	return (
-		<div className="my-4 space-y-3">
-			<p className="text-muted-foreground text-sm">
-				Showing {phraseIds.length} flashcard
-				{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
-				<Link to="." className="s-link" search={showThread}>
-					Return to discussion.
-				</Link>
-			</p>
-			<div className="grid divide-y border">
-				{!phraseIds.length && (
-					<div className="text-muted-foreground py-8 text-center">
-						<p>No answers yet. Be the first to add one!</p>
-					</div>
-				)}
-				{phraseIds.map((pid) => (
-					<div key={pid} className="p-4 pb-2">
-						<WithPhrase pid={pid} Component={CardResultSimple} />
-						<p className="text-sm">
-							View in thread:{' '}
-							{linksWithCommentsMap[pid].map((l, i, arr) => (
-								<span key={l.id}>
-									{i > 0 && i < arr.length - 1 ? ',' : ''}
-									{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
-									<Link
-										to="."
-										search={{
-											show: 'thread',
-											highlightComment: l.comment_id,
-											showSubthread: l.parent_comment_id ?? l.comment_id,
-										}}
-										className="s-link text-sm"
-									>
-										here
-									</Link>
-								</span>
-							))}
-							.
-						</p>
-					</div>
-				))}
+		<>
+			<div className="my-4 space-y-3">
+				<p className="text-muted-foreground px-4 text-sm">
+					Showing {phraseIds.length} flashcard
+					{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
+					<Link to="." className="s-link" search={showThread}>
+						Return to discussion.
+					</Link>
+				</p>
+				<div className="grid divide-y border">
+					{!phraseIds.length && (
+						<div className="text-muted-foreground py-8 text-center">
+							<p>No answers yet. Be the first to add one!</p>
+						</div>
+					)}
+					{phraseIds.map((pid) => (
+						<div key={pid} className="p-4 pb-2">
+							<WithPhrase pid={pid} Component={CardResultSimple} />
+							<p className="text-sm">
+								View in thread:{' '}
+								{linksWithCommentsMap[pid].map((l, i, arr) => (
+									<span key={l.id}>
+										{i > 0 && i < arr.length - 1 ? ',' : ''}
+										{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
+										<Link
+											to="."
+											search={{
+												show: 'thread',
+												highlightComment: l.comment_id,
+												showSubthread: l.parent_comment_id ?? l.comment_id,
+											}}
+											className="s-link text-sm"
+										>
+											here
+										</Link>
+									</span>
+								))}
+								.
+							</p>
+						</div>
+					))}
+				</div>
 			</div>
-		</div>
+			{phraseIds.length ?
+				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
+					This is the end of the thread.
+				</p>
+			:	null}
+		</>
 	)
 }
 
@@ -212,24 +216,35 @@ function TopLevelComments({
 	if (isLoading) return <Loader />
 
 	return (
-		<div className="my-4 space-y-3">
-			<p className="text-muted-foreground text-sm">
-				Showing {comments.length} comment
-				{comments.length !== 1 ? 's' : ''}.{' '}
-				<Link to="." className="s-link" search={answersOnly}>
-					Show only proposed answers.
-				</Link>
-			</p>
-			<div className="divide-y border">
-				{comments.map((comment) => (
-					<CommentWithReplies key={comment.id} comment={comment} lang={lang} />
-				))}
-				{!comments.length && (
-					<div className="text-muted-foreground py-8 text-center">
-						<p>No comments yet. Be the first to comment!</p>
-					</div>
-				)}
+		<>
+			<div className="my-4 space-y-3">
+				<p className="text-muted-foreground px-4 text-sm">
+					Showing {comments.length} comment
+					{comments.length !== 1 ? 's' : ''}.{' '}
+					<Link to="." className="s-link" search={answersOnly}>
+						Show only proposed answers.
+					</Link>
+				</p>
+				<div className="divide-y border">
+					{comments.map((comment) => (
+						<CommentWithReplies
+							key={comment.id}
+							comment={comment}
+							lang={lang}
+						/>
+					))}
+					{!comments.length && (
+						<div className="text-muted-foreground py-8 text-center">
+							<p>No comments yet. Be the first to comment!</p>
+						</div>
+					)}
+				</div>
 			</div>
-		</div>
+			{comments.length ?
+				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
+					This is the end of the thread.
+				</p>
+			:	null}
+		</>
 	)
 }
