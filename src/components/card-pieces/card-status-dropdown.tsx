@@ -228,6 +228,7 @@ export function CardStatusDropdown({
 						className="m-0 min-w-28 justify-between px-1.5"
 						data-name="card-status-dropdown"
 						data-key={phrase.id}
+						disabled={cardMutation.isPending}
 					>
 						<span className="flex items-center justify-center [&_svg]:size-4">
 							{cardMutation.isSuccess ?
@@ -307,6 +308,7 @@ export function CardStatusHeart({
 			size="icon"
 			data-name="card-status-heart"
 			data-key={phrase.id}
+			disabled={mutation.isPending}
 			onClick={() =>
 				requireAuth(
 					() => mutation.mutate({ status: statusToPost }),
