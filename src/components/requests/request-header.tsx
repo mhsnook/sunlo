@@ -11,7 +11,7 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 	const isOwner = profile?.uid === request.requester_uid
 
 	return (
-		<CardHeader className="border-2-lo-primary mb-6 border-b pb-4">
+		<CardHeader className="border-2-lo-primary py-3 @md:py-6">
 			<div className="flex flex-row items-center justify-between gap-2">
 				<UidPermalink
 					uid={request.requester_uid}
@@ -20,12 +20,12 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 					timeLinkParams={{ lang: request.lang, id: request.id }}
 					timeValue={request.created_at}
 				/>
-				<div className="flex flex-row items-center gap-2">
+				<div className="flex flex-col-reverse items-center gap-2 @md:flex-row">
 					{isOwner && (
-						<>
+						<div className="flex flex-row items-center gap-2">
 							<UpdateRequestDialog request={request} />
 							<DeleteRequestDialog request={request} />
-						</>
+						</div>
 					)}
 					<LangBadge lang={request.lang} />
 				</div>
