@@ -1,5 +1,5 @@
-import { useState, type CSSProperties, type ReactNode } from 'react'
-import { ExternalLink, Plus, Send } from 'lucide-react'
+import { useState, type CSSProperties } from 'react'
+import { ExternalLink, Plus, Send, Bookmark } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
@@ -8,7 +8,6 @@ import { useOnePlaylistPhrases } from '@/features/playlists/hooks'
 import { SharePlaylistButton } from './share-playlist-button'
 import { SendPlaylistToFriendDialog } from './send-playlist-to-friend'
 import { UpvotePlaylist } from './upvote-playlist-button'
-import { Separator } from '@/components/ui/separator'
 import { Link } from '@tanstack/react-router'
 import { PlaylistEmbed, isEmbeddableUrl } from './playlist-embed'
 import { useProfile } from '@/features/profile/hooks'
@@ -19,20 +18,58 @@ import { playlistCoverUrlify } from '@/lib/hooks'
 import { Button } from '@/components/ui/button'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
+import { cardsCollection } from '@/features/deck/collections'
+import { CardMetaSchema } from '@/features/deck/schemas'
+import { useDecks } from '@/features/deck/hooks'
+import { useUserId } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
 
 export function PlaylistItem({
 	playlist,
-	children,
+	compact = false,
 }: {
 	playlist: PhrasePlaylistType
-	children?: ReactNode
+	compact?: boolean
 }) {
 	const { data } = useOnePlaylistPhrases(playlist.id)
 	const { data: profile } = useProfile()
+	const userId = useUserId()
+	const { data: decks } = useDecks()
 	const isOwner = profile?.uid === playlist.uid
 	const [showAddPhrase, setShowAddPhrase] = useState(false)
+	const hasDeck = decks?.some((d) => d.lang === playlist.lang) ?? false
+
+	const phrasesNotInDeck =
+		data?.filter((item) => !item.phrase.card || item.phrase.card.status === 'skipped') ?? []
+
+	const bulkAddMutation = useMutation({
+		mutationFn: async (phraseIds: Array<string>) => {
+			const { data: inserted } = await supabase
+				.from('user_card')
+				.upsert(
+					phraseIds.map((phrase_id) => ({
+						lang: playlist.lang,
+						phrase_id,
+						status: 'active' as const,
+					})),
+					{ onConflict: 'uid, phrase_id' }
+				)
+				.select()
+				.throwOnError()
+			return inserted!
+		},
+		onSuccess: (cards: Array<{ [key: string]: unknown }>) => {
+			for (const card of cards) {
+				cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+			}
+			toastSuccess(`Added ${cards.length} card${cards.length === 1 ? '' : 's'} to your deck`)
+		},
+		onError: (error: Error) => {
+			toastError('Failed to add cards to deck')
+			console.log('Error', error)
+		},
+	})
 
 	// Mutation to link a newly created phrase to this playlist
 	const linkPhraseMutation = useMutation({
@@ -120,58 +157,64 @@ export function PlaylistItem({
 			)}
 
 			{/* Track list of linked phrases */}
-			<div className="text-muted-foreground flex flex-col gap-1 text-sm">
-				{data?.map(({ phrase }, index) => (
-					<Link
-						key={phrase.id}
-						to="/learn/$lang/phrases/$id"
-						params={{ lang: phrase.lang, id: phrase.id }}
-						className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
-					>
-						<span className="text-muted-foreground/50 w-6 text-end text-xs">
-							{index + 1}
-						</span>
-						<span
-							className="truncate font-medium"
-							style={
-								{
-									viewTransitionName: `phrase-text-${phrase.id}`,
-								} as CSSProperties
-							}
+			{!compact && (
+				<div className="text-muted-foreground flex flex-col gap-1 text-sm">
+					{data?.map(({ phrase }, index) => (
+						<Link
+							key={phrase.id}
+							to="/learn/$lang/phrases/$id"
+							params={{ lang: phrase.lang, id: phrase.id }}
+							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
 						>
-							&ldquo;
-							{phrase.text.length > 60 ?
-								`${phrase.text.slice(0, 60)}...`
-							:	phrase.text}
-							&rdquo;
-						</span>
-						{phrase.translations && phrase.translations.length > 0 && (
-							<span className="text-muted-foreground/70 ms-auto text-xs whitespace-nowrap">
-								{phrase.translations.length} translation
-								{phrase.translations.length === 1 ? '' : 's'}
+							<span className="text-muted-foreground/50 w-6 text-end text-xs">
+								{index + 1}
 							</span>
-						)}
-					</Link>
-				))}
+							<span
+								className="truncate font-medium"
+								style={
+									{
+										viewTransitionName: `phrase-text-${phrase.id}`,
+									} as CSSProperties
+								}
+							>
+								&ldquo;
+								{phrase.text.length > 60 ?
+									`${phrase.text.slice(0, 60)}...`
+								:	phrase.text}
+								&rdquo;
+							</span>
+							{phrase.translations && phrase.translations.length > 0 && (
+								<span className="text-muted-foreground/70 ms-auto text-xs whitespace-nowrap">
+									{phrase.translations.length} translation
+									{phrase.translations.length === 1 ? '' : 's'}
+								</span>
+							)}
+							{phrase.card?.status &&
+								['active', 'learned'].includes(phrase.card.status) && (
+									<Bookmark className="shrink-0 fill-purple-600/50 text-purple-600" size={12} />
+								)}
+						</Link>
+					))}
 
-				{/* Add phrase row — inline with the track list */}
-				{isOwner && !showAddPhrase && (
-					<button
-						type="button"
-						onClick={() => setShowAddPhrase(true)}
-						className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
-						data-testid="add-phrase-to-playlist-button"
-					>
-						<span className="flex w-6 justify-end">
-							<Plus className="h-3 w-3" />
-						</span>
-						<span className="font-medium">Add phrase</span>
-					</button>
-				)}
-			</div>
+					{/* Add phrase row — inline with the track list */}
+					{isOwner && !showAddPhrase && (
+						<button
+							type="button"
+							onClick={() => setShowAddPhrase(true)}
+							className="hover:text-foreground hover:bg-muted/50 flex items-center gap-2 rounded px-2 py-1 transition-colors"
+							data-testid="add-phrase-to-playlist-button"
+						>
+							<span className="flex w-6 justify-end">
+								<Plus className="h-3 w-3" />
+							</span>
+							<span className="font-medium">Add phrase</span>
+						</button>
+					)}
+				</div>
+			)}
 
 			{/* Inline phrase creator — between track list and social buttons */}
-			{isOwner && showAddPhrase && (
+			{!compact && isOwner && showAddPhrase && (
 				<InlinePhraseCreator
 					lang={playlist.lang}
 					onPhraseCreated={(phraseId) => {
@@ -181,6 +224,24 @@ export function PlaylistItem({
 					submitLabel="Add phrase to playlist"
 					allowAddAnother
 				/>
+			)}
+
+			{/* Bulk add all playlist phrases to deck */}
+			{!compact && userId && hasDeck && phrasesNotInDeck.length > 0 && (
+				<Button
+					variant="soft"
+					onClick={() =>
+						bulkAddMutation.mutate(
+							phrasesNotInDeck.map((item) => item.phrase.id)
+						)
+					}
+					disabled={bulkAddMutation.isPending}
+					data-testid="bulk-add-playlist-to-deck"
+				>
+					{bulkAddMutation.isPending ?
+						'Adding…'
+					:	`Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`}
+				</Button>
 			)}
 
 			<div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
@@ -212,8 +273,6 @@ export function PlaylistItem({
 					</SendPlaylistToFriendDialog>
 				</div>
 			</div>
-			{children && <Separator />}
-			{children}
 		</div>
 	)
 }

@@ -33,7 +33,7 @@ export function FeedPlaylistItem({ item }: { item: FeedActivityType }) {
 			}}
 			tabIndex={0}
 		>
-			<PlaylistItem playlist={playlist} />
+			<PlaylistItem playlist={playlist} compact />
 		</div>
 	)
 }
