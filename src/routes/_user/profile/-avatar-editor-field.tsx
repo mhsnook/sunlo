@@ -7,7 +7,8 @@ import { Label } from '@/components/ui/label'
 import supabase from '@/lib/supabase-client'
 import { ShowAndLogError } from '@/components/errors'
 import { Input } from '@/components/ui/input'
-import { UploadIcon } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { UploadIcon, XIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import ErrorLabel from '@/components/fields/error-label'
@@ -46,8 +47,8 @@ const filenameFromFile = (file: File) => {
 }
 
 interface AvatarEditorProps {
-	avatar_path: string
-	onUpload: (url: string) => void
+	avatar_path: string | null
+	onUpload: (url: string | null) => void
 }
 
 function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
@@ -119,6 +120,19 @@ function AvatarEditor({ avatar_path, onUpload }: AvatarEditorProps) {
 					}
 				</div>
 			</Label>
+
+			{url && (
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="self-start"
+					onClick={() => onUpload(null)}
+				>
+					<XIcon className="size-4" />
+					Remove image
+				</Button>
+			)}
 
 			<ShowAndLogError error={sendImage.error} text="Error uploading image" />
 		</div>
