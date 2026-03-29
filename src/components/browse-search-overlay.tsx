@@ -306,6 +306,7 @@ export default function BrowseSearchOverlay({
 							disabled={displayLangs.map((l) => l.code)}
 							popoverAlign="start"
 							trigger={
+								// oxlint-disable-next-line jsx-no-jsx-as-prop
 								<button
 									type="button"
 									className="border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors"
@@ -343,7 +344,7 @@ export default function BrowseSearchOverlay({
 
 				{/* Footer — only after typing */}
 				{hasQuery && (
-					<div className="text-muted-foreground bg-muted/30 flex items-center gap-4 border-t px-4 py-2 text-xs">
+					<div className="text-muted-foreground bg-muted/30 flex items-center gap-4 border-t px-4 py-2 text-xs max-sm:hidden">
 						<span className="inline-flex items-center gap-1">
 							<ArrowUp className="size-3" />
 							<ArrowDown className="size-3" />
