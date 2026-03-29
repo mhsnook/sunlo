@@ -60,6 +60,8 @@
 				"no-invalid-regexp": "error",
 				"no-irregular-whitespace": "error",
 				"no-loss-of-precision": "error",
+				"jsx-no-jsx-as-prop": "off",
+				"jsx-no-constructed-context-values": "off",
 				"jsx-no-new-array-as-prop": "off",
 				"jsx-no-new-function-as-prop": "off",
 				"jsx-no-new-object-as-prop": "off",
