@@ -5,6 +5,8 @@ import { FeedActivitySchema } from './schemas'
 import type { LangType } from '@/features/languages/schemas'
 import { friendSummariesCollection } from '@/features/social/collections'
 
+export type FeedFilterType = 'request' | 'playlist' | 'phrase'
+
 export const FEED_QUERY_KEY = ['feed']
 
 export function useFeedLang(lang: LangType) {
@@ -36,8 +38,42 @@ export function useFeedLang(lang: LangType) {
 	})
 }
 
+// Filtered feed: fetches only items of a specific type for backfill when filter is active
+export function useFilteredFeedLang(
+	lang: LangType,
+	filterType: FeedFilterType | undefined
+) {
+	return useInfiniteQuery({
+		queryKey: ['feed', lang, 'filtered', filterType],
+		queryFn: async ({ pageParam }) => {
+			let query = supabase
+				.from('feed_activities')
+				.select('*')
+				.eq('lang', lang)
+				.eq('type', filterType!)
+				.order('created_at', { ascending: false })
+				.limit(20)
+
+			if (pageParam) {
+				query = query.lt('created_at', pageParam)
+			}
+
+			const { data, error } = await query
+
+			if (error) throw error
+			return data.map((item) => FeedActivitySchema.parse(item))
+		},
+		initialPageParam: null as string | null,
+		getNextPageParam: (lastPage) => {
+			if (lastPage.length < 20) return null
+			return lastPage[lastPage.length - 1].created_at
+		},
+		enabled: !!filterType,
+	})
+}
+
 // Get connected friend UIDs from the local collection
-function useFriendUids() {
+export function useFriendUids() {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -89,6 +125,44 @@ export function useFriendsFeedLang(lang: LangType) {
 	})
 }
 
+// Filtered friends feed: backfill for a specific type when filter is active
+export function useFilteredFriendsFeedLang(
+	lang: LangType,
+	filterType: FeedFilterType | undefined,
+	friendUids: Array<string>
+) {
+	return useInfiniteQuery({
+		queryKey: ['feed', 'friends', lang, 'filtered', filterType, friendUids],
+		queryFn: async ({ pageParam }) => {
+			if (friendUids.length === 0) return []
+
+			let query = supabase
+				.from('feed_activities')
+				.select('*')
+				.eq('lang', lang)
+				.eq('type', filterType!)
+				.in('uid', friendUids)
+				.order('created_at', { ascending: false })
+				.limit(20)
+
+			if (pageParam) {
+				query = query.lt('created_at', pageParam)
+			}
+
+			const { data, error } = await query
+
+			if (error) throw error
+			return data.map((item) => FeedActivitySchema.parse(item))
+		},
+		initialPageParam: null as string | null,
+		getNextPageParam: (lastPage) => {
+			if (lastPage.length < 20) return null
+			return lastPage[lastPage.length - 1].created_at
+		},
+		enabled: !!filterType && friendUids.length > 0,
+	})
+}
+
 // Popular feed: shows activities ordered by popularity (highest first)
 // - Requests and playlists use upvote_count
 // - Phrases use count_learners
@@ -123,6 +197,42 @@ export function usePopularFeedLang(lang: LangType) {
 			return lastPage[lastPage.length - 1].created_at
 		},
 		refetchOnMount: true,
+	})
+}
+
+// Filtered popular feed: backfill for a specific type when filter is active
+export function useFilteredPopularFeedLang(
+	lang: LangType,
+	filterType: FeedFilterType | undefined
+) {
+	return useInfiniteQuery({
+		queryKey: ['feed', 'popular', lang, 'filtered', filterType],
+		queryFn: async ({ pageParam }) => {
+			let query = supabase
+				.from('feed_activities')
+				.select('*')
+				.eq('lang', lang)
+				.eq('type', filterType!)
+				.gt('popularity', 2)
+				.order('popularity', { ascending: false })
+				.order('created_at', { ascending: false })
+				.limit(20)
+
+			if (pageParam) {
+				query = query.lt('created_at', pageParam)
+			}
+
+			const { data, error } = await query
+
+			if (error) throw error
+			return data.map((item) => FeedActivitySchema.parse(item))
+		},
+		initialPageParam: null as string | null,
+		getNextPageParam: (lastPage) => {
+			if (lastPage.length < 20) return null
+			return lastPage[lastPage.length - 1].created_at
+		},
+		enabled: !!filterType,
 	})
 }
 

@@ -15,8 +15,12 @@ export {
 // Hooks
 export {
 	useFeedLang,
+	useFilteredFeedLang,
 	useFriendsFeedLang,
+	useFilteredFriendsFeedLang,
 	usePopularFeedLang,
+	useFilteredPopularFeedLang,
 	useInvalidateFeed,
 	FEED_QUERY_KEY,
+	type FeedFilterType,
 } from './hooks'
