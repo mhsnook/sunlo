@@ -89,7 +89,7 @@ export function PlaylistItem({
 							<DeletePlaylistDialog playlist={playlist} />
 						</>
 					)}
-					<Badge variant="outline">
+					<Badge variant="outline" className="whitespace-nowrap">
 						{data?.length ?? 0} phrase
 						{data?.length === 1 ? '' : 's'}
 					</Badge>
