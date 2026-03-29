@@ -73,6 +73,14 @@ export type PhrasePlaylistInsertType = z.infer<
 	typeof PhrasePlaylistInsertSchema
 >
 
+export const PhrasePlaylistUpdateSchema = PhrasePlaylistInsertSchema.omit({
+	phrases: true,
+})
+
+export type PhrasePlaylistUpdateType = z.infer<
+	typeof PhrasePlaylistUpdateSchema
+>
+
 /** Returns an error message if the string is not a valid URL, or null if valid/empty */
 export function validateUrl(value: string): string | null {
 	if (value.trim() === '') return null
