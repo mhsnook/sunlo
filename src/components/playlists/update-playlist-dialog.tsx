@@ -25,7 +25,17 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { CoverImageField } from '@/components/fields/cover-image-field'
+import ErrorLabel from '@/components/fields/error-label'
 import { isEmbeddableUrl } from './playlist-embed'
+
+function playlistDefaults(playlist: PhrasePlaylistType): PhrasePlaylistUpdateType {
+	return {
+		title: playlist.title,
+		description: playlist.description ?? '',
+		href: playlist.href,
+		cover_image_path: playlist.cover_image_path ?? null,
+	}
+}
 
 export function UpdatePlaylistDialog({
 	playlist,
@@ -37,12 +47,7 @@ export function UpdatePlaylistDialog({
 	const form = useForm<PhrasePlaylistUpdateType>({
 		resolver: zodResolver(PhrasePlaylistUpdateSchema),
 		mode: 'onBlur',
-		defaultValues: {
-			title: playlist.title,
-			description: playlist.description ?? '',
-			href: playlist.href,
-			cover_image_path: playlist.cover_image_path ?? null,
-		},
+		defaultValues: playlistDefaults(playlist),
 	})
 
 	const hrefValue = form.watch('href')
@@ -84,12 +89,7 @@ export function UpdatePlaylistDialog({
 			onOpenChange={(isOpen) => {
 				setOpen(isOpen)
 				if (isOpen) {
-					form.reset({
-						title: playlist.title,
-						description: playlist.description ?? '',
-						href: playlist.href,
-						cover_image_path: playlist.cover_image_path ?? null,
-					})
+					form.reset(playlistDefaults(playlist))
 				}
 			}}
 		>
@@ -126,11 +126,7 @@ export function UpdatePlaylistDialog({
 							}
 							{...form.register('title')}
 						/>
-						{form.formState.errors.title && (
-							<p className="text-sm text-red-500">
-								{form.formState.errors.title.message}
-							</p>
-						)}
+						<ErrorLabel error={form.formState.errors.title} />
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="playlist-description">Description</Label>
@@ -153,11 +149,7 @@ export function UpdatePlaylistDialog({
 							{...form.register('href')}
 							placeholder="https://..."
 						/>
-						{form.formState.errors.href && (
-							<p className="text-sm text-red-500">
-								{form.formState.errors.href.message}
-							</p>
-						)}
+						<ErrorLabel error={form.formState.errors.href} />
 					</div>
 					{showCoverImage && (
 						<CoverImageField
