@@ -31,7 +31,7 @@ function ProfilePage() {
 			'Something went wrong loading this profile... please contact administrator'
 		)
 	return (
-		<main className="mx-auto space-y-6 px-2 py-6">
+		<main className="mx-auto w-full space-y-6 px-2 py-6">
 			{isMine ?
 				<p className="text-muted-foreground mb-1 text-center italic">
 					This is how your profile appears to others
