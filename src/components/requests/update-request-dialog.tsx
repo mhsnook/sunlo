@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import { Edit } from 'lucide-react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+
 import {
 	Dialog,
 	DialogContent,
@@ -10,26 +14,38 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@/components/ui/form'
+import { Textarea } from '@/components/ui/textarea'
+import {
 	PhraseRequestSchema,
+	RequestPhraseFormSchema,
 	type PhraseRequestType,
+	type RequestPhraseFormInputs,
 } from '@/features/requests/schemas'
-import { Textarea } from '../ui/textarea'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
-import { useMutation } from '@tanstack/react-query'
 
 export function UpdateRequestDialog({
 	request,
 }: {
 	request: PhraseRequestType
 }) {
-	const [editPrompt, setEditPrompt] = useState(request.prompt)
-
 	const [open, setOpen] = useState(false)
-	// Update request mutation
+
+	const form = useForm<RequestPhraseFormInputs>({
+		resolver: zodResolver(RequestPhraseFormSchema),
+		defaultValues: { prompt: request.prompt },
+	})
+
 	const mutation = useMutation({
-		mutationFn: async (prompt: string) => {
+		mutationFn: async ({ prompt }: RequestPhraseFormInputs) => {
 			const { data, error } = await supabase
 				.from('phrase_request')
 				.update({ prompt })
@@ -53,7 +69,13 @@ export function UpdateRequestDialog({
 	})
 
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog
+			open={open}
+			onOpenChange={(next) => {
+				setOpen(next)
+				if (next) form.reset({ prompt: request.prompt })
+			}}
+		>
 			<DialogTrigger asChild>
 				<Button
 					variant="ghost"
@@ -71,34 +93,58 @@ export function UpdateRequestDialog({
 						Edit your request text below
 					</DialogDescription>
 				</DialogHeader>
-				<div className="mt-2 space-y-2">
-					<Textarea
-						data-testid="edit-request-prompt-input"
-						value={editPrompt}
-						onChange={(e) => setEditPrompt(e.target.value)}
-						rows={4}
-					/>
-					<div className="flex gap-2">
-						<Button
-							size="sm"
-							onClick={() => mutation.mutate(editPrompt)}
-							data-testid="save-request-button"
-							disabled={mutation.isPending}
-						>
-							{mutation.isPending ? 'Saving...' : 'Save'}
-						</Button>
-						<Button
-							size="sm"
-							variant="ghost"
-							onClick={() => {
-								setOpen(false)
-								setEditPrompt(request.prompt)
-							}}
-						>
-							Cancel
-						</Button>
-					</div>
-				</div>
+				<Form {...form}>
+					<form
+						// eslint-disable-next-line @typescript-eslint/no-misused-promises
+						onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+						className="space-y-4"
+					>
+						<FormField
+							control={form.control}
+							name="prompt"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>
+										What kinds of flash cards are you looking for?
+									</FormLabel>
+									<FormControl>
+										<Textarea
+											data-testid="edit-request-prompt-input"
+											rows={4}
+											{...field}
+										/>
+									</FormControl>
+									<p className="text-muted-foreground -mt-1 text-xs">
+										Supports markdown like `&gt;` for blockquote,{' '}
+										<em>_italics_</em>, <strong>**bold**</strong>.
+									</p>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<div className="flex gap-2">
+							<Button
+								size="sm"
+								type="submit"
+								data-testid="save-request-button"
+								disabled={mutation.isPending}
+							>
+								{mutation.isPending ? 'Saving...' : 'Save'}
+							</Button>
+							<Button
+								size="sm"
+								type="button"
+								variant="neutral"
+								onClick={() => {
+									setOpen(false)
+									form.reset({ prompt: request.prompt })
+								}}
+							>
+								Cancel
+							</Button>
+						</div>
+					</form>
+				</Form>
 			</DialogContent>
 		</Dialog>
 	)
