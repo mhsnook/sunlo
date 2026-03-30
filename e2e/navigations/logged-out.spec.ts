@@ -71,7 +71,10 @@ test.describe('Logged Out Navigation', () => {
 	test('browse page shows language cards', async ({ page }) => {
 		await page.goto('/learn/browse')
 
-		// Browse page should show language cards
+		// Wait for page to finish loading, then check for language cards
+		await expect(page.getByTestId('browse-page')).toBeVisible({
+			timeout: 10000,
+		})
 		const languageCards = page.locator('[data-slot=card]')
 		await expect(languageCards.first()).toBeVisible()
 	})

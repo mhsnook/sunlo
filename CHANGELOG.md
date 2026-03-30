@@ -3,6 +3,7 @@
 ## Recent changes
 
 - 2026-03-30 [feat] Prevent translation language from matching phrase language across all phrase/translation forms
+- 2026-03-30 [fix] Fix flaky e2e nav tests: Kannada seed data for all test users, dropdown open logic, CI timeouts
 - 2026-03-30 [feat] Search results now include playlists and requests, not just phrases (#439)
 - 2026-03-30 [feat] Show a login button on the public learn page for logged-out visitors (#461)
 - 2026-03-30 [feat] Show card due dates (overdue/today/upcoming) in the deck management table (#462)
