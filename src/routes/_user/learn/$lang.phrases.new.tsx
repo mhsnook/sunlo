@@ -5,7 +5,7 @@ import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { NotebookPen, Search } from 'lucide-react'
 
 import type { Tables } from '@/types/supabase'

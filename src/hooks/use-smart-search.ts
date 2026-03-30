@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useLiveQuery } from '@tanstack/react-db'
 import { inArray } from '@tanstack/db'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 
 import supabase from '@/lib/supabase-client'
 import { phrasesFull } from '@/features/phrases/live'

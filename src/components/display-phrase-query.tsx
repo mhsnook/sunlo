@@ -1,5 +1,5 @@
 import { memo, type ReactElement } from 'react'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 
 import type { pids } from '@/types/main'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'

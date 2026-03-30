@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
