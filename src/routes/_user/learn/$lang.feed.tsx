@@ -144,8 +144,7 @@ function mergeFilteredFeed(
 		fetchNextPage: filteredQuery.fetchNextPage,
 		isFetchingNextPage: filteredQuery.isFetchingNextPage,
 		// Only show loading if we have zero client results AND server is still loading
-		isBackfillLoading:
-			clientFiltered.length === 0 && filteredQuery.isLoading,
+		isBackfillLoading: clientFiltered.length === 0 && filteredQuery.isLoading,
 	}
 }
 
@@ -252,17 +251,17 @@ function RecentFeed() {
 		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
 
 	// Use main query pagination when unfiltered, filtered query pagination when filtered
-	const hasNextPage = filterType
-		? (merged.hasNextPage ?? false)
-		: (mainQuery.hasNextPage ?? false)
-	const fetchNextPage = filterType
-		? (merged.fetchNextPage ?? (() => {}))
-		: mainQuery.fetchNextPage
-	const isFetchingNextPage = filterType
-		? (merged.isFetchingNextPage ?? false)
-		: mainQuery.isFetchingNextPage
-	const isLoading =
-		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
+	const hasNextPage =
+		filterType ?
+			(merged.hasNextPage ?? false)
+		:	(mainQuery.hasNextPage ?? false)
+	const fetchNextPage =
+		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
+	const isFetchingNextPage =
+		filterType ?
+			(merged.isFetchingNextPage ?? false)
+		:	mainQuery.isFetchingNextPage
+	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
@@ -340,17 +339,17 @@ function FriendsFeed() {
 	const groupedItems =
 		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
 
-	const hasNextPage = filterType
-		? (merged.hasNextPage ?? false)
-		: (mainQuery.hasNextPage ?? false)
-	const fetchNextPage = filterType
-		? (merged.fetchNextPage ?? (() => {}))
-		: mainQuery.fetchNextPage
-	const isFetchingNextPage = filterType
-		? (merged.isFetchingNextPage ?? false)
-		: mainQuery.isFetchingNextPage
-	const isLoading =
-		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
+	const hasNextPage =
+		filterType ?
+			(merged.hasNextPage ?? false)
+		:	(mainQuery.hasNextPage ?? false)
+	const fetchNextPage =
+		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
+	const isFetchingNextPage =
+		filterType ?
+			(merged.isFetchingNextPage ?? false)
+		:	mainQuery.isFetchingNextPage
+	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
@@ -417,17 +416,17 @@ function PopularFeed() {
 	// No grouping for Popular feed to preserve popularity order
 	const merged = mergeFilteredFeed(unfilteredItems, filterType, filteredQuery)
 
-	const hasNextPage = filterType
-		? (merged.hasNextPage ?? false)
-		: (mainQuery.hasNextPage ?? false)
-	const fetchNextPage = filterType
-		? (merged.fetchNextPage ?? (() => {}))
-		: mainQuery.fetchNextPage
-	const isFetchingNextPage = filterType
-		? (merged.isFetchingNextPage ?? false)
-		: mainQuery.isFetchingNextPage
-	const isLoading =
-		mainQuery.isLoading || (merged.isBackfillLoading ?? false)
+	const hasNextPage =
+		filterType ?
+			(merged.hasNextPage ?? false)
+		:	(mainQuery.hasNextPage ?? false)
+	const fetchNextPage =
+		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
+	const isFetchingNextPage =
+		filterType ?
+			(merged.isFetchingNextPage ?? false)
+		:	mainQuery.isFetchingNextPage
+	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
