@@ -29,11 +29,20 @@ import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
 
-const AddTranslationsInputs = z.object({
-	translation_lang: z.string().length(3),
-	translation_text: z.string().min(1),
-})
-type AddTranslationsType = z.infer<typeof AddTranslationsInputs>
+const createAddTranslationsSchema = (phraseLang: string) =>
+	z.object({
+		translation_lang: z
+			.string()
+			.length(3)
+			.refine((val) => val !== phraseLang, {
+				message:
+					'Translation language cannot be the same as the phrase language',
+			}),
+		translation_text: z.string().min(1),
+	})
+type AddTranslationsType = z.infer<
+	ReturnType<typeof createAddTranslationsSchema>
+>
 
 export function AddTranslationsDialog({
 	phrase,
@@ -53,7 +62,7 @@ export function AddTranslationsDialog({
 			translation_text: '',
 			translation_lang: preferredTranslationLang,
 		},
-		resolver: zodResolver(AddTranslationsInputs),
+		resolver: zodResolver(createAddTranslationsSchema(phrase.lang)),
 	})
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
@@ -140,6 +149,7 @@ export function AddTranslationsDialog({
 						<TranslationLanguageField
 							control={control}
 							error={errors.translation_lang}
+							phraseLang={phrase.lang}
 						/>
 						<TranslationTextField
 							register={register}

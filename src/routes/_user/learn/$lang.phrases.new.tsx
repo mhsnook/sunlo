@@ -65,16 +65,21 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 	component: AddPhraseTab,
 })
 
-const addPhraseSchema = z.object({
-	phrase_text: z.string().min(1, 'Please enter a phrase'),
-	translation_lang: z
-		.string()
-		.length(3, 'Provide a language for the translation'),
-	translation_text: z.string().min(1, 'Please enter the translation'),
-	only_reverse: z.boolean().default(false),
-})
+const createAddPhraseSchema = (phraseLang: string) =>
+	z.object({
+		phrase_text: z.string().min(1, 'Please enter a phrase'),
+		translation_lang: z
+			.string()
+			.length(3, 'Provide a language for the translation')
+			.refine((val) => val !== phraseLang, {
+				message:
+					'Translation language cannot be the same as the phrase language',
+			}),
+		translation_text: z.string().min(1, 'Please enter the translation'),
+		only_reverse: z.boolean().default(false),
+	})
 
-type AddPhraseFormValues = z.infer<typeof addPhraseSchema>
+type AddPhraseFormValues = z.infer<ReturnType<typeof createAddPhraseSchema>>
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
@@ -104,7 +109,7 @@ function AddPhraseTab() {
 		reset,
 		formState: { errors },
 	} = useForm<AddPhraseFormValues>({
-		resolver: zodResolver(addPhraseSchema),
+		resolver: zodResolver(createAddPhraseSchema(lang)),
 		defaultValues: {
 			phrase_text: searchPhrase,
 			translation_text: '',
@@ -316,6 +321,7 @@ function AddPhraseTab() {
 							<TranslationLanguageField<AddPhraseFormValues>
 								error={errors.translation_lang}
 								control={control}
+								phraseLang={lang}
 							/>
 
 							{/* Card Preview Section */}

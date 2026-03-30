@@ -582,6 +582,7 @@ function InlineAddBar({
 						value={translationLang}
 						setValue={setTranslationLang}
 						className="h-7 text-xs"
+						disabled={[lang]}
 					/>
 					<Input
 						ref={translationRef}
@@ -777,6 +778,7 @@ function EditPhraseDialog({
 									value={t.lang}
 									setValue={(val) => updateTranslation(i, { lang: val })}
 									className="w-36"
+									disabled={[lang]}
 								/>
 								<Input
 									className="flex-1"
