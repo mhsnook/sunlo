@@ -1,5 +1,41 @@
 # Change Log
 
+## Recent changes
+
+_Since v0.17 (29–30th Mar, 2026)_
+
+### Features
+
+- Search results now include playlists and requests, not just phrases (#439)
+- Show a login button on the public learn page for logged-out visitors (#461)
+- Add "Add all cards to deck" button on playlist view (#453)
+- Show card due dates (overdue/today/upcoming) in the deck management table (#462)
+- Add "Remove image" button to avatar editor in profile settings (#450)
+
+### Improvements
+
+- Feed filtering is now instant: client-side results appear immediately, server backfills older matches in the background (#459)
+- Languages Known field on profile is now more compact on mobile using container queries (#460)
+- Playlist displays more compactly in the feed (#453)
+- Card status controls disable while their mutations are pending to prevent double-submissions (#457)
+- RequestForm extracted into a reusable component shared between the new-request page and feed composer (#458)
+- UpdatePlaylistDialog migrated to react-hook-form with reusable CoverImageField (#455)
+
+### Fixes
+
+- Fix sticky app-nav breaking due to `overflow-x-hidden` creating a scroll container; switched to `overflow-x-clip` (#464)
+- Fix sidebar trigger poking through modal overlays; fix sheet overlay sitting behind sheet content (#446)
+- Fix event propagation on card status heart button (#445)
+- Fix badge text wrapping on playlist item; fix profile page not filling width (#456)
+
+### Chores
+
+- Upgrade Zod to v4, update schema error message API accordingly (#470)
+- Deduplicate esbuild, upgrade `@vitejs/plugin-react` to v5 (#468)
+- Replace `@uidotdev/usehooks` and `react-intersection-observer` with internal implementations (#466)
+- Stabilise `eslint-plugin-react-hooks` to `^6.0.0`, pin Radix overrides (#465)
+- Remove `master` from branch detection fallback in fixup commit hook (#467)
+
 ## v0.17 - Unified Search, Language Filter Pills, Social Media Embeds
 
 _27th Mar, 2026_
