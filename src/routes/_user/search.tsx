@@ -147,7 +147,7 @@ function SearchPage() {
 
 	// --- Phrase search ---
 	// Use backend trigram search when lang filter is set, otherwise client-side
-	const useTrigramSearch = !!(
+	const shouldTrigram = !!(
 		langFilter &&
 		effectiveText.length >= 2 &&
 		(typeFilters.size === 0 || typeFilters.has('phrase'))
@@ -155,14 +155,14 @@ function SearchPage() {
 
 	const smartSearch = useSmartSearch(
 		langFilter ?? '',
-		useTrigramSearch ? effectiveText : '',
+		shouldTrigram ? effectiveText : '',
 		'relevance'
 	)
 
 	// Client-side phrase search (fallback when no lang filter)
 	const { data: clientPhraseResults } = useLiveQuery(
 		(q) => {
-			if (!hasActiveSearch || useTrigramSearch) return undefined
+			if (!hasActiveSearch || shouldTrigram) return undefined
 
 			let query = q.from({ phrase: phrasesFull })
 
@@ -193,19 +193,19 @@ function SearchPage() {
 			tagFilters,
 			languagesToShow,
 			hasActiveSearch,
-			useTrigramSearch,
+			shouldTrigram,
 		]
 	)
 
 	const phraseResults: Array<PhraseFullFilteredType> = useMemo(() => {
 		if (!hasActiveSearch) return []
 		if (typeFilters.size > 0 && !typeFilters.has('phrase')) return []
-		if (useTrigramSearch) return smartSearch.data
+		if (shouldTrigram) return smartSearch.data
 		return clientPhraseResults?.slice(0, 60) ?? []
 	}, [
 		hasActiveSearch,
 		typeFilters,
-		useTrigramSearch,
+		shouldTrigram,
 		smartSearch.data,
 		clientPhraseResults,
 	])
@@ -280,7 +280,7 @@ function SearchPage() {
 
 		for (const phrase of phraseResults) {
 			let score: number
-			if (useTrigramSearch) {
+			if (shouldTrigram) {
 				// Smart search already provides a similarity score (0–~2)
 				const smartResult = smartSearch.data.find((r) => r.id === phrase.id)
 				score = smartResult?.similarityScore ?? 0.3
@@ -312,7 +312,7 @@ function SearchPage() {
 		playlistResults,
 		requestResults,
 		effectiveText,
-		useTrigramSearch,
+		shouldTrigram,
 		smartSearch.data,
 	])
 
@@ -322,7 +322,7 @@ function SearchPage() {
 	const totalCount = mergedResults.length
 
 	const isSearching =
-		hasActiveSearch && (useTrigramSearch ? smartSearch.isLoading : false)
+		hasActiveSearch && (shouldTrigram ? smartSearch.isLoading : false)
 
 	// --- Actions ---
 
@@ -384,7 +384,7 @@ function SearchPage() {
 		let msg = `Found ${parts.join(', ')}`
 		if (langFilter) msg += ` in ${allLanguages[langFilter] ?? langFilter}`
 		if (effectiveText.length >= 2) msg += ` matching "${effectiveText}"`
-		if (useTrigramSearch) msg += ' (fuzzy)'
+		if (shouldTrigram) msg += ' (fuzzy)'
 		return msg
 	}, [
 		hasActiveSearch,
@@ -395,7 +395,7 @@ function SearchPage() {
 		requestCount,
 		langFilter,
 		effectiveText,
-		useTrigramSearch,
+		shouldTrigram,
 	])
 
 	return (
@@ -449,7 +449,7 @@ function SearchPage() {
 								)}
 							</div>
 						)}
-						{useTrigramSearch && smartSearch.hasNextPage && (
+						{shouldTrigram && smartSearch.hasNextPage && (
 							<div className="flex justify-center pt-2">
 								<Button
 									variant="soft"
