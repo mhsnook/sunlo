@@ -35,7 +35,7 @@ if [ -z "$MAIN_BRANCH" ]; then
   MAIN_BRANCH=$(git remote show origin 2>/dev/null | awk '/HEAD branch/ {print $NF}')
 fi
 if [ -z "$MAIN_BRANCH" ]; then
-  for candidate in main master next develop; do
+  for candidate in main next develop; do
     if git rev-parse --verify "origin/$candidate" >/dev/null 2>&1; then
       MAIN_BRANCH=$candidate
       break
