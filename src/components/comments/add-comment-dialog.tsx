@@ -62,7 +62,7 @@ function DisplayBlock({ markdown, uid }: { markdown: string; uid: uuid }) {
 	return (
 		<div>
 			<UidPermalink uid={uid} nonInteractive />
-			<div className="ms-13 text-sm">
+			<div className="ms-6 text-sm">
 				<Markdown>{markdown}</Markdown>
 			</div>
 		</div>
@@ -95,7 +95,7 @@ export function AddCommentDialog({
 			<AuthenticatedDialogContent
 				authTitle="Login to Comment"
 				authMessage="You need to be logged in to join the conversation."
-				className="max-h-[90vh] overflow-y-auto"
+				className="@container max-h-[90dvh] overflow-y-auto p-4 sm:p-6"
 			>
 				<DialogTitle className="sr-only">
 					{parentCommentId ? 'Reply to comment' : 'Add a comment'}
@@ -291,21 +291,19 @@ function NewCommentForm({
 					</div>
 				)}
 
-				<div className="flex flex-row items-center justify-between gap-2">
-					<div className="flex flex-row gap-2">
-						{/* Submit button */}
-						<Button
-							type="submit"
-							data-testid="post-comment-button"
-							disabled={createCommentMutation.isPending}
-						>
-							{createCommentMutation.isPending ?
-								'Posting...'
-							: isReply ?
-								'Post Reply'
-							:	'Post Comment'}
-						</Button>
-					</div>
+				<div className="flex flex-col gap-2 @xs:flex-row @xs:items-center @xs:justify-between">
+					{/* Submit button */}
+					<Button
+						type="submit"
+						data-testid="post-comment-button"
+						disabled={createCommentMutation.isPending}
+					>
+						{createCommentMutation.isPending ?
+							'Posting...'
+						: isReply ?
+							'Post Reply'
+						:	'Post Comment'}
+					</Button>
 
 					{/* Add flashcard button */}
 					<SelectPhrasesForComment
