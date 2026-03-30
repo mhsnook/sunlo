@@ -31,8 +31,7 @@ function PlaylistPage() {
 				<Loader />
 			: !playlist ?
 				<Show404 />
-			:	<PlaylistItem playlist={playlist} />
-			}
+			:	<PlaylistItem playlist={playlist} />}
 		</main>
 	)
 }
