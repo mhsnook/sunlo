@@ -41,7 +41,9 @@ export function PlaylistItem({
 	const hasDeck = decks?.some((d) => d.lang === playlist.lang) ?? false
 
 	const phrasesNotInDeck =
-		data?.filter((item) => !item.phrase.card || item.phrase.card.status === 'skipped') ?? []
+		data?.filter(
+			(item) => !item.phrase.card || item.phrase.card.status === 'skipped'
+		) ?? []
 
 	const bulkAddMutation = useMutation({
 		mutationFn: async (phraseIds: Array<string>) => {
@@ -57,13 +59,15 @@ export function PlaylistItem({
 				)
 				.select()
 				.throwOnError()
-			return inserted!
+			return inserted
 		},
 		onSuccess: (cards: Array<{ [key: string]: unknown }>) => {
 			for (const card of cards) {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
 			}
-			toastSuccess(`Added ${cards.length} card${cards.length === 1 ? '' : 's'} to your deck`)
+			toastSuccess(
+				`Added ${cards.length} card${cards.length === 1 ? '' : 's'} to your deck`
+			)
 		},
 		onError: (error: Error) => {
 			toastError('Failed to add cards to deck')
@@ -191,7 +195,10 @@ export function PlaylistItem({
 							)}
 							{phrase.card?.status &&
 								['active', 'learned'].includes(phrase.card.status) && (
-									<Bookmark className="shrink-0 fill-purple-600/50 text-purple-600" size={12} />
+									<Bookmark
+										className="shrink-0 fill-purple-600/50 text-purple-600"
+										size={12}
+									/>
 								)}
 						</Link>
 					))}
@@ -240,7 +247,8 @@ export function PlaylistItem({
 				>
 					{bulkAddMutation.isPending ?
 						'Adding…'
-					:	`Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`}
+					:	`Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`
+					}
 				</Button>
 			)}
 
