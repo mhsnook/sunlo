@@ -62,7 +62,7 @@ function DisplayBlock({ markdown, uid }: { markdown: string; uid: uuid }) {
 	return (
 		<div>
 			<UidPermalink uid={uid} nonInteractive />
-			<div className="ms-6 text-sm">
+			<div className="mt-2 text-sm">
 				<Markdown>{markdown}</Markdown>
 			</div>
 		</div>
