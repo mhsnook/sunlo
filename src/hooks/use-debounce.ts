@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type RefCallback, useEffect, useRef, useState } from 'react'
 
 export function useDebounce<T>(value: T, delay: number): T {
 	const [debounced, setDebounced] = useState<T>(value)
@@ -19,13 +19,13 @@ export function usePrevious<T>(value: T): T | undefined {
 
 export function useIntersectionObserver(
 	options: IntersectionObserverInit
-): [React.RefCallback<Element>, IntersectionObserverEntry | undefined] {
+): [RefCallback<Element>, IntersectionObserverEntry | undefined] {
 	const [entry, setEntry] = useState<IntersectionObserverEntry | undefined>(
 		undefined
 	)
 	const observerRef = useRef<IntersectionObserver | null>(null)
 
-	const ref: React.RefCallback<Element> = (node) => {
+	const ref: RefCallback<Element> = (node) => {
 		observerRef.current?.disconnect()
 		if (!node) return
 		observerRef.current = new IntersectionObserver(
