@@ -2,11 +2,11 @@ import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import type { CardMetaType } from '@/features/deck/schemas'
 
 import { ago } from '@/lib/dayjs'
-import { dateDiff, retrievability } from '@/lib/utils'
+import { dateDiff } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/features/review/hooks'
-import { intervals } from '@/features/review/fsrs'
+import { intervals, retrievability } from '@/features/review/fsrs'
 
 export default function PhraseExtraInfo({
 	phrase,
@@ -48,7 +48,9 @@ function CardSection({ card }: { card: CardMetaType }) {
 
 	const rev = reviews?.at(-1) ?? null
 	const retr =
-		neverReviewed ? 0 : retrievability(rev!.created_at, rev!.stability!)
+		neverReviewed ? 0 : (
+			retrievability(dateDiff(rev!.created_at), rev!.stability!)
+		)
 
 	return (
 		<div className="block space-y-4">

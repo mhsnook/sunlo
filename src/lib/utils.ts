@@ -58,6 +58,12 @@ export function round(num: number, places: number = 2): number {
 	return Math.pow(10, -places) * Math.round(Math.pow(10, places) * num)
 }
 
+/**
+ * Raw elapsed time between two timestamps in fractional days.
+ * Does NOT respect the 4am session-day boundary — use sessionDaysDiff() for
+ * display purposes. This function is used by the FSRS algorithm where the
+ * precise elapsed time matters (e.g. computing retrievability decay).
+ */
 export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
 	const later: Date =
 		!later_at ? new Date()
@@ -68,20 +74,41 @@ export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
 	return (later - prev) / 1000 / 24 / 60 / 60
 }
 
-export function retrievability(
-	prev_at: string | Date | null,
-	stability: number,
+/**
+ * Compute the number of calendar days between two dates using the 4am day boundary.
+ * Returns whole days (positive = later is after prev in session-day terms).
+ */
+export function sessionDaysDiff(
+	prev_at: string | Date,
 	later_at?: string | Date
 ): number {
-	if (!prev_at || !stability)
-		throw Error(
-			'Something went wrong calcaulating retrievability on the client'
-		)
+	const later =
+		!later_at ? new Date()
+		: typeof later_at === 'string' ? new Date(later_at)
+		: later_at
+	const prev = typeof prev_at === 'string' ? new Date(prev_at) : prev_at
 
-	const F = 19.0 / 81.0,
-		C = -0.5
-	const diff = dateDiff(prev_at, later_at)
-	return Math.pow(1.0 + F * (diff / stability), C)
+	// Shift both by -4 hours so 4am becomes the day boundary
+	const adjustedLater = new Date(later)
+	adjustedLater.setHours(adjustedLater.getHours() - 4)
+	const adjustedPrev = new Date(prev)
+	adjustedPrev.setHours(adjustedPrev.getHours() - 4)
+
+	// Compare calendar dates only (strip time)
+	const laterDay = new Date(
+		adjustedLater.getFullYear(),
+		adjustedLater.getMonth(),
+		adjustedLater.getDate()
+	)
+	const prevDay = new Date(
+		adjustedPrev.getFullYear(),
+		adjustedPrev.getMonth(),
+		adjustedPrev.getDate()
+	)
+
+	return Math.round(
+		(laterDay.getTime() - prevDay.getTime()) / (1000 * 60 * 60 * 24)
+	)
 }
 
 function makeItHave2Digits(input: string | number) {

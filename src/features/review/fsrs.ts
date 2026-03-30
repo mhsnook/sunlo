@@ -102,7 +102,10 @@ function initialStability(score: Score): number {
 }
 
 /**
- * Calculate retrievability (probability of recall) given time elapsed
+ * Probability of recalling a card after `timeInDays` with given `stability`.
+ * Uses the FSRS power-decay formula: R = (1 + F * t/S)^C
+ * where F ≈ 0.2346, C = -0.5. Returns 0–1 (1 = perfect recall).
+ * At t = 0 returns 1; at t = stability returns ~0.9 (the default retention).
  */
 export function retrievability(timeInDays: number, stability: number): number {
 	return Math.pow(
@@ -168,9 +171,12 @@ function nextStability(
 }
 
 /**
- * Calculate the interval (in days) to achieve desired retrievability
+ * Optimal review interval (in fractional days) for a given stability and
+ * desired retrievability. Inverts the retrievability decay formula to find
+ * the number of days at which recall probability equals `desiredRetrievability`.
+ * E.g. with retention 0.9 and stability 10, returns ~10 days.
  */
-function calculateInterval(
+export function calculateInterval(
 	desiredRetrievability: number,
 	stability: number
 ): number {
@@ -181,13 +187,19 @@ function calculateInterval(
 }
 
 /**
- * Main FSRS calculation function
+ * Core FSRS scheduling function. Given a user's score (1–4) and optionally
+ * the previous review's FSRS state, computes the updated card parameters:
  *
- * Given a score and optional previous review data, calculates:
- * - New difficulty and stability values
- * - Retrievability at time of review
- * - Optimal interval until next review
- * - Scheduled date for next review
+ * - difficulty (1–10): how inherently hard the card is
+ * - stability (days): the interval at which recall ≈ 90%
+ * - retrievability (0–1 | null): estimated recall probability at review time
+ *   (null on first review since there's no prior state)
+ * - interval (days): optimal days until next review (minimum 1)
+ * - scheduledFor (Date): the computed next review date
+ *
+ * First review: initializes difficulty and stability from the score alone.
+ * Subsequent reviews: uses elapsed time since last review to compute
+ * retrievability, then updates difficulty and stability based on performance.
  */
 export function calculateFSRS(input: FSRSInput): FSRSOutput {
 	const {
