@@ -7,7 +7,7 @@ import {
 	type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,

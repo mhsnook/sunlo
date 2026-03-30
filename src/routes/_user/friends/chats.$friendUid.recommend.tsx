@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Search,
