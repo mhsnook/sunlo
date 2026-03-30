@@ -2,6 +2,7 @@
 
 ## Recent changes
 
+- 2026-03-30 [improvement] Replace separate purple bookmark icon in feed with a purple-badge quote icon to indicate phrases in your deck
 - 2026-03-30 [feat] Prevent translation language from matching phrase language across all phrase/translation forms
 - 2026-03-30 [fix] Fix flaky e2e nav tests: Kannada seed data for all test users, dropdown open logic, CI timeouts
 - 2026-03-30 [feat] Search results now include playlists and requests, not just phrases (#439)
