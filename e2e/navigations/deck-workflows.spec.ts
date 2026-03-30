@@ -1,15 +1,15 @@
 import { test, expect } from '@playwright/test'
 import { getTestUserForProject } from '../helpers/auth-helpers'
 import { deleteMostRecentReviewState } from '../helpers/db-helpers'
+import { goToLearnPage } from '../helpers/goto-helpers'
 import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Deck Workflow Navigation', () => {
 	test.beforeEach(async ({ page }) => {
-		// storageState provides auth; just navigate to /learn
-		await page.goto('/learn')
+		await goToLearnPage(page)
 		await expect(
-			page.getByText('Which deck are we studying today?')
-		).toBeVisible()
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('review setup page loads with stats', async ({ page }) => {
@@ -46,12 +46,13 @@ test.describe('Deck Workflow Navigation', () => {
 
 		// Navigate to review using data-testid
 		await page.getByTestId('appnav-review').click()
+		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}/review`))
 
 		// Start or continue review button should be visible
 		const startButton = page.getByRole('button', {
 			name: /start.*review|continue.*review/i,
 		})
-		await expect(startButton).toBeVisible()
+		await expect(startButton).toBeVisible({ timeout: 10000 })
 		await startButton.click()
 
 		// Should be on review/preview or review/go page depending on fresh vs continue
@@ -212,9 +213,11 @@ test.describe('Deck Workflow Navigation', () => {
 		await page.keyboard.press('Escape')
 		await expect(page.getByTestId('browse-search-overlay')).not.toBeVisible()
 
-		// Go back to learn page via sidebar - use the link with title "All Decks"
-		// (The /learn link is in "Learning center" section with title "All Decks")
-		await page.getByRole('link', { name: /all decks/i }).click()
+		// Go back to deck list via the deck switcher dropdown
+		if (!(await page.getByTestId('all-decks-link').isVisible())) {
+			await page.getByTestId('deck-switcher-button').click()
+		}
+		await page.getByTestId('all-decks-link').click()
 		await expect(page).toHaveURL('/learn')
 
 		// Go to Spanish if available
@@ -223,8 +226,11 @@ test.describe('Deck Workflow Navigation', () => {
 			await spanishLink.first().click()
 			await expect(page).toHaveURL(/\/learn\/spa/)
 
-			// Go back to learn page and then back to test lang
-			await page.getByRole('link', { name: /all decks/i }).click()
+			// Go back to deck list via the deck switcher dropdown
+			if (!(await page.getByTestId('all-decks-link').isVisible())) {
+				await page.getByTestId('deck-switcher-button').click()
+			}
+			await page.getByTestId('all-decks-link').click()
 			await expect(page).toHaveURL('/learn')
 
 			await page
