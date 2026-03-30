@@ -5,6 +5,7 @@ import {
 	mapArrays,
 	round,
 	dateDiff,
+	sessionDaysDiff,
 	min0,
 	arrayUnion,
 	arrayDifference,
@@ -134,6 +135,54 @@ describe('dateDiff', () => {
 	it('returns negative for reverse order', () => {
 		const diff = dateDiff('2025-01-11T00:00:00Z', '2025-01-01T00:00:00Z')
 		expect(diff).toBeCloseTo(-10, 1)
+	})
+})
+
+describe('sessionDaysDiff', () => {
+	it('returns 0 for same session day (both after 4am)', () => {
+		// 10am and 8pm same day — same session day
+		expect(sessionDaysDiff('2025-06-15T10:00:00', '2025-06-15T20:00:00')).toBe(
+			0
+		)
+	})
+
+	it('returns 0 when reviewed at 11pm and checked at 1am (same session day)', () => {
+		// 11pm June 15 and 1am June 16 — both in "June 15" session (1am < 4am cutoff)
+		expect(sessionDaysDiff('2025-06-15T23:00:00', '2025-06-16T01:00:00')).toBe(
+			0
+		)
+	})
+
+	it('returns 1 when crossing the 4am boundary', () => {
+		// 3am June 16 is still "June 15" session, 5am June 16 is "June 16" session
+		expect(sessionDaysDiff('2025-06-16T03:00:00', '2025-06-16T05:00:00')).toBe(
+			1
+		)
+	})
+
+	it('returns 0 for review at 5am and check at 3am next day', () => {
+		// 5am June 15 = "June 15" session, 3am June 16 = still "June 15" session
+		expect(sessionDaysDiff('2025-06-15T05:00:00', '2025-06-16T03:00:00')).toBe(
+			0
+		)
+	})
+
+	it('returns correct multi-day difference', () => {
+		expect(sessionDaysDiff('2025-06-10T10:00:00', '2025-06-15T10:00:00')).toBe(
+			5
+		)
+	})
+
+	it('returns negative when prev is after later', () => {
+		expect(sessionDaysDiff('2025-06-15T10:00:00', '2025-06-10T10:00:00')).toBe(
+			-5
+		)
+	})
+
+	it('accepts Date objects', () => {
+		const prev = new Date('2025-06-10T10:00:00')
+		const later = new Date('2025-06-13T10:00:00')
+		expect(sessionDaysDiff(prev, later)).toBe(3)
 	})
 })
 

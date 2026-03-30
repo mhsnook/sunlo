@@ -40,4 +40,9 @@ export {
 } from './store'
 
 // Algorithm
-export { calculateFSRS, retrievability, type Score } from './fsrs'
+export {
+	calculateFSRS,
+	calculateInterval,
+	retrievability,
+	type Score,
+} from './fsrs'

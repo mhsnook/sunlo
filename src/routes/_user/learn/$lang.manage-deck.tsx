@@ -27,7 +27,8 @@ import { CardMetaSchema, type CardMetaType } from '@/features/deck/schemas'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { cn, dateDiff } from '@/lib/utils'
+import { cn, sessionDaysDiff } from '@/lib/utils'
+import { calculateInterval } from '@/features/review'
 import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
@@ -62,6 +63,34 @@ const statusBgColors = {
 	learned: 'bg-1-lo-success',
 	skipped: 'bg-1-lo-neutral',
 } as const
+
+const DEFAULT_RETENTION = 0.9
+
+function getDueInfo(card: CardMetaType): {
+	label: string
+	color: string
+} | null {
+	if (!card.last_reviewed_at || card.stability == null) return null
+	const interval = calculateInterval(DEFAULT_RETENTION, card.stability)
+	const lastReview = new Date(card.last_reviewed_at)
+	const dueDate = new Date(lastReview)
+	dueDate.setDate(dueDate.getDate() + Math.round(interval))
+	const daysUntilDue = sessionDaysDiff(new Date(), dueDate)
+
+	if (daysUntilDue < 0) {
+		const overdue = Math.abs(daysUntilDue)
+		return {
+			label: overdue === 1 ? 'Overdue 1d' : `Overdue ${overdue}d`,
+			color: 'text-7-hi-danger',
+		}
+	}
+	if (daysUntilDue === 0)
+		return { label: 'Due today', color: 'text-7-hi-warning' }
+	return {
+		label: daysUntilDue === 1 ? 'Due in 1d' : `Due in ${daysUntilDue}d`,
+		color: 'text-muted-foreground',
+	}
+}
 
 function ManageDeckPage() {
 	const isAuth = useIsAuthenticated()
@@ -136,14 +165,15 @@ function useCardData(lang: string) {
 					const aDate = a.last_reviewed_at ?? ''
 					const bDate = b.last_reviewed_at ?? ''
 					if (!aDate && !bDate) return 0
-					if (!aDate) return dir
-					if (!bDate) return -dir
+					if (!aDate) return 1 // nulls always last
+					if (!bDate) return -1
 					return dir * aDate.localeCompare(bDate)
 				}
 				case 'difficulty': {
-					const aD = a.difficulty ?? 0
-					const bD = b.difficulty ?? 0
-					return dir * (aD - bD)
+					if (a.difficulty == null && b.difficulty == null) return 0
+					if (a.difficulty == null) return 1 // nulls always last
+					if (b.difficulty == null) return -1
+					return dir * (a.difficulty - b.difficulty)
 				}
 				default:
 					return 0
@@ -249,7 +279,7 @@ function ManageDeckTable({ lang }: { lang: string }) {
 								onSort={handleSort}
 							/>
 							<SortableHeader
-								label="Last Review"
+								label="Next Review"
 								field="last_reviewed"
 								currentField={sortField}
 								currentDir={sortDir}
@@ -285,15 +315,9 @@ function ManageDeckTable({ lang }: { lang: string }) {
 function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 	const [open, setOpen] = useState(false)
 	const StatusIconComponent = statusIcon[card.status]
-	const daysSinceReview =
-		card.last_reviewed_at ? Math.floor(dateDiff(card.last_reviewed_at)) : null
+	const dueInfo = getDueInfo(card)
 	const difficultyDisplay =
-		card.difficulty != null ? (card.difficulty * 10).toFixed(1) : null
-	const difficultyColor =
-		card.difficulty == null ? 'text-muted-foreground'
-		: card.difficulty < 0.4 ? 'text-7-hi-success'
-		: card.difficulty < 0.7 ? 'text-7-hi-warning'
-		: 'text-7-hi-danger'
+		card.difficulty != null ? Math.round(card.difficulty) : null
 
 	return (
 		<div
@@ -340,20 +364,19 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 							</span>
 						</span>
 						<span className="text-muted-foreground">
-							Reviewed:{' '}
-							<span className="text-foreground tabular-nums">
-								{daysSinceReview != null ?
-									daysSinceReview === 0 ?
-										'today'
-									: daysSinceReview === 1 ?
-										'1 day ago'
-									:	`${daysSinceReview}d ago`
-								:	'never'}
+							Next review:{' '}
+							<span
+								className={cn(
+									'font-medium tabular-nums',
+									dueInfo?.color ?? 'text-foreground'
+								)}
+							>
+								{dueInfo?.label ?? 'n/a'}
 							</span>
 						</span>
 						<span className="text-muted-foreground">
 							Difficulty:{' '}
-							<span className={cn('font-medium tabular-nums', difficultyColor)}>
+							<span className="text-foreground font-medium tabular-nums">
 								{difficultyDisplay ?? '—'}
 							</span>
 						</span>
@@ -428,17 +451,9 @@ function DesktopCardRow({
 	lang: string
 }) {
 	const StatusIconComponent = statusIcon[card.status]
-	const daysSinceReview =
-		card.last_reviewed_at ? Math.floor(dateDiff(card.last_reviewed_at)) : null
-
+	const dueInfo = getDueInfo(card)
 	const difficultyDisplay =
-		card.difficulty != null ? (card.difficulty * 10).toFixed(1) : null
-
-	const difficultyColor =
-		card.difficulty == null ? ''
-		: card.difficulty < 0.4 ? 'text-7-hi-success'
-		: card.difficulty < 0.7 ? 'text-7-hi-warning'
-		: 'text-7-hi-danger'
+		card.difficulty != null ? Math.round(card.difficulty) : null
 
 	return (
 		<tr
@@ -470,25 +485,19 @@ function DesktopCardRow({
 				</span>
 			</td>
 
-			{/* Last Review */}
+			{/* Next Review */}
 			<td className="px-3 py-2 text-center">
-				{daysSinceReview != null ?
-					<span className="text-muted-foreground text-sm tabular-nums">
-						{daysSinceReview === 0 ?
-							'today'
-						: daysSinceReview === 1 ?
-							'1 day ago'
-						:	`${daysSinceReview}d ago`}
+				{dueInfo ?
+					<span className={cn('text-sm tabular-nums', dueInfo.color)}>
+						{dueInfo.label}
 					</span>
-				:	<span className="text-muted-foreground/50 text-xs">never</span>}
+				:	<span className="text-muted-foreground/50 text-xs">n/a</span>}
 			</td>
 
 			{/* Difficulty */}
 			<td className="px-3 py-2 text-center">
 				{difficultyDisplay != null ?
-					<span
-						className={cn('text-sm font-medium tabular-nums', difficultyColor)}
-					>
+					<span className="text-sm font-medium tabular-nums">
 						{difficultyDisplay}
 					</span>
 				:	<span className="text-muted-foreground/50 text-xs">—</span>}
