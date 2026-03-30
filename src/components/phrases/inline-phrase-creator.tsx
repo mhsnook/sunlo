@@ -177,7 +177,7 @@ function InlinePhraseForm({
 
 	return (
 		<div
-			className={`bg-muted/30 rounded-lg border p-4${animate ? ' animate-in fade-in duration-300' : ''}`}
+			className={`bg-muted/30 rounded-lg border p-4 ${animate ? 'animate-in fade-in duration-300' : ''}`}
 		>
 			<div className="mb-3 flex items-center justify-between">
 				<h4 className="font-medium">Create New Phrase</h4>

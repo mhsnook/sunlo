@@ -46,9 +46,7 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 
 	const top8 = stableTop8.current
 	const hasRecommendations =
-		top8.popular.length > 0 ||
-		top8.newest.length > 0 ||
-		top8.easiest.length > 0
+		top8.popular.length > 0 || top8.newest.length > 0 || top8.easiest.length > 0
 
 	return !hasRecommendations ?
 			<p className="text-muted-foreground mx-4 text-sm italic">
