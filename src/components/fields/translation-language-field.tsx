@@ -7,7 +7,8 @@ import ErrorLabel from './error-label'
 export default function TranslationLanguageField<T extends FieldValues>({
 	control,
 	error,
-}: ControlledFieldProps<T>) {
+	phraseLang,
+}: ControlledFieldProps<T> & { phraseLang: string }) {
 	const controller = useController({
 		name: 'translation_lang' as Path<T>,
 		control,
@@ -22,6 +23,7 @@ export default function TranslationLanguageField<T extends FieldValues>({
 				value={controller.field.value}
 				setValue={controller.field.onChange}
 				hasError={!!error}
+				disabled={[phraseLang]}
 			/>
 			<ErrorLabel error={error} />
 		</div>

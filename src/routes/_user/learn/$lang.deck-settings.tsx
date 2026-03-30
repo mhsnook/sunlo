@@ -488,6 +488,7 @@ function PreferredTranslationLanguageForm({
 					<SelectOneOfYourLanguages
 						value={selectedLang ?? ''}
 						setValue={handleSetLang}
+						disabled={[lang]}
 					/>
 				</div>
 				<div className="flex flex-wrap gap-2">
