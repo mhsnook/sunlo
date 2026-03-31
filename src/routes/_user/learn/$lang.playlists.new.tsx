@@ -19,6 +19,7 @@ import {
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
+	phrasePlaylistUpvotesCollection,
 } from '@/features/playlists/collections'
 import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
 import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
@@ -130,6 +131,10 @@ function NewPlaylistPageContent() {
 					PlaylistPhraseLinkSchema.parse(link)
 				)
 			)
+			// RPC auto-upvotes; sync local upvote collection
+			phrasePlaylistUpvotesCollection.utils.writeInsert({
+				playlist_id: data.playlist.id,
+			})
 			invalidateFeed(lang)
 			toastSuccess(`Added new playlist with ${data.links.length} phrases`)
 			void navigate({
