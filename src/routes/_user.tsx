@@ -20,6 +20,8 @@ import {
 import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
+import { notificationsCollection } from '@/features/notifications/collections'
+import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
@@ -63,6 +65,7 @@ export const Route = createFileRoute('/_user')({
 			if (location.pathname !== '/getting-started') {
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
+				void notificationsCollection.preload()
 			}
 			return
 		}
@@ -94,6 +97,7 @@ export const Route = createFileRoute('/_user')({
 			} else {
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
+				void notificationsCollection.preload()
 			}
 		}
 	},
@@ -135,8 +139,9 @@ function UserLayout() {
 	// Apply user's font preference to the document body
 	useFontPreference()
 
-	// Subscribe to realtime friend-request and chat-message events
+	// Subscribe to realtime friend-request, chat-message, and notification events
 	useSocialRealtime()
+	useNotificationsRealtime()
 
 	return (
 		<div

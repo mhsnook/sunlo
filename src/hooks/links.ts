@@ -4,11 +4,13 @@ import {
 	useUnreadChatsCount,
 } from '@/features/social/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
+import { useUnreadCount } from '@/features/notifications/hooks'
 import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'
 import {
 	BarChart3,
+	Bell,
 	ChartBarDecreasing,
 	CircleStar,
 	Compass,
@@ -160,6 +162,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/privacy-policy',
 			},
 			Icon: FileText,
+		},
+		'/notifications': {
+			name: 'Notifications',
+			title: 'Notifications',
+			Icon: Bell,
+			link: {
+				to: '/notifications',
+			},
+			useBadge: () => useUnreadCount(),
 		},
 		'/profile': {
 			name: 'Profile',
