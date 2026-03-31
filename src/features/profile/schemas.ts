@@ -34,11 +34,15 @@ export type PublicProfileType = z.infer<typeof PublicProfileSchema>
 export const FontPreferenceSchema = z.enum(['default', 'dyslexic'])
 export type FontPreferenceType = z.infer<typeof FontPreferenceSchema>
 
+export const ReviewAnswerModeSchema = z.enum(['4-buttons', '2-buttons'])
+export type ReviewAnswerModeType = z.infer<typeof ReviewAnswerModeSchema>
+
 export const MyProfileSchema = PublicProfileSchema.extend({
 	created_at: z.string(),
 	languages_known: LanguagesKnownSchema,
 	updated_at: z.string().nullable(),
 	font_preference: FontPreferenceSchema.nullable().default('default'),
+	review_answer_mode: ReviewAnswerModeSchema.nullable().default('4-buttons'),
 })
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>
