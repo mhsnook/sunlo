@@ -7,7 +7,7 @@ import ErrorLabel from './error-label'
 export default function PasswordField<T extends FieldValues>({
 	register,
 	error,
-	tabIndex = 2,
+	tabIndex,
 }: FieldProps<T>) {
 	return (
 		<div className="flex flex-col gap-1">
