@@ -86,7 +86,7 @@ export function SelectPhrasesForComment({
 					type="button"
 					variant="soft"
 					disabled={isMaxReached}
-					data-testid="open-phrase-picker"
+					data-testid="attach-phrase-button"
 				>
 					<Paperclip className="mr-2 h-4 w-4" />
 					{isMaxReached ? triggerMaxText : triggerText}
@@ -164,6 +164,7 @@ export function SelectPhrasesForComment({
 												checked={isSelected}
 												disabled={isDisabled}
 												id={`select-phrase-${phrase.id}`}
+												data-testid="phrase-checkbox"
 												onCheckedChange={() => handleToggle(phrase.id)}
 												className="mt-1"
 											/>

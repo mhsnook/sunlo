@@ -74,6 +74,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 				variant={hasUpvoted ? 'soft' : 'ghost'}
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this comment'}
 				size="icon"
+				data-testid="upvote-comment-button"
 				onClick={(e) => {
 					e.stopPropagation()
 					requireAuth(() => {

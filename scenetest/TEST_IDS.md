@@ -250,12 +250,16 @@ natural wrapper element to label.
 
 ## Display Preferences
 
-| Selector                   | Attribute   | Component/Location  | Description                        |
-| -------------------------- | ----------- | ------------------- | ---------------------------------- |
-| `display-preferences-page` | data-testid | Display prefs route | Display preferences page container |
-| `display-preferences-link` | data-testid | Profile page        | Link to display preferences        |
-| `font-preference-default`  | data-testid | Display prefs       | Default font radio option          |
-| `font-preference-dyslexic` | data-testid | Display prefs       | OpenDyslexic font radio option     |
+| Selector                       | Attribute   | Component/Location | Description                            |
+| ------------------------------ | ----------- | ------------------ | -------------------------------------- |
+| `display-preferences-page`     | data-testid | Profile page       | Display preferences section container  |
+| `font-preference-default`      | data-testid | Display prefs      | Default font radio option              |
+| `font-preference-dyslexic`     | data-testid | Display prefs      | OpenDyslexic font radio option         |
+| `review-answer-mode-2-buttons` | data-testid | Display prefs      | 2-button mode option (profile-level)   |
+| `review-answer-mode-4-buttons` | data-testid | Display prefs      | 4-button mode option (profile-level)   |
+| `upvote-comment-button`        | data-testid | Comment item       | Upvote button on a comment             |
+| `phrase-checkbox`              | data-testid | Phrase picker      | Checkbox for selecting a phrase        |
+| `add-selected-phrases-button`  | data-testid | Phrase picker      | Confirm button to add selected phrases |
 
 ## Comments & Answers
 

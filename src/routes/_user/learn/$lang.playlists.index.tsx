@@ -30,17 +30,21 @@ function RouteComponent() {
 			</div>
 			{isLoading ?
 				<Loader />
-			:	<div className="divide-y border">
+			:	<div className="divide-y border" data-testid="playlist-list">
 					{playlists?.map((p) => (
-						<div
+						<Link
+							key={p.id}
+							to="/learn/$lang/playlists/$playlistId"
+							params={{ lang, playlistId: p.id }}
 							style={
 								{ viewTransitionName: `playlist-${p.id}` } as CSSProperties
 							}
-							className="p-4"
-							key={p.id}
+							className="block p-4"
+							data-testid="playlist-item"
+							data-key={p.id}
 						>
 							{p.title}
-						</div>
+						</Link>
 					))}
 				</div>
 			}

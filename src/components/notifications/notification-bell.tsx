@@ -24,6 +24,7 @@ export function NotificationBell() {
 					<Badge
 						size="sm"
 						className="absolute -end-2 -top-2 min-w-4 justify-center"
+						data-testid="notification-badge"
 					>
 						{unreadCount > 99 ? '99+' : unreadCount}
 					</Badge>

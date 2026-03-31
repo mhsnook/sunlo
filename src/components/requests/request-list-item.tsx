@@ -38,7 +38,9 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 				}}
 				tabIndex={0}
 				data-name="request-item"
+				data-testid="request-item"
 				data-key={request.id}
+				data-uid={request.requester_uid}
 			>
 				<RequestHeader request={request} />
 				<CardContent>

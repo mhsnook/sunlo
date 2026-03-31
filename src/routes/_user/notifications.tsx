@@ -23,7 +23,9 @@ export const Route = createFileRoute('/_user/notifications')({
 function NotificationsPage() {
 	return (
 		<RequireAuth message="Log in to see your notifications.">
-			<NotificationList />
+			<div data-testid="notifications-page">
+				<NotificationList />
+			</div>
 		</RequireAuth>
 	)
 }

@@ -205,6 +205,7 @@ function NewPlaylistPageContent() {
 					<form
 						role="form"
 						noValidate
+						data-testid="new-playlist-form"
 						// eslint-disable-next-line @typescript-eslint/no-misused-promises
 						onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
 						className="space-y-6"
@@ -216,6 +217,7 @@ function NewPlaylistPageContent() {
 								className={form.formState.errors.title ? 'border-red-500' : ''}
 								{...form.register('title')}
 								placeholder="Playlist Title"
+								data-testid="playlist-title-input"
 							/>
 							{form.formState.errors.title && (
 								<p className="text-sm text-red-500">
@@ -230,6 +232,7 @@ function NewPlaylistPageContent() {
 								id="description"
 								{...form.register('description')}
 								placeholder="Optional description"
+								data-testid="playlist-description-input"
 							/>
 							<p className="text-muted-foreground text-xs">
 								Describe what this playlist is about
@@ -356,6 +359,7 @@ function NewPlaylistPageContent() {
 							</Button>
 							<Button
 								type="submit"
+								data-testid="create-playlist-button"
 								disabled={
 									mutation.isPending ||
 									!form.formState.isValid ||

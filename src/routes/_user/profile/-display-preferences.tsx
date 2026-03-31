@@ -23,7 +23,7 @@ import {
 
 export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 	return (
-		<div className="space-y-8">
+		<div className="space-y-8" data-testid="display-preferences-page">
 			<FontPreferenceSection profile={profile} />
 			<ReviewAnswerModeSection profile={profile} />
 		</div>
@@ -107,9 +107,14 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					control={control}
 					error={errors.font_preference}
 					options={fontPreferenceOptions}
+					data-testid="font-preference"
 				/>
 				<div className="space-x-2">
-					<Button type="submit" disabled={!isDirty}>
+					<Button
+						type="submit"
+						disabled={!isDirty}
+						data-testid="update-font-button"
+					>
 						Update font
 					</Button>
 					<Button
@@ -215,9 +220,14 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					control={control}
 					error={errors.review_answer_mode}
 					options={reviewAnswerModeOptions}
+					data-testid="review-answer-mode"
 				/>
 				<div className="space-x-2">
-					<Button type="submit" disabled={!isDirty}>
+					<Button
+						type="submit"
+						disabled={!isDirty}
+						data-testid="update-answer-mode-button"
+					>
 						Update answer mode
 					</Button>
 					<Button

@@ -16,6 +16,7 @@ export type FancySelectOption = {
 type FancySelectFieldProps<T extends FieldValues> = ControlledFieldProps<T> & {
 	name: Path<T>
 	options: FancySelectOption[]
+	'data-testid'?: string
 }
 
 export function FancySelectField<T extends FieldValues>({
@@ -23,6 +24,7 @@ export function FancySelectField<T extends FieldValues>({
 	error,
 	name,
 	options,
+	'data-testid': testId,
 }: FancySelectFieldProps<T>) {
 	const {
 		field: { value, onChange },
@@ -39,6 +41,7 @@ export function FancySelectField<T extends FieldValues>({
 				onValueChange={handleChange}
 				value={String(value)}
 				className="gap-0"
+				data-testid={testId}
 			>
 				{options.map((option) => (
 					<Fragment key={option.value}>
@@ -50,6 +53,7 @@ export function FancySelectField<T extends FieldValues>({
 						<Label
 							htmlFor={`${name}-${option.value}`}
 							data-key={String(option.value)}
+							data-testid={testId ? `${testId}-${option.value}` : undefined}
 							className={cn(
 								`flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors`,
 								String(value) === String(option.value) ?

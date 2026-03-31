@@ -540,7 +540,12 @@ function ReviewAnswerModeRadio({
 	onChange: (val: string) => void
 }) {
 	return (
-		<RadioGroup onValueChange={onChange} value={value ?? ''} className="gap-0">
+		<RadioGroup
+			onValueChange={onChange}
+			value={value ?? ''}
+			className="gap-0"
+			data-testid="review-answer-mode-radio"
+		>
 			{reviewAnswerModeOptions.map((option) => (
 				<Fragment key={option.value}>
 					<RadioGroupItem
@@ -550,6 +555,7 @@ function ReviewAnswerModeRadio({
 					/>
 					<Label
 						htmlFor={`deck-review-mode-${option.value}`}
+						data-testid={`review-answer-mode-${option.value}`}
 						className={cn(
 							'flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors',
 							value !== null && String(value) === String(option.value) ?
@@ -694,6 +700,7 @@ function ReviewAnswerModeForm({
 							updateAnswerModeMutation.isPending
 						}
 						onClick={handleClear}
+						data-testid="clear-review-answer-mode-button"
 					>
 						Clear
 					</Button>

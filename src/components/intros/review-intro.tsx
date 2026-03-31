@@ -15,6 +15,7 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 			description="Understanding spaced repetition will help you learn faster."
 			actionLabel="Start reviewing"
 			onAction={onClose}
+			actionTestId="dismiss-review-intro"
 		>
 			<div className="space-y-4">
 				<div className="space-y-2">

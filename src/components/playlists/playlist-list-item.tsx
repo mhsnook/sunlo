@@ -162,7 +162,10 @@ export function PlaylistItem({
 
 			{/* Track list of linked phrases */}
 			{!compact && (
-				<div className="text-muted-foreground flex flex-col gap-1 text-sm">
+				<div
+					className="text-muted-foreground flex flex-col gap-1 text-sm"
+					data-testid="playlist-phrase-list"
+				>
 					{data?.map(({ phrase }, index) => (
 						<Link
 							key={phrase.id}

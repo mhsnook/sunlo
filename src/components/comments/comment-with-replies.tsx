@@ -76,6 +76,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 			} p-4`}
 			data-comment-id={comment.id}
 			data-testid="comment-item"
+			data-key={comment.id}
 			style={
 				{
 					viewTransitionName: `comment-${comment.id}`,
@@ -114,7 +115,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 				{/* Attached flashcards */}
 				{phrases && phrases.length > 0 && (
-					<div className="mt-3 space-y-2">
+					<div
+						className="mt-3 space-y-2"
+						data-testid="comment-phrase-link-badge"
+					>
 						{phrases.map(({ phrase }) => {
 							return <CardResultSimple key={phrase.id} phrase={phrase} />
 						})}
@@ -133,6 +137,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							<DialogTrigger
 								aria-label="Add a reply"
 								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								data-testid="reply-to-comment-button"
 							>
 								<MessagesSquare />
 							</DialogTrigger>
@@ -220,6 +225,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 	return (
 		<div
 			className={`mt-4 ${isHighlighted ? 'border-s-primary rounded border-s-2 ps-3' : ''}`}
+			data-testid="comment-reply"
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">
