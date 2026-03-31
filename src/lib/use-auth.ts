@@ -9,6 +9,7 @@ export const emptyAuth = {
 	userId: null,
 	userEmail: null,
 	userRole: null,
+	isAdmin: false,
 }
 
 type AuthNotLoaded = Readonly<typeof emptyAuth>
@@ -20,6 +21,7 @@ type AuthNotLoggedIn = {
 	userId: null
 	userEmail: null
 	userRole: null
+	isAdmin: false
 }
 type AuthLoggedIn = {
 	isLoaded: true
@@ -28,6 +30,7 @@ type AuthLoggedIn = {
 	userId: uuid
 	userEmail: string
 	userRole: RolesEnum
+	isAdmin: boolean
 }
 
 export type AuthLoaded = AuthNotLoggedIn | AuthLoggedIn

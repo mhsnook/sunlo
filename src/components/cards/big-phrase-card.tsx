@@ -44,6 +44,10 @@ import {
 } from '@/features/phrases/hooks'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
+import {
+	AdminArchivePhraseButton,
+	AdminUnarchivePhraseButton,
+} from '@/components/cards/admin-archive-phrase'
 import { ago } from '@/lib/dayjs'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
@@ -90,6 +94,9 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								)}
 							</div>
 							<div className="flex flex-row items-center gap-2">
+								{phrase.archived ?
+									<AdminUnarchivePhraseButton phraseId={pid} />
+								:	<AdminArchivePhraseButton phraseId={pid} />}
 								<Flagged>
 									<Button
 										size="icon"

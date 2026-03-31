@@ -83,6 +83,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				userEmail: sessionState?.user.email ?? null,
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+				isAdmin: !!sessionState?.user?.app_metadata?.is_admin,
 				isLoaded: true,
 			} as AuthLoaded)
 		:	emptyAuth
