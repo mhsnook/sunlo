@@ -16,6 +16,8 @@ export {
 	LearningGoalEnumSchema,
 	FontPreferenceSchema,
 	type FontPreferenceType,
+	ReviewAnswerModeSchema,
+	type ReviewAnswerModeType,
 } from './schemas'
 
 // Collections
