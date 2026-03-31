@@ -3,7 +3,7 @@ import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/features/profile/hooks'
-import { Bookmark, MessageSquareQuote, Users } from 'lucide-react'
+import { MessageSquareQuote, Users } from 'lucide-react'
 import { CSSProperties } from 'react'
 import { uuid } from '@/types/main'
 
@@ -42,7 +42,14 @@ export function PhraseSummaryLine({
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}
 			>
-				<MessageSquareQuote size={14} className="shrink-0" />
+				{(
+					phrase?.card?.status &&
+					['active', 'learned'].includes(phrase.card.status)
+				) ?
+					<span className="inline-flex shrink-0 items-center justify-center rounded bg-purple-600 p-0.5">
+						<MessageSquareQuote size={12} className="text-white" />
+					</span>
+				:	<MessageSquareQuote size={14} className="shrink-0" />}
 				<span
 					className="truncate"
 					style={
@@ -56,15 +63,6 @@ export function PhraseSummaryLine({
 						({translationCount} translation{translationCount === 1 ? '' : 's'})
 					</span>
 				)}
-				{(
-					phrase?.card?.status &&
-					['active', 'learned'].includes(phrase.card.status)
-				) ?
-					<Bookmark
-						className="shrink-0 fill-purple-600/50 text-purple-600"
-						size={12}
-					/>
-				:	null}
 			</Link>
 
 			{(phrase.count_learners ?? 0) > 0 && (

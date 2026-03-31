@@ -22,6 +22,8 @@ import {
 	useOneReviewToday,
 	useReviewMutation,
 } from '@/features/review/hooks'
+import { useReviewAnswerMode } from '@/features/deck/hooks'
+import { useReviewLang } from '@/features/review/store'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
 import {
@@ -77,6 +79,8 @@ export function ReviewSingleCard({
 		triggerSlide
 	)
 
+	const lang = useReviewLang()
+	const answerMode = useReviewAnswerMode(lang)
 	const nextIntervals = intervals(latestReview).map(formatInterval)
 
 	if (!phrase) return null
@@ -159,6 +163,44 @@ export function ReviewSingleCard({
 					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
+				: answerMode === '2-buttons' ?
+					<div
+						data-name="answer-buttons-row"
+						className="mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
+					>
+						<Button
+							variant="default"
+							data-testid="rating-again-button"
+							onClick={() => mutate({ score: 1 })}
+							disabled={isPending}
+							className={cn(
+								'h-auto rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
+								prevData?.score === 1 && reviewStage < 4 ?
+									'ring-primary ring-2 ring-offset-3'
+								:	''
+							)}
+						>
+							Forgot
+						</Button>
+						<Button
+							variant="default"
+							data-testid="rating-good-button"
+							onClick={() => mutate({ score: 3 })}
+							disabled={isPending}
+							className={cn(
+								'h-auto rounded-2xl border-green-500! bg-green-500! py-6 text-2xl text-white hover:border-white! hover:bg-green-600!',
+								(
+									prevData?.score === 3 ||
+										prevData?.score === 2 ||
+										prevData?.score === 4
+								) ?
+									'ring-primary ring-2 ring-offset-3'
+								:	''
+							)}
+						>
+							Correct!
+						</Button>
+					</div>
 				:	<div
 						data-name="answer-buttons-row"
 						className="mb-3 grid w-full max-w-160 grid-cols-4"

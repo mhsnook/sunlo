@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Search,
@@ -33,29 +33,21 @@ import { Button } from '@/components/ui/button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
+import type { SearchResult, SearchResultType } from '@/types/search-result'
 
-type ContentFilter = 'phrases' | 'playlists' | 'requests'
+type ContentFilter = SearchResultType
 
-interface SearchResultBase {
-	id: string
-	lang: string
-	title: string
-	subtitle: string | null
-}
-
-interface PhraseResult extends SearchResultBase {
-	type: 'phrases'
-}
-
-interface PlaylistResult extends SearchResultBase {
-	type: 'playlists'
-}
-
-interface RequestResult extends SearchResultBase {
-	type: 'requests'
-}
-
-type SearchResult = PhraseResult | PlaylistResult | RequestResult
+// Map from tab values (plural) to SearchResultType (singular)
+const tabToFilter = (v: string): ContentFilter | null =>
+	v === 'phrases' ? 'phrase'
+	: v === 'playlists' ? 'playlist'
+	: v === 'requests' ? 'request'
+	: null
+const filterToTab = (f: ContentFilter | null): string =>
+	f === 'phrase' ? 'phrases'
+	: f === 'playlist' ? 'playlists'
+	: f === 'request' ? 'requests'
+	: 'all'
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendUid/recommend'
@@ -97,7 +89,7 @@ function RouteComponent() {
 		const items: Array<SearchResult> = []
 		const langFilter = lang || null
 
-		if (activeFilter === null || activeFilter === 'phrases') {
+		if (activeFilter === null || activeFilter === 'phrase') {
 			const matching =
 				allPhrases
 					?.filter((phrase) => {
@@ -116,7 +108,7 @@ function RouteComponent() {
 			for (const phrase of matching) {
 				items.push({
 					id: phrase.id,
-					type: 'phrases',
+					type: 'phrase',
 					lang: phrase.lang,
 					title: phrase.text,
 					subtitle: phrase.translations?.[0]?.text ?? null,
@@ -124,7 +116,7 @@ function RouteComponent() {
 			}
 		}
 
-		if (activeFilter === null || activeFilter === 'playlists') {
+		if (activeFilter === null || activeFilter === 'playlist') {
 			const matching =
 				allPlaylists
 					?.filter((playlist) => {
@@ -140,7 +132,7 @@ function RouteComponent() {
 			for (const playlist of matching) {
 				items.push({
 					id: playlist.id,
-					type: 'playlists',
+					type: 'playlist',
 					lang: playlist.lang,
 					title: playlist.title,
 					subtitle: playlist.description,
@@ -148,7 +140,7 @@ function RouteComponent() {
 			}
 		}
 
-		if (activeFilter === null || activeFilter === 'requests') {
+		if (activeFilter === null || activeFilter === 'request') {
 			const matching =
 				allRequests
 					?.filter((req) => {
@@ -161,7 +153,7 @@ function RouteComponent() {
 			for (const req of matching) {
 				items.push({
 					id: req.id,
-					type: 'requests',
+					type: 'request',
 					lang: req.lang,
 					title: req.prompt,
 					subtitle: null,
@@ -211,13 +203,13 @@ function RouteComponent() {
 			lang: result.lang,
 		}
 
-		if (result.type === 'phrases') {
+		if (result.type === 'phrase') {
 			void sendMessageMutation.mutate({
 				...base,
 				phrase_id: result.id,
 				message_type: 'recommendation',
 			})
-		} else if (result.type === 'playlists') {
+		} else if (result.type === 'playlist') {
 			void sendMessageMutation.mutate({
 				...base,
 				playlist_id: result.id,
@@ -291,10 +283,8 @@ function RouteComponent() {
 				{/* Filter Tabs */}
 				<div className="border-b px-4 py-2.5">
 					<Tabs
-						value={activeFilter ?? 'all'}
-						onValueChange={(v) =>
-							setActiveFilter(v === 'all' ? null : (v as ContentFilter))
-						}
+						value={filterToTab(activeFilter)}
+						onValueChange={(v: string) => setActiveFilter(tabToFilter(v))}
 					>
 						<TabsList>
 							<TabsTrigger value="all">All</TabsTrigger>
@@ -392,14 +382,11 @@ function SendableResult({
 	disabled: boolean
 }) {
 	const typeIcon =
-		result.type === 'phrases' ? <MessageSquareQuote className="size-3.5" />
-		: result.type === 'playlists' ? <ListMusic className="size-3.5" />
+		result.type === 'phrase' ? <MessageSquareQuote className="size-3.5" />
+		: result.type === 'playlist' ? <ListMusic className="size-3.5" />
 		: <MessageCircleHeart className="size-3.5" />
 
-	const typeLabel =
-		result.type === 'phrases' ? 'phrase'
-		: result.type === 'playlists' ? 'playlist'
-		: 'request'
+	const typeLabel = result.type
 
 	return (
 		<button

@@ -188,3 +188,21 @@ export const usePreferredTranslationLang = (lang: string): string => {
 	// Global default from profile
 	return profile?.languages_known[0]?.lang ?? 'eng'
 }
+
+/**
+ * Returns the review answer mode for a deck.
+ * Priority:
+ * 1. Deck-specific review_answer_mode (if set)
+ * 2. Profile's review_answer_mode
+ * 3. Fallback to '4-buttons'
+ */
+export const useReviewAnswerMode = (
+	lang: string
+): '4-buttons' | '2-buttons' => {
+	const { data: deck } = useDeckMeta(lang)
+	const { data: profile } = useProfile()
+	if (deck?.review_answer_mode) {
+		return deck.review_answer_mode
+	}
+	return profile?.review_answer_mode ?? '4-buttons'
+}

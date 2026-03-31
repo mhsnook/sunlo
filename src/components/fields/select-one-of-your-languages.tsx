@@ -37,12 +37,19 @@ export function SelectOneOfYourLanguages({
 	setValue,
 	hasError,
 	className,
-}: ControlledInputProps) {
+	disabled,
+}: ControlledInputProps & { disabled?: Array<string> }) {
 	const { data: languagesToShow } = useLanguagesToShow()
 	const [open, setOpen] = useState(false)
 
 	const generalLanguageOptions = allLanguageOptions.filter(
-		(option) => !languagesToShow.includes(option.value)
+		(option) =>
+			!languagesToShow.includes(option.value) &&
+			!disabled?.includes(option.value)
+	)
+
+	const filteredLanguagesToShow = languagesToShow.filter(
+		(lang) => !disabled?.includes(lang)
 	)
 
 	const onSelect = (currentValue: string) => {
@@ -74,13 +81,13 @@ export function SelectOneOfYourLanguages({
 					<CommandList>
 						<CommandEmpty>No language found.</CommandEmpty>
 						<CommandGroup>
-							{!languagesToShow.length ? null : (
-								languagesToShow.map((lang) =>
+							{!filteredLanguagesToShow.length ? null : (
+								filteredLanguagesToShow.map((lang) =>
 									lang === undefined ? null : (
 										<CommandItem key={lang} value={lang} onSelect={onSelect}>
 											<Check
 												className={cn(
-													'mr-2 size-4',
+													'me-2 size-4',
 													value === lang ? 'opacity-100' : 'opacity-0'
 												)}
 											/>
@@ -90,7 +97,7 @@ export function SelectOneOfYourLanguages({
 								)
 							)}
 						</CommandGroup>
-						{!languagesToShow.length ? null : <CommandSeparator />}
+						{!filteredLanguagesToShow.length ? null : <CommandSeparator />}
 						<CommandGroup>
 							{generalLanguageOptions.map((language) => (
 								<CommandItem
@@ -100,7 +107,7 @@ export function SelectOneOfYourLanguages({
 								>
 									<Check
 										className={cn(
-											'mr-2 size-4',
+											'me-2 size-4',
 											value === language.value ? 'opacity-100' : 'opacity-0'
 										)}
 									/>

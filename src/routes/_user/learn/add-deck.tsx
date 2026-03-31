@@ -35,7 +35,7 @@ export const Route = createFileRoute('/_user/learn/add-deck')({
 const NewDeckSchema = z.object({
 	lang: z
 		.string({
-			required_error: 'Select a language to start learning',
+			error: 'Select a language to start learning',
 		})
 		.length(3),
 })

@@ -1,6 +1,9 @@
 import * as z from 'zod'
 import { LangSchema } from '@/features/languages/schemas'
-import { LearningGoalEnumSchema } from '@/features/profile/schemas'
+import {
+	LearningGoalEnumSchema,
+	ReviewAnswerModeSchema,
+} from '@/features/profile/schemas'
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
 export type CardStatusEnumType = z.infer<typeof CardStatusEnumSchema>
@@ -13,6 +16,7 @@ export const DeckMetaRawSchema = z.object({
 	daily_review_goal: z.number(),
 	learning_goal: LearningGoalEnumSchema,
 	preferred_translation_lang: LangSchema.nullable().default(null),
+	review_answer_mode: ReviewAnswerModeSchema.nullable().default(null),
 	cards_active: z.number().default(0),
 	cards_learned: z.number().default(0),
 	cards_skipped: z.number().default(0),

@@ -4876,6 +4876,16 @@ values
 		'moving',
 		false,
 		15
+	),
+	-- Kannada deck for second test user (webkit tests)
+	(
+		'b2c3d4e5-f6a7-4890-bcde-f1a2b3c4d5e6',
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'kan',
+		now() - interval '15 days',
+		'moving',
+		false,
+		15
 	);
 
 --

@@ -4,6 +4,7 @@ import {
 	ChevronsRight,
 	Compass,
 	HeartPlus,
+	LogIn,
 	UserPlus,
 } from 'lucide-react'
 import { DeckCard } from './-deck-card'
@@ -135,6 +136,13 @@ function BrowsePrompt() {
 			<div className="mx-auto grid max-w-100 grid-cols-1 gap-4">
 				<Link to="/signup" className={buttonVariants({ size: 'lg' })}>
 					<UserPlus size={14} /> Create an account
+					<ChevronsRight className="h-6 w-5" />
+				</Link>
+				<Link
+					to="/login"
+					className={buttonVariants({ variant: 'soft', size: 'lg' })}
+				>
+					<LogIn size={14} /> Log in
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
 				<Link

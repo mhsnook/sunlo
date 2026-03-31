@@ -24,14 +24,23 @@ import { cardsCollection } from '@/features/deck/collections'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { usePreferredTranslationLang, useDecks } from '@/features/deck/hooks'
 
-const inlinePhraseSchema = z.object({
-	phrase_text: z.string().min(1, 'Enter a phrase'),
-	translation_text: z.string().min(1, 'Enter the translation'),
-	translation_lang: z.string().length(3, 'Select a language'),
-	only_reverse: z.boolean().default(false),
-})
+const createInlinePhraseSchema = (phraseLang: string) =>
+	z.object({
+		phrase_text: z.string().min(1, 'Enter a phrase'),
+		translation_text: z.string().min(1, 'Enter the translation'),
+		translation_lang: z
+			.string()
+			.length(3, 'Select a language')
+			.refine((val) => val !== phraseLang, {
+				message:
+					'Translation language cannot be the same as the phrase language',
+			}),
+		only_reverse: z.boolean().default(false),
+	})
 
-type InlinePhraseFormValues = z.infer<typeof inlinePhraseSchema>
+type InlinePhraseFormValues = z.infer<
+	ReturnType<typeof createInlinePhraseSchema>
+>
 
 interface InlinePhraseCreatorProps {
 	lang: string
@@ -117,7 +126,7 @@ function InlinePhraseForm({
 		getValues,
 		formState: { errors },
 	} = useForm<InlinePhraseFormValues>({
-		resolver: zodResolver(inlinePhraseSchema),
+		resolver: zodResolver(createInlinePhraseSchema(lang)),
 		defaultValues: {
 			phrase_text: '',
 			translation_text: '',
@@ -177,7 +186,7 @@ function InlinePhraseForm({
 
 	return (
 		<div
-			className={`bg-muted/30 rounded-lg border p-4${animate ? 'animate-in fade-in duration-300' : ''}`}
+			className={`bg-muted/30 rounded-lg border p-4 ${animate ? 'animate-in fade-in duration-300' : ''}`}
 		>
 			<div className="mb-3 flex items-center justify-between">
 				<h4 className="font-medium">Create New Phrase</h4>
@@ -232,6 +241,7 @@ function InlinePhraseForm({
 				<TranslationLanguageField<InlinePhraseFormValues>
 					error={errors.translation_lang}
 					control={control}
+					phraseLang={lang}
 				/>
 
 				<div className="flex items-center gap-2">

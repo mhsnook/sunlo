@@ -152,7 +152,7 @@ function UserLayout() {
 				<div className={cn('flex flex-1 flex-row', fixedHeight && 'min-h-0')}>
 					<div
 						className={cn(
-							'mx-auto flex min-w-0 flex-1 flex-col overflow-x-hidden',
+							'mx-auto flex min-w-0 flex-1 flex-col overflow-x-clip',
 							wideContent ? 'max-w-6xl' : 'max-w-4xl',
 							fixedHeight && 'min-h-0 overflow-y-auto'
 						)}

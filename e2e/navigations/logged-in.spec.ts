@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test'
 import { getTestUserForProject } from '../helpers/auth-helpers'
+import { goToLearnPage } from '../helpers/goto-helpers'
 import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 test.describe('Logged In Navigation', () => {
 	test.beforeEach(async ({ page }) => {
-		// storageState provides auth; just navigate to /learn
-		await page.goto('/learn')
+		await goToLearnPage(page)
 		await expect(
-			page.getByText('Which deck are we studying today?')
-		).toBeVisible()
+			page.getByTestId('decks-list-grid').getByText(TEST_LANG_DISPLAY)
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('deck list shows on learn page', async ({ page }) => {
@@ -46,7 +46,7 @@ test.describe('Logged In Navigation', () => {
 			page
 				.getByTestId('review-setup-page')
 				.or(page.getByRole('button', { name: /continue review/i }))
-		).toBeVisible()
+		).toBeVisible({ timeout: 10000 })
 	})
 
 	test('sidebar navigation works within a deck', async ({ page }) => {
@@ -114,18 +114,12 @@ test.describe('Logged In Navigation', () => {
 			.click()
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
-		// Navigate back to deck list - click the "back" or home link
-		// The sidebar should have a way to get back to deck selection
-		const backLink = page
-			.getByRole('link', { name: /decks|home|sunlo/i })
-			.first()
-		if ((await backLink.count()) > 0) {
-			await backLink.click()
-			await expect(page).toHaveURL('/learn')
-		} else {
-			// Try clicking the logo or similar
-			await page.goto('/learn')
+		// Navigate back to deck list via the deck switcher dropdown
+		if (!(await page.getByTestId('all-decks-link').isVisible())) {
+			await page.getByTestId('deck-switcher-button').click()
 		}
+		await page.getByTestId('all-decks-link').click()
+		await expect(page).toHaveURL('/learn')
 
 		// Now go to Spanish if available
 		const spanishLink = page.getByText('Spanish')

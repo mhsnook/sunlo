@@ -1349,6 +1349,7 @@ export type Database = {
 					lang: string
 					learning_goal: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang: string | null
+					review_answer_mode: string | null
 					uid: string
 				}
 				Insert: {
@@ -1359,6 +1360,7 @@ export type Database = {
 					lang: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
+					review_answer_mode?: string | null
 					uid?: string
 				}
 				Update: {
@@ -1369,6 +1371,7 @@ export type Database = {
 					lang?: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
+					review_answer_mode?: string | null
 					uid?: string
 				}
 				Relationships: [
@@ -1450,6 +1453,7 @@ export type Database = {
 					created_at: string
 					font_preference: string | null
 					languages_known: Json
+					review_answer_mode: string | null
 					uid: string
 					updated_at: string | null
 					username: string | null
@@ -1459,6 +1463,7 @@ export type Database = {
 					created_at?: string
 					font_preference?: string | null
 					languages_known?: Json
+					review_answer_mode?: string | null
 					uid?: string
 					updated_at?: string | null
 					username?: string | null
@@ -1468,6 +1473,7 @@ export type Database = {
 					created_at?: string
 					font_preference?: string | null
 					languages_known?: Json
+					review_answer_mode?: string | null
 					uid?: string
 					updated_at?: string | null
 					username?: string | null
@@ -1754,6 +1760,8 @@ export type Database = {
 					language: string | null
 					learning_goal: Database['public']['Enums']['learning_goal'] | null
 					most_recent_review_at: string | null
+					preferred_translation_lang: string | null
+					review_answer_mode: string | null
 					uid: string | null
 				}
 				Relationships: [

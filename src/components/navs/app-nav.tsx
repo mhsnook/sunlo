@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useMatches, useRouter } from '@tanstack/react-router'
 import { MoreVertical, Search } from 'lucide-react'
-import { useIntersectionObserver } from '@uidotdev/usehooks'
+import { useIntersectionObserver } from '@/hooks/use-debounce'
 
 import {
 	NavigationMenu,

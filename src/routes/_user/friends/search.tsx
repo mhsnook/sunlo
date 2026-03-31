@@ -1,7 +1,7 @@
 import { type ChangeEvent } from 'react'
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router'
 import * as z from 'zod'
-import { useDebounce, usePrevious } from '@uidotdev/usehooks'
+import { useDebounce, usePrevious } from '@/hooks/use-debounce'
 import { Search } from 'lucide-react'
 
 import { Loader } from '@/components/ui/loader'

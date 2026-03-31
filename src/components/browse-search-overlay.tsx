@@ -7,7 +7,7 @@ import {
 	type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useDebounce } from '@uidotdev/usehooks'
+import { useDebounce } from '@/hooks/use-debounce'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
@@ -29,15 +29,7 @@ import { LangBadge } from '@/components/ui/badge'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-
-interface SearchResult {
-	id: string
-	lang: string
-	title: string
-	subtitle: string | null
-	type: 'phrase' | 'playlist' | 'request'
-	playlistId?: string
-}
+import type { SearchResult } from '@/types/search-result'
 
 export default function BrowseSearchOverlay({
 	onClose,
@@ -140,7 +132,6 @@ export default function BrowseSearchOverlay({
 				lang: playlist.lang,
 				title: playlist.title,
 				subtitle: playlist.description,
-				playlistId: playlist.id,
 			})
 			if (items.length >= 20) return items
 		}
@@ -431,7 +422,7 @@ function SearchResultLink({
 		return (
 			<Link
 				to="/learn/$lang/playlists/$playlistId"
-				params={{ lang: result.lang, playlistId: result.playlistId! }}
+				params={{ lang: result.lang, playlistId: result.id }}
 				{...linkProps}
 			>
 				{inner}
