@@ -136,7 +136,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 					</p>
 				</div>
 
-				<div className="flex justify-center">
+				<div className="sticky bottom-0 flex justify-center bg-background py-4">
 					<Button onClick={handleStartReview} size="lg" className="min-w-48">
 						Start Review
 					</Button>
@@ -165,7 +165,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				))}
 			</div>
 
-			<div className="bg-muted mt-auto flex justify-center border-t p-4">
+			<div className="sticky bottom-0 flex justify-center border-t bg-muted p-4">
 				<Button onClick={handleStartReview} size="lg" className="min-w-48">
 					Start Review
 				</Button>
