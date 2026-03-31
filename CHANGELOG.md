@@ -1,6 +1,21 @@
 # Change Log
 
-## Recent changes
+## v0.18 - Notifications center, 2-option reviews, separate phrase_stats view
+
+_31 March, 2026_
+
+### Back-end Changes
+
+(released at v0.18)
+
+- [feat] Add notifications center for when requests are answered etc.
+- [feat] Add profile and deck option to only see two answer choices (Again, Good) in reviews
+- [fix] Fix a bug with like_counts always being 0 or 1
+- [chore] Refactor phrase_meta to split out phrase_stats
+
+### Other Changes
+
+(released as they're ready)
 
 - 2026-03-30 [improvement] Replace separate purple bookmark icon in feed with a purple-badge quote icon to indicate phrases in your deck
 - 2026-03-30 [feat] Prevent translation language from matching phrase language across all phrase/translation forms
@@ -28,7 +43,7 @@
 
 ## v0.17 - Unified Search, Language Filter Pills, Social Media Embeds
 
-_27th Mar, 2026_
+_27th March, 2026_
 
 ### Major Changes
 
@@ -54,7 +69,7 @@ _27th Mar, 2026_
 
 ## v0.16 - Feed Composer, Phrase Finder, Feature Module Refactor, Review Polish
 
-_25th Mar, 2026_
+_25th March, 2026_
 
 ### Major Changes
 
