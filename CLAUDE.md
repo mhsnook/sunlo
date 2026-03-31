@@ -55,6 +55,18 @@ npx playwright test --project=chromium
 
 Test files located in `/e2e/` directory. Tests require Supabase to be running locally.
 
+### Scenetest
+
+```bash
+# Run all scenetest specs
+pnpm scene
+
+# Run a specific scene file
+pnpm scene scenetest/scenes/decks.spec.md
+```
+
+Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
+
 ### Database Management
 
 ```bash
