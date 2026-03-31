@@ -49,6 +49,7 @@ const siteMenu = makeLinks([
 ])
 const siteMenuLoggedIn = makeLinks([
 	'/',
+	'/notifications',
 	'/search',
 	'/profile',
 	'/privacy-policy',
