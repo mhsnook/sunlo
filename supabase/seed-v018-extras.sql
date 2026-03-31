@@ -542,7 +542,7 @@ values
 	);
 
 ----------------------------------------------------------------------
--- 4. USER CARDS for new Kannada phrases (for GarlicFace and Best Frin)
+-- 4. USER CARDS for new Kannada phrases and Hindi review phrases
 ----------------------------------------------------------------------
 insert into
 	"public"."user_card" (
@@ -555,6 +555,71 @@ insert into
 		"lang"
 	)
 values
+	-- GarlicFace's Hindi cards (needed for review history)
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa440101-0001-4aaa-bbbb-222222222222',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		current_date - interval '5 days',
+		current_date - interval '5 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa440101-0002-4aaa-bbbb-222222222222',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		current_date - interval '5 days',
+		current_date - interval '5 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa440101-0003-4aaa-bbbb-222222222222',
+		'48edc28c-1530-4549-b48c-f678033a6892',
+		current_date - interval '3 days',
+		current_date - interval '3 days',
+		'active',
+		'hin'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa440101-0004-4aaa-bbbb-222222222222',
+		'cc3847f3-b151-401e-80c9-4aef221c54b5',
+		current_date - interval '3 days',
+		current_date - interval '3 days',
+		'active',
+		'hin'
+	),
+	-- Work Andy's Hindi cards (needed for review history)
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa440101-0005-4aaa-bbbb-222222222222',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		current_date - interval '3 days',
+		current_date - interval '3 days',
+		'active',
+		'hin'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa440101-0006-4aaa-bbbb-222222222222',
+		'48fe0624-f586-4812-a1a5-33c634995671',
+		current_date - interval '3 days',
+		current_date - interval '3 days',
+		'active',
+		'hin'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa440101-0007-4aaa-bbbb-222222222222',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		current_date - interval '3 days',
+		current_date - interval '3 days',
+		'active',
+		'hin'
+	),
 	-- GarlicFace's Kannada cards
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -611,15 +676,7 @@ values
 		'active',
 		'kan'
 	),
-	(
-		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
-		'aa440007-7777-4aaa-bbbb-222222222222',
-		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
-		current_date - interval '9 days',
-		current_date - interval '9 days',
-		'active',
-		'kan'
-	),
+	-- Best Frin already has a card for b0fbbe1d-705e in seed.sql
 	-- Work Andy's Kannada cards
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
