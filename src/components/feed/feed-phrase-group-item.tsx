@@ -42,8 +42,10 @@ export function PhraseSummaryLine({
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}
 			>
-				{phrase?.card?.status &&
-				['active', 'learned'].includes(phrase.card.status) ?
+				{(
+					phrase?.card?.status &&
+					['active', 'learned'].includes(phrase.card.status)
+				) ?
 					<span className="inline-flex shrink-0 items-center justify-center rounded bg-purple-600 p-0.5">
 						<MessageSquareQuote size={12} className="text-white" />
 					</span>

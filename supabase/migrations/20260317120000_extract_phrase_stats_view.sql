@@ -2,10 +2,11 @@
 -- This removes downstream dependencies on phrase_meta (feed_activities and
 -- phrase_search_index now depend on phrase_stats directly), so future changes
 -- to phrase_meta columns only require CREATE OR REPLACE VIEW.
-
 -- 1. Drop dependents in order
 drop materialized view if exists "public"."phrase_search_index";
+
 drop view if exists "public"."feed_activities";
+
 drop view if exists "public"."phrase_meta";
 
 -- 2. Create phrase_stats (extracted from the old "cards" CTE in phrase_meta)
@@ -221,7 +222,11 @@ alter table "public"."phrase_search_index" owner to "postgres";
 
 -- Recreate indexes (required for CONCURRENTLY refresh)
 create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
+
 create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
+
 create index "idx_phrase_search_lang" on "public"."phrase_search_index" using "btree" ("lang");
+
 create index "idx_phrase_search_popularity" on "public"."phrase_search_index" using "btree" ("popularity" desc);
+
 create index "idx_phrase_search_trgm" on "public"."phrase_search_index" using "gin" ("search_text" "public"."gin_trgm_ops");
