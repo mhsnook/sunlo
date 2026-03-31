@@ -2,7 +2,6 @@
 -- The view aggregates learner and phrase counts across the entire database,
 -- running for every client on app load. Language counts change only when
 -- users add/remove decks or phrases are added, making materialization appropriate.
-
 -- 1. Helper function to refresh the materialized view
 create or replace function "public"."refresh_meta_language" () returns "void" language "plpgsql" security definer as $$
 BEGIN
@@ -110,13 +109,19 @@ execute function "public"."trigger_refresh_meta_language" ();
 
 -- 6. Grants (same as the regular view had)
 grant all on function "public"."refresh_meta_language" () to "anon";
+
 grant all on function "public"."refresh_meta_language" () to "authenticated";
+
 grant all on function "public"."refresh_meta_language" () to "service_role";
 
 grant all on function "public"."trigger_refresh_meta_language" () to "anon";
+
 grant all on function "public"."trigger_refresh_meta_language" () to "authenticated";
+
 grant all on function "public"."trigger_refresh_meta_language" () to "service_role";
 
 grant all on table "public"."meta_language" to "anon";
+
 grant all on table "public"."meta_language" to "authenticated";
+
 grant all on table "public"."meta_language" to "service_role";

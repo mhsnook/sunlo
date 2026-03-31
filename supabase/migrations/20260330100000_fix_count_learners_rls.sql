@@ -3,19 +3,21 @@
 -- count_learners = 0 or 1 instead of the total across all learners.
 -- Fix: query user_card + user_card_review directly (no security_invoker = runs as
 -- postgres, bypasses RLS).
-
 -- Drop dependents in order
 drop materialized view if exists "public"."phrase_search_index";
+
 drop view if exists "public"."feed_activities";
+
 drop view if exists "public"."phrase_meta";
+
 drop view if exists "public"."phrase_stats";
 
 -- Recreate phrase_stats querying base tables directly (bypasses RLS)
 create view "public"."phrase_stats" as
 with
 	"latest_reviews" as (
-		select distinct on ("rev"."uid", "rev"."phrase_id")
-			"rev"."uid",
+		select distinct
+			on ("rev"."uid", "rev"."phrase_id") "rev"."uid",
 			"rev"."phrase_id",
 			"rev"."difficulty",
 			"rev"."stability"
@@ -239,7 +241,11 @@ alter table "public"."phrase_search_index" owner to "postgres";
 
 -- Recreate indexes (required for CONCURRENTLY refresh)
 create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
+
 create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
+
 create index "idx_phrase_search_lang" on "public"."phrase_search_index" using "btree" ("lang");
+
 create index "idx_phrase_search_popularity" on "public"."phrase_search_index" using "btree" ("popularity" desc);
+
 create index "idx_phrase_search_trgm" on "public"."phrase_search_index" using "gin" ("search_text" "public"."gin_trgm_ops");

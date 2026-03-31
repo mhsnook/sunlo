@@ -32,6 +32,8 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
+create extension if not exists "pgsodium";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -394,15 +396,6 @@ $$;
 
 alter function "public"."refresh_meta_language" () owner to "postgres";
 
-create or replace function "public"."trigger_refresh_meta_language" () returns "trigger" language "plpgsql" security definer as $$
-BEGIN
-  PERFORM refresh_meta_language();
-  RETURN NULL;
-END;
-$$;
-
-alter function "public"."trigger_refresh_meta_language" () owner to "postgres";
-
 create or replace function "public"."refresh_phrase_search_index" () returns "void" language "plpgsql" security definer as $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'phrase_search_index' AND ispopulated) THEN
@@ -629,6 +622,15 @@ END;
 $$;
 
 alter function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") owner to "postgres";
+
+create or replace function "public"."trigger_refresh_meta_language" () returns "trigger" language "plpgsql" security definer as $$
+BEGIN
+  PERFORM refresh_meta_language();
+  RETURN NULL;
+END;
+$$;
+
+alter function "public"."trigger_refresh_meta_language" () owner to "postgres";
 
 create or replace function "public"."trigger_refresh_phrase_search" () returns "trigger" language "plpgsql" security definer as $$
 BEGIN
@@ -874,8 +876,7 @@ create table if not exists "public"."phrase" (
 	"lang" character varying not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"text_script" "text",
-	"only_reverse" boolean default false not null,
-	"is_nsfw" boolean default false not null
+	"only_reverse" boolean default false not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -886,25 +887,34 @@ comment on column "public"."phrase"."lang" is 'The 3-letter code for the languag
 
 comment on column "public"."phrase"."only_reverse" is 'When true, this phrase should only be reviewed in reverse direction (translation -> phrase). Useful for phrases like numbers where the target language is obvious but recalling it is the challenge.';
 
-create table if not exists "public"."phrase_tag" (
-	"phrase_id" "uuid" not null,
-	"tag_id" "uuid" not null,
+create table if not exists "public"."phrase_playlist" (
+	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
+	"uid" "uuid" default "auth"."uid" () not null,
+	"title" "text" not null,
+	"description" "text",
+	"href" "text",
 	"created_at" timestamp with time zone default "now" () not null,
-	"added_by" "uuid" default "auth"."uid" () not null
+	"lang" character varying not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" (),
+	"cover_image_path" "text"
 );
 
-alter table "public"."phrase_tag" owner to "postgres";
+alter table "public"."phrase_playlist" owner to "postgres";
 
-create table if not exists "public"."tag" (
+create table if not exists "public"."phrase_request" (
 	"id" "uuid" default "gen_random_uuid" () not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	"name" "text" not null,
+	"requester_uid" "uuid" not null,
 	"lang" character varying not null,
-	"added_by" "uuid" default "auth"."uid" (),
-	"is_nsfw" boolean default false not null
+	"prompt" "text" not null,
+	"upvote_count" integer default 0 not null,
+	"deleted" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" ()
 );
 
-alter table "public"."tag" owner to "postgres";
+alter table "public"."phrase_request" owner to "postgres";
 
 create table if not exists "public"."user_card" (
 	"uid" "uuid" default "auth"."uid" () not null,
@@ -957,66 +967,11 @@ create table if not exists "public"."user_card_review" (
 
 alter table "public"."user_card_review" owner to "postgres";
 
-create or replace view "public"."user_card_plus"
-with
-	("security_invoker" = 'true') as
-with
-	"review" as (
-		select
-			"rev"."id",
-			"rev"."uid",
-			"rev"."score",
-			"rev"."difficulty",
-			"rev"."stability",
-			"rev"."review_time_retrievability",
-			"rev"."created_at",
-			"rev"."updated_at",
-			"rev"."day_session",
-			"rev"."lang",
-			"rev"."phrase_id"
-		from
-			(
-				"public"."user_card_review" "rev"
-				left join "public"."user_card_review" "rev2" on (
-					(
-						("rev"."phrase_id" = "rev2"."phrase_id")
-						and ("rev"."uid" = "rev2"."uid")
-						and ("rev"."created_at" < "rev2"."created_at")
-					)
-				)
-			)
-		where
-			("rev2"."created_at" is null)
-	)
-select
-	"card"."lang",
-	"card"."id",
-	"card"."uid",
-	"card"."status",
-	"card"."phrase_id",
-	"card"."created_at",
-	"card"."updated_at",
-	"review"."created_at" as "last_reviewed_at",
-	"review"."difficulty",
-	"review"."stability"
-from
-	(
-		"public"."user_card" "card"
-		left join "review" on (
-			(
-				("card"."phrase_id" = "review"."phrase_id")
-				and ("card"."uid" = "review"."uid")
-			)
-		)
-	);
-
-alter table "public"."user_card_plus" owner to "postgres";
-
-create view "public"."phrase_stats" as
+create or replace view "public"."phrase_stats" as
 with
 	"latest_reviews" as (
-		select distinct on ("rev"."uid", "rev"."phrase_id")
-			"rev"."uid",
+		select distinct
+			on ("rev"."uid", "rev"."phrase_id") "rev"."uid",
 			"rev"."phrase_id",
 			"rev"."difficulty",
 			"rev"."stability"
@@ -1033,96 +988,28 @@ select
 	"avg" ("lr"."difficulty") as "avg_difficulty",
 	"avg" ("lr"."stability") as "avg_stability"
 from
-	"public"."user_card" "card"
-	left join "latest_reviews" "lr" on (
-		("lr"."phrase_id" = "card"."phrase_id")
-		and ("lr"."uid" = "card"."uid")
+	(
+		"public"."user_card" "card"
+		left join "latest_reviews" "lr" on (
+			(
+				("lr"."phrase_id" = "card"."phrase_id")
+				and ("lr"."uid" = "card"."uid")
+			)
+		)
 	)
 where
-	"card"."status" = any (
-		array[
-			'active'::"public"."card_status",
-			'learned'::"public"."card_status"
-		]
+	(
+		"card"."status" = any (
+			array[
+				'active'::"public"."card_status",
+				'learned'::"public"."card_status"
+			]
+		)
 	)
 group by
 	"card"."phrase_id";
 
 alter table "public"."phrase_stats" owner to "postgres";
-
-create view "public"."phrase_meta" as
-with
-	"tags" as (
-		select
-			"pt"."phrase_id" as "t_phrase_id",
-			(
-				"json_agg" (
-					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
-				) filter (
-					where
-						("tag"."id" is not null)
-				)
-			)::"jsonb" as "tags"
-		from
-			(
-				"public"."phrase_tag" "pt"
-				left join "public"."tag" "tag" on (("tag"."id" = "pt"."tag_id"))
-			)
-		group by
-			"pt"."phrase_id"
-	)
-select
-	"phrase"."id",
-	"phrase"."lang",
-	"phrase"."text",
-	"phrase"."created_at",
-	"phrase"."added_by",
-	"phrase"."only_reverse",
-	coalesce("stats"."count_learners", (0)::bigint) as "count_learners",
-	"stats"."avg_difficulty",
-	"stats"."avg_stability",
-	coalesce("tags"."tags", '[]'::"jsonb") as "tags"
-from
-	(
-		(
-			"public"."phrase" "phrase"
-			left join "public"."phrase_stats" "stats" on (("stats"."phrase_id" = "phrase"."id"))
-		)
-		left join "tags" on (("tags"."t_phrase_id" = "phrase"."id"))
-	);
-
-alter table "public"."phrase_meta" owner to "postgres";
-
-create table if not exists "public"."phrase_playlist" (
-	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
-	"uid" "uuid" default "auth"."uid" () not null,
-	"title" "text" not null,
-	"description" "text",
-	"href" "text",
-	"created_at" timestamp with time zone default "now" () not null,
-	"lang" character varying not null,
-	"upvote_count" integer default 0 not null,
-	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" (),
-	"cover_image_path" "text",
-	"is_nsfw" boolean default false not null
-);
-
-alter table "public"."phrase_playlist" owner to "postgres";
-
-create table if not exists "public"."phrase_request" (
-	"id" "uuid" default "gen_random_uuid" () not null,
-	"created_at" timestamp with time zone default "now" () not null,
-	"requester_uid" "uuid" not null,
-	"lang" character varying not null,
-	"prompt" "text" not null,
-	"upvote_count" integer default 0 not null,
-	"deleted" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" (),
-	"is_nsfw" boolean default false not null
-);
-
-alter table "public"."phrase_request" owner to "postgres";
 
 create table if not exists "public"."playlist_phrase_link" (
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1207,7 +1094,7 @@ select distinct
 				'title',
 				"playlist"."title",
 				'follows',
-				coalesce("ps"."count_learners", (0)::bigint)::integer
+				(coalesce("ps"."count_learners", (0)::bigint))::integer
 			)
 			else null::"jsonb"
 		end
@@ -1389,11 +1276,71 @@ select
 from
 	"second"
 with
-	data;
+	no data;
 
 alter table "public"."meta_language" owner to "postgres";
 
-create unique index "idx_meta_language_lang" on "public"."meta_language" using "btree" ("lang");
+create table if not exists "public"."phrase_tag" (
+	"phrase_id" "uuid" not null,
+	"tag_id" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"added_by" "uuid" default "auth"."uid" () not null
+);
+
+alter table "public"."phrase_tag" owner to "postgres";
+
+create table if not exists "public"."tag" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	"name" "text" not null,
+	"lang" character varying not null,
+	"added_by" "uuid" default "auth"."uid" ()
+);
+
+alter table "public"."tag" owner to "postgres";
+
+create or replace view "public"."phrase_meta" as
+with
+	"tags" as (
+		select
+			"pt"."phrase_id" as "t_phrase_id",
+			(
+				"json_agg" (
+					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
+				) filter (
+					where
+						("tag"."id" is not null)
+				)
+			)::"jsonb" as "tags"
+		from
+			(
+				"public"."phrase_tag" "pt"
+				left join "public"."tag" "tag" on (("tag"."id" = "pt"."tag_id"))
+			)
+		group by
+			"pt"."phrase_id"
+	)
+select
+	"phrase"."id",
+	"phrase"."lang",
+	"phrase"."text",
+	"phrase"."created_at",
+	"phrase"."added_by",
+	"phrase"."only_reverse",
+	coalesce("stats"."count_learners", (0)::bigint) as "count_learners",
+	"stats"."avg_difficulty",
+	"stats"."avg_stability",
+	coalesce("tags"."tags", '[]'::"jsonb") as "tags"
+from
+	(
+		(
+			"public"."phrase" "phrase"
+			left join "public"."phrase_stats" "stats" on (("stats"."phrase_id" = "phrase"."id"))
+		)
+		left join "tags" on (("tags"."t_phrase_id" = "phrase"."id"))
+	);
+
+alter table "public"."phrase_meta" owner to "postgres";
 
 create table if not exists "public"."phrase_playlist_upvote" (
 	"playlist_id" "uuid" not null,
@@ -1432,8 +1379,7 @@ create table if not exists "public"."phrase_translation" (
 	"text_script" "text",
 	"created_at" timestamp with time zone default "now" () not null,
 	"archived" boolean default false not null,
-	"updated_at" timestamp with time zone default "now" (),
-	"is_nsfw" boolean default false not null
+	"updated_at" timestamp with time zone default "now" ()
 );
 
 alter table "public"."phrase_translation" owner to "postgres";
@@ -1486,6 +1432,61 @@ create table if not exists "public"."request_comment" (
 );
 
 alter table "public"."request_comment" owner to "postgres";
+
+create or replace view "public"."user_card_plus"
+with
+	("security_invoker" = 'true') as
+with
+	"review" as (
+		select
+			"rev"."id",
+			"rev"."uid",
+			"rev"."score",
+			"rev"."difficulty",
+			"rev"."stability",
+			"rev"."review_time_retrievability",
+			"rev"."created_at",
+			"rev"."updated_at",
+			"rev"."day_session",
+			"rev"."lang",
+			"rev"."phrase_id"
+		from
+			(
+				"public"."user_card_review" "rev"
+				left join "public"."user_card_review" "rev2" on (
+					(
+						("rev"."phrase_id" = "rev2"."phrase_id")
+						and ("rev"."uid" = "rev2"."uid")
+						and ("rev"."created_at" < "rev2"."created_at")
+					)
+				)
+			)
+		where
+			("rev2"."created_at" is null)
+	)
+select
+	"card"."lang",
+	"card"."id",
+	"card"."uid",
+	"card"."status",
+	"card"."phrase_id",
+	"card"."created_at",
+	"card"."updated_at",
+	"review"."created_at" as "last_reviewed_at",
+	"review"."difficulty",
+	"review"."stability"
+from
+	(
+		"public"."user_card" "card"
+		left join "review" on (
+			(
+				("card"."phrase_id" = "review"."phrase_id")
+				and ("card"."uid" = "review"."uid")
+			)
+		)
+	);
+
+alter table "public"."user_card_plus" owner to "postgres";
 
 create table if not exists "public"."user_client_event" (
 	"id" "uuid" default "gen_random_uuid" () not null,
@@ -1796,6 +1797,8 @@ create index "idx_comment_request_id" on "public"."request_comment" using "btree
 
 create index "idx_comment_upvotes" on "public"."request_comment" using "btree" ("request_id", "upvote_count" desc);
 
+create unique index "idx_meta_language_lang" on "public"."meta_language" using "btree" ("lang");
+
 create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
 
 create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
@@ -1856,6 +1859,16 @@ after
 update on "public"."playlist_phrase_link" for each row
 execute function "public"."update_parent_playlist_timestamp" ();
 
+create or replace trigger "refresh_meta_language_on_deck_change"
+after insert
+or delete on "public"."user_deck" for each statement
+execute function "public"."trigger_refresh_meta_language" ();
+
+create or replace trigger "refresh_meta_language_on_phrase_change"
+after insert
+or delete on "public"."phrase" for each statement
+execute function "public"."trigger_refresh_meta_language" ();
+
 create or replace trigger "refresh_search_on_phrase_change"
 after insert
 or delete
@@ -1876,16 +1889,6 @@ or delete
 or
 update on "public"."phrase_translation" for each statement
 execute function "public"."trigger_refresh_phrase_search" ();
-
-create or replace trigger "refresh_meta_language_on_deck_change"
-after insert
-or delete on "public"."user_deck" for each statement
-execute function "public"."trigger_refresh_meta_language" ();
-
-create or replace trigger "refresh_meta_language_on_phrase_change"
-after insert
-or delete on "public"."phrase" for each statement
-execute function "public"."trigger_refresh_meta_language" ();
 
 create or replace trigger "tr_update_comment_upvote_count"
 after insert
@@ -2950,12 +2953,6 @@ grant all on function "public"."refresh_meta_language" () to "authenticated";
 
 grant all on function "public"."refresh_meta_language" () to "service_role";
 
-grant all on function "public"."trigger_refresh_meta_language" () to "anon";
-
-grant all on function "public"."trigger_refresh_meta_language" () to "authenticated";
-
-grant all on function "public"."trigger_refresh_meta_language" () to "service_role";
-
 grant all on function "public"."refresh_phrase_search_index" () to "anon";
 
 grant all on function "public"."refresh_phrase_search_index" () to "authenticated";
@@ -3095,6 +3092,12 @@ grant all on function "public"."strict_word_similarity_op" ("text", "text") to "
 
 grant all on function "public"."strict_word_similarity_op" ("text", "text") to "service_role";
 
+grant all on function "public"."trigger_refresh_meta_language" () to "anon";
+
+grant all on function "public"."trigger_refresh_meta_language" () to "authenticated";
+
+grant all on function "public"."trigger_refresh_meta_language" () to "service_role";
+
 grant all on function "public"."trigger_refresh_phrase_search" () to "anon";
 
 grant all on function "public"."trigger_refresh_phrase_search" () to "authenticated";
@@ -3213,17 +3216,17 @@ grant all on table "public"."phrase" to "authenticated";
 
 grant all on table "public"."phrase" to "service_role";
 
-grant all on table "public"."phrase_tag" to "anon";
+grant all on table "public"."phrase_playlist" to "anon";
 
-grant all on table "public"."phrase_tag" to "authenticated";
+grant all on table "public"."phrase_playlist" to "authenticated";
 
-grant all on table "public"."phrase_tag" to "service_role";
+grant all on table "public"."phrase_playlist" to "service_role";
 
-grant all on table "public"."tag" to "anon";
+grant all on table "public"."phrase_request" to "anon";
 
-grant all on table "public"."tag" to "authenticated";
+grant all on table "public"."phrase_request" to "authenticated";
 
-grant all on table "public"."tag" to "service_role";
+grant all on table "public"."phrase_request" to "service_role";
 
 grant all on table "public"."user_card" to "anon";
 
@@ -3237,29 +3240,11 @@ grant all on table "public"."user_card_review" to "service_role";
 
 grant all on table "public"."user_card_review" to "anon";
 
-grant all on table "public"."user_card_plus" to "anon";
+grant all on table "public"."phrase_stats" to "anon";
 
-grant all on table "public"."user_card_plus" to "authenticated";
+grant all on table "public"."phrase_stats" to "authenticated";
 
-grant all on table "public"."user_card_plus" to "service_role";
-
-grant all on table "public"."phrase_meta" to "anon";
-
-grant all on table "public"."phrase_meta" to "authenticated";
-
-grant all on table "public"."phrase_meta" to "service_role";
-
-grant all on table "public"."phrase_playlist" to "anon";
-
-grant all on table "public"."phrase_playlist" to "authenticated";
-
-grant all on table "public"."phrase_playlist" to "service_role";
-
-grant all on table "public"."phrase_request" to "anon";
-
-grant all on table "public"."phrase_request" to "authenticated";
-
-grant all on table "public"."phrase_request" to "service_role";
+grant all on table "public"."phrase_stats" to "service_role";
 
 grant all on table "public"."playlist_phrase_link" to "anon";
 
@@ -3303,6 +3288,24 @@ grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
 
+grant all on table "public"."phrase_tag" to "anon";
+
+grant all on table "public"."phrase_tag" to "authenticated";
+
+grant all on table "public"."phrase_tag" to "service_role";
+
+grant all on table "public"."tag" to "anon";
+
+grant all on table "public"."tag" to "authenticated";
+
+grant all on table "public"."tag" to "service_role";
+
+grant all on table "public"."phrase_meta" to "anon";
+
+grant all on table "public"."phrase_meta" to "authenticated";
+
+grant all on table "public"."phrase_meta" to "service_role";
+
 grant all on table "public"."phrase_playlist_upvote" to "anon";
 
 grant all on table "public"."phrase_playlist_upvote" to "authenticated";
@@ -3344,6 +3347,12 @@ grant all on table "public"."request_comment" to "anon";
 grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
+
+grant all on table "public"."user_card_plus" to "anon";
+
+grant all on table "public"."user_card_plus" to "authenticated";
+
+grant all on table "public"."user_card_plus" to "service_role";
 
 grant all on table "public"."user_client_event" to "anon";
 
