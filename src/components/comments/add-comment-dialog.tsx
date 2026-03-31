@@ -29,6 +29,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
+	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
 import {
@@ -188,10 +189,14 @@ function NewCommentForm({
 			}
 		},
 		onSuccess: (data) => {
-			// Parse and add to collection
+			// Parse and add to collection (RPC returns updated upvote_count from auto-upvote)
 			commentsCollection.utils.writeInsert(
 				RequestCommentSchema.parse(data.request_comment)
 			)
+			// RPC auto-upvotes; sync local upvote collection
+			commentUpvotesCollection.utils.writeInsert({
+				comment_id: data.request_comment.id,
+			})
 
 			if (
 				data.comment_phrase_links &&

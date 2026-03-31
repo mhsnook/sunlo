@@ -6,7 +6,10 @@ import { PostgrestError } from '@supabase/supabase-js'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
-import { phraseRequestsCollection } from '@/features/requests/collections'
+import {
+	phraseRequestsCollection,
+	phraseRequestUpvotesCollection,
+} from '@/features/requests/collections'
 import {
 	PhraseRequestSchema,
 	PhraseRequestType,
@@ -90,7 +93,15 @@ export function RequestForm({
 				phraseRequestsCollection.utils.writeUpdate(parsed)
 				toastSuccess('Request updated!')
 			} else {
-				phraseRequestsCollection.utils.writeInsert(parsed)
+				// The DB trigger auto-upvotes, but RETURNING gets the pre-trigger value.
+				// Override upvote_count to reflect the auto-upvote.
+				phraseRequestsCollection.utils.writeInsert({
+					...parsed,
+					upvote_count: 1,
+				})
+				phraseRequestUpvotesCollection.utils.writeInsert({
+					request_id: data.id,
+				})
 				invalidateFeed(lang)
 				toastSuccess('Your request has been posted!')
 			}

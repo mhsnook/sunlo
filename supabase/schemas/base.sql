@@ -28,6 +28,10 @@ set
 set
 	row_security = off;
 
+create extension if not exists "pg_cron"
+with
+	schema "pg_catalog";
+
 create extension if not exists "pg_net"
 with
 	schema "extensions";
@@ -223,6 +227,17 @@ $$;
 
 alter function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") owner to "postgres";
 
+create or replace function "public"."auto_upvote_new_request" () returns "trigger" language "plpgsql" as $$
+BEGIN
+  INSERT INTO phrase_request_upvote (request_id, uid)
+  VALUES (NEW.id, NEW.requester_uid)
+  ON CONFLICT DO NOTHING;
+  RETURN NULL;
+END;
+$$;
+
+alter function "public"."auto_upvote_new_request" () owner to "postgres";
+
 create or replace function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
@@ -292,6 +307,14 @@ BEGIN
 
   v_comment_id := v_new_comment.id;
 
+  -- Auto-upvote by creator
+  INSERT INTO comment_upvote (comment_id, uid)
+  VALUES (v_comment_id, auth.uid())
+  ON CONFLICT DO NOTHING;
+
+  -- Re-read to get updated upvote_count after trigger fires
+  SELECT * INTO v_new_comment FROM request_comment WHERE id = v_comment_id;
+
   -- Link phrases to comment (max 4)
   IF p_phrase_ids IS NOT NULL AND array_length(p_phrase_ids, 1) > 0 THEN
     IF array_length(p_phrase_ids, 1) > 4 THEN
@@ -343,6 +366,14 @@ BEGIN
 
   v_playlist_id := v_new_playlist.id;
 
+  -- Auto-upvote by creator
+  INSERT INTO phrase_playlist_upvote (playlist_id, uid)
+  VALUES (v_playlist_id, auth.uid())
+  ON CONFLICT DO NOTHING;
+
+  -- Re-read to get updated upvote_count after trigger fires
+  SELECT * INTO v_new_playlist FROM phrase_playlist WHERE id = v_playlist_id;
+
   -- Insert phrase links
   IF phrases IS NOT NULL AND jsonb_array_length(phrases) > 0 THEN
     FOR v_phrase_item IN SELECT * FROM jsonb_array_elements(phrases)
@@ -383,6 +414,62 @@ alter function "public"."create_playlist_with_links" (
 	"cover_image_path" "text",
 	"phrases" "jsonb"
 ) owner to "postgres";
+
+create or replace function "public"."recount_all_upvotes" () returns "void" language "plpgsql" security definer as $$
+DECLARE
+  v_since timestamptz := now() - interval '2 days';
+BEGIN
+  -- Only recount items that had upvote activity in the last 2 days.
+  -- The "IS DISTINCT FROM" check avoids locking rows already correct.
+
+  -- Recount phrase_request upvotes (only recently active)
+  UPDATE phrase_request pr
+  SET upvote_count = sub.cnt
+  FROM (
+    SELECT pru.request_id, count(*) as cnt
+    FROM phrase_request_upvote pru
+    WHERE pru.request_id IN (
+      SELECT DISTINCT request_id FROM phrase_request_upvote
+      WHERE created_at >= v_since
+    )
+    GROUP BY pru.request_id
+  ) sub
+  WHERE pr.id = sub.request_id
+    AND pr.upvote_count IS DISTINCT FROM sub.cnt;
+
+  -- Recount phrase_playlist upvotes (only recently active)
+  UPDATE phrase_playlist pp
+  SET upvote_count = sub.cnt
+  FROM (
+    SELECT ppu.playlist_id, count(*) as cnt
+    FROM phrase_playlist_upvote ppu
+    WHERE ppu.playlist_id IN (
+      SELECT DISTINCT playlist_id FROM phrase_playlist_upvote
+      WHERE created_at >= v_since
+    )
+    GROUP BY ppu.playlist_id
+  ) sub
+  WHERE pp.id = sub.playlist_id
+    AND pp.upvote_count IS DISTINCT FROM sub.cnt;
+
+  -- Recount comment upvotes (only recently active)
+  UPDATE request_comment rc
+  SET upvote_count = sub.cnt
+  FROM (
+    SELECT cu.comment_id, count(*) as cnt
+    FROM comment_upvote cu
+    WHERE cu.comment_id IN (
+      SELECT DISTINCT comment_id FROM comment_upvote
+      WHERE created_at >= v_since
+    )
+    GROUP BY cu.comment_id
+  ) sub
+  WHERE rc.id = sub.comment_id
+    AND rc.upvote_count IS DISTINCT FROM sub.cnt;
+END;
+$$;
+
+alter function "public"."recount_all_upvotes" () owner to "postgres";
 
 create or replace function "public"."refresh_meta_language" () returns "void" language "plpgsql" security definer as $$
 BEGIN
@@ -1837,6 +1924,10 @@ create or replace trigger "on_phrase_playlist_upvote_removed"
 after delete on "public"."phrase_playlist_upvote" for each row
 execute function "public"."update_phrase_playlist_upvote_count" ();
 
+create or replace trigger "on_phrase_request_auto_upvote"
+after insert on "public"."phrase_request" for each row
+execute function "public"."auto_upvote_new_request" ();
+
 create or replace trigger "on_phrase_request_updated" before
 update on "public"."phrase_request" for each row
 execute function "public"."update_phrase_request_timestamp" ();
@@ -2677,6 +2768,12 @@ grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "service_role";
 
+grant all on function "public"."auto_upvote_new_request" () to "anon";
+
+grant all on function "public"."auto_upvote_new_request" () to "authenticated";
+
+grant all on function "public"."auto_upvote_new_request" () to "service_role";
+
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
@@ -2946,6 +3043,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "anon";
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "authenticated";
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
+
+grant all on function "public"."recount_all_upvotes" () to "anon";
+
+grant all on function "public"."recount_all_upvotes" () to "authenticated";
+
+grant all on function "public"."recount_all_upvotes" () to "service_role";
 
 grant all on function "public"."refresh_meta_language" () to "anon";
 
