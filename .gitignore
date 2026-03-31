@@ -10,7 +10,7 @@ lerna-debug.log*
 # build artefacts
 node_modules
 dist
-*.tsbuildinfo
+/*.tsbuildinfo
 .tanstack
 
 # environments
