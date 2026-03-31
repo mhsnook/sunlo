@@ -1,5 +1,5 @@
-import type { CSSProperties } from 'react'
-import { Link } from '@tanstack/react-router'
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import {
 	MessageSquareQuote,
 	MessagesSquare,
@@ -20,6 +20,7 @@ import { useMarkAsRead } from '@/features/notifications/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { commentsCollection } from '@/features/comments/collections'
+import { Button } from '@/components/ui/button'
 
 const notificationConfig: Record<
 	NotificationTypeEnum,
@@ -106,11 +107,9 @@ function useNotificationLink(notification: NotificationType): {
 
 		if (notification.comment_id && comment) {
 			if (comment.parent_comment_id) {
-				// It's a reply — open the parent thread and highlight the reply
 				search.showSubthread = comment.parent_comment_id
 				search.highlightComment = comment.id
 			} else {
-				// It's a top-level comment — open its thread
 				search.showSubthread = comment.id
 			}
 		}
@@ -142,25 +141,40 @@ export function NotificationItem({
 	const markAsRead = useMarkAsRead()
 	const isUnread = notification.read_at === null
 	const link = useNotificationLink(notification)
+	const navigate = useNavigate()
 
-	const handleClick = () => {
+	const handleClick = (
+		e: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>
+	) => {
+		const target = e.target as HTMLElement
+		if (!e.currentTarget?.contains(target)) return
+		if (target.closest('button, a, input')) return
+
 		if (isUnread) markAsRead.mutate(notification.id)
+		if (link)
+			void navigate({ to: link.to, params: link.params, search: link.search })
 	}
 
 	const style = {
 		viewTransitionName: `notification-${notification.id}`,
 	} as CSSProperties
 
-	const content = (
+	return (
 		<div
+			role="link"
+			tabIndex={0}
 			className={cn(
-				'group flex items-start gap-3 rounded p-3 transition-all duration-300',
+				'group flex cursor-pointer items-start gap-3 rounded p-3 transition-all duration-300',
 				isUnread ?
 					'border-s-primary bg-card/80 border-s-2'
 				:	'animate-card-pop-in bg-transparent opacity-70 hover:opacity-100'
 			)}
 			style={style}
 			data-testid="notification-item"
+			onClick={handleClick}
+			onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
+				if (e.key === 'Enter') handleClick(e)
+			}}
 		>
 			<div
 				className={cn(
@@ -173,7 +187,7 @@ export function NotificationItem({
 			<div className="min-w-0 flex-1">
 				<div className="flex items-start justify-between gap-2">
 					<div>
-						<UidPermalinkInline uid={notification.actor_uid} nonInteractive />
+						<UidPermalinkInline uid={notification.actor_uid} />
 						<p className="text-muted-foreground mt-0.5 text-sm">
 							{config.action}
 						</p>
@@ -183,31 +197,19 @@ export function NotificationItem({
 							{ago(notification.created_at)}
 						</span>
 						{isUnread && (
-							<div className="bg-primary h-2 w-2 shrink-0 rounded-full" />
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-6 w-6"
+								aria-label="Mark as read"
+								onClick={() => markAsRead.mutate(notification.id)}
+							>
+								<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+							</Button>
 						)}
 					</div>
 				</div>
 			</div>
 		</div>
-	)
-
-	if (link) {
-		return (
-			<Link
-				to={link.to}
-				params={link.params}
-				search={link.search}
-				onClick={handleClick}
-				className="block"
-			>
-				{content}
-			</Link>
-		)
-	}
-
-	return (
-		<button type="button" onClick={handleClick} className="w-full text-start">
-			{content}
-		</button>
 	)
 }

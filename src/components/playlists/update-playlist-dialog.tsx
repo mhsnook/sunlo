@@ -28,7 +28,9 @@ import { CoverImageField } from '@/components/fields/cover-image-field'
 import ErrorLabel from '@/components/fields/error-label'
 import { isEmbeddableUrl } from './playlist-embed'
 
-function playlistDefaults(playlist: PhrasePlaylistType): PhrasePlaylistUpdateType {
+function playlistDefaults(
+	playlist: PhrasePlaylistType
+): PhrasePlaylistUpdateType {
 	return {
 		title: playlist.title,
 		description: playlist.description ?? '',
@@ -121,9 +123,7 @@ export function UpdatePlaylistDialog({
 						<Input
 							id="playlist-title"
 							data-testid="playlist-title-input"
-							className={
-								form.formState.errors.title ? 'border-red-500' : ''
-							}
+							className={form.formState.errors.title ? 'border-red-500' : ''}
 							{...form.register('title')}
 						/>
 						<ErrorLabel error={form.formState.errors.title} />
@@ -143,9 +143,7 @@ export function UpdatePlaylistDialog({
 							id="playlist-href"
 							data-testid="playlist-href-input"
 							type="url"
-							className={
-								form.formState.errors.href ? 'border-red-500' : ''
-							}
+							className={form.formState.errors.href ? 'border-red-500' : ''}
 							{...form.register('href')}
 							placeholder="https://..."
 						/>

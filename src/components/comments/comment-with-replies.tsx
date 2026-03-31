@@ -219,7 +219,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-4 ${isHighlighted ? 'bg-2-mid-primary ring-primary-foresoft/60 ring ring-offset-4' : ''}`}
+			className={`mt-4 ${isHighlighted ? 'border-s-primary rounded border-s-2 ps-3' : ''}`}
 		>
 			{/* Comment header */}
 			<div className="flex items-center justify-between">

@@ -60,7 +60,10 @@ export function PhraseSummaryLine({
 					phrase?.card?.status &&
 					['active', 'learned'].includes(phrase.card.status)
 				) ?
-					<Bookmark className="shrink-0 fill-purple-600/50 text-purple-600" size={12} />
+					<Bookmark
+						className="shrink-0 fill-purple-600/50 text-purple-600"
+						size={12}
+					/>
 				:	null}
 			</Link>
 

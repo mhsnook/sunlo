@@ -117,21 +117,19 @@ export function UidPermalinkInline({
 	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
 		<div className={cn('inline-flex flex-row items-center gap-2', className)}>
-			{avatarUrl ?
-				<Link
-					to="/friends/$uid"
-					params={{ uid }}
-					className="inline-flex flex-row hover:underline"
-					disabled={nonInteractive}
-				>
-					<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
-						<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
-						<AvatarFallback className="text-[10px] font-bold">
-							{data.username?.slice(0, 2)}
-						</AvatarFallback>
-					</Avatar>
-				</Link>
-			:	null}
+			<Link
+				to="/friends/$uid"
+				params={{ uid }}
+				className="inline-flex flex-row hover:underline"
+				disabled={nonInteractive}
+			>
+				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
+					<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
+					<AvatarFallback className="text-[10px] font-bold">
+						{data.username?.slice(0, 2)}
+					</AvatarFallback>
+				</Avatar>
+			</Link>
 			<div className="flex flex-row items-center gap-1.5 text-sm">
 				<Link
 					to="/friends/$uid"
