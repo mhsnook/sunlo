@@ -129,7 +129,11 @@ execute on function search_phrases_smart (text, text, text, int, timestamptz, uu
 -- Called after phrase/translation/tag changes
 create or replace function refresh_phrase_search_index () returns void language plpgsql security definer as $$
 BEGIN
-  REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
+  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'phrase_search_index' AND ispopulated) THEN
+    REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
+  ELSE
+    REFRESH MATERIALIZED VIEW phrase_search_index;
+  END IF;
 END;
 $$;
 
