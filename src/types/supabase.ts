@@ -353,6 +353,78 @@ export type Database = {
 				}
 				Relationships: []
 			}
+			notification: {
+				Row: {
+					id: string
+					uid: string
+					type: Database['public']['Enums']['notification_type']
+					actor_uid: string
+					request_id: string | null
+					comment_id: string | null
+					phrase_id: string | null
+					read_at: string | null
+					created_at: string
+				}
+				Insert: {
+					id?: string
+					uid: string
+					type: Database['public']['Enums']['notification_type']
+					actor_uid: string
+					request_id?: string | null
+					comment_id?: string | null
+					phrase_id?: string | null
+					read_at?: string | null
+					created_at?: string
+				}
+				Update: {
+					id?: string
+					uid?: string
+					type?: Database['public']['Enums']['notification_type']
+					actor_uid?: string
+					request_id?: string | null
+					comment_id?: string | null
+					phrase_id?: string | null
+					read_at?: string | null
+					created_at?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'notification_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'notification_actor_uid_fkey'
+						columns: ['actor_uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'notification_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_comment_id_fkey'
+						columns: ['comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+				]
+			}
 			phrase: {
 				Row: {
 					added_by: string
@@ -1806,6 +1878,13 @@ export type Database = {
 				| 'invite'
 			language_proficiency: 'fluent' | 'proficient' | 'beginner'
 			learning_goal: 'moving' | 'family' | 'visiting'
+			notification_type:
+				| 'request_commented'
+				| 'comment_replied'
+				| 'phrase_translated'
+				| 'phrase_referenced'
+				| 'request_upvoted'
+				| 'change_suggested'
 		}
 		CompositeTypes: {
 			phrase_with_translations_input: {
@@ -2630,6 +2709,14 @@ export const Constants = {
 			],
 			language_proficiency: ['fluent', 'proficient', 'beginner'],
 			learning_goal: ['moving', 'family', 'visiting'],
+			notification_type: [
+				'request_commented',
+				'comment_replied',
+				'phrase_translated',
+				'phrase_referenced',
+				'request_upvoted',
+				'change_suggested',
+			],
 		},
 	},
 	storage: {
