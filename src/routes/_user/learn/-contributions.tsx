@@ -1,18 +1,31 @@
 import { Link, useNavigate, useSearch } from '@tanstack/react-router'
 import {
+	Check,
+	ListFilter,
 	ListMusic,
 	Logs,
 	MessageCircleHeart,
 	MessageSquareQuote,
+	MessagesSquare,
+	type LucideIcon,
 } from 'lucide-react'
 
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	useAnyonesPhraseRequests,
 	useAnyonesPhrases,
+	useAnyonesComments,
 } from '@/features/contributions/hooks'
 
 import { RequestItem } from '@/components/requests/request-list-item'
@@ -22,8 +35,21 @@ import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import languages from '@/lib/languages'
 import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
+import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
+import { Markdown } from '@/components/my-markdown'
 
 type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
+
+const tabOptions: Array<{
+	value: viewTabName
+	label: string
+	icon: LucideIcon
+}> = [
+	{ value: 'requests', label: 'Requests', icon: MessageCircleHeart },
+	{ value: 'phrases', label: 'Phrases', icon: MessageSquareQuote },
+	{ value: 'playlists', label: 'Playlists', icon: ListMusic },
+	{ value: 'comments', label: 'Comments', icon: MessagesSquare },
+]
 
 export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const search = useSearch({ strict: false })
@@ -42,6 +68,9 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 		})
 	}
 
+	const activeLabel =
+		tabOptions.find((t) => t.value === contributionsTab)?.label ?? 'Requests'
+
 	return (
 		<>
 			<Tabs
@@ -49,36 +78,50 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 				value={contributionsTab}
 				onValueChange={handleTabChange}
 			>
-				<div className="flex w-full flex-row items-center justify-between gap-2">
-					<TabsList className="mt-1 text-lg">
-						<TabsTrigger
-							data-testid="contributions-tab--requests"
-							value="requests"
-						>
-							<MessageCircleHeart size={16} className="me-1" /> Requests
-						</TabsTrigger>
-						<TabsTrigger
-							data-testid="contributions-tab--phrases"
-							value="phrases"
-						>
-							<MessageSquareQuote size={16} className="me-1" /> Phrases
-						</TabsTrigger>
-						<TabsTrigger
-							data-testid="contributions-tab--playlists"
-							value="playlists"
-						>
-							<ListMusic size={16} className="me-1" /> Playlists
-						</TabsTrigger>
-						{/*<TabsTrigger data-testid="contributions-tab--answers" value="answers" disabled>
-							<MessageSquarePlus size={16} className="me-1" /> Answers
-						</TabsTrigger>
-						<TabsTrigger data-testid="contributions-tab--comments" value="comments" disabled>
-							<MessagesSquare size={16} className="me-1" /> Comments
-						</TabsTrigger>
-						<TabsTrigger data-testid="contributions-tab--translations" value="translations" disabled>
-							<Languages size={16} className="me-1" /> Translations
-						</TabsTrigger>*/}
+				<div className="@container flex w-full flex-row items-center justify-between gap-2">
+					<TabsList className="mt-1 hidden text-lg @md:inline-flex">
+						{tabOptions.map(({ value, label, icon: Icon }) => (
+							<TabsTrigger
+								key={value}
+								data-testid={`contributions-tab--${value}`}
+								value={value}
+							>
+								<Icon size={16} className="me-1" /> {label}
+							</TabsTrigger>
+						))}
 					</TabsList>
+
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								data-testid="contributions-filter-button"
+								className="text-muted-foreground gap-1 text-xs @md:hidden"
+							>
+								<ListFilter className="size-3.5" />
+								{activeLabel}
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start">
+							<DropdownMenuLabel>Show content type</DropdownMenuLabel>
+							<DropdownMenuSeparator />
+							{tabOptions.map(({ value, label }) => (
+								<DropdownMenuItem
+									key={value}
+									onClick={() => handleTabChange(value)}
+								>
+									<Check
+										className={
+											contributionsTab === value ? 'opacity-100' : 'opacity-0'
+										}
+									/>
+									{label}
+								</DropdownMenuItem>
+							))}
+						</DropdownMenuContent>
+					</DropdownMenu>
+
 					{lang && (
 						<div className="shrink-0">
 							<PlusMenu lang={lang} />
@@ -98,7 +141,7 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 				<TabsContent value="answers">
 					<AnswersTab lang={lang} uid={uid} />
 				</TabsContent>
-				<TabsContent value="answers">
+				<TabsContent value="comments">
 					<CommentsTab lang={lang} uid={uid} />
 				</TabsContent>
 			</Tabs>
@@ -260,11 +303,13 @@ function AnswersTab(props: { lang?: string; uid: uuid }) {
 }
 
 function CommentsTab(props: { lang?: string; uid: uuid }) {
-	// @@TODO change this
-	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
+	const { data: comments, isLoading } = useAnyonesComments(
+		props.uid,
+		props.lang
+	)
 	return (
 		isLoading ? <Loader />
-		: !phrases || phrases.length === 0 ?
+		: !comments || comments.length === 0 ?
 			<Callout variant="ghost">
 				<p className="text-lg">This user hasn't made any comments yet.</p>
 				{props.lang && (
@@ -279,9 +324,31 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 				)}
 			</Callout>
 		:	<div className="space-y-4">
-				{phrases.map((phrase) => (
-					<div key={phrase.id} className="space-y-2">
-						<CardResultSimple phrase={phrase} />
+				{comments.map(({ comment, request }) => (
+					<div
+						key={comment.id}
+						className="bg-card space-y-2 rounded p-4 shadow-sm"
+					>
+						<UidPermalinkInline
+							uid={comment.uid}
+							timeValue={comment.created_at}
+							action={comment.parent_comment_id ? 'replied' : 'commented'}
+							timeLinkParams={{ id: request.id, lang: request.lang }}
+							timeLinkSearch={
+								comment.parent_comment_id ?
+									{
+										showSubthread: comment.parent_comment_id,
+										highlightComment: comment.id,
+									}
+								:	{ showSubthread: comment.id }
+							}
+							timeLinkTo="/learn/$lang/requests/$id"
+						/>
+						{comment.content && (
+							<div className="ms-8">
+								<Markdown>{comment.content}</Markdown>
+							</div>
+						)}
 					</div>
 				))}
 			</div>
