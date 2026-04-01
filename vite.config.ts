@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
 
 // https://vitejs.dev/config/
@@ -9,6 +10,7 @@ export default defineConfig(() => {
 	return {
 		plugins: [
 			tsconfigPaths(),
+			tailwindcss(),
 			tanstackRouter({
 				autoCodeSplitting: true,
 			}),
@@ -42,6 +44,9 @@ export default defineConfig(() => {
 					'**/scenetest/**',
 				],
 			},
+		},
+		test: {
+			include: ['src/**/*.test.ts'],
 		},
 	}
 })

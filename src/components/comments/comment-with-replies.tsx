@@ -142,7 +142,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								<MessagesSquare />
 							</DialogTrigger>
 						</AddCommentDialog>{' '}
-						<span>comment</span>
+						<span>reply</span>
 					</div>
 
 					{replyCount > 0 && (

@@ -1,2 +1,0 @@
-- See @CLAUDE.md for code rules
-- See @supabase/schemas/base.sql for the _current_ structure of the database (do not rely on migration files because they may represent an out-of-date picture of the system)

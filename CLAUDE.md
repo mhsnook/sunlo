@@ -37,7 +37,26 @@ pnpm format
 pnpm format:check
 ```
 
-### Testing
+### Scenetest (preferred)
+
+**Always write new tests as scenetest specs** unless a specific limitation prevents it. Scenetest specs are readable markdown files that describe user journeys at a high level — they're easier to write, easier to review, and keep browser orchestration separate from state assertions.
+
+```bash
+# Run all scenetest specs
+pnpm scene
+
+# Run a specific scene file
+pnpm scene scenetest/scenes/decks.spec.md
+```
+
+Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
+
+**When scenetest isn't enough**: If a user journey can't be expressed in a scene spec (e.g. you need fine-grained browser control, network interception, or multi-tab behavior), you have two options — in either case, **add a comment explaining why scenetest couldn't cover it**:
+
+1. **Scenetest with inline assertions** (`useTestEffect`) — for cases where the scene steps work but you need to verify internal component state or collection data alongside them.
+2. **Playwright** — for cases that require low-level browser control that scenetest can't provide at all.
+
+### Testing (Playwright)
 
 ```bash
 # Run all e2e tests (Playwright)

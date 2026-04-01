@@ -7,7 +7,7 @@ import ErrorLabel from './error-label'
 export default function EmailField<T extends FieldValues>({
 	register,
 	error,
-	tabIndex = 1,
+	tabIndex,
 }: FieldProps<T>) {
 	return (
 		<div className="flex flex-col gap-1">
