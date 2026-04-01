@@ -65,7 +65,8 @@ export function AnsweringDialog({
 
 	// ?answering=search OR ?answering=comment&attaching → show search panel
 	// ?answering=comment (no attaching) → show comment form
-	const showSearch = answering === 'search' || (answering === 'comment' && attaching)
+	const showSearch =
+		answering === 'search' || (answering === 'comment' && attaching)
 	const showComment = answering === 'comment' && !attaching
 
 	const close = () => {
@@ -91,7 +92,12 @@ export function AnsweringDialog({
 	}
 
 	return (
-		<Dialog open={!!answering} onOpenChange={(open) => { if (!open) close() }}>
+		<Dialog
+			open={!!answering}
+			onOpenChange={(open) => {
+				if (!open) close()
+			}}
+		>
 			<AuthenticatedDialogContent
 				authTitle="Login to Comment"
 				authMessage="You need to be logged in to join the conversation."
@@ -136,14 +142,10 @@ export function AnsweringDialog({
 				</div>
 
 				<div
-					className={cn(
-						'overflow-y-auto p-4 sm:p-6',
-						!showComment && 'hidden'
-					)}
+					className={cn('overflow-y-auto p-4 sm:p-6', !showComment && 'hidden')}
 				>
 					<CommentForm
 						requestId={requestId}
-						lang={lang}
 						selectedPhraseIds={selectedPhraseIds}
 						onRemovePhrase={(id) =>
 							onSelectionChange(selectedPhraseIds.filter((p) => p !== id))
@@ -193,7 +195,7 @@ function PhrasePickerPanel({
 			{!showCreateForm && (
 				<div className="flex-none border-b p-4 pb-3 sm:px-6 sm:py-4">
 					<div className="relative">
-						<Search className="text-muted-foreground absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2" />
+						<Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 						<Input
 							type="text"
 							placeholder="Search phrases..."
@@ -237,7 +239,7 @@ function PhrasePickerPanel({
 												key={phrase.id}
 												type="button"
 												onClick={() => addPhrase(phrase.id)}
-												className="w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors hover:bg-muted/50"
+												className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors"
 											>
 												<PhraseTinyCard pid={phrase.id} nonInteractive />
 											</button>
@@ -260,13 +262,11 @@ type CommentFormInputs = z.infer<typeof CommentFormSchema>
 
 function CommentForm({
 	requestId,
-	lang,
 	selectedPhraseIds,
 	onRemovePhrase,
 	onClose,
 }: {
 	requestId: uuid
-	lang: string
 	selectedPhraseIds: Array<uuid>
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
@@ -278,12 +278,15 @@ function CommentForm({
 
 	const createCommentMutation = useMutation({
 		mutationFn: async (values: CommentFormInputs) => {
-			const { data, error } = await supabase.rpc('create_comment_with_phrases', {
-				p_request_id: requestId,
-				p_content: values.content,
-				p_parent_comment_id: null,
-				p_phrase_ids: selectedPhraseIds,
-			})
+			const { data, error } = await supabase.rpc(
+				'create_comment_with_phrases',
+				{
+					p_request_id: requestId,
+					p_content: values.content,
+					p_parent_comment_id: null,
+					p_phrase_ids: selectedPhraseIds,
+				}
+			)
 			if (error) throw error
 			return data as {
 				request_comment: RequestCommentType
@@ -317,7 +320,9 @@ function CommentForm({
 		<Form {...form}>
 			<form
 				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => createCommentMutation.mutate(data))}
+				onSubmit={form.handleSubmit((data) =>
+					createCommentMutation.mutate(data)
+				)}
 				className="space-y-4"
 			>
 				{hasCards ?
@@ -332,7 +337,7 @@ function CommentForm({
 										type="button"
 										variant="ghost"
 										size="icon"
-										className="bg-background/80 border-border absolute top-2 end-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+										className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
 										onClick={() => onRemovePhrase(pid)}
 									>
 										<X />
@@ -360,7 +365,10 @@ function CommentForm({
 							...prev,
 							attaching: true,
 						})}
-						className={cn(buttonVariants({ variant: 'soft', size: 'sm' }), 'w-full')}
+						className={cn(
+							buttonVariants({ variant: 'soft', size: 'sm' }),
+							'w-full'
+						)}
 					>
 						<Paperclip className="h-4 w-4" />
 						Suggest a flashcard
