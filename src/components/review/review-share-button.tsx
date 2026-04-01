@@ -39,7 +39,7 @@ export function ReviewShareButton({ lang, dayString }: ReviewShareButtonProps) {
 	const total = emojis.length
 	const langName = langMeta?.name ?? lang
 
-	const handleShare = () => {
+	const handleShare = async () => {
 		const text = [
 			`Sunlo review • ${langName} • ${dayString}`,
 			'',
@@ -48,15 +48,19 @@ export function ReviewShareButton({ lang, dayString }: ReviewShareButtonProps) {
 			`${correct}/${total} recalled • ${Math.round((correct / total) * 100)}%`,
 		].join('\n')
 
-		navigator.clipboard.writeText(text).then(() => {
-			toastSuccess('Copied to clipboard!')
-		})
+		await navigator.clipboard.writeText(text)
+		toastSuccess('Copied to clipboard!')
 	}
 
 	if (manifest.length === 0) return null
 
 	return (
-		<Button variant="soft" size="lg" onClick={handleShare} className="w-full">
+		<Button
+			variant="soft"
+			size="lg"
+			onClick={() => void handleShare()}
+			className="w-full"
+		>
 			<Share2 className="me-2 h-4 w-4" />
 			Share results
 		</Button>
