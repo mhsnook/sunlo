@@ -159,7 +159,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				</p>
 			</div>
 
-			<div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto rounded border px-2 pb-6 pt-4 shadow-inner">
+			<div className="mb-3 flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto rounded border px-2 pb-6 pt-4 shadow-inner">
 				{unreviewedInOrder.map((pid) => (
 					<PreviewCard key={pid} pid={pid} />
 				))}

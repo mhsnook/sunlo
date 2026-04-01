@@ -158,7 +158,7 @@ function UserLayout() {
 							id="app-sidebar-layout-outlet"
 							className={cn(
 								'@container flex grow flex-col p-2',
-								fixedHeight ? 'min-h-0' : 'pb-8'
+								fixedHeight ? 'min-h-0' : !focusMode && 'pb-8'
 							)}
 							style={{ viewTransitionName: 'main-content' }}
 						>
