@@ -1,5 +1,11 @@
 # Change Log
 
+## v0.18.1 - Hotfix: Fix add-phrase error
+
+_1 April, 2026_
+
+- **Fix phrase_search_index** — the v0.18 migration recreated the materialized view with `WITH NO DATA` but never populated it, causing "CONCURRENTLY cannot be used when the materialized view is not populated" errors when adding phrases.
+
 ## v0.18 - Notifications, 2-Button Reviews, Auto-Likes, Performance
 
 _1 April, 2026_
