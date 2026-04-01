@@ -32,7 +32,7 @@
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.2.0",
-		"@hookform/resolvers": "^3.10.0",
+		"@hookform/resolvers": "^5.2.2",
 		"@supabase/supabase-js": "^2.87.3",
 		"@tanstack/db": "^0.5.12",
 		"@tanstack/query-core": "^5.90.12",
@@ -65,8 +65,8 @@
 		"@scenetest/vite-plugin": "^0.3.0",
 		"@tailwindcss/container-queries": "^0.1.1",
 		"@tailwindcss/line-clamp": "^0.4.4",
-		"@tailwindcss/vite": "^4.1.18",
 		"@tailwindcss/typography": "^0.5.19",
+		"@tailwindcss/vite": "^4.1.18",
 		"@tanstack/react-query-devtools": "^5.91.1",
 		"@tanstack/router-devtools": "^1.159.5",
 		"@tanstack/router-plugin": "^1.159.5",

@@ -76,7 +76,7 @@ const createAddPhraseSchema = (phraseLang: string) =>
 					'Translation language cannot be the same as the phrase language',
 			}),
 		translation_text: z.string().min(1, 'Please enter the translation'),
-		only_reverse: z.boolean().default(false),
+		only_reverse: z.boolean(),
 	})
 
 type AddPhraseFormValues = z.infer<ReturnType<typeof createAddPhraseSchema>>
