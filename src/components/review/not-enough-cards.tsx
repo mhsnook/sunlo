@@ -27,7 +27,7 @@ export function NotEnoughCards({
 				}
 				.
 			</p>
-			<div className="my-2 flex flex-wrap gap-2">
+			<div className="my-2 flex flex-wrap gap-2 [&>*]:flex-1">
 				<Link
 					className={buttonVariants({ variant: 'soft' })}
 					to="/learn/$lang/feed"
