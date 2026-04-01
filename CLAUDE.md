@@ -636,7 +636,7 @@ We use a deliberate set of button variants. Choose based on the action's role, n
 
 - Base components from ShadCN UI (Radix UI + Tailwind) in `@/components/ui/`
 - Always use generic components like `<Input>`, `<Textarea>`, `<Button>` for visual consistency
-- Toasts: Use `react-hot-toast` with `toast.success()` and `toast.error()`
+- Toasts: Use `toastSuccess()` and `toastError()` from `@/components/ui/sonner`
 
 ### Data Fetching in Components
 
@@ -776,7 +776,7 @@ When writing tests, instead of using names or exacty display text for the user, 
 - **zustand** v5 - Lightweight state management (currently used in Review interface)
 - **dayjs** - Date manipulation (lighter alternative to moment.js)
 - **recharts** - Data visualization components
-- **react-hot-toast** - Toast notifications
+- **sonner** - Toast notifications (`toastSuccess`, `toastError`, etc. from `@/components/ui/sonner`)
 - **lucide-react** - Icon library
 
 ### Feed System
