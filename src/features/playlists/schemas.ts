@@ -37,15 +37,12 @@ export type PhrasePlaylistUpvoteType = z.infer<
 	typeof PhrasePlaylistUpvoteSchema
 >
 
-// Preprocess empty/whitespace strings to null so blank inputs are treated as "no URL"
-const emptyToNull = (v: unknown) =>
-	typeof v === 'string' && v.trim() === '' ? null : v
-
 // Validates as a URL on input, but coerces empty strings to null first
-const urlFieldInsert = z.preprocess(
-	emptyToNull,
-	z.string().url('Please enter a valid URL').nullable()
-)
+const urlFieldInsert = z
+	.string()
+	.nullable()
+	.transform((v) => (typeof v === 'string' && v.trim() === '' ? null : v))
+	.pipe(z.string().url('Please enter a valid URL').nullable())
 
 // this is for links that are included as part of the larger create-playlist item
 export const PlaylistPhraseLinkIncludedInsertSchema = z.object({

@@ -35,7 +35,7 @@ const createInlinePhraseSchema = (phraseLang: string) =>
 				message:
 					'Translation language cannot be the same as the phrase language',
 			}),
-		only_reverse: z.boolean().default(false),
+		only_reverse: z.boolean(),
 	})
 
 type InlinePhraseFormValues = z.infer<
