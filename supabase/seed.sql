@@ -2158,7 +2158,7 @@ values
 		1
 	),
 	(
-		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		'5b0e1a4c-3456-4789-a1cd-ef0123456789',
 		current_date - interval '4 days',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'hin',
@@ -2166,7 +2166,7 @@ values
 		3
 	),
 	(
-		'6c1f2a5d-4567-7890-12de-f01234567890',
+		'6c1f2a5d-4567-4890-a2de-f01234567890',
 		current_date - interval '1 day',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'kan',
@@ -2189,7 +2189,7 @@ insert into
 	)
 values
 	(
-		'a1b2c3d4-1111-2222-3333-444444444444',
+		'a1b2c3d4-1111-4222-a333-444444444444',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'Essential Hindi Greetings',
 		'Common greetings and polite phrases for everyday conversations in Hindi',
@@ -2198,7 +2198,7 @@ values
 		12
 	),
 	(
-		'b2c3d4e5-2222-3333-4444-555555555555',
+		'b2c3d4e5-2222-4333-a444-555555555555',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'Hindi Questions',
 		'Useful question phrases to help you get information',
@@ -2207,7 +2207,7 @@ values
 		8
 	),
 	(
-		'c3d4e5f6-3333-4444-5555-666666666666',
+		'c3d4e5f6-3333-4444-a555-666666666666',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'Basic Kannada Phrases',
 		'Starter phrases for Kannada learners',
@@ -2216,7 +2216,7 @@ values
 		5
 	),
 	(
-		'd4e5f6a7-4444-5555-6666-777777777777',
+		'd4e5f6a7-4444-4555-a666-777777777777',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'Hindi Numbers and Counting',
 		'Learn to count in Hindi from 1 to 10',
@@ -2225,7 +2225,7 @@ values
 		15
 	),
 	(
-		'e5f6a7b8-5555-6666-7777-888888888888',
+		'e5f6a7b8-5555-4666-a777-888888888888',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'Kannada Food & Dining',
 		'Order food and drinks in Kannada restaurants',
@@ -2250,95 +2250,95 @@ insert into
 	"public"."playlist_phrase_link" ("id", "uid", "phrase_id", "playlist_id", "order", "created_at")
 values
 	(
-		'11111111-aaaa-bbbb-cccc-dddddddddddd',
+		'11111111-aaaa-4bbb-8ccc-dddddddddddd',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
-		'a1b2c3d4-1111-2222-3333-444444444444',
+		'a1b2c3d4-1111-4222-a333-444444444444',
 		1.0,
 		current_date - interval '15 days'
 	),
 	(
-		'22222222-bbbb-cccc-dddd-eeeeeeeeeeee',
+		'22222222-bbbb-4ccc-8ddd-eeeeeeeeeeee',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
-		'a1b2c3d4-1111-2222-3333-444444444444',
+		'a1b2c3d4-1111-4222-a333-444444444444',
 		2.0,
 		current_date - interval '15 days'
 	),
 	(
-		'33333333-cccc-dddd-eeee-ffffffffffff',
+		'33333333-cccc-4ddd-8eee-ffffffffffff',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
-		'a1b2c3d4-1111-2222-3333-444444444444',
+		'a1b2c3d4-1111-4222-a333-444444444444',
 		3.0,
 		current_date - interval '15 days'
 	),
 	(
-		'44444444-dddd-eeee-ffff-000000000000',
+		'44444444-dddd-4eee-8fff-000000000000',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'1d44afd2-1274-47ec-8107-36bd09861c3d',
-		'b2c3d4e5-2222-3333-4444-555555555555',
+		'b2c3d4e5-2222-4333-a444-555555555555',
 		1.0,
 		current_date - interval '12 days'
 	),
 	(
-		'55555555-eeee-ffff-0000-111111111111',
+		'55555555-eeee-4fff-8000-111111111111',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'267acd7c-65f2-4aad-bf5c-58e01c0f69f8',
-		'b2c3d4e5-2222-3333-4444-555555555555',
+		'b2c3d4e5-2222-4333-a444-555555555555',
 		2.0,
 		current_date - interval '12 days'
 	),
 	(
-		'66666666-ffff-0000-1111-222222222222',
+		'66666666-ffff-4000-8111-222222222222',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
-		'b2c3d4e5-2222-3333-4444-555555555555',
+		'b2c3d4e5-2222-4333-a444-555555555555',
 		3.0,
 		current_date - interval '12 days'
 	),
 	(
-		'77777777-0000-1111-2222-333333333333',
+		'77777777-0000-4111-8222-333333333333',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
-		'c3d4e5f6-3333-4444-5555-666666666666',
+		'c3d4e5f6-3333-4444-a555-666666666666',
 		1.0,
 		current_date - interval '10 days'
 	),
 	(
-		'88888888-1111-2222-3333-444444444444',
+		'88888888-1111-4222-8333-444444444444',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
-		'c3d4e5f6-3333-4444-5555-666666666666',
+		'c3d4e5f6-3333-4444-a555-666666666666',
 		2.0,
 		current_date - interval '10 days'
 	),
 	(
-		'99999999-2222-3333-4444-555555555555',
+		'99999999-2222-4333-8444-555555555555',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
-		'c3d4e5f6-3333-4444-5555-666666666666',
+		'c3d4e5f6-3333-4444-a555-666666666666',
 		3.0,
 		current_date - interval '10 days'
 	),
 	(
-		'aaaaaaaa-3333-4444-5555-666666666666',
+		'aaaaaaaa-3333-4444-8555-666666666666',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'8133abe3-f908-445a-b8ae-6f01db3c18d7',
-		'd4e5f6a7-4444-5555-6666-777777777777',
+		'd4e5f6a7-4444-4555-a666-777777777777',
 		1.0,
 		current_date - interval '7 days'
 	),
 	(
-		'bbbbbbbb-4444-5555-6666-777777777777',
+		'bbbbbbbb-4444-4555-8666-777777777777',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
-		'e5f6a7b8-5555-6666-7777-888888888888',
+		'e5f6a7b8-5555-4666-a777-888888888888',
 		1.0,
 		current_date - interval '5 days'
 	),
 	(
-		'cccccccc-5555-6666-7777-888888888888',
+		'cccccccc-5555-4666-8777-888888888888',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
 		'f6a7b8c9-6666-7777-8888-999999999999',
@@ -2369,7 +2369,7 @@ insert into
 	)
 values
 	(
-		'c0000001-1111-2222-3333-444444444444',
+		'c0000001-1111-4222-8333-444444444444',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
 		null,
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
@@ -2378,16 +2378,16 @@ values
 		5
 	),
 	(
-		'c0000002-2222-3333-4444-555555555555',
+		'c0000002-2222-4333-8444-555555555555',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		'c0000001-1111-2222-3333-444444444444',
+		'c0000001-1111-4222-8333-444444444444',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'Thanks! This is exactly what I needed.',
 		current_date - interval '3 days' + interval '4 hours',
 		2
 	),
 	(
-		'c0000003-3333-4444-5555-666666666666',
+		'c0000003-3333-4444-8555-666666666666',
 		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
 		null,
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -2396,7 +2396,7 @@ values
 		3
 	),
 	(
-		'c0000004-4444-5555-6666-777777777777',
+		'c0000004-4444-4555-8666-777777777777',
 		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
 		null,
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -2405,7 +2405,7 @@ values
 		1
 	),
 	(
-		'c0000005-5555-6666-7777-888888888888',
+		'c0000005-5555-4666-8777-888888888888',
 		'3f8c9e2a-1234-4567-89ab-cdef01234567',
 		null,
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -2424,7 +2424,7 @@ values
 	),
 	(
 		'c0000007-7777-8888-9999-000000000000',
-		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		'5b0e1a4c-3456-4789-a1cd-ef0123456789',
 		null,
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'You can say "nahi, dhanyavaad" (no, thank you) or "bas, ho gaya" (enough, I''m done). Both are polite!',
@@ -2432,8 +2432,8 @@ values
 		6
 	),
 	(
-		'c0000008-8888-9999-0000-111111111111',
-		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		'c0000008-8888-4999-8000-111111111111',
+		'5b0e1a4c-3456-4789-a1cd-ef0123456789',
 		'c0000007-7777-8888-9999-000000000000',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		'Perfect! I''ll add these to my deck.',
@@ -2441,8 +2441,8 @@ values
 		1
 	),
 	(
-		'c0000009-9999-0000-1111-222222222222',
-		'6c1f2a5d-4567-7890-12de-f01234567890',
+		'c0000009-9999-4000-8111-222222222222',
+		'6c1f2a5d-4567-4890-a2de-f01234567890',
 		null,
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
 		'Still learning these myself! Would love to see what others suggest.',
@@ -5346,7 +5346,7 @@ values
 	-- Hindi cards for second test user (webkit tests)
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
-		'c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
+		'c1a2b3c4-d5e6-47a8-b9c0-d1e2f3a4b5c6',
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
 		now() - interval '10 days',
 		now() - interval '10 days',
@@ -5355,7 +5355,7 @@ values
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
-		'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7',
+		'd2b3c4d5-e6f7-48b9-a0d1-e2f3a4b5c6d7',
 		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
 		now() - interval '10 days',
 		now() - interval '10 days',
@@ -5364,7 +5364,7 @@ values
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
-		'e3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8',
+		'e3c4d5e6-f7a8-49c0-91e2-f3a4b5c6d7e8',
 		'90108f59-7968-457f-9744-2e3b44e980dd',
 		now() - interval '10 days',
 		now() - interval '10 days',
@@ -5374,7 +5374,7 @@ values
 	-- Kannada cards for sunloapp@gmail.com (cf1f69ce)
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'a1b2c3d4-1111-2222-3333-444455556666',
+		'a1b2c3d4-1111-4222-a333-444455556666',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
 		now() - interval '12 days',
 		now() - interval '12 days',
@@ -5383,7 +5383,7 @@ values
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'b2c3d4e5-2222-3333-4444-555566667777',
+		'b2c3d4e5-2222-4333-a444-555566667777',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
 		now() - interval '11 days',
 		now() - interval '11 days',
@@ -5392,7 +5392,7 @@ values
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
-		'c3d4e5f6-3333-4444-5555-666677778888',
+		'c3d4e5f6-3333-4444-a555-666677778888',
 		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
 		now() - interval '10 days',
 		now() - interval '10 days',
@@ -5953,7 +5953,7 @@ values
 	),
 	-- Kannada card reviews for sunloapp@gmail.com (cf1f69ce)
 	(
-		'd1e2f3a4-1111-2222-3333-444455556666',
+		'd1e2f3a4-1111-4222-a333-444455556666',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		3,
 		5.282434422319,
@@ -5967,7 +5967,7 @@ values
 		true
 	),
 	(
-		'e2f3a4b5-2222-3333-4444-555566667777',
+		'e2f3a4b5-2222-4333-a444-555566667777',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		3,
 		5.282434422319,
@@ -5981,7 +5981,7 @@ values
 		true
 	),
 	(
-		'f3a4b5c6-3333-4444-5555-666677778888',
+		'f3a4b5c6-3333-4444-a555-666677778888',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		3,
 		5.282434422319,
