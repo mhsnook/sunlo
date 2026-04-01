@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.19 - Update comments, etc etc
+
+_2 April, 2026_
+
+-
+-
+
 ## v0.18.1 - Hotfix: Fix add-phrase error
 
 _1 April, 2026_
