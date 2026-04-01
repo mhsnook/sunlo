@@ -16,7 +16,7 @@ insert into
 	)
 values
 	(
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986', -- Hindi cheeseburger request
 		null::uuid, -- top-level
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74', -- Lexigrine (friend)
@@ -26,7 +26,7 @@ values
 		2
 	),
 	(
-		'22222222-2222-2222-2222-222222222222',
+		'22222222-2222-4222-8222-222222222222',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
 		null,
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -36,9 +36,9 @@ values
 		2
 	),
 	(
-		'33333333-3333-3333-3333-333333333333',
+		'33333333-3333-4333-8333-333333333333',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'Thank you so much! These are perfect 🙏',
 		now() - interval '1 days 23 hours',
@@ -70,17 +70,17 @@ insert into
 	)
 values
 	(
-		'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+		'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'1395ae94-46d9-4a54-92f5-fb8b76db896b', -- "haanji"
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74', -- Lexigrine
 		now() - interval '2 days 2 hours'
 	),
 	(
-		'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+		'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb',
 		'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'f878e60f-9647-4728-a368-fc8681b0acbb',
 		'7ad846a9-d55b-4035-8be2-dbcc70074f74',
 		now() - interval '2 days 2 hours'
@@ -101,17 +101,17 @@ insert into
 	"public"."comment_upvote" ("comment_id", "uid", "created_at")
 values
 	(
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', -- GarlicFace upvoted
 		now() - interval '2 days'
 	),
 	(
-		'11111111-1111-1111-1111-111111111111',
+		'11111111-1111-4111-8111-111111111111',
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21', -- Best Frin upvoted
 		now() - interval '1 day 20 hours'
 	),
 	(
-		'22222222-2222-2222-2222-222222222222',
+		'22222222-2222-4222-8222-222222222222',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', -- GarlicFace upvoted
 		now() - interval '1 day 4 hours'
 	);

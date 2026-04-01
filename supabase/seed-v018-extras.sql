@@ -356,7 +356,7 @@ values
 	(
 		'aa330001-1111-4aaa-bbbb-ffffffffffff',
 		'3f8c9e2a-1234-4567-89ab-cdef01234567',
-		'c0000005-5555-6666-7777-888888888888',
+		'c0000005-5555-4666-8777-888888888888',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'Awesome, thanks! What about for ginger specifically?',
 		current_date - interval '7 days' + interval '8 hours',
@@ -366,7 +366,7 @@ values
 	(
 		'aa330002-2222-4aaa-bbbb-ffffffffffff',
 		'3f8c9e2a-1234-4567-89ab-cdef01234567',
-		'c0000005-5555-6666-7777-888888888888',
+		'c0000005-5555-4666-8777-888888888888',
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
 		'For ginger you say "adrak" - "adrak hai?" or "adrak kitne ka hai?"',
 		current_date - interval '7 days' + interval '10 hours',
@@ -417,7 +417,7 @@ values
 	-- New thread on Kannada directions request (6c1f2a5d)
 	(
 		'aa330007-7777-4aaa-bbbb-ffffffffffff',
-		'6c1f2a5d-4567-7890-12de-f01234567890',
+		'6c1f2a5d-4567-4890-a2de-f01234567890',
 		null,
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
 		'Left = "edaku", right = "balaku", straight = "nere", stop = "nillu". Turn is "thirugu".',
@@ -427,7 +427,7 @@ values
 	),
 	(
 		'aa330008-8888-4aaa-bbbb-ffffffffffff',
-		'6c1f2a5d-4567-7890-12de-f01234567890',
+		'6c1f2a5d-4567-4890-a2de-f01234567890',
 		'aa330007-7777-4aaa-bbbb-ffffffffffff',
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 		'Perfect, exactly what I needed! Could you add these as phrases?',
@@ -437,7 +437,7 @@ values
 	),
 	(
 		'aa330009-9999-4aaa-bbbb-ffffffffffff',
-		'6c1f2a5d-4567-7890-12de-f01234567890',
+		'6c1f2a5d-4567-4890-a2de-f01234567890',
 		'aa330007-7777-4aaa-bbbb-ffffffffffff',
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
 		'Done! Added them all with translations.',
@@ -448,7 +448,7 @@ values
 	-- More on Hindi declining food (5b0e1a4c) -- already has 2 comments
 	(
 		'aa33000a-aaaa-4aaa-bbbb-ffffffffffff',
-		'5b0e1a4c-3456-6789-01cd-ef0123456789',
+		'5b0e1a4c-3456-4789-a1cd-ef0123456789',
 		'c0000007-7777-8888-9999-000000000000',
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
 		'You can also say "pet bhar gaya" (my stomach is full) - very common and friendly!',
