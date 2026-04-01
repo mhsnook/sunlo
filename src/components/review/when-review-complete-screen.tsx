@@ -14,6 +14,7 @@ import {
 } from '@/features/review/hooks'
 import { Link } from '@tanstack/react-router'
 import { BarChart3, Plus, Newspaper, Search } from 'lucide-react'
+import { ReviewShareButton } from './review-share-button'
 
 export function WhenComplete() {
 	const lang = useReviewLang()
@@ -161,6 +162,7 @@ export function WhenComplete() {
 						)}
 
 						<div className="mt-4 grid w-full max-w-sm gap-3">
+							<ReviewShareButton lang={lang} dayString={dayString} />
 							<Link
 								to="/learn/$lang/feed"
 								params={{ lang }}
