@@ -24,7 +24,7 @@ const buttonVariants = cva(
 					'w-full border-2 border-dashed border-2-lo-primary hover:border-border shadow-none hover:shadow',
 			},
 			size: {
-				default: 'h-8 rounded-2xl px-5 py-2 gap-2 text-md',
+				default: 'h-10 rounded-2xl px-5 py-2 gap-2 text-md',
 				sm: 'h-8 rounded-xl px-4 gap-1 [&_svg]:size-3 text-sm',
 				lg: 'rounded-2xl px-8 py-3 font-medium gap-3 [&_svg]:size-6 text-lg',
 				icon: 'size-8 rounded-xl rounded-squircle shrink-0 aspect-square text-sm',
