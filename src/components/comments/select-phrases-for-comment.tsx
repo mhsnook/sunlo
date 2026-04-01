@@ -3,7 +3,6 @@ import { Paperclip, Plus, Search } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -11,7 +10,6 @@ import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
-	DialogFooter,
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
@@ -29,6 +27,10 @@ interface SelectPhrasesForCommentProps {
 	triggerText?: string
 	/** Custom trigger button text when max is reached */
 	triggerMaxText?: string
+	/** Extra classes for the trigger button */
+	className?: string
+	/** Render the trigger as a card-shaped dashed + button instead of a pill button */
+	cardShape?: boolean
 }
 
 const DEFAULT_MAX_PHRASES = 4
@@ -38,14 +40,15 @@ export function SelectPhrasesForComment({
 	selectedPhraseIds,
 	onSelectionChange,
 	maxPhrases = DEFAULT_MAX_PHRASES,
-	triggerText = 'Suggest a phrase',
+	triggerText = 'Suggest a flashcard',
 	triggerMaxText = 'Maximum flashcards reached',
+	className,
+	cardShape = false,
 }: SelectPhrasesForCommentProps) {
 	const [searchText, setSearchText] = useState('')
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
 	const [showCreateForm, setShowCreateForm] = useState(false)
 
-	// Get all phrases for the language
 	const { data: filteredPhrases } = useLanguagePhrasesSearch(lang, searchText)
 
 	const effectiveMax = maxPhrases ?? Infinity
@@ -54,142 +57,123 @@ export function SelectPhrasesForComment({
 		if (selectedPhraseIds.includes(phraseId)) {
 			onSelectionChange(selectedPhraseIds.filter((id) => id !== phraseId))
 		} else {
-			if (selectedPhraseIds.length >= effectiveMax) {
-				return // Don't allow more than max
-			}
+			if (selectedPhraseIds.length >= effectiveMax) return
 			onSelectionChange([...selectedPhraseIds, phraseId])
+			setPhraseDialogOpen(false)
 		}
 	}
 
 	const handlePhraseCreated = (phraseId: string) => {
-		// Auto-add the newly created phrase to selection
 		if (selectedPhraseIds.length < effectiveMax) {
 			onSelectionChange([...selectedPhraseIds, phraseId])
 		}
 		setShowCreateForm(false)
-		// Close the dialog immediately, assuming this is the only phrase being added
 		setPhraseDialogOpen(false)
 	}
 
 	const isMaxReached = selectedPhraseIds.length >= effectiveMax
 
-	// Format the count display
 	const countDisplay =
 		maxPhrases === null ?
 			`${selectedPhraseIds.length} selected`
 		:	`${selectedPhraseIds.length}/${maxPhrases}`
 
+	const triggerButton =
+		cardShape ?
+			<button
+				type="button"
+				disabled={isMaxReached}
+				data-testid="open-phrase-picker"
+				className="border-2-lo-primary text-muted-foreground hover:bg-1-lo-primary hover:text-7-mid-primary hover:border-4-mlo-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors disabled:pointer-events-none disabled:opacity-50"
+			>
+				<Plus className="h-6 w-6" />
+			</button>
+		:	<Button
+				type="button"
+				variant="soft"
+				size="sm"
+				disabled={isMaxReached}
+				data-testid="open-phrase-picker"
+				className={className}
+			>
+				<Paperclip className="h-4 w-4" />
+				{isMaxReached ? triggerMaxText : triggerText}
+			</Button>
+
 	return (
 		<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
-			<DialogTrigger asChild>
-				<Button
-					type="button"
-					variant="soft"
-					disabled={isMaxReached}
-					data-testid="attach-phrase-button"
-				>
-					<Paperclip className="mr-2 h-4 w-4" />
-					{isMaxReached ? triggerMaxText : triggerText}
-				</Button>
-			</DialogTrigger>
-			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0">
+			<DialogTrigger asChild>{triggerButton}</DialogTrigger>
+			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0">
 				<DialogHeader className="flex-none border-b p-6 pb-4">
-					<DialogTitle>Select Flashcards ({countDisplay})</DialogTitle>
+					<DialogTitle>
+						{showCreateForm ?
+							'Create New Phrase'
+						:	`Select Flashcards (${countDisplay})`}
+					</DialogTitle>
 					<DialogDescription>
-						{maxPhrases === null ?
+						{showCreateForm ?
+							'Add a new phrase to the library'
+						: maxPhrases === null ?
 							'Select flashcards to add'
 						:	`Choose up to ${maxPhrases} flashcards`}
 					</DialogDescription>
-
-					<div className="relative mt-2">
-						<Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-						<Input
-							type="text"
-							placeholder="Search phrases..."
-							value={searchText}
-							data-testid="phrase-search-input"
-							onChange={(e) => setSearchText(e.target.value)}
-							className="pl-9"
-						/>
-					</div>
+					{!showCreateForm && (
+						<div className="relative mt-2">
+							<Search className="text-muted-foreground absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2" />
+							<Input
+								type="text"
+								placeholder="Search phrases..."
+								value={searchText}
+								data-testid="phrase-search-input"
+								onChange={(e) => setSearchText(e.target.value)}
+								className="ps-9"
+							/>
+						</div>
+					)}
 				</DialogHeader>
 
 				<div className="min-h-0 overflow-hidden">
 					<ScrollArea className="h-full">
-						<div className="flex flex-col gap-2 p-6">
-							{/* Inline phrase creator */}
-							{showCreateForm && (
+						<div className="flex flex-col gap-3 p-6">
+							{showCreateForm ?
 								<InlinePhraseCreator
 									lang={lang}
 									onPhraseCreated={handlePhraseCreated}
 									onCancel={() => setShowCreateForm(false)}
 								/>
-							)}
-
-							{/* Create new phrase button */}
-							{!showCreateForm && (
-								<Button
-									type="button"
-									variant="dashed-w-full"
-									onClick={() => setShowCreateForm(true)}
-									className="mb-2"
-								>
-									<Plus className="mr-2 h-4 w-4" />
-									Create new phrase
-								</Button>
-							)}
-
-							{!filteredPhrases?.length ?
-								<p className="text-muted-foreground py-8 text-center">
-									No phrases found
-								</p>
-							:	filteredPhrases.map((phrase) => {
-									const isSelected = selectedPhraseIds.includes(phrase.id)
-									const isDisabled = !isSelected && isMaxReached
-
-									return (
-										<label
-											key={phrase.id}
-											htmlFor={`select-phrase-${phrase.id}`}
-											className={`flex items-start gap-3 rounded-lg border p-3 pb-1 transition-colors ${
-												isSelected ?
-													'border-primary bg-0-lo-primary'
-												:	'hover:bg-muted/50'
-											} ${isDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
-											onClick={(e) => {
-												if (isDisabled) e.preventDefault()
-											}}
-										>
-											<Checkbox
-												checked={isSelected}
-												disabled={isDisabled}
-												id={`select-phrase-${phrase.id}`}
-												data-testid="phrase-checkbox"
-												onCheckedChange={() => handleToggle(phrase.id)}
-												className="mt-1"
-											/>
-											<div className="flex-1">
-												<PhraseTinyCard pid={phrase.id} nonInteractive />
-											</div>
-										</label>
-									)
-								})
+							:	<>
+									<Button
+										type="button"
+										variant="dashed-w-full"
+										onClick={() => setShowCreateForm(true)}
+										className="mb-2"
+									>
+										<Plus className="h-4 w-4" />
+										Create new phrase
+									</Button>
+									{!filteredPhrases?.length ?
+										<p className="text-muted-foreground py-8 text-center">
+											No phrases found
+										</p>
+									:	filteredPhrases
+											.filter((phrase) => !selectedPhraseIds.includes(phrase.id))
+											.map((phrase) => (
+												<button
+													key={phrase.id}
+													type="button"
+													disabled={isMaxReached}
+													onClick={() => handleToggle(phrase.id)}
+													className="w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
+												>
+													<PhraseTinyCard pid={phrase.id} nonInteractive />
+												</button>
+											))
+									}
+								</>
 							}
 						</div>
 					</ScrollArea>
 				</div>
-
-				<DialogFooter className="bg-background flex-none border-t p-6 pt-4">
-					<Button
-						onClick={() => setPhraseDialogOpen(false)}
-						disabled={selectedPhraseIds.length === 0}
-						className="w-full"
-						data-testid="add-selected-phrases-button"
-					>
-						Add {selectedPhraseIds.length} flashcard
-						{selectedPhraseIds.length !== 1 ? 's' : ''}
-					</Button>
-				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	)
