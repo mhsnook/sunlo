@@ -1,45 +1,85 @@
 # Change Log
 
-## v0.18 - Notifications center, 2-option reviews, separate phrase_stats view
+## v0.18 - Notifications, 2-Button Reviews, Auto-Likes, Performance
 
-_31 March, 2026_
+_1 April, 2026_
 
-### Back-end Changes
+7 migrations. 6 new database features. 44 new vitest tests. 5 new scenetest spec files.
 
-(released at v0.18)
+### Database Changes (migration track)
 
-- [feat] Add notifications center for when requests are answered etc.
-- [feat] Add profile and deck option to only see two answer choices (Again, Good) in reviews
-- [fix] Fix a bug with like_counts always being 0 or 1
-- [chore] Refactor phrase_meta to split out phrase_stats
+- **Notifications center** — new `notification` table with 4 SECURITY DEFINER triggers (`request_commented`, `comment_replied`, `phrase_translated`, `phrase_referenced`). Notifications are created server-side only; users can read their own and mark as read. RLS enforces uid-scoped access with no INSERT/DELETE grants to users.
+- **Review answer mode** — new `review_answer_mode` column on both `user_profile` (global default) and `user_deck` (per-deck override). Supports `'2-buttons'` (Again/Good) or `'4-buttons'` (Again/Hard/Good/Easy). Deck setting cascades to profile default when cleared.
+- **Auto-like on create** — triggers on `phrase_request`, `request_comment`, and `phrase_playlist` auto-upvote content on creation. Migration backfills existing content. Adds `recount_all_upvotes()` function for daily cron reconciliation.
+- **count_learners RLS fix** — `phrase_stats` view now queries `user_card` directly instead of through RLS-filtered views, fixing a bug where `count_learners` was always 0 or 1.
+- **Extract phrase_stats** — split `phrase_stats` out of `phrase_meta` into its own view, decoupling downstream views and simplifying the dependency chain.
+- **Materialize meta_language** — convert `meta_language` from a live view to a materialized view with automatic refresh triggers, improving read performance for language stats pages.
+- **Preferred translation language** — new `preferred_translation_lang` column on `user_deck` for per-deck translation language override.
 
-### Other Changes
+### UI Changes (migration track)
 
-(released as they're ready)
+- **Notification bell + page** — bell icon in app nav with unread badge, `/notifications` page with notification list, empty state, and mark-all-read. Realtime subscription for live delivery.
+- **Display preferences** — font preference (default/dyslexic) and global review answer mode toggleable from the display preferences sheet.
+- **Deck settings: answer mode** — per-deck 2-button/4-button toggle with clear-to-profile-default option.
+- **Review UI** — 2-button mode shows only Again and Good; 4-button mode shows all four FSRS ratings.
 
-- 2026-03-30 [improvement] Replace separate purple bookmark icon in feed with a purple-badge quote icon to indicate phrases in your deck
-- 2026-03-30 [feat] Prevent translation language from matching phrase language across all phrase/translation forms
-- 2026-03-30 [fix] Fix flaky e2e nav tests: Kannada seed data for all test users, dropdown open logic, CI timeouts
-- 2026-03-30 [feat] Search results now include playlists and requests, not just phrases (#439)
-- 2026-03-30 [feat] Show a login button on the public learn page for logged-out visitors (#461)
-- 2026-03-30 [feat] Show card due dates (overdue/today/upcoming) in the deck management table (#462)
-- 2026-03-29 [feat] Add "Add all cards to deck" button to playlist view (#453)
-- 2026-03-29 [feat] Add "Remove image" button to avatar editor in profile settings (#450)
-- 2026-03-29 [improvement] Feed filtering is now instant: client-side results appear immediately while server backfills older matches (#459)
-- 2026-03-29 [improvement] Playlist displays more compactly in the feed (#453)
-- 2026-03-29 [improvement] Languages Known field on profile is more compact on mobile using container queries (#460)
-- 2026-03-29 [improvement] Card status controls disable while mutations are pending to prevent double-submissions (#457)
-- 2026-03-29 [refactor] RequestForm extracted into a reusable component shared between new-request page and feed composer (#458)
-- 2026-03-29 [refactor] UpdatePlaylistDialog migrated to react-hook-form with reusable CoverImageField (#455)
-- 2026-03-30 [fix] Fix sticky app-nav: `overflow-x-hidden` was creating a scroll container, switched to `overflow-x-clip` (#464)
-- 2026-03-30 [fix] Fix sidebar trigger poking through modal overlays; fix sheet overlay sitting behind sheet content (#446)
-- 2026-03-29 [fix] Fix event propagation on card status heart button (#445)
-- 2026-03-29 [fix] Fix badge text wrapping on playlist item; fix profile page not filling width (#456)
-- 2026-03-30 [chore] Upgrade Zod to v4, update schema error message API accordingly (#470)
-- 2026-03-30 [chore] Deduplicate esbuild, upgrade `@vitejs/plugin-react` to v5 (#468)
-- 2026-03-30 [chore] Replace `@uidotdev/usehooks` and `react-intersection-observer` with internal implementations (#466)
-- 2026-03-30 [chore] Stabilise `eslint-plugin-react-hooks` to `^6.0.0`, pin Radix overrides (#465)
-- 2026-03-30 [chore] Remove `master` from branch detection fallback in fixup commit hook (#467)
+### Fast-Track Changes (released independently)
+
+#### Features
+
+- Search results now include playlists and requests, not just phrases
+- Show a login button on the public learn page for logged-out visitors
+- Show card due dates (overdue/today/upcoming) in the deck management table
+- Add "Add all cards to deck" button to playlist view
+- Add "Remove image" button to avatar editor in profile settings
+- Prevent translation language from matching phrase language across all forms
+- Add manage deck page with sortable card table and status controls
+- Add inline phrase creation on playlist page, simplify detail view
+
+#### Improvements
+
+- Feed filtering is now instant: client-side results appear immediately while server backfills
+- Playlist displays more compactly in the feed
+- Languages Known field on profile is more compact on mobile using container queries
+- Card status controls disable while mutations are pending
+- Replace purple bookmark badge with purple-bg quote icon in feed
+- Improve review rating buttons spacing with two-line layout
+- Improve warmup preview wording to be clearer about new cards
+- Always show avatar fallback instead of blank space
+- Search overlay: hide keyboard shortcuts on mobile
+- Fade-in animation and height-hold for "save & add another" remount
+
+#### Fixes
+
+- Fix sticky app-nav: `overflow-x-hidden` was creating a scroll container, switched to `overflow-x-clip`
+- Fix comment reply dialog layout for narrow screens
+- Fix FSRS due dates, reviewed display, and related cleanup
+- Fix feed filtering hybrid client + server approach for instant results
+- Fix badge text wrapping on playlist item; fix profile page not filling width
+- Fix phrase card race condition on direct URL navigation
+- Fix request-header bunchup of badge and buttons
+- Fix review session failing when user_card duplicates exist in DB
+- Fix sidebar trigger poking through modal overlays
+- Fix event propagation on card status heart button
+- Fix flaky e2e nav tests: seed data, dropdown logic, CI timeouts
+
+#### Chore
+
+- Upgrade Zod from 3.25 to 4.3.6
+- Deduplicate esbuild, upgrade `@vitejs/plugin-react` to v5
+- Replace `@uidotdev/usehooks` and `react-intersection-observer` with internal implementations
+- Stabilise `eslint-plugin-react-hooks` to `^6.0.0`, pin Radix overrides
+- Remove `master` from branch detection fallback in fixup hook
+- RequestForm extracted into a reusable component shared between new-request page and feed composer
+- UpdatePlaylistDialog migrated to react-hook-form with reusable CoverImageField
+
+### Testing
+
+- 44 new vitest unit tests across notifications, profile, and deck schemas (195 total)
+- 5 new scenetest spec files covering notifications, review answer mode, comments, playlists, and display preferences
+- 10 additional scenetest scenes documented but blocked on `setup:` directive (tracked in `scenetest/SETUP_DIRECTIVE.md`)
+- Comprehensive seed data additions: 8 Kannada phrases, 6 playlists, 10 comments with replies, 18 card reviews
+- RLS security audit: all 22 uid-scoped tables verified, grade A
 
 ## v0.17 - Unified Search, Language Filter Pills, Social Media Embeds
 
