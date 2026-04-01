@@ -13,6 +13,7 @@ import { useUserId } from '@/lib/use-auth'
 
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -32,6 +33,7 @@ export function ArchiveDeckButton({
 }) {
 	const [open, setOpen] = useState(false)
 	const userId = useUserId()
+	const navigate = useNavigate()
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const { data } = await supabase
@@ -54,6 +56,13 @@ export function ArchiveDeckButton({
 					'The deck has been re-activated!'
 				:	'The deck has been archived and hidden from your active decks.'
 			)
+
+			if (!data.archived) {
+				void navigate({
+					to: '/learn/$lang/feed',
+					params: { lang },
+				})
+			}
 		},
 		onError: (error) => {
 			if (error) {

@@ -17,6 +17,7 @@ import { Loader } from '@/components/ui/loader'
 import { useDecks } from '@/features/deck/hooks'
 import { useDeckLangs } from '@/lib/hooks'
 import { RequireAuth } from '@/components/require-auth'
+import { Archive } from 'lucide-react'
 
 const SearchSchema = z.object({
 	lang: z.string().optional(),
@@ -57,6 +58,7 @@ function NewDeckFormInner() {
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks, isLoading: decksLoading } = useDecks()
 	const deckLangs = useDeckLangs()
+	const archivedCount = decks?.filter((d) => d.archived).length ?? 0
 	const search = Route.useSearch()
 	const {
 		control,
@@ -135,6 +137,17 @@ function NewDeckFormInner() {
 							</Link>
 						</div>
 					</form>
+					{archivedCount > 0 && (
+						<Link
+							to="/learn/archived"
+							className="mt-4 flex items-center gap-2 rounded-2xl p-3 text-sm text-5-mlo-neutral hover:bg-1-mlo-primary hover:text-7-mid-primary"
+						>
+							<Archive className="size-4" />
+							{archivedCount === 1 ?
+								'1 of your decks is archived; view or re-enable it here'
+							:	`${archivedCount} of your decks are archived; view or re-enable them here`}
+						</Link>
+					)}
 					<ShowAndLogError
 						text="Problem creating new deck"
 						error={createNewDeck.error}
