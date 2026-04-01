@@ -31,7 +31,7 @@ export const PhraseTinyCard = ({
 		return (
 			<CardlikeFlashcard
 				className={cn(
-					`mb-4 flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
+					`flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2`,
 					className
 				)}
 				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
@@ -57,7 +57,7 @@ export const PhraseTinyCard = ({
 			params={{ lang: phrase.lang, id: pid }}
 		>
 			<CardlikeFlashcard
-				className="mb-4 flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2"
+				className="flex h-30 min-w-50 basis-50 flex-col justify-start px-3 py-2"
 				style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
 			>
 				<div className="line-clamp-3">
