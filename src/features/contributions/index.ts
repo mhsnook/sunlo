@@ -5,4 +5,8 @@
 export { UserContributionsTabs } from './schemas'
 
 // Hooks
-export { useAnyonesPhraseRequests, useAnyonesPhrases } from './hooks'
+export {
+	useAnyonesPhraseRequests,
+	useAnyonesPhrases,
+	useAnyonesComments,
+} from './hooks'

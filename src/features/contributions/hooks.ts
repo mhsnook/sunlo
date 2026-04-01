@@ -1,7 +1,9 @@
 import { phraseRequestsCollection } from '@/features/requests/collections'
+import { commentsCollection } from '@/features/comments/collections'
 import { phrasesFull } from '@/features/phrases/live'
 import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { RequestCommentType } from '@/features/comments/schemas'
 import { UseLiveQueryResult, uuid } from '@/types/main'
 import { eq } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
@@ -33,6 +35,30 @@ export function useAnyonesPhrases(
 			if (lang) query = query.where(({ phrase }) => eq(phrase.lang, lang))
 
 			return query.orderBy(({ phrase }) => phrase.created_at, 'desc')
+		},
+		[lang, uid]
+	)
+}
+
+export function useAnyonesComments(
+	uid: uuid,
+	lang?: string
+): UseLiveQueryResult<
+	{ comment: RequestCommentType; request: PhraseRequestType }[]
+> {
+	return useLiveQuery(
+		(q) => {
+			let query = q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) => eq(comment.uid, uid))
+				.join(
+					{ request: phraseRequestsCollection },
+					({ comment, request }) => eq(comment.request_id, request.id),
+					'inner'
+				)
+			if (lang) query = query.where(({ request }) => eq(request.lang, lang))
+
+			return query.orderBy(({ comment }) => comment.created_at, 'desc')
 		},
 		[lang, uid]
 	)
