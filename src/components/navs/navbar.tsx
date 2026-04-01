@@ -17,7 +17,7 @@ export default function Navbar() {
 			<div className="flex h-12 items-center">
 				<Title />
 			</div>
-			<div className="flex items-center gap-1">
+			<div className="flex items-center gap-2">
 				<NotificationBell />
 				<SidebarTrigger />
 			</div>
