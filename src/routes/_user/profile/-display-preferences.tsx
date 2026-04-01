@@ -2,12 +2,12 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { BookA, BookText, Columns2, Grid2x2 } from 'lucide-react'
+import { Columns2, Grid2x2 } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import {
-	FontPreferenceSchema,
+	type FontPreferenceType,
 	MyProfileSchema,
 	MyProfileType,
 	ReviewAnswerModeSchema,
@@ -20,6 +20,7 @@ import {
 	FancySelectField,
 	type FancySelectOption,
 } from '@/components/fields/fancy-select-field'
+import { cn } from '@/lib/utils'
 
 export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 	return (
@@ -30,45 +31,14 @@ export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 	)
 }
 
-const fontPreferenceOptions: Array<FancySelectOption> = [
-	{
-		value: 'default',
-		label: 'Default',
-		description: 'Instrument Sans',
-		Icon: BookA,
-	},
-	{
-		value: 'dyslexic',
-		label: 'Dyslexia-friendly',
-		description: 'OpenDyslexic',
-		Icon: BookText,
-	},
-]
-
-const FontPreferenceFormSchema = z.object({
-	font_preference: FontPreferenceSchema,
-})
-
-type FontPreferenceFormInputs = z.infer<typeof FontPreferenceFormSchema>
-
 function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 	const currentPref = profile.font_preference ?? 'default'
 
-	const {
-		control,
-		handleSubmit,
-		reset,
-		formState: { errors, isDirty },
-	} = useForm<FontPreferenceFormInputs>({
-		resolver: zodResolver(FontPreferenceFormSchema),
-		defaultValues: { font_preference: currentPref },
-	})
-
 	const updateFontPref = useMutation({
-		mutationFn: async (values: FontPreferenceFormInputs) => {
+		mutationFn: async (font_preference: FontPreferenceType) => {
 			const { data } = await supabase
 				.from('user_profile')
-				.update({ font_preference: values.font_preference })
+				.update({ font_preference })
 				.eq('uid', profile.uid)
 				.select()
 				.maybeSingle()
@@ -78,7 +48,6 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 		onSuccess: (data) => {
 			if (data)
 				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			reset({ font_preference: data?.font_preference ?? currentPref })
 			toastSuccess('Font preference updated')
 		},
 		onError: (error) => {
@@ -87,8 +56,14 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 		},
 	})
 
+	const handleFontChange = (pref: FontPreferenceType) => {
+		if (pref !== currentPref) {
+			updateFontPref.mutate(pref)
+		}
+	}
+
 	return (
-		<div className="space-y-4">
+		<div className="space-y-4" data-testid="font-preference">
 			<div className="space-y-2">
 				<Label>Font Style</Label>
 				<p className="text-muted-foreground text-sm">
@@ -96,37 +71,44 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					(OpenDyslexic) may help with readability.
 				</p>
 			</div>
-			<form
-				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={handleSubmit((data) => updateFontPref.mutate(data))}
-				className="space-y-4"
-			>
-				<FancySelectField<FontPreferenceFormInputs>
-					name="font_preference"
-					control={control}
-					error={errors.font_preference}
-					options={fontPreferenceOptions}
-					data-testid="font-preference"
-				/>
-				<div className="space-x-2">
-					<Button
-						type="submit"
-						disabled={!isDirty}
-						data-testid="update-font-button"
-					>
-						Update font
-					</Button>
-					<Button
-						variant="neutral"
-						type="button"
-						onClick={() => reset()}
-						disabled={!isDirty}
-					>
-						Reset
-					</Button>
-				</div>
-			</form>
+			<div className="flex gap-2">
+				<button
+					type="button"
+					onClick={() => handleFontChange('default')}
+					disabled={updateFontPref.isPending}
+					data-testid="font-preference-default"
+					className={cn(
+						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						currentPref === 'default' ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<span className="font-instrument block font-medium">Default</span>
+					<span className="text-muted-foreground font-instrument text-sm">
+						Instrument Sans
+					</span>
+				</button>
+				<button
+					type="button"
+					onClick={() => handleFontChange('dyslexic')}
+					disabled={updateFontPref.isPending}
+					data-testid="font-preference-dyslexic"
+					className={cn(
+						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						currentPref === 'dyslexic' ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<span className="font-dyslexic block font-medium">
+						Dyslexia-friendly
+					</span>
+					<span className="font-dyslexic text-muted-foreground text-sm">
+						OpenDyslexic
+					</span>
+				</button>
+			</div>
 		</div>
 	)
 }
