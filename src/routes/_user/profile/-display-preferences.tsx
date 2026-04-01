@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Columns2, Grid2x2 } from 'lucide-react'
+import { BookA, BookType, Columns2, Grid2x2 } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
@@ -78,16 +78,19 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					disabled={updateFontPref.isPending}
 					data-testid="font-preference-default"
 					className={cn(
-						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
 						currentPref === 'default' ?
 							'border-primary bg-1-mlo-primary'
 						:	'border-border hover:border-4-mlo-primary'
 					)}
 				>
-					<span className="font-instrument block font-medium">Default</span>
-					<span className="text-muted-foreground font-instrument text-sm">
-						Instrument Sans
-					</span>
+					<BookA className="size-5 shrink-0" />
+					<div>
+						<span className="font-instrument block font-medium">Default</span>
+						<span className="text-muted-foreground font-instrument text-sm">
+							Instrument Sans
+						</span>
+					</div>
 				</button>
 				<button
 					type="button"
@@ -95,18 +98,21 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					disabled={updateFontPref.isPending}
 					data-testid="font-preference-dyslexic"
 					className={cn(
-						'flex-1 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
 						currentPref === 'dyslexic' ?
 							'border-primary bg-1-mlo-primary'
 						:	'border-border hover:border-4-mlo-primary'
 					)}
 				>
-					<span className="font-dyslexic block font-medium">
-						Dyslexia-friendly
-					</span>
-					<span className="font-dyslexic text-muted-foreground text-sm">
-						OpenDyslexic
-					</span>
+					<BookType className="size-5 shrink-0" />
+					<div>
+						<span className="font-dyslexic block font-medium">
+							Dyslexia-friendly
+						</span>
+						<span className="font-dyslexic text-muted-foreground text-sm">
+							OpenDyslexic
+						</span>
+					</div>
 				</button>
 			</div>
 		</div>
