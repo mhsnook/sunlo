@@ -136,7 +136,7 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 					</p>
 				</div>
 
-				<div className="flex justify-center">
+				<div className="sticky bottom-0 -mx-2 -mb-2 flex justify-center bg-background px-2 py-4">
 					<Button onClick={handleStartReview} size="lg" className="min-w-48">
 						Start Review
 					</Button>
@@ -159,13 +159,13 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				</p>
 			</div>
 
-			<div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto rounded border px-2 py-4 shadow-inner">
+			<div className="mb-3 flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto rounded border px-2 pb-6 pt-4 shadow-inner">
 				{unreviewedInOrder.map((pid) => (
 					<PreviewCard key={pid} pid={pid} />
 				))}
 			</div>
 
-			<div className="bg-muted mt-auto flex justify-center border-t p-4">
+			<div className="sticky bottom-0 -mx-2 -mb-2 flex justify-center border-t bg-muted px-2 py-4">
 				<Button onClick={handleStartReview} size="lg" className="min-w-48">
 					Start Review
 				</Button>
