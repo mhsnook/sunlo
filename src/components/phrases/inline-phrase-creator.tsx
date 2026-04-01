@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { Plus, ChevronUp } from 'lucide-react'
+import { ChevronUp } from 'lucide-react'
 import { Controller } from 'react-hook-form'
 
 import type { Tables } from '@/types/supabase'
@@ -56,7 +56,7 @@ export function InlinePhraseCreator({
 	lang,
 	onPhraseCreated,
 	onCancel,
-	submitLabel = 'Create and select phrase',
+	submitLabel = 'Create Phrase',
 	allowAddAnother = false,
 }: InlinePhraseCreatorProps) {
 	const preferredTranslationLang = usePreferredTranslationLang(lang)
@@ -273,7 +273,7 @@ function InlinePhraseForm({
 					>
 						{mutation.isPending ?
 							<IconSizedLoader />
-						:	<Plus className="h-4 w-4" />}
+						:	null}
 						{submitLabel}
 					</Button>
 					{allowAddAnother && (
