@@ -25,6 +25,7 @@ export {
 	useDeckRoutineStats,
 	useDeckActivityChartData,
 	usePreferredTranslationLang,
+	useReviewAnswerMode,
 	type DeckPids,
 } from './hooks'
 

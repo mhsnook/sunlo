@@ -223,6 +223,71 @@ natural wrapper element to label.
 | `logged-out-learn-page`     | data-testid | Learn route        | Learn page for visitors                            |
 | `browse-languages-prompt`   | data-testid | Learn page         | Prompt to browse languages                         |
 
+## Notifications
+
+| Selector                    | Attribute   | Component/Location  | Description                             |
+| --------------------------- | ----------- | ------------------- | --------------------------------------- |
+| `notification-bell`         | data-testid | Navbar              | Bell icon link to /notifications        |
+| `notification-badge`        | data-testid | Notification bell   | Unread count badge on bell              |
+| `notifications-page`        | data-testid | Notifications route | Notifications page container            |
+| `notifications-empty-state` | data-testid | Notifications route | Empty state when no notifications exist |
+| `notification-item`         | data-testid | Notification list   | Individual notification row             |
+| `mark-all-read-button`      | data-testid | Notifications page  | "Mark all as read" button               |
+
+## Review Answer Mode
+
+| Selector                           | Attribute   | Component/Location | Description                           |
+| ---------------------------------- | ----------- | ------------------ | ------------------------------------- |
+| `review-answer-mode-radio`         | data-testid | Deck settings      | Radio group for answer mode selection |
+| `review-answer-mode-2-buttons`     | data-testid | Radio group        | Option for 2-button mode              |
+| `review-answer-mode-4-buttons`     | data-testid | Radio group        | Option for 4-button mode              |
+| `update-review-answer-mode-button` | data-testid | Deck settings      | Save button for answer mode           |
+| `clear-review-answer-mode-button`  | data-testid | Deck settings      | Clear deck override button            |
+| `rating-again-button`              | data-testid | Review card        | "Again" / "Forgot" button             |
+| `rating-hard-button`               | data-testid | Review card        | "Hard" button (4-button mode only)    |
+| `rating-good-button`               | data-testid | Review card        | "Good" / "Correct!" button            |
+| `rating-easy-button`               | data-testid | Review card        | "Easy" button (4-button mode only)    |
+
+## Display Preferences
+
+| Selector                       | Attribute   | Component/Location | Description                            |
+| ------------------------------ | ----------- | ------------------ | -------------------------------------- |
+| `display-preferences-page`     | data-testid | Profile page       | Display preferences section container  |
+| `font-preference-default`      | data-testid | Display prefs      | Default font radio option              |
+| `font-preference-dyslexic`     | data-testid | Display prefs      | OpenDyslexic font radio option         |
+| `review-answer-mode-2-buttons` | data-testid | Display prefs      | 2-button mode option (profile-level)   |
+| `review-answer-mode-4-buttons` | data-testid | Display prefs      | 4-button mode option (profile-level)   |
+| `upvote-comment-button`        | data-testid | Comment item       | Upvote button on a comment             |
+| `phrase-checkbox`              | data-testid | Phrase picker      | Checkbox for selecting a phrase        |
+| `add-selected-phrases-button`  | data-testid | Phrase picker      | Confirm button to add selected phrases |
+
+## Comments & Answers
+
+| Selector                    | Attribute   | Component/Location  | Description                           |
+| --------------------------- | ----------- | ------------------- | ------------------------------------- |
+| `add-comment-button`        | data-testid | Request detail page | Button to open comment dialog         |
+| `add-comment-dialog`        | data-testid | Dialog              | Add comment dialog container          |
+| `comment-content-input`     | data-testid | Comment dialog      | Textarea for comment content          |
+| `submit-comment-button`     | data-testid | Comment dialog      | Submit comment button                 |
+| `reply-to-comment-button`   | data-testid | Comment item        | Reply button on a comment             |
+| `comment-reply`             | data-testid | Comment thread      | A reply nested under a parent comment |
+| `comment-phrase-link-badge` | data-testid | Comment item        | Badge showing linked phrase           |
+| `attach-phrase-button`      | data-testid | Comment dialog      | Button to attach a phrase to comment  |
+| `upvote-request-button`     | data-testid | Request detail page | Upvote button on request              |
+
+## Playlists (HIN/KAN)
+
+| Selector                     | Attribute   | Component/Location | Description                    |
+| ---------------------------- | ----------- | ------------------ | ------------------------------ |
+| `playlist-list`              | data-testid | Playlists page     | List container for playlists   |
+| `playlist-item`              | data-testid | Playlists list     | Individual playlist card       |
+| `playlist-phrase-list`       | data-testid | Playlist detail    | List of phrases in a playlist  |
+| `new-playlist-form`          | data-testid | New playlist page  | Create playlist form container |
+| `playlist-title-input`       | data-testid | New playlist form  | Title input for new playlist   |
+| `playlist-description-input` | data-testid | New playlist form  | Description input              |
+| `create-playlist-button`     | data-testid | New playlist form  | Submit button for new playlist |
+| `upvote-playlist-button`     | data-testid | Playlist detail    | Upvote button on playlist      |
+
 ---
 
 ## Toasts

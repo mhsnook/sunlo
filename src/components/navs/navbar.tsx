@@ -6,6 +6,7 @@ import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCanGoBack } from '@tanstack/react-router'
 import type { MyRouterContext } from '@/routes/__root'
+import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export default function Navbar() {
 	return (
@@ -16,7 +17,10 @@ export default function Navbar() {
 			<div className="flex h-12 items-center">
 				<Title />
 			</div>
-			<SidebarTrigger />
+			<div className="flex items-center gap-1">
+				<NotificationBell />
+				<SidebarTrigger />
+			</div>
 		</nav>
 	)
 }

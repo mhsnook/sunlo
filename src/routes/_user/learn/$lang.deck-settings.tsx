@@ -1,4 +1,4 @@
-import { CSSProperties, useState } from 'react'
+import { type CSSProperties, Fragment, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
@@ -10,7 +10,9 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Briefcase,
 	Cat,
+	Columns2,
 	GraduationCap,
+	Grid2x2,
 	IceCreamBowl,
 	Rocket,
 	Users,
@@ -29,10 +31,14 @@ import {
 } from '@/components/fields/fancy-select-field'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { decksCollection } from '@/features/deck/collections'
+import { DeckMetaRawSchema } from '@/features/deck/schemas'
 import { Tables } from '@/types/supabase'
 import { useProfile } from '@/features/profile/hooks'
+import { type ReviewAnswerModeType } from '@/features/profile/schemas'
+import { cn } from '@/lib/utils'
 import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { InfoDialog } from '@/components/info-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
@@ -76,6 +82,10 @@ function DeckSettingsPage() {
 						<PreferredTranslationLanguageForm
 							lang={meta.lang}
 							preferred_translation_lang={meta.preferred_translation_lang}
+						/>
+						<ReviewAnswerModeForm
+							lang={meta.lang}
+							review_answer_mode={meta.review_answer_mode}
 						/>
 					</>
 				:	null}
@@ -444,10 +454,6 @@ function PreferredTranslationLanguageForm({
 		})
 	}
 
-	const handleReset = () => {
-		setSelectedLang(preferred_translation_lang)
-	}
-
 	const handleClearOverride = () => {
 		updatePreferredLangMutation.mutate({
 			preferred_translation_lang: null,
@@ -492,17 +498,212 @@ function PreferredTranslationLanguageForm({
 					/>
 				</div>
 				<div className="flex flex-wrap gap-2">
-					<Button onClick={handleSave} disabled={!isDirty}>
+					<Button
+						onClick={handleSave}
+						disabled={!isDirty || updatePreferredLangMutation.isPending}
+					>
 						Save preference
 					</Button>
-					<Button variant="neutral" onClick={handleReset} disabled={!isDirty}>
-						Reset
+					<Button
+						variant="neutral"
+						onClick={handleClearOverride}
+						disabled={updatePreferredLangMutation.isPending}
+					>
+						Clear
 					</Button>
-					{preferred_translation_lang && (
-						<Button variant="soft" onClick={handleClearOverride}>
-							Use profile default
-						</Button>
-					)}
+				</div>
+			</CardContent>
+		</div>
+	)
+}
+
+const reviewAnswerModeOptions: Array<FancySelectOption> = [
+	{
+		value: '4-buttons',
+		label: 'Show 4 answer choices',
+		description: 'Again, Hard, Good, Easy',
+		Icon: Grid2x2,
+	},
+	{
+		value: '2-buttons',
+		label: 'Show 2 answer choices',
+		description: 'Forgot, Correct!',
+		Icon: Columns2,
+	},
+]
+
+function ReviewAnswerModeRadio({
+	value,
+	onChange,
+}: {
+	value: string | null
+	onChange: (val: string) => void
+}) {
+	return (
+		<RadioGroup
+			onValueChange={onChange}
+			value={value ?? ''}
+			className="gap-0"
+			data-testid="review-answer-mode-radio"
+		>
+			{reviewAnswerModeOptions.map((option) => (
+				<Fragment key={option.value}>
+					<RadioGroupItem
+						value={String(option.value)}
+						id={`deck-review-mode-${option.value}`}
+						className="sr-only"
+					/>
+					<Label
+						htmlFor={`deck-review-mode-${option.value}`}
+						data-testid={`review-answer-mode-${option.value}`}
+						className={cn(
+							'flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors',
+							value !== null && String(value) === String(option.value) ?
+								'bg-1-mlo-primary border-2-mlo-primary'
+							:	'hover:bg-base-mlo-primary hover:border-input'
+						)}
+					>
+						{option.Icon && (
+							<span
+								className={`transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2 ${
+									value !== null && String(value) === String(option.value) ?
+										'bg-primary-foresoft text-primary-foreground'
+									:	''
+								}`}
+							>
+								<option.Icon className="size-5" />
+							</span>
+						)}
+						<div className="space-y-1">
+							<div>{option.label}</div>
+							<div className="text-sm font-medium opacity-60">
+								{option.description}
+							</div>
+						</div>
+					</Label>
+				</Fragment>
+			))}
+		</RadioGroup>
+	)
+}
+
+function ReviewAnswerModeForm({
+	lang,
+	review_answer_mode,
+}: {
+	lang: string
+	review_answer_mode: ReviewAnswerModeType | null
+}) {
+	const userId = useUserId()
+	const { data: profile } = useProfile()
+	const profileMode = profile?.review_answer_mode ?? '4-buttons'
+	const [selected, setSelected] = useState<string | null>(review_answer_mode)
+
+	const isDirty = selected !== review_answer_mode
+	const hasOverride = review_answer_mode !== null
+
+	const updateAnswerModeMutation = useMutation<
+		Tables<'user_deck'>,
+		PostgrestError,
+		{ review_answer_mode: string | null }
+	>({
+		mutationKey: ['user', lang, 'deck', 'settings', 'review-answer-mode'],
+		mutationFn: async (values) => {
+			const { data } = await supabase
+				.from('user_deck')
+				.update({ review_answer_mode: values.review_answer_mode })
+				.eq('lang', lang)
+				.eq('uid', userId!)
+				.throwOnError()
+				.select()
+			if (!data)
+				throw new Error(
+					'Failed to update review answer mode: did not find deck'
+				)
+			return data[0]
+		},
+		onSuccess: (data) => {
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
+			setSelected(data.review_answer_mode as ReviewAnswerModeType | null)
+			toastSuccess(
+				data.review_answer_mode ?
+					'Review answer mode updated for this deck.'
+				:	'Deck will now use your profile setting.'
+			)
+		},
+		onError: (error) => {
+			toastError(
+				'There was some error; please refresh the page to see if settings updated correctly.'
+			)
+			console.log(`Review answer mode update error`, { error })
+		},
+	})
+
+	const handleSave = () => {
+		updateAnswerModeMutation.mutate({ review_answer_mode: selected })
+	}
+
+	const handleClear = () => {
+		if (hasOverride) {
+			updateAnswerModeMutation.mutate({ review_answer_mode: null })
+		} else {
+			setSelected(null)
+		}
+	}
+
+	return (
+		<div className="rounded shadow">
+			<CardHeader className="pb-0">
+				<CardTitle className="flex items-center justify-between">
+					<span className="h4">Review answer choices</span>
+					<InfoDialog title="Review Answer Choices">
+						<p>
+							In Spaced-Repetition (SRS) systems the default is usually to show
+							4 options: &ldquo;Again&rdquo; when you couldn&rsquo;t remember
+							the card, and three options for &ldquo;Hard, Good, Easy&rdquo;
+							when you could. The SRS algorithm benefits slightly from the
+							increased precision, but not very much. So some users prefer just
+							2 buttons, &ldquo;No&rdquo; and &ldquo;Yes&rdquo;, which are
+							equivalent to &ldquo;Again&rdquo; and &ldquo;Good&rdquo;.
+						</p>
+					</InfoDialog>
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				<p className="text-muted-foreground text-sm">
+					Override your profile default for this deck. If not set, your profile
+					setting will be used.
+				</p>
+				<p className="text-muted-foreground text-sm">
+					{review_answer_mode ?
+						'Overriding the profile default: '
+					:	'Currently using profile default: '}
+					<strong>
+						{profileMode === '2-buttons' ?
+							'2 buttons (Forgot, Correct!)'
+						:	'4 buttons (Again, Hard, Good, Easy)'}
+					</strong>
+				</p>
+				<ReviewAnswerModeRadio value={selected} onChange={setSelected} />
+				<div className="flex flex-wrap gap-2">
+					<Button
+						onClick={handleSave}
+						disabled={!isDirty || updateAnswerModeMutation.isPending}
+						data-testid="update-review-answer-mode-button"
+					>
+						Update answer mode
+					</Button>
+					<Button
+						variant="neutral"
+						disabled={
+							(!hasOverride && selected === null) ||
+							updateAnswerModeMutation.isPending
+						}
+						onClick={handleClear}
+						data-testid="clear-review-answer-mode-button"
+					>
+						Clear
+					</Button>
 				</div>
 			</CardContent>
 		</div>

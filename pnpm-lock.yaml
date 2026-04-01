@@ -98,14 +98,14 @@ importers:
         specifier: ^0.1.3
         version: 0.1.3
       '@scenetest/checks-react':
-        specifier: ^0.2.0
-        version: 0.2.0(react@19.2.3)
+        specifier: ^0.3.0
+        version: 0.3.0(react@19.2.3)
       '@scenetest/scenes':
-        specifier: ^0.2.0
-        version: 0.2.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.3.0
+        version: 0.3.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       '@scenetest/vite-plugin':
-        specifier: ^0.2.0
-        version: 0.2.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.3.0
+        version: 0.3.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.1.18)
@@ -303,13 +303,13 @@ packages:
     resolution: {integrity: sha512-HoGuUs4sCZNezVEKdVcwqmZN8GoHirLUcLaYVNBK2J0DadGtdcqgr3BCbvH8+XUo4NGjNl3VOtSjEKNzqfFgKw==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/parser@7.28.5':
-    resolution: {integrity: sha512-KKBU1VGYR7ORr3At5HAtUQ+TV3SzRCXmA/8OdDZiLDBIZxVyzXuztPjfLd3BV1PRAQGCMWWSHYhL0F8d5uHBDQ==}
+  '@babel/parser@7.29.0':
+    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/parser@7.29.0':
-    resolution: {integrity: sha512-IyDgFV5GeDUVX4YdF/3CPULtVGSXXMLh1xVIgdCgxApktqnQV0r7/8Nqthg+8YLGaAtdyIlo2qIdZrbCv4+7ww==}
+  '@babel/parser@7.29.2':
+    resolution: {integrity: sha512-4GgRzy/+fsBa72/RZVJmGKPmZu9Byn8o4MoLpmNe1m8ZfYnz5emHLQz3U4gLud6Zwl0RZIcgiLD7Uq7ySFuDLA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -1092,33 +1092,33 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@scenetest/checks-panel@0.2.0':
-    resolution: {integrity: sha512-e7j2ajPXGsdwJNYJ+HUZFGHecFp72RFVDhp1nH3FUCxT0xh24eczQyer3gXcEqsatupX3hHzcekccOts/4JxXA==}
+  '@scenetest/checks-panel@0.3.0':
+    resolution: {integrity: sha512-SdGZKnLbjBLG+NGqVQzutxGZDrEQ6FdUo/45cS4gKdmonZ/ocT6GlhWMMiLIB/WwNAh3XpjLe0PBu5xvUnKx7w==}
 
-  '@scenetest/checks-react@0.2.0':
-    resolution: {integrity: sha512-nzJKHHGNsuHygIiT+MdkMvOjvaWSsk+yasV49L5SiZgGmYpakHbqApbYgdDe2iAVeuwgQ5UkZ8gTBJ0YDCj/4g==}
+  '@scenetest/checks-react@0.3.0':
+    resolution: {integrity: sha512-LOl+9VICD5m9nbZwoFqDN1HZCnU8sd2i5kKFL1iRQbH9DECvE/MeFbr1aI+5UHqR2bpygpSIZHvJEE/KlhfD8Q==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  '@scenetest/checks@0.2.0':
-    resolution: {integrity: sha512-Dr0jLu6r1D6ng6fJ6flzkGvs8FL5xFxfIC5VeH2ioPa85fBP/Nfzb+D/QzyF1WUEpsTRhSE3GBJTAr/aPanC/w==}
+  '@scenetest/checks@0.3.0':
+    resolution: {integrity: sha512-6rWY4BtoRqCk00aEcz5Zzz5uIHPGIq2EPA6K1018ef/+WePGzCei/Rqc05TJ2I/WtwNDED3D/lhXKcsJJhYY+Q==}
 
-  '@scenetest/scenes-panel@0.2.0':
-    resolution: {integrity: sha512-NR40Ybi9qRlx8tzWv5VnqoeXj8+NY3j52cYFNwJf16FFay47nMygo9xZHYWCBYjwLh5CFE1/E25wNmGETvbwDg==}
+  '@scenetest/scenes-panel@0.3.0':
+    resolution: {integrity: sha512-6Ai+LbZ/n9GEf9JLNii79acmfqUpzZmaXkYsET06QMUFbkIZcv8undmIQA7UcgesWbBz3Pl80RIQTNikDABpZg==}
 
-  '@scenetest/scenes@0.2.0':
-    resolution: {integrity: sha512-OaaB3HpFwYbiA2dUv4TjYu6OE7wj1Gq2ey24PbPfFB9AGs6Ok5rzN99Y18URjMyEgau6SAgjjI5DDyVLk6o5vA==}
+  '@scenetest/scenes@0.3.0':
+    resolution: {integrity: sha512-gC7VOuSfUKlrHbVA3mW+xt833WLu9dk4ByCa2UrwwPo0Rrqt+4wqWohLADLnzCIdxuBRW/apfTEKjdWw2xEGtg==}
     hasBin: true
     peerDependencies:
-      vite: ^5.0.0
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
     peerDependenciesMeta:
       vite:
         optional: true
 
-  '@scenetest/vite-plugin@0.2.0':
-    resolution: {integrity: sha512-2xxviE/Qx2BS4GqtM83ihwg1gzYSlD/3tOy9vIlXgKII4s5LL5BZ19XWu7iPGHqbpovvHtitUAttv3sDoW4aDg==}
+  '@scenetest/vite-plugin@0.3.0':
+    resolution: {integrity: sha512-222E7AKiRiYE+MY5voYrViV72TQhru9NHm6Sv87gPx7DeAb2wIJzgz7E9+WimK/mxOQtSNlREh5aEN+xrY+tzw==}
     peerDependencies:
-      vite: ^5.0.0 || ^6.0.0 || ^7.0.0
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
@@ -1674,6 +1674,10 @@ packages:
 
   brace-expansion@5.0.3:
     resolution: {integrity: sha512-fy6KJm2RawA5RcHkLa1z/ScpBeA762UF9KmZQxwIbDtRJrgLzM10depAiEQ+CXYcoiqW1/m96OAAoke2nE9EeA==}
+    engines: {node: 18 || 20 || >=22}
+
+  brace-expansion@5.0.5:
+    resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
     engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
@@ -2468,8 +2472,16 @@ packages:
     resolution: {integrity: sha512-+G4CpNBxa5MprY+04MbgOw1v7So6n5JY166pFi9KfYwT78fxScCeSNQSNzp6dpPSW2rONOps6Ocam1wFhCgoVw==}
     engines: {node: 18 || 20 || >=22}
 
+  minimatch@10.2.5:
+    resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
+    engines: {node: 18 || 20 || >=22}
+
   minipass@7.1.2:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
+    engines: {node: '>=16 || 14 >=14.17'}
+
+  minipass@7.1.3:
+    resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
     engines: {node: '>=16 || 14 >=14.17'}
 
   minizlib@3.1.0:
@@ -2942,6 +2954,10 @@ packages:
 
   strip-ansi@7.1.2:
     resolution: {integrity: sha512-gmBGslpoQJtgnMAvOVqGZpEz9dyoKTCzy2nfz/n8aIFhN/jCE/rCmcxabB6jOOHV+0WNnylOxaxBQPSvcWklhA==}
+    engines: {node: '>=12'}
+
+  strip-ansi@7.2.0:
+    resolution: {integrity: sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==}
     engines: {node: '>=12'}
 
   strip-json-comments@3.1.1:
@@ -3463,11 +3479,11 @@ snapshots:
       '@babel/template': 7.28.6
       '@babel/types': 7.29.0
 
-  '@babel/parser@7.28.5':
-    dependencies:
-      '@babel/types': 7.28.5
-
   '@babel/parser@7.29.0':
+    dependencies:
+      '@babel/types': 7.29.0
+
+  '@babel/parser@7.29.2':
     dependencies:
       '@babel/types': 7.29.0
 
@@ -3522,7 +3538,7 @@ snapshots:
       '@babel/code-frame': 7.29.0
       '@babel/generator': 7.29.1
       '@babel/helper-globals': 7.28.0
-      '@babel/parser': 7.29.0
+      '@babel/parser': 7.29.2
       '@babel/template': 7.28.6
       '@babel/types': 7.29.0
       debug: 4.4.3
@@ -3739,7 +3755,7 @@ snapshots:
     dependencies:
       string-width: 5.1.2
       string-width-cjs: string-width@4.2.3
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
       strip-ansi-cjs: strip-ansi@6.0.1
       wrap-ansi: 8.1.0
       wrap-ansi-cjs: wrap-ansi@7.0.0
@@ -4082,20 +4098,20 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.5':
     optional: true
 
-  '@scenetest/checks-panel@0.2.0': {}
+  '@scenetest/checks-panel@0.3.0': {}
 
-  '@scenetest/checks-react@0.2.0(react@19.2.3)':
+  '@scenetest/checks-react@0.3.0(react@19.2.3)':
     dependencies:
-      '@scenetest/checks': 0.2.0
+      '@scenetest/checks': 0.3.0
       react: 19.2.3
 
-  '@scenetest/checks@0.2.0': {}
+  '@scenetest/checks@0.3.0': {}
 
-  '@scenetest/scenes-panel@0.2.0': {}
+  '@scenetest/scenes-panel@0.3.0': {}
 
-  '@scenetest/scenes@0.2.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@scenetest/scenes@0.3.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
-      '@scenetest/checks': 0.2.0
+      '@scenetest/checks': 0.3.0
       commander: 12.1.0
       glob: 10.5.0
       jiti: 2.6.1
@@ -4103,14 +4119,14 @@ snapshots:
     optionalDependencies:
       vite: 7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  '@scenetest/vite-plugin@0.2.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@scenetest/vite-plugin@0.3.0(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
-      '@babel/parser': 7.28.5
-      '@babel/traverse': 7.28.5
-      '@babel/types': 7.28.5
-      '@scenetest/checks': 0.2.0
-      '@scenetest/checks-panel': 0.2.0
-      '@scenetest/scenes-panel': 0.2.0
+      '@babel/parser': 7.29.2
+      '@babel/traverse': 7.29.0
+      '@babel/types': 7.29.0
+      '@scenetest/checks': 0.3.0
+      '@scenetest/checks-panel': 0.3.0
+      '@scenetest/scenes-panel': 0.3.0
       magic-string: 0.30.21
       vite: 7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
@@ -4733,6 +4749,10 @@ snapshots:
     dependencies:
       balanced-match: 4.0.4
 
+  brace-expansion@5.0.5:
+    dependencies:
+      balanced-match: 4.0.4
+
   braces@3.0.3:
     dependencies:
       fill-range: 7.1.1
@@ -5142,8 +5162,8 @@ snapshots:
     dependencies:
       foreground-child: 3.3.1
       jackspeak: 3.4.3
-      minimatch: 10.2.2
-      minipass: 7.1.2
+      minimatch: 10.2.5
+      minipass: 7.1.3
       package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
 
@@ -5621,7 +5641,14 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.3
 
-  minipass@7.1.2: {}
+  minimatch@10.2.5:
+    dependencies:
+      brace-expansion: 5.0.5
+
+  minipass@7.1.2:
+    optional: true
+
+  minipass@7.1.3: {}
 
   minizlib@3.1.0:
     dependencies:
@@ -5744,7 +5771,7 @@ snapshots:
   path-scurry@1.11.1:
     dependencies:
       lru-cache: 10.4.3
-      minipass: 7.1.2
+      minipass: 7.1.3
 
   pathe@2.0.3: {}
 
@@ -6040,7 +6067,7 @@ snapshots:
     dependencies:
       eastasianwidth: 0.2.0
       emoji-regex: 9.2.2
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
 
   string-width@7.2.0:
     dependencies:
@@ -6063,6 +6090,10 @@ snapshots:
       ansi-regex: 5.0.1
 
   strip-ansi@7.1.2:
+    dependencies:
+      ansi-regex: 6.2.2
+
+  strip-ansi@7.2.0:
     dependencies:
       ansi-regex: 6.2.2
 
@@ -6373,7 +6404,7 @@ snapshots:
     dependencies:
       ansi-styles: 6.2.3
       string-width: 5.1.2
-      strip-ansi: 7.1.2
+      strip-ansi: 7.2.0
 
   wrap-ansi@9.0.2:
     dependencies:

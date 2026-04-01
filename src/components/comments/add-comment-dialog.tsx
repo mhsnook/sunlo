@@ -29,6 +29,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import supabase from '@/lib/supabase-client'
 import {
 	commentPhraseLinksCollection,
+	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
 import {
@@ -84,7 +85,10 @@ export function AddCommentDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
-				<DialogTrigger className="@group flex w-full grow cursor-pointer flex-row items-center justify-between gap-2">
+				<DialogTrigger
+					data-testid="add-comment-button"
+					className="@group flex w-full grow cursor-pointer flex-row items-center justify-between gap-2"
+				>
 					<TinySelfAvatar className="grow-o shrink-0" />
 					<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
 						{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
@@ -96,6 +100,7 @@ export function AddCommentDialog({
 				authTitle="Login to Comment"
 				authMessage="You need to be logged in to join the conversation."
 				className="@container max-h-[90dvh] overflow-y-auto p-4 sm:p-6"
+				data-testid="add-comment-dialog"
 			>
 				<DialogTitle className="sr-only">
 					{parentCommentId ? 'Reply to comment' : 'Add a comment'}
@@ -188,10 +193,14 @@ function NewCommentForm({
 			}
 		},
 		onSuccess: (data) => {
-			// Parse and add to collection
+			// Parse and add to collection (RPC returns updated upvote_count from auto-upvote)
 			commentsCollection.utils.writeInsert(
 				RequestCommentSchema.parse(data.request_comment)
 			)
+			// RPC auto-upvotes; sync local upvote collection
+			commentUpvotesCollection.utils.writeInsert({
+				comment_id: data.request_comment.id,
+			})
 
 			if (
 				data.comment_phrase_links &&
@@ -245,7 +254,7 @@ function NewCommentForm({
 
 							<FormControl>
 								<Textarea
-									data-testid="comment-textarea"
+									data-testid="comment-content-input"
 									placeholder={
 										isReply ? 'Write a reply...' : (
 											'Share your thoughts or answer the request...'
@@ -295,7 +304,7 @@ function NewCommentForm({
 					{/* Submit button */}
 					<Button
 						type="submit"
-						data-testid="post-comment-button"
+						data-testid="submit-comment-button"
 						disabled={createCommentMutation.isPending}
 					>
 						{createCommentMutation.isPending ?

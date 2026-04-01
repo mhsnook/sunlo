@@ -16,6 +16,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 export default defineConfig({
 	baseUrl: 'http://localhost:5173',
 	scenes: './scenetest/scenes',
+	noKeyboardActor: true,
 	server: {
 		supabase: createClient(supabaseUrl, supabaseServiceKey),
 	},

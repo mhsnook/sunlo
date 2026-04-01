@@ -353,6 +353,78 @@ export type Database = {
 				}
 				Relationships: []
 			}
+			notification: {
+				Row: {
+					id: string
+					uid: string
+					type: Database['public']['Enums']['notification_type']
+					actor_uid: string
+					request_id: string | null
+					comment_id: string | null
+					phrase_id: string | null
+					read_at: string | null
+					created_at: string
+				}
+				Insert: {
+					id?: string
+					uid: string
+					type: Database['public']['Enums']['notification_type']
+					actor_uid: string
+					request_id?: string | null
+					comment_id?: string | null
+					phrase_id?: string | null
+					read_at?: string | null
+					created_at?: string
+				}
+				Update: {
+					id?: string
+					uid?: string
+					type?: Database['public']['Enums']['notification_type']
+					actor_uid?: string
+					request_id?: string | null
+					comment_id?: string | null
+					phrase_id?: string | null
+					read_at?: string | null
+					created_at?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'notification_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'notification_actor_uid_fkey'
+						columns: ['actor_uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'notification_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_comment_id_fkey'
+						columns: ['comment_id']
+						isOneToOne: false
+						referencedRelation: 'request_comment'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+				]
+			}
 			phrase: {
 				Row: {
 					added_by: string
@@ -1277,6 +1349,7 @@ export type Database = {
 					lang: string
 					learning_goal: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang: string | null
+					review_answer_mode: string | null
 					uid: string
 				}
 				Insert: {
@@ -1287,6 +1360,7 @@ export type Database = {
 					lang: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
+					review_answer_mode?: string | null
 					uid?: string
 				}
 				Update: {
@@ -1297,6 +1371,7 @@ export type Database = {
 					lang?: string
 					learning_goal?: Database['public']['Enums']['learning_goal']
 					preferred_translation_lang?: string | null
+					review_answer_mode?: string | null
 					uid?: string
 				}
 				Relationships: [
@@ -1378,6 +1453,7 @@ export type Database = {
 					created_at: string
 					font_preference: string | null
 					languages_known: Json
+					review_answer_mode: string | null
 					uid: string
 					updated_at: string | null
 					username: string | null
@@ -1387,6 +1463,7 @@ export type Database = {
 					created_at?: string
 					font_preference?: string | null
 					languages_known?: Json
+					review_answer_mode?: string | null
 					uid?: string
 					updated_at?: string | null
 					username?: string | null
@@ -1396,6 +1473,7 @@ export type Database = {
 					created_at?: string
 					font_preference?: string | null
 					languages_known?: Json
+					review_answer_mode?: string | null
 					uid?: string
 					updated_at?: string | null
 					username?: string | null
@@ -1682,6 +1760,8 @@ export type Database = {
 					language: string | null
 					learning_goal: Database['public']['Enums']['learning_goal'] | null
 					most_recent_review_at: string | null
+					preferred_translation_lang: string | null
+					review_answer_mode: string | null
 					uid: string | null
 				}
 				Relationships: [
@@ -1806,6 +1886,13 @@ export type Database = {
 				| 'invite'
 			language_proficiency: 'fluent' | 'proficient' | 'beginner'
 			learning_goal: 'moving' | 'family' | 'visiting'
+			notification_type:
+				| 'request_commented'
+				| 'comment_replied'
+				| 'phrase_translated'
+				| 'phrase_referenced'
+				| 'request_upvoted'
+				| 'change_suggested'
 		}
 		CompositeTypes: {
 			phrase_with_translations_input: {
@@ -2630,6 +2717,14 @@ export const Constants = {
 			],
 			language_proficiency: ['fluent', 'proficient', 'beginner'],
 			learning_goal: ['moving', 'family', 'visiting'],
+			notification_type: [
+				'request_commented',
+				'comment_replied',
+				'phrase_translated',
+				'phrase_referenced',
+				'request_upvoted',
+				'change_suggested',
+			],
 		},
 	},
 	storage: {

@@ -15,6 +15,7 @@ import {
 } from '@/features/comments/collections'
 import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
+import { notificationsCollection } from '@/features/notifications/collections'
 import { queryClient } from '@/lib/query-client'
 
 export const clearUser = async () => {
@@ -32,6 +33,7 @@ export const clearUser = async () => {
 		commentUpvotesCollection.cleanup(),
 		phraseRequestUpvotesCollection.cleanup(),
 		phrasePlaylistUpvotesCollection.cleanup(),
+		notificationsCollection.cleanup(),
 	])
 
 	// Also clear React Query cache for user queries to prevent stale data

@@ -17,6 +17,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UserWelcomeRouteImport } from './routes/_user/welcome'
 import { Route as UserSearchRouteImport } from './routes/_user/search'
 import { Route as UserProfileRouteImport } from './routes/_user/profile'
+import { Route as UserNotificationsRouteImport } from './routes/_user/notifications'
 import { Route as UserLearnRouteImport } from './routes/_user/learn'
 import { Route as UserGettingStartedRouteImport } from './routes/_user/getting-started'
 import { Route as UserFriendsRouteImport } from './routes/_user/friends'
@@ -130,6 +131,11 @@ const UserSearchRoute = UserSearchRouteImport.update({
 const UserProfileRoute = UserProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserNotificationsRoute = UserNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => UserRoute,
 } as any)
 const UserLearnRoute = UserLearnRouteImport.update({
@@ -416,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/friends': typeof UserFriendsRouteWithChildren
   '/getting-started': typeof UserGettingStartedRoute
   '/learn': typeof UserLearnRouteWithChildren
+  '/notifications': typeof UserNotificationsRoute
   '/profile': typeof UserProfileRouteWithChildren
   '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
@@ -476,6 +483,7 @@ export interface FileRoutesByTo {
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
   '/getting-started': typeof UserGettingStartedRoute
+  '/notifications': typeof UserNotificationsRoute
   '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/_user/friends': typeof UserFriendsRouteWithChildren
   '/_user/getting-started': typeof UserGettingStartedRoute
   '/_user/learn': typeof UserLearnRouteWithChildren
+  '/_user/notifications': typeof UserNotificationsRoute
   '/_user/profile': typeof UserProfileRouteWithChildren
   '/_user/search': typeof UserSearchRoute
   '/_user/welcome': typeof UserWelcomeRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/friends'
     | '/getting-started'
     | '/learn'
+    | '/notifications'
     | '/profile'
     | '/search'
     | '/welcome'
@@ -659,6 +669,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/accept-invite'
     | '/getting-started'
+    | '/notifications'
     | '/search'
     | '/welcome'
     | '/friends/$uid'
@@ -717,6 +728,7 @@ export interface FileRouteTypes {
     | '/_user/friends'
     | '/_user/getting-started'
     | '/_user/learn'
+    | '/_user/notifications'
     | '/_user/profile'
     | '/_user/search'
     | '/_user/welcome'
@@ -853,6 +865,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof UserProfileRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/_user/notifications': {
+      id: '/_user/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof UserNotificationsRouteImport
       parentRoute: typeof UserRoute
     }
     '/_user/learn': {
@@ -1425,6 +1444,7 @@ interface UserRouteChildren {
   UserFriendsRoute: typeof UserFriendsRouteWithChildren
   UserGettingStartedRoute: typeof UserGettingStartedRoute
   UserLearnRoute: typeof UserLearnRouteWithChildren
+  UserNotificationsRoute: typeof UserNotificationsRoute
   UserProfileRoute: typeof UserProfileRouteWithChildren
   UserSearchRoute: typeof UserSearchRoute
   UserWelcomeRoute: typeof UserWelcomeRoute
@@ -1435,6 +1455,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserFriendsRoute: UserFriendsRouteWithChildren,
   UserGettingStartedRoute: UserGettingStartedRoute,
   UserLearnRoute: UserLearnRouteWithChildren,
+  UserNotificationsRoute: UserNotificationsRoute,
   UserProfileRoute: UserProfileRouteWithChildren,
   UserSearchRoute: UserSearchRoute,
   UserWelcomeRoute: UserWelcomeRoute,
