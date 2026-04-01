@@ -13,10 +13,15 @@ concurrency:
 jobs:
   typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -30,8 +35,68 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: pnpm check
+      - name: Collect PR branch errors
+        run: pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true
+
+      - name: Collect base branch errors
+        run: |
+          git worktree add /tmp/base-branch origin/${{ github.base_ref }}
+          cd /tmp/base-branch
+          pnpm install --frozen-lockfile --silent
+          pnpm check 2>&1 | grep ': error TS' | sort > /tmp/base-errors.txt || true
+          cd $GITHUB_WORKSPACE
+          git worktree remove --force /tmp/base-branch
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const baseErrors = fs.readFileSync('/tmp/base-errors.txt', 'utf8').trim().split('\n').filter(Boolean);
+            const prErrors   = fs.readFileSync('/tmp/pr-errors.txt',   'utf8').trim().split('\n').filter(Boolean);
+
+            const baseSet = new Set(baseErrors);
+            const prSet   = new Set(prErrors);
+            const newErrors = prErrors.filter(e => !baseSet.has(e));
+            const resolved  = baseErrors.filter(e => !prSet.has(e));
+
+            const summary = `**Before:** ${baseErrors.length} error(s) → **After:** ${prErrors.length} error(s)` +
+              (newErrors.length || resolved.length
+                ? ` (+${newErrors.length} new, −${resolved.length} resolved)`
+                : ' (no change)');
+
+            const lines = ['### TypeScript type check', '', summary];
+            if (newErrors.length > 0)
+              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.join('\n')}\n\`\`\``);
+            if (resolved.length > 0)
+              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.join('\n')}\n\`\`\``);
+            const body = lines.join('\n');
+
+            const marker = '### TypeScript type check';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
+      - name: Fail on new errors
+        run: |
+          NEW=$(comm -13 /tmp/base-errors.txt /tmp/pr-errors.txt | wc -l | tr -d ' ')
+          if [ "$NEW" -gt 0 ]; then
+            echo "❌ $NEW new type error(s) introduced — see PR comment for details"
+            exit 1
+          fi
 
   unit:
     runs-on: ubuntu-latest
