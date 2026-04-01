@@ -6,7 +6,6 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { X } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
@@ -38,12 +37,10 @@ import {
 	RequestCommentSchema,
 	RequestCommentType,
 } from '@/features/comments/schemas'
-import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { useRequest } from '@/features/requests/hooks'
 import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'
-import { SelectPhrasesForComment } from './select-phrases-for-comment'
 
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
@@ -82,16 +79,14 @@ export function AddCommentDialog({
 	children?: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{children ?? (
-				<DialogTrigger
-					data-testid="add-comment-button"
-					className="@group flex w-full grow cursor-pointer flex-row items-center justify-between gap-2"
-				>
+				<DialogTrigger className="@group flex grow cursor-pointer flex-row items-center gap-2">
 					<TinySelfAvatar className="grow-o shrink-0" />
 					<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
-						{parentCommentId ? 'Type your reply here' : 'Join the conversation'}
+						{parentCommentId ? 'Type your reply here' : 'Add a comment...'}
 						...
 					</p>
 				</DialogTrigger>
@@ -108,7 +103,7 @@ export function AddCommentDialog({
 				<DialogDescription className="sr-only">
 					{parentCommentId ?
 						'Write a reply to this comment'
-					:	'Share your thoughts or answer the request'}
+					:	'Share your thoughts'}
 				</DialogDescription>
 				{parentCommentId ?
 					<CommentDisplayOnly id={parentCommentId} />
@@ -118,9 +113,7 @@ export function AddCommentDialog({
 					requestId={requestId}
 					lang={lang}
 					parentCommentId={parentCommentId}
-					onSuccess={() => {
-						setOpen(false)
-					}}
+					onSuccess={() => setOpen(false)}
 				/>
 			</AuthenticatedDialogContent>
 		</Dialog>
@@ -135,13 +128,6 @@ const CommentFormSchema = z.object({
 })
 
 type CommentFormInputs = z.infer<typeof CommentFormSchema>
-
-interface CommentFormProps {
-	requestId: uuid
-	lang: string
-	parentCommentId?: uuid
-	onSuccess: () => void
-}
 
 function useOneComment(
 	commentId: uuid
@@ -161,31 +147,28 @@ function NewCommentForm({
 	lang,
 	parentCommentId,
 	onSuccess,
-}: CommentFormProps) {
-	const [selectedPhraseIds, setSelectedPhraseIds] = useState<uuid[]>([])
-
+}: {
+	requestId: uuid
+	lang: string
+	parentCommentId?: uuid
+	onSuccess: () => void
+}) {
 	const navigate = useNavigate()
-
 	const isReply = !!parentCommentId
 
 	const form = useForm<CommentFormInputs>({
 		resolver: zodResolver(CommentFormSchema),
-		defaultValues: {
-			content: '',
-		},
+		defaultValues: { content: '' },
 	})
 
 	const createCommentMutation = useMutation({
 		mutationFn: async (values: CommentFormInputs) => {
-			const { data, error } = await supabase.rpc(
-				'create_comment_with_phrases',
-				{
-					p_request_id: requestId,
-					p_content: values.content,
-					p_parent_comment_id: parentCommentId,
-					p_phrase_ids: selectedPhraseIds,
-				}
-			)
+			const { data, error } = await supabase.rpc('create_comment_with_phrases', {
+				p_request_id: requestId,
+				p_content: values.content,
+				p_parent_comment_id: parentCommentId,
+				p_phrase_ids: [],
+			})
 			if (error) throw error
 			return data as {
 				request_comment: RequestCommentType
@@ -193,15 +176,12 @@ function NewCommentForm({
 			}
 		},
 		onSuccess: (data) => {
-			// Parse and add to collection (RPC returns updated upvote_count from auto-upvote)
 			commentsCollection.utils.writeInsert(
 				RequestCommentSchema.parse(data.request_comment)
 			)
-			// RPC auto-upvotes; sync local upvote collection
 			commentUpvotesCollection.utils.writeInsert({
 				comment_id: data.request_comment.id,
 			})
-
 			if (
 				data.comment_phrase_links &&
 				Array.isArray(data.comment_phrase_links)
@@ -212,9 +192,7 @@ function NewCommentForm({
 					)
 				})
 			}
-			// Reset form
 			form.reset()
-			setSelectedPhraseIds([])
 			void navigate({
 				to: '/learn/$lang/requests/$id',
 				params: { lang, id: requestId },
@@ -229,10 +207,6 @@ function NewCommentForm({
 			)
 		},
 	})
-
-	const handleRemovePhrase = (phraseId: uuid) => {
-		setSelectedPhraseIds((prev) => prev.filter((id) => id !== phraseId))
-	}
 
 	return (
 		<Form {...form}>
@@ -251,76 +225,33 @@ function NewCommentForm({
 							<FormLabel className="sr-only">
 								{isReply ? 'Write a reply' : 'Add a comment'}
 							</FormLabel>
-
+							<p className="text-muted-foreground text-xs">
+								Comments support markdown like `&gt;` for blockquote,{' '}
+								<em>_italics_</em>, <strong>**bold**</strong>
+							</p>
 							<FormControl>
 								<Textarea
 									data-testid="comment-content-input"
-									placeholder={
-										isReply ? 'Write a reply...' : (
-											'Share your thoughts or answer the request...'
-										)
-									}
+									placeholder={isReply ? 'Write a reply...' : 'Share your thoughts...'}
 									rows={isReply ? 3 : 4}
 									{...field}
 								/>
 							</FormControl>
-							{!isReply && (
-								<p className="text-muted-foreground text-sm">
-									Comments support markdown like `&gt;` for blockquote,{' '}
-									<em>_italics_</em>, <strong>**bold**</strong>
-								</p>
-							)}
 							<FormMessage />
 						</FormItem>
 					)}
 				/>
-
-				{/* Attached flashcards */}
-				{selectedPhraseIds && selectedPhraseIds.length > 0 && (
-					<div className="mb-0">
-						<p className="text-sm font-medium">
-							Attached flashcards ({selectedPhraseIds.length}/4)
-						</p>
-						<div className="flex flex-wrap gap-x-2">
-							{selectedPhraseIds.map((pid) => (
-								<div key={pid} className="relative px-2">
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon"
-										className="border-border absolute top-5 right-1 h-6 w-6 backdrop-blur-xs"
-										onClick={() => handleRemovePhrase(pid)}
-									>
-										<X />
-									</Button>
-									<PhraseTinyCard pid={pid} className="mb-0" />
-								</div>
-							))}
-						</div>
-					</div>
-				)}
-
-				<div className="flex flex-col gap-2 @xs:flex-row @xs:items-center @xs:justify-between">
-					{/* Submit button */}
-					<Button
-						type="submit"
-						data-testid="submit-comment-button"
-						disabled={createCommentMutation.isPending}
-					>
-						{createCommentMutation.isPending ?
-							'Posting...'
-						: isReply ?
-							'Post Reply'
-						:	'Post Comment'}
-					</Button>
-
-					{/* Add flashcard button */}
-					<SelectPhrasesForComment
-						lang={lang}
-						selectedPhraseIds={selectedPhraseIds}
-						onSelectionChange={setSelectedPhraseIds}
-					/>
-				</div>
+				<Button
+					type="submit"
+					data-testid="post-comment-button"
+					disabled={createCommentMutation.isPending}
+				>
+					{createCommentMutation.isPending ?
+						'Posting...'
+					: isReply ?
+						'Post Reply'
+					:	'Post Comment'}
+				</Button>
 			</form>
 		</Form>
 	)
