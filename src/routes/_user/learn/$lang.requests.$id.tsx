@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
+import { useState, useEffect, useRef, CSSProperties } from 'react'
+import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
 import type { CommentPhraseLinkType } from '@/features/comments/schemas'
@@ -12,7 +14,8 @@ import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
-import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
@@ -25,13 +28,16 @@ import {
 	commentPhraseLinksCollection,
 } from '@/features/comments/collections'
 import { mapArrays } from '@/lib/utils'
-import { CSSProperties } from 'react'
+import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
+import { AnsweringDialog } from '@/components/comments/answering-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
 		showSubthread: z.string().uuid().optional(),
 		highlightComment: z.string().uuid().optional(),
+		answering: z.enum(['search', 'comment']).optional(),
+		attaching: z.boolean().optional(),
 	}),
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
@@ -71,6 +77,17 @@ function RequestThreadPage() {
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
 
+	const [selectedPhraseIds, setSelectedPhraseIds] = useState<Array<uuid>>([])
+
+	// Clear selected phrases when the dialog closes
+	const prevAnswering = useRef(search.answering)
+	useEffect(() => {
+		if (prevAnswering.current && !search.answering) {
+			setSelectedPhraseIds([])
+		}
+		prevAnswering.current = search.answering
+	}, [search.answering])
+
 	if (isLoading) return <Loader />
 
 	if (!request)
@@ -102,10 +119,43 @@ function RequestThreadPage() {
 					</div>
 				</CardContent>
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
-					<AddCommentDialog requestId={params.id} lang={params.lang} />
+					<div className="flex w-full flex-row items-center gap-2">
+						<Link
+							to="."
+							search={(s) => ({ ...s, answering: 'comment' })}
+							className="@group flex grow cursor-pointer flex-row items-center gap-2"
+							data-testid="open-comment-dialog"
+						>
+							<TinySelfAvatar className="grow-o shrink-0" />
+							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+								Add a comment or suggest a card...
+							</p>
+						</Link>
+						<Link
+							to="."
+							search={(s) => ({ ...s, answering: 'search' })}
+							className={cn(
+								buttonVariants({ variant: 'soft', size: 'sm' }),
+								'shrink-0 border border-transparent'
+							)}
+							data-testid="open-flashcard-search"
+						>
+							<Paperclip className="h-4 w-4" />
+							Flashcard
+						</Link>
+					</div>
 					<RequestButtonsRow request={request} />
 				</CardFooter>
 			</CardlikeRequest>
+
+			<AnsweringDialog
+				requestId={params.id}
+				lang={params.lang}
+				answering={search.answering}
+				attaching={!!search.attaching}
+				selectedPhraseIds={selectedPhraseIds}
+				onSelectionChange={setSelectedPhraseIds}
+			/>
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
@@ -120,7 +170,6 @@ function RequestThreadPage() {
 const showThread = { show: 'thread' } as const
 
 function AnswersOnlyView() {
-	// Get all comment-phrase links for this request
 	const params = Route.useParams()
 	const { data: linksWithCommentsMap, isLoading } = useRequestLinksWithComments(
 		params.id
@@ -198,7 +247,6 @@ function TopLevelComments({
 	requestId: uuid
 	lang: string
 }) {
-	// Get comments for this request, sorted by upvote count
 	const { data: comments, isLoading } = useLiveQuery(
 		(q) =>
 			q
