@@ -33,7 +33,7 @@ export function NotEnoughCards({
 					to="/learn/$lang/feed"
 					params={{ lang }}
 				>
-					Browse Requests feed to see what others are learning
+					Browse the Feed
 				</Link>
 
 				<Link
