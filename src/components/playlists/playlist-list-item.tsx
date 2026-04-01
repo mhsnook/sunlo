@@ -110,26 +110,28 @@ export function PlaylistItem({
 			style={{ viewTransitionName: `playlist-${playlist.id}` } as CSSProperties}
 			className="bg-card text-card-foreground @container flex flex-col gap-3 rounded-lg border p-6 shadow-sm"
 		>
-			<div className="flex flex-row items-center justify-between gap-2">
-				<UidPermalink
-					uid={playlist.uid}
-					action="created a Playlist"
-					timeLinkTo="/learn/$lang/playlists/$playlistId"
-					timeLinkParams={{
-						lang: playlist.lang,
-						playlistId: playlist.id,
-					}}
-					timeValue={playlist.created_at}
-				/>
-
-				<div className="flex flex-col-reverse items-end gap-2 @sm:flex-row @sm:items-center">
+			<div className="flex flex-row items-start justify-between gap-2">
+				<div className="flex flex-col gap-1">
+					<UidPermalink
+						uid={playlist.uid}
+						action="created a Playlist"
+						timeLinkTo="/learn/$lang/playlists/$playlistId"
+						timeLinkParams={{
+							lang: playlist.lang,
+							playlistId: playlist.id,
+						}}
+						timeValue={playlist.created_at}
+					/>
 					{isOwner && (
-						<>
+						<div className="flex items-center gap-1 ps-12">
 							<UpdatePlaylistDialog playlist={playlist} />
 							<ManagePlaylistPhrasesDialog playlist={playlist} />
 							<DeletePlaylistDialog playlist={playlist} />
-						</>
+						</div>
 					)}
+				</div>
+
+				<div className="flex flex-col items-end gap-2 @sm:flex-row @sm:items-center">
 					<Badge variant="outline" className="whitespace-nowrap">
 						{data?.length ?? 0} phrase
 						{data?.length === 1 ? '' : 's'}
