@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 
 import supabase from '@/lib/supabase-client'
+import { MarkdownHint } from '@/components/comments/comment-dialog'
 import { useUserId } from '@/lib/use-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import {
@@ -142,10 +143,7 @@ export function RequestForm({
 									{...field}
 								/>
 							</FormControl>
-							<p className="text-muted-foreground -mt-1 text-xs">
-								Supports markdown like `&gt;` for blockquote, <em>_italics_</em>
-								, <strong>**bold**</strong>.
-							</p>
+							<MarkdownHint />
 							<FormMessage />
 						</FormItem>
 					)}

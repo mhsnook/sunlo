@@ -41,6 +41,7 @@ import { useRequest } from '@/features/requests/hooks'
 import { TinySelfAvatar, UidPermalink } from '../card-pieces/user-permalink'
 import { Markdown } from '../my-markdown'
 import { Separator } from '../ui/separator'
+import { MarkdownHint } from './comment-dialog'
 
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
@@ -228,10 +229,7 @@ function NewCommentForm({
 							<FormLabel className="sr-only">
 								{isReply ? 'Write a reply' : 'Add a comment'}
 							</FormLabel>
-							<p className="text-muted-foreground text-xs">
-								Comments support markdown like `&gt;` for blockquote,{' '}
-								<em>_italics_</em>, <strong>**bold**</strong>
-							</p>
+							<MarkdownHint />
 							<FormControl>
 								<Textarea
 									data-testid="comment-content-input"
