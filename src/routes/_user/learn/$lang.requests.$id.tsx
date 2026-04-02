@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { useState, useEffect, useRef, CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -29,7 +29,14 @@ import {
 } from '@/features/comments/collections'
 import { mapArrays } from '@/lib/utils'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
-import { AnsweringDialog } from '@/components/comments/answering-dialog'
+import {
+	CommentDialog,
+	deriveCommentDialogMode,
+} from '@/components/comments/comment-dialog'
+import {
+	ReplyDialog,
+	deriveReplyDialogMode,
+} from '@/components/comments/reply-dialog'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -39,6 +46,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		answering: z.enum(['search', 'comment']).optional(),
 		attaching: z.boolean().optional(),
 		editing: z.string().uuid().optional(),
+		replying: z.string().uuid().optional(),
 	}),
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
@@ -73,21 +81,38 @@ export const useRequestLinksWithComments = (requestId: uuid) => {
 	}
 }
 
+/** Look up a comment by ID from the collection (for edit modes) */
+function useComment(commentId: uuid | undefined) {
+	return useLiveQuery(
+		(q) =>
+			commentId ?
+				q
+					.from({ comment: commentsCollection })
+					.where(({ comment }) => eq(comment.id, commentId))
+					.findOne()
+			:	q
+					.from({ comment: commentsCollection })
+					.where(() => false)
+					.findOne(),
+		[commentId]
+	)
+}
+
 function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
 
-	const [selectedPhraseIds, setSelectedPhraseIds] = useState<Array<uuid>>([])
+	// Look up the comment being edited (if any) for both dialogs
+	const { data: editComment } = useComment(search.editing)
 
-	// Clear selected phrases when the dialog closes
-	const prevAnswering = useRef(search.answering)
-	useEffect(() => {
-		if (prevAnswering.current && !search.answering) {
-			setSelectedPhraseIds([])
-		}
-		prevAnswering.current = search.answering
-	}, [search.answering])
+	// Derive dialog modes from URL
+	const commentMode = deriveCommentDialogMode(search)
+	const replyMode = deriveReplyDialogMode(search, editComment ?? undefined)
+
+	// If editing a reply, the CommentDialog shouldn't also open
+	const effectiveCommentMode =
+		replyMode && search.editing ? undefined : commentMode
 
 	if (isLoading) return <Loader />
 
@@ -149,14 +174,14 @@ function RequestThreadPage() {
 				</CardFooter>
 			</CardlikeRequest>
 
-			<AnsweringDialog
+			<CommentDialog
 				requestId={params.id}
 				lang={params.lang}
-				answering={search.answering}
-				attaching={!!search.attaching}
-				selectedPhraseIds={selectedPhraseIds}
-				onSelectionChange={setSelectedPhraseIds}
+				mode={effectiveCommentMode}
+				editComment={editComment ?? undefined}
 			/>
+
+			<ReplyDialog requestId={params.id} lang={params.lang} mode={replyMode} />
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
