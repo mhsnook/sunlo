@@ -13,6 +13,7 @@ import {
 import { PostgrestError } from '@supabase/supabase-js'
 import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
+import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
@@ -368,6 +369,14 @@ export function useReviewMutation(
 					CardReviewSchema.parse(data.row)
 				)
 			}
+
+			// Keep cardsCollection in sync so manage-deck sees fresh data
+			cardsCollection.utils.writeUpdate({
+				phrase_id: data.row.phrase_id,
+				last_reviewed_at: data.row.created_at,
+				difficulty: data.row.difficulty,
+				stability: data.row.stability,
+			})
 
 			triggerSlide(() => {
 				resetRevealCard()
