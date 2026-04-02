@@ -325,11 +325,14 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 	const difficultyDisplay =
 		card.difficulty != null ? Math.round(card.difficulty) : null
 
+	const isSkipped = card.status === 'skipped'
+
 	return (
 		<div
 			className={cn(
 				'rounded-lg border transition-colors',
-				open ? 'bg-0-lo-neutral' : 'hover:bg-0-lo-neutral'
+				open ? 'bg-0-lo-neutral' : 'hover:bg-0-lo-neutral',
+				isSkipped && 'opacity-50'
 			)}
 			data-testid="manage-deck-row"
 		>
@@ -371,7 +374,9 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 						</span>
 						<span className="text-muted-foreground">
 							Next review:{' '}
-							{reviewedToday ?
+							{isSkipped ?
+								<span className="font-medium">—</span>
+							: reviewedToday ?
 								<span className="font-medium text-primary-foresoft">
 									Reviewed today!
 								</span>
@@ -467,9 +472,14 @@ function DesktopCardRow({
 	const difficultyDisplay =
 		card.difficulty != null ? Math.round(card.difficulty) : null
 
+	const isSkipped = card.status === 'skipped'
+
 	return (
 		<tr
-			className="hover:bg-0-lo-neutral border-b transition-colors last:border-b-0"
+			className={cn(
+				'hover:bg-0-lo-neutral border-b transition-colors last:border-b-0',
+				isSkipped && 'opacity-50'
+			)}
 			data-testid="manage-deck-row"
 		>
 			{/* Phrase */}
@@ -499,7 +509,9 @@ function DesktopCardRow({
 
 			{/* Next Review */}
 			<td className="px-3 py-2 text-center">
-				{reviewedToday ?
+				{isSkipped ?
+					<span className="text-muted-foreground/50 text-xs">—</span>
+				: reviewedToday ?
 					<span className="text-sm font-medium text-primary-foresoft">
 						Reviewed today!
 					</span>
