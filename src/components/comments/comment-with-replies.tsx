@@ -1,9 +1,10 @@
 import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit, MessagesSquare } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
+import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import {
@@ -18,15 +19,9 @@ import {
 } from '@/features/comments/schemas'
 import { PhraseFullFullType } from '@/features/phrases/schemas'
 import { buttonVariants } from '@/components/ui/button'
-import { DialogTrigger } from '@/components/ui/dialog'
 import { phrasesFull } from '@/features/phrases/live'
 
-import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
-import {
-	UpdateCommentButton,
-	UpdateCommentDialog,
-} from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
 import { CommentContextMenu } from './comment-context-menu'
 import { CSSProperties } from 'react'
@@ -46,7 +41,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		select: (data) => data.highlightComment === comment.id,
 	})
 
-	// Get replies for this comment
+	// Get the child comments
 	const { data: repliesData } = useLiveQuery(
 		(q) =>
 			q
@@ -61,9 +56,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const replies = repliesData ?? []
 
-	// Get phrases for this comment with a join
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
-
 	const phrases = phraseFromComment ?? []
 
 	const isOwner = userId === comment.uid
@@ -86,7 +79,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				} as CSSProperties
 			}
 		>
-			{/* Comment header */}
 			<div className="w-full">
 				<div className="flex items-center justify-between">
 					<UidPermalinkInline
@@ -101,7 +93,18 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					<div className="flex gap-2">
 						{isOwner && (
 							<>
-								<UpdateCommentButton comment={comment} />
+								<Link
+									to="."
+									search={(prev: Record<string, unknown>) => ({
+										...prev,
+										editing: comment.id,
+									})}
+									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+									aria-label="Edit comment"
+									data-testid="edit-comment-button"
+								>
+									<Edit className="h-4 w-4" />
+								</Link>
 								<DeleteCommentDialog comment={comment} />
 							</>
 						)}
@@ -109,14 +112,12 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					</div>
 				</div>
 
-				{/* Comment content */}
 				{comment.content && (
 					<div className="mt-2">
 						<Markdown>{comment.content}</Markdown>
 					</div>
 				)}
 
-				{/* Attached flashcards */}
 				{phrases && phrases.length > 0 && (
 					<div
 						className="mt-3 space-y-2"
@@ -128,26 +129,21 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					</div>
 				)}
 
-				{/* Edit dialog (URL-driven) */}
-				{isOwner && <UpdateCommentDialog comment={comment} lang={lang} />}
-
-				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
 					<div className="flex items-center gap-2">
-						<AddCommentDialog
-							lang={lang}
-							requestId={comment.request_id}
-							parentCommentId={comment.id}
+						<Link
+							to="."
+							search={(prev: Record<string, unknown>) => ({
+								...prev,
+								replying: comment.id,
+							})}
+							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+							aria-label="Add a reply"
+							data-testid="reply-to-comment-button"
 						>
-							<DialogTrigger
-								aria-label="Add a reply"
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-								data-testid="reply-to-comment-button"
-							>
-								<MessagesSquare />
-							</DialogTrigger>
-						</AddCommentDialog>{' '}
+							<MessagesSquare />
+						</Link>
 						<span>reply</span>
 					</div>
 
@@ -166,8 +162,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							}}
 						>
 							{showSubthread ?
-								<ChevronUp className="mr-1 h-4 w-4" />
-							:	<ChevronDown className="mr-1 h-4 w-4" />}
+								<ChevronUp className="me-1 h-4 w-4" />
+							:	<ChevronDown className="me-1 h-4 w-4" />}
 							<span className="@max-md:sr-only">
 								{showSubthread ? 'Showing' : `Show`}{' '}
 							</span>
@@ -177,7 +173,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					)}
 				</div>
 
-				{/* Replies */}
 				{showSubthread && replies && replies.length > 0 && (
 					<div className="border-3-mlo-primary mt-3 space-y-3">
 						<Separator />
@@ -186,11 +181,20 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								<CommentReply key={reply.id} comment={reply} lang={lang} />
 							))}
 						</div>
-						<AddCommentDialog
-							parentCommentId={comment.id}
-							requestId={comment.request_id}
-							lang={lang}
-						/>
+						<Link
+							to="."
+							search={(prev: Record<string, unknown>) => ({
+								...prev,
+								replying: comment.id,
+							})}
+							className="@group flex grow cursor-pointer flex-row items-center gap-2"
+							data-testid="add-reply-inline"
+						>
+							<TinySelfAvatar className="grow-o shrink-0" />
+							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+								Type your reply here...
+							</p>
+						</Link>
 					</div>
 				)}
 			</div>
@@ -233,7 +237,6 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			className={`mt-4 ${isHighlighted ? 'border-s-primary rounded border-s-2 ps-3' : ''}`}
 			data-testid="comment-reply"
 		>
-			{/* Comment header */}
 			<div className="flex items-center justify-between">
 				<UidPermalinkInline
 					uid={comment.uid}
@@ -250,7 +253,18 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				<div className="flex gap-2">
 					{isOwner && (
 						<>
-							<UpdateCommentButton comment={comment} />
+							<Link
+								to="."
+								search={(prev: Record<string, unknown>) => ({
+									...prev,
+									editing: comment.id,
+								})}
+								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								aria-label="Edit reply"
+								data-testid="edit-reply-button"
+							>
+								<Edit className="h-4 w-4" />
+							</Link>
 							<DeleteCommentDialog comment={comment} />
 						</>
 					)}
@@ -258,14 +272,12 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				</div>
 			</div>
 
-			{/* Comment content */}
 			{comment.content && (
 				<div className="ms-9 mt-2">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
-			{/* Attached flashcards */}
 			{phrases && phrases.length > 0 && (
 				<div className="ms-9 mt-3 space-y-2">
 					{phrases.map(({ phrase }) => (
@@ -274,10 +286,6 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				</div>
 			)}
 
-			{/* Edit dialog (URL-driven) */}
-			{isOwner && <UpdateCommentDialog comment={comment} lang={lang} />}
-
-			{/* Comment actions */}
 			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
 			</div>
