@@ -186,32 +186,31 @@ BEGIN
   -- Re-read to get updated upvote_count after trigger fires
   SELECT * INTO v_new_comment FROM phrase_comment WHERE id = v_comment_id;
 
-  -- Create translations and link them (max 4)
+  -- Create translation and link it (max 1 per comment)
   IF p_translations IS NOT NULL AND jsonb_array_length(p_translations) > 0 THEN
-    IF jsonb_array_length(p_translations) > 4 THEN
-      RAISE EXCEPTION 'Cannot attach more than 4 translations to a comment';
+    IF jsonb_array_length(p_translations) > 1 THEN
+      RAISE EXCEPTION 'Cannot attach more than 1 translation to a comment';
     END IF;
 
-    FOR v_translation_item IN SELECT * FROM jsonb_array_elements(p_translations)
-    LOOP
-      -- Insert the translation into phrase_translation
-      INSERT INTO phrase_translation (phrase_id, lang, text, literal, added_by)
-      VALUES (
-        p_phrase_id,
-        v_translation_item->>'lang',
-        v_translation_item->>'text',
-        v_translation_item->>'literal',
-        auth.uid()
-      )
-      RETURNING * INTO v_new_translation;
+    v_translation_item := p_translations->0;
 
-      -- Link the translation to the comment
-      INSERT INTO comment_translation_link (phrase_id, comment_id, translation_id)
-      VALUES (p_phrase_id, v_comment_id, v_new_translation.id)
-      RETURNING * INTO v_link_record;
+    -- Insert the translation into phrase_translation
+    INSERT INTO phrase_translation (phrase_id, lang, text, literal, added_by)
+    VALUES (
+      p_phrase_id,
+      v_translation_item->>'lang',
+      v_translation_item->>'text',
+      v_translation_item->>'literal',
+      auth.uid()
+    )
+    RETURNING * INTO v_new_translation;
 
-      v_links := array_append(v_links, v_link_record);
-    END LOOP;
+    -- Link the translation to the comment
+    INSERT INTO comment_translation_link (phrase_id, comment_id, translation_id)
+    VALUES (p_phrase_id, v_comment_id, v_new_translation.id)
+    RETURNING * INTO v_link_record;
+
+    v_links := array_append(v_links, v_link_record);
   END IF;
 
   -- Return the comment and links

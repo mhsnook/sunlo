@@ -1,24 +1,24 @@
-import { useSearch } from '@tanstack/react-router'
+import { CSSProperties } from 'react'
+import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
-import { Link } from '@tanstack/react-router'
+import { ChevronDown, ChevronUp, Edit } from 'lucide-react'
 
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
+import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import {
 	commentTranslationLinksCollection,
 	phraseCommentsCollection,
 } from '@/features/comments/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
+import { useUserId } from '@/lib/use-auth'
 import { type PhraseCommentType } from '@/features/comments/schemas'
 import { buttonVariants } from '@/components/ui/button'
-import { DialogTrigger } from '@/components/ui/dialog'
 import { LangBadge } from '@/components/ui/badge'
 import { usePhrase } from '@/hooks/composite-phrase'
 
-import { AddPhraseCommentDialog } from './add-phrase-comment-dialog'
+import { DeletePhraseCommentDialog } from './delete-phrase-comment-dialog'
 import { UpvotePhraseComment } from './upvote-phrase-comment-button'
-import { CSSProperties } from 'react'
 import { Separator } from '../ui/separator'
 
 interface PhraseCommentThreadProps {
@@ -30,12 +30,8 @@ export function PhraseCommentWithReplies({
 	comment,
 	lang,
 }: PhraseCommentThreadProps) {
+	const userId = useUserId()
 	const search = useSearch({ strict: false })
-	const showSubthread = search.showSubthread === comment.id
-	const isHighlighted = useSearch({
-		strict: false,
-		select: (data) => data.highlightComment === comment.id,
-	})
 
 	// Get replies for this comment
 	const { data: repliesData } = useLiveQuery(
@@ -51,15 +47,24 @@ export function PhraseCommentWithReplies({
 	)
 
 	const replies = repliesData ?? []
+
+	// focus=<uuid> (without a dialog mode) means highlight + expand
+	const isFocusMode = search.focus && !search.mode
+	const isHighlighted = isFocusMode && search.focus === comment.id
+	const hasHighlightedReply =
+		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
+	const showSubthread = isHighlighted || hasHighlightedReply
+
+	const isOwner = userId === comment.uid
 	const replyCount = replies?.length ?? 0
 
 	return (
 		<div
 			className={`${
-				isHighlighted ?
-					'bg-2-mid-primary ring-primary-foresoft/60 ring ring-offset-4'
-				: showSubthread ? 'outline-primary rounded-lg outline'
-				: ''
+				isHighlighted ? 'border-primary bg-card/50 rounded border border-s-2'
+				: hasHighlightedReply ?
+					'border-3-mlo-primary bg-card/50 rounded border border-s-2'
+				:	''
 			} p-4`}
 			data-comment-id={comment.id}
 			data-testid="phrase-comment-item"
@@ -77,6 +82,27 @@ export function PhraseCommentWithReplies({
 						timeValue={comment.created_at}
 						action="commented"
 					/>
+
+					<div className="flex gap-2">
+						{isOwner && (
+							<>
+								<Link
+									to="."
+									search={(prev) => ({
+										...prev,
+										focus: comment.id,
+										mode: 'edit' as const,
+									})}
+									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+									aria-label="Edit comment"
+									data-testid="edit-phrase-comment-button"
+								>
+									<Edit className="h-4 w-4" />
+								</Link>
+								<DeletePhraseCommentDialog comment={comment} />
+							</>
+						)}
+					</div>
 				</div>
 
 				{/* Comment content */}
@@ -86,28 +112,12 @@ export function PhraseCommentWithReplies({
 					</div>
 				)}
 
-				{/* Attached translations */}
-				<CommentTranslations comment={comment} />
+				{/* Attached translation */}
+				<CommentTranslation comment={comment} />
 
 				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<UpvotePhraseComment comment={comment} />
-					<div className="flex items-center gap-2">
-						<AddPhraseCommentDialog
-							phraseLang={lang}
-							phraseId={comment.phrase_id}
-							parentCommentId={comment.id}
-						>
-							<DialogTrigger
-								aria-label="Add a reply"
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-								data-testid="reply-to-phrase-comment-button"
-							>
-								<MessagesSquare />
-							</DialogTrigger>
-						</AddPhraseCommentDialog>{' '}
-						<span>reply</span>
-					</div>
 
 					{replyCount > 0 && (
 						<Link
@@ -117,10 +127,10 @@ export function PhraseCommentWithReplies({
 							})}
 							to={'.'}
 							search={(search) => {
-								if (search.showSubthread === comment.id) {
-									const { showSubthread: _, ...args } = search
+								if (showSubthread) {
+									const { focus: _, ...args } = search
 									return args
-								} else return { ...search, showSubthread: comment.id }
+								} else return { ...search, focus: comment.id }
 							}}
 						>
 							{showSubthread ?
@@ -136,19 +146,35 @@ export function PhraseCommentWithReplies({
 				</div>
 
 				{/* Replies */}
-				{showSubthread && replies && replies.length > 0 && (
-					<div className="border-3-mlo-primary mt-3 space-y-3">
+				{showSubthread && (
+					<div className="mt-3 space-y-2 text-sm">
 						<Separator />
-						<div className="divide-y">
-							{replies.map(({ reply }) => (
-								<PhraseCommentReply key={reply.id} comment={reply} />
-							))}
-						</div>
-						<AddPhraseCommentDialog
-							parentCommentId={comment.id}
-							phraseId={comment.phrase_id}
-							phraseLang={lang}
-						/>
+						<Link
+							to="."
+							search={(prev) => ({
+								...prev,
+								focus: comment.id,
+								mode: 'reply' as const,
+							})}
+							className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
+							data-testid="add-phrase-reply-inline"
+						>
+							<TinySelfAvatar className="h-6 w-6 shrink-0" />
+							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
+								Type your reply here...
+							</p>
+						</Link>
+						{replies.length > 0 && (
+							<div className="divide-y">
+								{replies.map(({ reply }) => (
+									<PhraseCommentReply
+										key={reply.id}
+										comment={reply}
+										lang={lang}
+									/>
+								))}
+							</div>
+						)}
 					</div>
 				)}
 			</div>
@@ -156,8 +182,8 @@ export function PhraseCommentWithReplies({
 	)
 }
 
-function CommentTranslations({ comment }: { comment: PhraseCommentType }) {
-	// Get translation links for this comment
+function CommentTranslation({ comment }: { comment: PhraseCommentType }) {
+	// Get translation link for this comment (max 1)
 	const { data: links } = useLiveQuery(
 		(q) =>
 			q
@@ -171,40 +197,37 @@ function CommentTranslations({ comment }: { comment: PhraseCommentType }) {
 
 	if (!links?.length || !phrase) return null
 
-	// Resolve translation_ids to actual translations
+	// Resolve translation_id to actual translation
 	const allTranslations = (phrase.translations_mine ?? []).concat(
 		phrase.translations_other ?? []
 	)
-	const translations = links
-		.map((link) => allTranslations.find((t) => t.id === link.translation_id))
-		.filter((t): t is NonNullable<typeof t> => t !== undefined && t !== null)
+	const translation = allTranslations.find(
+		(t) => t.id === links[0].translation_id
+	)
 
-	if (!translations.length) return null
+	if (!translation) return null
 
 	return (
-		<div className="mt-3 space-y-2" data-testid="comment-translation-link">
-			{translations.map((translation) => (
-				<div
-					key={translation.id}
-					className="bg-muted flex items-baseline gap-2 rounded-lg p-2"
-				>
-					<LangBadge lang={translation.lang} />
-					<span className="text-sm">{translation.text}</span>
-				</div>
-			))}
+		<div className="mt-3" data-testid="comment-translation-link">
+			<div className="bg-muted flex items-baseline gap-2 rounded-lg p-2">
+				<LangBadge lang={translation.lang} />
+				<span className="text-sm">{translation.text}</span>
+			</div>
 		</div>
 	)
 }
 
-function PhraseCommentReply({ comment }: { comment: PhraseCommentType }) {
+function PhraseCommentReply({ comment }: PhraseCommentThreadProps) {
 	const isHighlighted = useSearch({
 		strict: false,
-		select: (data) => data.highlightComment === comment.id,
+		select: (data) => data.focus === comment.id && !data.mode,
 	})
+	const userId = useUserId()
+	const isOwner = userId === comment.uid
 
 	return (
 		<div
-			className={`mt-4 ${isHighlighted ? 'border-s-primary rounded border-s-2 ps-3' : ''}`}
+			className={`mt-2 py-2 ${isHighlighted ? 'border-primary -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
 			data-testid="phrase-comment-reply"
 		>
 			<div className="flex items-center justify-between">
@@ -213,20 +236,41 @@ function PhraseCommentReply({ comment }: { comment: PhraseCommentType }) {
 					timeValue={comment.created_at}
 					action="replied"
 				/>
+
+				<div className="flex gap-1">
+					{isOwner && (
+						<>
+							<Link
+								to="."
+								search={(prev) => ({
+									...prev,
+									focus: comment.id,
+									mode: 'edit' as const,
+								})}
+								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								aria-label="Edit reply"
+								data-testid="edit-phrase-reply-button"
+							>
+								<Edit className="h-3.5 w-3.5" />
+							</Link>
+							<DeletePhraseCommentDialog comment={comment} />
+						</>
+					)}
+				</div>
 			</div>
 
 			{comment.content && (
-				<div className="ms-9 mt-2">
+				<div className="ms-8 mt-1">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
-			{/* Attached translations */}
-			<div className="ms-9">
-				<CommentTranslations comment={comment} />
+			{/* Attached translation */}
+			<div className="ms-8">
+				<CommentTranslation comment={comment} />
 			</div>
 
-			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="text-muted-foreground ms-8 mt-2 mb-1 flex items-center gap-2 pb-1">
 				<UpvotePhraseComment comment={comment} />
 			</div>
 		</div>

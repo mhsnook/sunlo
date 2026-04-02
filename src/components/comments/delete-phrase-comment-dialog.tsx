@@ -1,0 +1,75 @@
+import { useState } from 'react'
+import { useMutation } from '@tanstack/react-query'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { Trash2 } from 'lucide-react'
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { PhraseCommentType } from '@/features/comments/schemas'
+import supabase from '@/lib/supabase-client'
+import { phraseCommentsCollection } from '@/features/comments/collections'
+
+export function DeletePhraseCommentDialog({
+	comment,
+}: {
+	comment: PhraseCommentType
+}) {
+	const [open, setOpen] = useState(false)
+	const mutation = useMutation({
+		mutationFn: async () => {
+			// @ts-expect-error -- table exists after migration; regenerate types with `pnpm run types`
+			const { error } = await supabase
+				.from('phrase_comment')
+				.delete()
+				.eq('id', comment.id)
+
+			if (error) throw error
+		},
+		onSuccess: () => {
+			phraseCommentsCollection.utils.writeDelete(comment.id)
+			toastSuccess('Comment deleted')
+		},
+		onError: (error: Error) => {
+			toastError(`Failed to delete comment: ${error.message}`)
+		},
+	})
+	return (
+		<AlertDialog open={open} onOpenChange={setOpen}>
+			<Button
+				variant="ghost"
+				size="icon"
+				aria-label="Delete comment"
+				onClick={() => setOpen(true)}
+			>
+				<Trash2 className="h-4 w-4" />
+			</Button>
+			<AlertDialogContent>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Delete comment?</AlertDialogTitle>
+					<AlertDialogDescription>
+						This will permanently delete your comment and all its replies. This
+						action cannot be undone.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogCancel>Cancel</AlertDialogCancel>
+					<AlertDialogAction
+						disabled={mutation.isPending}
+						onClick={() => mutation.mutate()}
+						className="bg-destructive text-destructive-foreground"
+					>
+						Delete
+					</AlertDialogAction>
+				</AlertDialogFooter>
+			</AlertDialogContent>
+		</AlertDialog>
+	)
+}

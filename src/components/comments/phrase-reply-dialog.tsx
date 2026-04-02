@@ -1,0 +1,358 @@
+import { useNavigate } from '@tanstack/react-router'
+import { useMutation } from '@tanstack/react-query'
+import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
+
+import type { UseLiveQueryResult, uuid } from '@/types/main'
+import { Button } from '@/components/ui/button'
+import {
+	Form,
+	FormControl,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from '@/components/ui/form'
+import { Textarea } from '@/components/ui/textarea'
+import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
+import { Separator } from '@/components/ui/separator'
+import { MarkdownHint } from './comment-dialog'
+import supabase from '@/lib/supabase-client'
+import {
+	phraseCommentsCollection,
+	phraseCommentUpvotesCollection,
+} from '@/features/comments/collections'
+import {
+	PhraseCommentSchema,
+	type PhraseCommentType,
+} from '@/features/comments/schemas'
+import { UidPermalink } from '@/components/card-pieces/user-permalink'
+import { Markdown } from '@/components/my-markdown'
+
+// ---------------------------------------------------------------------------
+// URL state types
+// ---------------------------------------------------------------------------
+
+type PhraseReplyDialogMode =
+	| { kind: 'new'; parentCommentId: uuid }
+	| { kind: 'edit'; comment: PhraseCommentType }
+
+/**
+ * Derives the reply dialog mode from URL search params and a comment lookup.
+ * Returns undefined when no reply dialog should be open.
+ */
+export function derivePhraseReplyDialogMode(
+	search: {
+		focus?: string
+		mode?: string
+	},
+	editComment?: PhraseCommentType
+): PhraseReplyDialogMode | undefined {
+	if (search.mode === 'reply' && search.focus) {
+		return { kind: 'new', parentCommentId: search.focus }
+	}
+	if (search.mode === 'edit' && editComment?.parent_comment_id != null) {
+		return { kind: 'edit', comment: editComment }
+	}
+	return undefined
+}
+
+// ---------------------------------------------------------------------------
+// PhraseReplyDialog
+// ---------------------------------------------------------------------------
+
+interface PhraseReplyDialogProps {
+	phraseId: uuid
+	phraseLang: string
+	mode: PhraseReplyDialogMode | undefined
+}
+
+export function PhraseReplyDialog({
+	phraseId,
+	phraseLang,
+	mode,
+}: PhraseReplyDialogProps) {
+	const navigate = useNavigate()
+	const isOpen = !!mode
+
+	const close = () => {
+		void navigate({
+			to: '.',
+			search: (prev: Record<string, unknown>) => {
+				const { mode: _, ...rest } = prev
+				return rest
+			},
+		})
+	}
+
+	const parentCommentId =
+		mode?.kind === 'new' ? mode.parentCommentId
+		: mode?.kind === 'edit' ? mode.comment.parent_comment_id!
+		: undefined
+
+	return (
+		<Dialog
+			open={isOpen}
+			onOpenChange={(open) => {
+				if (!open) close()
+			}}
+		>
+			<AuthenticatedDialogContent
+				authTitle="Login to Comment"
+				authMessage="You need to be logged in to join the conversation."
+				className="@container max-h-[90dvh] overflow-y-auto p-4 sm:p-6"
+				data-testid="phrase-reply-dialog"
+			>
+				<DialogTitle className="sr-only">
+					{mode?.kind === 'edit' ? 'Edit Reply' : 'Reply to comment'}
+				</DialogTitle>
+				<DialogDescription className="sr-only">
+					{mode?.kind === 'edit' ?
+						'Edit your reply'
+					:	'Write a reply to this comment'}
+				</DialogDescription>
+				{parentCommentId && (
+					<>
+						<PhraseCommentContext id={parentCommentId} />
+						<Separator />
+					</>
+				)}
+				{mode?.kind === 'edit' ?
+					<EditPhraseReplyForm comment={mode.comment} onClose={close} />
+				: mode?.kind === 'new' ?
+					<NewPhraseReplyForm
+						phraseId={phraseId}
+						phraseLang={phraseLang}
+						parentCommentId={mode.parentCommentId}
+						onClose={close}
+					/>
+				:	null}
+			</AuthenticatedDialogContent>
+		</Dialog>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Context display
+// ---------------------------------------------------------------------------
+
+function PhraseCommentContext({ id }: { id: uuid }) {
+	const { data, isLoading } = useOnePhraseComment(id)
+	if (isLoading || !data) return null
+	return (
+		<div>
+			<UidPermalink uid={data.uid} nonInteractive />
+			<div className="mt-2 text-sm">
+				<Markdown>{data.content}</Markdown>
+			</div>
+		</div>
+	)
+}
+
+function useOnePhraseComment(
+	commentId: uuid
+): UseLiveQueryResult<PhraseCommentType> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: phraseCommentsCollection })
+				.where(({ comment }) => eq(comment.id, commentId))
+				.findOne(),
+		[commentId]
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Reply form schema (shared)
+// ---------------------------------------------------------------------------
+
+const ReplyFormSchema = z.object({
+	content: z
+		.string()
+		.min(1, 'Please enter a reply')
+		.max(1000, 'Reply must be less than 1000 characters'),
+})
+
+// ---------------------------------------------------------------------------
+// New reply form
+// ---------------------------------------------------------------------------
+
+function NewPhraseReplyForm({
+	phraseId,
+	phraseLang,
+	parentCommentId,
+	onClose,
+}: {
+	phraseId: uuid
+	phraseLang: string
+	parentCommentId: uuid
+	onClose: () => void
+}) {
+	const navigate = useNavigate()
+
+	const form = useForm<{ content: string }>({
+		resolver: zodResolver(ReplyFormSchema),
+		defaultValues: { content: '' },
+	})
+
+	const createMutation = useMutation({
+		mutationFn: async (values: { content: string }) => {
+			// @ts-expect-error -- RPC exists after migration; regenerate types with `pnpm run types`
+			const { data, error } = await supabase.rpc('create_phrase_comment', {
+				p_phrase_id: phraseId,
+				p_content: values.content,
+				p_parent_comment_id: parentCommentId,
+				p_translations: [],
+			})
+			if (error) throw error
+			return data as {
+				phrase_comment: PhraseCommentType
+			}
+		},
+		onSuccess: (data) => {
+			phraseCommentsCollection.utils.writeInsert(
+				PhraseCommentSchema.parse(data.phrase_comment)
+			)
+			phraseCommentUpvotesCollection.utils.writeInsert({
+				comment_id: data.phrase_comment.id,
+			})
+			form.reset()
+			void navigate({
+				to: '/learn/$lang/phrases/$id',
+				params: { lang: phraseLang, id: phraseId },
+				search: { focus: parentCommentId },
+			})
+			toastSuccess('Reply posted!')
+			onClose()
+		},
+		onError: (error: Error) => {
+			toastError(`Failed to post reply: ${error.message}`)
+			console.log('Error', error)
+		},
+	})
+
+	return (
+		<Form {...form}>
+			<form
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
+				onSubmit={form.handleSubmit((data) => createMutation.mutate(data))}
+				className="space-y-4"
+			>
+				<FormField
+					control={form.control}
+					name="content"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="sr-only">Write a reply</FormLabel>
+							<MarkdownHint />
+							<FormControl>
+								<Textarea
+									data-testid="phrase-reply-content-input"
+									placeholder="Write a reply..."
+									rows={3}
+									{...field}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<Button
+					type="submit"
+					data-testid="post-phrase-reply-button"
+					disabled={createMutation.isPending}
+				>
+					{createMutation.isPending ? 'Posting...' : 'Post Reply'}
+				</Button>
+			</form>
+		</Form>
+	)
+}
+
+// ---------------------------------------------------------------------------
+// Edit reply form
+// ---------------------------------------------------------------------------
+
+function EditPhraseReplyForm({
+	comment,
+	onClose,
+}: {
+	comment: PhraseCommentType
+	onClose: () => void
+}) {
+	const form = useForm<{ content: string }>({
+		resolver: zodResolver(ReplyFormSchema),
+		defaultValues: { content: comment.content },
+	})
+
+	const updateMutation = useMutation({
+		mutationFn: async (values: { content: string }) => {
+			// @ts-expect-error -- table exists after migration; regenerate types with `pnpm run types`
+			const { data, error } = await supabase
+				.from('phrase_comment')
+				.update({ content: values.content })
+				.eq('id', comment.id)
+				.select()
+				.single()
+			if (error) throw error
+			return data
+		},
+		onSuccess: (data) => {
+			phraseCommentsCollection.utils.writeUpdate(
+				PhraseCommentSchema.parse(data)
+			)
+			toastSuccess('Reply updated!')
+			onClose()
+		},
+		onError: (error: Error) => {
+			toastError(`Failed to update reply: ${error.message}`)
+			console.log('Error', error)
+		},
+	})
+
+	return (
+		<Form {...form}>
+			<form
+				// eslint-disable-next-line @typescript-eslint/no-misused-promises
+				onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))}
+				className="space-y-4"
+			>
+				<FormField
+					control={form.control}
+					name="content"
+					render={({ field }) => (
+						<FormItem>
+							<FormLabel className="sr-only">Edit your reply</FormLabel>
+							<MarkdownHint />
+							<FormControl>
+								<Textarea
+									data-testid="edit-phrase-reply-input"
+									placeholder="Write a reply..."
+									rows={3}
+									{...field}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<div className="flex gap-2">
+					<Button
+						type="submit"
+						data-testid="save-phrase-reply-button"
+						disabled={updateMutation.isPending}
+					>
+						{updateMutation.isPending ? 'Saving...' : 'Save'}
+					</Button>
+					<Button type="button" variant="neutral" onClick={onClose}>
+						Cancel
+					</Button>
+				</div>
+			</form>
+		</Form>
+	)
+}

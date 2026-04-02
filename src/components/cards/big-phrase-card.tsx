@@ -1,5 +1,5 @@
 import { type CSSProperties, useState } from 'react'
-import { Link, useRouter } from '@tanstack/react-router'
+import { Link, useRouter, useSearch } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import {
 	ChevronsUpDown,
@@ -35,6 +35,7 @@ import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import {
 	UidPermalink,
 	UidPermalinkInline,
+	TinySelfAvatar,
 } from '@/components/card-pieces/user-permalink'
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
@@ -47,8 +48,16 @@ import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
 import { phraseCommentsCollection } from '@/features/comments/collections'
-import { AddPhraseCommentDialog } from '@/components/comments/add-phrase-comment-dialog'
 import { PhraseCommentWithReplies } from '@/components/comments/phrase-comment-with-replies'
+import {
+	PhraseCommentDialog,
+	derivePhraseCommentDialogMode,
+} from '@/components/comments/phrase-comment-dialog'
+import {
+	PhraseReplyDialog,
+	derivePhraseReplyDialogMode,
+} from '@/components/comments/phrase-reply-dialog'
+import { type PhraseCommentType } from '@/features/comments/schemas'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -292,6 +301,23 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 	)
 }
 
+/** Look up a phrase comment by ID from the collection (for edit modes) */
+function usePhraseComment(commentId: uuid | undefined) {
+	return useLiveQuery(
+		(q) =>
+			commentId ?
+				q
+					.from({ comment: phraseCommentsCollection })
+					.where(({ comment }) => eq(comment.id, commentId))
+					.findOne()
+			:	q
+					.from({ comment: phraseCommentsCollection })
+					.where(({ comment }) => eq(comment.id, ''))
+					.findOne(),
+		[commentId]
+	)
+}
+
 function PhraseDiscussion({
 	phraseId,
 	phraseLang,
@@ -299,6 +325,24 @@ function PhraseDiscussion({
 	phraseId: uuid
 	phraseLang: string
 }) {
+	const search = useSearch({ strict: false })
+
+	// Look up the comment being edited/focused (if any) for both dialogs
+	const editingId =
+		search.mode === 'edit' || search.mode === 'reply' ? search.focus : undefined
+	const { data: editComment } = usePhraseComment(editingId)
+
+	// Derive dialog modes from URL
+	const commentMode = derivePhraseCommentDialogMode(search)
+	const replyMode = derivePhraseReplyDialogMode(
+		search,
+		(editComment ?? undefined) as PhraseCommentType | undefined
+	)
+
+	// If editing a reply, the CommentDialog shouldn't also open
+	const effectiveCommentMode =
+		replyMode && search.mode === 'edit' ? undefined : commentMode
+
 	const { data: comments, isLoading } = useLiveQuery(
 		(q) =>
 			q
@@ -316,7 +360,33 @@ function PhraseDiscussion({
 	return (
 		<div className="mt-4 space-y-3" data-testid="phrase-discussion-section">
 			<h3 className="h3">Discussion</h3>
-			<AddPhraseCommentDialog phraseId={phraseId} phraseLang={phraseLang} />
+			<Link
+				to="."
+				search={(s) => ({ ...s, mode: 'comment' })}
+				className="flex grow cursor-pointer flex-row items-center gap-2"
+				data-testid="open-phrase-comment-dialog"
+			>
+				<TinySelfAvatar className="grow-o shrink-0" />
+				<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+					Discuss this phrase or suggest a translation...
+				</p>
+			</Link>
+
+			<PhraseCommentDialog
+				phraseId={phraseId}
+				phraseLang={phraseLang}
+				mode={effectiveCommentMode}
+				editComment={
+					(editComment ?? undefined) as PhraseCommentType | undefined
+				}
+			/>
+
+			<PhraseReplyDialog
+				phraseId={phraseId}
+				phraseLang={phraseLang}
+				mode={replyMode}
+			/>
+
 			{isLoading ? null : (
 				<div className="divide-y border">
 					{comments.map((comment) => (

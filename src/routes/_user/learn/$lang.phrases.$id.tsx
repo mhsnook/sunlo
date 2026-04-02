@@ -12,8 +12,8 @@ import {
 
 export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	validateSearch: z.object({
-		showSubthread: z.string().uuid().optional(),
-		highlightComment: z.string().uuid().optional(),
+		focus: z.string().uuid().optional(),
+		mode: z.enum(['reply', 'edit', 'comment']).optional(),
 	}),
 	component: RouteComponent,
 	beforeLoad: () => ({
