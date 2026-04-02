@@ -66,6 +66,11 @@ const statusBgColors = {
 
 const DEFAULT_RETENTION = 0.9
 
+function wasReviewedToday(card: CardMetaType): boolean {
+	if (!card.last_reviewed_at) return false
+	return sessionDaysDiff(card.last_reviewed_at, new Date()) === 0
+}
+
 function getDueInfo(card: CardMetaType): {
 	label: string
 	color: string
@@ -316,6 +321,7 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 	const [open, setOpen] = useState(false)
 	const StatusIconComponent = statusIcon[card.status]
 	const dueInfo = getDueInfo(card)
+	const reviewedToday = wasReviewedToday(card)
 	const difficultyDisplay =
 		card.difficulty != null ? Math.round(card.difficulty) : null
 
@@ -365,14 +371,19 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 						</span>
 						<span className="text-muted-foreground">
 							Next review:{' '}
-							<span
-								className={cn(
-									'font-medium tabular-nums',
-									dueInfo?.color ?? 'text-foreground'
-								)}
-							>
-								{dueInfo?.label ?? 'n/a'}
-							</span>
+							{reviewedToday ?
+								<span className="font-medium text-primary-foresoft">
+									Reviewed today!
+								</span>
+							:	<span
+									className={cn(
+										'font-medium tabular-nums',
+										dueInfo?.color ?? 'text-foreground'
+									)}
+								>
+									{dueInfo?.label ?? 'n/a'}
+								</span>
+							}
 						</span>
 						<span className="text-muted-foreground">
 							Difficulty:{' '}
@@ -452,6 +463,7 @@ function DesktopCardRow({
 }) {
 	const StatusIconComponent = statusIcon[card.status]
 	const dueInfo = getDueInfo(card)
+	const reviewedToday = wasReviewedToday(card)
 	const difficultyDisplay =
 		card.difficulty != null ? Math.round(card.difficulty) : null
 
@@ -487,7 +499,11 @@ function DesktopCardRow({
 
 			{/* Next Review */}
 			<td className="px-3 py-2 text-center">
-				{dueInfo ?
+				{reviewedToday ?
+					<span className="text-sm font-medium text-primary-foresoft">
+						Reviewed today!
+					</span>
+				: dueInfo ?
 					<span className={cn('text-sm tabular-nums', dueInfo.color)}>
 						{dueInfo.label}
 					</span>
