@@ -1,11 +1,20 @@
 import { createFileRoute } from '@tanstack/react-router'
+import * as z from 'zod'
 import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import { CSSProperties } from 'react'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
+import {
+	phraseCommentsCollection,
+	commentTranslationLinksCollection,
+} from '@/features/comments/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
+	validateSearch: z.object({
+		showSubthread: z.string().uuid().optional(),
+		highlightComment: z.string().uuid().optional(),
+	}),
 	component: RouteComponent,
 	beforeLoad: () => ({
 		titleBar: {
@@ -17,6 +26,8 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 			phrasesCollection.preload(),
 			cardsCollection.preload(),
 			publicProfilesCollection.preload(),
+			phraseCommentsCollection.preload(),
+			commentTranslationLinksCollection.preload(),
 		])
 	},
 })

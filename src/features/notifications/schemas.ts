@@ -7,6 +7,8 @@ export const NotificationTypeSchema = z.enum([
 	'phrase_referenced',
 	'request_upvoted',
 	'change_suggested',
+	'phrase_commented',
+	'phrase_comment_replied',
 ])
 
 export const NotificationSchema = z.object({
@@ -17,6 +19,7 @@ export const NotificationSchema = z.object({
 	request_id: z.string().uuid().nullable(),
 	comment_id: z.string().uuid().nullable(),
 	phrase_id: z.string().uuid().nullable(),
+	phrase_comment_id: z.string().uuid().nullable(),
 	read_at: z.string().nullable(),
 	created_at: z.string(),
 })

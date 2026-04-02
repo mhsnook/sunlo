@@ -1,5 +1,6 @@
 import { type CSSProperties, useState } from 'react'
 import { Link, useRouter } from '@tanstack/react-router'
+import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import {
 	ChevronsUpDown,
 	MessagesSquare,
@@ -45,6 +46,9 @@ import {
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
+import { phraseCommentsCollection } from '@/features/comments/collections'
+import { AddPhraseCommentDialog } from '@/components/comments/add-phrase-comment-dialog'
+import { PhraseCommentWithReplies } from '@/components/comments/phrase-comment-with-replies'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -279,6 +283,55 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 						)}
 					</div>
 				</>
+			)}
+
+			{/* Discussion section */}
+			<Separator className="mt-4" />
+			<PhraseDiscussion phraseId={pid} phraseLang={phrase.lang} />
+		</div>
+	)
+}
+
+function PhraseDiscussion({
+	phraseId,
+	phraseLang,
+}: {
+	phraseId: uuid
+	phraseLang: string
+}) {
+	const { data: comments, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: phraseCommentsCollection })
+				.where(({ comment }) =>
+					and(
+						eq(comment.phrase_id, phraseId),
+						isNull(comment.parent_comment_id)
+					)
+				)
+				.orderBy(({ comment }) => comment.upvote_count, 'desc'),
+		[phraseId]
+	)
+
+	return (
+		<div className="mt-4 space-y-3" data-testid="phrase-discussion-section">
+			<h3 className="h3">Discussion</h3>
+			<AddPhraseCommentDialog phraseId={phraseId} phraseLang={phraseLang} />
+			{isLoading ? null : (
+				<div className="divide-y border">
+					{comments.map((comment) => (
+						<PhraseCommentWithReplies
+							key={comment.id}
+							comment={comment}
+							lang={phraseLang}
+						/>
+					))}
+					{!comments.length && (
+						<div className="text-muted-foreground py-8 text-center">
+							<p>No comments yet. Be the first to comment!</p>
+						</div>
+					)}
+				</div>
 			)}
 		</div>
 	)

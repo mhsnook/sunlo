@@ -12,6 +12,9 @@ import {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
+	phraseCommentsCollection,
+	commentTranslationLinksCollection,
+	phraseCommentUpvotesCollection,
 } from '@/features/comments/collections'
 import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
@@ -31,6 +34,9 @@ export const clearUser = async () => {
 		commentsCollection.cleanup(),
 		commentPhraseLinksCollection.cleanup(),
 		commentUpvotesCollection.cleanup(),
+		phraseCommentsCollection.cleanup(),
+		commentTranslationLinksCollection.cleanup(),
+		phraseCommentUpvotesCollection.cleanup(),
 		phraseRequestUpvotesCollection.cleanup(),
 		phrasePlaylistUpvotesCollection.cleanup(),
 		notificationsCollection.cleanup(),

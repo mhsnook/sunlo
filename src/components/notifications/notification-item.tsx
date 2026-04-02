@@ -6,6 +6,7 @@ import {
 	Languages,
 	Link2,
 	ThumbsUp,
+	MessageCircle,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -19,7 +20,10 @@ import type {
 import { useMarkAsRead } from '@/features/notifications/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { commentsCollection } from '@/features/comments/collections'
+import {
+	commentsCollection,
+	phraseCommentsCollection,
+} from '@/features/comments/collections'
 import { Button } from '@/components/ui/button'
 
 const notificationConfig: Record<
@@ -56,6 +60,16 @@ const notificationConfig: Record<
 		action: 'suggested a change to your content',
 		iconClass: 'text-7-mid-neutral bg-1-lo-neutral',
 	},
+	phrase_commented: {
+		Icon: MessageCircle,
+		action: 'commented on your phrase',
+		iconClass: 'text-7-mid-primary bg-1-lo-primary',
+	},
+	phrase_comment_replied: {
+		Icon: MessagesSquare,
+		action: 'replied to your comment on a phrase',
+		iconClass: 'text-7-mid-info bg-1-lo-info',
+	},
 }
 
 function useNotificationLink(notification: NotificationType): {
@@ -63,7 +77,7 @@ function useNotificationLink(notification: NotificationType): {
 	params: Record<string, string>
 	search?: Record<string, string>
 } | null {
-	const { request_id, comment_id, phrase_id } = notification
+	const { request_id, comment_id, phrase_id, phrase_comment_id } = notification
 
 	// Look up the request for lang + comment search params
 	const { data: request } = useLiveQuery(
@@ -89,7 +103,19 @@ function useNotificationLink(notification: NotificationType): {
 		[comment_id]
 	)
 
-	// Look up the phrase for lang (phrase_translated, phrase_referenced)
+	// Look up the phrase comment for phrase comment notifications
+	const { data: phraseComment } = useLiveQuery(
+		(q) =>
+			!phrase_comment_id ? undefined : (
+				q
+					.from({ c: phraseCommentsCollection })
+					.where(({ c }) => eq(c.id, phrase_comment_id))
+					.findOne()
+			),
+		[phrase_comment_id]
+	)
+
+	// Look up the phrase for lang (phrase_translated, phrase_referenced, phrase_commented)
 	const { data: phrase } = useLiveQuery(
 		(q) =>
 			request_id || !phrase_id ? undefined : (
@@ -116,7 +142,27 @@ function useNotificationLink(notification: NotificationType): {
 		}
 	}
 
-	// Phrase-only notifications (no request_id)
+	// Phrase comment notifications (phrase_commented, phrase_comment_replied)
+	if (notification.phrase_comment_id && phrase) {
+		const search: Record<string, string> = {}
+
+		if (phraseComment) {
+			if (phraseComment.parent_comment_id) {
+				search.showSubthread = phraseComment.parent_comment_id
+				search.highlightComment = phraseComment.id
+			} else {
+				search.showSubthread = phraseComment.id
+			}
+		}
+
+		return {
+			to: '/learn/$lang/phrases/$id',
+			params: { lang: phrase.lang, id: phrase.id },
+			...(Object.keys(search).length > 0 && { search }),
+		}
+	}
+
+	// Phrase-only notifications (no request_id, no phrase_comment_id)
 	if (notification.phrase_id && phrase) {
 		return {
 			to: '/learn/$lang/phrases/$id',
