@@ -1,5 +1,6 @@
 import { useLanguagePhrase } from '@/features/phrases/hooks'
 import { useLanguagesToShow } from '@/features/profile/hooks'
+import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import type { uuid } from '@/types/main'
 import type {
 	PhraseFullFilteredType,
@@ -18,12 +19,10 @@ export type CompositePhraseQueryResults =
 			data: null
 	  }
 
-export const usePhrase = (
-	pid: uuid,
-	preferredLang?: string
-): CompositePhraseQueryResults => {
+export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
 	const { data: languagesToShow, isLoading: isLoading1 } = useLanguagesToShow()
 	const { data: phrase, isLoading: isLoading2 } = useLanguagePhrase(pid)
+	const preferredLang = usePreferredTranslationLang(phrase?.lang ?? '')
 
 	if (isLoading2) return { status: 'pending', data: undefined }
 	if (!phrase) return { data: null, status: 'not-found' }
@@ -36,7 +35,7 @@ export const usePhrase = (
 	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
 	const orderedLangs =
-		preferredLang && languagesToShow.includes(preferredLang) ?
+		languagesToShow.includes(preferredLang) ?
 			[preferredLang, ...languagesToShow.filter((l) => l !== preferredLang)]
 		:	languagesToShow
 

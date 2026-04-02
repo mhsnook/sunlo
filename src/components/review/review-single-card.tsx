@@ -22,7 +22,7 @@ import {
 	useOneReviewToday,
 	useReviewMutation,
 } from '@/features/review/hooks'
-import { usePreferredTranslationLang, useReviewAnswerMode } from '@/features/deck/hooks'
+import { useReviewAnswerMode } from '@/features/deck/hooks'
 import { useReviewLang } from '@/features/review/store'
 import { Separator } from '@/components/ui/separator'
 import { LangBadge } from '@/components/ui/badge'
@@ -62,9 +62,7 @@ export function ReviewSingleCard({
 	dayString: string
 	triggerSlide: (navigate: () => void) => void
 }) {
-	const lang = useReviewLang()
-	const preferredTranslationLang = usePreferredTranslationLang(lang)
-	const { data: phrase, status } = usePhrase(pid, preferredTranslationLang)
+	const { data: phrase, status } = usePhrase(pid)
 	if (status === 'not-found')
 		throw new Error(`Trying to review this card, but can't find it`)
 	const [revealCard, setRevealCard] = useState(false)
@@ -81,6 +79,7 @@ export function ReviewSingleCard({
 		triggerSlide
 	)
 
+	const lang = useReviewLang()
 	const answerMode = useReviewAnswerMode(lang)
 	const nextIntervals = intervals(latestReview).map(formatInterval)
 
