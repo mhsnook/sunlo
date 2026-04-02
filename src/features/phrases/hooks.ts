@@ -198,6 +198,98 @@ export function usePhraseComments(
 	)
 }
 
+// Types for related cards
+export interface RelatedCardSource {
+	type: 'playlist' | 'thread'
+	id: uuid // playlistId or requestId
+	label: string // playlist title or request prompt
+}
+
+export interface RelatedCard {
+	phraseId: uuid
+	sources: RelatedCardSource[]
+}
+
+/**
+ * Get phrases related to this one via shared playlists or request threads.
+ * Returns deduplicated phrase IDs with source metadata.
+ */
+export function useRelatedCards(phraseId: uuid): RelatedCard[] {
+	const { data: playlists } = usePhrasePlaylists(phraseId)
+	const { data: comments } = usePhraseComments(phraseId)
+
+	const playlistIds = (playlists ?? []).map((p) => p.playlistId)
+	const requestIds = [...new Set((comments ?? []).map((c) => c.requestId))]
+
+	// Get sibling phrases from the same playlists
+	const { data: playlistSiblings } = useLiveQuery(
+		(q) =>
+			playlistIds.length === 0 ?
+				undefined
+			:	q
+					.from({ link: playlistPhraseLinksCollection })
+					.join(
+						{ playlist: phrasePlaylistsCollection },
+						({ link, playlist }) => eq(link.playlist_id, playlist.id),
+						'inner'
+					)
+					.where(({ link }) => inArray(link.playlist_id, playlistIds))
+					.select(({ link, playlist }) => ({
+						phraseId: link.phrase_id,
+						playlistId: playlist.id,
+						title: playlist.title,
+					})),
+		[playlistIds.join(',')]
+	)
+
+	// Get sibling phrases from the same request threads
+	const { data: threadSiblings } = useLiveQuery(
+		(q) =>
+			requestIds.length === 0 ?
+				undefined
+			:	q
+					.from({ link: commentPhraseLinksCollection })
+					.join(
+						{ request: phraseRequestsCollection },
+						({ link, request }) => eq(link.request_id, request.id),
+						'inner'
+					)
+					.where(({ link }) => inArray(link.request_id, requestIds))
+					.select(({ link, request }) => ({
+						phraseId: link.phrase_id,
+						requestId: request.id,
+						prompt: request.prompt,
+					})),
+		[requestIds.join(',')]
+	)
+
+	// Merge into a map of phraseId -> sources, excluding the current phrase
+	const sourceMap = new Map<uuid, RelatedCardSource[]>()
+
+	for (const s of playlistSiblings ?? []) {
+		if (s.phraseId === phraseId) continue
+		const sources = sourceMap.get(s.phraseId) ?? []
+		if (!sources.some((x) => x.type === 'playlist' && x.id === s.playlistId)) {
+			sources.push({ type: 'playlist', id: s.playlistId, label: s.title })
+		}
+		sourceMap.set(s.phraseId, sources)
+	}
+
+	for (const s of threadSiblings ?? []) {
+		if (s.phraseId === phraseId) continue
+		const sources = sourceMap.get(s.phraseId) ?? []
+		if (!sources.some((x) => x.type === 'thread' && x.id === s.requestId)) {
+			sources.push({ type: 'thread', id: s.requestId, label: s.prompt })
+		}
+		sourceMap.set(s.phraseId, sources)
+	}
+
+	return [...sourceMap.entries()].map(([phraseId, sources]) => ({
+		phraseId,
+		sources,
+	}))
+}
+
 /**
  * Get all provenance items (playlists + comments) sorted by date
  */

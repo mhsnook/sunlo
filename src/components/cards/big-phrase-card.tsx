@@ -40,8 +40,10 @@ import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { Button } from '@/components/ui/button'
 import {
 	usePhraseProvenance,
+	useRelatedCards,
 	type PhraseProvenanceItem as PhraseProvenanceItemType,
 } from '@/features/phrases/hooks'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
@@ -250,6 +252,8 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 					size="icon"
 				/>
 			</div>
+			{/* Related cards section */}
+			<RelatedCardsSection pid={pid} lang={phrase.lang} />
 			{/* Provenance section */}
 			{provenanceItems.length > 0 && (
 				<>
@@ -304,6 +308,55 @@ function PhraseNotFound() {
 interface PhraseProvenanceItemProps {
 	item: PhraseProvenanceItemType
 	lang: string
+}
+
+function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
+	const relatedCards = useRelatedCards(pid)
+
+	if (relatedCards.length === 0) return null
+
+	return (
+		<>
+			<Separator />
+			<div className="mt-4 space-y-3">
+				<h3 className="h3 mb-1">Related phrases</h3>
+				<div className="space-y-3">
+					{relatedCards.map((card) => (
+						<div key={card.phraseId} className="space-y-1.5">
+							<PhraseTinyCard pid={card.phraseId} />
+							<div className="flex flex-wrap gap-1.5 px-1">
+								{card.sources.map((source) =>
+									source.type === 'playlist' ?
+										<Link
+											key={`playlist-${source.id}`}
+											to="/learn/$lang/playlists/$playlistId"
+											params={{ lang, playlistId: source.id }}
+											className="inline-flex"
+										>
+											<Badge variant="secondary" className="gap-1">
+												<ListMusic className="h-3 w-3" />
+												{source.label}
+											</Badge>
+										</Link>
+									:	<Link
+											key={`thread-${source.id}`}
+											to="/learn/$lang/requests/$id"
+											params={{ lang, id: source.id }}
+											className="inline-flex"
+										>
+											<Badge variant="secondary" className="gap-1">
+												<MessagesSquare className="h-3 w-3" />
+												{source.label}
+											</Badge>
+										</Link>
+								)}
+							</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</>
+	)
 }
 
 function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
