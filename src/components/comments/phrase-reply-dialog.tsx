@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
@@ -25,13 +26,27 @@ import supabase from '@/lib/supabase-client'
 import {
 	phraseCommentsCollection,
 	phraseCommentUpvotesCollection,
+	commentTranslationLinksCollection,
 } from '@/features/comments/collections'
 import {
 	PhraseCommentSchema,
+	CommentTranslationLinkSchema,
 	type PhraseCommentType,
+	type CommentTranslationLinkType,
 } from '@/features/comments/schemas'
+import {
+	TranslationSchema,
+	type TranslationType,
+} from '@/features/phrases/schemas'
+import { phrasesCollection } from '@/features/phrases/collections'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
+import {
+	AddTranslationInline,
+	AttachedTranslation,
+	SuggestTranslationButton,
+	type TranslationDraft,
+} from './add-translation-inline'
 
 // ---------------------------------------------------------------------------
 // URL state types
@@ -171,10 +186,7 @@ function useOnePhraseComment(
 // ---------------------------------------------------------------------------
 
 const ReplyFormSchema = z.object({
-	content: z
-		.string()
-		.min(1, 'Please enter a reply')
-		.max(1000, 'Reply must be less than 1000 characters'),
+	content: z.string().max(1000, 'Reply must be less than 1000 characters'),
 })
 
 // ---------------------------------------------------------------------------
@@ -193,24 +205,31 @@ function NewPhraseReplyForm({
 	onClose: () => void
 }) {
 	const navigate = useNavigate()
+	const [translation, setTranslation] = useState<TranslationDraft | null>(null)
+	const [showTranslationForm, setShowTranslationForm] = useState(false)
 
 	const form = useForm<{ content: string }>({
 		resolver: zodResolver(ReplyFormSchema),
 		defaultValues: { content: '' },
 	})
 
+	const hasTranslation = !!translation
+
 	const createMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
+			const translations = translation ? [translation] : []
 			// @ts-expect-error -- RPC exists after migration; regenerate types with `pnpm run types`
 			const { data, error } = await supabase.rpc('create_phrase_comment', {
 				p_phrase_id: phraseId,
 				p_content: values.content,
 				p_parent_comment_id: parentCommentId,
-				p_translations: [],
+				p_translations: translations,
 			})
 			if (error) throw error
 			return data as {
 				phrase_comment: PhraseCommentType
+				comment_translation_links: Array<CommentTranslationLinkType>
+				translations: Array<TranslationType>
 			}
 		},
 		onSuccess: (data) => {
@@ -220,7 +239,17 @@ function NewPhraseReplyForm({
 			phraseCommentUpvotesCollection.utils.writeInsert({
 				comment_id: data.phrase_comment.id,
 			})
+			data.comment_translation_links?.forEach((link) => {
+				commentTranslationLinksCollection.utils.writeInsert(
+					CommentTranslationLinkSchema.parse(link)
+				)
+			})
+			data.translations?.forEach((t) => {
+				const parsed = TranslationSchema.parse(t)
+				void phrasesCollection.preload({ force: true }).then(() => void parsed)
+			})
 			form.reset()
+			setTranslation(null)
 			void navigate({
 				to: '/learn/$lang/phrases/$id',
 				params: { lang: phraseLang, id: phraseId },
@@ -242,6 +271,26 @@ function NewPhraseReplyForm({
 				onSubmit={form.handleSubmit((data) => createMutation.mutate(data))}
 				className="space-y-4"
 			>
+				{/* Attached translation */}
+				{hasTranslation && (
+					<AttachedTranslation
+						translation={translation}
+						onRemove={() => setTranslation(null)}
+					/>
+				)}
+
+				{/* Inline translation form */}
+				{showTranslationForm && (
+					<AddTranslationInline
+						phraseLang={phraseLang}
+						onAdd={(draft) => {
+							setTranslation(draft)
+							setShowTranslationForm(false)
+						}}
+						onCancel={() => setShowTranslationForm(false)}
+					/>
+				)}
+
 				<FormField
 					control={form.control}
 					name="content"
@@ -252,7 +301,11 @@ function NewPhraseReplyForm({
 							<FormControl>
 								<Textarea
 									data-testid="phrase-reply-content-input"
-									placeholder="Write a reply..."
+									placeholder={
+										hasTranslation ?
+											'Add some context (optional)'
+										:	'Write a reply...'
+									}
 									rows={3}
 									{...field}
 								/>
@@ -261,13 +314,26 @@ function NewPhraseReplyForm({
 						</FormItem>
 					)}
 				/>
-				<Button
-					type="submit"
-					data-testid="post-phrase-reply-button"
-					disabled={createMutation.isPending}
-				>
-					{createMutation.isPending ? 'Posting...' : 'Post Reply'}
-				</Button>
+
+				<div className="flex flex-col gap-2 @xs:flex-row @xs:items-center @xs:justify-between">
+					<Button
+						type="submit"
+						data-testid="post-phrase-reply-button"
+						disabled={createMutation.isPending}
+					>
+						{createMutation.isPending ?
+							'Posting...'
+						: hasTranslation ?
+							'Post Translation'
+						:	'Post Reply'}
+					</Button>
+
+					{!hasTranslation && !showTranslationForm && (
+						<SuggestTranslationButton
+							onClick={() => setShowTranslationForm(true)}
+						/>
+					)}
+				</div>
 			</form>
 		</Form>
 	)
