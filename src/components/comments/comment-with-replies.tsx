@@ -54,9 +54,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	// focus=<uuid> (without a dialog mode) means highlight + expand
 	const isFocusMode = search.focus && !search.mode
 	const isHighlighted = isFocusMode && search.focus === comment.id
-	const showSubthread =
-		isHighlighted ||
-		(isFocusMode && replies.some(({ reply }) => reply.id === search.focus))
+	const hasHighlightedReply =
+		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
+	const showSubthread = isHighlighted || hasHighlightedReply
 
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const phrases = phraseFromComment ?? []
@@ -67,10 +67,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	return (
 		<div
 			className={`${
-				isHighlighted ?
-					'bg-2-mid-primary ring-primary-foresoft/60 ring ring-offset-4'
-				: showSubthread ? 'outline-primary rounded-lg outline'
-				: ''
+				isHighlighted ? 'border-primary bg-card/50 rounded border border-s-2'
+				: hasHighlightedReply ?
+					'border-3-mlo-primary bg-card/50 rounded border border-s-2'
+				:	''
 			} p-4`}
 			data-comment-id={comment.id}
 			data-testid="comment-item"
@@ -178,7 +178,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				</div>
 
 				{showSubthread && replies && replies.length > 0 && (
-					<div className="border-3-mlo-primary mt-3 space-y-3">
+					<div className="mt-3 space-y-2 text-sm">
 						<Separator />
 						<div className="divide-y">
 							{replies.map(({ reply }) => (
@@ -196,7 +196,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							data-testid="add-reply-inline"
 						>
 							<TinySelfAvatar className="grow-o shrink-0" />
-							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
 								Type your reply here...
 							</p>
 						</Link>
@@ -239,7 +239,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-4 ${isHighlighted ? 'border-s-primary rounded border-s-2 ps-3' : ''}`}
+			className={`mt-2 pt-2 ${isHighlighted ? 'border-primary -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
 			data-testid="comment-reply"
 		>
 			<div className="flex items-center justify-between">
@@ -252,7 +252,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					timeLinkTo="/learn/$lang/requests/$id"
 				/>
 
-				<div className="flex gap-2">
+				<div className="flex gap-1">
 					{isOwner && (
 						<>
 							<Link
@@ -266,7 +266,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 								aria-label="Edit reply"
 								data-testid="edit-reply-button"
 							>
-								<Edit className="h-4 w-4" />
+								<Edit className="h-3.5 w-3.5" />
 							</Link>
 							<DeleteCommentDialog comment={comment} />
 						</>
@@ -276,20 +276,20 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			</div>
 
 			{comment.content && (
-				<div className="ms-9 mt-2">
+				<div className="ms-8 mt-1">
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
 
 			{phrases && phrases.length > 0 && (
-				<div className="ms-9 mt-3 space-y-2">
+				<div className="ms-8 mt-2 space-y-1.5">
 					{phrases.map(({ phrase }) => (
 						<CardResultSimple key={phrase.id} phrase={phrase} />
 					))}
 				</div>
 			)}
 
-			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
+			<div className="text-muted-foreground ms-8 mt-2 mb-1 flex items-center gap-2 pb-1">
 				<Upvote comment={comment} />
 			</div>
 		</div>
