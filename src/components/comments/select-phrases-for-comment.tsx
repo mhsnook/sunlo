@@ -103,7 +103,7 @@ export function SelectPhrasesForComment({
 	return (
 		<Dialog open={phraseDialogOpen} onOpenChange={setPhraseDialogOpen}>
 			<DialogTrigger asChild>{triggerButton}</DialogTrigger>
-			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden p-0">
+			<DialogContent className="grid max-h-[98dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden px-4 pt-0 pb-4 sm:px-6 sm:pb-6">
 				<DialogHeader className="flex-none border-b p-6 pb-4">
 					<DialogTitle>
 						{showCreateForm ?
@@ -119,7 +119,7 @@ export function SelectPhrasesForComment({
 					</DialogDescription>
 					{!showCreateForm && (
 						<div className="relative mt-2">
-							<Search className="text-muted-foreground absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2" />
+							<Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
 							<Input
 								type="text"
 								placeholder="Search phrases..."
@@ -156,14 +156,16 @@ export function SelectPhrasesForComment({
 											No phrases found
 										</p>
 									:	filteredPhrases
-											.filter((phrase) => !selectedPhraseIds.includes(phrase.id))
+											.filter(
+												(phrase) => !selectedPhraseIds.includes(phrase.id)
+											)
 											.map((phrase) => (
 												<button
 													key={phrase.id}
 													type="button"
 													disabled={isMaxReached}
 													onClick={() => handleToggle(phrase.id)}
-													className="w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors hover:bg-muted/50 disabled:cursor-not-allowed disabled:opacity-50"
+													className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 												>
 													<PhraseTinyCard pid={phrase.id} nonInteractive />
 												</button>

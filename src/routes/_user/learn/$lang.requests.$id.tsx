@@ -38,6 +38,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		highlightComment: z.string().uuid().optional(),
 		answering: z.enum(['search', 'comment']).optional(),
 		attaching: z.boolean().optional(),
+		editing: z.string().uuid().optional(),
 	}),
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },

@@ -23,7 +23,10 @@ import { phrasesFull } from '@/features/phrases/live'
 
 import { AddCommentDialog } from './add-comment-dialog'
 import { DeleteCommentDialog } from './delete-comment-dialog'
-import { UpdateCommentDialog } from './update-comment-dialog'
+import {
+	UpdateCommentButton,
+	UpdateCommentDialog,
+} from './update-comment-dialog'
 import { Upvote } from './upvote-comment-button'
 import { CommentContextMenu } from './comment-context-menu'
 import { CSSProperties } from 'react'
@@ -98,7 +101,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					<div className="flex gap-2">
 						{isOwner && (
 							<>
-								<UpdateCommentDialog comment={comment} />
+								<UpdateCommentButton comment={comment} />
 								<DeleteCommentDialog comment={comment} />
 							</>
 						)}
@@ -124,6 +127,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						})}
 					</div>
 				)}
+
+				{/* Edit dialog (URL-driven) */}
+				{isOwner && <UpdateCommentDialog comment={comment} lang={lang} />}
 
 				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
@@ -244,7 +250,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				<div className="flex gap-2">
 					{isOwner && (
 						<>
-							<UpdateCommentDialog comment={comment} />
+							<UpdateCommentButton comment={comment} />
 							<DeleteCommentDialog comment={comment} />
 						</>
 					)}
@@ -267,6 +273,9 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					))}
 				</div>
 			)}
+
+			{/* Edit dialog (URL-driven) */}
+			{isOwner && <UpdateCommentDialog comment={comment} lang={lang} />}
 
 			{/* Comment actions */}
 			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
