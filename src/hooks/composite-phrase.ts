@@ -18,7 +18,10 @@ export type CompositePhraseQueryResults =
 			data: null
 	  }
 
-export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
+export const usePhrase = (
+	pid: uuid,
+	preferredLang?: string
+): CompositePhraseQueryResults => {
 	const { data: languagesToShow, isLoading: isLoading1 } = useLanguagesToShow()
 	const { data: phrase, isLoading: isLoading2 } = useLanguagePhrase(pid)
 
@@ -32,7 +35,12 @@ export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
 	if (isLoading1) return { data: partial, status: 'partial' }
 	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
-	const phraseFiltered = splitPhraseTranslations(phrase, languagesToShow)
+	const orderedLangs =
+		preferredLang && languagesToShow.includes(preferredLang) ?
+			[preferredLang, ...languagesToShow.filter((l) => l !== preferredLang)]
+		:	languagesToShow
+
+	const phraseFiltered = splitPhraseTranslations(phrase, orderedLangs)
 
 	return { data: phraseFiltered, status: 'complete' }
 }
