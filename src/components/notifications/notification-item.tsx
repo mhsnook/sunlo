@@ -106,12 +106,7 @@ function useNotificationLink(notification: NotificationType): {
 		const search: Record<string, string> = {}
 
 		if (notification.comment_id && comment) {
-			if (comment.parent_comment_id) {
-				search.showSubthread = comment.parent_comment_id
-				search.highlightComment = comment.id
-			} else {
-				search.showSubthread = comment.id
-			}
+			search.focus = comment.id
 		}
 
 		return {
