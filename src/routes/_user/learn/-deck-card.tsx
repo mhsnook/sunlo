@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import { Archive, Rocket, Logs, TableProperties } from 'lucide-react'
+import { Archive, CircleCheck, Rocket, Logs, TableProperties } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -11,10 +11,29 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { ArchiveDeckButton } from './-archive-deck-button'
-import { cn } from '@/lib/utils'
+import { cn, todayString } from '@/lib/utils'
 import { DeckStatsBadges } from '@/components/stats-badges'
 import { getThemeCss } from '@/lib/deck-themes'
 import { DeckMetaType } from '@/features/deck/schemas'
+import { useActiveReviewRemaining } from '@/features/review/hooks'
+
+function ReviewButton({ lang }: { lang: string }) {
+	const remaining = useActiveReviewRemaining(lang, todayString())
+	const isDone = remaining === 0
+	return (
+		<Link
+			to="/learn/$lang/review"
+			className={cn(
+				buttonVariants({ size: 'icon' }),
+				isDone && 'bg-5-hi-success hover:bg-6-hi-success'
+			)}
+			params={{ lang }}
+			aria-label={isDone ? 'Review complete' : 'Start review'}
+		>
+			{isDone ? <CircleCheck /> : <Rocket />}
+		</Link>
+	)
+}
 
 export function DeckCard({ deck }: { deck: DeckMetaType }) {
 	return (
@@ -40,14 +59,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								<Archive />
 								Archived
 							</Badge>
-						:	<Link
-								to="/learn/$lang/review"
-								className={buttonVariants({ size: 'icon' })}
-								params={{ lang: deck.lang }}
-								aria-label="Start review"
-							>
-								<Rocket />
-							</Link>
+						:	<ReviewButton lang={deck.lang} />
 						}
 					</span>
 				</CardHeader>
