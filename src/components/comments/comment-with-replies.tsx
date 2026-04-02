@@ -1,6 +1,6 @@
 import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronDown, ChevronUp, Edit, MessagesSquare } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
@@ -134,22 +134,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
-					<div className="flex items-center gap-2">
-						<Link
-							to="."
-							search={(prev) => ({
-								...prev,
-								focus: comment.id,
-								mode: 'reply' as const,
-							})}
-							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-							aria-label="Add a reply"
-							data-testid="reply-to-comment-button"
-						>
-							<MessagesSquare />
-						</Link>
-						<span>reply</span>
-					</div>
 
 					{replyCount > 0 && (
 						<Link
@@ -159,7 +143,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							})}
 							to={'.'}
 							search={(search) => {
-								if (search.focus === comment.id && !search.mode) {
+								if (showSubthread) {
 									const { focus: _, ...args } = search
 									return args
 								} else return { ...search, focus: comment.id }
@@ -177,14 +161,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					)}
 				</div>
 
-				{showSubthread && replies && replies.length > 0 && (
+				{showSubthread && (
 					<div className="mt-3 space-y-2 text-sm">
 						<Separator />
-						<div className="divide-y">
-							{replies.map(({ reply }) => (
-								<CommentReply key={reply.id} comment={reply} lang={lang} />
-							))}
-						</div>
 						<Link
 							to="."
 							search={(prev) => ({
@@ -192,14 +171,21 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								focus: comment.id,
 								mode: 'reply' as const,
 							})}
-							className="@group flex grow cursor-pointer flex-row items-center gap-2"
+							className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
 							data-testid="add-reply-inline"
 						>
-							<TinySelfAvatar className="grow-o shrink-0" />
+							<TinySelfAvatar className="h-6 w-6 shrink-0" />
 							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">
 								Type your reply here...
 							</p>
 						</Link>
+						{replies.length > 0 && (
+							<div className="divide-y">
+								{replies.map(({ reply }) => (
+									<CommentReply key={reply.id} comment={reply} lang={lang} />
+								))}
+							</div>
+						)}
 					</div>
 				)}
 			</div>
@@ -239,7 +225,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`mt-2 pt-2 ${isHighlighted ? 'border-primary -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
+			className={`mt-2 py-2 ${isHighlighted ? 'border-primary -mx-2 rounded border border-s-2 px-2 py-1' : ''}`}
 			data-testid="comment-reply"
 		>
 			<div className="flex items-center justify-between">

@@ -82,7 +82,7 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 		void navigate({
 			to: '.',
 			search: (prev: Record<string, unknown>) => {
-				const { mode: _, focus: __, ...rest } = prev
+				const { mode: _, ...rest } = prev
 				return rest
 			},
 		})

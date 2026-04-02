@@ -135,7 +135,7 @@ export function CommentDialog({
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
-					const { mode: _, attaching: __, focus: ___, ...rest } = prev
+					const { mode: _, attaching: __, ...rest } = prev
 					return rest
 				},
 			})
@@ -152,11 +152,11 @@ export function CommentDialog({
 				},
 			})
 		} else {
-			// 1a: close entirely
+			// 1a: close dialog, keep focus for highlight
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
-					const { mode: _, focus: __, attaching: ___, ...rest } = prev
+					const { mode: _, attaching: __, ...rest } = prev
 					return rest
 				},
 			})
