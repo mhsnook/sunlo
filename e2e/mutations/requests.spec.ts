@@ -272,7 +272,7 @@ test.describe('Phrase Request Mutations', () => {
 					expect(clipboardText).toContain(
 						`/learn/${TEST_LANG}/requests/${request.id}`
 					)
-					expect(clipboardText).toContain(`showSubthread=${comment!.id}`)
+					expect(clipboardText).toContain(`focus=${comment!.id}`)
 				}
 			} catch /*(error)*/ {
 				// Clipboard permissions not supported or operation failed, skip verification

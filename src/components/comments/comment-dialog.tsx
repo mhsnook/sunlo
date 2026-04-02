@@ -58,17 +58,17 @@ type CommentDialogMode =
  * Returns undefined when no comment dialog should be open.
  */
 export function deriveCommentDialogMode(search: {
-	answering?: 'search' | 'comment'
+	focus?: string
+	mode?: string
 	attaching?: boolean
-	editing?: string
 }): CommentDialogMode | undefined {
-	if (search.answering === 'search') return { kind: 'quicksearch' }
-	if (search.answering === 'comment')
+	if (search.mode === 'search') return { kind: 'quicksearch' }
+	if (search.mode === 'comment')
 		return { kind: 'new', attaching: !!search.attaching }
-	if (search.editing) {
+	if (search.mode === 'edit' && search.focus) {
 		return {
 			kind: 'edit',
-			commentId: search.editing,
+			commentId: search.focus,
 			attaching: !!search.attaching,
 		}
 	}
@@ -135,7 +135,7 @@ export function CommentDialog({
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
-					const { answering: _, attaching: __, ...rest } = prev
+					const { mode: _, attaching: __, focus: ___, ...rest } = prev
 					return rest
 				},
 			})
@@ -156,7 +156,7 @@ export function CommentDialog({
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
-					const { answering: _, editing: __, attaching: ___, ...rest } = prev
+					const { mode: _, focus: __, attaching: ___, ...rest } = prev
 					return rest
 				},
 			})
@@ -212,7 +212,7 @@ export function CommentDialog({
 									to: '.',
 									search: (prev: Record<string, unknown>) => ({
 										...prev,
-										answering: 'comment',
+										mode: 'comment' as const,
 									}),
 								})
 							} else {
@@ -724,7 +724,9 @@ function useCommentPhraseLinks(
 				q
 					.from({ link: commentPhraseLinksCollection })
 					.where(({ link }) => eq(link.comment_id, commentId))
-			:	q.from({ link: commentPhraseLinksCollection }).where(() => false),
+			:	q
+					.from({ link: commentPhraseLinksCollection })
+					.where(({ link }) => eq(link.comment_id, '')),
 		[commentId]
 	)
 }

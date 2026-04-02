@@ -49,15 +49,15 @@ type ReplyDialogMode =
  */
 export function deriveReplyDialogMode(
 	search: {
-		replying?: string
-		editing?: string
+		focus?: string
+		mode?: string
 	},
 	editComment?: RequestCommentType
 ): ReplyDialogMode | undefined {
-	if (search.replying) {
-		return { kind: 'new', parentCommentId: search.replying }
+	if (search.mode === 'reply' && search.focus) {
+		return { kind: 'new', parentCommentId: search.focus }
 	}
-	if (search.editing && editComment?.parent_comment_id != null) {
+	if (search.mode === 'edit' && editComment?.parent_comment_id != null) {
 		return { kind: 'edit', comment: editComment }
 	}
 	return undefined
@@ -82,7 +82,7 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 		void navigate({
 			to: '.',
 			search: (prev: Record<string, unknown>) => {
-				const { replying: _, editing: __, ...rest } = prev
+				const { mode: _, focus: __, ...rest } = prev
 				return rest
 			},
 		})
@@ -236,7 +236,7 @@ function NewReplyForm({
 			void navigate({
 				to: '/learn/$lang/requests/$id',
 				params: { lang, id: requestId },
-				search: { showSubthread: parentCommentId },
+				search: { focus: parentCommentId },
 			})
 			toastSuccess('Reply posted!')
 			onClose()

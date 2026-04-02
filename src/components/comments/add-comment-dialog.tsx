@@ -163,12 +163,15 @@ function NewCommentForm({
 
 	const createCommentMutation = useMutation({
 		mutationFn: async (values: CommentFormInputs) => {
-			const { data, error } = await supabase.rpc('create_comment_with_phrases', {
-				p_request_id: requestId,
-				p_content: values.content,
-				p_parent_comment_id: parentCommentId,
-				p_phrase_ids: [],
-			})
+			const { data, error } = await supabase.rpc(
+				'create_comment_with_phrases',
+				{
+					p_request_id: requestId,
+					p_content: values.content,
+					p_parent_comment_id: parentCommentId,
+					p_phrase_ids: [],
+				}
+			)
 			if (error) throw error
 			return data as {
 				request_comment: RequestCommentType
@@ -196,7 +199,7 @@ function NewCommentForm({
 			void navigate({
 				to: '/learn/$lang/requests/$id',
 				params: { lang, id: requestId },
-				search: { showSubthread: parentCommentId },
+				search: { focus: parentCommentId },
 			})
 			toastSuccess(isReply ? 'Reply posted!' : 'Comment posted!')
 			onSuccess()
@@ -232,7 +235,9 @@ function NewCommentForm({
 							<FormControl>
 								<Textarea
 									data-testid="comment-content-input"
-									placeholder={isReply ? 'Write a reply...' : 'Share your thoughts...'}
+									placeholder={
+										isReply ? 'Write a reply...' : 'Share your thoughts...'
+									}
 									rows={isReply ? 3 : 4}
 									{...field}
 								/>
