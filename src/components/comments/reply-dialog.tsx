@@ -20,6 +20,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
+import { MarkdownHint } from './comment-dialog'
 import supabase from '@/lib/supabase-client'
 import {
 	commentUpvotesCollection,
@@ -260,10 +261,7 @@ function NewReplyForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="sr-only">Write a reply</FormLabel>
-							<p className="text-muted-foreground text-xs">
-								Comments support markdown like `&gt;` for blockquote,{' '}
-								<em>_italics_</em>, <strong>**bold**</strong>
-							</p>
+							<MarkdownHint />
 							<FormControl>
 								<Textarea
 									data-testid="reply-content-input"
@@ -339,10 +337,7 @@ function EditReplyForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="sr-only">Edit your reply</FormLabel>
-							<p className="text-muted-foreground text-xs">
-								Comments support markdown like `&gt;` for blockquote,{' '}
-								<em>_italics_</em>, <strong>**bold**</strong>
-							</p>
+							<MarkdownHint />
 							<FormControl>
 								<Textarea
 									data-testid="edit-reply-content-input"

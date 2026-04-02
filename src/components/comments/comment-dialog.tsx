@@ -419,19 +419,12 @@ function AttachedPhraseCards({
 			</Link>
 }
 
-function MarkdownHint({ hasCards }: { hasCards: boolean }) {
+export function MarkdownHint() {
 	return (
-		<>
-			{hasCards && (
-				<p className="text-muted-foreground text-xs">
-					Caption is optional — the flashcard speaks for itself.
-				</p>
-			)}
-			<p className="text-muted-foreground text-xs">
-				Comments support markdown like `&gt;` for blockquote, <em>_italics_</em>
-				, <strong>**bold**</strong>
-			</p>
-		</>
+		<p className="text-muted-foreground text-xs">
+			Supports markdown like `&gt;` for blockquote, <em>_italics_</em>,{' '}
+			<strong>**bold**</strong>
+		</p>
 	)
 }
 
@@ -518,13 +511,13 @@ function NewCommentForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="sr-only">Add a comment</FormLabel>
-							<MarkdownHint hasCards={hasCards} />
+							<MarkdownHint />
 							<FormControl>
 								<Textarea
 									data-testid="comment-content-input"
 									placeholder={
 										hasCards ?
-											'Add a caption... (optional)'
+											'Add some context (optional)'
 										:	'Share your thoughts...'
 									}
 									rows={4}
@@ -676,13 +669,13 @@ function EditCommentForm({
 					render={({ field }) => (
 						<FormItem>
 							<FormLabel className="sr-only">Edit your comment</FormLabel>
-							<MarkdownHint hasCards={!isReply && hasCards} />
+							<MarkdownHint />
 							<FormControl>
 								<Textarea
 									data-testid="edit-comment-content-input"
 									placeholder={
 										!isReply && hasCards ?
-											'Add a caption... (optional)'
+											'Add some context (optional)'
 										:	'Share your thoughts...'
 									}
 									rows={4}
