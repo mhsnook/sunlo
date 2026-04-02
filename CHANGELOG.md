@@ -1,11 +1,39 @@
 # Change Log
 
-## v0.19 - Update comments, etc etc
+## v0.19 - Comment Overhaul, Manage Deck Polish, Archived Decks
 
-_2 April, 2026_
+_3 April, 2026_
 
--
--
+### Features
+
+- **Comment + reply overhaul** — consolidated 6+ comment components into `CommentDialog` and `ReplyDialog`; reply thread UX improvements (focus stays on close, cleaner reply prompt); edit comment form now has full parity with new-comment (markdown hints, flashcard support)
+- **URL-driven answering** — new `AnsweringDialog` opens from a URL param on request threads, with a dedicated "Flashcard" button to initiate it inline
+- **Archived decks** — manage and navigate archived decks from the deck settings area
+- **Comments tab in Contributions** — contributions page now includes a Comments tab with a responsive dropdown for tab navigation
+- **Manage deck: reviewed today** — "Reviewed today!" badge in the manage deck table; skipped cards are now dimmed and their due dates hidden; `cardsCollection` updates after a review session so the table stays in sync without a reload
+- **Wordle-style share button** — share your review results from the review completion screen
+
+### Improvements
+
+- **URL state simplification** — collapsed 7 comment/thread search params into two (`focus` + `mode`), making sharing and bookmarking request threads cleaner
+- **Preferred translation language** — deck's `preferred_translation_lang` is now prioritized in review card translation display order; logic moved into `usePhrase` hook
+- **Review start buttons** — sticky at the bottom of the viewport so they're always reachable on long warmup lists
+- **Font selector** — restored side-by-side layout with per-font preview; added book icons to each option
+- **Playlist owner actions** — moved under avatar instead of stacking vertically for a tighter layout
+- **MarkdownHint** — exported and reused across comment + edit forms; copy fixes
+
+### CI
+
+- **TypeScript type checking in CI** — `pnpm check` now runs on PRs with inline PR comments for type errors (#500)
+
+### Fixes
+
+- **[Hotfix v0.18.1]** Fix `phrase_search_index` not populated after recreation (caused "CONCURRENTLY cannot be used when not populated" errors on add-phrase)
+- Fix blank password causing silent hang on login form
+- Fix button default size regression and recommended-phrases grid gap
+- Fix invalid UUIDs in seed data (Zod v4 compatibility)
+- Fix button text overflow: shorten to "Browse the Feed"
+- Fix navbar icon spacing to match app-nav
 
 ## v0.18.1 - Hotfix: Fix add-phrase error
 
