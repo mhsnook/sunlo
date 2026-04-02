@@ -41,12 +41,9 @@ import {
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
-		showSubthread: z.string().uuid().optional(),
-		highlightComment: z.string().uuid().optional(),
-		answering: z.enum(['search', 'comment']).optional(),
+		focus: z.string().uuid().optional(),
+		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
-		editing: z.string().uuid().optional(),
-		replying: z.string().uuid().optional(),
 	}),
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
@@ -92,7 +89,7 @@ function useComment(commentId: uuid | undefined) {
 					.findOne()
 			:	q
 					.from({ comment: commentsCollection })
-					.where(() => false)
+					.where(({ comment }) => eq(comment.id, ''))
 					.findOne(),
 		[commentId]
 	)
@@ -103,8 +100,10 @@ function RequestThreadPage() {
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
 
-	// Look up the comment being edited (if any) for both dialogs
-	const { data: editComment } = useComment(search.editing)
+	// Look up the comment being edited/focused (if any) for both dialogs
+	const editingId =
+		search.mode === 'edit' || search.mode === 'reply' ? search.focus : undefined
+	const { data: editComment } = useComment(editingId)
 
 	// Derive dialog modes from URL
 	const commentMode = deriveCommentDialogMode(search)
@@ -112,7 +111,7 @@ function RequestThreadPage() {
 
 	// If editing a reply, the CommentDialog shouldn't also open
 	const effectiveCommentMode =
-		replyMode && search.editing ? undefined : commentMode
+		replyMode && search.mode === 'edit' ? undefined : commentMode
 
 	if (isLoading) return <Loader />
 
@@ -148,7 +147,7 @@ function RequestThreadPage() {
 					<div className="flex w-full flex-row items-center gap-2">
 						<Link
 							to="."
-							search={(s) => ({ ...s, answering: 'comment' })}
+							search={(s) => ({ ...s, mode: 'comment' })}
 							className="@group flex grow cursor-pointer flex-row items-center gap-2"
 							data-testid="open-comment-dialog"
 						>
@@ -159,7 +158,7 @@ function RequestThreadPage() {
 						</Link>
 						<Link
 							to="."
-							search={(s) => ({ ...s, answering: 'search' })}
+							search={(s) => ({ ...s, mode: 'search' })}
 							className={cn(
 								buttonVariants({ variant: 'soft', size: 'sm' }),
 								'shrink-0 border border-transparent'
@@ -240,8 +239,7 @@ function AnswersOnlyView() {
 											to="."
 											search={{
 												show: 'thread',
-												highlightComment: l.comment_id,
-												showSubthread: l.parent_comment_id ?? l.comment_id,
+												focus: l.comment_id,
 											}}
 											className="s-link text-sm"
 										>

@@ -35,11 +35,6 @@ interface CommentThreadProps {
 export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const userId = useUserId()
 	const search = useSearch({ strict: false })
-	const showSubthread = search.showSubthread === comment.id
-	const isHighlighted = useSearch({
-		strict: false,
-		select: (data) => data.highlightComment === comment.id,
-	})
 
 	// Get the child comments
 	const { data: repliesData } = useLiveQuery(
@@ -55,6 +50,13 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	)
 
 	const replies = repliesData ?? []
+
+	// focus=<uuid> (without a dialog mode) means highlight + expand
+	const isFocusMode = search.focus && !search.mode
+	const isHighlighted = isFocusMode && search.focus === comment.id
+	const showSubthread =
+		isHighlighted ||
+		(isFocusMode && replies.some(({ reply }) => reply.id === search.focus))
 
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const phrases = phraseFromComment ?? []
@@ -86,7 +88,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						timeValue={comment.created_at}
 						action="commented"
 						timeLinkParams={{ id: comment.request_id, lang }}
-						timeLinkSearch={{ showSubthread: comment.id }}
+						timeLinkSearch={{ focus: comment.id }}
 						timeLinkTo="/learn/$lang/requests/$id"
 					/>
 
@@ -95,9 +97,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							<>
 								<Link
 									to="."
-									search={(prev: Record<string, unknown>) => ({
+									search={(prev) => ({
 										...prev,
-										editing: comment.id,
+										focus: comment.id,
+										mode: 'edit' as const,
 									})}
 									className={buttonVariants({ variant: 'ghost', size: 'icon' })}
 									aria-label="Edit comment"
@@ -134,9 +137,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					<div className="flex items-center gap-2">
 						<Link
 							to="."
-							search={(prev: Record<string, unknown>) => ({
+							search={(prev) => ({
 								...prev,
-								replying: comment.id,
+								focus: comment.id,
+								mode: 'reply' as const,
 							})}
 							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
 							aria-label="Add a reply"
@@ -155,10 +159,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							})}
 							to={'.'}
 							search={(search) => {
-								if (search.showSubthread === comment.id) {
-									const { showSubthread: _, ...args } = search
+								if (search.focus === comment.id && !search.mode) {
+									const { focus: _, ...args } = search
 									return args
-								} else return { ...search, showSubthread: comment.id }
+								} else return { ...search, focus: comment.id }
 							}}
 						>
 							{showSubthread ?
@@ -183,9 +187,10 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						</div>
 						<Link
 							to="."
-							search={(prev: Record<string, unknown>) => ({
+							search={(prev) => ({
 								...prev,
-								replying: comment.id,
+								focus: comment.id,
+								mode: 'reply' as const,
 							})}
 							className="@group flex grow cursor-pointer flex-row items-center gap-2"
 							data-testid="add-reply-inline"
@@ -225,7 +230,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const isHighlighted = useSearch({
 		strict: false,
-		select: (data) => data.highlightComment === comment.id,
+		select: (data) => data.focus === comment.id && !data.mode,
 	})
 	const userId = useUserId()
 	const phrases = phraseFromComment ?? []
@@ -243,10 +248,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 					timeValue={comment.created_at}
 					action="replied"
 					timeLinkParams={{ id: comment.request_id, lang }}
-					timeLinkSearch={{
-						showSubthread: comment.parent_comment_id!,
-						highlightComment: comment.id,
-					}}
+					timeLinkSearch={{ focus: comment.id }}
 					timeLinkTo="/learn/$lang/requests/$id"
 				/>
 
@@ -255,9 +257,10 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 						<>
 							<Link
 								to="."
-								search={(prev: Record<string, unknown>) => ({
+								search={(prev) => ({
 									...prev,
-									editing: comment.id,
+									focus: comment.id,
+									mode: 'edit' as const,
 								})}
 								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
 								aria-label="Edit reply"

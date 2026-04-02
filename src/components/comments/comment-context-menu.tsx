@@ -18,7 +18,7 @@ interface CommentContextMenuProps {
 }
 
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
-	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?showSubthread=${comment.parent_comment_id ?? comment.id}${comment.parent_comment_id ? `&highlightComment=${comment.id}` : ''}`
+	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.id}`
 
 	const handleShare = () => {
 		if (!navigator.share) {

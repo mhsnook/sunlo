@@ -334,14 +334,7 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 							timeValue={comment.created_at}
 							action={comment.parent_comment_id ? 'replied' : 'commented'}
 							timeLinkParams={{ id: request.id, lang: request.lang }}
-							timeLinkSearch={
-								comment.parent_comment_id ?
-									{
-										showSubthread: comment.parent_comment_id,
-										highlightComment: comment.id,
-									}
-								:	{ showSubthread: comment.id }
-							}
+							timeLinkSearch={{ focus: comment.id }}
 							timeLinkTo="/learn/$lang/requests/$id"
 						/>
 						{comment.content && (
