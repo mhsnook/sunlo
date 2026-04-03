@@ -25,6 +25,7 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
 import supabase from '@/lib/supabase-client'
+import { safeWrite } from '@/lib/collections/safe-write'
 import { cn } from '@/lib/utils'
 import {
 	commentPhraseLinksCollection,
@@ -473,18 +474,31 @@ function NewCommentForm({
 				comment_phrase_links: CommentPhraseLinkType[]
 			}
 		},
-		onSuccess: (data) => {
-			commentsCollection.utils.writeInsert(
-				RequestCommentSchema.parse(data.request_comment)
+		onSuccess: async (data) => {
+			const comment = RequestCommentSchema.parse(data.request_comment)
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeInsert(comment)
 			)
-			commentUpvotesCollection.utils.writeInsert({
-				comment_id: data.request_comment.id,
-			})
-			data.comment_phrase_links?.forEach((link) => {
-				commentPhraseLinksCollection.utils.writeInsert(
-					CommentPhraseLinkSchema.parse(link)
+			await safeWrite(
+				() => commentUpvotesCollection.preload(),
+				() =>
+					commentUpvotesCollection.utils.writeInsert({
+						comment_id: comment.id,
+					})
+			)
+			if (data.comment_phrase_links?.length) {
+				const links = data.comment_phrase_links.map((l) =>
+					CommentPhraseLinkSchema.parse(l)
 				)
-			})
+				await safeWrite(
+					() => commentPhraseLinksCollection.preload(),
+					() =>
+						links.forEach((link) =>
+							commentPhraseLinksCollection.utils.writeInsert(link)
+						)
+				)
+			}
 			form.reset()
 			toastSuccess('Comment posted!')
 			onClose()
@@ -623,24 +637,31 @@ function EditCommentForm({
 
 			return { updatedComment, toDelete, insertedLinks }
 		},
-		onSuccess: ({ updatedComment, toDelete, insertedLinks }) => {
-			commentsCollection.utils.writeUpdate(
-				RequestCommentSchema.parse(updatedComment)
+		onSuccess: async ({ updatedComment, toDelete, insertedLinks }) => {
+			const parsed = RequestCommentSchema.parse(updatedComment)
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeUpdate(parsed)
 			)
 
 			const linksById = new Map(
 				(existingLinks ?? []).map((link) => [link.phrase_id, link])
 			)
-			for (const phraseId of toDelete) {
-				const link = linksById.get(phraseId)
-				if (link) commentPhraseLinksCollection.utils.writeDelete(link.id)
-			}
-
-			for (const link of insertedLinks) {
-				commentPhraseLinksCollection.utils.writeInsert(
-					CommentPhraseLinkSchema.parse(link)
-				)
-			}
+			const parsedLinks = insertedLinks.map((l) =>
+				CommentPhraseLinkSchema.parse(l)
+			)
+			await safeWrite(
+				() => commentPhraseLinksCollection.preload(),
+				() => {
+					for (const phraseId of toDelete) {
+						const link = linksById.get(phraseId)
+						if (link) commentPhraseLinksCollection.utils.writeDelete(link.id)
+					}
+					for (const link of parsedLinks) {
+						commentPhraseLinksCollection.utils.writeInsert(link)
+					}
+				}
+			)
 
 			toastSuccess('Comment updated!')
 			onClose()

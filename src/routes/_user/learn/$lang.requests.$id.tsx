@@ -26,6 +26,7 @@ import { CommentWithReplies } from '@/components/comments/comment-with-replies'
 import {
 	commentsCollection,
 	commentPhraseLinksCollection,
+	commentUpvotesCollection,
 } from '@/features/comments/collections'
 import { mapArrays } from '@/lib/utils'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
@@ -49,6 +50,13 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),
+	loader: async () => {
+		await Promise.all([
+			commentsCollection.preload(),
+			commentPhraseLinksCollection.preload(),
+			commentUpvotesCollection.preload(),
+		])
+	},
 	component: RequestThreadPage,
 })
 

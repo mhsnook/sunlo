@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/comments/schemas'
 import supabase from '@/lib/supabase-client'
+import { safeWrite } from '@/lib/collections/safe-write'
 import { commentsCollection } from '@/features/comments/collections'
 
 export function DeleteCommentDialog({
@@ -33,8 +34,11 @@ export function DeleteCommentDialog({
 
 			if (error) throw error
 		},
-		onSuccess: () => {
-			commentsCollection.utils.writeDelete(comment.id)
+		onSuccess: async () => {
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeDelete(comment.id)
+			)
 			toastSuccess('Comment deleted')
 		},
 		onError: (error: Error) => {
