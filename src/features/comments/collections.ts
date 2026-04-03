@@ -7,6 +7,8 @@ import {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	LinkUpvoteSchema,
+	type LinkUpvoteType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
@@ -63,5 +65,23 @@ export const commentUpvotesCollection = createCollection(
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
 		schema: CommentUpvoteSchema,
+	})
+)
+
+export const linkUpvotesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'link_upvotes',
+		queryKey: ['user', 'comment_phrase_link_upvote'],
+		queryFn: async () => {
+			console.log(`Loading linkUpvotesCollection`)
+			const { data } = await supabase
+				.from('comment_phrase_link_upvote')
+				.select('link_id')
+				.throwOnError()
+			return data?.map((item) => LinkUpvoteSchema.parse(item)) ?? []
+		},
+		getKey: (item: LinkUpvoteType) => item.link_id,
+		queryClient,
+		schema: LinkUpvoteSchema,
 	})
 )
