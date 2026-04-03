@@ -23,10 +23,7 @@ function ReviewButton({ lang }: { lang: string }) {
 	return (
 		<Link
 			to="/learn/$lang/review"
-			className={cn(
-				buttonVariants({ size: 'icon' }),
-				isDone && 'bg-5-hi-success hover:bg-6-hi-success'
-			)}
+			className={buttonVariants({ size: 'icon' })}
 			params={{ lang }}
 			aria-label={isDone ? 'Review complete' : 'Start review'}
 		>
