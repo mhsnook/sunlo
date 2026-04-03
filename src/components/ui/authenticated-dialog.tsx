@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ComponentPropsWithoutRef, ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { useAuth } from '@/lib/use-auth'
@@ -79,14 +79,13 @@ export function AuthenticatedDialog({
 	)
 }
 
-interface AuthenticatedDialogContentProps {
-	children: ReactNode
+interface AuthenticatedDialogContentProps extends ComponentPropsWithoutRef<
+	typeof DialogContent
+> {
 	/** Title shown when prompting to log in */
 	authTitle?: string
 	/** Message explaining why login is needed */
 	authMessage?: string
-	/** Class name for the DialogContent when authenticated */
-	className?: string
 }
 
 /**
@@ -98,12 +97,12 @@ export function AuthenticatedDialogContent({
 	children,
 	authTitle = 'Login Required',
 	authMessage = 'Please log in to continue.',
-	className,
+	...rest
 }: AuthenticatedDialogContentProps) {
 	const { isAuth } = useAuth()
 
 	if (isAuth) {
-		return <DialogContent className={className}>{children}</DialogContent>
+		return <DialogContent {...rest}>{children}</DialogContent>
 	}
 
 	return (

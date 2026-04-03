@@ -377,7 +377,7 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 							{isSkipped ?
 								<span className="font-medium">—</span>
 							: reviewedToday ?
-								<span className="font-medium text-primary-foresoft">
+								<span className="text-primary-foresoft font-medium">
 									Reviewed today!
 								</span>
 							:	<span
@@ -483,7 +483,7 @@ function DesktopCardRow({
 			data-testid="manage-deck-row"
 		>
 			{/* Phrase */}
-			<td className="max-w-[240px] px-3 py-2">
+			<td className="max-w-60 px-3 py-2">
 				<Link
 					to="/learn/$lang/phrases/$id"
 					params={{ lang, id: card.phrase_id }}
@@ -512,7 +512,7 @@ function DesktopCardRow({
 				{isSkipped ?
 					<span className="text-muted-foreground/50 text-xs">—</span>
 				: reviewedToday ?
-					<span className="text-sm font-medium text-primary-foresoft">
+					<span className="text-primary-foresoft text-sm font-medium">
 						Reviewed today!
 					</span>
 				: dueInfo ?

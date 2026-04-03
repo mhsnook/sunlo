@@ -12,7 +12,10 @@ export function TinySelfAvatar({ className }: { className?: string }) {
 	const avatarUrl = avatarUrlify(data?.avatar_path)
 	return !avatarUrl ? null : (
 			<Avatar
-				className={cn('bg-foreground text-background h-8 w-8 rounded-lg', className)}
+				className={cn(
+					'bg-foreground text-background h-8 w-8 rounded-lg',
+					className
+				)}
 			>
 				<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
 				<AvatarFallback className="text-[10px] font-bold">
