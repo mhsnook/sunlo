@@ -8,7 +8,7 @@ import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
 	Form,
@@ -114,7 +114,7 @@ export function CommentDialog({
 	const initialized = useRef(false)
 	useEffect(() => {
 		if (mode?.kind === 'edit' && !initialized.current && existingLinks) {
-			setSelectedPhraseIds(existingLinks.map(({ link }) => link.phrase_id))
+			setSelectedPhraseIds(existingLinks.map((link) => link.phrase_id))
 			initialized.current = true
 		}
 	}, [existingLinks, mode?.kind])
@@ -340,6 +340,8 @@ function PhrasePickerPanel({
 											<button
 												key={phrase.id}
 												type="button"
+												data-testid="phrase-picker-item"
+												data-key={phrase.id}
 												onClick={() => addPhrase(phrase.id)}
 												className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors"
 											>
@@ -382,6 +384,7 @@ function AttachedPhraseCards({
 								variant="ghost"
 								size="icon"
 								className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+								data-testid="remove-phrase-button"
 								onClick={() => onRemovePhrase(pid)}
 							>
 								<X />
@@ -413,6 +416,7 @@ function AttachedPhraseCards({
 					buttonVariants({ variant: 'soft', size: 'sm' }),
 					'w-full'
 				)}
+				data-testid="attach-phrase-button"
 			>
 				<Paperclip className="h-4 w-4" />
 				Suggest a flashcard
@@ -459,7 +463,7 @@ function NewCommentForm({
 				{
 					p_request_id: requestId,
 					p_content: values.content,
-					p_parent_comment_id: null,
+					p_parent_comment_id: undefined,
 					p_phrase_ids: selectedPhraseIds,
 				}
 			)
@@ -562,7 +566,7 @@ function EditCommentForm({
 	comment: RequestCommentType
 	isReply: boolean
 	selectedPhraseIds: Array<uuid>
-	existingLinks: { link: CommentPhraseLinkType }[] | undefined
+	existingLinks: CommentPhraseLinkType[] | undefined
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
@@ -574,7 +578,7 @@ function EditCommentForm({
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
 			const existingPhraseIds = new Set(
-				(existingLinks ?? []).map(({ link }) => link.phrase_id)
+				(existingLinks ?? []).map((link) => link.phrase_id)
 			)
 			const newPhraseIds = new Set(selectedPhraseIds)
 
@@ -625,7 +629,7 @@ function EditCommentForm({
 			)
 
 			const linksById = new Map(
-				(existingLinks ?? []).map(({ link }) => [link.phrase_id, link])
+				(existingLinks ?? []).map((link) => [link.phrase_id, link])
 			)
 			for (const phraseId of toDelete) {
 				const link = linksById.get(phraseId)
@@ -708,9 +712,7 @@ function EditCommentForm({
 // Hooks
 // ---------------------------------------------------------------------------
 
-function useCommentPhraseLinks(
-	commentId: uuid | undefined
-): UseLiveQueryResult<{ link: CommentPhraseLinkType }[]> {
+function useCommentPhraseLinks(commentId: uuid | undefined) {
 	return useLiveQuery(
 		(q) =>
 			commentId ?
