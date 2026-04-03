@@ -56,7 +56,9 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	const isHighlighted = isFocusMode && search.focus === comment.id
 	const hasHighlightedReply =
 		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
-	const showSubthread = isHighlighted || hasHighlightedReply
+	// Keep subthread open even when a dialog (mode) is active on this comment
+	const isFocusedWithMode = search.focus === comment.id && !!search.mode
+	const showSubthread = isHighlighted || hasHighlightedReply || isFocusedWithMode
 
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const phrases = phraseFromComment ?? []
@@ -135,7 +137,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
 
-					{replyCount === 0 && (
+					{replyCount === 0 && !showSubthread && (
 						<Link
 							className={buttonVariants({
 								variant: 'ghost',
