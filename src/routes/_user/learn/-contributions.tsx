@@ -37,6 +37,11 @@ import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
+import { eq, useLiveQuery } from '@tanstack/react-db'
+import { commentPhraseLinksCollection } from '@/features/comments/collections'
+import { phrasesFull } from '@/features/phrases/live'
+import type { RequestCommentType } from '@/features/comments/schemas'
+import type { PhraseRequestType } from '@/features/requests/schemas'
 
 type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
 
@@ -325,25 +330,58 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 			</Callout>
 		:	<div className="space-y-4">
 				{comments.map(({ comment, request }) => (
-					<div
+					<CommentCardWithPhrases
 						key={comment.id}
-						className="bg-card space-y-2 rounded p-4 shadow-sm"
-					>
-						<UidPermalinkInline
-							uid={comment.uid}
-							timeValue={comment.created_at}
-							action={comment.parent_comment_id ? 'replied' : 'commented'}
-							timeLinkParams={{ id: request.id, lang: request.lang }}
-							timeLinkSearch={{ focus: comment.id }}
-							timeLinkTo="/learn/$lang/requests/$id"
-						/>
-						{comment.content && (
-							<div className="ms-8">
-								<Markdown>{comment.content}</Markdown>
-							</div>
-						)}
-					</div>
+						comment={comment}
+						request={request}
+					/>
 				))}
 			</div>
+	)
+}
+
+function CommentCardWithPhrases({
+	comment,
+	request,
+}: {
+	comment: RequestCommentType
+	request: PhraseRequestType
+}) {
+	const { data: phrases } = useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.comment_id, comment.id))
+				.join(
+					{ phrase: phrasesFull },
+					({ link, phrase }) => eq(link.phrase_id, phrase.id),
+					'inner'
+				),
+		[comment.id]
+	)
+
+	return (
+		<div className="bg-card space-y-2 rounded p-4 shadow-sm">
+			<UidPermalinkInline
+				uid={comment.uid}
+				timeValue={comment.created_at}
+				action={comment.parent_comment_id ? 'replied' : 'commented'}
+				timeLinkParams={{ id: request.id, lang: request.lang }}
+				timeLinkSearch={{ focus: comment.id }}
+				timeLinkTo="/learn/$lang/requests/$id"
+			/>
+			{comment.content && (
+				<div className="ms-8">
+					<Markdown>{comment.content}</Markdown>
+				</div>
+			)}
+			{phrases && phrases.length > 0 && (
+				<div className="ms-8 mt-1 space-y-2">
+					{phrases.map(({ phrase }) => (
+						<CardResultSimple key={phrase.id} phrase={phrase} />
+					))}
+				</div>
+			)}
+		</div>
 	)
 }
