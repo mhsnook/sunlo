@@ -8,7 +8,7 @@ import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
 	Form,
@@ -114,7 +114,7 @@ export function CommentDialog({
 	const initialized = useRef(false)
 	useEffect(() => {
 		if (mode?.kind === 'edit' && !initialized.current && existingLinks) {
-			setSelectedPhraseIds(existingLinks.map(({ link }) => link.phrase_id))
+			setSelectedPhraseIds(existingLinks.map((link) => link.phrase_id))
 			initialized.current = true
 		}
 	}, [existingLinks, mode?.kind])
@@ -459,7 +459,7 @@ function NewCommentForm({
 				{
 					p_request_id: requestId,
 					p_content: values.content,
-					p_parent_comment_id: null,
+					p_parent_comment_id: undefined,
 					p_phrase_ids: selectedPhraseIds,
 				}
 			)
@@ -562,7 +562,7 @@ function EditCommentForm({
 	comment: RequestCommentType
 	isReply: boolean
 	selectedPhraseIds: Array<uuid>
-	existingLinks: { link: CommentPhraseLinkType }[] | undefined
+	existingLinks: CommentPhraseLinkType[] | undefined
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
@@ -574,7 +574,7 @@ function EditCommentForm({
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
 			const existingPhraseIds = new Set(
-				(existingLinks ?? []).map(({ link }) => link.phrase_id)
+				(existingLinks ?? []).map((link) => link.phrase_id)
 			)
 			const newPhraseIds = new Set(selectedPhraseIds)
 
@@ -625,7 +625,7 @@ function EditCommentForm({
 			)
 
 			const linksById = new Map(
-				(existingLinks ?? []).map(({ link }) => [link.phrase_id, link])
+				(existingLinks ?? []).map((link) => [link.phrase_id, link])
 			)
 			for (const phraseId of toDelete) {
 				const link = linksById.get(phraseId)
@@ -708,9 +708,7 @@ function EditCommentForm({
 // Hooks
 // ---------------------------------------------------------------------------
 
-function useCommentPhraseLinks(
-	commentId: uuid | undefined
-): UseLiveQueryResult<{ link: CommentPhraseLinkType }[]> {
+function useCommentPhraseLinks(commentId: uuid | undefined) {
 	return useLiveQuery(
 		(q) =>
 			commentId ?

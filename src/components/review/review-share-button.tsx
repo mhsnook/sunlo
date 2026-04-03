@@ -48,7 +48,7 @@ export function ReviewShareButton({ lang, dayString }: ReviewShareButtonProps) {
 			`${correct}/${total} recalled • ${Math.round((correct / total) * 100)}%`,
 		].join('\n')
 
-		navigator.clipboard.writeText(text).then(() => {
+		void navigator.clipboard.writeText(text).then(() => {
 			toastSuccess('Copied to clipboard!')
 		})
 	}
