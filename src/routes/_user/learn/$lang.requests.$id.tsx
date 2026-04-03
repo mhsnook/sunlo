@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouterState } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { CSSProperties } from 'react'
+import { CSSProperties, useEffect } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -38,11 +38,12 @@ import {
 	ReplyDialog,
 	deriveReplyDialogMode,
 } from '@/components/comments/reply-dialog'
+import { toastNeutral } from '@/components/ui/sonner'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
 		show: z.enum(['thread', 'answers-only', 'request-only']).optional(),
-		focus: z.string().uuid().optional(),
+		focus: z.string().uuid().optional().catch(undefined),
 		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
 	}),
@@ -107,6 +108,14 @@ function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
+	const rawSearch = useRouterState({ select: (s) => s.location.searchStr })
+
+	useEffect(() => {
+		const rawFocus = new URLSearchParams(rawSearch).get('focus')
+		if (rawFocus && !search.focus) {
+			toastNeutral("Couldn't find that comment")
+		}
+	}, [])
 
 	// Look up the comment being edited/focused (if any) for both dialogs
 	const editingId =
