@@ -23,6 +23,7 @@ import { phrasesFull } from '@/features/phrases/live'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { Upvote } from './upvote-comment-button'
+import { UpvoteLink } from './upvote-link-button'
 import { CommentContextMenu } from './comment-context-menu'
 import { CSSProperties } from 'react'
 import { Separator } from '../ui/separator'
@@ -125,8 +126,13 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						className="mt-3 space-y-2"
 						data-testid="comment-phrase-link-badge"
 					>
-						{phrases.map(({ phrase }) => {
-							return <CardResultSimple key={phrase.id} phrase={phrase} />
+						{phrases.map(({ phrase, link }) => {
+							return (
+								<div key={phrase.id} className="flex items-start gap-1">
+									<CardResultSimple phrase={phrase} />
+									<UpvoteLink link={link} />
+								</div>
+							)
 						})}
 					</div>
 				)}
@@ -287,8 +293,11 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 
 			{phrases && phrases.length > 0 && (
 				<div className="ms-8 mt-2 space-y-1.5">
-					{phrases.map(({ phrase }) => (
-						<CardResultSimple key={phrase.id} phrase={phrase} />
+					{phrases.map(({ phrase, link }) => (
+						<div key={phrase.id} className="flex items-start gap-1">
+							<CardResultSimple phrase={phrase} />
+							<UpvoteLink link={link} />
+						</div>
 					))}
 				</div>
 			)}

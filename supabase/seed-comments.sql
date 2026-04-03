@@ -115,3 +115,38 @@ values
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', -- GarlicFace upvoted
 		now() - interval '1 day 4 hours'
 	);
+
+--
+-- Data for Name: comment_phrase_link_upvote; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+insert into
+	"public"."comment_phrase_link_upvote" ("link_id", "uid", "created_at")
+values
+	(
+		'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa', -- "haanji" link in Lexigrine's comment
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', -- GarlicFace voted
+		now() - interval '1 day 22 hours'
+	),
+	(
+		'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21', -- Best Frin voted
+		now() - interval '1 day 18 hours'
+	),
+	(
+		'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb', -- second link in Lexigrine's comment
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', -- GarlicFace voted
+		now() - interval '1 day 20 hours'
+	);
+
+-- Update denormalized upvote_count on comment_phrase_link to match seed upvotes
+update "public"."comment_phrase_link"
+set
+	upvote_count = 2
+where
+	id = 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa';
+
+update "public"."comment_phrase_link"
+set
+	upvote_count = 1
+where
+	id = 'bbbbbbbb-bbbb-4bbb-abbb-bbbbbbbbbbbb';

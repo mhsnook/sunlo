@@ -9,6 +9,8 @@ export {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	LinkUpvoteSchema,
+	type LinkUpvoteType,
 } from './schemas'
 
 // Collections
@@ -16,4 +18,5 @@ export {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
+	linkUpvotesCollection,
 } from './collections'

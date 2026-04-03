@@ -147,6 +147,7 @@ export type Database = {
 					phrase_id: string
 					request_id: string
 					uid: string
+					upvote_count: number
 				}
 				Insert: {
 					comment_id: string
@@ -155,6 +156,7 @@ export type Database = {
 					phrase_id: string
 					request_id: string
 					uid?: string
+					upvote_count?: number
 				}
 				Update: {
 					comment_id?: string
@@ -163,6 +165,7 @@ export type Database = {
 					phrase_id?: string
 					request_id?: string
 					uid?: string
+					upvote_count?: number
 				}
 				Relationships: [
 					{
@@ -199,6 +202,39 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'phrase_request'
 						referencedColumns: ['id']
+					},
+				]
+			}
+			comment_phrase_link_upvote: {
+				Row: {
+					link_id: string
+					uid: string
+					created_at: string
+				}
+				Insert: {
+					link_id: string
+					uid?: string
+					created_at?: string
+				}
+				Update: {
+					link_id?: string
+					uid?: string
+					created_at?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'comment_phrase_link_upvote_link_id_fkey'
+						columns: ['link_id']
+						isOneToOne: false
+						referencedRelation: 'comment_phrase_link'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'comment_phrase_link_upvote_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -1862,6 +1898,10 @@ export type Database = {
 			}
 			set_comment_upvote: {
 				Args: { p_action: string; p_comment_id: string }
+				Returns: Json
+			}
+			set_link_upvote: {
+				Args: { p_action: string; p_link_id: string }
 				Returns: Json
 			}
 			set_phrase_playlist_upvote: {

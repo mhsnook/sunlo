@@ -20,6 +20,7 @@ export const CommentPhraseLinkSchema = z.object({
 	phrase_id: z.string().uuid(),
 	uid: z.string().uuid(),
 	created_at: z.string(),
+	upvote_count: z.number().default(0),
 })
 
 export type CommentPhraseLinkType = z.infer<typeof CommentPhraseLinkSchema>
@@ -29,3 +30,9 @@ export const CommentUpvoteSchema = z.object({
 })
 
 export type CommentUpvoteType = z.infer<typeof CommentUpvoteSchema>
+
+export const LinkUpvoteSchema = z.object({
+	link_id: z.string().uuid(),
+})
+
+export type LinkUpvoteType = z.infer<typeof LinkUpvoteSchema>
