@@ -9,6 +9,7 @@ import {
 	commentUpvotesCollection,
 } from '@/features/comments/collections'
 import supabase from '@/lib/supabase-client'
+import { safeWrite } from '@/lib/collections/safe-write'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { RequestCommentType } from '@/features/comments/schemas'
@@ -38,8 +39,7 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 				action: 'added' | 'removed' | 'no_change'
 			}
 		},
-		onSuccess: (data) => {
-			// Only update if server actually made a change
+		onSuccess: async (data) => {
 			if (data.action === 'no_change') return
 
 			const currentCount = comment.upvote_count ?? 0
@@ -48,19 +48,28 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 					currentCount + 1
 				:	Math.max(0, currentCount - 1)
 
-			// Update the comment count
-			commentsCollection.utils.writeUpdate({
-				id: data.comment_id,
-				upvote_count: newCount,
-			})
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() =>
+					commentsCollection.utils.writeUpdate({
+						id: data.comment_id,
+						upvote_count: newCount,
+					})
+			)
 
-			// Update the upvotes collection
 			if (data.action === 'added') {
-				commentUpvotesCollection.utils.writeInsert({
-					comment_id: data.comment_id,
-				})
+				await safeWrite(
+					() => commentUpvotesCollection.preload(),
+					() =>
+						commentUpvotesCollection.utils.writeInsert({
+							comment_id: data.comment_id,
+						})
+				)
 			} else if (data.action === 'removed') {
-				commentUpvotesCollection.utils.writeDelete(data.comment_id)
+				await safeWrite(
+					() => commentUpvotesCollection.preload(),
+					() => commentUpvotesCollection.utils.writeDelete(data.comment_id)
+				)
 			}
 		},
 		onError: (error: Error) => {

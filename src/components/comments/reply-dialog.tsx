@@ -22,6 +22,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import { Separator } from '@/components/ui/separator'
 import { MarkdownHint } from './comment-dialog'
 import supabase from '@/lib/supabase-client'
+import { safeWrite } from '@/lib/collections/safe-write'
 import {
 	commentUpvotesCollection,
 	commentsCollection,
@@ -216,22 +217,30 @@ function NewReplyForm({
 				comment_phrase_links: CommentPhraseLinkType[]
 			}
 		},
-		onSuccess: (data) => {
-			commentsCollection.utils.writeInsert(
-				RequestCommentSchema.parse(data.request_comment)
+		onSuccess: async (data) => {
+			const comment = RequestCommentSchema.parse(data.request_comment)
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeInsert(comment)
 			)
-			commentUpvotesCollection.utils.writeInsert({
-				comment_id: data.request_comment.id,
-			})
-			if (
-				data.comment_phrase_links &&
-				Array.isArray(data.comment_phrase_links)
-			) {
-				data.comment_phrase_links.forEach((link) => {
-					commentPhraseLinksCollection.utils.writeInsert(
-						CommentPhraseLinkSchema.parse(link)
-					)
-				})
+			await safeWrite(
+				() => commentUpvotesCollection.preload(),
+				() =>
+					commentUpvotesCollection.utils.writeInsert({
+						comment_id: comment.id,
+					})
+			)
+			if (data.comment_phrase_links?.length) {
+				const links = data.comment_phrase_links.map((l) =>
+					CommentPhraseLinkSchema.parse(l)
+				)
+				await safeWrite(
+					() => commentPhraseLinksCollection.preload(),
+					() =>
+						links.forEach((link) =>
+							commentPhraseLinksCollection.utils.writeInsert(link)
+						)
+				)
 			}
 			form.reset()
 			void navigate({
@@ -313,8 +322,12 @@ function EditReplyForm({
 			if (error) throw error
 			return data
 		},
-		onSuccess: (data) => {
-			commentsCollection.utils.writeUpdate(RequestCommentSchema.parse(data))
+		onSuccess: async (data) => {
+			const parsed = RequestCommentSchema.parse(data)
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeUpdate(parsed)
+			)
 			toastSuccess('Reply updated!')
 			onClose()
 		},

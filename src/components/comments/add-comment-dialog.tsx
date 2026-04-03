@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import supabase from '@/lib/supabase-client'
+import { safeWrite } from '@/lib/collections/safe-write'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
@@ -179,22 +180,30 @@ function NewCommentForm({
 				comment_phrase_links: CommentPhraseLinkType[]
 			}
 		},
-		onSuccess: (data) => {
-			commentsCollection.utils.writeInsert(
-				RequestCommentSchema.parse(data.request_comment)
+		onSuccess: async (data) => {
+			const comment = RequestCommentSchema.parse(data.request_comment)
+			await safeWrite(
+				() => commentsCollection.preload(),
+				() => commentsCollection.utils.writeInsert(comment)
 			)
-			commentUpvotesCollection.utils.writeInsert({
-				comment_id: data.request_comment.id,
-			})
-			if (
-				data.comment_phrase_links &&
-				Array.isArray(data.comment_phrase_links)
-			) {
-				data.comment_phrase_links.forEach((link) => {
-					commentPhraseLinksCollection.utils.writeInsert(
-						CommentPhraseLinkSchema.parse(link)
-					)
-				})
+			await safeWrite(
+				() => commentUpvotesCollection.preload(),
+				() =>
+					commentUpvotesCollection.utils.writeInsert({
+						comment_id: comment.id,
+					})
+			)
+			if (data.comment_phrase_links?.length) {
+				const links = data.comment_phrase_links.map((l) =>
+					CommentPhraseLinkSchema.parse(l)
+				)
+				await safeWrite(
+					() => commentPhraseLinksCollection.preload(),
+					() =>
+						links.forEach((link) =>
+							commentPhraseLinksCollection.utils.writeInsert(link)
+						)
+				)
 			}
 			form.reset()
 			void navigate({
