@@ -140,12 +140,13 @@ function NewDeckFormInner() {
 					{archivedCount > 0 && (
 						<Link
 							to="/learn/archived"
-							className="mt-4 flex items-center gap-2 rounded-2xl p-3 text-sm text-5-mlo-neutral hover:bg-1-mlo-primary hover:text-7-mid-primary"
+							className="text-5-mlo-neutral hover:bg-1-mlo-primary hover:text-7-mid-primary mt-4 flex items-center gap-2 rounded-2xl p-3 text-sm"
 						>
 							<Archive className="size-4" />
 							{archivedCount === 1 ?
 								'1 of your decks is archived; view or re-enable it here'
-							:	`${archivedCount} of your decks are archived; view or re-enable them here`}
+							:	`${archivedCount} of your decks are archived; view or re-enable them here`
+							}
 						</Link>
 					)}
 					<ShowAndLogError
