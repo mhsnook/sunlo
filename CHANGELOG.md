@@ -34,6 +34,15 @@ _3 April, 2026_
 - Fix invalid UUIDs in seed data (Zod v4 compatibility)
 - Fix button text overflow: shorten to "Browse the Feed"
 - Fix navbar icon spacing to match app-nav
+- Fix TypeScript errors in deck settings (parse Supabase data through Zod schema)
+- Fix comment phrase link type inference after TanStack DB update (single-source `useLiveQuery` returns flat types, not `{ alias }` wrappers)
+- Fix `AuthenticatedDialogContent` to forward rest props so `data-testid` attributes reach the dialog DOM element
+- Fix YAML syntax error in CI workflow
+- Upgrade `@base-ui/react` to 1.3.0 (popover/combobox positioning fix)
+
+### Testing
+
+- Add comment CRUD scenetest spec: two scenes covering post, phrase-link attach/remove, and delete for top-level comments and replies
 
 ## v0.18.1 - Hotfix: Fix add-phrase error
 
