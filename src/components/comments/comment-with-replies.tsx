@@ -53,10 +53,12 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	// focus=<uuid> (without a dialog mode) means highlight + expand
 	const isFocusMode = search.focus && !search.mode
-	const isHighlighted = isFocusMode && search.focus === comment.id
+	const isFocused = search.focus === comment.id
+	const isHighlighted = isFocusMode && isFocused
 	const hasHighlightedReply =
 		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
-	const showSubthread = isHighlighted || hasHighlightedReply
+	// Show subthread when focused, even if a dialog is open over it
+	const showSubthread = isHighlighted || hasHighlightedReply || isFocused
 
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const phrases = phraseFromComment ?? []
