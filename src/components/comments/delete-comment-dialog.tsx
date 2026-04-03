@@ -47,11 +47,12 @@ export function DeleteCommentDialog({
 				variant="ghost"
 				size="icon"
 				aria-label="Delete comment"
+				data-testid="delete-comment-button"
 				onClick={() => setOpen(true)}
 			>
 				<Trash2 className="h-4 w-4" />
 			</Button>
-			<AlertDialogContent>
+			<AlertDialogContent data-testid="delete-comment-dialog">
 				<AlertDialogHeader>
 					<AlertDialogTitle>Delete comment?</AlertDialogTitle>
 					<AlertDialogDescription>
@@ -65,6 +66,7 @@ export function DeleteCommentDialog({
 						disabled={mutation.isPending}
 						onClick={() => mutation.mutate()}
 						className="bg-destructive text-destructive-foreground"
+						data-testid="confirm-delete-comment-button"
 					>
 						Delete
 					</AlertDialogAction>

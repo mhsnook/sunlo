@@ -176,7 +176,7 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(data)
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 			reset(data)
 			toastSuccess('Your deck settings have been updated.')
 		},
@@ -330,7 +330,7 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 			return data[0]
 		},
 		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(data)
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 			reset(data)
 			toastSuccess('Your deck settings have been updated.')
 		},
@@ -434,7 +434,7 @@ function PreferredTranslationLanguageForm({
 			return data[0]
 		},
 		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(data)
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 			setSelectedLang(data.preferred_translation_lang)
 			toastSuccess('Your preferred translation language has been updated.')
 		},
