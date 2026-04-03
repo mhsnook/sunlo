@@ -36,7 +36,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Collect PR branch errors
-        run: pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true
+        run: |
+          pnpm check 2>&1 | grep ': error TS' | sort > /tmp/pr-errors.txt || true
 
       - name: Collect base branch errors
         run: |
