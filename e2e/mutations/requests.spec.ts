@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { FIRST_USER_UID, getTestUserForProject } from '../helpers/auth-helpers'
 import {
+	createPhrase,
 	createRequest,
 	deleteRequest,
 	getRequest,
@@ -9,6 +10,7 @@ import {
 	supabase,
 } from '../helpers/db-helpers'
 import { TEST_LANG } from '../helpers/test-constants'
+import { goToLearnPage } from '../helpers/goto-helpers'
 
 test.describe('Phrase Request Mutations', () => {
 	test('createRequestMutation: create new phrase request', async ({
@@ -421,6 +423,145 @@ test.describe('Phrase Request Mutations', () => {
 		} finally {
 			// Clean up the request (hard delete for test cleanup)
 			await supabase.from('phrase_request').delete().eq('id', request.id)
+		}
+	})
+
+	test('answer link voting: upvote and remove vote on linked phrases', async ({
+		page,
+	}, testInfo) => {
+		const { uid } = getTestUserForProject(testInfo)
+
+		// 1. Create a request with a comment that has a linked phrase
+		const request = await createRequest({
+			lang: TEST_LANG,
+			prompt: 'Test request for answer link voting',
+		})
+
+		const { phrase } = await createPhrase({
+			lang: TEST_LANG,
+			text: 'answer link vote test phrase',
+			translationText: 'answer link vote test translation',
+		})
+
+		const { data: comment } = await supabase
+			.from('request_comment')
+			.insert({
+				request_id: request.id,
+				uid: FIRST_USER_UID,
+				content: 'Here is a suggested answer',
+			})
+			.select()
+			.single()
+
+		expect(comment).toBeTruthy()
+
+		const { data: link } = await supabase
+			.from('comment_phrase_link')
+			.insert({
+				request_id: request.id,
+				comment_id: comment!.id,
+				phrase_id: phrase!.id,
+				uid: FIRST_USER_UID,
+			})
+			.select()
+			.single()
+
+		expect(link).toBeTruthy()
+
+		try {
+			// 2. Navigate to the request page via UI
+			await goToLearnPage(page)
+
+			// Navigate to contributions page
+			await page
+				.locator('a[data-key="/learn/$lang/contributions"]')
+				.first()
+				.click()
+			await expect(page).toHaveURL(
+				new RegExp(`/learn/${TEST_LANG}/contributions`)
+			)
+
+			// Switch to requests tab and find the request
+			await page.getByTestId('contributions-tab--requests').click()
+			await page
+				.getByText('Test request for answer link voting')
+				.first()
+				.click()
+
+			// Verify comment and phrase card are visible
+			await expect(page.getByText('Here is a suggested answer')).toBeVisible()
+			await expect(page.getByTestId('comment-phrase-link-badge')).toBeVisible()
+
+			// 3. Find the upvote-link button
+			const upvoteButton = page.getByTestId('upvote-link-button').first()
+			await expect(upvoteButton).toBeVisible()
+
+			// 4. Verify initial state: not voted
+			await expect(upvoteButton).toHaveAttribute(
+				'title',
+				'Vote for this answer'
+			)
+
+			// 5. Click to upvote
+			await upvoteButton.click()
+
+			// 6. Verify button state changed
+			await expect(upvoteButton).toHaveAttribute('title', 'Remove vote')
+
+			// 7. Verify upvote in database
+			const { data: upvoteInDb } = await supabase
+				.from('comment_phrase_link_upvote')
+				.select()
+				.eq('link_id', link!.id)
+				.eq('uid', uid)
+				.single()
+
+			expect(upvoteInDb).toBeTruthy()
+			expect(upvoteInDb?.link_id).toBe(link!.id)
+
+			// 8. Verify denormalized upvote_count
+			const { data: updatedLink } = await supabase
+				.from('comment_phrase_link')
+				.select('upvote_count')
+				.eq('id', link!.id)
+				.single()
+
+			expect(updatedLink?.upvote_count).toBe(1)
+
+			// 9. Click again to remove vote
+			await upvoteButton.click()
+
+			// 10. Verify button state changed back
+			await expect(upvoteButton).toHaveAttribute(
+				'title',
+				'Vote for this answer'
+			)
+
+			// 11. Verify upvote removed from database
+			const { data: removedUpvote } = await supabase
+				.from('comment_phrase_link_upvote')
+				.select()
+				.eq('link_id', link!.id)
+				.eq('uid', uid)
+				.maybeSingle()
+
+			expect(removedUpvote).toBeNull()
+
+			// 12. Verify upvote_count back to 0
+			const { data: finalLink } = await supabase
+				.from('comment_phrase_link')
+				.select('upvote_count')
+				.eq('id', link!.id)
+				.single()
+
+			expect(finalLink?.upvote_count).toBe(0)
+		} finally {
+			// Cleanup: cascade handles link and upvotes
+			if (comment?.id) {
+				await supabase.from('request_comment').delete().eq('id', comment.id)
+			}
+			await deletePhrase(phrase!.id)
+			await deleteRequest(request.id)
 		}
 	})
 
