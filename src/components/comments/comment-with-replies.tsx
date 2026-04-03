@@ -1,6 +1,6 @@
 import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronDown, ChevronUp, MessagesSquare } from 'lucide-react'
+import { ChevronUp, MessagesSquare } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
@@ -18,7 +18,6 @@ import {
 } from '@/features/comments/schemas'
 import { PhraseFullFullType } from '@/features/phrases/schemas'
 import { buttonVariants } from '@/components/ui/button'
-import { DialogTrigger } from '@/components/ui/dialog'
 import { phrasesFull } from '@/features/phrases/live'
 
 import { AddCommentDialog } from './add-comment-dialog'
@@ -128,47 +127,33 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
-					<div className="flex items-center gap-2">
-						<AddCommentDialog
-							lang={lang}
-							requestId={comment.request_id}
-							parentCommentId={comment.id}
-						>
-							<DialogTrigger
-								aria-label="Add a reply"
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-								data-testid="reply-to-comment-button"
-							>
-								<MessagesSquare />
-							</DialogTrigger>
-						</AddCommentDialog>{' '}
-						<span>reply</span>
-					</div>
-
-					{replyCount > 0 && (
-						<Link
-							className={buttonVariants({
-								variant: showSubthread ? 'soft' : 'ghost',
-								size: 'sm',
-							})}
-							to={'.'}
-							search={(search) => {
-								if (search.showSubthread === comment.id) {
-									const { showSubthread: _, ...args } = search
-									return args
-								} else return { ...search, showSubthread: comment.id }
-							}}
-						>
-							{showSubthread ?
-								<ChevronUp className="mr-1 h-4 w-4" />
-							:	<ChevronDown className="mr-1 h-4 w-4" />}
-							<span className="@max-md:sr-only">
-								{showSubthread ? 'Showing' : `Show`}{' '}
-							</span>
-							{replyCount}
-							{replyCount === 1 ? ' reply' : ' replies'}
-						</Link>
-					)}
+					<Link
+						className={buttonVariants({
+							variant: showSubthread ? 'soft' : 'ghost',
+							size: 'sm',
+						})}
+						to={'.'}
+						search={(search) => {
+							if (search.showSubthread === comment.id) {
+								const { showSubthread: _, ...args } = search
+								return args
+							} else return { ...search, showSubthread: comment.id }
+						}}
+						data-testid="reply-to-comment-button"
+					>
+						{showSubthread ?
+							<ChevronUp className="me-1 h-4 w-4" />
+						:	<MessagesSquare className="me-1 h-4 w-4" />}
+						{replyCount > 0 ?
+							<>
+								<span className="@max-md:sr-only">
+									{showSubthread ? 'Showing' : 'Show'}{' '}
+								</span>
+								{replyCount}
+								{replyCount === 1 ? ' reply' : ' replies'}
+							</>
+						:	'reply'}
+					</Link>
 				</div>
 
 				{/* Replies */}
@@ -273,18 +258,6 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			{/* Comment actions */}
 			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
-				<AddCommentDialog
-					lang={lang}
-					requestId={comment.request_id}
-					parentCommentId={comment.parent_comment_id!}
-				>
-					<DialogTrigger
-						className="s-link text-muted-foreground text-sm"
-						data-testid="reply-to-reply-button"
-					>
-						reply
-					</DialogTrigger>
-				</AddCommentDialog>
 			</div>
 		</div>
 	)
