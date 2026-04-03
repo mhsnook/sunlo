@@ -51,14 +51,11 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	const replies = repliesData ?? []
 
-	// focus=<uuid> (without a dialog mode) means highlight + expand
-	const isFocusMode = search.focus && !search.mode
 	const isFocused = search.focus === comment.id
-	const isHighlighted = isFocusMode && isFocused
+	const isFocusMode = search.focus && !search.mode
 	const hasHighlightedReply =
 		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
-	// Show subthread when focused, even if a dialog is open over it
-	const showSubthread = isHighlighted || hasHighlightedReply || isFocused
+	const showSubthread = isFocused || hasHighlightedReply
 
 	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
 	const phrases = phraseFromComment ?? []
@@ -69,7 +66,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	return (
 		<div
 			className={`${
-				isHighlighted ? 'border-primary bg-card/50 rounded border border-s-2'
+				isFocused ? 'border-primary bg-card/50 rounded border border-s-2'
 				: hasHighlightedReply ?
 					'border-3-mlo-primary bg-card/50 rounded border border-s-2'
 				:	''
