@@ -128,20 +128,22 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
-					<AddCommentDialog
-						lang={lang}
-						requestId={comment.request_id}
-						parentCommentId={comment.id}
-					>
-						<DialogTrigger
-							aria-label="Add a reply"
-							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-							data-testid="reply-to-comment-button"
+					<div className="flex items-center gap-2">
+						<AddCommentDialog
+							lang={lang}
+							requestId={comment.request_id}
+							parentCommentId={comment.id}
 						>
-							<MessagesSquare className="h-4 w-4" />
-							reply
-						</DialogTrigger>
-					</AddCommentDialog>
+							<DialogTrigger
+								aria-label="Add a reply"
+								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+								data-testid="reply-to-comment-button"
+							>
+								<MessagesSquare />
+							</DialogTrigger>
+						</AddCommentDialog>{' '}
+						<span>reply</span>
+					</div>
 
 					{replyCount > 0 && (
 						<Link
@@ -271,6 +273,18 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 			{/* Comment actions */}
 			<div className="text-muted-foreground ms-9 mt-3 mb-2 flex items-center gap-2 pb-2">
 				<Upvote comment={comment} />
+				<AddCommentDialog
+					lang={lang}
+					requestId={comment.request_id}
+					parentCommentId={comment.parent_comment_id!}
+				>
+					<DialogTrigger
+						className="s-link text-muted-foreground text-sm"
+						data-testid="reply-to-reply-button"
+					>
+						reply
+					</DialogTrigger>
+				</AddCommentDialog>
 			</div>
 		</div>
 	)
