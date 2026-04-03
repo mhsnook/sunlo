@@ -1,6 +1,6 @@
 import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { ChevronDown, ChevronUp, Edit } from 'lucide-react'
+import { ChevronDown, ChevronUp, Edit, Reply } from 'lucide-react'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
@@ -134,6 +134,25 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
+
+					{replyCount === 0 && !showSubthread && (
+						<Link
+							className={buttonVariants({
+								variant: 'ghost',
+								size: 'sm',
+							})}
+							to={'.'}
+							search={(search) => ({
+								...search,
+								focus: comment.id,
+								mode: 'reply' as const,
+							})}
+							data-testid="reply-link"
+						>
+							<Reply className="me-1 h-4 w-4" />
+							Reply
+						</Link>
+					)}
 
 					{replyCount > 0 && (
 						<Link
