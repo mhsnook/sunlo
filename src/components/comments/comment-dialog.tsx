@@ -340,6 +340,8 @@ function PhrasePickerPanel({
 											<button
 												key={phrase.id}
 												type="button"
+												data-testid="phrase-picker-item"
+												data-key={phrase.id}
 												onClick={() => addPhrase(phrase.id)}
 												className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors"
 											>
@@ -382,6 +384,7 @@ function AttachedPhraseCards({
 								variant="ghost"
 								size="icon"
 								className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+								data-testid="remove-phrase-button"
 								onClick={() => onRemovePhrase(pid)}
 							>
 								<X />
@@ -413,6 +416,7 @@ function AttachedPhraseCards({
 					buttonVariants({ variant: 'soft', size: 'sm' }),
 					'w-full'
 				)}
+				data-testid="attach-phrase-button"
 			>
 				<Paperclip className="h-4 w-4" />
 				Suggest a flashcard
