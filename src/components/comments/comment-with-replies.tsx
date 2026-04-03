@@ -128,22 +128,20 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				{/* Comment actions */}
 				<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
 					<Upvote comment={comment} />
-					<div className="flex items-center gap-2">
-						<AddCommentDialog
-							lang={lang}
-							requestId={comment.request_id}
-							parentCommentId={comment.id}
+					<AddCommentDialog
+						lang={lang}
+						requestId={comment.request_id}
+						parentCommentId={comment.id}
+					>
+						<DialogTrigger
+							aria-label="Add a reply"
+							className={buttonVariants({ variant: 'ghost', size: 'sm' })}
+							data-testid="reply-to-comment-button"
 						>
-							<DialogTrigger
-								aria-label="Add a reply"
-								className={buttonVariants({ variant: 'ghost', size: 'icon' })}
-								data-testid="reply-to-comment-button"
-							>
-								<MessagesSquare />
-							</DialogTrigger>
-						</AddCommentDialog>{' '}
-						<span>reply</span>
-					</div>
+							<MessagesSquare className="h-4 w-4" />
+							reply
+						</DialogTrigger>
+					</AddCommentDialog>
 
 					{replyCount > 0 && (
 						<Link
@@ -172,14 +170,16 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				</div>
 
 				{/* Replies */}
-				{showSubthread && replies && replies.length > 0 && (
+				{showSubthread && (
 					<div className="border-3-mlo-primary mt-3 space-y-3">
 						<Separator />
-						<div className="divide-y">
-							{replies.map(({ reply }) => (
-								<CommentReply key={reply.id} comment={reply} lang={lang} />
-							))}
-						</div>
+						{replies && replies.length > 0 && (
+							<div className="divide-y">
+								{replies.map(({ reply }) => (
+									<CommentReply key={reply.id} comment={reply} lang={lang} />
+								))}
+							</div>
+						)}
 						<AddCommentDialog
 							parentCommentId={comment.id}
 							requestId={comment.request_id}
