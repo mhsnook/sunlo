@@ -4,7 +4,7 @@
  * Triggered by user gesture (button click) so no autoplay issues.
  */
 
-type ReviewScore = 1 | 2 | 3 | 4
+import type { Score } from '@/features/review/fsrs'
 
 // Track live contexts and pending timeouts so we can abort at any time.
 const activeContexts = new Set<AudioContext>()
@@ -66,7 +66,7 @@ function note(
 	osc.stop(startTime + duration)
 }
 
-export function playReviewSound(score: ReviewScore) {
+export function playReviewSound(score: Score) {
 	const ctx = makeContext()
 	if (!ctx) return
 
@@ -93,7 +93,7 @@ export function playReviewSound(score: ReviewScore) {
 /** Play all four sounds in sequence — used as a preview in preferences. */
 export function previewAllSounds() {
 	cancelAllSounds()
-	const scores: ReviewScore[] = [1, 2, 3, 4]
+	const scores: Score[] = [1, 2, 3, 4]
 	scores.forEach((score, i) => {
 		const id = track(
 			setTimeout(() => {

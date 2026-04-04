@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect, useState } from 'react'
+import { type CSSProperties, useCallback, useEffect, useState } from 'react'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
@@ -14,7 +14,7 @@ import {
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
-import { intervals } from '@/features/review/fsrs'
+import { intervals, type Score } from '@/features/review/fsrs'
 import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
@@ -53,20 +53,14 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
-const COIN_COLORS: Record<1 | 2 | 3 | 4, string> = {
+const COIN_COLORS: Record<Score, string> = {
 	1: 'bg-red-600',
-	2: 'bg-gray-400',
+	2: 'bg-gray-200',
 	3: 'bg-green-500',
 	4: 'bg-blue-500',
 }
 
-function ScoreCoin({
-	score,
-	onDone,
-}: {
-	score: 1 | 2 | 3 | 4
-	onDone: () => void
-}) {
+function ScoreCoin({ score, onDone }: { score: Score; onDone: () => void }) {
 	useEffect(() => {
 		const t = setTimeout(onDone, 700)
 		return () => clearTimeout(t)
@@ -115,11 +109,10 @@ export function ReviewSingleCard({
 	const nextIntervals = intervals(latestReview).map(formatInterval)
 	const soundEnabled = useSoundEnabled()
 
-	const [coin, setCoin] = useState<{ score: 1 | 2 | 3 | 4; id: number } | null>(
-		null
-	)
+	const [coin, setCoin] = useState<{ score: Score; id: number } | null>(null)
+	const clearCoin = useCallback(() => setCoin(null), [])
 
-	const submitScore = (score: 1 | 2 | 3 | 4) => {
+	const submitScore = (score: Score) => {
 		if (soundEnabled) playReviewSound(score)
 		setCoin({ score, id: Date.now() })
 		mutate({ score })
@@ -212,11 +205,7 @@ export function ReviewSingleCard({
 					>
 						<div className="relative">
 							{coin?.score === 1 && (
-								<ScoreCoin
-									key={coin.id}
-									score={1}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={1} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
@@ -235,11 +224,7 @@ export function ReviewSingleCard({
 						</div>
 						<div className="relative">
 							{coin?.score === 3 && (
-								<ScoreCoin
-									key={coin.id}
-									score={3}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={3} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
@@ -267,11 +252,7 @@ export function ReviewSingleCard({
 					>
 						<div className="relative">
 							{coin?.score === 1 && (
-								<ScoreCoin
-									key={coin.id}
-									score={1}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={1} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
@@ -293,11 +274,7 @@ export function ReviewSingleCard({
 						</div>
 						<div className="relative">
 							{coin?.score === 2 && (
-								<ScoreCoin
-									key={coin.id}
-									score={2}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={2} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
@@ -319,11 +296,7 @@ export function ReviewSingleCard({
 						</div>
 						<div className="relative">
 							{coin?.score === 3 && (
-								<ScoreCoin
-									key={coin.id}
-									score={3}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={3} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
@@ -345,11 +318,7 @@ export function ReviewSingleCard({
 						</div>
 						<div className="relative">
 							{coin?.score === 4 && (
-								<ScoreCoin
-									key={coin.id}
-									score={4}
-									onDone={() => setCoin(null)}
-								/>
+								<ScoreCoin key={coin.id} score={4} onDone={clearCoin} />
 							)}
 							<Button
 								variant="default"
