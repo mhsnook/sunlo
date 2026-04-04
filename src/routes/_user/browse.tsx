@@ -1,38 +1,47 @@
 import { useCallback, useEffect } from 'react'
-import {
-	createFileRoute,
-	Outlet,
-	useParams,
-	useRouter,
-} from '@tanstack/react-router'
+import { createFileRoute, Outlet, useRouter } from '@tanstack/react-router'
 import * as z from 'zod'
 
-import { PendingRequestsHeader } from './friends/-pending-requests-header'
+import {
+	languagesCollection,
+	langTagsCollection,
+} from '@/features/languages/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
+import {
+	phrasePlaylistsCollection,
+	playlistPhraseLinksCollection,
+} from '@/features/playlists/collections'
 import BrowseSearchOverlay from '@/components/browse-search-overlay'
-import languages from '@/lib/languages'
 
-const LearnSearchParams = z.object({
+const BrowseSearchParams = z.object({
 	search: z.boolean().optional(),
 })
 
-export const Route = createFileRoute('/_user/learn')({
-	component: LearnLayout,
-	validateSearch: LearnSearchParams,
+export const Route = createFileRoute('/_user/browse')({
+	component: BrowseLayout,
+	validateSearch: BrowseSearchParams,
 	beforeLoad: ({ context }) => ({
 		titleBar: {
-			title: 'Learning Home',
-			subtitle:
-				context.auth.isAuth ?
-					'Which deck are we studying today?'
-				:	'Explore community-created language learning content',
+			title: 'Explore Languages',
+			subtitle: 'Browse the public library',
 		},
-		searchAction: true,
-		appnav:
+		appnav: ['/browse', '/browse/charts'],
+		contextMenu:
 			context.auth.isAuth ?
-				['/learn', '/friends', '/learn/contributions', '/learn/add-deck']
-			:	['/learn', '/browse'],
-		contextMenu: context.auth.isAuth ? ['/learn/add-deck'] : [],
+				['/learn/add-deck', '/learn/contributions']
+			:	['/login', '/signup'],
 	}),
+	loader: async () => {
+		await Promise.all([
+			languagesCollection.preload(),
+			langTagsCollection.preload(),
+			phraseRequestsCollection.preload(),
+			phrasePlaylistsCollection.preload(),
+			phrasesCollection.preload(),
+			playlistPhraseLinksCollection.preload(),
+		])
+	},
 })
 
 function setSearchParam(key: string, value: string | null) {
@@ -42,13 +51,9 @@ function setSearchParam(key: string, value: string | null) {
 	return url.pathname + url.search
 }
 
-function LearnLayout() {
+function BrowseLayout() {
 	const router = useRouter()
 	const { search: isSearchOpen } = Route.useSearch()
-	const { lang } = useParams({ strict: false })
-
-	// Pre-filter by the current deck language if we're inside a $lang route
-	const initialLangs = lang && lang in languages ? [lang] : undefined
 
 	const openSearch = useCallback(() => {
 		void router.navigate({
@@ -79,14 +84,8 @@ function LearnLayout() {
 
 	return (
 		<div className="h-full space-y-4">
-			<PendingRequestsHeader shy />
 			<Outlet />
-			{isSearchOpen && (
-				<BrowseSearchOverlay
-					onClose={closeSearch}
-					initialLangs={initialLangs}
-				/>
-			)}
+			{isSearchOpen && <BrowseSearchOverlay onClose={closeSearch} />}
 		</div>
 	)
 }

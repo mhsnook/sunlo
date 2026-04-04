@@ -65,11 +65,11 @@ test.describe('Logged Out Navigation', () => {
 		await page.getByRole('link', { name: /browse languages/i }).click()
 
 		// Should be on the browse page
-		await expect(page).toHaveURL(/\/learn\/browse/)
+		await expect(page).toHaveURL(/\/browse/)
 	})
 
 	test('browse page shows language cards', async ({ page }) => {
-		await page.goto('/learn/browse')
+		await page.goto('/browse')
 
 		// Wait for page to finish loading, then check for language cards
 		await expect(page.getByTestId('browse-page')).toBeVisible({
@@ -80,7 +80,7 @@ test.describe('Logged Out Navigation', () => {
 	})
 
 	test('can navigate to a language from browse', async ({ page }) => {
-		await page.goto('/learn/browse')
+		await page.goto('/browse')
 
 		// Find and click on a language card
 		const langCard = page
@@ -127,7 +127,7 @@ test.describe('Logged Out Navigation', () => {
 
 	test('sidebar shows login options for logged-out users', async ({ page }) => {
 		// Navigate to a language page (browse -> language)
-		await page.goto('/learn/browse')
+		await page.goto('/browse')
 		await page
 			.getByRole('link', { name: new RegExp(TEST_LANG_DISPLAY, 'i') })
 			.first()

@@ -106,7 +106,7 @@ export function HeroSection() {
 					<div className="mb-16 text-center">
 						<div className="mx-auto mb-8 flex max-w-md flex-col items-center justify-center gap-4 sm:flex-row">
 							<Link
-								to="/learn/browse"
+								to="/browse"
 								className={cn(
 									buttonVariants({ size: 'lg', variant: 'soft' }),
 									'group border-primary/30 hover:border-primary/60 hover:bg-foreground/5 w-full border-2 bg-transparent text-lg font-semibold transition-all duration-300 sm:w-auto dark:border-white/20 dark:text-slate-200 dark:hover:bg-white/5'

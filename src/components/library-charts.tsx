@@ -373,7 +373,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 	const handleClick = useCallback(
 		(_tagName: string) => {
 			void navigate({
-				to: '/learn/browse',
+				to: '/browse',
 				search: { search: true },
 			})
 		},

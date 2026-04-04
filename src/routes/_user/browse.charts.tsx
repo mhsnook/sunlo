@@ -25,7 +25,7 @@ const ChartsSearchParams = z.object({
 	lang: z.string().optional(),
 })
 
-export const Route = createFileRoute('/_user/learn/browse/charts')({
+export const Route = createFileRoute('/_user/browse/charts')({
 	validateSearch: ChartsSearchParams,
 	component: ChartsPage,
 })
@@ -150,10 +150,7 @@ function ChartsPage() {
 					<p className="text-muted-foreground text-lg">
 						No library data available yet.
 					</p>
-					<Link
-						to="/learn/browse"
-						className={buttonVariants({ variant: 'soft' })}
-					>
+					<Link to="/browse" className={buttonVariants({ variant: 'soft' })}>
 						Browse Languages
 					</Link>
 				</div>

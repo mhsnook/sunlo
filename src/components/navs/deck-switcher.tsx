@@ -237,7 +237,7 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						)}
 						<DropdownMenuSeparator />
 						<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
-							<Link to="/learn/browse" onClick={setClosedMobile}>
+							<Link to="/browse" onClick={setClosedMobile}>
 								<div className="bg-background flex size-6 items-center justify-center rounded border">
 									<Home />
 								</div>

@@ -193,7 +193,7 @@ export function WhenComplete() {
 									Stats
 								</Link>
 								<Link
-									to="/learn/browse"
+									to="/browse"
 									className={buttonVariants({
 										variant: 'soft',
 										size: 'lg',

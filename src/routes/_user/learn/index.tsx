@@ -146,7 +146,7 @@ function BrowsePrompt() {
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
 				<Link
-					to="/learn/browse"
+					to="/browse"
 					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
 				>
 					<Compass size={14} /> Browse languages

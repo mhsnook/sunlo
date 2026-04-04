@@ -62,7 +62,7 @@ function BrowseLink() {
 				'border-border/50 h-12 w-12 rounded-full border bg-white/10 text-slate-800 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:text-slate-200 dark:hover:bg-black/50'
 			)}
 			from={Route.fullPath}
-			to="/learn/browse"
+			to="/browse"
 			data-testid="browse-languages-link"
 		>
 			<Compass className="h-5 w-5" />

@@ -181,7 +181,7 @@ function WelcomePage() {
 						icon={Heart}
 						title="Help Others Learn"
 						description="Answer translation requests in languages you know."
-						linkTo="/learn/browse"
+						linkTo="/browse"
 						linkText="Browse Requests"
 						variant="secondary"
 					/>
@@ -405,7 +405,7 @@ function RequestsYouCanHelp() {
 			{requestsToShow.length >= 4 && (
 				<div className="mt-4 text-center">
 					<Link
-						to="/learn/browse"
+						to="/browse"
 						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						See More Requests

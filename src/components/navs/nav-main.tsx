@@ -29,15 +29,15 @@ const friendsMenu = makeLinks([
 ])
 const learnMenu = makeLinks([
 	'/learn',
-	'/learn/browse',
-	'/learn/browse/charts',
+	'/browse',
+	'/browse/charts',
 	'/learn/contributions',
 	'/learn/add-deck',
 ])
 const learnMenuPublic = makeLinks([
 	'/learn',
-	'/learn/browse',
-	'/learn/browse/charts',
+	'/browse',
+	'/browse/charts',
 	'/learn/add-deck',
 ])
 const siteMenu = makeLinks([
