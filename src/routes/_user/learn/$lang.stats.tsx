@@ -4,17 +4,9 @@ import {
 	Card,
 	CardContent,
 	CardDescription,
-	CardFooter,
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
-import {
-	Contact,
-	Logs,
-	MessageCircleHeart,
-	MessageSquareQuote,
-	Rocket,
-} from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
 import {
@@ -22,7 +14,6 @@ import {
 	useDeckPids,
 	useDeckRoutineStats,
 } from '@/features/deck/hooks'
-import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrases'
 import { ActivityChart } from '@/components/activity-chart'
@@ -126,79 +117,6 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 
 				{!deckIsNew && <ActivityChart lang={lang} />}
 			</CardContent>
-			<CardFooter>
-				<div className="flex flex-row flex-wrap gap-2">
-					{deckIsNew ?
-						<Link
-							to="/learn/$lang/feed"
-							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
-							)}
-						>
-							<Logs /> Browse the {languages[lang]} feed
-						</Link>
-					:	<Link
-							to="/learn/$lang/review"
-							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
-							)}
-						>
-							<Rocket /> Review my {languages[lang]} flashcards
-						</Link>
-					}
-					<div className="grid w-full grid-cols-1 gap-2 @lg:grid-cols-2 @lg:gap-0">
-						<Link
-							to="/learn/$lang/phrases/new"
-							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'neutral' }),
-								'@lg:rounded-r-none'
-							)}
-						>
-							<MessageSquareQuote />
-							Add a phrase
-						</Link>
-						<Link
-							to="/learn/$lang/requests/new"
-							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'neutral' }),
-								'@lg:rounded-l-none'
-							)}
-						>
-							<MessageCircleHeart />
-							Request a phrase
-						</Link>
-					</div>
-					{deckIsNew ?
-						<Link
-							to="/friends"
-							className={cn(
-								buttonVariants({ variant: 'neutral' }),
-								'grow basis-40'
-							)}
-						>
-							<Contact />
-							Invite a friend
-						</Link>
-					:	<Link
-							to="/learn/$lang/feed"
-							from={Route.fullPath}
-							className={cn(
-								buttonVariants({ variant: 'neutral' }),
-								'grow basis-40'
-							)}
-						>
-							<Logs />
-							Browse the {languages[lang]} feed
-						</Link>
-					}
-				</div>
-			</CardFooter>
 		</Card>
 	)
 }
