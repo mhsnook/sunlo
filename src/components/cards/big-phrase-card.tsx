@@ -403,7 +403,7 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 					<Link
 						to="/learn/$lang/requests/$id"
 						params={{ lang, id: item.requestId }}
-						search={{ show: 'thread' as const, focus: item.commentId }}
+						search={{ focus: item.commentId }}
 						className="s-link font-medium"
 					>
 						{item.prompt}
