@@ -14,7 +14,6 @@ import {
 	MessageCircleHeart,
 	MessageSquareQuote,
 	Rocket,
-	Search,
 } from 'lucide-react'
 import languages from '@/lib/languages'
 import { ago } from '@/lib/dayjs'
@@ -81,26 +80,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>
-					<div className="flex flex-row items-center justify-between">
-						<span>
-							{deckIsNew ? `Your ${languages[lang]} Deck` : 'Deck Home'}
-						</span>
-						<Link
-							to="/learn/$lang/feed"
-							params={{ lang }}
-							search={{ search: true }}
-							aria-disabled="true"
-							className={`${buttonVariants({
-								variant: 'soft',
-								size: 'sm',
-							})} -mt-2 aspect-square @max-lg:px-2`}
-						>
-							<Search className="size-3" />
-							<span className="hidden @lg:block">Quick Search</span>
-						</Link>
-					</div>
-				</CardTitle>
+				<CardTitle>{languages[lang]} Deck Stats</CardTitle>
 				<CardDescription className="flex flex-row flex-wrap gap-2">
 					<DeckStatsBadges lang={lang} />
 				</CardDescription>
