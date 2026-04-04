@@ -26,6 +26,7 @@ import { clearUser } from '@/lib/collections/clear-user'
 
 const data = makeLinks([
 	'/profile',
+	'/learn/contributions',
 	'/profile/change-email',
 	'/profile/change-password',
 ])

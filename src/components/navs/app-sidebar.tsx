@@ -30,9 +30,9 @@ export function AppSidebar({
 			<SidebarContent>
 				<ActiveReviewCallout currentLang={lang} />
 				<NavMain lang={lang} />
+				<ModeToggle />
 			</SidebarContent>
 			<SidebarFooter>
-				<ModeToggle />
 				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />
