@@ -59,7 +59,8 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		])
 		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
 		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
-			if (cause === 'preload') console.error('Malformed focus param in preload link:', rawFocus)
+			if (cause === 'preload')
+				console.error('Malformed focus param in preload link:', rawFocus)
 			else toastNeutral("Couldn't find that comment")
 		}
 	},
