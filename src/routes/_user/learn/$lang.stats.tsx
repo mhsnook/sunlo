@@ -127,14 +127,14 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 				{!deckIsNew && <ActivityChart lang={lang} />}
 			</CardContent>
 			<CardFooter>
-				<div className="flex flex-row flex-wrap gap-2">
+				<div className="flex min-w-0 flex-row flex-wrap gap-2">
 					{deckIsNew ?
 						<Link
 							to="/learn/$lang/feed"
 							from={Route.fullPath}
 							className={cn(
 								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
+								'min-w-0 grow basis-120'
 							)}
 						>
 							<Logs /> Browse the {languages[lang]} feed
@@ -144,7 +144,7 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 							from={Route.fullPath}
 							className={cn(
 								buttonVariants({ variant: 'default', size: 'lg' }),
-								'grow basis-120'
+								'min-w-0 grow basis-120'
 							)}
 						>
 							<Rocket /> Review my {languages[lang]} flashcards
