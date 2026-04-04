@@ -158,8 +158,7 @@ export const Route = createFileRoute('/_user/learn/$lang/feed')({
 	component: DeckFeedPage,
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
-			title: `Activity feed for ${languages[lang]}`,
-			subtitle: 'See what people are learning all across the network',
+			title: `${languages[lang]} Feed`,
 			onBackClick: '/learn',
 		},
 	}),
