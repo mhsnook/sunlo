@@ -58,9 +58,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 			commentUpvotesCollection.preload(),
 		])
 		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
-		const uuidRegex =
-			/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/
-		if (rawFocus && !uuidRegex.test(rawFocus)) {
+		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
 			if (cause === 'preload') console.error('Malformed focus param in preload link:', rawFocus)
 			else toastNeutral("Couldn't find that comment")
 		}
