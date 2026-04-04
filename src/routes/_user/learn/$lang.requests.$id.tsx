@@ -1,7 +1,7 @@
-import { createFileRoute, Link, useRouterState } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { CSSProperties, useEffect } from 'react'
+import { CSSProperties } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -51,7 +51,9 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),
-	loader: async () => {
+	loader: async ({ search, location }) => {
+		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
+		if (rawFocus && !search.focus) toastNeutral("Couldn't find that comment")
 		await Promise.all([
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
@@ -108,14 +110,6 @@ function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
 	const search = Route.useSearch()
-	const rawSearch = useRouterState({ select: (s) => s.location.searchStr })
-
-	useEffect(() => {
-		const rawFocus = new URLSearchParams(rawSearch).get('focus')
-		if (rawFocus && !search.focus) {
-			toastNeutral("Couldn't find that comment")
-		}
-	}, [])
 
 	// Look up the comment being edited/focused (if any) for both dialogs
 	const editingId =
