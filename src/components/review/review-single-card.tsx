@@ -1,6 +1,7 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
+import { useSoundEnabled } from '@/features/profile'
 import { useMutation } from '@tanstack/react-query'
 import {
 	BookmarkCheck,
@@ -112,11 +113,14 @@ export function ReviewSingleCard({
 	const lang = useReviewLang()
 	const answerMode = useReviewAnswerMode(lang)
 	const nextIntervals = intervals(latestReview).map(formatInterval)
+	const soundEnabled = useSoundEnabled()
 
-	const [coin, setCoin] = useState<{ score: 1 | 2 | 3 | 4; id: number } | null>(null)
+	const [coin, setCoin] = useState<{ score: 1 | 2 | 3 | 4; id: number } | null>(
+		null
+	)
 
 	const submitScore = (score: 1 | 2 | 3 | 4) => {
-		playReviewSound(score)
+		if (soundEnabled) playReviewSound(score)
 		setCoin({ score, id: Date.now() })
 		mutate({ score })
 	}
@@ -204,121 +208,167 @@ export function ReviewSingleCard({
 				: answerMode === '2-buttons' ?
 					<div
 						data-name="answer-buttons-row"
-						className="relative mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
+						className="mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
 					>
-						{coin && (
-							<ScoreCoin
-								key={coin.id}
-								score={coin.score}
-								onDone={() => setCoin(null)}
-							/>
-						)}
-						<Button
-							variant="default"
-							data-testid="rating-again-button"
-							onClick={() => submitScore(1)}
-							disabled={isPending}
-							className={cn(
-								'h-auto rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
-								prevData?.score === 1 && reviewStage < 4 ?
-									'ring-primary ring-2 ring-offset-3'
-								:	''
+						<div className="relative">
+							{coin?.score === 1 && (
+								<ScoreCoin
+									key={coin.id}
+									score={1}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-						>
-							Forgot
-						</Button>
-						<Button
-							variant="default"
-							data-testid="rating-good-button"
-							onClick={() => submitScore(3)}
-							disabled={isPending}
-							className={cn(
-								'h-auto rounded-2xl border-green-500! bg-green-500! py-6 text-2xl text-white hover:border-white! hover:bg-green-600!',
-								(
-									prevData?.score === 3 ||
-										prevData?.score === 2 ||
-										prevData?.score === 4
-								) ?
-									'ring-primary ring-2 ring-offset-3'
-								:	''
+							<Button
+								variant="default"
+								data-testid="rating-again-button"
+								onClick={() => submitScore(1)}
+								disabled={isPending}
+								className={cn(
+									'h-auto w-full rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
+									prevData?.score === 1 && reviewStage < 4 ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+							>
+								Forgot
+							</Button>
+						</div>
+						<div className="relative">
+							{coin?.score === 3 && (
+								<ScoreCoin
+									key={coin.id}
+									score={3}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-						>
-							Correct!
-						</Button>
+							<Button
+								variant="default"
+								data-testid="rating-good-button"
+								onClick={() => submitScore(3)}
+								disabled={isPending}
+								className={cn(
+									'h-auto w-full rounded-2xl border-green-500! bg-green-500! py-6 text-2xl text-white hover:border-white! hover:bg-green-600!',
+									(
+										prevData?.score === 3 ||
+											prevData?.score === 2 ||
+											prevData?.score === 4
+									) ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+							>
+								Correct!
+							</Button>
+						</div>
 					</div>
 				:	<div
 						data-name="answer-buttons-row"
-						className="relative mb-3 grid w-full max-w-160 grid-cols-4"
+						className="mb-3 grid w-full max-w-160 grid-cols-4"
 					>
-						{coin && (
-							<ScoreCoin
-								key={coin.id}
-								score={coin.score}
-								onDone={() => setCoin(null)}
-							/>
-						)}
-						<Button
-							variant="default"
-							data-testid="rating-again-button"
-							onClick={() => submitScore(1)}
-							disabled={isPending}
-							className={cn(
-								'h-auto flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
-								prevData?.score === 1 && reviewStage < 4 ?
-									'ring-primary ring-2 ring-offset-3'
-								:	''
+						<div className="relative">
+							{coin?.score === 1 && (
+								<ScoreCoin
+									key={coin.id}
+									score={1}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-						>
-							<span>Again</span>
-							<span className="text-xs font-normal opacity-80">
-								{nextIntervals[0]}
-							</span>
-						</Button>
-						<Button
-							variant="default"
-							data-testid="rating-hard-button"
-							onClick={() => submitScore(2)}
-							disabled={isPending}
-							className={cn(
-								'h-auto flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
-								prevData?.score === 2 ? 'ring-primary ring-2 ring-offset-3' : ''
+							<Button
+								variant="default"
+								data-testid="rating-again-button"
+								onClick={() => submitScore(1)}
+								disabled={isPending}
+								className={cn(
+									'h-auto w-full flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
+									prevData?.score === 1 && reviewStage < 4 ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+							>
+								<span>Again</span>
+								<span className="text-xs font-normal opacity-80">
+									{nextIntervals[0]}
+								</span>
+							</Button>
+						</div>
+						<div className="relative">
+							{coin?.score === 2 && (
+								<ScoreCoin
+									key={coin.id}
+									score={2}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-						>
-							<span>Hard</span>
-							<span className="text-xs font-normal opacity-60">
-								{nextIntervals[1]}
-							</span>
-						</Button>
-						<Button
-							variant="default"
-							data-testid="rating-good-button"
-							onClick={() => submitScore(3)}
-							disabled={isPending}
-							className={cn(
-								'h-auto flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
-								prevData?.score === 3 ? 'ring-primary ring-2 ring-offset-3' : ''
+							<Button
+								variant="default"
+								data-testid="rating-hard-button"
+								onClick={() => submitScore(2)}
+								disabled={isPending}
+								className={cn(
+									'h-auto w-full flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
+									prevData?.score === 2 ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+							>
+								<span>Hard</span>
+								<span className="text-xs font-normal opacity-60">
+									{nextIntervals[1]}
+								</span>
+							</Button>
+						</div>
+						<div className="relative">
+							{coin?.score === 3 && (
+								<ScoreCoin
+									key={coin.id}
+									score={3}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-						>
-							<span>Good</span>
-							<span className="text-xs font-normal opacity-80">
-								{nextIntervals[2]}
-							</span>
-						</Button>
-						<Button
-							variant="default"
-							data-testid="rating-easy-button"
-							className={cn(
-								'h-auto flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
-								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
+							<Button
+								variant="default"
+								data-testid="rating-good-button"
+								onClick={() => submitScore(3)}
+								disabled={isPending}
+								className={cn(
+									'h-auto w-full flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
+									prevData?.score === 3 ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+							>
+								<span>Good</span>
+								<span className="text-xs font-normal opacity-80">
+									{nextIntervals[2]}
+								</span>
+							</Button>
+						</div>
+						<div className="relative">
+							{coin?.score === 4 && (
+								<ScoreCoin
+									key={coin.id}
+									score={4}
+									onDone={() => setCoin(null)}
+								/>
 							)}
-							onClick={() => submitScore(4)}
-							disabled={isPending}
-						>
-							<span>Easy</span>
-							<span className="text-xs font-normal opacity-80">
-								{nextIntervals[3]}
-							</span>
-						</Button>
+							<Button
+								variant="default"
+								data-testid="rating-easy-button"
+								className={cn(
+									'h-auto w-full flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
+									prevData?.score === 4 ?
+										'ring-primary ring-2 ring-offset-3'
+									:	''
+								)}
+								onClick={() => submitScore(4)}
+								disabled={isPending}
+							>
+								<span>Easy</span>
+								<span className="text-xs font-normal opacity-80">
+									{nextIntervals[3]}
+								</span>
+							</Button>
+						</div>
 					</div>
 				}
 			</CardFooter>

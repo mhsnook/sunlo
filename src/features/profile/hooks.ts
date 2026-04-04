@@ -7,6 +7,11 @@ import type { UseLiveQueryResult } from '@/types/main'
 export const useProfile = (): UseLiveQueryResult<MyProfileType> =>
 	useLiveQuery((q) => q.from({ profile: myProfileCollection }).findOne())
 
+export const useSoundEnabled = () => {
+	const { data: profile } = useProfile()
+	return profile?.sound_enabled ?? true
+}
+
 export const useLanguagesToShow = () => {
 	const { data: profile, isLoading: isLoading1 } = useProfile()
 	const { data: decks, isLoading: isLoading2 } = useDecks()

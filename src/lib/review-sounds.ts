@@ -6,12 +6,40 @@
 
 type ReviewScore = 1 | 2 | 3 | 4
 
+// Track live contexts and pending timeouts so we can abort at any time.
+const activeContexts = new Set<AudioContext>()
+const pendingTimeouts = new Set<ReturnType<typeof setTimeout>>()
+
+function track(id: ReturnType<typeof setTimeout>) {
+	pendingTimeouts.add(id)
+	return id
+}
+
 function makeContext() {
 	try {
-		return new AudioContext()
+		const ctx = new AudioContext()
+		activeContexts.add(ctx)
+		return ctx
 	} catch {
 		return null
 	}
+}
+
+function scheduleClose(ctx: AudioContext, delay: number) {
+	const id = track(
+		setTimeout(() => {
+			pendingTimeouts.delete(id)
+			ctx.close().catch(() => {})
+			activeContexts.delete(ctx)
+		}, delay)
+	)
+}
+
+export function cancelAllSounds() {
+	for (const id of pendingTimeouts) clearTimeout(id)
+	pendingTimeouts.clear()
+	for (const ctx of activeContexts) ctx.close().catch(() => {})
+	activeContexts.clear()
 }
 
 function note(
@@ -45,19 +73,33 @@ export function playReviewSound(score: ReviewScore) {
 	const t = ctx.currentTime
 
 	if (score === 1) {
-		// Again — descending "bloop", soft disappointment
-		note(ctx, 290, t, 0.18, 0.28, 'sine', 140)
+		// Again — soft descending tone, quiet like hard
+		note(ctx, 290, t, 0.18, 0.15, 'sine', 140)
 	} else if (score === 2) {
-		// Hard — neutral short tap, medium pitch
-		note(ctx, 400, t, 0.13, 0.2, 'triangle', 320)
+		// Hard — neutral short tap
+		note(ctx, 400, t, 0.13, 0.15, 'triangle', 320)
 	} else if (score === 3) {
-		// Good — clean ding, C5
-		note(ctx, 523, t, 0.22, 0.22, 'sine')
+		// Good — triangle like Hard but higher and held slightly longer
+		note(ctx, 523, t, 0.22, 0.2, 'triangle')
 	} else {
-		// Easy — bright coin: two quick ascending notes
-		note(ctx, 880, t, 0.15, 0.22, 'sine')
-		note(ctx, 1109, t + 0.08, 0.18, 0.2, 'sine')
+		// Easy — two notes, each quieter so the combined level stays gentle
+		note(ctx, 880, t, 0.15, 0.12, 'sine')
+		note(ctx, 1109, t + 0.08, 0.18, 0.11, 'sine')
 	}
 
-	setTimeout(() => ctx.close(), 600)
+	scheduleClose(ctx, 600)
+}
+
+/** Play all four sounds in sequence — used as a preview in preferences. */
+export function previewAllSounds() {
+	cancelAllSounds()
+	const scores: ReviewScore[] = [1, 2, 3, 4]
+	scores.forEach((score, i) => {
+		const id = track(
+			setTimeout(() => {
+				pendingTimeouts.delete(id)
+				playReviewSound(score)
+			}, i * 230)
+		)
+	})
 }
