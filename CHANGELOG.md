@@ -1,6 +1,30 @@
 # Change Log
 
-## v0.19 - Comment Overhaul, Manage Deck Polish, Archived Decks
+## v0.20 - Review Sound Feedback, Phrase Detail Polish
+
+_4 April, 2026_
+
+### Features
+
+- **Review sound + coin feedback** — each score button plays a brief synthesized tone (Web Audio API, no external files) and pops a small color-matched circle above the pressed button Mario-coin style. Again/Hard are quiet and neutral; Good steps up slightly; Easy sparkles with two ascending notes. Tones are generated at runtime: no network, no files, works offline.
+- **Sound preference** — On/Off toggle in display preferences previews all four sounds in sequence when switched on, and aborts any in-progress audio immediately when switched off. Preference persisted to `user_profile.sound_enabled` (new column, default on).
+- **Related cards on phrase detail** — phrase detail page now shows other cards in the same deck that share vocabulary or context.
+- **Phrase links visible in Contributions tab** — comments in the Contributions view now surface their attached phrase links.
+- **Review completion on deck card** — the rocket icon becomes a checkmark after completing a review session, giving clearer confirmation on the deck overview.
+
+### Improvements
+
+- **Review answer mode updates on click** — the display preferences toggle for 2-button vs 4-button review now saves immediately on click, matching the font and sound toggles (no submit button).
+- Remove green tint from the completed-review button (was visually ambiguous with the Good rating button).
+
+### Fixes
+
+- Fix comment collection "not ready" errors by preloading collections and adding retry logic.
+- Remove duplicate search link and route file.
+
+### Database
+
+- `user_profile.sound_enabled boolean not null default true` — new column for sound preference.
 
 _3 April, 2026_
 
