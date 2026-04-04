@@ -56,7 +56,7 @@ export default function Callout({
 					<Icon />
 				</div>
 			)}
-			<div className="space-y-2">{children}</div>
+			<div className="min-w-0 space-y-2">{children}</div>
 		</div>
 	)
 }
