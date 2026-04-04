@@ -121,7 +121,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 }
 
 function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
-	const current = profile.sound_enabled ?? true
+	const current = profile.sound_enabled
 
 	useEffect(() => cancelAllSounds, [])
 
