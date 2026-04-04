@@ -1,5 +1,6 @@
-import { type CSSProperties, useState } from 'react'
+import { type CSSProperties, useEffect, useState } from 'react'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
+import { playReviewSound } from '@/lib/review-sounds'
 import { useMutation } from '@tanstack/react-query'
 import {
 	BookmarkCheck,
@@ -51,6 +52,35 @@ const playAudio = (text: string) => {
 	// In a real application, you would trigger audio playback here
 }
 
+const COIN_COLORS: Record<1 | 2 | 3 | 4, string> = {
+	1: 'bg-red-600',
+	2: 'bg-gray-400',
+	3: 'bg-green-500',
+	4: 'bg-blue-500',
+}
+
+function ScoreCoin({
+	score,
+	onDone,
+}: {
+	score: 1 | 2 | 3 | 4
+	onDone: () => void
+}) {
+	useEffect(() => {
+		const t = setTimeout(onDone, 700)
+		return () => clearTimeout(t)
+	}, [onDone])
+
+	return (
+		<div
+			className={cn(
+				'animate-score-coin pointer-events-none absolute bottom-full left-1/2 size-5 rounded-full shadow-md',
+				COIN_COLORS[score]
+			)}
+		/>
+	)
+}
+
 export function ReviewSingleCard({
 	pid,
 	reviewStage,
@@ -82,6 +112,14 @@ export function ReviewSingleCard({
 	const lang = useReviewLang()
 	const answerMode = useReviewAnswerMode(lang)
 	const nextIntervals = intervals(latestReview).map(formatInterval)
+
+	const [coin, setCoin] = useState<{ score: 1 | 2 | 3 | 4; id: number } | null>(null)
+
+	const submitScore = (score: 1 | 2 | 3 | 4) => {
+		playReviewSound(score)
+		setCoin({ score, id: Date.now() })
+		mutate({ score })
+	}
 
 	if (!phrase) return null
 
@@ -166,12 +204,19 @@ export function ReviewSingleCard({
 				: answerMode === '2-buttons' ?
 					<div
 						data-name="answer-buttons-row"
-						className="mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
+						className="relative mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
 					>
+						{coin && (
+							<ScoreCoin
+								key={coin.id}
+								score={coin.score}
+								onDone={() => setCoin(null)}
+							/>
+						)}
 						<Button
 							variant="default"
 							data-testid="rating-again-button"
-							onClick={() => mutate({ score: 1 })}
+							onClick={() => submitScore(1)}
 							disabled={isPending}
 							className={cn(
 								'h-auto rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
@@ -185,7 +230,7 @@ export function ReviewSingleCard({
 						<Button
 							variant="default"
 							data-testid="rating-good-button"
-							onClick={() => mutate({ score: 3 })}
+							onClick={() => submitScore(3)}
 							disabled={isPending}
 							className={cn(
 								'h-auto rounded-2xl border-green-500! bg-green-500! py-6 text-2xl text-white hover:border-white! hover:bg-green-600!',
@@ -203,12 +248,19 @@ export function ReviewSingleCard({
 					</div>
 				:	<div
 						data-name="answer-buttons-row"
-						className="mb-3 grid w-full max-w-160 grid-cols-4"
+						className="relative mb-3 grid w-full max-w-160 grid-cols-4"
 					>
+						{coin && (
+							<ScoreCoin
+								key={coin.id}
+								score={coin.score}
+								onDone={() => setCoin(null)}
+							/>
+						)}
 						<Button
 							variant="default"
 							data-testid="rating-again-button"
-							onClick={() => mutate({ score: 1 })}
+							onClick={() => submitScore(1)}
 							disabled={isPending}
 							className={cn(
 								'h-auto flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
@@ -225,7 +277,7 @@ export function ReviewSingleCard({
 						<Button
 							variant="default"
 							data-testid="rating-hard-button"
-							onClick={() => mutate({ score: 2 })}
+							onClick={() => submitScore(2)}
 							disabled={isPending}
 							className={cn(
 								'h-auto flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
@@ -240,7 +292,7 @@ export function ReviewSingleCard({
 						<Button
 							variant="default"
 							data-testid="rating-good-button"
-							onClick={() => mutate({ score: 3 })}
+							onClick={() => submitScore(3)}
 							disabled={isPending}
 							className={cn(
 								'h-auto flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
@@ -259,7 +311,7 @@ export function ReviewSingleCard({
 								'h-auto flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
 								prevData?.score === 4 ? 'ring-primary ring-2 ring-offset-3' : ''
 							)}
-							onClick={() => mutate({ score: 4 })}
+							onClick={() => submitScore(4)}
 							disabled={isPending}
 						>
 							<span>Easy</span>
