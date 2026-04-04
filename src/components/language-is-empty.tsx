@@ -21,7 +21,7 @@ export function LanguageIsEmpty({ lang }: { lang: string }) {
 				to="/learn/$lang/phrases/new"
 				params={{ lang }}
 			>
-				<MessageSquarePlus size="48" className="h-12 w-12 grow" />
+				<MessageSquarePlus />
 				Add phrases to the library
 			</Link>
 		</Callout>
