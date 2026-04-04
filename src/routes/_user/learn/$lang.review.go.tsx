@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react'
-import { cn } from '@/lib/utils'
 import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
@@ -131,12 +130,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div
-					className={cn(
-						'-m-4 flex min-h-0 flex-1 flex-col gap-2 p-4',
-						atTheEnd ? 'overflow-y-auto' : 'overflow-hidden',
-					)}
-				>
+			<div className="-m-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-4">
 				{atTheEnd ?
 					<WhenComplete />
 				:	<div
