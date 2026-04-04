@@ -1,8 +1,13 @@
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { BookA, BookType, Columns2, Grid2x2 } from 'lucide-react'
+import { useEffect } from 'react'
+import {
+	BookA,
+	BookType,
+	Columns2,
+	Grid2x2,
+	Volume2,
+	VolumeX,
+} from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
@@ -10,22 +15,18 @@ import {
 	type FontPreferenceType,
 	MyProfileSchema,
 	MyProfileType,
-	ReviewAnswerModeSchema,
 	type ReviewAnswerModeType,
 } from '@/features/profile/schemas'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
 import { InfoDialog } from '@/components/info-dialog'
-import {
-	FancySelectField,
-	type FancySelectOption,
-} from '@/components/fields/fancy-select-field'
 import { cn } from '@/lib/utils'
+import { cancelAllSounds, previewAllSounds } from '@/lib/review-sounds'
 
 export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 	return (
 		<div className="space-y-8" data-testid="display-preferences-page">
 			<FontPreferenceSection profile={profile} />
+			<SoundPreferenceSection profile={profile} />
 			<ReviewAnswerModeSection profile={profile} />
 		</div>
 	)
@@ -119,47 +120,16 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 	)
 }
 
-const reviewAnswerModeOptions: Array<FancySelectOption> = [
-	{
-		value: '4-buttons',
-		label: 'Show 4 answer choices',
-		description: 'Again, Hard, Good, Easy',
-		Icon: Grid2x2,
-	},
-	{
-		value: '2-buttons',
-		label: 'Show 2 answer choices',
-		description: 'Forgot, Correct!',
-		Icon: Columns2,
-	},
-]
+function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
+	const current = profile.sound_enabled ?? true
 
-const ReviewAnswerModeFormSchema = z.object({
-	review_answer_mode: ReviewAnswerModeSchema,
-})
+	useEffect(() => cancelAllSounds, [])
 
-type ReviewAnswerModeFormInputs = z.infer<typeof ReviewAnswerModeFormSchema>
-
-function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
-	const currentMode = profile.review_answer_mode ?? '4-buttons'
-
-	const {
-		control,
-		handleSubmit,
-		reset,
-		formState: { errors, isDirty },
-	} = useForm<ReviewAnswerModeFormInputs>({
-		resolver: zodResolver(ReviewAnswerModeFormSchema),
-		defaultValues: { review_answer_mode: currentMode },
-	})
-
-	const updateAnswerMode = useMutation({
-		mutationFn: async (values: ReviewAnswerModeFormInputs) => {
+	const updateSoundPref = useMutation({
+		mutationFn: async (sound_enabled: boolean) => {
 			const { data } = await supabase
 				.from('user_profile')
-				.update({
-					review_answer_mode: values.review_answer_mode,
-				})
+				.update({ sound_enabled })
 				.eq('uid', profile.uid)
 				.select()
 				.maybeSingle()
@@ -169,10 +139,81 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 		onSuccess: (data) => {
 			if (data)
 				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			reset({
-				review_answer_mode:
-					(data?.review_answer_mode as ReviewAnswerModeType) ?? currentMode,
-			})
+			toastSuccess('Sound preference updated')
+		},
+		onError: (error) => {
+			toastError('Failed to update preference')
+			console.log('Error', error)
+		},
+	})
+
+	return (
+		<div className="space-y-4" data-testid="sound-preference">
+			<div className="space-y-2">
+				<Label>Review sounds</Label>
+				<p className="text-muted-foreground text-sm">
+					Play a brief sound when you submit a review score.
+				</p>
+			</div>
+			<div className="flex gap-2">
+				<button
+					type="button"
+					onClick={() => {
+						if (!current) updateSoundPref.mutate(true)
+						previewAllSounds()
+					}}
+					disabled={updateSoundPref.isPending}
+					data-testid="sound-preference-on"
+					className={cn(
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						current ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<Volume2 className="size-5 shrink-0" />
+					<span className="font-medium">On</span>
+				</button>
+				<button
+					type="button"
+					onClick={() => {
+						cancelAllSounds()
+						if (current) updateSoundPref.mutate(false)
+					}}
+					disabled={updateSoundPref.isPending}
+					data-testid="sound-preference-off"
+					className={cn(
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						!current ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<VolumeX className="size-5 shrink-0" />
+					<span className="font-medium">Off</span>
+				</button>
+			</div>
+		</div>
+	)
+}
+
+function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
+	const currentMode = profile.review_answer_mode ?? '4-buttons'
+
+	const updateAnswerMode = useMutation({
+		mutationFn: async (review_answer_mode: ReviewAnswerModeType) => {
+			const { data } = await supabase
+				.from('user_profile')
+				.update({ review_answer_mode })
+				.eq('uid', profile.uid)
+				.select()
+				.maybeSingle()
+				.throwOnError()
+			return data
+		},
+		onSuccess: (data) => {
+			if (data)
+				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
 			toastSuccess('Review answer mode updated')
 		},
 		onError: (error) => {
@@ -197,37 +238,52 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					</p>
 				</InfoDialog>
 			</div>
-			<form
-				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={handleSubmit((data) => updateAnswerMode.mutate(data))}
-				className="space-y-4"
-			>
-				<FancySelectField<ReviewAnswerModeFormInputs>
-					name="review_answer_mode"
-					control={control}
-					error={errors.review_answer_mode}
-					options={reviewAnswerModeOptions}
-					data-testid="review-answer-mode"
-				/>
-				<div className="space-x-2">
-					<Button
-						type="submit"
-						disabled={!isDirty}
-						data-testid="update-answer-mode-button"
-					>
-						Update answer mode
-					</Button>
-					<Button
-						variant="neutral"
-						type="button"
-						onClick={() => reset()}
-						disabled={!isDirty}
-					>
-						Clear
-					</Button>
-				</div>
-			</form>
+			<div className="flex gap-2" data-testid="review-answer-mode">
+				<button
+					type="button"
+					onClick={() =>
+						currentMode !== '4-buttons' && updateAnswerMode.mutate('4-buttons')
+					}
+					disabled={updateAnswerMode.isPending}
+					data-testid="answer-mode-4-buttons"
+					className={cn(
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						currentMode === '4-buttons' ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<Grid2x2 className="size-5 shrink-0" />
+					<div>
+						<span className="block font-medium">Show 4 answer choices</span>
+						<span className="text-muted-foreground text-sm">
+							Again, Hard, Good, Easy
+						</span>
+					</div>
+				</button>
+				<button
+					type="button"
+					onClick={() =>
+						currentMode !== '2-buttons' && updateAnswerMode.mutate('2-buttons')
+					}
+					disabled={updateAnswerMode.isPending}
+					data-testid="answer-mode-2-buttons"
+					className={cn(
+						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
+						currentMode === '2-buttons' ?
+							'border-primary bg-1-mlo-primary'
+						:	'border-border hover:border-4-mlo-primary'
+					)}
+				>
+					<Columns2 className="size-5 shrink-0" />
+					<div>
+						<span className="block font-medium">Show 2 answer choices</span>
+						<span className="text-muted-foreground text-sm">
+							Forgot, Correct!
+						</span>
+					</div>
+				</button>
+			</div>
 		</div>
 	)
 }

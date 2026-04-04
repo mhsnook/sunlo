@@ -1454,6 +1454,7 @@ export type Database = {
 					font_preference: string | null
 					languages_known: Json
 					review_answer_mode: string | null
+					sound_enabled: boolean
 					uid: string
 					updated_at: string | null
 					username: string | null
@@ -1464,6 +1465,7 @@ export type Database = {
 					font_preference?: string | null
 					languages_known?: Json
 					review_answer_mode?: string | null
+					sound_enabled?: boolean
 					uid?: string
 					updated_at?: string | null
 					username?: string | null
@@ -1474,6 +1476,7 @@ export type Database = {
 					font_preference?: string | null
 					languages_known?: Json
 					review_answer_mode?: string | null
+					sound_enabled?: boolean
 					uid?: string
 					updated_at?: string | null
 					username?: string | null

@@ -29,4 +29,4 @@ export {
 
 // Hooks
 export { useAuth, useUserId } from '@/lib/use-auth'
-export { useProfile, useLanguagesToShow } from './hooks'
+export { useProfile, useLanguagesToShow, useSoundEnabled } from './hooks'

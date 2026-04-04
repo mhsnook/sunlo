@@ -43,6 +43,7 @@ export const MyProfileSchema = PublicProfileSchema.extend({
 	updated_at: z.string().nullable(),
 	font_preference: FontPreferenceSchema.nullable().default('default'),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default('4-buttons'),
+	sound_enabled: z.boolean().default(true),
 })
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>
