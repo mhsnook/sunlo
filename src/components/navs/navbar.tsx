@@ -9,6 +9,11 @@ import type { MyRouterContext } from '@/routes/__root'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export default function Navbar() {
+	const matches = useMatches()
+	const focusMode = matches.some(
+		(m) => (m.context as MyRouterContext)?.focusMode
+	)
+
 	return (
 		<nav
 			className="flex items-center justify-between gap-4 border-b px-2 py-3"
@@ -18,7 +23,7 @@ export default function Navbar() {
 				<Title />
 			</div>
 			<div className="flex items-center gap-2">
-				<NotificationBell />
+				{!focusMode && <NotificationBell />}
 				<SidebarTrigger />
 			</div>
 		</nav>
