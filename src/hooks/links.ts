@@ -132,14 +132,6 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/browse/charts',
 			},
 		},
-		'/learn/quick-search': {
-			name: 'Search',
-			title: 'Quick Search',
-			link: {
-				to: '/learn/quick-search',
-			},
-			Icon: Search,
-		},
 		'/search': {
 			name: 'Search',
 			title: 'Phrase Finder',
