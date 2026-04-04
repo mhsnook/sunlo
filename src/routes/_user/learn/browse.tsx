@@ -15,8 +15,7 @@ export const Route = createFileRoute('/_user/learn/browse')({
 	beforeLoad: ({ context }) => ({
 		titleBar: {
 			title: 'Explore Languages',
-			subtitle:
-				'Browse popular languages, requests, and playlists from our community',
+			subtitle: 'Browse the public library',
 		},
 		appnav: ['/learn/browse', '/learn/browse/charts'],
 		contextMenu:

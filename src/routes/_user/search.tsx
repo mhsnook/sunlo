@@ -55,7 +55,6 @@ export const Route = createFileRoute('/_user/search')({
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Search',
-			subtitle: 'Search phrases, playlists, and requests',
 		},
 		appnav: [],
 		fixedHeight: true,
