@@ -157,7 +157,7 @@ function FlashCardReviewSession({
 						return (
 							<div
 								key={`${manifest[currentCardIndex]}-${animKey}`}
-								className="animate-card-pop-in flex min-h-0 flex-1 flex-col"
+								className="animate-card-pop-in flex flex-col"
 							>
 								<ReviewSingleCard
 									pid={phraseId}
