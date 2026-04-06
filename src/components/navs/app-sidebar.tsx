@@ -30,9 +30,11 @@ export function AppSidebar({
 			<SidebarContent>
 				<ActiveReviewCallout currentLang={lang} />
 				<NavMain lang={lang} />
+				<div className="mt-auto p-2">
+					<ModeToggle />
+				</div>
 			</SidebarContent>
 			<SidebarFooter>
-				<ModeToggle />
 				<NavUser />
 			</SidebarFooter>
 			<SidebarRail />

@@ -31,7 +31,6 @@ const learnMenu = makeLinks([
 	'/learn',
 	'/learn/browse',
 	'/learn/browse/charts',
-	'/learn/contributions',
 	'/learn/add-deck',
 ])
 const learnMenuPublic = makeLinks([
