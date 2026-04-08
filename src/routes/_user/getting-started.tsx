@@ -16,10 +16,15 @@ import { useUserId } from '@/lib/use-auth'
 import { useProfile } from '@/features/profile/hooks'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
+import { decksCollection } from '@/features/deck/collections'
+import { DeckMetaSchema } from '@/features/deck/schemas'
+import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
 import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
+
+const PLAYLIST_INTENT_KEY = 'sunlo:playlist-intent'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -57,8 +62,26 @@ function GettingStartedPage() {
 	const userId = useUserId()
 	const { data: profile } = useProfile()
 
-	// After profile creation, go to welcome page (or referrer if invited)
-	const nextPage = referrer ? `/friends/search/${referrer}` : '/welcome'
+	// After profile creation, redirect based on intent:
+	// 1. Playlist intent → back to the playlist page (deck was auto-created)
+	// 2. Friend referrer → friend search
+	// 3. Default → welcome page
+	const playlistIntent = (() => {
+		try {
+			const raw = localStorage.getItem(PLAYLIST_INTENT_KEY)
+			return raw ?
+					(JSON.parse(raw) as { lang: string; playlistId: string })
+				:	null
+		} catch {
+			return null
+		}
+	})()
+
+	const nextPage =
+		playlistIntent ?
+			`/learn/${playlistIntent.lang}/playlists/${playlistIntent.playlistId}`
+		: referrer ? `/friends/search/${referrer}`
+		: '/welcome'
 
 	return profile ?
 			<Navigate to={nextPage} />
@@ -114,12 +137,41 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				.select()
 			return data
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			if (!data)
 				throw new Error(
 					`Somehow the server didn't return any data for the new profile...`
 				)
 			console.log(`Success! Profile:`, data)
+
+			// Auto-create deck from playlist intent before writing profile,
+			// because the profile write triggers navigation via <Navigate>
+			const intentStr = localStorage.getItem(PLAYLIST_INTENT_KEY)
+			if (intentStr) {
+				try {
+					const intent = JSON.parse(intentStr) as {
+						lang: string
+						playlistId: string
+					}
+					const { data: deck, error } = await supabase
+						.from('user_deck')
+						.insert({ lang: intent.lang })
+						.select()
+					if (!error && deck?.[0]) {
+						decksCollection.utils.writeInsert(
+							DeckMetaSchema.parse({
+								...deck[0],
+								language: languages[deck[0].lang],
+								theme: 0,
+							})
+						)
+					}
+				} catch (e) {
+					console.log('Failed to auto-create deck from playlist intent', e)
+				}
+				localStorage.removeItem(PLAYLIST_INTENT_KEY)
+			}
+
 			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
 			toastSuccess('Success!')
 		},
