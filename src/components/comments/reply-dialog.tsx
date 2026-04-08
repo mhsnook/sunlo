@@ -1,3 +1,4 @@
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
@@ -16,7 +17,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
+import {
+	MentionTextarea,
+	serializeMentions,
+	deserializeMentions,
+} from '@/components/mention-textarea'
+import { publicProfilesCollection } from '@/features/profile/collections'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
@@ -194,6 +200,7 @@ function NewReplyForm({
 	onClose: () => void
 }) {
 	const navigate = useNavigate()
+	const mentionMapRef = useRef(new Map<string, string>())
 
 	const form = useForm<{ content: string }>({
 		resolver: zodResolver(ReplyFormSchema),
@@ -202,11 +209,12 @@ function NewReplyForm({
 
 	const createMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
+			const content = serializeMentions(values.content, mentionMapRef.current)
 			const { data, error } = await supabase.rpc(
 				'create_comment_with_phrases',
 				{
 					p_request_id: requestId,
-					p_content: values.content,
+					p_content: content,
 					p_parent_comment_id: parentCommentId,
 					p_phrase_ids: [],
 				}
@@ -272,7 +280,8 @@ function NewReplyForm({
 							<FormLabel className="sr-only">Write a reply</FormLabel>
 							<MarkdownHint />
 							<FormControl>
-								<Textarea
+								<MentionTextarea
+									mentionMapRef={mentionMapRef}
 									data-testid="reply-content-input"
 									placeholder="Write a reply..."
 									rows={3}
@@ -306,16 +315,37 @@ function EditReplyForm({
 	comment: RequestCommentType
 	onClose: () => void
 }) {
+	const mentionMapRef = useRef(new Map<string, string>())
+
+	const { data: allProfiles } = useLiveQuery(
+		(q) => q.from({ profile: publicProfilesCollection }),
+		[]
+	)
+	const [defaultsReady, setDefaultsReady] = useState(false)
+
 	const form = useForm<{ content: string }>({
 		resolver: zodResolver(ReplyFormSchema),
 		defaultValues: { content: comment.content },
 	})
 
+	useEffect(() => {
+		if (defaultsReady || !allProfiles) return
+		const profilesByUid = new Map(allProfiles.map((p) => [p.uid, p]))
+		const { text, mentionMap } = deserializeMentions(
+			comment.content,
+			profilesByUid
+		)
+		mentionMapRef.current = mentionMap
+		form.reset({ content: text })
+		setDefaultsReady(true)
+	}, [allProfiles, comment.content, defaultsReady, form])
+
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
+			const content = serializeMentions(values.content, mentionMapRef.current)
 			const { data, error } = await supabase
 				.from('request_comment')
-				.update({ content: values.content })
+				.update({ content })
 				.eq('id', comment.id)
 				.select()
 				.single()
@@ -352,7 +382,8 @@ function EditReplyForm({
 							<FormLabel className="sr-only">Edit your reply</FormLabel>
 							<MarkdownHint />
 							<FormControl>
-								<Textarea
+								<MentionTextarea
+									mentionMapRef={mentionMapRef}
 									data-testid="edit-reply-content-input"
 									placeholder="Write a reply..."
 									rows={3}

@@ -18,7 +18,12 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
+import {
+	MentionTextarea,
+	serializeMentions,
+	deserializeMentions,
+} from '@/components/mention-textarea'
+import { publicProfilesCollection } from '@/features/profile/collections'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -428,7 +433,7 @@ export function MarkdownHint() {
 	return (
 		<p className="text-muted-foreground text-xs">
 			Supports markdown like `&gt;` for blockquote, <em>_italics_</em>,{' '}
-			<strong>**bold**</strong>
+			<strong>**bold**</strong>, and @mentions
 		</p>
 	)
 }
@@ -452,6 +457,7 @@ function NewCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
+	const mentionMapRef = useRef(new Map<string, string>())
 	const form = useForm<{ content: string }>({
 		resolver: zodResolver(CommentFormSchema),
 		defaultValues: { content: '' },
@@ -459,11 +465,12 @@ function NewCommentForm({
 
 	const createMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
+			const content = serializeMentions(values.content, mentionMapRef.current)
 			const { data, error } = await supabase.rpc(
 				'create_comment_with_phrases',
 				{
 					p_request_id: requestId,
-					p_content: values.content,
+					p_content: content,
 					p_parent_comment_id: undefined,
 					p_phrase_ids: selectedPhraseIds,
 				}
@@ -531,7 +538,8 @@ function NewCommentForm({
 							<FormLabel className="sr-only">Add a comment</FormLabel>
 							<MarkdownHint />
 							<FormControl>
-								<Textarea
+								<MentionTextarea
+									mentionMapRef={mentionMapRef}
 									data-testid="comment-content-input"
 									placeholder={
 										hasCards ?
@@ -584,13 +592,35 @@ function EditCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
+	const mentionMapRef = useRef(new Map<string, string>())
+
+	// Resolve @[uuid] tokens → @username for the textarea display
+	const { data: allProfiles } = useLiveQuery(
+		(q) => q.from({ profile: publicProfilesCollection }),
+		[]
+	)
+	const [defaultsReady, setDefaultsReady] = useState(false)
+
 	const form = useForm<{ content: string }>({
 		resolver: zodResolver(CommentFormSchema),
 		defaultValues: { content: comment.content },
 	})
 
+	useEffect(() => {
+		if (defaultsReady || !allProfiles) return
+		const profilesByUid = new Map(allProfiles.map((p) => [p.uid, p]))
+		const { text, mentionMap } = deserializeMentions(
+			comment.content,
+			profilesByUid
+		)
+		mentionMapRef.current = mentionMap
+		form.reset({ content: text })
+		setDefaultsReady(true)
+	}, [allProfiles, comment.content, defaultsReady, form])
+
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
+			const content = serializeMentions(values.content, mentionMapRef.current)
 			const existingPhraseIds = new Set(
 				(existingLinks ?? []).map((link) => link.phrase_id)
 			)
@@ -598,7 +628,7 @@ function EditCommentForm({
 
 			const { data: updatedComment, error: commentError } = await supabase
 				.from('request_comment')
-				.update({ content: values.content })
+				.update({ content })
 				.eq('id', comment.id)
 				.select()
 				.single()
@@ -696,7 +726,8 @@ function EditCommentForm({
 							<FormLabel className="sr-only">Edit your comment</FormLabel>
 							<MarkdownHint />
 							<FormControl>
-								<Textarea
+								<MentionTextarea
+									mentionMapRef={mentionMapRef}
 									data-testid="edit-comment-content-input"
 									placeholder={
 										!isReply && hasCards ?

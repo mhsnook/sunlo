@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react'
+import { ReactNode, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
@@ -17,7 +17,10 @@ import {
 	FormLabel,
 	FormMessage,
 } from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
+import {
+	MentionTextarea,
+	serializeMentions,
+} from '@/components/mention-textarea'
 import {
 	Dialog,
 	DialogDescription,
@@ -157,6 +160,7 @@ function NewCommentForm({
 }) {
 	const navigate = useNavigate()
 	const isReply = !!parentCommentId
+	const mentionMapRef = useRef(new Map<string, string>())
 
 	const form = useForm<CommentFormInputs>({
 		resolver: zodResolver(CommentFormSchema),
@@ -165,11 +169,12 @@ function NewCommentForm({
 
 	const createCommentMutation = useMutation({
 		mutationFn: async (values: CommentFormInputs) => {
+			const content = serializeMentions(values.content, mentionMapRef.current)
 			const { data, error } = await supabase.rpc(
 				'create_comment_with_phrases',
 				{
 					p_request_id: requestId,
-					p_content: values.content,
+					p_content: content,
 					p_parent_comment_id: parentCommentId,
 					p_phrase_ids: [],
 				}
@@ -240,7 +245,8 @@ function NewCommentForm({
 							</FormLabel>
 							<MarkdownHint />
 							<FormControl>
-								<Textarea
+								<MentionTextarea
+									mentionMapRef={mentionMapRef}
 									data-testid="comment-content-input"
 									placeholder={
 										isReply ? 'Write a reply...' : 'Share your thoughts...'
