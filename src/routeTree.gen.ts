@@ -11,6 +11,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AnkiToCsvRouteImport } from './routes/anki-to-csv'
 import { Route as UserRouteImport } from './routes/_user'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -104,6 +105,11 @@ const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/components.lazy').then((d) => d.Route))
+const AnkiToCsvRoute = AnkiToCsvRouteImport.update({
+  id: '/anki-to-csv',
+  path: '/anki-to-csv',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/anki-to-csv.lazy').then((d) => d.Route))
 const UserRoute = UserRouteImport.update({
   id: '/_user',
   getParentRoute: () => rootRouteImport,
@@ -403,6 +409,7 @@ const UserFriendsChatsFriendUidRecommendRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/anki-to-csv': typeof AnkiToCsvRoute
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -465,6 +472,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/anki-to-csv': typeof AnkiToCsvRoute
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -522,6 +530,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
+  '/anki-to-csv': typeof AnkiToCsvRoute
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -586,6 +595,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/anki-to-csv'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -648,6 +658,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/anki-to-csv'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -704,6 +715,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/_user'
+    | '/anki-to-csv'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -769,6 +781,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
+  AnkiToCsvRoute: typeof AnkiToCsvRoute
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   MicrocopyLazyRoute: typeof MicrocopyLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
@@ -811,6 +824,13 @@ declare module '@tanstack/react-router' {
       path: '/components'
       fullPath: '/components'
       preLoaderRoute: typeof ComponentsLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/anki-to-csv': {
+      id: '/anki-to-csv'
+      path: '/anki-to-csv'
+      fullPath: '/anki-to-csv'
+      preLoaderRoute: typeof AnkiToCsvRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_user': {
@@ -1446,6 +1466,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
+  AnkiToCsvRoute: AnkiToCsvRoute,
   ComponentsLazyRoute: ComponentsLazyRoute,
   MicrocopyLazyRoute: MicrocopyLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
