@@ -3,6 +3,8 @@ import { createLazyFileRoute } from '@tanstack/react-router'
 import { Download, FileUp, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Label } from '@/components/ui/label'
 import {
 	Card,
 	CardContent,
@@ -26,6 +28,7 @@ function AnkiToCsvPage() {
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 	const [result, setResult] = useState<AnkiDeckData | null>(null)
+	const [confirmed, setConfirmed] = useState(false)
 
 	const processFile = useCallback(async (file: File) => {
 		setError(null)
@@ -46,10 +49,11 @@ function AnkiToCsvPage() {
 		(e: DragEvent) => {
 			e.preventDefault()
 			setDragging(false)
+			if (!confirmed) return
 			const file = e.dataTransfer.files[0]
 			if (file) processFile(file)
 		},
-		[processFile]
+		[processFile, confirmed]
 	)
 
 	const handleFileInput = useCallback(
@@ -78,16 +82,32 @@ function AnkiToCsvPage() {
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="flex flex-col gap-4">
+					{/* Usage rights confirmation */}
+					<div className="flex items-start gap-3 rounded-lg border p-4">
+						<Checkbox
+							id="usage-rights"
+							checked={confirmed}
+							onCheckedChange={(checked) => setConfirmed(checked === true)}
+						/>
+						<Label
+							htmlFor="usage-rights"
+							className="cursor-pointer text-sm leading-relaxed"
+						>
+							I confirm that I am not using this tool to violate the usage
+							rights of the original deck author.
+						</Label>
+					</div>
+
 					{/* Drop zone */}
 					<label
-						className={`flex min-h-48 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
-							dragging ?
-								'border-primary bg-1-mlo-primary'
-							:	'border-muted-foreground/30 hover:border-muted-foreground/50'
+						className={`flex min-h-48 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+							!confirmed ? 'pointer-events-none opacity-40'
+							: dragging ? 'border-primary bg-1-mlo-primary cursor-pointer'
+							: 'border-muted-foreground/30 hover:border-muted-foreground/50 cursor-pointer'
 						}`}
 						onDragOver={(e) => {
 							e.preventDefault()
-							setDragging(true)
+							if (confirmed) setDragging(true)
 						}}
 						onDragLeave={() => setDragging(false)}
 						onDrop={handleDrop}
@@ -96,6 +116,7 @@ function AnkiToCsvPage() {
 							type="file"
 							accept=".apkg"
 							className="hidden"
+							disabled={!confirmed}
 							onChange={handleFileInput}
 						/>
 						{loading ?
