@@ -24,7 +24,6 @@ const friendsMenu = makeLinks([
 	'/friends',
 	'/friends/chats',
 	'/friends/requests',
-	'/friends/search',
 	'/friends/invite',
 ])
 const learnMenu = makeLinks([

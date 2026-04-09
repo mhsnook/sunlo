@@ -171,7 +171,8 @@ function WelcomePage() {
 						icon={UserPlus}
 						title="Find Friends"
 						description="Search for people you know or invite them to join."
-						linkTo="/friends/search"
+						linkTo="/friends"
+						linkSearch={{ search: true }}
 						linkText="Search Friends"
 						variant="secondary"
 					/>
@@ -283,6 +284,7 @@ function ActionCard({
 	title,
 	description,
 	linkTo,
+	linkSearch,
 	linkText,
 	variant = 'secondary',
 	disabled = false,
@@ -291,6 +293,7 @@ function ActionCard({
 	title: string
 	description: string
 	linkTo: string
+	linkSearch?: Record<string, unknown>
 	linkText: string
 	variant?: 'primary' | 'secondary'
 	disabled?: boolean
@@ -325,6 +328,7 @@ function ActionCard({
 					</Button>
 				:	<Link
 						to={linkTo}
+						search={linkSearch}
 						className={cn(
 							buttonVariants({
 								variant: isPrimary ? 'default' : 'soft',
