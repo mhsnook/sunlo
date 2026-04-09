@@ -20,7 +20,11 @@ export function FriendProfiles() {
 						: !data?.length ?
 							<p>
 								Your friends list is empty for now. Use{' '}
-								<Link className="s-link" to="/friends/search">
+								<Link
+									className="s-link"
+									to="/friends"
+									search={{ search: true }}
+								>
 									the search screen
 								</Link>{' '}
 								to find friends on Sunlo or{' '}

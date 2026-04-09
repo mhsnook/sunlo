@@ -1,12 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import {
-	Archive,
-	CircleCheck,
-	Rocket,
-	Logs,
-	TableProperties,
-} from 'lucide-react'
+import { Archive, CircleCheck, Rocket, Logs, TableProperties } from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -34,9 +28,7 @@ function ReviewButton({ lang }: { lang: string }) {
 			params={{ lang }}
 			aria-label={isDone ? 'Review complete' : 'Start review'}
 		>
-			{isDone ?
-				<CircleCheck />
-			:	<Rocket />}
+			{isDone ? <CircleCheck /> : <Rocket />}
 		</Link>
 	)
 }
@@ -65,7 +57,8 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								<Archive />
 								Archived
 							</Badge>
-						:	<ReviewButton lang={deck.lang} />}
+						:	<ReviewButton lang={deck.lang} />
+						}
 					</span>
 				</CardHeader>
 

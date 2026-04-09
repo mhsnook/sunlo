@@ -16,11 +16,12 @@ function RouteComponent() {
 
 	return !data?.length ?
 			<p
+				data-testid="friend-requests-page"
 				className={`text-muted-foreground mx-2 text-sm italic ${isLoading ? 'invisible' : ''}`}
 			>
 				No friend requests pending for you.
 			</p>
-		:	<Card>
+		:	<Card data-testid="friend-requests-page">
 				<CardHeader>
 					<CardTitle>
 						<div className="flex flex-row items-center justify-between">
