@@ -190,7 +190,7 @@ export function ReviewSingleCard({
 	return (
 		<>
 			<CardlikeFlashcard
-				className="mx-auto w-full"
+				className="mx-auto w-full flex-1"
 				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 				data-name="flashcard"
 				data-key={pid}
@@ -219,7 +219,6 @@ export function ReviewSingleCard({
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="min-h-40 flex-1" />
 			<div className="sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-background from-80% to-transparent pt-6 pb-3">
 				{!showAnswers ?
 					<Button
