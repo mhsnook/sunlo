@@ -166,14 +166,102 @@ export const useUnreadMessages = (): UseLiveQueryResult<ChatMessageType[]> => {
 	)
 }
 
-// Hook to count unique friends with unread messages + incoming requests (for badge)
-export const useUnreadChatsCount = (): number | undefined => {
+/** One canonical list for the chats sidebar: unique by uid, sorted unread-first. */
+export type ChatEntry = {
+	uid: uuid
+	profile: RelationsFullType['profile']
+	status: 'friends' | 'pending'
+	unreadCount: number
+	hasPendingRequest: boolean
+	oldestUnread: ChatMessageType | null
+	mostRecentMessage: ChatMessageRelType | null
+	mostRecentActivity: string
+}
+
+export const useChatEntries = (): {
+	data: Array<ChatEntry> | undefined
+	isLoading: boolean
+} => {
+	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
+	const { data: incomingRequests, isLoading: isLoadingRequests } =
+		useIncomingFriendRequests()
+	const { data: chats, isLoading: isLoadingChats } = useAllChats()
 	const { data: unreadMessages } = useUnreadMessages()
-	const { data: incomingRequests } = useIncomingFriendRequests()
-	if (!unreadMessages && !incomingRequests) return undefined
-	const uniqueSenders = new Set(unreadMessages?.map((m) => m.sender_uid))
-	const total = uniqueSenders.size + (incomingRequests?.length ?? 0)
-	return total || undefined
+
+	const isLoading =
+		!!isLoadingFriends || !!isLoadingRequests || !!isLoadingChats
+
+	if (!friends && !incomingRequests) return { data: undefined, isLoading }
+
+	// Build unread-message maps keyed by sender uid
+	const unreadCountByUid = new Map<string, number>()
+	const oldestUnreadByUid = new Map<string, ChatMessageType>()
+	unreadMessages?.forEach((msg) => {
+		unreadCountByUid.set(
+			msg.sender_uid,
+			(unreadCountByUid.get(msg.sender_uid) ?? 0) + 1
+		)
+		const existing = oldestUnreadByUid.get(msg.sender_uid)
+		if (!existing || msg.created_at < existing.created_at)
+			oldestUnreadByUid.set(msg.sender_uid, msg)
+	})
+
+	// Collect uids we've already added
+	const seen = new Set<string>()
+	const entries: Array<ChatEntry> = []
+
+	// Incoming requests first (they may also be in friends if status just changed)
+	incomingRequests?.forEach((req) => {
+		seen.add(req.uid)
+		entries.push({
+			uid: req.uid,
+			profile: req.profile,
+			status: 'pending',
+			unreadCount: unreadCountByUid.get(req.uid) ?? 0,
+			hasPendingRequest: true,
+			oldestUnread: oldestUnreadByUid.get(req.uid) ?? null,
+			mostRecentMessage: chats?.[req.uid]?.at(-1) ?? null,
+			mostRecentActivity: req.most_recent_created_at,
+		})
+	})
+
+	// Then friends (skip any already added as pending)
+	friends?.forEach((friend) => {
+		if (seen.has(friend.uid)) return
+		seen.add(friend.uid)
+		const lastMsg = chats?.[friend.uid]?.at(-1) ?? null
+		entries.push({
+			uid: friend.uid,
+			profile: friend.profile,
+			status: 'friends',
+			unreadCount: unreadCountByUid.get(friend.uid) ?? 0,
+			hasPendingRequest: false,
+			oldestUnread: oldestUnreadByUid.get(friend.uid) ?? null,
+			mostRecentMessage: lastMsg,
+			mostRecentActivity: lastMsg?.created_at ?? friend.most_recent_created_at,
+		})
+	})
+
+	// Sort: unread/pending first, then by most recent activity
+	entries.sort((a, b) => {
+		const aHot = a.unreadCount > 0 || a.hasPendingRequest
+		const bHot = b.unreadCount > 0 || b.hasPendingRequest
+		if (aHot && !bHot) return -1
+		if (bHot && !aHot) return 1
+		return a.mostRecentActivity < b.mostRecentActivity ? 1 : -1
+	})
+
+	return { data: entries, isLoading }
+}
+
+// Badge count: unique people with any unread activity
+export const useUnreadChatsCount = (): number | undefined => {
+	const { data: entries } = useChatEntries()
+	if (!entries) return undefined
+	const count = entries.filter(
+		(e) => e.unreadCount > 0 || e.hasPendingRequest
+	).length
+	return count || undefined
 }
 
 export const useMarkAsRead = () => {

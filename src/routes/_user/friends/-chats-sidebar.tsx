@@ -3,14 +3,7 @@ import { UserPlus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import {
-	useAllChats,
-	useIncomingFriendRequests,
-	useRelationFriends,
-	useUnreadMessages,
-} from '@/features/social/hooks'
-import { ChatMessageType } from '@/features/social/schemas'
-import type { RelationsFullType } from '@/features/social/live'
+import { type ChatEntry, useChatEntries } from '@/features/social/hooks'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
@@ -20,38 +13,7 @@ const linkActiveProps = {
 }
 
 export function ChatsSidebar() {
-	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
-	const { data: incomingRequests } = useIncomingFriendRequests()
-	const { data: chats, isLoading: isLoadingChats } = useAllChats()
-	const { data: unreadMessages } = useUnreadMessages()
-
-	// Count unread messages per friend and track the oldest unread message
-	const unreadCountByFriend = new Map<string, number>()
-	const oldestUnreadByFriend = new Map<string, ChatMessageType>()
-	unreadMessages?.forEach((msg) => {
-		const count = unreadCountByFriend.get(msg.sender_uid) ?? 0
-		unreadCountByFriend.set(msg.sender_uid, count + 1)
-		// Keep the oldest unread message (first one we see, or replace if older)
-		const existing = oldestUnreadByFriend.get(msg.sender_uid)
-		if (!existing || msg.created_at < existing.created_at) {
-			oldestUnreadByFriend.set(msg.sender_uid, msg)
-		}
-	})
-
-	// Sort by recent activity (prioritize friends with unread messages)
-	const sortedFriends = friends?.toSorted((a, b) => {
-		const aUnread = unreadCountByFriend.get(a.uid) ?? 0
-		const bUnread = unreadCountByFriend.get(b.uid) ?? 0
-		// Friends with unread messages come first
-		if (aUnread > 0 && bUnread === 0) return -1
-		if (bUnread > 0 && aUnread === 0) return 1
-		// Then sort by most recent activity
-		return (
-			a.most_recent_created_at === b.most_recent_created_at ? 0
-			: a.most_recent_created_at < b.most_recent_created_at ? 1
-			: -1
-		)
-	})
+	const { data: entries, isLoading } = useChatEntries()
 
 	return (
 		<Card className="flex h-full w-full flex-col">
@@ -62,121 +24,97 @@ export function ChatsSidebar() {
 				data-testid="friend-chat-list"
 				className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
 			>
-				{incomingRequests?.map((request) => (
-					<FriendRequestItem key={request.uid} request={request} />
-				))}
-				{isLoadingFriends || isLoadingChats ?
+				{isLoading ?
 					<>
 						<ChatSkeleton />
 						<ChatSkeleton />
 						<ChatSkeleton />
 					</>
-				: !sortedFriends || !sortedFriends.length ?
+				: !entries?.length ?
 					<p className="text-muted-foreground p-4 text-sm">
-						{incomingRequests?.length ? null : (
-							'You have no friends to chat with yet.'
-						)}
+						You have no friends to chat with yet.
 					</p>
-				:	sortedFriends.map((friend) => {
-						// Prefer showing the oldest unread message, otherwise show most recent
-						const oldestUnread = oldestUnreadByFriend.get(friend.uid)
-						const mostRecentMessage =
-							!chats || !chats[friend.uid] ? null : chats[friend.uid].at(-1)
-						const thisChatMessage = oldestUnread ?? mostRecentMessage
-						const isUnreadPreview = !!oldestUnread
-						const unreadCount = unreadCountByFriend.get(friend.uid)
-						return (
-							<Link
-								data-name="friend-chat-link"
-								data-key={friend.uid}
-								key={friend.uid}
-								to="/friends/chats/$friendUid"
-								params={{ friendUid: friend.uid }}
-								className={cn(
-									'hover:bg-1-mlo-accent hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all'
-								)}
-								activeProps={linkActiveProps}
-							>
-								<Avatar className="h-8 w-8">
-									<AvatarImage
-										src={avatarUrlify(friend.profile?.avatar_path)}
-										alt={friend.profile?.username}
-									/>
-									<AvatarFallback>
-										{friend.profile?.username?.charAt(0).toUpperCase()}
-									</AvatarFallback>
-								</Avatar>
-								<div className="flex-1 overflow-hidden">
-									<div className="flex items-center gap-2 font-semibold">
-										<span>{friend.profile?.username}</span>
-										{unreadCount ?
-											<Badge data-testid="unread-badge" size="sm">
-												{unreadCount}
-											</Badge>
-										:	null}
-									</div>
-									<p
-										className={cn(
-											'line-clamp-2 text-xs',
-											isUnreadPreview ?
-												'text-foreground font-medium'
-											:	'text-muted-foreground'
-										)}
-									>
-										{thisChatMessage ?
-											<>
-												{ago(thisChatMessage.created_at)} •{' '}
-												{/* Unread messages are always from the friend */}
-												{'isByMe' in thisChatMessage && thisChatMessage.isByMe ?
-													'you '
-												:	'they '}
-												{thisChatMessage.message_type === 'recommendation' ?
-													'sent a recommendation'
-												: thisChatMessage.message_type === 'request' ?
-													'requested a card'
-												: thisChatMessage.message_type === 'playlist' ?
-													'shared a playlist'
-												:	'accepted your recommendation'}
-											</>
-										:	'No messages yet'}
-									</p>
-								</div>
-							</Link>
-						)
-					})
+				:	entries.map((entry) => <ChatEntryItem key={entry.uid} entry={entry} />)
 				}
 			</CardContent>
 		</Card>
 	)
 }
 
-function FriendRequestItem({ request }: { request: RelationsFullType }) {
+function ChatEntryItem({ entry }: { entry: ChatEntry }) {
+	const {
+		uid,
+		profile,
+		hasPendingRequest,
+		unreadCount,
+		oldestUnread,
+		mostRecentMessage,
+		mostRecentActivity,
+	} = entry
+
+	// Prefer oldest unread message as preview, fall back to most recent
+	const previewMessage = oldestUnread ?? mostRecentMessage
+	const isUnreadPreview = !!oldestUnread
+
 	return (
 		<Link
-			data-testid="friend-request-item"
+			data-name="friend-chat-link"
+			data-key={uid}
 			to="/friends/chats/$friendUid"
-			params={{ friendUid: request.uid }}
+			params={{ friendUid: uid }}
 			className="hover:bg-1-mlo-accent hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
 			activeProps={linkActiveProps}
 		>
 			<Avatar className="h-8 w-8">
 				<AvatarImage
-					src={avatarUrlify(request.profile?.avatar_path)}
-					alt={request.profile?.username}
+					src={avatarUrlify(profile?.avatar_path)}
+					alt={profile?.username}
 				/>
 				<AvatarFallback>
-					{request.profile?.username?.charAt(0).toUpperCase()}
+					{profile?.username?.charAt(0).toUpperCase()}
 				</AvatarFallback>
 			</Avatar>
 			<div className="flex-1 overflow-hidden">
 				<div className="flex items-center gap-2 font-semibold">
-					<span>{request.profile?.username}</span>
-					<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+					<span>{profile?.username}</span>
+					{unreadCount ?
+						<Badge data-testid="unread-badge" size="sm">
+							{unreadCount}
+						</Badge>
+					: hasPendingRequest ?
+						<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+					:	null}
 				</div>
-				<p className="text-muted-foreground line-clamp-1 text-xs">
-					<UserPlus className="me-1 inline size-3" />
-					Wants to connect • {ago(request.most_recent_created_at)}
-				</p>
+				{hasPendingRequest && !previewMessage ?
+					<p className="text-muted-foreground line-clamp-1 text-xs">
+						<UserPlus className="me-1 inline size-3" />
+						Wants to connect • {ago(mostRecentActivity)}
+					</p>
+				:	<p
+						className={cn(
+							'line-clamp-2 text-xs',
+							isUnreadPreview ?
+								'text-foreground font-medium'
+							:	'text-muted-foreground'
+						)}
+					>
+						{previewMessage ?
+							<>
+								{ago(previewMessage.created_at)} •{' '}
+								{'isByMe' in previewMessage && previewMessage.isByMe ?
+									'you '
+								:	'they '}
+								{previewMessage.message_type === 'recommendation' ?
+									'sent a recommendation'
+								: previewMessage.message_type === 'request' ?
+									'requested a card'
+								: previewMessage.message_type === 'playlist' ?
+									'shared a playlist'
+								:	'accepted your recommendation'}
+							</>
+						:	'No messages yet'}
+					</p>
+				}
 			</div>
 		</Link>
 	)

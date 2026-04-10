@@ -25,12 +25,15 @@ export { relationsFull, type RelationsFullType } from './live'
 // Hooks
 export {
 	useRelationFriends,
+	useIncomingFriendRequests,
 	useOneRelation,
 	useFriendRequestAction,
 	useAllChats,
 	useOneFriendChat,
 	useUnreadMessages,
 	useUnreadChatsCount,
+	useChatEntries,
+	type ChatEntry,
 	useMarkAsRead,
 	useSocialRealtime,
 } from './hooks'
