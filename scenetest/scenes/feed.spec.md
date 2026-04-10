@@ -4,7 +4,6 @@ learner:
 
 - login
 - go-to-deck
-- up
 - see feed-item-list
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 
@@ -14,7 +13,6 @@ learner:
 
 - login
 - go-to-deck
-- up
 - click feed-tab-popular
 - see feed-item-list
 

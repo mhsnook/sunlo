@@ -28,7 +28,6 @@ learner:
 
 - login
 - go-to-deck
-- up
 - click /learn
 - up
 - see decks-list-grid

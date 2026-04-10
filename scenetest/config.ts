@@ -16,6 +16,7 @@ defineMacro('go-to-deck', [
 	'click [team.lang] deck-link',
 	'up',
 	'see deck-feed-page',
+	'up',
 ])
 
 defineMacro('go-to-deck-settings', [
