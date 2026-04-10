@@ -129,7 +129,7 @@ test.describe('Logged In Navigation', () => {
 			.click()
 
 		// Click search icon button in the app nav
-		await page.getByTestId('appnav-search-button').click()
+		await page.getByTestId('navbar-search-button').click()
 
 		// Search overlay modal should be visible
 		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
@@ -142,7 +142,7 @@ test.describe('Logged In Navigation', () => {
 			.click()
 
 		// Open search modal
-		await page.getByTestId('appnav-search-button').click()
+		await page.getByTestId('navbar-search-button').click()
 		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 
 		// Find search input inside the modal

@@ -90,7 +90,7 @@ test.describe('Deck Workflow Navigation', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Click search icon button in nav
-		await page.getByTestId('appnav-search-button').click()
+		await page.getByTestId('navbar-search-button').click()
 
 		// Search overlay modal should be visible
 		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
@@ -206,7 +206,7 @@ test.describe('Deck Workflow Navigation', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
 
 		// Open search modal using icon button
-		await page.getByTestId('appnav-search-button').click()
+		await page.getByTestId('navbar-search-button').click()
 		await expect(page.getByTestId('browse-search-overlay')).toBeVisible()
 
 		// Close search modal
