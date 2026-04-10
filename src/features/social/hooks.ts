@@ -19,7 +19,17 @@ import {
 import { mapArrays } from '@/lib/utils'
 import { relationsFull, type RelationsFullType } from './live'
 
-export const useRelationInvitations = (): UseLiveQueryResult<
+export const useRelationFriends = (): UseLiveQueryResult<
+	RelationsFullType[]
+> => {
+	return useLiveQuery((q) =>
+		q
+			.from({ relation: relationsFull })
+			.where(({ relation }) => eq(relation.status, 'friends'))
+	)
+}
+
+export const useIncomingFriendRequests = (): UseLiveQueryResult<
 	RelationsFullType[]
 > => {
 	return useLiveQuery((q) =>
@@ -34,30 +44,6 @@ export const useRelationInvitations = (): UseLiveQueryResult<
 	)
 }
 
-export const useRelationInvitedByMes = (): UseLiveQueryResult<
-	RelationsFullType[]
-> => {
-	return useLiveQuery((q) =>
-		q
-			.from({ relation: relationsFull })
-			.where(({ relation }) =>
-				and(
-					eq(relation.status, 'pending'),
-					eq(relation.most_recent_uid_for, relation.uid)
-				)
-			)
-	)
-}
-
-export const useRelationFriends = (): UseLiveQueryResult<
-	RelationsFullType[]
-> => {
-	return useLiveQuery((q) =>
-		q
-			.from({ relation: relationsFull })
-			.where(({ relation }) => eq(relation.status, 'friends'))
-	)
-}
 export const useOneRelation = (
 	uid: uuid
 ): UseLiveQueryResult<RelationsFullType> =>
@@ -90,8 +76,8 @@ export const useFriendRequestAction = (uid_for: uuid) => {
 		},
 		onSuccess: (_, variable) => {
 			if (variable === 'invite') toastSuccess('Friend request sent 👍')
-			//if (variable === 'accept')
-			//	toastSuccess('Accepted invitation. You are now connected 👍')
+			if (variable === 'accept')
+				toastSuccess('Accepted invitation. You are now connected 👍')
 			if (variable === 'decline') toastNeutral('Declined this invitation')
 			if (variable === 'cancel') toastNeutral('Cancelled this invitation')
 			if (variable === 'remove') toastNeutral('You are no longer friends')
@@ -180,13 +166,14 @@ export const useUnreadMessages = (): UseLiveQueryResult<ChatMessageType[]> => {
 	)
 }
 
-// Hook to count unique friends with unread messages (for badge)
+// Hook to count unique friends with unread messages + incoming requests (for badge)
 export const useUnreadChatsCount = (): number | undefined => {
 	const { data: unreadMessages } = useUnreadMessages()
-	if (!unreadMessages) return undefined
-	// Count unique sender_uids (friends with unread messages)
-	const uniqueSenders = new Set(unreadMessages.map((m) => m.sender_uid))
-	return uniqueSenders.size || undefined
+	const { data: incomingRequests } = useIncomingFriendRequests()
+	if (!unreadMessages && !incomingRequests) return undefined
+	const uniqueSenders = new Set(unreadMessages?.map((m) => m.sender_uid))
+	const total = uniqueSenders.size + (incomingRequests?.length ?? 0)
+	return total || undefined
 }
 
 export const useMarkAsRead = () => {

@@ -102,6 +102,7 @@ function SearchButton() {
 		<Button
 			variant="ghost"
 			size="icon"
+			className="me-2"
 			data-testid="appnav-search-button"
 			onClick={() => {
 				const url = new URL(window.location.href)

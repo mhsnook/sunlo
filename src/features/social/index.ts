@@ -24,8 +24,6 @@ export { relationsFull, type RelationsFullType } from './live'
 
 // Hooks
 export {
-	useRelationInvitations,
-	useRelationInvitedByMes,
 	useRelationFriends,
 	useOneRelation,
 	useFriendRequestAction,

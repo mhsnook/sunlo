@@ -1,8 +1,5 @@
 import { useParams } from '@tanstack/react-router'
-import {
-	useRelationInvitations,
-	useUnreadChatsCount,
-} from '@/features/social/hooks'
+import { useUnreadChatsCount } from '@/features/social/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { useUnreadCount } from '@/features/notifications/hooks'
 import { todayString } from '@/lib/utils'
@@ -15,7 +12,6 @@ import {
 	CircleStar,
 	Compass,
 	FileText,
-	HandHeart,
 	HeartHandshake,
 	HeartPlus,
 	Home,
@@ -55,15 +51,6 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			link: {
 				to: '/friends',
 			},
-		},
-		'/friends/requests': {
-			name: 'Requests',
-			title: 'Friend Requests',
-			Icon: HandHeart,
-			link: {
-				to: '/friends/requests',
-			},
-			useBadge: () => useRelationInvitations()?.data?.length,
 		},
 		'/friends/chats': {
 			name: 'Chats',

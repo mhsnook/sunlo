@@ -1,22 +1,10 @@
-# learner views friends list
+# learner opens friend search dialog from chats
 
 learner:
 
 - login
-- openTo /learn
-- see decks-list-grid
-- up
-- click /friends
-- up
-- see friends-section
-
-# learner opens friend search dialog from appnav
-
-learner:
-
-- login
-- openTo /friends
-- see friends-section
+- openTo /friends/chats
+- see chats-page
 - click appnav-search-button
 - see friend-search-overlay
 - see friend-search-input
@@ -26,8 +14,8 @@ learner:
 learner:
 
 - login
-- openTo /friends
-- see friends-section
+- openTo /friends/chats
+- see chats-page
 - click appnav-search-button
 - see friend-search-overlay
 - typeInto friend-search-input Lex
@@ -38,43 +26,27 @@ learner:
 learner:
 
 - login
-- openTo /friends
-- see friends-section
+- openTo /friends/chats
+- see chats-page
 - click appnav-search-button
 - see friend-search-overlay
 - click close-dialog-button
 - notSee friend-search-overlay
-- see friends-section
+- see chats-page
 
 # learner opens friend search via search param
 
 learner:
 
 - login
-- openTo /friends?search=true
+- openTo /friends/chats?search=true
 - see friend-search-overlay
 - see friend-search-input
 
-# learner navigates to friend requests tab
+# friends index redirects to chats
 
 learner:
 
 - login
 - openTo /friends
-- see friends-section
-- up
-- click appnav-requests
-- up
-- see friend-requests-page
-
-# learner navigates to chats from friends
-
-learner:
-
-- login
-- openTo /friends
-- see friends-section
-- up
-- click appnav-chats
-- up
 - see chats-page

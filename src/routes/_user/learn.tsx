@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-router'
 import * as z from 'zod'
 
-import { PendingRequestsHeader } from './friends/-pending-requests-header'
 import BrowseSearchOverlay from '@/components/browse-search-overlay'
 import languages from '@/lib/languages'
 
@@ -29,7 +28,7 @@ export const Route = createFileRoute('/_user/learn')({
 		searchAction: true,
 		appnav:
 			context.auth.isAuth ?
-				['/learn', '/friends', '/learn/contributions', '/learn/add-deck']
+				['/learn', '/friends/chats', '/learn/contributions', '/learn/add-deck']
 			:	['/learn', '/learn/browse'],
 		contextMenu: context.auth.isAuth ? ['/learn/add-deck'] : [],
 	}),
@@ -79,7 +78,6 @@ function LearnLayout() {
 
 	return (
 		<div className="h-full space-y-4">
-			<PendingRequestsHeader shy />
 			<Outlet />
 			{isSearchOpen && (
 				<BrowseSearchOverlay
