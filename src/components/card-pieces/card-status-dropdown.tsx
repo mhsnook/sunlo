@@ -185,23 +185,29 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 			return data
 		},
 		onSuccess: (data, variables) => {
-			if (data[0]) updatePhraseCounts(phrase.card, data[0])
+			try {
+				if (data[0]) updatePhraseCounts(phrase.card, data[0])
 
-			if (phrase.card) {
-				for (const card of data) {
-					cardsCollection.utils.writeUpdate({
-						phrase_id: card.phrase_id,
-						direction: card.direction,
-						status: variables.status,
-					})
+				if (phrase.card) {
+					for (const card of data) {
+						cardsCollection.utils.writeUpdate({
+							phrase_id: card.phrase_id,
+							direction: card.direction,
+							status: variables.status,
+						})
+					}
+				} else {
+					for (const card of data) {
+						cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+					}
 				}
-				toastSuccess(`Updated card status to "${data[0].status}"`)
-			} else {
-				for (const card of data) {
-					cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
-				}
-				toastSuccess('Added this phrase to your deck')
+			} catch (e) {
+				console.error('Card saved but failed to update local collection', e)
 			}
+
+			if (phrase.card)
+				toastSuccess(`Updated card status to "${data[0].status}"`)
+			else toastSuccess('Added this phrase to your deck')
 		},
 		onError: (error) => {
 			if (phrase.card) toastError('There was an error updating this card')
