@@ -27,18 +27,8 @@ cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', 
 
 learner:
 
-- login
-- openTo /learn
-- see deck-card-[team.lang]
-- click deck-link
-- up
-- see deck-feed-page
-- up
-- click top-right-context-menu
-- click deck-settings-menu-item
-- up
-- see deck-settings-page
-- ifClick dismiss-deck-settings-intro
+- login-and-go-to-deck
+- go-to-deck-settings
 - see review-goal-options
 - click 10
 - up
@@ -52,17 +42,8 @@ cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid'
 
 learner:
 
-- login
-- openTo /learn
-- see deck-card-[team.lang]
-- click deck-link
-- up
-- see deck-feed-page
-- up
-- click top-right-context-menu
-- click deck-settings-menu-item
-- up
-- see deck-settings-page
+- login-and-go-to-deck
+- go-to-deck-settings
 - see learning-goal-options
 - click family
 - up
@@ -76,16 +57,8 @@ cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[lear
 
 learner:
 
-- login
-- openTo /learn
-- see deck-card-[team.lang]
-- click deck-link
-- up
-- click top-right-context-menu
-- click deck-settings-menu-item
-- up
-- see deck-settings-page
-- up
+- login-and-go-to-deck
+- go-to-deck-settings
 - click archive-deck-button
 - see archive-confirmation-dialog
 - click confirm-archive-button
@@ -101,9 +74,7 @@ learner:
 - see deck-card-[team.lang]
 - click deck-link
 - up
-- click top-right-context-menu
-- click deck-settings-menu-item
-- up
+- go-to-deck-settings
 - click restore-deck-button
 - see restore-confirmation-dialog
 - click confirm-restore-button

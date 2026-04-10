@@ -77,26 +77,28 @@ learner:
 
 **DSL commands:**
 
-| Command | Args | Purpose |
-|---------|------|---------|
-| `openTo` | path | Navigate to URL |
-| `see` | selector | Assert element is visible |
-| `notSee` | selector | Assert element is NOT visible |
-| `seeText` | text | Assert text is visible |
-| `seeToast` | selector | Wait for toast to appear then disappear |
-| `click` | selector | Click element |
-| `typeInto` | selector value | Type text into input |
-| `up` | (none) | Wait for page to settle (async ops, animations) |
-| `login` | (none) | Macro: navigates to /login, fills email/password, submits |
+| Command    | Args           | Purpose                                                   |
+| ---------- | -------------- | --------------------------------------------------------- |
+| `openTo`   | path           | Navigate to URL                                           |
+| `see`      | selector       | Assert element is visible                                 |
+| `notSee`   | selector       | Assert element is NOT visible                             |
+| `seeText`  | text           | Assert text is visible                                    |
+| `seeToast` | selector       | Wait for toast to appear then disappear                   |
+| `click`    | selector       | Click element                                             |
+| `typeInto` | selector value | Type text into input                                      |
+| `up`       | (none)         | Wait for page to settle (async ops, animations)           |
+| `login`    | (none)         | Macro: navigates to /login, fills email/password, submits |
 
 **Selectors** resolve to `data-testid` attributes. For items inside lists, use space-separated selectors: `decks-list-grid hin deck-link` finds `[data-testid="deck-link"]` inside `[data-key="hin"]` inside `[data-testid="decks-list-grid"]`. See `scenetest/TEST_IDS.md` for the full registry.
 
 **Template variables:**
+
 - `[self.email]`, `[self.password]` — current actor's credentials
 - `[actor.key]` — actor's UUID (e.g., `[learner.key]`, `[friend.key]`)
 - `[team.lang]` — team's language code (e.g., `'kan'`)
 
 **Actors** (defined in `scenetest/actors/default.ts`):
+
 - `visitor` — not logged in
 - `new-user` — fresh account, needs onboarding
 - `learner` — main test user with decks and data
@@ -792,11 +794,11 @@ Routes eagerly load collection data in `loader` functions using `.preload()`:
 ```typescript
 // In $lang.tsx — await all preloads before rendering
 loader: async () => {
-  await Promise.all([
-    phrasesCollection.preload(),
-    cardsCollection.preload(),
-    publicProfilesCollection.preload(),
-  ])
+	await Promise.all([
+		phrasesCollection.preload(),
+		cardsCollection.preload(),
+		publicProfilesCollection.preload(),
+	])
 }
 
 // In _user.tsx — fire-and-forget for non-critical data
