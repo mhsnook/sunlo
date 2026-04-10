@@ -524,11 +524,10 @@ describe('direction isolation', () => {
 //     Phase 1: stability = initialStability(1) ≈ 0.40  (Again)
 //     Phase 3: stability = initialStability(3) ≈ 3.17  (Good, fresh init)
 //
-// IMPORTANT: Currently the onSuccess handler writes the phase-3 review's
-// difficulty/stability back to the card record, and useLatestReviewForPhrase
-// returns the phase-3 review (since it's newest). This means the NEXT day's
-// FSRS will build on the phase-3 initial values, not the phase-1 values.
-// This is load-bearing for scheduling — see the tests below.
+// IMPORTANT: The onSuccess handler skips card sync for phase-3 reviews, and
+// useLatestReviewForPhrase filters to day_first_review=true. This ensures
+// the NEXT day's FSRS builds on the phase-1 values, not the throwaway
+// phase-3 initial values. See the scheduling tests below.
 // ---------------------------------------------------------------------------
 
 describe('phase 1 vs phase 3 FSRS values', () => {
@@ -614,19 +613,15 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 		expect(hypotheticalChained.stability).not.toBe(actualPhase3.stability)
 	})
 
-	describe('scheduling implications of phase-3 values', () => {
-		// These tests document a consequence of the current design:
-		// The phase-3 review's FSRS values ARE used for future scheduling.
+	describe('scheduling uses phase-1 values (phase-3 excluded from chain)', () => {
+		// After the fix, useLatestReviewForPhrase filters to day_first_review=true,
+		// and onSuccess skips card sync for phase-3 reviews. This means next-day
+		// FSRS always builds on the phase-1 review, not the phase-3 re-review.
 		//
-		// useLatestReviewForPhrase returns the most recent review (by created_at),
-		// which after a phase-3 review is the phase-3 row. The next day's FSRS
-		// builds on that review's difficulty and stability.
-		//
-		// So: a card scored Again in phase 1 but Good in phase 3 will be
-		// scheduled as if its first review was Good — the Again is effectively
-		// replaced for scheduling purposes.
+		// A card scored Again in phase 1 but Good in phase 3 will be scheduled
+		// based on the Again — the phase-3 Good does NOT replace it.
 
-		it('next-day FSRS uses phase-3 values when phase-3 review is newest', () => {
+		it('next-day FSRS uses phase-1 values even when phase-3 review exists', () => {
 			// Phase 1: score=1 (Again), brand new card
 			const phase1 = calculateFSRS({
 				score: 1,
@@ -639,78 +634,85 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 				currentTime: new Date('2025-06-01T12:30:00Z'),
 			})
 
-			// Next day: build FSRS on the phase-3 review (the latest one)
+			// Next day: FSRS should build on the phase-1 review (day_first_review=true)
 			const nextDay = new Date('2025-06-02T12:00:00Z')
 
-			const scheduledFromPhase3 = calculateFSRS({
-				score: 3,
-				previousReview: mockReview({
-					difficulty: phase3.difficulty,
-					stability: phase3.stability,
-					created_at: '2025-06-01T12:30:00Z',
-					direction: 'reverse',
-				}),
-				currentTime: nextDay,
-			})
-
-			// Alternative: what if we'd scheduled from phase 1 instead?
 			const scheduledFromPhase1 = calculateFSRS({
 				score: 3,
 				previousReview: mockReview({
 					difficulty: phase1.difficulty,
 					stability: phase1.stability,
 					created_at: '2025-06-01T12:00:00Z',
-					direction: 'reverse',
+					day_first_review: true,
 				}),
 				currentTime: nextDay,
 			})
 
-			// Phase-3 had higher stability (3.17 vs 0.40), so the interval
-			// computed from it will be longer — the card is treated as more stable.
-			expect(scheduledFromPhase3.interval).toBeGreaterThan(
-				scheduledFromPhase1.interval
-			)
+			// The phase-3 review should NOT be used. If it were, the interval
+			// would be longer because phase-3 had higher stability (3.17 vs 0.40).
+			const scheduledFromPhase3 = calculateFSRS({
+				score: 3,
+				previousReview: mockReview({
+					difficulty: phase3.difficulty,
+					stability: phase3.stability,
+					created_at: '2025-06-01T12:30:00Z',
+					day_first_review: false,
+				}),
+				currentTime: nextDay,
+			})
 
-			// Document the actual values for clarity
-			expect(scheduledFromPhase3.stability).toBeGreaterThan(
-				scheduledFromPhase1.stability
+			// Phase-1 Again produces a shorter interval than phase-3 Good would —
+			// the Again is preserved in the scheduling chain.
+			expect(scheduledFromPhase1.interval).toBeLessThan(
+				scheduledFromPhase3.interval
+			)
+			expect(scheduledFromPhase1.stability).toBeLessThan(
+				scheduledFromPhase3.stability
 			)
 		})
 
-		it('same phase-3 score produces same scheduling regardless of phase-1 score', () => {
-			// Two cards, both new:
+		it('phase-1 Again followed by phase-3 Good still schedules based on the Again', () => {
 			// Card A: phase-1 score=1 (Again), phase-3 score=3 (Good)
-			// Card B: phase-1 score=2 (Hard),  phase-3 score=3 (Good)
+			// Card B: phase-1 score=3 (Good), no phase-3 needed
 			//
-			// Since phase-3 passes previousReview=undefined, the phase-1 score
-			// is irrelevant. Both phase-3 reviews produce identical FSRS values.
-			const phase3 = calculateFSRS({ score: 3 })
+			// With the fix, Card A's next-day scheduling should use the Again values,
+			// NOT the phase-3 Good values. Card B should be scheduled more favorably.
+			const phase1Again = calculateFSRS({ score: 1 })
+			const phase1Good = calculateFSRS({ score: 3 })
 
-			// Both cards have the same phase-3 output, so next-day scheduling is identical
 			const nextDay = new Date('2025-06-02T12:00:00Z')
 
-			const fromCardA = calculateFSRS({
+			// Card A: scheduled from phase-1 Again
+			const cardA = calculateFSRS({
 				score: 3,
 				previousReview: mockReview({
-					difficulty: phase3.difficulty,
-					stability: phase3.stability,
-					created_at: '2025-06-01T12:30:00Z',
-				}),
-				currentTime: nextDay,
-			})
-			const fromCardB = calculateFSRS({
-				score: 3,
-				previousReview: mockReview({
-					difficulty: phase3.difficulty,
-					stability: phase3.stability,
-					created_at: '2025-06-01T12:30:00Z',
+					difficulty: phase1Again.difficulty,
+					stability: phase1Again.stability,
+					created_at: '2025-06-01T12:00:00Z',
+					day_first_review: true,
 				}),
 				currentTime: nextDay,
 			})
 
-			expect(fromCardA.stability).toBe(fromCardB.stability)
-			expect(fromCardA.interval).toBe(fromCardB.interval)
-			expect(fromCardA.difficulty).toBe(fromCardB.difficulty)
+			// Card B: scheduled from phase-1 Good
+			const cardB = calculateFSRS({
+				score: 3,
+				previousReview: mockReview({
+					difficulty: phase1Good.difficulty,
+					stability: phase1Good.stability,
+					created_at: '2025-06-01T12:00:00Z',
+					day_first_review: true,
+				}),
+				currentTime: nextDay,
+			})
+
+			// Card A (Again) should have shorter interval than Card B (Good)
+			// because Again produces lower stability.
+			expect(cardA.interval).toBeLessThan(cardB.interval)
+			expect(cardA.stability).toBeLessThan(cardB.stability)
+
+			// Card A should also have higher difficulty (harder card)
+			expect(cardA.difficulty).toBeGreaterThan(cardB.difficulty)
 		})
 	})
 })
