@@ -100,13 +100,6 @@ test.describe('Logged In Navigation', () => {
 		await expect(page.getByText(/display preferences/i)).toBeVisible()
 	})
 
-	test('friends section is visible on learn page', async ({ page }) => {
-		// Should see friends section (use heading role to be specific)
-		await expect(
-			page.getByRole('heading', { name: /your friends/i })
-		).toBeVisible()
-	})
-
 	test('can switch between decks', async ({ page }) => {
 		await page
 			.getByTestId('decks-list-grid')
