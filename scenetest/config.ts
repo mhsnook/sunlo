@@ -10,6 +10,25 @@ defineMacro('login', [
 	'notSee login-form',
 ])
 
+defineMacro('login-and-go-to-deck', [
+	'login',
+	'openTo /learn',
+	'see decks-list-grid',
+	'click [team.lang] deck-link',
+	'up',
+	'see deck-feed-page',
+])
+
+defineMacro('go-to-deck-settings', [
+	'click top-right-context-menu',
+	'click deck-settings-menu-item',
+	'up',
+	'see deck-settings-page',
+	'up',
+	'ifClick dismiss-deck-settings-intro',
+	'see deck-settings-page',
+])
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 

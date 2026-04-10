@@ -2,11 +2,7 @@
 //
 // learner:
 //
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang] deck-link
-// - up
+// - login-and-go-to-deck
 // - click /learn/$lang/feed
 // - up
 // - see deck-feed-page
@@ -29,12 +25,7 @@
 
 learner:
 
-- login
-- openTo /learn
-- see decks-list-grid
-- click [team.lang] deck-link
-- up
-- see deck-feed-page
+- login-and-go-to-deck
 - up
 - click /learn
 - up
@@ -49,7 +40,6 @@ learner:
 //
 // - login
 // - openTo /learn
-// - see decks-list-grid
 // - up
 // - click sidebar-user-menu-trigger
 // - click /profile
@@ -61,11 +51,7 @@ learner:
 
 learner:
 
-- login
-- openTo /learn
-- see decks-list-grid
-- click [team.lang] deck-link
-- up
+- login-and-go-to-deck
 - click appnav-search-button
 - up
 - see browse-search-overlay
@@ -76,11 +62,7 @@ learner:
 
 // learner:
 //
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang] deck-link
-// - up
+// - login-and-go-to-deck
 // - click feed-phrase-link
 // - up
 // - see phrase-detail-page
@@ -95,11 +77,7 @@ learner:
 
 // learner:
 //
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang] deck-link
-// - up
+// - login-and-go-to-deck
 // - click feed-phrase-link
 // - up
 // - see phrase-detail-page
@@ -122,11 +100,7 @@ learner:
 //
 // learner:
 //
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang] deck-link
-// - up
+// - login-and-go-to-deck
 // - click /learn/$lang/review
 // - up
 // - see review-intro

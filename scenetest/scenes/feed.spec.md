@@ -2,12 +2,7 @@
 
 learner:
 
-- login
-- openTo /learn
-- see decks-list-grid
-- click [team.lang] deck-link
-- up
-- see deck-feed-page
+- login-and-go-to-deck
 - up
 - see feed-item-list
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
@@ -16,12 +11,7 @@ learner:
 
 learner:
 
-- login
-- openTo /learn
-- see decks-list-grid
-- click [team.lang] deck-link
-- up
-- see deck-feed-page
+- login-and-go-to-deck
 - up
 - click feed-tab-popular
 - see feed-item-list
@@ -32,11 +22,7 @@ cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.ke
 
 learner:
 
-- login
-- openTo /learn
-- see decks-list-grid
-- click [team.lang] deck-link
-- up
+- login-and-go-to-deck
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 - click upvote-playlist-button
 - up
@@ -47,12 +33,7 @@ learner:
 
 // learner:
 //
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - click [team.lang] deck-link
-// - up
-// - see deck-feed-page
+// - login-and-go-to-deck
 // - see feed-item-list
 // - up
 // - scrollToBottom
