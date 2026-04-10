@@ -6,7 +6,8 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - click /learn/$lang/review
 - up
 - see review-setup-page
