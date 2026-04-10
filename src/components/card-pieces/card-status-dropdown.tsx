@@ -203,6 +203,10 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 				}
 			} catch (e) {
 				console.error('Card saved but failed to update local collection', e)
+				toastError(
+					'Card saved, but your app may be out of date — try refreshing'
+				)
+				return
 			}
 
 			if (phrase.card)
