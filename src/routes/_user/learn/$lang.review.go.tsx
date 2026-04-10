@@ -147,7 +147,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="-m-4 min-h-0 flex-1 overflow-y-auto p-4">
+			<div className="-mx-4 -mb-4 min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
 				{atTheEnd ?
 					<WhenComplete />
 				:	(() => {
