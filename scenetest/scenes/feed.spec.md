@@ -57,19 +57,19 @@ learner:
 - see chat-messages-container
 - seeText Sent a phrase recommendation.
 
-// # opening a chat marks messages as read
-//
-// learner:
-//
-// - login
-// - openTo /learn
-// - see decks-list-grid
-// - up
-// - click /friends/chats
-// - up
-// - see chats-page
-// - see unread-badge
-// - up
-// - click friend-chat-link
-// - up
-// - see chat-messages-container
+# opening a chat marks messages as read
+
+learner:
+
+- login
+- openTo /learn
+- see decks-list-grid
+- up
+- click /friends/chats
+- up
+- see chats-page
+- see unread-badge
+- up
+- click friend-chat-link
+- up
+- see chat-messages-container

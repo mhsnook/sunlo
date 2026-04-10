@@ -111,7 +111,7 @@ learner:
 
 **Adding test IDs to components**: Use `data-testid` for unique elements, `data-key` for list items (on the item element, with `data-testid` on the container), and `data-name`+`data-key` for items without a wrapper. Register new IDs in `scenetest/TEST_IDS.md`.
 
-**Known limitation**: The `setup:` directive (for pre-setting state before a scene) is not yet implemented upstream. Scenes requiring non-default initial state are in `.spec.skip.md` files. See `scenetest/SETUP_DIRECTIVE.md` for details.
+**Setup directives** run before the scene to pre-set state (e.g., `setup: supabase.from('user_deck').update(...)`). Use them when a scene requires non-default initial state.
 
 ### Testing (Playwright)
 
