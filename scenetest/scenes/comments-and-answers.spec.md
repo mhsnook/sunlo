@@ -1,25 +1,102 @@
-# learner views comments with replies on a Hindi request
+# friend comments on learner's Hindi request and learner gets notified
+
+cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', '3f8c9e2a-1234-4567-89ab-cdef01234567').gte('created_at', '[testStart]')
+cleanup: supabase.from('notification').delete().eq('uid', '[learner.key]').eq('type', 'request_commented').gte('created_at', '[testStart]')
+
+friend:
+
+- login
+- openTo /learn/hin/requests/3f8c9e2a-1234-4567-89ab-cdef01234567
+- up
+- see request-detail-page
+- click open-comment-dialog
+- up
+- see comment-dialog
+- typeInto comment-content-input 'You can also try "haldi kitne ka hai?" for turmeric!'
+- click post-comment-button
+- up
+- seeToast toast-success
 
 learner:
 
 - login
-- openTo /learn/hin/requests/e0d3a74e-4fe7-43c0-aa35-d05c83929986
+- openTo /notifications
+- up
+- see notifications-page
+- seeText commented on your request
+
+# learner2 replies to a comment and both learner and original commenter get notified
+
+cleanup: supabase.from('request_comment').delete().eq('uid', '[learner2.key]').gte('created_at', '[testStart]')
+cleanup: supabase.from('request_comment').delete().eq('parent_comment_id', 'c0000005-5555-4666-8777-888888888888')
+cleanup: supabase.from('notification').delete().eq('type', 'comment_replied').gte('created_at', '[testStart]')
+
+learner2:
+
+- login
+- openTo /learn/hin/requests/3f8c9e2a-1234-4567-89ab-cdef01234567
 - up
 - see request-detail-page
-- see comment-item c0000001-1111-2222-3333-444444444444
-
-# learner views comments with phrase links on a Kannada request
+- up
+- see comment-item c0000005-5555-4666-8777-888888888888
+- click reply-link
+- up
+- see reply-dialog
+- typeInto reply-content-input 'Great tip! I also use "lehsun kitne ka hai?" for garlic.'
+- click post-reply-button
+- up
+- seeToast toast-success
 
 learner:
 
 - login
-- openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- openTo /notifications
+- up
+- seeText commented on your request
+
+# learner3 answers a Kannada request with phrase links
+
+cleanup: supabase.from('comment_phrase_link').delete().eq('uid', '[learner3.key]').gte('created_at', '[testStart]')
+cleanup: supabase.from('request_comment').delete().eq('uid', '[learner3.key]').eq('request_id', '6c1f2a5d-4567-4890-a2de-f01234567890').gte('created_at', '[testStart]')
+cleanup: supabase.from('notification').delete().eq('type', 'phrase_referenced').gte('created_at', '[testStart]')
+
+learner3:
+
+- login
+- openTo /learn/kan/requests/6c1f2a5d-4567-4890-a2de-f01234567890
 - up
 - see request-detail-page
-- see comment-item c0000003-3333-4444-5555-666666666666
+- click open-comment-dialog
+- up
+- see comment-dialog
+- typeInto comment-content-input 'Here are the direction phrases!'
+- click attach-phrase-button
+- up
+- typeInto phrase-search-input Amele
+- click phrase-picker-item
+- up
+- click post-comment-button
+- up
+- seeToast toast-success
 
-// Note: Scenes for posting comments, replying, attaching phrase links,
-// upvoting requests, and cross-actor notification flows are tracked in
-// comments-and-answers.spec.skip.md. They require multi-actor flows
-// with [testStart] template variables that scenetest v0.2.0 does not
-// yet support in cleanup directives.
+# learner upvotes a request and requester gets notified
+
+cleanup: supabase.from('phrase_request_upvote').delete().eq('uid', '[learner.key]').eq('request_id', '4a9d0f3b-2345-5678-90bc-def012345678')
+cleanup: supabase.from('notification').delete().eq('type', 'request_upvoted').gte('created_at', '[testStart]')
+
+learner:
+
+- login
+- openTo /learn/kan/requests/4a9d0f3b-2345-5678-90bc-def012345678
+- up
+- see request-detail-page
+- click upvote-request-button
+- up
+- seeToast toast-success
+
+learner2:
+
+- login
+- openTo /notifications
+- up
+- seeText upvoted your request

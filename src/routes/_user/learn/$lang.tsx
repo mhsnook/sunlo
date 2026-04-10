@@ -6,7 +6,7 @@ import { setTheme } from '@/lib/deck-themes'
 import { todayString } from '@/lib/utils'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { cardsCollection } from '@/features/deck/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import {
 	cardReviewsCollection,
@@ -56,6 +56,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			phrasesCollection.preload(),
 			cardsCollection.preload(),
 			publicProfilesCollection.preload(),
+			decksCollection.preload(),
 		])
 	},
 })

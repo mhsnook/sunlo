@@ -20,8 +20,6 @@ learner:
 - see display-preferences-page
 - click font-preference-dyslexic
 - up
-- click update-font-button
-- up
 - seeToast toast-success
 
 # learner sets global review answer mode to 2 buttons
@@ -34,8 +32,6 @@ learner:
 - openTo /profile
 - up
 - see display-preferences-page
-- click review-answer-mode-2-buttons
-- up
-- click update-answer-mode-button
+- click answer-mode-2-buttons
 - up
 - seeToast toast-success

@@ -107,7 +107,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 										onClick={setClosedMobile}
 									>
 										{deck.name}
-										<Badge variant="outline">{deck.badge} cards</Badge>
+										<Badge variant="outline">{deck.badge} phrases</Badge>
 									</Link>
 								</DropdownMenuItem>
 							))}

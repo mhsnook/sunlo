@@ -74,7 +74,7 @@ export function ContinueReview({
 							lang,
 							dayString,
 							reviewStats.count,
-							null, // newCardPids not available when continuing
+							null, // newCardEntries not available when continuing
 							reviewStats.stage,
 							reviewStats.index
 						)

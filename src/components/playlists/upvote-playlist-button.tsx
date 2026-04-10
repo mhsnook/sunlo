@@ -1,7 +1,7 @@
 import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
 import { count, eq } from '@tanstack/db'
-import { toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
 import {
@@ -59,8 +59,10 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 				phrasePlaylistUpvotesCollection.utils.writeInsert({
 					playlist_id: data.playlist_id,
 				})
+				toastSuccess('Vote added!')
 			} else if (data.action === 'removed') {
 				phrasePlaylistUpvotesCollection.utils.writeDelete(data.playlist_id)
+				toastSuccess('Vote removed')
 			}
 		},
 		onError: (error: Error) => {

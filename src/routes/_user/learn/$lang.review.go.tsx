@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react'
-import { pids } from '@/types/main'
 
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -20,6 +19,11 @@ import {
 	cardReviewsCollection,
 	reviewDaysCollection,
 } from '@/features/review/collections'
+import {
+	parseManifestEntry,
+	type ManifestEntry,
+} from '@/features/review/manifest'
+import { useCheck, should } from '@scenetest/checks-react'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
@@ -54,7 +58,7 @@ function FlashCardReviewSession({
 	manifest,
 	dayString,
 }: {
-	manifest: pids
+	manifest: Array<ManifestEntry>
 	dayString: string
 }) {
 	const currentCardIndex = useCardIndex()
@@ -63,6 +67,19 @@ function FlashCardReviewSession({
 	const nextValidIndex = useNextValid()
 
 	const atTheEnd = currentCardIndex === manifest.length
+
+	useCheck(() => {
+		should('manifest should not be empty', manifest.length > 0)
+
+		// Verify ordering: all forward entries come before all reverse entries
+		const lastForwardIdx = manifest.findLastIndex((e) => e.endsWith(':forward'))
+		const firstReverseIdx = manifest.findIndex((e) => e.endsWith(':reverse'))
+		should(
+			'forward cards should come before reverse cards in manifest',
+			firstReverseIdx === -1 || lastForwardIdx < firstReverseIdx,
+			{ lastForwardIdx, firstReverseIdx, manifestLength: manifest.length }
+		)
+	}, [manifest])
 
 	// Navigation happens immediately on click — never blocked by animation.
 	const [animKey, setAnimKey] = useState(0)
@@ -133,17 +150,25 @@ function FlashCardReviewSession({
 			<div className="-m-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-4">
 				{atTheEnd ?
 					<WhenComplete />
-				:	<div
-						key={`${manifest[currentCardIndex]}-${animKey}`}
-						className="animate-card-pop-in flex min-h-0 flex-1 flex-col"
-					>
-						<ReviewSingleCard
-							pid={manifest[currentCardIndex]}
-							reviewStage={reviewStage ?? 1}
-							dayString={dayString}
-							triggerSlide={triggerSlide}
-						/>
-					</div>
+				:	(() => {
+						const { phraseId, direction } = parseManifestEntry(
+							manifest[currentCardIndex]
+						)
+						return (
+							<div
+								key={`${manifest[currentCardIndex]}-${animKey}`}
+								className="animate-card-pop-in flex min-h-0 flex-1 flex-col"
+							>
+								<ReviewSingleCard
+									pid={phraseId}
+									direction={direction}
+									reviewStage={reviewStage ?? 1}
+									dayString={dayString}
+									triggerSlide={triggerSlide}
+								/>
+							</div>
+						)
+					})()
 				}
 			</div>
 		</div>

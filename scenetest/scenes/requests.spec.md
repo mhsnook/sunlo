@@ -3,7 +3,7 @@
 // learner:
 //
 // - login
-// - openTo /learn/[team.lang]/contributions
+// - openTo /learn/kan/contributions
 // - click contributions-tab--requests
 // - click new-request-link
 // - up
@@ -17,12 +17,12 @@
 
 // # learner edits their request
 //
-// cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: '[team.lang]', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+// cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
 //
 // learner:
 //
 // - login
-// - openTo /learn/[team.lang]/contributions
+// - openTo /learn/kan/contributions
 // - click contributions-tab--requests
 // - click request-item
 // - up
@@ -39,14 +39,14 @@
 
 # learner deletes their request
 
-cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: '[team.lang]', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/contributions
+- openTo /learn/kan/contributions
 - click contributions-tab--requests
-- click request-item
+- click request-item e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
 - up
 - see request-detail-page
 - up
@@ -66,7 +66,7 @@ learner:
 // - typeInto email-input [self.email]
 // - typeInto password-input [self.password]
 // - click login-submit-button
-// - openTo /learn/[team.lang]/contributions
+// - openTo /learn/kan/contributions
 // - click contributions-tab--requests
 // - click other-user-request-item
 // - see request-detail-page
@@ -78,7 +78,7 @@ learner:
 // learner:
 //
 // - login
-// - openTo /learn/[team.lang]/contributions
+// - openTo /learn/kan/contributions
 // - click contributions-tab--requests
 // - click request-item
 // - up

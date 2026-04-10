@@ -66,11 +66,11 @@ learner:
 - see decks-list-grid
 - click [team.lang] deck-link
 - up
-- click /learn/$lang/search
+- click appnav-search-button
 - up
-- see search-page
-- typeInto search-input tea
-- see search-results
+- see browse-search-overlay
+- typeInto browse-search-input tea
+- see browse-search-results
 
 # learner adds a phrase to their deck
 

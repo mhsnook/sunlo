@@ -39,6 +39,14 @@ export {
 	useReviewStore,
 } from './store'
 
+// Manifest utilities
+export {
+	toManifestEntry,
+	parseManifestEntry,
+	manifestPhraseId,
+	type ManifestEntry,
+} from './manifest'
+
 // Algorithm
 export {
 	calculateFSRS,

@@ -20,6 +20,11 @@ export default defineTeam({
 			password: 'password',
 			key: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 			username: 'GarlicFace',
+			localStorage: {
+				'sunlo-intro-review': 'seen',
+				'sunlo-intro-deck-new': 'seen',
+				'sunlo-intro-community-norms': 'affirmed',
+			},
 		},
 
 		friend: {

@@ -54,7 +54,7 @@ export const cardsCollection = createCollection(
 				.throwOnError()
 			return data?.map((item) => CardMetaSchema.parse(item)) ?? []
 		},
-		getKey: (item: CardMetaType) => item.phrase_id,
+		getKey: (item: CardMetaType) => item.id,
 		queryClient,
 		startSync: false,
 		schema: CardMetaSchema,

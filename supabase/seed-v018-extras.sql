@@ -552,7 +552,8 @@ insert into
 		"updated_at",
 		"created_at",
 		"status",
-		"lang"
+		"lang",
+		"direction"
 	)
 values
 	-- GarlicFace's Hindi cards (needed for review history)
@@ -563,7 +564,8 @@ values
 		current_date - interval '5 days',
 		current_date - interval '5 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -572,7 +574,8 @@ values
 		current_date - interval '5 days',
 		current_date - interval '5 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -581,7 +584,8 @@ values
 		current_date - interval '3 days',
 		current_date - interval '3 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -590,7 +594,8 @@ values
 		current_date - interval '3 days',
 		current_date - interval '3 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	-- Work Andy's Hindi cards (needed for review history)
 	(
@@ -600,7 +605,8 @@ values
 		current_date - interval '3 days',
 		current_date - interval '3 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -609,7 +615,8 @@ values
 		current_date - interval '3 days',
 		current_date - interval '3 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -618,7 +625,8 @@ values
 		current_date - interval '3 days',
 		current_date - interval '3 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	-- GarlicFace's Kannada cards
 	(
@@ -628,7 +636,8 @@ values
 		current_date - interval '14 days',
 		current_date - interval '14 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -637,7 +646,8 @@ values
 		current_date - interval '14 days',
 		current_date - interval '14 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -646,7 +656,8 @@ values
 		current_date - interval '12 days',
 		current_date - interval '12 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -655,7 +666,8 @@ values
 		current_date - interval '12 days',
 		current_date - interval '12 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	-- Best Frin's Kannada cards
 	(
@@ -665,7 +677,8 @@ values
 		current_date - interval '9 days',
 		current_date - interval '9 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -674,7 +687,8 @@ values
 		current_date - interval '9 days',
 		current_date - interval '9 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	-- Best Frin already has a card for b0fbbe1d-705e in seed.sql
 	-- Work Andy's Kannada cards
@@ -685,7 +699,8 @@ values
 		current_date - interval '15 days',
 		current_date - interval '15 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -694,7 +709,8 @@ values
 		current_date - interval '15 days',
 		current_date - interval '15 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -703,7 +719,125 @@ values
 		current_date - interval '15 days',
 		current_date - interval '15 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
+	);
+
+-- Reverse card copies for all forward cards in this file
+insert into
+	"public"."user_card" ("uid", "phrase_id", "lang", "status", "direction")
+values
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'48edc28c-1530-4549-b48c-f678033a6892',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'cc3847f3-b151-401e-80c9-4aef221c54b5',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'48fe0624-f586-4812-a1a5-33c634995671',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa110001-1111-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa110002-2222-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa110005-5555-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'aa110006-6666-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'aa110004-4444-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'aa110008-8888-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa110001-1111-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa110002-2222-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'aa110003-3333-4aaa-bbbb-cccccccccccc',
+		'kan',
+		'active',
+		'reverse'
 	);
 
 ----------------------------------------------------------------------
@@ -768,7 +902,8 @@ insert into
 		"day_session",
 		"lang",
 		"phrase_id",
-		"day_first_review"
+		"day_first_review",
+		"direction"
 	)
 values
 	-- GarlicFace Hindi reviews (3 days ago session)
@@ -784,7 +919,8 @@ values
 		(current_date - 3 + interval '31 minute' - interval '4 hour')::date,
 		'hin',
 		'235ce61c-be21-4697-815d-d5aa1a4ff121',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550002-2222-4aaa-bbbb-333333333333',
@@ -798,7 +934,8 @@ values
 		(current_date - 3 + interval '32 minute' - interval '4 hour')::date,
 		'hin',
 		'f1f5234e-0426-44f5-a007-b67329a70a81',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550003-3333-4aaa-bbbb-333333333333',
@@ -812,7 +949,8 @@ values
 		(current_date - 3 + interval '33 minute' - interval '4 hour')::date,
 		'hin',
 		'170f5fd4-58f8-4b05-aba4-23522f35800f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550004-4444-4aaa-bbbb-333333333333',
@@ -826,7 +964,8 @@ values
 		(current_date - 3 + interval '34 minute' - interval '4 hour')::date,
 		'hin',
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550005-5555-4aaa-bbbb-333333333333',
@@ -840,7 +979,8 @@ values
 		(current_date - 3 + interval '35 minute' - interval '4 hour')::date,
 		'hin',
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
-		true
+		true,
+		'forward'
 	),
 	-- GarlicFace Hindi reviews (1 day ago - second pass, better scores)
 	(
@@ -855,7 +995,8 @@ values
 		(current_date - 1 + interval '31 minute' - interval '4 hour')::date,
 		'hin',
 		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550007-7777-4aaa-bbbb-333333333333',
@@ -869,7 +1010,8 @@ values
 		(current_date - 1 + interval '32 minute' - interval '4 hour')::date,
 		'hin',
 		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550008-8888-4aaa-bbbb-333333333333',
@@ -883,7 +1025,8 @@ values
 		(current_date - 1 + interval '33 minute' - interval '4 hour')::date,
 		'hin',
 		'48edc28c-1530-4549-b48c-f678033a6892',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550009-9999-4aaa-bbbb-333333333333',
@@ -897,7 +1040,8 @@ values
 		(current_date - 1 + interval '34 minute' - interval '4 hour')::date,
 		'hin',
 		'cc3847f3-b151-401e-80c9-4aef221c54b5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa55000a-aaaa-4aaa-bbbb-333333333333',
@@ -911,7 +1055,8 @@ values
 		(current_date - 1 + interval '35 minute' - interval '4 hour')::date,
 		'hin',
 		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
-		true
+		true,
+		'forward'
 	),
 	-- GarlicFace Kannada reviews (2 days ago)
 	(
@@ -926,7 +1071,8 @@ values
 		(current_date - 2 + interval '46 minute' - interval '4 hour')::date,
 		'kan',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa55000c-cccc-4aaa-bbbb-333333333333',
@@ -940,7 +1086,8 @@ values
 		(current_date - 2 + interval '47 minute' - interval '4 hour')::date,
 		'kan',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa55000d-dddd-4aaa-bbbb-333333333333',
@@ -954,7 +1101,8 @@ values
 		(current_date - 2 + interval '48 minute' - interval '4 hour')::date,
 		'kan',
 		'aa110001-1111-4aaa-bbbb-cccccccccccc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa55000e-eeee-4aaa-bbbb-333333333333',
@@ -968,7 +1116,8 @@ values
 		(current_date - 2 + interval '49 minute' - interval '4 hour')::date,
 		'kan',
 		'aa110002-2222-4aaa-bbbb-cccccccccccc',
-		true
+		true,
+		'forward'
 	),
 	-- Best Frin Kannada reviews (2 days ago)
 	(
@@ -983,7 +1132,8 @@ values
 		(current_date - 2 + interval '61 minute' - interval '4 hour')::date,
 		'kan',
 		'aa110004-4444-4aaa-bbbb-cccccccccccc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550010-0001-4aaa-bbbb-333333333333',
@@ -997,7 +1147,8 @@ values
 		(current_date - 2 + interval '62 minute' - interval '4 hour')::date,
 		'kan',
 		'aa110008-8888-4aaa-bbbb-cccccccccccc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550011-0002-4aaa-bbbb-333333333333',
@@ -1011,7 +1162,8 @@ values
 		(current_date - 2 + interval '63 minute' - interval '4 hour')::date,
 		'kan',
 		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
-		true
+		true,
+		'forward'
 	),
 	-- Work Andy Hindi reviews (1 day ago - high scores, fluent speaker)
 	(
@@ -1026,7 +1178,8 @@ values
 		(current_date - 1 + interval '21 minute' - interval '4 hour')::date,
 		'hin',
 		'0e33be07-6d4a-4c99-8282-921038188cbf',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550013-0004-4aaa-bbbb-333333333333',
@@ -1040,7 +1193,8 @@ values
 		(current_date - 1 + interval '22 minute' - interval '4 hour')::date,
 		'hin',
 		'48fe0624-f586-4812-a1a5-33c634995671',
-		true
+		true,
+		'forward'
 	),
 	(
 		'aa550014-0005-4aaa-bbbb-333333333333',
@@ -1054,5 +1208,6 @@ values
 		(current_date - 1 + interval '23 minute' - interval '4 hour')::date,
 		'hin',
 		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
-		true
+		true,
+		'forward'
 	);

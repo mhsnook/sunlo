@@ -20,6 +20,7 @@ import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { CardMetaSchema } from '@/features/deck/schemas'
+import { directionsForPhrase } from '@/features/deck/card-directions'
 import { useDecks } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
@@ -46,17 +47,20 @@ export function PlaylistItem({
 		) ?? []
 
 	const bulkAddMutation = useMutation({
-		mutationFn: async (phraseIds: Array<string>) => {
+		mutationFn: async (
+			phrases: Array<{ id: string; only_reverse: boolean | null }>
+		) => {
+			const rows = phrases.flatMap((p) =>
+				directionsForPhrase(p.only_reverse).map((direction) => ({
+					lang: playlist.lang,
+					phrase_id: p.id,
+					status: 'active' as const,
+					direction,
+				}))
+			)
 			const { data: inserted } = await supabase
 				.from('user_card')
-				.upsert(
-					phraseIds.map((phrase_id) => ({
-						lang: playlist.lang,
-						phrase_id,
-						status: 'active' as const,
-					})),
-					{ onConflict: 'uid, phrase_id' }
-				)
+				.upsert(rows, { onConflict: 'uid,phrase_id,direction' })
 				.select()
 				.throwOnError()
 			return inserted
@@ -244,7 +248,10 @@ export function PlaylistItem({
 					variant="soft"
 					onClick={() =>
 						bulkAddMutation.mutate(
-							phrasesNotInDeck.map((item) => item.phrase.id)
+							phrasesNotInDeck.map((item) => ({
+								id: item.phrase.id,
+								only_reverse: item.phrase.only_reverse,
+							}))
 						)
 					}
 					disabled={bulkAddMutation.isPending}

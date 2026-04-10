@@ -192,6 +192,7 @@ function AddPhraseTab() {
 					phrase: Tables<'phrase'>
 					translation: Tables<'phrase_translation'>
 					card: Tables<'user_card'> | null
+					card_reverse: Tables<'user_card'> | null
 				},
 				newDeck,
 				createdCard: shouldCreateCard,
@@ -231,6 +232,11 @@ function AddPhraseTab() {
 			// Update card collection if we created a card
 			if (createdCard && rpcResult.card) {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(rpcResult.card))
+				if (rpcResult.card_reverse) {
+					cardsCollection.utils.writeInsert(
+						CardMetaSchema.parse(rpcResult.card_reverse)
+					)
+				}
 			}
 
 			invalidateFeed(lang)

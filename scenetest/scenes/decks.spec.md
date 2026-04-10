@@ -38,9 +38,7 @@ learner:
 - click deck-settings-menu-item
 - up
 - see deck-settings-page
-- up
-- click dismiss-deck-settings-intro
-- see deck-settings-page
+- ifClick dismiss-deck-settings-intro
 - see review-goal-options
 - click 10
 - up
@@ -65,9 +63,6 @@ learner:
 - click deck-settings-menu-item
 - up
 - see deck-settings-page
-- up
-- click dismiss-deck-settings-intro
-- see deck-settings-page
 - see learning-goal-options
 - click family
 - up
@@ -91,7 +86,6 @@ learner:
 - up
 - see deck-settings-page
 - up
-- click @dismiss-deck-settings-intro
 - click archive-deck-button
 - see archive-confirmation-dialog
 - click confirm-archive-button

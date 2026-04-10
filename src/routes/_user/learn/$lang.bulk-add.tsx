@@ -25,6 +25,7 @@ import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { PhraseFullSchema } from '@/features/phrases/schemas'
 import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
+import { directionsForPhrase } from '@/features/deck/card-directions'
 import { LangTagSchema } from '@/features/languages/schemas'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
@@ -201,12 +202,15 @@ function BulkAddPhrasesPage() {
 
 			let cards: Array<Tables<'user_card'>> = []
 			if (shouldCreateCards && rpcResult?.phrases?.length) {
-				const cardsToInsert = rpcResult.phrases.map((p) => ({
-					phrase_id: p.id,
-					lang,
-					uid: userId,
-					status: 'active' as const,
-				}))
+				const cardsToInsert = rpcResult.phrases.flatMap((p) =>
+					directionsForPhrase(p.only_reverse).map((direction) => ({
+						phrase_id: p.id,
+						lang,
+						uid: userId,
+						status: 'active' as const,
+						direction,
+					}))
+				)
 				const { data: cardData } = await supabase
 					.from('user_card')
 					.insert(cardsToInsert)

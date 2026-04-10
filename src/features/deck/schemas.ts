@@ -8,6 +8,9 @@ import {
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
 export type CardStatusEnumType = z.infer<typeof CardStatusEnumSchema>
 
+export const CardDirectionSchema = z.enum(['forward', 'reverse'])
+export type CardDirectionType = z.infer<typeof CardDirectionSchema>
+
 export const DeckMetaRawSchema = z.object({
 	uid: z.string(),
 	lang: LangSchema,
@@ -41,6 +44,7 @@ export const CardMetaSchema = z.object({
 	uid: z.string().uuid(),
 	lang: LangSchema,
 	status: CardStatusEnumSchema,
+	direction: CardDirectionSchema.default('forward'),
 	updated_at: z.string(),
 	last_reviewed_at: z.string().nullable().default(null),
 	difficulty: z.number().nullable().default(null),

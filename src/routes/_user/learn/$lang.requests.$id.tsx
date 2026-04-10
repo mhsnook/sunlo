@@ -28,6 +28,7 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from '@/features/comments/collections'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import { mapArrays } from '@/lib/utils'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
@@ -53,13 +54,15 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	}),
 	loader: async ({ location, cause }) => {
 		await Promise.all([
+			phraseRequestsCollection.preload(),
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
 			commentUpvotesCollection.preload(),
 		])
 		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
 		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
-			if (cause === 'preload') console.error('Malformed focus param in preload link:', rawFocus)
+			if (cause === 'preload')
+				console.error('Malformed focus param in preload link:', rawFocus)
 			else toastNeutral("Couldn't find that comment")
 		}
 	},

@@ -11,11 +11,14 @@ import {
 	reviewDaysCollection,
 } from '@/features/review/collections'
 import { inLastWeek } from '@/lib/dayjs'
-import { dateDiff, mapArrays, sortDecksByActivity } from '@/lib/utils'
+import { mapArrays, sortDecksByActivity } from '@/lib/utils'
 import { useProfile } from '@/features/profile/hooks'
-import { retrievability } from '@/features/review/fsrs'
+import { isDueCard } from './is-due-card'
 
 dayjs.extend(isoWeek)
+
+/** Deduplicate an array of IDs */
+const unique = (ids: pids): pids => [...new Set(ids)]
 
 type ReviewsDayMap = { [key: string]: Array<CardReviewType> }
 
@@ -138,34 +141,34 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 		data:
 			!data ? null : (
 				{
-					all: data.map((c) => c.phrase_id),
-					active: data
-						.filter((c) => c.status === 'active')
-						.map((c) => c.phrase_id),
-					inactive: data
-						.filter((c) => c.status !== 'active')
-						.map((c) => c.phrase_id),
-					reviewed: data
-						.filter((c) => !!c.last_reviewed_at)
-						.map((c) => c.phrase_id),
-					reviewed_or_inactive: data
-						.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
-						.map((c) => c.phrase_id),
-					reviewed_last_7d: data
-						.filter((c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at))
-						.map((c) => c.phrase_id),
-					unreviewed_active: data
-						.filter((c) => c.status === 'active' && !c.last_reviewed_at)
-						.map((c) => c.phrase_id),
-					today_active: data
-						.filter((c) => {
-							if (c.status !== 'active') return false
-							if (!c.last_reviewed_at || !c.stability) return false
-							const daysSince = dateDiff(c.last_reviewed_at)
-							const r = retrievability(daysSince, c.stability)
-							return r <= 0.9
-						})
-						.map((c) => c.phrase_id),
+					all: unique(data.map((c) => c.phrase_id)),
+					active: unique(
+						data.filter((c) => c.status === 'active').map((c) => c.phrase_id)
+					),
+					inactive: unique(
+						data.filter((c) => c.status !== 'active').map((c) => c.phrase_id)
+					),
+					reviewed: unique(
+						data.filter((c) => !!c.last_reviewed_at).map((c) => c.phrase_id)
+					),
+					reviewed_or_inactive: unique(
+						data
+							.filter((c) => !!c.last_reviewed_at || c.status !== 'active')
+							.map((c) => c.phrase_id)
+					),
+					reviewed_last_7d: unique(
+						data
+							.filter(
+								(c) => c.last_reviewed_at && inLastWeek(c.last_reviewed_at)
+							)
+							.map((c) => c.phrase_id)
+					),
+					unreviewed_active: unique(
+						data
+							.filter((c) => c.status === 'active' && !c.last_reviewed_at)
+							.map((c) => c.phrase_id)
+					),
+					today_active: unique(data.filter(isDueCard).map((c) => c.phrase_id)),
 				}
 			),
 	}

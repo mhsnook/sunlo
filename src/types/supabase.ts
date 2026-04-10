@@ -355,44 +355,44 @@ export type Database = {
 			}
 			notification: {
 				Row: {
-					id: string
-					uid: string
-					type: Database['public']['Enums']['notification_type']
 					actor_uid: string
-					request_id: string | null
 					comment_id: string | null
+					created_at: string
+					id: string
 					phrase_id: string | null
 					read_at: string | null
-					created_at: string
+					request_id: string | null
+					type: Database['public']['Enums']['notification_type']
+					uid: string
 				}
 				Insert: {
-					id?: string
-					uid: string
-					type: Database['public']['Enums']['notification_type']
 					actor_uid: string
-					request_id?: string | null
 					comment_id?: string | null
+					created_at?: string
+					id?: string
 					phrase_id?: string | null
 					read_at?: string | null
-					created_at?: string
+					request_id?: string | null
+					type: Database['public']['Enums']['notification_type']
+					uid: string
 				}
 				Update: {
-					id?: string
-					uid?: string
-					type?: Database['public']['Enums']['notification_type']
 					actor_uid?: string
-					request_id?: string | null
 					comment_id?: string | null
+					created_at?: string
+					id?: string
 					phrase_id?: string | null
 					read_at?: string | null
-					created_at?: string
+					request_id?: string | null
+					type?: Database['public']['Enums']['notification_type']
+					uid?: string
 				}
 				Relationships: [
 					{
-						foreignKeyName: 'notification_uid_fkey'
-						columns: ['uid']
+						foreignKeyName: 'notification_actor_uid_fkey'
+						columns: ['actor_uid']
 						isOneToOne: false
-						referencedRelation: 'user_profile'
+						referencedRelation: 'public_profile'
 						referencedColumns: ['uid']
 					},
 					{
@@ -401,13 +401,6 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'user_profile'
 						referencedColumns: ['uid']
-					},
-					{
-						foreignKeyName: 'notification_request_id_fkey'
-						columns: ['request_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_request'
-						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'notification_comment_id_fkey'
@@ -422,6 +415,41 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'phrase'
 						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_request_id_fkey'
+						columns: ['request_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_request'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'notification_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'public_profile'
+						referencedColumns: ['uid']
+					},
+					{
+						foreignKeyName: 'notification_uid_fkey'
+						columns: ['uid']
+						isOneToOne: false
+						referencedRelation: 'user_profile'
+						referencedColumns: ['uid']
 					},
 				]
 			}
@@ -1091,6 +1119,7 @@ export type Database = {
 			user_card: {
 				Row: {
 					created_at: string | null
+					direction: Database['public']['Enums']['card_direction']
 					id: string
 					lang: string
 					phrase_id: string
@@ -1100,6 +1129,7 @@ export type Database = {
 				}
 				Insert: {
 					created_at?: string | null
+					direction?: Database['public']['Enums']['card_direction']
 					id?: string
 					lang: string
 					phrase_id: string
@@ -1109,6 +1139,7 @@ export type Database = {
 				}
 				Update: {
 					created_at?: string | null
+					direction?: Database['public']['Enums']['card_direction']
 					id?: string
 					lang?: string
 					phrase_id?: string
@@ -1188,6 +1219,7 @@ export type Database = {
 					day_first_review: boolean
 					day_session: string
 					difficulty: number | null
+					direction: Database['public']['Enums']['card_direction']
 					id: string
 					lang: string
 					phrase_id: string
@@ -1202,6 +1234,7 @@ export type Database = {
 					day_first_review?: boolean
 					day_session: string
 					difficulty?: number | null
+					direction?: Database['public']['Enums']['card_direction']
 					id?: string
 					lang: string
 					phrase_id: string
@@ -1216,6 +1249,7 @@ export type Database = {
 					day_first_review?: boolean
 					day_session?: string
 					difficulty?: number | null
+					direction?: Database['public']['Enums']['card_direction']
 					id?: string
 					lang?: string
 					phrase_id?: string
@@ -1263,17 +1297,17 @@ export type Database = {
 					},
 					{
 						foreignKeyName: 'user_card_review_phrase_id_uid_fkey'
-						columns: ['uid', 'phrase_id']
+						columns: ['uid', 'phrase_id', 'direction']
 						isOneToOne: false
 						referencedRelation: 'user_card'
-						referencedColumns: ['uid', 'phrase_id']
+						referencedColumns: ['uid', 'phrase_id', 'direction']
 					},
 					{
 						foreignKeyName: 'user_card_review_phrase_id_uid_fkey'
-						columns: ['uid', 'phrase_id']
+						columns: ['uid', 'phrase_id', 'direction']
 						isOneToOne: false
 						referencedRelation: 'user_card_plus'
-						referencedColumns: ['uid', 'phrase_id']
+						referencedColumns: ['uid', 'phrase_id', 'direction']
 					},
 					{
 						foreignKeyName: 'user_card_review_uid_fkey'
@@ -1651,6 +1685,37 @@ export type Database = {
 					},
 				]
 			}
+			phrase_stats: {
+				Row: {
+					avg_difficulty: number | null
+					avg_stability: number | null
+					count_learners: number | null
+					phrase_id: string | null
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'user_card_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'user_card_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_meta'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'user_card_phrase_id_fkey'
+						columns: ['phrase_id']
+						isOneToOne: false
+						referencedRelation: 'phrase_search_index'
+						referencedColumns: ['id']
+					},
+				]
+			}
 			public_profile: {
 				Row: {
 					avatar_path: string | null
@@ -1672,11 +1737,14 @@ export type Database = {
 			user_card_plus: {
 				Row: {
 					created_at: string | null
+					current_timestamp: string | null
 					difficulty: number | null
+					direction: Database['public']['Enums']['card_direction'] | null
 					id: string | null
 					lang: string | null
 					last_reviewed_at: string | null
 					phrase_id: string | null
+					retrievability_now: number | null
 					stability: number | null
 					status: Database['public']['Enums']['card_status'] | null
 					uid: string | null
@@ -1846,6 +1914,8 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			recount_all_upvotes: { Args: never; Returns: undefined }
+			refresh_meta_language: { Args: never; Returns: undefined }
 			refresh_phrase_search_index: { Args: never; Returns: undefined }
 			search_phrases_smart: {
 				Args: {
@@ -1879,6 +1949,7 @@ export type Database = {
 			show_trgm: { Args: { '': string }; Returns: string[] }
 		}
 		Enums: {
+			card_direction: 'forward' | 'reverse'
 			card_status: 'active' | 'learned' | 'skipped'
 			chat_message_type: 'recommendation' | 'accepted' | 'request' | 'playlist'
 			friend_request_response:
@@ -2128,7 +2199,6 @@ export type Database = {
 					created_at: string | null
 					id: string
 					last_accessed_at: string | null
-					level: number | null
 					metadata: Json | null
 					name: string | null
 					owner: string | null
@@ -2143,7 +2213,6 @@ export type Database = {
 					created_at?: string | null
 					id?: string
 					last_accessed_at?: string | null
-					level?: number | null
 					metadata?: Json | null
 					name?: string | null
 					owner?: string | null
@@ -2158,7 +2227,6 @@ export type Database = {
 					created_at?: string | null
 					id?: string
 					last_accessed_at?: string | null
-					level?: number | null
 					metadata?: Json | null
 					name?: string | null
 					owner?: string | null
@@ -2171,38 +2239,6 @@ export type Database = {
 				Relationships: [
 					{
 						foreignKeyName: 'objects_bucketId_fkey'
-						columns: ['bucket_id']
-						isOneToOne: false
-						referencedRelation: 'buckets'
-						referencedColumns: ['id']
-					},
-				]
-			}
-			prefixes: {
-				Row: {
-					bucket_id: string
-					created_at: string | null
-					level: number
-					name: string
-					updated_at: string | null
-				}
-				Insert: {
-					bucket_id: string
-					created_at?: string | null
-					level?: number
-					name: string
-					updated_at?: string | null
-				}
-				Update: {
-					bucket_id?: string
-					created_at?: string | null
-					level?: number
-					name?: string
-					updated_at?: string | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'prefixes_bucketId_fkey'
 						columns: ['bucket_id']
 						isOneToOne: false
 						referencedRelation: 'buckets'
@@ -2357,28 +2393,17 @@ export type Database = {
 			[_ in never]: never
 		}
 		Functions: {
-			add_prefixes: {
-				Args: { _bucket_id: string; _name: string }
-				Returns: undefined
-			}
 			can_insert_object: {
 				Args: { bucketid: string; metadata: Json; name: string; owner: string }
 				Returns: undefined
 			}
-			delete_leaf_prefixes: {
-				Args: { bucket_ids: string[]; names: string[] }
-				Returns: undefined
-			}
-			delete_prefix: {
-				Args: { _bucket_id: string; _name: string }
-				Returns: boolean
-			}
 			extension: { Args: { name: string }; Returns: string }
 			filename: { Args: { name: string }; Returns: string }
 			foldername: { Args: { name: string }; Returns: string[] }
-			get_level: { Args: { name: string }; Returns: number }
-			get_prefix: { Args: { name: string }; Returns: string }
-			get_prefixes: { Args: { name: string }; Returns: string[] }
+			get_common_prefix: {
+				Args: { p_delimiter: string; p_key: string; p_prefix: string }
+				Returns: string
+			}
 			get_size_by_bucket: {
 				Args: never
 				Returns: {
@@ -2403,64 +2428,25 @@ export type Database = {
 			}
 			list_objects_with_delimiter: {
 				Args: {
-					bucket_id: string
+					_bucket_id: string
 					delimiter_param: string
 					max_keys?: number
 					next_token?: string
 					prefix_param: string
+					sort_order?: string
 					start_after?: string
 				}
 				Returns: {
+					created_at: string
 					id: string
+					last_accessed_at: string
 					metadata: Json
 					name: string
 					updated_at: string
 				}[]
-			}
-			lock_top_prefixes: {
-				Args: { bucket_ids: string[]; names: string[] }
-				Returns: undefined
 			}
 			operation: { Args: never; Returns: string }
-			search:
-				| {
-						Args: {
-							bucketname: string
-							levels?: number
-							limits?: number
-							offsets?: number
-							prefix: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-				| {
-						Args: {
-							bucketname: string
-							levels?: number
-							limits?: number
-							offsets?: number
-							prefix: string
-							search?: string
-							sortcolumn?: string
-							sortorder?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-			search_legacy_v1: {
+			search: {
 				Args: {
 					bucketname: string
 					levels?: number
@@ -2480,65 +2466,48 @@ export type Database = {
 					updated_at: string
 				}[]
 			}
-			search_v1_optimised: {
+			search_by_timestamp: {
 				Args: {
-					bucketname: string
-					levels?: number
-					limits?: number
-					offsets?: number
-					prefix: string
-					search?: string
-					sortcolumn?: string
-					sortorder?: string
+					p_bucket_id: string
+					p_level: number
+					p_limit: number
+					p_prefix: string
+					p_sort_column: string
+					p_sort_column_after: string
+					p_sort_order: string
+					p_start_after: string
 				}
 				Returns: {
 					created_at: string
 					id: string
+					key: string
 					last_accessed_at: string
 					metadata: Json
 					name: string
 					updated_at: string
 				}[]
 			}
-			search_v2:
-				| {
-						Args: {
-							bucket_name: string
-							levels?: number
-							limits?: number
-							prefix: string
-							start_after?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							key: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-				| {
-						Args: {
-							bucket_name: string
-							levels?: number
-							limits?: number
-							prefix: string
-							sort_column?: string
-							sort_column_after?: string
-							sort_order?: string
-							start_after?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							key: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
+			search_v2: {
+				Args: {
+					bucket_name: string
+					levels?: number
+					limits?: number
+					prefix: string
+					sort_column?: string
+					sort_column_after?: string
+					sort_order?: string
+					start_after?: string
+				}
+				Returns: {
+					created_at: string
+					id: string
+					key: string
+					last_accessed_at: string
+					metadata: Json
+					name: string
+					updated_at: string
+				}[]
+			}
 		}
 		Enums: {
 			buckettype: 'STANDARD' | 'ANALYTICS' | 'VECTOR'
@@ -2709,6 +2678,7 @@ export type CompositeTypes<
 export const Constants = {
 	public: {
 		Enums: {
+			card_direction: ['forward', 'reverse'],
 			card_status: ['active', 'learned', 'skipped'],
 			chat_message_type: ['recommendation', 'accepted', 'request', 'playlist'],
 			friend_request_response: [

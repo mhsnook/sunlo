@@ -72,7 +72,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				:	''
 			} p-4`}
 			data-comment-id={comment.id}
-			data-testid="comment-item"
+			data-name="comment-item"
 			data-key={comment.id}
 			style={
 				{

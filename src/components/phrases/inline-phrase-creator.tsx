@@ -154,6 +154,7 @@ function InlinePhraseForm({
 				phrase: Tables<'phrase'>
 				translation: Tables<'phrase_translation'>
 				card: Tables<'user_card'> | null
+				card_reverse: Tables<'user_card'> | null
 			}
 		},
 		onSuccess: (data) => {
@@ -168,6 +169,11 @@ function InlinePhraseForm({
 			)
 			if (data.card) {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))
+				if (data.card_reverse) {
+					cardsCollection.utils.writeInsert(
+						CardMetaSchema.parse(data.card_reverse)
+					)
+				}
 				phrasesCollection.utils.writeUpdate({
 					id: data.card.phrase_id,
 					count_learners: 1,

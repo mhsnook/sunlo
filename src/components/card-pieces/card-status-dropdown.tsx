@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { CardMetaSchema, CardMetaType } from '@/features/deck/schemas'
+import { directionsForPhrase } from '@/features/deck/card-directions'
 import {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
@@ -148,7 +149,7 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 	const userId = useUserId()
 
 	return useMutation<
-		Tables<'user_card'>,
+		Array<Tables<'user_card'>>,
 		PostgrestError,
 		{ status: LearningStatus }
 	>({
@@ -171,26 +172,34 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 						.throwOnError()
 				:	await supabase
 						.from('user_card')
-						.insert({
-							lang: phrase.lang,
-							phrase_id: phrase.id,
-							status,
-						})
+						.insert(
+							directionsForPhrase(phrase.only_reverse).map((direction) => ({
+								lang: phrase.lang,
+								phrase_id: phrase.id,
+								status,
+								direction,
+							}))
+						)
 						.select()
 						.throwOnError()
-			return data[0]
+			return data
 		},
 		onSuccess: (data, variables) => {
-			if (data) updatePhraseCounts(phrase.card, data)
+			if (data[0]) updatePhraseCounts(phrase.card, data[0])
 
 			if (phrase.card) {
-				cardsCollection.utils.writeUpdate({
-					phrase_id: phrase.id,
-					status: variables.status,
-				})
-				toastSuccess(`Updated card status to "${data.status}"`)
+				for (const card of data) {
+					cardsCollection.utils.writeUpdate({
+						phrase_id: card.phrase_id,
+						direction: card.direction,
+						status: variables.status,
+					})
+				}
+				toastSuccess(`Updated card status to "${data[0].status}"`)
 			} else {
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data))
+				for (const card of data) {
+					cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+				}
 				toastSuccess('Added this phrase to your deck')
 			}
 		},

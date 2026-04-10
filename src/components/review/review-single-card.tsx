@@ -4,6 +4,8 @@ import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
 import { useMutation } from '@tanstack/react-query'
 import {
+	ArrowRight,
+	ArrowLeft,
 	BookmarkCheck,
 	BookmarkX,
 	MoreVertical,
@@ -27,7 +29,7 @@ import {
 import { useReviewAnswerMode } from '@/features/deck/hooks'
 import { useReviewLang } from '@/features/review/store'
 import { Separator } from '@/components/ui/separator'
-import { LangBadge } from '@/components/ui/badge'
+import { Badge, LangBadge } from '@/components/ui/badge'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -40,13 +42,14 @@ import {
 	PhraseFullFilteredType,
 	TranslationType,
 } from '@/features/phrases/schemas'
-import { CardMetaSchema } from '@/features/deck/schemas'
+import { CardMetaSchema, type CardDirectionType } from '@/features/deck/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { cardsCollection } from '@/features/deck/collections'
+import { useCheck, should } from '@scenetest/checks-react'
 
 const playAudio = (text: string) => {
 	toastNeutral(`Playing audio for: ${text}`)
@@ -78,11 +81,13 @@ function ScoreCoin({ score, onDone }: { score: Score; onDone: () => void }) {
 
 export function ReviewSingleCard({
 	pid,
+	direction,
 	reviewStage,
 	dayString,
 	triggerSlide,
 }: {
 	pid: uuid
+	direction: CardDirectionType
 	reviewStage: number
 	dayString: string
 	triggerSlide: (navigate: () => void) => void
@@ -91,11 +96,12 @@ export function ReviewSingleCard({
 	if (status === 'not-found')
 		throw new Error(`Trying to review this card, but can't find it`)
 	const [revealCard, setRevealCard] = useState(false)
-	const { data: prevData } = useOneReviewToday(dayString, pid)
-	const { data: latestReview } = useLatestReviewForPhrase(pid)
+	const { data: prevData } = useOneReviewToday(dayString, pid, direction)
+	const { data: latestReview } = useLatestReviewForPhrase(pid, direction)
 	const closeCard = () => setRevealCard(false)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
+		direction,
 		dayString,
 		closeCard,
 		reviewStage,
@@ -118,10 +124,19 @@ export function ReviewSingleCard({
 		mutate({ score })
 	}
 
+	useCheck(() => {
+		if (!phrase) return
+		should(
+			'only_reverse phrase should be shown as reverse card',
+			!phrase.only_reverse || direction === 'reverse',
+			{ phraseId: pid, direction, only_reverse: phrase.only_reverse }
+		)
+	}, [phrase, direction, pid])
+
 	if (!phrase) return null
 
 	const showAnswers = prevData && reviewStage === 1 ? true : revealCard
-	const isReverse = phrase.only_reverse === true
+	const isReverse = direction === 'reverse'
 
 	// Phrase display - consistent styling with quotes like big-phrase-card
 	const phraseDisplay = (
@@ -181,6 +196,19 @@ export function ReviewSingleCard({
 		>
 			<CardContent className="relative flex grow flex-col items-center justify-center gap-4">
 				<ContextMenu phrase={phrase} />
+				<Badge
+					variant="outline"
+					className="absolute top-4 left-4 gap-1 text-xs"
+				>
+					{isReverse ?
+						<>
+							<ArrowLeft className="size-3" /> Reverse
+						</>
+					:	<>
+							Forward <ArrowRight className="size-3" />
+						</>
+					}
+				</Badge>
 				<div className="pt-16">{questionContent}</div>
 				<Separator />
 				<div
@@ -361,13 +389,16 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				.eq('uid', userId)
 				.select()
 				.throwOnError()
-			return data?.[0]
+			return data
 		},
 		onSuccess: (data) => {
 			if (data) {
-				cardsCollection.utils.writeUpdate(CardMetaSchema.parse(data))
+				for (const card of data) {
+					cardsCollection.utils.writeUpdate(CardMetaSchema.parse(card))
+				}
+				const status = data[0]?.status
 				const message =
-					data.status === 'learned' ?
+					status === 'learned' ?
 						"Great! This card is now marked as learned and won't appear in your reviews."
 					:	"This card has been skipped and won't appear in your reviews."
 				toastSuccess(message)
