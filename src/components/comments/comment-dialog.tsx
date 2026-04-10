@@ -287,7 +287,12 @@ function PhrasePickerPanel({
 }) {
 	const [searchText, setSearchText] = useState('')
 	const [showCreateForm, setShowCreateForm] = useState(false)
-	const { data: filteredPhrases } = useLanguagePhrasesSearch(lang, searchText)
+	const { data: rawPhrases } = useLanguagePhrasesSearch(lang, searchText)
+	// Deduplicate phrases by ID (phrasesFull can return duplicates from card joins)
+	const filteredPhrases =
+		rawPhrases ?
+			[...new Map(rawPhrases.map((p) => [p.id, p])).values()]
+		:	rawPhrases
 
 	const addPhrase = (phraseId: uuid) => {
 		onPhraseSelected([...selectedPhraseIds, phraseId])

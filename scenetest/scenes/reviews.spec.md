@@ -3,6 +3,8 @@
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+setup: supabase.from('user_deck').update({ daily_review_goal: 3 }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 
 learner:
 
