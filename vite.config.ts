@@ -9,6 +9,7 @@ import scenetest from '@scenetest/vite-plugin'
 export default defineConfig(() => {
 	return {
 		plugins: [
+			scenetest(),
 			tsconfigPaths(),
 			tailwindcss(),
 			tanstackRouter({
@@ -19,7 +20,6 @@ export default defineConfig(() => {
 					plugins: ['babel-plugin-react-compiler'],
 				},
 			}),
-			scenetest(),
 		],
 		build: {
 			chunkSizeWarningLimit: 750,
