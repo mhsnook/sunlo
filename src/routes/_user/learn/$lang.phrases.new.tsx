@@ -57,6 +57,7 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
 			title: `Add ${languages[lang]} Phrase`,
+			onBackClick: '/learn/$lang',
 		},
 	}),
 	loader: async () => {

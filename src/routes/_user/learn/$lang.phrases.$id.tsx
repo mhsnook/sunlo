@@ -10,6 +10,7 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Phrase',
+			onBackClick: '/learn/$lang',
 		},
 	}),
 	loader: async () => {
