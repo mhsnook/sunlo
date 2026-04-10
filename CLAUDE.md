@@ -56,6 +56,61 @@ Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requir
 1. **Scenetest with inline assertions** (`useTestEffect`) — for cases where the scene steps work but you need to verify internal component state or collection data alongside them.
 2. **Playwright** — for cases that require low-level browser control that scenetest can't provide at all.
 
+#### Writing Scene Specs
+
+Scene specs are markdown files in `scenetest/scenes/`. Each file contains one or more named scenes:
+
+```markdown
+# scene title (human-readable description)
+
+cleanup: supabase.from('table').delete().eq('uid', '[learner.key]').eq('lang', 'spa')
+
+learner:
+
+- login
+- openTo /learn
+- see decks-list-grid
+- click deck-link
+- up
+- seeToast toast-success
+```
+
+**DSL commands:**
+
+| Command | Args | Purpose |
+|---------|------|---------|
+| `openTo` | path | Navigate to URL |
+| `see` | selector | Assert element is visible |
+| `notSee` | selector | Assert element is NOT visible |
+| `seeText` | text | Assert text is visible |
+| `seeToast` | selector | Wait for toast to appear then disappear |
+| `click` | selector | Click element |
+| `typeInto` | selector value | Type text into input |
+| `up` | (none) | Wait for page to settle (async ops, animations) |
+| `login` | (none) | Macro: navigates to /login, fills email/password, submits |
+
+**Selectors** resolve to `data-testid` attributes. For items inside lists, use space-separated selectors: `decks-list-grid hin deck-link` finds `[data-testid="deck-link"]` inside `[data-key="hin"]` inside `[data-testid="decks-list-grid"]`. See `scenetest/TEST_IDS.md` for the full registry.
+
+**Template variables:**
+- `[self.email]`, `[self.password]` — current actor's credentials
+- `[actor.key]` — actor's UUID (e.g., `[learner.key]`, `[friend.key]`)
+- `[team.lang]` — team's language code (e.g., `'kan'`)
+
+**Actors** (defined in `scenetest/actors/default.ts`):
+- `visitor` — not logged in
+- `new-user` — fresh account, needs onboarding
+- `learner` — main test user with decks and data
+- `friend` — secondary user for multi-actor flows
+- `learner2`, `learner3` — additional test users
+
+**Cleanup directives** run both before AND after the scene for idempotency. They execute Supabase JS expressions with the server client from `scenetest/config.ts`.
+
+**Custom macros** are defined in `scenetest/config.ts` via `defineMacro('name', [...steps])`. Use them as bare step names in specs.
+
+**Adding test IDs to components**: Use `data-testid` for unique elements, `data-key` for list items (on the item element, with `data-testid` on the container), and `data-name`+`data-key` for items without a wrapper. Register new IDs in `scenetest/TEST_IDS.md`.
+
+**Known limitation**: The `setup:` directive (for pre-setting state before a scene) is not yet implemented upstream. Scenes requiring non-default initial state are in `.spec.skip.md` files. See `scenetest/SETUP_DIRECTIVE.md` for details.
+
 ### Testing (Playwright)
 
 ```bash
@@ -263,10 +318,16 @@ const mutation = useMutation({
   - `query-client.ts` - TanStack Query configuration
   - `use-auth.ts` - Authentication state
   - `dayjs.ts`, `utils.ts`, `languages.ts` - Cross-cutting utilities
-- `src/hooks/` - Cross-domain composite hooks
-  - `composite-phrase.ts`, `composite-pids.ts` - Multi-domain data hooks
-  - `use-smart-search.ts` - Search across phrases/requests/playlists
-  - `links.ts`, `use-mobile.tsx`, `use-require-auth.ts` - Utility hooks
+- `src/hooks/` - Cross-domain composite hooks and utilities
+  - `composite-phrase.ts` - `usePhrase()`: hydrates full phrase with translations split by user's known languages
+  - `composite-pids.ts` - `useCompositePids()`: computes top 8 recommended phrases and various phrase ID arrays for a language
+  - `use-smart-search.ts` - `useSmartSearch()`: server-side trigram similarity search via `search_phrases_smart` RPC with debounce and local collection hydration
+  - `links.ts` - `useLinks()`: returns route paths with navigation metadata and status badges for sidebar
+  - `use-debounce.ts` - `useDebounce()`, `usePrevious()`, `useIntersectionObserver()`: generic React utilities
+  - `use-font-preference.ts` - `useFontPreference()`: applies dyslexic/normal font from profile or localStorage to document body
+  - `use-intro-seen.ts` - `useIntro()`: manages intro/training dialog state ('unseen'/'seen'/'affirmed') via localStorage. Used for onboarding, review intro, deck settings intro
+  - `use-mobile.tsx` - `useIsMobile()`: viewport width < 768px detection
+  - `use-require-auth.ts` - `useRequireAuth()`: wraps actions with auth check, shows toast and redirects if not authenticated
 - `src/routes/` - File-based routing structure
   - `_auth.tsx` - Auth layout (login, signup)
   - `_user.tsx` - Protected routes requiring authentication
@@ -359,6 +420,41 @@ Use `beforeLoad` and `loader` hooks to:
 - Define navbar title and icons
 - Pass links for app-nav and context menu
 - Directly pass second sidebar if required
+
+**Route files in `src/routes/_user/learn/`** (dot notation = nested paths):
+
+```
+index.tsx                        → /learn
+add-deck.tsx                     → /learn/add-deck
+archived.tsx                     → /learn/archived
+browse.tsx                       → /learn/browse (layout)
+browse.index.tsx                 → /learn/browse
+browse.charts.tsx                → /learn/browse/charts
+contributions.tsx                → /learn/contributions
+$lang.tsx                        → /learn/$lang (layout with loader)
+$lang.index.tsx                  → /learn/$lang (index redirect)
+$lang.feed.tsx                   → /learn/$lang/feed
+$lang.deck-settings.tsx          → /learn/$lang/deck-settings
+$lang.manage-deck.tsx            → /learn/$lang/manage-deck
+$lang.bulk-add.tsx               → /learn/$lang/bulk-add
+$lang.stats.tsx                  → /learn/$lang/stats
+$lang.phrases.$id.tsx            → /learn/$lang/phrases/:id
+$lang.phrases.new.tsx            → /learn/$lang/phrases/new
+$lang.playlists.tsx              → /learn/$lang/playlists (layout)
+$lang.playlists.index.tsx        → /learn/$lang/playlists
+$lang.playlists.$playlistId.tsx  → /learn/$lang/playlists/:playlistId
+$lang.playlists.new.tsx          → /learn/$lang/playlists/new
+$lang.requests.index.tsx         → /learn/$lang/requests
+$lang.requests.$id.tsx           → /learn/$lang/requests/:id
+$lang.requests.new.tsx           → /learn/$lang/requests/new
+$lang.contributions.tsx          → /learn/$lang/contributions
+$lang.review.tsx                 → /learn/$lang/review (layout)
+$lang.review.index.tsx           → /learn/$lang/review (setup page)
+$lang.review.go.tsx              → /learn/$lang/review/go (active session)
+$lang.review.preview.tsx         → /learn/$lang/review/preview
+```
+
+Files prefixed with `-` (e.g., `-deck-card.tsx`) are non-route components co-located with routes.
 
 ### Authentication
 
@@ -480,7 +576,7 @@ import { todayString } from '@/lib/dayjs'
 - **Path aliases**: Always use `@/` prefix for imports
 - **Type naming**: Zod schemas generate types with `Type` suffix (e.g., `PhraseFullSchema` → infer as `PhraseFullType`)
 - **Query keys**: Use array format matching collection IDs (e.g., `['public', 'phrase_full']`)
-- **Collection keys**: Always define `getKey` as `(item) => item.id` for proper indexing
+- **Collection keys**: Define `getKey` to return each row's actual unique identifier. Most collections use `item.id`, but notable exceptions: `decksCollection` uses `item.lang`, `cardsCollection` uses `item.phrase_id`, profile collections use `item.uid`, upvote collections use the foreign key (e.g., `item.comment_id`), and `reviewDaysCollection`/`friendSummariesCollection` use composite template strings (e.g., `` `${item.day_session}--${item.lang}` ``). Always check the source table's unique constraint
 
 ## Styling with Tailwind CSS
 
@@ -689,6 +785,27 @@ queryFn: async () => {
 
 Joins happen in live queries, not in collection queryFn. This keeps collections focused and composable.
 
+### Collection Preloading
+
+Routes eagerly load collection data in `loader` functions using `.preload()`:
+
+```typescript
+// In $lang.tsx — await all preloads before rendering
+loader: async () => {
+  await Promise.all([
+    phrasesCollection.preload(),
+    cardsCollection.preload(),
+    publicProfilesCollection.preload(),
+  ])
+}
+
+// In _user.tsx — fire-and-forget for non-critical data
+void decksCollection.preload()
+void friendSummariesCollection.preload()
+```
+
+Use `await Promise.all([...])` when the route needs the data before first render. Use `void` (fire-and-forget) for collections that can load in the background.
+
 ## Forms & Mutation Patterns
 
 ### Standard Form Pattern
@@ -781,12 +898,13 @@ When writing tests, instead of using names or exacty display text for the user, 
 
 ### Feed System
 
-The feed uses infinite queries with pagination:
+The feed is the one feature that uses `useInfiniteQuery` instead of collections, due to cursor-based pagination:
 
-- `useFeedLang()` hook fetches feed activities
-- `useInvalidateFeed()` manually resets feed cache after mutations
-- Feed types: 'request', 'playlist', 'phrase'
-- Client-side folding removes child phrases from feed (see `$lang.feed.tsx`)
+- **Query hooks**: `useFeedLang(lang)`, `useFilteredFeedLang(lang, filterType)`, `useFriendsFeedLang(lang)`, `usePopularFeedLang(lang)` — each has a filtered variant
+- **Cursor**: `created_at` timestamp, 20 items per page, popular feed also sorts by `popularity` descending
+- **Cache invalidation**: `useInvalidateFeed()` manually resets all feed query caches after mutations
+- **Feed types**: 'request', 'playlist', 'phrase'
+- **Client-side folding**: Removes child phrases from feed to avoid duplication (see `$lang.feed.tsx`)
 
 ### View Transitions
 
