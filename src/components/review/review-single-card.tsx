@@ -190,12 +190,12 @@ export function ReviewSingleCard({
 	return (
 		<>
 			<CardlikeFlashcard
-				className="mx-auto w-full flex-1"
+				className="mx-auto flex w-full flex-1 flex-col"
 				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 				data-name="flashcard"
 				data-key={pid}
 			>
-				<CardContent className="relative flex flex-col items-center gap-4">
+				<CardContent className="relative flex flex-1 flex-col items-center justify-center gap-4">
 					<ContextMenu phrase={phrase} />
 					<Badge
 						variant="outline"
