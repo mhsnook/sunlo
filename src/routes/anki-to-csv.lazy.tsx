@@ -1,6 +1,6 @@
-import { type DragEvent, useState, useCallback } from 'react'
+import { type DragEvent, useRef, useState, useCallback, useEffect } from 'react'
 import { createLazyFileRoute } from '@tanstack/react-router'
-import { Download, FileUp, Loader2 } from 'lucide-react'
+import { Download, FileUp, Loader2, Play, Square } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -15,6 +15,7 @@ import {
 import {
 	type AnkiDeckData,
 	parseAnkiDeck,
+	revokeMediaUrls,
 	notesToCsv,
 	downloadCsv,
 } from '@/lib/anki-to-csv'
@@ -30,9 +31,19 @@ function AnkiToCsvPage() {
 	const [result, setResult] = useState<AnkiDeckData | null>(null)
 	const [confirmed, setConfirmed] = useState(false)
 
+	// Revoke old media URLs when result changes or on unmount
+	useEffect(() => {
+		return () => {
+			if (result) revokeMediaUrls(result.mediaUrls)
+		}
+	}, [result])
+
 	const processFile = useCallback(async (file: File) => {
 		setError(null)
-		setResult(null)
+		setResult((prev) => {
+			if (prev) revokeMediaUrls(prev.mediaUrls)
+			return null
+		})
 		setLoading(true)
 		try {
 			const buffer = await file.arrayBuffer()
@@ -150,6 +161,8 @@ function AnkiToCsvPage() {
 									<p className="text-muted-foreground text-sm">
 										{result.notes.length} notes &middot;{' '}
 										{result.fieldNames.length} fields
+										{result.mediaUrls.size > 0 &&
+											` · ${result.mediaUrls.size} audio files`}
 									</p>
 								</div>
 								<Button onClick={handleDownload}>
@@ -177,8 +190,23 @@ function AnkiToCsvPage() {
 										{result.notes.slice(0, 10).map((note, i) => (
 											<tr key={i} className="border-b last:border-0">
 												{result.fieldNames.map((_, fi) => (
-													<td key={fi} className="max-w-64 truncate px-3 py-2">
-														{note.fields[fi] ?? ''}
+													<td key={fi} className="max-w-64 px-3 py-2">
+														<div className="flex items-center gap-1.5">
+															<span className="truncate">
+																{note.fields[fi] ?? ''}
+															</span>
+															{note.audioRefs[fi]?.map((filename) => {
+																const url = result.mediaUrls.get(filename)
+																if (!url) return null
+																return (
+																	<AudioPlayButton
+																		key={filename}
+																		url={url}
+																		label={filename}
+																	/>
+																)
+															})}
+														</div>
 													</td>
 												))}
 											</tr>
@@ -196,5 +224,46 @@ function AnkiToCsvPage() {
 				</CardContent>
 			</Card>
 		</main>
+	)
+}
+
+function AudioPlayButton({ url, label }: { url: string; label: string }) {
+	const [playing, setPlaying] = useState(false)
+	const audioRef = useRef<HTMLAudioElement | null>(null)
+
+	const toggle = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		if (playing) {
+			audioRef.current?.pause()
+			setPlaying(false)
+			return
+		}
+		const audio = new Audio(url)
+		audioRef.current = audio
+		audio.addEventListener('ended', () => setPlaying(false))
+		audio.play()
+		setPlaying(true)
+	}
+
+	// Clean up on unmount
+	useEffect(() => {
+		return () => {
+			audioRef.current?.pause()
+		}
+	}, [])
+
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			className="size-6 shrink-0"
+			onClick={toggle}
+			aria-label={playing ? `Stop ${label}` : `Play ${label}`}
+			title={label}
+		>
+			{playing ?
+				<Square className="size-3" />
+			:	<Play className="size-3" />}
+		</Button>
 	)
 }

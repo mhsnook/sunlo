@@ -3,6 +3,8 @@ import { unzipSync } from 'fflate'
 
 export type AnkiNote = {
 	fields: Array<string>
+	/** Audio filenames referenced via [sound:...] per field */
+	audioRefs: Array<Array<string>>
 	modelId: number
 }
 
@@ -10,7 +12,11 @@ export type AnkiDeckData = {
 	notes: Array<AnkiNote>
 	fieldNames: Array<string>
 	deckName: string
+	/** Map from media filename → object URL (caller must revoke when done) */
+	mediaUrls: Map<string, string>
 }
+
+const SOUND_RE = /\[sound:([^\]]+)\]/g
 
 function stripHtml(text: string): string {
 	return text
@@ -22,16 +28,74 @@ function stripHtml(text: string): string {
 		.replace(/&gt;/g, '>')
 		.replace(/&quot;/g, '"')
 		.replace(/&#39;/g, "'")
+		.replace(SOUND_RE, '')
 		.trim()
 }
 
-function extractDb(apkgBuffer: ArrayBuffer): Uint8Array {
-	const files = unzipSync(new Uint8Array(apkgBuffer))
-	for (const name of ['collection.anki21', 'collection.anki2']) {
-		if (files[name]) return files[name]
+function extractSoundRefs(text: string): Array<string> {
+	const refs: Array<string> = []
+	let match
+	const re = new RegExp(SOUND_RE.source, 'g')
+	while ((match = re.exec(text)) !== null) {
+		refs.push(match[1])
 	}
-	const names = Object.keys(files).join(', ')
+	return refs
+}
+
+function extractFiles(apkgBuffer: ArrayBuffer): {
+	dbBytes: Uint8Array
+	allFiles: Record<string, Uint8Array>
+} {
+	const allFiles = unzipSync(new Uint8Array(apkgBuffer))
+	for (const name of ['collection.anki21', 'collection.anki2']) {
+		if (allFiles[name]) return { dbBytes: allFiles[name], allFiles }
+	}
+	const names = Object.keys(allFiles).join(', ')
 	throw new Error(`No collection database found in .apkg. Contents: ${names}`)
+}
+
+function buildMediaMap(
+	allFiles: Record<string, Uint8Array>
+): Map<string, string> {
+	// The `media` file is a JSON object mapping numeric keys to real filenames
+	// e.g. { "0": "recording.mp3", "1": "image.jpg" }
+	const mediaUrls = new Map<string, string>()
+
+	const mediaJson = allFiles['media']
+	if (!mediaJson) return mediaUrls
+
+	let mapping: Record<string, string>
+	try {
+		const text = new TextDecoder().decode(mediaJson)
+		mapping = JSON.parse(text)
+	} catch {
+		return mediaUrls
+	}
+
+	for (const [numericKey, realName] of Object.entries(mapping)) {
+		const fileBytes = allFiles[numericKey]
+		if (!fileBytes) continue
+
+		// Only create URLs for audio files
+		const ext = realName.split('.').pop()?.toLowerCase() ?? ''
+		const audioExts = ['mp3', 'ogg', 'wav', 'flac', 'opus', 'm4a', 'aac']
+		if (!audioExts.includes(ext)) continue
+
+		const mimeMap: Record<string, string> = {
+			mp3: 'audio/mpeg',
+			ogg: 'audio/ogg',
+			wav: 'audio/wav',
+			flac: 'audio/flac',
+			opus: 'audio/opus',
+			m4a: 'audio/mp4',
+			aac: 'audio/aac',
+		}
+		const mime = mimeMap[ext] ?? 'audio/mpeg'
+		const blob = new Blob([fileBytes.buffer as ArrayBuffer], { type: mime })
+		mediaUrls.set(realName, URL.createObjectURL(blob))
+	}
+
+	return mediaUrls
 }
 
 function getModelFieldNames(db: Database): Map<number, Array<string>> {
@@ -98,7 +162,8 @@ export async function parseAnkiDeck(
 		locateFile: () => '/sql-wasm.wasm',
 	})
 
-	const dbBytes = extractDb(apkgBuffer)
+	const { dbBytes, allFiles } = extractFiles(apkgBuffer)
+	const mediaUrls = buildMediaMap(allFiles)
 	const db = new SQL.Database(dbBytes)
 
 	try {
@@ -110,10 +175,14 @@ export async function parseAnkiDeck(
 			throw new Error('No notes found in the deck.')
 		}
 
-		const notes: Array<AnkiNote> = rows[0].values.map(([mid, flds]) => ({
-			modelId: mid as number,
-			fields: (flds as string).split('\x1f').map(stripHtml),
-		}))
+		const notes: Array<AnkiNote> = rows[0].values.map(([mid, flds]) => {
+			const rawFields = (flds as string).split('\x1f')
+			return {
+				modelId: mid as number,
+				fields: rawFields.map(stripHtml),
+				audioRefs: rawFields.map(extractSoundRefs),
+			}
+		})
 
 		// Determine column headers
 		const modelIds = new Set(notes.map((n) => n.modelId))
@@ -131,9 +200,16 @@ export async function parseAnkiDeck(
 			fieldNames.push(`Field${fieldNames.length + 1}`)
 		}
 
-		return { notes, fieldNames, deckName }
+		return { notes, fieldNames, deckName, mediaUrls }
 	} finally {
 		db.close()
+	}
+}
+
+/** Clean up object URLs when you're done with the deck data */
+export function revokeMediaUrls(mediaUrls: Map<string, string>) {
+	for (const url of mediaUrls.values()) {
+		URL.revokeObjectURL(url)
 	}
 }
 
