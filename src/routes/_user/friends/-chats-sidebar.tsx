@@ -85,7 +85,7 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 						<div className="bg-primary h-2.5 w-2.5 rounded-full" />
 					:	null}
 				</div>
-				{hasPendingRequest && !previewMessage ?
+				{hasPendingRequest ?
 					<p className="text-muted-foreground line-clamp-1 text-xs">
 						<UserPlus className="me-1 inline size-3" />
 						Wants to connect • {ago(mostRecentActivity)}

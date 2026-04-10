@@ -5,7 +5,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
-- click appnav-search-button
+- click navbar-search-button
 - see friend-search-overlay
 - see friend-search-input
 
@@ -16,7 +16,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
-- click appnav-search-button
+- click navbar-search-button
 - see friend-search-overlay
 - typeInto friend-search-input Lex
 - see friend-search-results
@@ -28,7 +28,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
-- click appnav-search-button
+- click navbar-search-button
 - see friend-search-overlay
 - click close-dialog-button
 - notSee friend-search-overlay

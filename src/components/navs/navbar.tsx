@@ -1,5 +1,5 @@
 import { useEffectEvent } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
@@ -13,6 +13,9 @@ export default function Navbar() {
 	const focusMode = matches.some(
 		(m) => (m.context as MyRouterContext)?.focusMode
 	)
+	const hasSearchAction = matches.some(
+		(m) => (m.context as MyRouterContext)?.searchAction
+	)
 
 	return (
 		<nav
@@ -23,6 +26,7 @@ export default function Navbar() {
 				<Title />
 			</div>
 			<div className="flex items-center gap-2">
+				{!focusMode && hasSearchAction && <NavSearchButton />}
 				{!focusMode && <NotificationBell />}
 				<SidebarTrigger />
 			</div>
@@ -76,5 +80,24 @@ function Title() {
 				</div>
 			</div>
 		</div>
+	)
+}
+
+function NavSearchButton() {
+	const router = useRouter()
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			data-testid="navbar-search-button"
+			onClick={() => {
+				const url = new URL(window.location.href)
+				url.searchParams.set('search', 'true')
+				void router.navigate({ to: url.pathname + url.search, replace: true })
+			}}
+		>
+			<Search className="h-5 w-5" />
+			<span className="sr-only">Search</span>
+		</Button>
 	)
 }

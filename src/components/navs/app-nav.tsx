@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Link, useMatches, useRouter } from '@tanstack/react-router'
-import { MoreVertical, Search } from 'lucide-react'
+import { Link, useMatches } from '@tanstack/react-router'
+import { MoreVertical } from 'lucide-react'
 import { useIntersectionObserver } from '@/hooks/use-debounce'
 
 import {
@@ -42,11 +42,6 @@ export function AppNav() {
 	)
 	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
 		?.contextMenu
-	const searchActionMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.searchAction
-	)
-	const searchAction = (searchActionMatch?.context as MyRouterContext)
-		?.searchAction
 	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
@@ -89,30 +84,9 @@ export function AppNav() {
 						</NavigationMenuList>
 					</NavigationMenu>
 				</div>
-				{searchAction && <SearchButton />}
 				<ContextMenu contextMenu={contextMenu} />
 			</div>
 		</>
-	)
-}
-
-function SearchButton() {
-	const router = useRouter()
-	return (
-		<Button
-			variant="ghost"
-			size="icon"
-			className="me-2"
-			data-testid="appnav-search-button"
-			onClick={() => {
-				const url = new URL(window.location.href)
-				url.searchParams.set('search', 'true')
-				void router.navigate({ to: url.pathname + url.search, replace: true })
-			}}
-		>
-			<Search />
-			<span className="sr-only">Search</span>
-		</Button>
 	)
 }
 

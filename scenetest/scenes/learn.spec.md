@@ -54,7 +54,7 @@ learner:
 
 - login
 - go-to-deck
-- click appnav-search-button
+- click navbar-search-button
 - up
 - see browse-search-overlay
 - typeInto browse-search-input tea
