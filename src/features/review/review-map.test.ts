@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildReviewsMap } from '@/features/review/hooks'
+import { buildReviewsMap } from '@/features/review/review-utils'
 import { toManifestEntry } from '@/features/review/manifest'
 import type { CardReviewType } from '@/features/review/schemas'
 

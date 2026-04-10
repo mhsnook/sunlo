@@ -3,7 +3,7 @@ import { createStore } from 'zustand'
 import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-import { type ReviewsMap, type ReviewStages, useReviewsToday } from './hooks'
+import type { ReviewStages } from './review-utils'
 import type { ManifestEntry } from './manifest'
 
 const DEFAULT_PROPS = {
@@ -125,50 +125,6 @@ export function useReviewStore<T>(selector: (state: ReviewState) => T): T {
 	const store = useContext(ReviewStoreContext)
 	if (!store) throw new Error('Missing ReviewStoreContext in the tree')
 	return useStore(store, selector)
-}
-
-export function useNextValid(): number {
-	const currentCardIndex = useCardIndex()
-	const lang = useReviewLang()
-	const day_session = useReviewDayString()
-	const stage = useReviewStage()
-	const { data: reviewsData } = useReviewsToday(lang, day_session)
-	const { manifest, reviewsMap } = reviewsData
-	return (stage ?? 0) < 3 ?
-			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
-		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
-}
-
-export function getIndexOfNextUnreviewedCard(
-	manifest: Array<string>,
-	reviewsMap: ReviewsMap,
-	currentCardIndex: number
-) {
-	const index = manifest.findIndex((pid, i) => {
-		// if we're currently at card 3 of 40, don't even check cards 0-3
-		// but if we're at 40/40 we should check from the start
-		if (currentCardIndex !== manifest.length && i <= currentCardIndex)
-			return false
-		// if the entry is undefined, it means we haven't reviewed this card yet
-		return !reviewsMap[pid]
-	})
-
-	return index !== -1 ? index : manifest.length
-}
-
-export function getIndexOfNextAgainCard(
-	manifest: Array<string>,
-	reviewsMap: ReviewsMap,
-	currentCardIndex: number
-) {
-	const index = manifest.findIndex((_, i) => {
-		// we want first to check state.currentCardIndex + 1
-		const indexChecking = (i + currentCardIndex + 1) % manifest.length
-		return reviewsMap[manifest[indexChecking]]?.score === 1
-	})
-	return index !== -1 ?
-			(index + currentCardIndex + 1) % manifest.length
-		:	manifest.length
 }
 
 export const useReviewLang = (): string => {

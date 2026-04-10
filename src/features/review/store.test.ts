@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import {
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
-} from '@/features/review/store'
-import type { ReviewsMap } from '@/features/review/hooks'
+	type ReviewsMap,
+} from '@/features/review/review-utils'
 import type { CardReviewType } from '@/features/review/schemas'
 import type { ManifestEntry } from '@/features/review/manifest'
 

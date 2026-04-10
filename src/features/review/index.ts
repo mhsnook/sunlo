@@ -12,9 +12,18 @@ export {
 // Collections
 export { cardReviewsCollection, reviewDaysCollection } from './collections'
 
-// Hooks
+// Pure utilities (no supabase dependency)
 export {
 	buildReviewsMap,
+	getIndexOfNextUnreviewedCard,
+	getIndexOfNextAgainCard,
+	type ReviewStages,
+	type ReviewsMap,
+} from './review-utils'
+
+// Hooks
+export {
+	useNextValid,
 	useReviewsToday,
 	useReviewsTodayStats,
 	useReviewDay,
@@ -24,8 +33,6 @@ export {
 	useOneCardReviews,
 	useUpdateReviewStage,
 	useActiveReviewRemaining,
-	type ReviewStages,
-	type ReviewsMap,
 	type ReviewStats,
 } from './hooks'
 
@@ -34,9 +41,6 @@ export {
 	useReviewActions,
 	useReviewLang,
 	useCardIndex,
-	useNextValid,
-	getIndexOfNextUnreviewedCard,
-	getIndexOfNextAgainCard,
 	useReviewStore,
 } from './store'
 
