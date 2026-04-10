@@ -38,7 +38,6 @@ import { Route as UserLearnArchivedRouteImport } from './routes/_user/learn/arch
 import { Route as UserLearnAddDeckRouteImport } from './routes/_user/learn/add-deck'
 import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
 import { Route as UserFriendsSearchRouteImport } from './routes/_user/friends/search'
-import { Route as UserFriendsRequestsRouteImport } from './routes/_user/friends/requests'
 import { Route as UserFriendsInviteRouteImport } from './routes/_user/friends/invite'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
@@ -239,11 +238,6 @@ const UserFriendsSearchRoute = UserFriendsSearchRouteImport.update({
   path: '/search',
   getParentRoute: () => UserFriendsRoute,
 } as any)
-const UserFriendsRequestsRoute = UserFriendsRequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
-  getParentRoute: () => UserFriendsRoute,
-} as any)
 const UserFriendsInviteRoute = UserFriendsInviteRouteImport.update({
   id: '/invite',
   path: '/invite',
@@ -423,7 +417,6 @@ export interface FileRoutesByFullPath {
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/friends/invite': typeof UserFriendsInviteRoute
-  '/friends/requests': typeof UserFriendsRequestsRoute
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
@@ -481,7 +474,6 @@ export interface FileRoutesByTo {
   '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/invite': typeof UserFriendsInviteRoute
-  '/friends/requests': typeof UserFriendsRequestsRoute
   '/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
@@ -542,7 +534,6 @@ export interface FileRoutesById {
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
   '/_user/friends/invite': typeof UserFriendsInviteRoute
-  '/_user/friends/requests': typeof UserFriendsRequestsRoute
   '/_user/friends/search': typeof UserFriendsSearchRouteWithChildren
   '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
@@ -606,7 +597,6 @@ export interface FileRouteTypes {
     | '/friends/$uid'
     | '/friends/chats'
     | '/friends/invite'
-    | '/friends/requests'
     | '/friends/search'
     | '/learn/$lang'
     | '/learn/add-deck'
@@ -664,7 +654,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/friends/$uid'
     | '/friends/invite'
-    | '/friends/requests'
     | '/friends/search'
     | '/learn/add-deck'
     | '/learn/archived'
@@ -724,7 +713,6 @@ export interface FileRouteTypes {
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
     | '/_user/friends/invite'
-    | '/_user/friends/requests'
     | '/_user/friends/search'
     | '/_user/learn/$lang'
     | '/_user/learn/add-deck'
@@ -1002,13 +990,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsSearchRouteImport
       parentRoute: typeof UserFriendsRoute
     }
-    '/_user/friends/requests': {
-      id: '/_user/friends/requests'
-      path: '/requests'
-      fullPath: '/friends/requests'
-      preLoaderRoute: typeof UserFriendsRequestsRouteImport
-      parentRoute: typeof UserFriendsRoute
-    }
     '/_user/friends/invite': {
       id: '/_user/friends/invite'
       path: '/invite'
@@ -1274,7 +1255,6 @@ interface UserFriendsRouteChildren {
   UserFriendsUidRoute: typeof UserFriendsUidRoute
   UserFriendsChatsRoute: typeof UserFriendsChatsRouteWithChildren
   UserFriendsInviteRoute: typeof UserFriendsInviteRoute
-  UserFriendsRequestsRoute: typeof UserFriendsRequestsRoute
   UserFriendsSearchRoute: typeof UserFriendsSearchRouteWithChildren
   UserFriendsIndexRoute: typeof UserFriendsIndexRoute
 }
@@ -1283,7 +1263,6 @@ const UserFriendsRouteChildren: UserFriendsRouteChildren = {
   UserFriendsUidRoute: UserFriendsUidRoute,
   UserFriendsChatsRoute: UserFriendsChatsRouteWithChildren,
   UserFriendsInviteRoute: UserFriendsInviteRoute,
-  UserFriendsRequestsRoute: UserFriendsRequestsRoute,
   UserFriendsSearchRoute: UserFriendsSearchRouteWithChildren,
   UserFriendsIndexRoute: UserFriendsIndexRoute,
 }

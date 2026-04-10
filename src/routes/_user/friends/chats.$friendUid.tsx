@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
-import { Send } from 'lucide-react'
+import { Send, UserPlus } from 'lucide-react'
 
 import type { PublicProfileType } from '@/features/profile/schemas'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -12,6 +12,7 @@ import {
 	useOneFriendChat,
 	useOneRelation,
 } from '@/features/social/hooks'
+import { RelationshipActions } from '@/routes/_user/friends/-relationship-actions'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { useUserId } from '@/lib/use-auth'
@@ -106,7 +107,15 @@ function ChatPage() {
 				<div className="flex-1">
 					<p className="font-semibold">{relUsername}</p>
 					<p className="text-muted-foreground text-xs">
-						{relation.status === 'friends' ? 'Friends' : 'Pending'}
+						{relation.status === 'friends' ?
+							'Friends'
+						: relation.status === 'pending' && !relation.isMostRecentByMe ?
+							<span className="text-primary inline-flex items-center gap-1">
+								<UserPlus className="size-3" /> Wants to connect
+							</span>
+						: relation.status === 'pending' ?
+							'Request sent'
+						:	'Not connected'}
 					</p>
 				</div>
 			</CardHeader>
@@ -208,8 +217,17 @@ function ChatPage() {
 							</span>
 						</Link>
 					</div>
-				:	<p className="text-muted-foreground p-2 text-center italic">
-						You must be friends to chat.
+				: relation.status === 'pending' && !relation.isMostRecentByMe ?
+					<div className="flex flex-col items-center gap-2 py-2">
+						<p className="text-muted-foreground text-sm">
+							{relUsername} wants to connect
+						</p>
+						<RelationshipActions uid_for={friendUid} />
+					</div>
+				:	<p className="text-muted-foreground p-2 text-center text-sm italic">
+						{relation.status === 'pending' ?
+							'Waiting for them to accept your request.'
+						:	'You must be friends to chat.'}
 					</p>
 				}
 			</div>

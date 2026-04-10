@@ -1,13 +1,16 @@
 import { Link } from '@tanstack/react-router'
+import { UserPlus } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import {
 	useAllChats,
+	useIncomingFriendRequests,
 	useRelationFriends,
 	useUnreadMessages,
 } from '@/features/social/hooks'
 import { ChatMessageType } from '@/features/social/schemas'
+import type { RelationsFullType } from '@/features/social/live'
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
@@ -18,6 +21,7 @@ const linkActiveProps = {
 
 export function ChatsSidebar() {
 	const { data: friends, isLoading: isLoadingFriends } = useRelationFriends()
+	const { data: incomingRequests } = useIncomingFriendRequests()
 	const { data: chats, isLoading: isLoadingChats } = useAllChats()
 	const { data: unreadMessages } = useUnreadMessages()
 
@@ -58,6 +62,9 @@ export function ChatsSidebar() {
 				data-testid="friend-chat-list"
 				className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
 			>
+				{incomingRequests?.map((request) => (
+					<FriendRequestItem key={request.uid} request={request} />
+				))}
 				{isLoadingFriends || isLoadingChats ?
 					<>
 						<ChatSkeleton />
@@ -66,7 +73,9 @@ export function ChatsSidebar() {
 					</>
 				: !sortedFriends || !sortedFriends.length ?
 					<p className="text-muted-foreground p-4 text-sm">
-						You have no friends to chat with yet.
+						{incomingRequests?.length ? null : (
+							'You have no friends to chat with yet.'
+						)}
 					</p>
 				:	sortedFriends.map((friend) => {
 						// Prefer showing the oldest unread message, otherwise show most recent
@@ -138,6 +147,38 @@ export function ChatsSidebar() {
 				}
 			</CardContent>
 		</Card>
+	)
+}
+
+function FriendRequestItem({ request }: { request: RelationsFullType }) {
+	return (
+		<Link
+			data-testid="friend-request-item"
+			to="/friends/chats/$friendUid"
+			params={{ friendUid: request.uid }}
+			className="hover:bg-1-mlo-accent hover:text-accent-foreground flex items-center gap-3 rounded-2xl px-3 py-2 transition-all"
+			activeProps={linkActiveProps}
+		>
+			<Avatar className="h-8 w-8">
+				<AvatarImage
+					src={avatarUrlify(request.profile?.avatar_path)}
+					alt={request.profile?.username}
+				/>
+				<AvatarFallback>
+					{request.profile?.username?.charAt(0).toUpperCase()}
+				</AvatarFallback>
+			</Avatar>
+			<div className="flex-1 overflow-hidden">
+				<div className="flex items-center gap-2 font-semibold">
+					<span>{request.profile?.username}</span>
+					<div className="bg-primary h-2.5 w-2.5 rounded-full" />
+				</div>
+				<p className="text-muted-foreground line-clamp-1 text-xs">
+					<UserPlus className="me-1 inline size-3" />
+					Wants to connect • {ago(request.most_recent_created_at)}
+				</p>
+			</div>
+		</Link>
 	)
 }
 

@@ -171,7 +171,7 @@ function WelcomePage() {
 						icon={UserPlus}
 						title="Find Friends"
 						description="Search for people you know or invite them to join."
-						linkTo="/friends"
+						linkTo="/friends/chats"
 						linkSearch={{ search: true }}
 						linkText="Search Friends"
 						variant="secondary"
@@ -240,7 +240,7 @@ function WelcomePage() {
 						<ArrowRight className="size-4" />
 					</Link>
 				:	<Link
-						to={'/friends'}
+						to={'/friends/chats'}
 						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
 						data-testid="go-to-friends-link"
 					>

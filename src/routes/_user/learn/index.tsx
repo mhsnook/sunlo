@@ -10,7 +10,6 @@ import {
 import { DeckCard } from './-deck-card'
 import { buttonVariants } from '@/components/ui/button'
 import { GarlicBroccoli } from '@/components/garlic'
-import { FriendProfiles } from '@/components/friend-profiles'
 import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { decksCollection } from '@/features/deck/collections'
@@ -73,7 +72,6 @@ function Page() {
 					:	<NoDecks />}
 				</div>
 			}
-			<FriendProfiles />
 		</main>
 	)
 }

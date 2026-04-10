@@ -130,7 +130,7 @@ function NewDeckFormInner() {
 							</Button>
 
 							<Link
-								to="/friends"
+								to="/friends/chats"
 								search={{ search: true }}
 								className={buttonVariants({ variant: 'neutral' })}
 							>
