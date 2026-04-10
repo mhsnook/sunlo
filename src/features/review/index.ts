@@ -14,6 +14,7 @@ export { cardReviewsCollection, reviewDaysCollection } from './collections'
 
 // Hooks
 export {
+	buildReviewsMap,
 	useReviewsToday,
 	useReviewsTodayStats,
 	useReviewDay,

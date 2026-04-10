@@ -161,7 +161,7 @@ function mapToStats(
 }
 
 /** Build a ReviewsMap keyed by manifest entry (phrase_id:direction) */
-function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
+export function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
 	const map: ReviewsMap = {}
 	// Iterate in chronological order so the last (newest) review wins per key
 	for (const r of reviews) {
