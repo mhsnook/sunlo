@@ -254,8 +254,10 @@ export function useOneReviewToday(
 }
 
 /**
- * Get the most recent review for a phrase+direction (any day, not just today)
- * Used for FSRS calculations which need the previous difficulty/stability
+ * Get the most recent phase-1 review for a phrase+direction (any day, not just today).
+ * Used for FSRS calculations which need the previous difficulty/stability.
+ * Filters to day_first_review=true so phase-3 re-reviews (which have throwaway
+ * initial FSRS values) never feed into the scheduling chain.
  */
 export function useLatestReviewForPhrase(
 	pid: uuid,
@@ -266,7 +268,11 @@ export function useLatestReviewForPhrase(
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
-					and(eq(review.phrase_id, pid), eq(review.direction, direction))
+					and(
+						eq(review.phrase_id, pid),
+						eq(review.direction, direction),
+						eq(review.day_first_review, true)
+					)
 				)
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
@@ -399,18 +405,22 @@ export function useReviewMutation(
 				)
 			}
 
-			// Keep cardsCollection in sync so manage-deck sees fresh data
-			const existingCard = cardsCollection.toArray.find(
-				(c) =>
-					c.phrase_id === data.row.phrase_id &&
-					c.direction === data.row.direction
-			)
-			cardsCollection.utils.writeUpdate({
-				id: existingCard!.id,
-				last_reviewed_at: data.row.created_at,
-				difficulty: data.row.difficulty,
-				stability: data.row.stability,
-			})
+			// Only sync card scheduling state from phase-1 reviews.
+			// Phase-3 reviews are for tracking only — their FSRS values are
+			// throwaway initial values that would corrupt the scheduling chain.
+			if (data.row.day_first_review) {
+				const existingCard = cardsCollection.toArray.find(
+					(c) =>
+						c.phrase_id === data.row.phrase_id &&
+						c.direction === data.row.direction
+				)
+				cardsCollection.utils.writeUpdate({
+					id: existingCard!.id,
+					last_reviewed_at: data.row.created_at,
+					difficulty: data.row.difficulty,
+					stability: data.row.stability,
+				})
+			}
 
 			triggerSlide(() => {
 				resetRevealCard()
