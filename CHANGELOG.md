@@ -1,5 +1,39 @@
 # Change Log
 
+## v0.21 - Bidirectional Cards
+
+_9 April, 2026_
+
+### Features
+
+- **Bidirectional cards** (issue #310) — each phrase now has two independently-scheduled flashcards: forward (phrase → translation) and reverse (translation → phrase). Phrases marked `only_reverse` skip the forward card entirely. The FSRS spaced-repetition schedule tracks each direction separately.
+- **Review preview page** — a new intermediate step between review setup and the session itself shows a breakdown of the upcoming cards (forward vs. reverse counts, new vs. due). Provides a natural confirmation point before committing to a session.
+
+### Improvements
+
+- Phrase picker now shows all phrases when the search field is empty (previously showed nothing until you typed).
+- Upvote actions on playlists and requests now show a toast confirmation on success.
+
+### Fixes
+
+- Migration: drop FK constraint before dropping the `uid_card` index to avoid a PostgreSQL dependency error on `supabase db reset`.
+
+### Database
+
+- `card_direction` enum: `'forward' | 'reverse'`
+- `user_card.direction card_direction not null default 'forward'` — new column; existing cards become forward.
+- `user_card_review.direction card_direction not null default 'forward'` — new column; FK updated to `(uid, phrase_id, direction)`.
+- `user_card` unique constraint updated from `(uid, phrase_id)` to `(uid, phrase_id, direction)`.
+- `add_phrase_translation_card` RPC updated to insert both forward and reverse cards.
+- `user_card_plus` view updated to join on direction.
+
+### Testing
+
+- Upgraded scenetest to v0.5.0 (`ifClick`, `warnIf`, `seeInView`, `setup:` directive, `[team.lang]` interpolation in cleanup/setup expressions).
+- Replaced hardcoded `kan` with `[team.lang]` throughout review and bidirectional specs.
+- New `bidirectional-review.spec.md` end-to-end scene for the full bidirectional review flow.
+- Applied `data-name` + `data-key` convention to list components rendered from database data (comments, feed items, friend chat links, phrase picker items).
+
 ## v0.20 - Review Sound Feedback, Phrase Detail Polish
 
 _4 April, 2026_

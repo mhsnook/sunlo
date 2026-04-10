@@ -43,5 +43,9 @@ function PreviewPage() {
 			/>
 		)
 
-	return <NewCardsPreview manifest={day.manifest} />
+	return (
+		<main data-testid="review-preview-page">
+			<NewCardsPreview manifest={day.manifest} />
+		</main>
+	)
 }

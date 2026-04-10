@@ -8,11 +8,9 @@ learner:
 - click [team.lang] deck-link
 - up
 - see deck-feed-page
-- see feed-item-list
-- see feed-item-request
 - up
 - see feed-item-list
-- see feed-item-playlist
+- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 
 # learner switches to popular tab on feed
 
@@ -30,6 +28,8 @@ learner:
 
 # learner upvotes a playlist in feed
 
+cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.key]').eq('playlist_id', 'c3d4e5f6-3333-4444-a555-666666666666')
+
 learner:
 
 - login
@@ -37,10 +37,10 @@ learner:
 - see decks-list-grid
 - click [team.lang] deck-link
 - up
-- see feed-item-playlist
+- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 - click upvote-playlist-button
 - up
-- see feed-item-playlist
+- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 - click upvote-playlist-button
 
 # feed loads more items on scroll
@@ -71,10 +71,10 @@ learner:
 - up
 - see chats-page
 - see friend-chat-list
-- click friend-chat-link
+- click friend-chat-link 7ad846a9-d55b-4035-8be2-dbcc70074f74
 - up
 - see chat-messages-container
-- see chat-message-bubble
+- seeText Sent a phrase recommendation.
 
 // # opening a chat marks messages as read
 //

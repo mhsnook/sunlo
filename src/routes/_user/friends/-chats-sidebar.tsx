@@ -78,7 +78,8 @@ export function ChatsSidebar() {
 						const unreadCount = unreadCountByFriend.get(friend.uid)
 						return (
 							<Link
-								data-testid="friend-chat-link"
+								data-name="friend-chat-link"
+								data-key={friend.uid}
 								key={friend.uid}
 								to="/friends/chats/$friendUid"
 								params={{ friendUid: friend.uid }}

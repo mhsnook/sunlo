@@ -131,18 +131,24 @@ function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
-				{links.map(({ link, title, Icon }) => (
-					<DropdownMenuItem key={link.to}>
-						<Link
-							{...link}
-							className="flex w-full flex-row items-center gap-2"
-							onClick={setClosed}
-						>
-							{!Icon ? null : <Icon className="size-5" />}
-							{title}
-						</Link>
-					</DropdownMenuItem>
-				)) || (
+				{links.map(({ link, title, Icon }) => {
+					const slug =
+						link.to.split('$lang/').at(1)?.replace(/\//g, '-') ??
+						link.to.split('/').at(-1) ??
+						'item'
+					return (
+						<DropdownMenuItem key={link.to} data-testid={`${slug}-menu-item`}>
+							<Link
+								{...link}
+								className="flex w-full flex-row items-center gap-2"
+								onClick={setClosed}
+							>
+								{!Icon ? null : <Icon className="size-5" />}
+								{title}
+							</Link>
+						</DropdownMenuItem>
+					)
+				}) || (
 					<DropdownMenuItem disabled>No options available</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>

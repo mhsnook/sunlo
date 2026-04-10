@@ -4,6 +4,11 @@ import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastSuccess } from '@/components/ui/sonner'
+import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
+import { directionsForPhrase } from '@/features/deck/card-directions'
+import { useDeckCards } from '@/features/deck/hooks'
+import { isDueCard } from '@/features/deck/is-due-card'
+import { phrasesCollection } from '@/features/phrases/collections'
 import {
 	BookOpen,
 	CalendarClock,
@@ -39,7 +44,7 @@ import { useReviewsTodayStats } from '@/features/review/hooks'
 import { ContinueReview } from '@/components/review/continue-review'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
-import { CardMetaSchema, CardStatusEnumType } from '@/features/deck/schemas'
+import { CardMetaSchema } from '@/features/deck/schemas'
 import { DailyReviewStateSchema } from '@/features/review/schemas'
 import { cardsCollection } from '@/features/deck/collections'
 import { reviewDaysCollection } from '@/features/review/collections'
@@ -159,41 +164,128 @@ function ReviewPageContent() {
 
 	const cardsToCreate = arrayDifference(freshCards, [deckPids?.all ?? []])
 
-	const allCardsForToday = arrayUnion([
+	const allPhraseIdsForToday = arrayUnion([
 		freshCards,
 		deckPids?.today_active ?? [],
 	])
+
+	// Get full card data for card-level manifest building
+	const { data: deckCards } = useDeckCards(lang)
+
+	// Sets for O(1) lookups in filters below
+	const freshSet = new Set(freshCards)
+	const createSet = new Set(cardsToCreate)
+
+	// Count total cards for today: existing due cards + cards to be created
+	const dueCards = (deckCards ?? []).filter(isDueCard)
+	const dueCardCount = dueCards.length
+	const freshCardCount = cardsToCreate.reduce((sum, pid) => {
+		const phrase = phrasesCollection.get(pid)
+		return sum + directionsForPhrase(phrase?.only_reverse).length
+	}, 0)
+	const unreviewedExisting = (deckCards ?? []).filter(
+		(c) =>
+			c.status === 'active' &&
+			!c.last_reviewed_at &&
+			freshSet.has(c.phrase_id) &&
+			!createSet.has(c.phrase_id)
+	)
+	const unreviewedExistingCount = unreviewedExisting.length
+	const totalCardsForToday =
+		dueCardCount + freshCardCount + unreviewedExistingCount
+
+	// Direction breakdown for display
+	const forwardCount =
+		dueCards.filter((c) => c.direction === 'forward').length +
+		unreviewedExisting.filter((c) => c.direction === 'forward').length +
+		cardsToCreate.reduce((sum, pid) => {
+			const phrase = phrasesCollection.get(pid)
+			return (
+				sum +
+				directionsForPhrase(phrase?.only_reverse).filter((d) => d === 'forward')
+					.length
+			)
+		}, 0)
+	const reverseCount = totalCardsForToday - forwardCount
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
 		mutationKey: ['user', lang, 'review', dayString, 'create'],
 		mutationFn: async () => {
+			// Create cards for new phrases, respecting only_reverse
+			const cardInserts = cardsToCreate.flatMap((pid) => {
+				const phrase = phrasesCollection.get(pid)
+				return directionsForPhrase(phrase?.only_reverse).map((direction) => ({
+					phrase_id: pid,
+					lang,
+					uid: userId!,
+					status: 'active' as const,
+					direction,
+				}))
+			})
+
 			console.log(
-				`Starting mutation to review ${allCardsForToday.length} cards today, creating ${cardsToCreate.length} new card records`,
+				`Starting mutation to review ${totalCardsForToday} cards today, creating ${cardInserts.length} new card records`,
 				{ cardsToCreate }
 			)
+
 			const { data: newCards } =
-				cardsToCreate.length === 0 ?
+				cardInserts.length === 0 ?
 					{ data: [] }
 				:	await supabase
 						.from('user_card')
-						.upsert(
-							cardsToCreate.map((pid) => ({
-								phrase_id: pid,
-								lang,
-								uid: userId!,
-								status: 'active' as CardStatusEnumType,
-							})),
-							{ onConflict: 'uid,phrase_id', ignoreDuplicates: true }
-						)
+						.upsert(cardInserts, {
+							onConflict: 'uid,phrase_id,direction',
+							ignoreDuplicates: true,
+						})
 						.select()
 						.throwOnError()
 
-			const skippedDuplicates = cardsToCreate.length - newCards.length
-			if (skippedDuplicates > 0)
-				console.warn(
-					`${skippedDuplicates} cards already existed in DB (local collection was stale) — skipped duplicates gracefully`
-				)
+			// Build manifest from card-level data.
+			// 4 buckets: forward due → forward new → reverse due → reverse new
+			const forwardDue: Array<ManifestEntry> = []
+			const forwardNew: Array<ManifestEntry> = []
+			const reverseDue: Array<ManifestEntry> = []
+			const reverseNew: Array<ManifestEntry> = []
+
+			const allPhraseSet = new Set(allPhraseIdsForToday)
+
+			// Existing cards: due (retrievability ≤ 0.9) or unreviewed fresh
+			for (const card of deckCards ?? []) {
+				if (!allPhraseSet.has(card.phrase_id)) continue
+				if (card.status !== 'active') continue
+
+				const isUnreviewed = !card.last_reviewed_at
+				if (!isUnreviewed && !isDueCard(card)) continue
+
+				const entry = toManifestEntry(card.phrase_id, card.direction)
+				const isFresh = isUnreviewed && freshSet.has(card.phrase_id)
+
+				if (card.direction === 'forward') {
+					;(isFresh ? forwardNew : forwardDue).push(entry)
+				} else {
+					;(isFresh ? reverseNew : reverseDue).push(entry)
+				}
+			}
+
+			// Add newly created cards (not yet in deckCards)
+			for (const insert of cardInserts) {
+				const entry = toManifestEntry(insert.phrase_id, insert.direction)
+				if (insert.direction === 'forward') {
+					forwardNew.push(entry)
+				} else {
+					reverseNew.push(entry)
+				}
+			}
+
+			const manifestEntries = [
+				...forwardDue,
+				...forwardNew,
+				...reverseDue,
+				...reverseNew,
+			]
+
+			const freshCardEntries = [...forwardNew, ...reverseNew]
 
 			const { data: reviewDay } = await supabase
 				.from('user_deck_review_state')
@@ -201,7 +293,7 @@ function ReviewPageContent() {
 					lang,
 					day_session: dayString,
 					uid: userId!,
-					manifest: allCardsForToday,
+					manifest: manifestEntries,
 				})
 				.throwOnError()
 				.select()
@@ -209,18 +301,18 @@ function ReviewPageContent() {
 
 			if (
 				!Array.isArray(reviewDay?.manifest) ||
-				reviewDay.manifest.length !== allCardsForToday.length
+				reviewDay.manifest.length !== manifestEntries.length
 			)
 				console.warn(
-					`Error creating daily session: expected manifest of length ${allCardsForToday.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
+					`Error creating daily session: expected manifest of length ${manifestEntries.length} but got back a manifest ${Array.isArray(reviewDay?.manifest) ? 'with ' + reviewDay.manifest.length + 'entries' : 'of type "' + typeof reviewDay?.manifest}".`
 				)
 
 			return {
-				countCards: allCardsForToday.length,
+				countCards: manifestEntries.length,
 				countCardsFresh: freshCards.length,
 				countCardsCreated: newCards.length,
-				countCardsAlreadyExisted: skippedDuplicates,
-				freshCardPids: freshCards,
+				countCardsAlreadyExisted: cardInserts.length - newCards.length,
+				freshCardEntries,
 				newCards,
 				reviewDay,
 			}
@@ -234,13 +326,8 @@ function ReviewPageContent() {
 				throw new Error(
 					`Error creating today's review session: server returned type "${typeof data.reviewDay.manifest}"`
 				)
-			if (
-				data.reviewDay.manifest.length === 0 ||
-				data.reviewDay.manifest.length !== allCardsForToday.length
-			)
-				throw new Error(
-					`Error creating today's review session: expected ${allCardsForToday.length} cards today, but got back a manifest of length ${data.reviewDay.manifest.length}`
-				)
+			if (data.reviewDay.manifest.length === 0)
+				throw new Error(`Error creating today's review session: empty manifest`)
 
 			// add new records to local db collections
 			data.newCards.forEach((c) => {
@@ -249,7 +336,12 @@ function ReviewPageContent() {
 			reviewDaysCollection.utils.writeInsert(
 				DailyReviewStateSchema.parse(data.reviewDay)
 			)
-			initLocalReviewState(lang, dayString, data.countCards, data.freshCardPids)
+			initLocalReviewState(
+				lang,
+				dayString,
+				data.countCards,
+				data.freshCardEntries
+			)
 			const toastMessage =
 				data.countCardsAlreadyExisted > 0 ?
 					`Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
@@ -308,16 +400,22 @@ function ReviewPageContent() {
 								<Card className="grow basis-40">
 									<CardHeader className="pb-2">
 										<CardTitle className="flex items-center gap-2 text-xl">
-											Total Cards
+											Today's Review
 										</CardTitle>
 									</CardHeader>
 									<CardContent>
 										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-orange-500">
 											<BookOpen />
-											{allCardsForToday.length}
+											{totalCardsForToday}
 										</p>
 										<p className="text-muted-foreground">
-											cards to work on today
+											{forwardCount > 0 && reverseCount > 0 ?
+												<>
+													{forwardCount} → forward · {reverseCount} ← reverse
+												</>
+											: forwardCount > 0 ?
+												<>{forwardCount} forward cards</>
+											:	<>{reverseCount} reverse cards</>}
 										</p>
 									</CardContent>
 								</Card>
@@ -345,7 +443,7 @@ function ReviewPageContent() {
 											<span>{freshCards.length}</span>
 										</p>
 										<p className="text-muted-foreground">
-											cards you haven't reviewed before
+											new phrases to learn
 										</p>
 									</CardContent>
 								</Card>
@@ -395,11 +493,11 @@ function ReviewPageContent() {
 									</CardContent>
 								</Card>
 							</div>
-							{!(meta.daily_review_goal > allCardsForToday.length) ? null : (
+							{!(meta.daily_review_goal > totalCardsForToday) ? null : (
 								<NotEnoughCards
 									lang={lang}
 									countNeeded={meta.daily_review_goal}
-									totalCards={allCardsForToday.length}
+									totalCards={totalCardsForToday}
 								/>
 							)}
 							<div className="flex basis-80 flex-row flex-wrap justify-items-stretch gap-4">
@@ -430,7 +528,7 @@ function ReviewPageContent() {
 										mutate()
 									}}
 									size="lg"
-									disabled={isPending || allCardsForToday.length === 0}
+									disabled={isPending || totalCardsForToday === 0}
 									className="grow"
 								>
 									<Rocket className="h-5 w-5" />

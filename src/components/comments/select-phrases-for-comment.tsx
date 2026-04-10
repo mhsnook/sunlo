@@ -4,7 +4,10 @@ import { Paperclip, Plus, Search } from 'lucide-react'
 import type { uuid } from '@/types/main'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
+import {
+	useLanguagePhrases,
+	useLanguagePhrasesSearch,
+} from '@/features/phrases/hooks'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
 	Dialog,
@@ -49,7 +52,12 @@ export function SelectPhrasesForComment({
 	const [phraseDialogOpen, setPhraseDialogOpen] = useState(false)
 	const [showCreateForm, setShowCreateForm] = useState(false)
 
-	const { data: filteredPhrases } = useLanguagePhrasesSearch(lang, searchText)
+	const { data: searchResults } = useLanguagePhrasesSearch(
+		lang,
+		searchText || undefined
+	)
+	const { data: allPhrases } = useLanguagePhrases(lang)
+	const filteredPhrases = searchText ? searchResults : allPhrases
 
 	const effectiveMax = maxPhrases ?? Infinity
 
@@ -165,6 +173,8 @@ export function SelectPhrasesForComment({
 													type="button"
 													disabled={isMaxReached}
 													onClick={() => handleToggle(phrase.id)}
+													data-name="phrase-picker-item"
+													data-key={phrase.id}
 													className="hover:bg-muted/50 w-full cursor-pointer rounded-lg border p-3 pb-1 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-50"
 												>
 													<PhraseTinyCard pid={phrase.id} nonInteractive />

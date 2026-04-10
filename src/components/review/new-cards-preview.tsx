@@ -9,15 +9,27 @@ import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useDeckPids } from '@/features/deck/hooks'
-import type { pids, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import type { TranslationType } from '@/features/phrases/schemas'
+import type { CardDirectionType } from '@/features/deck/schemas'
+import {
+	parseManifestEntry,
+	manifestPhraseId,
+	type ManifestEntry,
+} from '@/features/review/manifest'
 
-function PreviewCard({ pid }: { pid: uuid }) {
+function PreviewCard({
+	pid,
+	direction,
+}: {
+	pid: uuid
+	direction: CardDirectionType
+}) {
 	const { data: phrase, status } = usePhrase(pid)
 
 	if (status === 'not-found' || !phrase) return null
 
-	const isReverse = phrase.only_reverse === true
+	const isReverse = direction === 'reverse'
 
 	const phraseDisplay = (
 		<div className="text-center text-xl font-bold">
@@ -59,7 +71,11 @@ function PreviewCard({ pid }: { pid: uuid }) {
 	)
 }
 
-export function NewCardsPreview({ manifest }: { manifest: pids }) {
+export function NewCardsPreview({
+	manifest,
+}: {
+	manifest: Array<ManifestEntry>
+}) {
 	const { lang } = useParams({ strict: false })
 	const { data: deckPids } = useDeckPids(lang!)
 	const navigate = useNavigate()
@@ -69,8 +85,8 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 	}
 
 	// Show all cards the user has never reviewed before (no prior student experience)
-	const unreviewedInOrder = manifest.filter((pid) =>
-		deckPids?.unreviewed_active.includes(pid)
+	const unreviewedInOrder = manifest.filter((entry) =>
+		deckPids?.unreviewed_active.includes(manifestPhraseId(entry))
 	)
 
 	if (unreviewedInOrder.length === 0) {
@@ -137,7 +153,12 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 				</div>
 
 				<div className="bg-background sticky bottom-0 -mx-2 -mb-2 flex justify-center px-2 py-4">
-					<Button onClick={handleStartReview} size="lg" className="min-w-48">
+					<Button
+						onClick={handleStartReview}
+						size="lg"
+						className="min-w-48"
+						data-testid="start-review-from-preview-button"
+					>
 						Start Review
 					</Button>
 				</div>
@@ -160,13 +181,21 @@ export function NewCardsPreview({ manifest }: { manifest: pids }) {
 			</div>
 
 			<div className="mb-3 flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto rounded border px-2 pt-4 pb-6 shadow-inner">
-				{unreviewedInOrder.map((pid) => (
-					<PreviewCard key={pid} pid={pid} />
-				))}
+				{unreviewedInOrder.map((entry) => {
+					const { phraseId, direction } = parseManifestEntry(entry)
+					return (
+						<PreviewCard key={entry} pid={phraseId} direction={direction} />
+					)
+				})}
 			</div>
 
 			<div className="bg-muted sticky bottom-0 -mx-2 -mb-2 flex justify-center border-t px-2 py-4">
-				<Button onClick={handleStartReview} size="lg" className="min-w-48">
+				<Button
+					onClick={handleStartReview}
+					size="lg"
+					className="min-w-48"
+					data-testid="start-review-from-preview-button"
+				>
 					Start Review
 				</Button>
 			</div>

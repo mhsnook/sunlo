@@ -4899,7 +4899,8 @@ insert into
 		"updated_at",
 		"created_at",
 		"status",
-		"lang"
+		"lang",
+		"direction"
 	)
 values
 	(
@@ -4909,7 +4910,8 @@ values
 		now() - interval '27 days',
 		now() - interval '27 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4918,7 +4920,8 @@ values
 		now() - interval '27 days',
 		now() - interval '27 days',
 		'active',
-		'tam'
+		'tam',
+		'reverse'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4927,7 +4930,8 @@ values
 		now() - interval '27 days',
 		now() - interval '27 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4936,7 +4940,8 @@ values
 		now() - interval '27 days',
 		now() - interval '27 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4945,7 +4950,8 @@ values
 		now() - interval '27 days',
 		now() - interval '27 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4954,7 +4960,8 @@ values
 		now() - interval '26 days',
 		now() - interval '26 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4963,7 +4970,8 @@ values
 		now() - interval '26 days',
 		now() - interval '26 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4972,7 +4980,8 @@ values
 		now() - interval '26 days',
 		now() - interval '26 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4981,7 +4990,8 @@ values
 		now() - interval '25 days',
 		now() - interval '25 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4990,7 +5000,8 @@ values
 		now() - interval '25 days',
 		now() - interval '25 days',
 		'learned',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -4999,7 +5010,8 @@ values
 		now() - interval '25 days',
 		now() - interval '25 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5008,7 +5020,8 @@ values
 		now() - interval '24 days',
 		now() - interval '24 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5017,7 +5030,8 @@ values
 		now() - interval '24 days',
 		now() - interval '24 days',
 		'active',
-		'tam'
+		'tam',
+		'reverse'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5026,7 +5040,8 @@ values
 		now() - interval '23 days',
 		now() - interval '23 days',
 		'active',
-		'tam'
+		'tam',
+		'reverse'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5035,7 +5050,8 @@ values
 		now() - interval '23 days',
 		now() - interval '23 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5044,7 +5060,8 @@ values
 		now() - interval '23 days',
 		now() - interval '23 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5053,7 +5070,8 @@ values
 		now() - interval '20 days',
 		now() - interval '20 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5062,7 +5080,8 @@ values
 		now() - interval '20 days',
 		now() - interval '20 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5071,7 +5090,8 @@ values
 		now() - interval '20 days',
 		now() - interval '20 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5080,7 +5100,8 @@ values
 		now() - interval '19 days',
 		now() - interval '19 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5089,7 +5110,8 @@ values
 		now() - interval '18 days',
 		now() - interval '18 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5098,7 +5120,8 @@ values
 		now() - interval '18 days',
 		now() - interval '18 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5107,7 +5130,8 @@ values
 		now() - interval '17 days',
 		now() - interval '17 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5116,7 +5140,8 @@ values
 		now() - interval '17 days',
 		now() - interval '17 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5125,7 +5150,8 @@ values
 		now() - interval '17 days',
 		now() - interval '17 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5134,7 +5160,8 @@ values
 		now() - interval '17 days',
 		now() - interval '17 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5143,7 +5170,8 @@ values
 		now() - interval '16 days',
 		now() - interval '16 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5152,7 +5180,8 @@ values
 		now() - interval '16 days',
 		now() - interval '16 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5161,7 +5190,8 @@ values
 		now() - interval '15 days',
 		now() - interval '15 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5170,7 +5200,8 @@ values
 		now() - interval '15 days',
 		now() - interval '15 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5179,7 +5210,8 @@ values
 		now() - interval '14 days',
 		now() - interval '14 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5188,7 +5220,8 @@ values
 		now() - interval '14 days',
 		now() - interval '14 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5197,7 +5230,8 @@ values
 		now() - interval '14 days',
 		now() - interval '14 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5206,7 +5240,8 @@ values
 		now() - interval '13 days',
 		now() - interval '13 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5215,7 +5250,8 @@ values
 		now() - interval '13 days',
 		now() - interval '13 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5224,7 +5260,8 @@ values
 		now() - interval '13 days',
 		now() - interval '13 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5233,7 +5270,8 @@ values
 		now() - interval '12 days',
 		now() - interval '12 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5242,7 +5280,8 @@ values
 		now() - interval '12 days',
 		now() - interval '12 days',
 		'active',
-		'tam'
+		'tam',
+		'reverse'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5251,7 +5290,8 @@ values
 		now() - interval '12 days',
 		now() - interval '12 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5260,7 +5300,8 @@ values
 		now() - interval '12 days',
 		now() - interval '12 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5269,7 +5310,8 @@ values
 		now() - interval '11 days',
 		now() - interval '11 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5278,7 +5320,8 @@ values
 		now() - interval '11 days',
 		now() - interval '11 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5287,7 +5330,8 @@ values
 		now() - interval '11 days',
 		now() - interval '11 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5296,7 +5340,8 @@ values
 		now() - interval '11 days',
 		now() - interval '11 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5305,7 +5350,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5314,7 +5360,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5323,7 +5370,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'tam'
+		'tam',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5332,7 +5380,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
@@ -5341,7 +5390,8 @@ values
 		now() - interval '1 days',
 		now() - interval '1 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	-- Hindi cards for second test user (webkit tests)
 	(
@@ -5351,7 +5401,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -5360,7 +5411,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	(
 		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
@@ -5369,7 +5421,8 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'hin'
+		'hin',
+		'forward'
 	),
 	-- Kannada cards for sunloapp@gmail.com (cf1f69ce)
 	(
@@ -5379,7 +5432,8 @@ values
 		now() - interval '12 days',
 		now() - interval '12 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5388,7 +5442,8 @@ values
 		now() - interval '11 days',
 		now() - interval '11 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
 	),
 	(
 		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
@@ -5397,7 +5452,370 @@ values
 		now() - interval '10 days',
 		now() - interval '10 days',
 		'active',
-		'kan'
+		'kan',
+		'forward'
+	);
+
+-- Reverse card copies for all forward cards (new cards, no prior review history)
+insert into
+	"public"."user_card" ("uid", "phrase_id", "lang", "status", "direction")
+values
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'12536684-0b35-4aff-80cd-f4ce56c866b6',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'90108f59-7968-457f-9744-2e3b44e980dd',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'170f5fd4-58f8-4b05-aba4-23522f35800f',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'f1f5234e-0426-44f5-a007-b67329a70a81',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'5b5cc7ec-702e-4dc1-a568-0dcc660c25bb',
+		'hin',
+		'learned',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ded8028a-493f-438f-8b72-316c769a66b9',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'1f6bac22-b32a-4b77-9857-d2de02b538de',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'f6b69f3b-09b9-41a7-a9f2-255da0697015',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'43a760da-65af-400e-b3f0-fbed7a6b338e',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'0823546b-d240-4f14-9d51-8dfae5fcddc3',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a2777e37-b02e-4d8b-9a39-1a9ad56af4f2',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ddd650c2-00e9-43f1-8624-5a97282087aa',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7aac8e8f-4de1-41a0-b910-a2c9b80e47f9',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'fdd62764-2438-42bb-af7f-9eb378082899',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'f878e60f-9647-4728-a368-fc8681b0acbb',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'44bcd224-b4b3-46ce-b260-2136712b0907',
+		'tam',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'90108f59-7968-457f-9744-2e3b44e980dd',
+		'hin',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
+		'kan',
+		'active',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
+		'kan',
+		'active',
+		'reverse'
 	);
 
 --
@@ -5444,7 +5862,8 @@ insert into
 		"day_session",
 		"lang",
 		"phrase_id",
-		"day_first_review"
+		"day_first_review",
+		"direction"
 	)
 values
 	(
@@ -5459,7 +5878,8 @@ values
 		(current_date - 4 + interval '2 minute' - interval '4 hour')::date,
 		'tam',
 		'1f6bac22-b32a-4b77-9857-d2de02b538de',
-		true
+		true,
+		'forward'
 	),
 	(
 		'7b837436-f8e8-4459-85d1-af1366f03887',
@@ -5473,7 +5893,8 @@ values
 		(current_date - 4 + interval '3 minute' - interval '4 hour')::date,
 		'tam',
 		'12536684-0b35-4aff-80cd-f4ce56c866b6',
-		true
+		true,
+		'forward'
 	),
 	(
 		'd6355a75-8842-47ec-8417-262f060c1309',
@@ -5487,7 +5908,8 @@ values
 		(current_date - 4 + interval '4 minute' - interval '4 hour')::date,
 		'tam',
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
-		true
+		true,
+		'forward'
 	),
 	(
 		'9e587800-834f-40c0-ab2e-dd08a2044d04',
@@ -5501,7 +5923,8 @@ values
 		(current_date - 4 + interval '5 minute' - interval '4 hour')::date,
 		'tam',
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'e0f40ad4-62d8-478d-80ee-09b98263d670',
@@ -5515,7 +5938,8 @@ values
 		(current_date - 4 + interval '6 minute' - interval '4 hour')::date,
 		'tam',
 		'24a18665-a343-4960-99fc-7e5ed54accb0',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'ee22e0bf-5826-43a5-8b60-2e2220417ef9',
@@ -5529,7 +5953,8 @@ values
 		(current_date - 4 + interval '7 minute' - interval '4 hour')::date,
 		'tam',
 		'295fbba3-892c-43f9-84ba-85cf15fd28a5',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'd51d56ca-9e9d-452c-826a-0e00b46dac91',
@@ -5543,7 +5968,8 @@ values
 		(current_date - 4 + interval '8 minute' - interval '4 hour')::date,
 		'tam',
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'2b341982-61fd-4a7f-9c2d-48150ddba547',
@@ -5557,7 +5983,8 @@ values
 		(current_date - 4 + interval '9 minute' - interval '4 hour')::date,
 		'tam',
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
-		true
+		true,
+		'forward'
 	),
 	(
 		'df1878c1-c5a3-419a-84cc-31f71f6a46cb',
@@ -5571,7 +5998,8 @@ values
 		(current_date - 4 + interval '10 minute' - interval '4 hour')::date,
 		'tam',
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
-		true
+		true,
+		'forward'
 	),
 	(
 		'f5eda65e-1d59-49b4-aa38-651640631b29',
@@ -5585,7 +6013,8 @@ values
 		(current_date - 4 + interval '11 minute' - interval '4 hour')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'14b26464-4442-48ad-b614-ca82209d0b97',
@@ -5599,7 +6028,8 @@ values
 		(current_date - 4 + interval '12 minute' - interval '4 hour')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'8334fd09-6ae8-472e-8a64-9603d6832ec7',
@@ -5613,7 +6043,8 @@ values
 		(current_date - 4 + interval '13 minute' - interval '4 hour')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'0627dafe-bee7-4e8a-8ab8-e77abc2d54e0',
@@ -5627,7 +6058,8 @@ values
 		(current_date - 4 + interval '14 minute' - interval '4 hour')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'218dbc64-6574-40c0-9ca3-a69b48712d1e',
@@ -5641,7 +6073,8 @@ values
 		(current_date - 4 + interval '15 minute' - interval '4 hour')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'36109500-45e0-4682-9db1-dac8e3a93bb4',
@@ -5655,7 +6088,8 @@ values
 		(current_date - 4 + interval '16 minute' - interval '4 hour')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'049cdf96-8267-4fd7-9d58-1bb298ef21f3',
@@ -5669,7 +6103,8 @@ values
 		(current_date - 4 + interval '17 minute' - interval '4 hour')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'e34bfe2e-9762-407f-b796-299a69dd725a',
@@ -5683,7 +6118,8 @@ values
 		(current_date - 4 + interval '18 minute' - interval '4 hour')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'deb887de-e869-4615-94d2-0acdafadaea6',
@@ -5697,7 +6133,8 @@ values
 		(current_date - 4 + interval '19 minute' - interval '4 hour')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'b21dfcb6-db0c-44c8-a7c3-ad8d3fb4921f',
@@ -5711,7 +6148,8 @@ values
 		(current_date - 4 + interval '20 minute' - interval '4 hour')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'2ea384a4-007a-482c-adcb-9e2f855c4372',
@@ -5725,7 +6163,8 @@ values
 		(current_date - 4 + interval '21 minute' - interval '4 hour')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'b2e60078-4bad-4a8d-a390-ef240ad908c6',
@@ -5739,7 +6178,8 @@ values
 		(current_date - 4 + interval '22 minute' - interval '4 hour')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'0a73db77-687d-4987-9d8f-af9a22b478a1',
@@ -5753,7 +6193,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'fd535752-d602-4ab8-8656-9e11692f30fc',
-		true
+		true,
+		'forward'
 	),
 	(
 		'9c97bcd0-c5c9-40bb-aff1-78ce3b1d024d',
@@ -5767,7 +6208,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
-		true
+		true,
+		'forward'
 	),
 	(
 		'2e4f7ec0-b795-4080-aa90-45cdbce470dc',
@@ -5781,7 +6223,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'93d5d050-e9af-4652-9c76-9dc2a232640a',
-		true
+		true,
+		'forward'
 	),
 	(
 		'cafb615a-19fb-4055-995d-746bd31b86f5',
@@ -5795,7 +6238,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'fa26ba78-a7a3-49f8-8516-034424477dec',
-		true
+		true,
+		'forward'
 	),
 	(
 		'5f34841d-77fa-4511-986b-313031a8002d',
@@ -5809,7 +6253,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'eb144ddf-65ff-47ad-90ec-01c9d9b0fa8b',
@@ -5823,7 +6268,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'ed70550e-da8a-44dc-8bfd-69965375b7f9',
-		true
+		true,
+		'reverse'
 	),
 	(
 		'46089470-856a-4b47-b797-fd93cc81d999',
@@ -5837,7 +6283,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
-		true
+		true,
+		'forward'
 	),
 	(
 		'61032c94-65e0-45ab-a60a-79ab00693dd9',
@@ -5851,7 +6298,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'b2736292-1137-41db-a453-ad203726d8c5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'a8c23998-bbbc-4b3f-9401-72e9e1e00374',
@@ -5865,7 +6313,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
-		true
+		true,
+		'forward'
 	),
 	(
 		'4ca014e2-87c6-4939-a358-476ea8f57781',
@@ -5879,7 +6328,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
-		true
+		true,
+		'forward'
 	),
 	(
 		'43881316-0867-43fd-a4df-f8a7c315066b',
@@ -5893,7 +6343,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
-		true
+		true,
+		'forward'
 	),
 	(
 		'15101dbe-876f-42a2-8771-0a98c17819ad',
@@ -5907,7 +6358,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
-		true
+		true,
+		'forward'
 	),
 	(
 		'34eb7ece-d6e1-4e8f-a677-225019cf942b',
@@ -5921,7 +6373,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'49066ea2-e608-42ab-8817-1f20b0eada03',
-		true
+		true,
+		'forward'
 	),
 	(
 		'55e9dde7-43a1-40c3-b898-d035b8e92134',
@@ -5935,7 +6388,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
-		true
+		true,
+		'forward'
 	),
 	(
 		'b96b1427-1172-4548-a78f-80a5eba33c25',
@@ -5949,7 +6403,8 @@ values
 		(current_date - 4 + interval '29 hour' - interval '4 hour')::date,
 		'tam',
 		'44bcd224-b4b3-46ce-b260-2136712b0907',
-		true
+		true,
+		'forward'
 	),
 	-- Kannada card reviews for sunloapp@gmail.com (cf1f69ce)
 	(
@@ -5964,7 +6419,8 @@ values
 		(current_date - 4 + interval '35 minute' - interval '4 hour')::date,
 		'kan',
 		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
-		true
+		true,
+		'forward'
 	),
 	(
 		'e2f3a4b5-2222-4333-a444-555566667777',
@@ -5978,7 +6434,8 @@ values
 		(current_date - 4 + interval '36 minute' - interval '4 hour')::date,
 		'kan',
 		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
-		true
+		true,
+		'forward'
 	),
 	(
 		'f3a4b5c6-3333-4444-a555-666677778888',
@@ -5992,7 +6449,8 @@ values
 		(current_date - 4 + interval '37 minute' - interval '4 hour')::date,
 		'kan',
 		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
-		true
+		true,
+		'forward'
 	);
 
 --

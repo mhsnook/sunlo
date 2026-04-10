@@ -1,6 +1,12 @@
 import { Link } from '@tanstack/react-router'
 
-import { Archive, CircleCheck, Rocket, Logs, TableProperties } from 'lucide-react'
+import {
+	Archive,
+	CircleCheck,
+	Rocket,
+	Logs,
+	TableProperties,
+} from 'lucide-react'
 import {
 	Card,
 	CardContent,
@@ -16,6 +22,7 @@ import { DeckStatsBadges } from '@/components/stats-badges'
 import { getThemeCss } from '@/lib/deck-themes'
 import { DeckMetaType } from '@/features/deck/schemas'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
+import { useDeckPids } from '@/features/deck/hooks'
 
 function ReviewButton({ lang }: { lang: string }) {
 	const remaining = useActiveReviewRemaining(lang, todayString())
@@ -27,7 +34,9 @@ function ReviewButton({ lang }: { lang: string }) {
 			params={{ lang }}
 			aria-label={isDone ? 'Review complete' : 'Start review'}
 		>
-			{isDone ? <CircleCheck /> : <Rocket />}
+			{isDone ?
+				<CircleCheck />
+			:	<Rocket />}
 		</Link>
 	)
 }
@@ -56,8 +65,7 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 								<Archive />
 								Archived
 							</Badge>
-						:	<ReviewButton lang={deck.lang} />
-						}
+						:	<ReviewButton lang={deck.lang} />}
 					</span>
 				</CardHeader>
 
@@ -101,18 +109,22 @@ export function DeckCard({ deck }: { deck: DeckMetaType }) {
 						}
 					</div>
 					{/* Subtle stats footer */}
-					<div className="text-muted-foreground border-t pt-2 text-xs">
-						{deck.cards_active + deck.cards_learned} total cards •{' '}
-						{!deck.cards_learned ?
-							`0 mastered`
-						:	`${(
-								(100 * deck.cards_learned) /
-								(deck.cards_learned + deck.cards_active)
-							).toFixed(0)} % mastered`
-						}
-					</div>
+					<DeckFooterStats lang={deck.lang} />
 				</CardFooter>
 			</Card>
+		</div>
+	)
+}
+
+function DeckFooterStats({ lang }: { lang: string }) {
+	const { data: pids } = useDeckPids(lang)
+	if (!pids) return null
+	const total = pids.all.length
+	const inactive = pids.inactive.length
+	const pct = total > 0 ? ((100 * inactive) / total).toFixed(0) : '0'
+	return (
+		<div className="text-muted-foreground border-t pt-2 text-xs">
+			{total} total phrases • {!inactive ? '0 mastered' : `${pct}% mastered`}
 		</div>
 	)
 }

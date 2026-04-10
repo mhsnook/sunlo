@@ -18,7 +18,7 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 				{deckPids?.today_active ?
 					<Badge variant="outline">
 						<Hourglass />{' '}
-						{deckPids.today_active.length + deckMeta.daily_review_goal} cards
+						{deckPids.today_active.length + deckMeta.daily_review_goal} phrases
 						for today
 					</Badge>
 				:	null}
@@ -34,7 +34,7 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 				}
 				<Badge variant="outline">
 					<WalletCards />
-					<span>{deckMeta.cards_active} active cards</span>
+					<span>{deckPids.active.length} active phrases</span>
 				</Badge>
 
 				{deckMeta.most_recent_review_at ?

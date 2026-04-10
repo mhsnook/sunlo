@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
-import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
+import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { toastError } from '@/components/ui/sonner'
 import {
 	getIndexOfNextAgainCard,
@@ -11,7 +11,6 @@ import {
 	useReviewLang,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
-import { mapArray } from '@/lib/utils'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, useLiveQuery } from '@tanstack/react-db'
@@ -22,6 +21,8 @@ import {
 	type DailyReviewStateType,
 } from './schemas'
 import { calculateFSRS, type Score } from './fsrs'
+import type { CardDirectionType } from '@/features/deck/schemas'
+import { toManifestEntry, type ManifestEntry } from './manifest'
 
 /*
 	null: not yet initialised (zustand store only)
@@ -33,12 +34,13 @@ import { calculateFSRS, type Score } from './fsrs'
 */
 export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
-	[key: uuid]: CardReviewType
+	[key: string]: CardReviewType
 }
 
 interface PostReviewInput {
 	phrase_id: uuid
 	lang: string
+	direction: CardDirectionType
 	score: Score
 	day_session: string
 	day_first_review: boolean
@@ -49,6 +51,7 @@ const postReview = async (submitData: PostReviewInput) => {
 	const {
 		phrase_id,
 		lang,
+		direction,
 		score,
 		day_session,
 		day_first_review,
@@ -67,6 +70,7 @@ const postReview = async (submitData: PostReviewInput) => {
 		.insert({
 			phrase_id,
 			lang,
+			direction,
 			score,
 			day_session,
 			day_first_review,
@@ -115,7 +119,7 @@ const updateReview = async (submitData: UpdateReviewInput) => {
 
 function mapToStats(
 	reviewsMap: ReviewsMap,
-	manifest: pids,
+	manifest: Array<ManifestEntry>,
 	allReviews: Array<CardReviewType> = []
 ) {
 	// First-try reviews: day_first_review=true reviews only
@@ -156,6 +160,16 @@ function mapToStats(
 	}
 }
 
+/** Build a ReviewsMap keyed by manifest entry (phrase_id:direction) */
+function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
+	const map: ReviewsMap = {}
+	// Iterate in chronological order so the last (newest) review wins per key
+	for (const r of reviews) {
+		map[toManifestEntry(r.phrase_id, r.direction)] = r
+	}
+	return map
+}
+
 export function useReviewsToday(lang: string, day_session: string) {
 	const reviewsQuery = useLiveQuery(
 		(q) =>
@@ -164,8 +178,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 				.where(({ review }) =>
 					and(eq(review.lang, lang), eq(day_session, review.day_session))
 				)
-				// Order by created_at ASC so mapArray picks the NEWEST review for each phrase
-				// (mapArray assigns last item for duplicates, so newest must come last)
+				// Order by created_at ASC so newest review wins per key
 				.orderBy(({ review }) => review.created_at, 'asc'),
 		[lang, day_session]
 	)
@@ -175,7 +188,7 @@ export function useReviewsToday(lang: string, day_session: string) {
 		data: {
 			...reviewDayQuery.data,
 			reviews: reviewsQuery.data,
-			reviewsMap: mapArray(reviewsQuery.data, 'phrase_id'),
+			reviewsMap: buildReviewsMap(reviewsQuery.data),
 		},
 	}
 }
@@ -219,43 +232,52 @@ export function useReviewDay(
 
 export function useOneReviewToday(
 	day_session: string,
-	pid: uuid
+	pid: uuid,
+	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType> {
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ review: cardReviewsCollection })
 				.where(({ review }) =>
-					and(eq(review.day_session, day_session), eq(review.phrase_id, pid))
+					and(
+						eq(review.day_session, day_session),
+						eq(review.phrase_id, pid),
+						eq(review.direction, direction)
+					)
 				)
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[day_session, pid]
+		[day_session, pid, direction]
 	)
 }
 
 /**
- * Get the most recent review for a phrase (any day, not just today)
+ * Get the most recent review for a phrase+direction (any day, not just today)
  * Used for FSRS calculations which need the previous difficulty/stability
  */
 export function useLatestReviewForPhrase(
-	pid: uuid
+	pid: uuid,
+	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType> {
 	return useLiveQuery(
 		(q) =>
 			q
 				.from({ review: cardReviewsCollection })
-				.where(({ review }) => eq(review.phrase_id, pid))
+				.where(({ review }) =>
+					and(eq(review.phrase_id, pid), eq(review.direction, direction))
+				)
 				.orderBy(({ review }) => review.created_at, 'desc')
 				.limit(1)
 				.findOne(),
-		[pid]
+		[pid, direction]
 	)
 }
 
 export function useReviewMutation(
 	pid: uuid,
+	direction: CardDirectionType,
 	day_session: string,
 	resetRevealCard: () => void,
 	stage: number,
@@ -273,11 +295,12 @@ export function useReviewMutation(
 		PostgrestError,
 		{ score: number }
 	>({
-		mutationKey: ['user', 'review', day_session, pid],
+		mutationKey: ['user', 'review', day_session, pid, direction],
 		mutationFn: async ({ score }: { score: number }) => {
 			console.log(`Entering the review mutation:`, {
 				day_session,
 				pid,
+				direction,
 				score,
 				prevDataToday,
 				latestReview,
@@ -310,13 +333,18 @@ export function useReviewMutation(
 					}
 				}
 				// First review for this card today
-				console.log(`Phase 1-2: Creating first review`, { pid, score })
+				console.log(`Phase 1-2: Creating first review`, {
+					pid,
+					direction,
+					score,
+				})
 				return {
 					action: 'insert',
 					row: await postReview({
 						score: score as Score,
 						phrase_id: pid,
 						lang,
+						direction,
 						day_session,
 						day_first_review: true,
 						previousReview: latestReview,
@@ -344,13 +372,14 @@ export function useReviewMutation(
 			}
 
 			// First phase-3 review for this card
-			console.log(`Phase 3: Creating phase-3 review`, { pid, score })
+			console.log(`Phase 3: Creating phase-3 review`, { pid, direction, score })
 			return {
 				action: 'insert',
 				row: await postReview({
 					score: score as Score,
 					phrase_id: pid,
 					lang,
+					direction,
 					day_session,
 					day_first_review: false,
 					previousReview: undefined, // Don't use FSRS for phase-3 reviews
@@ -371,8 +400,13 @@ export function useReviewMutation(
 			}
 
 			// Keep cardsCollection in sync so manage-deck sees fresh data
+			const existingCard = cardsCollection.toArray.find(
+				(c) =>
+					c.phrase_id === data.row.phrase_id &&
+					c.direction === data.row.direction
+			)
 			cardsCollection.utils.writeUpdate({
-				phrase_id: data.row.phrase_id,
+				id: existingCard!.id,
 				last_reviewed_at: data.row.created_at,
 				difficulty: data.row.difficulty,
 				stability: data.row.stability,
@@ -394,15 +428,18 @@ export function useReviewMutation(
 }
 
 export const useOneCardReviews = (
-	pid: uuid
+	pid: uuid,
+	direction: CardDirectionType = 'forward'
 ): UseLiveQueryResult<CardReviewType[]> =>
 	useLiveQuery(
 		(q) =>
 			q
 				.from({ review: cardReviewsCollection })
-				.where(({ review }) => eq(review.phrase_id, pid))
+				.where(({ review }) =>
+					and(eq(review.phrase_id, pid), eq(review.direction, direction))
+				)
 				.orderBy(({ review }) => review.created_at, 'asc'),
-		[pid]
+		[pid, direction]
 	)
 
 /**

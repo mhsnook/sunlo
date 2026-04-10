@@ -3,8 +3,8 @@ import { createStore } from 'zustand'
 import { useStore } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-import type { pids } from '@/types/main'
 import { type ReviewsMap, type ReviewStages, useReviewsToday } from './hooks'
+import type { ManifestEntry } from './manifest'
 
 const DEFAULT_PROPS = {
 	lang: '',
@@ -12,7 +12,7 @@ const DEFAULT_PROPS = {
 	countCards: -1,
 	stage: null as ReviewStages,
 	currentCardIndex: -1,
-	newCardPids: null as pids | null,
+	newCardEntries: null as Array<ManifestEntry> | null,
 }
 
 type ReviewActions = {
@@ -28,7 +28,7 @@ type ReviewActions = {
 		lang: string,
 		dayString: string,
 		countCards: number,
-		newCardPids?: pids | null,
+		newCardEntries?: Array<ManifestEntry> | null,
 		stage?: ReviewStages,
 		index?: number
 	) => void
@@ -80,7 +80,7 @@ export function createReviewStore(lang: string, dayString: string) {
 							lang: string,
 							dayString: string,
 							countCards: number,
-							newCardPids: pids | null = null,
+							newCardEntries: Array<ManifestEntry> | null = null,
 							stage: ReviewStages = 1,
 							index: number = 0
 						) =>
@@ -96,7 +96,7 @@ export function createReviewStore(lang: string, dayString: string) {
 									lang,
 									dayString,
 									countCards,
-									newCardPids,
+									newCardEntries,
 									stage,
 									currentCardIndex: index,
 								}
@@ -111,7 +111,7 @@ export function createReviewStore(lang: string, dayString: string) {
 						countCards: state.countCards,
 						stage: state.stage,
 						currentCardIndex: state.currentCardIndex,
-						newCardPids: state.newCardPids,
+						newCardEntries: state.newCardEntries,
 					}),
 				}
 			)
@@ -140,7 +140,7 @@ export function useNextValid(): number {
 }
 
 export function getIndexOfNextUnreviewedCard(
-	manifest: pids,
+	manifest: Array<string>,
 	reviewsMap: ReviewsMap,
 	currentCardIndex: number
 ) {
@@ -157,7 +157,7 @@ export function getIndexOfNextUnreviewedCard(
 }
 
 export function getIndexOfNextAgainCard(
-	manifest: pids,
+	manifest: Array<string>,
 	reviewsMap: ReviewsMap,
 	currentCardIndex: number
 ) {
@@ -195,6 +195,6 @@ export const useReviewActions = (): ReviewActions => {
 	return useReviewStore((state) => state.actions)
 }
 
-export const useNewCardPids = (): pids | null => {
-	return useReviewStore((state) => state.newCardPids)
+export const useNewCardEntries = (): Array<ManifestEntry> | null => {
+	return useReviewStore((state) => state.newCardEntries)
 }

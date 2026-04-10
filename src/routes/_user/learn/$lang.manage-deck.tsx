@@ -37,9 +37,19 @@ export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
 
-type CardWithPhrase = CardMetaType & {
-	phrase_text: string
+type PhraseRow = {
 	phrase_id: string
+	phrase_text: string
+	/** Most active status across both directions */
+	status: CardMetaType['status']
+	/** Soonest due date across both directions */
+	last_reviewed_at: string | null
+	/** Average difficulty across reviewed directions */
+	difficulty: number | null
+	/** Lowest stability across directions (drives due date) */
+	stability: number | null
+	/** All underlying card records for this phrase */
+	cards: Array<CardMetaType>
 }
 
 type SortField = 'phrase' | 'status' | 'last_reviewed' | 'difficulty'
@@ -66,18 +76,23 @@ const statusBgColors = {
 
 const DEFAULT_RETENTION = 0.9
 
-function wasReviewedToday(card: CardMetaType): boolean {
-	if (!card.last_reviewed_at) return false
-	return sessionDaysDiff(card.last_reviewed_at, new Date()) === 0
+type DueCheckable = Pick<
+	PhraseRow,
+	'last_reviewed_at' | 'stability' | 'difficulty'
+>
+
+function wasReviewedToday(item: DueCheckable): boolean {
+	if (!item.last_reviewed_at) return false
+	return sessionDaysDiff(item.last_reviewed_at, new Date()) === 0
 }
 
-function getDueInfo(card: CardMetaType): {
+function getDueInfo(item: DueCheckable): {
 	label: string
 	color: string
 } | null {
-	if (!card.last_reviewed_at || card.stability == null) return null
-	const interval = calculateInterval(DEFAULT_RETENTION, card.stability)
-	const lastReview = new Date(card.last_reviewed_at)
+	if (!item.last_reviewed_at || item.stability == null) return null
+	const interval = calculateInterval(DEFAULT_RETENTION, item.stability)
+	const lastReview = new Date(item.last_reviewed_at)
 	const dueDate = new Date(lastReview)
 	dueDate.setDate(dueDate.getDate() + Math.round(interval))
 	const daysUntilDue = sessionDaysDiff(new Date(), dueDate)
@@ -118,10 +133,7 @@ function ManageDeckPage() {
 		<Card style={style} data-testid="manage-deck-page">
 			<CardHeader>
 				<CardTitle>Manage Deck</CardTitle>
-				<p className="text-muted-foreground text-sm">
-					{meta.cards_active} active, {meta.cards_learned} learned,{' '}
-					{meta.cards_skipped} skipped
-				</p>
+				<ManageDeckSummary lang={lang} />
 			</CardHeader>
 			<CardContent>
 				<ManageDeckTable lang={lang} />
@@ -144,22 +156,66 @@ function useCardData(lang: string) {
 	const [sortDir, setSortDir] = useState<SortDir>('desc')
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
 
-	const cardsWithPhrases: Array<CardWithPhrase> = useMemo(() => {
+	// Group cards by phrase, picking the most relevant values
+	const phraseRows: Array<PhraseRow> = useMemo(() => {
 		if (!cards || !phrases) return []
 		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
-		return cards
-			.map((card) => {
-				const phrase = phraseMap.get(card.phrase_id)
+
+		// Group cards by phrase_id
+		const grouped = new Map<string, Array<CardMetaType>>()
+		for (const card of cards) {
+			const arr = grouped.get(card.phrase_id)
+			if (arr) arr.push(card)
+			else grouped.set(card.phrase_id, [card])
+		}
+
+		const statusPriority = { active: 0, learned: 1, skipped: 2 } as const
+
+		return [...grouped.entries()]
+			.map(([pid, dirCards]) => {
+				const phrase = phraseMap.get(pid)
+				// Pick the most active status (active > learned > skipped)
+				const status = dirCards.reduce(
+					(best, c) =>
+						statusPriority[c.status] < statusPriority[best] ? c.status : best,
+					dirCards[0].status
+				)
+				// Soonest last_reviewed_at (most recently reviewed direction)
+				const reviewed = dirCards
+					.map((c) => c.last_reviewed_at)
+					.filter(Boolean)
+					.toSorted()
+					.at(-1) as string | null
+				// Average difficulty of reviewed directions
+				const diffs = dirCards
+					.map((c) => c.difficulty)
+					.filter((d): d is number => d != null)
+				const difficulty =
+					diffs.length > 0 ?
+						diffs.reduce((a, b) => a + b, 0) / diffs.length
+					:	null
+				// Lowest stability (most urgent card drives due date)
+				const stabilities = dirCards
+					.map((c) => c.stability)
+					.filter((s): s is number => s != null)
+				const stability =
+					stabilities.length > 0 ? Math.min(...stabilities) : null
+
 				return {
-					...card,
+					phrase_id: pid,
 					phrase_text: phrase?.text ?? '(unknown phrase)',
+					status,
+					last_reviewed_at: reviewed,
+					difficulty,
+					stability,
+					cards: dirCards,
 				}
 			})
-			.filter((c) => statusFilter === 'all' || c.status === statusFilter)
+			.filter((r) => statusFilter === 'all' || r.status === statusFilter)
 	}, [cards, phrases, statusFilter])
 
 	const sortedCards = useMemo(() => {
-		return [...cardsWithPhrases].toSorted((a, b) => {
+		return [...phraseRows].toSorted((a, b) => {
 			const dir = sortDir === 'asc' ? 1 : -1
 			switch (sortField) {
 				case 'phrase':
@@ -184,7 +240,7 @@ function useCardData(lang: string) {
 					return 0
 			}
 		})
-	}, [cardsWithPhrases, sortField, sortDir])
+	}, [phraseRows, sortField, sortDir])
 
 	const handleSort = (field: SortField) => {
 		if (sortField === field) {
@@ -195,8 +251,38 @@ function useCardData(lang: string) {
 		}
 	}
 
+	// Unfiltered phrase rows for filter counts
+	const allPhraseRows: Array<PhraseRow> = useMemo(() => {
+		if (!cards || !phrases) return []
+		const phraseMap = new Map(phrases.map((p) => [p.id, p]))
+		const grouped = new Map<string, Array<CardMetaType>>()
+		for (const card of cards) {
+			const arr = grouped.get(card.phrase_id)
+			if (arr) arr.push(card)
+			else grouped.set(card.phrase_id, [card])
+		}
+		const statusPriority = { active: 0, learned: 1, skipped: 2 } as const
+		return [...grouped.entries()].map(([pid, dirCards]) => {
+			const phrase = phraseMap.get(pid)
+			const status = dirCards.reduce(
+				(best, c) =>
+					statusPriority[c.status] < statusPriority[best] ? c.status : best,
+				dirCards[0].status
+			)
+			return {
+				phrase_id: pid,
+				phrase_text: phrase?.text ?? '(unknown phrase)',
+				status,
+				last_reviewed_at: null,
+				difficulty: null,
+				stability: null,
+				cards: dirCards,
+			}
+		})
+	}, [cards, phrases])
+
 	return {
-		cards,
+		allPhraseRows,
 		sortedCards,
 		isLoading: cardsLoading || phrasesLoading,
 		sortField,
@@ -207,9 +293,31 @@ function useCardData(lang: string) {
 	}
 }
 
+function ManageDeckSummary({ lang }: { lang: string }) {
+	const { data: cards } = useDeckCards(lang)
+	const phraseIds = new Set((cards ?? []).map((c) => c.phrase_id))
+	const byStatus = { active: 0, learned: 0, skipped: 0 }
+	const statusPriority = { active: 0, learned: 1, skipped: 2 } as const
+	const phraseStatus = new Map<string, CardMetaType['status']>()
+	for (const card of cards ?? []) {
+		const prev = phraseStatus.get(card.phrase_id)
+		if (!prev || statusPriority[card.status] < statusPriority[prev]) {
+			phraseStatus.set(card.phrase_id, card.status)
+		}
+	}
+	for (const status of phraseStatus.values()) byStatus[status]++
+
+	return (
+		<p className="text-muted-foreground text-sm">
+			{phraseIds.size} phrases — {byStatus.active} active, {byStatus.learned}{' '}
+			learned, {byStatus.skipped} skipped
+		</p>
+	)
+}
+
 function ManageDeckTable({ lang }: { lang: string }) {
 	const {
-		cards,
+		allPhraseRows,
 		sortedCards,
 		isLoading,
 		sortField,
@@ -222,15 +330,15 @@ function ManageDeckTable({ lang }: { lang: string }) {
 	if (isLoading) {
 		return (
 			<div className="text-muted-foreground py-12 text-center text-sm">
-				Loading your cards...
+				Loading your phrases...
 			</div>
 		)
 	}
 
-	if (!cards?.length) {
+	if (!allPhraseRows.length) {
 		return (
 			<div className="text-muted-foreground py-12 text-center text-sm">
-				No cards in your deck yet.
+				No phrases in your deck yet.
 			</div>
 		)
 	}
@@ -249,8 +357,8 @@ function ManageDeckTable({ lang }: { lang: string }) {
 						data-testid={`filter-${filter}`}
 					>
 						{filter === 'all' ?
-							`All (${cards.length})`
-						:	`${filter.charAt(0).toUpperCase() + filter.slice(1)} (${cards.filter((c) => c.status === filter).length})`
+							`All (${allPhraseRows.length})`
+						:	`${filter.charAt(0).toUpperCase() + filter.slice(1)} (${allPhraseRows.filter((r) => r.status === filter).length})`
 						}
 					</Button>
 				))}
@@ -258,8 +366,8 @@ function ManageDeckTable({ lang }: { lang: string }) {
 
 			{/* Mobile: tap-to-expand list */}
 			<div className="space-y-1 @md:hidden">
-				{sortedCards.map((card) => (
-					<MobileCardRow key={card.id} card={card} lang={lang} />
+				{sortedCards.map((row) => (
+					<MobileCardRow key={row.phrase_id} row={row} lang={lang} />
 				))}
 			</div>
 
@@ -301,15 +409,15 @@ function ManageDeckTable({ lang }: { lang: string }) {
 						</tr>
 					</thead>
 					<tbody>
-						{sortedCards.map((card) => (
-							<DesktopCardRow key={card.id} card={card} lang={lang} />
+						{sortedCards.map((row) => (
+							<DesktopCardRow key={row.phrase_id} row={row} lang={lang} />
 						))}
 					</tbody>
 				</table>
 			</div>
 
 			<p className="text-muted-foreground text-xs">
-				Showing {sortedCards.length} of {cards.length} cards
+				Showing {sortedCards.length} of {allPhraseRows.length} phrases
 			</p>
 		</div>
 	)
@@ -317,15 +425,15 @@ function ManageDeckTable({ lang }: { lang: string }) {
 
 /* ── Mobile: expandable card row ─────────────────────────────── */
 
-function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
+function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 	const [open, setOpen] = useState(false)
-	const StatusIconComponent = statusIcon[card.status]
-	const dueInfo = getDueInfo(card)
-	const reviewedToday = wasReviewedToday(card)
+	const StatusIconComponent = statusIcon[row.status]
+	const dueInfo = getDueInfo(row)
+	const reviewedToday = wasReviewedToday(row)
 	const difficultyDisplay =
-		card.difficulty != null ? Math.round(card.difficulty) : null
+		row.difficulty != null ? Math.round(row.difficulty) : null
 
-	const isSkipped = card.status === 'skipped'
+	const isSkipped = row.status === 'skipped'
 
 	return (
 		<div
@@ -342,10 +450,10 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 				className="flex w-full items-center gap-3 px-3 py-2.5 text-start"
 			>
 				<StatusIconComponent
-					className={cn('size-4 shrink-0', statusColors[card.status])}
+					className={cn('size-4 shrink-0', statusColors[row.status])}
 				/>
 				<span className="min-w-0 flex-1 text-sm font-medium">
-					{card.phrase_text}
+					{row.phrase_text}
 				</span>
 				<ChevronRight
 					className={cn(
@@ -365,11 +473,11 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 							<span
 								className={cn(
 									'inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-medium',
-									statusColors[card.status],
-									statusBgColors[card.status]
+									statusColors[row.status],
+									statusBgColors[row.status]
 								)}
 							>
-								{card.status}
+								{row.status}
 							</span>
 						</span>
 						<span className="text-muted-foreground">
@@ -400,10 +508,10 @@ function MobileCardRow({ card, lang }: { card: CardWithPhrase; lang: string }) {
 
 					{/* Actions */}
 					<div className="flex flex-wrap items-center gap-2">
-						<CardStatusActions card={card} />
+						<CardStatusActions row={row} />
 						<Link
 							to="/learn/$lang/phrases/$id"
-							params={{ lang, id: card.phrase_id }}
+							params={{ lang, id: row.phrase_id }}
 							className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-xs transition-colors"
 						>
 							<ExternalLink className="size-3" />
@@ -459,20 +567,14 @@ function SortableHeader({
 
 /* ── Desktop: table row ──────────────────────────────────────── */
 
-function DesktopCardRow({
-	card,
-	lang,
-}: {
-	card: CardWithPhrase
-	lang: string
-}) {
-	const StatusIconComponent = statusIcon[card.status]
-	const dueInfo = getDueInfo(card)
-	const reviewedToday = wasReviewedToday(card)
+function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
+	const StatusIconComponent = statusIcon[row.status]
+	const dueInfo = getDueInfo(row)
+	const reviewedToday = wasReviewedToday(row)
 	const difficultyDisplay =
-		card.difficulty != null ? Math.round(card.difficulty) : null
+		row.difficulty != null ? Math.round(row.difficulty) : null
 
-	const isSkipped = card.status === 'skipped'
+	const isSkipped = row.status === 'skipped'
 
 	return (
 		<tr
@@ -486,10 +588,10 @@ function DesktopCardRow({
 			<td className="max-w-60 px-3 py-2">
 				<Link
 					to="/learn/$lang/phrases/$id"
-					params={{ lang, id: card.phrase_id }}
+					params={{ lang, id: row.phrase_id }}
 					className="s-link line-clamp-2 text-sm font-medium"
 				>
-					{card.phrase_text}
+					{row.phrase_text}
 				</Link>
 			</td>
 
@@ -498,12 +600,12 @@ function DesktopCardRow({
 				<span
 					className={cn(
 						'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium',
-						statusColors[card.status],
-						statusBgColors[card.status]
+						statusColors[row.status],
+						statusBgColors[row.status]
 					)}
 				>
 					<StatusIconComponent className="size-3" />
-					{card.status}
+					{row.status}
 				</span>
 			</td>
 
@@ -533,7 +635,7 @@ function DesktopCardRow({
 
 			{/* Actions */}
 			<td className="px-3 py-2 text-end">
-				<CardStatusActions card={card} />
+				<CardStatusActions row={row} />
 			</td>
 		</tr>
 	)
@@ -541,31 +643,33 @@ function DesktopCardRow({
 
 /* ── Shared: status change buttons ───────────────────────────── */
 
-function CardStatusActions({ card }: { card: CardWithPhrase }) {
+function CardStatusActions({ row }: { row: PhraseRow }) {
 	const userId = useUserId()
 
 	const mutation = useMutation<
-		Tables<'user_card'>,
+		Array<Tables<'user_card'>>,
 		PostgrestError,
 		{ status: 'active' | 'learned' | 'skipped' }
 	>({
-		mutationKey: ['manage-card-status', card.phrase_id],
+		mutationKey: ['manage-card-status', row.phrase_id],
 		mutationFn: async ({ status }) => {
 			const { data } = await supabase
 				.from('user_card')
 				.update({ status })
-				.eq('phrase_id', card.phrase_id)
+				.eq('phrase_id', row.phrase_id)
 				.eq('uid', userId!)
 				.select()
 				.throwOnError()
-			return data[0]
+			return data
 		},
 		onSuccess: (data) => {
-			cardsCollection.utils.writeUpdate(CardMetaSchema.parse(data))
-			toastSuccess(`Card status changed to "${data.status}"`)
+			for (const c of data) {
+				cardsCollection.utils.writeUpdate(CardMetaSchema.parse(c))
+			}
+			toastSuccess(`Phrase status changed to "${data[0]?.status}"`)
 		},
 		onError: (error) => {
-			toastError('Failed to update card status')
+			toastError('Failed to update phrase status')
 			console.log('Error', error)
 		},
 	})
@@ -583,7 +687,7 @@ function CardStatusActions({ card }: { card: CardWithPhrase }) {
 	return (
 		<div className="flex items-center gap-1">
 			{buttons
-				.filter((b) => b.status !== card.status)
+				.filter((b) => b.status !== row.status)
 				.map((b) => (
 					<Button
 						key={b.status}

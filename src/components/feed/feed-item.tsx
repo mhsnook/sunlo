@@ -43,6 +43,7 @@ export function FeedItem({ item }: { item: FeedActivityType | PhraseGroup }) {
 			data-feed-item
 			data-popularity={item.popularity}
 			data-name={`feed-item-${item.type}`}
+			data-key={item.id}
 		>
 			{content}
 		</div>

@@ -11,6 +11,8 @@ export {
 	type CardMetaType,
 	CardStatusEnumSchema,
 	type CardStatusEnumType,
+	CardDirectionSchema,
+	type CardDirectionType,
 } from './schemas'
 
 // Collections
@@ -29,5 +31,11 @@ export {
 	type DeckPids,
 } from './hooks'
 
+// Card utilities
+export { isDueCard } from './is-due-card'
+
 // Mutations
 export { useNewDeckMutation } from './mutations'
+
+// Utilities
+export { directionsForPhrase } from './card-directions'

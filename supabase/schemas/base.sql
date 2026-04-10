@@ -68,6 +68,10 @@ create extension if not exists "uuid-ossp"
 with
 	schema "extensions";
 
+create type "public"."card_direction" as enum('forward', 'reverse');
+
+alter type "public"."card_direction" owner to "postgres";
+
 create type "public"."card_status" as enum('active', 'learned', 'skipped');
 
 alter type "public"."card_status" owner to "postgres";
@@ -92,6 +96,17 @@ alter type "public"."learning_goal" owner to "postgres";
 
 comment on type "public"."learning_goal" is 'why are you learning this language?';
 
+create type "public"."notification_type" as enum(
+	'request_commented',
+	'comment_replied',
+	'phrase_translated',
+	'phrase_referenced',
+	'request_upvoted',
+	'change_suggested'
+);
+
+alter type "public"."notification_type" owner to "postgres";
+
 create type "public"."translation_input" as ("lang" character(3), "text" "text");
 
 alter type "public"."translation_input" owner to "postgres";
@@ -115,29 +130,48 @@ create or replace function "public"."add_phrase_translation_card" (
 	"phrase_only_reverse" boolean default false
 ) returns "json" language "plpgsql" as $$
 DECLARE
-    new_phrase public.phrase;
-    new_translation public.phrase_translation;
-    new_card public.user_card;
-
+	new_phrase public.phrase;
+	new_translation public.phrase_translation;
+	new_card_forward public.user_card;
+	new_card_reverse public.user_card;
 BEGIN
-    -- Insert a new phrase with only_reverse flag
-    INSERT INTO public.phrase (text, lang, text_script, only_reverse)
-    VALUES (phrase_text, phrase_lang, phrase_text_script, phrase_only_reverse)
-    RETURNING * INTO new_phrase;
+	-- Insert a new phrase with only_reverse flag
+	INSERT INTO public.phrase (text, lang, text_script, only_reverse)
+	VALUES (phrase_text, phrase_lang, phrase_text_script, phrase_only_reverse)
+	RETURNING * INTO new_phrase;
 
-    -- Insert the translation for the new phrase
-    INSERT INTO public.phrase_translation (phrase_id, text, lang, text_script)
-    VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
-    RETURNING * INTO new_translation;
+	-- Insert the translation for the new phrase
+	INSERT INTO public.phrase_translation (phrase_id, text, lang, text_script)
+	VALUES (new_phrase.id, translation_text, translation_lang, translation_text_script)
+	RETURNING * INTO new_translation;
 
-    -- Only insert a new user card if create_card is true
-    IF create_card THEN
-        INSERT INTO public.user_card (phrase_id, status, lang)
-        VALUES (new_phrase.id, 'active', phrase_lang)
-        RETURNING * INTO new_card;
-    END IF;
+	-- Create cards based on direction rules
+	IF create_card THEN
+		IF NOT phrase_only_reverse THEN
+			-- Create forward card for standard phrases
+			INSERT INTO public.user_card (phrase_id, status, lang, direction)
+			VALUES (new_phrase.id, 'active', phrase_lang, 'forward')
+			RETURNING * INTO new_card_forward;
+		END IF;
 
-    RETURN json_build_object('phrase', row_to_json(new_phrase), 'translation', row_to_json(new_translation), 'card', row_to_json(new_card));
+		-- Always create reverse card
+		INSERT INTO public.user_card (phrase_id, status, lang, direction)
+		VALUES (new_phrase.id, 'active', phrase_lang, 'reverse')
+		RETURNING * INTO new_card_reverse;
+	END IF;
+
+	RETURN json_build_object(
+		'phrase', row_to_json(new_phrase),
+		'translation', row_to_json(new_translation),
+		'card', CASE
+			WHEN new_card_forward IS NOT NULL THEN row_to_json(new_card_forward)
+			ELSE row_to_json(new_card_reverse)
+		END,
+		'card_reverse', CASE
+			WHEN new_card_forward IS NOT NULL THEN row_to_json(new_card_reverse)
+			ELSE NULL
+		END
+	);
 END;
 $$;
 
@@ -414,6 +448,93 @@ alter function "public"."create_playlist_with_links" (
 	"cover_image_path" "text",
 	"phrases" "jsonb"
 ) owner to "postgres";
+
+create or replace function "public"."notify_on_comment" () returns "trigger" language "plpgsql" security definer as $$
+declare
+  v_requester_uid uuid;
+  v_parent_uid uuid;
+begin
+  -- Notify request owner
+  select requester_uid into v_requester_uid
+    from phrase_request where id = NEW.request_id;
+
+  if v_requester_uid is not null and v_requester_uid <> NEW.uid then
+    insert into notification (uid, type, actor_uid, request_id, comment_id)
+    values (v_requester_uid, 'request_commented', NEW.uid, NEW.request_id, NEW.id);
+  end if;
+
+  -- Notify parent comment author (if this is a reply)
+  if NEW.parent_comment_id is not null then
+    select uid into v_parent_uid
+      from request_comment where id = NEW.parent_comment_id;
+
+    -- Skip if parent author is same as request owner (already notified above)
+    -- or same as comment author (self-reply)
+    if v_parent_uid is not null
+       and v_parent_uid <> NEW.uid
+       and v_parent_uid is distinct from v_requester_uid then
+      insert into notification (uid, type, actor_uid, request_id, comment_id)
+      values (v_parent_uid, 'comment_replied', NEW.uid, NEW.request_id, NEW.id);
+    end if;
+  end if;
+
+  return NEW;
+end;
+$$;
+
+alter function "public"."notify_on_comment" () owner to "postgres";
+
+create or replace function "public"."notify_on_phrase_reference" () returns "trigger" language "plpgsql" security definer as $$
+declare
+  v_phrase_owner uuid;
+begin
+  select added_by into v_phrase_owner from phrase where id = NEW.phrase_id;
+
+  if v_phrase_owner is not null and v_phrase_owner <> NEW.uid then
+    insert into notification (uid, type, actor_uid, phrase_id, request_id, comment_id)
+    values (v_phrase_owner, 'phrase_referenced', NEW.uid, NEW.phrase_id, NEW.request_id, NEW.comment_id);
+  end if;
+
+  return NEW;
+end;
+$$;
+
+alter function "public"."notify_on_phrase_reference" () owner to "postgres";
+
+create or replace function "public"."notify_on_request_upvote" () returns "trigger" language "plpgsql" security definer as $$
+declare
+  v_requester_uid uuid;
+begin
+  select requester_uid into v_requester_uid
+    from phrase_request where id = NEW.request_id;
+
+  if v_requester_uid is not null and v_requester_uid <> NEW.uid then
+    insert into notification (uid, type, actor_uid, request_id)
+    values (v_requester_uid, 'request_upvoted', NEW.uid, NEW.request_id);
+  end if;
+
+  return NEW;
+end;
+$$;
+
+alter function "public"."notify_on_request_upvote" () owner to "postgres";
+
+create or replace function "public"."notify_on_translation" () returns "trigger" language "plpgsql" security definer as $$
+declare
+  v_phrase_owner uuid;
+begin
+  select added_by into v_phrase_owner from phrase where id = NEW.phrase_id;
+
+  if v_phrase_owner is not null and v_phrase_owner <> NEW.added_by then
+    insert into notification (uid, type, actor_uid, phrase_id)
+    values (v_phrase_owner, 'phrase_translated', NEW.added_by, NEW.phrase_id);
+  end if;
+
+  return NEW;
+end;
+$$;
+
+alter function "public"."notify_on_translation" () owner to "postgres";
 
 create or replace function "public"."recount_all_upvotes" () returns "void" language "plpgsql" security definer as $$
 DECLARE
@@ -1010,7 +1131,8 @@ create table if not exists "public"."user_card" (
 	"updated_at" timestamp with time zone default "now" (),
 	"created_at" timestamp with time zone default "now" (),
 	"status" "public"."card_status" default 'active'::"public"."card_status",
-	"lang" character varying not null
+	"lang" character varying not null,
+	"direction" "public"."card_direction" default 'forward'::"public"."card_direction" not null
 );
 
 alter table "public"."user_card" owner to "postgres";
@@ -1032,6 +1154,7 @@ create table if not exists "public"."user_card_review" (
 	"lang" character varying not null,
 	"phrase_id" "uuid" not null,
 	"day_first_review" boolean default true not null,
+	"direction" "public"."card_direction" default 'forward'::"public"."card_direction" not null,
 	constraint "user_card_review_difficulty_check" check (
 		(
 			("difficulty" >= 1.0)
@@ -1285,7 +1408,16 @@ create table if not exists "public"."user_deck" (
 	"archived" boolean default false not null,
 	"daily_review_goal" smallint default 15 not null,
 	"preferred_translation_lang" character varying(3) default null::character varying,
-	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20])))
+	"review_answer_mode" "text",
+	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20]))),
+	constraint "user_deck_review_answer_mode_check" check (
+		(
+			("review_answer_mode" is null)
+			or (
+				"review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"])
+			)
+		)
+	)
 );
 
 alter table "public"."user_deck" owner to "postgres";
@@ -1366,6 +1498,21 @@ with
 	no data;
 
 alter table "public"."meta_language" owner to "postgres";
+
+create table if not exists "public"."notification" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"uid" "uuid" not null,
+	"type" "public"."notification_type" not null,
+	"actor_uid" "uuid" not null,
+	"request_id" "uuid",
+	"comment_id" "uuid",
+	"phrase_id" "uuid",
+	"read_at" timestamp with time zone,
+	"created_at" timestamp with time zone default "now" () not null,
+	constraint "notification_no_self_notify" check (("uid" <> "actor_uid"))
+);
+
+alter table "public"."notification" owner to "postgres";
 
 create table if not exists "public"."phrase_tag" (
 	"phrase_id" "uuid" not null,
@@ -1485,9 +1632,16 @@ create table if not exists "public"."user_profile" (
 	"avatar_path" "text",
 	"languages_known" "jsonb" default '[]'::"jsonb" not null,
 	"font_preference" "text" default 'default'::"text",
+	"review_answer_mode" "text" default '4-buttons'::"text",
+	"sound_enabled" boolean default true not null,
 	constraint "user_profile_font_preference_check" check (
 		(
 			"font_preference" = any (array['default'::"text", 'dyslexic'::"text"])
+		)
+	),
+	constraint "user_profile_review_answer_mode_check" check (
+		(
+			"review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"])
 		)
 	),
 	constraint "username_length" check (("char_length" ("username") >= 3))
@@ -1536,7 +1690,8 @@ with
 			"rev"."updated_at",
 			"rev"."day_session",
 			"rev"."lang",
-			"rev"."phrase_id"
+			"rev"."phrase_id",
+			"rev"."direction"
 		from
 			(
 				"public"."user_card_review" "rev"
@@ -1544,6 +1699,7 @@ with
 					(
 						("rev"."phrase_id" = "rev2"."phrase_id")
 						and ("rev"."uid" = "rev2"."uid")
+						and ("rev"."direction" = "rev2"."direction")
 						and ("rev"."created_at" < "rev2"."created_at")
 					)
 				)
@@ -1557,11 +1713,34 @@ select
 	"card"."uid",
 	"card"."status",
 	"card"."phrase_id",
+	"card"."direction",
 	"card"."created_at",
 	"card"."updated_at",
 	"review"."created_at" as "last_reviewed_at",
 	"review"."difficulty",
-	"review"."stability"
+	"review"."stability",
+	current_timestamp as "current_timestamp",
+	nullif(
+		"power" (
+			(
+				1.0 + (
+					(
+						(19.0 / 81.0) * (
+							(
+								extract(
+									epoch
+									from
+										(current_timestamp - "review"."created_at")
+								) / 3600.0
+							) / 24.0
+						)
+					) / nullif("review"."stability", (0)::numeric)
+				)
+			),
+			'-0.5'::numeric
+		),
+		'NaN'::numeric
+	) as "retrievability_now"
 from
 	(
 		"public"."user_card" "card"
@@ -1569,6 +1748,7 @@ from
 			(
 				("card"."phrase_id" = "review"."phrase_id")
 				and ("card"."uid" = "review"."uid")
+				and ("card"."direction" = "review"."direction")
 			)
 		)
 	);
@@ -1595,6 +1775,8 @@ select
 	"d"."learning_goal",
 	"d"."archived",
 	"d"."daily_review_goal",
+	"d"."preferred_translation_lang",
+	"d"."review_answer_mode",
 	(
 		select
 			"l"."name"
@@ -1684,6 +1866,8 @@ group by
 	"d"."learning_goal",
 	"d"."archived",
 	"d"."daily_review_goal",
+	"d"."preferred_translation_lang",
+	"d"."review_answer_mode",
 	"d"."created_at"
 order by
 	(
@@ -1794,6 +1978,9 @@ add constraint "language_code2_key" unique ("lang");
 alter table only "public"."language"
 add constraint "language_pkey" primary key ("lang");
 
+alter table only "public"."notification"
+add constraint "notification_pkey" primary key ("id");
+
 alter table only "public"."user_deck"
 add constraint "one_deck_per_language_per_user" unique ("uid", "lang");
 
@@ -1840,7 +2027,7 @@ alter table only "public"."user_card_review"
 add constraint "user_card_review_pkey" primary key ("id");
 
 alter table only "public"."user_card"
-add constraint "user_card_uid_phrase_id_key" unique ("uid", "phrase_id");
+add constraint "user_card_uid_phrase_id_direction_key" unique ("uid", "phrase_id", "direction");
 
 alter table only "public"."user_client_event"
 add constraint "user_client_event_pkey" primary key ("id");
@@ -1886,6 +2073,12 @@ create index "idx_comment_upvotes" on "public"."request_comment" using "btree" (
 
 create unique index "idx_meta_language_lang" on "public"."meta_language" using "btree" ("lang");
 
+create index "idx_notification_uid_created" on "public"."notification" using "btree" ("uid", "created_at" desc);
+
+create index "idx_notification_uid_unread" on "public"."notification" using "btree" ("uid")
+where
+	("read_at" is null);
+
 create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
 
 create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
@@ -1905,8 +2098,6 @@ create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btre
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
 create index "playlist_phrase_link_playlist_id_idx" on "public"."playlist_phrase_link" using "btree" ("playlist_id");
-
-create unique index "uid_card" on "public"."user_card" using "btree" ("uid", "phrase_id");
 
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
@@ -1986,6 +2177,22 @@ after insert
 or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
 
+create or replace trigger "trg_notify_on_comment"
+after insert on "public"."request_comment" for each row
+execute function "public"."notify_on_comment" ();
+
+create or replace trigger "trg_notify_on_phrase_reference"
+after insert on "public"."comment_phrase_link" for each row
+execute function "public"."notify_on_phrase_reference" ();
+
+create or replace trigger "trg_notify_on_request_upvote"
+after insert on "public"."phrase_request_upvote" for each row
+execute function "public"."notify_on_request_upvote" ();
+
+create or replace trigger "trg_notify_on_translation"
+after insert on "public"."phrase_translation" for each row
+execute function "public"."notify_on_translation" ();
+
 create or replace trigger "trigger_update_phrase_translation_updated_at" before
 update on "public"."phrase_translation" for each row
 execute function "public"."update_phrase_translation_updated_at" ();
@@ -2040,6 +2247,21 @@ add constraint "friend_request_action_uid_less_fkey" foreign key ("uid_less") re
 
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_uid_more_fkey" foreign key ("uid_more") references "public"."user_profile" ("uid") on update cascade on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_actor_uid_fkey" foreign key ("actor_uid") references "public"."user_profile" ("uid") on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_comment_id_fkey" foreign key ("comment_id") references "public"."request_comment" ("id") on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_request_id_fkey" foreign key ("request_id") references "public"."phrase_request" ("id") on delete cascade;
+
+alter table only "public"."notification"
+add constraint "notification_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on delete cascade;
 
 alter table only "public"."phrase"
 add constraint "phrase_added_by_fkey" foreign key ("added_by") references "public"."user_profile" ("uid") on delete set null;
@@ -2132,7 +2354,7 @@ alter table only "public"."user_card_review"
 add constraint "user_card_review_phrase_id_fkey" foreign key ("phrase_id") references "public"."phrase" ("id") on update cascade on delete set null;
 
 alter table only "public"."user_card_review"
-add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("uid", "phrase_id") references "public"."user_card" ("uid", "phrase_id");
+add constraint "user_card_review_phrase_id_uid_fkey" foreign key ("uid", "phrase_id", "direction") references "public"."user_card" ("uid", "phrase_id", "direction");
 
 alter table only "public"."user_card_review"
 add constraint "user_card_review_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
@@ -2526,6 +2748,8 @@ create policy "Users can delete own upvotes" on "public"."phrase_playlist_upvote
 
 create policy "Users can delete own upvotes" on "public"."phrase_request_upvote" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
 
+create policy "Users can delete phrase links for their own comments" on "public"."comment_phrase_link" for delete to "authenticated" using (("uid" = "auth"."uid" ()));
+
 create policy "Users can insert phrase links for their own comments" on "public"."comment_phrase_link" for insert to "authenticated"
 with
 	check (
@@ -2552,6 +2776,10 @@ create policy "Users can log their own events" on "public"."user_client_event" f
 with
 	check ((not ("uid" is distinct from "auth"."uid" ())));
 
+create policy "Users can read own notifications" on "public"."notification" for
+select
+	using (("uid" = "auth"."uid" ()));
+
 create policy "Users can send messages to friends" on "public"."chat_message" for insert
 with
 	check (
@@ -2571,6 +2799,10 @@ for update
 	to "authenticated" using (("uid" = "auth"."uid" ()))
 with
 	check (("uid" = "auth"."uid" ()));
+
+create policy "Users can update own notifications" on "public"."notification"
+for update
+	using (("uid" = "auth"."uid" ()));
 
 create policy "Users can update their own playlists" on "public"."phrase_playlist"
 for update
@@ -2643,6 +2875,8 @@ alter table "public"."friend_request_action" enable row level security;
 
 alter table "public"."language" enable row level security;
 
+alter table "public"."notification" enable row level security;
+
 alter table "public"."phrase" enable row level security;
 
 alter table "public"."phrase_playlist" enable row level security;
@@ -2684,6 +2918,9 @@ add table only "public"."chat_message";
 
 alter publication "supabase_realtime"
 add table only "public"."friend_request_action";
+
+alter publication "supabase_realtime"
+add table only "public"."notification";
 
 revoke usage on schema "public"
 from
@@ -3044,6 +3281,30 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
+grant all on function "public"."notify_on_comment" () to "anon";
+
+grant all on function "public"."notify_on_comment" () to "authenticated";
+
+grant all on function "public"."notify_on_comment" () to "service_role";
+
+grant all on function "public"."notify_on_phrase_reference" () to "anon";
+
+grant all on function "public"."notify_on_phrase_reference" () to "authenticated";
+
+grant all on function "public"."notify_on_phrase_reference" () to "service_role";
+
+grant all on function "public"."notify_on_request_upvote" () to "anon";
+
+grant all on function "public"."notify_on_request_upvote" () to "authenticated";
+
+grant all on function "public"."notify_on_request_upvote" () to "service_role";
+
+grant all on function "public"."notify_on_translation" () to "anon";
+
+grant all on function "public"."notify_on_translation" () to "authenticated";
+
+grant all on function "public"."notify_on_translation" () to "service_role";
+
 grant all on function "public"."recount_all_upvotes" () to "anon";
 
 grant all on function "public"."recount_all_upvotes" () to "authenticated";
@@ -3390,6 +3651,12 @@ grant all on table "public"."meta_language" to "anon";
 grant all on table "public"."meta_language" to "authenticated";
 
 grant all on table "public"."meta_language" to "service_role";
+
+grant all on table "public"."notification" to "anon";
+
+grant all on table "public"."notification" to "authenticated";
+
+grant all on table "public"."notification" to "service_role";
 
 grant all on table "public"."phrase_tag" to "anon";
 
