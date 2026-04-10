@@ -57,8 +57,8 @@ function GettingStartedPage() {
 	const userId = useUserId()
 	const { data: profile } = useProfile()
 
-	// After profile creation, go to welcome page (or referrer if invited)
-	const nextPage = referrer ? `/friends/search/${referrer}` : '/welcome'
+	// After profile creation, go to welcome page (or friend's chat if invited)
+	const nextPage = referrer ? `/friends/chats/${referrer}` : '/welcome'
 
 	return profile ?
 			<Navigate to={nextPage} />
