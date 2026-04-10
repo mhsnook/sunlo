@@ -41,6 +41,7 @@ const PopoverContent = ({
 			align={align}
 			sideOffset={sideOffset}
 			side={side}
+			positionMethod="fixed"
 			className="isolate z-50"
 		>
 			<PopoverPrimitive.Popup
