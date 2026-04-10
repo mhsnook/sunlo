@@ -3,12 +3,11 @@ import supabase from '@/lib/supabase-client'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { toastError } from '@/components/ui/sonner'
 import {
-	getIndexOfNextAgainCard,
-	getIndexOfNextUnreviewedCard,
 	useCardIndex,
-	useNextValid,
 	useReviewActions,
+	useReviewDayString,
 	useReviewLang,
+	useReviewStage,
 } from './store'
 import { PostgrestError } from '@supabase/supabase-js'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
@@ -22,20 +21,17 @@ import {
 } from './schemas'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
-import { toManifestEntry, type ManifestEntry } from './manifest'
+import type { ManifestEntry } from './manifest'
+import {
+	buildReviewsMap,
+	getIndexOfNextAgainCard,
+	getIndexOfNextUnreviewedCard,
+	type ReviewsMap,
+	type ReviewStages,
+} from './review-utils'
 
-/*
-	null: not yet initialised (zustand store only)
-	1. doing the first review
-	2. going back for unreviewed
-	3. skip unreviewed and see screen asking to re-review
-	4. doing re-reviews
-	5. skip re-reviews and end
-*/
-export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
-export type ReviewsMap = {
-	[key: string]: CardReviewType
-}
+export type { ReviewStages, ReviewsMap }
+export { buildReviewsMap }
 
 interface PostReviewInput {
 	phrase_id: uuid
@@ -160,14 +156,16 @@ function mapToStats(
 	}
 }
 
-/** Build a ReviewsMap keyed by manifest entry (phrase_id:direction) */
-export function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
-	const map: ReviewsMap = {}
-	// Iterate in chronological order so the last (newest) review wins per key
-	for (const r of reviews) {
-		map[toManifestEntry(r.phrase_id, r.direction)] = r
-	}
-	return map
+export function useNextValid(): number {
+	const currentCardIndex = useCardIndex()
+	const lang = useReviewLang()
+	const day_session = useReviewDayString()
+	const stage = useReviewStage()
+	const { data: reviewsData } = useReviewsToday(lang, day_session)
+	const { manifest, reviewsMap } = reviewsData
+	return (stage ?? 0) < 3 ?
+			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
+		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 export function useReviewsToday(lang: string, day_session: string) {
