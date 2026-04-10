@@ -68,7 +68,7 @@ learner:
 
 - login
 - go-to-deck
-- click feed-phrase-link
+- click feed-phrase-link aa110007-7777-4aaa-bbbb-cccccccccccc
 - up
 - see phrase-detail-page
 - up
@@ -84,7 +84,7 @@ learner:
 
 - login
 - go-to-deck
-- click feed-phrase-link
+- click feed-phrase-link aa110006-6666-4aaa-bbbb-cccccccccccc
 - up
 - see phrase-detail-page
 - up
