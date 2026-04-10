@@ -33,6 +33,7 @@ learner:
 - click start-review-from-preview-button
 - up
 - see flashcard
+- prev
 - click reveal-answer-button
 - see rating-again-button
 - see rating-hard-button
@@ -59,6 +60,7 @@ learner:
 - click start-review-from-preview-button
 - up
 - see flashcard
+- prev
 - click reveal-answer-button
 - see rating-again-button
 - see rating-good-button

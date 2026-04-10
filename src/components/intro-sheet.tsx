@@ -37,6 +37,8 @@ interface IntroSheetProps {
 	onSkip?: () => void
 	/** data-testid for the action button */
 	actionTestId?: string
+	/** data-testid for the dialog/drawer content wrapper */
+	testId?: string
 }
 
 /**
@@ -56,6 +58,7 @@ export function IntroSheet({
 	skipLabel,
 	onSkip,
 	actionTestId,
+	testId,
 }: IntroSheetProps) {
 	const isMobile = useIsMobile()
 
@@ -81,7 +84,7 @@ export function IntroSheet({
 	if (isMobile) {
 		return (
 			<Drawer open={open} onOpenChange={handleOpenChange}>
-				<DrawerContent data-testid="intro-message-section">
+				<DrawerContent data-testid={testId ?? 'intro-message-section'}>
 					<DrawerHeader className="text-left">
 						<DrawerTitle>{title}</DrawerTitle>
 						{description && (
@@ -113,7 +116,7 @@ export function IntroSheet({
 	return (
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent
-				data-testid="intro-message-section"
+				data-testid={testId ?? 'intro-message-section'}
 				className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
 			>
 				<DialogHeader>

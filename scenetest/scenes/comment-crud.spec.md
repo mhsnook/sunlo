@@ -11,6 +11,7 @@ friend:
 
 - login
 - openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- up
 - see request-detail-page
 
 // Post a new comment
