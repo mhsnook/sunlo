@@ -10,13 +10,13 @@ defineMacro('login', [
 	'notSee login-form',
 ])
 
-defineMacro('login-and-go-to-deck', [
-	'login',
+defineMacro('go-to-deck', [
 	'openTo /learn',
 	'see decks-list-grid',
 	'click [team.lang] deck-link',
 	'up',
 	'see deck-feed-page',
+	'up',
 ])
 
 defineMacro('go-to-deck-settings', [

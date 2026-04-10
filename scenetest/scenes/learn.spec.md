@@ -2,7 +2,8 @@
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - click /learn/$lang/feed
 - up
 - see deck-feed-page
@@ -25,8 +26,8 @@ learner:
 
 learner:
 
-- login-and-go-to-deck
-- up
+- login
+- go-to-deck
 - click /learn
 - up
 - see decks-list-grid
@@ -51,7 +52,8 @@ learner:
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - click appnav-search-button
 - up
 - see browse-search-overlay
@@ -64,8 +66,8 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- login-and-go-to-deck
-- click feed-phrase-link
+- login
+- openTo /learn/[team.lang]/phrases/aa110007-7777-4aaa-bbbb-cccccccccccc
 - up
 - see phrase-detail-page
 - up
@@ -79,8 +81,8 @@ learner:
 
 learner:
 
-- login-and-go-to-deck
-- click feed-phrase-link
+- login
+- openTo /learn/[team.lang]/phrases/aa110006-6666-4aaa-bbbb-cccccccccccc
 - up
 - see phrase-detail-page
 - up
@@ -106,7 +108,8 @@ cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - click /learn/$lang/review
 - up
 - see review-intro

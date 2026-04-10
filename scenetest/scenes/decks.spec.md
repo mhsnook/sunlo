@@ -27,7 +27,8 @@ cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', 
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - go-to-deck-settings
 - see review-goal-options
 - click 10
@@ -42,7 +43,8 @@ cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid'
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - go-to-deck-settings
 - see learning-goal-options
 - click family
@@ -57,7 +59,8 @@ cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[lear
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - go-to-deck-settings
 - click archive-deck-button
 - see archive-confirmation-dialog

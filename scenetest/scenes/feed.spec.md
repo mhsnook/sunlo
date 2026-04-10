@@ -2,8 +2,8 @@
 
 learner:
 
-- login-and-go-to-deck
-- up
+- login
+- go-to-deck
 - see feed-item-list
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 
@@ -11,8 +11,8 @@ learner:
 
 learner:
 
-- login-and-go-to-deck
-- up
+- login
+- go-to-deck
 - click feed-tab-popular
 - see feed-item-list
 
@@ -22,7 +22,8 @@ cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.ke
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
 - click upvote-playlist-button
 - up
@@ -33,7 +34,8 @@ learner:
 
 learner:
 
-- login-and-go-to-deck
+- login
+- go-to-deck
 - see feed-item-list
 - up
 - scrollToBottom
