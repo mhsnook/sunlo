@@ -11,7 +11,12 @@ defineMacro('login', [
 ])
 
 defineMacro('login-and-go-to-deck', [
-	'login',
+	// Inline login steps (nested macros not supported by scenetest v0.5)
+	'openTo /login',
+	'typeInto email-input [self.email]',
+	'typeInto password-input [self.password]',
+	'click login-submit-button',
+	'notSee login-form',
 	'openTo /learn',
 	'see decks-list-grid',
 	'click [team.lang] deck-link',
