@@ -13,7 +13,7 @@ import {
 	Send,
 } from 'lucide-react'
 
-import { CardContent, CardFooter } from '@/components/ui/card'
+import { CardContent } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
 import { intervals, type Score } from '@/features/review/fsrs'
@@ -188,40 +188,43 @@ export function ReviewSingleCard({
 	const answerContent = isReverse ? phraseDisplay : translationsDisplay
 
 	return (
-		<CardlikeFlashcard
-			className="mx-auto flex w-full flex-col"
-			style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
-			data-name="flashcard"
-			data-key={pid}
-		>
-			<CardContent className="relative flex flex-col items-center gap-4 pb-48">
-				<ContextMenu phrase={phrase} />
-				<Badge
-					variant="outline"
-					className="absolute top-4 left-4 gap-1 text-xs"
-				>
-					{isReverse ?
-						<>
-							<ArrowLeft className="size-3" /> Reverse
-						</>
-					:	<>
-							Forward <ArrowRight className="size-3" />
-						</>
-					}
-				</Badge>
-				<div className="pt-16">{questionContent}</div>
-				<Separator />
-				<div
-					className={`w-full transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
-				>
-					{answerContent}
-				</div>
-			</CardContent>
-			<CardFooter className="bg-card sticky bottom-0 z-10 flex flex-col rounded-b-lg">
+		<>
+			<CardlikeFlashcard
+				className="mx-auto w-full"
+				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
+				data-name="flashcard"
+				data-key={pid}
+			>
+				<CardContent className="relative flex flex-col items-center gap-4">
+					<ContextMenu phrase={phrase} />
+					<Badge
+						variant="outline"
+						className="absolute top-4 left-4 gap-1 text-xs"
+					>
+						{isReverse ?
+							<>
+								<ArrowLeft className="size-3" /> Reverse
+							</>
+						:	<>
+								Forward <ArrowRight className="size-3" />
+							</>
+						}
+					</Badge>
+					<div className="pt-16">{questionContent}</div>
+					<Separator />
+					<div
+						className={`w-full transition-opacity ${showAnswers ? 'opacity-100' : 'opacity-0'}`}
+					>
+						{answerContent}
+					</div>
+				</CardContent>
+			</CardlikeFlashcard>
+			<div className="min-h-40 flex-1" />
+			<div className="sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-background from-80% to-transparent pt-6 pb-3">
 				{!showAnswers ?
 					<Button
 						data-testid="reveal-answer-button"
-						className="mb-3 w-full max-w-160"
+						className="w-full max-w-160"
 						onClick={() => setRevealCard(true)}
 					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
@@ -229,7 +232,7 @@ export function ReviewSingleCard({
 				: answerMode === '2-buttons' ?
 					<div
 						data-name="answer-buttons-row"
-						className="mb-3 grid w-full max-w-160 grid-cols-2 gap-3"
+						className="grid w-full max-w-160 grid-cols-2 gap-3"
 					>
 						<div className="relative">
 							{coin?.score === 1 && (
@@ -276,7 +279,7 @@ export function ReviewSingleCard({
 					</div>
 				:	<div
 						data-name="answer-buttons-row"
-						className="mb-3 grid w-full max-w-160 grid-cols-4"
+						className="grid w-full max-w-160 grid-cols-4"
 					>
 						<div className="relative">
 							{coin?.score === 1 && (
@@ -368,8 +371,8 @@ export function ReviewSingleCard({
 						</div>
 					</div>
 				}
-			</CardFooter>
-		</CardlikeFlashcard>
+			</div>
+		</>
 	)
 }
 

@@ -147,7 +147,7 @@ function FlashCardReviewSession({
 					:	null}
 				</div>
 			</div>
-			<div className="-m-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-4">
+			<div className="-m-4 min-h-0 flex-1 overflow-y-auto p-4">
 				{atTheEnd ?
 					<WhenComplete />
 				:	(() => {
@@ -157,7 +157,7 @@ function FlashCardReviewSession({
 						return (
 							<div
 								key={`${manifest[currentCardIndex]}-${animKey}`}
-								className="animate-card-pop-in flex flex-col"
+								className="animate-card-pop-in flex min-h-full flex-col"
 							>
 								<ReviewSingleCard
 									pid={phraseId}
