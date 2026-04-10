@@ -63,6 +63,7 @@ learner:
 - go-to-deck
 - go-to-deck-settings
 - click archive-deck-button
+- up
 - see archive-confirmation-dialog
 - click confirm-archive-button
 - up
@@ -79,6 +80,7 @@ learner:
 - up
 - go-to-deck-settings
 - click restore-deck-button
+- up
 - see restore-confirmation-dialog
 - click confirm-restore-button
 - up

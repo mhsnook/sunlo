@@ -68,11 +68,10 @@ learner:
 
 - login
 - openTo /learn/[team.lang]/phrases/aa110007-7777-4aaa-bbbb-cccccccccccc
-- up
 - see phrase-detail-page
+- seeText Not in deck
 - up
 - click card-status-dropdown
-- seeText Not in deck
 - click add-to-deck-option
 - up
 - seeToast toast-success
@@ -88,6 +87,7 @@ learner:
 - up
 - click card-status-dropdown
 - seeText Active
+- prev
 - click set-learned-option
 - up
 - seeToast toast-success

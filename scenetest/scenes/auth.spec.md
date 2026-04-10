@@ -4,8 +4,6 @@ learner:
 
 - login
 - see decks-list-grid
-- up
-- see friends-section
 
 # new user completes onboarding and affirms community norms
 

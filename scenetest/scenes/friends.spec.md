@@ -5,6 +5,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
+- up
 - click navbar-search-button
 - see friend-search-overlay
 - see friend-search-input
@@ -16,6 +17,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
+- up
 - click navbar-search-button
 - see friend-search-overlay
 - typeInto friend-search-input Lex
@@ -28,6 +30,7 @@ learner:
 - login
 - openTo /friends/chats
 - see chats-page
+- up
 - click navbar-search-button
 - see friend-search-overlay
 - click close-dialog-button

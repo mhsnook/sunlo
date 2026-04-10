@@ -23,6 +23,7 @@ learner:
 - up
 - see review-session-page
 - see flashcard
+- prev
 
 // Review the first card — score it Good
 
@@ -33,6 +34,7 @@ learner:
 // Review the second card — score it Again
 
 - see flashcard
+- prev
 - click reveal-answer-button
 - click rating-again-button
 - up
@@ -40,6 +42,7 @@ learner:
 // Review the third card — score it Good
 
 - see flashcard
+- prev
 - click reveal-answer-button
 - click rating-good-button
 - up
