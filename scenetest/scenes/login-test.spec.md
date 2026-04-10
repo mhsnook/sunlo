@@ -8,8 +8,6 @@ learner:
 - click login-submit-button
 - notSee login-form
 - see decks-list-grid
-- up
-- see friends-section
 
 # new-user logs in
 

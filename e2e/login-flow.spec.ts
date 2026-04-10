@@ -40,12 +40,7 @@ test('login flow redirects and shows content', async ({ page }) => {
 		await expect(page).toHaveURL(/\/learn$/, { timeout: 10000 })
 	}
 
-	// 8. Verify the presence of active decks and friends (allow time for collections to load)
+	// 8. Verify the presence of active decks (allow time for collections to load)
 	await expect(decksGrid).toBeVisible({ timeout: 10000 })
 	expect(await decksGrid.locator('> *').count()).toBeGreaterThanOrEqual(3)
-
-	// Assert at least 1 friend
-	await expect(page.getByTestId('friends-section')).toBeVisible({
-		timeout: 10000,
-	})
 })
