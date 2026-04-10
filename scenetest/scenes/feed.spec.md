@@ -31,14 +31,14 @@ learner:
 
 # feed loads more items on scroll
 
-// learner:
-//
-// - login-and-go-to-deck
-// - see feed-item-list
-// - up
-// - scrollToBottom
-// - see load-more-button
-// - click load-more-button
+learner:
+
+- login-and-go-to-deck
+- see feed-item-list
+- up
+- scrollToBottom
+- see load-more-button
+- click load-more-button
 
 # learner views chat messages from a friend
 
