@@ -64,6 +64,6 @@ learner:
 - see chats-page
 - see unread-badge
 - up
-- click friend-chat-link a2dfa256-ef7b-41b0-b05a-d97afab8dd21
+- click friend-chat-link [learner2.key]
 - up
 - see chat-messages-container
