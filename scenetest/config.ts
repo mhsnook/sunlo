@@ -12,7 +12,7 @@ defineMacro('login', [
 
 defineMacro('go-to-deck', [
 	'openTo /learn',
-	'see decks-list-grid',
+	'scope decks-list-grid',
 	'click [team.lang] deck-link',
 	'up',
 	'see deck-feed-page',

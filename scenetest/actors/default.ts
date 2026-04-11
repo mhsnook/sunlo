@@ -8,6 +8,8 @@ export default defineTeam({
 		// A seed phrase (seed-v018-extras.sql) in [team.lang] that the learner has no card for.
 		// Used in learn.spec.md "learner adds a phrase to their deck".
 		nocard_phrase: 'aa110007-7777-4aaa-bbbb-cccccccccccc',
+		// A seed comment on the Hindi request used in comments-and-answers.spec.md.
+		seed_comment: 'c0000005-5555-4666-8777-888888888888',
 	},
 	actors: {
 		visitor: {

@@ -28,7 +28,7 @@ learner:
 # learner2 replies to a comment and both learner and original commenter get notified
 
 cleanup: supabase.from('request_comment').delete().eq('uid', '[learner2.key]').gte('created_at', '[testStart]')
-cleanup: supabase.from('request_comment').delete().eq('parent_comment_id', 'c0000005-5555-4666-8777-888888888888')
+cleanup: supabase.from('request_comment').delete().eq('parent_comment_id', '[team.seed_comment]')
 cleanup: supabase.from('notification').delete().eq('type', 'comment_replied').gte('created_at', '[testStart]')
 
 learner2:
@@ -38,7 +38,7 @@ learner2:
 - up
 - see request-detail-page
 - up
-- see comment-item c0000005-5555-4666-8777-888888888888
+- scope comment-item [team.seed_comment]
 - click reply-link
 - up
 - scope reply-dialog
