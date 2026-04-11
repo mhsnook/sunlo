@@ -194,7 +194,11 @@ export function ReviewSingleCard({
 		<>
 			<CardlikeFlashcard
 				className="mx-auto flex w-full flex-1 flex-col"
-				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
+				style={
+					{
+						viewTransitionName: `phrase-${pid}-${direction}`,
+					} as CSSProperties
+				}
 				data-name="flashcard"
 				data-key={pid}
 			>

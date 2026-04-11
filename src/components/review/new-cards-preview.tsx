@@ -51,7 +51,11 @@ function PreviewCard({
 	return (
 		<CardlikeFlashcard
 			className="flex w-full max-w-lg flex-col"
-			style={{ viewTransitionName: `preview-${pid}` } as CSSProperties}
+			style={
+				{
+					viewTransitionName: `preview-${pid}-${direction}`,
+				} as CSSProperties
+			}
 		>
 			<CardContent className="flex flex-col items-center justify-center gap-3 p-4">
 				{isReverse ?
