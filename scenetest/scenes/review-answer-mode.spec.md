@@ -17,6 +17,7 @@ learner:
 
 # learner sees 4-button mode by default during review
 
+cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
@@ -32,12 +33,15 @@ learner:
 - see review-preview-page
 - click start-review-from-preview-button
 - up
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
-- see rating-again-button
-- see rating-hard-button
-- see rating-good-button
+- scope rating-again-button
+- prev
+- scope rating-hard-button
+- prev
+- scope rating-good-button
+- prev
 - see rating-easy-button
 
 # learner sees 2-button mode with Forgot/Correct labels
@@ -59,11 +63,13 @@ learner:
 - see review-preview-page
 - click start-review-from-preview-button
 - up
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
-- see rating-again-button
-- see rating-good-button
+- scope rating-again-button
+- prev
+- scope rating-good-button
+- prev
 - notSee rating-hard-button
 - notSee rating-easy-button
 

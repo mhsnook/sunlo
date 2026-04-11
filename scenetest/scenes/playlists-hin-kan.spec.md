@@ -43,7 +43,7 @@ learner:
 - login
 - openTo /learn/hin/playlists/new
 - up
-- see new-playlist-form
+- scope new-playlist-form
 - typeInto playlist-title-input 'Test: Hindi Slang'
 - typeInto playlist-description-input 'Informal Hindi phrases young people use'
 - pressKey Tab
@@ -65,7 +65,7 @@ learner:
 - login
 - openTo /learn/kan/playlists/new
 - up
-- see new-playlist-form
+- scope new-playlist-form
 - typeInto playlist-title-input 'Test: Kannada Basics'
 - typeInto playlist-description-input 'Essential Kannada for getting started'
 - pressKey Tab

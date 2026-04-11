@@ -11,7 +11,7 @@ friend:
 - see request-detail-page
 - click open-comment-dialog
 - up
-- see comment-dialog
+- scope comment-dialog
 - typeInto comment-content-input 'You can also try "haldi kitne ka hai?" for turmeric!'
 - click post-comment-button
 - up
@@ -41,7 +41,7 @@ learner2:
 - see comment-item c0000005-5555-4666-8777-888888888888
 - click reply-link
 - up
-- see reply-dialog
+- scope reply-dialog
 - typeInto reply-content-input 'Great tip! I also use "lehsun kitne ka hai?" for garlic.'
 - click post-reply-button
 - up
@@ -68,7 +68,7 @@ learner3:
 - see request-detail-page
 - click open-comment-dialog
 - up
-- see comment-dialog
+- scope comment-dialog
 - typeInto comment-content-input 'Here are the direction phrases!'
 - click attach-phrase-button
 - up

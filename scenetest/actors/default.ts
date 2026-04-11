@@ -3,7 +3,12 @@ import { defineTeam } from '@scenetest/scenes'
 export default defineTeam({
 	name: 'Sunlo Default',
 	owns: ['/learn', '/friends'],
-	tags: { lang: 'kan' },
+	tags: {
+		lang: 'kan',
+		// A seed phrase (seed-v018-extras.sql) in [team.lang] that the learner has no card for.
+		// Used in learn.spec.md "learner adds a phrase to their deck".
+		nocard_phrase: 'aa110007-7777-4aaa-bbbb-cccccccccccc',
+	},
 	actors: {
 		visitor: {
 			key: undefined!,
