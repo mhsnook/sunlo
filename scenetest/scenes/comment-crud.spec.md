@@ -18,7 +18,7 @@ friend:
 
 - click add-comment-trigger
 - up
-- see add-comment-dialog
+- scope add-comment-dialog
 - typeInto comment-content-input 'Here is a useful phrase for ordering'
 - click post-comment-button
 - up
@@ -28,7 +28,7 @@ friend:
 - see request-detail-page
 - click edit-comment-button
 - up
-- see comment-dialog
+- scope comment-dialog
 - click attach-phrase-button
 - typeInto phrase-search-input dosa
 - click phrase-picker-item b0fbbe1d-705e-4d93-a231-ac55263fcfee
@@ -49,8 +49,8 @@ friend:
 - see request-detail-page
 - click edit-comment-button
 - up
-- see comment-dialog
-- see remove-phrase-button
+- scope comment-dialog
+- scope remove-phrase-button
 - click
 - up
 - typeInto edit-comment-content-input 'Actually just check the playlist'
@@ -79,7 +79,7 @@ learner:
 - openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
 - see request-detail-page
 - openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96?focus=c0000003-3333-4444-8555-666666666666&mode=reply
-- see reply-dialog
+- scope reply-dialog
 - typeInto reply-content-input 'Thanks for the tip about dosas!'
 - click post-reply-button
 - up
@@ -89,7 +89,7 @@ learner:
 - see request-detail-page
 - click edit-reply-button
 - up
-- see reply-dialog
+- scope reply-dialog
 - typeInto edit-reply-content-input 'Thanks for the tip about dosas and coffee!'
 - click save-reply-button
 - up

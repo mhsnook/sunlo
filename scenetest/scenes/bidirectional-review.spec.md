@@ -21,8 +21,8 @@ learner:
 - see review-preview-page
 - click start-review-from-preview-button
 - up
-- see review-session-page
-- see flashcard
+- scope review-session-page
+- scope flashcard
 - prev
 
 // Review the first card — score it Good
@@ -33,7 +33,7 @@ learner:
 
 // Review the second card — score it Again
 
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
 - click rating-again-button
@@ -41,7 +41,7 @@ learner:
 
 // Review the third card — score it Good
 
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
 - click rating-good-button

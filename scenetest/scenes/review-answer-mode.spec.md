@@ -33,14 +33,14 @@ learner:
 - see review-preview-page
 - click start-review-from-preview-button
 - up
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
-- see rating-again-button
+- scope rating-again-button
 - prev
-- see rating-hard-button
+- scope rating-hard-button
 - prev
-- see rating-good-button
+- scope rating-good-button
 - prev
 - see rating-easy-button
 
@@ -63,12 +63,12 @@ learner:
 - see review-preview-page
 - click start-review-from-preview-button
 - up
-- see flashcard
+- scope flashcard
 - prev
 - click reveal-answer-button
-- see rating-again-button
+- scope rating-again-button
 - prev
-- see rating-good-button
+- scope rating-good-button
 - prev
 - notSee rating-hard-button
 - notSee rating-easy-button

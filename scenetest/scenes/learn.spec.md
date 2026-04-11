@@ -54,7 +54,7 @@ learner:
 - go-to-deck
 - click navbar-search-button
 - up
-- see browse-search-overlay
+- scope browse-search-overlay
 - typeInto browse-search-input tea
 - see browse-search-results
 

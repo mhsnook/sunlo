@@ -19,7 +19,7 @@ learner:
 - see chats-page
 - up
 - click navbar-search-button
-- see friend-search-overlay
+- scope friend-search-overlay
 - typeInto friend-search-input Lex
 - see friend-search-results
 
