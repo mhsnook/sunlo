@@ -23,7 +23,10 @@ import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
 import { cardsCollection } from '@/features/deck/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { CardMetaSchema, type CardMetaType } from '@/features/deck/schemas'
+import {
+	type CardMetaType,
+	CardStatusEnumSchema,
+} from '@/features/deck/schemas'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
@@ -664,7 +667,11 @@ function CardStatusActions({ row }: { row: PhraseRow }) {
 		},
 		onSuccess: (data) => {
 			for (const c of data) {
-				cardsCollection.utils.writeUpdate(CardMetaSchema.parse(c))
+				cardsCollection.utils.writeUpdate({
+					id: c.id,
+					status: CardStatusEnumSchema.parse(c.status),
+					updated_at: c.updated_at!,
+				})
 			}
 			toastSuccess(`Phrase status changed to "${data[0]?.status}"`)
 		},
