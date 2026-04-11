@@ -25,7 +25,11 @@ import { useDecks } from '@/features/deck/hooks'
 import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { CardMetaSchema, CardMetaType } from '@/features/deck/schemas'
+import {
+	CardMetaSchema,
+	CardMetaType,
+	CardStatusEnumSchema,
+} from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import {
 	PhraseFullFilteredType,
@@ -190,7 +194,11 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 
 				if (phrase.card) {
 					for (const card of data) {
-						cardsCollection.utils.writeUpdate(CardMetaSchema.parse(card))
+						cardsCollection.utils.writeUpdate({
+							id: card.id,
+							status: CardStatusEnumSchema.parse(card.status),
+							updated_at: card.updated_at!,
+						})
 					}
 				} else {
 					for (const card of data) {
