@@ -59,8 +59,10 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 			title: `Add ${languages[lang]} Phrase`,
 		},
 	}),
-	loader: async () => {
-		await cardsCollection.preload()
+	loader: async ({ context }) => {
+		if (context.auth.isAuth) {
+			await cardsCollection.preload()
+		}
 	},
 	component: AddPhraseTab,
 })

@@ -12,12 +12,15 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 			title: 'Phrase',
 		},
 	}),
-	loader: async () => {
-		await Promise.all([
+	loader: async ({ context }) => {
+		const preloads: Promise<unknown>[] = [
 			phrasesCollection.preload(),
-			cardsCollection.preload(),
 			publicProfilesCollection.preload(),
-		])
+		]
+		if (context.auth.isAuth) {
+			preloads.push(cardsCollection.preload())
+		}
+		await Promise.all(preloads)
 	},
 })
 

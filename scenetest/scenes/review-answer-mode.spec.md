@@ -36,8 +36,11 @@ learner:
 - prev
 - click reveal-answer-button
 - see rating-again-button
+- prev
 - see rating-hard-button
+- prev
 - see rating-good-button
+- prev
 - see rating-easy-button
 
 # learner sees 2-button mode with Forgot/Correct labels
@@ -63,7 +66,9 @@ learner:
 - prev
 - click reveal-answer-button
 - see rating-again-button
+- prev
 - see rating-good-button
+- prev
 - notSee rating-hard-button
 - notSee rating-easy-button
 

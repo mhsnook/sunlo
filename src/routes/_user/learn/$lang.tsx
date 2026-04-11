@@ -48,16 +48,21 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				:	[],
 		}
 	},
-	loader: async () => {
-		await Promise.all([
+	loader: async ({ context }) => {
+		const preloads: Promise<unknown>[] = [
 			langTagsCollection.preload(),
-			reviewDaysCollection.preload(),
-			cardReviewsCollection.preload(),
 			phrasesCollection.preload(),
-			cardsCollection.preload(),
 			publicProfilesCollection.preload(),
-			decksCollection.preload(),
-		])
+		]
+		if (context.auth.isAuth) {
+			preloads.push(
+				reviewDaysCollection.preload(),
+				cardReviewsCollection.preload(),
+				cardsCollection.preload(),
+				decksCollection.preload()
+			)
+		}
+		await Promise.all(preloads)
 	},
 })
 

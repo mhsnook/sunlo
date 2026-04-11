@@ -17,8 +17,10 @@ import { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
-	loader: async () => {
-		await decksCollection.preload()
+	loader: async ({ context }) => {
+		if (context.auth.isAuth) {
+			await decksCollection.preload()
+		}
 	},
 })
 
