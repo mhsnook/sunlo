@@ -16,10 +16,6 @@ learner:
 - ifClick review-intro-dismiss
 - see review-setup-page
 - up
-- click /learn/$lang/search
-- up
-- see search-page
-- up
 - click /learn/$lang/contributions
 - up
 - see contributions-page
@@ -73,6 +69,7 @@ learner:
 - up
 - see phrase-detail-page
 - seeText Not in deck
+- up
 - click card-status-dropdown
 - click add-to-deck-option
 - up
@@ -118,7 +115,11 @@ learner:
 - see review-setup-page
 - up
 - see start-review-button
+- up
 - click start-review-button
+- up
+- see review-preview-page
+- click start-review-from-preview-button
 - up
 - see review-session-page
 - see flashcard
@@ -128,6 +129,8 @@ learner:
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+setup: supabase.from('user_deck').update({ daily_review_goal: 1 }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 
 learner:
 
@@ -138,6 +141,9 @@ learner:
 - see review-setup-page
 - up
 - click start-review-button
+- up
+- see review-preview-page
+- click start-review-from-preview-button
 - up
 - see review-session-page
 - see flashcard

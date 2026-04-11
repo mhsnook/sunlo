@@ -67,3 +67,5 @@ learner:
 - click friend-chat-link [learner2.key]
 - up
 - see chat-messages-container
+
+learner2:
