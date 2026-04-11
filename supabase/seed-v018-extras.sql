@@ -58,6 +58,7 @@ values
 		current_date - interval '20 days',
 		null
 	),
+	-- aa110007: learner has NO card for this phrase; used as [team.nocard_phrase] in scenetest
 	(
 		'Hosa varsha shubhashayagalu',
 		'aa110007-7777-4aaa-bbbb-cccccccccccc',
