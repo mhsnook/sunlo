@@ -184,17 +184,13 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 						.throwOnError()
 			return data
 		},
-		onSuccess: (data, variables) => {
+		onSuccess: (data) => {
 			try {
 				if (data[0]) updatePhraseCounts(phrase.card, data[0])
 
 				if (phrase.card) {
 					for (const card of data) {
-						cardsCollection.utils.writeUpdate({
-							phrase_id: card.phrase_id,
-							direction: card.direction,
-							status: variables.status,
-						})
+						cardsCollection.utils.writeUpdate(CardMetaSchema.parse(card))
 					}
 				} else {
 					for (const card of data) {
