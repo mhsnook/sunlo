@@ -3,7 +3,10 @@ import { defineTeam } from '@scenetest/scenes'
 export default defineTeam({
 	name: 'Sunlo Default',
 	owns: ['/learn', '/friends'],
-	tags: { lang: 'kan' },
+	tags: {
+		lang: 'kan',
+		nocard_phrase: 'aa110007-7777-4aaa-bbbb-cccccccccccc',
+	},
 	actors: {
 		visitor: {
 			key: undefined!,

@@ -64,12 +64,12 @@ learner:
 
 # learner adds a phrase to their deck
 
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('phrase_id', 'aa110007-7777-4aaa-bbbb-cccccccccccc')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('phrase_id', '[team.nocard_phrase]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/phrases/aa110007-7777-4aaa-bbbb-cccccccccccc
+- openTo /learn/[team.lang]/phrases/[team.nocard_phrase]
 - up
 - see phrase-detail-page
 - seeText Not in deck
