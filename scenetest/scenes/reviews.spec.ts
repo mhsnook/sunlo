@@ -8,7 +8,14 @@
 import { scene } from '@scenetest/scenes'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/supabase'
-import { todayString } from '../../src/lib/utils'
+
+// Inlined from src/lib/utils to avoid pulling in browser-only imports (sonner)
+function todayString() {
+	const now = new Date()
+	now.setHours(now.getHours() - 4)
+	const pad = (n: number) => `0${n}`.slice(-2)
+	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+}
 
 const supabase = createClient<Database>(
 	process.env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321',
