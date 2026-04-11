@@ -75,8 +75,7 @@ learner:
 - up
 - click view-archived-decks-link
 - up
-- see deck-card-[team.lang]
-- click deck-link
+- click deck-card-[team.lang] deck-link
 - up
 - go-to-deck-settings
 - click restore-deck-button
