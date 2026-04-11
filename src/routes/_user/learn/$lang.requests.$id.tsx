@@ -52,16 +52,20 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		titleBar: { title: `${languages[lang]} Request` },
 		appnav: [],
 	}),
-	loader: async ({ location, cause }) => {
-		await Promise.all([
+	loader: async ({ context, location, cause }) => {
+		const preloads: Promise<unknown>[] = [
 			phraseRequestsCollection.preload(),
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
-			commentUpvotesCollection.preload(),
-		])
+		]
+		if (context.auth.isAuth) {
+			preloads.push(commentUpvotesCollection.preload())
+		}
+		await Promise.all(preloads)
 		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
 		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
-			if (cause === 'preload') console.error('Malformed focus param in preload link:', rawFocus)
+			if (cause === 'preload')
+				console.error('Malformed focus param in preload link:', rawFocus)
 			else toastNeutral("Couldn't find that comment")
 		}
 	},

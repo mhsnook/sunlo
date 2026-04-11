@@ -18,7 +18,8 @@ export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
 		focusMode: true,
 	}),
 	component: PreviewPage,
-	loader: async () => {
+	loader: async ({ context }) => {
+		if (!context.auth.isAuth) return
 		await Promise.all([
 			reviewDaysCollection.preload(),
 			cardReviewsCollection.preload(),

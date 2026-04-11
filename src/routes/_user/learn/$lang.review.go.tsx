@@ -31,10 +31,12 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		fixedHeight: true,
 	}),
 	component: ReviewPage,
-	loader: async () => {
-		const daysLoaded = reviewDaysCollection.preload()
-		const reviewsLoaded = cardReviewsCollection.preload()
-		await Promise.all([daysLoaded, reviewsLoaded])
+	loader: async ({ context }) => {
+		if (!context.auth.isAuth) return
+		await Promise.all([
+			reviewDaysCollection.preload(),
+			cardReviewsCollection.preload(),
+		])
 	},
 })
 
