@@ -36,7 +36,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				session?.user.id &&
 				sessionState.user.id !== session.user.id
 			if (isSigningOut || isSwitchingUsers) {
-				void clearUser()
+				// Update auth state first so React unmounts user components (and their
+				// live queries) before we destroy the underlying collections. Without
+				// this ordering, cleanup() fires while live queries are still
+				// subscribed, producing dozens of console errors.
+				setSessionState(session)
+				setIsLoaded(true)
+				setIsReady(true)
+				// Defer collection cleanup to the next macro-task so React has time
+				// to process the state update and unmount subscribers.
+				setTimeout(() => void clearUser(), 0)
+				return
 			}
 			// Refetch user collections only when logging in from a logged-out state
 			// (not on token refresh or other events that already have a user)
