@@ -44,7 +44,10 @@ export function NavUser() {
 			if (error) {
 				console.log(`auth.signOut error:`, error, `- clearing session manually`)
 				removeSbTokens()
-				await clearUser()
+				// No SIGNED_OUT event will fire, so we need to clear user data
+				// ourselves. Defer so React can process the navigation and unmount
+				// live-query subscribers before we destroy collections.
+				setTimeout(() => void clearUser(), 0)
 			}
 			// Don't throw - we want to navigate home regardless
 		},
