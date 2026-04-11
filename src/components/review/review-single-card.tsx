@@ -42,7 +42,10 @@ import {
 	PhraseFullFilteredType,
 	TranslationType,
 } from '@/features/phrases/schemas'
-import { CardMetaSchema, type CardDirectionType } from '@/features/deck/schemas'
+import {
+	type CardDirectionType,
+	CardStatusEnumSchema,
+} from '@/features/deck/schemas'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
@@ -219,7 +222,7 @@ export function ReviewSingleCard({
 					</div>
 				</CardContent>
 			</CardlikeFlashcard>
-			<div className="sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-background from-80% to-transparent pt-6 pb-3">
+			<div className="from-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-80% to-transparent pt-6 pb-3">
 				{!showAnswers ?
 					<Button
 						data-testid="reveal-answer-button"
@@ -396,7 +399,11 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 		onSuccess: (data) => {
 			if (data) {
 				for (const card of data) {
-					cardsCollection.utils.writeUpdate(CardMetaSchema.parse(card))
+					cardsCollection.utils.writeUpdate({
+						id: card.id,
+						status: CardStatusEnumSchema.parse(card.status),
+						updated_at: card.updated_at!,
+					})
 				}
 				const status = data[0]?.status
 				const message =

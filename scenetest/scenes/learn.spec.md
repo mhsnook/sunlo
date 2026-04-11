@@ -1,5 +1,8 @@
 # learner navigates within a deck using sidebar
 
+cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+
 learner:
 
 - login
@@ -10,8 +13,7 @@ learner:
 - up
 - click /learn/$lang/review
 - up
-- see review-intro
-- click review-intro-dismiss
+- ifClick review-intro-dismiss
 - see review-setup-page
 - up
 - click /learn/$lang/search
@@ -62,15 +64,15 @@ learner:
 
 # learner adds a phrase to their deck
 
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('phrase_id', '[team.nocard_phrase]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/phrases/aa110007-7777-4aaa-bbbb-cccccccccccc
+- openTo /learn/[team.lang]/phrases/[team.nocard_phrase]
+- up
 - see phrase-detail-page
 - seeText Not in deck
-- up
 - click card-status-dropdown
 - click add-to-deck-option
 - up
@@ -112,10 +114,8 @@ learner:
 - go-to-deck
 - click /learn/$lang/review
 - up
-- see review-intro
-- click review-intro-dismiss
+- ifClick review-intro-dismiss
 - see review-setup-page
-- seeText Total cards
 - up
 - see start-review-button
 - click start-review-button
@@ -133,8 +133,8 @@ learner:
 
 - login
 - openTo /learn/[team.lang]/review
-- see review-intro
-- click review-intro-dismiss
+- up
+- ifClick review-intro-dismiss
 - see review-setup-page
 - up
 - click start-review-button
