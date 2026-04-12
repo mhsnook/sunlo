@@ -48,7 +48,6 @@ export {
 // Manifest utilities
 export {
 	toManifestEntry,
-	asManifestEntry,
 	parseManifestEntry,
 	manifestPhraseId,
 	type ManifestEntry,
