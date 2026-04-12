@@ -6,14 +6,30 @@
 import type { CardDirectionType } from '@/features/deck/schemas'
 import type { uuid } from '@/types/main'
 
-/** A manifest entry string like "abc-123:forward" or "abc-123:reverse" */
-export type ManifestEntry = string
+/**
+ * A manifest entry string like "abc-123:forward" or "abc-123:reverse".
+ *
+ * Branded so `Map<ManifestEntry, T>` rejects a bare `phrase_id` at compile
+ * time — the only way to produce one is `toManifestEntry()` or the
+ * `asManifestEntry()` trust-boundary cast for strings read from the DB.
+ */
+declare const manifestEntryBrand: unique symbol
+export type ManifestEntry = string & { readonly [manifestEntryBrand]: true }
 
 export function toManifestEntry(
 	phraseId: uuid,
 	direction: CardDirectionType
 ): ManifestEntry {
-	return `${phraseId}:${direction}`
+	return `${phraseId}:${direction}` as ManifestEntry
+}
+
+/**
+ * Trust-boundary cast for strings already known to be manifest entries
+ * (e.g. values read from `user_deck_review_state.manifest`, or test fixtures).
+ * Prefer `toManifestEntry()` when constructing from components.
+ */
+export function asManifestEntry(s: string): ManifestEntry {
+	return s as ManifestEntry
 }
 
 export function parseManifestEntry(entry: ManifestEntry): {

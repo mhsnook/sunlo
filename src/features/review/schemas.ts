@@ -1,6 +1,7 @@
 import * as z from 'zod'
 import { LangSchema } from '@/features/languages/schemas'
 import { CardDirectionSchema } from '@/features/deck/schemas'
+import { asManifestEntry, type ManifestEntry } from './manifest'
 
 export const CardReviewSchema = z.object({
 	id: z.string().uuid(),
@@ -24,7 +25,12 @@ export const DailyReviewStateSchema = z.object({
 	created_at: z.string(),
 	day_session: z.string().length(10),
 	lang: LangSchema,
-	manifest: z.array(z.string()).nullable(),
+	manifest: z
+		.array(z.string())
+		.nullable()
+		.transform(
+			(arr): Array<ManifestEntry> | null => arr?.map(asManifestEntry) ?? null
+		),
 	stage: z.number().int().min(0).max(5).default(1),
 	uid: z.string().uuid(),
 })

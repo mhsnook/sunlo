@@ -578,7 +578,7 @@ import { todayString } from '@/lib/dayjs'
 - **Path aliases**: Always use `@/` prefix for imports
 - **Type naming**: Zod schemas generate types with `Type` suffix (e.g., `PhraseFullSchema` → infer as `PhraseFullType`)
 - **Query keys**: Use array format matching collection IDs (e.g., `['public', 'phrase_full']`)
-- **Collection keys**: Define `getKey` to return each row's actual unique identifier. Most collections use `item.id`, but notable exceptions: `decksCollection` uses `item.lang`, `cardsCollection` uses `item.phrase_id`, profile collections use `item.uid`, upvote collections use the foreign key (e.g., `item.comment_id`), and `reviewDaysCollection`/`friendSummariesCollection` use composite template strings (e.g., `` `${item.day_session}--${item.lang}` ``). Always check the source table's unique constraint
+- **Collection keys**: Define `getKey` to return each row's actual unique identifier. Most collections use `item.id`, but notable exceptions: `decksCollection` uses `item.lang`, profile collections use `item.uid`, upvote collections use the foreign key (e.g., `item.comment_id`), and `reviewDaysCollection`/`friendSummariesCollection` use composite template strings (e.g., `` `${item.day_session}--${item.lang}` ``). Always check the source table's unique constraint
 
 ## Styling with Tailwind CSS
 

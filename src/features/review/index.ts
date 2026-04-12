@@ -15,6 +15,7 @@ export { cardReviewsCollection, reviewDaysCollection } from './collections'
 // Pure utilities (no supabase dependency)
 export {
 	buildReviewsMap,
+	firstTryReviewMap,
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
 	type ReviewStages,
@@ -47,6 +48,7 @@ export {
 // Manifest utilities
 export {
 	toManifestEntry,
+	asManifestEntry,
 	parseManifestEntry,
 	manifestPhraseId,
 	type ManifestEntry,
