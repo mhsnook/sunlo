@@ -5,7 +5,7 @@ import {
 	type ReviewsMap,
 } from '@/features/review/review-utils'
 import type { CardReviewType } from '@/features/review/schemas'
-import type { ManifestEntry } from '@/features/review/manifest'
+import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
 
 /**
  * These tests verify the session-navigation functions with manifests that
@@ -21,6 +21,11 @@ import type { ManifestEntry } from '@/features/review/manifest'
 const P1 = '00000000-0000-0000-0000-000000000001'
 const P2 = '00000000-0000-0000-0000-000000000002'
 const P3 = '00000000-0000-0000-0000-000000000003'
+
+// Shorthand: `me(P1, 'forward')` reads like `${P1}:forward` but is properly
+// branded as ManifestEntry.
+const me = (pid: string, dir: 'forward' | 'reverse') =>
+	toManifestEntry(pid, dir)
 
 /** Minimal CardReviewType stub — only score matters for these tests */
 function stubReview(score: number): CardReviewType {
@@ -46,9 +51,12 @@ describe('getIndexOfNextUnreviewedCard', () => {
 		// Manifest: [P1:forward, P1:reverse]
 		// Only P1:forward has been reviewed.
 		// Expected: P1:reverse (index 1) is the next unreviewed card.
-		const manifest: Array<ManifestEntry> = [`${P1}:forward`, `${P1}:reverse`]
+		const manifest: Array<ManifestEntry> = [
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
+			[me(P1, 'forward')]: stubReview(3),
 		}
 
 		const next = getIndexOfNextUnreviewedCard(manifest, reviewsMap, -1)
@@ -60,12 +68,12 @@ describe('getIndexOfNextUnreviewedCard', () => {
 		// P1:reverse reviewed, but P1:forward and P2:forward not reviewed.
 		// Starting from index -1, P1:forward (index 0) is found first.
 		const manifest: Array<ManifestEntry> = [
-			`${P1}:forward`,
-			`${P1}:reverse`,
-			`${P2}:forward`,
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+			me(P2, 'forward'),
 		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:reverse`]: stubReview(3),
+			[me(P1, 'reverse')]: stubReview(3),
 		}
 
 		const next = getIndexOfNextUnreviewedCard(manifest, reviewsMap, -1)
@@ -73,10 +81,13 @@ describe('getIndexOfNextUnreviewedCard', () => {
 	})
 
 	it('returns manifest.length when all cards (both directions) are reviewed', () => {
-		const manifest: Array<ManifestEntry> = [`${P1}:forward`, `${P1}:reverse`]
+		const manifest: Array<ManifestEntry> = [
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
-			[`${P1}:reverse`]: stubReview(2),
+			[me(P1, 'forward')]: stubReview(3),
+			[me(P1, 'reverse')]: stubReview(2),
 		}
 
 		const next = getIndexOfNextUnreviewedCard(manifest, reviewsMap, -1)
@@ -86,19 +97,19 @@ describe('getIndexOfNextUnreviewedCard', () => {
 	it('handles a realistic mixed manifest: forward-due, forward-new, reverse-due, reverse-new', () => {
 		// This mirrors the 4-bucket ordering built by the review setup page
 		const manifest: Array<ManifestEntry> = [
-			`${P1}:forward`, // due
-			`${P2}:forward`, // new
-			`${P3}:forward`, // new
-			`${P1}:reverse`, // due
-			`${P2}:reverse`, // new
-			`${P3}:reverse`, // new
+			me(P1, 'forward'), // due
+			me(P2, 'forward'), // new
+			me(P3, 'forward'), // new
+			me(P1, 'reverse'), // due
+			me(P2, 'reverse'), // new
+			me(P3, 'reverse'), // new
 		]
 
 		// Suppose we've reviewed up through index 2 (all forward cards)
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
-			[`${P2}:forward`]: stubReview(1),
-			[`${P3}:forward`]: stubReview(4),
+			[me(P1, 'forward')]: stubReview(3),
+			[me(P2, 'forward')]: stubReview(1),
+			[me(P3, 'forward')]: stubReview(4),
 		}
 
 		// Starting from currentCardIndex=2, the next unreviewed is index 3 (P1:reverse)
@@ -109,9 +120,12 @@ describe('getIndexOfNextUnreviewedCard', () => {
 	it('does not confuse a forward review as covering the reverse card', () => {
 		// This is the critical direction-isolation check:
 		// Reviewing P1:forward should NOT mark P1:reverse as reviewed.
-		const manifest: Array<ManifestEntry> = [`${P1}:forward`, `${P1}:reverse`]
+		const manifest: Array<ManifestEntry> = [
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
+			[me(P1, 'forward')]: stubReview(3),
 			// P1:reverse is NOT in the map — it has not been reviewed
 		}
 
@@ -126,14 +140,14 @@ describe('getIndexOfNextAgainCard', () => {
 		// P1:forward scored Good (3), P1:reverse scored Again (1)
 		// Should find P1:reverse, not P1:forward.
 		const manifest: Array<ManifestEntry> = [
-			`${P1}:forward`,
-			`${P1}:reverse`,
-			`${P2}:forward`,
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+			me(P2, 'forward'),
 		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
-			[`${P1}:reverse`]: stubReview(1),
-			[`${P2}:forward`]: stubReview(3),
+			[me(P1, 'forward')]: stubReview(3),
+			[me(P1, 'reverse')]: stubReview(1),
+			[me(P2, 'forward')]: stubReview(3),
 		}
 
 		const next = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
@@ -143,10 +157,13 @@ describe('getIndexOfNextAgainCard', () => {
 	it('does not confuse forward Again with reverse Good for same phrase', () => {
 		// P1:forward scored Again (1), P1:reverse scored Good (3)
 		// Should find P1:forward, not P1:reverse.
-		const manifest: Array<ManifestEntry> = [`${P1}:forward`, `${P1}:reverse`]
+		const manifest: Array<ManifestEntry> = [
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(1),
-			[`${P1}:reverse`]: stubReview(3),
+			[me(P1, 'forward')]: stubReview(1),
+			[me(P1, 'reverse')]: stubReview(3),
 		}
 
 		const next = getIndexOfNextAgainCard(manifest, reviewsMap, -1)
@@ -155,14 +172,14 @@ describe('getIndexOfNextAgainCard', () => {
 
 	it('wraps around the manifest to find Again cards before current index', () => {
 		const manifest: Array<ManifestEntry> = [
-			`${P1}:forward`,
-			`${P2}:forward`,
-			`${P1}:reverse`,
+			me(P1, 'forward'),
+			me(P2, 'forward'),
+			me(P1, 'reverse'),
 		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(1), // Again
-			[`${P2}:forward`]: stubReview(3), // Good
-			[`${P1}:reverse`]: stubReview(3), // Good
+			[me(P1, 'forward')]: stubReview(1), // Again
+			[me(P2, 'forward')]: stubReview(3), // Good
+			[me(P1, 'reverse')]: stubReview(3), // Good
 		}
 
 		// Currently at index 2 (P1:reverse). The only Again is at index 0 (P1:forward).
@@ -172,10 +189,13 @@ describe('getIndexOfNextAgainCard', () => {
 	})
 
 	it('returns manifest.length when no Again cards exist', () => {
-		const manifest: Array<ManifestEntry> = [`${P1}:forward`, `${P1}:reverse`]
+		const manifest: Array<ManifestEntry> = [
+			me(P1, 'forward'),
+			me(P1, 'reverse'),
+		]
 		const reviewsMap: ReviewsMap = {
-			[`${P1}:forward`]: stubReview(3),
-			[`${P1}:reverse`]: stubReview(4),
+			[me(P1, 'forward')]: stubReview(3),
+			[me(P1, 'reverse')]: stubReview(4),
 		}
 
 		const next = getIndexOfNextAgainCard(manifest, reviewsMap, -1)

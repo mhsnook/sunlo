@@ -5,7 +5,7 @@
  */
 
 import type { CardReviewType } from './schemas'
-import { toManifestEntry } from './manifest'
+import { toManifestEntry, type ManifestEntry } from './manifest'
 
 /*
 	null: not yet initialised (zustand store only)
@@ -17,7 +17,7 @@ import { toManifestEntry } from './manifest'
 */
 export type ReviewStages = null | 1 | 2 | 3 | 4 | 5
 export type ReviewsMap = {
-	[key: string]: CardReviewType
+	[key: ManifestEntry]: CardReviewType
 }
 
 /** Build a ReviewsMap keyed by manifest entry (phrase_id:direction) */
@@ -30,25 +30,41 @@ export function buildReviewsMap(reviews: Array<CardReviewType>): ReviewsMap {
 	return map
 }
 
+/**
+ * Build a Map of first-try reviews keyed by manifest entry.
+ * Use this instead of hand-rolling a Map — the branded key type prevents
+ * accidentally keying by bare phrase_id (which silently misses reverse cards
+ * and any lookup against a manifest).
+ */
+export function firstTryReviewMap(
+	reviews: Array<CardReviewType>
+): Map<ManifestEntry, CardReviewType> {
+	return new Map(
+		reviews
+			.filter((r) => r.day_first_review === true)
+			.map((r) => [toManifestEntry(r.phrase_id, r.direction), r])
+	)
+}
+
 export function getIndexOfNextUnreviewedCard(
-	manifest: Array<string>,
+	manifest: Array<ManifestEntry>,
 	reviewsMap: ReviewsMap,
 	currentCardIndex: number
 ) {
-	const index = manifest.findIndex((pid, i) => {
+	const index = manifest.findIndex((entry, i) => {
 		// if we're currently at card 3 of 40, don't even check cards 0-3
 		// but if we're at 40/40 we should check from the start
 		if (currentCardIndex !== manifest.length && i <= currentCardIndex)
 			return false
 		// if the entry is undefined, it means we haven't reviewed this card yet
-		return !reviewsMap[pid]
+		return !reviewsMap[entry]
 	})
 
 	return index !== -1 ? index : manifest.length
 }
 
 export function getIndexOfNextAgainCard(
-	manifest: Array<string>,
+	manifest: Array<ManifestEntry>,
 	reviewsMap: ReviewsMap,
 	currentCardIndex: number
 ) {

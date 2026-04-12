@@ -2,6 +2,7 @@ import { Share2 } from 'lucide-react'
 import { toastSuccess } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { useReviewsToday } from '@/features/review/hooks'
+import { firstTryReviewMap } from '@/features/review/review-utils'
 import { useLanguageMeta } from '@/features/languages'
 
 interface ReviewShareButtonProps {
@@ -16,14 +17,10 @@ export function ReviewShareButton({ lang, dayString }: ReviewShareButtonProps) {
 	const manifest = data?.manifest ?? []
 	const reviews = data?.reviews ?? []
 
-	const firstTryMap = new Map(
-		reviews
-			.filter((r) => r.day_first_review === true)
-			.map((r) => [r.phrase_id, r])
-	)
+	const firstTryMap = firstTryReviewMap(reviews)
 
-	const emojis = manifest.map((pid) => {
-		const review = firstTryMap.get(pid)
+	const emojis = manifest.map((entry) => {
+		const review = firstTryMap.get(entry)
 		if (!review) return '⬛'
 		if (review.score === 1) return '🟨'
 		return '🟩'

@@ -6,14 +6,22 @@
 import type { CardDirectionType } from '@/features/deck/schemas'
 import type { uuid } from '@/types/main'
 
-/** A manifest entry string like "abc-123:forward" or "abc-123:reverse" */
-export type ManifestEntry = string
+/**
+ * A manifest entry string like "abc-123:forward" or "abc-123:reverse".
+ *
+ * Branded so `Map<ManifestEntry, T>` rejects a bare `phrase_id` at compile
+ * time. Pure compile-time construct — `ManifestEntry` IS a string at runtime.
+ * Produce one via `toManifestEntry()`; strings coming from the DB are
+ * widened to `Array<ManifestEntry>` by `DailyReviewStateSchema`.
+ */
+declare const manifestEntryBrand: unique symbol
+export type ManifestEntry = string & { readonly [manifestEntryBrand]: true }
 
 export function toManifestEntry(
 	phraseId: uuid,
 	direction: CardDirectionType
 ): ManifestEntry {
-	return `${phraseId}:${direction}`
+	return `${phraseId}:${direction}` as ManifestEntry
 }
 
 export function parseManifestEntry(entry: ManifestEntry): {

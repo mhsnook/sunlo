@@ -3,6 +3,7 @@ import {
 	toManifestEntry,
 	parseManifestEntry,
 	manifestPhraseId,
+	type ManifestEntry,
 } from '@/features/review/manifest'
 
 const UUID = '550e8400-e29b-41d4-a716-446655440000'
@@ -19,21 +20,23 @@ describe('toManifestEntry', () => {
 
 describe('parseManifestEntry', () => {
 	it('parses forward entry', () => {
-		expect(parseManifestEntry(`${UUID}:forward`)).toEqual({
+		expect(parseManifestEntry(toManifestEntry(UUID, 'forward'))).toEqual({
 			phraseId: UUID,
 			direction: 'forward',
 		})
 	})
 
 	it('parses reverse entry', () => {
-		expect(parseManifestEntry(`${UUID}:reverse`)).toEqual({
+		expect(parseManifestEntry(toManifestEntry(UUID, 'reverse'))).toEqual({
 			phraseId: UUID,
 			direction: 'reverse',
 		})
 	})
 
 	it('treats bare UUID as forward (backward compat)', () => {
-		expect(parseManifestEntry(UUID)).toEqual({
+		// Legacy manifest rows stored bare UUIDs; cast inline since
+		// toManifestEntry always includes a direction suffix.
+		expect(parseManifestEntry(UUID as ManifestEntry)).toEqual({
 			phraseId: UUID,
 			direction: 'forward',
 		})
@@ -41,7 +44,7 @@ describe('parseManifestEntry', () => {
 
 	it('handles UUID containing colons in the id portion', () => {
 		// UUIDs don't contain colons, but test lastIndexOf behavior
-		const weird = 'not:a:uuid:forward'
+		const weird = 'not:a:uuid:forward' as ManifestEntry
 		expect(parseManifestEntry(weird)).toEqual({
 			phraseId: 'not:a:uuid',
 			direction: 'forward',
@@ -49,7 +52,7 @@ describe('parseManifestEntry', () => {
 	})
 
 	it('treats unknown suffix as forward (backward compat)', () => {
-		const entry = `${UUID}:something-else`
+		const entry = `${UUID}:something-else` as ManifestEntry
 		expect(parseManifestEntry(entry)).toEqual({
 			phraseId: entry,
 			direction: 'forward',
@@ -59,15 +62,15 @@ describe('parseManifestEntry', () => {
 
 describe('manifestPhraseId', () => {
 	it('extracts phrase id from forward entry', () => {
-		expect(manifestPhraseId(`${UUID}:forward`)).toBe(UUID)
+		expect(manifestPhraseId(toManifestEntry(UUID, 'forward'))).toBe(UUID)
 	})
 
 	it('extracts phrase id from reverse entry', () => {
-		expect(manifestPhraseId(`${UUID}:reverse`)).toBe(UUID)
+		expect(manifestPhraseId(toManifestEntry(UUID, 'reverse'))).toBe(UUID)
 	})
 
 	it('extracts phrase id from bare UUID', () => {
-		expect(manifestPhraseId(UUID)).toBe(UUID)
+		expect(manifestPhraseId(UUID as ManifestEntry)).toBe(UUID)
 	})
 })
 
