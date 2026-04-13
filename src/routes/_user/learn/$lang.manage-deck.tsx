@@ -1,7 +1,6 @@
 import { CSSProperties, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	ArrowDown,
@@ -22,12 +21,11 @@ import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
 import { cardsCollection } from '@/features/deck/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
+import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import {
 	type CardMetaType,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
-import type { PhraseFullType } from '@/features/phrases/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { cn, sessionDaysDiff } from '@/lib/utils'
@@ -147,13 +145,7 @@ function ManageDeckPage() {
 
 function useCardData(lang: string) {
 	const { data: cards, isLoading: cardsLoading } = useDeckCards(lang)
-	const { data: phrases, isLoading: phrasesLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.lang, lang)),
-		[lang]
-	) as { data: PhraseFullType[]; isLoading: boolean }
+	const { data: phrases, isLoading: phrasesLoading } = useLangPhrasesRaw(lang)
 
 	const [sortField, setSortField] = useState<SortField>('last_reviewed')
 	const [sortDir, setSortDir] = useState<SortDir>('desc')

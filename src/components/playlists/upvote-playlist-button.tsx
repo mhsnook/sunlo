@@ -1,6 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
-import { count, eq } from '@tanstack/db'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
@@ -8,6 +6,7 @@ import {
 	phrasePlaylistsCollection,
 	phrasePlaylistUpvotesCollection,
 } from '@/features/playlists/collections'
+import { useHasPlaylistUpvote } from '@/features/playlists/hooks'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
@@ -16,14 +15,7 @@ import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 	const requireAuth = useRequireAuth()
-	const hasUpvoted = !!useLiveQuery(
-		(q) =>
-			q
-				.from({ upvote: phrasePlaylistUpvotesCollection })
-				.where(({ upvote }) => eq(upvote.playlist_id, playlist.id))
-				.select(({ upvote }) => ({ total: count(upvote.playlist_id) })),
-		[playlist.id]
-	).data?.length
+	const hasUpvoted = useHasPlaylistUpvote(playlist.id)
 
 	// Upvote mutation with explicit action
 	const upvoteMutation = useMutation({

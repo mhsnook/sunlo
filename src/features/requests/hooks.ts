@@ -6,7 +6,10 @@ import {
 	commentPhraseLinksCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
-import { phraseRequestsCollection } from './collections'
+import {
+	phraseRequestsCollection,
+	phraseRequestUpvotesCollection,
+} from './collections'
 import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from './schemas'
 import { mapArrays } from '@/lib/utils'
@@ -67,16 +70,29 @@ export const useRequestCounts = (
 	}
 }
 
-export const useRequest = (id: uuid): UseLiveQueryResult<PhraseRequestType> =>
+export const useRequest = (
+	id: uuid | undefined | null
+): UseLiveQueryResult<PhraseRequestType> =>
 	useLiveQuery(
-		(q) => {
-			return q
-				.from({ req: phraseRequestsCollection })
-				.where(({ req }) => eq(req.id, id))
-				.findOne()
-		},
+		(q) =>
+			!id ? undefined : (
+				q
+					.from({ req: phraseRequestsCollection })
+					.where(({ req }) => eq(req.id, id))
+					.findOne()
+			),
 		[id]
 	)
+
+/** Whether the current user has upvoted this request. */
+export const useHasRequestUpvote = (requestId: uuid): boolean =>
+	!!useLiveQuery(
+		(q) =>
+			q
+				.from({ upvote: phraseRequestUpvotesCollection })
+				.where(({ upvote }) => eq(upvote.request_id, requestId)),
+		[requestId]
+	).data?.length
 
 export type FulfillRequestResponse = {
 	phrase: Tables<'phrase'>

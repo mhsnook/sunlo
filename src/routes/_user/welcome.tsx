@@ -5,7 +5,7 @@ import {
 	Navigate,
 	useNavigate,
 } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	WalletCards,
 	Users,
@@ -23,6 +23,7 @@ import { useProfile } from '@/features/profile/hooks'
 import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -359,8 +360,7 @@ function RequestsYouCanHelp() {
 	// Get requests in languages the user knows
 	const { data: relevantRequests } = useLiveQuery((q) =>
 		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+			.from({ req: phraseRequestsActive })
 			.orderBy(({ req }) => req.upvote_count, 'desc')
 	)
 

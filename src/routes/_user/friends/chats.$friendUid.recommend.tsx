@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import { useDebounce } from '@/hooks/use-debounce'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
@@ -18,8 +18,8 @@ import type { TablesInsert } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 
 import {
 	Dialog,
@@ -74,14 +74,10 @@ function RouteComponent() {
 		q.from({ phrase: phrasesCollection })
 	)
 	const { data: allRequests } = useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+		q.from({ req: phraseRequestsActive })
 	)
 	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+		q.from({ playlist: phrasePlaylistsActive })
 	)
 
 	// Filter and search results

@@ -1,6 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
-import { count, eq } from '@tanstack/db'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
@@ -8,6 +6,7 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
+import { useHasRequestUpvote } from '@/features/requests/hooks'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
@@ -16,14 +15,7 @@ import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 	const requireAuth = useRequireAuth()
-	const hasUpvoted = !!useLiveQuery(
-		(q) =>
-			q
-				.from({ upvote: phraseRequestUpvotesCollection })
-				.where(({ upvote }) => eq(upvote.request_id, request.id))
-				.select(({ upvote }) => ({ total: count(upvote.request_id) })),
-		[request.id]
-	).data?.length
+	const hasUpvoted = useHasRequestUpvote(request.id)
 
 	// Upvote mutation with explicit action
 	const upvoteMutation = useMutation({

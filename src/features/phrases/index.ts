@@ -27,6 +27,8 @@ export { phrasesFull } from './live'
 // Hooks
 export {
 	useLanguagePhrases,
+	useLangPhrasesRaw,
+	useOnePhrase,
 	useLanguagePhrasesSearch,
 	useLanguagePhrase,
 	useAllMyPhrasesLang,

@@ -37,9 +37,7 @@ import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-import { eq, useLiveQuery } from '@tanstack/react-db'
-import { commentPhraseLinksCollection } from '@/features/comments/collections'
-import { phrasesFull } from '@/features/phrases/live'
+import { usePhrasesFromComment } from '@/features/comments/hooks'
 import type { RequestCommentType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 
@@ -347,18 +345,7 @@ function CommentCardWithPhrases({
 	comment: RequestCommentType
 	request: PhraseRequestType
 }) {
-	const { data: phrases } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.comment_id, comment.id))
-				.join(
-					{ phrase: phrasesFull },
-					({ link, phrase }) => eq(link.phrase_id, phrase.id),
-					'inner'
-				),
-		[comment.id]
-	)
+	const { data: phrases } = usePhrasesFromComment(comment.id)
 
 	return (
 		<div className="bg-card space-y-2 rounded p-4 shadow-sm">

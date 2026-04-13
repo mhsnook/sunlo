@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDebounce } from '@/hooks/use-debounce'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
 	X,
@@ -21,8 +21,8 @@ import {
 } from 'lucide-react'
 
 import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useDecks } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { LangBadge } from '@/components/ui/badge'
@@ -85,14 +85,10 @@ export default function BrowseSearchOverlay({
 		q.from({ phrase: phrasesCollection })
 	)
 	const { data: allRequests } = useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+		q.from({ req: phraseRequestsActive })
 	)
 	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+		q.from({ playlist: phrasePlaylistsActive })
 	)
 
 	// Search and filter results

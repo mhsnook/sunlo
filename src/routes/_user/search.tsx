@@ -27,11 +27,11 @@ import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { cn } from '@/lib/utils'
 import { phrasesFull } from '@/features/phrases/live'
 import {
-	languagesCollection,
-	langTagsCollection,
-} from '@/features/languages/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
+	useAllLangTags,
+	useLanguagesWithPhrases,
+} from '@/features/languages/hooks'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
+import { phraseRequestsActive } from '@/features/requests/live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
@@ -89,28 +89,12 @@ function SearchPage() {
 	const langFilter = filters.find((f) => f.type === 'lang')?.value
 	const tagFilters = filters.filter((f) => f.type === 'tag').map((f) => f.value)
 
-	// Languages that have phrases
-	const { data: availableLanguages } = useLiveQuery(
-		(q) =>
-			q
-				.from({ lang: languagesCollection })
-				.fn.where(({ lang }) => (lang.phrases_to_learn ?? 0) > 0),
-		[]
-	)
-
-	const sortedLanguages = useMemo(
-		() =>
-			[...(availableLanguages ?? [])].toSorted(
-				(a, b) => (b.phrases_to_learn ?? 0) - (a.phrases_to_learn ?? 0)
-			),
-		[availableLanguages]
-	)
+	// Languages that have phrases (sorted by phrases_to_learn desc)
+	const { data: sortedLanguagesData } = useLanguagesWithPhrases()
+	const sortedLanguages = sortedLanguagesData ?? []
 
 	// All tags (per-language)
-	const { data: allTags } = useLiveQuery(
-		(q) => q.from({ tag: langTagsCollection }),
-		[]
-	)
+	const { data: allTags } = useAllLangTags()
 
 	const uniqueTagNames = useMemo(
 		() => [...new Set(allTags?.map((t) => t.name) ?? [])].toSorted(),
@@ -216,9 +200,7 @@ function SearchPage() {
 			if (typeFilters.size > 0 && !typeFilters.has('playlist')) return undefined
 			if (!effectiveText || effectiveText.length < 2) return undefined
 
-			let query = q
-				.from({ playlist: phrasePlaylistsCollection })
-				.where(({ playlist }) => eq(playlist.deleted, false))
+			let query = q.from({ playlist: phrasePlaylistsActive })
 
 			if (langFilter) {
 				query = query.where(({ playlist }) => eq(playlist.lang, langFilter))
@@ -242,9 +224,7 @@ function SearchPage() {
 			if (typeFilters.size > 0 && !typeFilters.has('request')) return undefined
 			if (!effectiveText || effectiveText.length < 2) return undefined
 
-			let query = q
-				.from({ req: phraseRequestsCollection })
-				.where(({ req }) => eq(req.deleted, false))
+			let query = q.from({ req: phraseRequestsActive })
 
 			if (langFilter) {
 				query = query.where(({ req }) => eq(req.lang, langFilter))

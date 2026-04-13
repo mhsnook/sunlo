@@ -17,7 +17,14 @@ export {
 export { languagesCollection, langTagsCollection } from './collections'
 
 // Hooks
-export { useLanguageMeta, useLanguageTags } from './hooks'
+export {
+	useLanguageMeta,
+	useLanguageTags,
+	useAllLanguages,
+	useLanguagesSortedByLearners,
+	useLanguagesWithPhrases,
+	useAllLangTags,
+} from './hooks'
 
 // Static data
 export { default as languages } from '@/lib/languages'

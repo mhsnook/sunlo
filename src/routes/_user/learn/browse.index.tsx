@@ -1,6 +1,6 @@
 import { type CSSProperties } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Globe,
 	Users,
@@ -16,13 +16,15 @@ import {
 	UserPlus,
 } from 'lucide-react'
 
-import { languagesCollection } from '@/features/languages/collections'
+import {
+	useAllLanguages,
+	useLanguagesSortedByLearners,
+} from '@/features/languages/hooks'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import {
-	phrasePlaylistsCollection,
-	playlistPhraseLinksCollection,
-} from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
+import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useAuth } from '@/lib/use-auth'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
@@ -126,9 +128,7 @@ function BrowsePage() {
 }
 
 function StatsSection() {
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q.from({ lang: languagesCollection })
-	)
+	const { data: allLanguages } = useAllLanguages()
 	const { data: allPhrases } = useLiveQuery((q) =>
 		q.from({ phrase: phrasesCollection })
 	)
@@ -182,11 +182,7 @@ function StatsSection() {
 }
 
 function LanguagesSection() {
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q
-			.from({ lang: languagesCollection })
-			.orderBy(({ lang }) => lang.learners, 'desc')
-	)
+	const { data: allLanguages } = useLanguagesSortedByLearners()
 
 	const { data: requestCounts } = useLiveQuery((q) =>
 		q.from({ req: phraseRequestsCollection })
@@ -392,8 +388,7 @@ function LanguageListItem({
 function PopularRequestsSection() {
 	const { data: popularRequests } = useLiveQuery((q) =>
 		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+			.from({ req: phraseRequestsActive })
 			.orderBy(({ req }) => req.upvote_count, 'desc')
 	)
 
@@ -460,8 +455,7 @@ function RequestCard({
 function TrendingPlaylistsSection() {
 	const { data: playlists } = useLiveQuery((q) =>
 		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+			.from({ playlist: phrasePlaylistsActive })
 			.orderBy(({ playlist }) => playlist.upvote_count, 'desc')
 	)
 

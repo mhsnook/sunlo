@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useLiveQuery } from '@tanstack/react-db'
 import {
 	ChevronsUpDown,
 	Globe,
@@ -26,7 +25,7 @@ import {
 } from '@/components/ui/sidebar'
 import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
-import { languagesCollection } from '@/features/languages/collections'
+import { useLanguagesSortedByLearners } from '@/features/languages/hooks'
 import languages from '@/lib/languages'
 
 const useDeckMenuData = () => {
@@ -150,11 +149,7 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 
 function LanguageBrowser({ lang }: { lang?: string }) {
 	const { isMobile, setClosedMobile } = useSidebar()
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q
-			.from({ lang: languagesCollection })
-			.orderBy(({ lang }) => lang.learners, 'desc')
-	)
+	const { data: allLanguages } = useLanguagesSortedByLearners()
 	const languageName = lang ? languages[lang] : null
 
 	const topLanguages = allLanguages?.slice(0, 10) ?? []

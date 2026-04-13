@@ -1,13 +1,12 @@
 import { ReactNode, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -32,6 +31,7 @@ import {
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
+import { useOneComment } from '@/features/comments/hooks'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
@@ -130,19 +130,6 @@ const CommentFormSchema = z.object({
 })
 
 type CommentFormInputs = z.infer<typeof CommentFormSchema>
-
-function useOneComment(
-	commentId: uuid
-): UseLiveQueryResult<RequestCommentType> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) => eq(comment.id, commentId))
-				.findOne(),
-		[commentId]
-	)
-}
 
 function NewCommentForm({
 	requestId,
