@@ -99,18 +99,20 @@ type ChatsMap = {
 
 export const useAllChats = (): UseLiveQueryResult<ChatsMap> => {
 	const userId = useUserId()
-	const initialQuery = useLiveQuery((q) =>
-		q
-			.from({ message: chatMessagesCollection })
-			.orderBy(({ message }) => message.created_at, 'asc')
-			.fn.select(({ message }) => ({
-				...message,
-				friendUid:
-					message.sender_uid === userId ?
-						message.recipient_uid
-					:	message.sender_uid,
-				isByMe: message.sender_uid === userId,
-			}))
+	const initialQuery = useLiveQuery(
+		(q) =>
+			q
+				.from({ message: chatMessagesCollection })
+				.orderBy(({ message }) => message.created_at, 'asc')
+				.fn.select(({ message }) => ({
+					...message,
+					friendUid:
+						message.sender_uid === userId ?
+							message.recipient_uid
+						:	message.sender_uid,
+					isByMe: message.sender_uid === userId,
+				})),
+		[userId]
 	)
 
 	return {
