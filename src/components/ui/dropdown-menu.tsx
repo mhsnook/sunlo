@@ -8,26 +8,9 @@ const DropdownMenu = ({ ...props }: MenuPrimitive.Root.Props) => (
 	<MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 )
 
-const DropdownMenuTrigger = ({
-	asChild,
-	children,
-	...props
-}: MenuPrimitive.Trigger.Props & { asChild?: boolean }) => {
-	if (asChild && React.isValidElement(children)) {
-		return (
-			<MenuPrimitive.Trigger
-				data-slot="dropdown-menu-trigger"
-				render={children as React.ReactElement}
-				{...props}
-			/>
-		)
-	}
-	return (
-		<MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>
-			{children}
-		</MenuPrimitive.Trigger>
-	)
-}
+const DropdownMenuTrigger = (props: MenuPrimitive.Trigger.Props) => (
+	<MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
+)
 
 const DropdownMenuGroup = ({ ...props }: MenuPrimitive.Group.Props) => (
 	<MenuPrimitive.Group data-slot="dropdown-menu-group" {...props} />
@@ -119,36 +102,21 @@ const DropdownMenuContent = ({
 const DropdownMenuItem = ({
 	className,
 	inset,
-	asChild,
-	children,
 	...props
 }: MenuPrimitive.Item.Props & {
 	inset?: boolean
-	asChild?: boolean
 }) => {
 	const mergedClassName = cn(
 		'focus:bg-1-mlo-primary relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-hidden transition-colors select-none focus:ring data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
 		inset && 'pl-8',
 		className
 	)
-	if (asChild && React.isValidElement(children)) {
-		return (
-			<MenuPrimitive.Item
-				data-slot="dropdown-menu-item"
-				className={mergedClassName}
-				render={children as React.ReactElement}
-				{...props}
-			/>
-		)
-	}
 	return (
 		<MenuPrimitive.Item
 			data-slot="dropdown-menu-item"
 			className={mergedClassName}
 			{...props}
-		>
-			{children}
-		</MenuPrimitive.Item>
+		/>
 	)
 }
 

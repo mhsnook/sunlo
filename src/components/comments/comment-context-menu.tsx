@@ -59,15 +59,17 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="icon"
-					aria-label="More options"
-					data-testid="comment-context-menu-trigger"
-				>
-					<MoreVertical className="h-4 w-4" />
-				</Button>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="More options"
+						data-testid="comment-context-menu-trigger"
+					/>
+				}
+			>
+				<MoreVertical className="h-4 w-4" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				{typeof navigator !== 'undefined' && 'share' in navigator && (

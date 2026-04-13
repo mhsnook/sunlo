@@ -304,8 +304,8 @@ function ComponentsPage() {
 					</CardHeader>
 					<CardContent>
 						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<Button variant="soft">Open Menu</Button>
+							<DropdownMenuTrigger render={<Button variant="soft" />}>
+								Open Menu
 							</DropdownMenuTrigger>
 							<DropdownMenuContent>
 								<DropdownMenuLabel>My Account</DropdownMenuLabel>

@@ -3,11 +3,13 @@ import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
 import { useMutation } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import {
 	ArrowRight,
 	ArrowLeft,
 	BookmarkCheck,
 	BookmarkX,
+	EllipsisVertical,
 	MoreVertical,
 	Play,
 	Send,
@@ -17,7 +19,6 @@ import { CardContent } from '@/components/ui/card'
 import { cn, preventDefaultCallback } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
 import { intervals, type Score } from '@/features/review/fsrs'
-import PermalinkButton from '@/components/permalink-button'
 import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
@@ -427,15 +428,17 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<>
 			<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-				<DropdownMenuTrigger asChild>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Open context menu"
-						className="absolute top-4 right-4"
-					>
-						<MoreVertical />
-					</Button>
+				<DropdownMenuTrigger
+					render={
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label="Open context menu"
+							className="absolute end-4 top-4"
+						/>
+					}
+				>
+					<MoreVertical />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="w-56">
 					<DropdownMenuItem
@@ -453,13 +456,16 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 						Skip this card
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
-					<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-						<PermalinkButton
-							to={'/learn/$lang/phrases/$id'}
-							params={{ lang: phrase.lang, id: phrase.id }}
-							className="w-full px-2 py-1.5"
-							link
-						/>
+					<DropdownMenuItem
+						render={
+							<Link
+								to="/learn/$lang/phrases/$id"
+								params={{ lang: phrase.lang, id: phrase.id }}
+							/>
+						}
+					>
+						<EllipsisVertical className="h-4 w-4" />
+						Permalink
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={() => {
