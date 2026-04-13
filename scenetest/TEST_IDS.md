@@ -198,6 +198,14 @@ natural wrapper element to label.
 | `chat-messages-container` | data-testid | Chat page          | Messages container        |
 | `chat-message-bubble`     | data-testid | Chat page          | Individual message bubble |
 
+## Friends / Invite
+
+| Selector             | Attribute   | Component/Location | Description                                  |
+| -------------------- | ----------- | ------------------ | -------------------------------------------- |
+| `invite-friend-page` | data-testid | Invite route       | Invite page container                        |
+| `invite-qr-card`     | data-testid | Invite page        | Card wrapping the QR code section            |
+| `invite-qr-code`     | data-testid | Invite page        | QR code element encoding the signup referral |
+
 ## Review
 
 | Selector               | Attribute   | Component/Location | Description             |

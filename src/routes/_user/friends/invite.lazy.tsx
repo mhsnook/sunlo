@@ -34,7 +34,10 @@ function InviteFriendPage() {
 	}
 
 	return (
-		<main className="mx-auto max-w-4xl space-y-12 px-4 py-8 @lg:px-6 @xl:px-8">
+		<main
+			className="mx-auto max-w-4xl space-y-12 px-4 py-8 @lg:px-6 @xl:px-8"
+			data-testid="invite-friend-page"
+		>
 			<div className="text-center">
 				<div className="bg-1-mlo-primary text-primary mb-6 inline-flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium">
 					<Sparkles className="h-4 w-4" />
