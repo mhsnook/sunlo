@@ -1,5 +1,13 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { Share, Copy, Mail, MessageSquare, Sparkles } from 'lucide-react'
+import { createLazyFileRoute } from '@tanstack/react-router'
+import {
+	Share,
+	Copy,
+	Mail,
+	MessageSquare,
+	Sparkles,
+	QrCode,
+} from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useProfile } from '@/features/profile/hooks'
@@ -7,7 +15,7 @@ import { NativeShareButton } from '@/components/native-share-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { copyLink } from '@/lib/utils'
 
-export const Route = createFileRoute('/_user/friends/invite')({
+export const Route = createLazyFileRoute('/_user/friends/invite')({
 	component: InviteFriendPage,
 })
 
@@ -93,6 +101,37 @@ function InviteFriendPage() {
 					</div>
 				:	null
 			}
+
+			{/* QR Code */}
+			<Card className="border-border/50 shadow-sm" data-testid="invite-qr-card">
+				<CardContent className="flex flex-col items-center gap-6 p-8 @lg:flex-row @lg:items-center @lg:gap-8">
+					<div
+						className="flex aspect-square items-center justify-center rounded-2xl bg-white p-4 shadow"
+						data-testid="invite-qr-code"
+					>
+						<QRCodeSVG
+							value={signupUrl}
+							size={192}
+							level="M"
+							marginSize={0}
+							aria-label="QR code with invite link"
+						/>
+					</div>
+					<div className="flex-1 space-y-3 text-center @lg:text-start">
+						<div className="bg-1-mlo-accent text-accent-foresoft inline-flex items-center space-x-2 rounded-full px-3 py-1 text-sm font-medium">
+							<QrCode className="h-4 w-4" />
+							<span>Scan to invite</span>
+						</div>
+						<h2 className="text-foreground text-2xl font-bold">
+							Show them in person
+						</h2>
+						<p className="text-muted-foreground text-pretty">
+							Meeting up? Have them point their camera at this QR code to open
+							your invite link and join Sunlo.
+						</p>
+					</div>
+				</CardContent>
+			</Card>
 
 			{/* Sharing Methods */}
 			<Card className="border-border/50 shadow-sm">

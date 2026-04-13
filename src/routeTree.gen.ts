@@ -37,7 +37,6 @@ import { Route as UserLearnBrowseRouteImport } from './routes/_user/learn/browse
 import { Route as UserLearnArchivedRouteImport } from './routes/_user/learn/archived'
 import { Route as UserLearnAddDeckRouteImport } from './routes/_user/learn/add-deck'
 import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
-import { Route as UserFriendsInviteRouteImport } from './routes/_user/friends/invite'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
 import { Route as UserLearnBrowseIndexRouteImport } from './routes/_user/learn/browse.index'
@@ -71,6 +70,9 @@ const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
+const UserFriendsInviteLazyRouteImport = createFileRoute(
+  '/_user/friends/invite',
+)()
 
 const ThemesLazyRoute = ThemesLazyRouteImport.update({
   id: '/themes',
@@ -189,6 +191,13 @@ const UserFriendsIndexRoute = UserFriendsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UserFriendsRoute,
 } as any)
+const UserFriendsInviteLazyRoute = UserFriendsInviteLazyRouteImport.update({
+  id: '/invite',
+  path: '/invite',
+  getParentRoute: () => UserFriendsRoute,
+} as any).lazy(() =>
+  import('./routes/_user/friends/invite.lazy').then((d) => d.Route),
+)
 const UserProfileChangePasswordRoute =
   UserProfileChangePasswordRouteImport.update({
     id: '/change-password',
@@ -230,11 +239,6 @@ const UserLearnLangRoute = UserLearnLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
   getParentRoute: () => UserLearnRoute,
-} as any)
-const UserFriendsInviteRoute = UserFriendsInviteRouteImport.update({
-  id: '/invite',
-  path: '/invite',
-  getParentRoute: () => UserFriendsRoute,
 } as any)
 const UserFriendsChatsRoute = UserFriendsChatsRouteImport.update({
   id: '/chats',
@@ -404,7 +408,6 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
-  '/friends/invite': typeof UserFriendsInviteRoute
   '/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
@@ -413,6 +416,7 @@ export interface FileRoutesByFullPath {
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/friends/invite': typeof UserFriendsInviteLazyRoute
   '/friends/': typeof UserFriendsIndexRoute
   '/learn/': typeof UserLearnIndexRoute
   '/profile/': typeof UserProfileIndexRoute
@@ -459,13 +463,13 @@ export interface FileRoutesByTo {
   '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
   '/friends/$uid': typeof UserFriendsUidRoute
-  '/friends/invite': typeof UserFriendsInviteRoute
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
   '/learn/contributions': typeof UserLearnContributionsRoute
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/friends/invite': typeof UserFriendsInviteLazyRoute
   '/friends': typeof UserFriendsIndexRoute
   '/learn': typeof UserLearnIndexRoute
   '/profile': typeof UserProfileIndexRoute
@@ -517,7 +521,6 @@ export interface FileRoutesById {
   '/_user/welcome': typeof UserWelcomeRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
-  '/_user/friends/invite': typeof UserFriendsInviteRoute
   '/_user/learn/$lang': typeof UserLearnLangRouteWithChildren
   '/_user/learn/add-deck': typeof UserLearnAddDeckRoute
   '/_user/learn/archived': typeof UserLearnArchivedRoute
@@ -526,6 +529,7 @@ export interface FileRoutesById {
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
   '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/_user/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/_user/friends/invite': typeof UserFriendsInviteLazyRoute
   '/_user/friends/': typeof UserFriendsIndexRoute
   '/_user/learn/': typeof UserLearnIndexRoute
   '/_user/profile/': typeof UserProfileIndexRoute
@@ -578,7 +582,6 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/friends/$uid'
     | '/friends/chats'
-    | '/friends/invite'
     | '/learn/$lang'
     | '/learn/add-deck'
     | '/learn/archived'
@@ -587,6 +590,7 @@ export interface FileRouteTypes {
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
+    | '/friends/invite'
     | '/friends/'
     | '/learn/'
     | '/profile/'
@@ -633,13 +637,13 @@ export interface FileRouteTypes {
     | '/search'
     | '/welcome'
     | '/friends/$uid'
-    | '/friends/invite'
     | '/learn/add-deck'
     | '/learn/archived'
     | '/learn/contributions'
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
+    | '/friends/invite'
     | '/friends'
     | '/learn'
     | '/profile'
@@ -690,7 +694,6 @@ export interface FileRouteTypes {
     | '/_user/welcome'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
-    | '/_user/friends/invite'
     | '/_user/learn/$lang'
     | '/_user/learn/add-deck'
     | '/_user/learn/archived'
@@ -699,6 +702,7 @@ export interface FileRouteTypes {
     | '/_user/profile/change-email'
     | '/_user/profile/change-email-confirm'
     | '/_user/profile/change-password'
+    | '/_user/friends/invite'
     | '/_user/friends/'
     | '/_user/learn/'
     | '/_user/profile/'
@@ -903,6 +907,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsIndexRouteImport
       parentRoute: typeof UserFriendsRoute
     }
+    '/_user/friends/invite': {
+      id: '/_user/friends/invite'
+      path: '/invite'
+      fullPath: '/friends/invite'
+      preLoaderRoute: typeof UserFriendsInviteLazyRouteImport
+      parentRoute: typeof UserFriendsRoute
+    }
     '/_user/profile/change-password': {
       id: '/_user/profile/change-password'
       path: '/change-password'
@@ -958,13 +969,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/learn/$lang'
       preLoaderRoute: typeof UserLearnLangRouteImport
       parentRoute: typeof UserLearnRoute
-    }
-    '/_user/friends/invite': {
-      id: '/_user/friends/invite'
-      path: '/invite'
-      fullPath: '/friends/invite'
-      preLoaderRoute: typeof UserFriendsInviteRouteImport
-      parentRoute: typeof UserFriendsRoute
     }
     '/_user/friends/chats': {
       id: '/_user/friends/chats'
@@ -1205,14 +1209,14 @@ const UserFriendsChatsRouteWithChildren =
 interface UserFriendsRouteChildren {
   UserFriendsUidRoute: typeof UserFriendsUidRoute
   UserFriendsChatsRoute: typeof UserFriendsChatsRouteWithChildren
-  UserFriendsInviteRoute: typeof UserFriendsInviteRoute
+  UserFriendsInviteLazyRoute: typeof UserFriendsInviteLazyRoute
   UserFriendsIndexRoute: typeof UserFriendsIndexRoute
 }
 
 const UserFriendsRouteChildren: UserFriendsRouteChildren = {
   UserFriendsUidRoute: UserFriendsUidRoute,
   UserFriendsChatsRoute: UserFriendsChatsRouteWithChildren,
-  UserFriendsInviteRoute: UserFriendsInviteRoute,
+  UserFriendsInviteLazyRoute: UserFriendsInviteLazyRoute,
   UserFriendsIndexRoute: UserFriendsIndexRoute,
 }
 
