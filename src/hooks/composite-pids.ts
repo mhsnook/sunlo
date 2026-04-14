@@ -37,13 +37,19 @@ export function useCompositePids(lang: string) {
 	if (!languagesToShow || !phrases || !deckPids) {
 		return null
 	}
-	const languagePids = phrases.map((p) => p.id)
+	// Dedupe: `phrasesFull` joins with cards, so a phrase with cards in both
+	// directions (forward + reverse) shows up twice in the `phrases` array.
+	const languagePids = [...new Set(phrases.map((p) => p.id))]
 
 	// First, filter phrases to only those with translations the user can see.
-	const pidsICanSee = phrases
-		.map((p) => splitPhraseTranslations(p, languagesToShow))
-		.filter((p) => p.translations_mine.length > 0)
-		.map((p) => p.id)
+	const pidsICanSee = [
+		...new Set(
+			phrases
+				.map((p) => splitPhraseTranslations(p, languagesToShow))
+				.filter((p) => p.translations_mine.length > 0)
+				.map((p) => p.id)
+		),
+	]
 
 	// Get the pool of selectable phrases (excluding all cards already in deck)
 	const pidsNotInDeck = arrayDifference(pidsICanSee, [deckPids.all])

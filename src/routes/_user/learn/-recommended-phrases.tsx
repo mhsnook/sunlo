@@ -1,10 +1,10 @@
 import { useRef } from 'react'
-import { Link } from '@tanstack/react-router'
 import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 
 import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
 import { CompositePids, useCompositePids } from '@/hooks/composite-pids'
+import { useDeckPids } from '@/features/deck/hooks'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
@@ -21,67 +21,69 @@ const PhraseSection = ({ description, pids, Icon }: PhraseSectionProps) => {
 				{description}
 				<Icon className="inline size-6" />
 			</p>
-			{pids?.length > 0 ?
-				<div className="grid grid-cols-1 gap-4 @xl:grid-cols-2">
-					{pids.map((pid) => (
-						<PhraseTinyCard key={pid} pid={pid} />
-					))}
-				</div>
-			:	<p className="text-muted-foreground">No recommendations available</p>}
+			<div className="grid grid-cols-1 gap-4 @xl:grid-cols-2">
+				{pids.map((pid) => (
+					<PhraseTinyCard key={pid} pid={pid} />
+				))}
+			</div>
 		</div>
 	)
 }
 
 export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 	const recommendations = useCompositePids(lang)
+	const { data: deckPids } = useDeckPids(lang)
 
-	// Snapshot top8 on first load so the list stays stable when
-	// the user bookmarks cards (which changes deckPids reactively)
+	// Snapshot top8 on first load so the ordering stays stable when
+	// the user bookmarks cards (which changes deckPids reactively).
+	// We still live-filter against the current deckPids below so that
+	// newly-added cards disappear from the list instead of lingering.
 	const stableTop8 = useRef<CompositePids['top8'] | null>(null)
 	if (stableTop8.current === null && recommendations) {
 		stableTop8.current = recommendations.top8
 	}
 
-	if (!stableTop8.current) return null
+	if (!stableTop8.current || !deckPids) return null
 
-	const top8 = stableTop8.current
-	const hasRecommendations =
-		top8.popular.length > 0 || top8.newest.length > 0 || top8.easiest.length > 0
+	const deckSet = new Set(deckPids.all)
+	const popular = stableTop8.current.popular
+		.filter((pid) => !deckSet.has(pid))
+		.slice(0, 4)
+	const newest = stableTop8.current.newest
+		.filter((pid) => !deckSet.has(pid))
+		.slice(0, 4)
+	const easiest = stableTop8.current.easiest
+		.filter((pid) => !deckSet.has(pid))
+		.slice(0, 4)
 
-	return !hasRecommendations ?
-			<p className="text-muted-foreground mx-4 text-sm italic">
-				There are no smart recommendations for you at this time. Check back
-				later or consider{' '}
-				<Link
-					className="s-link-muted"
-					to="/learn/$lang/requests/new"
-					params={{ lang }}
-				>
-					requesting a phrase
-				</Link>
-				.
-			</p>
-		:	<Card>
-				<CardHeader>
-					<CardTitle>Recommended For You</CardTitle>
-				</CardHeader>
+	if (popular.length === 0 && newest.length === 0 && easiest.length === 0)
+		return null
 
-				<CardContent className="space-y-4">
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle>Recommended For You</CardTitle>
+			</CardHeader>
+
+			<CardContent className="space-y-4">
+				{popular.length > 0 && (
 					<PhraseSection
 						description={`Popular among all ${languages[lang]} learners`}
-						pids={top8.popular.slice(0, 4)}
+						pids={popular}
 						Icon={TrendingUp}
 					/>
-					<PhraseSection
-						description="Newly added"
-						pids={top8.newest.slice(0, 4)}
-						Icon={Brain}
-					/>
+				)}
+				{newest.length > 0 && (
+					<PhraseSection description="Newly added" pids={newest} Icon={Brain} />
+				)}
+				{easiest.length > 0 && (
 					<PhraseSection
 						description="Broaden your vocabulary"
-						pids={top8.easiest.slice(0, 4)}
+						pids={easiest}
 						Icon={Carrot}
 					/>
-				</CardContent>
-			</Card>
+				)}
+			</CardContent>
+		</Card>
+	)
 }
