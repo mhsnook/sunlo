@@ -364,7 +364,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 				search: { search: true },
 			})
 		},
-		[navigate, lang]
+		[navigate]
 	)
 
 	if (!treemapData.length) {

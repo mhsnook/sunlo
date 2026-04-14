@@ -23,6 +23,7 @@ import { MarkdownHint } from './comment-dialog'
 import supabase from '@/lib/supabase-client'
 import { safeWrite } from '@/lib/collections/safe-write'
 import {
+	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
@@ -33,7 +34,6 @@ import {
 	RequestCommentSchema,
 	type RequestCommentType,
 } from '@/features/comments/schemas'
-import { commentPhraseLinksCollection } from '@/features/comments/collections'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 
