@@ -50,7 +50,7 @@ function ChatsLayout() {
 					'@container min-h-0 flex-1',
 					isOnIndex ? 'hidden @xl:block' : 'w-full'
 				)}
-				style={{ viewTransitionName: 'main-content' }}
+				style={{ viewTransitionName: 'chat-content' }}
 			>
 				<Outlet />
 			</div>

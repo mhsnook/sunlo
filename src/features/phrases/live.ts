@@ -15,6 +15,7 @@ export const phrasesFull = createLiveQueryCollection({
 			.join({ card: cardsCollection }, ({ phrase, card }) =>
 				eq(phrase.id, card.phrase_id)
 			)
+			/* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 			.fn.select(({ phrase, profile, card }) => ({
 				...phrase,
 				card,
@@ -24,5 +25,6 @@ export const phrasesFull = createLiveQueryCollection({
 					...(phrase.translations?.map((t) => t.text) ?? []),
 					...(phrase.tags ?? []).map((t) => t.name),
 				].join(', '),
-			})),
+			}))
+			.where(({ card }) => !eq(card?.direction, 'forward')),
 })

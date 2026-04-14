@@ -57,12 +57,7 @@ export function SelectPhrasesForComment({
 		searchText || undefined
 	)
 	const { data: allPhrases } = useLanguagePhrases(lang)
-	const rawPhrases = searchText ? searchResults : allPhrases
-	// Deduplicate phrases by ID (phrasesFull can return duplicates from card joins)
-	const filteredPhrases =
-		rawPhrases ?
-			[...new Map(rawPhrases.map((p) => [p.id, p])).values()]
-		:	rawPhrases
+	const filteredPhrases = searchText ? searchResults : allPhrases
 
 	const effectiveMax = maxPhrases ?? Infinity
 
