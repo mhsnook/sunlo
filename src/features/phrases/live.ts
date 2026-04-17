@@ -1,4 +1,4 @@
-import { createLiveQueryCollection, eq } from '@tanstack/db'
+import { createLiveQueryCollection, eq, not } from '@tanstack/db'
 import { cardsCollection } from '@/features/deck/collections'
 import { phrasesCollection } from './collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
@@ -15,7 +15,7 @@ export const phrasesFull = createLiveQueryCollection({
 			.join({ card: cardsCollection }, ({ phrase, card }) =>
 				eq(phrase.id, card.phrase_id)
 			)
-			/* eslint-disable @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
+			 
 			.fn.select(({ phrase, profile, card }) => ({
 				...phrase,
 				card,
@@ -26,5 +26,5 @@ export const phrasesFull = createLiveQueryCollection({
 					...(phrase.tags ?? []).map((t) => t.name),
 				].join(', '),
 			}))
-			.where(({ card }) => !eq(card?.direction, 'forward')),
+			.where(({ card }) => not(eq(card.direction, 'forward'))),
 })
