@@ -15,7 +15,6 @@ export const phrasesFull = createLiveQueryCollection({
 			.join({ card: cardsCollection }, ({ phrase, card }) =>
 				eq(phrase.id, card.phrase_id)
 			)
-			 
 			.fn.select(({ phrase, profile, card }) => ({
 				...phrase,
 				card,
@@ -26,5 +25,5 @@ export const phrasesFull = createLiveQueryCollection({
 					...(phrase.tags ?? []).map((t) => t.name),
 				].join(', '),
 			}))
-			.where(({ card }) => not(eq(card.direction, 'forward'))),
+			.where(({ card }) => not(eq(card?.direction, 'forward'))),
 })
