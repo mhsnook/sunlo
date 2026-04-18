@@ -29,7 +29,7 @@ function makeReview(
 }
 
 describe('findChainPredecessor', () => {
-	it('returns the most recent phase-1 review strictly before the cutoff', () => {
+	it('returns the most recent phase-1 review from a strictly earlier session', () => {
 		const yesterday = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
@@ -48,19 +48,19 @@ describe('findChainPredecessor', () => {
 			[yesterday, today],
 			P1,
 			'forward',
-			today.created_at
+			today.day_session
 		)
 		expect(pred?.id).toBe(yesterday.id)
 	})
 
-	it('returns undefined when no earlier review exists', () => {
+	it('returns undefined when no earlier session exists', () => {
 		const today = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
 			created_at: '2025-06-30T12:00:00Z',
 		})
 		expect(
-			findChainPredecessor([today], P1, 'forward', today.created_at)
+			findChainPredecessor([today], P1, 'forward', today.day_session)
 		).toBeUndefined()
 	})
 
@@ -82,18 +82,14 @@ describe('findChainPredecessor', () => {
 				created_at: '2025-06-03T00:00:00Z',
 			}),
 		]
-		const pred = findChainPredecessor(
-			reviews,
-			P1,
-			'forward',
-			'2025-06-30T00:00:00Z'
-		)
+		const pred = findChainPredecessor(reviews, P1, 'forward', '2025-06-30')
 		expect(pred?.phrase_id).toBe(P1)
 		expect(pred?.direction).toBe('forward')
 	})
 
 	it('skips phase-3 rows (day_first_review=false)', () => {
-		// Even if a phase-3 row is newer, it shouldn't feed the scheduling
+		// Even if a phase-3 row exists in an earlier session (shouldn't happen
+		// post-reclassify, but defensive), it shouldn't feed the scheduling
 		// chain. Only phase-1 rows do.
 		const phase1 = makeReview({
 			phrase_id: P1,
@@ -104,25 +100,34 @@ describe('findChainPredecessor', () => {
 		const phase3 = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
-			created_at: '2025-06-01T08:30:00Z',
+			created_at: '2025-06-10T08:30:00Z',
 			day_first_review: false,
 		})
 		const pred = findChainPredecessor(
 			[phase1, phase3],
 			P1,
 			'forward',
-			'2025-06-02T00:00:00Z'
+			'2025-06-30'
 		)
 		expect(pred?.id).toBe(phase1.id)
 	})
 
-	it('uses strict less-than on created_at (never returns the row at the boundary)', () => {
-		// If `beforeCreatedAt` equals a review's created_at exactly, that
-		// review is the one we're updating — it MUST be excluded.
-		const target = makeReview({
+	it('excludes the current session entirely (never returns a same-session row)', () => {
+		// Re-scoring within the same session: all today's rows — including the
+		// one we're updating AND any legacy duplicates from a historical bug —
+		// must be excluded so we never feed the chain back into itself.
+		const currentSession = '2025-06-30'
+		const todayFirst = makeReview({
 			phrase_id: P1,
 			direction: 'forward',
-			created_at: '2025-06-30T12:00:00Z',
+			created_at: '2025-06-30T08:00:00Z',
+			day_session: currentSession,
+		})
+		const todaySecond = makeReview({
+			phrase_id: P1,
+			direction: 'forward',
+			created_at: '2025-06-30T08:05:00Z',
+			day_session: currentSession,
 		})
 		const earlier = makeReview({
 			phrase_id: P1,
@@ -130,12 +135,36 @@ describe('findChainPredecessor', () => {
 			created_at: '2025-06-01T12:00:00Z',
 		})
 		const pred = findChainPredecessor(
-			[target, earlier],
+			[todayFirst, todaySecond, earlier],
 			P1,
 			'forward',
-			target.created_at
+			currentSession
 		)
 		expect(pred?.id).toBe(earlier.id)
+	})
+
+	it('picks the newest session when multiple earlier sessions exist', () => {
+		const twoWeeksAgo = makeReview({
+			phrase_id: P1,
+			direction: 'forward',
+			created_at: '2025-06-01T12:00:00Z',
+			difficulty: 5,
+			stability: 10,
+		})
+		const yesterday = makeReview({
+			phrase_id: P1,
+			direction: 'forward',
+			created_at: '2025-06-14T12:00:00Z',
+			difficulty: 4.8,
+			stability: 20,
+		})
+		const pred = findChainPredecessor(
+			[twoWeeksAgo, yesterday],
+			P1,
+			'forward',
+			'2025-06-15'
+		)
+		expect(pred?.id).toBe(yesterday.id)
 	})
 })
 
@@ -150,10 +179,10 @@ describe('findChainPredecessor', () => {
 // being updated itself. So the ternary passed `undefined` and calculateFSRS
 // treated the re-score as a first review, wiping the prior chain.
 //
-// The fix: look up the chain predecessor (the newest phase-1 review strictly
-// before the target row) and pass THAT as previousReview. These tests assert
-// the observable effect — the re-scored row must reflect the prior chain,
-// not fresh initial values.
+// The fix: look up the chain predecessor (the newest phase-1 review from
+// any strictly earlier session) and pass THAT as previousReview. These
+// tests assert the observable effect — the re-scored row must reflect the
+// prior chain, not fresh initial values.
 // ---------------------------------------------------------------------------
 
 describe('re-score preserves the scheduling chain (the §2 bug)', () => {
@@ -181,7 +210,7 @@ describe('re-score preserves the scheduling chain (the §2 bug)', () => {
 			reviews,
 			P1,
 			'forward',
-			todayGood.created_at
+			todayGood.day_session
 		)
 		expect(pred?.id).toBe(yesterday.id) // NOT todayGood
 
@@ -218,7 +247,7 @@ describe('re-score preserves the scheduling chain (the §2 bug)', () => {
 			[yesterday, todayGood],
 			P1,
 			'forward',
-			todayGood.created_at
+			todayGood.day_session
 		)
 		const rescored = calculateFSRS({
 			score: 1, // Again
@@ -246,7 +275,7 @@ describe('re-score preserves the scheduling chain (the §2 bug)', () => {
 			[todayAgain],
 			P1,
 			'forward',
-			todayAgain.created_at
+			todayAgain.day_session
 		)
 		expect(pred).toBeUndefined()
 

@@ -330,13 +330,13 @@ export function useReviewMutation(
 					// whenever we're in this branch. Using it as previousReview
 					// would feed the row we're overwriting back into itself; using
 					// `undefined` wipes the prior chain and rewrites with brand-new-
-					// card values. Instead, look up the row immediately preceding
-					// prevDataToday in the chain.
+					// card values. Instead, look up the chain's predecessor — the
+					// newest phase-1 review from any strictly earlier session.
 					const chainPredecessor = findChainPredecessor(
 						cardReviewsCollection.toArray,
 						pid,
 						direction,
-						prevDataToday.created_at
+						day_session
 					)
 					return {
 						action: 'update',
