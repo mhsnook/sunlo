@@ -1,4 +1,4 @@
-import { createCollection, BasicIndex } from '@tanstack/react-db'
+import { createCollection, BTreeIndex } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import {
 	FriendSummarySchema,
@@ -26,7 +26,7 @@ export const friendSummariesCollection = createCollection(
 		startSync: false,
 		schema: FriendSummarySchema,
 		autoIndex: 'eager',
-		defaultIndexType: BasicIndex,
+		defaultIndexType: BTreeIndex,
 	})
 )
 
