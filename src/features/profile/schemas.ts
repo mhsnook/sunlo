@@ -42,7 +42,7 @@ export const MyProfileSchema = PublicProfileSchema.extend({
 	languages_known: LanguagesKnownSchema,
 	updated_at: z.string().nullable(),
 	font_preference: FontPreferenceSchema.nullable().default('default'),
-	review_answer_mode: ReviewAnswerModeSchema.nullable().default('4-buttons'),
+	review_answer_mode: ReviewAnswerModeSchema.nullable().default('2-buttons'),
 	sound_enabled: z.boolean().default(true),
 })
 

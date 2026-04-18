@@ -5,7 +5,7 @@
 // is not achievable via setup directives. We query the actual manifest after
 // session creation and loop over however many entries exist.
 
-import { scene } from '@scenetest/scenes'
+import { test } from '@scenetest/scenes'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/supabase'
 
@@ -22,13 +22,13 @@ const supabase = createClient<Database>(
 	process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-scene('learner completes a review session', ({ actor, team }) => {
+test('learner completes a review session', async ({ actor, team }) => {
 	const lang = team.tags!.lang
-	const learner = actor('learner')
+	const learner = await actor('learner')
 	const uid = learner.key
 	let testStart = ''
 
-	learner
+	await learner
 		.do(async () => {
 			testStart = new Date().toISOString()
 			await supabase
@@ -42,6 +42,11 @@ scene('learner completes a review session', ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 		})
+		.openTo('/login')
+		.typeInto('email-input', learner.email!)
+		.typeInto('password-input', learner.password!)
+		.click('login-submit-button')
+		.notSee('login-form')
 		.openTo(`/learn/${lang}/review`)
 		.up()
 		.ifClick('review-intro-dismiss')
@@ -102,14 +107,14 @@ scene('learner completes a review session', ({ actor, team }) => {
 		})
 })
 
-scene('learner completes stage 1 with mixed scores', ({ actor, team }) => {
+test('learner completes stage 1 with mixed scores', async ({ actor, team }) => {
 	const lang = team.tags!.lang
-	const learner = actor('learner')
+	const learner = await actor('learner')
 	const uid = learner.key
 	let testStart = ''
 	let againCount = 0
 
-	learner
+	await learner
 		.do(async () => {
 			testStart = new Date().toISOString()
 			await supabase
@@ -123,6 +128,11 @@ scene('learner completes stage 1 with mixed scores', ({ actor, team }) => {
 				.eq('uid', uid)
 				.eq('lang', lang)
 		})
+		.openTo('/login')
+		.typeInto('email-input', learner.email!)
+		.typeInto('password-input', learner.password!)
+		.click('login-submit-button')
+		.notSee('login-form')
 		.openTo(`/learn/${lang}/review`)
 		.up()
 		.ifClick('review-intro-dismiss')

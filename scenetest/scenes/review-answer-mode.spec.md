@@ -15,8 +15,10 @@ learner:
 - up
 - seeToast toast-success
 
-# learner sees 4-button mode by default during review
+# learner sees 4-button mode when profile opts into 4-buttons
 
+setup: supabase.from('user_profile').update({ review_answer_mode: '4-buttons' }).eq('uid', '[learner.key]')
+cleanup: supabase.from('user_profile').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]')
 cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
@@ -44,7 +46,7 @@ learner:
 - prev
 - see rating-easy-button
 
-# learner sees 2-button mode with Forgot/Correct labels
+# learner sees 2-button mode with Try Again/Correct labels
 
 setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')

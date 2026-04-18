@@ -12,6 +12,10 @@ import {
 	cardReviewsCollection,
 	reviewDaysCollection,
 } from '@/features/review/collections'
+import {
+	phrasePlaylistsCollection,
+	playlistPhraseLinksCollection,
+} from '@/features/playlists/collections'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 
@@ -53,6 +57,8 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			langTagsCollection.preload(),
 			phrasesCollection.preload(),
 			publicProfilesCollection.preload(),
+			phrasePlaylistsCollection.preload(),
+			playlistPhraseLinksCollection.preload(),
 		]
 		if (context.auth.isAuth) {
 			preloads.push(

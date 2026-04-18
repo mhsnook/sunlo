@@ -1,4 +1,3 @@
-import { CSSProperties } from 'react'
 import type { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 
@@ -25,7 +24,6 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 		>
 			<CardlikeFlashcard
 				className={`relative z-10 mb-0 ${isMine ? 'rounded-br-none' : 'rounded-bl-none'}`}
-				style={{ viewTransitionName: `phrase-${pid}` } as CSSProperties}
 			>
 				<CardContent className="space-y-2 p-4">
 					<div className="flex items-center justify-between gap-2">

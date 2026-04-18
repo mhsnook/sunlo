@@ -1,4 +1,4 @@
-import { createLiveQueryCollection, eq } from '@tanstack/db'
+import { createLiveQueryCollection, eq, not } from '@tanstack/db'
 import { cardsCollection } from '@/features/deck/collections'
 import { phrasesCollection } from './collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
@@ -24,5 +24,6 @@ export const phrasesFull = createLiveQueryCollection({
 					...(phrase.translations?.map((t) => t.text) ?? []),
 					...(phrase.tags ?? []).map((t) => t.name),
 				].join(', '),
-			})),
+			}))
+			.where(({ card }) => not(eq(card?.direction, 'forward'))),
 })

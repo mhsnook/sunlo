@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+<!-- intent-skills:start -->
+
+# Skill mappings - when working in these areas, load the linked skill file into context.
+
+skills:
+
+- task: "Creating or modifying TanStack DB collections in src/features/\*/collections.ts"
+  load: "node_modules/@tanstack/db/skills/db-core/collection-setup/SKILL.md"
+
+- task: "Writing or modifying useLiveQuery hooks, joins, filters, or derived collections"
+  load: "node_modules/@tanstack/db/skills/db-core/live-queries/SKILL.md"
+
+- task: "Wiring optimistic mutations — collection.insert, collection.update, collection.delete, writeInsert, writeUpdate in onSuccess handlers"
+  load: "node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md"
+
+- task: "Route loaders, collection.preload(), or integrating collections with TanStack Router"
+load: "node_modules/@tanstack/db/skills/meta-framework/SKILL.md"
+<!-- intent-skills:end -->
+
 ## Development Commands
 
 ### Setup
