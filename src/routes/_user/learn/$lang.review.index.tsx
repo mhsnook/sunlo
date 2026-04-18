@@ -431,7 +431,7 @@ function ReviewPageContent() {
 									<CardContent>
 										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-purple-500">
 											<CalendarClock />
-											<span>{deckPids.today_active.length}</span>
+											<span>{dueCardCount}</span>
 										</p>
 										<p className="text-muted-foreground">
 											scheduled based on past reviews
@@ -440,15 +440,15 @@ function ReviewPageContent() {
 								</Card>
 								<Card className="grow basis-40">
 									<CardHeader className="pb-2">
-										<CardTitle className="text-xl">New Phrases</CardTitle>
+										<CardTitle className="text-xl">New Cards</CardTitle>
 									</CardHeader>
 									<CardContent>
 										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 											<MessageSquarePlus />
-											<span>{freshCards.length}</span>
+											<span>{freshCardCount + unreviewedExistingCount}</span>
 										</p>
 										<p className="text-muted-foreground">
-											new phrases to learn
+											new cards to learn
 										</p>
 									</CardContent>
 								</Card>
