@@ -3,8 +3,11 @@ import { findChainPredecessor } from './review-utils'
 import { calculateFSRS } from './fsrs'
 import type { CardReviewType } from './schemas'
 
-const P1 = '00000000-0000-0000-0000-000000000001'
-const P2 = '00000000-0000-0000-0000-000000000002'
+// Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b} (variant).
+// zod 4's .uuid() enforces this; nil-ish strings like '00000000-…-0001' fail parse.
+const P1 = '11111111-1111-4111-8111-111111111111'
+const P2 = '22222222-2222-4222-8222-222222222222'
+const UID = '33333333-3333-4333-8333-333333333333'
 
 function makeReview(
 	overrides: Partial<CardReviewType> & {
@@ -15,7 +18,7 @@ function makeReview(
 ): CardReviewType {
 	return {
 		id: crypto.randomUUID(),
-		uid: '00000000-0000-0000-0000-aaaaaaaaaaaa',
+		uid: UID,
 		day_session: overrides.created_at.slice(0, 10),
 		lang: 'hin',
 		score: 3,

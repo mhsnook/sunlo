@@ -37,13 +37,14 @@ const tsf = fsrs(tsParams)
 type ScoreStep = { score: Score; daysFromStart: number }
 
 function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
+	// Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b} (variant).
 	return {
-		id: '00000000-0000-0000-0000-000000000001',
+		id: '11111111-1111-4111-8111-111111111111',
 		created_at: '2025-01-01T00:00:00Z',
-		uid: '00000000-0000-0000-0000-000000000002',
+		uid: '22222222-2222-4222-8222-222222222222',
 		day_session: '2025-01-01',
 		lang: 'hin',
-		phrase_id: '00000000-0000-0000-0000-000000000003',
+		phrase_id: '33333333-3333-4333-8333-333333333333',
 		direction: 'forward',
 		score: 3,
 		day_first_review: true,
