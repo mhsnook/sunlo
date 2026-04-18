@@ -28,8 +28,6 @@
 		"db-reset": "supabase db reset",
 		"db-schema": "pnpm run seeds:schema && pnpm types && pnpm format",
 		"db-full": "supabase db reset && `pnpm run db-schema",
-		"recompute-reviews": "tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts",
-		"reclassify-phase1-duplicates": "tsx --tsconfig scripts/tsconfig.json scripts/reclassify-phase1-duplicates.ts",
 		"prepare": "husky"
 	},
 	"dependencies": {
