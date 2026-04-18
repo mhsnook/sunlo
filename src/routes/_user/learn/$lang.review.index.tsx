@@ -46,12 +46,17 @@ import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
 import { DailyReviewStateSchema } from '@/features/review/schemas'
-import { cardsCollection } from '@/features/deck/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { reviewDaysCollection } from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
+	loader: async ({ context }) => {
+		if (context.auth.isAuth) {
+			await decksCollection.preload()
+		}
+	},
 	component: ReviewPageSetup,
 })
 

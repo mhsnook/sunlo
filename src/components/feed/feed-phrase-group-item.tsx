@@ -4,7 +4,6 @@ import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/features/profile/hooks'
 import { MessageSquareQuote, Users } from 'lucide-react'
-import { CSSProperties } from 'react'
 import { uuid } from '@/types/main'
 
 export function PhraseSummaryLine({
@@ -50,14 +49,7 @@ export function PhraseSummaryLine({
 						<MessageSquareQuote size={12} className="text-white" />
 					</span>
 				:	<MessageSquareQuote size={14} className="shrink-0" />}
-				<span
-					className="truncate"
-					style={
-						{ viewTransitionName: `phrase-text-${item.id}` } as CSSProperties
-					}
-				>
-					&ldquo;{phraseText}&rdquo;
-				</span>
+				<span className="truncate">&ldquo;{phraseText}&rdquo;</span>
 				{translationCount > 0 && (
 					<span className="text-muted-foreground/70 group-hover:text-foreground shrink-0 text-xs whitespace-nowrap">
 						({translationCount} translation{translationCount === 1 ? '' : 's'})
