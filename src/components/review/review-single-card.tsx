@@ -4,8 +4,6 @@ import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
 import { useMutation } from '@tanstack/react-query'
 import {
-	ArrowRight,
-	ArrowLeft,
 	BookmarkCheck,
 	BookmarkX,
 	MoreVertical,
@@ -208,14 +206,7 @@ export function ReviewSingleCard({
 						variant="outline"
 						className="absolute top-4 left-4 gap-1 text-xs"
 					>
-						{isReverse ?
-							<>
-								<ArrowLeft className="size-3" /> 🧠 Recall
-							</>
-						:	<>
-								💡 Recognise <ArrowRight className="size-3" />
-							</>
-						}
+						{isReverse ? '🧠 Recall' : '💡 Recognise'}
 					</Badge>
 					<div className="pt-16">{questionContent}</div>
 					<Separator />
