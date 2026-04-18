@@ -7,7 +7,6 @@ import {
 	Users,
 	Edit,
 	Trash2,
-	RefreshCcwDot,
 } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -86,8 +85,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<LangBadge lang={phrase.lang} />
 								{phrase.only_reverse && (
 									<Badge variant="outline" className="gap-1">
-										<RefreshCcwDot className="h-3 w-3" />
-										Recall only
+										🧠 Recall only
 									</Badge>
 								)}
 							</div>
