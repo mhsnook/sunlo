@@ -1,6 +1,7 @@
 import { type CSSProperties, useState } from 'react'
 import { Link, useRouter } from '@tanstack/react-router'
 import {
+	Brain,
 	ChevronsUpDown,
 	MessagesSquare,
 	ListMusic,
@@ -85,7 +86,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								<LangBadge lang={phrase.lang} />
 								{phrase.only_reverse && (
 									<Badge variant="outline" className="gap-1">
-										Recall only 🧠
+										Recall only <Brain className="size-3" />
 									</Badge>
 								)}
 							</div>
