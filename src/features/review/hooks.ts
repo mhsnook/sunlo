@@ -24,6 +24,7 @@ import type { CardDirectionType } from '@/features/deck/schemas'
 import type { ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,
+	findChainPredecessor,
 	getIndexOfNextAgainCard,
 	getIndexOfNextUnreviewedCard,
 	type ReviewsMap,
@@ -324,15 +325,25 @@ export function useReviewMutation(
 						prevDataToday,
 						score,
 					})
+					// `latestReview` (from useLatestReviewForPhrase) is the newest
+					// phase-1 row for this (pid, direction) — which IS prevDataToday
+					// whenever we're in this branch. Using it as previousReview
+					// would feed the row we're overwriting back into itself; using
+					// `undefined` wipes the prior chain and rewrites with brand-new-
+					// card values. Instead, look up the row immediately preceding
+					// prevDataToday in the chain.
+					const chainPredecessor = findChainPredecessor(
+						cardReviewsCollection.toArray,
+						pid,
+						direction,
+						prevDataToday.created_at
+					)
 					return {
 						action: 'update',
 						row: await updateReview({
 							score: score as Score,
 							review_id: prevDataToday.id,
-							previousReview:
-								latestReview?.id !== prevDataToday.id ?
-									latestReview
-								:	undefined,
+							previousReview: chainPredecessor,
 						}),
 					}
 				}

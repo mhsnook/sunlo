@@ -15,9 +15,9 @@ import { describe, it, expect } from 'vitest'
 import {
 	fsrs,
 	createEmptyCard,
-	Rating,
 	generatorParameters,
 	type Card as TsFsrsCard,
+	type Grade,
 } from 'ts-fsrs'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardReviewType } from './schemas'
@@ -85,7 +85,8 @@ function runReference(steps: Array<ScoreStep>, start: Date) {
 	for (let i = 0; i < steps.length; i++) {
 		const { score, daysFromStart } = steps[i]
 		const now = new Date(start.getTime() + daysFromStart * 86400_000)
-		const result = tsf.next(card, now, score as unknown as Rating)
+		// Our Score (1-4) maps directly to ts-fsrs Grade (Rating except Manual).
+		const result = tsf.next(card, now, score as unknown as Grade)
 		card = result.card
 		trace.push({
 			step: i,

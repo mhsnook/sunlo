@@ -5,6 +5,8 @@
  */
 
 import type { CardReviewType } from './schemas'
+import type { CardDirectionType } from '@/features/deck/schemas'
+import type { uuid } from '@/types/main'
 import { toManifestEntry, type ManifestEntry } from './manifest'
 
 /*
@@ -61,6 +63,34 @@ export function getIndexOfNextUnreviewedCard(
 	})
 
 	return index !== -1 ? index : manifest.length
+}
+
+/**
+ * Returns the most recent phase-1 review for (pid, direction) whose
+ * `created_at` is strictly before `beforeCreatedAt`. Used when updating a
+ * phase-1 review today — we need the chain's *predecessor*, not the newest
+ * phase-1 (which is the row we're about to overwrite). Without this, re-
+ * scoring a card within the session (e.g. to fix a mis-click) would wipe
+ * the prior chain and rewrite the row with brand-new-card FSRS values.
+ *
+ * Returns `undefined` if no predecessor exists — correct semantics for a
+ * card's first-ever phase-1 review.
+ */
+export function findChainPredecessor(
+	reviews: Array<CardReviewType>,
+	pid: uuid,
+	direction: CardDirectionType,
+	beforeCreatedAt: string
+): CardReviewType | undefined {
+	let best: CardReviewType | undefined = undefined
+	for (const r of reviews) {
+		if (r.phrase_id !== pid) continue
+		if (r.direction !== direction) continue
+		if (!r.day_first_review) continue
+		if (r.created_at >= beforeCreatedAt) continue
+		if (!best || r.created_at > best.created_at) best = r
+	}
+	return best
 }
 
 export function getIndexOfNextAgainCard(
