@@ -279,7 +279,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					<div>
 						<span className="block font-medium">Show 2 answer choices</span>
 						<span className="text-muted-foreground text-sm">
-							Forgot, Correct!
+							Try Again, Correct!
 						</span>
 					</div>
 				</button>

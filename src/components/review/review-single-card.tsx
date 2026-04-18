@@ -256,7 +256,7 @@ export function ReviewSingleCard({
 									:	''
 								)}
 							>
-								Forgot
+								Try Again
 							</Button>
 						</div>
 						<div className="relative">

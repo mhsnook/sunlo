@@ -46,7 +46,7 @@ learner:
 - prev
 - see rating-easy-button
 
-# learner sees 2-button mode with Forgot/Correct labels
+# learner sees 2-button mode with Try Again/Correct labels
 
 setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
 cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
