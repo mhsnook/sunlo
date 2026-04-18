@@ -6,6 +6,8 @@ import { useMutation } from '@tanstack/react-query'
 import {
 	BookmarkCheck,
 	BookmarkX,
+	Brain,
+	Lightbulb,
 	MoreVertical,
 	Play,
 	Send,
@@ -206,7 +208,14 @@ export function ReviewSingleCard({
 						variant="outline"
 						className="absolute top-4 left-4 gap-1 text-xs"
 					>
-						{isReverse ? 'Recall 🧠' : 'Recognise 💡'}
+						{isReverse ?
+							<>
+								Recall <Brain className="size-3" />
+							</>
+						:	<>
+								Recognition <Lightbulb className="size-3" />
+							</>
+						}
 					</Badge>
 					<div className="pt-16">{questionContent}</div>
 					<Separator />
