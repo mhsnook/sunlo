@@ -266,7 +266,7 @@ function InlinePhraseForm({
 						htmlFor="inline-only-reverse"
 						className="text-muted-foreground cursor-pointer text-sm font-normal"
 					>
-						Only reverse reviews make sense
+						Only recall reviews make sense
 					</Label>
 				</div>
 

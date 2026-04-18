@@ -87,7 +87,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								{phrase.only_reverse && (
 									<Badge variant="outline" className="gap-1">
 										<RefreshCcwDot className="h-3 w-3" />
-										Reverse only
+										Recall only
 									</Badge>
 								)}
 							</div>
