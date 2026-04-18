@@ -4,6 +4,34 @@ One-off maintenance scripts. Each is standalone — not part of the app bundle,
 not part of CI. They connect directly to Supabase using the **service role
 key**, so treat them with production-grade care.
 
+Scripts in this directory share the same patterns: dry-run by default,
+`--apply` to write, `--uid <uuid>` to scope to one user, env-var handling
+documented once below under **Running against production**, and a 5-second
+safety pause before any non-local write.
+
+---
+
+## `reclassify-phase1-duplicates.ts`
+
+Finds groups of `day_first_review = true` rows that share the same
+`(uid, lang, phrase_id, direction, day_session)` and flips all but the
+oldest to `day_first_review = false`. The oldest is the genuine phase-1
+review; the rest are phase-3 re-reviews that got misclassified by a
+historical bug (see readme/review-interface-flow-logic.md:21-23).
+
+Run this **before** `recompute-reviews` when you have duplicate phase-1
+warnings. Recommended flow:
+
+```bash
+pnpm reclassify-phase1-duplicates          # dry-run
+pnpm reclassify-phase1-duplicates --apply  # flip
+pnpm recompute-reviews --apply             # re-normalize FSRS chain
+```
+
+The flipped rows keep their `score` and `created_at`. Their FSRS values get
+overwritten by the subsequent `recompute-reviews` pass, which will mirror
+the kept phase-1's values onto them.
+
 ---
 
 ## `recompute-reviews.ts`
