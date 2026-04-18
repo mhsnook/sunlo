@@ -197,7 +197,7 @@ export const usePreferredTranslationLang = (lang: string): string => {
  * Priority:
  * 1. Deck-specific review_answer_mode (if set)
  * 2. Profile's review_answer_mode
- * 3. Fallback to '4-buttons'
+ * 3. Fallback to '2-buttons'
  */
 export const useReviewAnswerMode = (
 	lang: string
@@ -207,5 +207,5 @@ export const useReviewAnswerMode = (
 	if (deck?.review_answer_mode) {
 		return deck.review_answer_mode
 	}
-	return profile?.review_answer_mode ?? '4-buttons'
+	return profile?.review_answer_mode ?? '2-buttons'
 }

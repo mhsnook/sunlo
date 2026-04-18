@@ -20,6 +20,11 @@ test.describe.serial('Review Mutations', () => {
 	// oxlint-disable-next-line no-empty-pattern
 	test.beforeAll(async ({}, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
+		// This suite exercises the hard/easy buttons, so force 4-button mode.
+		await supabase
+			.from('user_profile')
+			.update({ review_answer_mode: '4-buttons' })
+			.eq('uid', uid)
 		const { data: existingSession } = await getReviewSessionState(
 			uid,
 			TEST_LANG,
@@ -33,6 +38,10 @@ test.describe.serial('Review Mutations', () => {
 	test.afterAll(async ({}, workerInfo) => {
 		const { uid } = getTestUserForProject(workerInfo as unknown as TestInfo)
 		await cleanupReviewSession(uid, TEST_LANG, sessionDate)
+		await supabase
+			.from('user_profile')
+			.update({ review_answer_mode: '2-buttons' })
+			.eq('uid', uid)
 	})
 
 	test('0. create daily review session', async ({ page }) => {

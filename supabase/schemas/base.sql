@@ -1632,7 +1632,7 @@ create table if not exists "public"."user_profile" (
 	"avatar_path" "text",
 	"languages_known" "jsonb" default '[]'::"jsonb" not null,
 	"font_preference" "text" default 'default'::"text",
-	"review_answer_mode" "text" default '4-buttons'::"text",
+	"review_answer_mode" "text" default '2-buttons'::"text",
 	"sound_enabled" boolean default true not null,
 	constraint "user_profile_font_preference_check" check (
 		(

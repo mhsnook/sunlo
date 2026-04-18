@@ -596,7 +596,7 @@ function ReviewAnswerModeForm({
 }) {
 	const userId = useUserId()
 	const { data: profile } = useProfile()
-	const profileMode = profile?.review_answer_mode ?? '4-buttons'
+	const profileMode = profile?.review_answer_mode ?? '2-buttons'
 	const [selected, setSelected] = useState<string | null>(review_answer_mode)
 
 	const isDirty = selected !== review_answer_mode

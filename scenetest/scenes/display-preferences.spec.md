@@ -24,7 +24,7 @@ learner:
 
 # learner sets global review answer mode to 2 buttons
 
-cleanup: supabase.from('user_profile').update({ review_answer_mode: '4-buttons' }).eq('uid', '[learner.key]')
+cleanup: supabase.from('user_profile').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]')
 
 learner:
 
