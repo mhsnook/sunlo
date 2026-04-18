@@ -1,12 +1,16 @@
 # Change Log
 
-## v0.22 - 2-Button Review Default
+## v0.22 - 2-Button Review Default & FSRS Fix
 
 _18 April, 2026_
 
 ### Changes
 
 - **Default review mode is now 2-buttons** — new profiles get "Try Again / Correct" instead of the 4-button FSRS scale. Existing profiles keep their current setting.
+
+### Fixes
+
+- **Phase-3 FSRS values corrected** (#544) — re-reviews of "Again" cards were being stamped with fresh initial FSRS values instead of mirroring the same-session phase-1 snapshot. Since phase-3 rows are tracking-only and never feed scheduling, they now copy difficulty/stability/retrievability directly from the phase-1 review. Two data-repair scripts (`pnpm recompute-reviews`, `pnpm reclassify-phase1-duplicates`) are included to correct historical rows.
 
 ### Database
 
