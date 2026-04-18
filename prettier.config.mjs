@@ -1,22 +1,12 @@
-/** @type {import('prettier').Config} */
-const prettierConfig = {
+/**
+ * Prettier only formats SQL here. JS/TS/JSX/CSS/MD/JSON are formatted by oxfmt.
+ *
+ * @type {import('prettier').Config & import('prettier-plugin-sql').SqlBaseOptions}
+ */
+const config = {
 	useTabs: true,
-	semi: false,
-	singleQuote: true,
-	trailingComma: 'es5',
-	experimentalTernaries: true,
-	plugins: [
-		'@prettier/plugin-oxc',
-		'prettier-plugin-tailwindcss',
-		'prettier-plugin-sql',
-	],
-}
-
-/** @type {import('prettier-plugin-sql').SqlBaseOptions} */
-const prettierPluginSqlConfig = {
-	// formatter: 'node-sql-parser',
+	plugins: ['prettier-plugin-sql'],
 	language: 'postgresql',
-	// dialect: 'postgresql',
 	keywordCase: 'lower',
 	dataTypeCase: 'lower',
 	functionCase: 'lower',
@@ -26,11 +16,6 @@ const prettierPluginSqlConfig = {
 	expressionWidth: 64,
 	denseOperators: false,
 	database: 'postgresql',
-}
-
-const config = {
-	...prettierConfig,
-	...prettierPluginSqlConfig,
 }
 
 export default config
