@@ -23,9 +23,9 @@ Run this **before** `recompute-reviews` when you have duplicate phase-1
 warnings. Recommended flow:
 
 ```bash
-pnpm reclassify-phase1-duplicates          # dry-run
-pnpm reclassify-phase1-duplicates --apply  # flip
-pnpm recompute-reviews --apply             # re-normalize FSRS chain
+tsx --tsconfig scripts/tsconfig.json scripts/reclassify-phase1-duplicates.ts          # dry-run
+tsx --tsconfig scripts/tsconfig.json scripts/reclassify-phase1-duplicates.ts --apply  # flip
+tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --apply             # re-normalize FSRS chain
 ```
 
 The flipped rows keep their `score` and `created_at`. Their FSRS values get
@@ -120,7 +120,7 @@ is passed — but check what it will do before flipping the switch.
 ```bash
 VITE_SUPABASE_URL="https://<ref>.supabase.co" \
 SUPABASE_SERVICE_ROLE_KEY="<prod-service-role-key>" \
-pnpm recompute-reviews
+tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts
 ```
 
 Look for:
@@ -145,7 +145,7 @@ Same command, add `--apply`:
 ```bash
 VITE_SUPABASE_URL="https://<ref>.supabase.co" \
 SUPABASE_SERVICE_ROLE_KEY="<prod-service-role-key>" \
-pnpm recompute-reviews --apply
+tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --apply
 ```
 
 When `--apply` is combined with a non-local URL, the script prints a

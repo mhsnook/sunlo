@@ -25,9 +25,9 @@
  *
  * Recommended flow
  * ----------------
- *   pnpm reclassify-phase1-duplicates          # dry-run
- *   pnpm reclassify-phase1-duplicates --apply  # flip
- *   pnpm recompute-reviews --apply             # re-normalize FSRS chain
+ *   pnpm tsx --tsconfig scripts/tsconfig.json scripts/reclassify-phase1-duplicates.ts          # dry-run
+ *   pnpm tsx --tsconfig scripts/tsconfig.json scripts/reclassify-phase1-duplicates.ts --apply  # flip
+ *   pnpm tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --apply             # re-normalize FSRS chain
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY in .env (bypasses RLS for full access).
  */

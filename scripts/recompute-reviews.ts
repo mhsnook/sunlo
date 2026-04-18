@@ -34,10 +34,10 @@
  *
  * Usage
  * -----
- *   pnpm recompute-reviews               # dry-run, prints summary + samples
- *   pnpm recompute-reviews --apply       # writes the corrections
- *   pnpm recompute-reviews --uid <uuid>  # limit to one user
- *   pnpm recompute-reviews --verbose     # print every diff
+ *   tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts               # dry-run, prints summary + samples
+ *   tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --apply       # writes the corrections
+ *   tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --uid <uuid>  # limit to one user
+ *   tsx --tsconfig scripts/tsconfig.json scripts/recompute-reviews.ts --verbose     # print every diff
  *
  * Requires SUPABASE_SERVICE_ROLE_KEY in .env (bypasses RLS for full access).
  */
