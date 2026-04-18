@@ -12,8 +12,10 @@ import type { CardReviewType } from '@/features/review/schemas'
  * vice-versa.
  */
 
-const P1 = '00000000-0000-0000-0000-000000000001'
-const P2 = '00000000-0000-0000-0000-000000000002'
+// Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b} (variant).
+// zod@4's .uuid() rejects nil-ish '00000000-…-0001' strings.
+const P1 = '11111111-1111-4111-8111-111111111111'
+const P2 = '22222222-2222-4222-8222-222222222222'
 
 function makeReview(
 	overrides: Partial<CardReviewType> & {
@@ -24,7 +26,7 @@ function makeReview(
 	return {
 		id: crypto.randomUUID(),
 		created_at: '2025-06-01T12:00:00Z',
-		uid: '00000000-0000-0000-0000-aaaaaaaaaaaa',
+		uid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
 		day_session: '2025-06-01',
 		lang: 'hin',
 		score: 3,
