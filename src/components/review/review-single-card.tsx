@@ -206,7 +206,7 @@ export function ReviewSingleCard({
 						variant="outline"
 						className="absolute top-4 left-4 gap-1 text-xs"
 					>
-						{isReverse ? '🧠 Recall' : '💡 Recognise'}
+						{isReverse ? 'Recall 🧠' : 'Recognise 💡'}
 					</Badge>
 					<div className="pt-16">{questionContent}</div>
 					<Separator />
