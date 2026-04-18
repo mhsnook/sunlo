@@ -210,10 +210,10 @@ export function ReviewSingleCard({
 					>
 						{isReverse ?
 							<>
-								<ArrowLeft className="size-3" /> Recall
+								<ArrowLeft className="size-3" /> 🧠 Recall
 							</>
 						:	<>
-								Recognise <ArrowRight className="size-3" />
+								💡 Recognise <ArrowRight className="size-3" />
 							</>
 						}
 					</Badge>
