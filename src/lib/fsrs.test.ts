@@ -511,23 +511,20 @@ describe('direction isolation', () => {
 //   This is the review that matters for long-term scheduling.
 //
 // Phase 3 (day_first_review=false):
-//   Re-review of cards you scored Again in phase 1. The mutation passes
-//   `previousReview: undefined` so FSRS computes INITIAL values (as if
-//   the card were brand new).
-//
-// THIS IS THE KEY INSIGHT the user asked about:
-//   A phase-3 review has a stability value, but it's NOT derived from
-//   the phase-1 review. It's a fresh initial value based solely on the
-//   phase-3 score. The phase-1 chain is not consulted.
-//
-//   For a brand-new card scored Again in phase 1 then Good in phase 3:
-//     Phase 1: stability = initialStability(1) ≈ 0.40  (Again)
-//     Phase 3: stability = initialStability(3) ≈ 3.17  (Good, fresh init)
+//   Re-review of cards you scored Again in phase 1. These rows are
+//   tracking-only and never feed scheduling, so the mutation copies the
+//   same-session phase-1 review's FSRS values directly onto them — that's
+//   the meaningful snapshot of the card's state at that moment.
 //
 // IMPORTANT: The onSuccess handler skips card sync for phase-3 reviews, and
 // useLatestReviewForPhrase filters to day_first_review=true. This ensures
-// the NEXT day's FSRS builds on the phase-1 values, not the throwaway
-// phase-3 initial values. See the scheduling tests below.
+// the NEXT day's FSRS builds on the phase-1 values, not phase-3 rows.
+// See the scheduling tests below.
+//
+// The tests in this section verify `calculateFSRS` behavior when called
+// with `previousReview: undefined` (initial values from score alone).
+// That's a pure-function property of calculateFSRS; the mutation no longer
+// calls it this way for phase-3 rows but other callers still can.
 // ---------------------------------------------------------------------------
 
 describe('phase 1 vs phase 3 FSRS values', () => {
@@ -541,10 +538,9 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 		expect(phase1.stability).toBeCloseTo(0.403, 2) // W.S_0[0]
 	})
 
-	it('phase-3 re-review ALSO computes initial values (previousReview is undefined by design)', () => {
-		// The phase-3 code path passes `previousReview: undefined`.
-		// So calculateFSRS treats this as a first-ever review.
-		// Score = 3 (Good) on the re-review.
+	it('calculateFSRS with undefined previousReview computes initial values', () => {
+		// Calling `calculateFSRS` with no previousReview treats the input as a
+		// first-ever review. Score = 3 (Good).
 		const phase3 = calculateFSRS({ score: 3 })
 
 		expect(phase3.retrievability).toBeNull()
@@ -552,33 +548,28 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 		expect(phase3.stability).toBeCloseTo(3.173, 2) // W.S_0[2]
 	})
 
-	it('phase-3 stability is NOT derived from the phase-1 review', () => {
-		// This is the specific scenario the user observed:
-		// 1. New reverse card, phase 1, score=1 (Again) → stability ≈ 0.40
-		// 2. Same card, phase 3, score=3 (Good)         → stability ≈ 3.17
-		//
-		// The phase-3 stability (3.17) is much higher than the phase-1 stability (0.40).
-		// It's not derived from 0.40 in any way — it's a fresh initial value for score=3.
-		const phase1 = calculateFSRS({ score: 1 })
-		const phase3 = calculateFSRS({ score: 3 }) // same as what the mutation does
+	it('calculateFSRS with undefined previousReview is not derived from any chain', () => {
+		// Two calls with different scores and no previousReview produce independent
+		// initial values — the second call does not build on the first.
+		const a = calculateFSRS({ score: 1 })
+		const b = calculateFSRS({ score: 3 })
 
-		// Phase 3 has higher stability because score=3 > score=1
-		expect(phase3.stability).toBeGreaterThan(phase1.stability)
+		// Score=3 yields higher stability than score=1
+		expect(b.stability).toBeGreaterThan(a.stability)
 
-		// If phase 3 were building on phase 1, it would use phase1's difficulty
-		// and stability as inputs. Instead it computes its own initial values:
-		expect(phase3.difficulty).not.toBeCloseTo(phase1.difficulty, 2)
-		expect(phase3.stability).not.toBeCloseTo(phase1.stability, 2)
+		// Call (b) is not a function of call (a); it's a standalone initial value.
+		expect(b.difficulty).not.toBeCloseTo(a.difficulty, 2)
+		expect(b.stability).not.toBeCloseTo(a.stability, 2)
 
-		// Verify phase 3 matches a standalone score=3 first review exactly
+		// Confirm (b) matches a standalone score=3 first review exactly
 		const standalone = calculateFSRS({ score: 3 })
-		expect(phase3.difficulty).toBe(standalone.difficulty)
-		expect(phase3.stability).toBe(standalone.stability)
+		expect(b.difficulty).toBe(standalone.difficulty)
+		expect(b.stability).toBe(standalone.stability)
 	})
 
-	it('phase 3 values would be different if it DID chain off phase 1', () => {
-		// For comparison: what WOULD happen if phase 3 used phase 1 as previousReview?
-		// (This is NOT what the code does, but proves the values would differ.)
+	it('chained vs unchained calls produce different results', () => {
+		// Demonstrates the difference between calling calculateFSRS with and
+		// without a previousReview.
 		const phase1Time = new Date('2025-06-01T12:00:00Z')
 		const phase3Time = new Date('2025-06-01T12:30:00Z') // 30 minutes later
 
@@ -587,8 +578,8 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 			currentTime: phase1Time,
 		})
 
-		// Hypothetical: chaining off phase 1
-		const hypotheticalChained = calculateFSRS({
+		// Chained call: uses phase 1 as previousReview
+		const chained = calculateFSRS({
 			score: 3,
 			previousReview: mockReview({
 				difficulty: phase1.difficulty,
@@ -598,19 +589,19 @@ describe('phase 1 vs phase 3 FSRS values', () => {
 			currentTime: phase3Time,
 		})
 
-		// Actual: what the code does (fresh init, previousReview=undefined)
-		const actualPhase3 = calculateFSRS({
+		// Unchained call: previousReview omitted → initial values
+		const unchained = calculateFSRS({
 			score: 3,
 			currentTime: phase3Time,
 		})
 
-		// The chained version would have non-null retrievability
-		expect(hypotheticalChained.retrievability).not.toBeNull()
-		// The actual phase 3 has null retrievability (fresh init)
-		expect(actualPhase3.retrievability).toBeNull()
+		// The chained version has non-null retrievability (computed from elapsed time)
+		expect(chained.retrievability).not.toBeNull()
+		// The unchained version has null retrievability (initial value)
+		expect(unchained.retrievability).toBeNull()
 
-		// The stability values differ between chained and fresh
-		expect(hypotheticalChained.stability).not.toBe(actualPhase3.stability)
+		// The stability values differ between chained and unchained
+		expect(chained.stability).not.toBe(unchained.stability)
 	})
 
 	describe('scheduling uses phase-1 values (phase-3 excluded from chain)', () => {
