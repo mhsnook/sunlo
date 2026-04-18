@@ -416,11 +416,11 @@ function ReviewPageContent() {
 										<p className="text-muted-foreground">
 											{forwardCount > 0 && reverseCount > 0 ?
 												<>
-													{forwardCount} → forward · {reverseCount} ← reverse
+													{forwardCount} → recognise · {reverseCount} ← recall
 												</>
 											: forwardCount > 0 ?
-												<>{forwardCount} forward cards</>
-											:	<>{reverseCount} reverse cards</>}
+												<>{forwardCount} recognise cards</>
+											:	<>{reverseCount} recall cards</>}
 										</p>
 									</CardContent>
 								</Card>

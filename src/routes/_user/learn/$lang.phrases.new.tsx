@@ -344,7 +344,7 @@ function AddPhraseTab() {
 											className={`bg-card rounded-lg border p-3 transition-opacity ${onlyReverse ? 'opacity-40' : ''}`}
 										>
 											<div className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
-												<span>Forward Review</span>
+												<span>Recognise Review</span>
 												{onlyReverse && (
 													<span className="text-muted-foreground text-xs normal-case">
 														(disabled)
@@ -371,7 +371,7 @@ function AddPhraseTab() {
 										{/* Reverse card preview */}
 										<div className="bg-card rounded-lg border p-3">
 											<div className="text-muted-foreground mb-2 text-xs font-medium tracking-wide uppercase">
-												Reverse Review
+												Recall Review
 											</div>
 											<div className="space-y-2">
 												<div className="text-foreground font-medium">
@@ -409,7 +409,7 @@ function AddPhraseTab() {
 											htmlFor="only_reverse"
 											className="text-muted-foreground cursor-pointer text-sm font-normal"
 										>
-											Only reverse reviews make sense for this phrase
+											Only recall reviews make sense for this phrase
 										</Label>
 									</div>
 								</div>
