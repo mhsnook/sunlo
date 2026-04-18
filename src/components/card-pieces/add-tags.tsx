@@ -73,10 +73,9 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 				})
 			}
 			if (data?.phrase_tags.length) {
-				const langTags =
-					data.phrase_tags
-						.map((t) => langTagsCollection.get(t.tag_id))
-						.filter((t): t is LangTagType => !!t) ?? []
+				const langTags = data.phrase_tags
+					.map((t) => langTagsCollection.get(t.tag_id))
+					.filter(Boolean) as LangTagType[]
 				phrasesCollection.utils.writeUpdate({
 					id: phrase.id,
 					tags: [
