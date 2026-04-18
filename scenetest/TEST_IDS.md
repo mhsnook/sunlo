@@ -251,7 +251,7 @@ natural wrapper element to label.
 | `review-answer-mode-4-buttons`     | data-testid | Radio group        | Option for 4-button mode              |
 | `update-review-answer-mode-button` | data-testid | Deck settings      | Save button for answer mode           |
 | `clear-review-answer-mode-button`  | data-testid | Deck settings      | Clear deck override button            |
-| `rating-again-button`              | data-testid | Review card        | "Again" / "Forgot" button             |
+| `rating-again-button`              | data-testid | Review card        | "Again" / "Try Again" button          |
 | `rating-hard-button`               | data-testid | Review card        | "Hard" button (4-button mode only)    |
 | `rating-good-button`               | data-testid | Review card        | "Good" / "Correct!" button            |
 | `rating-easy-button`               | data-testid | Review card        | "Easy" button (4-button mode only)    |

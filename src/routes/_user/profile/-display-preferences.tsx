@@ -198,7 +198,7 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 }
 
 function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
-	const currentMode = profile.review_answer_mode ?? '4-buttons'
+	const currentMode = profile.review_answer_mode ?? '2-buttons'
 
 	const updateAnswerMode = useMutation({
 		mutationFn: async (review_answer_mode: ReviewAnswerModeType) => {
@@ -279,7 +279,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					<div>
 						<span className="block font-medium">Show 2 answer choices</span>
 						<span className="text-muted-foreground text-sm">
-							Forgot, Correct!
+							Try Again, Correct!
 						</span>
 					</div>
 				</button>
