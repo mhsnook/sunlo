@@ -36,8 +36,6 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
-create extension if not exists "pgsodium";
-
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
