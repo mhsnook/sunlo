@@ -356,39 +356,60 @@ export function useReviewMutation(
 				}
 			}
 
-			// Phase 3+: Re-review of "Again" cards (day_first_review=false)
-			// - If there's already a phase-3 review (day_first_review=false), update it
-			// - Otherwise insert new review with day_first_review=false
+			// Phase 3+: Re-review of "Again" cards (day_first_review=false).
+			// Phase-3 rows are tracking-only (never read for scheduling), so we
+			// copy the same-session phase-1 review's FSRS values directly onto
+			// them — that's the snapshot that actually reflects the card's
+			// state. `latestReview` is filtered to day_first_review=true and
+			// is by definition the same-session phase-1 here (you can't reach
+			// phase-3 without having done phase-1 today).
+			if (!latestReview) {
+				throw new Error(
+					'Phase-3 review requires a same-session phase-1 review to copy from'
+				)
+			}
+			const phase3Fsrs = {
+				difficulty: latestReview.difficulty,
+				stability: latestReview.stability,
+				review_time_retrievability: latestReview.review_time_retrievability,
+			}
+
 			if (prevDataToday?.day_first_review === false) {
 				console.log(`Phase 3: Updating existing phase-3 review`, {
 					prevDataToday,
 					score,
 				})
-				return {
-					action: 'update',
-					row: await updateReview({
-						score: score as Score,
-						review_id: prevDataToday.id,
-						// Don't recalculate FSRS for phase-3 reviews - they're just for tracking
-						previousReview: undefined,
-					}),
-				}
+				const { data } = await supabase
+					.from('user_card_review')
+					.update({
+						score,
+						...phase3Fsrs,
+						updated_at: new Date().toISOString(),
+					})
+					.eq('id', prevDataToday.id)
+					.select()
+					.single()
+					.throwOnError()
+				return { action: 'update', row: data }
 			}
 
 			// First phase-3 review for this card
 			console.log(`Phase 3: Creating phase-3 review`, { pid, direction, score })
-			return {
-				action: 'insert',
-				row: await postReview({
-					score: score as Score,
+			const { data } = await supabase
+				.from('user_card_review')
+				.insert({
 					phrase_id: pid,
 					lang,
 					direction,
+					score,
 					day_session,
 					day_first_review: false,
-					previousReview: undefined, // Don't use FSRS for phase-3 reviews
-				}),
-			}
+					...phase3Fsrs,
+				})
+				.select()
+				.single()
+				.throwOnError()
+			return { action: 'insert', row: data }
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
