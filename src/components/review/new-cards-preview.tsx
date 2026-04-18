@@ -8,13 +8,13 @@ import { CardContent } from '@/components/ui/card'
 import { LangBadge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { useDeckPids } from '@/features/deck/hooks'
+import { useDeckCards } from '@/features/deck/hooks'
 import type { uuid } from '@/types/main'
 import type { TranslationType } from '@/features/phrases/schemas'
 import type { CardDirectionType } from '@/features/deck/schemas'
 import {
 	parseManifestEntry,
-	manifestPhraseId,
+	toManifestEntry,
 	type ManifestEntry,
 } from '@/features/review/manifest'
 
@@ -81,16 +81,24 @@ export function NewCardsPreview({
 	manifest: Array<ManifestEntry>
 }) {
 	const { lang } = useParams({ strict: false })
-	const { data: deckPids } = useDeckPids(lang!)
+	const { data: deckCards } = useDeckCards(lang!)
 	const navigate = useNavigate()
 
 	const handleStartReview = () => {
 		void navigate({ to: '/learn/$lang/review/go', params: { lang: lang! } })
 	}
 
-	// Show all cards the user has never reviewed before (no prior student experience)
+	// Only the specific phrase+direction cards the user has never reviewed.
+	// Matching by phrase_id alone would over-include: when one direction has
+	// prior reviews and the sibling direction is new, both manifest entries
+	// would pass a phrase-id filter.
+	const unreviewedEntries = new Set<ManifestEntry>(
+		(deckCards ?? [])
+			.filter((c) => c.status === 'active' && !c.last_reviewed_at)
+			.map((c) => toManifestEntry(c.phrase_id, c.direction))
+	)
 	const unreviewedInOrder = manifest.filter((entry) =>
-		deckPids?.unreviewed_active.includes(manifestPhraseId(entry))
+		unreviewedEntries.has(entry)
 	)
 
 	if (unreviewedInOrder.length === 0) {
