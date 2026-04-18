@@ -80,7 +80,7 @@ async function fetchUserIds(
 		if (data.length < pageSize) break
 		from += pageSize
 	}
-	return [...uids].sort()
+	return [...uids].toSorted()
 }
 
 async function loadPhase1ReviewsForUsers(
@@ -144,10 +144,7 @@ function findDuplicateGroups(reviews: CardReviewType[]): ReclassifyGroup[] {
 	return out
 }
 
-async function flipReviews(
-	supabase: Supabase,
-	ids: string[]
-): Promise<void> {
+async function flipReviews(supabase: Supabase, ids: string[]): Promise<void> {
 	for (let i = 0; i < ids.length; i += WRITE_CONCURRENCY) {
 		const chunk = ids.slice(i, i + WRITE_CONCURRENCY)
 		// eslint-disable-next-line no-await-in-loop

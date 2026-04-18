@@ -94,8 +94,11 @@ modifies existing rows in place; there's no automatic rollback.
 From the Supabase SQL editor or a psql session pointed at prod:
 
 ```sql
-create table user_card_review_backup_YYYYMMDD as
-  select * from user_card_review;
+create table user_card_review_backup_yyyymmdd as
+select
+	*
+from
+	user_card_review;
 ```
 
 Or via pg_dump (using the pooler connection string from the dashboard):
@@ -170,12 +173,12 @@ stability.
 
 ### CLI flags
 
-| Flag            | Effect                                                           |
-| --------------- | ---------------------------------------------------------------- |
-| _(none)_        | Dry run. Prints summary + first 20 diffs.                        |
-| `--apply`       | Writes corrections to DB. Prompted with a 5s pause against prod. |
-| `--verbose`     | Print every diff, not just the first 20. Still dry-run unless combined with `--apply`. |
-| `--uid <uuid>`  | Limit the scope to one user's reviews (for testing or partial fixes). |
+| Flag           | Effect                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------- |
+| _(none)_       | Dry run. Prints summary + first 20 diffs.                                              |
+| `--apply`      | Writes corrections to DB. Prompted with a 5s pause against prod.                       |
+| `--verbose`    | Print every diff, not just the first 20. Still dry-run unless combined with `--apply`. |
+| `--uid <uuid>` | Limit the scope to one user's reviews (for testing or partial fixes).                  |
 
 ### What the script assumes
 
@@ -193,10 +196,18 @@ stability.
 There's no built-in undo. Your options:
 
 1. Restore from the backup you took in step 3:
+
    ```sql
    truncate user_card_review;
-   insert into user_card_review select * from user_card_review_backup_YYYYMMDD;
+   
+   insert into
+   	user_card_review
+   select
+   	*
+   from
+   	user_card_review_backup_yyyymmdd;
    ```
+
    (Careful: this locks the table and blocks writes while it runs. Prefer
    a per-row update-from-backup if writes are ongoing.)
 
