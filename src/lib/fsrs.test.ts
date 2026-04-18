@@ -8,15 +8,17 @@ import {
 } from '@/features/review/fsrs'
 import type { CardReviewType } from '@/features/review/schemas'
 
-// Helper to make a mock previous review
+// Helper to make a mock previous review.
+// Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b}
+// (variant). zod@4's .uuid() rejects nil-ish '00000000-…-0001' strings.
 function mockReview(overrides: Partial<CardReviewType> = {}): CardReviewType {
 	return {
-		id: '00000000-0000-0000-0000-000000000001',
+		id: '11111111-1111-4111-8111-111111111111',
 		created_at: '2025-01-01T12:00:00Z',
-		uid: '00000000-0000-0000-0000-000000000002',
+		uid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
 		day_session: '2025-01-01',
 		lang: 'hin',
-		phrase_id: '00000000-0000-0000-0000-000000000003',
+		phrase_id: '22222222-2222-4222-8222-222222222222',
 		direction: 'forward',
 		score: 3,
 		day_first_review: true,
