@@ -139,7 +139,7 @@ async function fetchUserIds(
 		if (data.length < pageSize) break
 		from += pageSize
 	}
-	return [...uids].sort()
+	return [...uids].toSorted()
 }
 
 async function loadReviewsForUsers(
@@ -434,9 +434,7 @@ async function main(): Promise<void> {
 		if (args.verbose && result.updates.length > 0) {
 			for (const u of result.updates) console.log(formatUpdate(u))
 		} else if (sampleDiffs.length < 20) {
-			sampleDiffs.push(
-				...result.updates.slice(0, 20 - sampleDiffs.length)
-			)
+			sampleDiffs.push(...result.updates.slice(0, 20 - sampleDiffs.length))
 		}
 
 		if (args.apply && result.updates.length > 0) {
