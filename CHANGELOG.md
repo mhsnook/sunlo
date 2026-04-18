@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.22 - 2-Button Review Default
+
+_18 April, 2026_
+
+### Changes
+
+- **Default review mode is now 2-buttons** — new profiles get "Try Again / Correct" instead of the 4-button FSRS scale. Existing profiles keep their current setting.
+
+### Database
+
+- `user_profile.review_answer_mode` default changed to `'2-buttons'`.
+
 ## v0.21 - Bidirectional Cards
 
 _9 April, 2026_
