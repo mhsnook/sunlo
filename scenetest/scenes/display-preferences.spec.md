@@ -22,7 +22,21 @@ learner:
 - up
 - seeToast toast-success
 
-# learner sets global review answer mode to 2 buttons
+# learner switches review answer mode to 4 buttons
+
+cleanup: supabase.from('user_profile').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]')
+
+learner:
+
+- login
+- openTo /profile
+- up
+- see display-preferences-page
+- click answer-mode-4-buttons
+- up
+- seeToast toast-success
+
+# learner switches review answer mode to 2 buttons
 
 cleanup: supabase.from('user_profile').update({ review_answer_mode: '4-buttons' }).eq('uid', '[learner.key]')
 

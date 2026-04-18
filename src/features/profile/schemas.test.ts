@@ -106,10 +106,10 @@ describe('MyProfileSchema', () => {
 		expect(result.font_preference).toBeNull()
 	})
 
-	it('defaults review_answer_mode to "4-buttons" when omitted', () => {
+	it('defaults review_answer_mode to "2-buttons" when omitted', () => {
 		const { review_answer_mode: _, ...withoutMode } = validProfile
 		const result = MyProfileSchema.parse(withoutMode)
-		expect(result.review_answer_mode).toBe('4-buttons')
+		expect(result.review_answer_mode).toBe('2-buttons')
 	})
 
 	it('preserves null review_answer_mode when explicitly null', () => {

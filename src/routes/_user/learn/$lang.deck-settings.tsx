@@ -527,7 +527,7 @@ const reviewAnswerModeOptions: Array<FancySelectOption> = [
 	{
 		value: '2-buttons',
 		label: 'Show 2 answer choices',
-		description: 'Forgot, Correct!',
+		description: 'Try Again, Correct!',
 		Icon: Columns2,
 	},
 ]
@@ -596,7 +596,7 @@ function ReviewAnswerModeForm({
 }) {
 	const userId = useUserId()
 	const { data: profile } = useProfile()
-	const profileMode = profile?.review_answer_mode ?? '4-buttons'
+	const profileMode = profile?.review_answer_mode ?? '2-buttons'
 	const [selected, setSelected] = useState<string | null>(review_answer_mode)
 
 	const isDirty = selected !== review_answer_mode
@@ -680,7 +680,7 @@ function ReviewAnswerModeForm({
 					:	'Currently using profile default: '}
 					<strong>
 						{profileMode === '2-buttons' ?
-							'2 buttons (Forgot, Correct!)'
+							'2 buttons (Try Again, Correct!)'
 						:	'4 buttons (Again, Hard, Good, Easy)'}
 					</strong>
 				</p>
