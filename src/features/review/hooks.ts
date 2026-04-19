@@ -12,7 +12,7 @@ import {
 import { PostgrestError } from '@supabase/supabase-js'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
-import { and, eq, useLiveQuery } from '@tanstack/react-db'
+import { and, eq, lt, useLiveQuery } from '@tanstack/react-db'
 import {
 	CardReviewSchema,
 	type CardReviewType,
@@ -141,13 +141,13 @@ function mapToStats(
 	}
 
 	const stage: ReviewStages =
-		stats.reviewed < stats.count ? 1
-		: stats.again === 0 ? 5
-		: 4
+		stats.reviewed < stats.count ? 1 : stats.again === 0 ? 5 : 4
 	const index =
-		stage === 4 ? stats.firstAgainIndex
-		: stage === 5 ? manifest.length
-		: stats.firstUnreviewedIndex
+		stage === 4
+			? stats.firstAgainIndex
+			: stage === 5
+				? manifest.length
+				: stats.firstUnreviewedIndex
 
 	return {
 		...stats,
@@ -164,9 +164,9 @@ export function useNextValid(): number {
 	const stage = useReviewStage()
 	const { data: reviewsData } = useReviewsToday(lang, day_session)
 	const { manifest, reviewsMap } = reviewsData
-	return (stage ?? 0) < 3 ?
-			getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
-		:	getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
+	return (stage ?? 0) < 3
+		? getIndexOfNextUnreviewedCard(manifest!, reviewsMap, currentCardIndex)
+		: getIndexOfNextAgainCard(manifest!, reviewsMap, currentCardIndex)
 }
 
 export function useReviewsToday(lang: string, day_session: string) {
@@ -202,9 +202,11 @@ export function useReviewsTodayStats(lang: string, day_session: string) {
 	// Use server-persisted stage when available, fall back to inferred
 	const stage = (query.data.stage as ReviewStages) ?? computed.inferred.stage
 	const index =
-		stage >= 5 ? computed.count
-		: stage >= 3 ? computed.firstAgainIndex
-		: computed.firstUnreviewedIndex
+		stage >= 5
+			? computed.count
+			: stage >= 3
+				? computed.firstAgainIndex
+				: computed.firstUnreviewedIndex
 	return {
 		...query,
 		data: { ...computed, stage, index },
@@ -277,6 +279,40 @@ export function useLatestReviewForPhrase(
 				.limit(1)
 				.findOne(),
 		[pid, direction]
+	)
+}
+
+/**
+ * The chain predecessor: the most recent phase-1 review from a session
+ * strictly earlier than `day_session`. Use this — not `useLatestReviewForPhrase`
+ * — when you need "where was the card before today" for display (e.g. the
+ * interval badges on each answer button). If today's row has already been
+ * written, `useLatestReviewForPhrase` returns TODAY's row and any downstream
+ * computation starts compounding on already-updated state, making the badges
+ * flicker to different values after re-visiting a card.
+ */
+export function useChainPredecessorForPhrase(
+	pid: uuid,
+	direction: CardDirectionType,
+	day_session: string
+): UseLiveQueryResult<CardReviewType> {
+	return useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) =>
+					and(
+						eq(review.phrase_id, pid),
+						eq(review.direction, direction),
+						eq(review.day_first_review, true),
+						lt(review.day_session, day_session)
+					)
+				)
+				.orderBy(({ review }) => review.day_session, 'desc')
+				.orderBy(({ review }) => review.created_at, 'desc')
+				.limit(1)
+				.findOne(),
+		[pid, direction, day_session]
 	)
 }
 

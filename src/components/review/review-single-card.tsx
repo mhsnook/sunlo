@@ -22,6 +22,7 @@ import PhraseExtraInfo from '@/components/phrase-extra-info'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import {
+	useChainPredecessorForPhrase,
 	useLatestReviewForPhrase,
 	useOneReviewToday,
 	useReviewMutation,
@@ -101,6 +102,16 @@ export function ReviewSingleCard({
 	const [revealCard, setRevealCard] = useState(false)
 	const { data: prevData } = useOneReviewToday(dayString, pid, direction)
 	const { data: latestReview } = useLatestReviewForPhrase(pid, direction)
+	// Interval badges should reflect "where the card was before today" and
+	// must not change when the user scores then navigates back. `latestReview`
+	// returns today's row once scored; the chain predecessor stays stable
+	// across the whole session. Phase 3+ doesn't affect scheduling, so we
+	// skip the computation entirely and hide the labels.
+	const { data: chainPredecessor } = useChainPredecessorForPhrase(
+		pid,
+		direction,
+		dayString
+	)
 	const closeCard = () => setRevealCard(false)
 	const { mutate, isPending } = useReviewMutation(
 		pid,
@@ -115,7 +126,8 @@ export function ReviewSingleCard({
 
 	const lang = useReviewLang()
 	const answerMode = useReviewAnswerMode(lang)
-	const nextIntervals = intervals(latestReview).map(formatInterval)
+	const nextIntervals =
+		reviewStage < 3 ? intervals(chainPredecessor).map(formatInterval) : null
 	const soundEnabled = useSoundEnabled()
 
 	const [coin, setCoin] = useState<{ score: Score; id: number } | null>(null)
@@ -208,14 +220,15 @@ export function ReviewSingleCard({
 						variant="outline"
 						className="absolute top-4 left-4 gap-1 text-xs"
 					>
-						{isReverse ?
+						{isReverse ? (
 							<>
 								Recall <Brain className="size-3" />
 							</>
-						:	<>
+						) : (
+							<>
 								Recognition <Lightbulb className="size-3" />
 							</>
-						}
+						)}
 					</Badge>
 					<div className="pt-16">{questionContent}</div>
 					<Separator />
@@ -227,7 +240,7 @@ export function ReviewSingleCard({
 				</CardContent>
 			</CardlikeFlashcard>
 			<div className="from-background sticky bottom-0 z-10 flex flex-col items-center bg-gradient-to-t from-80% to-transparent pt-6 pb-3">
-				{!showAnswers ?
+				{!showAnswers ? (
 					<Button
 						data-testid="reveal-answer-button"
 						className="w-full max-w-160"
@@ -235,7 +248,7 @@ export function ReviewSingleCard({
 					>
 						{isReverse ? 'Show Phrase' : 'Show Translations'}
 					</Button>
-				: answerMode === '2-buttons' ?
+				) : answerMode === '2-buttons' ? (
 					<div
 						data-name="answer-buttons-row"
 						className="grid w-full max-w-160 grid-cols-2 gap-3"
@@ -251,9 +264,9 @@ export function ReviewSingleCard({
 								disabled={isPending}
 								className={cn(
 									'h-auto w-full rounded-2xl border-red-600! bg-red-600! py-6 text-2xl text-white hover:border-white! hover:bg-red-700!',
-									prevData?.score === 1 && reviewStage < 4 ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 1 && reviewStage < 4
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 							>
 								Try Again
@@ -270,20 +283,19 @@ export function ReviewSingleCard({
 								disabled={isPending}
 								className={cn(
 									'h-auto w-full rounded-2xl border-green-500! bg-green-500! py-6 text-2xl text-white hover:border-white! hover:bg-green-600!',
-									(
-										prevData?.score === 3 ||
-											prevData?.score === 2 ||
-											prevData?.score === 4
-									) ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 3 ||
+										prevData?.score === 2 ||
+										prevData?.score === 4
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 							>
 								Correct!
 							</Button>
 						</div>
 					</div>
-				:	<div
+				) : (
+					<div
 						data-name="answer-buttons-row"
 						className="grid w-full max-w-160 grid-cols-4"
 					>
@@ -298,15 +310,17 @@ export function ReviewSingleCard({
 								disabled={isPending}
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none rounded-l-2xl border-red-600! bg-red-600! py-2 text-white hover:border-white! hover:bg-red-700!',
-									prevData?.score === 1 && reviewStage < 4 ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 1 && reviewStage < 4
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 							>
 								<span>Again</span>
-								<span className="text-xs font-normal opacity-80">
-									{nextIntervals[0]}
-								</span>
+								{nextIntervals && (
+									<span className="text-xs font-normal opacity-80">
+										{nextIntervals[0]}
+									</span>
+								)}
 							</Button>
 						</div>
 						<div className="relative">
@@ -320,15 +334,17 @@ export function ReviewSingleCard({
 								disabled={isPending}
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none border-gray-200! bg-gray-200! py-2 text-gray-700! hover:border-white! hover:bg-gray-300!',
-									prevData?.score === 2 ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 2
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 							>
 								<span>Hard</span>
-								<span className="text-xs font-normal opacity-60">
-									{nextIntervals[1]}
-								</span>
+								{nextIntervals && (
+									<span className="text-xs font-normal opacity-60">
+										{nextIntervals[1]}
+									</span>
+								)}
 							</Button>
 						</div>
 						<div className="relative">
@@ -342,15 +358,17 @@ export function ReviewSingleCard({
 								disabled={isPending}
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none border-green-500! bg-green-500! py-2 text-white hover:border-white! hover:bg-green-600!',
-									prevData?.score === 3 ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 3
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 							>
 								<span>Good</span>
-								<span className="text-xs font-normal opacity-80">
-									{nextIntervals[2]}
-								</span>
+								{nextIntervals && (
+									<span className="text-xs font-normal opacity-80">
+										{nextIntervals[2]}
+									</span>
+								)}
 							</Button>
 						</div>
 						<div className="relative">
@@ -362,21 +380,23 @@ export function ReviewSingleCard({
 								data-testid="rating-easy-button"
 								className={cn(
 									'h-auto w-full flex-col gap-0 rounded-none rounded-r-2xl border-blue-500 bg-blue-500! py-2 text-white hover:border-white! hover:bg-blue-600',
-									prevData?.score === 4 ?
-										'ring-primary ring-2 ring-offset-3'
-									:	''
+									prevData?.score === 4
+										? 'ring-primary ring-2 ring-offset-3'
+										: ''
 								)}
 								onClick={() => submitScore(4)}
 								disabled={isPending}
 							>
 								<span>Easy</span>
-								<span className="text-xs font-normal opacity-80">
-									{nextIntervals[3]}
-								</span>
+								{nextIntervals && (
+									<span className="text-xs font-normal opacity-80">
+										{nextIntervals[3]}
+									</span>
+								)}
 							</Button>
 						</div>
 					</div>
-				}
+				)}
 			</div>
 		</>
 	)
@@ -411,9 +431,9 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				}
 				const status = data[0]?.status
 				const message =
-					status === 'learned' ?
-						"Great! This card is now marked as learned and won't appear in your reviews."
-					:	"This card has been skipped and won't appear in your reviews."
+					status === 'learned'
+						? "Great! This card is now marked as learned and won't appear in your reviews."
+						: "This card has been skipped and won't appear in your reviews."
 				toastSuccess(message)
 			}
 			setIsOpen(false)
