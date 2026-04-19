@@ -18,9 +18,11 @@ import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
  * treat reviewed cards as unreviewed (or vice-versa).
  */
 
-const P1 = '00000000-0000-0000-0000-000000000001'
-const P2 = '00000000-0000-0000-0000-000000000002'
-const P3 = '00000000-0000-0000-0000-000000000003'
+// Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b} (variant).
+// zod@4's .uuid() rejects nil-ish '00000000-…-0001' strings.
+const P1 = '11111111-1111-4111-8111-111111111111'
+const P2 = '22222222-2222-4222-8222-222222222222'
+const P3 = '33333333-3333-4333-8333-333333333333'
 
 // Shorthand: `me(P1, 'forward')` reads like `${P1}:forward` but is properly
 // branded as ManifestEntry.
@@ -32,7 +34,7 @@ function stubReview(score: number): CardReviewType {
 	return {
 		id: crypto.randomUUID(),
 		created_at: '2025-06-01T12:00:00Z',
-		uid: '00000000-0000-0000-0000-aaaaaaaaaaaa',
+		uid: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
 		day_session: '2025-06-01',
 		lang: 'hin',
 		phrase_id: P1,
