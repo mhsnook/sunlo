@@ -80,16 +80,16 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					data-testid="font-preference-default"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentPref === 'default' ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						currentPref === 'default'
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<BookA className="size-5 shrink-0" />
 					<div>
-						<span className="font-instrument block font-medium">Default</span>
-						<span className="text-muted-foreground font-instrument text-sm">
-							Instrument Sans
+						<span className="font-atkinson block font-medium">Default</span>
+						<span className="text-muted-foreground font-atkinson text-sm">
+							Atkinson Hyperlegible
 						</span>
 					</div>
 				</button>
@@ -100,9 +100,9 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 					data-testid="font-preference-dyslexic"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentPref === 'dyslexic' ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						currentPref === 'dyslexic'
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<BookType className="size-5 shrink-0" />
@@ -166,9 +166,9 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 					data-testid="sound-preference-on"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						current ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						current
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<Volume2 className="size-5 shrink-0" />
@@ -184,9 +184,9 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 					data-testid="sound-preference-off"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						!current ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						!current
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<VolumeX className="size-5 shrink-0" />
@@ -248,9 +248,9 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					data-testid="answer-mode-4-buttons"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentMode === '4-buttons' ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						currentMode === '4-buttons'
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<Grid2x2 className="size-5 shrink-0" />
@@ -270,9 +270,9 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 					data-testid="answer-mode-2-buttons"
 					className={cn(
 						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentMode === '2-buttons' ?
-							'border-primary bg-1-mlo-primary'
-						:	'border-border hover:border-4-mlo-primary'
+						currentMode === '2-buttons'
+							? 'border-primary bg-1-mlo-primary'
+							: 'border-border hover:border-4-mlo-primary'
 					)}
 				>
 					<Columns2 className="size-5 shrink-0" />
