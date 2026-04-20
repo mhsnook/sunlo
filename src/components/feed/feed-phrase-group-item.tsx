@@ -3,6 +3,7 @@ import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/features/profile/hooks'
+import { useMyCard } from '@/features/deck/hooks'
 import { MessageSquareQuote, Users } from 'lucide-react'
 import { uuid } from '@/types/main'
 
@@ -13,6 +14,7 @@ export function PhraseSummaryLine({
 }) {
 	const { data: phrase } = usePhrase(item.id)
 	const { data: profile } = useProfile()
+	const { data: card } = useMyCard(item.id)
 
 	if (!phrase) return null
 
@@ -26,9 +28,9 @@ export function PhraseSummaryLine({
 	// Truncate phrase text if needed
 	const maxLength = 50
 	const phraseText =
-		phrase.text.length > maxLength ?
-			`${phrase.text.slice(0, maxLength)}...`
-		:	phrase.text
+		phrase.text.length > maxLength
+			? `${phrase.text.slice(0, maxLength)}...`
+			: phrase.text
 
 	return (
 		<div className="group flex flex-row items-center gap-2 px-2">
@@ -41,14 +43,13 @@ export function PhraseSummaryLine({
 				// Only link if it's from the feed; otherwise assume it's not meant to be interactive
 				disabled={!('payload' in item)}
 			>
-				{(
-					phrase?.card?.status &&
-					['active', 'learned'].includes(phrase.card.status)
-				) ?
+				{card?.status && ['active', 'learned'].includes(card.status) ? (
 					<span className="inline-flex shrink-0 items-center justify-center rounded bg-purple-600 p-0.5">
 						<MessageSquareQuote size={12} className="text-white" />
 					</span>
-				:	<MessageSquareQuote size={14} className="shrink-0" />}
+				) : (
+					<MessageSquareQuote size={14} className="shrink-0" />
+				)}
 				<span className="truncate">&ldquo;{phraseText}&rdquo;</span>
 				{translationCount > 0 && (
 					<span className="text-muted-foreground/70 group-hover:text-foreground shrink-0 text-xs whitespace-nowrap">

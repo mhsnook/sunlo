@@ -47,6 +47,7 @@ import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
+import { useMyCard } from '@/features/deck/hooks'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -57,8 +58,9 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 	if (status === 'pending') return <Loader />
 	if (status === 'not-found' || !phrase) return <PhraseNotFound />
 
-	const displayedProvenance =
-		showAllProvenance ? provenanceItems : provenanceItems.slice(0, 5)
+	const displayedProvenance = showAllProvenance
+		? provenanceItems
+		: provenanceItems.slice(0, 5)
 	const hasMore = provenanceItems.length > 5
 
 	return (
@@ -158,9 +160,9 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 										)}
 									>
 										<ChevronsUpDown className="h-4 w-4" />
-										{isOpen ?
-											'Hide extra'
-										:	`Show ${phrase.translations_other.length} hidden`}{' '}
+										{isOpen
+											? 'Hide extra'
+											: `Show ${phrase.translations_other.length} hidden`}{' '}
 										translation{phrase.translations_other.length > 0 ? 's' : ''}
 									</CollapsibleTrigger>
 									<CollapsibleContent className="space-y-3">
@@ -200,32 +202,23 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							<div className="text-muted-foreground flex flex-wrap gap-3 text-sm">
 								<span title="Shows the average difficulty for this phrase across all learners">
 									Difficulty:{' '}
-									{!phrase.avg_difficulty ?
+									{!phrase.avg_difficulty ? (
 										'unknown'
-									:	<span>
+									) : (
+										<span>
 											<span className="font-bold">
 												{phrase.avg_difficulty?.toFixed(1) ?? '?'}
 											</span>{' '}
 											/ 10
 										</span>
-									}
+									)}
 								</span>
 								<span>•</span>
 								<span className={phrase.count_learners ? 'font-bold' : ''}>
 									{phrase.count_learners} learner
 									{phrase.count_learners === 1 ? '' : 's'}
 								</span>
-								{phrase.card?.last_reviewed_at ?
-									<>
-										<span>•</span>
-										<span>
-											Your last review:{' '}
-											<span className="font-bold">
-												{ago(phrase.card.last_reviewed_at)}
-											</span>
-										</span>
-									</>
-								:	null}
+								<LastReviewedBadge phraseId={phrase.id} />
 							</div>
 						</div>
 					</div>
@@ -325,7 +318,7 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 							<PhraseTinyCard pid={card.phraseId} />
 							<div className="flex flex-wrap gap-1.5 px-1">
 								{card.sources.map((source) =>
-									source.type === 'playlist' ?
+									source.type === 'playlist' ? (
 										<Link
 											key={`playlist-${source.id}`}
 											to="/learn/$lang/playlists/$playlistId"
@@ -337,7 +330,8 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 												{source.label}
 											</Badge>
 										</Link>
-									:	<Link
+									) : (
+										<Link
 											key={`thread-${source.id}`}
 											to="/learn/$lang/requests/$id"
 											params={{ lang, id: source.id }}
@@ -348,6 +342,7 @@ function RelatedCardsSection({ pid, lang }: { pid: uuid; lang: string }) {
 												{source.label}
 											</Badge>
 										</Link>
+									)
 								)}
 							</div>
 						</div>
@@ -413,5 +408,19 @@ function PhraseProvenanceItem({ item, lang }: PhraseProvenanceItemProps) {
 				</div>
 			</div>
 		</div>
+	)
+}
+
+function LastReviewedBadge({ phraseId }: { phraseId: uuid }) {
+	const { data: card } = useMyCard(phraseId)
+	if (!card?.last_reviewed_at) return null
+	return (
+		<>
+			<span>•</span>
+			<span>
+				Your last review:{' '}
+				<span className="font-bold">{ago(card.last_reviewed_at)}</span>
+			</span>
+		</>
 	)
 }
