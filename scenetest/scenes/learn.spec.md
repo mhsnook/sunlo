@@ -99,6 +99,31 @@ learner:
 - up
 - seeToast toast-success
 
+# learner opens add-phrase page from deck context menu
+
+learner:
+
+- login
+- go-to-deck
+- click top-right-context-menu
+- click phrases-new-menu-item
+- up
+- see add-phrase-page
+
+# learner navigates from add-phrase to bulk-add
+
+learner:
+
+- login
+- go-to-deck
+- click top-right-context-menu
+- click phrases-new-menu-item
+- up
+- see add-phrase-page
+- click bulk-add-link
+- up
+- see bulk-add-page
+
 # learner starts a review session
 
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
