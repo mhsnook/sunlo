@@ -22,7 +22,6 @@ import { avatarUrlify } from '@/lib/hooks'
 import { useMutation } from '@tanstack/react-query'
 import supabase from '@/lib/supabase-client'
 import { removeSbTokens } from '@/lib/utils'
-import { clearUser } from '@/lib/collections/clear-user'
 
 const data = makeLinks([
 	'/profile',
@@ -39,12 +38,14 @@ export function NavUser() {
 	const signOut = useMutation({
 		mutationFn: async () => {
 			const { error } = await supabase.auth.signOut({ scope: 'local' })
-			// If signOut fails (e.g., 403), manually clear tokens and user data
-			// This can happen when the session is already invalid server-side
+			// If signOut fails (e.g., 403 when session is already invalid
+			// server-side), supabase won't fire SIGNED_OUT, leaving the auth
+			// context stale. Clear tokens and hard-reload to reset everything.
 			if (error) {
 				console.log(`auth.signOut error:`, error, `- clearing session manually`)
 				removeSbTokens()
-				await clearUser()
+				window.location.href = '/'
+				return
 			}
 			// Don't throw - we want to navigate home regardless
 		},
@@ -120,9 +121,7 @@ export function NavUser() {
 										data-key={item.link.to}
 										onClick={setClosedMobile}
 									>
-										{item.Icon ?
-											<item.Icon />
-										:	null}
+										{item.Icon ? <item.Icon /> : null}
 										{item.title ?? item.name}
 									</Link>
 								</DropdownMenuItem>
