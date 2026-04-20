@@ -441,9 +441,11 @@ function ReviewPageContent() {
 												</>
 											)}
 										</p>
-										<p className="text-muted-foreground mt-1 text-xs">
-											counting front and back of each phrase
-										</p>
+										{forwardCount > 0 && reverseCount > 0 ? (
+											<p className="text-muted-foreground mt-1 text-xs">
+												counting front and back of each phrase
+											</p>
+										) : null}
 									</CardContent>
 								</Card>
 								<Card className="grow basis-40">
