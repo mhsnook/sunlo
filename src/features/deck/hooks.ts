@@ -1,4 +1,5 @@
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
+import { should } from '@scenetest/checks-react'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 
@@ -85,17 +86,24 @@ export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 
 export const useMyCard = (
 	phraseId: string | null | undefined
-): UseLiveQueryResult<CardMetaType> =>
-	useLiveQuery(
+): UseLiveQueryResult<CardMetaType> => {
+	const query = useLiveQuery(
 		(q) =>
 			!phraseId
 				? undefined
 				: q
 						.from({ card: cardsCollection })
-						.where(({ card }) => eq(card.phrase_id, phraseId))
-						.findOne(),
+						.where(({ card }) => eq(card.phrase_id, phraseId)),
 		[phraseId]
 	)
+	should(
+		'forward/reverse cards share status',
+		!query.data ||
+			query.data.length <= 1 ||
+			new Set(query.data.map((c) => c.status)).size === 1
+	)
+	return { ...query, data: query.data?.[0] } as UseLiveQueryResult<CardMetaType>
+}
 
 export const useDeckCards = (
 	lang: string
