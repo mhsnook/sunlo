@@ -4,6 +4,7 @@ import { phrasesCollection } from './collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 
 export const phrasesFull = createLiveQueryCollection({
+	id: 'phrases_full',
 	query: (q) =>
 		q
 			.from({ phrase: phrasesCollection })

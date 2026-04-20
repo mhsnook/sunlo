@@ -25,17 +25,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
 			console.log(`User auth event: ${event}`)
-			// Only clear user data when:
-			// 1. Explicitly signing out, OR
-			// 2. Switching between two different authenticated users
-			// Do NOT clear when logging in from a logged-out state (null -> user)
-			// as this causes live query errors from cleaning up subscribed collections
 			const isSigningOut = event === 'SIGNED_OUT'
 			const isSwitchingUsers =
 				sessionState?.user.id &&
 				session?.user.id &&
 				sessionState.user.id !== session.user.id
 			if (isSigningOut || isSwitchingUsers) {
+				// Refetch (not cleanup) user collections so RLS-filtered empty
+				// results clear the data. Calling .cleanup() would fire a
+				// 'cleaned-up' status event that subscribed live queries log
+				// as an error — many components (e.g. NavUser) call useProfile()
+				// unconditionally, so their subscriptions persist past logout.
 				void clearUser()
 			}
 			// Refetch user collections only when logging in from a logged-out state
@@ -74,9 +74,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 		}
 	}, [])
 
-	const value =
-		isLoaded ?
-			({
+	const value = isLoaded
+		? ({
 				isAuth: sessionState?.user.role === 'authenticated',
 				isReady,
 				userId: sessionState?.user.id ?? null,
@@ -85,7 +84,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 				isLoaded: true,
 			} as AuthLoaded)
-		:	emptyAuth
+		: emptyAuth
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

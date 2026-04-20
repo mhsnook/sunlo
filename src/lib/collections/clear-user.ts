@@ -19,21 +19,26 @@ import { notificationsCollection } from '@/features/notifications/collections'
 import { queryClient } from '@/lib/query-client'
 
 export const clearUser = async () => {
-	// Clean up all user collections
+	// Refetch (don't cleanup) each user collection. Post-logout the client has
+	// no JWT so RLS returns empty, the collection clears, and any active live
+	// queries simply see rows removed. Calling .cleanup() instead would fire
+	// a 'cleaned-up' status event that every subscribed live query logs as an
+	// error — many components (NavUser, etc.) call useProfile() unconditionally
+	// so subscribers persist even after the auth state changes.
 	await Promise.all([
-		myProfileCollection.cleanup(),
-		decksCollection.cleanup(),
-		cardsCollection.cleanup(),
-		reviewDaysCollection.cleanup(),
-		cardReviewsCollection.cleanup(),
-		friendSummariesCollection.cleanup(),
-		chatMessagesCollection.cleanup(),
-		commentsCollection.cleanup(),
-		commentPhraseLinksCollection.cleanup(),
-		commentUpvotesCollection.cleanup(),
-		phraseRequestUpvotesCollection.cleanup(),
-		phrasePlaylistUpvotesCollection.cleanup(),
-		notificationsCollection.cleanup(),
+		myProfileCollection.utils.refetch(),
+		decksCollection.utils.refetch(),
+		cardsCollection.utils.refetch(),
+		reviewDaysCollection.utils.refetch(),
+		cardReviewsCollection.utils.refetch(),
+		friendSummariesCollection.utils.refetch(),
+		chatMessagesCollection.utils.refetch(),
+		commentsCollection.utils.refetch(),
+		commentPhraseLinksCollection.utils.refetch(),
+		commentUpvotesCollection.utils.refetch(),
+		phraseRequestUpvotesCollection.utils.refetch(),
+		phrasePlaylistUpvotesCollection.utils.refetch(),
+		notificationsCollection.utils.refetch(),
 	])
 
 	// Also clear React Query cache for user queries to prevent stale data
