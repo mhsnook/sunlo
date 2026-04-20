@@ -260,7 +260,7 @@ function ReviewPageContent() {
 		backOnly: number
 	): string {
 		const parts: Array<string> = []
-		if (bothSides > 0) parts.push(`${bothSides} front+back`)
+		if (bothSides > 0) parts.push(`${bothSides} recognition & recall`)
 		if (frontOnly > 0) parts.push(`${frontOnly} recognition`)
 		if (backOnly > 0) parts.push(`${backOnly} recall`)
 		return parts.join(' · ')
