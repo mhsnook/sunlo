@@ -7,6 +7,7 @@ import Flagged from '@/components/flagged'
 import ExtraInfo from '@/components/extra-info'
 import { useOneCardReviews } from '@/features/review/hooks'
 import { intervals, retrievability } from '@/features/review/fsrs'
+import { useMyCard } from '@/features/deck/hooks'
 
 export default function PhraseExtraInfo({
 	phrase,
@@ -17,28 +18,31 @@ export default function PhraseExtraInfo({
 	className?: string
 	link?: boolean
 }) {
+	const { data: card } = useMyCard(phrase?.id)
 	return !phrase ? null : (
-			<ExtraInfo
-				title="User card details"
-				description={`“${phrase.text}”`}
-				className={className}
-				link={link}
-			>
-				<div className="block space-y-4">
-					<div className="flex flex-col">
-						<span className="font-semibold">Phrase ID</span>
-						<span>{phrase.id}</span>
-					</div>
-					<div className="flex flex-col">
-						<span className="font-semibold">Phrase created at</span>
-						<span>{ago(phrase.created_at)}</span>
-					</div>
+		<ExtraInfo
+			title="User card details"
+			description={`"${phrase.text}"`}
+			className={className}
+			link={link}
+		>
+			<div className="block space-y-4">
+				<div className="flex flex-col">
+					<span className="font-semibold">Phrase ID</span>
+					<span>{phrase.id}</span>
 				</div>
-				{!phrase.card ?
-					<p>Phrase has no card in your deck</p>
-				:	<CardSection card={phrase.card} />}
-			</ExtraInfo>
-		)
+				<div className="flex flex-col">
+					<span className="font-semibold">Phrase created at</span>
+					<span>{ago(phrase.created_at)}</span>
+				</div>
+			</div>
+			{!card ? (
+				<p>Phrase has no card in your deck</p>
+			) : (
+				<CardSection card={card} />
+			)}
+		</ExtraInfo>
+	)
 }
 
 function CardSection({ card }: { card: CardMetaType }) {
@@ -47,10 +51,9 @@ function CardSection({ card }: { card: CardMetaType }) {
 		!reviews || !Array.isArray(reviews) || reviews.length === 0
 
 	const rev = reviews?.at(-1) ?? null
-	const retr =
-		neverReviewed ? 0 : (
-			retrievability(dateDiff(rev!.created_at), rev!.stability!)
-		)
+	const retr = neverReviewed
+		? 0
+		: retrievability(dateDiff(rev!.created_at), rev!.stability!)
 
 	return (
 		<div className="block space-y-4">
@@ -62,9 +65,10 @@ function CardSection({ card }: { card: CardMetaType }) {
 				<span className="font-semibold">Card created at</span>
 				<span>{ago(card.created_at)}</span>
 			</div>
-			{neverReviewed ?
+			{neverReviewed ? (
 				<p>Never reviewed</p>
-			:	<>
+			) : (
+				<>
 					<div className="flex flex-col">
 						<span className="font-semibold">
 							Recentest of {reviews.length} reviews
@@ -89,7 +93,7 @@ function CardSection({ card }: { card: CardMetaType }) {
 						</span>
 					</div>
 				</>
-			}
+			)}
 
 			<div className="flex flex-col">
 				<ul className="space-y-2">
@@ -100,9 +104,9 @@ function CardSection({ card }: { card: CardMetaType }) {
 							</p>
 							<p>
 								Expected R:{' '}
-								{r.review_time_retrievability ?
-									r.review_time_retrievability.toFixed(2)
-								:	'N/A'}
+								{r.review_time_retrievability
+									? r.review_time_retrievability.toFixed(2)
+									: 'N/A'}
 							</p>
 							<p>
 								Difficulty: {r.difficulty ? r.difficulty.toFixed(2) : 'N/A'}

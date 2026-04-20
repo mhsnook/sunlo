@@ -22,6 +22,7 @@ export { decksCollection, cardsCollection } from './collections'
 export {
 	useDecks,
 	useDeckMeta,
+	useMyCard,
 	useDeckCards,
 	useDeckPids,
 	useDeckRoutineStats,

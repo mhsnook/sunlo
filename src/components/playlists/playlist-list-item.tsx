@@ -21,7 +21,7 @@ import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { CardMetaSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
-import { useDecks } from '@/features/deck/hooks'
+import { useDecks, useDeckCards, useMyCard } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
@@ -40,11 +40,15 @@ export function PlaylistItem({
 	const isOwner = profile?.uid === playlist.uid
 	const [showAddPhrase, setShowAddPhrase] = useState(false)
 	const hasDeck = decks?.some((d) => d.lang === playlist.lang) ?? false
+	const { data: langCards } = useDeckCards(playlist.lang)
+	const activeCardPhraseIds = new Set(
+		langCards
+			?.filter((c) => c.status === 'active' || c.status === 'learned')
+			.map((c) => c.phrase_id)
+	)
 
 	const phrasesNotInDeck =
-		data?.filter(
-			(item) => !item.phrase.card || item.phrase.card.status === 'skipped'
-		) ?? []
+		data?.filter((item) => !activeCardPhraseIds.has(item.phrase.id)) ?? []
 
 	const bulkAddMutation = useMutation({
 		mutationFn: async (
@@ -191,9 +195,9 @@ export function PlaylistItem({
 								}
 							>
 								&ldquo;
-								{phrase.text.length > 60 ?
-									`${phrase.text.slice(0, 60)}...`
-								:	phrase.text}
+								{phrase.text.length > 60
+									? `${phrase.text.slice(0, 60)}...`
+									: phrase.text}
 								&rdquo;
 							</span>
 							{phrase.translations && phrase.translations.length > 0 && (
@@ -202,13 +206,7 @@ export function PlaylistItem({
 									{phrase.translations.length === 1 ? '' : 's'}
 								</span>
 							)}
-							{phrase.card?.status &&
-								['active', 'learned'].includes(phrase.card.status) && (
-									<Bookmark
-										className="shrink-0 fill-purple-600/50 text-purple-600"
-										size={12}
-									/>
-								)}
+							<PhraseBookmarkBadge phraseId={phrase.id} />
 						</Link>
 					))}
 
@@ -257,17 +255,16 @@ export function PlaylistItem({
 					disabled={bulkAddMutation.isPending}
 					data-testid="bulk-add-playlist-to-deck"
 				>
-					{bulkAddMutation.isPending ?
-						'Adding…'
-					:	`Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`
-					}
+					{bulkAddMutation.isPending
+						? 'Adding…'
+						: `Add ${phrasesNotInDeck.length} new card${phrasesNotInDeck.length === 1 ? '' : 's'} to deck`}
 				</Button>
 			)}
 
 			<div className="text-muted-foreground flex items-center justify-between gap-4 text-sm">
 				<div className="flex items-center gap-4">
 					<UpvotePlaylist playlist={playlist} />
-					{playlist.href ?
+					{playlist.href ? (
 						<a
 							className="hover:text-foreground flex items-center gap-1 underline"
 							href={playlist.href}
@@ -277,7 +274,7 @@ export function PlaylistItem({
 							<ExternalLink className="h-4 w-4" />
 							<span>Source link</span>
 						</a>
-					:	null}
+					) : null}
 				</div>
 				<div className="flex items-center gap-2">
 					<SharePlaylistButton id={playlist.id} />
@@ -294,5 +291,16 @@ export function PlaylistItem({
 				</div>
 			</div>
 		</div>
+	)
+}
+
+function PhraseBookmarkBadge({ phraseId }: { phraseId: string }) {
+	const { data: card } = useMyCard(phraseId)
+	if (!card?.status || !['active', 'learned'].includes(card.status)) return null
+	return (
+		<Bookmark
+			className="shrink-0 fill-purple-600/50 text-purple-600"
+			size={12}
+		/>
 	)
 }

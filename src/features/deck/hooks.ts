@@ -83,6 +83,20 @@ export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	}
 }
 
+export const useMyCard = (
+	phraseId: string | null | undefined
+): UseLiveQueryResult<CardMetaType> =>
+	useLiveQuery(
+		(q) =>
+			!phraseId
+				? undefined
+				: q
+						.from({ card: cardsCollection })
+						.where(({ card }) => eq(card.phrase_id, phraseId))
+						.findOne(),
+		[phraseId]
+	)
+
 export const useDeckCards = (
 	lang: string
 ): UseLiveQueryResult<CardMetaType[]> =>
@@ -138,9 +152,9 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 
 	return {
 		isLoading: isLoading ?? true,
-		data:
-			!data ? null : (
-				{
+		data: !data
+			? null
+			: {
 					all: unique(data.map((c) => c.phrase_id)),
 					active: unique(
 						data.filter((c) => c.status === 'active').map((c) => c.phrase_id)
@@ -169,8 +183,7 @@ export const useDeckPids = (lang: string): UseDeckPidsReturnType => {
 							.map((c) => c.phrase_id)
 					),
 					today_active: unique(data.filter(isDueCard).map((c) => c.phrase_id)),
-				}
-			),
+				},
 	}
 }
 

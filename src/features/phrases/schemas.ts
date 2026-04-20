@@ -2,7 +2,6 @@ import * as z from 'zod'
 import { LangSchema } from '@/features/languages/schemas'
 import { PhraseTagSchema } from '@/features/languages/schemas'
 import type { PublicProfileType } from '@/features/profile/schemas'
-import type { CardMetaType } from '@/features/deck/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 
 export const FilterEnumSchema = z.enum([
@@ -66,7 +65,6 @@ export type PhraseWithTranslationSplit = PhraseFullType & {
 
 export type PhraseFullFullType = PhraseFullType & {
 	profile: PublicProfileType
-	card?: CardMetaType
 	request?: PhraseRequestType
 	searchableText: string
 }

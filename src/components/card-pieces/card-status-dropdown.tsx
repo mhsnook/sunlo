@@ -21,7 +21,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
-import { useDecks } from '@/features/deck/hooks'
+import { useDecks, useMyCard } from '@/features/deck/hooks'
 import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
@@ -44,7 +44,6 @@ interface CardStatusDropdownProps {
 	className?: string
 }
 
-// TODO check if we can get this from the supabase types?
 type LearningStatus = 'active' | 'skipped' | 'learned'
 type ShowableActions = LearningStatus | 'nodeck' | 'nocard'
 
@@ -124,12 +123,10 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 
 function updatePhraseCounts(
 	oldCard: CardMetaType | undefined,
-	newCard: Tables<'user_card'> // cards never get deleted, just marked inactive
+	newCard: Tables<'user_card'>
 ) {
-	// if no change in status, nothing to update
 	if (oldCard?.status === newCard?.status) return
 	const oldPhrase = phrasesCollection.get(newCard.phrase_id)
-	// if we can't find the phrase, that's weird
 	if (!oldPhrase) {
 		console.error(
 			`Odd that we have a new card but can't find the phrase for id "${newCard.phrase_id}"`
@@ -140,16 +137,19 @@ function updatePhraseCounts(
 		id: oldPhrase.id,
 		count_learners: Math.max(
 			(oldPhrase?.count_learners ?? 0) -
-				(oldCard?.status === 'active' || oldCard?.status === 'learned' ?
-					1
-				:	0) +
+				(oldCard?.status === 'active' || oldCard?.status === 'learned'
+					? 1
+					: 0) +
 				(newCard.status === 'active' || newCard.status === 'learned' ? 1 : 0),
 			0
 		),
 	})
 }
 
-function useCardStatusMutation(phrase: AnyPhrase) {
+function useCardStatusMutation(
+	phrase: AnyPhrase,
+	card: CardMetaType | undefined
+) {
 	const userId = useUserId()
 
 	return useMutation<
@@ -163,9 +163,8 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 				throw new Error('Trying to change status of a card that does not exist')
 			if (!userId)
 				throw new Error("Trying to change card status but you're not logged in")
-			const { data } =
-				phrase.card ?
-					await supabase
+			const { data } = card
+				? await supabase
 						.from('user_card')
 						.update({
 							status,
@@ -174,7 +173,7 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 						.eq('uid', userId)
 						.select()
 						.throwOnError()
-				:	await supabase
+				: await supabase
 						.from('user_card')
 						.insert(
 							directionsForPhrase(phrase.only_reverse).map((direction) => ({
@@ -190,19 +189,19 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 		},
 		onSuccess: (data) => {
 			try {
-				if (data[0]) updatePhraseCounts(phrase.card, data[0])
+				if (data[0]) updatePhraseCounts(card, data[0])
 
-				if (phrase.card) {
-					for (const card of data) {
+				if (card) {
+					for (const c of data) {
 						cardsCollection.utils.writeUpdate({
-							id: card.id,
-							status: CardStatusEnumSchema.parse(card.status),
-							updated_at: card.updated_at!,
+							id: c.id,
+							status: CardStatusEnumSchema.parse(c.status),
+							updated_at: c.updated_at!,
 						})
 					}
 				} else {
-					for (const card of data) {
-						cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
+					for (const c of data) {
+						cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
 					}
 				}
 			} catch (e) {
@@ -213,12 +212,11 @@ function useCardStatusMutation(phrase: AnyPhrase) {
 				return
 			}
 
-			if (phrase.card)
-				toastSuccess(`Updated card status to "${data[0].status}"`)
+			if (card) toastSuccess(`Updated card status to "${data[0].status}"`)
 			else toastSuccess('Added this phrase to your deck')
 		},
 		onError: (error) => {
-			if (phrase.card) toastError('There was an error updating this card')
+			if (card) toastError('There was an error updating this card')
 			else toastError('There was an error adding this card to your deck')
 			console.log(`error upserting card`, error)
 		},
@@ -232,89 +230,88 @@ export function CardStatusDropdown({
 	const userId = useUserId()
 	const { data: decks } = useDecks()
 	const deckPresent = decks?.some((d) => d.lang === phrase.lang) ?? false
-	const card = phrase.card
+	const { data: card } = useMyCard(phrase.id)
 
-	const cardMutation = useCardStatusMutation(phrase)
+	const cardMutation = useCardStatusMutation(phrase, card)
 
-	const choice =
-		!deckPresent ? 'nodeck'
-		: !card ? 'nocard'
-		: card.status
+	const choice = !deckPresent ? 'nodeck' : !card ? 'nocard' : card.status
 
-	// @TODO: if no userId, maybe we should prompt to sign up
 	return !userId ? null : (
-			<DropdownMenu>
-				<DropdownMenuTrigger className={className} asChild>
-					<Button
-						variant={card?.status === 'active' ? 'soft' : 'ghost'}
-						size="sm"
-						className="m-0 min-w-28 justify-between px-1.5"
-						data-name="card-status-dropdown"
-						data-key={phrase.id}
-						disabled={cardMutation.isPending}
+		<DropdownMenu>
+			<DropdownMenuTrigger className={className} asChild>
+				<Button
+					variant={card?.status === 'active' ? 'soft' : 'ghost'}
+					size="sm"
+					className="m-0 min-w-28 justify-between px-1.5"
+					data-name="card-status-dropdown"
+					data-key={phrase.id}
+					disabled={cardMutation.isPending}
+				>
+					<span className="flex items-center justify-center [&_svg]:size-4">
+						{cardMutation.isSuccess ? (
+							<CheckCircle className="text-green-500" />
+						) : (
+							<StatusIcon choice={choice} />
+						)}{' '}
+					</span>
+					<span className="me-1">{statusStrings[choice].name}</span>
+					<ChevronDown size={12} />
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent className="">
+				{!deckPresent ? (
+					<DropdownMenuItem>
+						<Link to="/learn/add-deck" search={{ lang: phrase.lang }}>
+							<StatusSpan choice="nodeck" />
+						</Link>
+					</DropdownMenuItem>
+				) : !card ? (
+					<DropdownMenuItem
+						onClick={() => cardMutation.mutate({ status: 'active' })}
+						data-testid="add-to-deck-option"
 					>
-						<span className="flex items-center justify-center [&_svg]:size-4">
-							{cardMutation.isSuccess ?
-								<CheckCircle className="text-green-500" />
-							:	<StatusIcon choice={choice} />}{' '}
-						</span>
-						<span className="me-1">{statusStrings[choice].name}</span>
-						<ChevronDown size={12} />
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent className="">
-					{!deckPresent ?
-						<DropdownMenuItem>
-							<Link to="/learn/add-deck" search={{ lang: phrase.lang }}>
-								<StatusSpan choice="nodeck" />
-							</Link>
-						</DropdownMenuItem>
-					: !card ?
+						<StatusSpan choice="nocard" />
+					</DropdownMenuItem>
+				) : (
+					<>
 						<DropdownMenuItem
-							onClick={() => cardMutation.mutate({ status: 'active' })}
-							data-testid="add-to-deck-option"
+							onClick={() =>
+								card?.status === 'active'
+									? false
+									: cardMutation.mutate({ status: 'active' })
+							}
+							className={card?.status === 'active' ? 'bg-2-mid-primary' : ''}
+							data-testid="activate-card-option"
 						>
-							<StatusSpan choice="nocard" />
+							<StatusSpan choice="active" />
 						</DropdownMenuItem>
-					:	<>
-							<DropdownMenuItem
-								onClick={() =>
-									card?.status === 'active' ?
-										false
-									:	cardMutation.mutate({ status: 'active' })
-								}
-								className={card?.status === 'active' ? 'bg-2-mid-primary' : ''}
-								data-testid="activate-card-option"
-							>
-								<StatusSpan choice="active" />
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() =>
-									card?.status === 'learned' ?
-										false
-									:	cardMutation.mutate({ status: 'learned' })
-								}
-								className={card?.status === 'learned' ? 'bg-2-mid-primary' : ''}
-								data-testid="set-learned-option"
-							>
-								<StatusSpan choice="learned" />
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={() =>
-									card?.status === 'skipped' ?
-										false
-									:	cardMutation.mutate({ status: 'skipped' })
-								}
-								className={card?.status === 'skipped' ? 'bg-2-mid-primary' : ''}
-								data-testid="ignore-card-option"
-							>
-								<StatusSpan choice="skipped" />
-							</DropdownMenuItem>
-						</>
-					}
-				</DropdownMenuContent>
-			</DropdownMenu>
-		)
+						<DropdownMenuItem
+							onClick={() =>
+								card?.status === 'learned'
+									? false
+									: cardMutation.mutate({ status: 'learned' })
+							}
+							className={card?.status === 'learned' ? 'bg-2-mid-primary' : ''}
+							data-testid="set-learned-option"
+						>
+							<StatusSpan choice="learned" />
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={() =>
+								card?.status === 'skipped'
+									? false
+									: cardMutation.mutate({ status: 'skipped' })
+							}
+							className={card?.status === 'skipped' ? 'bg-2-mid-primary' : ''}
+							data-testid="ignore-card-option"
+						>
+							<StatusSpan choice="skipped" />
+						</DropdownMenuItem>
+					</>
+				)}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
 }
 
 export function CardStatusHeart({
@@ -323,11 +320,12 @@ export function CardStatusHeart({
 	phrase: PhraseFullFilteredType | PhraseFullFullType
 }) {
 	const requireAuth = useRequireAuth()
-	const mutation = useCardStatusMutation(phrase)
-	const statusToPost = phrase.card?.status === 'active' ? 'skipped' : 'active'
+	const { data: card } = useMyCard(phrase.id)
+	const mutation = useCardStatusMutation(phrase, card)
+	const statusToPost = card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
-			variant={phrase.card?.status === 'active' ? 'soft' : 'ghost'}
+			variant={card?.status === 'active' ? 'soft' : 'ghost'}
 			size="icon"
 			data-name="card-status-heart"
 			data-key={phrase.id}
@@ -341,16 +339,16 @@ export function CardStatusHeart({
 				)
 			}}
 			aria-label={
-				phrase.card?.status === 'active' ?
-					'Skip this phrase (remove it from your active deck)'
-				:	'Learn this phrase (add to your active deck)'
+				card?.status === 'active'
+					? 'Skip this phrase (remove it from your active deck)'
+					: 'Learn this phrase (add to your active deck)'
 			}
 		>
 			<Bookmark
 				className={
-					phrase.card?.status === 'active' ?
-						'fill-purple-600/50 text-purple-600'
-					:	'text-muted-foreground'
+					card?.status === 'active'
+						? 'fill-purple-600/50 text-purple-600'
+						: 'text-muted-foreground'
 				}
 			/>
 		</Button>
