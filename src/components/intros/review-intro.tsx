@@ -45,10 +45,10 @@ export function ReviewIntro({ open, onClose }: ReviewIntroProps) {
 				<div className="space-y-2">
 					<p className="font-medium">Recognition and recall:</p>
 					<p className="text-muted-foreground text-sm">
-						Most phrases have two cards. <strong>Recognition</strong> shows the
+						Most phrases use both sides. <strong>Recognition</strong> shows the
 						phrase and asks what it means — training your ear.{' '}
 						<strong>Recall</strong> shows the meaning and asks what to say —
-						training your voice. Some phrases use only one side.
+						training your voice.
 					</p>
 				</div>
 
