@@ -181,39 +181,44 @@ function ReviewPageContent() {
 
 	// Sets for O(1) lookups in filters below
 	const freshSet = new Set(freshCards)
-	const createSet = new Set(cardsToCreate)
+	const allPhraseSet = new Set(allPhraseIdsForToday)
 
-	// Count total cards for today: existing due cards + cards to be created
-	const dueCards = (deckCards ?? []).filter(isDueCard)
-	const dueCardCount = dueCards.length
-	const freshCardCount = cardsToCreate.reduce((sum, pid) => {
+	// Mirror manifest construction so display counts match the session exactly.
+	// A card enters the manifest if its phrase is in today's set AND it is
+	// active AND (due OR unreviewed). Unreviewed siblings on scheduled phrases
+	// count toward "Scheduled" — they ride along with a due sibling.
+	let scheduledForward = 0
+	let scheduledReverse = 0
+	let newForward = 0
+	let newReverse = 0
+
+	for (const card of deckCards ?? []) {
+		if (!allPhraseSet.has(card.phrase_id)) continue
+		if (card.status !== 'active') continue
+		const isUnreviewed = !card.last_reviewed_at
+		if (!isUnreviewed && !isDueCard(card)) continue
+		const isFresh = isUnreviewed && freshSet.has(card.phrase_id)
+		if (card.direction === 'forward') {
+			isFresh ? newForward++ : scheduledForward++
+		} else {
+			isFresh ? newReverse++ : scheduledReverse++
+		}
+	}
+
+	// Newly-created cards (not yet in deckCards) — always counted as new
+	for (const pid of cardsToCreate) {
 		const phrase = phrasesCollection.get(pid)
-		return sum + directionsForPhrase(phrase?.only_reverse).length
-	}, 0)
-	const unreviewedExisting = (deckCards ?? []).filter(
-		(c) =>
-			c.status === 'active' &&
-			!c.last_reviewed_at &&
-			freshSet.has(c.phrase_id) &&
-			!createSet.has(c.phrase_id)
-	)
-	const unreviewedExistingCount = unreviewedExisting.length
-	const totalCardsForToday =
-		dueCardCount + freshCardCount + unreviewedExistingCount
+		for (const d of directionsForPhrase(phrase?.only_reverse)) {
+			if (d === 'forward') newForward++
+			else newReverse++
+		}
+	}
 
-	// Direction breakdown for display
-	const forwardCount =
-		dueCards.filter((c) => c.direction === 'forward').length +
-		unreviewedExisting.filter((c) => c.direction === 'forward').length +
-		cardsToCreate.reduce((sum, pid) => {
-			const phrase = phrasesCollection.get(pid)
-			return (
-				sum +
-				directionsForPhrase(phrase?.only_reverse).filter((d) => d === 'forward')
-					.length
-			)
-		}, 0)
-	const reverseCount = totalCardsForToday - forwardCount
+	const dueCardCount = scheduledForward + scheduledReverse
+	const newCardCount = newForward + newReverse
+	const totalCardsForToday = dueCardCount + newCardCount
+	const forwardCount = scheduledForward + newForward
+	const reverseCount = scheduledReverse + newReverse
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
@@ -237,16 +242,16 @@ function ReviewPageContent() {
 			)
 
 			const { data: newCards } =
-				cardInserts.length === 0 ?
-					{ data: [] }
-				:	await supabase
-						.from('user_card')
-						.upsert(cardInserts, {
-							onConflict: 'uid,phrase_id,direction',
-							ignoreDuplicates: true,
-						})
-						.select()
-						.throwOnError()
+				cardInserts.length === 0
+					? { data: [] }
+					: await supabase
+							.from('user_card')
+							.upsert(cardInserts, {
+								onConflict: 'uid,phrase_id,direction',
+								ignoreDuplicates: true,
+							})
+							.select()
+							.throwOnError()
 
 			// Build manifest from card-level data.
 			// 4 buckets: forward due → forward new → reverse due → reverse new
@@ -350,9 +355,9 @@ function ReviewPageContent() {
 				data.freshCardEntries
 			)
 			const toastMessage =
-				data.countCardsAlreadyExisted > 0 ?
-					`Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
-				:	`Ready to go! ${data.countCardsCreated} new cards, ${data.countCards} total for today.`
+				data.countCardsAlreadyExisted > 0
+					? `Ready! Could only create ${data.countCardsCreated} new cards — ${data.countCardsAlreadyExisted} already existed. You have ${data.countCards} total today.`
+					: `Ready to go! ${data.countCardsCreated} new cards, ${data.countCards} total for today.`
 			toastSuccess(toastMessage)
 			sessionJustCreatedRef.current = true
 			void navigate({ to: '/learn/$lang/review/preview', params: { lang } })
@@ -368,11 +373,12 @@ function ReviewPageContent() {
 	// when the manifest is present, skip this page, go to a better one
 	// useRef guard: set synchronously in onSettled before React batch re-render, prevents redirect racing with navigate to /preview
 	if (stats?.count && !sessionJustCreatedRef.current)
-		return (
-			stats.complete === stats.count || stats.stage >= 5 ? <WhenComplete />
-			: stage !== null ?
-				<Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
-			:	<ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
+		return stats.complete === stats.count || stats.stage >= 5 ? (
+			<WhenComplete />
+		) : stage !== null ? (
+			<Navigate to="/learn/$lang/review/go" from={Route.fullPath} />
+		) : (
+			<ContinueReview lang={lang} dayString={dayString} reviewStats={stats} />
 		)
 
 	return (
@@ -398,11 +404,12 @@ function ReviewPageContent() {
 						Your personalized review session is prepared and waiting for you.
 						Here's what to expect...
 					</p>
-					{recs.language.length === 0 ?
+					{recs.language.length === 0 ? (
 						<LanguageIsEmpty lang={lang} />
-					: recs.language_filtered.length === 0 ?
+					) : recs.language_filtered.length === 0 ? (
 						<LanguageFilteredIsEmpty lang={lang} />
-					:	<>
+					) : (
+						<>
 							<div className="flex flex-row flex-wrap gap-4 text-sm">
 								<Card className="grow basis-40">
 									<CardHeader className="pb-2">
@@ -416,22 +423,26 @@ function ReviewPageContent() {
 											{totalCardsForToday}
 										</p>
 										<p className="text-muted-foreground inline-flex items-center gap-1">
-											{forwardCount > 0 && reverseCount > 0 ?
+											{forwardCount > 0 && reverseCount > 0 ? (
 												<>
 													{forwardCount} recognition{' '}
 													<Lightbulb className="size-3" /> · {reverseCount}{' '}
 													recall <Brain className="size-3" />
 												</>
-											: forwardCount > 0 ?
+											) : forwardCount > 0 ? (
 												<>
 													{forwardCount} recognition cards{' '}
 													<Lightbulb className="size-3" />
 												</>
-											:	<>
+											) : (
+												<>
 													{reverseCount} recall cards{' '}
 													<Brain className="size-3" />
 												</>
-											}
+											)}
+										</p>
+										<p className="text-muted-foreground mt-1 text-xs">
+											counting front and back of each phrase
 										</p>
 									</CardContent>
 								</Card>
@@ -456,11 +467,9 @@ function ReviewPageContent() {
 									<CardContent>
 										<p className="flex flex-row items-center justify-start gap-2 text-4xl font-bold text-green-500">
 											<MessageSquarePlus />
-											<span>{freshCardCount + unreviewedExistingCount}</span>
+											<span>{newCardCount}</span>
 										</p>
-										<p className="text-muted-foreground">
-											new cards to learn
-										</p>
+										<p className="text-muted-foreground">new cards to learn</p>
 									</CardContent>
 								</Card>
 
@@ -552,7 +561,7 @@ function ReviewPageContent() {
 								</Button>
 							</div>
 						</>
-					}
+					)}
 				</CardContent>
 			</Card>
 		</>
