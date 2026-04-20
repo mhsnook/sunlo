@@ -190,6 +190,12 @@ function ReviewPageContent() {
 	let newForward = 0
 	let newReverse = 0
 
+	// Per-phrase direction tracking for the phrase-level breakdown
+	const newForwardPhrases = new Set<string>()
+	const newReversePhrases = new Set<string>()
+	const schedForwardPhrases = new Set<string>()
+	const schedReversePhrases = new Set<string>()
+
 	for (const card of deckCards ?? []) {
 		if (!allPhraseSet.has(card.phrase_id)) continue
 		if (card.status !== 'active') continue
@@ -197,9 +203,21 @@ function ReviewPageContent() {
 		if (!isUnreviewed && !isDueCard(card)) continue
 		const isFresh = isUnreviewed && freshSet.has(card.phrase_id)
 		if (card.direction === 'forward') {
-			isFresh ? newForward++ : scheduledForward++
+			if (isFresh) {
+				newForward++
+				newForwardPhrases.add(card.phrase_id)
+			} else {
+				scheduledForward++
+				schedForwardPhrases.add(card.phrase_id)
+			}
 		} else {
-			isFresh ? newReverse++ : scheduledReverse++
+			if (isFresh) {
+				newReverse++
+				newReversePhrases.add(card.phrase_id)
+			} else {
+				scheduledReverse++
+				schedReversePhrases.add(card.phrase_id)
+			}
 		}
 	}
 
@@ -207,8 +225,13 @@ function ReviewPageContent() {
 	for (const pid of cardsToCreate) {
 		const phrase = phrasesCollection.get(pid)
 		for (const d of directionsForPhrase(phrase?.only_reverse)) {
-			if (d === 'forward') newForward++
-			else newReverse++
+			if (d === 'forward') {
+				newForward++
+				newForwardPhrases.add(pid)
+			} else {
+				newReverse++
+				newReversePhrases.add(pid)
+			}
 		}
 	}
 
@@ -217,6 +240,31 @@ function ReviewPageContent() {
 	const totalCardsForToday = dueCardCount + newCardCount
 	const forwardCount = scheduledForward + newForward
 	const reverseCount = scheduledReverse + newReverse
+
+	// Phrase-level breakdown by direction coverage
+	const newBothSides = [...newForwardPhrases].filter((pid) =>
+		newReversePhrases.has(pid)
+	).length
+	const newFrontOnly = newForwardPhrases.size - newBothSides
+	const newBackOnly = newReversePhrases.size - newBothSides
+
+	const schedBothSides = [...schedForwardPhrases].filter((pid) =>
+		schedReversePhrases.has(pid)
+	).length
+	const schedFrontOnly = schedForwardPhrases.size - schedBothSides
+	const schedBackOnly = schedReversePhrases.size - schedBothSides
+
+	function phraseBreakdown(
+		bothSides: number,
+		frontOnly: number,
+		backOnly: number
+	): string {
+		const parts: Array<string> = []
+		if (bothSides > 0) parts.push(`${bothSides} front+back`)
+		if (frontOnly > 0) parts.push(`${frontOnly} front only`)
+		if (backOnly > 0) parts.push(`${backOnly} back only`)
+		return parts.join(' · ')
+	}
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
@@ -444,7 +492,13 @@ function ReviewPageContent() {
 											<span>{dueCardCount}</span>
 										</p>
 										<p className="text-muted-foreground">
-											scheduled based on past reviews
+											{dueCardCount === 0
+												? 'scheduled based on past reviews'
+												: phraseBreakdown(
+														schedBothSides,
+														schedFrontOnly,
+														schedBackOnly
+													)}
 										</p>
 									</CardContent>
 								</Card>
@@ -457,7 +511,15 @@ function ReviewPageContent() {
 											<MessageSquarePlus />
 											<span>{newCardCount}</span>
 										</p>
-										<p className="text-muted-foreground">new cards to learn</p>
+										<p className="text-muted-foreground">
+											{newCardCount === 0
+												? 'new cards to learn'
+												: phraseBreakdown(
+														newBothSides,
+														newFrontOnly,
+														newBackOnly
+													)}
+										</p>
 									</CardContent>
 								</Card>
 
