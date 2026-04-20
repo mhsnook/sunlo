@@ -11,9 +11,7 @@ import { isDueCard } from '@/features/deck/is-due-card'
 import { phrasesCollection } from '@/features/phrases/collections'
 import {
 	BookOpen,
-	Brain,
 	CalendarClock,
-	Lightbulb,
 	MessageSquare,
 	MessageSquarePlus,
 	Rocket,
@@ -422,30 +420,18 @@ function ReviewPageContent() {
 											<BookOpen />
 											{totalCardsForToday}
 										</p>
-										<p className="text-muted-foreground inline-flex items-center gap-1">
+										<p className="text-muted-foreground">
 											{forwardCount > 0 && reverseCount > 0 ? (
 												<>
-													{forwardCount} recognition{' '}
-													<Lightbulb className="size-3" /> · {reverseCount}{' '}
-													recall <Brain className="size-3" />
+													{forwardCount} recognition + {reverseCount} recall,
+													counting front and back of each phrase
 												</>
 											) : forwardCount > 0 ? (
-												<>
-													{forwardCount} recognition cards{' '}
-													<Lightbulb className="size-3" />
-												</>
+												<>{forwardCount} recognition cards</>
 											) : (
-												<>
-													{reverseCount} recall cards{' '}
-													<Brain className="size-3" />
-												</>
+												<>{reverseCount} recall cards</>
 											)}
 										</p>
-										{forwardCount > 0 && reverseCount > 0 ? (
-											<p className="text-muted-foreground mt-1 text-xs">
-												counting front and back of each phrase
-											</p>
-										) : null}
 									</CardContent>
 								</Card>
 								<Card className="grow basis-40">
