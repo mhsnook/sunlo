@@ -254,10 +254,9 @@ function AddPhraseTab() {
 
 			// Show appropriate success message
 			if (newDeck && createdCard) {
-				const deckAction =
-					hasArchivedDeck ?
-						`re-activated your ${languages[lang]} deck`
-					:	`started learning ${languages[lang]}`
+				const deckAction = hasArchivedDeck
+					? `re-activated your ${languages[lang]} deck`
+					: `started learning ${languages[lang]}`
 				toastSuccess(
 					`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
 				)
@@ -281,7 +280,7 @@ function AddPhraseTab() {
 
 	return (
 		<RequireAuth message="You need to be logged in to add new phrases.">
-			<main style={style}>
+			<main data-testid="add-phrase-page" style={style}>
 				<Card>
 					<CardHeader>
 						<CardTitle>Add A Phrase</CardTitle>
@@ -436,9 +435,9 @@ function AddPhraseTab() {
 										>
 											You are not currently learning working on an{' '}
 											{languages[lang]} deck.{' '}
-											{hasArchivedDeck ?
-												`Re-activate ${languages[lang]} deck`
-											:	`Start learning ${languages[lang]}?`}
+											{hasArchivedDeck
+												? `Re-activate ${languages[lang]} deck`
+												: `Start learning ${languages[lang]}?`}
 										</Label>
 									</ItemContent>
 								</Item>
@@ -449,9 +448,11 @@ function AddPhraseTab() {
 									className={addPhraseMutation.isPending ? 'opacity-60' : ''}
 									disabled={addPhraseMutation.isPending}
 								>
-									{addPhraseMutation.isPending ?
+									{addPhraseMutation.isPending ? (
 										<IconSizedLoader />
-									:	<NotebookPen />}
+									) : (
+										<NotebookPen />
+									)}
 									Save and add another
 								</Button>
 								<Link
@@ -467,6 +468,7 @@ function AddPhraseTab() {
 								<Link
 									to="/learn/$lang/bulk-add"
 									from={Route.fullPath}
+									data-testid="bulk-add-link"
 									className={buttonVariants({ variant: 'soft' })}
 								>
 									Bulk add phrases

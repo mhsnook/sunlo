@@ -306,31 +306,6 @@ export async function cleanupReviewSession(
 }
 
 /**
- * Delete the most recent review state for a user/lang (for navigation test cleanup)
- * Silently succeeds if no record exists.
- */
-export async function deleteMostRecentReviewState(uid: string, lang: string) {
-	// Find the most recent review state
-	const { data } = await supabase
-		.from('user_deck_review_state')
-		.select('day_session')
-		.eq('uid', uid)
-		.eq('lang', lang)
-		.order('day_session', { ascending: false })
-		.limit(1)
-		.maybeSingle()
-
-	if (data?.day_session) {
-		await supabase
-			.from('user_deck_review_state')
-			.delete()
-			.eq('uid', uid)
-			.eq('lang', lang)
-			.eq('day_session', data.day_session)
-	}
-}
-
-/**
  * Get a single review record (most recent if multiple exist)
  */
 export async function getReview(
@@ -442,8 +417,9 @@ export async function cleanupAfterTimestamp(
 ) {
 	const isoTimestamp = timestamp.toISOString()
 	// keeps the correct dependency original without the test-writer having to know it
-	const tablesToClean =
-		!tables ? tableOrder : tableOrder.filter((t) => tables?.includes(t))
+	const tablesToClean = !tables
+		? tableOrder
+		: tableOrder.filter((t) => tables?.includes(t))
 	tablesToClean.forEach(
 		async (name) =>
 			await supabase.from(name).delete().gte('created_at', isoTimestamp)

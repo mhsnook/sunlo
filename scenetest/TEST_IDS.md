@@ -100,14 +100,17 @@ natural wrapper element to label.
 
 ## Card Management
 
-| Selector               | Attribute   | Component/Location | Description                  |
-| ---------------------- | ----------- | ------------------ | ---------------------------- |
-| `phrase-detail-page`   | data-testid | Phrase route       | Phrase detail page container |
-| `card-status-dropdown` | data-testid | Phrase page        | Dropdown for card status     |
-| `add-to-deck-option`   | data-testid | Status dropdown    | "Add to deck" option         |
-| `set-learned-option`   | data-testid | Status dropdown    | "Set learned" option         |
-| `ignore-card-option`   | data-testid | Status dropdown    | "Ignore card" option         |
-| `activate-card-option` | data-testid | Status dropdown    | "Activate card" option       |
+| Selector               | Attribute   | Component/Location | Description                            |
+| ---------------------- | ----------- | ------------------ | -------------------------------------- |
+| `phrase-detail-page`   | data-testid | Phrase route       | Phrase detail page container           |
+| `card-status-dropdown` | data-testid | Phrase page        | Dropdown for card status               |
+| `add-to-deck-option`   | data-testid | Status dropdown    | "Add to deck" option                   |
+| `set-learned-option`   | data-testid | Status dropdown    | "Set learned" option                   |
+| `ignore-card-option`   | data-testid | Status dropdown    | "Ignore card" option                   |
+| `activate-card-option` | data-testid | Status dropdown    | "Activate card" option                 |
+| `add-phrase-page`      | data-testid | Add phrase route   | Container for /learn/$lang/phrases/new |
+| `bulk-add-link`        | data-testid | Add phrase page    | Link to bulk-add page                  |
+| `bulk-add-page`        | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add    |
 
 ## Sidebar Navigation
 

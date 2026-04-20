@@ -325,13 +325,13 @@ function BulkAddPhrasesPage() {
 			])
 			setStagedPhrases([])
 
-			const cardsMessage =
-				cards.length ? ' They will appear in your next review.' : ''
+			const cardsMessage = cards.length
+				? ' They will appear in your next review.'
+				: ''
 			if (newDeck) {
-				const deckAction =
-					hasArchivedDeck ?
-						`re-activated your ${languages[lang]} deck`
-					:	`started learning ${languages[lang]}`
+				const deckAction = hasArchivedDeck
+					? `re-activated your ${languages[lang]} deck`
+					: `started learning ${languages[lang]}`
 				toastSuccess(
 					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.${cardsMessage}`
 				)
@@ -354,7 +354,11 @@ function BulkAddPhrasesPage() {
 
 	return (
 		<RequireAuth message="You need to be logged in to bulk add phrases.">
-			<main style={style} className="flex flex-1 flex-col">
+			<main
+				data-testid="bulk-add-page"
+				style={style}
+				className="flex flex-1 flex-col"
+			>
 				<Card className="flex flex-1 flex-col">
 					<CardHeader>
 						<CardTitle>Bulk Add {languages[lang]} Phrases</CardTitle>
@@ -385,7 +389,7 @@ function BulkAddPhrasesPage() {
 						</div>
 
 						{/* Staging list OR empty-state hint */}
-						{stagedPhrases.length > 0 ?
+						{stagedPhrases.length > 0 ? (
 							<div className="flex flex-1 flex-col gap-4">
 								<div className="space-y-1">
 									<div className="flex items-center justify-between">
@@ -431,9 +435,9 @@ function BulkAddPhrasesPage() {
 											}
 										/>
 										<Label htmlFor="create-deck" className="cursor-pointer">
-											{hasArchivedDeck ?
-												`Re-activate ${languages[lang]} deck`
-											:	`Start learning ${languages[lang]}`}
+											{hasArchivedDeck
+												? `Re-activate ${languages[lang]} deck`
+												: `Start learning ${languages[lang]}`}
 										</Label>
 									</div>
 								)}
@@ -461,17 +465,17 @@ function BulkAddPhrasesPage() {
 									onClick={handleSubmit}
 									data-testid="submit-staged-phrases"
 								>
-									{submitMutation.isPending ?
-										'Submitting...'
-									:	`Submit ${stagedPhrases.length} Phrase${stagedPhrases.length === 1 ? '' : 's'}`
-									}
+									{submitMutation.isPending
+										? 'Submitting...'
+										: `Submit ${stagedPhrases.length} Phrase${stagedPhrases.length === 1 ? '' : 's'}`}
 								</Button>
 								<ShowAndLogError
 									error={submitMutation.error}
 									text="There was an error submitting your phrases"
 								/>
 							</div>
-						:	<div
+						) : (
+							<div
 								className="bg-muted/30 flex flex-1 flex-col items-center justify-center gap-3 rounded-lg text-center"
 								data-testid="empty-state-hint"
 							>
@@ -484,7 +488,7 @@ function BulkAddPhrasesPage() {
 									<Kbd>Esc</Kbd> to clear.
 								</p>
 							</div>
-						}
+						)}
 
 						{/* Successfully added */}
 						{successfullyAddedPhrases.length > 0 && (
