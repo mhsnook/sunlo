@@ -1,5 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
+import { BasicIndex } from '@tanstack/db'
 import {
 	RequestCommentSchema,
 	type RequestCommentType,
@@ -26,6 +27,8 @@ export const commentsCollection = createCollection(
 		getKey: (item: RequestCommentType) => item.id,
 		queryClient,
 		schema: RequestCommentSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 
