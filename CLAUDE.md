@@ -18,7 +18,11 @@ skills:
   load: "node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md"
 
 - task: "Route loaders, collection.preload(), or integrating collections with TanStack Router"
-load: "node_modules/@tanstack/db/skills/meta-framework/SKILL.md"
+  load: "node_modules/@tanstack/db/skills/meta-framework/SKILL.md"
+
+- task: "Using React bindings — useLiveQuery, useLiveSuspenseQuery, useLiveInfiniteQuery, usePacedMutations from @tanstack/react-db"
+  load: "node_modules/@tanstack/react-db/skills/react-db/SKILL.md"
+
 <!-- intent-skills:end -->
 
 ## Development Commands
