@@ -1,5 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
+import { BasicIndex } from '@tanstack/db'
 import {
 	PhrasePlaylistSchema,
 	type PhrasePlaylistType,
@@ -46,6 +47,8 @@ export const playlistPhraseLinksCollection = createCollection(
 		getKey: (item: PlaylistPhraseLinkType) => item.id,
 		queryClient,
 		schema: PlaylistPhraseLinkSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 

@@ -1,5 +1,6 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
+import { BasicIndex } from '@tanstack/db'
 import {
 	PhraseRequestSchema,
 	type PhraseRequestType,
@@ -25,6 +26,8 @@ export const phraseRequestsCollection = createCollection(
 		getKey: (item: PhraseRequestType) => item.id,
 		schema: PhraseRequestSchema,
 		queryClient,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 
