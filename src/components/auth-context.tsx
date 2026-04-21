@@ -21,6 +21,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [isReady, setIsReady] = useState(false)
+	const [connectionError, setConnectionError] = useState<Error | null>(null)
 
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
@@ -62,10 +63,30 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	)
 
 	useLayoutEffect(() => {
-		void supabase.auth.getSession().then(({ data: { session }, error }) => {
-			if (error) throw error
-			handleNewAuthState('GET_SESSION', session)
-		})
+		void supabase.auth
+			.getSession()
+			.then(({ data: { session }, error }) => {
+				if (error) {
+					console.error('Supabase getSession error:', error)
+					setConnectionError(error)
+					setIsLoaded(true)
+					setIsReady(true)
+					return
+				}
+				handleNewAuthState('GET_SESSION', session)
+			})
+			.catch((error: unknown) => {
+				// Network-level failures (e.g. Supabase unreachable because
+				// Docker is offline) reject the promise rather than returning
+				// an error field — surface them so the app can show guidance
+				// instead of hanging on the loading screen.
+				console.error('Supabase getSession failed:', error)
+				setConnectionError(
+					error instanceof Error ? error : new Error('Unknown connection error')
+				)
+				setIsLoaded(true)
+				setIsReady(true)
+			})
 		const { data: listener } =
 			supabase.auth.onAuthStateChange(handleNewAuthState)
 
@@ -83,8 +104,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 				isLoaded: true,
+				connectionError,
 			} as AuthLoaded)
-		: emptyAuth
+		: { ...emptyAuth, connectionError }
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

@@ -1,9 +1,13 @@
 import { CSSProperties, useEffect, useState } from 'react'
 import { Loader } from '@/components/ui/loader'
+import { Button } from '@/components/ui/button'
+import { ShowErrorDontLog } from '@/components/errors'
+import { useAuth } from '@/lib/use-auth'
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 export function AwaitingAuthLoader() {
+	const { connectionError } = useAuth()
 	const [time, setTime] = useState(0)
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -11,6 +15,10 @@ export function AwaitingAuthLoader() {
 		}, 1000)
 		return () => clearInterval(interval)
 	}, [])
+
+	if (connectionError) {
+		return <ConnectionErrorScreen error={connectionError} />
+	}
 
 	return (
 		<div
@@ -43,6 +51,41 @@ export function AwaitingAuthLoader() {
 					or get in touch with Em directly (it may be affecting others too).
 				</p>
 			</div>
+		</div>
+	)
+}
+
+function ConnectionErrorScreen({ error }: { error: Error }) {
+	const isDev = import.meta.env.DEV
+	return (
+		<div
+			className="mx-auto flex h-full w-full max-w-160 flex-col items-center justify-center gap-4 px-4 py-10"
+			style={style}
+			data-testid="connection-error-screen"
+		>
+			<ShowErrorDontLog
+				error={error}
+				text="Can't reach Supabase"
+				className="w-full"
+			/>
+			<div className="max-w-120 space-y-3 text-center">
+				<p>
+					The app couldn't connect to its backend. Check your internet
+					connection and try again.
+				</p>
+				{isDev ? (
+					<p className="text-muted-foreground text-sm">
+						<strong>Dev tip:</strong> make sure Docker Desktop is running and
+						<code className="bg-muted mx-1 rounded px-1">supabase start</code>
+						has finished, then confirm your{' '}
+						<code className="bg-muted rounded px-1">.env</code> values match the
+						CLI output.
+					</p>
+				) : null}
+			</div>
+			<Button variant="default" onClick={() => window.location.reload()}>
+				Retry
+			</Button>
 		</div>
 	)
 }

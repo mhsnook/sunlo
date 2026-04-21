@@ -8,7 +8,9 @@ export default function Routes({ router }: Register) {
 	const auth = useAuth()
 	const queryClient = useQueryClient()
 	const context: MyRouterContext = { auth: auth, queryClient }
-	return auth.isLoaded ?
-			<RouterProvider router={router} context={context} />
-		:	<AwaitingAuthLoader />
+	return auth.isLoaded && !auth.connectionError ? (
+		<RouterProvider router={router} context={context} />
+	) : (
+		<AwaitingAuthLoader />
+	)
 }
