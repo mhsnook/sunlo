@@ -29,7 +29,8 @@ learner:
 - click /learn
 - up
 - see decks-list-grid
-- click tam deck-link
+- click tam deck-tile
+- click deck-link
 - up
 - see deck-feed-page
 
