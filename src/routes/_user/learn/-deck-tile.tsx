@@ -144,6 +144,59 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 							</Link>
 						</DialogClose>
 					</div>
+
+					<nav
+						aria-label="Deck quick links"
+						className="flex flex-wrap gap-x-4 gap-y-2 px-2 pt-1 text-sm"
+						data-testid="deck-tile-quick-links"
+					>
+						<DialogClose asChild>
+							<Link
+								to="/learn/$lang/manage-deck"
+								params={{ lang: deck.lang }}
+								className="s-link"
+							>
+								Manage Cards
+							</Link>
+						</DialogClose>
+						<DialogClose asChild>
+							<Link
+								to="/learn/$lang/phrases/new"
+								params={{ lang: deck.lang }}
+								className="s-link"
+							>
+								New Phrase
+							</Link>
+						</DialogClose>
+						<DialogClose asChild>
+							<Link
+								to="/learn/$lang/stats"
+								params={{ lang: deck.lang }}
+								className="s-link"
+							>
+								Stats
+							</Link>
+						</DialogClose>
+						<DialogClose asChild>
+							<Link
+								to="/learn/$lang/feed"
+								params={{ lang: deck.lang }}
+								search={{ search: true }}
+								className="s-link"
+							>
+								Search
+							</Link>
+						</DialogClose>
+						<DialogClose asChild>
+							<Link
+								to="/learn/$lang/deck-settings"
+								params={{ lang: deck.lang }}
+								className="s-link"
+							>
+								Settings
+							</Link>
+						</DialogClose>
+					</nav>
 				</DialogContent>
 			</Dialog>
 		</>

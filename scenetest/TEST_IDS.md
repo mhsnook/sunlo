@@ -79,9 +79,11 @@ natural wrapper element to label.
 | `start-practice-link`              | data-testid | Deck chooser        | "Daily practice" link to /learn/$lang/review                  |
 | `deck-link`                        | data-testid | Deck chooser / card | "Browse deck" link to /learn/$lang                            |
 | `add-deck-tile`                    | data-testid | Learn page          | "+ Start a new deck" tile                                     |
-| `community-feed-section`           | data-testid | Learn page          | Section containing the community feed snippet                 |
-| `community-feed-snippet`           | data-testid | Learn page          | Wrapper around preview feed items                             |
-| `view-full-feed-link`              | data-testid | Community feed      | Link to the full feed for the language                        |
+| `friends-feed-section`             | data-testid | Learn page          | Section containing the friends-activity snippet               |
+| `friends-feed-snippet`             | data-testid | Learn page          | Wrapper around preview friend-activity items                  |
+| `friends-feed-empty`               | data-testid | Friends feed        | Shown when the user has no connected friends                  |
+| `friends-feed-quiet`               | data-testid | Friends feed        | Shown when friends exist but have posted nothing              |
+| `view-friends-feed-link`           | data-testid | Friends feed        | Link to the full friends feed for the focus deck              |
 | `deck-switcher-button`             | data-testid | Sidebar             | Button to open deck switcher                                  |
 | `new-deck-menu-item`               | data-testid | Deck switcher       | "New deck" option                                             |
 | `add-deck-form`                    | data-testid | Add deck page       | Form container                                                |

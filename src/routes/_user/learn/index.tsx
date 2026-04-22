@@ -17,11 +17,10 @@ import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { decksCollection } from '@/features/deck/collections'
 import type { DeckMetaType } from '@/features/deck/schemas'
-import languages from '@/lib/languages'
 
 import { DeckTile, AddDeckTile } from './-deck-tile'
 import { ReviewBanner } from './-review-banner'
-import { CommunityFeedSnippet } from './-community-feed'
+import { FriendsFeedSnippet } from './-friends-feed'
 import {
 	compareDecks,
 	DeckDueProbe,
@@ -166,18 +165,13 @@ function AuthenticatedHome({
 
 			<section
 				className="space-y-3"
-				aria-labelledby="community-feed-heading"
-				data-testid="community-feed-section"
+				aria-labelledby="friends-feed-heading"
+				data-testid="friends-feed-section"
 			>
-				<SectionLabel id="community-feed-heading">
-					Recent from the community
-					{deckCount > 1 ? (
-						<span className="text-muted-foreground ms-1 font-normal tracking-normal normal-case">
-							· {languages[feedLang]}
-						</span>
-					) : null}
+				<SectionLabel id="friends-feed-heading">
+					Recent from friends
 				</SectionLabel>
-				<CommunityFeedSnippet lang={feedLang} />
+				<FriendsFeedSnippet viewAllLang={feedLang} />
 			</section>
 		</main>
 	)
