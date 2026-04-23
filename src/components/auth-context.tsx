@@ -7,7 +7,7 @@ import {
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
-import supabase from '@/lib/supabase-client'
+import supabase, { pingSupabase } from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection } from '@/features/deck/collections'
 import {
@@ -63,24 +63,31 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	)
 
 	useLayoutEffect(() => {
-		void supabase.auth
-			.getSession()
-			.then(({ data: { session }, error }) => {
-				if (error) {
-					console.error('Supabase getSession error:', error)
-					setConnectionError(error)
-					setIsLoaded(true)
-					setIsReady(true)
-					return
+		// Ping Supabase and read the session in parallel. The ping catches
+		// "backend unreachable" (e.g. local Docker offline) because
+		// getSession() resolves from localStorage without any network call
+		// when no session is cached.
+		void Promise.all([pingSupabase(), supabase.auth.getSession()])
+			.then(
+				([
+					,
+					{
+						data: { session },
+						error,
+					},
+				]) => {
+					if (error) {
+						console.error('Supabase getSession error:', error)
+						setConnectionError(error)
+						setIsLoaded(true)
+						setIsReady(true)
+						return
+					}
+					handleNewAuthState('GET_SESSION', session)
 				}
-				handleNewAuthState('GET_SESSION', session)
-			})
+			)
 			.catch((error: unknown) => {
-				// Network-level failures (e.g. Supabase unreachable because
-				// Docker is offline) reject the promise rather than returning
-				// an error field — surface them so the app can show guidance
-				// instead of hanging on the loading screen.
-				console.error('Supabase getSession failed:', error)
+				console.error('Supabase unreachable:', error)
 				setConnectionError(
 					error instanceof Error ? error : new Error('Unknown connection error')
 				)
