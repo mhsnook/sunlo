@@ -69,22 +69,24 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 					<div style={sizeStyles} />
 				) : (
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<SidebarMenuButton
-								data-testid="deck-switcher-button"
-								size="lg"
-								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
-							>
-								<div className="bg-primary rounded-squircle text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
-									<WalletCards />
-								</div>
-								<div className="grid flex-1 text-left text-sm leading-tight">
-									<span className="truncate font-semibold">
-										{languageName ?? 'Choose a deck'}
-									</span>
-								</div>
-								<ChevronsUpDown className="ml-auto" />
-							</SidebarMenuButton>
+						<DropdownMenuTrigger
+							render={
+								<SidebarMenuButton
+									data-testid="deck-switcher-button"
+									size="lg"
+									className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
+								/>
+							}
+						>
+							<div className="bg-primary rounded-squircle text-primary-foreground flex aspect-square size-8 items-center justify-center rounded-xl">
+								<WalletCards />
+							</div>
+							<div className="grid flex-1 text-start text-sm leading-tight">
+								<span className="truncate font-semibold">
+									{languageName ?? 'Choose a deck'}
+								</span>
+							</div>
+							<ChevronsUpDown className="ms-auto" />
 						</DropdownMenuTrigger>
 						<DropdownMenuContent
 							className="w-(--anchor-width) min-w-56 rounded-lg"
@@ -98,47 +100,48 @@ function AuthenticatedDeckSwitcher({ lang }: { lang?: string }) {
 							{deckMenuData?.map((deck) => (
 								<DropdownMenuItem
 									key={deck.name}
-									asChild
 									className="cursor-pointer justify-between gap-2 p-2"
+									render={
+										<Link
+											to="/learn/$lang"
+											params={{ lang: deck.lang }}
+											onClick={setClosedMobile}
+										/>
+									}
 								>
-									<Link
-										to="/learn/$lang"
-										params={{ lang: deck.lang }}
-										onClick={setClosedMobile}
-									>
-										{deck.name}
-										<Badge variant="outline">{deck.badge} phrases</Badge>
-									</Link>
+									{deck.name}
+									<Badge variant="outline">{deck.badge} phrases</Badge>
 								</DropdownMenuItem>
 							))}
 							<DropdownMenuSeparator />
-							<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
-								<Link
-									to="/learn"
-									data-testid="all-decks-link"
-									onClick={setClosedMobile}
-								>
-									<div className="bg-background flex size-6 items-center justify-center rounded border">
-										<Home />
-									</div>
-									<div className="text-muted-foreground font-medium">
-										All decks
-									</div>
-								</Link>
+							<DropdownMenuItem
+								className="cursor-pointer gap-2 p-2"
+								render={
+									<Link
+										to="/learn"
+										data-testid="all-decks-link"
+										onClick={setClosedMobile}
+									/>
+								}
+							>
+								<div className="bg-background flex size-6 items-center justify-center rounded border">
+									<Home />
+								</div>
+								<div className="text-muted-foreground font-medium">
+									All decks
+								</div>
 							</DropdownMenuItem>
 							<DropdownMenuItem
 								data-testid="new-deck-menu-item"
-								asChild
 								className="cursor-pointer gap-2 p-2"
+								render={<Link to="/learn/add-deck" onClick={setClosedMobile} />}
 							>
-								<Link to="/learn/add-deck" onClick={setClosedMobile}>
-									<div className="bg-background flex size-6 items-center justify-center rounded border">
-										<Plus />
-									</div>
-									<div className="text-muted-foreground font-medium">
-										New deck
-									</div>
-								</Link>
+								<div className="bg-background flex size-6 items-center justify-center rounded border">
+									<Plus />
+								</div>
+								<div className="text-muted-foreground font-medium">
+									New deck
+								</div>
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
@@ -160,21 +163,23 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 		<SidebarMenu>
 			<SidebarMenuItem>
 				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<SidebarMenuButton
-							size="lg"
-							className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
-						>
-							<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
-								<Globe />
-							</div>
-							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">
-									{languageName ?? 'Browse a language'}
-								</span>
-							</div>
-							<ChevronsUpDown className="ml-auto" />
-						</SidebarMenuButton>
+					<DropdownMenuTrigger
+						render={
+							<SidebarMenuButton
+								size="lg"
+								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
+							/>
+						}
+					>
+						<div className="bg-primary-foresoft text-sidebar-primary-foreground rounded-squircle flex aspect-square size-8 items-center justify-center rounded-xl">
+							<Globe />
+						</div>
+						<div className="grid flex-1 text-start text-sm leading-tight">
+							<span className="truncate font-semibold">
+								{languageName ?? 'Browse a language'}
+							</span>
+						</div>
+						<ChevronsUpDown className="ms-auto" />
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						className="max-h-[60vh] w-(--anchor-width) min-w-56 overflow-y-auto rounded-lg"
@@ -188,20 +193,20 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 						{topLanguages.map((langItem) => (
 							<DropdownMenuItem
 								key={langItem.lang}
-								asChild
 								className="cursor-pointer justify-between gap-2 p-2"
+								render={
+									<Link
+										to="/learn/$lang/feed"
+										params={{ lang: langItem.lang }}
+										onClick={setClosedMobile}
+									/>
+								}
 							>
-								<Link
-									to="/learn/$lang/feed"
-									params={{ lang: langItem.lang }}
-									onClick={setClosedMobile}
-								>
-									{langItem.name}
-									<Badge variant="outline" className="gap-1">
-										<Users className="size-3" />
-										{langItem.learners?.toLocaleString() ?? 0}
-									</Badge>
-								</Link>
+								{langItem.name}
+								<Badge variant="outline" className="gap-1">
+									<Users className="size-3" />
+									{langItem.learners?.toLocaleString() ?? 0}
+								</Badge>
 							</DropdownMenuItem>
 						))}
 						{otherLanguages.length > 0 && (
@@ -213,34 +218,35 @@ function LanguageBrowser({ lang }: { lang?: string }) {
 								{otherLanguages.map((langItem) => (
 									<DropdownMenuItem
 										key={langItem.lang}
-										asChild
 										className="cursor-pointer justify-between gap-2 p-2"
+										render={
+											<Link
+												to="/learn/$lang/feed"
+												params={{ lang: langItem.lang }}
+												onClick={setClosedMobile}
+											/>
+										}
 									>
-										<Link
-											to="/learn/$lang/feed"
-											params={{ lang: langItem.lang }}
-											onClick={setClosedMobile}
-										>
-											{langItem.name}
-											<Badge variant="outline" className="gap-1">
-												<Users className="size-3" />
-												{langItem.learners?.toLocaleString() ?? 0}
-											</Badge>
-										</Link>
+										{langItem.name}
+										<Badge variant="outline" className="gap-1">
+											<Users className="size-3" />
+											{langItem.learners?.toLocaleString() ?? 0}
+										</Badge>
 									</DropdownMenuItem>
 								))}
 							</>
 						)}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem asChild className="cursor-pointer gap-2 p-2">
-							<Link to="/learn/browse" onClick={setClosedMobile}>
-								<div className="bg-background flex size-6 items-center justify-center rounded border">
-									<Home />
-								</div>
-								<div className="text-muted-foreground font-medium">
-									Browse all
-								</div>
-							</Link>
+						<DropdownMenuItem
+							className="cursor-pointer gap-2 p-2"
+							render={<Link to="/learn/browse" onClick={setClosedMobile} />}
+						>
+							<div className="bg-background flex size-6 items-center justify-center rounded border">
+								<Home />
+							</div>
+							<div className="text-muted-foreground font-medium">
+								Browse all
+							</div>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>

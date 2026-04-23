@@ -39,17 +39,19 @@ export function FeedFilterMenu() {
 
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<Button
-					variant="ghost"
-					size="sm"
-					aria-label="Filter feed content"
-					data-testid="feed-filter-button"
-					className="text-muted-foreground gap-1 text-xs"
-				>
-					<ListFilter className="size-3.5" />
-					{activeLabel}
-				</Button>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="ghost"
+						size="sm"
+						aria-label="Filter feed content"
+						data-testid="feed-filter-button"
+						className="text-muted-foreground gap-1 text-xs"
+					/>
+				}
+			>
+				<ListFilter className="size-3.5" />
+				{activeLabel}
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
 				<DropdownMenuLabel>Show content type</DropdownMenuLabel>

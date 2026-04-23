@@ -238,32 +238,37 @@ export function CardStatusDropdown({
 
 	return !userId ? null : (
 		<DropdownMenu>
-			<DropdownMenuTrigger className={className} asChild>
-				<Button
-					variant={card?.status === 'active' ? 'soft' : 'ghost'}
-					size="sm"
-					className="m-0 min-w-28 justify-between px-1.5"
-					data-name="card-status-dropdown"
-					data-key={phrase.id}
-					disabled={cardMutation.isPending}
-				>
-					<span className="flex items-center justify-center [&_svg]:size-4">
-						{cardMutation.isSuccess ? (
-							<CheckCircle className="text-green-500" />
-						) : (
-							<StatusIcon choice={choice} />
-						)}{' '}
-					</span>
-					<span className="me-1">{statusStrings[choice].name}</span>
-					<ChevronDown size={12} />
-				</Button>
+			<DropdownMenuTrigger
+				className={className}
+				render={
+					<Button
+						variant={card?.status === 'active' ? 'soft' : 'ghost'}
+						size="sm"
+						className="m-0 min-w-28 justify-between px-1.5"
+						data-name="card-status-dropdown"
+						data-key={phrase.id}
+						disabled={cardMutation.isPending}
+					/>
+				}
+			>
+				<span className="flex items-center justify-center [&_svg]:size-4">
+					{cardMutation.isSuccess ? (
+						<CheckCircle className="text-green-500" />
+					) : (
+						<StatusIcon choice={choice} />
+					)}{' '}
+				</span>
+				<span className="me-1">{statusStrings[choice].name}</span>
+				<ChevronDown size={12} />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent className="">
 				{!deckPresent ? (
-					<DropdownMenuItem>
-						<Link to="/learn/add-deck" search={{ lang: phrase.lang }}>
-							<StatusSpan choice="nodeck" />
-						</Link>
+					<DropdownMenuItem
+						render={
+							<Link to="/learn/add-deck" search={{ lang: phrase.lang }} />
+						}
+					>
+						<StatusSpan choice="nodeck" />
 					</DropdownMenuItem>
 				) : !card ? (
 					<DropdownMenuItem

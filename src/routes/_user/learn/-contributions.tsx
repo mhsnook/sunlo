@@ -95,16 +95,18 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 					</TabsList>
 
 					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								size="sm"
-								data-testid="contributions-filter-button"
-								className="text-muted-foreground gap-1 text-xs @md:hidden"
-							>
-								<ListFilter className="size-3.5" />
-								{activeLabel}
-							</Button>
+						<DropdownMenuTrigger
+							render={
+								<Button
+									variant="ghost"
+									size="sm"
+									data-testid="contributions-filter-button"
+									className="text-muted-foreground gap-1 text-xs @md:hidden"
+								/>
+							}
+						>
+							<ListFilter className="size-3.5" />
+							{activeLabel}
 						</DropdownMenuTrigger>
 						<DropdownMenuContent align="start">
 							<DropdownMenuLabel>Show content type</DropdownMenuLabel>
