@@ -199,7 +199,7 @@ There's no built-in undo. Your options:
 
    ```sql
    truncate user_card_review;
-   
+
    insert into
    	user_card_review
    select

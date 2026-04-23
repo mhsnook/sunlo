@@ -7,7 +7,7 @@ import {
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
-import supabase from '@/lib/supabase-client'
+import supabase, { pingSupabase } from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection } from '@/features/deck/collections'
 import {
@@ -21,6 +21,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [isReady, setIsReady] = useState(false)
+	const [connectionError, setConnectionError] = useState<Error | null>(null)
 
 	const handleNewAuthState = useEffectEvent(
 		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
@@ -62,10 +63,37 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	)
 
 	useLayoutEffect(() => {
-		void supabase.auth.getSession().then(({ data: { session }, error }) => {
-			if (error) throw error
-			handleNewAuthState('GET_SESSION', session)
-		})
+		// Ping Supabase and read the session in parallel. The ping catches
+		// "backend unreachable" (e.g. local Docker offline) because
+		// getSession() resolves from localStorage without any network call
+		// when no session is cached.
+		void Promise.all([pingSupabase(), supabase.auth.getSession()])
+			.then(
+				([
+					,
+					{
+						data: { session },
+						error,
+					},
+				]) => {
+					if (error) {
+						console.error('Supabase getSession error:', error)
+						setConnectionError(error)
+						setIsLoaded(true)
+						setIsReady(true)
+						return
+					}
+					handleNewAuthState('GET_SESSION', session)
+				}
+			)
+			.catch((error: unknown) => {
+				console.error('Supabase unreachable:', error)
+				setConnectionError(
+					error instanceof Error ? error : new Error('Unknown connection error')
+				)
+				setIsLoaded(true)
+				setIsReady(true)
+			})
 		const { data: listener } =
 			supabase.auth.onAuthStateChange(handleNewAuthState)
 
@@ -83,8 +111,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
 				isLoaded: true,
+				connectionError,
 			} as AuthLoaded)
-		: emptyAuth
+		: { ...emptyAuth, connectionError }
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
