@@ -3,10 +3,13 @@ import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
 import { useMutation } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import {
 	BookmarkCheck,
 	BookmarkX,
 	Brain,
+	ExternalLink,
+	History,
 	Lightbulb,
 	MoreVertical,
 	Play,
@@ -14,11 +17,10 @@ import {
 } from 'lucide-react'
 
 import { CardContent } from '@/components/ui/card'
-import { cn, preventDefaultCallback } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
 import { intervals, type Score } from '@/features/review/fsrs'
-import PermalinkButton from '@/components/permalink-button'
-import PhraseExtraInfo from '@/components/phrase-extra-info'
+import PracticeHistoryDialog from '@/components/practice-history-dialog'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
 import {
@@ -215,7 +217,7 @@ export function ReviewSingleCard({
 				data-key={pid}
 			>
 				<CardContent className="relative flex flex-1 flex-col items-center justify-center gap-4">
-					<ContextMenu phrase={phrase} />
+					<ContextMenu phrase={phrase} direction={direction} />
 					<Badge
 						variant="outline"
 						className="absolute top-4 left-4 gap-1 text-xs"
@@ -402,9 +404,16 @@ export function ReviewSingleCard({
 	)
 }
 
-function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
+function ContextMenu({
+	phrase,
+	direction,
+}: {
+	phrase: PhraseFullFilteredType
+	direction: CardDirectionType
+}) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [sendChatOpen, setSendChatOpen] = useState(false)
+	const [detailsOpen, setDetailsOpen] = useState(false)
 	const userId = useUserId()
 
 	const cardStatusMutation = useMutation({
@@ -447,15 +456,17 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 	return (
 		<>
 			<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-				<DropdownMenuTrigger asChild>
-					<Button
-						variant="ghost"
-						size="icon"
-						aria-label="Open context menu"
-						className="absolute top-4 right-4"
-					>
-						<MoreVertical />
-					</Button>
+				<DropdownMenuTrigger
+					render={
+						<Button
+							variant="ghost"
+							size="icon"
+							aria-label="Open context menu"
+							className="absolute end-4 top-4"
+						/>
+					}
+				>
+					<MoreVertical />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="w-56">
 					<DropdownMenuItem
@@ -473,13 +484,16 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 						Skip this card
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
-					<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-						<PermalinkButton
-							to={'/learn/$lang/phrases/$id'}
-							params={{ lang: phrase.lang, id: phrase.id }}
-							className="w-full px-2 py-1.5"
-							link
-						/>
+					<DropdownMenuItem
+						render={
+							<Link
+								to="/learn/$lang/phrases/$id"
+								params={{ lang: phrase.lang, id: phrase.id }}
+							/>
+						}
+					>
+						<ExternalLink className="h-4 w-4" />
+						View phrase
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={() => {
@@ -490,12 +504,14 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 						<Send className="me-2 h-4 w-4" />
 						Send in chat
 					</DropdownMenuItem>
-					<DropdownMenuItem onSelect={preventDefaultCallback} className="p-0">
-						<PhraseExtraInfo
-							phrase={phrase}
-							link
-							className="w-full px-2 py-1.5"
-						/>
+					<DropdownMenuItem
+						onClick={() => {
+							setIsOpen(false)
+							setDetailsOpen(true)
+						}}
+					>
+						<History className="me-2 h-4 w-4" />
+						Practice history
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -503,6 +519,12 @@ function ContextMenu({ phrase }: { phrase: PhraseFullFilteredType }) {
 				phrase={phrase}
 				open={sendChatOpen}
 				onOpenChange={setSendChatOpen}
+			/>
+			<PracticeHistoryDialog
+				phrase={phrase}
+				direction={direction}
+				open={detailsOpen}
+				onOpenChange={setDetailsOpen}
 			/>
 		</>
 	)

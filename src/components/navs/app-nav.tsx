@@ -99,11 +99,12 @@ function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-			<DropdownMenuTrigger id="top-right-context-menu" asChild>
-				<Button className="me-2" variant="ghost" size="icon">
-					<MoreVertical />
-					<span className="sr-only">Open menu</span>
-				</Button>
+			<DropdownMenuTrigger
+				id="top-right-context-menu"
+				render={<Button className="me-2" variant="ghost" size="icon" />}
+			>
+				<MoreVertical />
+				<span className="sr-only">Open menu</span>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
 				{links.map(({ link, title, Icon }) => {
@@ -112,15 +113,13 @@ function ContextMenu({ contextMenu }: { contextMenu: string[] | undefined }) {
 						link.to.split('/').at(-1) ??
 						'item'
 					return (
-						<DropdownMenuItem key={link.to} data-testid={`${slug}-menu-item`}>
-							<Link
-								{...link}
-								className="flex w-full flex-row items-center gap-2"
-								onClick={setClosed}
-							>
-								{!Icon ? null : <Icon className="size-5" />}
-								{title}
-							</Link>
+						<DropdownMenuItem
+							key={link.to}
+							data-testid={`${slug}-menu-item`}
+							render={<Link {...link} onClick={setClosed} />}
+						>
+							{!Icon ? null : <Icon className="size-5" />}
+							{title}
 						</DropdownMenuItem>
 					)
 				}) || (

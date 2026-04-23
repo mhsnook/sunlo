@@ -88,24 +88,26 @@ export function NavUser() {
 		<SidebarMenu>
 			<SidebarMenuItem>
 				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<SidebarMenuButton
-							size="lg"
-							data-testid="sidebar-user-menu-trigger"
-							className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
-						>
-							<Avatar>
-								<AvatarImage src={avatarUrl} alt={profile?.username} />
-								<AvatarFallback className="rounded-lg">Me</AvatarFallback>
-							</Avatar>
-							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">
-									{profile?.username}
-								</span>
-								<span className="truncate text-xs">{userEmail}</span>
-							</div>
-							<ChevronsUpDown className="ml-auto size-4" />
-						</SidebarMenuButton>
+					<DropdownMenuTrigger
+						render={
+							<SidebarMenuButton
+								size="lg"
+								data-testid="sidebar-user-menu-trigger"
+								className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground rounded-xl shadow"
+							/>
+						}
+					>
+						<Avatar>
+							<AvatarImage src={avatarUrl} alt={profile?.username} />
+							<AvatarFallback className="rounded-lg">Me</AvatarFallback>
+						</Avatar>
+						<div className="grid flex-1 text-start text-sm leading-tight">
+							<span className="truncate font-semibold">
+								{profile?.username}
+							</span>
+							<span className="truncate text-xs">{userEmail}</span>
+						</div>
+						<ChevronsUpDown className="ms-auto size-4" />
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						className="w-(--anchor-width) min-w-56"
@@ -114,18 +116,24 @@ export function NavUser() {
 						sideOffset={4}
 					>
 						<DropdownMenuGroup>
-							{data?.map((item) => (
-								<DropdownMenuItem key={item.link.to} asChild>
-									<Link
-										to={item.link.to}
-										data-key={item.link.to}
-										onClick={setClosedMobile}
+							{data?.map((item) => {
+								const slug = item.link.to.split('/').pop() ?? 'item'
+								return (
+									<DropdownMenuItem
+										key={item.link.to}
+										render={
+											<Link
+												to={item.link.to}
+												data-testid={`user-menu-${slug}`}
+												onClick={setClosedMobile}
+											/>
+										}
 									>
 										{item.Icon ? <item.Icon /> : null}
 										{item.title ?? item.name}
-									</Link>
-								</DropdownMenuItem>
-							))}
+									</DropdownMenuItem>
+								)
+							})}
 						</DropdownMenuGroup>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
