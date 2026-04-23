@@ -12,7 +12,8 @@ defineMacro('login', [
 
 defineMacro('go-to-deck', [
 	'openTo /learn',
-	'click decks-list-grid [team.lang] deck-link',
+	'click decks-list-grid [team.lang] deck-tile',
+	'click deck-link',
 	'up',
 	'see deck-feed-page',
 	'up',

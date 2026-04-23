@@ -1,7 +1,11 @@
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
+import {
+	useInfiniteQuery,
+	useQuery,
+	useQueryClient,
+} from '@tanstack/react-query'
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import supabase from '@/lib/supabase-client'
-import { FeedActivitySchema } from './schemas'
+import { FeedActivitySchema, type FeedActivityType } from './schemas'
 import type { LangType } from '@/features/languages/schemas'
 import { friendSummariesCollection } from '@/features/social/collections'
 
@@ -243,4 +247,32 @@ export function useInvalidateFeed() {
 			queryKey: lang ? [...FEED_QUERY_KEY, lang] : FEED_QUERY_KEY,
 		})
 	}
+}
+
+/**
+ * Recent friend activity across every language. Returns the most
+ * recent `windowSize` rows from connected friends so callers can
+ * group by friend client-side for compact dashboard displays.
+ * Returns an empty list when the user has no friends connected.
+ */
+export function useRecentFriendsActivity(windowSize = 25) {
+	const { data: friends } = useFriendUids()
+	const friendUids = friends?.map((f) => f.uid) ?? []
+
+	return useQuery({
+		queryKey: ['feed', 'friends', 'recent', windowSize, friendUids],
+		queryFn: async (): Promise<Array<FeedActivityType>> => {
+			if (friendUids.length === 0) return []
+			const { data, error } = await supabase
+				.from('feed_activities')
+				.select('*')
+				.in('uid', friendUids)
+				.order('created_at', { ascending: false })
+				.limit(windowSize)
+			if (error) throw error
+			return data.map((item) => FeedActivitySchema.parse(item))
+		},
+		enabled: friends !== undefined,
+		staleTime: 60_000,
+	})
 }

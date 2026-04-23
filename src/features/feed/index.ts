@@ -18,6 +18,7 @@ export {
 	useFilteredFeedLang,
 	useFriendsFeedLang,
 	useFilteredFriendsFeedLang,
+	useRecentFriendsActivity,
 	usePopularFeedLang,
 	useFilteredPopularFeedLang,
 	useInvalidateFeed,

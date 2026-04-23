@@ -13,7 +13,7 @@ Three attributes, each with a clear role:
 | List container            | `data-testid="decks-list-grid"`       | `decks-list-grid`               |
 | Interactive element       | `data-testid="save-button"`           | `save-button`                   |
 | Item inside a list        | `data-key={lang}`                     | `decks-list-grid hin`           |
-| Action inside a list item | `data-testid="deck-link"`             | `decks-list-grid hin deck-link` |
+| Action inside a list item | `data-testid="deck-tile"`             | `decks-list-grid hin deck-tile` |
 | Items with no wrapper     | `data-name="tab" data-key="settings"` | `tab settings`                  |
 
 ### List items: container + `data-key`
@@ -26,9 +26,7 @@ instance.
 <div data-testid="decks-list-grid">
 	{decks.map((deck) => (
 		<div data-key={deck.lang}>
-			<a data-testid="deck-link" href={`/learn/${deck.lang}`}>
-				{deck.name}
-			</a>
+			<button data-testid="deck-tile">{deck.name}</button>
 		</div>
 	))}
 </div>
@@ -36,7 +34,7 @@ instance.
 
 ```
 - see decks-list-grid hin
-- click decks-list-grid hin deck-link
+- click decks-list-grid hin deck-tile
 - notSee decks-list-grid spa
 ```
 
@@ -67,9 +65,25 @@ natural wrapper element to label.
 
 | Selector                           | Attribute   | Component/Location  | Description                                                   |
 | ---------------------------------- | ----------- | ------------------- | ------------------------------------------------------------- |
+| `learn-page`                       | data-testid | Learn page          | Main container for authenticated learn page                   |
+| `learn-welcome-header`             | data-testid | Learn page          | Welcome hero ("Welcome back, …")                              |
+| `add-phrase-button`                | data-testid | Learn page          | Hero CTA linking to /learn/$lang/phrases/new                  |
+| `review-ready-banner`              | data-testid | Learn page          | Banner showing cards ready for review                         |
+| `start-review-button`              | data-testid | Review banner       | CTA to start the review session                               |
+| `your-decks-section`               | data-testid | Learn page          | Section containing the deck tile grid                         |
 | `decks-list-grid`                  | data-testid | Learn page          | Grid container for deck cards                                 |
-| `decks-list-grid {lang}`           | data-key    | Deck card           | Item inside grid (e.g. `decks-list-grid hin`)                 |
-| `decks-list-grid {lang} deck-link` | data-testid | Deck card           | Link to deck feed (e.g. `decks-list-grid hin deck-link`)      |
+| `decks-list-grid {lang}`           | data-key    | Deck card/tile      | Item inside grid (e.g. `decks-list-grid hin`)                 |
+| `decks-list-grid {lang} deck-tile` | data-testid | Deck tile           | Button that opens the deck chooser dialog                     |
+| `deck-tile-{lang}`                 | data-testid | Deck tile           | Compact deck tile on learn home                               |
+| `deck-tile-dialog`                 | data-testid | Deck chooser        | Dialog surface opened from a deck tile                        |
+| `start-practice-link`              | data-testid | Deck chooser        | "Daily practice" link to /learn/$lang/review                  |
+| `deck-link`                        | data-testid | Deck chooser / card | "Browse deck" link to /learn/$lang                            |
+| `add-deck-tile`                    | data-testid | Learn page          | "+ Start a new deck" tile                                     |
+| `friends-feed-section`             | data-testid | Learn page          | Section containing the friends-activity snippet               |
+| `friends-feed-snippet`             | data-testid | Learn page          | Wrapper around preview friend-activity items                  |
+| `friends-feed-empty`               | data-testid | Friends feed        | Shown when the user has no connected friends                  |
+| `friends-feed-quiet`               | data-testid | Friends feed        | Shown when friends exist but have posted nothing              |
+| `view-friends-feed-link`           | data-testid | Friends feed        | Link to the full friends feed for the focus deck              |
 | `deck-switcher-button`             | data-testid | Sidebar             | Button to open deck switcher                                  |
 | `new-deck-menu-item`               | data-testid | Deck switcher       | "New deck" option                                             |
 | `add-deck-form`                    | data-testid | Add deck page       | Form container                                                |

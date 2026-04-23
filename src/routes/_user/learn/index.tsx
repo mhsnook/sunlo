@@ -1,3 +1,4 @@
+import { useMemo, type CSSProperties, type ReactNode } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import {
 	Archive,
@@ -5,15 +6,27 @@ import {
 	Compass,
 	HeartPlus,
 	LogIn,
+	Plus,
 	UserPlus,
 } from 'lucide-react'
-import { DeckCard } from './-deck-card'
+
 import { buttonVariants } from '@/components/ui/button'
 import { GarlicBroccoli } from '@/components/garlic'
 import { useDecks } from '@/features/deck/hooks'
+import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { decksCollection } from '@/features/deck/collections'
-import { CSSProperties } from 'react'
+import type { DeckMetaType } from '@/features/deck/schemas'
+
+import { DeckTile, AddDeckTile } from './-deck-tile'
+import { ReviewBanner } from './-review-banner'
+import { FriendsFeedSnippet } from './-friends-feed'
+import {
+	compareDecks,
+	DeckDueProbe,
+	useDueMap,
+	useRecencyWeightedScores,
+} from './-deck-ranking'
 
 export const Route = createFileRoute('/_user/learn/')({
 	component: Page,
@@ -29,9 +42,8 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function Page() {
 	const { isAuth } = useAuth()
 	const { data: decks } = useDecks()
-	const activeDecks = decks?.filter((i) => !i.archived)
+	const activeDecks = decks?.filter((d) => !d.archived) ?? []
 
-	// For non-authenticated users, show browse prompt
 	if (!isAuth) {
 		return (
 			<main
@@ -46,35 +58,166 @@ function Page() {
 		)
 	}
 
+	if (decks && decks.length === 0) {
+		return (
+			<main
+				className="w-full space-y-6"
+				style={style}
+				data-testid="learn-page-empty"
+			>
+				<div className="px-4 @lg:px-6 @xl:px-8">
+					<NoDecks />
+				</div>
+			</main>
+		)
+	}
+
+	if (activeDecks.length === 0) {
+		return (
+			<main className="w-full space-y-6" style={style}>
+				<div className="px-4 @lg:px-6 @xl:px-8">
+					<AllDecksArchived />
+				</div>
+			</main>
+		)
+	}
+
 	return (
-		<main className="w-full space-y-6" style={style}>
-			{activeDecks?.length ?
-				<>
-					<div
-						data-testid="decks-list-grid"
-						className="grid grid-cols-1 gap-6 @xl:grid-cols-2"
-					>
-						{activeDecks.map((d) => (
-							<DeckCard key={d.lang} deck={d} />
-						))}
-					</div>
+		<AuthenticatedHome
+			activeDecks={activeDecks}
+			hasArchived={(decks?.length ?? 0) > activeDecks.length}
+		/>
+	)
+}
+
+function AuthenticatedHome({
+	activeDecks,
+	hasArchived,
+}: {
+	activeDecks: Array<DeckMetaType>
+	hasArchived: boolean
+}) {
+	const { data: profile } = useProfile()
+	const scores = useRecencyWeightedScores()
+	const { dueMap, report } = useDueMap()
+
+	const rankedDecks = useMemo(
+		() => activeDecks.toSorted((a, b) => compareDecks(a, b, scores, dueMap)),
+		[activeDecks, scores, dueMap]
+	)
+
+	const focus = rankedDecks.find((d) => (dueMap[d.lang]?.due ?? 0) > 0)
+	const focusDue = focus ? (dueMap[focus.lang]?.due ?? 0) : 0
+
+	const deckCount = activeDecks.length
+	const languageSubtitle =
+		deckCount === 1
+			? `You're learning ${activeDecks[0].language}.`
+			: deckCount === 2
+				? `You're learning two languages.`
+				: deckCount === 3
+					? `You're learning three languages.`
+					: `You're learning ${deckCount} languages.`
+
+	const feedLang = rankedDecks[0].lang
+
+	return (
+		<main className="w-full space-y-8" style={style} data-testid="learn-page">
+			{activeDecks.map((d) => (
+				<DeckDueProbe key={d.lang} deck={d} onReport={report} />
+			))}
+
+			<WelcomeHeader
+				username={profile?.username}
+				subtitle={languageSubtitle}
+				addPhraseLang={feedLang}
+			/>
+
+			<ReviewBanner focus={focus} focusDue={focusDue} />
+
+			<section
+				className="space-y-3"
+				aria-labelledby="your-decks-heading"
+				data-testid="your-decks-section"
+			>
+				<SectionLabel id="your-decks-heading">Your decks</SectionLabel>
+				<div
+					data-testid="decks-list-grid"
+					className="grid grid-cols-1 gap-3 @sm:grid-cols-2 @xl:grid-cols-3 @4xl:grid-cols-4"
+				>
+					{rankedDecks.map((d) => (
+						<DeckTile key={d.lang} deck={d} />
+					))}
+					<AddDeckTile />
+				</div>
+				{hasArchived ? (
 					<Link
-						className="s-link-muted flex flex-row items-center gap-1 text-sm"
+						className="s-link-muted inline-flex items-center gap-1 text-xs"
 						to="/learn/archived"
 						data-testid="view-archived-decks-link"
 					>
-						<Archive size={14} />
-						<span>View archived decks</span>{' '}
-						<ChevronsRight className="h-5 w-4" />
+						<Archive size={12} />
+						<span>View archived decks</span>
+						<ChevronsRight className="h-4 w-3" />
 					</Link>
-				</>
-			:	<div className="px-4 @lg:px-6 @xl:px-8">
-					{decks?.length ?
-						<AllDecksArchived />
-					:	<NoDecks />}
-				</div>
-			}
+				) : null}
+			</section>
+
+			<section
+				className="space-y-3"
+				aria-labelledby="friends-feed-heading"
+				data-testid="friends-feed-section"
+			>
+				<SectionLabel id="friends-feed-heading">
+					Recent from friends
+				</SectionLabel>
+				<FriendsFeedSnippet viewAllLang={feedLang} />
+			</section>
 		</main>
+	)
+}
+
+function SectionLabel({ id, children }: { id?: string; children: ReactNode }) {
+	return (
+		<h2
+			id={id}
+			className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+		>
+			{children}
+		</h2>
+	)
+}
+
+function WelcomeHeader({
+	username,
+	subtitle,
+	addPhraseLang,
+}: {
+	username: string | undefined
+	subtitle: string
+	addPhraseLang: string
+}) {
+	return (
+		<header
+			className="flex flex-col items-start justify-between gap-4 @md:flex-row @md:items-center"
+			data-testid="learn-welcome-header"
+		>
+			<div>
+				<h1 className="text-2xl leading-tight font-bold @md:text-3xl">
+					Welcome back{username ? <>, {username}</> : null}
+				</h1>
+				<p className="text-muted-foreground mt-1 text-sm">{subtitle}</p>
+			</div>
+			<Link
+				to="/learn/$lang/phrases/new"
+				params={{ lang: addPhraseLang }}
+				data-testid="add-phrase-button"
+				className={buttonVariants({ variant: 'default' })}
+			>
+				<Plus />
+				Add a phrase
+			</Link>
+		</header>
 	)
 }
 
