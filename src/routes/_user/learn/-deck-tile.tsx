@@ -30,48 +30,49 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 
 	return (
 		<>
-			<button
-				type="button"
-				onClick={() => setOpen(true)}
-				data-testid="deck-tile"
-				data-key={deck.lang}
-				className="block w-full cursor-pointer text-start transition-all duration-200 hover:-translate-y-0.5"
-				style={style}
-			>
-				<Card
-					className="flex h-full flex-col gap-3 p-4 hover:shadow"
-					data-testid={`deck-tile-${deck.lang}`}
+			<div data-key={deck.lang}>
+				<button
+					type="button"
+					onClick={() => setOpen(true)}
+					data-testid="deck-tile"
+					className="block w-full cursor-pointer text-start transition-all duration-200 hover:-translate-y-0.5"
+					style={style}
 				>
-					<span className="from-5-mhi-primary to-6-mid-primary text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
-						{tileCode}
-					</span>
+					<Card
+						className="flex h-full flex-col gap-3 p-4 hover:shadow"
+						data-testid={`deck-tile-${deck.lang}`}
+					>
+						<span className="from-5-mhi-primary to-6-mid-primary text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
+							{tileCode}
+						</span>
 
-					<div className="space-y-0.5">
-						<h3 className="text-lg leading-tight font-semibold">
-							{deck.language}
-						</h3>
-						<p className="text-muted-foreground text-xs">
-							{totalCards === 0 ? (
-								'no cards yet'
-							) : (
-								<>
-									{totalCards} {totalCards === 1 ? 'card' : 'cards'}
-									{dueToday > 0 ? (
-										<>
-											{' · '}
-											<span className="text-primary-foresoft font-medium">
-												{dueToday} due
-											</span>
-										</>
-									) : (
-										<span className="text-muted-foreground"> · new</span>
-									)}
-								</>
-							)}
-						</p>
-					</div>
-				</Card>
-			</button>
+						<div className="space-y-0.5">
+							<h3 className="text-lg leading-tight font-semibold">
+								{deck.language}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{totalCards === 0 ? (
+									'no cards yet'
+								) : (
+									<>
+										{totalCards} {totalCards === 1 ? 'card' : 'cards'}
+										{dueToday > 0 ? (
+											<>
+												{' · '}
+												<span className="text-primary-foresoft font-medium">
+													{dueToday} due
+												</span>
+											</>
+										) : (
+											<span className="text-muted-foreground"> · new</span>
+										)}
+									</>
+								)}
+							</p>
+						</div>
+					</Card>
+				</button>
+			</div>
 
 			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogContent

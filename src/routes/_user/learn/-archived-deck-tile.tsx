@@ -55,44 +55,45 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 	return (
 		<>
-			<button
-				type="button"
-				onClick={() => setOpen(true)}
-				data-testid="archived-deck-tile"
-				data-key={deck.lang}
-				className="block w-full cursor-pointer text-start transition-all duration-200 hover:-translate-y-0.5"
-			>
-				<Card
-					className="flex h-full flex-col gap-3 p-4 opacity-80 hover:opacity-100 hover:shadow"
-					data-testid={`archived-deck-tile-${deck.lang}`}
+			<div data-key={deck.lang}>
+				<button
+					type="button"
+					onClick={() => setOpen(true)}
+					data-testid="archived-deck-tile"
+					className="block w-full cursor-pointer text-start transition-all duration-200 hover:-translate-y-0.5"
 				>
-					<span className="bg-1-mlo-neutral text-6-mid-neutral border-2-lo-neutral inline-flex w-fit items-center justify-center rounded-md border px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase">
-						{tileCode}
-					</span>
+					<Card
+						className="flex h-full flex-col gap-3 p-4 opacity-80 hover:opacity-100 hover:shadow"
+						data-testid={`archived-deck-tile-${deck.lang}`}
+					>
+						<span className="bg-1-mlo-neutral text-6-mid-neutral border-2-lo-neutral inline-flex w-fit items-center justify-center rounded-md border px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase">
+							{tileCode}
+						</span>
 
-					<div className="space-y-0.5">
-						<h3 className="text-muted-foreground text-lg leading-tight font-semibold">
-							{deck.language}
-						</h3>
-						<p className="text-muted-foreground text-xs">
-							{totalCards === 0
-								? 'no cards'
-								: `${totalCards} ${totalCards === 1 ? 'card' : 'cards'}`}
-							{lastReviewed ? (
-								<>
-									<span> · </span>
-									<span>last reviewed {lastReviewed}</span>
-								</>
-							) : (
-								<>
-									<span> · </span>
-									<span>never reviewed</span>
-								</>
-							)}
-						</p>
-					</div>
-				</Card>
-			</button>
+						<div className="space-y-0.5">
+							<h3 className="text-muted-foreground text-lg leading-tight font-semibold">
+								{deck.language}
+							</h3>
+							<p className="text-muted-foreground text-xs">
+								{totalCards === 0
+									? 'no cards'
+									: `${totalCards} ${totalCards === 1 ? 'card' : 'cards'}`}
+								{lastReviewed ? (
+									<>
+										<span> · </span>
+										<span>last reviewed {lastReviewed}</span>
+									</>
+								) : (
+									<>
+										<span> · </span>
+										<span>never reviewed</span>
+									</>
+								)}
+							</p>
+						</div>
+					</Card>
+				</button>
+			</div>
 
 			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogContent

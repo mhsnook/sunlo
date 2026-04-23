@@ -42,7 +42,8 @@ learner:
 - openTo /learn
 - up
 - click sidebar-user-menu-trigger
-- click /profile
+- up
+- click user-menu-profile
 - up
 - see profile-page
 - seeText Display Preferences
