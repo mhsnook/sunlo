@@ -6,7 +6,6 @@ import {
 	PhraseFullFullType,
 } from '@/features/phrases/schemas'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
-import { CSSProperties } from 'react'
 
 export function CardResultSimple({
 	phrase,
@@ -16,10 +15,7 @@ export function CardResultSimple({
 	nonInteractive?: boolean
 }) {
 	return (
-		<CardlikeFlashcard
-			className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1"
-			style={{ viewTransitionName: `phrase-${phrase.id}` } as CSSProperties}
-		>
+		<CardlikeFlashcard className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1">
 			<div className="grow py-6">
 				<div className="space-x-2 pb-2">
 					<LangBadge lang={phrase.lang} />
