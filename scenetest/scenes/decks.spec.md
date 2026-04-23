@@ -6,7 +6,7 @@ learner:
 
 - login
 - openTo /learn
-- see deck-card-[team.lang]
+- see deck-tile-[team.lang]
 - up
 - click deck-switcher-button
 - click new-deck-menu-item
@@ -71,16 +71,12 @@ learner:
 - up
 - openTo /learn
 - see decks-list-grid
-- notSee deck-card-[team.lang]
+- notSee deck-tile-[team.lang]
 - up
 - click view-archived-decks-link
 - up
-- click deck-card-[team.lang] deck-link
+- click [team.lang] archived-deck-tile
 - up
-- go-to-deck-settings
-- click restore-deck-button
-- up
-- see restore-confirmation-dialog
 - click confirm-restore-button
 - up
 - seeToast toast-success
