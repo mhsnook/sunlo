@@ -7,6 +7,7 @@ import type {
 	PhraseFullFullType,
 	PhraseFullType,
 } from './schemas'
+import { phrasesCollection } from './collections'
 import { phrasesFull } from './live'
 import {
 	playlistPhraseLinksCollection,
@@ -30,6 +31,36 @@ export const useLanguagePhrases = (
 				.from({ phrase: phrasesFull })
 				.where(({ phrase }) => eq(phrase.lang, lang)),
 		[lang]
+	)
+
+/**
+ * Phrases for a language, straight off `phrasesCollection` (no profile/card join).
+ * Use this when you only need raw phrase metadata — charts, manage-deck, etc.
+ */
+export const useLangPhrasesRaw = (
+	lang: string
+): UseLiveQueryResult<PhraseFullType[]> =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ phrase: phrasesCollection })
+				.where(({ phrase }) => eq(phrase.lang, lang)),
+		[lang]
+	)
+
+/** A single phrase by id from the raw `phrasesCollection`. */
+export const useOnePhrase = (
+	pid: uuid | undefined | null
+): UseLiveQueryResult<PhraseFullType> =>
+	useLiveQuery(
+		(q) =>
+			!pid
+				? undefined
+				: q
+						.from({ phrase: phrasesCollection })
+						.where(({ phrase }) => eq(phrase.id, pid))
+						.findOne(),
+		[pid]
 	)
 
 export const useLanguagePhrasesSearch = (
@@ -79,12 +110,12 @@ export const useLanguagePhrase = (
 ): UseLiveQueryResult<PhraseFullFullType> =>
 	useLiveQuery(
 		(q) =>
-			!pid ? undefined : (
-				q
-					.from({ phrase: phrasesFull })
-					.where(({ phrase }) => eq(phrase.id, pid))
-					.findOne()
-			),
+			!pid
+				? undefined
+				: q
+						.from({ phrase: phrasesFull })
+						.where(({ phrase }) => eq(phrase.id, pid))
+						.findOne(),
 		[pid]
 	)
 
@@ -224,42 +255,42 @@ export function useRelatedCards(phraseId: uuid): RelatedCard[] {
 	// Get sibling phrases from the same playlists
 	const { data: playlistSiblings } = useLiveQuery(
 		(q) =>
-			playlistIds.length === 0 ?
-				undefined
-			:	q
-					.from({ link: playlistPhraseLinksCollection })
-					.join(
-						{ playlist: phrasePlaylistsCollection },
-						({ link, playlist }) => eq(link.playlist_id, playlist.id),
-						'inner'
-					)
-					.where(({ link }) => inArray(link.playlist_id, playlistIds))
-					.select(({ link, playlist }) => ({
-						phraseId: link.phrase_id,
-						playlistId: playlist.id,
-						title: playlist.title,
-					})),
+			playlistIds.length === 0
+				? undefined
+				: q
+						.from({ link: playlistPhraseLinksCollection })
+						.join(
+							{ playlist: phrasePlaylistsCollection },
+							({ link, playlist }) => eq(link.playlist_id, playlist.id),
+							'inner'
+						)
+						.where(({ link }) => inArray(link.playlist_id, playlistIds))
+						.select(({ link, playlist }) => ({
+							phraseId: link.phrase_id,
+							playlistId: playlist.id,
+							title: playlist.title,
+						})),
 		[playlistIds.join(',')]
 	)
 
 	// Get sibling phrases from the same request threads
 	const { data: threadSiblings } = useLiveQuery(
 		(q) =>
-			requestIds.length === 0 ?
-				undefined
-			:	q
-					.from({ link: commentPhraseLinksCollection })
-					.join(
-						{ request: phraseRequestsCollection },
-						({ link, request }) => eq(link.request_id, request.id),
-						'inner'
-					)
-					.where(({ link }) => inArray(link.request_id, requestIds))
-					.select(({ link, request }) => ({
-						phraseId: link.phrase_id,
-						requestId: request.id,
-						prompt: request.prompt,
-					})),
+			requestIds.length === 0
+				? undefined
+				: q
+						.from({ link: commentPhraseLinksCollection })
+						.join(
+							{ request: phraseRequestsCollection },
+							({ link, request }) => eq(link.request_id, request.id),
+							'inner'
+						)
+						.where(({ link }) => inArray(link.request_id, requestIds))
+						.select(({ link, request }) => ({
+							phraseId: link.phrase_id,
+							requestId: request.id,
+							prompt: request.prompt,
+						})),
 		[requestIds.join(',')]
 	)
 

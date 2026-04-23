@@ -1,6 +1,4 @@
-import { useLiveQuery } from '@tanstack/react-db'
 import { useMutation } from '@tanstack/react-query'
-import { count, eq } from '@tanstack/db'
 import { toastError } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
@@ -8,6 +6,7 @@ import {
 	commentsCollection,
 	commentUpvotesCollection,
 } from '@/features/comments/collections'
+import { useHasCommentUpvote } from '@/features/comments/hooks'
 import supabase from '@/lib/supabase-client'
 import { safeWrite } from '@/lib/collections/safe-write'
 import type { uuid } from '@/types/main'
@@ -17,14 +16,7 @@ import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function Upvote({ comment }: { comment: RequestCommentType }) {
 	const requireAuth = useRequireAuth()
-	const hasUpvoted = !!useLiveQuery(
-		(q) =>
-			q
-				.from({ upvote: commentUpvotesCollection })
-				.where(({ upvote }) => eq(upvote.comment_id, comment.id))
-				.select(({ upvote }) => ({ total: count(upvote.comment_id) })),
-		[comment.id]
-	).data?.length
+	const hasUpvoted = useHasCommentUpvote(comment.id)
 
 	// Upvote mutation with explicit action
 	const upvoteMutation = useMutation({
@@ -44,9 +36,9 @@ export function Upvote({ comment }: { comment: RequestCommentType }) {
 
 			const currentCount = comment.upvote_count ?? 0
 			const newCount =
-				data.action === 'added' ?
-					currentCount + 1
-				:	Math.max(0, currentCount - 1)
+				data.action === 'added'
+					? currentCount + 1
+					: Math.max(0, currentCount - 1)
 
 			await safeWrite(
 				() => commentsCollection.preload(),

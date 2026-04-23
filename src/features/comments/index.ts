@@ -17,3 +17,10 @@ export {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from './collections'
+
+// Hooks
+export {
+	useOneComment,
+	usePhrasesFromComment,
+	useHasCommentUpvote,
+} from './hooks'

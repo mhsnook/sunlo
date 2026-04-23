@@ -28,6 +28,8 @@ export const phrasePlaylistsCollection = createCollection(
 		getKey: (item: PhrasePlaylistType) => item.id,
 		queryClient,
 		schema: PhrasePlaylistSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 

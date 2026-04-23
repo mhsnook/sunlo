@@ -6,7 +6,10 @@ import {
 	commentPhraseLinksCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
-import { phraseRequestsCollection } from './collections'
+import {
+	phraseRequestsCollection,
+	phraseRequestUpvotesCollection,
+} from './collections'
 import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from './schemas'
 import { mapArrays } from '@/lib/utils'
@@ -26,19 +29,21 @@ export const useRequestLinksPhraseIds = (
 }
 
 export const useRequestLinksWithComments = (requestId: uuid) => {
-	const { data, isLoading } = useLiveQuery((q) =>
-		q
-			.from({ link: commentPhraseLinksCollection })
-			.where(({ link }) => eq(link.request_id, requestId))
-			.join(
-				{ comment: commentsCollection },
-				({ link, comment }) => eq(link.comment_id, comment.id),
-				'inner'
-			)
-			.select(({ link, comment }) => ({
-				...link,
-				parent_comment_id: comment.parent_comment_id,
-			}))
+	const { data, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.request_id, requestId))
+				.join(
+					{ comment: commentsCollection },
+					({ link, comment }) => eq(link.comment_id, comment.id),
+					'inner'
+				)
+				.select(({ link, comment }) => ({
+					...link,
+					parent_comment_id: comment.parent_comment_id,
+				})),
+		[requestId]
 	)
 	return {
 		isLoading,
@@ -55,10 +60,12 @@ export const useRequestCounts = (
 	countComments: number | undefined
 	countLinks: number | undefined
 } => {
-	const countComments = useLiveQuery((q) =>
-		q
-			.from({ comment: commentsCollection })
-			.where(({ comment }) => eq(id, comment.request_id))
+	const countComments = useLiveQuery(
+		(q) =>
+			q
+				.from({ comment: commentsCollection })
+				.where(({ comment }) => eq(id, comment.request_id)),
+		[id]
 	).data?.length
 	const countLinks = useRequestLinksPhraseIds(id).data?.length
 	return {
@@ -67,16 +74,29 @@ export const useRequestCounts = (
 	}
 }
 
-export const useRequest = (id: uuid): UseLiveQueryResult<PhraseRequestType> =>
+export const useRequest = (
+	id: uuid | undefined | null
+): UseLiveQueryResult<PhraseRequestType> =>
 	useLiveQuery(
-		(q) => {
-			return q
-				.from({ req: phraseRequestsCollection })
-				.where(({ req }) => eq(req.id, id))
-				.findOne()
-		},
+		(q) =>
+			!id
+				? undefined
+				: q
+						.from({ req: phraseRequestsCollection })
+						.where(({ req }) => eq(req.id, id))
+						.findOne(),
 		[id]
 	)
+
+/** Whether the current user has upvoted this request. */
+export const useHasRequestUpvote = (requestId: uuid): boolean =>
+	!!useLiveQuery(
+		(q) =>
+			q
+				.from({ upvote: phraseRequestUpvotesCollection })
+				.where(({ upvote }) => eq(upvote.request_id, requestId)),
+		[requestId]
+	).data?.length
 
 export type FulfillRequestResponse = {
 	phrase: Tables<'phrase'>

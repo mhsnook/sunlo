@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback, type MouseEvent } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { useLiveQuery, eq } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Bar,
 	BarChart,
@@ -22,12 +22,15 @@ import {
 	type ChartConfig,
 } from '@/components/ui/chart'
 import {
-	languagesCollection,
-	langTagsCollection,
-} from '@/features/languages/collections'
+	useAllLangTags,
+	useAllLanguages,
+	useLanguagesSortedByLearners,
+	useLanguagesWithPhrases,
+} from '@/features/languages/hooks'
 import { phrasesCollection } from '@/features/phrases/collections'
+import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 import languages from '@/lib/languages'
 
 // ─── Chart 1: Language Comparison ────────────────────────────────
@@ -44,11 +47,7 @@ const langChartConfig = {
 } satisfies ChartConfig
 
 export function LanguageComparisonChart() {
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q
-			.from({ lang: languagesCollection })
-			.orderBy(({ lang }) => lang.learners, 'desc')
-	)
+	const { data: allLanguages } = useLanguagesSortedByLearners()
 
 	const chartData = useMemo(() => {
 		if (!allLanguages?.length) return []
@@ -120,13 +119,7 @@ const SCATTER_COLORS = [
 ]
 
 export function DifficultyPopularityScatter({ lang }: { lang: string }) {
-	const { data: allPhrases } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.lang, lang)),
-		[lang]
-	)
+	const { data: allPhrases } = useLangPhrasesRaw(lang)
 
 	const scatterData = useMemo(() => {
 		if (!allPhrases?.length) return []
@@ -330,13 +323,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 		y: number
 	} | null>(null)
 
-	const { data: allPhrases } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.lang, lang)),
-		[lang]
-	)
+	const { data: allPhrases } = useLangPhrasesRaw(lang)
 
 	const { treemapData, totalTagged } = useMemo(() => {
 		if (!allPhrases?.length) return { treemapData: [], totalTagged: 0 }
@@ -377,7 +364,7 @@ export function TagTreemap({ lang }: { lang: string }) {
 				search: { search: true },
 			})
 		},
-		[navigate, lang]
+		[navigate]
 	)
 
 	if (!treemapData.length) {
@@ -425,9 +412,9 @@ export function TagTreemap({ lang }: { lang: string }) {
 					<p className="font-semibold">{tooltip.item.name}</p>
 					<p className="text-muted-foreground">
 						{tooltip.item.size} phrases (
-						{totalTagged > 0 ?
-							((tooltip.item.size / totalTagged) * 100).toFixed(1)
-						:	0}
+						{totalTagged > 0
+							? ((tooltip.item.size / totalTagged) * 100).toFixed(1)
+							: 0}
 						%)
 					</p>
 					<p className="text-primary mt-1 text-xs">Click to browse phrases</p>
@@ -473,13 +460,7 @@ const HISTOGRAM_FILLS = [
 ]
 
 export function DifficultyHistogram({ lang }: { lang: string }) {
-	const { data: allPhrases } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.lang, lang)),
-		[lang]
-	)
+	const { data: allPhrases } = useLangPhrasesRaw(lang)
 
 	const histogramData = useMemo(() => {
 		if (!allPhrases?.length) return []
@@ -550,24 +531,15 @@ export function DifficultyHistogram({ lang }: { lang: string }) {
 // ─── Language Selector ──────────────────────────────────────────
 
 export function useAvailableLanguages() {
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q
-			.from({ lang: languagesCollection })
-			.orderBy(({ lang }) => lang.phrases_to_learn, 'desc')
-	)
+	const { data: allLanguages } = useLanguagesWithPhrases()
 
-	return useMemo(
-		() => (allLanguages ?? []).filter((l) => (l.phrases_to_learn ?? 0) > 0),
-		[allLanguages]
-	)
+	return allLanguages ?? []
 }
 
 // ─── Library Summary Stats ──────────────────────────────────────
 
 export function LibrarySummaryStats() {
-	const { data: allLanguages } = useLiveQuery((q) =>
-		q.from({ lang: languagesCollection })
-	)
+	const { data: allLanguages } = useAllLanguages()
 	const { data: allPhrases } = useLiveQuery((q) =>
 		q.from({ phrase: phrasesCollection })
 	)
@@ -575,13 +547,9 @@ export function LibrarySummaryStats() {
 		q.from({ req: phraseRequestsCollection })
 	)
 	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+		q.from({ playlist: phrasePlaylistsActive })
 	)
-	const { data: allTags } = useLiveQuery((q) =>
-		q.from({ tag: langTagsCollection })
-	)
+	const { data: allTags } = useAllLangTags()
 
 	const phrasesWithDifficulty = useMemo(
 		() => allPhrases?.filter((p) => p.avg_difficulty !== null).length ?? 0,

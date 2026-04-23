@@ -10,16 +10,15 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import type {
 	NotificationType,
 	NotificationTypeEnum,
 } from '@/features/notifications/schemas'
 import { useMarkAsRead } from '@/features/notifications/hooks'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { commentsCollection } from '@/features/comments/collections'
+import { useRequest } from '@/features/requests/hooks'
+import { useOnePhrase } from '@/features/phrases/hooks'
+import { useOneComment } from '@/features/comments/hooks'
 import { Button } from '@/components/ui/button'
 
 const notificationConfig: Record<
@@ -65,41 +64,10 @@ function useNotificationLink(notification: NotificationType): {
 } | null {
 	const { request_id, comment_id, phrase_id } = notification
 
-	// Look up the request for lang + comment search params
-	const { data: request } = useLiveQuery(
-		(q) =>
-			!request_id ? undefined : (
-				q
-					.from({ r: phraseRequestsCollection })
-					.where(({ r }) => eq(r.id, request_id))
-					.findOne()
-			),
-		[request_id]
-	)
-
-	// Look up the comment to determine if it's a reply (has parent_comment_id)
-	const { data: comment } = useLiveQuery(
-		(q) =>
-			!comment_id ? undefined : (
-				q
-					.from({ c: commentsCollection })
-					.where(({ c }) => eq(c.id, comment_id))
-					.findOne()
-			),
-		[comment_id]
-	)
-
-	// Look up the phrase for lang (phrase_translated, phrase_referenced)
-	const { data: phrase } = useLiveQuery(
-		(q) =>
-			request_id || !phrase_id ? undefined : (
-				q
-					.from({ p: phrasesCollection })
-					.where(({ p }) => eq(p.id, phrase_id))
-					.findOne()
-			),
-		[phrase_id, request_id]
-	)
+	const { data: request } = useRequest(request_id)
+	const { data: comment } = useOneComment(comment_id ?? undefined)
+	// Only resolve the phrase when there's no request_id (phrase-only notifications)
+	const { data: phrase } = useOnePhrase(request_id ? undefined : phrase_id)
 
 	// Request-related notifications
 	if (notification.request_id && request) {
@@ -160,9 +128,9 @@ export function NotificationItem({
 			tabIndex={0}
 			className={cn(
 				'group flex cursor-pointer items-start gap-3 rounded p-3 transition-all duration-300',
-				isUnread ?
-					'border-s-primary bg-card/80 border-s-2'
-				:	'animate-card-pop-in bg-transparent opacity-70 hover:opacity-100'
+				isUnread
+					? 'border-s-primary bg-card/80 border-s-2'
+					: 'animate-card-pop-in bg-transparent opacity-70 hover:opacity-100'
 			)}
 			style={style}
 			data-testid="notification-item"

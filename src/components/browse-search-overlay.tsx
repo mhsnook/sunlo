@@ -8,7 +8,7 @@ import {
 } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDebounce } from '@/hooks/use-debounce'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
 	X,
@@ -21,8 +21,8 @@ import {
 } from 'lucide-react'
 
 import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useDecks } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { LangBadge } from '@/components/ui/badge'
@@ -85,14 +85,10 @@ export default function BrowseSearchOverlay({
 		q.from({ phrase: phrasesCollection })
 	)
 	const { data: allRequests } = useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+		q.from({ req: phraseRequestsActive })
 	)
 	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+		q.from({ playlist: phrasePlaylistsActive })
 	)
 
 	// Search and filter results
@@ -209,9 +205,9 @@ export default function BrowseSearchOverlay({
 	// Language filter actions
 	const toggleLang = (langCode: string) => {
 		setSelectedLangs((prev) =>
-			prev.includes(langCode) ?
-				prev.filter((l) => l !== langCode)
-			:	[...prev, langCode]
+			prev.includes(langCode)
+				? prev.filter((l) => l !== langCode)
+				: [...prev, langCode]
 		)
 	}
 
@@ -283,9 +279,9 @@ export default function BrowseSearchOverlay({
 								onClick={() => toggleLang(l.code)}
 								className={cn(
 									'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-									selectedLangs.includes(l.code) ?
-										'bg-primary-foresoft text-primary-foreground border-transparent'
-									:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
+									selectedLangs.includes(l.code)
+										? 'bg-primary-foresoft text-primary-foreground border-transparent'
+										: 'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
 								)}
 							>
 								{l.name}
@@ -317,11 +313,12 @@ export default function BrowseSearchOverlay({
 						className="min-h-0 flex-1 overflow-y-auto"
 						data-testid="browse-search-results"
 					>
-						{results.length === 0 ?
+						{results.length === 0 ? (
 							<div className="text-muted-foreground px-4 py-8 text-center text-sm">
 								No results found
 							</div>
-						:	results.map((result, index) => (
+						) : (
+							results.map((result, index) => (
 								<SearchResultLink
 									key={`${result.type}-${result.id}`}
 									result={result}
@@ -329,7 +326,7 @@ export default function BrowseSearchOverlay({
 									onMouseEnter={() => setSelectedIndex(index)}
 								/>
 							))
-						}
+						)}
 					</div>
 				)}
 
@@ -354,9 +351,9 @@ export default function BrowseSearchOverlay({
 							search={{
 								q: lowerQuery || undefined,
 								langs:
-									selectedLangs.length > 0 ?
-										selectedLangs.join(',')
-									:	undefined,
+									selectedLangs.length > 0
+										? selectedLangs.join(',')
+										: undefined,
 							}}
 							className="hover:text-foreground ms-auto inline-flex items-center gap-1 font-medium"
 							onClick={onClose}

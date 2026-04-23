@@ -47,6 +47,8 @@ export const commentPhraseLinksCollection = createCollection(
 		getKey: (item: CommentPhraseLinkType) => item.id,
 		queryClient,
 		schema: CommentPhraseLinkSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 

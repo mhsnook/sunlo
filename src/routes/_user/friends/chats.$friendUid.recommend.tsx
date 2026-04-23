@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import { useDebounce } from '@/hooks/use-debounce'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
@@ -18,8 +18,8 @@ import type { TablesInsert } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
 
 import {
 	Dialog,
@@ -39,15 +39,21 @@ type ContentFilter = SearchResultType
 
 // Map from tab values (plural) to SearchResultType (singular)
 const tabToFilter = (v: string): ContentFilter | null =>
-	v === 'phrases' ? 'phrase'
-	: v === 'playlists' ? 'playlist'
-	: v === 'requests' ? 'request'
-	: null
+	v === 'phrases'
+		? 'phrase'
+		: v === 'playlists'
+			? 'playlist'
+			: v === 'requests'
+				? 'request'
+				: null
 const filterToTab = (f: ContentFilter | null): string =>
-	f === 'phrase' ? 'phrases'
-	: f === 'playlist' ? 'playlists'
-	: f === 'request' ? 'requests'
-	: 'all'
+	f === 'phrase'
+		? 'phrases'
+		: f === 'playlist'
+			? 'playlists'
+			: f === 'request'
+				? 'requests'
+				: 'all'
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendUid/recommend'
@@ -74,14 +80,10 @@ function RouteComponent() {
 		q.from({ phrase: phrasesCollection })
 	)
 	const { data: allRequests } = useLiveQuery((q) =>
-		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+		q.from({ req: phraseRequestsActive })
 	)
 	const { data: allPlaylists } = useLiveQuery((q) =>
-		q
-			.from({ playlist: phrasePlaylistsCollection })
-			.where(({ playlist }) => eq(playlist.deleted, false))
+		q.from({ playlist: phrasePlaylistsActive })
 	)
 
 	// Filter and search results
@@ -184,9 +186,11 @@ function RouteComponent() {
 		},
 		onSuccess: (_data, variables) => {
 			const label =
-				variables.message_type === 'recommendation' ? 'Phrase'
-				: variables.message_type === 'playlist' ? 'Playlist'
-				: 'Request'
+				variables.message_type === 'recommendation'
+					? 'Phrase'
+					: variables.message_type === 'playlist'
+						? 'Playlist'
+						: 'Request'
 			closeDialog()
 			toastSuccess(`${label} sent!`)
 		},
@@ -311,12 +315,13 @@ function RouteComponent() {
 
 				{/* Results */}
 				<div className="min-h-0 flex-1 overflow-y-auto">
-					{showResults ?
-						results.length === 0 ?
+					{showResults ? (
+						results.length === 0 ? (
 							<div className="text-muted-foreground px-4 py-8 text-center text-sm">
 								No results found
 							</div>
-						:	results.map((result) => (
+						) : (
+							results.map((result) => (
 								<SendableResult
 									key={`${result.type}-${result.id}`}
 									result={result}
@@ -325,23 +330,25 @@ function RouteComponent() {
 									disabled={sendMessageMutation.isPending}
 								/>
 							))
-
-					:	<div className="text-muted-foreground px-4 py-8 text-center text-sm">
+						)
+					) : (
+						<div className="text-muted-foreground px-4 py-8 text-center text-sm">
 							Search for something to send
 						</div>
-					}
+					)}
 				</div>
 
 				{/* Create New Phrase */}
 				<div className="border-t px-4 py-3">
-					{showCreator ?
-						lang ?
+					{showCreator ? (
+						lang ? (
 							<InlinePhraseCreator
 								lang={lang}
 								onPhraseCreated={handlePhraseCreated}
 								onCancel={() => setShowCreator(false)}
 							/>
-						:	<div className="space-y-3">
+						) : (
+							<div className="space-y-3">
 								<p className="text-muted-foreground text-sm">
 									Select a language above to create a new phrase.
 								</p>
@@ -353,8 +360,9 @@ function RouteComponent() {
 									Cancel
 								</Button>
 							</div>
-
-					:	<Button
+						)
+					) : (
+						<Button
 							variant="soft"
 							size="sm"
 							className="w-full"
@@ -363,7 +371,7 @@ function RouteComponent() {
 							<Plus className="size-4" />
 							Create a new phrase
 						</Button>
-					}
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>
@@ -382,9 +390,13 @@ function SendableResult({
 	disabled: boolean
 }) {
 	const typeIcon =
-		result.type === 'phrase' ? <MessageSquareQuote className="size-3.5" />
-		: result.type === 'playlist' ? <ListMusic className="size-3.5" />
-		: <MessageCircleHeart className="size-3.5" />
+		result.type === 'phrase' ? (
+			<MessageSquareQuote className="size-3.5" />
+		) : result.type === 'playlist' ? (
+			<ListMusic className="size-3.5" />
+		) : (
+			<MessageCircleHeart className="size-3.5" />
+		)
 
 	const typeLabel = result.type
 

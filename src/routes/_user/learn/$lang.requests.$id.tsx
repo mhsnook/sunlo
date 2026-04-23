@@ -5,11 +5,13 @@ import { CSSProperties } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
-import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import { useRequest } from '@/features/requests/hooks'
+import {
+	useRequest,
+	useRequestLinksWithComments,
+} from '@/features/requests/hooks'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
@@ -28,8 +30,8 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 } from '@/features/comments/collections'
+import { useOneComment } from '@/features/comments/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import { mapArrays } from '@/lib/utils'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -74,47 +76,6 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
 
-export const useRequestLinksWithComments = (requestId: uuid) => {
-	const { data, isLoading } = useLiveQuery((q) =>
-		q
-			.from({ link: commentPhraseLinksCollection })
-			.where(({ link }) => eq(link.request_id, requestId))
-			.join(
-				{ comment: commentsCollection },
-				({ link, comment }) => eq(link.comment_id, comment.id),
-				'inner'
-			)
-			.select(({ link, comment }) => ({
-				...link,
-				parent_comment_id: comment.parent_comment_id,
-			}))
-	)
-	return {
-		isLoading,
-		data: mapArrays<
-			CommentPhraseLinkType & { parent_comment_id: uuid | null },
-			'phrase_id'
-		>(data, 'phrase_id'),
-	}
-}
-
-/** Look up a comment by ID from the collection (for edit modes) */
-function useComment(commentId: uuid | undefined) {
-	return useLiveQuery(
-		(q) =>
-			commentId ?
-				q
-					.from({ comment: commentsCollection })
-					.where(({ comment }) => eq(comment.id, commentId))
-					.findOne()
-			:	q
-					.from({ comment: commentsCollection })
-					.where(({ comment }) => eq(comment.id, ''))
-					.findOne(),
-		[commentId]
-	)
-}
-
 function RequestThreadPage() {
 	const params = Route.useParams()
 	const { data: request, isLoading } = useRequest(params.id)
@@ -123,7 +84,7 @@ function RequestThreadPage() {
 	// Look up the comment being edited/focused (if any) for both dialogs
 	const editingId =
 		search.mode === 'edit' || search.mode === 'reply' ? search.focus : undefined
-	const { data: editComment } = useComment(editingId)
+	const { data: editComment } = useOneComment(editingId)
 
 	// Derive dialog modes from URL
 	const commentMode = deriveCommentDialogMode(search)
@@ -204,9 +165,11 @@ function RequestThreadPage() {
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
-				{search.show === 'answers-only' ?
+				{search.show === 'answers-only' ? (
 					<AnswersOnlyView />
-				:	<TopLevelComments requestId={params.id} lang={params.lang} />}
+				) : (
+					<TopLevelComments requestId={params.id} lang={params.lang} />
+				)}
 			</Collapsible>
 		</main>
 	)
@@ -273,11 +236,11 @@ function AnswersOnlyView() {
 					))}
 				</div>
 			</div>
-			{phraseIds.length ?
+			{phraseIds.length ? (
 				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
 					This is the end of the thread.
 				</p>
-			:	null}
+			) : null}
 		</>
 	)
 }
@@ -332,11 +295,11 @@ function TopLevelComments({
 					)}
 				</div>
 			</div>
-			{comments.length ?
+			{comments.length ? (
 				<p className="text-muted-foreground mb-6 px-4 text-xs italic">
 					This is the end of the thread.
 				</p>
-			:	null}
+			) : null}
 		</>
 	)
 }
