@@ -5,6 +5,7 @@ import type { PhrasePlaylistType, PlaylistPhraseLinkType } from './schemas'
 
 import {
 	phrasePlaylistsCollection,
+	phrasePlaylistUpvotesCollection,
 	playlistPhraseLinksCollection,
 } from './collections'
 import { phrasesFull } from '@/features/phrases/live'
@@ -80,3 +81,13 @@ export function useOnePlaylistPhrases(
 		[id]
 	)
 }
+
+/** Whether the current user has upvoted this playlist. */
+export const useHasPlaylistUpvote = (playlistId: uuid): boolean =>
+	!!useLiveQuery(
+		(q) =>
+			q
+				.from({ upvote: phrasePlaylistUpvotesCollection })
+				.where(({ upvote }) => eq(upvote.playlist_id, playlistId)),
+		[playlistId]
+	).data?.length

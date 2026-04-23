@@ -16,11 +16,15 @@ export {
 	phraseRequestUpvotesCollection,
 } from './collections'
 
+// Live collections
+export { phraseRequestsActive } from './live'
+
 // Hooks
 export {
 	useRequest,
 	useRequestCounts,
 	useRequestLinksPhraseIds,
 	useRequestLinksWithComments,
+	useHasRequestUpvote,
 	type FulfillRequestResponse,
 } from './hooks'

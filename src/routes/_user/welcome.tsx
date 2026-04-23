@@ -5,7 +5,7 @@ import {
 	Navigate,
 	useNavigate,
 } from '@tanstack/react-router'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { useLiveQuery } from '@tanstack/react-db'
 import {
 	WalletCards,
 	Users,
@@ -23,6 +23,7 @@ import { useProfile } from '@/features/profile/hooks'
 import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phraseRequestsActive } from '@/features/requests/live'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -146,7 +147,7 @@ function WelcomePage() {
 					/>
 
 					{/* Start Learning or Continue */}
-					{hasDecks ?
+					{hasDecks ? (
 						<ActionCard
 							icon={WalletCards}
 							title="Continue Learning"
@@ -155,7 +156,8 @@ function WelcomePage() {
 							linkText="Go to Decks"
 							variant="primary"
 						/>
-					:	<ActionCard
+					) : (
+						<ActionCard
 							icon={WalletCards}
 							title="Create Your First Deck"
 							description="Pick a language and start building your vocabulary."
@@ -164,7 +166,7 @@ function WelcomePage() {
 							variant="primary"
 							disabled={!isLearner && userRole !== 'both'}
 						/>
-					}
+					)}
 
 					{/* Find Friends */}
 					<ActionCard
@@ -221,7 +223,7 @@ function WelcomePage() {
 
 			{/* Continue Button */}
 			<div className="flex flex-col items-center gap-4 pt-4">
-				{hasDecks ?
+				{hasDecks ? (
 					<Link
 						to={'/learn'}
 						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
@@ -230,7 +232,7 @@ function WelcomePage() {
 						Go to My Decks
 						<ArrowRight className="size-4" />
 					</Link>
-				: isLearner ?
+				) : isLearner ? (
 					<Link
 						to={'/learn/add-deck'}
 						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
@@ -239,7 +241,8 @@ function WelcomePage() {
 						Create My First Deck
 						<ArrowRight className="size-4" />
 					</Link>
-				:	<Link
+				) : (
+					<Link
 						to={'/friends/chats'}
 						className={cn(buttonVariants({ size: 'lg' }), 'gap-2')}
 						data-testid="go-to-friends-link"
@@ -247,7 +250,7 @@ function WelcomePage() {
 						Find Friends
 						<ArrowRight className="size-4" />
 					</Link>
-				}
+				)}
 
 				<p className="text-muted-foreground text-sm">
 					You can always come back to this page from your profile.
@@ -322,11 +325,12 @@ function ActionCard({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<p className="text-muted-foreground text-sm">{description}</p>
-				{disabled ?
+				{disabled ? (
 					<Button variant="soft" disabled className="w-full">
 						{linkText}
 					</Button>
-				:	<Link
+				) : (
+					<Link
 						to={linkTo}
 						search={linkSearch}
 						className={cn(
@@ -338,7 +342,7 @@ function ActionCard({
 					>
 						{linkText}
 					</Link>
-				}
+				)}
 			</CardContent>
 		</Card>
 	)
@@ -359,8 +363,7 @@ function RequestsYouCanHelp() {
 	// Get requests in languages the user knows
 	const { data: relevantRequests } = useLiveQuery((q) =>
 		q
-			.from({ req: phraseRequestsCollection })
-			.where(({ req }) => eq(req.deleted, false))
+			.from({ req: phraseRequestsActive })
 			.orderBy(({ req }) => req.upvote_count, 'desc')
 	)
 

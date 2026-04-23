@@ -37,9 +37,7 @@ import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-import { eq, useLiveQuery } from '@tanstack/react-db'
-import { commentPhraseLinksCollection } from '@/features/comments/collections'
-import { phrasesFull } from '@/features/phrases/live'
+import { usePhrasesFromComment } from '@/features/comments/hooks'
 import type { RequestCommentType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 
@@ -60,9 +58,9 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 	const search = useSearch({ strict: false })
 	const navigate = useNavigate()
 	const contributionsTab =
-		'contributionsTab' in search ?
-			(search?.contributionsTab as viewTabName)
-		:	'requests'
+		'contributionsTab' in search
+			? (search?.contributionsTab as viewTabName)
+			: 'requests'
 
 	const handleTabChange = (value: string) => {
 		void navigate({
@@ -156,61 +154,64 @@ export function UserContributions({ uid, lang }: { uid: uuid; lang?: string }) {
 
 function RequestsTab({ lang, uid }: { lang?: string; uid: uuid }) {
 	const { data: requests, isLoading } = useAnyonesPhraseRequests(uid, lang)
-	return (
-		isLoading ? <Loader />
-		: !requests || requests.length === 0 ?
-			<Callout variant="ghost">
-				<p className="text-lg">You haven't made any requests yet.</p>
-				{lang ?
-					<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn/$lang/requests/new"
-						params={{ lang }}
-					>
-						<MessageCircleHeart />
-						Post a new phrase request
-					</Link>
-				:	<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn"
-					>
-						Choose a language deck to make a request for
-					</Link>
-				}
-			</Callout>
-		:	<div className="space-y-4">
-				{requests.map((request) => (
-					<RequestItem key={request.id} request={request} />
-				))}
-			</div>
+	return isLoading ? (
+		<Loader />
+	) : !requests || requests.length === 0 ? (
+		<Callout variant="ghost">
+			<p className="text-lg">You haven't made any requests yet.</p>
+			{lang ? (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn/$lang/requests/new"
+					params={{ lang }}
+				>
+					<MessageCircleHeart />
+					Post a new phrase request
+				</Link>
+			) : (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn"
+				>
+					Choose a language deck to make a request for
+				</Link>
+			)}
+		</Callout>
+	) : (
+		<div className="space-y-4">
+			{requests.map((request) => (
+				<RequestItem key={request.id} request={request} />
+			))}
+		</div>
 	)
 }
 
 function PhrasesTab(props: { lang?: string; uid: uuid }) {
 	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
-	return (
-		isLoading ? <Loader />
-		: !phrases || phrases.length === 0 ?
-			<Callout variant="ghost">
-				<p className="text-lg">This person hasn't made any requests yet.</p>
-				{props.lang && (
-					<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn/$lang/phrases/new"
-						params={{ lang: props.lang }}
-					>
-						<MessageSquareQuote />
-						Add a new phrase
-					</Link>
-				)}
-			</Callout>
-		:	<div className="space-y-4">
-				{phrases.map((phrase) => (
-					<div key={phrase.id} className="space-y-2">
-						<CardResultSimple phrase={phrase} />
-					</div>
-				))}
-			</div>
+	return isLoading ? (
+		<Loader />
+	) : !phrases || phrases.length === 0 ? (
+		<Callout variant="ghost">
+			<p className="text-lg">This person hasn't made any requests yet.</p>
+			{props.lang && (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn/$lang/phrases/new"
+					params={{ lang: props.lang }}
+				>
+					<MessageSquareQuote />
+					Add a new phrase
+				</Link>
+			)}
+		</Callout>
+	) : (
+		<div className="space-y-4">
+			{phrases.map((phrase) => (
+				<div key={phrase.id} className="space-y-2">
+					<CardResultSimple phrase={phrase} />
+				</div>
+			))}
+		</div>
 	)
 }
 
@@ -221,89 +222,92 @@ function PlaylistsTab(props: { lang?: string; uid: uuid }) {
 	)
 	const navigate = useNavigate()
 
-	return (
-		isLoading ? <Loader />
-		: !playlists || playlists.length === 0 ?
-			<Callout variant="ghost">
-				<p className="text-lg">This user hasn't made any playlists yet.</p>
-				{props.lang ?
-					<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn/$lang/playlists"
-						params={{ lang: props.lang }}
-					>
-						<ListMusic />
-						Browse other {languages[props.lang]} playlists
-					</Link>
-				:	<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn"
-					>
-						Choose a language deck to make a playlist for
-					</Link>
-				}
-			</Callout>
-		:	<div className="space-y-4">
-				{playlists.map((playlist) => (
-					// oxlint-disable-next-line click-events-have-key-events
-					<div
-						role="link"
-						tabIndex={0}
-						key={playlist.id}
-						className="cursor-pointer hover:shadow"
-						onClick={(e) => {
-							const target = e.target as HTMLElement
-							if (!e.currentTarget.contains(target)) return
-							if (target.closest('button, a, input')) return
+	return isLoading ? (
+		<Loader />
+	) : !playlists || playlists.length === 0 ? (
+		<Callout variant="ghost">
+			<p className="text-lg">This user hasn't made any playlists yet.</p>
+			{props.lang ? (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn/$lang/playlists"
+					params={{ lang: props.lang }}
+				>
+					<ListMusic />
+					Browse other {languages[props.lang]} playlists
+				</Link>
+			) : (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn"
+				>
+					Choose a language deck to make a playlist for
+				</Link>
+			)}
+		</Callout>
+	) : (
+		<div className="space-y-4">
+			{playlists.map((playlist) => (
+				// oxlint-disable-next-line click-events-have-key-events
+				<div
+					role="link"
+					tabIndex={0}
+					key={playlist.id}
+					className="cursor-pointer hover:shadow"
+					onClick={(e) => {
+						const target = e.target as HTMLElement
+						if (!e.currentTarget.contains(target)) return
+						if (target.closest('button, a, input')) return
+						void navigate({
+							to: '/learn/$lang/playlists/$playlistId',
+							params: { lang: playlist.lang, playlistId: playlist.id },
+						})
+					}}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter') {
 							void navigate({
 								to: '/learn/$lang/playlists/$playlistId',
 								params: { lang: playlist.lang, playlistId: playlist.id },
 							})
-						}}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter') {
-								void navigate({
-									to: '/learn/$lang/playlists/$playlistId',
-									params: { lang: playlist.lang, playlistId: playlist.id },
-								})
-							}
-						}}
-					>
-						<PlaylistItem playlist={playlist} compact />
-					</div>
-				))}
-			</div>
+						}
+					}}
+				>
+					<PlaylistItem playlist={playlist} compact />
+				</div>
+			))}
+		</div>
 	)
 }
 
 function AnswersTab(props: { lang?: string; uid: uuid }) {
 	// @@TODO change this
 	const { data: phrases, isLoading } = useAnyonesPhrases(props.uid, props.lang)
-	return (
-		isLoading ? <Loader />
-		: !phrases || phrases.length === 0 ?
-			<Callout variant="ghost">
-				<p className="text-lg">
-					This user hasn't recommended any flashcards to answer requests.
-				</p>
-				{props.lang && (
-					<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn/$lang/feed"
-						params={{ lang: props.lang }}
-					>
-						<Logs />
-						Check out the feed and get involved
-					</Link>
-				)}
-			</Callout>
-		:	<div className="space-y-4">
-				{phrases.map((phrase) => (
-					<div key={phrase.id} className="space-y-2">
-						<CardResultSimple phrase={phrase} />
-					</div>
-				))}
-			</div>
+	return isLoading ? (
+		<Loader />
+	) : !phrases || phrases.length === 0 ? (
+		<Callout variant="ghost">
+			<p className="text-lg">
+				This user hasn't recommended any flashcards to answer requests.
+			</p>
+			{props.lang && (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn/$lang/feed"
+					params={{ lang: props.lang }}
+				>
+					<Logs />
+					Check out the feed and get involved
+				</Link>
+			)}
+		</Callout>
+	) : (
+		<div className="space-y-4">
+			{phrases.map((phrase) => (
+				<div key={phrase.id} className="space-y-2">
+					<CardResultSimple phrase={phrase} />
+				</div>
+			))}
+		</div>
 	)
 }
 
@@ -312,31 +316,32 @@ function CommentsTab(props: { lang?: string; uid: uuid }) {
 		props.uid,
 		props.lang
 	)
-	return (
-		isLoading ? <Loader />
-		: !comments || comments.length === 0 ?
-			<Callout variant="ghost">
-				<p className="text-lg">This user hasn't made any comments yet.</p>
-				{props.lang && (
-					<Link
-						className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
-						to="/learn/$lang/feed"
-						params={{ lang: props.lang }}
-					>
-						<Logs />
-						Check out the feed and get involved
-					</Link>
-				)}
-			</Callout>
-		:	<div className="space-y-4">
-				{comments.map(({ comment, request }) => (
-					<CommentCardWithPhrases
-						key={comment.id}
-						comment={comment}
-						request={request}
-					/>
-				))}
-			</div>
+	return isLoading ? (
+		<Loader />
+	) : !comments || comments.length === 0 ? (
+		<Callout variant="ghost">
+			<p className="text-lg">This user hasn't made any comments yet.</p>
+			{props.lang && (
+				<Link
+					className={buttonVariants({ variant: 'soft' }) + ' mt-4'}
+					to="/learn/$lang/feed"
+					params={{ lang: props.lang }}
+				>
+					<Logs />
+					Check out the feed and get involved
+				</Link>
+			)}
+		</Callout>
+	) : (
+		<div className="space-y-4">
+			{comments.map(({ comment, request }) => (
+				<CommentCardWithPhrases
+					key={comment.id}
+					comment={comment}
+					request={request}
+				/>
+			))}
+		</div>
 	)
 }
 
@@ -347,18 +352,7 @@ function CommentCardWithPhrases({
 	comment: RequestCommentType
 	request: PhraseRequestType
 }) {
-	const { data: phrases } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.comment_id, comment.id))
-				.join(
-					{ phrase: phrasesFull },
-					({ link, phrase }) => eq(link.phrase_id, phrase.id),
-					'inner'
-				),
-		[comment.id]
-	)
+	const { data: phrases } = usePhrasesFromComment(comment.id)
 
 	return (
 		<div className="bg-card space-y-2 rounded p-4 shadow-sm">

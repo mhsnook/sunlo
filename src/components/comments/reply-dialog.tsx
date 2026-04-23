@@ -1,12 +1,11 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -24,16 +23,17 @@ import { MarkdownHint } from './comment-dialog'
 import supabase from '@/lib/supabase-client'
 import { safeWrite } from '@/lib/collections/safe-write'
 import {
+	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
+import { useOneComment } from '@/features/comments/hooks'
 import {
 	CommentPhraseLinkSchema,
 	type CommentPhraseLinkType,
 	RequestCommentSchema,
 	type RequestCommentType,
 } from '@/features/comments/schemas'
-import { commentPhraseLinksCollection } from '@/features/comments/collections'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 
@@ -91,9 +91,11 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 	}
 
 	const parentCommentId =
-		mode?.kind === 'new' ? mode.parentCommentId
-		: mode?.kind === 'edit' ? mode.comment.parent_comment_id!
-		: undefined
+		mode?.kind === 'new'
+			? mode.parentCommentId
+			: mode?.kind === 'edit'
+				? mode.comment.parent_comment_id!
+				: undefined
 
 	return (
 		<Dialog
@@ -112,9 +114,9 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 					{mode?.kind === 'edit' ? 'Edit Reply' : 'Reply to comment'}
 				</DialogTitle>
 				<DialogDescription className="sr-only">
-					{mode?.kind === 'edit' ?
-						'Edit your reply'
-					:	'Write a reply to this comment'}
+					{mode?.kind === 'edit'
+						? 'Edit your reply'
+						: 'Write a reply to this comment'}
 				</DialogDescription>
 				{parentCommentId && (
 					<>
@@ -122,16 +124,16 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 						<Separator />
 					</>
 				)}
-				{mode?.kind === 'edit' ?
+				{mode?.kind === 'edit' ? (
 					<EditReplyForm comment={mode.comment} onClose={close} />
-				: mode?.kind === 'new' ?
+				) : mode?.kind === 'new' ? (
 					<NewReplyForm
 						requestId={requestId}
 						lang={lang}
 						parentCommentId={mode.parentCommentId}
 						onClose={close}
 					/>
-				:	null}
+				) : null}
 			</AuthenticatedDialogContent>
 		</Dialog>
 	)
@@ -151,19 +153,6 @@ function CommentContext({ id }: { id: uuid }) {
 				<Markdown>{data.content}</Markdown>
 			</div>
 		</div>
-	)
-}
-
-function useOneComment(
-	commentId: uuid
-): UseLiveQueryResult<RequestCommentType> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) => eq(comment.id, commentId))
-				.findOne(),
-		[commentId]
 	)
 }
 

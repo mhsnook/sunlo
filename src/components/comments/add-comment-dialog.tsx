@@ -1,13 +1,12 @@
 import { ReactNode, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import {
 	Form,
@@ -32,6 +31,7 @@ import {
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
+import { useOneComment } from '@/features/comments/hooks'
 import {
 	CommentPhraseLinkSchema,
 	CommentPhraseLinkType,
@@ -47,15 +47,15 @@ import { MarkdownHint } from './comment-dialog'
 function CommentDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.content} uid={data.uid} />
-		)
+		<DisplayBlock markdown={data.content} uid={data.uid} />
+	)
 }
 
 function RequestDisplayOnly({ id }: { id: uuid }) {
 	const { data, isLoading } = useRequest(id)
 	return isLoading || !data ? null : (
-			<DisplayBlock markdown={data.prompt} uid={data.requester_uid} />
-		)
+		<DisplayBlock markdown={data.prompt} uid={data.requester_uid} />
+	)
 }
 
 function DisplayBlock({ markdown, uid }: { markdown: string; uid: uuid }) {
@@ -103,13 +103,15 @@ export function AddCommentDialog({
 					{parentCommentId ? 'Reply to comment' : 'Add a comment'}
 				</DialogTitle>
 				<DialogDescription className="sr-only">
-					{parentCommentId ?
-						'Write a reply to this comment'
-					:	'Share your thoughts'}
+					{parentCommentId
+						? 'Write a reply to this comment'
+						: 'Share your thoughts'}
 				</DialogDescription>
-				{parentCommentId ?
+				{parentCommentId ? (
 					<CommentDisplayOnly id={parentCommentId} />
-				:	<RequestDisplayOnly id={requestId} />}
+				) : (
+					<RequestDisplayOnly id={requestId} />
+				)}
 				<Separator />
 				<NewCommentForm
 					requestId={requestId}
@@ -130,19 +132,6 @@ const CommentFormSchema = z.object({
 })
 
 type CommentFormInputs = z.infer<typeof CommentFormSchema>
-
-function useOneComment(
-	commentId: uuid
-): UseLiveQueryResult<RequestCommentType> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ comment: commentsCollection })
-				.where(({ comment }) => eq(comment.id, commentId))
-				.findOne(),
-		[commentId]
-	)
-}
 
 function NewCommentForm({
 	requestId,
@@ -258,11 +247,11 @@ function NewCommentForm({
 					data-testid="post-comment-button"
 					disabled={createCommentMutation.isPending}
 				>
-					{createCommentMutation.isPending ?
-						'Posting...'
-					: isReply ?
-						'Post Reply'
-					:	'Post Comment'}
+					{createCommentMutation.isPending
+						? 'Posting...'
+						: isReply
+							? 'Post Reply'
+							: 'Post Comment'}
 				</Button>
 			</form>
 		</Form>

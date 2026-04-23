@@ -2,24 +2,16 @@ import { Link, useSearch } from '@tanstack/react-router'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import { ChevronDown, ChevronUp, Edit, Reply } from 'lucide-react'
 
-import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import {
-	commentPhraseLinksCollection,
-	commentsCollection,
-} from '@/features/comments/collections'
+import { commentsCollection } from '@/features/comments/collections'
+import { usePhrasesFromComment } from '@/features/comments/hooks'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { useUserId } from '@/lib/use-auth'
-import {
-	CommentPhraseLinkType,
-	type RequestCommentType,
-} from '@/features/comments/schemas'
-import { PhraseFullFullType } from '@/features/phrases/schemas'
+import { type RequestCommentType } from '@/features/comments/schemas'
 import { buttonVariants } from '@/components/ui/button'
-import { phrasesFull } from '@/features/phrases/live'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { Upvote } from './upvote-comment-button'
@@ -66,10 +58,11 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 	return (
 		<div
 			className={`${
-				isFocused ? 'border-primary bg-card/50 rounded border border-s-2'
-				: hasHighlightedReply ?
-					'border-3-mlo-primary bg-card/50 rounded border border-s-2'
-				:	''
+				isFocused
+					? 'border-primary bg-card/50 rounded border border-s-2'
+					: hasHighlightedReply
+						? 'border-3-mlo-primary bg-card/50 rounded border border-s-2'
+						: ''
 			} p-4`}
 			data-comment-id={comment.id}
 			data-name="comment-item"
@@ -167,9 +160,11 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								} else return { ...search, focus: comment.id }
 							}}
 						>
-							{showSubthread ?
+							{showSubthread ? (
 								<ChevronUp className="me-1 h-4 w-4" />
-							:	<ChevronDown className="me-1 h-4 w-4" />}
+							) : (
+								<ChevronDown className="me-1 h-4 w-4" />
+							)}
 							<span className="@max-md:sr-only">
 								{showSubthread ? 'Showing' : `Show`}{' '}
 							</span>
@@ -208,25 +203,6 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 				)}
 			</div>
 		</div>
-	)
-}
-
-function usePhrasesFromComment(
-	commentId: uuid
-): UseLiveQueryResult<
-	{ phrase: PhraseFullFullType; link: CommentPhraseLinkType }[]
-> {
-	return useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.comment_id, commentId))
-				.join(
-					{ phrase: phrasesFull },
-					({ link, phrase }) => eq(link.phrase_id, phrase.id),
-					'inner'
-				),
-		[commentId]
 	)
 }
 

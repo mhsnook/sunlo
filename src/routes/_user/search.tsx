@@ -27,11 +27,11 @@ import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { cn } from '@/lib/utils'
 import { phrasesFull } from '@/features/phrases/live'
 import {
-	languagesCollection,
-	langTagsCollection,
-} from '@/features/languages/collections'
-import { phrasePlaylistsCollection } from '@/features/playlists/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
+	useAllLangTags,
+	useLanguagesWithPhrases,
+} from '@/features/languages/hooks'
+import { phrasePlaylistsActive } from '@/features/playlists/live'
+import { phraseRequestsActive } from '@/features/requests/live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
@@ -89,28 +89,12 @@ function SearchPage() {
 	const langFilter = filters.find((f) => f.type === 'lang')?.value
 	const tagFilters = filters.filter((f) => f.type === 'tag').map((f) => f.value)
 
-	// Languages that have phrases
-	const { data: availableLanguages } = useLiveQuery(
-		(q) =>
-			q
-				.from({ lang: languagesCollection })
-				.fn.where(({ lang }) => (lang.phrases_to_learn ?? 0) > 0),
-		[]
-	)
-
-	const sortedLanguages = useMemo(
-		() =>
-			[...(availableLanguages ?? [])].toSorted(
-				(a, b) => (b.phrases_to_learn ?? 0) - (a.phrases_to_learn ?? 0)
-			),
-		[availableLanguages]
-	)
+	// Languages that have phrases (sorted by phrases_to_learn desc)
+	const { data: sortedLanguagesData } = useLanguagesWithPhrases()
+	const sortedLanguages = sortedLanguagesData ?? []
 
 	// All tags (per-language)
-	const { data: allTags } = useLiveQuery(
-		(q) => q.from({ tag: langTagsCollection }),
-		[]
-	)
+	const { data: allTags } = useAllLangTags()
 
 	const uniqueTagNames = useMemo(
 		() => [...new Set(allTags?.map((t) => t.name) ?? [])].toSorted(),
@@ -216,9 +200,7 @@ function SearchPage() {
 			if (typeFilters.size > 0 && !typeFilters.has('playlist')) return undefined
 			if (!effectiveText || effectiveText.length < 2) return undefined
 
-			let query = q
-				.from({ playlist: phrasePlaylistsCollection })
-				.where(({ playlist }) => eq(playlist.deleted, false))
+			let query = q.from({ playlist: phrasePlaylistsActive })
 
 			if (langFilter) {
 				query = query.where(({ playlist }) => eq(playlist.lang, langFilter))
@@ -242,9 +224,7 @@ function SearchPage() {
 			if (typeFilters.size > 0 && !typeFilters.has('request')) return undefined
 			if (!effectiveText || effectiveText.length < 2) return undefined
 
-			let query = q
-				.from({ req: phraseRequestsCollection })
-				.where(({ req }) => eq(req.deleted, false))
+			let query = q.from({ req: phraseRequestsActive })
 
 			if (langFilter) {
 				query = query.where(({ req }) => eq(req.lang, langFilter))
@@ -401,7 +381,7 @@ function SearchPage() {
 		<div className="flex h-full flex-col" data-testid="search-page">
 			{/* Scrollable content area */}
 			<div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto">
-				{!hasActiveSearch ?
+				{!hasActiveSearch ? (
 					<WelcomeState
 						onSelectLanguage={(code, name) =>
 							addFilter({
@@ -425,26 +405,29 @@ function SearchPage() {
 						languages={sortedLanguages}
 						tags={uniqueTags}
 					/>
-				:	<div className="space-y-3 p-4">
+				) : (
+					<div className="space-y-3 p-4">
 						{statusMessage && <SystemMessage>{statusMessage}</SystemMessage>}
 						{!isSearching && totalCount === 0 && <EmptyResults />}
 						{totalCount > 0 && (
 							<div className="flex flex-col gap-2">
 								{mergedResults.map((item) =>
-									item.type === 'phrase' ?
+									item.type === 'phrase' ? (
 										<PhraseResultRow
 											key={`phrase-${item.phrase.id}`}
 											phrase={item.phrase}
 										/>
-									: item.type === 'playlist' ?
+									) : item.type === 'playlist' ? (
 										<PlaylistResultRow
 											key={`playlist-${item.playlist.id}`}
 											playlist={item.playlist}
 										/>
-									:	<RequestResultRow
+									) : (
+										<RequestResultRow
 											key={`request-${item.request.id}`}
 											request={item.request}
 										/>
+									)
 								)}
 							</div>
 						)}
@@ -456,14 +439,14 @@ function SearchPage() {
 									onClick={() => void smartSearch.fetchNextPage()}
 									disabled={smartSearch.isFetchingNextPage}
 								>
-									{smartSearch.isFetchingNextPage ?
-										'Loading...'
-									:	'Load more phrases'}
+									{smartSearch.isFetchingNextPage
+										? 'Loading...'
+										: 'Load more phrases'}
 								</Button>
 							</div>
 						)}
 					</div>
-				}
+				)}
 			</div>
 
 			{/* Bottom input area */}
@@ -623,9 +606,9 @@ function FilterPill({
 			onClick={onClick}
 			className={cn(
 				'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
-				active ?
-					'bg-primary-foresoft text-primary-foreground border-transparent'
-				:	'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
+				active
+					? 'bg-primary-foresoft text-primary-foreground border-transparent'
+					: 'border-border text-muted-foreground hover:border-4-mlo-primary hover:text-foreground'
 			)}
 		>
 			{children}
@@ -652,9 +635,13 @@ function EmptyResults() {
 
 function TypeBadge({ type }: { type: SearchResultType }) {
 	const icon =
-		type === 'phrase' ? <MessageSquareQuote className="size-3" />
-		: type === 'playlist' ? <ListMusic className="size-3" />
-		: <MessageCircleHeart className="size-3" />
+		type === 'phrase' ? (
+			<MessageSquareQuote className="size-3" />
+		) : type === 'playlist' ? (
+			<ListMusic className="size-3" />
+		) : (
+			<MessageCircleHeart className="size-3" />
+		)
 
 	return (
 		<span className="text-muted-foreground flex shrink-0 items-center gap-1 text-xs capitalize">
@@ -665,11 +652,11 @@ function TypeBadge({ type }: { type: SearchResultType }) {
 }
 
 function PhraseResultRow({ phrase }: { phrase: PhraseFullFilteredType }) {
-	const translations =
-		phrase.translations_mine?.length ? phrase.translations_mine
-		: phrase.translations_other?.filter((t) => t.lang === 'eng').length ?
-			phrase.translations_other.filter((t) => t.lang === 'eng')
-		:	(phrase.translations_other ?? phrase.translations ?? [])
+	const translations = phrase.translations_mine?.length
+		? phrase.translations_mine
+		: phrase.translations_other?.filter((t) => t.lang === 'eng').length
+			? phrase.translations_other.filter((t) => t.lang === 'eng')
+			: (phrase.translations_other ?? phrase.translations ?? [])
 
 	return (
 		<Link
@@ -862,8 +849,9 @@ function QuickFiltersPanel({
 	)
 
 	// Filter tags to selected language, or show all with prefix
-	const displayTags =
-		langFilter ? tags.filter((t) => t.lang === langFilter) : tags
+	const displayTags = langFilter
+		? tags.filter((t) => t.lang === langFilter)
+		: tags
 
 	return (
 		<div className="max-h-64 space-y-4 overflow-y-auto border-t p-4">
@@ -886,17 +874,17 @@ function QuickFiltersPanel({
 								key={lang.lang}
 								active={isActive}
 								onClick={() =>
-									isActive ?
-										onRemoveFilter({
-											type: 'lang',
-											value: lang.lang,
-											label: lang.name,
-										})
-									:	onAddFilter({
-											type: 'lang',
-											value: lang.lang,
-											label: lang.name,
-										})
+									isActive
+										? onRemoveFilter({
+												type: 'lang',
+												value: lang.lang,
+												label: lang.name,
+											})
+										: onAddFilter({
+												type: 'lang',
+												value: lang.lang,
+												label: lang.name,
+											})
 								}
 							>
 								{lang.name}

@@ -1,7 +1,6 @@
 import { CSSProperties, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
 import { PostgrestError } from '@supabase/supabase-js'
 import {
 	ArrowDown,
@@ -22,12 +21,11 @@ import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
 import { cardsCollection } from '@/features/deck/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
+import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import {
 	type CardMetaType,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
-import type { PhraseFullType } from '@/features/phrases/schemas'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { cn, sessionDaysDiff } from '@/lib/utils'
@@ -147,13 +145,7 @@ function ManageDeckPage() {
 
 function useCardData(lang: string) {
 	const { data: cards, isLoading: cardsLoading } = useDeckCards(lang)
-	const { data: phrases, isLoading: phrasesLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ phrase: phrasesCollection })
-				.where(({ phrase }) => eq(phrase.lang, lang)),
-		[lang]
-	) as { data: PhraseFullType[]; isLoading: boolean }
+	const { data: phrases, isLoading: phrasesLoading } = useLangPhrasesRaw(lang)
 
 	const [sortField, setSortField] = useState<SortField>('last_reviewed')
 	const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -194,9 +186,9 @@ function useCardData(lang: string) {
 					.map((c) => c.difficulty)
 					.filter((d): d is number => d != null)
 				const difficulty =
-					diffs.length > 0 ?
-						diffs.reduce((a, b) => a + b, 0) / diffs.length
-					:	null
+					diffs.length > 0
+						? diffs.reduce((a, b) => a + b, 0) / diffs.length
+						: null
 				// Lowest stability (most urgent card drives due date)
 				const stabilities = dirCards
 					.map((c) => c.stability)
@@ -359,10 +351,9 @@ function ManageDeckTable({ lang }: { lang: string }) {
 						onClick={() => setStatusFilter(filter)}
 						data-testid={`filter-${filter}`}
 					>
-						{filter === 'all' ?
-							`All (${allPhraseRows.length})`
-						:	`${filter.charAt(0).toUpperCase() + filter.slice(1)} (${allPhraseRows.filter((r) => r.status === filter).length})`
-						}
+						{filter === 'all'
+							? `All (${allPhraseRows.length})`
+							: `${filter.charAt(0).toUpperCase() + filter.slice(1)} (${allPhraseRows.filter((r) => r.status === filter).length})`}
 					</Button>
 				))}
 			</div>
@@ -485,13 +476,14 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 						</span>
 						<span className="text-muted-foreground">
 							Next review:{' '}
-							{isSkipped ?
+							{isSkipped ? (
 								<span className="font-medium">—</span>
-							: reviewedToday ?
+							) : reviewedToday ? (
 								<span className="text-primary-foresoft font-medium">
 									Reviewed today!
 								</span>
-							:	<span
+							) : (
+								<span
 									className={cn(
 										'font-medium tabular-nums',
 										dueInfo?.color ?? 'text-foreground'
@@ -499,7 +491,7 @@ function MobileCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 								>
 									{dueInfo?.label ?? 'n/a'}
 								</span>
-							}
+							)}
 						</span>
 						<span className="text-muted-foreground">
 							Difficulty:{' '}
@@ -545,12 +537,11 @@ function SortableHeader({
 	className?: string
 }) {
 	const isActive = currentField === field
-	const Icon =
-		isActive ?
-			currentDir === 'asc' ?
-				ArrowUp
-			:	ArrowDown
-		:	ArrowUpDown
+	const Icon = isActive
+		? currentDir === 'asc'
+			? ArrowUp
+			: ArrowDown
+		: ArrowUpDown
 
 	return (
 		<th className={className}>
@@ -614,26 +605,30 @@ function DesktopCardRow({ row, lang }: { row: PhraseRow; lang: string }) {
 
 			{/* Next Review */}
 			<td className="px-3 py-2 text-center">
-				{isSkipped ?
+				{isSkipped ? (
 					<span className="text-muted-foreground/50 text-xs">—</span>
-				: reviewedToday ?
+				) : reviewedToday ? (
 					<span className="text-primary-foresoft text-sm font-medium">
 						Reviewed today!
 					</span>
-				: dueInfo ?
+				) : dueInfo ? (
 					<span className={cn('text-sm tabular-nums', dueInfo.color)}>
 						{dueInfo.label}
 					</span>
-				:	<span className="text-muted-foreground/50 text-xs">n/a</span>}
+				) : (
+					<span className="text-muted-foreground/50 text-xs">n/a</span>
+				)}
 			</td>
 
 			{/* Difficulty */}
 			<td className="px-3 py-2 text-center">
-				{difficultyDisplay != null ?
+				{difficultyDisplay != null ? (
 					<span className="text-sm font-medium tabular-nums">
 						{difficultyDisplay}
 					</span>
-				:	<span className="text-muted-foreground/50 text-xs">—</span>}
+				) : (
+					<span className="text-muted-foreground/50 text-xs">—</span>
+				)}
 			</td>
 
 			{/* Actions */}

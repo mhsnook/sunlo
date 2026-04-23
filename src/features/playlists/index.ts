@@ -25,6 +25,9 @@ export {
 	phrasePlaylistUpvotesCollection,
 } from './collections'
 
+// Live collections
+export { phrasePlaylistsActive } from './live'
+
 // Hooks
 export {
 	useAnyonesPlaylists,
@@ -32,4 +35,5 @@ export {
 	useMyPlaylists,
 	useOnePlaylist,
 	useOnePlaylistPhrases,
+	useHasPlaylistUpvote,
 } from './hooks'
