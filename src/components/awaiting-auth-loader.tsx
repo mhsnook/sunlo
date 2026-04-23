@@ -63,15 +63,11 @@ function ConnectionErrorScreen({ error }: { error: Error }) {
 			style={style}
 			data-testid="connection-error-screen"
 		>
-			<ShowErrorDontLog
-				error={error}
-				text="Can't reach Supabase"
-				className="w-full"
-			/>
+			<ShowErrorDontLog error={error} text="Unable to contact the Server" />
 			<div className="max-w-120 space-y-3 text-center">
 				<p>
-					The app couldn't connect to its backend. Check your internet
-					connection and try again.
+					The app couldn't connect to the backend, (where the database lives).
+					Please check your internet connection and try again.
 				</p>
 				{isDev ? (
 					<p className="text-muted-foreground text-sm">
