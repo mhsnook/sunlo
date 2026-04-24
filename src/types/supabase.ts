@@ -9,6 +9,21 @@ export type Json =
 export type Database = {
 	public: {
 		Tables: {
+			admin_user: {
+				Row: {
+					created_at: string
+					uid: string
+				}
+				Insert: {
+					created_at?: string
+					uid: string
+				}
+				Update: {
+					created_at?: string
+					uid?: string
+				}
+				Relationships: []
+			}
 			chat_message: {
 				Row: {
 					content: Json | null
@@ -456,6 +471,7 @@ export type Database = {
 			phrase: {
 				Row: {
 					added_by: string
+					archived: boolean
 					created_at: string
 					id: string
 					lang: string
@@ -465,6 +481,7 @@ export type Database = {
 				}
 				Insert: {
 					added_by?: string
+					archived?: boolean
 					created_at?: string
 					id?: string
 					lang: string
@@ -474,6 +491,7 @@ export type Database = {
 				}
 				Update: {
 					added_by?: string
+					archived?: boolean
 					created_at?: string
 					id?: string
 					lang?: string
@@ -1618,6 +1636,7 @@ export type Database = {
 			phrase_meta: {
 				Row: {
 					added_by: string | null
+					archived: boolean | null
 					avg_difficulty: number | null
 					avg_stability: number | null
 					count_learners: number | null
@@ -1914,6 +1933,7 @@ export type Database = {
 				}
 				Returns: Json
 			}
+			is_admin: { Args: never; Returns: boolean }
 			recount_all_upvotes: { Args: never; Returns: undefined }
 			refresh_meta_language: { Args: never; Returns: undefined }
 			refresh_phrase_search_index: { Args: never; Returns: undefined }
@@ -2199,7 +2219,6 @@ export type Database = {
 					created_at: string | null
 					id: string
 					last_accessed_at: string | null
-					level: number | null
 					metadata: Json | null
 					name: string | null
 					owner: string | null
@@ -2214,7 +2233,6 @@ export type Database = {
 					created_at?: string | null
 					id?: string
 					last_accessed_at?: string | null
-					level?: number | null
 					metadata?: Json | null
 					name?: string | null
 					owner?: string | null
@@ -2229,7 +2247,6 @@ export type Database = {
 					created_at?: string | null
 					id?: string
 					last_accessed_at?: string | null
-					level?: number | null
 					metadata?: Json | null
 					name?: string | null
 					owner?: string | null
@@ -2249,38 +2266,6 @@ export type Database = {
 					},
 				]
 			}
-			prefixes: {
-				Row: {
-					bucket_id: string
-					created_at: string | null
-					level: number
-					name: string
-					updated_at: string | null
-				}
-				Insert: {
-					bucket_id: string
-					created_at?: string | null
-					level?: number
-					name: string
-					updated_at?: string | null
-				}
-				Update: {
-					bucket_id?: string
-					created_at?: string | null
-					level?: number
-					name?: string
-					updated_at?: string | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'prefixes_bucketId_fkey'
-						columns: ['bucket_id']
-						isOneToOne: false
-						referencedRelation: 'buckets'
-						referencedColumns: ['id']
-					},
-				]
-			}
 			s3_multipart_uploads: {
 				Row: {
 					bucket_id: string
@@ -2288,6 +2273,7 @@ export type Database = {
 					id: string
 					in_progress_size: number
 					key: string
+					metadata: Json | null
 					owner_id: string | null
 					upload_signature: string
 					user_metadata: Json | null
@@ -2299,6 +2285,7 @@ export type Database = {
 					id: string
 					in_progress_size?: number
 					key: string
+					metadata?: Json | null
 					owner_id?: string | null
 					upload_signature: string
 					user_metadata?: Json | null
@@ -2310,6 +2297,7 @@ export type Database = {
 					id?: string
 					in_progress_size?: number
 					key?: string
+					metadata?: Json | null
 					owner_id?: string | null
 					upload_signature?: string
 					user_metadata?: Json | null
@@ -2428,28 +2416,25 @@ export type Database = {
 			[_ in never]: never
 		}
 		Functions: {
-			add_prefixes: {
-				Args: { _bucket_id: string; _name: string }
-				Returns: undefined
+			allow_any_operation: {
+				Args: { expected_operations: string[] }
+				Returns: boolean
+			}
+			allow_only_operation: {
+				Args: { expected_operation: string }
+				Returns: boolean
 			}
 			can_insert_object: {
 				Args: { bucketid: string; metadata: Json; name: string; owner: string }
 				Returns: undefined
 			}
-			delete_leaf_prefixes: {
-				Args: { bucket_ids: string[]; names: string[] }
-				Returns: undefined
-			}
-			delete_prefix: {
-				Args: { _bucket_id: string; _name: string }
-				Returns: boolean
-			}
 			extension: { Args: { name: string }; Returns: string }
 			filename: { Args: { name: string }; Returns: string }
 			foldername: { Args: { name: string }; Returns: string[] }
-			get_level: { Args: { name: string }; Returns: number }
-			get_prefix: { Args: { name: string }; Returns: string }
-			get_prefixes: { Args: { name: string }; Returns: string[] }
+			get_common_prefix: {
+				Args: { p_delimiter: string; p_key: string; p_prefix: string }
+				Returns: string
+			}
 			get_size_by_bucket: {
 				Args: never
 				Returns: {
@@ -2474,64 +2459,25 @@ export type Database = {
 			}
 			list_objects_with_delimiter: {
 				Args: {
-					bucket_id: string
+					_bucket_id: string
 					delimiter_param: string
 					max_keys?: number
 					next_token?: string
 					prefix_param: string
+					sort_order?: string
 					start_after?: string
 				}
 				Returns: {
+					created_at: string
 					id: string
+					last_accessed_at: string
 					metadata: Json
 					name: string
 					updated_at: string
 				}[]
-			}
-			lock_top_prefixes: {
-				Args: { bucket_ids: string[]; names: string[] }
-				Returns: undefined
 			}
 			operation: { Args: never; Returns: string }
-			search:
-				| {
-						Args: {
-							bucketname: string
-							levels?: number
-							limits?: number
-							offsets?: number
-							prefix: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-				| {
-						Args: {
-							bucketname: string
-							levels?: number
-							limits?: number
-							offsets?: number
-							prefix: string
-							search?: string
-							sortcolumn?: string
-							sortorder?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-			search_legacy_v1: {
+			search: {
 				Args: {
 					bucketname: string
 					levels?: number
@@ -2551,65 +2497,48 @@ export type Database = {
 					updated_at: string
 				}[]
 			}
-			search_v1_optimised: {
+			search_by_timestamp: {
 				Args: {
-					bucketname: string
-					levels?: number
-					limits?: number
-					offsets?: number
-					prefix: string
-					search?: string
-					sortcolumn?: string
-					sortorder?: string
+					p_bucket_id: string
+					p_level: number
+					p_limit: number
+					p_prefix: string
+					p_sort_column: string
+					p_sort_column_after: string
+					p_sort_order: string
+					p_start_after: string
 				}
 				Returns: {
 					created_at: string
 					id: string
+					key: string
 					last_accessed_at: string
 					metadata: Json
 					name: string
 					updated_at: string
 				}[]
 			}
-			search_v2:
-				| {
-						Args: {
-							bucket_name: string
-							levels?: number
-							limits?: number
-							prefix: string
-							start_after?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							key: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
-				| {
-						Args: {
-							bucket_name: string
-							levels?: number
-							limits?: number
-							prefix: string
-							sort_column?: string
-							sort_column_after?: string
-							sort_order?: string
-							start_after?: string
-						}
-						Returns: {
-							created_at: string
-							id: string
-							key: string
-							last_accessed_at: string
-							metadata: Json
-							name: string
-							updated_at: string
-						}[]
-				  }
+			search_v2: {
+				Args: {
+					bucket_name: string
+					levels?: number
+					limits?: number
+					prefix: string
+					sort_column?: string
+					sort_column_after?: string
+					sort_order?: string
+					start_after?: string
+				}
+				Returns: {
+					created_at: string
+					id: string
+					key: string
+					last_accessed_at: string
+					metadata: Json
+					name: string
+					updated_at: string
+				}[]
+			}
 		}
 		Enums: {
 			buckettype: 'STANDARD' | 'ANALYTICS' | 'VECTOR'
@@ -2628,154 +2557,114 @@ export type Tables<
 	DefaultSchemaTableNameOrOptions extends
 		| keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
 		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
+	TableName extends DefaultSchemaTableNameOrOptions extends {
+		schema: keyof DatabaseWithoutInternals
+	}
+		? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+				DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+		: never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+	schema: keyof DatabaseWithoutInternals
+}
+	? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+			DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+			Row: infer R
 		}
-	) ?
-		keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-			DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
-	:	never = never,
-> =
-	DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		(DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-			DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends (
-			{
+		? R
+		: never
+	: DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+				DefaultSchema['Views'])
+		? (DefaultSchema['Tables'] &
+				DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
 				Row: infer R
 			}
-		) ?
-			R
-		:	never
-	: DefaultSchemaTableNameOrOptions extends (
-		keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-	) ?
-		(DefaultSchema['Tables'] &
-			DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends (
-			{
-				Row: infer R
-			}
-		) ?
-			R
-		:	never
-	:	never
+			? R
+			: never
+		: never
 
 export type TablesInsert<
 	DefaultSchemaTableNameOrOptions extends
 		| keyof DefaultSchema['Tables']
 		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
+	TableName extends DefaultSchemaTableNameOrOptions extends {
+		schema: keyof DatabaseWithoutInternals
+	}
+		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+		: never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+	schema: keyof DatabaseWithoutInternals
+}
+	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+			Insert: infer I
 		}
-	) ?
-		keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-	:	never = never,
-> =
-	DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends (
-			{
+		? I
+		: never
+	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+		? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
 				Insert: infer I
 			}
-		) ?
-			I
-		:	never
-	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] ?
-		DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends (
-			{
-				Insert: infer I
-			}
-		) ?
-			I
-		:	never
-	:	never
+			? I
+			: never
+		: never
 
 export type TablesUpdate<
 	DefaultSchemaTableNameOrOptions extends
 		| keyof DefaultSchema['Tables']
 		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
+	TableName extends DefaultSchemaTableNameOrOptions extends {
+		schema: keyof DatabaseWithoutInternals
+	}
+		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+		: never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+	schema: keyof DatabaseWithoutInternals
+}
+	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+			Update: infer U
 		}
-	) ?
-		keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
-	:	never = never,
-> =
-	DefaultSchemaTableNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends (
-			{
+		? U
+		: never
+	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+		? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
 				Update: infer U
 			}
-		) ?
-			U
-		:	never
-	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables'] ?
-		DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends (
-			{
-				Update: infer U
-			}
-		) ?
-			U
-		:	never
-	:	never
+			? U
+			: never
+		: never
 
 export type Enums<
 	DefaultSchemaEnumNameOrOptions extends
 		| keyof DefaultSchema['Enums']
 		| { schema: keyof DatabaseWithoutInternals },
-	EnumName extends DefaultSchemaEnumNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
-	:	never = never,
-> =
-	DefaultSchemaEnumNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
-	: DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums'] ?
-		DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
-	:	never
+	EnumName extends DefaultSchemaEnumNameOrOptions extends {
+		schema: keyof DatabaseWithoutInternals
+	}
+		? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+		: never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+	schema: keyof DatabaseWithoutInternals
+}
+	? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+	: DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+		? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+		: never
 
 export type CompositeTypes<
 	PublicCompositeTypeNameOrOptions extends
 		| keyof DefaultSchema['CompositeTypes']
 		| { schema: keyof DatabaseWithoutInternals },
-	CompositeTypeName extends PublicCompositeTypeNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
-	:	never = never,
-> =
-	PublicCompositeTypeNameOrOptions extends (
-		{
-			schema: keyof DatabaseWithoutInternals
-		}
-	) ?
-		DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
-	: PublicCompositeTypeNameOrOptions extends (
-		keyof DefaultSchema['CompositeTypes']
-	) ?
-		DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
-	:	never
+	CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+		schema: keyof DatabaseWithoutInternals
+	}
+		? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+		: never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+	schema: keyof DatabaseWithoutInternals
+}
+	? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+	: PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+		? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+		: never
 
 export const Constants = {
 	public: {
