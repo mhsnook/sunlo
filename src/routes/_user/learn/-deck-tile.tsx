@@ -101,7 +101,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 					</DialogHeader>
 
 					<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/review"
 								params={{ lang: deck.lang }}
@@ -126,7 +126,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 							</Link>
 						</DialogClose>
 
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang"
 								params={{ lang: deck.lang }}
@@ -151,7 +151,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 						className="flex flex-wrap gap-x-4 gap-y-2 px-2 pt-1 text-sm"
 						data-testid="deck-tile-quick-links"
 					>
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/manage-deck"
 								params={{ lang: deck.lang }}
@@ -160,7 +160,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								Manage Cards
 							</Link>
 						</DialogClose>
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/phrases/new"
 								params={{ lang: deck.lang }}
@@ -169,7 +169,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								New Phrase
 							</Link>
 						</DialogClose>
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/stats"
 								params={{ lang: deck.lang }}
@@ -178,7 +178,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								Stats
 							</Link>
 						</DialogClose>
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/feed"
 								params={{ lang: deck.lang }}
@@ -188,7 +188,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 								Search
 							</Link>
 						</DialogClose>
-						<DialogClose asChild>
+						<DialogClose asChild nativeButton={false}>
 							<Link
 								to="/learn/$lang/deck-settings"
 								params={{ lang: deck.lang }}
