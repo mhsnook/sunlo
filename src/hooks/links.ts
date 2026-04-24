@@ -298,6 +298,26 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: ListPlus,
 		},
+		'/admin/$lang/phrases': {
+			name: 'Phrases',
+			title: 'Admin: Phrases',
+			link: {
+				to: '/admin/$lang/phrases',
+				params: { lang },
+			},
+			inexact: true,
+			Icon: FileText,
+		},
+		'/admin/$lang/requests': {
+			name: 'Requests',
+			title: 'Admin: Requests',
+			link: {
+				to: '/admin/$lang/requests',
+				params: { lang },
+			},
+			inexact: true,
+			Icon: MessageCircleHeart,
+		},
 	}
 
 	return { ...constantLinks, ...languageLinks }
