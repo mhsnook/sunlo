@@ -7,6 +7,7 @@ import {
 	ListMusic,
 	Users,
 	Edit,
+	Settings,
 	Trash2,
 } from 'lucide-react'
 
@@ -48,6 +49,7 @@ import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
 import { useMyCard } from '@/features/deck/hooks'
+import { useAuth } from '@/lib/use-auth'
 
 export function BigPhraseCard({ pid }: { pid: uuid }) {
 	const { data: phrase, status } = usePhrase(pid)
@@ -93,6 +95,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 								)}
 							</div>
 							<div className="flex flex-row items-center gap-2">
+								<AdminGearLink phraseId={pid} lang={phrase.lang} />
 								<Flagged>
 									<Button
 										size="icon"
@@ -422,5 +425,21 @@ function LastReviewedBadge({ phraseId }: { phraseId: uuid }) {
 				<span className="font-bold">{ago(card.last_reviewed_at)}</span>
 			</span>
 		</>
+	)
+}
+
+function AdminGearLink({ phraseId, lang }: { phraseId: uuid; lang: string }) {
+	const { isAdmin } = useAuth()
+	if (!isAdmin) return null
+	return (
+		<Link
+			to="/admin/$lang/phrases/$id"
+			params={{ lang, id: phraseId }}
+			className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+			aria-label="Manage phrase (admin)"
+			data-testid="admin-gear-link"
+		>
+			<Settings className="h-4 w-4" />
+		</Link>
 	)
 }

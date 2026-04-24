@@ -9,6 +9,7 @@ export const emptyAuth = {
 	userId: null,
 	userEmail: null,
 	userRole: null,
+	isAdmin: false,
 	connectionError: null as Error | null,
 }
 
@@ -21,6 +22,7 @@ type AuthNotLoggedIn = {
 	userId: null
 	userEmail: null
 	userRole: null
+	isAdmin: false
 	connectionError: Error | null
 }
 type AuthLoggedIn = {
@@ -30,6 +32,7 @@ type AuthLoggedIn = {
 	userId: uuid
 	userEmail: string
 	userRole: RolesEnum
+	isAdmin: boolean
 	connectionError: Error | null
 }
 
