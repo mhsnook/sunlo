@@ -17,10 +17,16 @@ import {
 import { clearUser } from '@/lib/collections/clear-user'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
+async function checkAdminStatus(): Promise<boolean> {
+	const { data } = await supabase.from('admin_user').select('uid')
+	return (data?.length ?? 0) > 0
+}
+
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [isReady, setIsReady] = useState(false)
+	const [isAdmin, setIsAdmin] = useState(false)
 	const [connectionError, setConnectionError] = useState<Error | null>(null)
 
 	const handleNewAuthState = useEffectEvent(
@@ -38,6 +44,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				// as an error — many components (e.g. NavUser) call useProfile()
 				// unconditionally, so their subscriptions persist past logout.
 				void clearUser()
+				setIsAdmin(false)
 			}
 			// Refetch user collections only when logging in from a logged-out state
 			// (not on token refresh or other events that already have a user)
@@ -52,6 +59,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				if (chatMessagesCollection.size > 0) {
 					void chatMessagesCollection.utils.refetch()
 				}
+				// Check admin status: RLS returns 0 rows for non-admins, 1 for admins
+				// Table not in generated types yet — run `pnpm types` after migration
+				void checkAdminStatus().then(setIsAdmin)
 				setSessionState(session)
 				setIsLoaded(true)
 				return
@@ -110,6 +120,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				userEmail: sessionState?.user.email ?? null,
 				userRole:
 					(sessionState?.user?.user_metadata?.role as RolesEnum) ?? null,
+				isAdmin,
 				isLoaded: true,
 				connectionError,
 			} as AuthLoaded)
