@@ -411,7 +411,7 @@ jobs:
 
             const report = JSON.parse(fs.readFileSync(path.join(dir, jsonFiles[0].f), 'utf8'));
             const s = report.summary;
-            const headline = `Scenes: ${s.completed}/${s.scenes} completed · Assertions: ${s.assertions.passed}/${s.assertions.total} passed · Duration: ${report.duration}ms`;
+            const headline = `Scenes: ${s.completed}/${s.scenes} completed · Assertions: ${s.assertions.passed}/${s.assertions.total} passed · Console errors: ${s.consoleErrors} · Duration: ${report.duration}ms`;
 
             const failed = report.scenes.filter(sc => sc.status !== 'completed' || sc.assertions.some(a => !a.result));
             const lines = [marker, '', headline];
@@ -432,10 +432,6 @@ jobs:
                   const loc = a.location ? ` (${a.location.file}:${a.location.line})` : '';
                   const actor = a.actor ? ` [${a.actor}]` : '';
                   b.push(`  ✗ ${cap(a.description, 200)}${actor}${loc}`);
-                }
-                const consoleErrs = (sc.consoleErrors || []).slice(0, 5);
-                for (const ce of consoleErrs) {
-                  b.push(`  console[${ce.type}${ce.actor ? ` ${ce.actor}` : ''}]: ${cap(ce.message.replace(/\s+/g, ' '), 300)}`);
                 }
                 blocks.push(b.join('\n'));
               }
