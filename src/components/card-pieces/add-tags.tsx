@@ -5,7 +5,7 @@ import * as z from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
-import { Tags } from 'lucide-react'
+import { Tags, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -37,7 +37,13 @@ type AddTagsReturnValues = {
 	phrase_tags: Tables<'phrase_tag'>[]
 }
 
-export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
+export function AddTags({
+	phrase,
+	allowRemove = false,
+}: {
+	phrase: PhraseFullFilteredType
+	allowRemove?: boolean
+}) {
 	const [open, setOpen] = useState(false)
 	const { data: allLangTags } = useLanguageTags(phrase?.lang)
 	const {
@@ -123,16 +129,26 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 					<div>
 						<h4 className="text-sm font-medium">Current tags</h4>
 						<div className="mt-2 flex flex-wrap gap-1">
-							{phrase.tags?.length ?
-								phrase.tags.map((tag) => (
-									<Badge key={tag.id} variant="secondary">
-										{tag.name}
-									</Badge>
-								))
-							:	<p className="text-muted-foreground text-sm italic">
+							{phrase.tags?.length ? (
+								phrase.tags.map((tag) =>
+									allowRemove ? (
+										<RemovableTagBadge
+											key={tag.id}
+											tag={tag}
+											phraseId={phrase.id}
+											phraseTags={phrase.tags ?? []}
+										/>
+									) : (
+										<Badge key={tag.id} variant="secondary">
+											{tag.name}
+										</Badge>
+									)
+								)
+							) : (
+								<p className="text-muted-foreground text-sm italic">
 									No tags yet.
 								</p>
-							}
+							)}
 						</div>
 					</div>
 					<Separator />
@@ -175,5 +191,50 @@ export function AddTags({ phrase }: { phrase: PhraseFullFilteredType }) {
 				</DialogFooter>
 			</AuthenticatedDialogContent>
 		</Dialog>
+	)
+}
+
+function RemovableTagBadge({
+	tag,
+	phraseId,
+	phraseTags,
+}: {
+	tag: { id: string; name: string }
+	phraseId: string
+	phraseTags: Array<{ id: string; name: string }>
+}) {
+	const removeTag = useMutation({
+		mutationFn: async () => {
+			await supabase
+				.from('phrase_tag')
+				.delete()
+				.eq('phrase_id', phraseId)
+				.eq('tag_id', tag.id)
+				.throwOnError()
+		},
+		onSuccess: () => {
+			phrasesCollection.utils.writeUpdate({
+				id: phraseId,
+				tags: phraseTags.filter((t) => t.id !== tag.id),
+			})
+			toastSuccess(`Tag "${tag.name}" removed`)
+		},
+		onError: (error) => {
+			toastError('Failed to remove tag')
+			console.error(error)
+		},
+	})
+
+	return (
+		<Badge variant="secondary" className="gap-1">
+			{tag.name}
+			<button
+				onClick={() => removeTag.mutate()}
+				disabled={removeTag.isPending}
+				className="hover:text-destructive -me-1 rounded-full p-0.5"
+			>
+				<X className="size-3" />
+			</button>
+		</Badge>
 	)
 }
