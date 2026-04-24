@@ -294,6 +294,8 @@ jobs:
   scenetest:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v4
@@ -359,7 +361,90 @@ jobs:
         run: npx wait-on http://localhost:5173 --timeout 60000
 
       - name: Run scenetest specs
-        run: pnpm scene
+        id: scene
+        continue-on-error: true
+        run: |
+          rm -rf scenetest/.reports
+          pnpm scene:ci
+
+      - name: Comment scenetest results on PR
+        if: github.event_name == 'pull_request' && !cancelled()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            const dir = 'scenetest/.reports';
+            const marker = '### Scenetest';
+
+            const upsertComment = async (body) => {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              const existing = comments.find(c => c.body.startsWith(marker));
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  comment_id: existing.id, body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: context.issue.number, body,
+                });
+              }
+            };
+
+            if (!fs.existsSync(dir)) {
+              await upsertComment([marker, '', '_No report was produced — scenetest may have crashed before writing output. Check the job log._'].join('\n'));
+              return;
+            }
+            const jsonFiles = fs.readdirSync(dir)
+              .filter(f => f.endsWith('.json'))
+              .map(f => ({ f, mtime: fs.statSync(path.join(dir, f)).mtimeMs }))
+              .sort((a, b) => b.mtime - a.mtime);
+            if (jsonFiles.length === 0) {
+              await upsertComment([marker, '', '_No JSON report found in `scenetest/.reports/`._'].join('\n'));
+              return;
+            }
+
+            const report = JSON.parse(fs.readFileSync(path.join(dir, jsonFiles[0].f), 'utf8'));
+            const s = report.summary;
+            const headline = `Scenes: ${s.completed}/${s.scenes} completed · Assertions: ${s.assertions.passed}/${s.assertions.total} passed · Duration: ${report.duration}ms`;
+
+            const failed = report.scenes.filter(sc => sc.status !== 'completed' || sc.assertions.some(a => !a.result));
+            const lines = [marker, '', headline];
+
+            if (failed.length === 0) {
+              lines.push('', 'All scenes passed ✅');
+            } else {
+              const cap = (str, n) => str && str.length > n ? str.slice(0, n) + '…' : str;
+              const blocks = [];
+              for (const sc of failed) {
+                const b = [];
+                const status = sc.status === 'completed' ? 'ASSERTION FAILED' : sc.status.toUpperCase();
+                b.push(`✗ ${sc.name} — ${status}`);
+                b.push(`  file: ${sc.file}`);
+                if (sc.error) b.push(`  error: ${cap(sc.error.replace(/\s+/g, ' '), 1000)}`);
+                const failedAssertions = sc.assertions.filter(a => !a.result).slice(0, 10);
+                for (const a of failedAssertions) {
+                  const loc = a.location ? ` (${a.location.file}:${a.location.line})` : '';
+                  const actor = a.actor ? ` [${a.actor}]` : '';
+                  b.push(`  ✗ ${cap(a.description, 200)}${actor}${loc}`);
+                }
+                const consoleErrs = (sc.consoleErrors || []).slice(0, 5);
+                for (const ce of consoleErrs) {
+                  b.push(`  console[${ce.type}${ce.actor ? ` ${ce.actor}` : ''}]: ${cap(ce.message.replace(/\s+/g, ' '), 300)}`);
+                }
+                blocks.push(b.join('\n'));
+              }
+              lines.push('', `**Failed (${failed.length}):**`, '', '```', blocks.join('\n\n'), '```');
+            }
+
+            let body = lines.join('\n');
+            if (body.length > 60000) body = body.slice(0, 60000) + '\n… (truncated)\n```';
+            await upsertComment(body);
 
       - name: Upload scenetest report
         uses: actions/upload-artifact@v4
@@ -368,3 +453,9 @@ jobs:
           name: scenetest-report
           path: scenetest/.reports/
           retention-days: 30
+
+      - name: Fail job if scenetest failed
+        if: steps.scene.outcome == 'failure'
+        run: |
+          echo "❌ scenetest reported failures — see PR comment"
+          exit 1
