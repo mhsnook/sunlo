@@ -25,12 +25,12 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 				</Badge>
 			) : null}
 			{deckMeta.count_reviews_7d ? (
-				<Badge variant="outline">
+				<Badge variant="outline" data-testid="badge-count-reviews-7d">
 					<ChartSpline />
 					<span>{deckMeta.count_reviews_7d} reviews this week</span>
 				</Badge>
 			) : (
-				<Badge variant="outline">
+				<Badge variant="outline" data-testid="badge-no-reviews-7d">
 					<TriangleAlert />
 					<span>No reviews this week</span>
 				</Badge>
@@ -41,7 +41,7 @@ export function DeckStatsBadges({ lang }: { lang: string }) {
 			</Badge>
 
 			{deckMeta.most_recent_review_at ? (
-				<Badge variant="outline">
+				<Badge variant="outline" data-testid="badge-most-recent-review">
 					<BookOpenCheck />
 					<span>{ago(deckMeta.most_recent_review_at)}</span>
 				</Badge>

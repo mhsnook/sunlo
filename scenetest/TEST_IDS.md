@@ -335,3 +335,37 @@ element to appear and then disappear:
 | `toast-playlist-updated` | Playlist edited               |
 | `toast-playlist-deleted` | Playlist deleted              |
 | `toast-link-copied`      | Link copied to clipboard      |
+
+---
+
+## Onboarding & Profile Creation
+
+| Selector              | Attribute   | Component/Location                 | Description                                |
+| --------------------- | ----------- | ---------------------------------- | ------------------------------------------ |
+| `username-input`      | data-testid | `components/fields/username-field` | Username input on the getting-started form |
+| `save-profile-button` | data-testid | `routes/_user/getting-started.tsx` | Submit button on the profile creation form |
+
+## Chat previews
+
+| Selector                            | Attribute   | Component/Location                          | Description                                   |
+| ----------------------------------- | ----------- | ------------------------------------------- | --------------------------------------------- |
+| `chat-request-preview`              | data-testid | `routes/_user/friends/-request-preview.tsx` | Link wrapping a shared request bubble in chat |
+| `chat-request-preview {request_id}` | data-key    | same                                        | Individual preview keyed by request id        |
+
+## Inline phrase creator (comment dialog, chat recommend)
+
+| Selector                        | Attribute   | Component/Location                             | Description                           |
+| ------------------------------- | ----------- | ---------------------------------------------- | ------------------------------------- |
+| `create-new-phrase-button`      | data-testid | `components/comments/comment-dialog.tsx`       | Opens the inline phrase creator panel |
+| `inline-phrase-creator`         | data-testid | `components/phrases/inline-phrase-creator.tsx` | Inline phrase creator container       |
+| `inline-phrase-text-input`      | data-testid | same                                           | Phrase text input                     |
+| `inline-translation-text-input` | data-testid | same                                           | Translation text input                |
+| `inline-phrase-submit-button`   | data-testid | same                                           | Submit button for creating the phrase |
+
+## Deck stats badges
+
+| Selector                   | Attribute   | Component/Location            | Description                                                |
+| -------------------------- | ----------- | ----------------------------- | ---------------------------------------------------------- |
+| `badge-count-reviews-7d`   | data-testid | `components/stats-badges.tsx` | Shown when deck has reviews in the last 7 days             |
+| `badge-no-reviews-7d`      | data-testid | `components/stats-badges.tsx` | Shown when deck has zero reviews this week                 |
+| `badge-most-recent-review` | data-testid | `components/stats-badges.tsx` | Shown only when `most_recent_review_at` is non-null (#156) |
