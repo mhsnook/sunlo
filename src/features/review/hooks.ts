@@ -460,32 +460,53 @@ export function useReviewMutation(
 		},
 		onSuccess: (data) => {
 			console.log(`mutation returns:`, data)
-			if (data.action === 'update') {
-				cardReviewsCollection.utils.writeUpdate(
-					CardReviewSchema.parse(data.row)
-				)
-			}
-			if (data.action === 'insert') {
-				cardReviewsCollection.utils.writeInsert(
-					CardReviewSchema.parse(data.row)
-				)
-			}
+			// The DB write has already succeeded. Any failure below is a local
+			// sync problem, not a review-posting problem — isolate it so a misleading
+			// "error posting your review" toast never fires, and so the slide
+			// transition always runs and the user isn't stuck on the same card.
+			try {
+				if (data.action === 'update') {
+					cardReviewsCollection.utils.writeUpdate(
+						CardReviewSchema.parse(data.row)
+					)
+				}
+				if (data.action === 'insert') {
+					cardReviewsCollection.utils.writeInsert(
+						CardReviewSchema.parse(data.row)
+					)
+				}
 
-			// Only sync card scheduling state from phase-1 reviews.
-			// Phase-3 reviews are for tracking only — their FSRS values are
-			// throwaway initial values that would corrupt the scheduling chain.
-			if (data.row.day_first_review) {
-				const existingCard = cardsCollection.toArray.find(
-					(c) =>
-						c.phrase_id === data.row.phrase_id &&
-						c.direction === data.row.direction
+				// Only sync card scheduling state from phase-1 reviews.
+				// Phase-3 reviews are for tracking only — their FSRS values are
+				// throwaway initial values that would corrupt the scheduling chain.
+				if (data.row.day_first_review) {
+					const existingCard = cardsCollection.toArray.find(
+						(c) =>
+							c.phrase_id === data.row.phrase_id &&
+							c.direction === data.row.direction
+					)
+					if (existingCard) {
+						cardsCollection.utils.writeUpdate({
+							id: existingCard.id,
+							last_reviewed_at: data.row.created_at,
+							difficulty: data.row.difficulty,
+							stability: data.row.stability,
+						})
+					} else {
+						console.warn(
+							`Review saved to DB, but no matching card found in local cardsCollection to update.`,
+							{
+								phrase_id: data.row.phrase_id,
+								direction: data.row.direction,
+							}
+						)
+					}
+				}
+			} catch (err) {
+				console.error(
+					`Review saved, but failed to sync local collections:`,
+					err
 				)
-				cardsCollection.utils.writeUpdate({
-					id: existingCard!.id,
-					last_reviewed_at: data.row.created_at,
-					difficulty: data.row.difficulty,
-					stability: data.row.stability,
-				})
 			}
 
 			triggerSlide(() => {
