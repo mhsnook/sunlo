@@ -369,3 +369,16 @@ element to appear and then disappear:
 | `badge-count-reviews-7d`   | data-testid | `components/stats-badges.tsx` | Shown when deck has reviews in the last 7 days             |
 | `badge-no-reviews-7d`      | data-testid | `components/stats-badges.tsx` | Shown when deck has zero reviews this week                 |
 | `badge-most-recent-review` | data-testid | `components/stats-badges.tsx` | Shown only when `most_recent_review_at` is non-null (#156) |
+
+## Admin Phrase Management
+
+| Selector                       | Purpose                                |
+| ------------------------------ | -------------------------------------- |
+| `admin-gear-link`              | Gear icon on phrase card (admin only)  |
+| `admin-phrases-page`           | Admin phrases layout wrapper           |
+| `admin-phrases-table`          | Phrases table/list on admin index page |
+| `admin-phrase-detail`          | Admin phrase detail page wrapper       |
+| `admin-phrase-detail-link`     | Link to phrase detail from table row   |
+| `admin-not-authorized-warning` | Warning callout for non-admin users    |
+| `admin-archive-button`         | Archive phrase button on detail page   |
+| `admin-unarchive-button`       | Restore archived phrase button         |
