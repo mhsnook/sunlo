@@ -447,6 +447,14 @@ alter function "public"."create_playlist_with_links" (
 	"phrases" "jsonb"
 ) owner to "postgres";
 
+create or replace function "public"."is_admin" () returns boolean language "sql" stable security definer as $$
+  select exists (
+    select 1 from public.admin_user where uid = auth.uid()
+  );
+$$;
+
+alter function "public"."is_admin" () owner to "postgres";
+
 create or replace function "public"."notify_on_comment" () returns "trigger" language "plpgsql" security definer as $$
 declare
   v_requester_uid uuid;
@@ -1024,6 +1032,13 @@ set
 set
 	default_table_access_method = "heap";
 
+create table if not exists "public"."admin_user" (
+	"uid" "uuid" not null,
+	"created_at" timestamp with time zone default "now" () not null
+);
+
+alter table "public"."admin_user" owner to "postgres";
+
 create table if not exists "public"."chat_message" (
 	"id" "uuid" default "gen_random_uuid" () not null,
 	"created_at" timestamp with time zone default "now" () not null,
@@ -1082,7 +1097,8 @@ create table if not exists "public"."phrase" (
 	"lang" character varying not null,
 	"created_at" timestamp with time zone default "now" () not null,
 	"text_script" "text",
-	"only_reverse" boolean default false not null
+	"only_reverse" boolean default false not null,
+	"archived" boolean default false not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -1324,6 +1340,7 @@ from
 where
 	(
 		("p"."added_by" is not null)
+		and ("p"."archived" = false)
 		and ("cpl"."id" is null)
 		and ("ppl"."id" is null)
 	);
@@ -1559,6 +1576,7 @@ select
 	"phrase"."created_at",
 	"phrase"."added_by",
 	"phrase"."only_reverse",
+	"phrase"."archived",
 	coalesce("stats"."count_learners", (0)::bigint) as "count_learners",
 	"stats"."avg_difficulty",
 	"stats"."avg_stability",
@@ -1943,6 +1961,9 @@ with
 
 alter table "public"."phrase_search_index" owner to "postgres";
 
+alter table only "public"."admin_user"
+add constraint "admin_user_pkey" primary key ("uid");
+
 alter table only "public"."phrase"
 add constraint "card_phrase_id_int_key" unique ("id");
 
@@ -2198,6 +2219,9 @@ execute function "public"."update_phrase_translation_updated_at" ();
 create or replace trigger "trigger_validate_friend_request_action" before insert on "public"."friend_request_action" for each row
 execute function "public"."validate_friend_request_action" ();
 
+alter table only "public"."admin_user"
+add constraint "admin_user_uid_fkey" foreign key ("uid") references "auth"."users" ("id") on delete cascade;
+
 alter table only "public"."chat_message"
 add constraint "chat_message_lang_fkey" foreign key ("lang") references "public"."language" ("lang") on update cascade on delete set null;
 
@@ -2375,6 +2399,26 @@ add constraint "user_deck_review_state_lang_uid_fkey" foreign key ("lang", "uid"
 alter table only "public"."user_deck"
 add constraint "user_deck_uid_fkey" foreign key ("uid") references "public"."user_profile" ("uid") on update cascade on delete cascade;
 
+create policy "Admins can delete phrase tags" on "public"."phrase_tag" for delete to "authenticated" using ("public"."is_admin" ());
+
+create policy "Admins can update phrases" on "public"."phrase"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
+
+create policy "Admins can update requests" on "public"."phrase_request"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
+
+create policy "Admins can update translations" on "public"."phrase_translation"
+for update
+	to "authenticated" using ("public"."is_admin" ())
+with
+	check ("public"."is_admin" ());
+
 create policy "Authenticated users can add phrase relations" on "public"."phrase_relation" for insert to "authenticated"
 with
 	check (
@@ -2495,7 +2539,12 @@ select
 
 create policy "Enable read access for all users" on "public"."phrase" for
 select
-	using (true);
+	using (
+		case
+			when (not "archived") then true
+			else "public"."is_admin" ()
+		end
+	);
 
 create policy "Enable read access for all users" on "public"."phrase_playlist" for
 select
@@ -2526,15 +2575,16 @@ select
 create policy "Enable read access for all users" on "public"."phrase_translation" for
 select
 	using (
-		(
-			("archived" = false)
-			or (
+		case
+			when (not "archived") then true
+			when (
 				"added_by" = (
 					select
 						"auth"."uid" () as "uid"
 				)
-			)
-		)
+			) then true
+			else "public"."is_admin" ()
+		end
 	);
 
 create policy "Enable read access for all users" on "public"."playlist_phrase_link" for
@@ -2774,6 +2824,10 @@ create policy "Users can log their own events" on "public"."user_client_event" f
 with
 	check ((not ("uid" is distinct from "auth"."uid" ())));
 
+create policy "Users can read own admin status" on "public"."admin_user" for
+select
+	to "authenticated" using (("auth"."uid" () = "uid"));
+
 create policy "Users can read own notifications" on "public"."notification" for
 select
 	using (("uid" = "auth"."uid" ()));
@@ -2862,6 +2916,8 @@ select
 			)
 		)
 	);
+
+alter table "public"."admin_user" enable row level security;
 
 alter table "public"."chat_message" enable row level security;
 
@@ -3279,6 +3335,12 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
+grant all on function "public"."is_admin" () to "anon";
+
+grant all on function "public"."is_admin" () to "authenticated";
+
+grant all on function "public"."is_admin" () to "service_role";
+
 grant all on function "public"."notify_on_comment" () to "anon";
 
 grant all on function "public"."notify_on_comment" () to "authenticated";
@@ -3553,6 +3615,12 @@ grant all on function "public"."word_similarity_op" ("text", "text") to "anon";
 grant all on function "public"."word_similarity_op" ("text", "text") to "authenticated";
 
 grant all on function "public"."word_similarity_op" ("text", "text") to "service_role";
+
+grant all on table "public"."admin_user" to "service_role";
+
+grant
+select
+	on table "public"."admin_user" to "authenticated";
 
 grant all on table "public"."chat_message" to "anon";
 
