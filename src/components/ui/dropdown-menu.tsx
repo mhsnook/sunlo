@@ -8,15 +8,8 @@ const DropdownMenu = ({ ...props }: MenuPrimitive.Root.Props) => (
 	<MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
 )
 
-const DropdownMenuTrigger = ({
-	nativeButton = false,
-	...props
-}: MenuPrimitive.Trigger.Props) => (
-	<MenuPrimitive.Trigger
-		data-slot="dropdown-menu-trigger"
-		nativeButton={nativeButton}
-		{...props}
-	/>
+const DropdownMenuTrigger = ({ ...props }: MenuPrimitive.Trigger.Props) => (
+	<MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />
 )
 
 const DropdownMenuGroup = ({ ...props }: MenuPrimitive.Group.Props) => (
