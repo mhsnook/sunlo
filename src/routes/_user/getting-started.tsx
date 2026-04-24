@@ -27,11 +27,11 @@ type GettingStartedProps = {
 
 export const Route = createFileRoute('/_user/getting-started')({
 	validateSearch: (search?: Record<string, unknown>): GettingStartedProps => {
-		return search ?
-				{
+		return search
+			? {
 					referrer: (search.referrer as string) || undefined,
 				}
-			:	{}
+			: {}
 	},
 	component: GettingStartedPage,
 	beforeLoad: ({ context }) => {
@@ -60,24 +60,26 @@ function GettingStartedPage() {
 	// After profile creation, go to welcome page (or friend's chat if invited)
 	const nextPage = referrer ? `/friends/chats/${referrer}` : '/welcome'
 
-	return profile ?
-			<Navigate to={nextPage} />
-		:	<main
-				className="w-app px-[5cqw] py-10"
-				style={style}
-				data-testid="getting-started-page"
-			>
-				<div className="my-4 space-y-4 text-center">
-					<h1 className="d1">Welcome to Sunlo</h1>
-					<div className="mx-auto inline-flex shrink flex-row items-center gap-4">
-						<SuccessCheckmarkTrans />
-						<p className="text-muted-foreground max-w-80 text-start text-2xl font-extralight text-balance">
-							Thanks for confirming your email. Let&apos;s get you set up.
-						</p>
-					</div>
+	return profile ? (
+		<Navigate to={nextPage} />
+	) : (
+		<main
+			className="w-app px-[5cqw] py-10"
+			style={style}
+			data-testid="getting-started-page"
+		>
+			<div className="my-4 space-y-4 text-center">
+				<h1 className="d1">Welcome to Sunlo</h1>
+				<div className="mx-auto inline-flex shrink flex-row items-center gap-4">
+					<SuccessCheckmarkTrans />
+					<p className="text-muted-foreground max-w-80 text-start text-2xl font-extralight text-balance">
+						Thanks for confirming your email. Let&apos;s get you set up.
+					</p>
 				</div>
-				<ProfileCreationForm userId={userId!} />
-			</main>
+			</div>
+			<ProfileCreationForm userId={userId!} />
+		</main>
+	)
 }
 
 const formSchema = z.object({
@@ -140,7 +142,12 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 				<UsernameField register={register} error={errors.username} />
 				<LanguagesKnownField control={control} error={errors.languages_known} />
 				<div className="flex flex-col gap-4 @xl:flex-row @xl:justify-between">
-					<Button type="submit" size="lg" className="w-full @xl:w-auto">
+					<Button
+						type="submit"
+						size="lg"
+						data-testid="save-profile-button"
+						className="w-full @xl:w-auto"
+					>
 						Save your profile
 					</Button>
 				</div>

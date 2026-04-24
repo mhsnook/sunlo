@@ -179,16 +179,16 @@ export function CommentDialog({
 			>
 				<div className="flex-none p-4 pb-3 sm:p-6 sm:pb-4">
 					<DialogTitle className="sr-only">
-						{showSearch ?
-							'Select a flashcard'
-						: mode?.kind === 'edit' ?
-							'Edit Comment'
-						:	'Add a comment'}
+						{showSearch
+							? 'Select a flashcard'
+							: mode?.kind === 'edit'
+								? 'Edit Comment'
+								: 'Add a comment'}
 					</DialogTitle>
 					<DialogDescription className="sr-only">
-						{showSearch ?
-							'Search and select a flashcard to attach to your answer'
-						:	'Share your thoughts or suggest a flashcard answer'}
+						{showSearch
+							? 'Search and select a flashcard to attach to your answer'
+							: 'Share your thoughts or suggest a flashcard answer'}
 					</DialogDescription>
 					<RequestContext id={requestId} />
 				</div>
@@ -233,7 +233,7 @@ export function CommentDialog({
 				<div
 					className={cn('overflow-y-auto p-4 sm:p-6', !showForm && 'hidden')}
 				>
-					{mode?.kind === 'edit' && editComment ?
+					{mode?.kind === 'edit' && editComment ? (
 						<EditCommentForm
 							comment={editComment}
 							isReply={isReply}
@@ -244,7 +244,8 @@ export function CommentDialog({
 							}
 							onClose={close}
 						/>
-					:	<NewCommentForm
+					) : (
+						<NewCommentForm
 							requestId={requestId}
 							selectedPhraseIds={selectedPhraseIds}
 							onRemovePhrase={(id) =>
@@ -252,7 +253,7 @@ export function CommentDialog({
 							}
 							onClose={close}
 						/>
-					}
+					)}
 				</div>
 			</AuthenticatedDialogContent>
 		</Dialog>
@@ -313,7 +314,7 @@ function PhrasePickerPanel({
 			<div className="min-h-0 overflow-hidden">
 				<ScrollArea className="h-full">
 					<div className="flex flex-col gap-3 p-4 sm:p-6">
-						{showCreateForm ?
+						{showCreateForm ? (
 							<InlinePhraseCreator
 								lang={lang}
 								onPhraseCreated={(id) => {
@@ -322,20 +323,23 @@ function PhrasePickerPanel({
 								}}
 								onCancel={() => setShowCreateForm(false)}
 							/>
-						:	<>
+						) : (
+							<>
 								<Button
 									type="button"
 									variant="dashed-w-full"
+									data-testid="create-new-phrase-button"
 									onClick={() => setShowCreateForm(true)}
 								>
 									<Plus className="h-4 w-4" />
 									Create new phrase
 								</Button>
-								{!filteredPhrases?.length ?
+								{!filteredPhrases?.length ? (
 									<p className="text-muted-foreground py-8 text-center">
 										No phrases found
 									</p>
-								:	filteredPhrases
+								) : (
+									filteredPhrases
 										.filter((phrase) => !selectedPhraseIds.includes(phrase.id))
 										.map((phrase) => (
 											<button
@@ -349,9 +353,9 @@ function PhrasePickerPanel({
 												<PhraseTinyCard pid={phrase.id} nonInteractive />
 											</button>
 										))
-								}
+								)}
 							</>
-						}
+						)}
 					</div>
 				</ScrollArea>
 			</div>
@@ -372,56 +376,55 @@ function AttachedPhraseCards({
 }) {
 	const hasCards = selectedPhraseIds.length > 0
 
-	return hasCards ?
-			<div>
-				<p className="mb-2 text-sm font-medium">
-					Attached flashcards ({selectedPhraseIds.length}/4)
-				</p>
-				<div className="flex flex-wrap items-start gap-2">
-					{selectedPhraseIds.map((pid) => (
-						<div key={pid} className="relative shrink-0">
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon"
-								className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
-								data-testid="remove-phrase-button"
-								onClick={() => onRemovePhrase(pid)}
-							>
-								<X />
-							</Button>
-							<PhraseTinyCard pid={pid} nonInteractive />
-						</div>
-					))}
-					{selectedPhraseIds.length < 4 && (
-						<Link
-							to="."
-							search={(prev: Record<string, unknown>) => ({
-								...prev,
-								attaching: true,
-							})}
-							className="border-2-lo-primary text-muted-foreground hover:bg-1-lo-primary hover:text-7-mid-primary hover:border-4-mlo-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+	return hasCards ? (
+		<div>
+			<p className="mb-2 text-sm font-medium">
+				Attached flashcards ({selectedPhraseIds.length}/4)
+			</p>
+			<div className="flex flex-wrap items-start gap-2">
+				{selectedPhraseIds.map((pid) => (
+					<div key={pid} className="relative shrink-0">
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon"
+							className="bg-background/80 border-border absolute end-2 top-2 z-10 h-6 w-6 rounded-full backdrop-blur-sm"
+							data-testid="remove-phrase-button"
+							onClick={() => onRemovePhrase(pid)}
 						>
-							<Plus className="h-6 w-6" />
-						</Link>
-					)}
-				</div>
-			</div>
-		:	<Link
-				to="."
-				search={(prev: Record<string, unknown>) => ({
-					...prev,
-					attaching: true,
-				})}
-				className={cn(
-					buttonVariants({ variant: 'soft', size: 'sm' }),
-					'w-full'
+							<X />
+						</Button>
+						<PhraseTinyCard pid={pid} nonInteractive />
+					</div>
+				))}
+				{selectedPhraseIds.length < 4 && (
+					<Link
+						to="."
+						search={(prev: Record<string, unknown>) => ({
+							...prev,
+							attaching: true,
+						})}
+						className="border-2-lo-primary text-muted-foreground hover:bg-1-lo-primary hover:text-7-mid-primary hover:border-4-mlo-primary flex h-30 min-w-50 basis-50 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors"
+					>
+						<Plus className="h-6 w-6" />
+					</Link>
 				)}
-				data-testid="attach-phrase-button"
-			>
-				<Paperclip className="h-4 w-4" />
-				Suggest a flashcard
-			</Link>
+			</div>
+		</div>
+	) : (
+		<Link
+			to="."
+			search={(prev: Record<string, unknown>) => ({
+				...prev,
+				attaching: true,
+			})}
+			className={cn(buttonVariants({ variant: 'soft', size: 'sm' }), 'w-full')}
+			data-testid="attach-phrase-button"
+		>
+			<Paperclip className="h-4 w-4" />
+			Suggest a flashcard
+		</Link>
+	)
 }
 
 export function MarkdownHint() {
@@ -534,9 +537,9 @@ function NewCommentForm({
 								<Textarea
 									data-testid="comment-content-input"
 									placeholder={
-										hasCards ?
-											'Add some context (optional)'
-										:	'Share your thoughts...'
+										hasCards
+											? 'Add some context (optional)'
+											: 'Share your thoughts...'
 									}
 									rows={4}
 									{...field}
@@ -552,13 +555,13 @@ function NewCommentForm({
 					data-testid="post-comment-button"
 					disabled={createMutation.isPending}
 				>
-					{createMutation.isPending ?
-						'Posting...'
-					: selectedPhraseIds.length > 1 ?
-						'Post Answers'
-					: selectedPhraseIds.length === 1 ?
-						'Post Answer'
-					:	'Post Comment'}
+					{createMutation.isPending
+						? 'Posting...'
+						: selectedPhraseIds.length > 1
+							? 'Post Answers'
+							: selectedPhraseIds.length === 1
+								? 'Post Answer'
+								: 'Post Comment'}
 				</Button>
 			</form>
 		</Form>
@@ -699,9 +702,9 @@ function EditCommentForm({
 								<Textarea
 									data-testid="edit-comment-content-input"
 									placeholder={
-										!isReply && hasCards ?
-											'Add some context (optional)'
-										:	'Share your thoughts...'
+										!isReply && hasCards
+											? 'Add some context (optional)'
+											: 'Share your thoughts...'
 									}
 									rows={4}
 									{...field}
@@ -736,13 +739,13 @@ function EditCommentForm({
 function useCommentPhraseLinks(commentId: uuid | undefined) {
 	return useLiveQuery(
 		(q) =>
-			commentId ?
-				q
-					.from({ link: commentPhraseLinksCollection })
-					.where(({ link }) => eq(link.comment_id, commentId))
-			:	q
-					.from({ link: commentPhraseLinksCollection })
-					.where(({ link }) => eq(link.comment_id, '')),
+			commentId
+				? q
+						.from({ link: commentPhraseLinksCollection })
+						.where(({ link }) => eq(link.comment_id, commentId))
+				: q
+						.from({ link: commentPhraseLinksCollection })
+						.where(({ link }) => eq(link.comment_id, '')),
 		[commentId]
 	)
 }

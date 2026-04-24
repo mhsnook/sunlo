@@ -23,6 +23,7 @@ export default function UsernameField<T extends FieldValues>({
 				{...register('username' as Path<T>)}
 				inputMode="text"
 				aria-invalid={!!error}
+				data-testid="username-input"
 				className={error ? 'bg-destructive/20' : ''}
 			/>
 			<ErrorLabel error={error} />

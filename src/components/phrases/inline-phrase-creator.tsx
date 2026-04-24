@@ -192,6 +192,7 @@ function InlinePhraseForm({
 
 	return (
 		<div
+			data-testid="inline-phrase-creator"
 			className={`bg-muted/30 rounded-lg border p-4 ${animate ? 'animate-in fade-in duration-300' : ''}`}
 		>
 			<div className="mb-3 flex items-center justify-between">
@@ -218,6 +219,7 @@ function InlinePhraseForm({
 					</Label>
 					<Input
 						id="inline-phrase-text"
+						data-testid="inline-phrase-text-input"
 						{...register('phrase_text')}
 						placeholder="Enter the phrase..."
 						className={errors.phrase_text ? 'border-red-500' : ''}
@@ -233,6 +235,7 @@ function InlinePhraseForm({
 					</Label>
 					<Input
 						id="inline-translation-text"
+						data-testid="inline-translation-text-input"
 						{...register('translation_text')}
 						placeholder="Enter the translation..."
 						className={errors.translation_text ? 'border-red-500' : ''}
@@ -274,12 +277,11 @@ function InlinePhraseForm({
 					<Button
 						type="submit"
 						size="sm"
+						data-testid="inline-phrase-submit-button"
 						disabled={mutation.isPending}
 						className="flex-1"
 					>
-						{mutation.isPending ?
-							<IconSizedLoader />
-						:	null}
+						{mutation.isPending ? <IconSizedLoader /> : null}
 						{submitLabel}
 					</Button>
 					{allowAddAnother && (
