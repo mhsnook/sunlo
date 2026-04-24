@@ -9,7 +9,11 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from '@/features/review/store'
-import { useNextValid, useReviewDay } from '@/features/review/hooks'
+import {
+	ensureManifestCardsInCollection,
+	useNextValid,
+	useReviewDay,
+} from '@/features/review/hooks'
 import { Loader } from '@/components/ui/loader'
 import { WhenComplete } from '@/components/review/when-review-complete-screen'
 import { ReviewSingleCard } from '@/components/review/review-single-card'
@@ -23,6 +27,7 @@ import {
 	type ManifestEntry,
 } from '@/features/review/manifest'
 import { useCheck, should } from '@scenetest/checks-react'
+import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 	beforeLoad: () => ({
@@ -31,12 +36,13 @@ export const Route = createFileRoute('/_user/learn/$lang/review/go')({
 		fixedHeight: true,
 	}),
 	component: ReviewPage,
-	loader: async ({ context }) => {
+	loader: async ({ context, params }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
 			reviewDaysCollection.preload(),
 			cardReviewsCollection.preload(),
 		])
+		await ensureManifestCardsInCollection(params.lang, todayString())
 	},
 })
 
@@ -99,7 +105,7 @@ function FlashCardReviewSession({
 		>
 			<div className="flex flex-col items-center justify-center gap-2">
 				<div className="flex min-h-10 flex-row items-center justify-center">
-					{!atTheEnd && reviewStage === 1 ?
+					{!atTheEnd && reviewStage === 1 ? (
 						<>
 							<Button
 								size="icon"
@@ -123,7 +129,7 @@ function FlashCardReviewSession({
 								<ChevronRight className="size-4" />
 							</Button>
 						</>
-					: !atTheEnd && (reviewStage ?? 0) > 1 ?
+					) : !atTheEnd && (reviewStage ?? 0) > 1 ? (
 						<Button
 							size="sm"
 							variant="ghost"
@@ -135,7 +141,7 @@ function FlashCardReviewSession({
 						>
 							Skip for today <ChevronRight className="size-4" />
 						</Button>
-					: reviewStage === 1 ?
+					) : reviewStage === 1 ? (
 						<Button
 							size="sm"
 							variant="ghost"
@@ -145,13 +151,14 @@ function FlashCardReviewSession({
 						>
 							<ChevronLeft className="size-4" /> Back one card
 						</Button>
-					:	null}
+					) : null}
 				</div>
 			</div>
 			<div className="-mx-4 -mb-4 min-h-0 flex-1 overflow-y-auto px-4 pt-2 pb-4">
-				{atTheEnd ?
+				{atTheEnd ? (
 					<WhenComplete />
-				:	(() => {
+				) : (
+					(() => {
 						const { phraseId, direction } = parseManifestEntry(
 							manifest[currentCardIndex]
 						)
@@ -170,7 +177,7 @@ function FlashCardReviewSession({
 							</div>
 						)
 					})()
-				}
+				)}
 			</div>
 		</div>
 	)

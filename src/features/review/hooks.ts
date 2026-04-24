@@ -21,7 +21,7 @@ import {
 } from './schemas'
 import { calculateFSRS, type Score } from './fsrs'
 import type { CardDirectionType } from '@/features/deck/schemas'
-import type { ManifestEntry } from './manifest'
+import { toManifestEntry, type ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,
 	findChainPredecessor,
@@ -229,6 +229,39 @@ export function useReviewDay(
 				.findOne(),
 		[lang, day_session]
 	)
+}
+
+/**
+ * The manifest is the authoritative list of cards for a review session —
+ * it's persisted server-side, so any device loading today's session sees
+ * the same set. Local `cardsCollection` can drift from that (long-lived
+ * PWA without refetches, server-side data migrations, sessions authored
+ * on another device), and if the manifest references a card the local
+ * collection has never heard of, the review mutation can't find it when
+ * syncing FSRS state. Refetch once to self-heal before the session starts.
+ */
+export async function ensureManifestCardsInCollection(
+	lang: string,
+	day_session: string
+) {
+	const reviewDay = reviewDaysCollection.toArray.find(
+		(d) => d.lang === lang && d.day_session === day_session
+	)
+	if (!reviewDay?.manifest?.length) return
+
+	const present = new Set<string>(
+		cardsCollection.toArray.map((c) =>
+			toManifestEntry(c.phrase_id, c.direction)
+		)
+	)
+	const missing = reviewDay.manifest.some((entry) => !present.has(entry))
+	if (missing) {
+		console.warn(
+			`Review manifest references cards not in local cardsCollection; refetching to self-heal.`,
+			{ lang, day_session }
+		)
+		await cardsCollection.utils.refetch()
+	}
 }
 
 export function useOneReviewToday(
