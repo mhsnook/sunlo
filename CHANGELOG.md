@@ -1,5 +1,54 @@
 # Change Log
 
+## v0.23 - Admin Panel, Learn Page Redesign, Recognise & Recall
+
+_25 April, 2026_
+
+### Features
+
+- **Admin panel** — new `/admin` section for admins: phrase management (list, view, archive per language) and request management per language. Backed by a new `admin_user` table, `is_admin()` function, and admin-scoped RLS policies on phrases and requests. Non-admin users see a 403 guard.
+- **Learn page redesign** (#567) — the main `/learn` page has a new layout: prominent review banner for the active language, simpler deck tiles, and an integrated friends feed below.
+- **Recognise & Recall labels** — bidirectional card directions are now labelled "Recognise" (💡, forward) and "Recall" (🧠, reverse) throughout the review setup, preview, and session screens. Replaces the previous "front/back" labels with an explainer in the intro dialog.
+- **Phrase-level direction breakdown** — review setup now shows a Recognise/Recall split under Scheduled and New Cards headings so you know what kind of review is coming.
+
+### Improvements
+
+- **Review counts are now card-accurate** — setup counts and the preview filter now count by individual card (not phrase), matching exactly what the session will contain. Re-scoring a card within a session no longer wipes the FSRS chain.
+- **Interval badges stabilised** — review button interval labels no longer flicker mid-session.
+- **Practice-history dialog redesigned** — cleaner layout; card permalink fixed.
+- **Supabase connection errors handled gracefully** (#565) — network/DB errors on load show a friendly message instead of a crash.
+- **Auth logout hardened** — hard-reload on signOut error to reset stale auth state; use refetch instead of collection clear on logout to avoid race conditions.
+- **"Most phrases use both sides" leads the intro** — reordered for clearer first impression.
+- **Default font changed to Atkinson Hyperlegible** — replaces Instrument Sans for better readability across sizes.
+
+### Fixes
+
+- Fix misleading "error posting review" toast when the review actually succeeded.
+- Fix review preview over-including cards with a reviewed sibling direction.
+- Silence Base UI `nativeButton` mismatch warnings.
+- Fix dev warnings: add `autoIndex` to public, eagerly-loaded collections.
+- Fix seed data: reclassify 9 duplicate phase-1 reviews to phase-3.
+
+### Refactors
+
+- **`phrasesFull` split** — extracted into a public-only collection plus a new `useMyCard` hook; forward/reverse card status invariant now asserted at hook boundary.
+- **Query hooks extracted** (#566) — shared live collections and query hooks pulled into reusable modules for better composability.
+
+### CI / DX
+
+- Switch formatter to **oxfmt** (keep prettier for SQL only).
+- Scenetest upgraded to **v0.8.2** — panel hidden unless `:ui` is specified; JSON report emitted and posted as a pasteable PR comment on failure; per-scene console errors dropped in favour of a headline total.
+- Add lint-diff CI job mirroring the typecheck job.
+- Migrate navigation e2e tests to scenetest.
+- Add regression scenetest scenes for issues #104, #134, #156, #202.
+- Add ts-fsrs parity tests for FSRS-5 reference-vector verification.
+
+### Database
+
+- `admin_user (uid uuid primary key references auth.users)` — new table; `is_admin()` security-definer function; admin RLS policies on `phrase` and `phrase_request`.
+
+---
+
 ## v0.22 - 2-Button Review Default & FSRS Fix
 
 _18 April, 2026_
