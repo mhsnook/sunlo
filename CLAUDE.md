@@ -23,6 +23,9 @@ skills:
 - task: "Using React bindings — useLiveQuery, useLiveSuspenseQuery, useLiveInfiniteQuery, usePacedMutations from @tanstack/react-db"
   load: "node_modules/@tanstack/react-db/skills/react-db/SKILL.md"
 
+- task: "Reviewing or improving codebase architecture — surfacing shallow modules, deepening seams, improving testability and AI-navigability"
+  load: ".claude/skills/improve-codebase-architecture/SKILL.md"
+
 <!-- intent-skills:end -->
 
 ## Development Commands
