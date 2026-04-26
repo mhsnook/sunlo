@@ -122,6 +122,7 @@ learner:
 - click phrases-new-menu-item
 - up
 - see add-phrase-page
+- up
 - click bulk-add-link
 - up
 - see bulk-add-page

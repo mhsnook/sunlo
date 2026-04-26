@@ -7,6 +7,8 @@ learner:
 
 # new user completes onboarding and affirms community norms
 
+cleanup: supabase.from('user_profile').delete().eq('uid', '[new-user.key]')
+
 new-user:
 
 - login
