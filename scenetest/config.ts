@@ -33,7 +33,7 @@ const supabaseUrl = process.env.VITE_SUPABASE_URL ?? 'http://127.0.0.1:54321'
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 export default defineConfig({
-	baseUrl: 'http://localhost:5173',
+	baseUrl: 'http://localhost:4173',
 	scenes: './scenetest/scenes',
 	noKeyboardActor: true,
 	server: {

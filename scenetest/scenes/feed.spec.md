@@ -25,9 +25,11 @@ learner:
 - login
 - go-to-deck
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
+- up
 - click upvote-playlist-button
 - up
 - see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
+- up
 - click upvote-playlist-button
 
 // feed loads more items on scroll — SKIPPED: Kannada seed data has <20 feed

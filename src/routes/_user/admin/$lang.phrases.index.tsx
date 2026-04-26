@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useLanguagePhrases } from '@/features/phrases/hooks'
+import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import { ago } from '@/lib/dayjs'
 
@@ -29,7 +29,7 @@ type SortDir = 'asc' | 'desc'
 
 function AdminPhrasesIndex() {
 	const { lang } = Route.useParams()
-	const { data: phrases, isLoading } = useLanguagePhrases(lang)
+	const { data: phrases, isLoading } = useLangPhrasesRaw(lang)
 
 	const [search, setSearch] = useState('')
 	const [sortField, setSortField] = useState<SortField>('created')
