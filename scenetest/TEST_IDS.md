@@ -145,28 +145,30 @@ natural wrapper element to label.
 
 ## Phrase Requests
 
-| Selector                       | Attribute   | Component/Location  | Description                    |
-| ------------------------------ | ----------- | ------------------- | ------------------------------ |
-| `contributions-page`           | data-testid | Contributions route | Contributions page container   |
-| `contributions-tab--requests`  | data-testid | Contributions page  | Tab for requests               |
-| `contributions-tab--phrases`   | data-testid | Contributions page  | Tab for phrases                |
-| `new-request-link`             | data-testid | Contributions page  | Link to create new request     |
-| `new-request-form`             | data-testid | New request page    | Request form container         |
-| `request-prompt-input`         | data-testid | Request form        | Textarea for prompt            |
-| `post-request-button`          | data-testid | Request form        | Submit button                  |
-| `request-detail-page`          | data-testid | Request route       | Request detail container       |
-| `request-item`                 | data-testid | Request list        | A request list item (own user) |
-| `other-user-request-item`      | data-testid | Request list        | A request by another user      |
-| `update-request-button`        | data-testid | Request page        | Edit button (owner only)       |
-| `edit-request-dialog`          | data-testid | Dialog              | Edit request dialog            |
-| `edit-request-prompt-input`    | data-testid | Edit dialog         | Textarea for prompt            |
-| `save-request-button`          | data-testid | Edit dialog         | Save button                    |
-| `delete-request-button`        | data-testid | Request page        | Delete button (owner only)     |
-| `delete-request-dialog`        | data-testid | Dialog              | Delete confirmation            |
-| `confirm-delete-button`        | data-testid | Dialog              | Confirm delete button          |
-| `comment-item`                 | data-testid | Request page        | Comment container              |
-| `comment-context-menu-trigger` | data-testid | Comment             | Context menu button            |
-| `copy-link-menu-item`          | data-testid | Context menu        | Copy link option               |
+| Selector                       | Attribute   | Component/Location  | Description                                                                  |
+| ------------------------------ | ----------- | ------------------- | ---------------------------------------------------------------------------- |
+| `contributions-page`           | data-testid | Contributions route | Contributions page container                                                 |
+| `contributions-tab--requests`  | data-testid | Contributions page  | Tab for requests                                                             |
+| `contributions-tab--phrases`   | data-testid | Contributions page  | Tab for phrases                                                              |
+| `new-request-link`             | data-testid | Contributions page  | Link to create new request                                                   |
+| `new-request-form`             | data-testid | New request page    | Request form container                                                       |
+| `request-prompt-input`         | data-testid | Request form        | Textarea for prompt                                                          |
+| `post-request-button`          | data-testid | Request form        | Submit button                                                                |
+| `request-detail-page`          | data-testid | Request route       | Request detail container                                                     |
+| `request-item`                 | data-testid | Request list        | A request list item (own user)                                               |
+| `other-user-request-item`      | data-testid | Request list        | A request by another user                                                    |
+| `update-request-button`        | data-testid | Request page        | Edit button (owner only)                                                     |
+| `edit-request-dialog`          | data-testid | Dialog              | Edit request dialog                                                          |
+| `edit-request-prompt-input`    | data-testid | Edit dialog         | Textarea for prompt                                                          |
+| `save-request-button`          | data-testid | Edit dialog         | Save button                                                                  |
+| `delete-request-button`        | data-testid | Request page        | Delete button (owner only)                                                   |
+| `delete-request-dialog`        | data-testid | Dialog              | Delete confirmation                                                          |
+| `confirm-delete-button`        | data-testid | Dialog              | Confirm delete button                                                        |
+| `comment-item`                 | data-name   | Request page        | Comment container (use with data-key for a specific comment)                 |
+| `show-replies-button`          | data-name   | Comment item        | Toggle to expand/collapse the reply subthread (use with data-key=comment.id) |
+| `add-reply-inline`             | data-name   | Comment subthread   | Inline prompt to open the reply dialog (use with data-key=comment.id)        |
+| `comment-context-menu-trigger` | data-testid | Comment             | Context menu button                                                          |
+| `copy-link-menu-item`          | data-testid | Context menu        | Copy link option                                                             |
 
 ## Playlists
 

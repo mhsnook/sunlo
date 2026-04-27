@@ -17,5 +17,6 @@ new-user:
 - typeInto email-input [self.email]
 - typeInto password-input [self.password]
 - click login-submit-button
+- up
 - notSee login-form
 - see getting-started-page
