@@ -6,16 +6,23 @@ import {
 	type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { useDebounce } from '@/hooks/use-debounce'
-import { Search, X } from 'lucide-react'
+import { Check, Search, Send, ThumbsUp, UserCheck, X } from 'lucide-react'
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
-import { ProfileWithRelationship } from '@/components/profile-with-relationship'
-import { Loader } from '@/components/ui/loader'
+import { Button } from '@/components/ui/button'
+import { AvatarIconRow } from '@/components/ui/avatar-icon'
+import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
+import { IconSizedLoader, Loader } from '@/components/ui/loader'
 import { Garlic } from '@/components/garlic'
 import Callout from '@/components/ui/callout'
-import { useSearchProfilesByUsername } from '@/features/social/public-profile'
+import { useFriendRequestAction } from '@/features/social/hooks'
+import {
+	useOnePublicProfile,
+	useSearchProfilesByUsername,
+} from '@/features/social/public-profile'
 import { useUserId } from '@/lib/use-auth'
 import { usePrevious } from '@/hooks/use-debounce'
+import { uuid } from '@/types/main'
 
 export default function FriendSearchOverlay({
 	onClose,
@@ -100,15 +107,16 @@ export default function FriendSearchOverlay({
 						className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4"
 						data-testid="friend-search-results"
 					>
-						{showLoader ?
+						{showLoader ? (
 							<div className="flex h-20 items-center justify-center opacity-50">
 								<Loader />
 							</div>
-						: filteredResults.length === 0 ?
+						) : filteredResults.length === 0 ? (
 							<Callout variant="ghost" Icon={BigGarlic}>
 								<p>No users match that search, but you can invite a friend!</p>
 							</Callout>
-						:	<>
+						) : (
+							<>
 								<p className="text-muted-foreground ms-1 text-sm italic">
 									{filteredResults.length} result
 									{filteredResults.length === 1 ? '' : 's'}
@@ -119,7 +127,7 @@ export default function FriendSearchOverlay({
 									</div>
 								))}
 							</>
-						}
+						)}
 					</div>
 				)}
 			</DialogContent>
@@ -130,3 +138,100 @@ export default function FriendSearchOverlay({
 const BigGarlic = () => (
 	<Garlic className="bg-2-mlo-primary w-20 rounded-full p-3 @xl:p-4" />
 )
+
+function ProfileWithRelationship({ uid }: { uid: uuid }) {
+	const { data: profile } = useOnePublicProfile(uid)
+	const inviteResponseMutation = useFriendRequestAction(uid)
+	const isMostRecentByThem = profile?.relation?.most_recent_uid_by === uid
+
+	return !profile ? null : (
+		<AvatarIconRow {...profile}>
+			<div className="flex flex-row gap-2">
+				{inviteResponseMutation.isPending ? (
+					<IconSizedLoader />
+				) : inviteResponseMutation.isSuccess ? (
+					<span className="rounded-squircle size-8 rounded-full bg-green-600 p-1">
+						<Check className="size-6 text-white" />
+					</span>
+				) : !profile.relation || profile.relation.status === 'unconnected' ? (
+					<Button
+						variant="default"
+						className="size-8"
+						size="icon"
+						aria-label="Send friend request"
+						onClick={() => inviteResponseMutation.mutate('invite')}
+					>
+						<Send className="mt-[0.1rem] mr-[0.1rem] size-6" />
+					</Button>
+				) : profile.relation.status === 'pending' && isMostRecentByThem ? (
+					<>
+						<Button
+							variant="default"
+							className="size-8"
+							size="icon"
+							aria-label="Accept pending invitation"
+							onClick={() => inviteResponseMutation.mutate('accept')}
+						>
+							<ThumbsUp />
+						</Button>
+						<ConfirmDestructiveActionDialog
+							title="Decline this invitation"
+							description="Please confirm whether you'd like to decline this invitation"
+						>
+							<Button
+								variant="neutral"
+								className="size-8"
+								size="icon"
+								aria-label="Decline pending invitation"
+							>
+								<X className="size-6 p-0" />
+							</Button>
+							<Button
+								variant="red"
+								aria-label="Confirm: Decline friend request"
+								onClick={() => inviteResponseMutation.mutate('decline')}
+							>
+								{inviteResponseMutation.isPending ? (
+									<IconSizedLoader />
+								) : inviteResponseMutation.isSuccess ? (
+									<Check className="size-6 text-white" />
+								) : (
+									<>Confirm</>
+								)}
+							</Button>
+						</ConfirmDestructiveActionDialog>
+					</>
+				) : profile.relation?.status === 'pending' && !isMostRecentByThem ? (
+					<ConfirmDestructiveActionDialog
+						title={`Cancel this request`}
+						description={`Please confirm whether you'd like to cancel this friend request`}
+					>
+						<Button
+							variant="neutral"
+							className="size-8"
+							size="icon"
+							aria-label="Cancel friend request"
+						>
+							<X className="size-6 p-0" />
+						</Button>
+						<Button
+							variant="red"
+							aria-label="Confirm: Cancel friend request"
+							onClick={() => inviteResponseMutation.mutate('cancel')}
+						>
+							{inviteResponseMutation.isPending ? (
+								<IconSizedLoader />
+							) : inviteResponseMutation.isSuccess ? (
+								<Check className="size-6 text-white" />
+							) : (
+								<>Confirm</>
+							)}
+						</Button>
+					</ConfirmDestructiveActionDialog>
+				) : profile.relation.status === 'friends' ? (
+					<UserCheck className="size-6 p-0" />
+				) : null}
+			</div>
+		</AvatarIconRow>
+	)
+}
