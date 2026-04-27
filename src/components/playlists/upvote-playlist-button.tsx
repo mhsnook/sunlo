@@ -68,7 +68,7 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 				variant={hasUpvoted ? 'soft' : 'ghost'}
 				aria-label={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}
 				size="icon"
-				data-testid="upvote-playlist-button"
+				data-name="upvote-playlist-button"
 				onClick={(e) => {
 					e.stopPropagation()
 					requireAuth(() => {
