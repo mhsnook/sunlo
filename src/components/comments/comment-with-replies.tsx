@@ -159,6 +159,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 									return args
 								} else return { ...search, focus: comment.id }
 							}}
+							data-name="show-replies-button"
+							data-key={comment.id}
 						>
 							{showSubthread ? (
 								<ChevronUp className="me-1 h-4 w-4" />
@@ -185,7 +187,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								mode: 'reply' as const,
 							})}
 							className="mt-2 flex grow cursor-pointer flex-row items-center gap-2 py-2"
-							data-testid="add-reply-inline"
+							data-name="add-reply-inline"
+							data-key={comment.id}
 						>
 							<TinySelfAvatar className="h-6 w-6 shrink-0" />
 							<p className="bg-card/50 hover:bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1 pe-6 text-start text-xs shadow-xs inset-shadow-sm">

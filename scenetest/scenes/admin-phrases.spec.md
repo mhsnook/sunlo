@@ -30,7 +30,7 @@ learner:
 - up
 - see admin-phrases-page
 - see admin-phrases-table
-- click admin-phrase-detail-link
+- click admin-phrase-detail-link #1
 - up
 - see admin-phrase-detail
 
@@ -77,7 +77,7 @@ friend:
 - see admin-phrases-page
 - see admin-not-authorized-warning
 - see admin-phrases-table
-- click admin-phrase-detail-link
+- click admin-phrase-detail-link #1
 - up
 - see admin-phrase-detail
 - see admin-not-authorized-warning
