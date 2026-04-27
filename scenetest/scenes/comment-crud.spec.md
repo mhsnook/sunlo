@@ -80,9 +80,9 @@ learner:
 - openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
 - up
 - see request-detail-page
-- click show-replies-button c0000003-3333-4444-8555-666666666666
+- click comment-item c0000003-3333-4444-8555-666666666666 show-replies-button
 - up
-- click add-reply-inline c0000003-3333-4444-8555-666666666666
+- click comment-item c0000003-3333-4444-8555-666666666666 add-reply-inline
 - scope reply-dialog
 - typeInto reply-content-input 'Thanks for the tip about dosas!'
 - click post-reply-button

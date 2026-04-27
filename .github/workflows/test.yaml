@@ -354,11 +354,14 @@ jobs:
           echo "VITE_SUPABASE_ANON_KEY=$(supabase status -o json | jq -r '.ANON_KEY')" >> $GITHUB_ENV
           echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r '.SERVICE_ROLE_KEY')" >> $GITHUB_ENV
 
-      - name: Start dev server
-        run: pnpm dev &
+      - name: Build app
+        run: pnpm build
 
-      - name: Wait for dev server
-        run: npx wait-on http://localhost:5173 --timeout 60000
+      - name: Start preview server
+        run: pnpm preview &
+
+      - name: Wait for preview server
+        run: npx wait-on http://localhost:4173 --timeout 20000
 
       - name: Run scenetest specs
         id: scene
