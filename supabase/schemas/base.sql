@@ -36,6 +36,8 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
+create extension if not exists "pgsodium";
+
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -1548,7 +1550,9 @@ create table if not exists "public"."tag" (
 
 alter table "public"."tag" owner to "postgres";
 
-create or replace view "public"."phrase_meta" as
+create or replace view "public"."phrase_meta"
+with
+	("security_invoker" = 'true') as
 with
 	"tags" as (
 		select
