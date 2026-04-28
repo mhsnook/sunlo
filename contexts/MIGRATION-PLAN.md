@@ -42,6 +42,8 @@ Cloudflare auto-detects pnpm from the `packageManager` field in `package.json`.
 
 ### 1b. Environment variables
 
+**Production Supabase credentials:** Use the [Cloudflare–Supabase integration](https://developers.cloudflare.com/workers/databases/third-party-integrations/supabase/) to auto-inject credentials. In the Pages project Settings → Integrations → click "Add Integration" on the Supabase card → authenticate with your Supabase account → select your org and project. This automatically sets `SUPABASE_URL` and `SUPABASE_KEY` as secrets. (Note: these are runtime secrets for Pages Functions. You still need the `VITE_`-prefixed build-time vars below for the SPA client.)
+
 **Production** (Cloudflare Pages → Settings → Environment variables):
 
 | Variable | Value | Encrypted? |
