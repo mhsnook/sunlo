@@ -10,6 +10,11 @@ import { useDeckCards } from '@/features/deck/hooks'
 import { isDueCard } from '@/features/deck/is-due-card'
 import { phrasesCollection } from '@/features/phrases/collections'
 import {
+	partitionBuriedSiblings,
+	type BurySiblingCandidate,
+} from '@/features/review/bury-siblings'
+import { eq, useLiveQuery } from '@tanstack/react-db'
+import {
 	BookOpen,
 	CalendarClock,
 	MessageSquare,
@@ -47,7 +52,10 @@ import { useCompositePids } from '@/hooks/composite-pids'
 import { CardMetaSchema } from '@/features/deck/schemas'
 import { DailyReviewStateSchema } from '@/features/review/schemas'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
-import { reviewDaysCollection } from '@/features/review/collections'
+import {
+	cardReviewsCollection,
+	reviewDaysCollection,
+} from '@/features/review/collections'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
 
@@ -177,14 +185,64 @@ function ReviewPageContent() {
 	// Get full card data for card-level manifest building
 	const { data: deckCards } = useDeckCards(lang)
 
+	// Reviews scoped to this language — used by bury-siblings Rule 1, which
+	// looks at the reverse card's two most recent phase-1 reviews to decide
+	// whether to defer recall after consecutive failures.
+	const { data: reviewsForLang } = useLiveQuery(
+		(q) =>
+			q
+				.from({ review: cardReviewsCollection })
+				.where(({ review }) => eq(review.lang, lang)),
+		[lang]
+	)
+
 	// Sets for O(1) lookups in filters below
 	const freshSet = new Set(freshCards)
 	const allPhraseSet = new Set(allPhraseIdsForToday)
 
-	// Mirror manifest construction so display counts match the session exactly.
-	// A card enters the manifest if its phrase is in today's set AND it is
-	// active AND (due OR unreviewed). Unreviewed siblings on scheduled phrases
-	// count toward "Scheduled" — they ride along with a due sibling.
+	// One unified candidate list, then bury siblings exactly once. Both the
+	// display counts AND the manifest persisted on Start derive from `kept`,
+	// so users never see counts that don't match the session they're about
+	// to start.
+	type ReviewCandidate = BurySiblingCandidate & { bucket: 'due' | 'fresh' }
+	const candidates: Array<ReviewCandidate> = []
+
+	for (const card of deckCards ?? []) {
+		if (!allPhraseSet.has(card.phrase_id)) continue
+		if (card.status !== 'active') continue
+		const isUnreviewed = !card.last_reviewed_at
+		if (!isUnreviewed && !isDueCard(card)) continue
+		candidates.push({
+			phrase_id: card.phrase_id,
+			direction: card.direction,
+			last_reviewed_at: card.last_reviewed_at,
+			stability: card.stability,
+			bucket: isUnreviewed && freshSet.has(card.phrase_id) ? 'fresh' : 'due',
+		})
+	}
+
+	// Brand-new cards (not yet in deckCards) — always treated as fresh. We
+	// still record both directions here so bury-siblings can pick which one
+	// actually goes on today's manifest; the buried sibling's user_card row
+	// is still inserted so it can come up in a future session.
+	for (const pid of cardsToCreate) {
+		const phrase = phrasesCollection.get(pid)
+		for (const direction of directionsForPhrase(phrase?.only_reverse)) {
+			candidates.push({
+				phrase_id: pid,
+				direction,
+				last_reviewed_at: null,
+				stability: null,
+				bucket: 'fresh',
+			})
+		}
+	}
+
+	const { kept: keptCandidates } = partitionBuriedSiblings(
+		candidates,
+		reviewsForLang ?? []
+	)
+
 	let scheduledForward = 0
 	let scheduledReverse = 0
 	let newForward = 0
@@ -196,41 +254,23 @@ function ReviewPageContent() {
 	const schedForwardPhrases = new Set<string>()
 	const schedReversePhrases = new Set<string>()
 
-	for (const card of deckCards ?? []) {
-		if (!allPhraseSet.has(card.phrase_id)) continue
-		if (card.status !== 'active') continue
-		const isUnreviewed = !card.last_reviewed_at
-		if (!isUnreviewed && !isDueCard(card)) continue
-		const isFresh = isUnreviewed && freshSet.has(card.phrase_id)
-		if (card.direction === 'forward') {
+	for (const c of keptCandidates) {
+		const isFresh = c.bucket === 'fresh'
+		if (c.direction === 'forward') {
 			if (isFresh) {
 				newForward++
-				newForwardPhrases.add(card.phrase_id)
+				newForwardPhrases.add(c.phrase_id)
 			} else {
 				scheduledForward++
-				schedForwardPhrases.add(card.phrase_id)
+				schedForwardPhrases.add(c.phrase_id)
 			}
 		} else {
 			if (isFresh) {
 				newReverse++
-				newReversePhrases.add(card.phrase_id)
+				newReversePhrases.add(c.phrase_id)
 			} else {
 				scheduledReverse++
-				schedReversePhrases.add(card.phrase_id)
-			}
-		}
-	}
-
-	// Newly-created cards (not yet in deckCards) — always counted as new
-	for (const pid of cardsToCreate) {
-		const phrase = phrasesCollection.get(pid)
-		for (const d of directionsForPhrase(phrase?.only_reverse)) {
-			if (d === 'forward') {
-				newForward++
-				newForwardPhrases.add(pid)
-			} else {
-				newReverse++
-				newReversePhrases.add(pid)
+				schedReversePhrases.add(c.phrase_id)
 			}
 		}
 	}
@@ -299,40 +339,20 @@ function ReviewPageContent() {
 							.select()
 							.throwOnError()
 
-			// Build manifest from card-level data.
+			// Build manifest from the bury-siblings-filtered candidate set.
 			// 4 buckets: forward due → forward new → reverse due → reverse new
 			const forwardDue: Array<ManifestEntry> = []
 			const forwardNew: Array<ManifestEntry> = []
 			const reverseDue: Array<ManifestEntry> = []
 			const reverseNew: Array<ManifestEntry> = []
 
-			const allPhraseSet = new Set(allPhraseIdsForToday)
-
-			// Existing cards: due (retrievability ≤ 0.9) or unreviewed fresh
-			for (const card of deckCards ?? []) {
-				if (!allPhraseSet.has(card.phrase_id)) continue
-				if (card.status !== 'active') continue
-
-				const isUnreviewed = !card.last_reviewed_at
-				if (!isUnreviewed && !isDueCard(card)) continue
-
-				const entry = toManifestEntry(card.phrase_id, card.direction)
-				const isFresh = isUnreviewed && freshSet.has(card.phrase_id)
-
-				if (card.direction === 'forward') {
+			for (const c of keptCandidates) {
+				const entry = toManifestEntry(c.phrase_id, c.direction)
+				const isFresh = c.bucket === 'fresh'
+				if (c.direction === 'forward') {
 					;(isFresh ? forwardNew : forwardDue).push(entry)
 				} else {
 					;(isFresh ? reverseNew : reverseDue).push(entry)
-				}
-			}
-
-			// Add newly created cards (not yet in deckCards)
-			for (const insert of cardInserts) {
-				const entry = toManifestEntry(insert.phrase_id, insert.direction)
-				if (insert.direction === 'forward') {
-					forwardNew.push(entry)
-				} else {
-					reverseNew.push(entry)
 				}
 			}
 

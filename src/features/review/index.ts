@@ -60,3 +60,10 @@ export {
 	retrievability,
 	type Score,
 } from './fsrs'
+
+// Bury-siblings policy
+export {
+	decideBuryDirection,
+	partitionBuriedSiblings,
+	type BurySiblingCandidate,
+} from './bury-siblings'
