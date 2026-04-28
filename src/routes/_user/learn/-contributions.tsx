@@ -366,7 +366,11 @@ function CommentCardWithPhrases({
 	const { data: phrases } = usePhrasesFromComment(comment.id)
 
 	return (
-		<div className="bg-card space-y-2 rounded p-4 shadow-sm">
+		<div
+			data-testid="contributions-comment-item"
+			data-key={comment.id}
+			className="bg-card space-y-2 rounded p-4 shadow-sm"
+		>
 			<UidPermalinkInline
 				uid={comment.uid}
 				timeValue={comment.created_at}

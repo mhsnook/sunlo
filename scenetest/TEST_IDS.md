@@ -150,6 +150,10 @@ natural wrapper element to label.
 | `contributions-page`           | data-testid | Contributions route | Contributions page container                                                                       |
 | `contributions-tab--requests`  | data-testid | Contributions page  | Tab for requests                                                                                   |
 | `contributions-tab--phrases`   | data-testid | Contributions page  | Tab for phrases                                                                                    |
+| `contributions-tab--playlists` | data-testid | Contributions page  | Tab for playlists                                                                                  |
+| `contributions-tab--answers`   | data-testid | Contributions page  | Tab for answers                                                                                    |
+| `contributions-tab--comments`  | data-testid | Contributions page  | Tab for comments                                                                                   |
+| `contributions-comment-item`   | data-testid | Comments tab        | Comment card on the comments tab (use with `data-key={commentId}`)                                 |
 | `new-request-link`             | data-testid | Contributions page  | Link to create new request                                                                         |
 | `new-request-form`             | data-testid | New request page    | Request form container                                                                             |
 | `request-prompt-input`         | data-testid | Request form        | Textarea for prompt                                                                                |

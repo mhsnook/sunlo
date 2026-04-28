@@ -16,12 +16,23 @@ export default defineTeam({
 			key: undefined!,
 		},
 
+		// Fresh signup; expected to have NO decks, phrases, requests, or comments.
+		// Used to exercise onboarding flows.
 		'new-user': {
 			email: 'sunloapp+new@gmail.com',
 			password: 'password',
 			key: 'd4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8',
 		},
 
+		// Primary test user. Seeded with rich data across multiple decks.
+		// Decks (user_deck): hin, kan, tam, ibo, spa
+		// Phrase requests (5): kan e40e53ce (dosa+coffee), kan 6c1f2a5d (directions),
+		//   hin 3f8c9e2a (cooking ingredients), tam bc2e2811 (favourite food),
+		//   ibo 26fc0561 (cab driver)
+		// Playlists (3): hin a1b2c3d4 (Greetings), kan c3d4e5f6 (Basic Kannada),
+		//   hin f6a7b8c9 (Travel Phrases)
+		// Comments authored: c0000004 on kan request e40e53ce ("Vandu tea kudhi"),
+		//   c0000007 on hin request 5b0e1a4c ("nahi, dhanyavaad")
 		learner: {
 			email: 'sunloapp@gmail.com',
 			password: 'password',
@@ -34,6 +45,10 @@ export default defineTeam({
 			},
 		},
 
+		// Secondary actor for multi-user flows (friend requests, comments, chat).
+		// Phrase requests (1): hin 5b0e1a4c (declining food politely)
+		// Playlists (1): hin d4e5f6a7 (Numbers and Counting)
+		// Comments: c0000001 on hin request e0d3a74e, c0000006 on hin 4a9d0f3b
 		friend: {
 			email: 'sunloapp+friend@gmail.com',
 			password: 'password',
@@ -41,6 +56,9 @@ export default defineTeam({
 			username: 'Lexigrine',
 		},
 
+		// Tertiary actor; comments + replies.
+		// Comments: c0000002 (reply on hin e0d3a74e), c0000003 (kan e40e53ce),
+		//   c0000005 = team.seed_comment (on hin 3f8c9e2a)
 		learner2: {
 			email: 'sunloapp+1@gmail.com',
 			password: 'password',
@@ -48,6 +66,8 @@ export default defineTeam({
 			username: 'Best Frin',
 		},
 
+		// Used for answer/phrase-link flows in comments-and-answers.spec.md.
+		// No comments seeded; tests create them then clean up by [testStart].
 		learner3: {
 			email: 'sunloapp+2@gmail.com',
 			password: 'password',

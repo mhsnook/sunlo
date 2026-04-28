@@ -100,3 +100,19 @@ learner2:
 - openTo /notifications
 - up
 - seeText upvoted your request
+
+# learner sees their own comments on the contributions page comments tab
+
+// Exercises useAnyonesComments and the contributions Comments tab.
+// Relies on seed comment c0000004 (learner on Kannada request e40e53ce).
+
+learner:
+
+- login
+- openTo /learn/kan/contributions
+- up
+- see contributions-page
+- click contributions-tab--comments
+- up
+- see contributions-comment-item c0000004-4444-4555-8666-777777777777
+- seeText Vandu tea kudhi
