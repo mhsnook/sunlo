@@ -9,6 +9,7 @@ import {
 	MessagesSquare,
 	type LucideIcon,
 } from 'lucide-react'
+import * as z from 'zod'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
@@ -24,9 +25,14 @@ import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	useAnyonesPhraseRequests,
-	useAnyonesPhrases,
+	type PhraseRequestType,
+} from '@/features/requests'
+import { useAnyonesPhrases } from '@/features/phrases'
+import {
 	useAnyonesComments,
-} from '@/features/contributions/hooks'
+	usePhrasesFromComment,
+	type RequestCommentType,
+} from '@/features/comments'
 
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
@@ -37,9 +43,12 @@ import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-import { usePhrasesFromComment } from '@/features/comments/hooks'
-import type { RequestCommentType } from '@/features/comments/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+
+export const UserContributionsTabs = z.object({
+	contributionsTab: z
+		.enum(['requests', 'phrases', 'playlists', 'answers', 'comments'])
+		.optional(),
+})
 
 type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
 

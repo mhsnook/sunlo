@@ -88,6 +88,22 @@ export const useRequest = (
 		[id]
 	)
 
+export function useAnyonesPhraseRequests(
+	uid: uuid,
+	lang?: string
+): UseLiveQueryResult<PhraseRequestType[]> {
+	return useLiveQuery(
+		(q) => {
+			let query = q
+				.from({ request: phraseRequestsCollection })
+				.where(({ request }) => eq(request.requester_uid, uid))
+			if (lang) query = query.where(({ request }) => eq(request.lang, lang))
+			return query.orderBy(({ request }) => request.created_at, 'desc')
+		},
+		[lang, uid]
+	)
+}
+
 /** Whether the current user has upvoted this request. */
 export const useHasRequestUpvote = (requestId: uuid): boolean =>
 	!!useLiveQuery(
