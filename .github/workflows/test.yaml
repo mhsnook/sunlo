@@ -195,6 +195,102 @@ jobs:
             exit 1
           fi
 
+  bundle-size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Set up dummy env for build
+        run: |
+          echo "VITE_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_ANON_KEY=dummy" >> $GITHUB_ENV
+
+      - name: Install dependencies (PR)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build PR branch
+        run: pnpm build
+
+      - name: Measure PR bundle
+        run: |
+          PR_FILE=$(ls -S dist/assets/index-*.js | head -1)
+          echo "PR_RAW=$(stat -c%s "$PR_FILE")" >> $GITHUB_ENV
+          echo "PR_GZ=$(gzip -c "$PR_FILE" | wc -c)" >> $GITHUB_ENV
+
+      - name: Build base branch
+        run: |
+          git worktree add /tmp/base-branch origin/${{ github.base_ref }}
+          cd /tmp/base-branch
+          pnpm install --frozen-lockfile --silent
+          pnpm build
+          BASE_FILE=$(ls -S dist/assets/index-*.js | head -1)
+          echo "BASE_RAW=$(stat -c%s "$BASE_FILE")" >> $GITHUB_ENV
+          echo "BASE_GZ=$(gzip -c "$BASE_FILE" | wc -c)" >> $GITHUB_ENV
+          cd $GITHUB_WORKSPACE
+          git worktree remove --force /tmp/base-branch
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fmt = (n) => (n / 1024).toFixed(2) + ' kB';
+            const diff = (pr, base) => {
+              const d = pr - base;
+              const pct = base ? ((d / base) * 100).toFixed(2) : '0.00';
+              const sign = d > 0 ? '+' : '';
+              const emoji = d > 0 ? '🔺' : d < 0 ? '🟢' : '➖';
+              return `${emoji} ${sign}${(d / 1024).toFixed(2)} kB (${sign}${pct}%)`;
+            };
+            const prRaw = parseInt(process.env.PR_RAW);
+            const prGz = parseInt(process.env.PR_GZ);
+            const baseRaw = parseInt(process.env.BASE_RAW);
+            const baseGz = parseInt(process.env.BASE_GZ);
+
+            const body = [
+              '### Main bundle size',
+              '',
+              '`dist/assets/index-*.js` (largest chunk)',
+              '',
+              '|         | Base            | PR              | Δ                    |',
+              '|---------|-----------------|-----------------|----------------------|',
+              `| Raw     | ${fmt(baseRaw).padEnd(15)} | ${fmt(prRaw).padEnd(15)} | ${diff(prRaw, baseRaw)} |`,
+              `| Gzipped | ${fmt(baseGz).padEnd(15)} | ${fmt(prGz).padEnd(15)} | ${diff(prGz, baseGz)} |`,
+            ].join('\n');
+
+            const marker = '### Main bundle size';
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.startsWith(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
   unit:
     runs-on: ubuntu-latest
     timeout-minutes: 3
