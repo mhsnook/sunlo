@@ -2,7 +2,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import languages from '@/lib/languages'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 
-import { UserContributions, UserContributionsTabs } from './-contributions'
+import { UserContributions } from './-contributions'
+import { UserContributionsTabs } from './-contributions-tabs'
 import type { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({

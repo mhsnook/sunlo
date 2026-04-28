@@ -9,8 +9,6 @@ import {
 	MessagesSquare,
 	type LucideIcon,
 } from 'lucide-react'
-import * as z from 'zod'
-
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
 	DropdownMenu,
@@ -43,12 +41,6 @@ import Callout from '@/components/ui/callout'
 import { PlusMenu } from '@/components/plus-menu'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-
-export const UserContributionsTabs = z.object({
-	contributionsTab: z
-		.enum(['requests', 'phrases', 'playlists', 'answers', 'comments'])
-		.optional(),
-})
 
 type viewTabName = 'requests' | 'phrases' | 'playlists' | 'answers' | 'comments'
 
