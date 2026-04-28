@@ -1,7 +1,6 @@
 import { useUserId } from '@/lib/use-auth'
 import { createFileRoute } from '@tanstack/react-router'
-import { UserContributions } from './-contributions'
-import { UserContributionsTabs } from '@/features/contributions/schemas'
+import { UserContributions, UserContributionsTabs } from './-contributions'
 
 export const Route = createFileRoute('/_user/learn/contributions')({
 	validateSearch: UserContributionsTabs,

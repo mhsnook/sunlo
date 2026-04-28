@@ -23,4 +23,5 @@ export {
 	useOneComment,
 	usePhrasesFromComment,
 	useHasCommentUpvote,
+	useAnyonesComments,
 } from './hooks'

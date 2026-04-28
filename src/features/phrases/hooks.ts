@@ -135,6 +135,22 @@ export function useAllMyPhrasesLang(
 	)
 }
 
+export function useAnyonesPhrases(
+	uid: uuid,
+	lang?: string
+): UseLiveQueryResult<PhraseFullFullType[]> {
+	return useLiveQuery(
+		(q) => {
+			let query = q
+				.from({ phrase: phrasesFull })
+				.where(({ phrase }) => eq(phrase.added_by, uid))
+			if (lang) query = query.where(({ phrase }) => eq(phrase.lang, lang))
+			return query.orderBy(({ phrase }) => phrase.created_at, 'desc')
+		},
+		[lang, uid]
+	)
+}
+
 // Provenance types for phrase metadata
 export interface PhraseProvenancePlaylist {
 	type: 'playlist'
