@@ -271,15 +271,16 @@ describe('decideBuryDirection — Rule 2 (tomorrow retrievability)', () => {
 	})
 })
 
-describe('decideBuryDirection — fallback (no FSRS state)', () => {
-	it('buries reverse when both siblings are brand-new (no last_reviewed_at)', () => {
+describe('decideBuryDirection — Rule 0 (first-day exception)', () => {
+	it('returns null when both siblings are brand-new (keep both, recognition then recall)', () => {
 		const forward = makeCandidate({ phrase_id: P1, direction: 'forward' })
 		const reverse = makeCandidate({ phrase_id: P1, direction: 'reverse' })
-		expect(decideBuryDirection(forward, reverse, [], NOW)).toBe('reverse')
+		expect(decideBuryDirection(forward, reverse, [], NOW)).toBeNull()
 	})
+})
 
-	it('buries reverse when one sibling is new and the other is reviewed', () => {
-		// Mixed state — can't compare retrievability — default to recognition.
+describe('decideBuryDirection — fallback (mixed FSRS state)', () => {
+	it('buries reverse when forward is reviewed but reverse is not', () => {
 		const forward = makeCandidate({
 			phrase_id: P1,
 			direction: 'forward',
@@ -287,6 +288,17 @@ describe('decideBuryDirection — fallback (no FSRS state)', () => {
 			stability: 5,
 		})
 		const reverse = makeCandidate({ phrase_id: P1, direction: 'reverse' })
+		expect(decideBuryDirection(forward, reverse, [], NOW)).toBe('reverse')
+	})
+
+	it('buries reverse when reverse is reviewed but forward is not', () => {
+		const forward = makeCandidate({ phrase_id: P1, direction: 'forward' })
+		const reverse = makeCandidate({
+			phrase_id: P1,
+			direction: 'reverse',
+			last_reviewed_at: dayBefore(NOW, 10),
+			stability: 5,
+		})
 		expect(decideBuryDirection(forward, reverse, [], NOW)).toBe('reverse')
 	})
 })
@@ -300,9 +312,32 @@ describe('partitionBuriedSiblings', () => {
 		expect(buried).toEqual([])
 	})
 
-	it('buries one sibling per phrase that has both directions present', () => {
-		const forward1 = makeCandidate({ phrase_id: P1, direction: 'forward' })
-		const reverse1 = makeCandidate({ phrase_id: P1, direction: 'reverse' })
+	it('keeps both siblings of a brand-new pair (first-day exception)', () => {
+		const forward = makeCandidate({ phrase_id: P1, direction: 'forward' })
+		const reverse = makeCandidate({ phrase_id: P1, direction: 'reverse' })
+		const { kept, buried } = partitionBuriedSiblings(
+			[forward, reverse],
+			[],
+			NOW
+		)
+		expect(kept).toEqual([forward, reverse])
+		expect(buried).toEqual([])
+	})
+
+	it('buries one sibling per phrase once both have been reviewed', () => {
+		// Identical FSRS state on each pair → ties go to burying reverse.
+		const forward1 = makeCandidate({
+			phrase_id: P1,
+			direction: 'forward',
+			last_reviewed_at: dayBefore(NOW, 5),
+			stability: 8,
+		})
+		const reverse1 = makeCandidate({
+			phrase_id: P1,
+			direction: 'reverse',
+			last_reviewed_at: dayBefore(NOW, 5),
+			stability: 8,
+		})
 		const forward2 = makeCandidate({ phrase_id: P2, direction: 'forward' })
 		const { kept, buried } = partitionBuriedSiblings(
 			[forward1, reverse1, forward2],
@@ -315,14 +350,26 @@ describe('partitionBuriedSiblings', () => {
 	})
 
 	it('preserves input order in the kept array', () => {
-		const c1 = makeCandidate({ phrase_id: P1, direction: 'forward' })
+		const c1 = makeCandidate({
+			phrase_id: P1,
+			direction: 'forward',
+			last_reviewed_at: dayBefore(NOW, 5),
+			stability: 8,
+		})
 		const c2 = makeCandidate({ phrase_id: P2, direction: 'forward' })
-		const c3 = makeCandidate({ phrase_id: P1, direction: 'reverse' })
+		const c3 = makeCandidate({
+			phrase_id: P1,
+			direction: 'reverse',
+			last_reviewed_at: dayBefore(NOW, 5),
+			stability: 8,
+		})
 		const { kept } = partitionBuriedSiblings([c1, c2, c3], [], NOW)
 		expect(kept).toEqual([c1, c2])
 	})
 
-	it('applies Rule 1 across multiple phrases independently', () => {
+	it('applies Rule 1 and Rule 0 across multiple phrases independently', () => {
+		// P1: reverse failed twice → bury reverse.
+		// P2: brand-new pair → first-day exception, keep both.
 		const f1 = makeCandidate({
 			phrase_id: P1,
 			direction: 'forward',
@@ -356,9 +403,7 @@ describe('partitionBuriedSiblings', () => {
 			reviews,
 			NOW
 		)
-		// P1: Rule 1 fires — reverse buried.
-		// P2: brand-new pair → fallback buries reverse.
-		expect(kept).toEqual([f1, f2])
-		expect(buried).toEqual([r1, r2])
+		expect(kept).toEqual([f1, f2, r2])
+		expect(buried).toEqual([r1])
 	})
 })

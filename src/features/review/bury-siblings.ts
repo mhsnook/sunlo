@@ -9,6 +9,11 @@
  *
  * Rules, in order:
  *
+ *   0. First-day exception: when BOTH siblings are unreviewed, keep both.
+ *      The very first encounter pairs recognition then recall in one session
+ *      to anchor the new phrase; standard bury-siblings kicks in starting on
+ *      the second session.
+ *
  *   1. If the reverse sibling's two most recent phase-1 reviews both scored 1
  *      (Again), bury the reverse and show the forward today. Piling on a
  *      third failure attempt isn't useful — let the user re-anchor recognition
@@ -21,9 +26,9 @@
  *      tomorrow if the second decays more gradually, in which case we still
  *      keep the first.)
  *
- *   3. Fallback when retrievability can't be compared (one or both siblings
- *      have no FSRS state yet — e.g. brand-new cards): bury the reverse and
- *      show the forward. Recognition before recall is the safer default.
+ *   3. Fallback when retrievability can't be compared (one sibling reviewed
+ *      and one not, so no apples-to-apples retrievability): bury the reverse
+ *      and show the forward. Recognition before recall is the safer default.
  */
 
 import type { CardReviewType } from './schemas'
@@ -41,14 +46,21 @@ export interface BurySiblingCandidate {
 
 /**
  * Decide which sibling to bury when both forward and reverse are eligible.
- * Returns the direction that should be DROPPED from the manifest.
+ * Returns the direction that should be DROPPED from the manifest, or `null`
+ * when both should be kept (first-day exception).
  */
 export function decideBuryDirection(
 	forward: BurySiblingCandidate,
 	reverse: BurySiblingCandidate,
 	reviews: ReadonlyArray<CardReviewType>,
 	now: Date = new Date()
-): CardDirectionType {
+): CardDirectionType | null {
+	// Rule 0: brand-new pair — keep both so recognition and recall happen
+	// in the same first session.
+	if (!forward.last_reviewed_at && !reverse.last_reviewed_at) {
+		return null
+	}
+
 	if (reverseFailedTwiceInARow(reverse.phrase_id, reviews)) {
 		return 'reverse'
 	}
@@ -143,6 +155,7 @@ export function partitionBuriedSiblings<T extends BurySiblingCandidate>(
 	for (const { forward, reverse } of byPhrase.values()) {
 		if (!forward || !reverse) continue
 		const buryDir = decideBuryDirection(forward, reverse, reviews, now)
+		if (buryDir === null) continue
 		buriedSet.add(buryDir === 'forward' ? forward : reverse)
 	}
 
