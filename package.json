@@ -97,6 +97,7 @@
 		"playwright": "^1.58.2",
 		"prettier": "^3.6.0",
 		"prettier-plugin-sql": "^0.19.2",
+		"rollup-plugin-visualizer": "^7.0.1",
 		"tailwind-merge": "^2.6.0",
 		"tailwindcss": "^4.1.18",
 		"ts-fsrs": "4.7.1",
