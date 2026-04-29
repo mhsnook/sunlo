@@ -53,7 +53,7 @@ values
 		'You just say "give one" like this',
 		now() - interval '23 hours',
 		now() - interval '23 hours',
-		0
+		5
 	);
 
 --

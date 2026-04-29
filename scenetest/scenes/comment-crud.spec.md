@@ -39,10 +39,12 @@ friend:
 - click save-comment-button
 - up
 
-// Verify the phrase badge is visible on the saved comment
+// Verify the phrase badge is visible on the saved comment.
+// The seeded comment 800d41d1 also has a phrase link (with high upvote_count
+// so it sorts above friend's), so friend's badge is the second in DOM order.
 
 - see request-detail-page
-- see comment-phrase-link-badge
+- see comment-phrase-link-badge #2
 - up
 
 // Edit again to remove the phrase link
