@@ -110,3 +110,19 @@ learner:
 - see delete-comment-dialog
 - click confirm-delete-comment-button
 - up
+
+# friend cannot edit or delete learner2's seeded comment
+
+// Ownership gating: viewing someone else's comment, the edit and delete
+// controls must not render. Pairs with the RLS policies on request_comment
+// (Users can update/delete own comments) for defense in depth.
+
+friend:
+
+- login
+- openTo /learn/[team.lang]/requests/[team.comment_crud_request]
+- up
+- see request-detail-page
+- scope comment-item [team.phrase_linked_seed_comment]
+- notSee edit-comment-button
+- notSee delete-comment-button
