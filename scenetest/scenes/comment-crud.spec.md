@@ -102,7 +102,7 @@ learner:
 // Delete the reply
 
 - see request-detail-page
-- see comment-reply
+- scope comment-reply
 - click delete-comment-button
 - up
 - see delete-comment-dialog
