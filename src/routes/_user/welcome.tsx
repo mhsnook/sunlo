@@ -1,4 +1,4 @@
-import { type CSSProperties, useMemo } from 'react'
+import { type CSSProperties, useMemo, useState } from 'react'
 import {
 	createFileRoute,
 	Link,
@@ -17,6 +17,7 @@ import {
 	Sparkles,
 	Heart,
 	Globe,
+	List,
 } from 'lucide-react'
 
 import { useProfile } from '@/features/profile/hooks'
@@ -24,10 +25,19 @@ import { useDecks } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { phraseRequestsActive } from '@/features/requests/live'
+import { languagesCollection } from '@/features/languages/collections'
+import { useLanguagesSortedByLearners } from '@/features/languages/hooks'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { LangBadge } from '@/components/ui/badge'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog'
 import {
 	Select,
 	SelectContent,
@@ -35,6 +45,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@/components/ui/select'
+import { SelectOneLanguage } from '@/components/select-one-language'
 import { cn } from '@/lib/utils'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { CommunityNormsIntro } from '@/components/intros'
@@ -48,7 +59,10 @@ export const Route = createFileRoute('/_user/welcome')({
 		},
 	}),
 	loader: async () => {
-		await phraseRequestsCollection.preload()
+		await Promise.all([
+			phraseRequestsCollection.preload(),
+			languagesCollection.preload(),
+		])
 	},
 })
 
@@ -65,6 +79,7 @@ function WelcomePage() {
 			requireAffirmation: true,
 		}
 	)
+	const [browseRequestsOpen, setBrowseRequestsOpen] = useState(false)
 
 	// Redirect to getting-started if no profile
 	if (!profileLoading && !profile) {
@@ -184,9 +199,13 @@ function WelcomePage() {
 						icon={Heart}
 						title="Help Others Learn"
 						description="Answer translation requests in languages you know."
-						linkTo="/learn/browse"
 						linkText="Browse Requests"
 						variant="secondary"
+						onButtonClick={() => setBrowseRequestsOpen(true)}
+					/>
+					<BrowseRequestsDialog
+						open={browseRequestsOpen}
+						onOpenChange={setBrowseRequestsOpen}
 					/>
 				</div>
 			</section>
@@ -291,15 +310,17 @@ function ActionCard({
 	linkText,
 	variant = 'secondary',
 	disabled = false,
+	onButtonClick,
 }: {
 	icon: typeof WalletCards
 	title: string
 	description: string
-	linkTo: string
+	linkTo?: string
 	linkSearch?: Record<string, unknown>
 	linkText: string
 	variant?: 'primary' | 'secondary'
 	disabled?: boolean
+	onButtonClick?: () => void
 }) {
 	const isPrimary = variant === 'primary'
 
@@ -329,9 +350,17 @@ function ActionCard({
 					<Button variant="soft" disabled className="w-full">
 						{linkText}
 					</Button>
+				) : onButtonClick ? (
+					<Button
+						variant={isPrimary ? 'default' : 'soft'}
+						className="w-full"
+						onClick={onButtonClick}
+					>
+						{linkText}
+					</Button>
 				) : (
 					<Link
-						to={linkTo}
+						to={linkTo!}
 						search={linkSearch}
 						className={cn(
 							buttonVariants({
@@ -345,6 +374,74 @@ function ActionCard({
 				)}
 			</CardContent>
 		</Card>
+	)
+}
+
+function BrowseRequestsDialog({
+	open,
+	onOpenChange,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+}) {
+	const navigate = useNavigate()
+	const { data: allLanguages } = useLanguagesSortedByLearners()
+	const [selectorLang, setSelectorLang] = useState('')
+	const top5 = allLanguages?.slice(0, 5) ?? []
+
+	const handleLang = (lang: string) => {
+		onOpenChange(false)
+		void navigate({ to: '/learn/$lang/requests', params: { lang } })
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Browse Requests</DialogTitle>
+					<DialogDescription>
+						Pick a language to see translation requests you can help answer.
+					</DialogDescription>
+				</DialogHeader>
+				<div className="grid grid-cols-2 gap-3 @sm:grid-cols-3">
+					{top5.map((lang) => (
+						<button
+							key={lang.lang}
+							type="button"
+							onClick={() => handleLang(lang.lang)}
+							className="bg-card hover:bg-1-lo-primary flex flex-col gap-2 rounded-lg border p-4 text-start transition-colors"
+						>
+							<span className="from-5-mhi-primary to-6-mid-primary text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
+								{lang.lang.toUpperCase()}
+							</span>
+							<span className="text-sm leading-tight font-semibold">
+								{lang.name}
+							</span>
+						</button>
+					))}
+					<SelectOneLanguage
+						value={selectorLang}
+						setValue={(lang) => {
+							setSelectorLang(lang)
+							if (lang) handleLang(lang)
+						}}
+						trigger={
+							<button
+								type="button"
+								className="bg-card hover:bg-1-lo-primary flex flex-col gap-2 rounded-lg border border-dashed p-4 text-start transition-colors"
+							>
+								<span className="bg-muted text-muted-foreground inline-flex w-fit items-center justify-center rounded-md px-2.5 py-1">
+									<List className="size-4" />
+								</span>
+								<span className="text-muted-foreground text-sm leading-tight font-semibold">
+									More languages
+								</span>
+							</button>
+						}
+					/>
+				</div>
+			</DialogContent>
+		</Dialog>
 	)
 }
 
