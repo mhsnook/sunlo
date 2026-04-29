@@ -380,38 +380,44 @@ element to appear and then disappear:
 
 Prototype-only feature in `src/features/chat/`. Public route, no auth.
 
-| Selector                                           | Attribute   | Component/Location                                | Description                                            |
-| -------------------------------------------------- | ----------- | ------------------------------------------------- | ------------------------------------------------------ |
-| `chat-page`                                        | data-testid | `features/chat/components/chat-page.tsx`          | Chat page container                                    |
-| `chat-language-picker`                             | data-testid | `features/chat/components/language-picker.tsx`    | Container for language buttons                         |
-| `chat-language-picker {lang}`                      | data-key    | Language picker                                   | Language option (e.g. `chat-language-picker hin`)      |
-| `chat-language-picker {lang} chat-language-option` | data-testid | Language picker                                   | Bare option button inside the picker                   |
-| `chat-conversation`                                | data-testid | Chat page                                         | Scrollable list of turns                               |
-| `chat-empty-state`                                 | data-testid | Chat page                                         | Empty placeholder before any turns                     |
-| `chat-turn`                                        | data-testid | `features/chat/components/chat-message.tsx`       | One user query + assistant response                    |
-| `chat-user-message`                                | data-testid | Chat turn                                         | The bubble showing the user's query                    |
-| `chat-assistant-message`                           | data-testid | Chat turn                                         | The container for the assistant's response             |
-| `chat-pending`                                     | data-testid | Chat turn                                         | "Thinking…" indicator while results load               |
-| `chat-empty-results`                               | data-testid | Chat turn                                         | Shown when results array is empty                      |
-| `chat-result-list`                                 | data-testid | Chat turn                                         | Container for result cards                             |
-| `chat-phrase-result`                               | data-testid | `features/chat/components/phrase-result-card.tsx` | One result card                                        |
-| `chat-phrase-result {phraseId}`                    | data-key    | Result card                                       | Item key on each card                                  |
-| `chat-toggle-cart-button`                          | data-testid | Result card                                       | Toggle: add/remove phrase from cart + selection        |
-| `chat-cart-button`                                 | data-testid | `features/chat/components/cart-button.tsx`        | Top-right shopping-cart icon (popover trigger)         |
-| `chat-cart-badge`                                  | data-testid | Cart button                                       | Count badge on the cart icon                           |
-| `chat-cart-popover`                                | data-testid | Cart button                                       | Popover surface with cart contents                     |
-| `chat-cart-empty`                                  | data-testid | Cart popover                                      | Empty-state message inside the cart popover            |
-| `chat-cart-item`                                   | data-testid | Cart popover                                      | Individual cart row                                    |
-| `chat-cart-remove-button`                          | data-testid | Cart popover                                      | Per-row remove button (also clears from selection)     |
-| `chat-cart-clear-button`                           | data-testid | Cart popover                                      | Button to clear the entire cart                        |
-| `chat-selection-bar`                               | data-testid | `features/chat/components/selection-bar.tsx`      | Bar above input showing items selected for next pivot  |
-| `chat-selection-chip`                              | data-testid | Selection bar                                     | Selected-phrase chip (use with `data-key={phraseId}`)  |
-| `chat-selection-remove-button`                     | data-testid | Selection chip                                    | Remove a single phrase from selection (cart untouched) |
-| `chat-selection-clear-button`                      | data-testid | Selection bar                                     | Clear entire selection (cart untouched)                |
-| `chat-pivot-button`                                | data-testid | Selection bar                                     | "More like these" — pivot using current selection      |
-| `chat-input-form`                                  | data-testid | `features/chat/components/chat-input.tsx`         | Submit form wrapping the input + send                  |
-| `chat-input`                                       | data-testid | Chat input                                        | Text input for the user's query                        |
-| `chat-send-button`                                 | data-testid | Chat input                                        | Submit button                                          |
+| Selector                        | Attribute   | Component/Location                                | Description                                            |
+| ------------------------------- | ----------- | ------------------------------------------------- | ------------------------------------------------------ |
+| `chats-index-page`              | data-testid | `routes/chats.lazy.tsx`                           | /chats index page (language picker)                    |
+| `chats-language-list`           | data-testid | Index page                                        | Grid of top-N language tiles + search tile             |
+| `chats-language-list {lang}`    | data-key    | Index page                                        | Language tile (e.g. `chats-language-list spa`)         |
+| `chats-language-link`           | data-testid | Index page                                        | Tile that routes to /chats/$lang                       |
+| `chats-search-trigger`          | data-testid | Index page                                        | Tile that opens the language search dialog             |
+| `chats-search-input`            | data-testid | Search dialog                                     | Filter input inside the dialog                         |
+| `chats-search-results`          | data-testid | Search dialog                                     | List of all languages, filtered as you type            |
+| `chats-search-result`           | data-testid | Search dialog                                     | Filtered row (use with `data-key={lang}`)              |
+| `chat-page`                     | data-testid | `features/chat/components/chat-page.tsx`          | Chat page container (per-language at /chats/$lang)     |
+| `chat-back-link`                | data-testid | Chat page                                         | Link back to the index                                 |
+| `chat-conversation`             | data-testid | Chat page                                         | Scrollable list of turns                               |
+| `chat-empty-state`              | data-testid | Chat page                                         | Empty placeholder before any turns                     |
+| `chat-turn`                     | data-testid | `features/chat/components/chat-message.tsx`       | One user query + assistant response                    |
+| `chat-user-message`             | data-testid | Chat turn                                         | The bubble showing the user's query                    |
+| `chat-assistant-message`        | data-testid | Chat turn                                         | The container for the assistant's response             |
+| `chat-pending`                  | data-testid | Chat turn                                         | "Thinking…" indicator while results load               |
+| `chat-empty-results`            | data-testid | Chat turn                                         | Shown when results array is empty                      |
+| `chat-result-list`              | data-testid | Chat turn                                         | Container for result cards                             |
+| `chat-phrase-result`            | data-testid | `features/chat/components/phrase-result-card.tsx` | One result card                                        |
+| `chat-phrase-result {phraseId}` | data-key    | Result card                                       | Item key on each card                                  |
+| `chat-toggle-cart-button`       | data-testid | Result card                                       | Toggle: add/remove phrase from cart + selection        |
+| `chat-cart-button`              | data-testid | `features/chat/components/cart-button.tsx`        | Top-right shopping-cart icon (popover trigger)         |
+| `chat-cart-badge`               | data-testid | Cart button                                       | Count badge on the cart icon                           |
+| `chat-cart-popover`             | data-testid | Cart button                                       | Popover surface with cart contents                     |
+| `chat-cart-empty`               | data-testid | Cart popover                                      | Empty-state message inside the cart popover            |
+| `chat-cart-item`                | data-testid | Cart popover                                      | Individual cart row                                    |
+| `chat-cart-remove-button`       | data-testid | Cart popover                                      | Per-row remove button (also clears from selection)     |
+| `chat-cart-clear-button`        | data-testid | Cart popover                                      | Button to clear the entire cart                        |
+| `chat-selection-bar`            | data-testid | `features/chat/components/selection-bar.tsx`      | Bar above input showing items selected for next pivot  |
+| `chat-selection-chip`           | data-testid | Selection bar                                     | Selected-phrase chip (use with `data-key={phraseId}`)  |
+| `chat-selection-remove-button`  | data-testid | Selection chip                                    | Remove a single phrase from selection (cart untouched) |
+| `chat-selection-clear-button`   | data-testid | Selection bar                                     | Clear entire selection (cart untouched)                |
+| `chat-pivot-button`             | data-testid | Selection bar                                     | "More like these" — pivot using current selection      |
+| `chat-input-form`               | data-testid | `features/chat/components/chat-input.tsx`         | Submit form wrapping the input + send                  |
+| `chat-input`                    | data-testid | Chat input                                        | Text input for the user's query                        |
+| `chat-send-button`              | data-testid | Chat input                                        | Submit button                                          |
 
 ## Admin Phrase Management
 

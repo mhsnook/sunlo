@@ -12,13 +12,12 @@ export {
 	type ChatTurnType,
 } from './schemas'
 
-export { useChatStore } from './store'
+export { useChatStore, ChatLangProvider, useChatRouteLang } from './store'
 export {
-	useChatLang,
 	useChatTurns,
 	useChatCart,
 	useChatSelection,
 	useChatSearch,
 } from './hooks'
-export { chatSearch, SUPPORTED_LANGS, type ChatSearchInput } from './api'
+export { chatSearch, type ChatSearchInput } from './api'
 export { ChatPage } from './components/chat-page'

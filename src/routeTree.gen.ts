@@ -11,6 +11,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as UserRouteImport } from './routes/_user'
 import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -80,7 +81,8 @@ const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
-const ChatLazyRouteImport = createFileRoute('/chat')()
+const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
+const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
 const UserFriendsInviteLazyRouteImport = createFileRoute(
   '/_user/friends/invite',
 )()
@@ -114,11 +116,11 @@ const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/components.lazy').then((d) => d.Route))
-const ChatLazyRoute = ChatLazyRouteImport.update({
-  id: '/chat',
-  path: '/chat',
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
   getParentRoute: () => rootRouteImport,
-} as any).lazy(() => import('./routes/chat.lazy').then((d) => d.Route))
+} as any)
 const UserRoute = UserRouteImport.update({
   id: '/_user',
   getParentRoute: () => rootRouteImport,
@@ -132,6 +134,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatsIndexLazyRoute = ChatsIndexLazyRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ChatsRoute,
+} as any).lazy(() => import('./routes/chats.index.lazy').then((d) => d.Route))
+const ChatsLangLazyRoute = ChatsLangLazyRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
+  getParentRoute: () => ChatsRoute,
+} as any).lazy(() => import('./routes/chats.$lang.lazy').then((d) => d.Route))
 const UserWelcomeRoute = UserWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -457,7 +469,7 @@ const UserAdminLangPhrasesIdRoute = UserAdminLangPhrasesIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chat': typeof ChatLazyRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -476,6 +488,8 @@ export interface FileRoutesByFullPath {
   '/profile': typeof UserProfileRouteWithChildren
   '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
+  '/chats/$lang': typeof ChatsLangLazyRoute
+  '/chats/': typeof ChatsIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -527,7 +541,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chat': typeof ChatLazyRoute
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -542,6 +555,8 @@ export interface FileRoutesByTo {
   '/notifications': typeof UserNotificationsRoute
   '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
+  '/chats/$lang': typeof ChatsLangLazyRoute
+  '/chats': typeof ChatsIndexLazyRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/learn/add-deck': typeof UserLearnAddDeckRoute
   '/learn/archived': typeof UserLearnArchivedRoute
@@ -588,7 +603,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
-  '/chat': typeof ChatLazyRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
@@ -607,6 +622,8 @@ export interface FileRoutesById {
   '/_user/profile': typeof UserProfileRouteWithChildren
   '/_user/search': typeof UserSearchRoute
   '/_user/welcome': typeof UserWelcomeRoute
+  '/chats/$lang': typeof ChatsLangLazyRoute
+  '/chats/': typeof ChatsIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -660,7 +677,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/chat'
+    | '/chats'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -679,6 +696,8 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/welcome'
+    | '/chats/$lang'
+    | '/chats/'
     | '/admin/$lang'
     | '/friends/$uid'
     | '/friends/chats'
@@ -730,7 +749,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/chat'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -745,6 +763,8 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/search'
     | '/welcome'
+    | '/chats/$lang'
+    | '/chats'
     | '/friends/$uid'
     | '/learn/add-deck'
     | '/learn/archived'
@@ -790,7 +810,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_auth'
     | '/_user'
-    | '/chat'
+    | '/chats'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
@@ -809,6 +829,8 @@ export interface FileRouteTypes {
     | '/_user/profile'
     | '/_user/search'
     | '/_user/welcome'
+    | '/chats/$lang'
+    | '/chats/'
     | '/_user/admin/$lang'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
@@ -863,7 +885,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
-  ChatLazyRoute: typeof ChatLazyRoute
+  ChatsRoute: typeof ChatsRouteWithChildren
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   MicrocopyLazyRoute: typeof MicrocopyLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
@@ -908,11 +930,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComponentsLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatLazyRouteImport
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_user': {
@@ -935,6 +957,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/chats/': {
+      id: '/chats/'
+      path: '/'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof ChatsIndexLazyRouteImport
+      parentRoute: typeof ChatsRoute
+    }
+    '/chats/$lang': {
+      id: '/chats/$lang'
+      path: '/$lang'
+      fullPath: '/chats/$lang'
+      preLoaderRoute: typeof ChatsLangLazyRouteImport
+      parentRoute: typeof ChatsRoute
     }
     '/_user/welcome': {
       id: '/_user/welcome'
@@ -1638,11 +1674,23 @@ const UserRouteChildren: UserRouteChildren = {
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
 
+interface ChatsRouteChildren {
+  ChatsLangLazyRoute: typeof ChatsLangLazyRoute
+  ChatsIndexLazyRoute: typeof ChatsIndexLazyRoute
+}
+
+const ChatsRouteChildren: ChatsRouteChildren = {
+  ChatsLangLazyRoute: ChatsLangLazyRoute,
+  ChatsIndexLazyRoute: ChatsIndexLazyRoute,
+}
+
+const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
-  ChatLazyRoute: ChatLazyRoute,
+  ChatsRoute: ChatsRouteWithChildren,
   ComponentsLazyRoute: ComponentsLazyRoute,
   MicrocopyLazyRoute: MicrocopyLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,

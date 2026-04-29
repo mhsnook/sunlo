@@ -1,10 +1,13 @@
-# visitor opens the chat prototype and sees the empty state
+# visitor lands on the chats index and picks a language
 
 visitor:
 
-- openTo /chat
+- openTo /chats
+- see chats-index-page
+- see chats-language-list
+- click chats-language-list spa chats-language-link
+- up
 - see chat-page
-- see chat-language-picker
 - see chat-empty-state
 - see chat-input
 - see chat-cart-button
@@ -15,7 +18,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - see chat-page
 - typeInto chat-input what do I say if I am going to the store?
 - click chat-send-button
@@ -28,7 +31,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -42,7 +45,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -59,7 +62,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -75,7 +78,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -92,7 +95,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -107,7 +110,7 @@ visitor:
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
@@ -117,17 +120,26 @@ visitor:
 - notSee chat-selection-bar
 - see chat-cart-badge
 
-# switching languages resets the conversation, cart, and selection
+# each language keeps its own conversation
 
 visitor:
 
-- openTo /chat
+- openTo /chats/spa
 - typeInto chat-input store
 - click chat-send-button
 - up
+- see chat-result-list
 - click chat-phrase-result mock-spa-001 chat-toggle-cart-button
-- click chat-language-picker hin chat-language-option
-- notSee chat-result-list
-- notSee chat-cart-badge
-- notSee chat-selection-bar
+- see chat-cart-badge
+- click chat-back-link
+- up
+- click chats-language-list hin chats-language-link
+- up
 - see chat-empty-state
+- notSee chat-cart-badge
+- click chat-back-link
+- up
+- click chats-language-list spa chats-language-link
+- up
+- see chat-result-list
+- see chat-cart-badge
