@@ -264,6 +264,12 @@ inspector_port = 8083
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 # entrypoint = "./functions/MY_FUNCTION_NAME/index.ts"
 
+[functions.chat-search]
+enabled = true
+# Public-facing endpoint: anonymous callers should be able to invoke it
+# without a JWT (the chat prototype's /chats route is unauthenticated).
+verify_jwt = false
+
 [analytics]
 enabled = false
 port = 54327
