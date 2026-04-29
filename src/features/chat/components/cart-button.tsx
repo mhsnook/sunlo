@@ -5,10 +5,12 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from '@/components/ui/popover'
-import { useChatStore } from '../store'
+import { useChatStore, useChatRouteLang } from '../store'
+import { useChatCart } from '../hooks'
 
 export function CartButton() {
-	const cart = useChatStore((s) => s.cart)
+	const lang = useChatRouteLang()
+	const cart = useChatCart()
 	const removeFromCart = useChatStore((s) => s.removeFromCart)
 	const clearCart = useChatStore((s) => s.clearCart)
 
@@ -53,7 +55,7 @@ export function CartButton() {
 								variant="ghost"
 								size="sm"
 								data-testid="chat-cart-clear-button"
-								onClick={clearCart}
+								onClick={() => clearCart(lang)}
 							>
 								<Trash2 />
 								Clear
@@ -96,7 +98,7 @@ export function CartButton() {
 										size="icon"
 										data-testid="chat-cart-remove-button"
 										aria-label="Remove from cart"
-										onClick={() => removeFromCart(phrase.id)}
+										onClick={() => removeFromCart(lang, phrase.id)}
 									>
 										<X />
 									</Button>
