@@ -45,6 +45,10 @@ values
 		now() - interval '1 days 23 hours',
 		0
 	),
+	-- team.phrase_linked_seed_comment (see scenetest/actors/default.ts).
+	-- comment-crud.spec.md depends on this comment having a phrase link AND
+	-- a higher upvote_count than every other comment on this request, so it
+	-- reliably sorts first in the live query. Don't drop the count below 4.
 	(
 		'800d41d1-3161-4a22-9d6f-dd0dcb29374a',
 		'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
@@ -53,7 +57,7 @@ values
 		'You just say "give one" like this',
 		now() - interval '23 hours',
 		now() - interval '23 hours',
-		0
+		5
 	);
 
 --
