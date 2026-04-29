@@ -1,7 +1,7 @@
 import { Check, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { useChatStore } from '../store'
+import { useChatStore, useChatRouteLang } from '../store'
 import type { ChatResultPhraseType } from '../schemas'
 
 type Props = {
@@ -9,7 +9,10 @@ type Props = {
 }
 
 export function PhraseResultCard({ phrase }: Props) {
-	const inCart = useChatStore((s) => s.cart.some((p) => p.id === phrase.id))
+	const lang = useChatRouteLang()
+	const inCart = useChatStore((s) =>
+		(s.cartByLang[lang] ?? []).some((p) => p.id === phrase.id)
+	)
 	const toggleResult = useChatStore((s) => s.toggleResult)
 
 	return (
@@ -42,7 +45,7 @@ export function PhraseResultCard({ phrase }: Props) {
 				size="icon"
 				data-testid="chat-toggle-cart-button"
 				aria-label={inCart ? 'Remove from cart' : 'Add to cart'}
-				onClick={() => toggleResult(phrase)}
+				onClick={() => toggleResult(lang, phrase)}
 			>
 				{inCart ? <Check /> : <Plus />}
 			</Button>
