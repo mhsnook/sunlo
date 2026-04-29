@@ -1,10 +1,11 @@
 import { Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useChatStore } from '../store'
-import { useChatSearch } from '../hooks'
+import { useChatStore, useChatRouteLang } from '../store'
+import { useChatSearch, useChatSelection } from '../hooks'
 
 export function SelectionBar() {
-	const selection = useChatStore((s) => s.selection)
+	const lang = useChatRouteLang()
+	const selection = useChatSelection()
 	const removeFromSelection = useChatStore((s) => s.removeFromSelection)
 	const clearSelection = useChatStore((s) => s.clearSelection)
 	const search = useChatSearch()
@@ -32,7 +33,7 @@ export function SelectionBar() {
 					variant="ghost"
 					size="sm"
 					data-testid="chat-selection-clear-button"
-					onClick={clearSelection}
+					onClick={() => clearSelection(lang)}
 				>
 					Clear
 				</Button>
@@ -51,7 +52,7 @@ export function SelectionBar() {
 							type="button"
 							data-testid="chat-selection-remove-button"
 							aria-label="Remove from selection"
-							onClick={() => removeFromSelection(phrase.id)}
+							onClick={() => removeFromSelection(lang, phrase.id)}
 							className="hover:text-foreground text-muted-foreground"
 						>
 							<X className="h-3 w-3" />
