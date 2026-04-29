@@ -5,12 +5,12 @@
 // Finally deletes the comment to clean up.
 
 cleanup: supabase.from('comment_phrase_link').delete().eq('uid', '[friend.key]')
-cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96')
+cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', '[team.comment_crud_request]')
 
 friend:
 
 - login
-- openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- openTo /learn/[team.lang]/requests/[team.comment_crud_request]
 - up
 - up
 - see request-detail-page
@@ -32,7 +32,7 @@ friend:
 - scope comment-dialog
 - click attach-phrase-button
 - typeInto phrase-search-input dosa
-- click phrase-picker-item b0fbbe1d-705e-4d93-a231-ac55263fcfee
+- click phrase-picker-item [team.attach_phrase]
 - see remove-phrase-button
 - up
 - typeInto edit-comment-content-input 'Updated: here is the phrase you need'
@@ -40,8 +40,9 @@ friend:
 - up
 
 // Verify the phrase badge is visible on the saved comment.
-// The seeded comment 800d41d1 also has a phrase link (with high upvote_count
-// so it sorts above friend's), so friend's badge is the second in DOM order.
+// [team.phrase_linked_seed_comment] also has a phrase link and is seeded with a
+// high upvote_count so it sorts above friend's, so friend's badge is the
+// second in DOM order. (See actors/default.ts for the invariant.)
 
 - see request-detail-page
 - see comment-phrase-link-badge #2
@@ -74,12 +75,12 @@ friend:
 // learner opens the request page, waits for collections to load,
 // then navigates to the reply URL to open the reply dialog.
 
-cleanup: supabase.from('request_comment').delete().eq('uid', '[learner.key]').eq('request_id', 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96').neq('id', 'c0000004-4444-4555-8666-777777777777')
+cleanup: supabase.from('request_comment').delete().eq('uid', '[learner.key]').eq('request_id', '[team.comment_crud_request]').neq('id', 'c0000004-4444-4555-8666-777777777777')
 
 learner:
 
 - login
-- openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- openTo /learn/[team.lang]/requests/[team.comment_crud_request]
 - up
 - see request-detail-page
 - click comment-item c0000003-3333-4444-8555-666666666666 show-replies-button

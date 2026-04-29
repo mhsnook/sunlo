@@ -10,6 +10,21 @@ export default defineTeam({
 		nocard_phrase: 'aa110007-7777-4aaa-bbbb-cccccccccccc',
 		// A seed comment on the Hindi request used in comments-and-answers.spec.md.
 		seed_comment: 'c0000005-5555-4666-8777-888888888888',
+		// Request in [team.lang] used by comment-crud.spec.md. Must exist and be
+		// open for friend + learner to comment on.
+		comment_crud_request: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96',
+		// Seeded phrase-linked comment on [team.comment_crud_request], owned by learner2.
+		// Required invariants for comment-crud.spec.md:
+		//   1. Has a comment_phrase_link row attached.
+		//   2. upvote_count > all sibling comments on the request, so it sorts FIRST
+		//      in the live query (orderBy upvote_count desc). Currently set to 5,
+		//      while the next-highest sibling sits at 3. Don't lower this.
+		// The spec then asserts friend's own badge as `comment-phrase-link-badge #2`.
+		phrase_linked_seed_comment: '800d41d1-3161-4a22-9d6f-dd0dcb29374a',
+		// A phrase in [team.lang] that friend attaches to their comment in
+		// comment-crud.spec.md. Must be searchable from the phrase picker by
+		// the substring 'dosa'.
+		attach_phrase: 'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
 	},
 	actors: {
 		visitor: {
@@ -58,7 +73,8 @@ export default defineTeam({
 
 		// Tertiary actor; comments + replies.
 		// Comments: c0000002 (reply on hin e0d3a74e), c0000003 (kan e40e53ce),
-		//   c0000005 = team.seed_comment (on hin 3f8c9e2a)
+		//   c0000005 = team.seed_comment (on hin 3f8c9e2a),
+		//   800d41d1 = team.phrase_linked_seed_comment (on team.comment_crud_request)
 		learner2: {
 			email: 'sunloapp+1@gmail.com',
 			password: 'password',
