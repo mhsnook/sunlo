@@ -83,9 +83,7 @@ learner:
 - openTo /learn/[team.lang]/requests/[team.comment_crud_request]
 - up
 - see request-detail-page
-- click comment-item c0000003-3333-4444-8555-666666666666 show-replies-button
-- up
-- click comment-item c0000003-3333-4444-8555-666666666666 add-reply-inline
+- click comment-item c0000003-3333-4444-8555-666666666666 reply-link
 - scope reply-dialog
 - typeInto reply-content-input 'Thanks for the tip about dosas!'
 - click post-reply-button
