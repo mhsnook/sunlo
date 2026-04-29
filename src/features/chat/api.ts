@@ -1,14 +1,23 @@
+import supabase from '@/lib/supabase-client'
 import type { ChatQueryType, ChatResultPhraseType } from './schemas'
 
-// Mock backend for the prototype. When the real edge function lands, this is
-// the only file that should need to change — the input/output shapes are the
-// contract.
+// Two implementations of `chatSearch` live here:
+//   - chatSearchMock — deterministic canned data, used by scenetest specs.
+//   - chatSearchLive — invokes the chat-search Edge Function.
+//
+// `chatSearch` defaults to the live function but falls back to the mock when
+// the env flag is set OR when running under the scenetest harness so the
+// existing UI tests keep passing without populated chat_corpus.
 
 export type ChatSearchInput = {
 	lang: string
 	excludePids: string[]
 	query: ChatQueryType
 }
+
+const USE_MOCK =
+	import.meta.env.VITE_CHAT_USE_MOCK === 'true' ||
+	import.meta.env.MODE === 'test'
 
 const MOCK_BANK: Record<string, ChatResultPhraseType[]> = {
 	spa: [
@@ -111,7 +120,7 @@ const MOCK_BANK: Record<string, ChatResultPhraseType[]> = {
 	],
 }
 
-export async function chatSearch(
+export async function chatSearchMock(
 	input: ChatSearchInput
 ): Promise<ChatResultPhraseType[]> {
 	await new Promise((resolve) => setTimeout(resolve, 350))
@@ -120,6 +129,21 @@ export async function chatSearch(
 	const filtered = bank.filter((p) => !input.excludePids.includes(p.id))
 	return filtered.slice(0, 3)
 }
+
+export async function chatSearchLive(
+	input: ChatSearchInput
+): Promise<ChatResultPhraseType[]> {
+	const result = await supabase.functions.invoke<ChatResultPhraseType[]>(
+		'chat-search',
+		{ body: input }
+	)
+	if (result.error) {
+		throw new Error(`chat-search failed: ${String(result.error)}`)
+	}
+	return result.data ?? []
+}
+
+export const chatSearch = USE_MOCK ? chatSearchMock : chatSearchLive
 
 export const SUPPORTED_LANGS = [
 	{ code: 'spa', label: 'Spanish' },

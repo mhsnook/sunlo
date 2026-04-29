@@ -23,7 +23,7 @@
 	"env": {
 		"builtin": true
 	},
-	"ignorePatterns": ["dist/", "src-tauri/"],
+	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
 	"overrides": [
 		{
 			"files": ["src/**/*.{ts,tsx}", "vite.config.ts"],
