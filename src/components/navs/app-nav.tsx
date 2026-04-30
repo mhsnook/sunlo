@@ -54,7 +54,7 @@ export function AppNav() {
 			<div ref={ref}></div>
 
 			<div
-				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${!entry?.isIntersecting ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
+				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${entry?.isIntersecting === false ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
 				<div className="scrollbar-none w-0 grow overflow-x-auto">

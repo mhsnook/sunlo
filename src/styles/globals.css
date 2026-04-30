@@ -303,6 +303,7 @@
 @layer base {
 	html {
 		font-size: 112.5%; /* 18px base — bump from the 16px default */
+		scrollbar-gutter: stable;
 	}
 	body {
 		padding-top: env(safe-area-inset-top);
@@ -318,12 +319,5 @@
 	}
 	body.font-dyslexic {
 		--font-sans: var(--font-dyslexic);
-	}
-}
-
-/* Wider sidebar on large screens */
-@media (min-width: 1536px) {
-	[data-slot='sidebar'] {
-		--sidebar-width: 18rem;
 	}
 }
