@@ -23,15 +23,17 @@ import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 
 type GettingStartedProps = {
 	referrer?: uuid
+	lang?: string
 }
 
 export const Route = createFileRoute('/_user/getting-started')({
 	validateSearch: (search?: Record<string, unknown>): GettingStartedProps => {
-		return search
-			? {
-					referrer: (search.referrer as string) || undefined,
-				}
-			: {}
+		if (!search) return {}
+		const lang = search.lang as string | undefined
+		return {
+			referrer: (search.referrer as string) || undefined,
+			lang: lang && lang.length === 3 ? lang : undefined,
+		}
 	},
 	component: GettingStartedPage,
 	beforeLoad: ({ context }) => {
@@ -53,12 +55,16 @@ export const Route = createFileRoute('/_user/getting-started')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function GettingStartedPage() {
-	const { referrer }: GettingStartedProps = Route.useSearch()
+	const { referrer, lang }: GettingStartedProps = Route.useSearch()
 	const userId = useUserId()
 	const { data: profile } = useProfile()
 
-	// After profile creation, go to welcome page (or friend's chat if invited)
-	const nextPage = referrer ? `/friends/chats/${referrer}` : '/welcome'
+	// After profile creation, prioritize: deck-creation flow → friend's chat → welcome
+	const nextPage = lang
+		? `/learn/add-deck?lang=${lang}`
+		: referrer
+			? `/friends/chats/${referrer}`
+			: '/welcome'
 
 	return profile ? (
 		<Navigate to={nextPage} />

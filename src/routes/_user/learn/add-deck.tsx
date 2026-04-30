@@ -16,7 +16,7 @@ import ErrorLabel from '@/components/fields/error-label'
 import { Loader } from '@/components/ui/loader'
 import { useDecks } from '@/features/deck/hooks'
 import { useDeckLangs } from '@/lib/hooks'
-import { RequireAuth } from '@/components/require-auth'
+import { useAuth } from '@/lib/use-auth'
 import { Archive } from 'lucide-react'
 
 const SearchSchema = z.object({
@@ -46,14 +46,90 @@ type FormValues = z.infer<typeof NewDeckSchema>
 const HelloIcon = () => <span className="text-2xl">👋</span>
 
 function NewDeckForm() {
+	const { isAuth } = useAuth()
+	return isAuth ? <NewDeckFormAuthed /> : <NewDeckFormVisitor />
+}
+
+function NewDeckFormVisitor() {
+	const search = Route.useSearch()
+	const {
+		control,
+		formState: { errors },
+	} = useForm<FormValues>({
+		resolver: zodResolver(NewDeckSchema),
+		defaultValues: { lang: search.lang },
+		mode: 'onChange',
+	})
+	const controller = useController({ name: 'lang', control })
+	const selectedLang = controller.field.value
+
 	return (
-		<RequireAuth message="You need to be logged in to create a new deck.">
-			<NewDeckFormInner />
-		</RequireAuth>
+		<main>
+			<Card>
+				<CardHeader>
+					<CardTitle>What language would you like to learn?</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div data-testid="add-deck-form" className="space-y-6">
+						<SelectOneLanguage
+							hasError={!!errors.lang}
+							value={selectedLang}
+							setValue={controller.field.onChange}
+							size="lg"
+						/>
+						<ErrorLabel error={errors.lang} />
+						{selectedLang ? (
+							<Callout Icon={HelloIcon}>
+								<p className="text-primary-foresoft text-xl font-bold">
+									Sign up to start learning {languages[selectedLang]}
+								</p>
+								<p>
+									We'll save your selection and get you set up with your first
+									deck of flashcards.
+								</p>
+							</Callout>
+						) : (
+							<p className="text-muted-foreground">
+								Pick a language above to get started — we'll create an account
+								so you can save your progress.
+							</p>
+						)}
+						<div className="flex flex-col items-center justify-between gap-2 @lg:flex-row">
+							<Link
+								to="/signup"
+								search={selectedLang ? { lang: selectedLang } : {}}
+								data-testid="start-learning-button"
+								className={buttonVariants({ variant: 'default', size: 'lg' })}
+								disabled={!selectedLang}
+								aria-disabled={!selectedLang}
+								tabIndex={!selectedLang ? -1 : undefined}
+							>
+								{selectedLang ? (
+									<>Sign up to start learning {languages[selectedLang]}</>
+								) : (
+									<>Sign up to start learning</>
+								)}
+							</Link>
+							<Link
+								to="/login"
+								search={{
+									redirectedFrom: selectedLang
+										? `/learn/add-deck?lang=${selectedLang}`
+										: '/learn/add-deck',
+								}}
+								className={buttonVariants({ variant: 'neutral' })}
+							>
+								I already have an account
+							</Link>
+						</div>
+					</div>
+				</CardContent>
+			</Card>
+		</main>
 	)
 }
 
-function NewDeckFormInner() {
+function NewDeckFormAuthed() {
 	const createNewDeck = useNewDeckMutation()
 	const { data: profile, isLoading: profileLoading } = useProfile()
 	const { data: decks, isLoading: decksLoading } = useDecks()
@@ -88,7 +164,7 @@ function NewDeckFormInner() {
 						onSubmit={handleSubmit((data) => createNewDeck.mutate(data))}
 						className="space-y-6"
 					>
-						{decks?.length === 0 ?
+						{decks?.length === 0 ? (
 							<Callout Icon={HelloIcon}>
 								<p className="text-primary-foresoft text-2xl font-bold">
 									Welcome <em>{profile?.username}</em>!
@@ -98,7 +174,8 @@ function NewDeckFormInner() {
 									link to look for your people.
 								</p>
 							</Callout>
-						:	<p>
+						) : (
+							<p>
 								You're currently learning{' '}
 								{decks?.map(({ lang }) => (
 									<Badge key={lang} className="mx-1">
@@ -106,7 +183,7 @@ function NewDeckFormInner() {
 									</Badge>
 								))}
 							</p>
-						}
+						)}
 						<SelectOneLanguage
 							hasError={!!errors.lang}
 							value={controller.field.value}
@@ -144,10 +221,9 @@ function NewDeckFormInner() {
 							className="text-5-mlo-neutral hover:bg-1-mlo-primary hover:text-7-mid-primary mt-4 flex items-center gap-2 rounded-2xl p-3 text-sm"
 						>
 							<Archive className="size-4" />
-							{archivedCount === 1 ?
-								'1 of your decks is archived; view or re-enable it here'
-							:	`${archivedCount} of your decks are archived; view or re-enable them here`
-							}
+							{archivedCount === 1
+								? '1 of your decks is archived; view or re-enable it here'
+								: `${archivedCount} of your decks are archived; view or re-enable them here`}
 						</Link>
 					)}
 					<ShowAndLogError

@@ -31,6 +31,7 @@ import { UserRoleField } from './-user-role-field'
 
 const SearchSchema = z.object({
 	referrer: z.string().uuid().optional(),
+	lang: z.string().length(3).optional(),
 })
 
 type SignUpProps = z.infer<typeof SearchSchema>
@@ -66,18 +67,22 @@ const FormSchema = z.object({
 type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
-	const { referrer } = Route.useSearch()
+	const { referrer, lang } = Route.useSearch()
 	const { isAuth, isReady } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
 		mutationKey: ['signup'],
 		mutationFn: async ({ email, password, user_role }: FormInputs) => {
+			const redirectParams = new URLSearchParams()
+			if (referrer) redirectParams.set('referrer', referrer)
+			if (lang) redirectParams.set('lang', lang)
+			const redirectQuery = redirectParams.toString()
 			const { data, error } = await supabase.auth.signUp({
 				email,
 				password,
 				options: {
-					emailRedirectTo: `${window.location.origin}/getting-started${referrer ? `?referrer=${referrer}` : ''}`,
+					emailRedirectTo: `${window.location.origin}/getting-started${redirectQuery ? `?${redirectQuery}` : ''}`,
 					data: {
 						role: user_role || 'learner',
 					},
@@ -99,7 +104,9 @@ function SignUp() {
 		onSuccess: (data) => {
 			if (data.wasLogin) {
 				toastSuccess(`Welcome back! Logged in as ${data.user?.email}`)
-				void navigate({ to: '/learn' })
+				void navigate(
+					lang ? { to: '/learn/add-deck', search: { lang } } : { to: '/learn' }
+				)
 			} else {
 				toastSuccess(
 					`Account created for ${data.user?.email}. Please check your email to confirm.`
@@ -127,7 +134,13 @@ function SignUp() {
 		console.log(
 			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
 		)
-		return <Navigate to="/getting-started" from={Route.fullPath} />
+		return (
+			<Navigate
+				to="/getting-started"
+				from={Route.fullPath}
+				search={lang ? { lang } : {}}
+			/>
+		)
 	}
 
 	return (
@@ -138,7 +151,7 @@ function SignUp() {
 					<CardTitle>Sign Up</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{signupMutation.isSuccess ?
+					{signupMutation.isSuccess ? (
 						<Callout Icon={SuccessCheckmarkTrans}>
 							<p>Almost done!</p>
 							<p>
@@ -147,7 +160,8 @@ function SignUp() {
 							</p>
 							<p>You can close this window.</p>
 						</Callout>
-					:	<form
+					) : (
+						<form
 							role="form"
 							noValidate
 							className="space-y-4"
@@ -186,7 +200,7 @@ function SignUp() {
 								text="Problem signing up"
 							/>
 						</form>
-					}
+					)}
 				</CardContent>
 				{signupMutation.isSuccess ? null : (
 					<CardFooter className="static block space-y-2 opacity-80">
