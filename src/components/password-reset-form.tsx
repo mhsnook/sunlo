@@ -1,17 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { CardContent } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { ShowAndLogError } from '@/components/errors'
-import PasswordField from './fields/password-field'
+import { useAppForm } from '@/components/form'
 
 const FormSchema = z.object({
 	password: z.string().min(8, 'Password should be 8 characters at least'),
@@ -29,28 +26,23 @@ export function PasswordResetForm() {
 				throw error
 			}
 			return data
-			// console.log(`form data`, email, user_role)
-			// return { user: { email: '@fake email@' } }
 		},
 		onSuccess: () => {
 			toastSuccess(`Successfully updated your password.`)
 		},
 	})
 
-	const {
-		handleSubmit,
-		register,
-		formState: { errors, isSubmitting, isValid },
-	} = useForm<FormInputs>({
-		resolver: zodResolver(FormSchema),
-		defaultValues: {
-			password: '',
+	const form = useAppForm({
+		defaultValues: { password: '' },
+		validators: { onChange: FormSchema },
+		onSubmit: async ({ value }) => {
+			await changeMutation.mutateAsync(value)
 		},
 	})
 
 	return (
 		<CardContent>
-			{changeMutation.isSuccess ?
+			{changeMutation.isSuccess ? (
 				<Callout Icon={SuccessCheckmarkTrans}>
 					<p>Success!</p>
 					<p>You've changed your password.</p>
@@ -60,20 +52,29 @@ export function PasswordResetForm() {
 						</Link>
 					</p>
 				</Callout>
-			:	<form
+			) : (
+				<form
+					data-testid="password-reset-form"
 					role="form"
 					noValidate
 					className="space-y-4"
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit((data) => changeMutation.mutate(data))}
+					onSubmit={(e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						void form.handleSubmit()
+					}}
 				>
-					<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-						<PasswordField register={register} error={errors.password} />
-					</fieldset>
+					<div className="flex flex-col gap-y-4">
+						<form.AppField name="password">
+							{(field) => <field.PasswordInput autoComplete="new-password" />}
+						</form.AppField>
+					</div>
 					<div className="flex flex-row justify-between">
-						<Button disabled={changeMutation.isPending || !isValid}>
-							Submit
-						</Button>
+						<form.AppForm>
+							<form.SubmitButton pendingText="Updating...">
+								Submit
+							</form.SubmitButton>
+						</form.AppForm>
 						<Link
 							to="/profile"
 							className={buttonVariants({ variant: 'neutral' })}
@@ -81,12 +82,14 @@ export function PasswordResetForm() {
 							Back to profile
 						</Link>
 					</div>
-					<ShowAndLogError
-						error={changeMutation.error}
-						text="Problem changing password"
-					/>
+					<form.AppForm>
+						<form.FormAlert
+							error={changeMutation.error}
+							text="Problem changing password"
+						/>
+					</form.AppForm>
 				</form>
-			}
+			)}
 		</CardContent>
 	)
 }

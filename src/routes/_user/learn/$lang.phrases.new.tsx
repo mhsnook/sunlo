@@ -1,9 +1,7 @@
-import { CSSProperties, useEffect, useState } from 'react'
+import { CSSProperties, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Brain, Lightbulb, NotebookPen, Search } from 'lucide-react'
@@ -19,11 +17,8 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import languages from '@/lib/languages'
-import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
@@ -42,7 +37,7 @@ import {
 } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Item, ItemContent, ItemMedia } from '@/components/ui/item'
-import ErrorLabel from '@/components/fields/error-label'
+import { useAppForm } from '@/components/form'
 
 export interface SearchParams {
 	text?: string
@@ -86,7 +81,6 @@ type AddPhraseFormValues = z.infer<ReturnType<typeof createAddPhraseSchema>>
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function AddPhraseTab() {
-	const navigate = Route.useNavigate()
 	const { lang } = Route.useParams()
 	const { text } = Route.useSearch()
 	const userId = useUserId()
@@ -104,39 +98,6 @@ function AddPhraseTab() {
 		useState(true)
 
 	const searchPhrase = text || ''
-	const {
-		control,
-		handleSubmit,
-		watch,
-		reset,
-		formState: { errors },
-	} = useForm<AddPhraseFormValues>({
-		resolver: zodResolver(createAddPhraseSchema(lang)),
-		defaultValues: {
-			phrase_text: searchPhrase,
-			translation_text: '',
-			translation_lang: preferredTranslationLang,
-			only_reverse: false,
-		},
-	})
-
-	const phraseText = watch('phrase_text')
-	const translationText = watch('translation_text')
-	const onlyReverse = watch('only_reverse')
-	const debouncedText = useDebounce(phraseText, 300)
-
-	useEffect(() => {
-		if (debouncedText !== text) {
-			void navigate({
-				replace: true,
-				search: (search: SearchParams) => ({
-					...search,
-					text: debouncedText || undefined,
-				}),
-				params: true,
-			})
-		}
-	}, [text, debouncedText, navigate])
 
 	const invalidateFeed = useInvalidateFeed()
 	const addPhraseMutation = useMutation({
@@ -147,15 +108,11 @@ function AddPhraseTab() {
 					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
 				)
 			}
-			// Determine if we should create a card
-			// Only create card if user has active deck OR is creating/reactivating one
 			const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
 
-			// Handle deck creation/reactivation if needed
 			let newDeck: Tables<'user_deck'> | null = null
 			if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
 				if (hasArchivedDeck) {
-					// Reactivate archived deck
 					const { data } = await supabase
 						.from('user_deck')
 						.update({ archived: false })
@@ -166,7 +123,6 @@ function AddPhraseTab() {
 						.throwOnError()
 					newDeck = data
 				} else if (noDeck) {
-					// Create new deck
 					const { data } = await supabase
 						.from('user_deck')
 						.insert({ lang })
@@ -177,7 +133,6 @@ function AddPhraseTab() {
 				}
 			}
 
-			// Add phrase (and optionally card)
 			const { data } = await supabase
 				.rpc('add_phrase_translation_card', {
 					phrase_lang: lang,
@@ -204,7 +159,6 @@ function AddPhraseTab() {
 			if (!rpcResult)
 				throw new Error('No data returned from add_phrase_translation_card')
 
-			// Update phrase collection
 			phrasesCollection.utils.writeInsert(
 				PhraseFullSchema.parse({
 					...rpcResult.phrase,
@@ -217,7 +171,6 @@ function AddPhraseTab() {
 					count_learners: 1,
 				})
 
-			// Update deck collection if we created/reactivated one
 			if (newDeck) {
 				const deckWithTheme = {
 					...newDeck,
@@ -231,7 +184,6 @@ function AddPhraseTab() {
 				}
 			}
 
-			// Update card collection if we created a card
 			if (createdCard && rpcResult.card) {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(rpcResult.card))
 				if (rpcResult.card_reverse) {
@@ -244,7 +196,7 @@ function AddPhraseTab() {
 			invalidateFeed(lang)
 			console.log(`Success:`, rpcResult)
 			setNewPhrases((prev) => [rpcResult.phrase.id, ...prev])
-			reset({
+			form.reset({
 				phrase_text: '',
 				translation_text: '',
 				translation_lang:
@@ -252,7 +204,6 @@ function AddPhraseTab() {
 				only_reverse: false,
 			})
 
-			// Show appropriate success message
 			if (newDeck && createdCard) {
 				const deckAction = hasArchivedDeck
 					? `re-activated your ${languages[lang]} deck`
@@ -278,6 +229,20 @@ function AddPhraseTab() {
 		},
 	})
 
+	const schema = useMemo(() => createAddPhraseSchema(lang), [lang])
+	const form = useAppForm({
+		defaultValues: {
+			phrase_text: searchPhrase,
+			translation_text: '',
+			translation_lang: preferredTranslationLang,
+			only_reverse: false,
+		},
+		validators: { onChange: schema },
+		onSubmit: async ({ value }) => {
+			await addPhraseMutation.mutateAsync(value)
+		},
+	})
+
 	return (
 		<RequireAuth message="You need to be logged in to add new phrases.">
 			<main data-testid="add-phrase-page" style={style}>
@@ -290,131 +255,135 @@ function AddPhraseTab() {
 					</CardHeader>
 					<CardContent>
 						<form
+							data-testid="add-phrase-form"
 							noValidate
-							// eslint-disable-next-line @typescript-eslint/no-misused-promises
-							onSubmit={handleSubmit((data) => addPhraseMutation.mutate(data))}
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								void form.handleSubmit()
+							}}
 							className="mt-2 space-y-4"
 						>
-							<div>
-								<Label htmlFor="newPhrase">
-									Text of the Phrase (in {languages[lang]})
-								</Label>
-								<Controller
-									name="phrase_text"
-									control={control}
-									render={({ field }) => (
-										<Textarea
-											{...field}
-											placeholder="The text of the phrase to learn"
-										/>
-									)}
-								/>
-							</div>
-							<div>
-								<Label htmlFor="translation_text">Translation</Label>
-								<Controller
-									name="translation_text"
-									control={control}
-									render={({ field }) => (
-										<Textarea
-											id="translation_text"
-											{...field}
-											placeholder="Enter the translation"
-										/>
-									)}
-								/>
-								<ErrorLabel error={errors.translation_text} />
-							</div>
-							<TranslationLanguageField<AddPhraseFormValues>
-								error={errors.translation_lang}
-								control={control}
-								phraseLang={lang}
-							/>
+							<form.AppField name="phrase_text">
+								{(field) => (
+									<field.TextareaInput
+										label={`Text of the Phrase (in ${languages[lang]})`}
+										placeholder="The text of the phrase to learn"
+									/>
+								)}
+							</form.AppField>
 
-							{/* Card Preview Section */}
-							{(phraseText || translationText) && (
-								<div className="space-y-3 pt-2">
-									<Label className="text-muted-foreground text-sm">
-										Review card previews
-									</Label>
-									<div className="grid gap-3 @lg:grid-cols-2">
-										{/* Forward card preview */}
-										<div
-											className={`bg-card rounded-lg border p-3 transition-opacity ${onlyReverse ? 'opacity-40' : ''}`}
-										>
-											<div className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
-												<span className="inline-flex items-center gap-1">
-													Recognition Review <Lightbulb className="size-3" />
-												</span>
-												{onlyReverse && (
-													<span className="text-muted-foreground text-xs normal-case">
-														(disabled)
-													</span>
-												)}
-											</div>
-											<div className="space-y-2">
-												<div className="text-foreground font-medium">
-													{phraseText || (
-														<span className="text-muted-foreground italic">
-															Phrase text...
+							<form.AppField name="translation_text">
+								{(field) => (
+									<field.TextareaInput
+										label="Translation"
+										placeholder="Enter the translation"
+									/>
+								)}
+							</form.AppField>
+
+							<form.AppField name="translation_lang">
+								{() => <TranslationLanguageField phraseLang={lang} />}
+							</form.AppField>
+
+							<form.Subscribe selector={(s) => s.values.phrase_text}>
+								{(phraseText) => (
+									<UrlSync phraseText={phraseText} currentText={text} />
+								)}
+							</form.Subscribe>
+
+							<form.Subscribe
+								selector={(s) => ({
+									phraseText: s.values.phrase_text,
+									translationText: s.values.translation_text,
+									onlyReverse: s.values.only_reverse,
+								})}
+							>
+								{({ phraseText, translationText, onlyReverse }) =>
+									phraseText || translationText ? (
+										<div className="space-y-3 pt-2">
+											<Label className="text-muted-foreground text-sm">
+												Review card previews
+											</Label>
+											<div className="grid gap-3 @lg:grid-cols-2">
+												<div
+													className={`bg-card rounded-lg border p-3 transition-opacity ${onlyReverse ? 'opacity-40' : ''}`}
+												>
+													<div className="text-muted-foreground mb-2 flex items-center justify-between text-xs font-medium tracking-wide uppercase">
+														<span className="inline-flex items-center gap-1">
+															Recognition Review{' '}
+															<Lightbulb className="size-3" />
 														</span>
-													)}
+														{onlyReverse && (
+															<span className="text-muted-foreground text-xs normal-case">
+																(disabled)
+															</span>
+														)}
+													</div>
+													<div className="space-y-2">
+														<div className="text-foreground font-medium">
+															{phraseText || (
+																<span className="text-muted-foreground italic">
+																	Phrase text...
+																</span>
+															)}
+														</div>
+														<Separator />
+														<div className="text-muted-foreground text-sm">
+															{translationText || (
+																<span className="italic">Translation...</span>
+															)}
+														</div>
+													</div>
 												</div>
-												<Separator />
-												<div className="text-muted-foreground text-sm">
-													{translationText || (
-														<span className="italic">Translation...</span>
-													)}
+
+												<div className="bg-card rounded-lg border p-3">
+													<div className="text-muted-foreground mb-2 inline-flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
+														Recall Review <Brain className="size-3" />
+													</div>
+													<div className="space-y-2">
+														<div className="text-foreground font-medium">
+															{translationText || (
+																<span className="text-muted-foreground italic">
+																	Translation...
+																</span>
+															)}
+														</div>
+														<Separator />
+														<div className="text-muted-foreground text-sm">
+															{phraseText || (
+																<span className="italic">Phrase text...</span>
+															)}
+														</div>
+													</div>
 												</div>
+											</div>
+
+											<div className="flex items-center gap-2">
+												<form.AppField name="only_reverse">
+													{(field) => (
+														<Checkbox
+															id="only_reverse"
+															checked={field.state.value}
+															className="mb-1"
+															onCheckedChange={(checked) => {
+																field.handleChange(checked === true)
+																field.handleBlur()
+															}}
+														/>
+													)}
+												</form.AppField>
+												<Label
+													htmlFor="only_reverse"
+													className="text-muted-foreground cursor-pointer text-sm font-normal"
+												>
+													Only recall reviews make sense for this phrase
+												</Label>
 											</div>
 										</div>
-
-										{/* Reverse card preview */}
-										<div className="bg-card rounded-lg border p-3">
-											<div className="text-muted-foreground mb-2 inline-flex items-center gap-1 text-xs font-medium tracking-wide uppercase">
-												Recall Review <Brain className="size-3" />
-											</div>
-											<div className="space-y-2">
-												<div className="text-foreground font-medium">
-													{translationText || (
-														<span className="text-muted-foreground italic">
-															Translation...
-														</span>
-													)}
-												</div>
-												<Separator />
-												<div className="text-muted-foreground text-sm">
-													{phraseText || (
-														<span className="italic">Phrase text...</span>
-													)}
-												</div>
-											</div>
-										</div>
-									</div>
-
-									{/* Only reverse checkbox */}
-									<div className="flex items-center gap-2">
-										<Controller
-											control={control}
-											name="only_reverse"
-											render={({ field }) => (
-												<Checkbox
-													id="only_reverse"
-													checked={field.value}
-													className="mb-1"
-													onCheckedChange={field.onChange}
-												/>
-											)}
-										/>
-										<Label
-											htmlFor="only_reverse"
-											className="text-muted-foreground cursor-pointer text-sm font-normal"
-										>
-											Only recall reviews make sense for this phrase
-										</Label>
-									</div>
-								</div>
-							)}
+									) : null
+								}
+							</form.Subscribe>
 
 							{showDeckCheckbox && (
 								<Item variant="outline">
@@ -443,18 +412,12 @@ function AddPhraseTab() {
 								</Item>
 							)}
 							<div className="flex w-full flex-col justify-between gap-2 pt-8 @xl:flex-row">
-								<Button
-									type="submit"
-									className={addPhraseMutation.isPending ? 'opacity-60' : ''}
-									disabled={addPhraseMutation.isPending}
-								>
-									{addPhraseMutation.isPending ? (
-										<IconSizedLoader />
-									) : (
+								<form.AppForm>
+									<form.SubmitButton>
 										<NotebookPen />
-									)}
-									Save and add another
-								</Button>
+										Save and add another
+									</form.SubmitButton>
+								</form.AppForm>
 								<Link
 									to="/learn/$lang/feed"
 									params={{ lang }}
@@ -491,4 +454,33 @@ function AddPhraseTab() {
 			</main>
 		</RequireAuth>
 	)
+}
+
+/**
+ * Pushes the current phrase text into the route's `text` search param,
+ * debounced. Rendered inside <form.Subscribe> so it sees value changes
+ * without forcing the parent form to re-render on every keystroke.
+ */
+function UrlSync({
+	phraseText,
+	currentText,
+}: {
+	phraseText: string
+	currentText: string | undefined
+}) {
+	const navigate = Route.useNavigate()
+	const debouncedText = useDebounce(phraseText, 300)
+	useEffect(() => {
+		if (debouncedText !== currentText) {
+			void navigate({
+				replace: true,
+				search: (search: SearchParams) => ({
+					...search,
+					text: debouncedText || undefined,
+				}),
+				params: true,
+			})
+		}
+	}, [currentText, debouncedText, navigate])
+	return null
 }

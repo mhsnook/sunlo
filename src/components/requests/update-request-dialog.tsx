@@ -44,8 +44,6 @@ export function UpdateRequestDialog({
 					onSuccess={() => setOpen(false)}
 					onCancel={() => setOpen(false)}
 					formTestId="edit-request-form"
-					inputTestId="edit-request-prompt-input"
-					submitTestId="save-request-button"
 					rows={4}
 				/>
 			</DialogContent>

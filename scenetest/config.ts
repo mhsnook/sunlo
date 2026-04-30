@@ -6,7 +6,7 @@ defineMacro('login', [
 	'openTo /login',
 	'typeInto email-input [self.email]',
 	'typeInto password-input [self.password]',
-	'click login-submit-button',
+	'click submit-button',
 	'notSee login-form',
 ])
 

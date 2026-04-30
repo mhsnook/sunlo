@@ -1,19 +1,14 @@
-import { useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
+import { useMemo, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ChevronUp } from 'lucide-react'
-import { Controller } from 'react-hook-form'
 
 import type { Tables } from '@/types/supabase'
 import type { RPCFunctions } from '@/types/main'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { IconSizedLoader } from '@/components/ui/loader'
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
@@ -23,6 +18,7 @@ import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { usePreferredTranslationLang, useDecks } from '@/features/deck/hooks'
+import { useAppForm } from '@/components/form'
 
 const createInlinePhraseSchema = (phraseLang: string) =>
 	z.object({
@@ -81,13 +77,11 @@ export function InlinePhraseCreator({
 				onPhraseCreated={onPhraseCreated}
 				onCancel={onCancel}
 				onAddAnother={(translationLang) => {
-					// Capture current height before remounting
 					if (wrapperRef.current) {
 						setHoldHeight(wrapperRef.current.offsetHeight)
 					}
 					setOverrideLang(translationLang)
 					setFormKey((k) => k + 1)
-					// Release the held height after the new form settles
 					requestAnimationFrame(() => {
 						requestAnimationFrame(() => setHoldHeight(undefined))
 					})
@@ -119,21 +113,6 @@ function InlinePhraseForm({
 }) {
 	const { data: decks } = useDecks()
 	const hasDeck = decks?.some((d) => d.lang === lang) ?? false
-	const {
-		register,
-		control,
-		handleSubmit,
-		getValues,
-		formState: { errors },
-	} = useForm<InlinePhraseFormValues>({
-		resolver: zodResolver(createInlinePhraseSchema(lang)),
-		defaultValues: {
-			phrase_text: '',
-			translation_text: '',
-			translation_lang: defaultTranslationLang,
-			only_reverse: false,
-		},
-	})
 	const invalidateFeed = useInvalidateFeed()
 
 	const mutation = useMutation({
@@ -160,7 +139,6 @@ function InlinePhraseForm({
 		onSuccess: (data) => {
 			if (!data) throw new Error('No data returned')
 
-			// Update local collections
 			phrasesCollection.utils.writeInsert(
 				PhraseFullSchema.parse({
 					...data.phrase,
@@ -190,6 +168,21 @@ function InlinePhraseForm({
 		},
 	})
 
+	const schema = useMemo(() => createInlinePhraseSchema(lang), [lang])
+	const form = useAppForm({
+		defaultValues: {
+			phrase_text: '',
+			translation_text: '',
+			translation_lang: defaultTranslationLang,
+			only_reverse: false,
+		},
+		validators: { onChange: schema },
+		onSubmit: async ({ value }) => {
+			await mutation.mutateAsync(value)
+			onCancel()
+		},
+	})
+
 	return (
 		<div
 			data-testid="inline-phrase-creator"
@@ -206,65 +199,47 @@ function InlinePhraseForm({
 			<form
 				noValidate
 				onSubmit={(e) => {
+					e.preventDefault()
 					e.stopPropagation()
-					void handleSubmit((data) =>
-						mutation.mutate(data, { onSuccess: () => onCancel() })
-					)(e)
+					void form.handleSubmit()
 				}}
 				className="space-y-3"
 			>
-				<div>
-					<Label htmlFor="inline-phrase-text" className="text-sm">
-						Phrase in {languages[lang]}
-					</Label>
-					<Input
-						id="inline-phrase-text"
-						data-testid="inline-phrase-text-input"
-						{...register('phrase_text')}
-						placeholder="Enter the phrase..."
-						className={errors.phrase_text ? 'border-red-500' : ''}
-					/>
-					{errors.phrase_text && (
-						<p className="text-xs text-red-500">{errors.phrase_text.message}</p>
+				<form.AppField name="phrase_text">
+					{(field) => (
+						<field.TextInput
+							label={`Phrase in ${languages[lang]}`}
+							placeholder="Enter the phrase..."
+						/>
 					)}
-				</div>
+				</form.AppField>
 
-				<div>
-					<Label htmlFor="inline-translation-text" className="text-sm">
-						Translation
-					</Label>
-					<Input
-						id="inline-translation-text"
-						data-testid="inline-translation-text-input"
-						{...register('translation_text')}
-						placeholder="Enter the translation..."
-						className={errors.translation_text ? 'border-red-500' : ''}
-					/>
-					{errors.translation_text && (
-						<p className="text-xs text-red-500">
-							{errors.translation_text.message}
-						</p>
+				<form.AppField name="translation_text">
+					{(field) => (
+						<field.TextInput
+							label="Translation"
+							placeholder="Enter the translation..."
+						/>
 					)}
-				</div>
+				</form.AppField>
 
-				<TranslationLanguageField<InlinePhraseFormValues>
-					error={errors.translation_lang}
-					control={control}
-					phraseLang={lang}
-				/>
+				<form.AppField name="translation_lang">
+					{() => <TranslationLanguageField phraseLang={lang} />}
+				</form.AppField>
 
 				<div className="flex items-center gap-2">
-					<Controller
-						control={control}
-						name="only_reverse"
-						render={({ field }) => (
+					<form.AppField name="only_reverse">
+						{(field) => (
 							<Checkbox
 								id="inline-only-reverse"
-								checked={field.value}
-								onCheckedChange={field.onChange}
+								checked={field.state.value}
+								onCheckedChange={(checked) => {
+									field.handleChange(checked === true)
+									field.handleBlur()
+								}}
 							/>
 						)}
-					/>
+					</form.AppField>
 					<Label
 						htmlFor="inline-only-reverse"
 						className="text-muted-foreground cursor-pointer text-sm font-normal"
@@ -274,16 +249,11 @@ function InlinePhraseForm({
 				</div>
 
 				<div className="flex gap-2">
-					<Button
-						type="submit"
-						size="sm"
-						data-testid="inline-phrase-submit-button"
-						disabled={mutation.isPending}
-						className="flex-1"
-					>
-						{mutation.isPending ? <IconSizedLoader /> : null}
-						{submitLabel}
-					</Button>
+					<form.AppForm>
+						<form.SubmitButton size="sm" className="flex-1">
+							{submitLabel}
+						</form.SubmitButton>
+					</form.AppForm>
 					{allowAddAnother && (
 						<Button
 							type="button"
@@ -291,13 +261,15 @@ function InlinePhraseForm({
 							size="sm"
 							disabled={mutation.isPending}
 							onClick={() => {
-								void handleSubmit((formData) => {
-									mutation.mutate(formData, {
+								void form.validateAllFields('submit').then(() => {
+									if (!form.state.canSubmit) return
+									const value = form.state.values
+									mutation.mutate(value, {
 										onSuccess: () => {
-											onAddAnother(getValues('translation_lang'))
+											onAddAnother(value.translation_lang)
 										},
 									})
-								})()
+								})
 							}}
 						>
 							Save & add another

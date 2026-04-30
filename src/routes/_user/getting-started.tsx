@@ -1,9 +1,7 @@
 import type { CSSProperties } from 'react'
 import { createFileRoute, Navigate, redirect } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { TablesInsert } from '@/types/supabase'
@@ -16,10 +14,9 @@ import { useUserId } from '@/lib/use-auth'
 import { useProfile } from '@/features/profile/hooks'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
-import { Button } from '@/components/ui/button'
-import UsernameField from '@/components/fields/username-field'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
+import { useAppForm } from '@/components/form'
 
 type GettingStartedProps = {
 	referrer?: uuid
@@ -93,18 +90,6 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>
 
 function ProfileCreationForm({ userId }: { userId: string }) {
-	const {
-		register,
-		control,
-		handleSubmit,
-		formState: { errors },
-	} = useForm<FormData>({
-		resolver: zodResolver(formSchema),
-		defaultValues: {
-			languages_known: [{ lang: 'eng', level: 'fluent' }],
-		},
-	})
-
 	const mainForm = useMutation({
 		mutationKey: ['user', userId],
 		mutationFn: async (values: TablesInsert<'user_profile'>) => {
@@ -131,25 +116,48 @@ function ProfileCreationForm({ userId }: { userId: string }) {
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: {
+			username: '',
+			languages_known: [{ lang: 'eng', level: 'fluent' }],
+		} as FormData,
+		validators: { onChange: formSchema },
+		onSubmit: async ({ value }) => {
+			await mainForm.mutateAsync(value)
+		},
+	})
+
 	return (
 		<div className="mx-auto space-y-8">
 			<form
+				data-testid="profile-creation-form"
 				noValidate
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={handleSubmit((data) => mainForm.mutate(data))}
+				onSubmit={(e) => {
+					e.preventDefault()
+					e.stopPropagation()
+					void form.handleSubmit()
+				}}
 				className="space-y-6"
 			>
-				<UsernameField register={register} error={errors.username} />
-				<LanguagesKnownField control={control} error={errors.languages_known} />
+				<form.AppField name="username">
+					{(field) => (
+						<field.TextInput
+							label="Your nickname"
+							description="Your username helps you find friends, and accompanies your contributions to the library."
+							placeholder="e.g. Learnie McLearnerson, Helpar1992"
+							inputMode="text"
+						/>
+					)}
+				</form.AppField>
+				<form.AppField name="languages_known">
+					{() => <LanguagesKnownField />}
+				</form.AppField>
 				<div className="flex flex-col gap-4 @xl:flex-row @xl:justify-between">
-					<Button
-						type="submit"
-						size="lg"
-						data-testid="save-profile-button"
-						className="w-full @xl:w-auto"
-					>
-						Save your profile
-					</Button>
+					<form.AppForm>
+						<form.SubmitButton size="lg" className="w-full @xl:w-auto">
+							Save your profile
+						</form.SubmitButton>
+					</form.AppForm>
 				</div>
 			</form>
 		</div>

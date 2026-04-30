@@ -2,23 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { eq, useLiveQuery } from '@tanstack/react-db'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { uuid } from '@/types/main'
 import { Button, buttonVariants } from '@/components/ui/button'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
@@ -44,10 +33,7 @@ import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
-
-// ---------------------------------------------------------------------------
-// URL state types
-// ---------------------------------------------------------------------------
+import { useAppForm } from '@/components/form'
 
 type CommentDialogMode =
 	| { kind: 'new'; attaching: boolean }
@@ -76,10 +62,6 @@ export function deriveCommentDialogMode(search: {
 	return undefined
 }
 
-// ---------------------------------------------------------------------------
-// CommentDialog — handles new comments, editing, and quick-add search
-// ---------------------------------------------------------------------------
-
 interface CommentDialogProps {
 	requestId: uuid
 	lang: string
@@ -105,10 +87,8 @@ export function CommentDialog({
 		((mode?.kind === 'new' || mode?.kind === 'edit') && mode.attaching)
 	const showForm = !showSearch && isOpen
 
-	// Phrase selection state — lives here (form value, not URL)
 	const [selectedPhraseIds, setSelectedPhraseIds] = useState<Array<uuid>>([])
 
-	// For edit mode, initialize from existing links
 	const { data: existingLinks } = useCommentPhraseLinks(
 		mode?.kind === 'edit' ? mode.commentId : undefined
 	)
@@ -120,7 +100,6 @@ export function CommentDialog({
 		}
 	}, [existingLinks, mode?.kind])
 
-	// Reset when dialog closes
 	const prevOpen = useRef(isOpen)
 	useEffect(() => {
 		if (prevOpen.current && !isOpen) {
@@ -132,7 +111,6 @@ export function CommentDialog({
 
 	const close = () => {
 		if (mode?.kind === 'quicksearch') {
-			// 1c: dismiss entirely
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
@@ -144,7 +122,6 @@ export function CommentDialog({
 			(mode?.kind === 'new' || mode?.kind === 'edit') &&
 			mode.attaching
 		) {
-			// 1b: return to form (drop attaching)
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
@@ -153,7 +130,6 @@ export function CommentDialog({
 				},
 			})
 		} else {
-			// 1a: close dialog, keep focus for highlight
 			void navigate({
 				to: '.',
 				search: (prev: Record<string, unknown>) => {
@@ -208,7 +184,6 @@ export function CommentDialog({
 							setSelectedPhraseIds(ids)
 							// After selecting, land on the form
 							if (mode?.kind === 'quicksearch') {
-								// 1c → 1a: transition from quick-search to comment form
 								void navigate({
 									to: '.',
 									search: (prev: Record<string, unknown>) => ({
@@ -217,7 +192,6 @@ export function CommentDialog({
 									}),
 								})
 							} else {
-								// 1b → 1a: drop attaching
 								void navigate({
 									to: '.',
 									search: (prev: Record<string, unknown>) => {
@@ -259,10 +233,6 @@ export function CommentDialog({
 		</Dialog>
 	)
 }
-
-// ---------------------------------------------------------------------------
-// Shared sub-components
-// ---------------------------------------------------------------------------
 
 function RequestContext({ id }: { id: uuid }) {
 	const { data, isLoading } = useRequest(id)
@@ -363,10 +333,6 @@ function PhrasePickerPanel({
 	)
 }
 
-// ---------------------------------------------------------------------------
-// Phrase cards section (shared between new and edit forms)
-// ---------------------------------------------------------------------------
-
 function AttachedPhraseCards({
 	selectedPhraseIds,
 	onRemovePhrase,
@@ -436,10 +402,6 @@ export function MarkdownHint() {
 	)
 }
 
-// ---------------------------------------------------------------------------
-// New comment form (1a new)
-// ---------------------------------------------------------------------------
-
 const CommentFormSchema = z.object({
 	content: z.string().max(1000, 'Comment must be less than 1000 characters'),
 })
@@ -455,11 +417,6 @@ function NewCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
-	const form = useForm<{ content: string }>({
-		resolver: zodResolver(CommentFormSchema),
-		defaultValues: { content: '' },
-	})
-
 	const createMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
 			const { data, error } = await supabase.rpc(
@@ -502,7 +459,6 @@ function NewCommentForm({
 						)
 				)
 			}
-			form.reset()
 			toastSuccess('Comment posted!')
 			onClose()
 		},
@@ -512,65 +468,61 @@ function NewCommentForm({
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: { content: '' },
+		validators: { onChange: CommentFormSchema },
+		onSubmit: async ({ value, formApi }) => {
+			await createMutation.mutateAsync(value)
+			formApi.reset()
+		},
+	})
+
 	const hasCards = selectedPhraseIds.length > 0
+	const submitLabel =
+		selectedPhraseIds.length > 1
+			? 'Post Answers'
+			: selectedPhraseIds.length === 1
+				? 'Post Answer'
+				: 'Post Comment'
 
 	return (
-		<Form {...form}>
-			<form
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => createMutation.mutate(data))}
-				className="space-y-4"
-			>
-				<AttachedPhraseCards
-					selectedPhraseIds={selectedPhraseIds}
-					onRemovePhrase={onRemovePhrase}
-				/>
+		<form
+			data-testid="new-comment-form"
+			noValidate
+			className="space-y-4"
+			onSubmit={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			<AttachedPhraseCards
+				selectedPhraseIds={selectedPhraseIds}
+				onRemovePhrase={onRemovePhrase}
+			/>
 
-				<FormField
-					control={form.control}
-					name="content"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel className="sr-only">Add a comment</FormLabel>
-							<MarkdownHint />
-							<FormControl>
-								<Textarea
-									data-testid="comment-content-input"
-									placeholder={
-										hasCards
-											? 'Add some context (optional)'
-											: 'Share your thoughts...'
-									}
-									rows={4}
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+			<MarkdownHint />
+			<form.AppField name="content">
+				{(field) => (
+					<field.TextareaInput
+						placeholder={
+							hasCards
+								? 'Add some context (optional)'
+								: 'Share your thoughts...'
+						}
+						rows={4}
+					/>
+				)}
+			</form.AppField>
 
-				<Button
-					type="submit"
-					data-testid="post-comment-button"
-					disabled={createMutation.isPending}
-				>
-					{createMutation.isPending
-						? 'Posting...'
-						: selectedPhraseIds.length > 1
-							? 'Post Answers'
-							: selectedPhraseIds.length === 1
-								? 'Post Answer'
-								: 'Post Comment'}
-				</Button>
-			</form>
-		</Form>
+			<form.AppForm>
+				<form.SubmitButton pendingText="Posting...">
+					{submitLabel}
+				</form.SubmitButton>
+			</form.AppForm>
+		</form>
 	)
 }
-
-// ---------------------------------------------------------------------------
-// Edit comment form (1a edit)
-// ---------------------------------------------------------------------------
 
 function EditCommentForm({
 	comment,
@@ -587,11 +539,6 @@ function EditCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
-	const form = useForm<{ content: string }>({
-		resolver: zodResolver(CommentFormSchema),
-		defaultValues: { content: comment.content },
-	})
-
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
 			const existingPhraseIds = new Set(
@@ -675,66 +622,59 @@ function EditCommentForm({
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: { content: comment.content },
+		validators: { onChange: CommentFormSchema },
+		onSubmit: async ({ value }) => {
+			await updateMutation.mutateAsync(value)
+		},
+	})
+
 	const hasCards = selectedPhraseIds.length > 0
 
 	return (
-		<Form {...form}>
-			<form
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))}
-				className="space-y-4"
-			>
-				{!isReply && (
-					<AttachedPhraseCards
-						selectedPhraseIds={selectedPhraseIds}
-						onRemovePhrase={onRemovePhrase}
+		<form
+			data-testid="edit-comment-form"
+			noValidate
+			className="space-y-4"
+			onSubmit={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			{!isReply && (
+				<AttachedPhraseCards
+					selectedPhraseIds={selectedPhraseIds}
+					onRemovePhrase={onRemovePhrase}
+				/>
+			)}
+
+			<MarkdownHint />
+			<form.AppField name="content">
+				{(field) => (
+					<field.TextareaInput
+						placeholder={
+							!isReply && hasCards
+								? 'Add some context (optional)'
+								: 'Share your thoughts...'
+						}
+						rows={4}
 					/>
 				)}
+			</form.AppField>
 
-				<FormField
-					control={form.control}
-					name="content"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel className="sr-only">Edit your comment</FormLabel>
-							<MarkdownHint />
-							<FormControl>
-								<Textarea
-									data-testid="edit-comment-content-input"
-									placeholder={
-										!isReply && hasCards
-											? 'Add some context (optional)'
-											: 'Share your thoughts...'
-									}
-									rows={4}
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-
-				<div className="flex gap-2">
-					<Button
-						type="submit"
-						data-testid="save-comment-button"
-						disabled={updateMutation.isPending}
-					>
-						{updateMutation.isPending ? 'Saving...' : 'Save'}
-					</Button>
-					<Button type="button" variant="neutral" onClick={onClose}>
-						Cancel
-					</Button>
-				</div>
-			</form>
-		</Form>
+			<div className="flex gap-2">
+				<form.AppForm>
+					<form.SubmitButton pendingText="Saving...">Save</form.SubmitButton>
+				</form.AppForm>
+				<Button type="button" variant="neutral" onClick={onClose}>
+					Cancel
+				</Button>
+			</div>
+		</form>
 	)
 }
-
-// ---------------------------------------------------------------------------
-// Hooks
-// ---------------------------------------------------------------------------
 
 function useCommentPhraseLinks(commentId: uuid | undefined) {
 	return useLiveQuery(

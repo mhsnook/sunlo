@@ -1,10 +1,7 @@
-import { type CSSProperties, Fragment, useState } from 'react'
+import { type CSSProperties } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import {
@@ -16,30 +13,29 @@ import {
 	IceCreamBowl,
 	Rocket,
 	Users,
+	type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChoiceTile } from '@/components/ui/choice-tile'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta } from '@/features/deck/hooks'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { ArchiveDeckButton } from './-archive-deck-button'
-import {
-	FancySelectField,
-	FancySelectOption,
-} from '@/components/fields/fancy-select-field'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaRawSchema } from '@/features/deck/schemas'
+import { DeckMetaRawSchema, type DeckMetaType } from '@/features/deck/schemas'
 import { Tables } from '@/types/supabase'
 import { useProfile } from '@/features/profile/hooks'
 import { type ReviewAnswerModeType } from '@/features/profile/schemas'
 import { cn } from '@/lib/utils'
 import languages from '@/lib/languages'
 import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { InfoDialog } from '@/components/info-dialog'
+
+type LearningGoalType = DeckMetaType['learning_goal']
 
 export const Route = createFileRoute('/_user/learn/$lang/deck-settings')({
 	component: DeckSettingsPage,
@@ -52,7 +48,6 @@ function DeckSettingsPage() {
 	const { lang } = Route.useParams()
 	const { data: meta, isReady } = useDeckMeta(lang)
 
-	// Require auth for deck settings
 	if (!isAuth) {
 		return (
 			<RequireAuth message="You need to be logged in to manage deck settings.">
@@ -61,7 +56,6 @@ function DeckSettingsPage() {
 		)
 	}
 
-	// return early conditions: not ready yet, or deck not found error
 	if (!meta)
 		if (!isReady) return null
 		else throw new Error(`No deck found for language "${lang}"`)
@@ -72,23 +66,26 @@ function DeckSettingsPage() {
 				<CardTitle>Deck Settings</CardTitle>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				{!meta.archived ?
+				{!meta.archived ? (
 					<>
-						<GoalForm lang={meta.lang} learning_goal={meta.learning_goal} />
-						<DailyGoalForm
+						<LearningGoalSection
+							lang={meta.lang}
+							learning_goal={meta.learning_goal}
+						/>
+						<DailyGoalSection
 							lang={meta.lang}
 							daily_review_goal={meta.daily_review_goal}
 						/>
-						<PreferredTranslationLanguageForm
+						<PreferredTranslationLanguageSection
 							lang={meta.lang}
 							preferred_translation_lang={meta.preferred_translation_lang}
 						/>
-						<ReviewAnswerModeForm
+						<ReviewAnswerModeSection
 							lang={meta.lang}
 							review_answer_mode={meta.review_answer_mode}
 						/>
 					</>
-				:	null}
+				) : null}
 				<CardHeader className="rounded shadow">
 					<CardTitle className="flex w-full flex-row items-center justify-between gap-2">
 						<span className="h4">
@@ -111,16 +108,51 @@ function DeckSettingsPage() {
 	)
 }
 
-const DailyGoalSchema = z.object({
-	daily_review_goal: z
-		.number()
-		.min(1, { message: 'Invalid goal value; must be 10, 15, or 20' }),
-	lang: z.string().min(3, { message: 'ou must select a deck to modify' }),
-})
+type FancyChoice<V extends string | number> = {
+	value: V
+	label: string
+	description: string
+	Icon: LucideIcon
+}
 
-type DailyGoalFormInputs = z.infer<typeof DailyGoalSchema>
+function FancyChoiceButton<V extends string | number>({
+	option,
+	selected,
+	disabled,
+	onClick,
+}: {
+	option: FancyChoice<V>
+	selected: boolean
+	disabled: boolean
+	onClick: () => void
+}) {
+	return (
+		<ChoiceTile
+			selected={selected}
+			disabled={disabled}
+			onClick={onClick}
+			data-key={String(option.value)}
+			className="flex w-full items-center p-4 text-start"
+		>
+			<span
+				className={cn(
+					'transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2',
+					selected ? 'bg-primary-foresoft text-primary-foreground' : ''
+				)}
+			>
+				<option.Icon className="size-5" />
+			</span>
+			<div className="space-y-1">
+				<div>{option.label}</div>
+				<div className="text-sm font-medium opacity-60">
+					{option.description}
+				</div>
+			</div>
+		</ChoiceTile>
+	)
+}
 
-const dailyReviewGoalOptions: FancySelectOption[] = [
+const dailyReviewGoalOptions: Array<FancyChoice<number>> = [
 	{
 		value: 10,
 		label: '10 – Relaxed',
@@ -144,29 +176,21 @@ const dailyReviewGoalOptions: FancySelectOption[] = [
 	},
 ]
 
-function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
+function DailyGoalSection({
+	lang,
+	daily_review_goal,
+}: {
+	lang: string
+	daily_review_goal: number
+}) {
 	const userId = useUserId()
-	const {
-		control,
-		handleSubmit,
-		reset,
-		formState: { errors, isDirty },
-	} = useForm<DailyGoalFormInputs>({
-		resolver: zodResolver(DailyGoalSchema),
-		defaultValues: { daily_review_goal, lang },
-	})
 
-	const updateDailyGoalMutation = useMutation<
-		Tables<'user_deck'>,
-		PostgrestError,
-		DailyGoalFormInputs
-	>({
+	const mutation = useMutation<Tables<'user_deck'>, PostgrestError, number>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'daily-goal'],
-		mutationFn: async (values: DailyGoalFormInputs) => {
-			console.log(`start updateDailyGoalMutation`, { values })
+		mutationFn: async (daily_review_goal) => {
 			const { data } = await supabase
 				.from('user_deck')
-				.update({ daily_review_goal: values.daily_review_goal })
+				.update({ daily_review_goal })
 				.eq('lang', lang)
 				.eq('uid', userId!)
 				.throwOnError()
@@ -177,16 +201,16 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 		},
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			reset(data)
-			toastSuccess('Your deck settings have been updated.')
+			toastSuccess('Your daily review goal has been updated.')
 		},
 		onError: (error) => {
 			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
-			console.log(`Daily Goal Form deck settings update error`, { error })
+			console.log(`Daily Goal update error`, { error })
 		},
 	})
+
 	return (
 		<div className="rounded shadow">
 			<CardHeader className="pb-0">
@@ -231,52 +255,25 @@ function DailyGoalForm({ daily_review_goal, lang }: DailyGoalFormInputs) {
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form
-					noValidate
-					data-testid="review-goal-options"
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit((data) =>
-						updateDailyGoalMutation.mutate(data)
-					)}
-					className="space-y-4"
-				>
-					<FancySelectField<DailyGoalFormInputs>
-						name="daily_review_goal"
-						control={control}
-						error={errors.daily_review_goal}
-						options={dailyReviewGoalOptions}
-					/>
-					<div className="space-x-2">
-						<Button
-							type="submit"
-							disabled={!isDirty}
-							data-testid="update-daily-goal-button"
-						>
-							Update your daily goal
-						</Button>
-						<Button
-							variant="neutral"
-							type="button"
-							onClick={() => reset()}
-							disabled={!isDirty}
-						>
-							Reset
-						</Button>
-					</div>
-				</form>
+				<div data-testid="review-goal-options" className="space-y-2">
+					{dailyReviewGoalOptions.map((option) => (
+						<FancyChoiceButton
+							key={option.value}
+							option={option}
+							selected={daily_review_goal === option.value}
+							disabled={
+								mutation.isPending || daily_review_goal === option.value
+							}
+							onClick={() => mutation.mutate(option.value)}
+						/>
+					))}
+				</div>
 			</CardContent>
 		</div>
 	)
 }
 
-const DeckGoalSchema = z.object({
-	learning_goal: z.enum(['visiting', 'family', 'moving']),
-	lang: z.string().min(3, { message: 'You must select a deck to modify' }),
-})
-
-type DeckGoalFormInputs = z.infer<typeof DeckGoalSchema>
-
-const learningGoalOptions: FancySelectOption[] = [
+const learningGoalOptions: Array<FancyChoice<LearningGoalType>> = [
 	{
 		value: 'moving',
 		label: 'Moving or learning for friends',
@@ -298,29 +295,25 @@ const learningGoalOptions: FancySelectOption[] = [
 	},
 ]
 
-function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
+function LearningGoalSection({
+	lang,
+	learning_goal,
+}: {
+	lang: string
+	learning_goal: LearningGoalType
+}) {
 	const userId = useUserId()
-	const {
-		control,
-		handleSubmit,
-		reset,
-		formState: { errors, isDirty },
-	} = useForm<DeckGoalFormInputs>({
-		resolver: zodResolver(DeckGoalSchema),
-		defaultValues: { learning_goal, lang },
-	})
 
-	const updateDeckGoalMutation = useMutation<
+	const mutation = useMutation<
 		Tables<'user_deck'>,
 		PostgrestError,
-		DeckGoalFormInputs
+		LearningGoalType
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
-		mutationFn: async (values: DeckGoalFormInputs) => {
-			console.log(`start updateDeckGoalMutation`, { values })
+		mutationFn: async (learning_goal) => {
 			const { data } = await supabase
 				.from('user_deck')
-				.update({ learning_goal: values.learning_goal })
+				.update({ learning_goal })
 				.eq('lang', lang)
 				.eq('uid', userId!)
 				.throwOnError()
@@ -331,14 +324,13 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 		},
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			reset(data)
-			toastSuccess('Your deck settings have been updated.')
+			toastSuccess('Your learning goal has been updated.')
 		},
 		onError: (error) => {
 			toastError(
 				'There was some error; please refresh the page to see if settings updated correctly.'
 			)
-			console.log(`Language Goal Form deck settings update error`, { error })
+			console.log(`Language Goal update error`, { error })
 		},
 	})
 
@@ -357,72 +349,43 @@ function GoalForm({ learning_goal, lang }: DeckGoalFormInputs) {
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
-				<form
-					noValidate
-					data-testid="learning-goal-options"
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit((data) => updateDeckGoalMutation.mutate(data))}
-					className="space-y-4"
-				>
-					<FancySelectField<DeckGoalFormInputs>
-						name="learning_goal"
-						control={control}
-						error={errors.learning_goal}
-						options={learningGoalOptions}
-					/>
-					<div className="space-x-2">
-						<Button
-							type="submit"
-							disabled={!isDirty}
-							data-testid="update-goal-button"
-						>
-							Update your goal
-						</Button>
-						<Button
-							variant="neutral"
-							type="button"
-							onClick={() => reset()}
-							disabled={!isDirty}
-						>
-							Reset
-						</Button>
-					</div>
-				</form>
+				<div data-testid="learning-goal-options" className="space-y-2">
+					{learningGoalOptions.map((option) => (
+						<FancyChoiceButton
+							key={option.value}
+							option={option}
+							selected={learning_goal === option.value}
+							disabled={mutation.isPending || learning_goal === option.value}
+							onClick={() => mutation.mutate(option.value)}
+						/>
+					))}
+				</div>
 			</CardContent>
 		</div>
 	)
 }
 
-type PreferredTranslationLangFormInputs = {
-	preferred_translation_lang: string | null
-	lang: string
-}
-
-function PreferredTranslationLanguageForm({
-	preferred_translation_lang,
+function PreferredTranslationLanguageSection({
 	lang,
-}: PreferredTranslationLangFormInputs) {
+	preferred_translation_lang,
+}: {
+	lang: string
+	preferred_translation_lang: string | null
+}) {
 	const userId = useUserId()
 	const { data: profile } = useProfile()
-	const [selectedLang, setSelectedLang] = useState<string | null>(
-		preferred_translation_lang
-	)
-
 	const profileDefaultLang = profile?.languages_known[0]?.lang ?? null
 
-	const updatePreferredLangMutation = useMutation<
+	const mutation = useMutation<
 		Tables<'user_deck'>,
 		PostgrestError,
-		{ preferred_translation_lang: string | null }
+		string | null
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'preferred-translation'],
-		mutationFn: async (values) => {
-			console.log(`start updatePreferredLangMutation`, { values })
+		mutationFn: async (preferred_translation_lang) => {
 			const { data } = await supabase
 				.from('user_deck')
-				.update({
-					preferred_translation_lang: values.preferred_translation_lang,
-				})
+				.update({ preferred_translation_lang })
 				.eq('lang', lang)
 				.eq('uid', userId!)
 				.throwOnError()
@@ -435,8 +398,11 @@ function PreferredTranslationLanguageForm({
 		},
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			setSelectedLang(data.preferred_translation_lang)
-			toastSuccess('Your preferred translation language has been updated.')
+			toastSuccess(
+				data.preferred_translation_lang
+					? 'Your preferred translation language has been updated.'
+					: 'Deck will now use your profile default translation language.'
+			)
 		},
 		onError: (error) => {
 			toastError(
@@ -446,21 +412,10 @@ function PreferredTranslationLanguageForm({
 		},
 	})
 
-	const isDirty = selectedLang !== preferred_translation_lang
-
-	const handleSave = () => {
-		updatePreferredLangMutation.mutate({
-			preferred_translation_lang: selectedLang,
-		})
+	const handleSetLang = (val: string) => {
+		const next = val || null
+		if (next !== preferred_translation_lang) mutation.mutate(next)
 	}
-
-	const handleClearOverride = () => {
-		updatePreferredLangMutation.mutate({
-			preferred_translation_lang: null,
-		})
-	}
-
-	const handleSetLang = (val: string) => setSelectedLang(val || null)
 
 	return (
 		<div className="rounded shadow">
@@ -492,24 +447,20 @@ function PreferredTranslationLanguageForm({
 				<div className="space-y-2">
 					<Label>Translation language for this deck</Label>
 					<SelectOneOfYourLanguages
-						value={selectedLang ?? ''}
+						value={preferred_translation_lang ?? ''}
 						setValue={handleSetLang}
 						disabled={[lang]}
 					/>
 				</div>
-				<div className="flex flex-wrap gap-2">
-					<Button
-						onClick={handleSave}
-						disabled={!isDirty || updatePreferredLangMutation.isPending}
-					>
-						Save preference
-					</Button>
+				<div>
 					<Button
 						variant="neutral"
-						onClick={handleClearOverride}
-						disabled={updatePreferredLangMutation.isPending}
+						size="sm"
+						onClick={() => mutation.mutate(null)}
+						disabled={preferred_translation_lang === null || mutation.isPending}
+						data-testid="clear-preferred-translation-button"
 					>
-						Clear
+						Use profile default
 					</Button>
 				</div>
 			</CardContent>
@@ -517,7 +468,7 @@ function PreferredTranslationLanguageForm({
 	)
 }
 
-const reviewAnswerModeOptions: Array<FancySelectOption> = [
+const reviewAnswerModeOptions: Array<FancyChoice<ReviewAnswerModeType>> = [
 	{
 		value: '4-buttons',
 		label: 'Show 4 answer choices',
@@ -532,62 +483,7 @@ const reviewAnswerModeOptions: Array<FancySelectOption> = [
 	},
 ]
 
-function ReviewAnswerModeRadio({
-	value,
-	onChange,
-}: {
-	value: string | null
-	onChange: (val: string) => void
-}) {
-	return (
-		<RadioGroup
-			onValueChange={onChange}
-			value={value ?? ''}
-			className="gap-0"
-			data-testid="review-answer-mode-radio"
-		>
-			{reviewAnswerModeOptions.map((option) => (
-				<Fragment key={option.value}>
-					<RadioGroupItem
-						value={String(option.value)}
-						id={`deck-review-mode-${option.value}`}
-						className="sr-only"
-					/>
-					<Label
-						htmlFor={`deck-review-mode-${option.value}`}
-						data-testid={`review-answer-mode-${option.value}`}
-						className={cn(
-							'flex w-full cursor-pointer items-center rounded-2xl border border-transparent p-4 transition-colors',
-							value !== null && String(value) === String(option.value) ?
-								'bg-1-mlo-primary border-2-mlo-primary'
-							:	'hover:bg-base-mlo-primary hover:border-input'
-						)}
-					>
-						{option.Icon && (
-							<span
-								className={`transition-color mr-3 flex aspect-square place-items-center rounded-xl p-2 ${
-									value !== null && String(value) === String(option.value) ?
-										'bg-primary-foresoft text-primary-foreground'
-									:	''
-								}`}
-							>
-								<option.Icon className="size-5" />
-							</span>
-						)}
-						<div className="space-y-1">
-							<div>{option.label}</div>
-							<div className="text-sm font-medium opacity-60">
-								{option.description}
-							</div>
-						</div>
-					</Label>
-				</Fragment>
-			))}
-		</RadioGroup>
-	)
-}
-
-function ReviewAnswerModeForm({
+function ReviewAnswerModeSection({
 	lang,
 	review_answer_mode,
 }: {
@@ -597,21 +493,18 @@ function ReviewAnswerModeForm({
 	const userId = useUserId()
 	const { data: profile } = useProfile()
 	const profileMode = profile?.review_answer_mode ?? '2-buttons'
-	const [selected, setSelected] = useState<string | null>(review_answer_mode)
-
-	const isDirty = selected !== review_answer_mode
 	const hasOverride = review_answer_mode !== null
 
-	const updateAnswerModeMutation = useMutation<
+	const mutation = useMutation<
 		Tables<'user_deck'>,
 		PostgrestError,
-		{ review_answer_mode: string | null }
+		ReviewAnswerModeType | null
 	>({
 		mutationKey: ['user', lang, 'deck', 'settings', 'review-answer-mode'],
-		mutationFn: async (values) => {
+		mutationFn: async (review_answer_mode) => {
 			const { data } = await supabase
 				.from('user_deck')
-				.update({ review_answer_mode: values.review_answer_mode })
+				.update({ review_answer_mode })
 				.eq('lang', lang)
 				.eq('uid', userId!)
 				.throwOnError()
@@ -624,11 +517,10 @@ function ReviewAnswerModeForm({
 		},
 		onSuccess: (data) => {
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			setSelected(data.review_answer_mode as ReviewAnswerModeType | null)
 			toastSuccess(
-				data.review_answer_mode ?
-					'Review answer mode updated for this deck.'
-				:	'Deck will now use your profile setting.'
+				data.review_answer_mode
+					? 'Review answer mode updated for this deck.'
+					: 'Deck will now use your profile setting.'
 			)
 		},
 		onError: (error) => {
@@ -638,18 +530,6 @@ function ReviewAnswerModeForm({
 			console.log(`Review answer mode update error`, { error })
 		},
 	})
-
-	const handleSave = () => {
-		updateAnswerModeMutation.mutate({ review_answer_mode: selected })
-	}
-
-	const handleClear = () => {
-		if (hasOverride) {
-			updateAnswerModeMutation.mutate({ review_answer_mode: null })
-		} else {
-			setSelected(null)
-		}
-	}
 
 	return (
 		<div className="rounded shadow">
@@ -675,34 +555,37 @@ function ReviewAnswerModeForm({
 					setting will be used.
 				</p>
 				<p className="text-muted-foreground text-sm">
-					{review_answer_mode ?
-						'Overriding the profile default: '
-					:	'Currently using profile default: '}
+					{hasOverride
+						? 'Overriding the profile default: '
+						: 'Currently using profile default: '}
 					<strong>
-						{profileMode === '2-buttons' ?
-							'2 buttons (Try Again, Correct!)'
-						:	'4 buttons (Again, Hard, Good, Easy)'}
+						{profileMode === '2-buttons'
+							? '2 buttons (Try Again, Correct!)'
+							: '4 buttons (Again, Hard, Good, Easy)'}
 					</strong>
 				</p>
-				<ReviewAnswerModeRadio value={selected} onChange={setSelected} />
-				<div className="flex flex-wrap gap-2">
-					<Button
-						onClick={handleSave}
-						disabled={!isDirty || updateAnswerModeMutation.isPending}
-						data-testid="update-review-answer-mode-button"
-					>
-						Update answer mode
-					</Button>
+				<div data-testid="review-answer-mode-radio" className="space-y-2">
+					{reviewAnswerModeOptions.map((option) => (
+						<FancyChoiceButton
+							key={option.value}
+							option={option}
+							selected={review_answer_mode === option.value}
+							disabled={
+								mutation.isPending || review_answer_mode === option.value
+							}
+							onClick={() => mutation.mutate(option.value)}
+						/>
+					))}
+				</div>
+				<div>
 					<Button
 						variant="neutral"
-						disabled={
-							(!hasOverride && selected === null) ||
-							updateAnswerModeMutation.isPending
-						}
-						onClick={handleClear}
+						size="sm"
+						disabled={!hasOverride || mutation.isPending}
+						onClick={() => mutation.mutate(null)}
 						data-testid="clear-review-answer-mode-button"
 					>
-						Clear
+						Use profile default
 					</Button>
 				</div>
 			</CardContent>

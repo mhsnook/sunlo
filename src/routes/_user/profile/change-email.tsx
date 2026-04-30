@@ -1,17 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import { ShowAndLogError } from '@/components/errors'
-import EmailField from '@/components/fields/email-field'
+import { useAppForm } from '@/components/form'
 
 export const Route = createFileRoute('/_user/profile/change-email')({
 	component: ChangeEmailPage,
@@ -28,7 +25,7 @@ type FormInputs = z.infer<typeof FormSchema>
 
 function ChangeEmailPage() {
 	const changeMutation = useMutation({
-		mutationKey: ['forgot-password'],
+		mutationKey: ['change-email'],
 		mutationFn: async ({ email }: FormInputs) => {
 			const { error } = await supabase.auth.updateUser(
 				{ email },
@@ -49,14 +46,11 @@ function ChangeEmailPage() {
 		},
 	})
 
-	const {
-		handleSubmit,
-		register,
-		formState: { errors, isSubmitting, isValid },
-	} = useForm<FormInputs>({
-		resolver: zodResolver(FormSchema),
-		defaultValues: {
-			email: '',
+	const form = useAppForm({
+		defaultValues: { email: '' },
+		validators: { onChange: FormSchema },
+		onSubmit: async ({ value }) => {
+			await changeMutation.mutateAsync(value)
 		},
 	})
 
@@ -66,7 +60,7 @@ function ChangeEmailPage() {
 				<CardTitle>Change your registered email</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{changeMutation.isSuccess ?
+				{changeMutation.isSuccess ? (
 					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Step 1 complete:</p>
 						<p>
@@ -78,23 +72,29 @@ function ChangeEmailPage() {
 							change.
 						</p>
 					</Callout>
-				:	<form
+				) : (
+					<form
+						data-testid="change-email-form"
 						role="form"
 						noValidate
 						className="space-y-4"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => changeMutation.mutate(data))}
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void form.handleSubmit()
+						}}
 					>
-						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-							<EmailField<FormInputs>
-								register={register}
-								error={errors.email}
-							/>
-						</fieldset>
+						<div className="flex flex-col gap-y-4">
+							<form.AppField name="email">
+								{(field) => <field.EmailInput />}
+							</form.AppField>
+						</div>
 						<div className="flex flex-row justify-between">
-							<Button disabled={changeMutation.isPending || !isValid}>
-								Submit
-							</Button>
+							<form.AppForm>
+								<form.SubmitButton pendingText="Submitting...">
+									Submit
+								</form.SubmitButton>
+							</form.AppForm>
 							<Link
 								to="/profile"
 								className={buttonVariants({ variant: 'neutral' })}
@@ -102,12 +102,14 @@ function ChangeEmailPage() {
 								Back to profile
 							</Link>
 						</div>
-						<ShowAndLogError
-							text="Problem changing registered email"
-							error={changeMutation.error}
-						/>
+						<form.AppForm>
+							<form.FormAlert
+								text="Problem changing registered email"
+								error={changeMutation.error}
+							/>
+						</form.AppForm>
 					</form>
-				}
+				)}
 			</CardContent>
 		</Card>
 	)

@@ -6,8 +6,6 @@ import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request
 import { ShareRequestButton } from '@/components/card-pieces/share-request-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import { buttonVariants } from '@/components/ui/button'
-import { AddCommentDialog } from '@/components/comments/add-comment-dialog'
-import { DialogTrigger } from '@/components/ui/dialog'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/features/requests/hooks'
 import { UpvoteRequest } from './upvote-request-button'
@@ -50,18 +48,24 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 				</Flagged>
 
 				<div className="flex flex-row items-center gap-2">
-					<AddCommentDialog requestId={request.id} lang={request.lang}>
-						<DialogTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								aria-label="Add a comment"
-								data-testid="add-comment-trigger"
-							>
-								<MessagesSquare />
-							</Button>
-						</DialogTrigger>
-					</AddCommentDialog>
+					<Link
+						to="/learn/$lang/requests/$id"
+						params={{ lang: request.lang, id: request.id }}
+						title={`View comments (${counts?.countComments ?? 0})`}
+						aria-label="View comments"
+						search={showThread}
+						className={buttonVariants({
+							variant:
+								currentUrlParams.id === request.id &&
+								search.show !== 'answers-only'
+									? 'soft'
+									: 'ghost',
+							size: 'icon',
+						})}
+						data-testid="view-comments-link"
+					>
+						<MessagesSquare />
+					</Link>
 					<span className="@max-sm:sr-only">
 						{counts?.countComments ?? 0}
 						<span className="@max-lg:sr-only">
@@ -76,12 +80,10 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						params={{ lang: request.lang, id: request.id }}
 						title={`Click to view answers (${counts?.countLinks ?? 0})`}
 						search={
-							(
-								search.show === 'answers-only' &&
-								currentUrlParams.id === request.id
-							) ?
-								showThread
-							:	answersOnly
+							search.show === 'answers-only' &&
+							currentUrlParams.id === request.id
+								? showThread
+								: answersOnly
 						}
 						className={buttonVariants({
 							variant: search.show === 'answers-only' ? 'soft' : 'ghost',

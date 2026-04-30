@@ -1,31 +1,32 @@
-import type { ControlledFieldProps } from './types'
-import { FieldValues, Path, useController } from 'react-hook-form'
 import { Label } from '@/components/ui/label'
 import { SelectOneOfYourLanguages } from './select-one-of-your-languages'
-import ErrorLabel from './error-label'
+import { useFieldContext } from '@/components/form'
+import { ErrorList } from '@/components/form/fields/error-list'
 
-export default function TranslationLanguageField<T extends FieldValues>({
-	control,
-	error,
+export default function TranslationLanguageField({
 	phraseLang,
-}: ControlledFieldProps<T> & { phraseLang: string }) {
-	const controller = useController({
-		name: 'translation_lang' as Path<T>,
-		control,
-	})
+}: {
+	phraseLang: string
+}) {
+	const field = useFieldContext<string>()
+	const meta = field.state.meta
+	const showError = meta.isBlurred && meta.errors.length > 0
 
 	return (
 		<div className="flex flex-col gap-1">
-			<Label htmlFor="lang" className={error ? 'text-destructive' : ''}>
+			<Label className={showError ? 'text-destructive' : ''}>
 				Translation language
 			</Label>
 			<SelectOneOfYourLanguages
-				value={controller.field.value}
-				setValue={controller.field.onChange}
-				hasError={!!error}
+				value={field.state.value ?? ''}
+				setValue={(v) => {
+					field.handleChange(v)
+					field.handleBlur()
+				}}
+				hasError={showError}
 				disabled={[phraseLang]}
 			/>
-			<ErrorLabel error={error} />
+			{showError && <ErrorList errors={meta.errors} />}
 		</div>
 	)
 }

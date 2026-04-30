@@ -1,35 +1,6 @@
-import {
-	UseFormRegister,
-	FieldError,
-	FieldValues,
-	Control,
-	FieldErrors,
-} from 'react-hook-form'
-
-type AnyFieldType = {
-	error?: FieldError
-	tabIndex?: number
-}
-type AnyArrayFieldType<T extends FieldValues> = {
-	error?: FieldErrors<T>[keyof FieldErrors<T>]
-}
-
-export type FieldProps<T extends FieldValues> = AnyFieldType & {
-	register: UseFormRegister<T>
-}
-export type ArrayFieldProps<T extends FieldValues> = AnyArrayFieldType<T> & {
-	register: UseFormRegister<T>
-}
-
-// A field is a packaged-up set of an input, a label, and an error
-export type ControlledFieldProps<T extends FieldValues> = AnyFieldType & {
-	control: Control<T>
-}
-export type ControlledArrayFieldProps<T extends FieldValues> =
-	AnyArrayFieldType<T> & {
-		control: Control<T>
-	}
-
+// Plain controlled-input contract for our select-language pickers.
+// They take value/setValue and live outside the form module so they can
+// be used from non-form contexts (search overlays, admin tools, etc).
 export type ControlledInputProps = {
 	hasError?: boolean
 	value: string

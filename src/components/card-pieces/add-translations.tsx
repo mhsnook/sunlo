@@ -1,7 +1,5 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
@@ -23,11 +21,11 @@ import {
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import TranslationTextField from '@/components/fields/translation-text-field'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
+import { useAppForm } from '@/components/form'
 
 const createAddTranslationsSchema = (phraseLang: string) =>
 	z.object({
@@ -51,19 +49,6 @@ export function AddTranslationsDialog({
 	phrase: PhraseFullType
 }) {
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
-	const {
-		handleSubmit,
-		register,
-		control,
-		reset,
-		formState: { errors, isSubmitting, isValid },
-	} = useForm<AddTranslationsType>({
-		defaultValues: {
-			translation_text: '',
-			translation_lang: preferredTranslationLang,
-		},
-		resolver: zodResolver(createAddTranslationsSchema(phrase.lang)),
-	})
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
 
@@ -95,22 +80,44 @@ export function AddTranslationsDialog({
 				translations: [TranslationSchema.parse(data), ...phrase.translations],
 			})
 			close()
-			reset()
+			form.reset()
 			toastSuccess(`Translation added for ${phrase.text}`)
 		},
 		onError: (error) => {
 			toastError(error.message)
 		},
 	})
+
+	const schema = useMemo(
+		() => createAddTranslationsSchema(phrase.lang),
+		[phrase.lang]
+	)
+	const form = useAppForm({
+		defaultValues: {
+			translation_text: '',
+			translation_lang: preferredTranslationLang,
+		},
+		validators: { onChange: schema },
+		onSubmit: async ({ value }) => {
+			await addTranslation.mutateAsync(value)
+		},
+	})
+
 	if (addTranslation.error)
 		console.log(
 			`Uncaught somewhere in the translation mutation`,
 			addTranslation.error
 		)
+
 	return (
 		<Dialog>
 			<DialogTrigger asChild ref={closeRef}>
-				<Button {...props} size="icon">
+				<Button
+					{...props}
+					size="icon"
+					data-testid="add-translations-trigger"
+					aria-label="Manage translations"
+				>
 					<Pencil />
 				</Button>
 			</DialogTrigger>
@@ -118,10 +125,11 @@ export function AddTranslationsDialog({
 				authTitle="Login to Add Translations"
 				authMessage="You need to be logged in to add translations to phrases."
 				className="w-[92%] max-w-106"
+				data-testid="add-translations-dialog"
 			>
-				<DialogHeader className="text-left">
+				<DialogHeader className="text-start">
 					<DialogTitle>Manage translations</DialogTitle>
-					<DialogDescription className="space-y-2 text-left">
+					<DialogDescription className="space-y-2 text-start">
 						For the phrase &ldquo;{phrase.text}&rdquo;
 					</DialogDescription>
 				</DialogHeader>
@@ -138,31 +146,36 @@ export function AddTranslationsDialog({
 					</ol>
 				</div>
 				<form
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={handleSubmit((data) => addTranslation.mutate(data))}
+					data-testid="add-translation-form"
 					noValidate
+					onSubmit={(e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						void form.handleSubmit()
+					}}
 				>
-					<fieldset
-						className="mb-4 flex flex-col gap-4"
-						disabled={isSubmitting}
-					>
-						<TranslationLanguageField
-							control={control}
-							error={errors.translation_lang}
-							phraseLang={phrase.lang}
-						/>
-						<TranslationTextField
-							register={register}
-							error={errors.translation_text}
-						/>
-					</fieldset>
+					<div className="mb-4 flex flex-col gap-4">
+						<form.AppField name="translation_lang">
+							{() => <TranslationLanguageField phraseLang={phrase.lang} />}
+						</form.AppField>
+						<form.AppField name="translation_text">
+							{(field) => (
+								<field.TextareaInput
+									label="Translation text"
+									placeholder="Translation text"
+								/>
+							)}
+						</form.AppField>
+					</div>
 					<DialogFooter className="flex flex-row justify-between">
-						<Button disabled={isSubmitting} variant="neutral">
+						<Button type="button" variant="neutral" onClick={close}>
 							Cancel
 						</Button>
-						<Button disabled={isSubmitting || !isValid} variant="default">
-							Add translation
-						</Button>
+						<form.AppForm>
+							<form.SubmitButton variant="default">
+								Add translation
+							</form.SubmitButton>
+						</form.AppForm>
 					</DialogFooter>
 				</form>
 			</AuthenticatedDialogContent>
@@ -196,7 +209,6 @@ function TranslationListItem({
 			return data[0]
 		},
 		onSuccess: (data) => {
-			// Update the translation in the phrase's translations array
 			phrasesCollection.utils.writeUpdate({
 				id: phrase.id,
 				translations: phrase.translations.map((t) =>
@@ -218,7 +230,6 @@ function TranslationListItem({
 			trans.archived ? 'unarchive' : 'archive',
 		],
 		mutationFn: async () => {
-			// Soft delete by setting archived = true, or un-delete
 			await supabase
 				.from('phrase_translation')
 				.update({ archived: !trans.archived })
@@ -226,7 +237,6 @@ function TranslationListItem({
 				.throwOnError()
 		},
 		onSuccess: () => {
-			// Remove the translation from the phrase's translations array
 			phrasesCollection.utils.writeUpdate({
 				id: phrase.id,
 				translations: phrase.translations.map((t) =>
@@ -258,7 +268,7 @@ function TranslationListItem({
 			<span className="shrink-0 rounded-md bg-gray-200 px-2 py-1 text-xs text-gray-700">
 				{trans.lang}
 			</span>
-			{isEditing ?
+			{isEditing ? (
 				<>
 					<Input
 						value={editText}
@@ -283,7 +293,8 @@ function TranslationListItem({
 						<X className="size-3" />
 					</Button>
 				</>
-			:	<>
+			) : (
+				<>
 					<span
 						className={`flex-1 ${trans.archived ? 'text-muted-foreground line-through' : ''}`}
 					>
@@ -308,15 +319,16 @@ function TranslationListItem({
 								onClick={() => toggleArchiveTranslation.mutate()}
 								disabled={toggleArchiveTranslation.isPending}
 							>
-								{trans.archived ?
+								{trans.archived ? (
 									<Undo2 className="size-3" />
-								:	<Archive className="text-destructive hover:text-destructive size-3" />
-								}
+								) : (
+									<Archive className="text-destructive hover:text-destructive size-3" />
+								)}
 							</Button>
 						</>
 					)}
 				</>
-			}
+			)}
 		</li>
 	)
 }
