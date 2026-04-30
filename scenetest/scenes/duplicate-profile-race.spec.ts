@@ -30,7 +30,7 @@ test('profile inserted mid-submit still lands on welcome', async ({
 		.openTo('/login')
 		.typeInto('email-input', newUser.email!)
 		.typeInto('password-input', newUser.password!)
-		.click('login-submit-button')
+		.click('submit-button')
 		.notSee('login-form')
 		.see('getting-started-page')
 		.typeInto('username-input', 'RaceNewcomer')
@@ -44,7 +44,7 @@ test('profile inserted mid-submit still lands on welcome', async ({
 				languages_known: [{ lang: 'eng', level: 'fluent' }],
 			})
 		})
-		.click('save-profile-button')
+		.click('submit-button')
 		.up()
 		.notSee('toast-error')
 		.see('welcome-page')

@@ -18,7 +18,7 @@ learner:
 - openTo /profile
 - up
 - see display-preferences-page
-- click font-preference-dyslexic
+- click font-preference dyslexic
 - up
 - seeToast toast-success
 
@@ -32,7 +32,7 @@ learner:
 - openTo /profile
 - up
 - see display-preferences-page
-- click answer-mode-4-buttons
+- click review-answer-mode 4-buttons
 - up
 - seeToast toast-success
 
@@ -46,6 +46,6 @@ learner:
 - openTo /profile
 - up
 - see display-preferences-page
-- click answer-mode-2-buttons
+- click review-answer-mode 2-buttons
 - up
 - seeToast toast-success

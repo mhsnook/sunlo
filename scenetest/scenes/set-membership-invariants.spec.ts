@@ -53,7 +53,7 @@ test('walk common flows; core set-membership invariants hold', async ({
 		.openTo('/login')
 		.typeInto('email-input', learner.email!)
 		.typeInto('password-input', learner.password!)
-		.click('login-submit-button')
+		.click('submit-button')
 		.notSee('login-form')
 		// Deck feed depends on card.phrase_id → phrase resolution
 		.openTo('/learn')

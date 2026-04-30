@@ -56,7 +56,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 		.openTo('/login')
 		.typeInto('email-input', learner.email!)
 		.typeInto('password-input', learner.password!)
-		.click('login-submit-button')
+		.click('submit-button')
 		.notSee('login-form')
 		// Confirm the deck tile shows up before we kick off a review.
 		.openTo('/learn')
@@ -188,7 +188,7 @@ test('deck with no reviews does not show a most-recent-review badge', async ({
 		.openTo('/login')
 		.typeInto('email-input', learner.email!)
 		.typeInto('password-input', learner.password!)
-		.click('login-submit-button')
+		.click('submit-button')
 		.notSee('login-form')
 		.openTo(`/learn/${lang}/stats`)
 		.see('badge-no-reviews-7d')

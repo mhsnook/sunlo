@@ -28,9 +28,9 @@ learner:
 - click create-new-phrase-button
 - up
 - see inline-phrase-creator
-- typeInto inline-phrase-text-input 'What time is it?'
-- typeInto inline-translation-text-input 'Kitne baj rahe hain?'
-- click inline-phrase-submit-button
+- typeInto inline-phrase-creator phrase-text-input 'What time is it?'
+- typeInto inline-phrase-creator translation-text-input 'Kitne baj rahe hain?'
+- click inline-phrase-creator submit-button
 - up
 - seeToast toast-success
 - notSee toast-error
@@ -61,14 +61,14 @@ learner:
 - click create-new-phrase-button
 - up
 - see inline-phrase-creator
-- typeInto inline-phrase-text-input 'Hello friends'
-- typeInto inline-translation-text-input 'Namaste doston'
-- click inline-phrase-submit-button
+- typeInto inline-phrase-creator phrase-text-input 'Hello friends'
+- typeInto inline-phrase-creator translation-text-input 'Namaste doston'
+- click inline-phrase-creator submit-button
 - up
 - seeToast toast-success
 - scope comment-dialog
-- typeInto comment-content-input 'Here is a warm greeting to use with the group.'
-- click post-comment-button
+- typeInto content-input 'Here is a warm greeting to use with the group.'
+- click submit-button
 - up
 - seeToast toast-success
 - notSee toast-error

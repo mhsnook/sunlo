@@ -16,7 +16,7 @@ learner:
 - typeInto language-search-input Spanish
 - click language-options spa
 - up
-- click start-learning-button
+- click submit-button
 - up
 - seeToast toast-success
 - see deck-feed-page
@@ -33,8 +33,6 @@ learner:
 - see review-goal-options
 - click 10
 - up
-- click update-daily-goal-button
-- up
 - seeToast toast-success
 
 # learner updates learning goal
@@ -48,8 +46,6 @@ learner:
 - go-to-deck-settings
 - see learning-goal-options
 - click family
-- up
-- click update-goal-button
 - up
 - seeToast toast-success
 
