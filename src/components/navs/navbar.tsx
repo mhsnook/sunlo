@@ -22,9 +22,8 @@ export default function Navbar() {
 	const hasSearchAction = matches.some(
 		(m) => (m.context as MyRouterContext)?.searchAction
 	)
-	const langNavAction = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.langNavAction
-	)?.context?.langNavAction as string | undefined
+	const langNavAction = matches.findLast((m) => m.params && 'lang' in m.params)
+		?.params?.lang as string | undefined
 
 	return (
 		<nav
