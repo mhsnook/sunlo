@@ -45,103 +45,119 @@ natural wrapper element to label.
 
 ## Authentication & Navigation
 
-| Selector                        | Attribute   | Component/Location     | Description                             |
-| ------------------------------- | ----------- | ---------------------- | --------------------------------------- |
-| `login-link`                    | data-testid | Sidebar                | Link to login page for logged-out users |
-| `login-form`                    | data-testid | Login page             | The login form container                |
-| `email-input`                   | data-testid | Form fields            | Email input                             |
-| `password-input`                | data-testid | Form fields            | Password input                          |
-| `login-submit-button`           | data-testid | Login form             | Form submit button                      |
-| `welcome-page`                  | data-testid | Welcome route          | Welcome page container                  |
-| `community-norms-dialog`        | data-testid | Welcome page           | Community norms intro dialog            |
-| `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                  |
-| `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming         |
-| `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                          |
-| `sidebar-user-menu-trigger`     | data-testid | Sidebar                | User avatar/menu button                 |
-| `sidebar-signout-button`        | data-testid | User menu              | Sign out button                         |
-| `profile-menu-item`             | data-testid | User menu              | Link to profile                         |
+| Selector                        | Attribute   | Component/Location     | Description                                                 |
+| ------------------------------- | ----------- | ---------------------- | ----------------------------------------------------------- |
+| `login-link`                    | data-testid | Sidebar                | Link to login page for logged-out users                     |
+| `login-form`                    | data-testid | Login page             | The login form container                                    |
+| `email-input`                   | data-testid | Form fields            | Email input                                                 |
+| `password-input`                | data-testid | Form fields            | Password input                                              |
+| `submit-button`                 | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |
+| `welcome-page`                  | data-testid | Welcome route          | Welcome page container                                      |
+| `community-norms-dialog`        | data-testid | Welcome page           | Community norms intro dialog                                |
+| `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                                      |
+| `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming                             |
+| `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                                              |
+| `sidebar-user-menu-trigger`     | data-testid | Sidebar                | User avatar/menu button                                     |
+| `sidebar-signout-button`        | data-testid | User menu              | Sign out button                                             |
+| `profile-menu-item`             | data-testid | User menu              | Link to profile                                             |
 
 ## Deck Management
 
-| Selector                           | Attribute   | Component/Location  | Description                                                   |
-| ---------------------------------- | ----------- | ------------------- | ------------------------------------------------------------- |
-| `learn-page`                       | data-testid | Learn page          | Main container for authenticated learn page                   |
-| `learn-welcome-header`             | data-testid | Learn page          | Welcome hero ("Welcome back, …")                              |
-| `add-phrase-button`                | data-testid | Learn page          | Hero CTA linking to /learn/$lang/phrases/new                  |
-| `review-ready-banner`              | data-testid | Learn page          | Banner showing cards ready for review                         |
-| `start-review-button`              | data-testid | Review banner       | CTA to start the review session                               |
-| `your-decks-section`               | data-testid | Learn page          | Section containing the deck tile grid                         |
-| `decks-list-grid`                  | data-testid | Learn page          | Grid container for deck cards                                 |
-| `decks-list-grid {lang}`           | data-key    | Deck card/tile      | Item inside grid (e.g. `decks-list-grid hin`)                 |
-| `decks-list-grid {lang} deck-tile` | data-testid | Deck tile           | Button that opens the deck chooser dialog                     |
-| `deck-tile-{lang}`                 | data-testid | Deck tile           | Compact deck tile on learn home                               |
-| `deck-tile-dialog`                 | data-testid | Deck chooser        | Dialog surface opened from a deck tile                        |
-| `start-practice-link`              | data-testid | Deck chooser        | "Daily practice" link to /learn/$lang/review                  |
-| `deck-link`                        | data-testid | Deck chooser / card | "Browse deck" link to /learn/$lang                            |
-| `add-deck-tile`                    | data-testid | Learn page          | "+ Start a new deck" tile                                     |
-| `friends-feed-section`             | data-testid | Learn page          | Section containing the friends-activity snippet               |
-| `friends-feed-snippet`             | data-testid | Learn page          | Wrapper around preview friend-activity items                  |
-| `friends-feed-empty`               | data-testid | Friends feed        | Shown when the user has no connected friends                  |
-| `friends-feed-quiet`               | data-testid | Friends feed        | Shown when friends exist but have posted nothing              |
-| `view-friends-feed-link`           | data-testid | Friends feed        | Link to the full friends feed for the focus deck              |
-| `deck-switcher-button`             | data-testid | Sidebar             | Button to open deck switcher                                  |
-| `new-deck-menu-item`               | data-testid | Deck switcher       | "New deck" option                                             |
-| `add-deck-form`                    | data-testid | Add deck page       | Form container                                                |
-| `language-selector-button`         | data-testid | Add deck form       | Button to open language selector                              |
-| `language-search-input`            | data-testid | Language selector   | Search input for languages                                    |
-| `language-options`                 | data-testid | Language selector   | Container for language options                                |
-| `language-options {lang}`          | data-key    | Language selector   | Language option item (e.g. `language-options spa`)            |
-| `start-learning-button`            | data-testid | Add deck form       | Submit button                                                 |
-| `deck-feed-page`                   | data-testid | Deck feed route     | Feed page container                                           |
-| `top-right-context-menu`           | data-testid | Navbar              | Context menu trigger                                          |
-| `deck-settings-menu-item`          | data-testid | Context menu        | Link to deck settings                                         |
-| `deck-settings-page`               | data-testid | Deck settings route | Settings page container                                       |
-| `dismiss-deck-settings-intro`      | data-testid | Deck settings intro | Button to dismiss settings intro sheet                        |
-| `review-goal-options`              | data-testid | Settings form       | Container for review goal radios                              |
-| `review-goal-options {n}`          | data-key    | Settings form       | Radio for review goal (e.g. `review-goal-options 10`)         |
-| `update-daily-goal-button`         | data-testid | Settings form       | Button to save review goal                                    |
-| `learning-goal-options`            | data-testid | Settings form       | Container for learning goal radios                            |
-| `learning-goal-options {type}`     | data-key    | Settings form       | Radio for learning goal (e.g. `learning-goal-options family`) |
-| `update-goal-button`               | data-testid | Settings form       | Button to save learning goal                                  |
-| `archive-deck-button`              | data-testid | Settings page       | Button to archive deck                                        |
-| `archive-confirmation-dialog`      | data-testid | Dialog              | Archive confirmation dialog                                   |
-| `confirm-archive-button`           | data-testid | Dialog              | Confirm archive button                                        |
-| `back-to-all-decks-link`           | data-testid | Settings page       | Link back to /learn                                           |
-| `view-archived-decks-link`         | data-testid | Learn page          | Link to archived decks                                        |
-| `restore-deck-button`              | data-testid | Settings page       | Button to restore archived deck                               |
-| `restore-confirmation-dialog`      | data-testid | Dialog              | Restore confirmation dialog                                   |
-| `confirm-restore-button`           | data-testid | Dialog              | Confirm restore button                                        |
+| Selector                             | Attribute   | Component/Location  | Description                                                              |
+| ------------------------------------ | ----------- | ------------------- | ------------------------------------------------------------------------ |
+| `learn-page`                         | data-testid | Learn page          | Main container for authenticated learn page                              |
+| `learn-welcome-header`               | data-testid | Learn page          | Welcome hero ("Welcome back, …")                                         |
+| `add-phrase-button`                  | data-testid | Learn page          | Hero CTA linking to /learn/$lang/phrases/new                             |
+| `review-ready-banner`                | data-testid | Learn page          | Banner showing cards ready for review                                    |
+| `start-review-button`                | data-testid | Review banner       | CTA to start the review session                                          |
+| `your-decks-section`                 | data-testid | Learn page          | Section containing the deck tile grid                                    |
+| `decks-list-grid`                    | data-testid | Learn page          | Grid container for deck cards                                            |
+| `decks-list-grid {lang}`             | data-key    | Deck card/tile      | Item inside grid (e.g. `decks-list-grid hin`)                            |
+| `decks-list-grid {lang} deck-tile`   | data-testid | Deck tile           | Button that opens the deck chooser dialog                                |
+| `deck-tile-{lang}`                   | data-testid | Deck tile           | Compact deck tile on learn home                                          |
+| `deck-tile-dialog`                   | data-testid | Deck chooser        | Dialog surface opened from a deck tile                                   |
+| `start-practice-link`                | data-testid | Deck chooser        | "Daily practice" link to /learn/$lang/review                             |
+| `deck-link`                          | data-testid | Deck chooser / card | "Browse deck" link to /learn/$lang                                       |
+| `add-deck-tile`                      | data-testid | Learn page          | "+ Start a new deck" tile                                                |
+| `friends-feed-section`               | data-testid | Learn page          | Section containing the friends-activity snippet                          |
+| `friends-feed-snippet`               | data-testid | Learn page          | Wrapper around preview friend-activity items                             |
+| `friends-feed-empty`                 | data-testid | Friends feed        | Shown when the user has no connected friends                             |
+| `friends-feed-quiet`                 | data-testid | Friends feed        | Shown when friends exist but have posted nothing                         |
+| `view-friends-feed-link`             | data-testid | Friends feed        | Link to the full friends feed for the focus deck                         |
+| `deck-switcher-button`               | data-testid | Sidebar             | Button to open deck switcher                                             |
+| `new-deck-menu-item`                 | data-testid | Deck switcher       | "New deck" option                                                        |
+| `add-deck-form`                      | data-testid | Add deck page       | Form container                                                           |
+| `language-selector-button`           | data-testid | Add deck form       | Button to open language selector                                         |
+| `language-search-input`              | data-testid | Language selector   | Search input for languages                                               |
+| `language-options`                   | data-testid | Language selector   | Container for language options                                           |
+| `language-options {lang}`            | data-key    | Language selector   | Language option item (e.g. `language-options spa`)                       |
+| `add-deck-form submit-button`        | scope       | Add deck form       | Submit button (scoped by `add-deck-form`)                                |
+| `deck-feed-page`                     | data-testid | Deck feed route     | Feed page container                                                      |
+| `top-right-context-menu`             | data-testid | Navbar              | Context menu trigger                                                     |
+| `deck-settings-menu-item`            | data-testid | Context menu        | Link to deck settings                                                    |
+| `deck-settings-page`                 | data-testid | Deck settings route | Settings page container                                                  |
+| `dismiss-deck-settings-intro`        | data-testid | Deck settings intro | Button to dismiss settings intro sheet                                   |
+| `review-goal-options`                | data-testid | Settings section    | Container for daily review goal buttons                                  |
+| `review-goal-options {n}`            | data-key    | Settings section    | Button for daily goal (e.g. `review-goal-options 10`)                    |
+| `review-goal-options-{n}`            | data-testid | Settings section    | Button for daily goal by testid (e.g. `review-goal-options-10`)          |
+| `learning-goal-options`              | data-testid | Settings section    | Container for learning goal buttons                                      |
+| `learning-goal-options {type}`       | data-key    | Settings section    | Button for learning goal (e.g. `learning-goal-options family`)           |
+| `learning-goal-options-{type}`       | data-testid | Settings section    | Button for learning goal by testid (e.g. `learning-goal-options-family`) |
+| `clear-preferred-translation-button` | data-testid | Settings section    | Button to clear preferred translation override                           |
+| `archive-deck-button`                | data-testid | Settings page       | Button to archive deck                                                   |
+| `archive-confirmation-dialog`        | data-testid | Dialog              | Archive confirmation dialog                                              |
+| `confirm-archive-button`             | data-testid | Dialog              | Confirm archive button                                                   |
+| `back-to-all-decks-link`             | data-testid | Settings page       | Link back to /learn                                                      |
+| `view-archived-decks-link`           | data-testid | Learn page          | Link to archived decks                                                   |
+| `restore-deck-button`                | data-testid | Settings page       | Button to restore archived deck                                          |
+| `restore-confirmation-dialog`        | data-testid | Dialog              | Restore confirmation dialog                                              |
+| `confirm-restore-button`             | data-testid | Dialog              | Confirm restore button                                                   |
 
 ## Card Management
 
-| Selector               | Attribute   | Component/Location | Description                            |
-| ---------------------- | ----------- | ------------------ | -------------------------------------- |
-| `phrase-detail-page`   | data-testid | Phrase route       | Phrase detail page container           |
-| `card-status-dropdown` | data-testid | Phrase page        | Dropdown for card status               |
-| `add-to-deck-option`   | data-testid | Status dropdown    | "Add to deck" option                   |
-| `set-learned-option`   | data-testid | Status dropdown    | "Set learned" option                   |
-| `ignore-card-option`   | data-testid | Status dropdown    | "Ignore card" option                   |
-| `activate-card-option` | data-testid | Status dropdown    | "Activate card" option                 |
-| `add-phrase-page`      | data-testid | Add phrase route   | Container for /learn/$lang/phrases/new |
-| `bulk-add-link`        | data-testid | Add phrase page    | Link to bulk-add page                  |
-| `bulk-add-page`        | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add    |
+| Selector                   | Attribute   | Component/Location | Description                                                                           |
+| -------------------------- | ----------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `phrase-detail-page`       | data-testid | Phrase route       | Phrase detail page container                                                          |
+| `card-status-dropdown`     | data-testid | Phrase page        | Dropdown for card status                                                              |
+| `add-to-deck-option`       | data-testid | Status dropdown    | "Add to deck" option                                                                  |
+| `set-learned-option`       | data-testid | Status dropdown    | "Set learned" option                                                                  |
+| `ignore-card-option`       | data-testid | Status dropdown    | "Ignore card" option                                                                  |
+| `activate-card-option`     | data-testid | Status dropdown    | "Activate card" option                                                                |
+| `add-phrase-page`          | data-testid | Add phrase route   | Container for /learn/$lang/phrases/new                                                |
+| `add-phrase-form`          | data-testid | Add phrase route   | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`) |
+| `bulk-add-link`            | data-testid | Add phrase page    | Link to bulk-add page                                                                 |
+| `add-translations-trigger` | data-testid | Big phrase card    | Pencil icon that opens the manage-translations dialog                                 |
+| `add-translations-dialog`  | data-testid | Dialog             | Manage-translations dialog (scope `translation-text-input` / `submit-button`)         |
+| `add-tags-trigger`         | data-testid | Big phrase card    | Tags icon that opens the edit-tags dialog                                             |
+| `add-tags-dialog`          | data-testid | Dialog             | Edit-tags dialog (contains `add-tags-form`)                                           |
+| `bulk-add-page`            | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add                                                   |
 
 ## Sidebar Navigation
 
-| Selector                                 | Attribute   | Component/Location | Description               |
-| ---------------------------------------- | ----------- | ------------------ | ------------------------- |
-| `sidebar-link--learn-lang-feed`          | data-testid | Sidebar            | Link to deck feed         |
-| `sidebar-link--learn-lang-review`        | data-testid | Sidebar            | Link to review            |
-| `sidebar-link--learn-lang-search`        | data-testid | Sidebar            | Link to search            |
-| `sidebar-link--learn-lang-contributions` | data-testid | Sidebar            | Link to contributions     |
-| `sidebar-link--learn-lang-requests-new`  | data-testid | Sidebar            | Link to new request       |
-| `sidebar-link--friends-chats`            | data-testid | Sidebar            | Link to chats             |
-| `back-to-decks-link`                     | data-testid | Sidebar            | Link back to /learn       |
-| `friends-section`                        | data-testid | Learn page         | Friends section container |
-| `profile-page`                           | data-testid | Profile route      | Profile page container    |
-| `search-page`                            | data-testid | Search route       | Search page container     |
-| `search-input`                           | data-testid | Search page        | Search text input         |
-| `search-results`                         | data-testid | Search page        | Search results container  |
+| Selector                                 | Attribute   | Component/Location       | Description                                                                                                        |
+| ---------------------------------------- | ----------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `sidebar-link--learn-lang-feed`          | data-testid | Sidebar                  | Link to deck feed                                                                                                  |
+| `sidebar-link--learn-lang-review`        | data-testid | Sidebar                  | Link to review                                                                                                     |
+| `sidebar-link--learn-lang-search`        | data-testid | Sidebar                  | Link to search                                                                                                     |
+| `sidebar-link--learn-lang-contributions` | data-testid | Sidebar                  | Link to contributions                                                                                              |
+| `sidebar-link--learn-lang-requests-new`  | data-testid | Sidebar                  | Link to new request                                                                                                |
+| `sidebar-link--friends-chats`            | data-testid | Sidebar                  | Link to chats                                                                                                      |
+| `back-to-decks-link`                     | data-testid | Sidebar                  | Link back to /learn                                                                                                |
+| `friends-section`                        | data-testid | Learn page               | Friends section container                                                                                          |
+| `profile-page`                           | data-testid | Profile route            | Profile page container                                                                                             |
+| `update-profile-form`                    | data-testid | Profile route            | Edit-profile form (scope `username-input` / `submit-button`)                                                       |
+| `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
+| `profile-creation-form`                  | data-testid | Onboarding route         | Initial profile-creation form (scope `username-input` / `submit-button`)                                           |
+| `languages-known`                        | data-testid | Profile / onboarding     | Container for the languages-known array editor (rows have `data-key={index}`)                                      |
+| `add-language-button`                    | data-testid | Languages-known          | Adds an empty language row                                                                                         |
+| `move-up`                                | data-testid | Languages-known row      | Moves this row up                                                                                                  |
+| `move-down`                              | data-testid | Languages-known row      | Moves this row down                                                                                                |
+| `remove-language`                        | data-testid | Languages-known row      | Removes this row                                                                                                   |
+| `level-trigger`                          | data-testid | Languages-known row      | Opens the proficiency-level dropdown                                                                               |
+| `level-{value}`                          | data-testid | Languages-known dropdown | Proficiency option (`level-fluent` / `level-proficient` / `level-beginner`) — portal-rendered, no row scope needed |
+| `search-page`                            | data-testid | Search route             | Search page container                                                                                              |
+| `search-input`                           | data-testid | Search page              | Search text input                                                                                                  |
+| `search-results`                         | data-testid | Search page              | Search results container                                                                                           |
 
 ## Phrase Requests
 
@@ -155,16 +171,13 @@ natural wrapper element to label.
 | `contributions-tab--comments`  | data-testid | Contributions page  | Tab for comments                                                                                   |
 | `contributions-comment-item`   | data-testid | Comments tab        | Comment card on the comments tab (use with `data-key={commentId}`)                                 |
 | `new-request-link`             | data-testid | Contributions page  | Link to create new request                                                                         |
-| `new-request-form`             | data-testid | New request page    | Request form container                                                                             |
-| `request-prompt-input`         | data-testid | Request form        | Textarea for prompt                                                                                |
-| `post-request-button`          | data-testid | Request form        | Submit button                                                                                      |
+| `new-request-form`             | data-testid | New request page    | Request form container (scope `prompt-input` and `submit-button` by this)                          |
 | `request-detail-page`          | data-testid | Request route       | Request detail container                                                                           |
 | `request-item`                 | data-testid | Request list        | A request list item (own user)                                                                     |
 | `other-user-request-item`      | data-testid | Request list        | A request by another user                                                                          |
 | `update-request-button`        | data-testid | Request page        | Edit button (owner only)                                                                           |
 | `edit-request-dialog`          | data-testid | Dialog              | Edit request dialog                                                                                |
-| `edit-request-prompt-input`    | data-testid | Edit dialog         | Textarea for prompt                                                                                |
-| `save-request-button`          | data-testid | Edit dialog         | Save button                                                                                        |
+| `edit-request-form`            | data-testid | Edit dialog         | Form container inside the edit dialog (scope `prompt-input` and `submit-button` by this)           |
 | `delete-request-button`        | data-testid | Request page        | Delete button (owner only)                                                                         |
 | `delete-request-dialog`        | data-testid | Dialog              | Delete confirmation                                                                                |
 | `confirm-delete-button`        | data-testid | Dialog              | Confirm delete button                                                                              |
@@ -176,25 +189,22 @@ natural wrapper element to label.
 
 ## Playlists
 
-| Selector                     | Attribute   | Component/Location | Description                        |
-| ---------------------------- | ----------- | ------------------ | ---------------------------------- |
-| `playlist-detail-page`       | data-testid | Playlist route     | Playlist detail container          |
-| `update-playlist-button`     | data-testid | Playlist page      | Edit button (owner only)           |
-| `edit-playlist-dialog`       | data-testid | Dialog             | Edit playlist dialog               |
-| `playlist-title-input`       | data-testid | Edit dialog        | Title input                        |
-| `playlist-description-input` | data-testid | Edit dialog        | Description textarea               |
-| `playlist-href-input`        | data-testid | Edit dialog        | URL input                          |
-| `save-playlist-button`       | data-testid | Edit dialog        | Save button                        |
-| `delete-playlist-button`     | data-testid | Playlist page      | Delete button (owner only)         |
-| `delete-playlist-dialog`     | data-testid | Dialog             | Delete confirmation                |
-| `manage-phrases-button`      | data-testid | Playlist page      | Manage phrases button (owner only) |
-| `manage-phrases-dialog`      | data-testid | Dialog             | Manage phrases dialog              |
-| `add-phrases-button`         | data-testid | Manage dialog      | Button to add phrases              |
-| `phrase-search-input`        | data-testid | Add phrases        | Search input                       |
-| `phrase-checkbox`            | data-testid | Add phrases        | Checkbox for phrase selection      |
-| `add-flashcard-button`       | data-testid | Add phrases        | Confirm add button                 |
-| `remove-phrase-button`       | data-testid | Manage dialog      | Remove phrase button               |
-| `move-phrase-down-button`    | data-testid | Manage dialog      | Reorder down button                |
+| Selector                  | Attribute   | Component/Location | Description                                                                                    |
+| ------------------------- | ----------- | ------------------ | ---------------------------------------------------------------------------------------------- |
+| `playlist-detail-page`    | data-testid | Playlist route     | Playlist detail container                                                                      |
+| `update-playlist-button`  | data-testid | Playlist page      | Edit button (owner only)                                                                       |
+| `edit-playlist-dialog`    | data-testid | Dialog             | Edit playlist dialog (scopes `edit-playlist-form`)                                             |
+| `edit-playlist-form`      | data-testid | Edit dialog        | Form element (scope `title-input`, `description-input`, `href-input`, `submit-button` by this) |
+| `delete-playlist-button`  | data-testid | Playlist page      | Delete button (owner only)                                                                     |
+| `delete-playlist-dialog`  | data-testid | Dialog             | Delete confirmation                                                                            |
+| `manage-phrases-button`   | data-testid | Playlist page      | Manage phrases button (owner only)                                                             |
+| `manage-phrases-dialog`   | data-testid | Dialog             | Manage phrases dialog                                                                          |
+| `add-phrases-button`      | data-testid | Manage dialog      | Button to add phrases                                                                          |
+| `phrase-search-input`     | data-testid | Add phrases        | Search input                                                                                   |
+| `phrase-checkbox`         | data-testid | Add phrases        | Checkbox for phrase selection                                                                  |
+| `add-flashcard-button`    | data-testid | Add phrases        | Confirm add button                                                                             |
+| `remove-phrase-button`    | data-testid | Manage dialog      | Remove phrase button                                                                           |
+| `move-phrase-down-button` | data-testid | Manage dialog      | Reorder down button                                                                            |
 
 ## Feed
 
@@ -267,57 +277,58 @@ natural wrapper element to label.
 
 ## Review Answer Mode
 
-| Selector                           | Attribute   | Component/Location | Description                           |
-| ---------------------------------- | ----------- | ------------------ | ------------------------------------- |
-| `review-answer-mode-radio`         | data-testid | Deck settings      | Radio group for answer mode selection |
-| `review-answer-mode-2-buttons`     | data-testid | Radio group        | Option for 2-button mode              |
-| `review-answer-mode-4-buttons`     | data-testid | Radio group        | Option for 4-button mode              |
-| `update-review-answer-mode-button` | data-testid | Deck settings      | Save button for answer mode           |
-| `clear-review-answer-mode-button`  | data-testid | Deck settings      | Clear deck override button            |
-| `rating-again-button`              | data-testid | Review card        | "Again" / "Try Again" button          |
-| `rating-hard-button`               | data-testid | Review card        | "Hard" button (4-button mode only)    |
-| `rating-good-button`               | data-testid | Review card        | "Good" / "Correct!" button            |
-| `rating-easy-button`               | data-testid | Review card        | "Easy" button (4-button mode only)    |
+| Selector                           | Attribute   | Component/Location | Description                        |
+| ---------------------------------- | ----------- | ------------------ | ---------------------------------- |
+| `review-answer-mode-radio`         | data-testid | Deck settings      | Container for answer mode tiles    |
+| `review-answer-mode-radio {value}` | data-key    | Deck settings      | Tile for `2-buttons` / `4-buttons` |
+| `clear-review-answer-mode-button`  | data-testid | Deck settings      | Use profile default button         |
+| `rating-again-button`              | data-testid | Review card        | "Again" / "Try Again" button       |
+| `rating-hard-button`               | data-testid | Review card        | "Hard" button (4-button mode only) |
+| `rating-good-button`               | data-testid | Review card        | "Good" / "Correct!" button         |
+| `rating-easy-button`               | data-testid | Review card        | "Easy" button (4-button mode only) |
 
 ## Display Preferences
 
-| Selector                       | Attribute   | Component/Location | Description                            |
-| ------------------------------ | ----------- | ------------------ | -------------------------------------- |
-| `display-preferences-page`     | data-testid | Profile page       | Display preferences section container  |
-| `font-preference-default`      | data-testid | Display prefs      | Default font radio option              |
-| `font-preference-dyslexic`     | data-testid | Display prefs      | OpenDyslexic font radio option         |
-| `review-answer-mode-2-buttons` | data-testid | Display prefs      | 2-button mode option (profile-level)   |
-| `review-answer-mode-4-buttons` | data-testid | Display prefs      | 4-button mode option (profile-level)   |
-| `upvote-comment-button`        | data-testid | Comment item       | Upvote button on a comment             |
-| `phrase-checkbox`              | data-testid | Phrase picker      | Checkbox for selecting a phrase        |
-| `add-selected-phrases-button`  | data-testid | Phrase picker      | Confirm button to add selected phrases |
+| Selector                      | Attribute   | Component/Location | Description                            |
+| ----------------------------- | ----------- | ------------------ | -------------------------------------- |
+| `display-preferences-page`    | data-testid | Profile page       | Display preferences section container  |
+| `font-preference`             | data-testid | Display prefs      | Container for font tiles               |
+| `font-preference {value}`     | data-key    | Display prefs      | Tile for `default` / `dyslexic`        |
+| `sound-preference`            | data-testid | Display prefs      | Container for sound tiles              |
+| `sound-preference {value}`    | data-key    | Display prefs      | Tile for `on` / `off`                  |
+| `review-answer-mode`          | data-testid | Display prefs      | Container for answer-mode tiles        |
+| `review-answer-mode {value}`  | data-key    | Display prefs      | Tile for `2-buttons` / `4-buttons`     |
+| `upvote-comment-button`       | data-testid | Comment item       | Upvote button on a comment             |
+| `phrase-checkbox`             | data-testid | Phrase picker      | Checkbox for selecting a phrase        |
+| `add-selected-phrases-button` | data-testid | Phrase picker      | Confirm button to add selected phrases |
 
 ## Comments & Answers
 
-| Selector                    | Attribute   | Component/Location  | Description                           |
-| --------------------------- | ----------- | ------------------- | ------------------------------------- |
-| `add-comment-button`        | data-testid | Request detail page | Button to open comment dialog         |
-| `add-comment-dialog`        | data-testid | Dialog              | Add comment dialog container          |
-| `comment-content-input`     | data-testid | Comment dialog      | Textarea for comment content          |
-| `submit-comment-button`     | data-testid | Comment dialog      | Submit comment button                 |
-| `reply-to-comment-button`   | data-testid | Comment item        | Reply button on a comment             |
-| `comment-reply`             | data-testid | Comment thread      | A reply nested under a parent comment |
-| `comment-phrase-link-badge` | data-testid | Comment item        | Badge showing linked phrase           |
-| `attach-phrase-button`      | data-testid | Comment dialog      | Button to attach a phrase to comment  |
-| `upvote-request-button`     | data-testid | Request detail page | Upvote button on request              |
+| Selector                    | Attribute   | Component/Location  | Description                                                                       |
+| --------------------------- | ----------- | ------------------- | --------------------------------------------------------------------------------- |
+| `open-comment-dialog`       | data-testid | Request detail page | Fake-input link that opens the comment dialog (`?mode=comment`)                   |
+| `view-comments-link`        | data-testid | Request page        | Chat-bubble icon: navigates to thread view (`?show=thread`)                       |
+| `comment-dialog`            | data-testid | Dialog              | Comment dialog container (scopes both `new-comment-form` and `edit-comment-form`) |
+| `new-comment-form`          | data-testid | Comment dialog      | Form element when creating a new comment                                          |
+| `edit-comment-form`         | data-testid | Comment dialog      | Form element when editing an existing comment                                     |
+| `reply-dialog`              | data-testid | Dialog              | Reply dialog container (scopes both `new-reply-form` and `edit-reply-form`)       |
+| `new-reply-form`            | data-testid | Reply dialog        | Form element when creating a new reply                                            |
+| `edit-reply-form`           | data-testid | Reply dialog        | Form element when editing an existing reply                                       |
+| `reply-to-comment-button`   | data-testid | Comment item        | Reply button on a comment                                                         |
+| `comment-reply`             | data-testid | Comment thread      | A reply nested under a parent comment                                             |
+| `comment-phrase-link-badge` | data-testid | Comment item        | Badge showing linked phrase                                                       |
+| `attach-phrase-button`      | data-testid | Comment dialog      | Button to attach a phrase to comment                                              |
+| `upvote-request-button`     | data-testid | Request detail page | Upvote button on request                                                          |
 
 ## Playlists (HIN/KAN)
 
-| Selector                     | Attribute   | Component/Location | Description                    |
-| ---------------------------- | ----------- | ------------------ | ------------------------------ |
-| `playlist-list`              | data-testid | Playlists page     | List container for playlists   |
-| `playlist-item`              | data-testid | Playlists list     | Individual playlist card       |
-| `playlist-phrase-list`       | data-testid | Playlist detail    | List of phrases in a playlist  |
-| `new-playlist-form`          | data-testid | New playlist page  | Create playlist form container |
-| `playlist-title-input`       | data-testid | New playlist form  | Title input for new playlist   |
-| `playlist-description-input` | data-testid | New playlist form  | Description input              |
-| `create-playlist-button`     | data-testid | New playlist form  | Submit button for new playlist |
-| `upvote-playlist-button`     | data-testid | Playlist detail    | Upvote button on playlist      |
+| Selector                 | Attribute   | Component/Location | Description                                                                                                      |
+| ------------------------ | ----------- | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `playlist-list`          | data-testid | Playlists page     | List container for playlists                                                                                     |
+| `playlist-item`          | data-testid | Playlists list     | Individual playlist card                                                                                         |
+| `playlist-phrase-list`   | data-testid | Playlist detail    | List of phrases in a playlist                                                                                    |
+| `new-playlist-form`      | data-testid | New playlist page  | Create playlist form container (scope `title-input`, `description-input`, `href-input`, `submit-button` by this) |
+| `upvote-playlist-button` | data-testid | Playlist detail    | Upvote button on playlist                                                                                        |
 
 ---
 
@@ -346,10 +357,14 @@ element to appear and then disappear:
 
 ## Onboarding & Profile Creation
 
-| Selector              | Attribute   | Component/Location                 | Description                                |
-| --------------------- | ----------- | ---------------------------------- | ------------------------------------------ |
-| `username-input`      | data-testid | `components/fields/username-field` | Username input on the getting-started form |
-| `save-profile-button` | data-testid | `routes/_user/getting-started.tsx` | Submit button on the profile creation form |
+See also the `Languages-known field` section above for testids inside the
+LanguagesKnownField (used on /profile and /getting-started).
+
+| Selector                | Attribute   | Component/Location                              | Description                                                            |
+| ----------------------- | ----------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| `getting-started-page`  | data-testid | `routes/_user/getting-started.tsx`              | Onboarding page container                                              |
+| `profile-creation-form` | data-testid | `routes/_user/getting-started.tsx`              | Form on the onboarding page (scope `username-input` / `submit-button`) |
+| `update-profile-form`   | data-testid | `routes/_user/profile/-update-profile-form.tsx` | Form on /profile (scope `username-input` / `submit-button`)            |
 
 ## Chat previews
 
@@ -360,13 +375,10 @@ element to appear and then disappear:
 
 ## Inline phrase creator (comment dialog, chat recommend)
 
-| Selector                        | Attribute   | Component/Location                             | Description                           |
-| ------------------------------- | ----------- | ---------------------------------------------- | ------------------------------------- |
-| `create-new-phrase-button`      | data-testid | `components/comments/comment-dialog.tsx`       | Opens the inline phrase creator panel |
-| `inline-phrase-creator`         | data-testid | `components/phrases/inline-phrase-creator.tsx` | Inline phrase creator container       |
-| `inline-phrase-text-input`      | data-testid | same                                           | Phrase text input                     |
-| `inline-translation-text-input` | data-testid | same                                           | Translation text input                |
-| `inline-phrase-submit-button`   | data-testid | same                                           | Submit button for creating the phrase |
+| Selector                   | Attribute   | Component/Location                             | Description                                                                                                    |
+| -------------------------- | ----------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `create-new-phrase-button` | data-testid | `components/comments/comment-dialog.tsx`       | Opens the inline phrase creator panel                                                                          |
+| `inline-phrase-creator`    | data-testid | `components/phrases/inline-phrase-creator.tsx` | Inline phrase creator container (scope `phrase-text-input`, `translation-text-input`, `submit-button` by this) |
 
 ## Deck stats badges
 

@@ -12,7 +12,13 @@ cleanup: supabase.from('user_profile').delete().eq('uid', '[new-user.key]')
 new-user:
 
 - login
+- seeToast toast-success
 - see getting-started-page
+- see profile-creation-form
+- typeInto profile-creation-form username-input 'NewLearnerName'
+- click profile-creation-form submit-button
+- up
+- seeToast toast-success
 
 # user signs out and is redirected to home
 

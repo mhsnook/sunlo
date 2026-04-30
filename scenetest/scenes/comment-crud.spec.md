@@ -17,11 +17,11 @@ friend:
 
 // Post a new comment
 
-- click add-comment-trigger
+- click open-comment-dialog
 - up
-- scope add-comment-dialog
-- typeInto comment-content-input 'Here is a useful phrase for ordering'
-- click post-comment-button
+- scope comment-dialog
+- typeInto content-input 'Here is a useful phrase for ordering'
+- click submit-button
 - up
 
 // Edit the comment to attach a phrase link
@@ -35,8 +35,8 @@ friend:
 - click phrase-picker-item [team.attach_phrase]
 - see remove-phrase-button
 - up
-- typeInto edit-comment-content-input 'Updated: here is the phrase you need'
-- click save-comment-button
+- typeInto content-input 'Updated: here is the phrase you need'
+- click submit-button
 - up
 
 // Verify the phrase badge is visible on the saved comment.
@@ -57,8 +57,8 @@ friend:
 - scope remove-phrase-button
 - click
 - up
-- typeInto edit-comment-content-input 'Actually just check the playlist'
-- click save-comment-button
+- typeInto content-input 'Actually just check the playlist'
+- click submit-button
 - up
 
 // Delete the comment
@@ -85,8 +85,8 @@ learner:
 - see request-detail-page
 - click comment-item c0000003-3333-4444-8555-666666666666 reply-link
 - scope reply-dialog
-- typeInto reply-content-input 'Thanks for the tip about dosas!'
-- click post-reply-button
+- typeInto content-input 'Thanks for the tip about dosas!'
+- click submit-button
 - up
 
 // Edit the reply
@@ -95,8 +95,8 @@ learner:
 - click edit-reply-button
 - up
 - scope reply-dialog
-- typeInto edit-reply-content-input 'Thanks for the tip about dosas and coffee!'
-- click save-reply-button
+- typeInto content-input 'Thanks for the tip about dosas and coffee!'
+- click submit-button
 - up
 
 // Delete the reply

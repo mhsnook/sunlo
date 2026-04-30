@@ -12,8 +12,8 @@ friend:
 - click open-comment-dialog
 - up
 - scope comment-dialog
-- typeInto comment-content-input 'You can also try "haldi kitne ka hai?" for turmeric!'
-- click post-comment-button
+- typeInto content-input 'You can also try "haldi kitne ka hai?" for turmeric!'
+- click submit-button
 - up
 - seeToast toast-success
 
@@ -42,8 +42,8 @@ learner2:
 - click reply-link
 - up
 - scope reply-dialog
-- typeInto reply-content-input 'Great tip! I also use "lehsun kitne ka hai?" for garlic.'
-- click post-reply-button
+- typeInto content-input 'Great tip! I also use "lehsun kitne ka hai?" for garlic.'
+- click submit-button
 - up
 - seeToast toast-success
 
@@ -69,13 +69,13 @@ learner3:
 - click open-comment-dialog
 - up
 - scope comment-dialog
-- typeInto comment-content-input 'Here are the direction phrases!'
+- typeInto content-input 'Here are the direction phrases!'
 - click attach-phrase-button
 - up
 - typeInto phrase-search-input Amele
 - click phrase-picker-item
 - up
-- click post-comment-button
+- click submit-button
 - up
 - seeToast toast-success
 

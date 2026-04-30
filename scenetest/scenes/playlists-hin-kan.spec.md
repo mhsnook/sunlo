@@ -44,14 +44,14 @@ learner:
 - openTo /learn/hin/playlists/new
 - up
 - scope new-playlist-form
-- typeInto playlist-title-input 'Test: Hindi Slang'
-- typeInto playlist-description-input 'Informal Hindi phrases young people use'
+- typeInto title-input 'Test: Hindi Slang'
+- typeInto description-input 'Informal Hindi phrases young people use'
 - pressKey Tab
 - click open-phrase-picker
 - up
 - click phrase-picker-item 2fbae84f-5b1d-43c2-8927-ef4d41c7e794
 - up
-- click create-playlist-button
+- click submit-button
 - up
 - seeToast toast-success
 - see playlist-detail-page
@@ -66,14 +66,14 @@ learner:
 - openTo /learn/kan/playlists/new
 - up
 - scope new-playlist-form
-- typeInto playlist-title-input 'Test: Kannada Basics'
-- typeInto playlist-description-input 'Essential Kannada for getting started'
+- typeInto title-input 'Test: Kannada Basics'
+- typeInto description-input 'Essential Kannada for getting started'
 - pressKey Tab
 - click open-phrase-picker
 - up
 - click phrase-picker-item b9e3edac-de8b-4796-b436-a0cded08d2ae
 - up
-- click create-playlist-button
+- click submit-button
 - up
 - seeToast toast-success
 - see playlist-detail-page

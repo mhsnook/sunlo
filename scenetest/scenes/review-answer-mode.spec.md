@@ -9,9 +9,7 @@ learner:
 - up
 - see deck-settings-page
 - see review-answer-mode-radio
-- click review-answer-mode-2-buttons
-- up
-- click update-review-answer-mode-button
+- click review-answer-mode-radio 2-buttons
 - up
 - seeToast toast-success
 

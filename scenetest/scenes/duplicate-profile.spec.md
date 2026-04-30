@@ -18,9 +18,10 @@ cleanup: supabase.from('user_profile').delete().eq('uid', '[new-user.key]')
 new-user:
 
 - login
+- seeToast toast-success
 - see getting-started-page
-- typeInto username-input NewLearner1
-- click save-profile-button
+- typeInto profile-creation-form username-input NewLearner1
+- click profile-creation-form submit-button
 - up
 - see welcome-page
 - notSee toast-error
@@ -36,6 +37,6 @@ new-user:
 - openTo /getting-started
 - up
 - notSee getting-started-page
-- notSee save-profile-button
+- notSee profile-creation-form
 - notSee toast-error
 - see welcome-page
