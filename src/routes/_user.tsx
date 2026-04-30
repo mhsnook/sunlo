@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { lazy, Suspense, useEffect, useRef } from 'react'
 import {
 	createFileRoute,
 	Outlet,
@@ -8,9 +8,16 @@ import {
 import { cn } from '@/lib/utils'
 import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
-import { AppSidebar } from '@/components/navs/app-sidebar'
 import Navbar from '@/components/navs/navbar'
-import { AppNav } from '@/components/navs/app-nav'
+
+const AppSidebar = lazy(() =>
+	import('@/components/navs/app-sidebar').then((m) => ({
+		default: m.AppSidebar,
+	}))
+)
+const AppNav = lazy(() =>
+	import('@/components/navs/app-nav').then((m) => ({ default: m.AppNav }))
+)
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import type { MyRouterContext } from './__root'
 import {
@@ -124,6 +131,12 @@ function UserLayout() {
 		(m) => (m.context as MyRouterContext)?.fixedHeight
 	)
 
+	// Skip the AppNav chunk entirely when no route declares an appnav
+	const appnavMatch = matches.findLast(
+		(m) => (m.context as MyRouterContext)?.appnav
+	)
+	const hasAppNav = !!(appnavMatch?.context as MyRouterContext)?.appnav?.length
+
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()
 	const savedOpenState = useRef(open)
@@ -147,7 +160,16 @@ function UserLayout() {
 		<div
 			className={cn('flex w-full', fixedHeight ? 'h-screen' : 'min-h-screen')}
 		>
-			<AppSidebar focusMode={focusMode} />
+			<Suspense
+				fallback={
+					<div
+						aria-hidden
+						className="hidden h-svh w-(--sidebar-width) shrink-0 md:block"
+					/>
+				}
+			>
+				<AppSidebar focusMode={focusMode} />
+			</Suspense>
 			<SidebarInset className="@container flex w-full min-w-0 flex-1 flex-col">
 				<div className={cn('flex flex-1 flex-row', fixedHeight && 'min-h-0')}>
 					<div
@@ -158,7 +180,18 @@ function UserLayout() {
 						)}
 					>
 						<Navbar />
-						<AppNav />
+						{hasAppNav && (
+							<Suspense
+								fallback={
+									<div
+										aria-hidden
+										className="bg-base-lo-neutral mt-1 -mb-[2px] h-12"
+									/>
+								}
+							>
+								<AppNav />
+							</Suspense>
+						)}
 						<div
 							id="app-sidebar-layout-outlet"
 							className={cn(
