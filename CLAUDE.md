@@ -553,8 +553,9 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 
 ### Formatting
 
-- Use **tabs** instead of spaces (enforced by prettier.config.mjs)
-- Run `pnpm format` before committing
+- Use **tabs** instead of spaces
+- TS/JS/JSX/CSS/MD/JSON are formatted by **oxfmt**; prettier is only used for SQL. To format specific files, use `npx oxfmt path/to/file.ts` — never `npx prettier`, which applies wrong defaults (semicolons, double quotes, spaces) to non-SQL files.
+- The pre-commit hook runs oxfmt + oxlint --fix + eslint --fix on staged files via lint-staged, so the format step happens automatically. Run `pnpm format` by hand only when you want to format the whole tree.
 
 ### Naming Conventions
 
