@@ -1,17 +1,14 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
-import EmailField from '@/components/fields/email-field'
+import { useAppForm } from '@/components/form'
 
 export const Route = createFileRoute('/_auth/forgot-password')({
 	component: ForgotPasswordPage,
@@ -38,8 +35,6 @@ function ForgotPasswordPage() {
 				throw error
 			}
 			return email
-			// console.log(`form data`, email, user_role)
-			// return { user: { email: '@fake email@' } }
 		},
 		onSuccess: (email) => {
 			toastSuccess(
@@ -48,14 +43,11 @@ function ForgotPasswordPage() {
 		},
 	})
 
-	const {
-		handleSubmit,
-		register,
-		formState: { errors, isSubmitting },
-	} = useForm<FormInputs>({
-		resolver: zodResolver(FormSchema),
-		defaultValues: {
-			email: '',
+	const form = useAppForm({
+		defaultValues: { email: '' },
+		validators: { onChange: FormSchema },
+		onSubmit: async ({ value }) => {
+			await recoveryMutation.mutateAsync(value)
 		},
 	})
 
@@ -65,7 +57,7 @@ function ForgotPasswordPage() {
 				<CardTitle>Recover your password</CardTitle>
 			</CardHeader>
 			<CardContent>
-				{recoveryMutation.isSuccess ?
+				{recoveryMutation.isSuccess ? (
 					<Callout Icon={SuccessCheckmarkTrans}>
 						<p>Almost done!</p>
 						<p>
@@ -73,21 +65,29 @@ function ForgotPasswordPage() {
 						</p>
 						<p>You can close this window.</p>
 					</Callout>
-				:	<form
+				) : (
+					<form
+						data-testid="forgot-password-form"
 						role="form"
 						noValidate
 						className="space-y-4"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => recoveryMutation.mutate(data))}
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void form.handleSubmit()
+						}}
 					>
-						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-							<EmailField<FormInputs>
-								register={register}
-								error={errors.email}
-							/>
-						</fieldset>
+						<div className="flex flex-col gap-y-4">
+							<form.AppField name="email">
+								{(field) => <field.EmailInput />}
+							</form.AppField>
+						</div>
 						<div className="flex flex-row justify-between">
-							<Button disabled={recoveryMutation.isPending}>Submit</Button>
+							<form.AppForm>
+								<form.SubmitButton pendingText="Sending...">
+									Submit
+								</form.SubmitButton>
+							</form.AppForm>
 							<Link
 								to="/login"
 								className={buttonVariants({ variant: 'neutral' })}
@@ -95,13 +95,15 @@ function ForgotPasswordPage() {
 								Back to login
 							</Link>
 						</div>
-						<ShowAndLogError
-							error={recoveryMutation.error}
-							text="There was an uncaught error while submitting your request"
-							values={recoveryMutation.variables}
-						/>
+						<form.AppForm>
+							<form.FormAlert
+								error={recoveryMutation.error}
+								text="There was an uncaught error while submitting your request"
+								values={recoveryMutation.variables ?? null}
+							/>
+						</form.AppForm>
 					</form>
-				}
+				)}
 			</CardContent>
 		</Card>
 	)

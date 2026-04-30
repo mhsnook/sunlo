@@ -1,21 +1,10 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
@@ -36,10 +25,7 @@ import {
 } from '@/features/comments/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
-
-// ---------------------------------------------------------------------------
-// URL state types
-// ---------------------------------------------------------------------------
+import { useAppForm } from '@/components/form'
 
 type ReplyDialogMode =
 	| { kind: 'new'; parentCommentId: uuid }
@@ -64,10 +50,6 @@ export function deriveReplyDialogMode(
 	}
 	return undefined
 }
-
-// ---------------------------------------------------------------------------
-// ReplyDialog
-// ---------------------------------------------------------------------------
 
 interface ReplyDialogProps {
 	requestId: uuid
@@ -139,10 +121,6 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 	)
 }
 
-// ---------------------------------------------------------------------------
-// Context display
-// ---------------------------------------------------------------------------
-
 function CommentContext({ id }: { id: uuid }) {
 	const { data, isLoading } = useOneComment(id)
 	if (isLoading || !data) return null
@@ -156,20 +134,12 @@ function CommentContext({ id }: { id: uuid }) {
 	)
 }
 
-// ---------------------------------------------------------------------------
-// Reply form schema (shared)
-// ---------------------------------------------------------------------------
-
 const ReplyFormSchema = z.object({
 	content: z
 		.string()
 		.min(1, 'Please enter a reply')
 		.max(1000, 'Reply must be less than 1000 characters'),
 })
-
-// ---------------------------------------------------------------------------
-// New reply form (2 new)
-// ---------------------------------------------------------------------------
 
 function NewReplyForm({
 	requestId,
@@ -183,11 +153,6 @@ function NewReplyForm({
 	onClose: () => void
 }) {
 	const navigate = useNavigate()
-
-	const form = useForm<{ content: string }>({
-		resolver: zodResolver(ReplyFormSchema),
-		defaultValues: { content: '' },
-	})
 
 	const createMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
@@ -231,7 +196,6 @@ function NewReplyForm({
 						)
 				)
 			}
-			form.reset()
 			void navigate({
 				to: '/learn/$lang/requests/$id',
 				params: { lang, id: requestId },
@@ -246,47 +210,40 @@ function NewReplyForm({
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: { content: '' },
+		validators: { onChange: ReplyFormSchema },
+		onSubmit: async ({ value, formApi }) => {
+			await createMutation.mutateAsync(value)
+			formApi.reset()
+		},
+	})
+
 	return (
-		<Form {...form}>
-			<form
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => createMutation.mutate(data))}
-				className="space-y-4"
-			>
-				<FormField
-					control={form.control}
-					name="content"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel className="sr-only">Write a reply</FormLabel>
-							<MarkdownHint />
-							<FormControl>
-								<Textarea
-									data-testid="reply-content-input"
-									placeholder="Write a reply..."
-									rows={3}
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<Button
-					type="submit"
-					data-testid="post-reply-button"
-					disabled={createMutation.isPending}
-				>
-					{createMutation.isPending ? 'Posting...' : 'Post Reply'}
-				</Button>
-			</form>
-		</Form>
+		<form
+			data-testid="new-reply-form"
+			noValidate
+			className="space-y-4"
+			onSubmit={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			<MarkdownHint />
+			<form.AppField name="content">
+				{(field) => (
+					<field.TextareaInput placeholder="Write a reply..." rows={3} />
+				)}
+			</form.AppField>
+			<form.AppForm>
+				<form.SubmitButton pendingText="Posting...">
+					Post Reply
+				</form.SubmitButton>
+			</form.AppForm>
+		</form>
 	)
 }
-
-// ---------------------------------------------------------------------------
-// Edit reply form (2 edit)
-// ---------------------------------------------------------------------------
 
 function EditReplyForm({
 	comment,
@@ -295,11 +252,6 @@ function EditReplyForm({
 	comment: RequestCommentType
 	onClose: () => void
 }) {
-	const form = useForm<{ content: string }>({
-		resolver: zodResolver(ReplyFormSchema),
-		defaultValues: { content: comment.content },
-	})
-
 	const updateMutation = useMutation({
 		mutationFn: async (values: { content: string }) => {
 			const { data, error } = await supabase
@@ -326,45 +278,39 @@ function EditReplyForm({
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: { content: comment.content },
+		validators: { onChange: ReplyFormSchema },
+		onSubmit: async ({ value }) => {
+			await updateMutation.mutateAsync(value)
+		},
+	})
+
 	return (
-		<Form {...form}>
-			<form
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => updateMutation.mutate(data))}
-				className="space-y-4"
-			>
-				<FormField
-					control={form.control}
-					name="content"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel className="sr-only">Edit your reply</FormLabel>
-							<MarkdownHint />
-							<FormControl>
-								<Textarea
-									data-testid="edit-reply-content-input"
-									placeholder="Write a reply..."
-									rows={3}
-									{...field}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
-				<div className="flex gap-2">
-					<Button
-						type="submit"
-						data-testid="save-reply-button"
-						disabled={updateMutation.isPending}
-					>
-						{updateMutation.isPending ? 'Saving...' : 'Save'}
-					</Button>
-					<Button type="button" variant="neutral" onClick={onClose}>
-						Cancel
-					</Button>
-				</div>
-			</form>
-		</Form>
+		<form
+			data-testid="edit-reply-form"
+			noValidate
+			className="space-y-4"
+			onSubmit={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			<MarkdownHint />
+			<form.AppField name="content">
+				{(field) => (
+					<field.TextareaInput placeholder="Write a reply..." rows={3} />
+				)}
+			</form.AppField>
+			<div className="flex gap-2">
+				<form.AppForm>
+					<form.SubmitButton pendingText="Saving...">Save</form.SubmitButton>
+				</form.AppForm>
+				<Button type="button" variant="neutral" onClick={onClose}>
+					Cancel
+				</Button>
+			</div>
+		</form>
 	)
 }

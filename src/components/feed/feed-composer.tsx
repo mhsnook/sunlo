@@ -77,8 +77,6 @@ export function FeedComposer({ lang }: { lang: string }) {
 						lang={lang}
 						onSuccess={() => setOpen(false)}
 						formTestId="feed-composer-form"
-						inputTestId="feed-composer-prompt"
-						submitTestId="feed-composer-submit"
 						rows={4}
 					/>
 				</AuthenticatedDialogContent>

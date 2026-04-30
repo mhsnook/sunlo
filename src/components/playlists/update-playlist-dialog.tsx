@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import { Edit } from 'lucide-react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import {
 	Dialog,
 	DialogContent,
@@ -17,16 +15,13 @@ import {
 	type PhrasePlaylistType,
 	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { useMutation } from '@tanstack/react-query'
 import { CoverImageField } from '@/components/fields/cover-image-field'
-import ErrorLabel from '@/components/fields/error-label'
 import { isEmbeddableUrl } from './playlist-embed'
+import { useAppForm } from '@/components/form'
 
 function playlistDefaults(
 	playlist: PhrasePlaylistType
@@ -45,15 +40,6 @@ export function UpdatePlaylistDialog({
 	playlist: PhrasePlaylistType
 }) {
 	const [open, setOpen] = useState(false)
-
-	const form = useForm<PhrasePlaylistUpdateType>({
-		resolver: zodResolver(PhrasePlaylistUpdateSchema),
-		mode: 'onBlur',
-		defaultValues: playlistDefaults(playlist),
-	})
-
-	const hrefValue = form.watch('href')
-	const showCoverImage = !isEmbeddableUrl(hrefValue)
 
 	const mutation = useMutation({
 		mutationFn: async (values: PhrasePlaylistUpdateType) => {
@@ -85,6 +71,14 @@ export function UpdatePlaylistDialog({
 		},
 	})
 
+	const form = useAppForm({
+		defaultValues: playlistDefaults(playlist),
+		validators: { onChange: PhrasePlaylistUpdateSchema },
+		onSubmit: async ({ value }) => {
+			await mutation.mutateAsync(value)
+		},
+	})
+
 	return (
 		<Dialog
 			open={open}
@@ -113,57 +107,47 @@ export function UpdatePlaylistDialog({
 					</DialogDescription>
 				</DialogHeader>
 				<form
+					data-testid="edit-playlist-form"
 					noValidate
-					// eslint-disable-next-line @typescript-eslint/no-misused-promises
-					onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+					onSubmit={(e) => {
+						e.preventDefault()
+						e.stopPropagation()
+						void form.handleSubmit()
+					}}
 					className="mt-2 space-y-4"
 				>
-					<div className="space-y-2">
-						<Label htmlFor="playlist-title">Title</Label>
-						<Input
-							id="playlist-title"
-							data-testid="playlist-title-input"
-							className={form.formState.errors.title ? 'border-red-500' : ''}
-							{...form.register('title')}
-						/>
-						<ErrorLabel error={form.formState.errors.title} />
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="playlist-description">Description</Label>
-						<Textarea
-							id="playlist-description"
-							data-testid="playlist-description-input"
-							{...form.register('description')}
-							rows={3}
-						/>
-					</div>
-					<div className="space-y-2">
-						<Label htmlFor="playlist-href">Source URL</Label>
-						<Input
-							id="playlist-href"
-							data-testid="playlist-href-input"
-							type="url"
-							className={form.formState.errors.href ? 'border-red-500' : ''}
-							{...form.register('href')}
-							placeholder="https://..."
-						/>
-						<ErrorLabel error={form.formState.errors.href} />
-					</div>
-					{showCoverImage && (
-						<CoverImageField
-							control={form.control}
-							error={form.formState.errors.cover_image_path}
-						/>
-					)}
+					<form.AppField name="title">
+						{(field) => <field.TextInput label="Title" />}
+					</form.AppField>
+					<form.AppField name="description">
+						{(field) => <field.TextareaInput label="Description" rows={3} />}
+					</form.AppField>
+					<form.AppField name="href">
+						{(field) => (
+							<field.TextInput
+								label="Source URL"
+								type="url"
+								placeholder="https://..."
+							/>
+						)}
+					</form.AppField>
+
+					<form.Subscribe selector={(s) => s.values.href}>
+						{(href) =>
+							isEmbeddableUrl(href) ? null : (
+								<form.AppField name="cover_image_path">
+									{() => <CoverImageField />}
+								</form.AppField>
+							)
+						}
+					</form.Subscribe>
+
 					<div className="flex gap-2">
-						<Button
-							size="sm"
-							type="submit"
-							disabled={mutation.isPending || !form.formState.isValid}
-							data-testid="save-playlist-button"
-						>
-							{mutation.isPending ? 'Saving...' : 'Save'}
-						</Button>
+						<form.AppForm>
+							<form.SubmitButton size="sm" pendingText="Saving...">
+								Save
+							</form.SubmitButton>
+						</form.AppForm>
 						<Button
 							size="sm"
 							variant="ghost"

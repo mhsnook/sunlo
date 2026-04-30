@@ -19,7 +19,7 @@ import {
 } from '@/features/profile/schemas'
 import { Label } from '@/components/ui/label'
 import { InfoDialog } from '@/components/info-dialog'
-import { cn } from '@/lib/utils'
+import { ChoiceTile } from '@/components/ui/choice-tile'
 import { cancelAllSounds, previewAllSounds } from '@/lib/review-sounds'
 
 export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
@@ -73,17 +73,12 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 				</p>
 			</div>
 			<div className="flex gap-2">
-				<button
-					type="button"
+				<ChoiceTile
+					selected={currentPref === 'default'}
 					onClick={() => handleFontChange('default')}
 					disabled={updateFontPref.isPending}
-					data-testid="font-preference-default"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentPref === 'default'
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="default"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<BookA className="size-5 shrink-0" />
 					<div>
@@ -92,18 +87,13 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 							Atkinson Hyperlegible
 						</span>
 					</div>
-				</button>
-				<button
-					type="button"
+				</ChoiceTile>
+				<ChoiceTile
+					selected={currentPref === 'dyslexic'}
 					onClick={() => handleFontChange('dyslexic')}
 					disabled={updateFontPref.isPending}
-					data-testid="font-preference-dyslexic"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentPref === 'dyslexic'
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="dyslexic"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<BookType className="size-5 shrink-0" />
 					<div>
@@ -114,7 +104,7 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 							OpenDyslexic
 						</span>
 					</div>
-				</button>
+				</ChoiceTile>
 			</div>
 		</div>
 	)
@@ -156,42 +146,32 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 				</p>
 			</div>
 			<div className="flex gap-2">
-				<button
-					type="button"
+				<ChoiceTile
+					selected={current}
 					onClick={() => {
 						if (!current) updateSoundPref.mutate(true)
 						previewAllSounds()
 					}}
 					disabled={updateSoundPref.isPending}
-					data-testid="sound-preference-on"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						current
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="on"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<Volume2 className="size-5 shrink-0" />
 					<span className="font-medium">On</span>
-				</button>
-				<button
-					type="button"
+				</ChoiceTile>
+				<ChoiceTile
+					selected={!current}
 					onClick={() => {
 						cancelAllSounds()
 						if (current) updateSoundPref.mutate(false)
 					}}
 					disabled={updateSoundPref.isPending}
-					data-testid="sound-preference-off"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						!current
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="off"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<VolumeX className="size-5 shrink-0" />
 					<span className="font-medium">Off</span>
-				</button>
+				</ChoiceTile>
 			</div>
 		</div>
 	)
@@ -239,19 +219,14 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 				</InfoDialog>
 			</div>
 			<div className="flex gap-2" data-testid="review-answer-mode">
-				<button
-					type="button"
+				<ChoiceTile
+					selected={currentMode === '4-buttons'}
 					onClick={() =>
 						currentMode !== '4-buttons' && updateAnswerMode.mutate('4-buttons')
 					}
 					disabled={updateAnswerMode.isPending}
-					data-testid="answer-mode-4-buttons"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentMode === '4-buttons'
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="4-buttons"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<Grid2x2 className="size-5 shrink-0" />
 					<div>
@@ -260,20 +235,15 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 							Again, Hard, Good, Easy
 						</span>
 					</div>
-				</button>
-				<button
-					type="button"
+				</ChoiceTile>
+				<ChoiceTile
+					selected={currentMode === '2-buttons'}
 					onClick={() =>
 						currentMode !== '2-buttons' && updateAnswerMode.mutate('2-buttons')
 					}
 					disabled={updateAnswerMode.isPending}
-					data-testid="answer-mode-2-buttons"
-					className={cn(
-						'flex flex-1 items-center gap-3 rounded-2xl border-2 px-4 py-3 text-start transition-colors',
-						currentMode === '2-buttons'
-							? 'border-primary bg-1-mlo-primary'
-							: 'border-border hover:border-4-mlo-primary'
-					)}
+					data-key="2-buttons"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
 					<Columns2 className="size-5 shrink-0" />
 					<div>
@@ -282,7 +252,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 							Try Again, Correct!
 						</span>
 					</div>
-				</button>
+				</ChoiceTile>
 			</div>
 		</div>
 	)

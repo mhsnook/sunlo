@@ -1,24 +1,11 @@
 import type { ReactNode } from 'react'
-import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
-import {
-	Link,
-	useCanGoBack,
-	useNavigate,
-	useRouter,
-} from '@tanstack/react-router'
-import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toastSuccess } from '@/components/ui/sonner'
+import { useCanGoBack, useNavigate, useRouter } from '@tanstack/react-router'
 import { ChevronLeft } from 'lucide-react'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/use-auth'
-import { ShowAndLogError } from '@/components/errors'
-import EmailField from '@/components/fields/email-field'
-import PasswordField from '@/components/fields/password-field'
+import { LoginCardBody } from '@/components/login-card-body'
 
 interface RequireAuthProps {
 	children: ReactNode
@@ -43,46 +30,10 @@ export function RequireAuth({
 	return <AuthGate message={message} />
 }
 
-const FormSchema = z.object({
-	email: z
-		.string()
-		.min(1, `Email is required`)
-		.email(`Email is required to be a real email`),
-	password: z.string().min(1, 'Password is required'),
-})
-
-type FormInputs = z.infer<typeof FormSchema>
-
 function AuthGate({ message }: { message: string }) {
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
-
-	const loginMutation = useMutation({
-		mutationKey: ['login'],
-		mutationFn: async ({ email, password }: FormInputs) => {
-			const { data, error } = await supabase.auth.signInWithPassword({
-				email,
-				password,
-			})
-			if (error) throw error
-			return data.user?.email
-		},
-		onSuccess: (email: string | undefined) => {
-			if (email) {
-				toastSuccess(`Logged in as ${email}`)
-			}
-			// Page will re-render and show the protected content
-		},
-	})
-
-	const {
-		register,
-		handleSubmit,
-		formState: { errors, isSubmitting },
-	} = useForm<FormInputs>({
-		resolver: zodResolver(FormSchema),
-	})
 
 	const handleGoBack = () => {
 		if (canGoBack) {
@@ -111,47 +62,7 @@ function AuthGate({ message }: { message: string }) {
 				</CardHeader>
 				<CardContent className="space-y-6">
 					<p className="text-muted-foreground">{message}</p>
-
-					<form
-						role="form"
-						noValidate
-						className="space-y-4"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => loginMutation.mutate(data))}
-					>
-						<fieldset className="flex flex-col gap-y-4" disabled={isSubmitting}>
-							<EmailField<FormInputs>
-								register={register}
-								error={errors.email}
-							/>
-							<PasswordField<FormInputs>
-								register={register}
-								error={errors.password}
-							/>
-						</fieldset>
-						<div className="flex flex-row justify-between">
-							<Button type="submit" disabled={isSubmitting}>
-								Log in
-							</Button>
-
-							<Link
-								to="/signup"
-								className={buttonVariants({ variant: 'neutral' })}
-							>
-								Create account
-							</Link>
-						</div>
-						<ShowAndLogError
-							error={loginMutation.error}
-							text="Problem logging in"
-						/>
-
-						<p>
-							<Link to="/forgot-password" className="s-link text-sm">
-								Forgot password?
-							</Link>
-						</p>
-					</form>
+					<LoginCardBody />
 				</CardContent>
 			</Card>
 		</div>

@@ -1,65 +1,52 @@
-import { FieldValues, Path, useController } from 'react-hook-form'
-import { BookOpen, Handshake, LifeBuoy } from 'lucide-react'
-import type { ControlledFieldProps } from '@/components/fields/types'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Label } from '@/components/ui/label'
-import ErrorLabel from '@/components/fields/error-label'
+import { BookOpen, Handshake, LifeBuoy, type LucideIcon } from 'lucide-react'
+import { ChoiceTile } from '@/components/ui/choice-tile'
+import { useFieldContext } from '@/components/form'
+import { ErrorList } from '@/components/form/fields/error-list'
 
-const outer = 'flex flex-row gap-2 items-center',
-	inner =
-		'flex-col gap-2 flex w-full cursor-pointer items-center rounded border p-4 transition-colors',
-	selected = 'bg-1-mlo-primary border-2-mlo-primary hover:border-primary',
-	unselected = 'hover:bg-base-mlo-primary border-input'
+const options: ReadonlyArray<{
+	value: string
+	label: string
+	Icon: LucideIcon
+}> = [
+	{ value: 'learner', label: 'Learning', Icon: BookOpen },
+	{ value: 'helper', label: 'Helping', Icon: LifeBuoy },
+	{ value: 'both', label: 'Both', Icon: Handshake },
+]
 
-export function UserRoleField<T extends FieldValues>({
-	control,
-	error,
-	tabIndex,
-}: ControlledFieldProps<T>) {
-	const {
-		field: { value, onChange },
-	} = useController({ name: 'user_role' as Path<T>, control })
+export function UserRoleField() {
+	const field = useFieldContext<string>()
+	const value = field.state.value
+	const meta = field.state.meta
+	const showError = meta.isBlurred && meta.errors.length > 0
 
 	return (
-		<div className="space-y-2">
+		<div
+			role="radiogroup"
+			aria-required="true"
+			data-testid="user-role"
+			className="space-y-2"
+		>
 			<p>Are you learning for yourself, or helping a friend?</p>
-			<RadioGroup
-				onValueChange={onChange}
-				className="grid grid-cols-3 gap-3"
-				tabIndex={tabIndex}
-			>
-				<div className={outer}>
-					<RadioGroupItem value="learner" id="learner" className="sr-only" />
-					<Label
-						htmlFor="learner"
-						className={`${inner} ${value === 'learner' ? selected : unselected}`}
+			<div className="grid grid-cols-3 gap-3">
+				{options.map(({ value: v, label, Icon }) => (
+					<ChoiceTile
+						key={v}
+						role="radio"
+						aria-checked={value === v}
+						selected={value === v}
+						data-key={v}
+						onClick={() => {
+							field.handleChange(v)
+							field.handleBlur()
+						}}
+						className="flex flex-col items-center gap-2 p-4"
 					>
-						<BookOpen size="16" />
-						Learning
-					</Label>
-				</div>
-				<div className={outer}>
-					<RadioGroupItem value="helper" id="helper" className="sr-only" />
-					<Label
-						htmlFor="helper"
-						className={`${inner} ${value === 'helper' ? selected : unselected}`}
-					>
-						<LifeBuoy size="16" />
-						Helping
-					</Label>
-				</div>
-				<div className={outer}>
-					<RadioGroupItem value="both" id="both" className="sr-only" />
-					<Label
-						htmlFor="both"
-						className={`${inner} ${value === 'both' ? selected : unselected}`}
-					>
-						<Handshake size="16" />
-						Both
-					</Label>
-				</div>
-			</RadioGroup>
-			<ErrorLabel error={error} />
+						<Icon size="16" />
+						{label}
+					</ChoiceTile>
+				))}
+			</div>
+			{showError && <ErrorList errors={meta.errors} />}
 		</div>
 	)
 }

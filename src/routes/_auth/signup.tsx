@@ -5,12 +5,10 @@ import {
 	redirect,
 } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import { Button, buttonVariants } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import {
 	Card,
 	CardContent,
@@ -22,11 +20,9 @@ import Callout from '@/components/ui/callout'
 
 import supabase from '@/lib/supabase-client'
 import { useAuth } from '@/lib/use-auth'
-import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
 import { UnderConstructionNotice } from '../-homepage/under-construction'
-import EmailField from '@/components/fields/email-field'
-import PasswordField from '@/components/fields/password-field'
+import { useAppForm } from '@/components/form'
 import { UserRoleField } from './-user-role-field'
 
 const SearchSchema = z.object({
@@ -78,13 +74,10 @@ function SignUp() {
 				password,
 				options: {
 					emailRedirectTo: `${window.location.origin}/getting-started${referrer ? `?referrer=${referrer}` : ''}`,
-					data: {
-						role: user_role || 'learner',
-					},
+					data: { role: user_role || 'learner' },
 				},
 			})
 			if (error) {
-				// If user already exists, try to log them in instead
 				if (error.message.toLowerCase().includes('already registered')) {
 					const { data: loginData, error: loginError } =
 						await supabase.auth.signInWithPassword({ email, password })
@@ -108,21 +101,18 @@ function SignUp() {
 		},
 	})
 
-	const {
-		handleSubmit,
-		register,
-		control,
-		formState: { errors, isSubmitting },
-	} = useForm<FormInputs>({
-		resolver: zodResolver(FormSchema),
+	const form = useAppForm({
 		defaultValues: {
 			email: '',
 			password: '',
 			user_role: 'learner',
+		} as FormInputs,
+		validators: { onChange: FormSchema },
+		onSubmit: async ({ value }) => {
+			await signupMutation.mutateAsync(value)
 		},
 	})
 
-	// Redirect if already logged in (either from wasLogin or regular auth state)
 	if (isReady && isAuth) {
 		console.log(
 			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
@@ -138,7 +128,7 @@ function SignUp() {
 					<CardTitle>Sign Up</CardTitle>
 				</CardHeader>
 				<CardContent>
-					{signupMutation.isSuccess ?
+					{signupMutation.isSuccess ? (
 						<Callout Icon={SuccessCheckmarkTrans}>
 							<p>Almost done!</p>
 							<p>
@@ -147,32 +137,37 @@ function SignUp() {
 							</p>
 							<p>You can close this window.</p>
 						</Callout>
-					:	<form
+					) : (
+						<form
+							data-testid="signup-form"
 							role="form"
 							noValidate
 							className="space-y-4"
-							// eslint-disable-next-line @typescript-eslint/no-misused-promises
-							onSubmit={handleSubmit((data) => signupMutation.mutate(data))}
+							onSubmit={(e) => {
+								e.preventDefault()
+								e.stopPropagation()
+								void form.handleSubmit()
+							}}
 						>
-							<fieldset
-								className="flex flex-col gap-y-4"
-								disabled={isSubmitting}
-							>
-								<EmailField<FormInputs>
-									register={register}
-									error={errors.email}
-								/>
-								<PasswordField<FormInputs>
-									register={register}
-									error={errors.password}
-								/>
-								<UserRoleField<FormInputs>
-									control={control}
-									error={errors.user_role}
-								/>
-							</fieldset>
+							<div className="flex flex-col gap-y-4">
+								<form.AppField name="email">
+									{(field) => <field.EmailInput />}
+								</form.AppField>
+								<form.AppField name="password">
+									{(field) => (
+										<field.PasswordInput autoComplete="new-password" />
+									)}
+								</form.AppField>
+								<form.AppField name="user_role">
+									{() => <UserRoleField />}
+								</form.AppField>
+							</div>
 							<div className="flex flex-row justify-between">
-								<Button disabled={signupMutation.isPending}>Sign Up</Button>
+								<form.AppForm>
+									<form.SubmitButton pendingText="Signing up...">
+										Sign Up
+									</form.SubmitButton>
+								</form.AppForm>
 								<Link
 									to="/login"
 									className={buttonVariants({ variant: 'neutral' })}
@@ -180,13 +175,15 @@ function SignUp() {
 									Already have an account?
 								</Link>
 							</div>
-							<ShowAndLogError
-								error={signupMutation.error}
-								values={signupMutation.variables}
-								text="Problem signing up"
-							/>
+							<form.AppForm>
+								<form.FormAlert
+									error={signupMutation.error}
+									values={signupMutation.variables ?? null}
+									text="Problem signing up"
+								/>
+							</form.AppForm>
 						</form>
-					}
+					)}
 				</CardContent>
 				{signupMutation.isSuccess ? null : (
 					<CardFooter className="static block space-y-2 opacity-80">

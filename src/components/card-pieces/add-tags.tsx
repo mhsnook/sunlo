@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
-import { Controller, useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Tags, X } from 'lucide-react'
@@ -26,6 +24,8 @@ import { phrasesCollection } from '@/features/phrases/collections'
 import { LangTagSchema, LangTagType } from '@/features/languages/schemas'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
+import { useAppForm } from '@/components/form'
+import { ErrorList } from '@/components/form/fields/error-list'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
@@ -46,17 +46,6 @@ export function AddTags({
 }) {
 	const [open, setOpen] = useState(false)
 	const { data: allLangTags } = useLanguageTags(phrase?.lang)
-	const {
-		control,
-		handleSubmit,
-		reset,
-		formState: { errors },
-	} = useForm<AddTagsFormValues>({
-		resolver: zodResolver(addTagsSchema),
-		defaultValues: {
-			tags: [],
-		},
-	})
 
 	const addTagsMutation = useMutation({
 		mutationFn: async (values: AddTagsFormValues) => {
@@ -91,12 +80,20 @@ export function AddTags({
 				})
 			}
 			setOpen(false)
-			reset({ tags: [] })
+			form.reset()
 			toastSuccess('Tags added!')
 		},
 		onError: (error) => {
 			console.log(`Failed to add tags: ${error.message}`, error)
 			toastError(`Failed to add tags: ${error.message}`)
+		},
+	})
+
+	const form = useAppForm({
+		defaultValues: { tags: [] } as AddTagsFormValues,
+		validators: { onChange: addTagsSchema },
+		onSubmit: async ({ value }) => {
+			await addTagsMutation.mutateAsync(value)
 		},
 	})
 
@@ -110,7 +107,12 @@ export function AddTags({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
-				<Button variant="ghost" size="icon" aria-label="Edit tags">
+				<Button
+					variant="ghost"
+					size="icon"
+					aria-label="Edit tags"
+					data-testid="add-tags-trigger"
+				>
 					<Tags />
 				</Button>
 			</DialogTrigger>
@@ -118,6 +120,7 @@ export function AddTags({
 				authTitle="Login to Edit Tags"
 				authMessage="You need to be logged in to add tags to phrases."
 				className="sm:max-w-106"
+				data-testid="add-tags-dialog"
 			>
 				<DialogHeader>
 					<DialogTitle>Edit tags</DialogTitle>
@@ -154,40 +157,46 @@ export function AddTags({
 					<Separator />
 					<form
 						id="add-tags-form"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={handleSubmit((data) => addTagsMutation.mutate(data))}
+						data-testid="add-tags-form"
+						noValidate
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void form.handleSubmit()
+						}}
 						className="space-y-4"
 					>
 						<div>
 							<h4 className="text-sm font-medium">Add tags</h4>
-							<Controller
-								control={control}
-								name="tags"
-								render={({ field }) => (
-									<MultiSelectCreatable
-										options={availableTags}
-										selected={field.value}
-										onChange={field.onChange}
-										className="mt-2"
-									/>
-								)}
-							/>
-							{errors.tags && (
-								<p className="text-destructive mt-1 text-sm">
-									{errors.tags.message}
-								</p>
-							)}
+							<form.AppField name="tags">
+								{(field) => {
+									const meta = field.state.meta
+									const showError = meta.isBlurred && meta.errors.length > 0
+									return (
+										<>
+											<MultiSelectCreatable
+												options={availableTags}
+												selected={field.state.value}
+												onChange={(next) => {
+													field.handleChange(next)
+													field.handleBlur()
+												}}
+												className="mt-2"
+											/>
+											{showError && <ErrorList errors={meta.errors} />}
+										</>
+									)
+								}}
+							</form.AppField>
 						</div>
 					</form>
 				</div>
 				<DialogFooter>
-					<Button
-						type="submit"
-						form="add-tags-form"
-						disabled={addTagsMutation.isPending}
-					>
-						{addTagsMutation.isPending ? 'Saving...' : 'Save changes'}
-					</Button>
+					<form.AppForm>
+						<form.SubmitButton form="add-tags-form" pendingText="Saving...">
+							Save changes
+						</form.SubmitButton>
+					</form.AppForm>
 				</DialogFooter>
 			</AuthenticatedDialogContent>
 		</Dialog>

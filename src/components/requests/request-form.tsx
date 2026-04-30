@@ -1,5 +1,3 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { PostgrestError } from '@supabase/supabase-js'
 
@@ -21,16 +19,7 @@ import {
 import { useRequest } from '@/features/requests/hooks'
 import { useOneRandomly } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from '@/components/ui/form'
-import { Textarea } from '@/components/ui/textarea'
-import Callout from '@/components/ui/callout'
+import { useAppForm } from '@/components/form'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
 import type { uuid } from '@/types/main'
 
@@ -40,8 +29,6 @@ export function RequestForm({
 	onSuccess,
 	onCancel,
 	formTestId = 'new-request-form',
-	inputTestId = 'request-prompt-input',
-	submitTestId = 'post-request-button',
 	rows,
 }: {
 	lang: string
@@ -49,8 +36,6 @@ export function RequestForm({
 	onSuccess?: (data: PhraseRequestType) => void
 	onCancel?: () => void
 	formTestId?: string
-	inputTestId?: string
-	submitTestId?: string
 	rows?: number
 }) {
 	const userId = useUserId()
@@ -58,11 +43,6 @@ export function RequestForm({
 	const invalidateFeed = useInvalidateFeed()
 	const { data: request } = useRequest(requestId ?? '')
 	const isEditing = !!requestId
-
-	const form = useForm<RequestPhraseFormInputs>({
-		resolver: zodResolver(RequestPhraseFormSchema),
-		defaultValues: { prompt: request?.prompt ?? '' },
-	})
 
 	const mutation = useMutation<
 		PhraseRequestType,
@@ -106,82 +86,75 @@ export function RequestForm({
 				invalidateFeed(lang)
 				toastSuccess('Your request has been posted!')
 			}
-			form.reset()
 			onSuccess?.(data)
 		},
 		onError: (error) => {
 			console.error(error)
 			toastError(
-				isEditing ?
-					'There was an error updating your request.'
-				:	'There was an error posting your request.'
+				isEditing
+					? 'There was an error updating your request.'
+					: 'There was an error posting your request.'
 			)
 		},
 	})
 
-	return (
-		<Form {...form}>
-			<form
-				data-testid={formTestId}
-				// eslint-disable-next-line @typescript-eslint/no-misused-promises
-				onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
-				className="space-y-4"
-			>
-				<FormField
-					control={form.control}
-					name="prompt"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>
-								What kinds of flash cards are you looking for?
-							</FormLabel>
-							<FormControl>
-								<Textarea
-									data-testid={inputTestId}
-									placeholder={isEditing ? undefined : `ex: "${placeholder}"`}
-									rows={rows}
-									{...field}
-								/>
-							</FormControl>
-							<MarkdownHint />
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+	const form = useAppForm({
+		defaultValues: { prompt: request?.prompt ?? '' },
+		validators: { onChange: RequestPhraseFormSchema },
+		onSubmit: async ({ value, formApi }) => {
+			await mutation.mutateAsync(value)
+			formApi.reset()
+		},
+	})
 
-				{mutation.isError && (
-					<Callout size="sm" variant="problem">
-						<p className="font-bold">Error</p>
-						<p>{mutation.error.message}</p>
-					</Callout>
+	return (
+		<form
+			data-testid={formTestId}
+			noValidate
+			className="space-y-4"
+			onSubmit={(e) => {
+				e.preventDefault()
+				e.stopPropagation()
+				void form.handleSubmit()
+			}}
+		>
+			<form.AppField name="prompt">
+				{(field) => (
+					<field.TextareaInput
+						label="What kinds of flash cards are you looking for?"
+						placeholder={isEditing ? undefined : `ex: "${placeholder}"`}
+						rows={rows}
+					/>
 				)}
-				<div className="flex gap-2">
-					<Button
-						type="submit"
+			</form.AppField>
+			<MarkdownHint />
+
+			<div className="flex gap-2">
+				<form.AppForm>
+					<form.SubmitButton
 						size={isEditing ? 'sm' : 'default'}
-						data-testid={submitTestId}
-						disabled={mutation.isPending}
+						pendingText={isEditing ? 'Saving...' : 'Posting...'}
 					>
-						{mutation.isPending ?
-							isEditing ?
-								'Saving...'
-							:	'Posting...'
-						: isEditing ?
-							'Save'
-						:	'Post Request'}
+						{isEditing ? 'Save' : 'Post Request'}
+					</form.SubmitButton>
+				</form.AppForm>
+				{onCancel && (
+					<Button size="sm" type="button" variant="neutral" onClick={onCancel}>
+						Cancel
 					</Button>
-					{onCancel && (
-						<Button
-							size="sm"
-							type="button"
-							variant="neutral"
-							onClick={onCancel}
-						>
-							Cancel
-						</Button>
-					)}
-				</div>
-			</form>
-		</Form>
+				)}
+			</div>
+
+			<form.AppForm>
+				<form.FormAlert
+					error={mutation.error}
+					text={
+						isEditing
+							? 'There was an error updating your request.'
+							: 'There was an error posting your request.'
+					}
+				/>
+			</form.AppForm>
+		</form>
 	)
 }

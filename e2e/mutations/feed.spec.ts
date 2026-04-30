@@ -277,8 +277,9 @@ test.describe('Unified Feed', () => {
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/new`))
 
 		// 3. Fill and submit
-		await page.getByTestId('request-prompt-input').fill(promptText)
-		await page.getByTestId('post-request-button').click()
+		const newRequestForm = page.getByTestId('new-request-form')
+		await newRequestForm.getByTestId('prompt-input').fill(promptText)
+		await newRequestForm.getByTestId('submit-button').click()
 
 		// 4. Wait for success and redirect to the request detail page
 		await expect(page).toHaveURL(new RegExp(`/learn/${lang}/requests/`))

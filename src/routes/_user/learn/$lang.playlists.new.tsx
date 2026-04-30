@@ -1,14 +1,11 @@
 import { CSSProperties, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
 import { useMutation } from '@tanstack/react-query'
 import { Tables } from '@/types/supabase'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
 	PhrasePlaylistInsertSchema,
@@ -36,6 +33,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
+import { useAppForm } from '@/components/form'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
 	component: NewPlaylistPage,
@@ -62,7 +60,6 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 function NewPlaylistPage() {
 	const isAuth = useIsAuthenticated()
 
-	// Require auth to create playlists
 	if (!isAuth) {
 		return (
 			<RequireAuth message="You need to be logged in to create playlists.">
@@ -74,41 +71,21 @@ function NewPlaylistPage() {
 	return <NewPlaylistPageContent />
 }
 
-// Inner component contains all the hooks - only rendered when authenticated
 function NewPlaylistPageContent() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { lang } = Route.useParams()
 
-	// Track selected phrases with their hrefs
 	const [selectedPhrases, setSelectedPhrases] = useState<PhraseWithHref[]>([])
-
-	const form = useForm<PhrasePlaylistInsertType>({
-		resolver: zodResolver(PhrasePlaylistInsertSchema),
-		mode: 'onBlur',
-		defaultValues: {
-			title: '',
-			description: '',
-			href: null,
-			cover_image_path: null,
-			phrases: [],
-		},
-	})
-
-	// Watch href to determine if we should show cover image field
-	const hrefValue = form.watch('href')
-	const showCoverImage = !isEmbeddableUrl(hrefValue)
 
 	const invalidateFeed = useInvalidateFeed()
 	const mutation = useMutation({
 		mutationKey: ['createPlaylist'],
 		mutationFn: async (values: PhrasePlaylistInsertType) => {
-			// Build phrases array with order values
 			const phrasesWithOrder = selectedPhrases.map((p, i) => ({
 				phrase_id: p.phrase_id,
 				href: p.href,
 				order: i,
 			}))
-			// API call
 			const { data } = await supabase
 				.rpc('create_playlist_with_links', {
 					title: values.title,
@@ -122,7 +99,6 @@ function NewPlaylistPageContent() {
 			return data as CreatePlaylistRPCReturnType
 		},
 		onSuccess: (data) => {
-			// update local collections with all new rows
 			phrasePlaylistsCollection.utils.writeInsert(
 				PhrasePlaylistSchema.parse(data.playlist)
 			)
@@ -131,7 +107,6 @@ function NewPlaylistPageContent() {
 					PlaylistPhraseLinkSchema.parse(link)
 				)
 			)
-			// RPC auto-upvotes; sync local upvote collection
 			phrasePlaylistUpvotesCollection.utils.writeInsert({
 				playlist_id: data.playlist.id,
 			})
@@ -148,10 +123,22 @@ function NewPlaylistPageContent() {
 		},
 	})
 
-	// Handle phrase selection from the picker
+	const form = useAppForm({
+		defaultValues: {
+			title: '',
+			description: '',
+			href: null,
+			cover_image_path: null,
+			phrases: [],
+		} as PhrasePlaylistInsertType,
+		validators: { onChange: PhrasePlaylistInsertSchema },
+		onSubmit: async ({ value }) => {
+			await mutation.mutateAsync(value)
+		},
+	})
+
 	const handleSelectionChange = (phraseIds: string[]) => {
 		setSelectedPhrases((current) => {
-			// Keep existing phrases that are still selected, preserving their hrefs
 			const existingMap = new Map(current.map((p) => [p.phrase_id, p]))
 			return phraseIds.map(
 				(id) => existingMap.get(id) ?? { phrase_id: id, href: null }
@@ -169,9 +156,7 @@ function NewPlaylistPageContent() {
 		setSelectedPhrases((phrases) => {
 			const newPhrases = [...phrases]
 			const targetIndex = direction === 'up' ? index - 1 : index + 1
-			if (targetIndex < 0 || targetIndex >= phrases.length)
-				return phrases
-				// Swap
+			if (targetIndex < 0 || targetIndex >= phrases.length) return phrases
 			;[newPhrases[index], newPhrases[targetIndex]] = [
 				newPhrases[targetIndex],
 				newPhrases[index],
@@ -188,7 +173,6 @@ function NewPlaylistPageContent() {
 		)
 	}
 
-	// Extract just the IDs for the picker component
 	const selectedPhraseIds = selectedPhrases.map((p) => p.phrase_id)
 
 	return (
@@ -206,77 +190,61 @@ function NewPlaylistPageContent() {
 						role="form"
 						noValidate
 						data-testid="new-playlist-form"
-						// eslint-disable-next-line @typescript-eslint/no-misused-promises
-						onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void form.handleSubmit()
+						}}
 						className="space-y-6"
 					>
-						<div className="space-y-2">
-							<Label htmlFor="title">Title</Label>
-							<Input
-								id="title"
-								className={form.formState.errors.title ? 'border-red-500' : ''}
-								{...form.register('title')}
-								placeholder="Playlist Title"
-								data-testid="playlist-title-input"
-							/>
-							{form.formState.errors.title && (
-								<p className="text-sm text-red-500">
-									{form.formState.errors.title.message}
-								</p>
+						<form.AppField name="title">
+							{(field) => (
+								<field.TextInput label="Title" placeholder="Playlist Title" />
 							)}
-						</div>
+						</form.AppField>
 
-						<div className="space-y-2">
-							<Label htmlFor="description">Description</Label>
-							<Textarea
-								id="description"
-								{...form.register('description')}
-								placeholder="Optional description"
-								data-testid="playlist-description-input"
-							/>
-							<p className="text-muted-foreground text-xs">
-								Describe what this playlist is about
-							</p>
-						</div>
+						<form.AppField name="description">
+							{(field) => (
+								<field.TextareaInput
+									label="Description"
+									placeholder="Optional description"
+									description="Describe what this playlist is about"
+								/>
+							)}
+						</form.AppField>
 
-						<div className="space-y-2">
-							<Label htmlFor="href">Source Link</Label>
-							<Input
-								id="href"
-								className={form.formState.errors.href ? 'border-red-500' : ''}
-								{...form.register('href')}
-								placeholder="https://youtube.com/watch?v=... or Spotify link"
-							/>
-							{form.formState.errors.href ?
-								<p className="text-sm text-red-500">
-									{form.formState.errors.href.message}
-								</p>
-							:	<p className="text-muted-foreground text-xs">
-									Link to a video or podcast episode
-								</p>
+						<form.AppField name="href">
+							{(field) => (
+								<field.TextInput
+									label="Source Link"
+									type="url"
+									placeholder="https://youtube.com/watch?v=... or Spotify link"
+									description="Link to a video or podcast episode"
+								/>
+							)}
+						</form.AppField>
+
+						<form.Subscribe selector={(s) => s.values.href}>
+							{(href) =>
+								isEmbeddableUrl(href) ? null : (
+									<form.AppField name="cover_image_path">
+										{() => <CoverImageField />}
+									</form.AppField>
+								)
 							}
-						</div>
-
-						{showCoverImage && (
-							<CoverImageField
-								control={form.control}
-								error={form.formState.errors.cover_image_path}
-							/>
-						)}
+						</form.Subscribe>
 
 						<div className="space-y-3">
 							<div className="w-full">
 								<Label>Phrases ({selectedPhrases.length})</Label>
 							</div>
 
-							{/* Display selected phrases with reorder and href controls */}
 							{selectedPhrases.map((phrase, index) => (
 								<div
 									key={phrase.phrase_id}
 									className="bg-muted/30 rounded border p-3"
 								>
 									<div className="flex items-start gap-2">
-										{/* Reorder buttons */}
 										<div className="flex flex-col gap-1">
 											<Button
 												type="button"
@@ -302,11 +270,9 @@ function NewPlaylistPageContent() {
 											</Button>
 										</div>
 
-										{/* Phrase card */}
 										<div className="min-w-0 flex-1">
 											<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
 
-											{/* Href input for timestamp */}
 											<div className="mt-2 flex items-center gap-2">
 												<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
 												<Input
@@ -321,7 +287,6 @@ function NewPlaylistPageContent() {
 											</div>
 										</div>
 
-										{/* Delete button */}
 										<Button
 											type="button"
 											onClick={() => removePhrase(phrase.phrase_id)}
@@ -335,16 +300,15 @@ function NewPlaylistPageContent() {
 								</div>
 							))}
 
-							{/* Phrase picker with inline creation */}
 							<SelectPhrasesForComment
 								lang={lang}
 								selectedPhraseIds={selectedPhraseIds}
 								onSelectionChange={handleSelectionChange}
 								maxPhrases={null}
 								triggerText={
-									selectedPhrases.length ? '+ Add more phrases' : (
-										'Add phrases to your playlist'
-									)
+									selectedPhrases.length
+										? '+ Add more phrases'
+										: 'Add phrases to your playlist'
 								}
 							/>
 						</div>
@@ -357,17 +321,14 @@ function NewPlaylistPageContent() {
 							>
 								Cancel
 							</Button>
-							<Button
-								type="submit"
-								data-testid="create-playlist-button"
-								disabled={
-									mutation.isPending ||
-									!form.formState.isValid ||
-									selectedPhrases.length === 0
-								}
-							>
-								{mutation.isPending ? 'Creating...' : 'Create Playlist'}
-							</Button>
+							<form.AppForm>
+								<form.SubmitButton
+									pendingText="Creating..."
+									disabled={selectedPhrases.length === 0}
+								>
+									Create Playlist
+								</form.SubmitButton>
+							</form.AppForm>
 						</div>
 					</form>
 				</CardContent>
