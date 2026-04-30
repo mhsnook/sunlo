@@ -25,6 +25,7 @@ export interface MyRouterContext {
 	focusMode?: boolean
 	wideContent?: boolean
 	fixedHeight?: boolean
+	langNavAction?: string
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

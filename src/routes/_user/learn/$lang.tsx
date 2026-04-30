@@ -34,6 +34,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			},
+			langNavAction: lang,
 			searchAction: true,
 			appnav: context.auth.isAuth
 				? [
