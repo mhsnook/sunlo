@@ -20,6 +20,7 @@ type ChatStoreState = {
 	turnsByLang: Record<string, ChatTurnType[]>
 	cartByLang: Record<string, ChatResultPhraseType[]>
 	selectionByLang: Record<string, ChatResultPhraseType[]>
+	dismissedSuggestionsByLang: Record<string, Set<string>>
 
 	startTurn: (lang: string, query: ChatQueryType) => string
 	completeTurn: (
@@ -34,6 +35,11 @@ type ChatStoreState = {
 	clearSelection: (lang: string) => void
 	clearCart: (lang: string) => void
 	resetConversation: (lang: string) => void
+	dismissSuggestion: (
+		lang: string,
+		turnId: string,
+		suggestionKey: string
+	) => void
 }
 
 const updateMap = <T>(
@@ -49,6 +55,7 @@ export const useChatStore = create<ChatStoreState>()((set) => ({
 	turnsByLang: {},
 	cartByLang: {},
 	selectionByLang: {},
+	dismissedSuggestionsByLang: {},
 
 	startTurn: (lang, query) => {
 		const id = newId()
@@ -136,6 +143,20 @@ export const useChatStore = create<ChatStoreState>()((set) => ({
 			cartByLang: { ...state.cartByLang, [lang]: [] },
 			selectionByLang: { ...state.selectionByLang, [lang]: [] },
 		})),
+
+	dismissSuggestion: (lang, turnId, suggestionKey) =>
+		set((state) => {
+			const current =
+				state.dismissedSuggestionsByLang[lang] ?? new Set<string>()
+			const updated = new Set(current)
+			updated.add(`${turnId}|${suggestionKey}`)
+			return {
+				dismissedSuggestionsByLang: {
+					...state.dismissedSuggestionsByLang,
+					[lang]: updated,
+				},
+			}
+		}),
 }))
 
 // Context that route wraps the chat page in. All chat hooks read the lang

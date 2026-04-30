@@ -5,6 +5,7 @@ import { CartButton } from './cart-button'
 import { ChatInput } from './chat-input'
 import { ChatTurnView } from './chat-message'
 import { SelectionBar } from './selection-bar'
+import { SuggestionStrip } from './suggestion-strip'
 import { useChatTurns } from '../hooks'
 import { useChatRouteLang } from '../store'
 
@@ -67,6 +68,7 @@ export function ChatPage({ languageLabel }: Props) {
 			</div>
 
 			<SelectionBar />
+			<SuggestionStrip />
 			<ChatInput />
 		</div>
 	)
