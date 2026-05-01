@@ -98,7 +98,15 @@ function NewPlaylistPageContent() {
 				.throwOnError()
 			return data as CreatePlaylistRPCReturnType
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
+			// writeInsert requires an active manual-sync context. preload()
+			// is idempotent: returns the cached promise if sync is already up,
+			// or re-spins it up if it was cleaned up after gcTime expired.
+			await Promise.all([
+				phrasePlaylistsCollection.preload(),
+				playlistPhraseLinksCollection.preload(),
+				phrasePlaylistUpvotesCollection.preload(),
+			])
 			phrasePlaylistsCollection.utils.writeInsert(
 				PhrasePlaylistSchema.parse(data.playlist)
 			)

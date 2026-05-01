@@ -149,7 +149,8 @@ natural wrapper element to label.
 | `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
 | `profile-creation-form`                  | data-testid | Onboarding route         | Initial profile-creation form (scope `username-input` / `submit-button`)                                           |
 | `languages-known`                        | data-testid | Profile / onboarding     | Container for the languages-known array editor (rows have `data-key={index}`)                                      |
-| `add-language-button`                    | data-testid | Languages-known          | Adds an empty language row                                                                                         |
+| `add-language-button`                    | data-testid | Languages-known          | Opens the language picker; selecting a language pushes a new row                                                   |
+| `language-name`                          | data-testid | Languages-known row      | Read-only display of this row's language name                                                                      |
 | `move-up`                                | data-testid | Languages-known row      | Moves this row up                                                                                                  |
 | `move-down`                              | data-testid | Languages-known row      | Moves this row down                                                                                                |
 | `remove-language`                        | data-testid | Languages-known row      | Removes this row                                                                                                   |

@@ -55,3 +55,34 @@ learner:
 - up
 - seeToast toast-success
 - see deck-feed-page
+
+// # non-owner cannot edit or delete request
+//
+// learner:
+//
+// - openTo /login
+// - typeInto email-input [self.email]
+// - typeInto password-input [self.password]
+// - click submit-button
+// - openTo /learn/kan/contributions
+// - click contributions-tab--requests
+// - click other-user-request-item
+// - see request-detail-page
+// - notSee update-request-button
+// - notSee delete-request-button
+
+// # learner copies comment permalink
+//
+// learner:
+//
+// - login
+// - openTo /learn/kan/contributions
+// - click contributions-tab--requests
+// - click request-item
+// - up
+// - see comment-item
+// - click comment-context-menu-trigger
+// - up
+// - click copy-link-menu-item
+// - up
+// - seeToast toast-success

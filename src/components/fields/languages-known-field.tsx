@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import {
@@ -16,6 +16,7 @@ import type {
 import { Card } from '@/components/ui/card'
 import { useFieldContext } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
+import languages from '@/lib/languages'
 
 const proficiencyLevels: {
 	value: LanguageProficiencyEnumType
@@ -27,22 +28,17 @@ const proficiencyLevels: {
 ]
 
 /**
- * Renders the array of languages-known. The field value is the array;
- * each row reads/writes its own slot via field.handleChange with a
- * remapped array. We keep the component bound to a single
- * `<form.AppField name="languages_known">` parent so order/move/remove
- * mutations stay atomic.
+ * Renders the array of languages-known. The language is fixed once a row
+ * is added — only proficiency and order can change. To "swap" a language
+ * the user removes the row and adds the new one. This makes `lang` a
+ * stable per-row identity, so it doubles as the React key.
  */
 export function LanguagesKnownField() {
 	const field = useFieldContext<LanguageKnownType[]>()
 	const value = field.state.value ?? []
 
-	const setValue = (next: LanguageKnownType[]) => {
-		field.handleChange(next)
-	}
-
 	const updateAt = (index: number, patch: Partial<LanguageKnownType>) => {
-		setValue(
+		field.handleChange(
 			value.map((item, i) => (i === index ? { ...item, ...patch } : item))
 		)
 	}
@@ -52,15 +48,16 @@ export function LanguagesKnownField() {
 		if (target < 0 || target >= value.length) return
 		const next = [...value]
 		;[next[index], next[target]] = [next[target], next[index]]
-		setValue(next)
+		field.handleChange(next)
 	}
 
 	const remove = (index: number) => {
-		setValue(value.filter((_, i) => i !== index))
+		field.handleChange(value.filter((_, i) => i !== index))
 	}
 
-	const append = () => {
-		setValue([...value, { lang: '', level: 'proficient' }])
+	const addLanguage = (lang: string) => {
+		if (!lang || value.some((item) => item.lang === lang)) return
+		field.handleChange([...value, { lang, level: 'proficient' }])
 	}
 
 	return (
@@ -73,7 +70,7 @@ export function LanguagesKnownField() {
 			<div className="space-y-2">
 				{value.map((item, index) => (
 					<Card
-						key={index}
+						key={item.lang}
 						className="@container space-y-2 p-2"
 						data-key={String(index)}
 					>
@@ -104,14 +101,11 @@ export function LanguagesKnownField() {
 									<ArrowDown className="size-3 @lg:size-4" />
 								</Button>
 							</div>
-							<div className="min-w-0 flex-1">
-								<SelectOneLanguage
-									value={item.lang}
-									setValue={(v) => updateAt(index, { lang: v })}
-									disabled={value
-										.map((other) => other.lang)
-										.filter((l) => l !== item.lang)}
-								/>
+							<div
+								className="text-foreground min-w-0 flex-1 px-2 text-sm @lg:text-base"
+								data-testid="language-name"
+							>
+								{languages[item.lang] ?? item.lang}
 							</div>
 							<div className="w-24 shrink-0 @lg:w-30">
 								<Select
@@ -157,16 +151,24 @@ export function LanguagesKnownField() {
 				<ErrorList errors={field.state.meta.errors} />
 			</div>
 			<div className="flex w-full flex-row justify-end">
-				<Button
-					type="button"
-					variant="soft"
-					size="sm"
-					onClick={append}
-					className="mt-0"
-					data-testid="add-language-button"
-				>
-					Add Language
-				</Button>
+				<SelectOneLanguage
+					value=""
+					setValue={addLanguage}
+					disabled={value.map((item) => item.lang)}
+					trigger={
+						<Button
+							type="button"
+							variant="soft"
+							size="sm"
+							className="mt-0"
+							data-testid="add-language-button"
+						>
+							<Plus className="me-1 size-4" />
+							Add Language
+						</Button>
+					}
+					popoverAlign="end"
+				/>
 			</div>
 		</div>
 	)

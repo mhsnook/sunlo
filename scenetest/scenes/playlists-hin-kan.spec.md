@@ -53,7 +53,7 @@ learner:
 - up
 - click submit-button
 - up
-- seeToast toast-success
+- see toast-success
 - see playlist-detail-page
 
 # learner creates a new Kannada playlist
@@ -75,7 +75,7 @@ learner:
 - up
 - click submit-button
 - up
-- seeToast toast-success
+- see toast-success
 - see playlist-detail-page
 
 # learner2 upvotes a Kannada playlist
