@@ -1,0 +1,77 @@
+{
+	"lang": "hin",
+	"rules": [
+		{
+			"match": "chch",
+			"to": "cch",
+			"scope": "anywhere",
+			"note": "Geminate ch: doubled-stop (cch) is canonical; doubled-digraph (chch) is non-standard."
+		},
+		{
+			"match": "khkh",
+			"to": "kkh",
+			"scope": "anywhere",
+			"note": "Geminate kh."
+		},
+		{
+			"match": "ghgh",
+			"to": "ggh",
+			"scope": "anywhere",
+			"note": "Geminate gh."
+		},
+		{
+			"match": "thth",
+			"to": "tth",
+			"scope": "anywhere",
+			"note": "Geminate th."
+		},
+		{
+			"match": "dhdh",
+			"to": "ddh",
+			"scope": "anywhere",
+			"note": "Geminate dh."
+		},
+		{
+			"match": "phph",
+			"to": "pph",
+			"scope": "anywhere",
+			"note": "Geminate ph."
+		},
+		{
+			"match": "bhbh",
+			"to": "bbh",
+			"scope": "anywhere",
+			"note": "Geminate bh."
+		},
+		{
+			"match": "hu",
+			"to": "hoon",
+			"scope": "word",
+			"note": "Short verb form to canonical."
+		},
+		{
+			"match": "acha",
+			"to": "accha",
+			"scope": "word",
+			"note": "Common variant of accha."
+		},
+		{
+			"match": "achche",
+			"to": "acche",
+			"scope": "word",
+			"note": "Plural form to canonical."
+		},
+		{
+			"match": "rahee",
+			"to": "rahi",
+			"scope": "word",
+			"note": "Long-vowel variant to canonical."
+		},
+		{
+			"match": "rahaa",
+			"to": "raha",
+			"scope": "word",
+			"note": "Long-vowel variant to canonical."
+		}
+	]
+}
