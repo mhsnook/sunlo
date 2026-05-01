@@ -146,7 +146,10 @@ function SignUp() {
 	return (
 		<>
 			{signupMutation.isSuccess ? null : <UnderConstructionNotice />}
-			<Card className="mx-auto mt-[1cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]">
+			<Card
+				data-testid="signup-page"
+				className="mx-auto mt-[1cqh] w-full max-w-md p-[clamp(0.5rem,2cqw,2rem)]"
+			>
 				<CardHeader>
 					<CardTitle>Sign Up</CardTitle>
 				</CardHeader>

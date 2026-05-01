@@ -52,3 +52,18 @@ visitor:
 - see browse-languages-prompt
 - up
 - see login-link
+
+# visitor can pick a language on add-deck before being prompted to sign up
+
+visitor:
+
+- openTo /learn/add-deck
+- see add-deck-form
+- click language-selector-button
+- up
+- typeInto language-search-input Spanish
+- click language-options spa
+- up
+- click start-learning-button
+- up
+- see signup-page
