@@ -36,6 +36,13 @@ export default defineConfig({
 	baseUrl: 'http://localhost:4173',
 	scenes: './scenetest/scenes',
 	noKeyboardActor: true,
+	// Fail fast when an error toast appears, instead of timing out on a
+	// misleading downstream assertion. console.error capture is unreliable
+	// when React Query catches mutation throws via microtask after the test
+	// has already failed.
+	errorSelectors: [
+		{ selector: 'toast-error', message: 'Error toast appeared on page' },
+	],
 	server: {
 		supabase: createClient(supabaseUrl, supabaseServiceKey),
 	},

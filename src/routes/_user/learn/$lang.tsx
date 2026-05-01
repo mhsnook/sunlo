@@ -16,6 +16,10 @@ import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,
 } from '@/features/playlists/collections'
+import {
+	phraseRequestsCollection,
+	phraseRequestUpvotesCollection,
+} from '@/features/requests/collections'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 
@@ -31,25 +35,23 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 				title: `${languages[lang]} Deck`,
 			},
 			searchAction: true,
-			appnav:
-				context.auth.isAuth ?
-					[
+			appnav: context.auth.isAuth
+				? [
 						'/learn/$lang/feed',
 						'/learn/$lang/review',
 						'/learn/$lang/contributions',
 						'/learn/$lang/stats',
 					]
-				:	['/learn/$lang/feed'],
-			contextMenu:
-				context.auth.isAuth ?
-					[
+				: ['/learn/$lang/feed'],
+			contextMenu: context.auth.isAuth
+				? [
 						'/learn/$lang/manage-deck',
 						'/learn/$lang/requests/new',
 						'/learn/$lang/phrases/new',
 						'/learn/$lang/playlists/new',
 						'/learn/$lang/deck-settings',
 					]
-				:	[],
+				: [],
 		}
 	},
 	loader: async ({ context }) => {
@@ -59,13 +61,15 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			publicProfilesCollection.preload(),
 			phrasePlaylistsCollection.preload(),
 			playlistPhraseLinksCollection.preload(),
+			phraseRequestsCollection.preload(),
 		]
 		if (context.auth.isAuth) {
 			preloads.push(
 				reviewDaysCollection.preload(),
 				cardReviewsCollection.preload(),
 				cardsCollection.preload(),
-				decksCollection.preload()
+				decksCollection.preload(),
+				phraseRequestUpvotesCollection.preload()
 			)
 		}
 		await Promise.all(preloads)

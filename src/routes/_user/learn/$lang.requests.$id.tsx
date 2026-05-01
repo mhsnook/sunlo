@@ -31,7 +31,6 @@ import {
 	commentUpvotesCollection,
 } from '@/features/comments/collections'
 import { useOneComment } from '@/features/comments/hooks'
-import { phraseRequestsCollection } from '@/features/requests/collections'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -56,7 +55,6 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	}),
 	loader: async ({ context, location, cause }) => {
 		const preloads: Promise<unknown>[] = [
-			phraseRequestsCollection.preload(),
 			commentsCollection.preload(),
 			commentPhraseLinksCollection.preload(),
 		]

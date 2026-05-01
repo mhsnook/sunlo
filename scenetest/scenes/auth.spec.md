@@ -31,7 +31,8 @@ learner:
 - click sidebar-user-menu-trigger
 - click sidebar-signout-button
 - up
-- see login-link
+- see landing-page
+- see homepage-login-link
 - notSee sidebar-user-menu-trigger
 
 # visitor can browse languages without logging in

@@ -136,8 +136,16 @@ function InlinePhraseForm({
 				card_reverse: Tables<'user_card'> | null
 			}
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			if (!data) throw new Error('No data returned')
+
+			// writeInsert/writeUpdate need an active manual-sync context.
+			// preload() is idempotent: returns instantly if sync is up, or
+			// re-spins it up if it was cleaned up after gcTime expired.
+			await Promise.all([
+				phrasesCollection.preload(),
+				cardsCollection.preload(),
+			])
 
 			phrasesCollection.utils.writeInsert(
 				PhraseFullSchema.parse({

@@ -27,12 +27,10 @@ learner:
 - see languages-known
 - click add-language-button
 - up
-- see languages-known 1
-- click languages-known 1 language-selector-button
-- up
 - typeInto language-search-input Hindi
 - click language-options hin
 - up
+- see languages-known 1
 - click languages-known 1 level-trigger
 - up
 - click level-beginner
