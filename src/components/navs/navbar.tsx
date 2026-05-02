@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffectEvent } from 'react'
+import { useEffectEvent } from 'react'
 import { ChevronLeft, Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -8,12 +8,6 @@ import { useCanGoBack } from '@tanstack/react-router'
 import type { MyRouterContext } from '@/routes/__root'
 import { NotificationBell } from '@/components/notifications/notification-bell'
 
-const StartLearningButton = lazy(() =>
-	import('./-start-learning-button').then((m) => ({
-		default: m.StartLearningButton,
-	}))
-)
-
 export default function Navbar() {
 	const matches = useMatches()
 	const focusMode = matches.some(
@@ -22,8 +16,6 @@ export default function Navbar() {
 	const hasSearchAction = matches.some(
 		(m) => (m.context as MyRouterContext)?.searchAction
 	)
-	const langNavAction = matches.findLast((m) => m.params && 'lang' in m.params)
-		?.params?.lang as string | undefined
 
 	return (
 		<nav
@@ -34,11 +26,6 @@ export default function Navbar() {
 				<Title />
 			</div>
 			<div className="flex items-center gap-2">
-				{langNavAction && (
-					<Suspense>
-						<StartLearningButton lang={langNavAction} />
-					</Suspense>
-				)}
 				{!focusMode && hasSearchAction && <NavSearchButton />}
 				{!focusMode && <NotificationBell />}
 				<SidebarTrigger />

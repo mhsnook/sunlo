@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
 import type { MyRouterContext } from '@/routes/__root'
+import { StartLearningButton } from './-start-learning-button'
 
 const activeProps = {
 	className: 'border-primary text-primary-foresoft',
@@ -42,6 +43,8 @@ export function AppNav() {
 	)
 	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
 		?.contextMenu
+	const lang = matches.findLast((m) => m.params && 'lang' in m.params)?.params
+		?.lang as string | undefined
 	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
@@ -84,6 +87,7 @@ export function AppNav() {
 						</NavigationMenuList>
 					</NavigationMenu>
 				</div>
+				{lang && <StartLearningButton lang={lang} />}
 				<ContextMenu contextMenu={contextMenu} />
 			</div>
 		</>
