@@ -1,31 +1,35 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { Sparkles, ArrowRight } from 'lucide-react'
+import { Sparkles, ArrowRight, ArchiveRestore, Archive } from 'lucide-react'
 
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
+import { DeckMetaSchema, DeckMetaRawSchema } from '@/features/deck/schemas'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { useDecks } from '@/features/deck/hooks'
+import { useUserId } from '@/lib/use-auth'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
 	Dialog,
+	DialogClose,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { toastError } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 
 export function StartLearningButton({ lang }: { lang: string }) {
 	const { data: deck, isReady } = useDeckMeta(lang)
 	const countDecks = useDecks().data?.length ?? 0
-	const [successOpen, setSuccessOpen] = useState(false)
+	const userId = useUserId()
+	const [startOpen, setStartOpen] = useState(false)
+	const [unarchiveOpen, setUnarchiveOpen] = useState(false)
 
-	const mutation = useMutation({
+	const startMutation = useMutation({
 		mutationKey: ['new-deck', lang],
 		mutationFn: async () => {
 			const { data, error } = await supabase
@@ -43,30 +47,116 @@ export function StartLearningButton({ lang }: { lang: string }) {
 					theme: countDecks % 5,
 				})
 			)
-			setSuccessOpen(true)
+			setStartOpen(true)
 		},
 		onError: (error) => {
 			toastError(`Couldn't start deck: ${error.message}`)
 		},
 	})
 
-	if (!isReady || deck) return null
+	const unarchiveMutation = useMutation({
+		mutationKey: ['unarchive-deck', lang],
+		mutationFn: async () => {
+			const { data } = await supabase
+				.from('user_deck')
+				.update({ archived: false })
+				.eq('lang', lang)
+				.eq('uid', userId!)
+				.select()
+				.maybeSingle()
+				.throwOnError()
+			return data
+		},
+		onSuccess: (data) => {
+			setUnarchiveOpen(false)
+			if (!data) return
+			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
+			toastSuccess(`${languages[lang]} deck restored!`)
+		},
+		onError: (error) => {
+			toastError('Failed to restore the deck.')
+			console.log(error)
+		},
+	})
+
+	if (!isReady) return null
+	if (deck && !deck.archived) return null
+
+	if (deck?.archived) {
+		return (
+			<>
+				<Button
+					variant="soft"
+					size="sm"
+					onClick={() => setUnarchiveOpen(true)}
+					data-testid="continue-learning-button"
+				>
+					Continue Learning
+				</Button>
+				<Dialog open={unarchiveOpen} onOpenChange={setUnarchiveOpen}>
+					<DialogContent className="max-w-md">
+						<DialogHeader>
+							<DialogTitle>Un-archive your {languages[lang]} deck?</DialogTitle>
+							<DialogDescription>
+								Your progress is preserved — pick up where you left off.
+							</DialogDescription>
+						</DialogHeader>
+						<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+							<button
+								type="button"
+								onClick={() => unarchiveMutation.mutate()}
+								disabled={unarchiveMutation.isPending}
+								data-testid="confirm-unarchive-button"
+								className="from-5-mhi-primary to-6-mid-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+							>
+								<ArchiveRestore className="size-6" />
+								<div>
+									<div className="text-base leading-tight font-semibold">
+										{unarchiveMutation.isPending
+											? 'Restoring…'
+											: 'Yes, restore'}
+									</div>
+									<div className="text-primary-foreground/80 text-xs">
+										Move back to your active decks
+									</div>
+								</div>
+							</button>
+							<DialogClose
+								data-testid="cancel-unarchive-button"
+								className="border-2-lo-neutral bg-1-mlo-neutral text-7-mid-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+							>
+								<Archive className="size-6" />
+								<div>
+									<div className="text-base leading-tight font-semibold">
+										No, keep archived
+									</div>
+									<div className="text-muted-foreground text-xs">
+										Leave it where it is
+									</div>
+								</div>
+							</DialogClose>
+						</div>
+					</DialogContent>
+				</Dialog>
+			</>
+		)
+	}
 
 	return (
 		<>
 			<Button
 				variant="soft"
 				size="sm"
-				onClick={() => mutation.mutate()}
-				disabled={mutation.isPending}
+				onClick={() => startMutation.mutate()}
+				disabled={startMutation.isPending}
 				data-testid="start-learning-button"
 			>
-				{mutation.isPending ? 'Starting…' : `Learn ${languages[lang]}`}
+				{startMutation.isPending ? 'Starting…' : `Learn ${languages[lang]}`}
 			</Button>
 			<StartLearningSuccessDialog
-				open={successOpen}
+				open={startOpen}
 				lang={lang}
-				onOpenChange={setSuccessOpen}
+				onOpenChange={setStartOpen}
 			/>
 		</>
 	)
