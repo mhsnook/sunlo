@@ -914,6 +914,103 @@ function FriendActionsSection() {
 }
 
 // ---------------------------------------------------------------------------
+// Section: Language CTA Button (AppNav) — state machine
+// ---------------------------------------------------------------------------
+
+const langCtaStates: Array<{
+	state: string
+	condition: string
+	buttonLabel: string
+	action: string
+	dialogTitle?: string
+	dialogOptions?: string
+	testId: string
+}> = [
+	{
+		state: 'Unauthenticated',
+		condition: '!isAuth',
+		buttonLabel: 'Join',
+		action: 'Link → /signup',
+		testId: 'join-to-learn-link',
+	},
+	{
+		state: 'No deck',
+		condition: 'isAuth && !deck',
+		buttonLabel: 'Learn {Language}',
+		action: 'Mutation: insert user_deck',
+		dialogTitle: "You're learning {Language}!",
+		dialogOptions:
+			'"Do My First Review" → /review  |  "Keep Browsing" → dismiss',
+		testId: 'start-learning-button',
+	},
+	{
+		state: 'Archived deck',
+		condition: 'isAuth && deck.archived',
+		buttonLabel: 'Continue Learning',
+		action: 'Opens unarchive dialog',
+		dialogTitle: 'Un-archive your {Language} deck?',
+		dialogOptions:
+			'"Yes, restore" (mutation)  |  "No, keep archived" → dismiss',
+		testId: 'continue-learning-button',
+	},
+	{
+		state: 'Active deck',
+		condition: 'isAuth && deck && !deck.archived',
+		buttonLabel: '(hidden)',
+		action: 'Returns null',
+		testId: '—',
+	},
+]
+
+function LangCtaSection() {
+	return (
+		<div className="space-y-4">
+			<SectionHeading
+				title="Language CTA Button (AppNav)"
+				description="Appears between the tab links and the ⋮ menu on all /learn/$lang/* pages. State depends on auth + deck status."
+			/>
+			<p className="text-muted-foreground text-xs">
+				Source: <code>src/components/navs/-start-learning-button.tsx</code>
+			</p>
+			<div className="overflow-x-auto">
+				<table className="w-full text-sm">
+					<thead>
+						<tr className="text-muted-foreground border-b text-left text-xs">
+							<th className="p-2">State</th>
+							<th className="p-2">Condition</th>
+							<th className="p-2">Button label</th>
+							<th className="p-2">Action</th>
+							<th className="p-2">Dialog title</th>
+							<th className="p-2">Dialog options</th>
+							<th className="p-2">data-testid</th>
+						</tr>
+					</thead>
+					<tbody>
+						{langCtaStates.map((s) => (
+							<tr key={s.state} className="border-b">
+								<td className="p-2 text-xs font-medium">{s.state}</td>
+								<td className="p-2">
+									<code className="text-xs">{s.condition}</code>
+								</td>
+								<td className="p-2 font-medium">{s.buttonLabel}</td>
+								<td className="text-muted-foreground p-2 text-xs">
+									{s.action}
+								</td>
+								<td className="p-2 text-xs">{s.dialogTitle ?? '—'}</td>
+								<td className="p-2 text-xs">{s.dialogOptions ?? '—'}</td>
+								<td className="p-2">
+									<code className="text-xs">{s.testId}</code>
+								</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	)
+}
+
+// ---------------------------------------------------------------------------
 // Section: Icon-only Buttons & Aria Labels (reference)
 // ---------------------------------------------------------------------------
 
@@ -1177,10 +1274,11 @@ function InconsistenciesSection() {
 						<CardContent className="flex items-start gap-3 p-3">
 							<Badge
 								variant={
-									issue.priority === 'high' ? 'destructive'
-									: issue.priority === 'medium' ?
-										'secondary'
-									:	'outline'
+									issue.priority === 'high'
+										? 'destructive'
+										: issue.priority === 'medium'
+											? 'secondary'
+											: 'outline'
 								}
 								className="mt-0.5 shrink-0"
 							>
@@ -1246,6 +1344,9 @@ function MicrocopyPage() {
 					<a href="#friends">Friends</a>
 				</Button>
 				<Button variant="soft" size="sm" asChild>
+					<a href="#lang-cta">Language CTA</a>
+				</Button>
+				<Button variant="soft" size="sm" asChild>
 					<a href="#a11y">Accessibility</a>
 				</Button>
 				<Button variant="soft" size="sm" asChild>
@@ -1297,6 +1398,12 @@ function MicrocopyPage() {
 
 			<section id="friends">
 				<FriendActionsSection />
+			</section>
+
+			<hr />
+
+			<section id="lang-cta">
+				<LangCtaSection />
 			</section>
 
 			<hr />
