@@ -233,7 +233,7 @@ We use **trunk-based development with a migration gate** — two deployment trac
 - **Data Management**: TanStack DB Collections + TanStack Query
 - **Backend**: Supabase (PostgreSQL + Auth + Realtime + Storage + RPC)
 - **Validation**: Zod schemas
-- **Forms**: react-hook-form with zodResolver
+- **Forms**: TanStack Form via `useAppForm` (from `@/components/form`) with Zod validators
 - **UI**: ShadCN UI + Tailwind CSS
 - **Package Manager**: PNPM
 - **Linting**: oxlint (fast) + eslint (thorough)
@@ -837,12 +837,12 @@ Use `await Promise.all([...])` when the route needs the data before first render
 
 ### Standard Form Pattern
 
-1. Define Zod schema for validation
-2. Create form with `useForm({ resolver: zodResolver(Schema) })`
-3. Create mutation with full typing
-4. Handle submit with `handleSubmit((data) => mutation.mutate(data))`
-5. Show error alert when `formState.errors` exists
-6. Toast on success/error
+1. Define a Zod schema for validation
+2. Create the form with `useAppForm({ defaultValues, validators: { onChange: Schema }, onSubmit })` from `@/components/form`
+3. Create a mutation (with full typing) and call it from `onSubmit`
+4. Submit via `form.handleSubmit()` inside the form element's `onSubmit`
+5. Render fields with `<form.AppField name="...">` and the input adapters exposed on `field` (e.g. `field.EmailInput`, `field.PasswordInput`); wrap the submit control in `<form.AppForm>` and use `<form.SubmitButton>`
+6. Toast on success/error from the mutation
 
 ### Mutation Best Practices
 

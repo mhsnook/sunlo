@@ -25,33 +25,31 @@ import { ReviewStoreProvider } from '@/components/review/review-context-provider
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	beforeLoad: ({ params: { lang }, context }) => {
+	beforeLoad: ({ params: { lang } }) => {
 		if (!languages[lang]) {
 			console.log(`not found`)
 			throw notFound()
 		}
+		// useLinks() filters these by auth + deck state at render time, so the
+		// menu always reflects what the user can actually do for this `$lang`.
 		return {
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			},
 			searchAction: true,
-			appnav: context.auth.isAuth
-				? [
-						'/learn/$lang/feed',
-						'/learn/$lang/review',
-						'/learn/$lang/contributions',
-						'/learn/$lang/stats',
-					]
-				: ['/learn/$lang/feed'],
-			contextMenu: context.auth.isAuth
-				? [
-						'/learn/$lang/manage-deck',
-						'/learn/$lang/requests/new',
-						'/learn/$lang/phrases/new',
-						'/learn/$lang/playlists/new',
-						'/learn/$lang/deck-settings',
-					]
-				: [],
+			appnav: [
+				'/learn/$lang/feed',
+				'/learn/$lang/review',
+				'/learn/$lang/contributions',
+				'/learn/$lang/stats',
+			],
+			contextMenu: [
+				'/learn/$lang/manage-deck',
+				'/learn/$lang/requests/new',
+				'/learn/$lang/phrases/new',
+				'/learn/$lang/playlists/new',
+				'/learn/$lang/deck-settings',
+			],
 		}
 	},
 	loader: async ({ context }) => {

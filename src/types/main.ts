@@ -33,6 +33,12 @@ export type ActionCopy = Microcopy & {
 
 export type LinkType = Microcopy & {
 	inexact?: boolean
+	/**
+	 * Gate on app state so menus skip links the user can't act on.
+	 * - `auth`: requires the user to be signed in
+	 * - `deck`: requires `auth` AND a non-archived deck for the current `$lang`
+	 */
+	requires?: 'auth' | 'deck'
 	link: {
 		to: string
 		params?: Route['types']['params']

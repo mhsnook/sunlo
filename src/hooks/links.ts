@@ -2,6 +2,8 @@ import { useParams } from '@tanstack/react-router'
 import { useUnreadChatsCount } from '@/features/social/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { useUnreadCount } from '@/features/notifications/hooks'
+import { useDeckMeta } from '@/features/deck/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'
@@ -204,6 +206,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			name: 'Stats',
 			title: `My Review Stats`,
 			Icon: ChartBarDecreasing,
+			requires: 'deck' as const,
 			link: {
 				to: '/learn/$lang/stats',
 				params: { lang },
@@ -212,6 +215,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/deck-settings': {
 			name: 'Settings',
 			title: 'Deck Settings',
+			requires: 'deck' as const,
 			link: {
 				to: '/learn/$lang/deck-settings',
 				params: { lang },
@@ -221,6 +225,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/review': {
 			name: 'Review',
 			title: `Daily Review`,
+			requires: 'deck' as const,
 			link: {
 				to: '/learn/$lang/review',
 				params: { lang },
@@ -247,6 +252,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/phrases/new': {
 			name: 'Phrase',
 			title: 'Add a Phrase',
+			requires: 'auth' as const,
 			link: {
 				to: '/learn/$lang/phrases/new',
 				params: { lang },
@@ -265,6 +271,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/manage-deck': {
 			name: 'Cards',
 			title: 'Manage Deck',
+			requires: 'deck' as const,
 			link: {
 				to: '/learn/$lang/manage-deck',
 				params: { lang },
@@ -274,6 +281,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/requests/new': {
 			name: 'Request',
 			title: 'Request a Phrase',
+			requires: 'auth' as const,
 			link: {
 				to: '/learn/$lang/requests/new',
 				params: { lang },
@@ -292,6 +300,7 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		'/learn/$lang/playlists/new': {
 			name: 'Playlist',
 			title: 'New Playlist',
+			requires: 'auth' as const,
 			link: {
 				to: '/learn/$lang/playlists/new',
 				params: { lang },
@@ -325,7 +334,17 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 
 export function useLinks(paths: Array<string> | undefined): LinkType[] {
 	const { lang } = useParams({ strict: false })
-	return makeLinks(paths, lang)
+	const { isAuth } = useAuth()
+	// Pass an unmatchable code when no `$lang` is in the route — the live query
+	// runs unconditionally but returns no rows, so `hasActiveDeck` is false.
+	const { data: deck } = useDeckMeta(lang ?? '__none__')
+	const hasActiveDeck = !!deck && !deck.archived
+
+	return makeLinks(paths, lang).filter((link) => {
+		if (link.requires === 'auth' && !isAuth) return false
+		if (link.requires === 'deck' && !hasActiveDeck) return false
+		return true
+	})
 }
 
 export function makeLinks(
