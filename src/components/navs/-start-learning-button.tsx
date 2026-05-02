@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { Sparkles, ArrowRight, ArchiveRestore, Archive } from 'lucide-react'
+import {
+	Sparkles,
+	ArrowRight,
+	ArchiveRestore,
+	Archive,
+	UserPlus,
+} from 'lucide-react'
 
 import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
@@ -34,9 +40,13 @@ export function StartLearningButton({ lang }: { lang: string }) {
 		return (
 			<Link
 				to="/signup"
-				className={cn(buttonVariants({ variant: 'soft', size: 'sm' }))}
+				className={cn(
+					buttonVariants({ variant: 'soft', size: 'sm' }),
+					'gap-1.5'
+				)}
 				data-testid="join-to-learn-link"
 			>
+				<UserPlus className="size-3.5" />
 				Join
 			</Link>
 		)
