@@ -9,7 +9,7 @@ import { decksCollection } from '@/features/deck/collections'
 import { DeckMetaSchema, DeckMetaRawSchema } from '@/features/deck/schemas'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { useDecks } from '@/features/deck/hooks'
-import { useUserId } from '@/lib/use-auth'
+import { useAuth, useUserId } from '@/lib/use-auth'
 import { Button, buttonVariants } from '@/components/ui/button'
 import {
 	Dialog,
@@ -23,11 +23,23 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { cn } from '@/lib/utils'
 
 export function StartLearningButton({ lang }: { lang: string }) {
+	const { isAuth } = useAuth()
 	const { data: deck, isReady } = useDeckMeta(lang)
 	const countDecks = useDecks().data?.length ?? 0
 	const userId = useUserId()
 	const [startOpen, setStartOpen] = useState(false)
 	const [unarchiveOpen, setUnarchiveOpen] = useState(false)
+
+	if (!isAuth)
+		return (
+			<Link
+				to="/signup"
+				className={cn(buttonVariants({ variant: 'soft', size: 'sm' }))}
+				data-testid="join-to-learn-link"
+			>
+				Join
+			</Link>
+		)
 
 	const startMutation = useMutation({
 		mutationKey: ['new-deck', lang],
