@@ -118,6 +118,7 @@ export function IntroSheet({
 			<DialogContent
 				data-testid={testId ?? 'intro-message-section'}
 				className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
+				hideClose={requireAffirmation}
 			>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>

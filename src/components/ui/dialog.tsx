@@ -71,10 +71,12 @@ const DialogOverlay = ({
 const DialogContent = ({
 	className,
 	children,
+	hideClose = false,
 	onInteractOutside: _onInteractOutside,
 	onEscapeKeyDown: _onEscapeKeyDown,
 	...props
 }: DialogPrimitive.Popup.Props & {
+	hideClose?: boolean
 	onInteractOutside?: unknown
 	onEscapeKeyDown?: unknown
 }) => (
@@ -88,15 +90,17 @@ const DialogContent = ({
 			)}
 			{...props}
 		>
-			<div className="pointer-events-none sticky top-0 z-20 -mx-6 -mt-6 h-0">
-				<DialogPrimitive.Close
-					data-testid="close-dialog-button"
-					className="bg-card/50 text-foreground/70 hover:text-foreground focus:ring-ring pointer-events-auto absolute top-4 right-4 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
-				>
-					<X className="size-4" />
-					<span className="sr-only">Close</span>
-				</DialogPrimitive.Close>
-			</div>
+			{!hideClose && (
+				<div className="pointer-events-none sticky top-0 z-20 -mx-6 -mt-6 h-0">
+					<DialogPrimitive.Close
+						data-testid="close-dialog-button"
+						className="bg-card/50 text-foreground/70 hover:text-foreground focus:ring-ring pointer-events-auto absolute top-4 right-4 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
+					>
+						<X className="size-4" />
+						<span className="sr-only">Close</span>
+					</DialogPrimitive.Close>
+				</div>
+			)}
 			{children}
 		</DialogPrimitive.Popup>
 	</DialogPortal>
