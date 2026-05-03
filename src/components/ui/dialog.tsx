@@ -79,32 +79,41 @@ const DialogContent = ({
 	hideClose?: boolean
 	onInteractOutside?: unknown
 	onEscapeKeyDown?: unknown
-}) => (
-	<DialogPortal>
-		<DialogOverlay />
-		<DialogPrimitive.Popup
-			data-slot="dialog-content"
-			className={cn(
-				'bg-card data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[min(50rem,96%)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded border p-6 shadow-lg duration-200',
-				className
-			)}
-			{...props}
-		>
-			{!hideClose && (
-				<div className="pointer-events-none sticky top-0 z-20 -mx-6 -mt-6 h-0">
-					<DialogPrimitive.Close
-						data-testid="close-dialog-button"
-						className="bg-card/50 text-foreground/70 hover:text-foreground focus:ring-ring pointer-events-auto absolute top-4 right-4 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
-					>
-						<X className="size-4" />
-						<span className="sr-only">Close</span>
-					</DialogPrimitive.Close>
-				</div>
-			)}
-			{children}
-		</DialogPrimitive.Popup>
-	</DialogPortal>
-)
+}) => {
+	const popupRef = React.useRef<HTMLDivElement>(null)
+	return (
+		<DialogPortal>
+			<DialogOverlay />
+			<DialogPrimitive.Popup
+				ref={popupRef}
+				data-slot="dialog-content"
+				initialFocus={() =>
+					popupRef.current?.querySelector<HTMLElement>(
+						'[data-slot="dialog-title"]'
+					) ?? popupRef.current
+				}
+				className={cn(
+					'bg-card data-[open]:animate-in data-[closed]:animate-out data-[closed]:fade-out-0 data-[open]:fade-in-0 data-[closed]:zoom-out-95 data-[open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[min(50rem,96%)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded border p-6 shadow-lg duration-200',
+					className
+				)}
+				{...props}
+			>
+				{!hideClose && (
+					<div className="pointer-events-none sticky top-0 z-20 -mx-6 -mt-6 h-0">
+						<DialogPrimitive.Close
+							data-testid="close-dialog-button"
+							className="bg-card/50 text-foreground/70 hover:text-foreground focus:ring-ring pointer-events-auto absolute top-4 right-4 rounded-sm p-1 backdrop-blur-sm transition-colors focus:ring-2 focus:outline-hidden disabled:pointer-events-none"
+						>
+							<X className="size-4" />
+							<span className="sr-only">Close</span>
+						</DialogPrimitive.Close>
+					</div>
+				)}
+				{children}
+			</DialogPrimitive.Popup>
+		</DialogPortal>
+	)
+}
 
 const DialogHeader = ({
 	className,
@@ -132,8 +141,9 @@ const DialogFooter = ({
 const DialogTitle = ({ className, ...props }: DialogPrimitive.Title.Props) => (
 	<DialogPrimitive.Title
 		data-slot="dialog-title"
+		tabIndex={-1}
 		className={cn(
-			'text-foreground/90 text-lg leading-none font-semibold tracking-tight',
+			'text-foreground/90 text-lg leading-none font-semibold tracking-tight focus:outline-hidden',
 			className
 		)}
 		{...props}
