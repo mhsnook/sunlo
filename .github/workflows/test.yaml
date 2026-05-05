@@ -29,8 +29,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -117,8 +117,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -213,8 +213,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Set up dummy env for build
         run: |
@@ -225,7 +225,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build PR branch
-        run: pnpm build
+        run: pnpm build:test
 
       - name: Measure PR bundle
         run: |
@@ -238,7 +238,7 @@ jobs:
           git worktree add /tmp/base-branch origin/${{ github.base_ref }}
           cd /tmp/base-branch
           pnpm install --frozen-lockfile --silent
-          pnpm build
+          pnpm build:test
           BASE_FILE=$(ls -S dist/assets/index-*.js | head -1)
           echo "BASE_RAW=$(stat -c%s "$BASE_FILE")" >> $GITHUB_ENV
           echo "BASE_GZ=$(gzip -c "$BASE_FILE" | wc -c)" >> $GITHUB_ENV
@@ -304,8 +304,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -326,8 +326,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
@@ -402,8 +402,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
@@ -451,7 +451,7 @@ jobs:
           echo "SUPABASE_SERVICE_ROLE_KEY=$(supabase status -o json | jq -r '.SERVICE_ROLE_KEY')" >> $GITHUB_ENV
 
       - name: Build app
-        run: pnpm build
+        run: pnpm build:test
 
       - name: Start preview server
         run: pnpm preview &
