@@ -20,9 +20,6 @@ import { queryClient } from '@/lib/query-client'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 
 export const clearUser = async () => {
-	// Drop device-local UI prefs (font, theme) so a new user on the same
-	// device sees the standard defaults rather than inheriting the previous
-	// user's accessibility/theme choices.
 	resetUiPrefs()
 
 	// Refetch (don't cleanup) each user collection. Post-logout the client has
