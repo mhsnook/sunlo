@@ -301,6 +301,26 @@ function FeatureItem({
 	)
 }
 
+type ActionCardProps = {
+	icon: typeof WalletCards
+	title: string
+	description: string
+	linkText: string
+	variant?: 'primary' | 'secondary'
+	disabled?: boolean
+} & (
+	| {
+			onButtonClick: () => void
+			linkTo?: never
+			linkSearch?: never
+	  }
+	| {
+			onButtonClick?: never
+			linkTo: string
+			linkSearch?: Record<string, unknown>
+	  }
+)
+
 function ActionCard({
 	icon: Icon,
 	title,
@@ -311,17 +331,7 @@ function ActionCard({
 	variant = 'secondary',
 	disabled = false,
 	onButtonClick,
-}: {
-	icon: typeof WalletCards
-	title: string
-	description: string
-	linkTo?: string
-	linkSearch?: Record<string, unknown>
-	linkText: string
-	variant?: 'primary' | 'secondary'
-	disabled?: boolean
-	onButtonClick?: () => void
-}) {
+}: ActionCardProps) {
 	const isPrimary = variant === 'primary'
 
 	return (
@@ -360,7 +370,7 @@ function ActionCard({
 					</Button>
 				) : (
 					<Link
-						to={linkTo!}
+						to={linkTo}
 						search={linkSearch}
 						className={cn(
 							buttonVariants({
