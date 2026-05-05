@@ -20,7 +20,7 @@ visitor:
 
 - openTo /chats/kan
 - see chat-page
-- typeInto chat-input what do I say if I am going to the store?
+- typeInto chat-input "what do I say if I am going to the store?"
 - click chat-send-button
 - up
 - see chat-result-list
