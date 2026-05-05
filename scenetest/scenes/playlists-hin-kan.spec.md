@@ -50,7 +50,6 @@ learner:
 - click open-phrase-picker
 - up
 - click phrase-picker-item 2fbae84f-5b1d-43c2-8927-ef4d41c7e794
-- up
 - click submit-button
 - up
 - see toast-success
@@ -72,7 +71,6 @@ learner:
 - click open-phrase-picker
 - up
 - click phrase-picker-item b9e3edac-de8b-4796-b436-a0cded08d2ae
-- up
 - click submit-button
 - up
 - see toast-success

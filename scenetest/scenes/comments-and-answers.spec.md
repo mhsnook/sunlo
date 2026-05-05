@@ -74,7 +74,6 @@ learner3:
 - up
 - typeInto phrase-search-input Amele
 - click phrase-picker-item
-- up
 - click submit-button
 - up
 - seeToast toast-success

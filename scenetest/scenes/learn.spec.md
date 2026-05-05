@@ -42,7 +42,6 @@ learner:
 - openTo /learn
 - up
 - click sidebar-user-menu-trigger
-- up
 - click user-menu-profile
 - up
 - see profile-page
@@ -55,7 +54,6 @@ learner:
 - login
 - go-to-deck
 - click navbar-search-button
-- up
 - scope browse-search-overlay
 - typeInto browse-search-input tea
 - see browse-search-results

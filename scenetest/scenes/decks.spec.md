@@ -15,7 +15,6 @@ learner:
 - up
 - typeInto language-search-input Spanish
 - click language-options spa
-- up
 - click submit-button
 - up
 - seeToast toast-success
