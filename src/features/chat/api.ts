@@ -118,6 +118,57 @@ const MOCK_BANK: Record<string, ChatResultPhraseType[]> = {
 			],
 		},
 	],
+	kan: [
+		{
+			id: 'mock-kan-001',
+			lang: 'kan',
+			text: 'naanu angadige hoguttiddene',
+			score: 0.92,
+			translations: [
+				{ id: 'mock-kan-001-en', lang: 'eng', text: 'I am going to the store' },
+			],
+		},
+		{
+			id: 'mock-kan-002',
+			lang: 'kan',
+			text: 'idakke estu?',
+			score: 0.83,
+			translations: [
+				{ id: 'mock-kan-002-en', lang: 'eng', text: 'How much is this?' },
+			],
+		},
+		{
+			id: 'mock-kan-003',
+			lang: 'kan',
+			text: 'supermarket ellide?',
+			score: 0.79,
+			translations: [
+				{
+					id: 'mock-kan-003-en',
+					lang: 'eng',
+					text: 'Where is the supermarket?',
+				},
+			],
+		},
+		{
+			id: 'mock-kan-004',
+			lang: 'kan',
+			text: 'naanu rotti khariidisbeku',
+			score: 0.74,
+			translations: [
+				{ id: 'mock-kan-004-en', lang: 'eng', text: 'I need to buy bread' },
+			],
+		},
+		{
+			id: 'mock-kan-005',
+			lang: 'kan',
+			text: 'neevu card togolthira?',
+			score: 0.7,
+			translations: [
+				{ id: 'mock-kan-005-en', lang: 'eng', text: 'Do you take cards?' },
+			],
+		},
+	],
 }
 
 export async function chatSearchMock(
