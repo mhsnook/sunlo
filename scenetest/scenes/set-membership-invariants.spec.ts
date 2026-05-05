@@ -44,7 +44,7 @@ test('walk common flows; core set-membership invariants hold', async ({
 	actor,
 	team,
 }) => {
-	const lang = team.tags!.lang
+	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
 	const uid = learner.key
 	const learner2Key = defaultTeam.actors!['learner2']!.key
