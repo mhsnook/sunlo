@@ -5,7 +5,7 @@ visitor:
 - openTo /chats
 - see chats-index-page
 - see chats-language-list
-- click chats-language-list spa chats-language-link
+- click chats-language-list kan chats-language-link
 - up
 - see chat-page
 - see chat-empty-state
@@ -18,7 +18,7 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - see chat-page
 - typeInto chat-input what do I say if I am going to the store?
 - click chat-send-button
@@ -31,12 +31,12 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
 - see chat-result-list
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - see chat-cart-badge
 - see chat-selection-bar
 - see chat-selection-chip
@@ -45,12 +45,12 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
-- click chat-phrase-result mock-spa-002 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-002 chat-toggle-cart-button
 - see chat-selection-bar
 - click chat-pivot-button
 - up
@@ -62,47 +62,47 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - click chat-pivot-button
 - up
-- click chat-phrase-result mock-spa-004 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-004 chat-toggle-cart-button
 - see chat-selection-bar
 - see chat-selection-chip
-- notSee chat-selection-chip mock-spa-001
+- notSee chat-selection-chip mock-kan-001
 
 # opening the cart popover shows everything ever added
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - click chat-pivot-button
 - up
-- click chat-phrase-result mock-spa-004 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-004 chat-toggle-cart-button
 - click chat-cart-button
 - see chat-cart-popover
-- see chat-cart-popover mock-spa-001 chat-cart-item
-- see chat-cart-popover mock-spa-004 chat-cart-item
+- see chat-cart-popover mock-kan-001 chat-cart-item
+- see chat-cart-popover mock-kan-004 chat-cart-item
 
 # removing from cart also clears selection if present
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - see chat-selection-chip
 - click chat-cart-button
-- click chat-cart-popover mock-spa-001 chat-cart-remove-button
+- click chat-cart-popover mock-kan-001 chat-cart-remove-button
 - notSee chat-selection-bar
 - notSee chat-cart-badge
 
@@ -110,13 +110,13 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - see chat-selection-chip
-- click chat-selection-chip mock-spa-001 chat-selection-remove-button
+- click chat-selection-chip mock-kan-001 chat-selection-remove-button
 - notSee chat-selection-bar
 - see chat-cart-badge
 
@@ -124,12 +124,12 @@ visitor:
 
 visitor:
 
-- openTo /chats/spa
+- openTo /chats/kan
 - typeInto chat-input store
 - click chat-send-button
 - up
 - see chat-result-list
-- click chat-phrase-result mock-spa-001 chat-toggle-cart-button
+- click chat-phrase-result mock-kan-001 chat-toggle-cart-button
 - see chat-cart-badge
 - click chat-back-link
 - up
@@ -139,7 +139,7 @@ visitor:
 - notSee chat-cart-badge
 - click chat-back-link
 - up
-- click chats-language-list spa chats-language-link
+- click chats-language-list kan chats-language-link
 - up
 - see chat-result-list
 - see chat-cart-badge
