@@ -1,11 +1,11 @@
 # learner creates a new phrase request
 
-cleanup: supabase.from('phrase_request').delete().eq('requester_uid', '[learner.key]').eq('lang', 'kan').gte('created_at', '[testStart]')
+cleanup: supabase.from('phrase_request').delete().eq('requester_uid', '[learner.key]').eq('lang', '[team.lang_partial]').gte('created_at', '[testStart]')
 
 learner:
 
 - login
-- openTo /learn/kan/requests/new
+- openTo /learn/[team.lang_partial]/requests/new
 - up
 - see new-request-form
 - typeInto new-request-form prompt-input 'How do I say good morning casually?'
@@ -16,12 +16,12 @@ learner:
 
 # learner edits their request
 
-cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+cleanup: supabase.from('phrase_request').upsert({ id: '[team.partial_crud_request]', requester_uid: '[learner.key]', lang: '[team.lang_partial]', prompt: '[team.partial_crud_request_prompt]', upvote_count: 0, deleted: false })
 
 learner:
 
 - login
-- openTo /learn/kan/requests/e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- openTo /learn/[team.lang_partial]/requests/[team.partial_crud_request]
 - up
 - see request-detail-page
 - click update-request-button
@@ -35,17 +35,17 @@ learner:
 
 # learner deletes their request
 
-cleanup: supabase.from('phrase_request').upsert({ id: 'e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96', requester_uid: '[learner.key]', lang: 'kan', prompt: 'How do I order a dosa and a coffee?', upvote_count: 0, deleted: false })
+cleanup: supabase.from('phrase_request').upsert({ id: '[team.partial_crud_request]', requester_uid: '[learner.key]', lang: '[team.lang_partial]', prompt: '[team.partial_crud_request_prompt]', upvote_count: 0, deleted: false })
 
 learner:
 
 - login
-- openTo /learn/kan/contributions
+- openTo /learn/[team.lang_partial]/contributions
 - up
 - see contributions-page
 - click contributions-tab--requests
 - up
-- click request-item e40e53ce-0b24-4b5d-9cf4-5c1ac16d4f96
+- click request-item [team.partial_crud_request]
 - up
 - see request-detail-page
 - click delete-request-button
@@ -64,7 +64,7 @@ learner:
 // - typeInto email-input [self.email]
 // - typeInto password-input [self.password]
 // - click submit-button
-// - openTo /learn/kan/contributions
+// - openTo /learn/[team.lang_partial]/contributions
 // - click contributions-tab--requests
 // - click other-user-request-item
 // - see request-detail-page
@@ -76,7 +76,7 @@ learner:
 // learner:
 //
 // - login
-// - openTo /learn/kan/contributions
+// - openTo /learn/[team.lang_partial]/contributions
 // - click contributions-tab--requests
 // - click request-item
 // - up

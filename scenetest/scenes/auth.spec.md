@@ -45,7 +45,7 @@ visitor:
 - up
 - see browse-page
 - see language-card-list
-- scope [team.lang]
+- scope [team.lang_full]
 - click explore-language-link
 - up
 - see deck-feed-page

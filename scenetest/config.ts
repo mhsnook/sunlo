@@ -10,9 +10,12 @@ defineMacro('login', [
 	'notSee login-form',
 ])
 
+// Opens the well-populated (full) lang deck. Most tests build on this so the
+// review/feed flows have meaningful data; tests that operate specifically on
+// the partial deck should navigate explicitly with [team.lang_partial].
 defineMacro('go-to-deck', [
 	'openTo /learn',
-	'click decks-list-grid [team.lang] deck-tile',
+	'click decks-list-grid [team.lang_full] deck-tile',
 	'click deck-link',
 	'up',
 	'see deck-feed-page',

@@ -1,11 +1,11 @@
 # learner switches to 2-button mode via deck settings
 
-cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/deck-settings
+- openTo /learn/[team.lang_full]/deck-settings
 - up
 - see deck-settings-page
 - see review-answer-mode-radio
@@ -17,15 +17,15 @@ learner:
 
 setup: supabase.from('user_profile').update({ review_answer_mode: '4-buttons' }).eq('uid', '[learner.key]')
 cleanup: supabase.from('user_profile').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]')
-cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]').gte('created_at', '[testStart]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/review
+- openTo /learn/[team.lang_full]/review
 - up
 - see review-setup-page
 - click start-review-button
@@ -46,16 +46,16 @@ learner:
 
 # learner sees 2-button mode with Try Again/Correct labels
 
-setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]').gte('created_at', '[testStart]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/review
+- openTo /learn/[team.lang_full]/review
 - up
 - see review-setup-page
 - click start-review-button
@@ -75,13 +75,13 @@ learner:
 
 # learner clears deck override and falls back to profile default
 
-setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+setup: supabase.from('user_deck').update({ review_answer_mode: '2-buttons' }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck').update({ review_answer_mode: null }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/deck-settings
+- openTo /learn/[team.lang_full]/deck-settings
 - up
 - see deck-settings-page
 - click clear-review-answer-mode-button

@@ -1,21 +1,21 @@
 # learner edits their playlist
 
-cleanup: supabase.from('phrase_playlist').update({ title: 'Essential Hindi Greetings', description: 'Common greetings and polite phrases for everyday conversations in Hindi' }).eq('id', 'a1b2c3d4-1111-4222-a333-444444444444')
+cleanup: supabase.from('phrase_playlist').update({ title: '[team.full_playlist_for_edits_title]', description: '[team.full_playlist_for_edits_description]' }).eq('id', '[team.full_playlist_for_edits]')
 
 learner:
 
 - login
-- openTo /learn/hin/playlists/a1b2c3d4-1111-4222-a333-444444444444
+- openTo /learn/[team.lang_full]/playlists/[team.full_playlist_for_edits]
 - up
 - see playlist-detail-page
 - click update-playlist-button
 - up
 - see edit-playlist-dialog
-- typeInto edit-playlist-dialog title-input 'Updated Hindi Greetings'
+- typeInto edit-playlist-dialog title-input 'Test: Updated Playlist Title'
 - click edit-playlist-dialog submit-button
 - up
 - seeToast toast-success
-- seeText Updated Hindi Greetings
+- seeText Test: Updated Playlist Title
 
 // # learner deletes their playlist
 //
@@ -24,7 +24,7 @@ learner:
 // - login
 // - openTo /learn
 // - see decks-list-grid
-// - click [team.lang] deck-link
+// - click [team.lang_full] deck-link
 // - up
 // - see deck-feed-page
 // - click feed-item-playlist
@@ -49,7 +49,7 @@ learner:
 // - click submit-button
 // - openTo /learn
 // - see decks-list-grid
-// - click [team.lang] deck-link
+// - click [team.lang_full] deck-link
 // - see deck-feed-page
 // - click other-user-playlist-item
 // - see playlist-detail-page
@@ -64,7 +64,7 @@ learner:
 // - login
 // - openTo /learn
 // - see decks-list-grid
-// - click [team.lang] deck-link
+// - click [team.lang_full] deck-link
 // - up
 // - see deck-feed-page
 // - click feed-item-playlist
@@ -87,7 +87,7 @@ learner:
 // - login
 // - openTo /learn
 // - see decks-list-grid
-// - click [team.lang] deck-link
+// - click [team.lang_full] deck-link
 // - up
 // - see deck-feed-page
 // - click feed-item-playlist
@@ -107,7 +107,7 @@ learner:
 // - login
 // - openTo /learn
 // - see decks-list-grid
-// - click [team.lang] deck-link
+// - click [team.lang_full] deck-link
 // - up
 // - see deck-feed-page
 // - click feed-item-playlist

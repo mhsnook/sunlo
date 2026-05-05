@@ -5,7 +5,7 @@ learner:
 - login
 - go-to-deck
 - see feed-item-list
-- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
+- see feed-item-playlist [team.full_playlist_for_edits]
 
 # learner switches to popular tab on feed
 
@@ -18,23 +18,23 @@ learner:
 
 # learner upvotes a playlist in feed
 
-cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.key]').eq('playlist_id', 'c3d4e5f6-3333-4444-a555-666666666666')
+cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner.key]').eq('playlist_id', '[team.full_playlist_for_edits]')
 
 learner:
 
 - login
 - go-to-deck
-- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
+- see feed-item-playlist [team.full_playlist_for_edits]
 - up
-- click feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666 upvote-playlist-button
+- click feed-item-playlist [team.full_playlist_for_edits] upvote-playlist-button
 - up
-- see feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666
+- see feed-item-playlist [team.full_playlist_for_edits]
 - up
-- click feed-item-playlist c3d4e5f6-3333-4444-a555-666666666666 upvote-playlist-button
+- click feed-item-playlist [team.full_playlist_for_edits] upvote-playlist-button
 
-// feed loads more items on scroll — SKIPPED: Kannada seed data has <20 feed
-// items so hasNextPage is false and load-more-button never renders. Re-enable
-// after adding more Kannada feed seed data.
+// feed loads more items on scroll — SKIPPED: even the well-populated lang
+// has <20 feed items so hasNextPage is false and load-more-button never
+// renders. Re-enable after adding more feed seed data.
 
 # learner views chat messages from a friend
 
@@ -48,7 +48,7 @@ learner:
 - up
 - see chats-page
 - see friend-chat-list
-- click friend-chat-link 7ad846a9-d55b-4035-8be2-dbcc70074f74
+- click friend-chat-link [friend.key]
 - up
 - see chat-messages-container
 - seeText Sent a phrase recommendation.

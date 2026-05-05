@@ -1,18 +1,18 @@
-# friend comments on learner's Hindi request and learner gets notified
+# friend comments on learner's full-lang request and learner gets notified
 
-cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', '3f8c9e2a-1234-4567-89ab-cdef01234567').gte('created_at', '[testStart]')
+cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', '[team.full_request_for_comments]').gte('created_at', '[testStart]')
 cleanup: supabase.from('notification').delete().eq('uid', '[learner.key]').eq('type', 'request_commented').gte('created_at', '[testStart]')
 
 friend:
 
 - login
-- openTo /learn/hin/requests/3f8c9e2a-1234-4567-89ab-cdef01234567
+- openTo /learn/[team.lang_full]/requests/[team.full_request_for_comments]
 - up
 - see request-detail-page
 - click open-comment-dialog
 - up
 - scope comment-dialog
-- typeInto content-input 'You can also try "haldi kitne ka hai?" for turmeric!'
+- typeInto content-input 'You can also try a follow-up question here'
 - click submit-button
 - up
 - seeToast toast-success
@@ -28,21 +28,21 @@ learner:
 # learner2 replies to a comment and both learner and original commenter get notified
 
 cleanup: supabase.from('request_comment').delete().eq('uid', '[learner2.key]').gte('created_at', '[testStart]')
-cleanup: supabase.from('request_comment').delete().eq('parent_comment_id', '[team.seed_comment]')
+cleanup: supabase.from('request_comment').delete().eq('parent_comment_id', '[team.full_seed_comment]')
 cleanup: supabase.from('notification').delete().eq('type', 'comment_replied').gte('created_at', '[testStart]')
 
 learner2:
 
 - login
-- openTo /learn/hin/requests/3f8c9e2a-1234-4567-89ab-cdef01234567
+- openTo /learn/[team.lang_full]/requests/[team.full_request_for_comments]
 - up
 - see request-detail-page
 - up
-- scope comment-item [team.seed_comment]
+- scope comment-item [team.full_seed_comment]
 - click reply-link
 - up
 - scope reply-dialog
-- typeInto content-input 'Great tip! I also use "lehsun kitne ka hai?" for garlic.'
+- typeInto content-input 'Great tip! Here is another way to ask.'
 - click submit-button
 - up
 - seeToast toast-success
@@ -54,25 +54,25 @@ learner:
 - up
 - seeText commented on your request
 
-# learner3 answers a Kannada request with phrase links
+# learner3 answers a partial-lang request with phrase links
 
 cleanup: supabase.from('comment_phrase_link').delete().eq('uid', '[learner3.key]').gte('created_at', '[testStart]')
-cleanup: supabase.from('request_comment').delete().eq('uid', '[learner3.key]').eq('request_id', '6c1f2a5d-4567-4890-a2de-f01234567890').gte('created_at', '[testStart]')
+cleanup: supabase.from('request_comment').delete().eq('uid', '[learner3.key]').eq('request_id', '[team.partial_request_for_answers]').gte('created_at', '[testStart]')
 cleanup: supabase.from('notification').delete().eq('type', 'phrase_referenced').gte('created_at', '[testStart]')
 
 learner3:
 
 - login
-- openTo /learn/kan/requests/6c1f2a5d-4567-4890-a2de-f01234567890
+- openTo /learn/[team.lang_partial]/requests/[team.partial_request_for_answers]
 - up
 - see request-detail-page
 - click open-comment-dialog
 - up
 - scope comment-dialog
-- typeInto content-input 'Here are the direction phrases!'
+- typeInto content-input 'Here is a phrase that might help!'
 - click attach-phrase-button
 - up
-- typeInto phrase-search-input Amele
+- typeInto phrase-search-input [team.partial_attach_phrase_search]
 - click phrase-picker-item
 - click submit-button
 - up
@@ -80,13 +80,13 @@ learner3:
 
 # learner upvotes a request and requester gets notified
 
-cleanup: supabase.from('phrase_request_upvote').delete().eq('uid', '[learner.key]').eq('request_id', '4a9d0f3b-2345-5678-90bc-def012345678')
+cleanup: supabase.from('phrase_request_upvote').delete().eq('uid', '[learner.key]').eq('request_id', '[team.partial_request_for_upvote]')
 cleanup: supabase.from('notification').delete().eq('type', 'request_upvoted').gte('created_at', '[testStart]')
 
 learner:
 
 - login
-- openTo /learn/kan/requests/4a9d0f3b-2345-5678-90bc-def012345678
+- openTo /learn/[team.lang_partial]/requests/[team.partial_request_for_upvote]
 - up
 - see request-detail-page
 - click upvote-request-button
@@ -103,15 +103,15 @@ learner2:
 # learner sees their own comments on the contributions page comments tab
 
 // Exercises useAnyonesComments and the contributions Comments tab.
-// Relies on seed comment c0000004 (learner on Kannada request e40e53ce).
+// Relies on the seeded learner comment on [team.partial_crud_request].
 
 learner:
 
 - login
-- openTo /learn/kan/contributions
+- openTo /learn/[team.lang_partial]/contributions
 - up
 - see contributions-page
 - click contributions-tab--comments
 - up
-- see contributions-comment-item c0000004-4444-4555-8666-777777777777
-- seeText Vandu tea kudhi
+- see contributions-comment-item [team.partial_learner_seed_comment]
+- seeText [team.partial_learner_seed_comment_text]
