@@ -351,7 +351,7 @@ const mutation = useMutation({
   - `use-smart-search.ts` - `useSmartSearch()`: server-side trigram similarity search via `search_phrases_smart` RPC with debounce and local collection hydration
   - `links.ts` - `useLinks()`: returns route paths with navigation metadata and status badges for sidebar
   - `use-debounce.ts` - `useDebounce()`, `usePrevious()`, `useIntersectionObserver()`: generic React utilities
-  - `use-font-preference.ts` - `useFontPreference()`: applies dyslexic/normal font from the user's profile to document body (defaults to standard font when no preference is set)
+  - `use-font-preference.ts` - `useFontPreference()`: applies dyslexic/normal font to document body. Reads from profile when authenticated, falls back to localStorage (`sunlo-font-preference`) for first-paint before profile loads. Cleared on logout via `resetUiPrefs()` so a new user on the same device gets the standard default.
   - `use-intro-seen.ts` - `useIntro()`: manages intro/training dialog state ('unseen'/'seen'/'affirmed') via localStorage. Used for onboarding, review intro, deck settings intro
   - `use-mobile.tsx` - `useIsMobile()`: viewport width < 768px detection
   - `use-require-auth.ts` - `useRequireAuth()`: wraps actions with auth check, shows toast and redirects if not authenticated

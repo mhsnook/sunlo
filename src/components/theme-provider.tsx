@@ -5,6 +5,7 @@ import {
 	useEffect,
 	useState,
 } from 'react'
+import { THEME_KEY, onUiPrefsReset } from '@/lib/ui-prefs'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -28,8 +29,8 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
 	children,
-	defaultTheme = 'system',
-	storageKey = 'vite-ui-theme',
+	defaultTheme = 'light',
+	storageKey = THEME_KEY,
 	...props
 }: ThemeProviderProps) {
 	const [theme, setTheme] = useState<Theme>(
@@ -42,10 +43,10 @@ export function ThemeProvider({
 		root.classList.remove('light', 'dark')
 
 		if (theme === 'system') {
-			const systemTheme =
-				window.matchMedia('(prefers-color-scheme: dark)').matches ?
-					'dark'
-				:	'light'
+			const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+				.matches
+				? 'dark'
+				: 'light'
 
 			root.classList.add(systemTheme)
 			return
@@ -53,6 +54,8 @@ export function ThemeProvider({
 
 		root.classList.add(theme)
 	}, [theme])
+
+	useEffect(() => onUiPrefsReset(() => setTheme(defaultTheme)), [defaultTheme])
 
 	const value = {
 		theme,

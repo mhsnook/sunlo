@@ -17,8 +17,14 @@ import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
 import { notificationsCollection } from '@/features/notifications/collections'
 import { queryClient } from '@/lib/query-client'
+import { resetUiPrefs } from '@/lib/ui-prefs'
 
 export const clearUser = async () => {
+	// Drop device-local UI prefs (font, theme) so a new user on the same
+	// device sees the standard defaults rather than inheriting the previous
+	// user's accessibility/theme choices.
+	resetUiPrefs()
+
 	// Refetch (don't cleanup) each user collection. Post-logout the client has
 	// no JWT so RLS returns empty, the collection clears, and any active live
 	// queries simply see rows removed. Calling .cleanup() instead would fire
