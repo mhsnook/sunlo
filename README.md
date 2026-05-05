@@ -59,6 +59,32 @@ file like this: `pnpm run seeds:data`, or modify this command per your needs:
 Then, be prepared to heavily curate this file because the seeding process will not have any
 knowledge of our approach to dates, and your PR will be rejected if your seeds do not follow it.
 
+### Chat search corpus
+
+The `/chats` chat-style search feature and the semantic side of
+`/search` read from a `chat_corpus` table that holds denormalized
+phrase + translation text plus BGE-M3 embeddings. `supabase db reset`
+wipes that table; populate it with:
+
+```bash
+pnpm tsx scripts/backfill-chat-corpus.ts
+```
+
+This requires Cloudflare Workers AI credentials in `.env`
+(`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`) and takes ~30 seconds
+on seed-sized data. If you don't have those, `/chats/$lang` returns
+empty results and `/search` falls back gracefully to trigram-only
+ranking — no other surface breaks.
+
+Use `pnpm dev:local` (sets `VITE_CHAT_USE_MOCK=true`) to develop the
+chat UI against canned mock data without populating the corpus or
+calling Workers AI.
+
+See [`scripts/README.md`](./scripts/README.md) for details on the
+backfill script's flags (e.g. `--normalize-only` for cheap re-runs
+after rule changes), running against a remote project, and the cost
+shape.
+
 ## The React App
 
 - This app is a full SPA as an architectural choice so that we can use Tauri to compile it to
