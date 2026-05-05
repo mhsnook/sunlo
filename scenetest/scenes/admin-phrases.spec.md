@@ -10,7 +10,7 @@ cleanup: supabase.from('admin_user').delete().eq('uid', '[learner.key]')
 learner:
 
 - login
-- openTo /learn/[team.lang]/phrases/[team.nocard_phrase]
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
 - up
 - see admin-gear-link
 - click admin-gear-link
@@ -26,7 +26,7 @@ cleanup: supabase.from('admin_user').delete().eq('uid', '[learner.key]')
 learner:
 
 - login
-- openTo /admin/[team.lang]/phrases
+- openTo /admin/[team.lang_partial]/phrases
 - up
 - see admin-phrases-page
 - see admin-phrases-table
@@ -42,13 +42,13 @@ learner:
 
 setup: supabase.from('admin_user').upsert({ uid: '[learner.key]' })
 cleanup: supabase.from('admin_user').delete().eq('uid', '[learner.key]')
-cleanup: supabase.from('phrase').update({ archived: false }).eq('id', '[team.nocard_phrase]')
-cleanup: supabase.from('phrase_translation').update({ archived: false }).eq('phrase_id', '[team.nocard_phrase]')
+cleanup: supabase.from('phrase').update({ archived: false }).eq('id', '[team.partial_nocard_phrase]')
+cleanup: supabase.from('phrase_translation').update({ archived: false }).eq('phrase_id', '[team.partial_nocard_phrase]')
 
 learner:
 
 - login
-- openTo /admin/[team.lang]/phrases/[team.nocard_phrase]
+- openTo /admin/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
 - up
 - see admin-phrase-detail
 - click admin-archive-button
@@ -59,7 +59,7 @@ learner:
 friend:
 
 - login
-- openTo /learn/kan/phrases/[team.nocard_phrase]
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
 - up
 - notSee admin-gear-link
 
@@ -72,7 +72,7 @@ friend:
 friend:
 
 - login
-- openTo /admin/kan/phrases
+- openTo /admin/[team.lang_partial]/phrases
 - up
 - see admin-phrases-page
 - see admin-not-authorized-warning

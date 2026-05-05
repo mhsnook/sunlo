@@ -33,7 +33,7 @@ test('review updates most_recent_review_at and count_reviews_7d together', async
 	actor,
 	team,
 }) => {
-	const lang = team.tags!.lang
+	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
 	const uid = learner.key
 	let testStart = ''
@@ -168,7 +168,7 @@ test('deck with no reviews does not show a most-recent-review badge', async ({
 	// rendered "1 month" when there was no activity at all. The correct
 	// behavior is: if most_recent_review_at is null, the badge should not
 	// render. This scene clears reviews and asserts the badge is absent.
-	const lang = team.tags!.lang
+	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
 	const uid = learner.key
 

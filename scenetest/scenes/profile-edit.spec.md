@@ -1,6 +1,6 @@
 # learner changes their username
 
-cleanup: supabase.from('user_profile').update({ username: 'GarlicFace' }).eq('uid', '[learner.key]')
+cleanup: supabase.from('user_profile').update({ username: '[learner.username]' }).eq('uid', '[learner.key]')
 
 learner:
 
@@ -9,7 +9,7 @@ learner:
 - up
 - see profile-page
 - see update-profile-form
-- typeInto update-profile-form username-input 'GarlicFace2'
+- typeInto update-profile-form username-input 'TestUsername2'
 - click update-profile-form submit-button
 - up
 - seeToast toast-success
@@ -27,8 +27,8 @@ learner:
 - see languages-known
 - click add-language-button
 - up
-- typeInto language-search-input Hindi
-- click language-options hin
+- typeInto language-search-input [team.lang_partial_name]
+- click language-options [team.lang_partial]
 - up
 - see languages-known 1
 - click languages-known 1 level-trigger
