@@ -5,8 +5,10 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite --host",
+		"dev:local": "VITE_CHAT_USE_MOCK=true vite --host",
 		"scan": "vite --host & pnpx react-scan@latest localhost:5173",
 		"build": "vite build",
+		"build:test": "VITE_CHAT_USE_MOCK=true SCENETEST_PANEL=0 vite build",
 		"lint": "oxlint . && eslint .",
 		"preview": "vite preview",
 		"format": "oxfmt . && prettier --write 'supabase/**/*.sql'",
