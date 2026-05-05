@@ -103,17 +103,17 @@ importers:
         specifier: ^0.1.3
         version: 0.1.4
       '@scenetest/checks-panel':
-        specifier: ^0.8.3
-        version: 0.8.3
+        specifier: ^0.9.0
+        version: 0.9.0
       '@scenetest/checks-react':
-        specifier: ^0.8.3
-        version: 0.8.3(react@19.2.3)
+        specifier: ^0.9.0
+        version: 0.9.0(react@19.2.3)
       '@scenetest/scenes':
-        specifier: ^0.8.3
-        version: 0.8.3(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.9.0
+        version: 0.9.0(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
       '@scenetest/vite-plugin':
-        specifier: ^0.8.3
-        version: 0.8.3(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: ^0.9.0
+        version: 0.9.0(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.1.18)
@@ -1284,22 +1284,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@scenetest/checks-panel@0.8.3':
-    resolution: {integrity: sha512-LnpC6gWxm/q5eRBlK0sUt4S5zG5tfn2M6CA0jUmKMPhWoaTWG/+aW3asGqPSCL4FT/HoMWUU6tenuBNiqtfGVg==}
+  '@scenetest/checks-panel@0.9.0':
+    resolution: {integrity: sha512-XsscL6N4q89/W0OO21OT4gkLHz3PciVgCp+qIb8tDh6GRRRbWlzcQD4EokthwxspevIJ8IKM0vNxO9FoDmlK+Q==}
 
-  '@scenetest/checks-react@0.8.3':
-    resolution: {integrity: sha512-6VRRRSSiPR018b2FpWNeRjZNq8h0Sl/b6t8iLmfOwVzyosBYiw8Nax4xSjamaGCwF7IQ9gtqBOjnzWgBKiyhOw==}
+  '@scenetest/checks-react@0.9.0':
+    resolution: {integrity: sha512-SSFhPpTfs2wNQzNiCA8ziwchi2RTfwtI1Fi1yNlOjc99MO1fKZGlGVQuGu4lhjqPw22/gKYKSSHqybhiTVibUQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
 
-  '@scenetest/checks@0.8.3':
-    resolution: {integrity: sha512-VPD3tqUJtz8MI/LcVV0iwTXhK8k/cVF+6+81CICccDCnoZMdmxtcJdYYUSmDe1q8VetNGhjdYIEUcIn/wK52Mg==}
+  '@scenetest/checks@0.9.0':
+    resolution: {integrity: sha512-mkVuKuurZd13fraqMyvzDx9oEZEiH26Wl+SHhcnqt8pcaHSNbEtcrGhNQGl4rTTiGaFelOviNw+462T9yrqsjA==}
 
-  '@scenetest/scenes-panel@0.8.3':
-    resolution: {integrity: sha512-hJIMfMX/ogQA+KRElZl4JIy3q+2YYKPQjYzORCbk5GILNeZi2AzrX5yKBmxRgNyJ2WliOf7pSTsCK6rwYBjv6w==}
+  '@scenetest/scenes-panel@0.9.0':
+    resolution: {integrity: sha512-EtEt8UlhUOiFGn9BjZiFniIxDiqWqpahmk1yDuHjGty+z20Oj9PRTA9nZ10k0PRtbkgbsDIqW8beQsVx4Ltu3Q==}
 
-  '@scenetest/scenes@0.8.3':
-    resolution: {integrity: sha512-KubiCuR9kZaDgaQ5nB76LzKacGDI2z51U5QmUgp28BWQ8t3LQCxSSustZeXt/B26KOS/A+cKP5chLAbYRygBkA==}
+  '@scenetest/scenes@0.9.0':
+    resolution: {integrity: sha512-7wdMYUMx4+QOQgEmow3PWOh7bEy+HETEgk6vOPBaT1Prv0OPwX4Y4f19oE6BxledxgRp4NQo62Mv2zHwDe1uEg==}
     hasBin: true
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -1307,8 +1307,8 @@ packages:
       vite:
         optional: true
 
-  '@scenetest/vite-plugin@0.8.3':
-    resolution: {integrity: sha512-JKLh0udEVXH/1bf2jg63FugoqOCJ7+x1lLj1vzXX4qC6gOukYDDVRbxV1MRqVUnNYNI1bkVTBrDzJ18a6Zl7Qg==}
+  '@scenetest/vite-plugin@0.9.0':
+    resolution: {integrity: sha512-oBgW2HDVWg7e0+0v6cR7cKTEPfyv32qtOB8MXye/Brcee+QGT2PPJsmVRBUz2uWE4YsyyPtDU94MRpMimTKM6g==}
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
@@ -2353,6 +2353,9 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
+  htm@3.1.1:
+    resolution: {integrity: sha512-983Vyg8NwUE7JkZ6NmOqpCZ+sh1bKv2iYTlUkzlWmA5JD2acKoxd4KVxbMmxX/85mtfdnDmTFoNKcg5DGAvxNQ==}
+
   html-url-attributes@3.0.1:
     resolution: {integrity: sha512-ol6UPyBWqsrO6EJySPz2O7ZSr856WDrEzM5zMqp+FJJLGMW35cLYmmZnl0vztAZxRUoNZJFTCohfjuIJ8I4QBQ==}
 
@@ -2857,6 +2860,9 @@ packages:
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
+
+  preact@10.29.1:
+    resolution: {integrity: sha512-gQCLc/vWroE8lIpleXtdJhTFDogTdZG9AjMUpVkDf2iTCNwYNWA+u16dL41TqUDJO4gm2IgrcMv3uTpjd4Pwmg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -4341,20 +4347,20 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.60.1':
     optional: true
 
-  '@scenetest/checks-panel@0.8.3': {}
+  '@scenetest/checks-panel@0.9.0': {}
 
-  '@scenetest/checks-react@0.8.3(react@19.2.3)':
+  '@scenetest/checks-react@0.9.0(react@19.2.3)':
     dependencies:
-      '@scenetest/checks': 0.8.3
+      '@scenetest/checks': 0.9.0
       react: 19.2.3
 
-  '@scenetest/checks@0.8.3': {}
+  '@scenetest/checks@0.9.0': {}
 
-  '@scenetest/scenes-panel@0.8.3': {}
+  '@scenetest/scenes-panel@0.9.0': {}
 
-  '@scenetest/scenes@0.8.3(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@scenetest/scenes@0.9.0(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
-      '@scenetest/checks': 0.8.3
+      '@scenetest/checks': 0.9.0
       commander: 12.1.0
       glob: 11.1.0
       jiti: 2.6.1
@@ -4362,15 +4368,17 @@ snapshots:
     optionalDependencies:
       vite: 7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
 
-  '@scenetest/vite-plugin@0.8.3(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
+  '@scenetest/vite-plugin@0.9.0(vite@7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2))':
     dependencies:
       '@babel/parser': 7.29.2
       '@babel/traverse': 7.29.0
       '@babel/types': 7.29.0
-      '@scenetest/checks': 0.8.3
-      '@scenetest/checks-panel': 0.8.3
-      '@scenetest/scenes-panel': 0.8.3
+      '@scenetest/checks': 0.9.0
+      '@scenetest/checks-panel': 0.9.0
+      '@scenetest/scenes-panel': 0.9.0
+      htm: 3.1.1
       magic-string: 0.30.21
+      preact: 10.29.1
       vite: 7.3.2(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
@@ -5483,6 +5491,8 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
+  htm@3.1.1: {}
+
   html-url-attributes@3.0.1: {}
 
   https-proxy-agent@7.0.6:
@@ -6108,6 +6118,8 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  preact@10.29.1: {}
 
   prelude-ls@1.2.1: {}
 
