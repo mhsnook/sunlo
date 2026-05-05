@@ -23,7 +23,7 @@ const supabase = createClient<Database>(
 )
 
 test('learner completes a review session', async ({ actor, team }) => {
-	const lang = team.tags!.lang
+	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
 	const uid = learner.key
 	let testStart = ''
@@ -108,7 +108,7 @@ test('learner completes a review session', async ({ actor, team }) => {
 })
 
 test('learner completes stage 1 with mixed scores', async ({ actor, team }) => {
-	const lang = team.tags!.lang
+	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
 	const uid = learner.key
 	let testStart = ''

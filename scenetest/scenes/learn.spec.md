@@ -1,7 +1,7 @@
 # learner navigates within a deck using sidebar
 
-cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
+cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
@@ -22,6 +22,9 @@ learner:
 
 # learner switches between decks
 
+// go-to-deck opens lang_full; switch to lang_partial to verify both decks
+// are clickable from the grid.
+
 learner:
 
 - login
@@ -29,7 +32,7 @@ learner:
 - click /learn
 - up
 - see decks-list-grid
-- click tam deck-tile
+- click [team.lang_partial] deck-tile
 - click deck-link
 - up
 - see deck-feed-page
@@ -60,12 +63,12 @@ learner:
 
 # learner adds a phrase to their deck
 
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('phrase_id', '[team.nocard_phrase]')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('phrase_id', '[team.partial_nocard_phrase]')
 
 learner:
 
 - login
-- openTo /learn/[team.lang]/phrases/[team.nocard_phrase]
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
 - up
 - see phrase-detail-page
 - seeText Not in deck
@@ -80,7 +83,7 @@ learner:
 learner:
 
 - login
-- openTo /learn/[team.lang]/phrases/aa110006-6666-4aaa-bbbb-cccccccccccc
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_phrase_with_card]
 - up
 - see phrase-detail-page
 - up
@@ -127,9 +130,9 @@ learner:
 
 # learner starts a review session
 
-cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]')
-cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang]').gte('created_at', '[testStart]')
+cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
+cleanup: supabase.from('user_card').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]').gte('created_at', '[testStart]')
 
 learner:
 

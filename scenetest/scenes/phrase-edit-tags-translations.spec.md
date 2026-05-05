@@ -5,12 +5,12 @@ cleanup: supabase.from('phrase_translation').delete().eq('added_by', '[learner.k
 learner:
 
 - login
-- openTo /learn/kan/phrases/b0fbbe1d-705e-4d93-a231-ac55263fcfee
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_attach_phrase]
 - up
 - click add-translations-trigger
 - up
 - see add-translations-dialog
-- typeInto add-translations-dialog translation-text-input 'A test translation for dosa'
+- typeInto add-translations-dialog translation-text-input 'A test translation'
 - click add-translations-dialog submit-button
 - up
 - seeToast toast-success
@@ -22,7 +22,7 @@ cleanup: supabase.from('phrase_tag').delete().eq('uid', '[learner.key]').gte('cr
 learner:
 
 - login
-- openTo /learn/kan/phrases/b0fbbe1d-705e-4d93-a231-ac55263fcfee
+- openTo /learn/[team.lang_partial]/phrases/[team.partial_attach_phrase]
 - up
 - click add-tags-trigger
 - up

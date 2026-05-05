@@ -1,20 +1,21 @@
 # learner creates a new deck
 
-cleanup: supabase.from('user_deck').delete().eq('uid', '[learner.key]').eq('lang', 'spa')
+cleanup: supabase.from('user_deck').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_empty]')
 
 learner:
 
 - login
 - openTo /learn
-- see deck-tile-[team.lang]
+- see deck-tile-[team.lang_full]
 - up
 - click deck-switcher-button
 - click new-deck-menu-item
 - see add-deck-form
 - click language-selector-button
 - up
-- typeInto language-search-input Spanish
-- click language-options spa
+- typeInto language-search-input [team.lang_empty_name]
+- click language-options [team.lang_empty]
+- up
 - click submit-button
 - up
 - seeToast toast-success
@@ -22,7 +23,7 @@ learner:
 
 # learner updates daily review goal
 
-cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', 'kan')
+cleanup: supabase.from('user_deck').update({ daily_review_goal: 15 }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
@@ -36,7 +37,7 @@ learner:
 
 # learner updates learning goal
 
-cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid', '[learner.key]').eq('lang', 'kan')
+cleanup: supabase.from('user_deck').update({ learning_goal: 'moving' }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
@@ -50,7 +51,7 @@ learner:
 
 # learner archives and restores a deck
 
-cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[learner.key]').eq('lang', 'kan')
+cleanup: supabase.from('user_deck').update({ archived: false }).eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 
 learner:
 
@@ -66,11 +67,11 @@ learner:
 - up
 - openTo /learn
 - see decks-list-grid
-- notSee deck-tile-[team.lang]
+- notSee deck-tile-[team.lang_full]
 - up
 - click view-archived-decks-link
 - up
-- click [team.lang] archived-deck-tile
+- click [team.lang_full] archived-deck-tile
 - up
 - click confirm-restore-button
 - up

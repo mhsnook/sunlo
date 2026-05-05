@@ -1,92 +1,90 @@
-# learner browses Hindi playlists
+# learner browses full-lang playlists
 
 learner:
 
 - login
-- openTo /learn/hin/playlists
+- openTo /learn/[team.lang_full]/playlists
 - up
 - see playlist-list
-- seeText Essential Hindi Greetings
-- seeText Hindi Questions
-- seeText Hindi Numbers and Counting
-- seeText Hindi Travel Phrases
+- see playlist-item [team.full_playlist_for_edits]
 
-# learner browses Kannada playlists
+# learner browses partial-lang playlists
 
 learner:
 
 - login
-- openTo /learn/kan/playlists
+- openTo /learn/[team.lang_partial]/playlists
 - up
 - see playlist-list
-- seeText Basic Kannada Phrases
-- seeText Kannada Food & Dining
+- see playlist-item [team.partial_featured_playlist]
 
-# learner opens a Kannada playlist and sees linked phrases
+# learner opens a partial-lang playlist and sees linked phrases
 
 learner:
 
 - login
-- openTo /learn/kan/playlists
+- openTo /learn/[team.lang_partial]/playlists
 - up
-- click playlist-item c3d4e5f6-3333-4444-a555-666666666666
+- click playlist-item [team.partial_featured_playlist]
 - up
 - see playlist-detail-page
 - see playlist-phrase-list
 
-# learner creates a new Hindi playlist
+# learner creates a new full-lang playlist
 
-cleanup: supabase.from('phrase_playlist').delete().eq('uid', '[learner.key]').eq('title', 'Test: Hindi Slang')
+cleanup: supabase.from('phrase_playlist').delete().eq('uid', '[learner.key]').eq('title', 'Test: Full Lang Slang')
 
 learner:
 
 - login
-- openTo /learn/hin/playlists/new
+- openTo /learn/[team.lang_full]/playlists/new
 - up
 - scope new-playlist-form
-- typeInto title-input 'Test: Hindi Slang'
-- typeInto description-input 'Informal Hindi phrases young people use'
+- typeInto title-input 'Test: Full Lang Slang'
+- typeInto description-input 'Informal phrases young people use'
 - pressKey Tab
 - click open-phrase-picker
 - up
-- click phrase-picker-item 2fbae84f-5b1d-43c2-8927-ef4d41c7e794
+- click phrase-picker-item [team.full_picker_phrase]
+- up
 - click submit-button
 - up
 - see toast-success
 - see playlist-detail-page
 
-# learner creates a new Kannada playlist
+# learner creates a new partial-lang playlist
 
-cleanup: supabase.from('phrase_playlist').delete().eq('uid', '[learner.key]').eq('title', 'Test: Kannada Basics')
+cleanup: supabase.from('phrase_playlist').delete().eq('uid', '[learner.key]').eq('title', 'Test: Partial Lang Basics')
 
 learner:
 
 - login
-- openTo /learn/kan/playlists/new
+- openTo /learn/[team.lang_partial]/playlists/new
 - up
 - scope new-playlist-form
-- typeInto title-input 'Test: Kannada Basics'
-- typeInto description-input 'Essential Kannada for getting started'
+- typeInto title-input 'Test: Partial Lang Basics'
+- typeInto description-input 'Essential phrases for getting started'
 - pressKey Tab
 - click open-phrase-picker
 - up
-- click phrase-picker-item b9e3edac-de8b-4796-b436-a0cded08d2ae
+- click phrase-picker-item [team.partial_picker_phrase]
+- up
 - click submit-button
 - up
 - see toast-success
 - see playlist-detail-page
 
-# learner2 upvotes a Kannada playlist
+# learner2 upvotes a partial-lang playlist
 
-cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner2.key]').eq('playlist_id', 'c3d4e5f6-3333-4444-a555-666666666666')
+cleanup: supabase.from('phrase_playlist_upvote').delete().eq('uid', '[learner2.key]').eq('playlist_id', '[team.partial_featured_playlist]')
 
 learner2:
 
 - login
-- openTo /learn/kan/playlists
+- openTo /learn/[team.lang_partial]/playlists
 - up
 - see playlist-list
-- click playlist-item c3d4e5f6-3333-4444-a555-666666666666
+- click playlist-item [team.partial_featured_playlist]
 - up
 - see playlist-detail-page
 - click upvote-playlist-button
