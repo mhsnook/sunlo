@@ -20,6 +20,8 @@ type ChatStoreState = {
 	turnsByLang: Record<string, ChatTurnType[]>
 	cartByLang: Record<string, ChatResultPhraseType[]>
 	selectionByLang: Record<string, ChatResultPhraseType[]>
+	dismissedSuggestionsByLang: Record<string, Set<string>>
+	inputByLang: Record<string, string>
 
 	startTurn: (lang: string, query: ChatQueryType) => string
 	completeTurn: (
@@ -34,6 +36,12 @@ type ChatStoreState = {
 	clearSelection: (lang: string) => void
 	clearCart: (lang: string) => void
 	resetConversation: (lang: string) => void
+	dismissSuggestion: (
+		lang: string,
+		scopeKey: string,
+		suggestionKey: string
+	) => void
+	setInput: (lang: string, text: string) => void
 }
 
 const updateMap = <T>(
@@ -49,6 +57,8 @@ export const useChatStore = create<ChatStoreState>()((set) => ({
 	turnsByLang: {},
 	cartByLang: {},
 	selectionByLang: {},
+	dismissedSuggestionsByLang: {},
+	inputByLang: {},
 
 	startTurn: (lang, query) => {
 		const id = newId()
@@ -135,6 +145,25 @@ export const useChatStore = create<ChatStoreState>()((set) => ({
 			turnsByLang: { ...state.turnsByLang, [lang]: [] },
 			cartByLang: { ...state.cartByLang, [lang]: [] },
 			selectionByLang: { ...state.selectionByLang, [lang]: [] },
+		})),
+
+	dismissSuggestion: (lang, scopeKey, suggestionKey) =>
+		set((state) => {
+			const current =
+				state.dismissedSuggestionsByLang[lang] ?? new Set<string>()
+			const updated = new Set(current)
+			updated.add(`${scopeKey}|${suggestionKey}`)
+			return {
+				dismissedSuggestionsByLang: {
+					...state.dismissedSuggestionsByLang,
+					[lang]: updated,
+				},
+			}
+		}),
+
+	setInput: (lang, text) =>
+		set((state) => ({
+			inputByLang: { ...state.inputByLang, [lang]: text },
 		})),
 }))
 

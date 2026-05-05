@@ -1,11 +1,14 @@
-import { useState, type FormEvent } from 'react'
+import { type FormEvent } from 'react'
 import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useChatSearch } from '../hooks'
+import { useChatRouteLang, useChatStore } from '../store'
 
 export function ChatInput() {
-	const [text, setText] = useState('')
+	const lang = useChatRouteLang()
+	const text = useChatStore((s) => s.inputByLang[lang] ?? '')
+	const setInput = useChatStore((s) => s.setInput)
 	const search = useChatSearch()
 
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -13,7 +16,7 @@ export function ChatInput() {
 		const trimmed = text.trim()
 		if (!trimmed) return
 		search.mutate({ query: { kind: 'text', text: trimmed } })
-		setText('')
+		setInput(lang, '')
 	}
 
 	return (
@@ -25,10 +28,9 @@ export function ChatInput() {
 			<Input
 				type="text"
 				value={text}
-				onChange={(e) => setText(e.target.value)}
+				onChange={(e) => setInput(lang, e.target.value)}
 				placeholder="What do you want to say?"
 				data-testid="chat-input"
-				disabled={search.isPending}
 				autoComplete="off"
 			/>
 			<Button
