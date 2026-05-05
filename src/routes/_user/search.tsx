@@ -37,7 +37,7 @@ import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
-import { useSmartSearch } from '@/hooks/use-smart-search'
+import { useHybridSmartSearch } from '@/hooks/use-hybrid-search'
 
 import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
 import type { SearchResultType } from '@/types/search-result'
@@ -136,7 +136,7 @@ function SearchPage() {
 		(typeFilters.size === 0 || typeFilters.has('phrase'))
 	)
 
-	const smartSearch = useSmartSearch(
+	const smartSearch = useHybridSmartSearch(
 		langFilter ?? '',
 		shouldTrigram ? effectiveText : '',
 		'relevance'
