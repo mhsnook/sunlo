@@ -137,7 +137,7 @@ function SearchPage() {
 	)
 
 	const smartSearch = useHybridSmartSearch(
-		langFilter ?? '',
+		langFilter ? [langFilter] : [],
 		shouldTrigram ? effectiveText : '',
 		'relevance'
 	)
