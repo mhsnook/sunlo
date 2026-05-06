@@ -1,13 +1,11 @@
 // Edge Function: chat-search
 //
-// Public, no-auth. Accepts a normalized search request, embeds the query via
-// Cloudflare Workers AI (BGE-M3) for text mode, then queries the search_corpus
-// via search_by_query / search_by_anchors RPCs. Returns mixed entity results
-// (phrases with translations attached + requests).
-//
-// Backwards-compat: still accepts the older `lang` / `excludePids` / `pids`
-// body shape from the chat client on `next`. New callers should use `langs`
-// (string[] | null), `excludeIds`, and `ids` for anchors.
+// Public, no-auth. Accepts a search request, embeds the query via Cloudflare
+// Workers AI (BGE-M3) for text mode (or computes a server-side anchor mean
+// for anchor mode), then queries search_corpus via search_by_query /
+// search_by_anchors RPCs. Returns mixed entity results — phrases (with
+// translations attached), requests (with the prompt), and playlists (with
+// title + description).
 //
 // Required env vars (set in Supabase dashboard):
 //   CLOUDFLARE_ACCOUNT_ID
@@ -25,43 +23,34 @@ const CORS_HEADERS = {
 		'authorization, x-client-info, apikey, content-type',
 }
 
+type EntityType = 'phrase' | 'request' | 'playlist'
+
 type RequestBody = {
-	// New multi-lang shape; pass null to skip lang filtering.
-	langs?: string[] | null
-	// Legacy single-lang shape (chat client on next).
-	lang?: string
-
-	excludeIds?: string[]
-	excludePids?: string[] // legacy
-
-	query:
-		| { kind: 'text'; text: string }
-		| { kind: 'anchor'; ids?: string[]; pids?: string[]; label?: string }
-
-	// Optional override for top-K. Defaults to 3 (chat) or 20 (search).
+	// null = no lang filter; array = filter to those entity_langs.
+	langs: string[] | null
+	excludeIds: string[]
+	query: { kind: 'text'; text: string } | { kind: 'anchor'; ids: string[] }
 	limit?: number
 }
 
 type CorpusMatch = {
-	entity_type: 'phrase' | 'request'
+	entity_type: EntityType
 	entity_id: string
-	matched_via: 'phrase' | 'translation' | 'request'
+	matched_via: 'phrase' | 'translation' | 'request' | 'playlist'
 	matched_text: string
 	matched_lang: string
 	similarity: number
 }
 
 type SearchResult = {
-	entity_type: 'phrase' | 'request'
+	entity_type: EntityType
 	entity_id: string
 	lang: string
 	text: string
 	score: number
 	translations: Array<{ id: string; lang: string; text: string }>
-	// Backwards-compat for the chat client which expects `id` (phrase id) at
-	// the root and translations attached. Set to entity_id; chat results are
-	// always phrases at the moment.
-	id: string
+	// Playlists only: include description as a separate field for UI.
+	description?: string | null
 }
 
 const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')!
@@ -103,9 +92,6 @@ async function embedViaWorkersAI(text: string): Promise<number[]> {
 	}
 
 	const json = await res.json()
-
-	// BGE-M3 has shipped under multiple response shapes across Workers AI
-	// revisions; accept either flat embedding or wrapped payload.
 	const data =
 		json?.result?.data ?? json?.result?.response?.data ?? json?.response?.data
 	const vec = Array.isArray(data?.[0]) ? data[0] : null
@@ -130,30 +116,41 @@ async function hydrateResults(matches: CorpusMatch[]): Promise<SearchResult[]> {
 	const requestIds = matches
 		.filter((m) => m.entity_type === 'request')
 		.map((m) => m.entity_id)
+	const playlistIds = matches
+		.filter((m) => m.entity_type === 'playlist')
+		.map((m) => m.entity_id)
 
-	const [phraseRes, translationRes, requestRes] = await Promise.all([
-		phraseIds.length
-			? supabase
-					.from('phrase')
-					.select('id, text, lang, archived')
-					.in('id', phraseIds)
-					.eq('archived', false)
-			: Promise.resolve({ data: [], error: null }),
-		phraseIds.length
-			? supabase
-					.from('phrase_translation')
-					.select('id, phrase_id, text, lang, archived')
-					.in('phrase_id', phraseIds)
-					.eq('archived', false)
-			: Promise.resolve({ data: [], error: null }),
-		requestIds.length
-			? supabase
-					.from('phrase_request')
-					.select('id, prompt, lang, deleted')
-					.in('id', requestIds)
-					.eq('deleted', false)
-			: Promise.resolve({ data: [], error: null }),
-	])
+	const [phraseRes, translationRes, requestRes, playlistRes] =
+		await Promise.all([
+			phraseIds.length
+				? supabase
+						.from('phrase')
+						.select('id, text, lang, archived')
+						.in('id', phraseIds)
+						.eq('archived', false)
+				: Promise.resolve({ data: [], error: null }),
+			phraseIds.length
+				? supabase
+						.from('phrase_translation')
+						.select('id, phrase_id, text, lang, archived')
+						.in('phrase_id', phraseIds)
+						.eq('archived', false)
+				: Promise.resolve({ data: [], error: null }),
+			requestIds.length
+				? supabase
+						.from('phrase_request')
+						.select('id, prompt, lang, deleted')
+						.in('id', requestIds)
+						.eq('deleted', false)
+				: Promise.resolve({ data: [], error: null }),
+			playlistIds.length
+				? supabase
+						.from('phrase_playlist')
+						.select('id, title, description, lang, deleted')
+						.in('id', playlistIds)
+						.eq('deleted', false)
+				: Promise.resolve({ data: [], error: null }),
+		])
 
 	const phraseById = new Map(
 		(phraseRes.data ?? []).map((p) => [
@@ -165,6 +162,17 @@ async function hydrateResults(matches: CorpusMatch[]): Promise<SearchResult[]> {
 		(requestRes.data ?? []).map((r) => [
 			r.id,
 			r as { id: string; prompt: string; lang: string },
+		])
+	)
+	const playlistById = new Map(
+		(playlistRes.data ?? []).map((p) => [
+			p.id,
+			p as {
+				id: string
+				title: string
+				description: string | null
+				lang: string
+			},
 		])
 	)
 	const translationsByPhrase = new Map<
@@ -186,21 +194,32 @@ async function hydrateResults(matches: CorpusMatch[]): Promise<SearchResult[]> {
 				return {
 					entity_type: 'phrase',
 					entity_id: phrase.id,
-					id: phrase.id,
 					lang: phrase.lang,
 					text: phrase.text,
 					score: m.similarity,
 					translations: translationsByPhrase.get(phrase.id) ?? [],
 				}
 			}
-			const request = requestById.get(m.entity_id)
-			if (!request) return null
+			if (m.entity_type === 'request') {
+				const request = requestById.get(m.entity_id)
+				if (!request) return null
+				return {
+					entity_type: 'request',
+					entity_id: request.id,
+					lang: request.lang,
+					text: request.prompt,
+					score: m.similarity,
+					translations: [],
+				}
+			}
+			const playlist = playlistById.get(m.entity_id)
+			if (!playlist) return null
 			return {
-				entity_type: 'request',
-				entity_id: request.id,
-				id: request.id,
-				lang: request.lang,
-				text: request.prompt,
+				entity_type: 'playlist',
+				entity_id: playlist.id,
+				lang: playlist.lang,
+				text: playlist.title,
+				description: playlist.description,
 				score: m.similarity,
 				translations: [],
 			}
@@ -230,11 +249,9 @@ Deno.serve(async (req) => {
 		})
 	}
 
-	// Normalize legacy fields. langs=null means "search across all langs".
-	const langs: string[] | null =
-		body.langs !== undefined ? body.langs : body.lang ? [body.lang] : null
-	const excludeIds: string[] = body.excludeIds ?? body.excludePids ?? []
-	const matchLimit = body.limit ?? 3
+	const langs = body.langs ?? null
+	const excludeIds = body.excludeIds ?? []
+	const matchLimit = body.limit ?? 20
 	const normalizeLang = langs?.[0] ?? 'eng'
 
 	try {
@@ -260,9 +277,8 @@ Deno.serve(async (req) => {
 			if (error) throw error
 			matches = (data ?? []) as CorpusMatch[]
 		} else {
-			const anchorIds = body.query.ids ?? body.query.pids ?? []
 			const { data, error } = await supabase.rpc('search_by_anchors', {
-				anchor_ids: anchorIds,
+				anchor_ids: body.query.ids,
 				target_langs: langs,
 				exclude_ids: excludeIds,
 				match_limit: matchLimit,

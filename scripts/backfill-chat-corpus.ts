@@ -61,8 +61,8 @@ const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
 
 const BATCH_SIZE = 32
 
-type SourceType = 'phrase' | 'translation' | 'request'
-type EntityType = 'phrase' | 'request'
+type SourceType = 'phrase' | 'translation' | 'request' | 'playlist'
+type EntityType = 'phrase' | 'request' | 'playlist'
 
 type CorpusRow = {
 	source_type: SourceType
@@ -172,6 +172,33 @@ async function loadRequests(): Promise<CorpusRow[]> {
 		}))
 }
 
+async function loadPlaylists(): Promise<CorpusRow[]> {
+	const { data, error } = await supabase
+		.from('phrase_playlist')
+		.select('id, title, description, lang')
+		.eq('deleted', false)
+	if (error) throw error
+	return (data ?? [])
+		.map((p) => {
+			const text = [p.title, p.description ?? '']
+				.filter(Boolean)
+				.join('\n')
+				.trim()
+			return { p, text }
+		})
+		.filter(({ text }) => text.length > 0)
+		.map(({ p, text }) => ({
+			source_type: 'playlist',
+			source_id: p.id,
+			entity_type: 'playlist',
+			entity_id: p.id,
+			entity_lang: p.lang,
+			text_lang: p.lang,
+			text,
+			text_normalized: normalize(p.lang, text),
+		}))
+}
+
 async function loadExistingKeys(): Promise<Set<string>> {
 	const keys = new Set<string>()
 	let from = 0
@@ -275,15 +302,16 @@ async function main() {
 			: 'full backfill (text + text_normalized + embedding for every row)'
 	console.log(`Mode: ${mode}`)
 
-	console.log('Loading phrases + translations + requests…')
-	const [phrases, translations, requests] = await Promise.all([
+	console.log('Loading phrases + translations + requests + playlists…')
+	const [phrases, translations, requests, playlists] = await Promise.all([
 		loadPhrases(),
 		loadTranslations(),
 		loadRequests(),
+		loadPlaylists(),
 	])
-	let rows = [...phrases, ...translations, ...requests]
+	let rows = [...phrases, ...translations, ...requests, ...playlists]
 	console.log(
-		`Loaded ${phrases.length} phrases + ${translations.length} translations + ${requests.length} requests = ${rows.length} corpus rows`
+		`Loaded ${phrases.length} phrases + ${translations.length} translations + ${requests.length} requests + ${playlists.length} playlists = ${rows.length} corpus rows`
 	)
 
 	if (SKIP_EXISTING) {

@@ -181,17 +181,43 @@ export async function chatSearchMock(
 	return filtered.slice(0, 3)
 }
 
+// Edge Function returns mixed-entity results; chat only renders phrases.
+type EdgeResult = {
+	entity_type: 'phrase' | 'request' | 'playlist'
+	entity_id: string
+	lang: string
+	text: string
+	score: number
+	translations: Array<{ id: string; lang: string; text: string }>
+}
+
 export async function chatSearchLive(
 	input: ChatSearchInput
 ): Promise<ChatResultPhraseType[]> {
-	const result = await supabase.functions.invoke<ChatResultPhraseType[]>(
-		'chat-search',
-		{ body: input }
-	)
+	const body = {
+		langs: [input.lang],
+		excludeIds: input.excludePids,
+		query:
+			input.query.kind === 'text'
+				? { kind: 'text' as const, text: input.query.text }
+				: { kind: 'anchor' as const, ids: input.query.pids },
+		limit: 3,
+	}
+	const result = await supabase.functions.invoke<EdgeResult[]>('chat-search', {
+		body,
+	})
 	if (result.error) {
 		throw new Error(`chat-search failed: ${String(result.error)}`)
 	}
-	return result.data ?? []
+	return (result.data ?? [])
+		.filter((r) => r.entity_type === 'phrase')
+		.map((r) => ({
+			id: r.entity_id,
+			lang: r.lang,
+			text: r.text,
+			score: r.score,
+			translations: r.translations,
+		}))
 }
 
 export const chatSearch = USE_MOCK ? chatSearchMock : chatSearchLive

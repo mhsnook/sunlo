@@ -16,7 +16,7 @@ create table if not exists "public"."search_corpus" (
 	"id" uuid primary key default gen_random_uuid(),
 	-- Which source table this row came from. Drives backfill ingestion and
 	-- shows up in search results as `matched_via` (which kind of text matched).
-	"source_type" text not null check (source_type in ('phrase', 'translation', 'request')),
+	"source_type" text not null check (source_type in ('phrase', 'translation', 'request', 'playlist')),
 	"source_id" uuid not null,
 	-- The downstream entity this row "belongs to". For phrase rows: own id.
 	-- For translation rows: parent phrase's id (so translation matches roll
@@ -24,7 +24,7 @@ create table if not exists "public"."search_corpus" (
 	"entity_id" uuid not null,
 	-- 'phrase' for phrase + translation rows; 'request' for request rows.
 	-- The result side uses this to route to the right detail page.
-	"entity_type" text not null check (entity_type in ('phrase', 'request')),
+	"entity_type" text not null check (entity_type in ('phrase', 'request', 'playlist')),
 	-- Lang of the OWNING entity (used to filter search results). For a
 	-- Hindi phrase's English translation row, entity_lang='hin' (the
 	-- phrase's lang). Denormalized — doesn't auto-update if a phrase's
@@ -125,6 +125,12 @@ create or replace function "public"."search_by_query" (
 				select 1 from phrase_request
 				where id = mp.entity_id and deleted = false
 			)
+		) or (
+			mp.entity_type = 'playlist'
+			and exists (
+				select 1 from phrase_playlist
+				where id = mp.entity_id and deleted = false
+			)
 		)
 	),
 	deduped as (
@@ -187,13 +193,14 @@ create or replace function "public"."search_by_anchors" (
 declare
 	avg_embedding vector(1024);
 begin
-	-- Average over primary rows (phrase + request), not translations.
-	-- Translations capture the entity's meaning in another language;
-	-- including them in the centroid would smear the semantic anchor
-	-- toward whatever target language the translations happen to be in.
+	-- Average over primary rows (phrase + request + playlist), not
+	-- translations. Translations capture the entity's meaning in another
+	-- language; including them in the centroid would smear the semantic
+	-- anchor toward whatever target language the translations happen to
+	-- be in.
 	select avg(embedding) into avg_embedding
 	from search_corpus
-	where source_type in ('phrase', 'request')
+	where source_type in ('phrase', 'request', 'playlist')
 		and entity_id = any(anchor_ids);
 
 	if avg_embedding is null then
