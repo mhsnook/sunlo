@@ -1941,7 +1941,7 @@ export type Database = {
 				Args: {
 					cursor_created_at?: string
 					cursor_id?: string
-					lang_filter: string
+					lang_filter?: string[] | null
 					query: string
 					result_limit?: number
 					sort_by?: string
