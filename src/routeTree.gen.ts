@@ -28,10 +28,12 @@ import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSetNewPasswordRouteImport } from './routes/_auth/set-new-password'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as UserSearchIndexRouteImport } from './routes/_user/search.index'
 import { Route as UserProfileIndexRouteImport } from './routes/_user/profile/index'
 import { Route as UserLearnIndexRouteImport } from './routes/_user/learn/index'
 import { Route as UserFriendsIndexRouteImport } from './routes/_user/friends/index'
 import { Route as UserAdminIndexRouteImport } from './routes/_user/admin/index'
+import { Route as UserSearchTestRouteImport } from './routes/_user/search.test'
 import { Route as UserProfileChangePasswordRouteImport } from './routes/_user/profile/change-password'
 import { Route as UserProfileChangeEmailConfirmRouteImport } from './routes/_user/profile/change-email-confirm'
 import { Route as UserProfileChangeEmailRouteImport } from './routes/_user/profile/change-email'
@@ -209,6 +211,11 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
+const UserSearchIndexRoute = UserSearchIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserSearchRoute,
+} as any)
 const UserProfileIndexRoute = UserProfileIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -236,6 +243,11 @@ const UserFriendsInviteLazyRoute = UserFriendsInviteLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_user/friends/invite.lazy').then((d) => d.Route),
 )
+const UserSearchTestRoute = UserSearchTestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => UserSearchRoute,
+} as any)
 const UserProfileChangePasswordRoute =
   UserProfileChangePasswordRouteImport.update({
     id: '/change-password',
@@ -486,7 +498,7 @@ export interface FileRoutesByFullPath {
   '/learn': typeof UserLearnRouteWithChildren
   '/notifications': typeof UserNotificationsRoute
   '/profile': typeof UserProfileRouteWithChildren
-  '/search': typeof UserSearchRoute
+  '/search': typeof UserSearchRouteWithChildren
   '/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
@@ -501,11 +513,13 @@ export interface FileRoutesByFullPath {
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/search/test': typeof UserSearchTestRoute
   '/friends/invite': typeof UserFriendsInviteLazyRoute
   '/admin/': typeof UserAdminIndexRoute
   '/friends/': typeof UserFriendsIndexRoute
   '/learn/': typeof UserLearnIndexRoute
   '/profile/': typeof UserProfileIndexRoute
+  '/search/': typeof UserSearchIndexRoute
   '/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
@@ -553,7 +567,6 @@ export interface FileRoutesByTo {
   '/accept-invite': typeof UserAcceptInviteRoute
   '/getting-started': typeof UserGettingStartedRoute
   '/notifications': typeof UserNotificationsRoute
-  '/search': typeof UserSearchRoute
   '/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats': typeof ChatsIndexLazyRoute
@@ -564,11 +577,13 @@ export interface FileRoutesByTo {
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/search/test': typeof UserSearchTestRoute
   '/friends/invite': typeof UserFriendsInviteLazyRoute
   '/admin': typeof UserAdminIndexRoute
   '/friends': typeof UserFriendsIndexRoute
   '/learn': typeof UserLearnIndexRoute
   '/profile': typeof UserProfileIndexRoute
+  '/search': typeof UserSearchIndexRoute
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
@@ -620,7 +635,7 @@ export interface FileRoutesById {
   '/_user/learn': typeof UserLearnRouteWithChildren
   '/_user/notifications': typeof UserNotificationsRoute
   '/_user/profile': typeof UserProfileRouteWithChildren
-  '/_user/search': typeof UserSearchRoute
+  '/_user/search': typeof UserSearchRouteWithChildren
   '/_user/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
@@ -635,11 +650,13 @@ export interface FileRoutesById {
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
   '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/_user/profile/change-password': typeof UserProfileChangePasswordRoute
+  '/_user/search/test': typeof UserSearchTestRoute
   '/_user/friends/invite': typeof UserFriendsInviteLazyRoute
   '/_user/admin/': typeof UserAdminIndexRoute
   '/_user/friends/': typeof UserFriendsIndexRoute
   '/_user/learn/': typeof UserLearnIndexRoute
   '/_user/profile/': typeof UserProfileIndexRoute
+  '/_user/search/': typeof UserSearchIndexRoute
   '/_user/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/_user/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
   '/_user/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
@@ -709,11 +726,13 @@ export interface FileRouteTypes {
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
+    | '/search/test'
     | '/friends/invite'
     | '/admin/'
     | '/friends/'
     | '/learn/'
     | '/profile/'
+    | '/search/'
     | '/admin/$lang/phrases'
     | '/admin/$lang/requests'
     | '/friends/chats/$friendUid'
@@ -761,7 +780,6 @@ export interface FileRouteTypes {
     | '/accept-invite'
     | '/getting-started'
     | '/notifications'
-    | '/search'
     | '/welcome'
     | '/chats/$lang'
     | '/chats'
@@ -772,11 +790,13 @@ export interface FileRouteTypes {
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
+    | '/search/test'
     | '/friends/invite'
     | '/admin'
     | '/friends'
     | '/learn'
     | '/profile'
+    | '/search'
     | '/friends/chats/$friendUid'
     | '/learn/$lang/bulk-add'
     | '/learn/$lang/contributions'
@@ -842,11 +862,13 @@ export interface FileRouteTypes {
     | '/_user/profile/change-email'
     | '/_user/profile/change-email-confirm'
     | '/_user/profile/change-password'
+    | '/_user/search/test'
     | '/_user/friends/invite'
     | '/_user/admin/'
     | '/_user/friends/'
     | '/_user/learn/'
     | '/_user/profile/'
+    | '/_user/search/'
     | '/_user/admin/$lang/phrases'
     | '/_user/admin/$lang/requests'
     | '/_user/friends/chats/$friendUid'
@@ -1063,6 +1085,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthForgotPasswordRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_user/search/': {
+      id: '/_user/search/'
+      path: '/'
+      fullPath: '/search/'
+      preLoaderRoute: typeof UserSearchIndexRouteImport
+      parentRoute: typeof UserSearchRoute
+    }
     '/_user/profile/': {
       id: '/_user/profile/'
       path: '/'
@@ -1097,6 +1126,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/friends/invite'
       preLoaderRoute: typeof UserFriendsInviteLazyRouteImport
       parentRoute: typeof UserFriendsRoute
+    }
+    '/_user/search/test': {
+      id: '/_user/search/test'
+      path: '/test'
+      fullPath: '/search/test'
+      preLoaderRoute: typeof UserSearchTestRouteImport
+      parentRoute: typeof UserSearchRoute
     }
     '/_user/profile/change-password': {
       id: '/_user/profile/change-password'
@@ -1648,6 +1684,20 @@ const UserProfileRouteWithChildren = UserProfileRoute._addFileChildren(
   UserProfileRouteChildren,
 )
 
+interface UserSearchRouteChildren {
+  UserSearchTestRoute: typeof UserSearchTestRoute
+  UserSearchIndexRoute: typeof UserSearchIndexRoute
+}
+
+const UserSearchRouteChildren: UserSearchRouteChildren = {
+  UserSearchTestRoute: UserSearchTestRoute,
+  UserSearchIndexRoute: UserSearchIndexRoute,
+}
+
+const UserSearchRouteWithChildren = UserSearchRoute._addFileChildren(
+  UserSearchRouteChildren,
+)
+
 interface UserRouteChildren {
   UserAcceptInviteRoute: typeof UserAcceptInviteRoute
   UserAdminRoute: typeof UserAdminRouteWithChildren
@@ -1656,7 +1706,7 @@ interface UserRouteChildren {
   UserLearnRoute: typeof UserLearnRouteWithChildren
   UserNotificationsRoute: typeof UserNotificationsRoute
   UserProfileRoute: typeof UserProfileRouteWithChildren
-  UserSearchRoute: typeof UserSearchRoute
+  UserSearchRoute: typeof UserSearchRouteWithChildren
   UserWelcomeRoute: typeof UserWelcomeRoute
 }
 
@@ -1668,7 +1718,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserLearnRoute: UserLearnRouteWithChildren,
   UserNotificationsRoute: UserNotificationsRoute,
   UserProfileRoute: UserProfileRouteWithChildren,
-  UserSearchRoute: UserSearchRoute,
+  UserSearchRoute: UserSearchRouteWithChildren,
   UserWelcomeRoute: UserWelcomeRoute,
 }
 

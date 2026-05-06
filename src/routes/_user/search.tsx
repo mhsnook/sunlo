@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
 import { useDebounceWithFlush } from '@/hooks/use-debounce'
 import { eq, ilike } from '@tanstack/db'
@@ -37,7 +37,7 @@ import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
-import { useHybridSmartSearch } from '@/hooks/use-hybrid-search'
+import { useHybridSearch } from '@/hooks/use-hybrid-search'
 
 import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
 import type { SearchResultType } from '@/types/search-result'
@@ -49,8 +49,11 @@ const SearchParams = z.object({
 	langs: z.string().optional(),
 })
 
+// /search is a layout that just renders its children — the actual search UI
+// lives in search.index.tsx (for /search) and search.test.tsx (for the
+// hidden /search/test diagnostic route). Both render <SearchPage />.
 export const Route = createFileRoute('/_user/search')({
-	component: SearchPage,
+	component: () => <Outlet />,
 	validateSearch: SearchParams,
 	beforeLoad: () => ({
 		titleBar: {
@@ -63,7 +66,7 @@ export const Route = createFileRoute('/_user/search')({
 
 // --- Main Component ---
 
-function SearchPage() {
+export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 	const { q: initialQuery, langs: initialLangs } = Route.useSearch()
 
 	const [inputText, setInputText] = useState(initialQuery ?? '')
@@ -137,7 +140,7 @@ function SearchPage() {
 		(typeFilters.size === 0 || typeFilters.has('phrase'))
 	)
 
-	const smartSearch = useHybridSmartSearch(
+	const smartSearch = useHybridSearch(
 		langFilter ? [langFilter] : [],
 		shouldTrigram ? effectiveText : '',
 		'relevance'
@@ -240,8 +243,14 @@ function SearchPage() {
 	)
 
 	// --- Merge and sort results by relevance ---
+	type ScoredPhrase = PhraseFullFilteredType & {
+		semanticScore?: number
+		similarityScore?: number
+		combinedScore?: number
+		popularityScore?: number
+	}
 	type ScoredResult =
-		| { type: 'phrase'; score: number; phrase: PhraseFullFilteredType }
+		| { type: 'phrase'; score: number; phrase: ScoredPhrase }
 		| { type: 'playlist'; score: number; playlist: PhrasePlaylistType }
 		| { type: 'request'; score: number; request: PhraseRequestType }
 
@@ -417,16 +426,25 @@ function SearchPage() {
 										<PhraseResultRow
 											key={`phrase-${item.phrase.id}`}
 											phrase={item.phrase}
+											diagnostic={diagnostic}
 										/>
 									) : item.type === 'playlist' ? (
 										<PlaylistResultRow
 											key={`playlist-${item.playlist.id}`}
 											playlist={item.playlist}
+											diagnostic={diagnostic}
+											semanticScore={
+												smartSearch.semanticById.get(item.playlist.id) ?? 0
+											}
 										/>
 									) : (
 										<RequestResultRow
 											key={`request-${item.request.id}`}
 											request={item.request}
+											diagnostic={diagnostic}
+											semanticScore={
+												smartSearch.semanticById.get(item.request.id) ?? 0
+											}
 										/>
 									)
 								)}
@@ -658,7 +676,16 @@ function TypeBadge({ type }: { type: SearchResultType }) {
 	)
 }
 
-function PhraseResultRow({ phrase }: { phrase: PhraseFullFilteredType }) {
+function PhraseResultRow({
+	phrase,
+	diagnostic = false,
+}: {
+	phrase: PhraseFullFilteredType & {
+		semanticScore?: number
+		similarityScore?: number
+	}
+	diagnostic?: boolean
+}) {
 	const translations = phrase.translations_mine?.length
 		? phrase.translations_mine
 		: phrase.translations_other?.filter((t) => t.lang === 'eng').length
@@ -696,23 +723,64 @@ function PhraseResultRow({ phrase }: { phrase: PhraseFullFilteredType }) {
 					</div>
 				)}
 			</div>
-			<div className="flex shrink-0 items-center gap-3">
+			<div className="flex shrink-0 items-start gap-3">
 				{(phrase.count_learners ?? 0) > 0 && (
 					<span
-						className="text-muted-foreground/60 flex items-center gap-0.5 text-xs"
+						className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs"
 						title={`${phrase.count_learners} learner${phrase.count_learners !== 1 ? 's' : ''}`}
 					>
 						<Users size={10} />
 						{phrase.count_learners}
 					</span>
 				)}
-				<TypeBadge type="phrase" />
+				<div className="flex flex-col items-end gap-1">
+					<TypeBadge type="phrase" />
+					{diagnostic && (
+						<ScoreBreakdown
+							semantic={phrase.semanticScore ?? 0}
+							trigram={phrase.similarityScore ?? 0}
+						/>
+					)}
+				</div>
 			</div>
 		</Link>
 	)
 }
 
-function PlaylistResultRow({ playlist }: { playlist: PhrasePlaylistType }) {
+const fmt2 = (n: number) => n.toFixed(2)
+
+function ScoreBreakdown({
+	semantic,
+	trigram = 0,
+}: {
+	semantic: number
+	trigram?: number
+}) {
+	const semContribution = Math.sqrt(semantic)
+	const triContribution = Math.sqrt(trigram)
+	const combined = semContribution + triContribution
+	return (
+		<div className="text-muted-foreground/70 flex flex-col items-end gap-0 font-mono text-[10px] leading-tight tabular-nums">
+			<span>
+				Ω {fmt2(semantic)} → {fmt2(semContribution)}
+			</span>
+			<span>
+				Δ {fmt2(trigram)} → {fmt2(triContribution)}
+			</span>
+			<span className="text-foreground font-semibold">Σ {fmt2(combined)}</span>
+		</div>
+	)
+}
+
+function PlaylistResultRow({
+	playlist,
+	diagnostic = false,
+	semanticScore = 0,
+}: {
+	playlist: PhrasePlaylistType
+	diagnostic?: boolean
+	semanticScore?: number
+}) {
 	return (
 		<Link
 			to="/learn/$lang/playlists/$playlistId"
@@ -730,20 +798,31 @@ function PlaylistResultRow({ playlist }: { playlist: PhrasePlaylistType }) {
 					</p>
 				)}
 			</div>
-			<div className="flex shrink-0 items-center gap-3">
+			<div className="flex shrink-0 items-start gap-3">
 				{playlist.upvote_count > 0 && (
-					<span className="text-muted-foreground/60 flex items-center gap-0.5 text-xs">
+					<span className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs">
 						<ArrowUp size={10} />
 						{playlist.upvote_count}
 					</span>
 				)}
-				<TypeBadge type="playlist" />
+				<div className="flex flex-col items-end gap-1">
+					<TypeBadge type="playlist" />
+					{diagnostic && <ScoreBreakdown semantic={semanticScore} />}
+				</div>
 			</div>
 		</Link>
 	)
 }
 
-function RequestResultRow({ request }: { request: PhraseRequestType }) {
+function RequestResultRow({
+	request,
+	diagnostic = false,
+	semanticScore = 0,
+}: {
+	request: PhraseRequestType
+	diagnostic?: boolean
+	semanticScore?: number
+}) {
 	return (
 		<Link
 			to="/learn/$lang/requests/$id"
@@ -756,14 +835,17 @@ function RequestResultRow({ request }: { request: PhraseRequestType }) {
 					<span className="truncate font-semibold">{request.prompt}</span>
 				</div>
 			</div>
-			<div className="flex shrink-0 items-center gap-3">
+			<div className="flex shrink-0 items-start gap-3">
 				{request.upvote_count > 0 && (
-					<span className="text-muted-foreground/60 flex items-center gap-0.5 text-xs">
+					<span className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs">
 						<ArrowUp size={10} />
 						{request.upvote_count}
 					</span>
 				)}
-				<TypeBadge type="request" />
+				<div className="flex flex-col items-end gap-1">
+					<TypeBadge type="request" />
+					{diagnostic && <ScoreBreakdown semantic={semanticScore} />}
+				</div>
 			</div>
 		</Link>
 	)
