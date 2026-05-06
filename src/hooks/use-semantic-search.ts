@@ -15,10 +15,10 @@ import supabase from '@/lib/supabase-client'
 //   - 'anchor' — caller passes entity_ids; edge function averages their
 //                stored embeddings server-side. No Workers AI call.
 
-export type SemanticEntityType = 'phrase' | 'request' | 'playlist'
+export type SearchEntityType = 'phrase' | 'request' | 'playlist'
 
 export type SemanticResult = {
-	entity_type: SemanticEntityType
+	entity_type: SearchEntityType
 	entity_id: string
 	lang: string
 	text: string
