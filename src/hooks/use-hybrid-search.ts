@@ -28,45 +28,33 @@ export type HybridSearchResult = PhraseFullFilteredType & {
 	similarityScore: number // trigram (0..1)
 	popularityScore: number
 	semanticScore: number // cosine (0..1), 0 if not surfaced by semantic
+	combinedScore: number // 3·sqrt(semanticScore/4) + similarityScore
 }
 
 const SEARCH_PAGE_SIZE = 20
 const SEMANTIC_TOP_K = 20
 const SEARCH_DEBOUNCE_MS = 300
 const MIN_QUERY_LENGTH = 2
-const RRF_K = 60
 
-/**
- * Reciprocal rank fusion across multiple rankings of phrase IDs. Each ranking
- * is a top-down list (best first). Items appearing in multiple rankings get
- * their RRF contributions summed. Returns ID → fused score, ordered desc.
- *
- * Standard k=60 from the original RRF paper. No score-scale normalization
- * needed, which is the reason RRF is the right tool here (trigram similarity
- * and cosine similarity are not directly comparable).
- */
-function reciprocalRankFusion(
-	rankings: Array<Array<string>>,
-	k = RRF_K
-): Map<string, number> {
-	const scores = new Map<string, number>()
-	for (const ranking of rankings) {
-		ranking.forEach((id, idx) => {
-			const rank = idx + 1
-			scores.set(id, (scores.get(id) ?? 0) + 1 / (k + rank))
-		})
-	}
-	return scores
+// Symmetric score-blend: sqrt(x) + sqrt(y). Sqrt amplifies low values on
+// both sides — trigram similarity in the 0.15-0.30 range often surfaces
+// genuinely-relevant matches (typos, inflections, partial substring), and
+// the linear-trigram version was burying them. Semantic cosine values are
+// already higher in absolute terms, so they don't need an extra weight to
+// stay near the top.
+function combinedScore(semantic: number, trigram: number): number {
+	return Math.sqrt(semantic) + Math.sqrt(trigram)
 }
 
 /**
- * Hybrid smart search for phrases: blends trigram (lexical) and semantic
- * (BGE-M3 cosine) rankings.
+ * Hybrid search for phrases: blends trigram (lexical) and semantic (BGE-M3
+ * cosine) signals into a single ranking.
  *
  * Trigram is paginated — that's the source of "load more" results. Semantic
- * is a one-shot top-K against the search Edge Function. RRF merges the
- * trigram first page with the semantic results to compute the visible
- * ordering; subsequent trigram pages append directly without re-blending.
+ * is a one-shot top-K against the search Edge Function. The first page of
+ * trigram + the semantic results get blended via combinedScore (above);
+ * subsequent trigram pages append in their original order without
+ * re-blending (no semantic data exists for items past the first page).
  *
  * `langs` filters the result phrases to those languages. Pass an empty
  * array to search across all langs; both trigram and semantic accept null
@@ -78,7 +66,7 @@ function reciprocalRankFusion(
  * by semantic are blended into this hook's results; request entities the
  * Edge Function returns are dropped here (route handles them separately).
  */
-export function useHybridSmartSearch(
+export function useHybridSearch(
 	langs: string[],
 	query: string,
 	sortBy: SmartSearchSortBy = 'relevance'
@@ -125,7 +113,7 @@ export function useHybridSmartSearch(
 				'search',
 				{
 					body: {
-						langs: langs.length > 0 ? langs : null,
+						langs: langFilter,
 						excludeIds: [],
 						query: { kind: 'text', text: debouncedQuery },
 						limit: SEMANTIC_TOP_K,
@@ -146,11 +134,9 @@ export function useHybridSmartSearch(
 		staleTime: 5 * 60 * 1000,
 	})
 
-	// 3. RRF blend of (trigram page 1) + semantic-phrase-results, then
-	// append remaining trigram pages in their original order (deduped).
-	// Request entities from the semantic side are dropped here — the route
-	// renders requests separately (and the trigram side has no request
-	// matches at all today).
+	// 3. Score-blend (trigram page 1) ∪ (semantic phrases), sort by
+	// combinedScore desc, then append remaining trigram pages in their
+	// original order (deduped).
 	const trigramPages = trigramQuery.data?.pages ?? []
 	const trigramFirst = trigramPages[0] ?? []
 	const trigramRest = trigramPages.slice(1).flat()
@@ -158,16 +144,33 @@ export function useHybridSmartSearch(
 		(r) => r.entity_type === 'phrase'
 	)
 
-	const blended = reciprocalRankFusion([
-		trigramFirst.map((r) => r.id),
-		semanticPhrases.map((r) => r.entity_id),
-	])
-	const blendedIds = Array.from(blended.entries())
-		.toSorted((a, b) => b[1] - a[1])
-		.map(([id]) => id)
+	const trigramScoresById = new Map(trigramPages.flat().map((r) => [r.id, r]))
+	// Phrase-only — used for blending into the phrase ranking.
+	const semanticScoresById = new Map(
+		semanticPhrases.map((r) => [r.entity_id, r.score])
+	)
+	// All entity types — exposed so callers can show diagnostic info on
+	// non-phrase result rows (requests, playlists).
+	const semanticById = new Map(
+		(semanticQuery.data ?? []).map((r) => [r.entity_id, r.score])
+	)
 
-	const seen = new Set(blendedIds)
-	const tail = trigramRest.map((r) => r.id).filter((id) => !seen.has(id))
+	const blendIds = new Set<string>([
+		...trigramFirst.map((r) => r.id),
+		...semanticPhrases.map((r) => r.entity_id),
+	])
+	const blendedIds = [...blendIds]
+		.map((id) => ({
+			id,
+			score: combinedScore(
+				semanticScoresById.get(id) ?? 0,
+				trigramScoresById.get(id)?.similarity_score ?? 0
+			),
+		}))
+		.toSorted((a, b) => b.score - a.score)
+		.map(({ id }) => id)
+
+	const tail = trigramRest.map((r) => r.id).filter((id) => !blendIds.has(id))
 	const matchingIds = [...blendedIds, ...tail]
 
 	// 4. Hydrate full phrase data from local collection.
@@ -181,11 +184,6 @@ export function useHybridSmartSearch(
 		[matchingIds.join(',')]
 	)
 
-	const trigramScoresById = new Map(trigramPages.flat().map((r) => [r.id, r]))
-	const semanticScoresById = new Map(
-		semanticPhrases.map((r) => [r.entity_id, r.score])
-	)
-
 	const results: Array<HybridSearchResult> = []
 	for (const id of matchingIds) {
 		const phrase = phrasesQuery.data?.find((p) => p.id === id)
@@ -195,16 +193,20 @@ export function useHybridSmartSearch(
 			languagesToShow ?? []
 		)
 		const trigramRow = trigramScoresById.get(id)
+		const semanticScore = semanticScoresById.get(id) ?? 0
+		const similarityScore = trigramRow?.similarity_score ?? 0
 		results.push({
 			...phraseFiltered,
-			similarityScore: trigramRow?.similarity_score ?? 0,
+			similarityScore,
 			popularityScore: trigramRow?.popularity_score ?? 0,
-			semanticScore: semanticScoresById.get(id) ?? 0,
+			semanticScore,
+			combinedScore: combinedScore(semanticScore, similarityScore),
 		})
 	}
 
 	return {
 		data: results,
+		semanticById,
 		isLoading:
 			trigramQuery.isLoading ||
 			trigramQuery.isFetching ||
