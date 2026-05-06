@@ -626,7 +626,7 @@ alter function "public"."refresh_phrase_search_index" () owner to "postgres";
 
 create or replace function "public"."search_phrases_smart" (
 	"query" "text",
-	"lang_filter" "text",
+	"lang_filter" "text" [] default null::"text" [],
 	"sort_by" "text" default 'relevance'::"text",
 	"result_limit" integer default 20,
 	"cursor_created_at" timestamp with time zone default null::timestamp with time zone,
@@ -640,10 +640,8 @@ create or replace function "public"."search_phrases_smart" (
 DECLARE
   normalized_query TEXT;
 BEGIN
-  -- Normalize query: lowercase and trim
   normalized_query := LOWER(TRIM(query));
 
-  -- Early exit for empty or too-short queries
   IF normalized_query = '' OR LENGTH(normalized_query) < 2 THEN
     RETURN;
   END IF;
@@ -654,22 +652,16 @@ BEGIN
       psi.id,
       psi.created_at,
       psi.popularity,
-      -- Compute similarity score with boosts for different match types
       GREATEST(
-        -- Base trigram similarity
         similarity(psi.search_text, normalized_query),
-        -- Boost for exact substring matches
         CASE WHEN psi.search_text ILIKE '%' || normalized_query || '%' THEN 0.4 ELSE 0 END,
-        -- Boost for prefix matches (word starts with query)
         CASE WHEN psi.search_text ILIKE normalized_query || '%' THEN 0.6 ELSE 0 END,
-        -- Boost for word-boundary matches
         CASE WHEN psi.search_text ILIKE '% ' || normalized_query || '%' THEN 0.5 ELSE 0 END
       ) AS sim_score
     FROM phrase_search_index psi
     WHERE
-      psi.lang = lang_filter
+      (lang_filter IS NULL OR psi.lang = ANY(lang_filter))
       AND (
-        -- Match via substring OR trigram similarity
         psi.search_text ILIKE '%' || normalized_query || '%'
         OR similarity(psi.search_text, normalized_query) > 0.1
       )
@@ -681,14 +673,11 @@ BEGIN
     scored.created_at
   FROM scored
   WHERE
-    -- Cursor-based pagination: skip items we've already seen
     (cursor_created_at IS NULL AND cursor_id IS NULL)
     OR (scored.created_at, scored.id) < (cursor_created_at, cursor_id)
   ORDER BY
-    -- Primary sort by user preference
     CASE WHEN sort_by = 'relevance' THEN scored.sim_score END DESC NULLS LAST,
     CASE WHEN sort_by = 'popularity' THEN scored.popularity END DESC NULLS LAST,
-    -- Secondary sort for stable pagination
     scored.created_at DESC,
     scored.id DESC
   LIMIT result_limit;
@@ -697,7 +686,7 @@ $$;
 
 alter function "public"."search_phrases_smart" (
 	"query" "text",
-	"lang_filter" "text",
+	"lang_filter" "text" [],
 	"sort_by" "text",
 	"result_limit" integer,
 	"cursor_created_at" timestamp with time zone,
@@ -3389,7 +3378,7 @@ grant all on function "public"."refresh_phrase_search_index" () to "service_role
 
 grant all on function "public"."search_phrases_smart" (
 	"query" "text",
-	"lang_filter" "text",
+	"lang_filter" "text" [],
 	"sort_by" "text",
 	"result_limit" integer,
 	"cursor_created_at" timestamp with time zone,
@@ -3398,7 +3387,7 @@ grant all on function "public"."search_phrases_smart" (
 
 grant all on function "public"."search_phrases_smart" (
 	"query" "text",
-	"lang_filter" "text",
+	"lang_filter" "text" [],
 	"sort_by" "text",
 	"result_limit" integer,
 	"cursor_created_at" timestamp with time zone,
@@ -3407,7 +3396,7 @@ grant all on function "public"."search_phrases_smart" (
 
 grant all on function "public"."search_phrases_smart" (
 	"query" "text",
-	"lang_filter" "text",
+	"lang_filter" "text" [],
 	"sort_by" "text",
 	"result_limit" integer,
 	"cursor_created_at" timestamp with time zone,
