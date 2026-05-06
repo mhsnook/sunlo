@@ -11,6 +11,73 @@ safety pause before any non-local write.
 
 ---
 
+## `backfill-chat-corpus.ts`
+
+Populates the `chat_corpus` table with denormalized phrase + translation
+text and BGE-M3 embeddings (1024d). The chat search feature (`/chats`,
+and the semantic side of `/search`) reads from this table — without it,
+`/chats/$lang` returns empty results and `/search` falls back to
+trigram-only ranking.
+
+`supabase db reset` wipes `chat_corpus`. Run this script afterwards
+(or any time the seed data or `src/features/chat/normalize.ts` rules
+change) to repopulate it.
+
+### Local
+
+Local `.env` is loaded automatically. You need all four vars:
+
+```bash
+# Full populate — text + text_normalized + embedding (hits Workers AI):
+pnpm tsx scripts/backfill-chat-corpus.ts
+
+# Re-normalize without re-embedding (skips Workers AI entirely):
+pnpm tsx scripts/backfill-chat-corpus.ts --normalize-only
+```
+
+Required env vars:
+
+| Var                         | When               |
+| --------------------------- | ------------------ |
+| `VITE_SUPABASE_URL`         | always             |
+| `SUPABASE_SERVICE_ROLE_KEY` | always             |
+| `CLOUDFLARE_ACCOUNT_ID`     | full backfill only |
+| `CLOUDFLARE_API_TOKEN`      | full backfill only |
+
+`--normalize-only` updates `text` + `text_normalized` on existing rows
+and never calls Workers AI. Use it after tweaking
+`src/features/chat/normalize.ts` when you don't want to burn embedding
+credits re-vectorizing things that barely changed. Rows that don't yet
+exist in the corpus are skipped (run a full backfill first to seed
+them).
+
+### Against a remote project (preview branch, staging, prod)
+
+Same env-var override pattern as `recompute-reviews.ts` — inline the
+remote creds and they beat your local `.env`:
+
+```bash
+VITE_SUPABASE_URL="https://<ref>.supabase.co" \
+SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
+CLOUDFLARE_ACCOUNT_ID="..." \
+CLOUDFLARE_API_TOKEN="..." \
+pnpm tsx scripts/backfill-chat-corpus.ts
+```
+
+The upsert is idempotent on `(source_type, source_id)`, so re-runs
+update existing rows in place. Cost shape: ~10 batched calls of 32 to
+Workers AI per ~300 rows, ~30 seconds total. Free-tier eligible at
+prototype scale.
+
+### CLI flags
+
+| Flag               | Effect                                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| _(none)_           | Full backfill. Reads phrases + translations, normalizes, embeds, upserts.      |
+| `--normalize-only` | Updates `text` + `text_normalized` on existing rows only. No Workers AI calls. |
+
+---
+
 ## `reclassify-phase1-duplicates.ts`
 
 Finds groups of `day_first_review = true` rows that share the same
