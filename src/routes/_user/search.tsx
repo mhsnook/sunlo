@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
-import { useDebounce } from '@/hooks/use-debounce'
+import { useDebounceWithFlush } from '@/hooks/use-debounce'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
@@ -67,7 +67,7 @@ function SearchPage() {
 	const { q: initialQuery, langs: initialLangs } = Route.useSearch()
 
 	const [inputText, setInputText] = useState(initialQuery ?? '')
-	const debouncedText = useDebounce(inputText, 150)
+	const [debouncedText, flushSearch] = useDebounceWithFlush(inputText, 150)
 	const [filters, setFilters] = useState<Array<SearchFilter>>(() => {
 		if (!initialLangs) return []
 		const langCodes = initialLangs.split(',').filter((l) => l in allLanguages)
@@ -562,6 +562,12 @@ function SearchPage() {
 								data-testid="search-input"
 								value={inputText}
 								onChange={(e) => setInputText(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault()
+										flushSearch()
+									}
+								}}
 								placeholder="Search phrases, playlists, and requests..."
 								className="ps-9"
 							/>
