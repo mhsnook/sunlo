@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
 import { useDebounceWithFlush } from '@/hooks/use-debounce'
-import { eq, ilike } from '@tanstack/db'
+import { eq } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
@@ -25,19 +25,20 @@ import { Badge, LangBadge } from '@/components/ui/badge'
 import allLanguages from '@/lib/languages'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { cn } from '@/lib/utils'
-import { phrasesFull } from '@/features/phrases/live'
 import {
 	useAllLangTags,
 	useLanguagesWithPhrases,
 } from '@/features/languages/hooks'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { phraseRequestsActive } from '@/features/requests/live'
-import { useLanguagesToShow } from '@/features/profile/hooks'
-import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
-import { useHybridSearch } from '@/hooks/use-hybrid-search'
+import {
+	useHybridSearch,
+	combinedScore,
+	type HybridSearchResult,
+} from '@/hooks/use-hybrid-search'
 
 import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
 import type { SearchResultType } from '@/types/search-result'
@@ -86,8 +87,6 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 	)
 	const scrollRef = useRef<HTMLDivElement>(null)
 
-	const { data: languagesToShow } = useLanguagesToShow()
-
 	// Derive explicit filter values
 	const langFilter = filters.find((f) => f.type === 'lang')?.value
 	const tagFilters = filters.filter((f) => f.type === 'tag').map((f) => f.value)
@@ -125,20 +124,14 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 
 	const effectiveText = parsed.effectiveText
 
-	const hasActiveSearch = !!(
-		effectiveText.length >= 2 ||
-		langFilter ||
-		tagFilters.length > 0
-	)
+	// Searches activate on text only — lang and tag chips are filters on a
+	// text query, not standalone activators. (If you want "all Hindi
+	// phrases," that's /learn/$lang or the browse charts, not /search.)
+	const hasActiveSearch = effectiveText.length >= 2
 
 	// --- Phrase search ---
-	// Use backend hybrid search whenever there's text; lang is a filter, not
-	// a gate (both trigram and semantic accept null lang). Falls back to a
-	// client-side scan only for tag-only / lang-only searches with no text.
-	const shouldTrigram = !!(
-		effectiveText.length >= 2 &&
-		(typeFilters.size === 0 || typeFilters.has('phrase'))
-	)
+	const shouldTrigram =
+		hasActiveSearch && (typeFilters.size === 0 || typeFilters.has('phrase'))
 
 	const smartSearch = useHybridSearch(
 		langFilter ? [langFilter] : [],
@@ -146,56 +139,15 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		'relevance'
 	)
 
-	// Client-side phrase search (handles no-text searches: tag-only / lang-only)
-	const { data: clientPhraseResults } = useLiveQuery(
-		(q) => {
-			if (!hasActiveSearch || shouldTrigram) return undefined
-
-			let query = q.from({ phrase: phrasesFull })
-
-			if (langFilter) {
-				query = query.where(({ phrase }) => eq(phrase.lang, langFilter))
-			}
-			if (effectiveText.length >= 2) {
-				query = query.where(({ phrase }) =>
-					ilike(phrase.searchableText, `%${effectiveText}%`)
-				)
-			}
-			if (tagFilters.length > 0) {
-				query = query.fn.where(({ phrase }) => {
-					if (!phrase?.tags) return false
-					return tagFilters.every((tag) =>
-						(phrase.tags ?? []).some((t) => t?.name === tag)
-					)
-				})
-			}
-
-			return query.fn.select(({ phrase }) =>
-				splitPhraseTranslations(phrase, languagesToShow)
-			)
-		},
-		[
-			langFilter,
-			effectiveText,
-			tagFilters,
-			languagesToShow,
-			hasActiveSearch,
-			shouldTrigram,
-		]
-	)
-
-	const phraseResults: Array<PhraseFullFilteredType> = useMemo(() => {
-		if (!hasActiveSearch) return []
-		if (typeFilters.size > 0 && !typeFilters.has('phrase')) return []
-		if (shouldTrigram) return smartSearch.data
-		return clientPhraseResults?.slice(0, 60) ?? []
-	}, [
-		hasActiveSearch,
-		typeFilters,
-		shouldTrigram,
-		smartSearch.data,
-		clientPhraseResults,
-	])
+	const phraseResults: Array<HybridSearchResult> = useMemo(() => {
+		if (!shouldTrigram) return []
+		if (tagFilters.length === 0) return smartSearch.data
+		// Tag filter applied as a post-filter on server results; the trigram
+		// + semantic backends don't filter by tags directly.
+		return smartSearch.data.filter((p) =>
+			tagFilters.every((tag) => (p.tags ?? []).some((t) => t?.name === tag))
+		)
+	}, [shouldTrigram, smartSearch.data, tagFilters])
 
 	// --- Playlist search (client-side) ---
 	const { data: playlistResults } = useLiveQuery(
@@ -267,32 +219,40 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 			return 0.2
 		}
 
+		// Phrases: use the hook's combinedScore directly. It already blends
+		// semantic + trigram via sqrt(x) + sqrt(y) and matches the Σ shown
+		// in the diagnostic breakdown.
 		for (const phrase of phraseResults) {
-			let score: number
-			if (shouldTrigram) {
-				// Smart search already provides a similarity score (0–~2)
-				const smartResult = smartSearch.data.find((r) => r.id === phrase.id)
-				score = smartResult?.similarityScore ?? 0.3
-			} else {
-				score = effectiveText.length >= 2 ? textMatchScore(phrase.text) : 0.3
-			}
-			// Boost by popularity (learners), capped contribution
-			score += Math.min((phrase.count_learners ?? 0) * 0.02, 0.2)
+			const score = phrase.combinedScore ?? 0
 			items.push({ type: 'phrase', score, phrase })
 		}
 
+		// Playlists + requests: not in the trigram index, so trigram
+		// signal is approximated by a local text-match score (substring
+		// position on title/prompt). Semantic comes from the hybrid hook's
+		// semanticById map (the search Edge Function returns all entity
+		// types in one call). Combined via the same formula so playlists,
+		// requests, and phrases sort on the same yardstick.
 		for (const playlist of playlistResults?.slice(0, 20) ?? []) {
-			let score =
-				effectiveText.length >= 2 ? textMatchScore(playlist.title) : 0.3
-			score += Math.min(playlist.upvote_count * 0.03, 0.2)
-			items.push({ type: 'playlist', score, playlist })
+			const semantic = smartSearch.semanticById.get(playlist.id) ?? 0
+			const text =
+				effectiveText.length >= 2 ? textMatchScore(playlist.title) : 0
+			items.push({
+				type: 'playlist',
+				score: combinedScore(semantic, text),
+				playlist,
+			})
 		}
 
 		for (const request of requestResults?.slice(0, 20) ?? []) {
-			let score =
-				effectiveText.length >= 2 ? textMatchScore(request.prompt) : 0.3
-			score += Math.min(request.upvote_count * 0.03, 0.2)
-			items.push({ type: 'request', score, request })
+			const semantic = smartSearch.semanticById.get(request.id) ?? 0
+			const text =
+				effectiveText.length >= 2 ? textMatchScore(request.prompt) : 0
+			items.push({
+				type: 'request',
+				score: combinedScore(semantic, text),
+				request,
+			})
 		}
 
 		return items.toSorted((a, b) => b.score - a.score)
@@ -301,8 +261,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		playlistResults,
 		requestResults,
 		effectiveText,
-		shouldTrigram,
-		smartSearch.data,
+		smartSearch.semanticById,
 	])
 
 	const phraseCount = phraseResults.length

@@ -8,7 +8,8 @@ import {
 } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDebounce } from '@/hooks/use-debounce'
-import { useLiveQuery } from '@tanstack/react-db'
+import { useLocalSearch } from '@/hooks/use-local-search'
+import { useHybridSearch } from '@/hooks/use-hybrid-search'
 import {
 	Search,
 	X,
@@ -20,9 +21,6 @@ import {
 	ArrowRight,
 } from 'lucide-react'
 
-import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsActive } from '@/features/requests/live'
-import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useDecks } from '@/features/deck/hooks'
 import languages from '@/lib/languages'
 import { LangBadge } from '@/components/ui/badge'
@@ -80,48 +78,60 @@ export default function BrowseSearchOverlay({
 		return base
 	}, [userLangs, extraLangs, selectedLangs])
 
-	// Collections data
-	const { data: allPhrases } = useLiveQuery((q) =>
-		q.from({ phrase: phrasesCollection })
+	// Layered search: local for instant feedback (in-memory substring match),
+	// hybrid for server-blended phrase results (semantic + trigram). Local
+	// fires immediately as the user types; hybrid fires after the debounce
+	// settles. Local phrases are shown first (stable order, no re-shuffle
+	// when server arrives), then hybrid results extend the list.
+	// Playlists and requests come from local only — the trigram backend
+	// doesn't index them, and the semantic side via useHybridSearch is
+	// phrase-focused. (BrowseSearchOverlay can switch to useSemanticSearch
+	// directly if non-phrase server matches become important here.)
+	const local = useLocalSearch(
+		selectedLangs.length > 0 ? selectedLangs : null,
+		debouncedQuery,
+		{ limit: 20 }
 	)
-	const { data: allRequests } = useLiveQuery((q) =>
-		q.from({ req: phraseRequestsActive })
-	)
-	const { data: allPlaylists } = useLiveQuery((q) =>
-		q.from({ playlist: phrasePlaylistsActive })
-	)
+	const hybrid = useHybridSearch(selectedLangs, debouncedQuery)
 
-	// Search and filter results
 	const results = useMemo((): Array<SearchResult> => {
 		if (!hasQuery) return []
 
 		const items: Array<SearchResult> = []
-		const langSet = selectedLangs.length > 0 ? new Set(selectedLangs) : null
+		const seenPhraseIds = new Set<string>()
 
-		const matchesQuery = (text: string) =>
-			!lowerQuery || text.toLowerCase().includes(lowerQuery)
-
-		for (const phrase of allPhrases ?? []) {
-			if (langSet && !langSet.has(phrase.lang)) continue
-			const searchText = [
-				phrase.text,
-				...(phrase.translations?.map((t) => t.text) ?? []),
-			].join(' ')
-			if (!matchesQuery(searchText)) continue
+		// Phrases: local first (instant), then hybrid extensions (server).
+		const phrasePool = [
+			...local.phrases.map((p) => ({
+				id: p.id,
+				lang: p.lang,
+				text: p.text,
+				translation: p.translations?.[0]?.text ?? null,
+			})),
+			...hybrid.data.map((p) => ({
+				id: p.id,
+				lang: p.lang,
+				text: p.text,
+				translation:
+					p.translations_mine?.[0]?.text ??
+					p.translations_other?.[0]?.text ??
+					null,
+			})),
+		]
+		for (const phrase of phrasePool) {
+			if (seenPhraseIds.has(phrase.id)) continue
+			seenPhraseIds.add(phrase.id)
 			items.push({
 				id: phrase.id,
 				type: 'phrase',
 				lang: phrase.lang,
 				title: phrase.text,
-				subtitle: phrase.translations?.[0]?.text ?? null,
+				subtitle: phrase.translation,
 			})
 			if (items.length >= 20) return items
 		}
 
-		for (const playlist of allPlaylists ?? []) {
-			if (langSet && !langSet.has(playlist.lang)) continue
-			if (!matchesQuery([playlist.title, playlist.description ?? ''].join(' ')))
-				continue
+		for (const playlist of local.playlists) {
 			items.push({
 				id: playlist.id,
 				type: 'playlist',
@@ -132,9 +142,7 @@ export default function BrowseSearchOverlay({
 			if (items.length >= 20) return items
 		}
 
-		for (const req of allRequests ?? []) {
-			if (langSet && !langSet.has(req.lang)) continue
-			if (!matchesQuery(req.prompt)) continue
+		for (const req of local.requests) {
 			items.push({
 				id: req.id,
 				type: 'request',
@@ -146,14 +154,7 @@ export default function BrowseSearchOverlay({
 		}
 
 		return items
-	}, [
-		allPhrases,
-		allPlaylists,
-		allRequests,
-		selectedLangs,
-		lowerQuery,
-		hasQuery,
-	])
+	}, [hasQuery, local.phrases, local.playlists, local.requests, hybrid.data])
 
 	// Reset selected index when results change
 	const resetKey = `${results.length}-${lowerQuery}`
