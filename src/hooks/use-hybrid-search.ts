@@ -60,8 +60,8 @@ function reciprocalRankFusion(
 }
 
 /**
- * Hybrid smart search for phrases: drop-in for the legacy `useSmartSearch`
- * but blends trigram (lexical) and semantic (BGE-M3 cosine) rankings.
+ * Hybrid smart search for phrases: blends trigram (lexical) and semantic
+ * (BGE-M3 cosine) rankings.
  *
  * Trigram is paginated — that's the source of "load more" results. Semantic
  * is a one-shot top-K against the search Edge Function. RRF merges the
@@ -69,10 +69,8 @@ function reciprocalRankFusion(
  * ordering; subsequent trigram pages append directly without re-blending.
  *
  * `langs` filters the result phrases to those languages. Pass an empty
- * array (or skip) to opt out — but for `/search` and friends the caller
- * should usually pass the user's deck languages or the chip-selected
- * languages. The trigram RPC takes a single lang for now (uses the first
- * element); the semantic side fully respects the array.
+ * array to search across all langs; both trigram and semantic accept null
+ * lang filter and run cross-lingually.
  *
  * Graceful degradation: if the semantic Edge Function fails or
  * search_corpus is empty, the merged list is just trigram. The route never
@@ -89,18 +87,16 @@ export function useHybridSmartSearch(
 	const { data: languagesToShow } = useLanguagesToShow()
 	const enabled = !!debouncedQuery && debouncedQuery.length >= MIN_QUERY_LENGTH
 	const langsKey = langs.join(',')
-	const primaryLang = langs[0] ?? ''
+	const langFilter = langs.length > 0 ? langs : null
 
-	// 1. Trigram side — paginated. The current trigram RPC takes a single
-	// lang; pass the first selected lang. (When `search_phrases_smart`
-	// learns multi-lang, swap to passing the array.)
+	// 1. Trigram side — paginated.
 	const trigramQuery = useInfiniteQuery({
-		queryKey: ['hybrid-search-trigram', primaryLang, debouncedQuery, sortBy],
+		queryKey: ['hybrid-search-trigram', langsKey, debouncedQuery, sortBy],
 		queryFn: async ({ pageParam }): Promise<Array<TrigramRow>> => {
 			if (!enabled) return []
 			const { data, error } = await supabase.rpc('search_phrases_smart', {
 				query: debouncedQuery,
-				lang_filter: primaryLang,
+				lang_filter: langFilter,
 				sort_by: sortBy,
 				result_limit: SEARCH_PAGE_SIZE,
 				cursor_created_at: pageParam?.created_at,

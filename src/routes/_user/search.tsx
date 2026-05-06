@@ -129,9 +129,10 @@ function SearchPage() {
 	)
 
 	// --- Phrase search ---
-	// Use backend trigram search when lang filter is set, otherwise client-side
+	// Use backend hybrid search whenever there's text; lang is a filter, not
+	// a gate (both trigram and semantic accept null lang). Falls back to a
+	// client-side scan only for tag-only / lang-only searches with no text.
 	const shouldTrigram = !!(
-		langFilter &&
 		effectiveText.length >= 2 &&
 		(typeFilters.size === 0 || typeFilters.has('phrase'))
 	)
@@ -142,7 +143,7 @@ function SearchPage() {
 		'relevance'
 	)
 
-	// Client-side phrase search (fallback when no lang filter)
+	// Client-side phrase search (handles no-text searches: tag-only / lang-only)
 	const { data: clientPhraseResults } = useLiveQuery(
 		(q) => {
 			if (!hasActiveSearch || shouldTrigram) return undefined
