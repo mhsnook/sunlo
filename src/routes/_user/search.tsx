@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
 import { useDebounceWithFlush } from '@/hooks/use-debounce'
-import { eq } from '@tanstack/db'
+import { inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
@@ -23,7 +23,6 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import allLanguages from '@/lib/languages'
-import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { cn } from '@/lib/utils'
 import {
 	useAllLangTags,
@@ -135,8 +134,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 
 	const smartSearch = useHybridSearch(
 		langFilter ? [langFilter] : [],
-		shouldTrigram ? effectiveText : '',
-		'relevance'
+		shouldTrigram ? effectiveText : ''
 	)
 
 	const phraseResults: Array<HybridSearchResult> = useMemo(() => {
@@ -149,124 +147,110 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		)
 	}, [shouldTrigram, smartSearch.data, tagFilters])
 
-	// --- Playlist search (client-side) ---
+	// --- Playlist + request candidates ---
+	// The server-side semantic + trigram backends already returned the
+	// matching entity_ids via smartSearch.{semanticById, trigramById}; the
+	// local query just hydrates those ids to full rows for display
+	// (title, description, upvote_count).
+	const candidateIds = useMemo(() => {
+		const ids = new Set<string>()
+		smartSearch.semanticById.forEach((_, id) => ids.add(id))
+		smartSearch.trigramById.forEach((_, id) => ids.add(id))
+		return [...ids]
+	}, [smartSearch.semanticById, smartSearch.trigramById])
+
 	const { data: playlistResults } = useLiveQuery(
 		(q) => {
 			if (!hasActiveSearch) return undefined
 			if (typeFilters.size > 0 && !typeFilters.has('playlist')) return undefined
-			if (!effectiveText || effectiveText.length < 2) return undefined
-
-			let query = q.from({ playlist: phrasePlaylistsActive })
-
-			if (langFilter) {
-				query = query.where(({ playlist }) => eq(playlist.lang, langFilter))
-			}
-
-			const lowerText = effectiveText.toLowerCase()
-			return query.fn.where(({ playlist }) => {
-				const searchText = [playlist.title, playlist.description ?? '']
-					.join(' ')
-					.toLowerCase()
-				return searchText.includes(lowerText)
-			})
+			if (candidateIds.length === 0) return undefined
+			return q
+				.from({ playlist: phrasePlaylistsActive })
+				.where(({ playlist }) => inArray(playlist.id, candidateIds))
 		},
-		[hasActiveSearch, typeFilters, effectiveText, langFilter]
+		[hasActiveSearch, typeFilters, candidateIds]
 	)
 
-	// --- Request search (client-side) ---
 	const { data: requestResults } = useLiveQuery(
 		(q) => {
 			if (!hasActiveSearch) return undefined
 			if (typeFilters.size > 0 && !typeFilters.has('request')) return undefined
-			if (!effectiveText || effectiveText.length < 2) return undefined
-
-			let query = q.from({ req: phraseRequestsActive })
-
-			if (langFilter) {
-				query = query.where(({ req }) => eq(req.lang, langFilter))
-			}
-
-			const lowerText = effectiveText.toLowerCase()
-			return query.fn.where(({ req }) =>
-				req.prompt.toLowerCase().includes(lowerText)
-			)
+			if (candidateIds.length === 0) return undefined
+			return q
+				.from({ req: phraseRequestsActive })
+				.where(({ req }) => inArray(req.id, candidateIds))
 		},
-		[hasActiveSearch, typeFilters, effectiveText, langFilter]
+		[hasActiveSearch, typeFilters, candidateIds]
 	)
 
 	// --- Merge and sort results by relevance ---
-	type ScoredPhrase = PhraseFullFilteredType & {
-		semanticScore?: number
-		similarityScore?: number
-		combinedScore?: number
-		popularityScore?: number
-	}
 	type ScoredResult =
-		| { type: 'phrase'; score: number; phrase: ScoredPhrase }
-		| { type: 'playlist'; score: number; playlist: PhrasePlaylistType }
-		| { type: 'request'; score: number; request: PhraseRequestType }
+		| { type: 'phrase'; score: number; phrase: HybridSearchResult }
+		| {
+				type: 'playlist'
+				score: number
+				entity: PhrasePlaylistType
+				semanticScore: number
+				trigramScore: number
+		  }
+		| {
+				type: 'request'
+				score: number
+				entity: PhraseRequestType
+				semanticScore: number
+				trigramScore: number
+		  }
 
-	const mergedResults = useMemo((): Array<ScoredResult> => {
+	const { mergedResults, playlistCount, requestCount } = useMemo(() => {
 		const items: Array<ScoredResult> = []
-		const lowerText = effectiveText.toLowerCase()
+		let playlists = 0
+		let requests = 0
 
-		// Score a text match: prefix > exact word > substring
-		const textMatchScore = (text: string): number => {
-			const lower = text.toLowerCase()
-			if (lower.startsWith(lowerText)) return 0.8
-			if (lower.includes(` ${lowerText}`)) return 0.6
-			if (lower.includes(lowerText)) return 0.4
-			return 0.2
-		}
-
-		// Phrases: use the hook's combinedScore directly. It already blends
-		// semantic + trigram via sqrt(x) + sqrt(y) and matches the Σ shown
-		// in the diagnostic breakdown.
 		for (const phrase of phraseResults) {
-			const score = phrase.combinedScore ?? 0
-			items.push({ type: 'phrase', score, phrase })
+			items.push({ type: 'phrase', score: phrase.combinedScore, phrase })
 		}
 
-		// Playlists + requests: not in the trigram index, so trigram
-		// signal is approximated by a local text-match score (substring
-		// position on title/prompt). Semantic comes from the hybrid hook's
-		// semanticById map (the search Edge Function returns all entity
-		// types in one call). Combined via the same formula so playlists,
-		// requests, and phrases sort on the same yardstick.
-		for (const playlist of playlistResults?.slice(0, 20) ?? []) {
-			const semantic = smartSearch.semanticById.get(playlist.id) ?? 0
-			const text =
-				effectiveText.length >= 2 ? textMatchScore(playlist.title) : 0
-			items.push({
-				type: 'playlist',
-				score: combinedScore(semantic, text),
-				playlist,
-			})
+		const scoreEntity = <
+			T extends PhrasePlaylistType | PhraseRequestType,
+			K extends 'playlist' | 'request',
+		>(
+			pool: Array<T> | undefined,
+			type: K
+		): number => {
+			let count = 0
+			for (const entity of pool ?? []) {
+				const semantic = smartSearch.semanticById.get(entity.id) ?? 0
+				const trigram = smartSearch.trigramById.get(entity.id) ?? 0
+				if (semantic === 0 && trigram === 0) continue
+				items.push({
+					type,
+					score: combinedScore(semantic, trigram),
+					entity,
+					semanticScore: semantic,
+					trigramScore: trigram,
+				} as ScoredResult)
+				count++
+			}
+			return count
 		}
 
-		for (const request of requestResults?.slice(0, 20) ?? []) {
-			const semantic = smartSearch.semanticById.get(request.id) ?? 0
-			const text =
-				effectiveText.length >= 2 ? textMatchScore(request.prompt) : 0
-			items.push({
-				type: 'request',
-				score: combinedScore(semantic, text),
-				request,
-			})
-		}
+		playlists = scoreEntity(playlistResults, 'playlist')
+		requests = scoreEntity(requestResults, 'request')
 
-		return items.toSorted((a, b) => b.score - a.score)
+		return {
+			mergedResults: items.toSorted((a, b) => b.score - a.score),
+			playlistCount: playlists,
+			requestCount: requests,
+		}
 	}, [
 		phraseResults,
 		playlistResults,
 		requestResults,
-		effectiveText,
 		smartSearch.semanticById,
+		smartSearch.trigramById,
 	])
 
 	const phraseCount = phraseResults.length
-	const playlistCount = playlistResults?.length ?? 0
-	const requestCount = requestResults?.length ?? 0
 	const totalCount = mergedResults.length
 
 	const isSearching =
@@ -387,23 +371,14 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 											phrase={item.phrase}
 											diagnostic={diagnostic}
 										/>
-									) : item.type === 'playlist' ? (
-										<PlaylistResultRow
-											key={`playlist-${item.playlist.id}`}
-											playlist={item.playlist}
-											diagnostic={diagnostic}
-											semanticScore={
-												smartSearch.semanticById.get(item.playlist.id) ?? 0
-											}
-										/>
 									) : (
-										<RequestResultRow
-											key={`request-${item.request.id}`}
-											request={item.request}
+										<EntityResultRow
+											key={`${item.type}-${item.entity.id}`}
+											type={item.type}
+											entity={item.entity}
 											diagnostic={diagnostic}
-											semanticScore={
-												smartSearch.semanticById.get(item.request.id) ?? 0
-											}
+											semanticScore={item.semanticScore}
+											trigramScore={item.trigramScore}
 										/>
 									)
 								)}
@@ -639,10 +614,7 @@ function PhraseResultRow({
 	phrase,
 	diagnostic = false,
 }: {
-	phrase: PhraseFullFilteredType & {
-		semanticScore?: number
-		similarityScore?: number
-	}
+	phrase: HybridSearchResult
 	diagnostic?: boolean
 }) {
 	const translations = phrase.translations_mine?.length
@@ -717,7 +689,7 @@ function ScoreBreakdown({
 }) {
 	const semContribution = Math.sqrt(semantic)
 	const triContribution = Math.sqrt(trigram)
-	const combined = semContribution + triContribution
+	const combined = combinedScore(semantic, trigram)
 	return (
 		<div className="text-muted-foreground/70 flex flex-col items-end gap-0 font-mono text-[10px] leading-tight tabular-nums">
 			<span>
@@ -731,81 +703,76 @@ function ScoreBreakdown({
 	)
 }
 
-function PlaylistResultRow({
-	playlist,
+function EntityResultRow({
+	type,
+	entity,
 	diagnostic = false,
 	semanticScore = 0,
+	trigramScore = 0,
 }: {
-	playlist: PhrasePlaylistType
+	type: 'playlist' | 'request'
+	entity: PhrasePlaylistType | PhraseRequestType
 	diagnostic?: boolean
 	semanticScore?: number
+	trigramScore?: number
 }) {
-	return (
-		<Link
-			to="/learn/$lang/playlists/$playlistId"
-			params={{ lang: playlist.lang, playlistId: playlist.id }}
-			className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors"
-		>
+	const title =
+		type === 'playlist'
+			? (entity as PhrasePlaylistType).title
+			: (entity as PhraseRequestType).prompt
+	const subtitle =
+		type === 'playlist' ? (entity as PhrasePlaylistType).description : null
+	const linkClass =
+		'hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors'
+
+	const body = (
+		<>
 			<div className="min-w-0 flex-1">
 				<div className="flex items-center gap-2">
-					<LangBadge lang={playlist.lang} />
-					<span className="truncate font-semibold">{playlist.title}</span>
+					<LangBadge lang={entity.lang} />
+					<span className="truncate font-semibold">{title}</span>
 				</div>
-				{playlist.description && (
+				{subtitle && (
 					<p className="text-muted-foreground mt-1 truncate text-sm">
-						{playlist.description}
+						{subtitle}
 					</p>
 				)}
 			</div>
 			<div className="flex shrink-0 items-start gap-3">
-				{playlist.upvote_count > 0 && (
+				{entity.upvote_count > 0 && (
 					<span className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs">
 						<ArrowUp size={10} />
-						{playlist.upvote_count}
+						{entity.upvote_count}
 					</span>
 				)}
 				<div className="flex flex-col items-end gap-1">
-					<TypeBadge type="playlist" />
-					{diagnostic && <ScoreBreakdown semantic={semanticScore} />}
+					<TypeBadge type={type} />
+					{diagnostic && (
+						<ScoreBreakdown semantic={semanticScore} trigram={trigramScore} />
+					)}
 				</div>
 			</div>
-		</Link>
+		</>
 	)
-}
 
-function RequestResultRow({
-	request,
-	diagnostic = false,
-	semanticScore = 0,
-}: {
-	request: PhraseRequestType
-	diagnostic?: boolean
-	semanticScore?: number
-}) {
+	if (type === 'playlist') {
+		return (
+			<Link
+				to="/learn/$lang/playlists/$playlistId"
+				params={{ lang: entity.lang, playlistId: entity.id }}
+				className={linkClass}
+			>
+				{body}
+			</Link>
+		)
+	}
 	return (
 		<Link
 			to="/learn/$lang/requests/$id"
-			params={{ lang: request.lang, id: request.id }}
-			className="hover:bg-muted/50 flex items-start gap-3 rounded-lg border px-4 py-3 transition-colors"
+			params={{ lang: entity.lang, id: entity.id }}
+			className={linkClass}
 		>
-			<div className="min-w-0 flex-1">
-				<div className="flex items-center gap-2">
-					<LangBadge lang={request.lang} />
-					<span className="truncate font-semibold">{request.prompt}</span>
-				</div>
-			</div>
-			<div className="flex shrink-0 items-start gap-3">
-				{request.upvote_count > 0 && (
-					<span className="text-muted-foreground/60 mt-0.5 flex items-center gap-0.5 text-xs">
-						<ArrowUp size={10} />
-						{request.upvote_count}
-					</span>
-				)}
-				<div className="flex flex-col items-end gap-1">
-					<TypeBadge type="request" />
-					{diagnostic && <ScoreBreakdown semantic={semanticScore} />}
-				</div>
-			</div>
+			{body}
 		</Link>
 	)
 }

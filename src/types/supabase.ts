@@ -1678,32 +1678,6 @@ export type Database = {
 					},
 				]
 			}
-			phrase_search_index: {
-				Row: {
-					created_at: string | null
-					id: string | null
-					lang: string | null
-					popularity: number | null
-					search_text: string | null
-					text: string | null
-				}
-				Relationships: [
-					{
-						foreignKeyName: 'phrase_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'language'
-						referencedColumns: ['lang']
-					},
-					{
-						foreignKeyName: 'phrase_lang_fkey'
-						columns: ['lang']
-						isOneToOne: false
-						referencedRelation: 'meta_language'
-						referencedColumns: ['lang']
-					},
-				]
-			}
 			phrase_stats: {
 				Row: {
 					avg_difficulty: number | null
@@ -1936,21 +1910,23 @@ export type Database = {
 			is_admin: { Args: never; Returns: boolean }
 			recount_all_upvotes: { Args: never; Returns: undefined }
 			refresh_meta_language: { Args: never; Returns: undefined }
-			refresh_phrase_search_index: { Args: never; Returns: undefined }
-			search_phrases_smart: {
+			search_by_trigram: {
 				Args: {
 					cursor_created_at?: string
 					cursor_id?: string
-					lang_filter?: string[] | null
+					exclude_ids?: string[]
+					match_limit?: number
 					query: string
-					result_limit?: number
-					sort_by?: string
+					target_langs?: string[] | null
 				}
 				Returns: {
 					created_at: string
-					id: string
-					popularity_score: number
-					similarity_score: number
+					entity_id: string
+					entity_type: string
+					matched_lang: string
+					matched_text: string
+					matched_via: string
+					similarity: number
 				}[]
 			}
 			set_comment_upvote: {
