@@ -1,39 +1,28 @@
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useLiveQuery } from '@tanstack/react-db'
 import { inArray } from '@tanstack/db'
 import { useDebounce } from '@/hooks/use-debounce'
+import { useSemanticSearch } from '@/hooks/use-semantic-search'
+import {
+	useTrigramSearch,
+	type TrigramSortBy,
+} from '@/hooks/use-trigram-search'
 
-import supabase from '@/lib/supabase-client'
 import { phrasesFull } from '@/features/phrases/live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
-export type SmartSearchSortBy = 'relevance' | 'popularity'
-
-interface TrigramRow {
-	id: string
-	similarity_score: number
-	popularity_score: number
-	created_at: string
-}
-
-interface SemanticRow {
-	entity_type: 'phrase' | 'request' | 'playlist'
-	entity_id: string
-	score: number
-}
+export type SmartSearchSortBy = TrigramSortBy
 
 export type HybridSearchResult = PhraseFullFilteredType & {
 	similarityScore: number // trigram (0..1)
 	popularityScore: number
 	semanticScore: number // cosine (0..1), 0 if not surfaced by semantic
-	combinedScore: number // 3·sqrt(semanticScore/4) + similarityScore
+	combinedScore: number // sqrt(semanticScore) + sqrt(similarityScore)
 }
 
-const SEARCH_PAGE_SIZE = 20
-const SEMANTIC_TOP_K = 20
 const SEARCH_DEBOUNCE_MS = 300
+const SEMANTIC_TOP_K = 20
 const MIN_QUERY_LENGTH = 2
 
 // Symmetric score-blend: sqrt(x) + sqrt(y). Sqrt amplifies low values on
@@ -42,29 +31,32 @@ const MIN_QUERY_LENGTH = 2
 // the linear-trigram version was burying them. Semantic cosine values are
 // already higher in absolute terms, so they don't need an extra weight to
 // stay near the top.
-function combinedScore(semantic: number, trigram: number): number {
+//
+// Exported so consumers (the /search route's playlist + request scoring,
+// the /search/test diagnostic display) can apply the same formula
+// directly.
+export function combinedScore(semantic: number, trigram: number): number {
 	return Math.sqrt(semantic) + Math.sqrt(trigram)
 }
 
 /**
- * Hybrid search for phrases: blends trigram (lexical) and semantic (BGE-M3
- * cosine) signals into a single ranking.
- *
- * Trigram is paginated — that's the source of "load more" results. Semantic
- * is a one-shot top-K against the search Edge Function. The first page of
- * trigram + the semantic results get blended via combinedScore (above);
- * subsequent trigram pages append in their original order without
- * re-blending (no semantic data exists for items past the first page).
+ * Hybrid search for phrases: composes useSemanticSearch + useTrigramSearch
+ * into a single ranking. Trigram is paginated (source of "load more");
+ * semantic is a one-shot top-K. The first page of trigram + the semantic
+ * results get blended via combinedScore; subsequent trigram pages append
+ * in their original order without re-blending (no semantic data exists
+ * for items past the first page).
  *
  * `langs` filters the result phrases to those languages. Pass an empty
- * array to search across all langs; both trigram and semantic accept null
- * lang filter and run cross-lingually.
+ * array to search across all langs; both primitives accept null lang
+ * filter and run cross-lingually.
  *
  * Graceful degradation: if the semantic Edge Function fails or
  * search_corpus is empty, the merged list is just trigram. The route never
- * breaks because of the semantic side. Note: only phrase entities returned
- * by semantic are blended into this hook's results; request entities the
- * Edge Function returns are dropped here (route handles them separately).
+ * breaks because of the semantic side. Only phrase entities returned by
+ * semantic are blended into this hook's results; request and playlist
+ * entities are exposed via `semanticById` so callers can show diagnostic
+ * info on non-phrase result rows.
  */
 export function useHybridSearch(
 	langs: string[],
@@ -73,86 +65,26 @@ export function useHybridSearch(
 ) {
 	const debouncedQuery = useDebounce(query, SEARCH_DEBOUNCE_MS)
 	const { data: languagesToShow } = useLanguagesToShow()
-	const enabled = !!debouncedQuery && debouncedQuery.length >= MIN_QUERY_LENGTH
-	const langsKey = langs.join(',')
+	const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH
 	const langFilter = langs.length > 0 ? langs : null
 
-	// 1. Trigram side — paginated.
-	const trigramQuery = useInfiniteQuery({
-		queryKey: ['hybrid-search-trigram', langsKey, debouncedQuery, sortBy],
-		queryFn: async ({ pageParam }): Promise<Array<TrigramRow>> => {
-			if (!enabled) return []
-			const { data, error } = await supabase.rpc('search_phrases_smart', {
-				query: debouncedQuery,
-				lang_filter: langFilter,
-				sort_by: sortBy,
-				result_limit: SEARCH_PAGE_SIZE,
-				cursor_created_at: pageParam?.created_at,
-				cursor_id: pageParam?.id,
-			})
-			if (error) throw error
-			return (data ?? []) as Array<TrigramRow>
-		},
-		initialPageParam: null as { created_at: string; id: string } | null,
-		getNextPageParam: (lastPage) => {
-			if (lastPage.length < SEARCH_PAGE_SIZE) return null
-			const lastItem = lastPage[lastPage.length - 1]
-			return { created_at: lastItem.created_at, id: lastItem.id }
-		},
+	const trigram = useTrigramSearch(langFilter, debouncedQuery, {
+		sortBy,
 		enabled,
 	})
+	const semantic = useSemanticSearch(
+		langFilter,
+		{ kind: 'text', text: debouncedQuery },
+		{ enabled, limit: SEMANTIC_TOP_K }
+	)
 
-	// 2. Semantic side — top-K once, no pagination. Failure is non-fatal:
-	// the queryFn returns [] on any error so the merged list falls back to
-	// trigram-only without bubbling the error up.
-	const semanticQuery = useQuery({
-		queryKey: ['hybrid-search-semantic', langsKey, debouncedQuery],
-		queryFn: async (): Promise<Array<SemanticRow>> => {
-			if (!enabled) return []
-			const result = await supabase.functions.invoke<Array<SemanticRow>>(
-				'search',
-				{
-					body: {
-						langs: langFilter,
-						excludeIds: [],
-						query: { kind: 'text', text: debouncedQuery },
-						limit: SEMANTIC_TOP_K,
-					},
-				}
-			)
-			if (result.error) {
-				console.warn(
-					'search failed; falling back to trigram only',
-					result.error
-				)
-				return []
-			}
-			return result.data ?? []
-		},
-		enabled,
-		retry: false,
-		staleTime: 5 * 60 * 1000,
-	})
-
-	// 3. Score-blend (trigram page 1) ∪ (semantic phrases), sort by
+	// Score-blend (trigram page 1) ∪ (semantic phrases), sort by
 	// combinedScore desc, then append remaining trigram pages in their
 	// original order (deduped).
-	const trigramPages = trigramQuery.data?.pages ?? []
-	const trigramFirst = trigramPages[0] ?? []
-	const trigramRest = trigramPages.slice(1).flat()
-	const semanticPhrases = (semanticQuery.data ?? []).filter(
+	const trigramFirst = trigram.pages[0] ?? []
+	const trigramRest = trigram.pages.slice(1).flat()
+	const semanticPhrases = semantic.data.filter(
 		(r) => r.entity_type === 'phrase'
-	)
-
-	const trigramScoresById = new Map(trigramPages.flat().map((r) => [r.id, r]))
-	// Phrase-only — used for blending into the phrase ranking.
-	const semanticScoresById = new Map(
-		semanticPhrases.map((r) => [r.entity_id, r.score])
-	)
-	// All entity types — exposed so callers can show diagnostic info on
-	// non-phrase result rows (requests, playlists).
-	const semanticById = new Map(
-		(semanticQuery.data ?? []).map((r) => [r.entity_id, r.score])
 	)
 
 	const blendIds = new Set<string>([
@@ -163,8 +95,8 @@ export function useHybridSearch(
 		.map((id) => ({
 			id,
 			score: combinedScore(
-				semanticScoresById.get(id) ?? 0,
-				trigramScoresById.get(id)?.similarity_score ?? 0
+				semantic.byId.get(id)?.score ?? 0,
+				trigram.byId.get(id)?.similarity_score ?? 0
 			),
 		}))
 		.toSorted((a, b) => b.score - a.score)
@@ -173,7 +105,7 @@ export function useHybridSearch(
 	const tail = trigramRest.map((r) => r.id).filter((id) => !blendIds.has(id))
 	const matchingIds = [...blendedIds, ...tail]
 
-	// 4. Hydrate full phrase data from local collection.
+	// Hydrate full phrase data from local collection.
 	const phrasesQuery = useLiveQuery(
 		(q) => {
 			if (!matchingIds.length) return undefined
@@ -192,8 +124,8 @@ export function useHybridSearch(
 			phrase,
 			languagesToShow ?? []
 		)
-		const trigramRow = trigramScoresById.get(id)
-		const semanticScore = semanticScoresById.get(id) ?? 0
+		const trigramRow = trigram.byId.get(id)
+		const semanticScore = semantic.byId.get(id)?.score ?? 0
 		const similarityScore = trigramRow?.similarity_score ?? 0
 		results.push({
 			...phraseFiltered,
@@ -206,19 +138,18 @@ export function useHybridSearch(
 
 	return {
 		data: results,
-		semanticById,
-		isLoading:
-			trigramQuery.isLoading ||
-			trigramQuery.isFetching ||
-			semanticQuery.isLoading,
+		// Map<entity_id, score> over all entity types — for diagnostic
+		// display on non-phrase result rows.
+		semanticById: new Map(semantic.data.map((r) => [r.entity_id, r.score])),
+		isLoading: trigram.isLoading || trigram.isFetching || semantic.isLoading,
 		isEmpty:
-			trigramQuery.isSuccess &&
-			!semanticQuery.isLoading &&
+			trigram.isSuccess &&
+			!semantic.isLoading &&
 			matchingIds.length === 0 &&
 			!!debouncedQuery,
-		error: trigramQuery.error,
-		hasNextPage: trigramQuery.hasNextPage,
-		fetchNextPage: trigramQuery.fetchNextPage,
-		isFetchingNextPage: trigramQuery.isFetchingNextPage,
+		error: trigram.error,
+		hasNextPage: trigram.hasNextPage,
+		fetchNextPage: trigram.fetchNextPage,
+		isFetchingNextPage: trigram.isFetchingNextPage,
 	}
 }

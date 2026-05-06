@@ -1,4 +1,7 @@
-import supabase from '@/lib/supabase-client'
+import {
+	runSemanticSearch,
+	type SemanticQuery,
+} from '@/hooks/use-semantic-search'
 import type { ChatQueryType, ChatResultPhraseType } from './schemas'
 
 // Two implementations of `chatSearch` live here:
@@ -181,35 +184,18 @@ export async function chatSearchMock(
 	return filtered.slice(0, 3)
 }
 
-// Edge Function returns mixed-entity results; chat only renders phrases.
-type EdgeResult = {
-	entity_type: 'phrase' | 'request' | 'playlist'
-	entity_id: string
-	lang: string
-	text: string
-	score: number
-	translations: Array<{ id: string; lang: string; text: string }>
-}
-
 export async function chatSearchLive(
 	input: ChatSearchInput
 ): Promise<ChatResultPhraseType[]> {
-	const body = {
-		langs: [input.lang],
+	const query: SemanticQuery =
+		input.query.kind === 'text'
+			? { kind: 'text', text: input.query.text }
+			: { kind: 'anchor', ids: input.query.pids }
+	const results = await runSemanticSearch([input.lang], query, {
 		excludeIds: input.excludePids,
-		query:
-			input.query.kind === 'text'
-				? { kind: 'text' as const, text: input.query.text }
-				: { kind: 'anchor' as const, ids: input.query.pids },
 		limit: 3,
-	}
-	const result = await supabase.functions.invoke<EdgeResult[]>('search', {
-		body,
 	})
-	if (result.error) {
-		throw new Error(`search failed: ${String(result.error)}`)
-	}
-	return (result.data ?? [])
+	return results
 		.filter((r) => r.entity_type === 'phrase')
 		.map((r) => ({
 			id: r.entity_id,
