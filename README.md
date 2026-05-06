@@ -59,15 +59,15 @@ file like this: `pnpm run seeds:data`, or modify this command per your needs:
 Then, be prepared to heavily curate this file because the seeding process will not have any
 knowledge of our approach to dates, and your PR will be rejected if your seeds do not follow it.
 
-### Chat search corpus
+### Search corpus
 
 The `/chats` chat-style search feature and the semantic side of
-`/search` read from a `chat_corpus` table that holds denormalized
-phrase + translation text plus BGE-M3 embeddings. `supabase db reset`
-wipes that table; populate it with:
+`/search` read from a `search_corpus` table that holds denormalized
+phrase + translation + request + playlist text plus BGE-M3 embeddings.
+`supabase db reset` wipes that table; populate it with:
 
 ```bash
-pnpm tsx scripts/backfill-chat-corpus.ts
+pnpm tsx scripts/backfill-search-corpus.ts
 ```
 
 This requires Cloudflare Workers AI credentials in `.env`
