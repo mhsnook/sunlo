@@ -152,7 +152,7 @@ export function useAnyonesPhrases(
 }
 
 // Provenance types for phrase metadata
-export interface PhraseProvenancePlaylist {
+export interface PhraseProvenancePlaylistRow {
 	type: 'playlist'
 	id: uuid
 	playlistId: uuid
@@ -163,7 +163,7 @@ export interface PhraseProvenancePlaylist {
 	uid: uuid
 }
 
-export interface PhraseProvenanceComment {
+export interface PhraseProvenanceCommentRow {
 	type: 'comment'
 	id: uuid
 	commentId: uuid
@@ -171,6 +171,13 @@ export interface PhraseProvenanceComment {
 	prompt: string
 	created_at: string
 	uid: uuid
+}
+
+export type PhraseProvenancePlaylist = PhraseProvenancePlaylistRow & {
+	siblings: uuid[]
+}
+export type PhraseProvenanceComment = PhraseProvenanceCommentRow & {
+	siblings: uuid[]
 }
 
 export type PhraseProvenanceItem =
@@ -182,7 +189,7 @@ export type PhraseProvenanceItem =
  */
 export function usePhrasePlaylists(
 	phraseId: uuid
-): UseLiveQueryResult<PhraseProvenancePlaylist[]> {
+): UseLiveQueryResult<PhraseProvenancePlaylistRow[]> {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -214,7 +221,7 @@ export function usePhrasePlaylists(
  */
 export function usePhraseComments(
 	phraseId: uuid
-): UseLiveQueryResult<PhraseProvenanceComment[]> {
+): UseLiveQueryResult<PhraseProvenanceCommentRow[]> {
 	return useLiveQuery(
 		(q) =>
 			q
@@ -245,108 +252,75 @@ export function usePhraseComments(
 	)
 }
 
-// Types for related cards
-export interface RelatedCardSource {
-	type: 'playlist' | 'thread'
-	id: uuid // playlistId or requestId
-	label: string // playlist title or request prompt
-}
-
-export interface RelatedCard {
-	phraseId: uuid
-	sources: RelatedCardSource[]
-}
-
 /**
- * Get phrases related to this one via shared playlists or request threads.
- * Returns deduplicated phrase IDs with source metadata.
+ * Get all provenance items (playlists + comments) sorted by date,
+ * each annotated with sibling phrase IDs from the same source.
  */
-export function useRelatedCards(phraseId: uuid): RelatedCard[] {
+export function usePhraseProvenance(phraseId: uuid): PhraseProvenanceItem[] {
 	const { data: playlists } = usePhrasePlaylists(phraseId)
 	const { data: comments } = usePhraseComments(phraseId)
 
 	const playlistIds = (playlists ?? []).map((p) => p.playlistId)
 	const requestIds = [...new Set((comments ?? []).map((c) => c.requestId))]
 
-	// Get sibling phrases from the same playlists
 	const { data: playlistSiblings } = useLiveQuery(
 		(q) =>
 			playlistIds.length === 0
 				? undefined
 				: q
 						.from({ link: playlistPhraseLinksCollection })
-						.join(
-							{ playlist: phrasePlaylistsCollection },
-							({ link, playlist }) => eq(link.playlist_id, playlist.id),
-							'inner'
-						)
 						.where(({ link }) => inArray(link.playlist_id, playlistIds))
-						.select(({ link, playlist }) => ({
+						.select(({ link }) => ({
 							phraseId: link.phrase_id,
-							playlistId: playlist.id,
-							title: playlist.title,
+							playlistId: link.playlist_id,
 						})),
 		[playlistIds.join(',')]
 	)
 
-	// Get sibling phrases from the same request threads
 	const { data: threadSiblings } = useLiveQuery(
 		(q) =>
 			requestIds.length === 0
 				? undefined
 				: q
 						.from({ link: commentPhraseLinksCollection })
-						.join(
-							{ request: phraseRequestsCollection },
-							({ link, request }) => eq(link.request_id, request.id),
-							'inner'
-						)
 						.where(({ link }) => inArray(link.request_id, requestIds))
-						.select(({ link, request }) => ({
+						.select(({ link }) => ({
 							phraseId: link.phrase_id,
-							requestId: request.id,
-							prompt: request.prompt,
+							requestId: link.request_id,
 						})),
 		[requestIds.join(',')]
 	)
 
-	// Merge into a map of phraseId -> sources, excluding the current phrase
-	const sourceMap = new Map<uuid, RelatedCardSource[]>()
-
+	const playlistSiblingMap = new Map<uuid, uuid[]>()
 	for (const s of playlistSiblings ?? []) {
 		if (s.phraseId === phraseId) continue
-		const sources = sourceMap.get(s.phraseId) ?? []
-		if (!sources.some((x) => x.type === 'playlist' && x.id === s.playlistId)) {
-			sources.push({ type: 'playlist', id: s.playlistId, label: s.title })
-		}
-		sourceMap.set(s.phraseId, sources)
+		const list = playlistSiblingMap.get(s.playlistId) ?? []
+		if (!list.includes(s.phraseId)) list.push(s.phraseId)
+		playlistSiblingMap.set(s.playlistId, list)
 	}
 
+	const threadSiblingMap = new Map<uuid, uuid[]>()
 	for (const s of threadSiblings ?? []) {
 		if (s.phraseId === phraseId) continue
-		const sources = sourceMap.get(s.phraseId) ?? []
-		if (!sources.some((x) => x.type === 'thread' && x.id === s.requestId)) {
-			sources.push({ type: 'thread', id: s.requestId, label: s.prompt })
-		}
-		sourceMap.set(s.phraseId, sources)
+		const list = threadSiblingMap.get(s.requestId) ?? []
+		if (!list.includes(s.phraseId)) list.push(s.phraseId)
+		threadSiblingMap.set(s.requestId, list)
 	}
 
-	return [...sourceMap.entries()].map(([phraseId, sources]) => ({
-		phraseId,
-		sources,
-	}))
-}
-
-/**
- * Get all provenance items (playlists + comments) sorted by date
- */
-export function usePhraseProvenance(phraseId: uuid) {
-	const { data: playlists } = usePhrasePlaylists(phraseId)
-	const { data: comments } = usePhraseComments(phraseId)
+	const playlistItems: PhraseProvenancePlaylist[] = (playlists ?? []).map((p) =>
+		Object.assign({}, p, {
+			siblings: playlistSiblingMap.get(p.playlistId) ?? [],
+		})
+	)
+	const commentItems: PhraseProvenanceComment[] = (comments ?? []).map((c) =>
+		Object.assign({}, c, {
+			siblings: threadSiblingMap.get(c.requestId) ?? [],
+		})
+	)
 
 	const items: PhraseProvenanceItem[] = [
-		...(playlists ?? []),
-		...(comments ?? []),
+		...playlistItems,
+		...commentItems,
 	].toSorted(
 		(a, b) =>
 			new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
