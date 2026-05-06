@@ -11,15 +11,16 @@ safety pause before any non-local write.
 
 ---
 
-## `backfill-chat-corpus.ts`
+## `backfill-search-corpus.ts`
 
-Populates the `chat_corpus` table with denormalized phrase + translation
-text and BGE-M3 embeddings (1024d). The chat search feature (`/chats`,
-and the semantic side of `/search`) reads from this table — without it,
-`/chats/$lang` returns empty results and `/search` falls back to
-trigram-only ranking.
+Populates the `search_corpus` table with denormalized phrase + translation
 
-`supabase db reset` wipes `chat_corpus`. Run this script afterwards
+- request + playlist text and BGE-M3 embeddings (1024d). Both `/chats`
+  and the semantic side of `/search` read from this table — without it,
+  `/chats/$lang` returns empty results and `/search` falls back to
+  trigram-only ranking.
+
+`supabase db reset` wipes `search_corpus`. Run this script afterwards
 (or any time the seed data or `src/features/chat/normalize.ts` rules
 change) to repopulate it.
 
@@ -29,10 +30,10 @@ Local `.env` is loaded automatically. You need all four vars:
 
 ```bash
 # Full populate — text + text_normalized + embedding (hits Workers AI):
-pnpm tsx scripts/backfill-chat-corpus.ts
+pnpm tsx scripts/backfill-search-corpus.ts
 
 # Re-normalize without re-embedding (skips Workers AI entirely):
-pnpm tsx scripts/backfill-chat-corpus.ts --normalize-only
+pnpm tsx scripts/backfill-search-corpus.ts --normalize-only
 ```
 
 Required env vars:
@@ -61,7 +62,7 @@ VITE_SUPABASE_URL="https://<ref>.supabase.co" \
 SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
 CLOUDFLARE_ACCOUNT_ID="..." \
 CLOUDFLARE_API_TOKEN="..." \
-pnpm tsx scripts/backfill-chat-corpus.ts
+pnpm tsx scripts/backfill-search-corpus.ts
 ```
 
 The upsert is idempotent on `(source_type, source_id)`, so re-runs

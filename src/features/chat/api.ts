@@ -3,11 +3,11 @@ import type { ChatQueryType, ChatResultPhraseType } from './schemas'
 
 // Two implementations of `chatSearch` live here:
 //   - chatSearchMock — deterministic canned data, used by scenetest specs.
-//   - chatSearchLive — invokes the chat-search Edge Function.
+//   - chatSearchLive — invokes the search Edge Function.
 //
 // `chatSearch` defaults to the live function but falls back to the mock when
 // the env flag is set OR when running under the scenetest harness so the
-// existing UI tests keep passing without populated chat_corpus.
+// existing UI tests keep passing without a populated search_corpus.
 
 export type ChatSearchInput = {
 	lang: string
@@ -181,17 +181,43 @@ export async function chatSearchMock(
 	return filtered.slice(0, 3)
 }
 
+// Edge Function returns mixed-entity results; chat only renders phrases.
+type EdgeResult = {
+	entity_type: 'phrase' | 'request' | 'playlist'
+	entity_id: string
+	lang: string
+	text: string
+	score: number
+	translations: Array<{ id: string; lang: string; text: string }>
+}
+
 export async function chatSearchLive(
 	input: ChatSearchInput
 ): Promise<ChatResultPhraseType[]> {
-	const result = await supabase.functions.invoke<ChatResultPhraseType[]>(
-		'chat-search',
-		{ body: input }
-	)
-	if (result.error) {
-		throw new Error(`chat-search failed: ${String(result.error)}`)
+	const body = {
+		langs: [input.lang],
+		excludeIds: input.excludePids,
+		query:
+			input.query.kind === 'text'
+				? { kind: 'text' as const, text: input.query.text }
+				: { kind: 'anchor' as const, ids: input.query.pids },
+		limit: 3,
 	}
-	return result.data ?? []
+	const result = await supabase.functions.invoke<EdgeResult[]>('search', {
+		body,
+	})
+	if (result.error) {
+		throw new Error(`search failed: ${String(result.error)}`)
+	}
+	return (result.data ?? [])
+		.filter((r) => r.entity_type === 'phrase')
+		.map((r) => ({
+			id: r.entity_id,
+			lang: r.lang,
+			text: r.text,
+			score: r.score,
+			translations: r.translations,
+		}))
 }
 
 export const chatSearch = USE_MOCK ? chatSearchMock : chatSearchLive
