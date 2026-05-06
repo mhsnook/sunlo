@@ -1,18 +1,19 @@
 // Edge Function: chat-search
 //
-// Public, no-auth. Accepts a normalized chat search request, embeds the
-// query via Cloudflare Workers AI (BGE-M3), and queries the chat_corpus
-// via the chat_search / chat_anchor_search RPCs. Returns ChatResultPhrase
-// shaped responses with translations attached.
+// Public, no-auth. Accepts a normalized search request, embeds the query via
+// Cloudflare Workers AI (BGE-M3) for text mode, then queries the search_corpus
+// via search_by_query / search_by_anchors RPCs. Returns mixed entity results
+// (phrases with translations attached + requests).
+//
+// Backwards-compat: still accepts the older `lang` / `excludePids` / `pids`
+// body shape from the chat client on `next`. New callers should use `langs`
+// (string[] | null), `excludeIds`, and `ids` for anchors.
 //
 // Required env vars (set in Supabase dashboard):
 //   CLOUDFLARE_ACCOUNT_ID
 //   CLOUDFLARE_API_TOKEN
-//   SUPABASE_URL                  (built-in)
-//   SUPABASE_SERVICE_ROLE_KEY     (built-in — used so we can read corpus
-//                                  even without a user JWT; corpus is
-//                                  public anyway, but service role bypasses
-//                                  the RLS round-trip)
+//   SUPABASE_URL                  (built-in in deployed runtime)
+//   SUPABASE_SERVICE_ROLE_KEY     (built-in in deployed runtime)
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 import { normalize } from '../_shared/normalize.ts'
@@ -25,26 +26,49 @@ const CORS_HEADERS = {
 }
 
 type RequestBody = {
-	lang: string
-	excludePids: string[]
+	// New multi-lang shape; pass null to skip lang filtering.
+	langs?: string[] | null
+	// Legacy single-lang shape (chat client on next).
+	lang?: string
+
+	excludeIds?: string[]
+	excludePids?: string[] // legacy
+
 	query:
 		| { kind: 'text'; text: string }
-		| { kind: 'anchor'; pids: string[]; label?: string }
+		| { kind: 'anchor'; ids?: string[]; pids?: string[]; label?: string }
+
+	// Optional override for top-K. Defaults to 3 (chat) or 20 (search).
+	limit?: number
 }
 
 type CorpusMatch = {
-	phrase_id: string
-	matched_via: 'phrase' | 'translation'
+	entity_type: 'phrase' | 'request'
+	entity_id: string
+	matched_via: 'phrase' | 'translation' | 'request'
 	matched_text: string
 	matched_lang: string
 	similarity: number
+}
+
+type SearchResult = {
+	entity_type: 'phrase' | 'request'
+	entity_id: string
+	lang: string
+	text: string
+	score: number
+	translations: Array<{ id: string; lang: string; text: string }>
+	// Backwards-compat for the chat client which expects `id` (phrase id) at
+	// the root and translations attached. Set to entity_id; chat results are
+	// always phrases at the moment.
+	id: string
 }
 
 const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')!
 const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')!
 
 // SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are auto-injected by the deployed
-// edge runtime, but `supabase functions serve` does NOT inject them locally
+// edge runtime, but `supabase functions serve` doesn't inject them locally
 // (and refuses to load any `SUPABASE_*` from supabase/functions/.env). Fall
 // back to the unprefixed CHAT_* names so local dev can supply them via the
 // functions .env file without colliding with the reserved prefix.
@@ -97,30 +121,57 @@ function vectorToPgLiteral(vec: number[]): string {
 	return `[${vec.join(',')}]`
 }
 
-async function hydrateResults(matches: CorpusMatch[]) {
+async function hydrateResults(matches: CorpusMatch[]): Promise<SearchResult[]> {
 	if (matches.length === 0) return []
 
-	const phraseIds = matches.map((m) => m.phrase_id)
+	const phraseIds = matches
+		.filter((m) => m.entity_type === 'phrase')
+		.map((m) => m.entity_id)
+	const requestIds = matches
+		.filter((m) => m.entity_type === 'request')
+		.map((m) => m.entity_id)
 
-	const [{ data: phrases }, { data: translations }] = await Promise.all([
-		supabase
-			.from('phrase')
-			.select('id, text, lang, archived')
-			.in('id', phraseIds)
-			.eq('archived', false),
-		supabase
-			.from('phrase_translation')
-			.select('id, phrase_id, text, lang, archived')
-			.in('phrase_id', phraseIds)
-			.eq('archived', false),
+	const [phraseRes, translationRes, requestRes] = await Promise.all([
+		phraseIds.length
+			? supabase
+					.from('phrase')
+					.select('id, text, lang, archived')
+					.in('id', phraseIds)
+					.eq('archived', false)
+			: Promise.resolve({ data: [], error: null }),
+		phraseIds.length
+			? supabase
+					.from('phrase_translation')
+					.select('id, phrase_id, text, lang, archived')
+					.in('phrase_id', phraseIds)
+					.eq('archived', false)
+			: Promise.resolve({ data: [], error: null }),
+		requestIds.length
+			? supabase
+					.from('phrase_request')
+					.select('id, prompt, lang, deleted')
+					.in('id', requestIds)
+					.eq('deleted', false)
+			: Promise.resolve({ data: [], error: null }),
 	])
 
-	const phraseById = new Map((phrases ?? []).map((p) => [p.id, p]))
+	const phraseById = new Map(
+		(phraseRes.data ?? []).map((p) => [
+			p.id,
+			p as { id: string; text: string; lang: string },
+		])
+	)
+	const requestById = new Map(
+		(requestRes.data ?? []).map((r) => [
+			r.id,
+			r as { id: string; prompt: string; lang: string },
+		])
+	)
 	const translationsByPhrase = new Map<
 		string,
 		Array<{ id: string; lang: string; text: string }>
 	>()
-	for (const t of translations ?? []) {
+	for (const t of translationRes.data ?? []) {
 		const list = translationsByPhrase.get(t.phrase_id) ?? []
 		list.push({ id: t.id, lang: t.lang, text: t.text })
 		translationsByPhrase.set(t.phrase_id, list)
@@ -128,18 +179,33 @@ async function hydrateResults(matches: CorpusMatch[]) {
 
 	// Preserve RPC ordering (already sorted by similarity desc).
 	return matches
-		.map((m) => {
-			const phrase = phraseById.get(m.phrase_id)
-			if (!phrase) return null
+		.map((m): SearchResult | null => {
+			if (m.entity_type === 'phrase') {
+				const phrase = phraseById.get(m.entity_id)
+				if (!phrase) return null
+				return {
+					entity_type: 'phrase',
+					entity_id: phrase.id,
+					id: phrase.id,
+					lang: phrase.lang,
+					text: phrase.text,
+					score: m.similarity,
+					translations: translationsByPhrase.get(phrase.id) ?? [],
+				}
+			}
+			const request = requestById.get(m.entity_id)
+			if (!request) return null
 			return {
-				id: phrase.id,
-				lang: phrase.lang,
-				text: phrase.text,
+				entity_type: 'request',
+				entity_id: request.id,
+				id: request.id,
+				lang: request.lang,
+				text: request.prompt,
 				score: m.similarity,
-				translations: translationsByPhrase.get(phrase.id) ?? [],
+				translations: [],
 			}
 		})
-		.filter((x): x is NonNullable<typeof x> => x !== null)
+		.filter((x): x is SearchResult => x !== null)
 }
 
 Deno.serve(async (req) => {
@@ -164,15 +230,18 @@ Deno.serve(async (req) => {
 		})
 	}
 
-	const lang = body.lang
-	const excludePids = body.excludePids ?? []
-	const matchLimit = 3
+	// Normalize legacy fields. langs=null means "search across all langs".
+	const langs: string[] | null =
+		body.langs !== undefined ? body.langs : body.lang ? [body.lang] : null
+	const excludeIds: string[] = body.excludeIds ?? body.excludePids ?? []
+	const matchLimit = body.limit ?? 3
+	const normalizeLang = langs?.[0] ?? 'eng'
 
 	try {
 		let matches: CorpusMatch[]
 
 		if (body.query.kind === 'text') {
-			const normalized = normalize(lang, body.query.text)
+			const normalized = normalize(normalizeLang, body.query.text)
 			if (normalized.length < 2) {
 				return new Response(JSON.stringify([]), {
 					status: 200,
@@ -181,20 +250,21 @@ Deno.serve(async (req) => {
 			}
 
 			const embedding = await embedViaWorkersAI(normalized)
-			const { data, error } = await supabase.rpc('chat_search', {
+			const { data, error } = await supabase.rpc('search_by_query', {
 				query_embedding: vectorToPgLiteral(embedding),
-				target_lang: lang,
-				exclude_pids: excludePids,
+				target_langs: langs,
+				exclude_ids: excludeIds,
 				match_limit: matchLimit,
 			})
 
 			if (error) throw error
 			matches = (data ?? []) as CorpusMatch[]
 		} else {
-			const { data, error } = await supabase.rpc('chat_anchor_search', {
-				anchor_pids: body.query.pids,
-				target_lang: lang,
-				exclude_pids: excludePids,
+			const anchorIds = body.query.ids ?? body.query.pids ?? []
+			const { data, error } = await supabase.rpc('search_by_anchors', {
+				anchor_ids: anchorIds,
+				target_langs: langs,
+				exclude_ids: excludeIds,
 				match_limit: matchLimit,
 			})
 
