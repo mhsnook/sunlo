@@ -48,4 +48,3 @@ export {
 } from '@/hooks/composite-phrase'
 
 export { useCompositePids } from '@/hooks/composite-pids'
-export { useSmartSearch } from '@/hooks/use-smart-search'
