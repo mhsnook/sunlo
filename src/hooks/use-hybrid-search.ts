@@ -19,10 +19,9 @@ interface TrigramRow {
 }
 
 interface SemanticRow {
-	id: string
+	entity_type: 'phrase' | 'request' | 'playlist'
+	entity_id: string
 	score: number
-	// Edge function returns more (lang, text, translations) but we only
-	// use id + score; phrase data comes from local collections.
 }
 
 export type HybridSearchResult = PhraseFullFilteredType & {
@@ -61,35 +60,47 @@ function reciprocalRankFusion(
 }
 
 /**
- * Hybrid smart search: drop-in replacement for `useSmartSearch` that fuses
- * trigram (lexical) and semantic (BGE-M3 cosine) rankings.
+ * Hybrid smart search for phrases: drop-in for the legacy `useSmartSearch`
+ * but blends trigram (lexical) and semantic (BGE-M3 cosine) rankings.
  *
  * Trigram is paginated — that's the source of "load more" results. Semantic
- * is a one-shot top-K against the chat-search Edge Function. RRF merges the
+ * is a one-shot top-K against the search Edge Function. RRF merges the
  * trigram first page with the semantic results to compute the visible
  * ordering; subsequent trigram pages append directly without re-blending.
  *
- * Graceful degradation: if the semantic Edge Function fails or chat_corpus
- * is empty, the merged list is just trigram. The route never breaks because
- * of the semantic side.
+ * `langs` filters the result phrases to those languages. Pass an empty
+ * array (or skip) to opt out — but for `/search` and friends the caller
+ * should usually pass the user's deck languages or the chip-selected
+ * languages. The trigram RPC takes a single lang for now (uses the first
+ * element); the semantic side fully respects the array.
+ *
+ * Graceful degradation: if the semantic Edge Function fails or
+ * search_corpus is empty, the merged list is just trigram. The route never
+ * breaks because of the semantic side. Note: only phrase entities returned
+ * by semantic are blended into this hook's results; request entities the
+ * Edge Function returns are dropped here (route handles them separately).
  */
 export function useHybridSmartSearch(
-	lang: string,
+	langs: string[],
 	query: string,
 	sortBy: SmartSearchSortBy = 'relevance'
 ) {
 	const debouncedQuery = useDebounce(query, SEARCH_DEBOUNCE_MS)
 	const { data: languagesToShow } = useLanguagesToShow()
 	const enabled = !!debouncedQuery && debouncedQuery.length >= MIN_QUERY_LENGTH
+	const langsKey = langs.join(',')
+	const primaryLang = langs[0] ?? ''
 
-	// 1. Trigram side — paginated, same as the legacy hook.
+	// 1. Trigram side — paginated. The current trigram RPC takes a single
+	// lang; pass the first selected lang. (When `search_phrases_smart`
+	// learns multi-lang, swap to passing the array.)
 	const trigramQuery = useInfiniteQuery({
-		queryKey: ['hybrid-search-trigram', lang, debouncedQuery, sortBy],
+		queryKey: ['hybrid-search-trigram', primaryLang, debouncedQuery, sortBy],
 		queryFn: async ({ pageParam }): Promise<Array<TrigramRow>> => {
 			if (!enabled) return []
 			const { data, error } = await supabase.rpc('search_phrases_smart', {
 				query: debouncedQuery,
-				lang_filter: lang,
+				lang_filter: primaryLang,
 				sort_by: sortBy,
 				result_limit: SEARCH_PAGE_SIZE,
 				cursor_created_at: pageParam?.created_at,
@@ -111,23 +122,23 @@ export function useHybridSmartSearch(
 	// the queryFn returns [] on any error so the merged list falls back to
 	// trigram-only without bubbling the error up.
 	const semanticQuery = useQuery({
-		queryKey: ['hybrid-search-semantic', lang, debouncedQuery],
+		queryKey: ['hybrid-search-semantic', langsKey, debouncedQuery],
 		queryFn: async (): Promise<Array<SemanticRow>> => {
 			if (!enabled) return []
 			const result = await supabase.functions.invoke<Array<SemanticRow>>(
-				'chat-search',
+				'search',
 				{
 					body: {
-						lang,
-						excludePids: [],
+						langs: langs.length > 0 ? langs : null,
+						excludeIds: [],
 						query: { kind: 'text', text: debouncedQuery },
+						limit: SEMANTIC_TOP_K,
 					},
 				}
 			)
 			if (result.error) {
-				// Don't propagate — degrade gracefully.
 				console.warn(
-					'chat-search failed; falling back to trigram only',
+					'search failed; falling back to trigram only',
 					result.error
 				)
 				return []
@@ -139,16 +150,21 @@ export function useHybridSmartSearch(
 		staleTime: 5 * 60 * 1000,
 	})
 
-	// 3. RRF blend of (trigram page 1) + semantic, then append remaining
-	// trigram pages in their original order (deduped).
+	// 3. RRF blend of (trigram page 1) + semantic-phrase-results, then
+	// append remaining trigram pages in their original order (deduped).
+	// Request entities from the semantic side are dropped here — the route
+	// renders requests separately (and the trigram side has no request
+	// matches at all today).
 	const trigramPages = trigramQuery.data?.pages ?? []
 	const trigramFirst = trigramPages[0] ?? []
 	const trigramRest = trigramPages.slice(1).flat()
-	const semantic = (semanticQuery.data ?? []).slice(0, SEMANTIC_TOP_K)
+	const semanticPhrases = (semanticQuery.data ?? []).filter(
+		(r) => r.entity_type === 'phrase'
+	)
 
 	const blended = reciprocalRankFusion([
 		trigramFirst.map((r) => r.id),
-		semantic.map((r) => r.id),
+		semanticPhrases.map((r) => r.entity_id),
 	])
 	const blendedIds = Array.from(blended.entries())
 		.toSorted((a, b) => b[1] - a[1])
@@ -158,8 +174,7 @@ export function useHybridSmartSearch(
 	const tail = trigramRest.map((r) => r.id).filter((id) => !seen.has(id))
 	const matchingIds = [...blendedIds, ...tail]
 
-	// 4. Hydrate full phrase data from local collection (same pattern as
-	// useSmartSearch).
+	// 4. Hydrate full phrase data from local collection.
 	const phrasesQuery = useLiveQuery(
 		(q) => {
 			if (!matchingIds.length) return undefined
@@ -171,7 +186,9 @@ export function useHybridSmartSearch(
 	)
 
 	const trigramScoresById = new Map(trigramPages.flat().map((r) => [r.id, r]))
-	const semanticScoresById = new Map(semantic.map((r) => [r.id, r.score]))
+	const semanticScoresById = new Map(
+		semanticPhrases.map((r) => [r.entity_id, r.score])
+	)
 
 	const results: Array<HybridSearchResult> = []
 	for (const id of matchingIds) {
