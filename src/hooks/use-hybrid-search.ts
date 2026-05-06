@@ -1,23 +1,18 @@
+import { useMemo } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { inArray } from '@tanstack/db'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useSemanticSearch } from '@/hooks/use-semantic-search'
-import {
-	useTrigramSearch,
-	type TrigramSortBy,
-} from '@/hooks/use-trigram-search'
+import { useTrigramSearch } from '@/hooks/use-trigram-search'
 
 import { phrasesFull } from '@/features/phrases/live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
-export type SmartSearchSortBy = TrigramSortBy
-
 export type HybridSearchResult = PhraseFullFilteredType & {
 	similarityScore: number // trigram (0..1)
-	popularityScore: number
-	semanticScore: number // cosine (0..1), 0 if not surfaced by semantic
+	semanticScore: number // cosine (0..1)
 	combinedScore: number // sqrt(semanticScore) + sqrt(similarityScore)
 }
 
@@ -41,71 +36,71 @@ export function combinedScore(semantic: number, trigram: number): number {
 
 /**
  * Hybrid search for phrases: composes useSemanticSearch + useTrigramSearch
- * into a single ranking. Trigram is paginated (source of "load more");
- * semantic is a one-shot top-K. The first page of trigram + the semantic
- * results get blended via combinedScore; subsequent trigram pages append
- * in their original order without re-blending (no semantic data exists
- * for items past the first page).
+ * into a single ranking. Both primitives now hit search_corpus (semantic
+ * via search_by_query, trigram via search_by_trigram), returning rows for
+ * phrases, requests, and playlists. This hook focuses the result list on
+ * phrases — but exposes per-entity score Maps (semanticById, trigramById)
+ * over all entity types so /search can score playlists + requests against
+ * the same yardstick.
  *
- * `langs` filters the result phrases to those languages. Pass an empty
- * array to search across all langs; both primitives accept null lang
- * filter and run cross-lingually.
+ * Trigram is paginated (source of "load more"); semantic is a one-shot
+ * top-K. The first page of trigram + the semantic results get blended
+ * via combinedScore; subsequent trigram pages append in their original
+ * order without re-blending.
  *
  * Graceful degradation: if the semantic Edge Function fails or
- * search_corpus is empty, the merged list is just trigram. The route never
- * breaks because of the semantic side. Only phrase entities returned by
- * semantic are blended into this hook's results; request and playlist
- * entities are exposed via `semanticById` so callers can show diagnostic
- * info on non-phrase result rows.
+ * search_corpus is empty for embeddings, the merged list is still
+ * usable from trigram alone (and vice versa).
  */
-export function useHybridSearch(
-	langs: string[],
-	query: string,
-	sortBy: SmartSearchSortBy = 'relevance'
-) {
+export function useHybridSearch(langs: string[], query: string) {
 	const debouncedQuery = useDebounce(query, SEARCH_DEBOUNCE_MS)
 	const { data: languagesToShow } = useLanguagesToShow()
 	const enabled = debouncedQuery.length >= MIN_QUERY_LENGTH
 	const langFilter = langs.length > 0 ? langs : null
 
-	const trigram = useTrigramSearch(langFilter, debouncedQuery, {
-		sortBy,
-		enabled,
-	})
+	const trigram = useTrigramSearch(langFilter, debouncedQuery, { enabled })
 	const semantic = useSemanticSearch(
 		langFilter,
 		{ kind: 'text', text: debouncedQuery },
 		{ enabled, limit: SEMANTIC_TOP_K }
 	)
 
-	// Score-blend (trigram page 1) ∪ (semantic phrases), sort by
-	// combinedScore desc, then append remaining trigram pages in their
-	// original order (deduped).
-	const trigramFirst = trigram.pages[0] ?? []
-	const trigramRest = trigram.pages.slice(1).flat()
-	const semanticPhrases = semantic.data.filter(
-		(r) => r.entity_type === 'phrase'
-	)
+	const matchingIds = useMemo(() => {
+		// Score-blend (trigram page 1 phrases) ∪ (semantic phrases), sort
+		// by combinedScore desc, then append remaining trigram-page phrases
+		// in original order (deduped).
+		const trigramFirstPhrases = (trigram.pages[0] ?? []).filter(
+			(r) => r.entity_type === 'phrase'
+		)
+		const trigramRestPhrases = trigram.pages
+			.slice(1)
+			.flat()
+			.filter((r) => r.entity_type === 'phrase')
+		const semanticPhrases = semantic.data.filter(
+			(r) => r.entity_type === 'phrase'
+		)
 
-	const blendIds = new Set<string>([
-		...trigramFirst.map((r) => r.id),
-		...semanticPhrases.map((r) => r.entity_id),
-	])
-	const blendedIds = [...blendIds]
-		.map((id) => ({
-			id,
-			score: combinedScore(
-				semantic.byId.get(id)?.score ?? 0,
-				trigram.byId.get(id)?.similarity_score ?? 0
-			),
-		}))
-		.toSorted((a, b) => b.score - a.score)
-		.map(({ id }) => id)
+		const blendIds = new Set<string>([
+			...trigramFirstPhrases.map((r) => r.entity_id),
+			...semanticPhrases.map((r) => r.entity_id),
+		])
+		const blended = [...blendIds]
+			.map((id) => ({
+				id,
+				score: combinedScore(
+					semantic.byId.get(id)?.score ?? 0,
+					trigram.byId.get(id)?.similarity ?? 0
+				),
+			}))
+			.toSorted((a, b) => b.score - a.score)
+			.map(({ id }) => id)
 
-	const tail = trigramRest.map((r) => r.id).filter((id) => !blendIds.has(id))
-	const matchingIds = [...blendedIds, ...tail]
+		const tail = trigramRestPhrases
+			.map((r) => r.entity_id)
+			.filter((id) => !blendIds.has(id))
+		return [...blended, ...tail]
+	}, [trigram.pages, trigram.byId, semantic.data, semantic.byId])
 
-	// Hydrate full phrase data from local collection.
 	const phrasesQuery = useLiveQuery(
 		(q) => {
 			if (!matchingIds.length) return undefined
@@ -116,31 +111,49 @@ export function useHybridSearch(
 		[matchingIds.join(',')]
 	)
 
-	const results: Array<HybridSearchResult> = []
-	for (const id of matchingIds) {
-		const phrase = phrasesQuery.data?.find((p) => p.id === id)
-		if (!phrase) continue
-		const phraseFiltered = splitPhraseTranslations(
-			phrase,
-			languagesToShow ?? []
-		)
-		const trigramRow = trigram.byId.get(id)
-		const semanticScore = semantic.byId.get(id)?.score ?? 0
-		const similarityScore = trigramRow?.similarity_score ?? 0
-		results.push({
-			...phraseFiltered,
-			similarityScore,
-			popularityScore: trigramRow?.popularity_score ?? 0,
-			semanticScore,
-			combinedScore: combinedScore(semanticScore, similarityScore),
-		})
-	}
+	const results = useMemo((): Array<HybridSearchResult> => {
+		const phraseById = new Map(phrasesQuery.data?.map((p) => [p.id, p]) ?? [])
+		const out: Array<HybridSearchResult> = []
+		for (const id of matchingIds) {
+			const phrase = phraseById.get(id)
+			if (!phrase) continue
+			const phraseFiltered = splitPhraseTranslations(
+				phrase,
+				languagesToShow ?? []
+			)
+			const semanticScore = semantic.byId.get(id)?.score ?? 0
+			const similarityScore = trigram.byId.get(id)?.similarity ?? 0
+			out.push({
+				...phraseFiltered,
+				similarityScore,
+				semanticScore,
+				combinedScore: combinedScore(semanticScore, similarityScore),
+			})
+		}
+		return out
+	}, [
+		matchingIds,
+		phrasesQuery.data,
+		languagesToShow,
+		semantic.byId,
+		trigram.byId,
+	])
+
+	const semanticById = useMemo(
+		() => new Map(semantic.data.map((r) => [r.entity_id, r.score])),
+		[semantic.data]
+	)
+	const trigramById = useMemo(
+		() => new Map(trigram.rows.map((r) => [r.entity_id, r.similarity])),
+		[trigram.rows]
+	)
 
 	return {
 		data: results,
-		// Map<entity_id, score> over all entity types — for diagnostic
-		// display on non-phrase result rows.
-		semanticById: new Map(semantic.data.map((r) => [r.entity_id, r.score])),
+		// Per-entity score Maps over ALL entity types — consumers can apply
+		// combinedScore() to rank non-phrase rows on the same yardstick.
+		semanticById,
+		trigramById,
 		isLoading: trigram.isLoading || trigram.isFetching || semantic.isLoading,
 		isEmpty:
 			trigram.isSuccess &&

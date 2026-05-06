@@ -9,7 +9,7 @@ import {
 import { Link } from '@tanstack/react-router'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useLocalSearch } from '@/hooks/use-local-search'
-import { useHybridSearch } from '@/hooks/use-hybrid-search'
+import { useHybridSearch, combinedScore } from '@/hooks/use-hybrid-search'
 import {
 	Search,
 	X,
@@ -79,14 +79,15 @@ export default function BrowseSearchOverlay({
 	}, [userLangs, extraLangs, selectedLangs])
 
 	// Layered search: local for instant feedback (in-memory substring match),
-	// hybrid for server-blended phrase results (semantic + trigram). Local
-	// fires immediately as the user types; hybrid fires after the debounce
-	// settles. Local phrases are shown first (stable order, no re-shuffle
-	// when server arrives), then hybrid results extend the list.
-	// Playlists and requests come from local only — the trigram backend
-	// doesn't index them, and the semantic side via useHybridSearch is
-	// phrase-focused. (BrowseSearchOverlay can switch to useSemanticSearch
-	// directly if non-phrase server matches become important here.)
+	// Layered search:
+	//   - useLocalSearch fires synchronously off the local collections —
+	//     instant phrase / playlist / request matches that render before
+	//     the server returns.
+	//   - useHybridSearch fires after the debounce settles, returning
+	//     server-side combined rankings.
+	// Both go into one merged list ranked by combinedScore desc — same
+	// formula and ordering as /search, so the diagnostic page actually
+	// diagnoses the overlay.
 	const local = useLocalSearch(
 		selectedLangs.length > 0 ? selectedLangs : null,
 		debouncedQuery,
@@ -97,64 +98,97 @@ export default function BrowseSearchOverlay({
 	const results = useMemo((): Array<SearchResult> => {
 		if (!hasQuery) return []
 
-		const items: Array<SearchResult> = []
-		const seenPhraseIds = new Set<string>()
+		type ScoredItem = SearchResult & { score: number }
+		const byId = new Map<string, ScoredItem>()
 
-		// Phrases: local first (instant), then hybrid extensions (server).
-		const phrasePool = [
-			...local.phrases.map((p) => ({
-				id: p.id,
-				lang: p.lang,
-				text: p.text,
-				translation: p.translations?.[0]?.text ?? null,
-			})),
-			...hybrid.data.map((p) => ({
-				id: p.id,
-				lang: p.lang,
-				text: p.text,
-				translation:
-					p.translations_mine?.[0]?.text ??
+		const recordPhrase = (
+			id: string,
+			lang: string,
+			text: string,
+			translation: string | null,
+			semantic: number,
+			trigram: number
+		) => {
+			const score = combinedScore(semantic, trigram)
+			const existing = byId.get(id)
+			if (existing && existing.score >= score) return
+			byId.set(id, {
+				id,
+				type: 'phrase',
+				lang,
+				title: text,
+				subtitle: translation,
+				score,
+			})
+		}
+
+		// Server-ranked phrases first — they have real scores.
+		for (const p of hybrid.data) {
+			recordPhrase(
+				p.id,
+				p.lang,
+				p.text,
+				p.translations_mine?.[0]?.text ??
 					p.translations_other?.[0]?.text ??
 					null,
-			})),
-		]
-		for (const phrase of phrasePool) {
-			if (seenPhraseIds.has(phrase.id)) continue
-			seenPhraseIds.add(phrase.id)
-			items.push({
-				id: phrase.id,
-				type: 'phrase',
-				lang: phrase.lang,
-				title: phrase.text,
-				subtitle: phrase.translation,
-			})
-			if (items.length >= 20) return items
+				p.semanticScore,
+				p.similarityScore
+			)
+		}
+		// Local phrases that the server didn't surface get a synthetic
+		// trigram score so they still appear (e.g., before debounce settles
+		// or when search_corpus is empty).
+		for (const p of local.phrases) {
+			if (byId.has(p.id)) continue
+			recordPhrase(
+				p.id,
+				p.lang,
+				p.text,
+				p.translations?.[0]?.text ?? null,
+				0,
+				0.3
+			)
 		}
 
 		for (const playlist of local.playlists) {
-			items.push({
+			const semantic = hybrid.semanticById.get(playlist.id) ?? 0
+			const trigram = hybrid.trigramById.get(playlist.id) ?? 0.3
+			byId.set(playlist.id, {
 				id: playlist.id,
 				type: 'playlist',
 				lang: playlist.lang,
 				title: playlist.title,
 				subtitle: playlist.description,
+				score: combinedScore(semantic, trigram),
 			})
-			if (items.length >= 20) return items
 		}
 
 		for (const req of local.requests) {
-			items.push({
+			const semantic = hybrid.semanticById.get(req.id) ?? 0
+			const trigram = hybrid.trigramById.get(req.id) ?? 0.3
+			byId.set(req.id, {
 				id: req.id,
 				type: 'request',
 				lang: req.lang,
 				title: req.prompt,
 				subtitle: `${req.upvote_count} upvotes`,
+				score: combinedScore(semantic, trigram),
 			})
-			if (items.length >= 20) return items
 		}
 
-		return items
-	}, [hasQuery, local.phrases, local.playlists, local.requests, hybrid.data])
+		return [...byId.values()]
+			.toSorted((a, b) => b.score - a.score)
+			.slice(0, 20)
+			.map(({ score: _score, ...rest }) => rest)
+	}, [
+		hasQuery,
+		local.phrases,
+		local.playlists,
+		local.requests,
+		hybrid.data,
+		hybrid.semanticById,
+		hybrid.trigramById,
+	])
 
 	// Reset selected index when results change
 	const resetKey = `${results.length}-${lowerQuery}`

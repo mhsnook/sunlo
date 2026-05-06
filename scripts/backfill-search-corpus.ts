@@ -101,22 +101,31 @@ function pgVecLiteral(v: number[]): string {
 
 async function loadPhrases(): Promise<CorpusRow[]> {
 	const { data, error } = await supabase
-		.from('phrase')
-		.select('id, text, lang')
+		.from('phrase_meta')
+		.select('id, text, lang, tags')
 		.eq('archived', false)
 	if (error) throw error
 	return (data ?? [])
-		.filter((p) => p.text.trim().length > 0)
-		.map((p) => ({
-			source_type: 'phrase',
-			source_id: p.id,
-			entity_type: 'phrase',
-			entity_id: p.id,
-			entity_lang: p.lang,
-			text_lang: p.lang,
-			text: p.text,
-			text_normalized: normalize(p.lang, p.text),
-		}))
+		.filter((p) => p.text && p.text.trim().length > 0)
+		.map((p) => {
+			const tagNames = ((p.tags ?? []) as Array<{ name: string }>)
+				.map((t) => t.name)
+				.join(' ')
+			// `text` stays clean for display in matched_text result rows;
+			// `text_normalized` includes tag names so both trigram and
+			// semantic indexing pick up tag context.
+			const searchableText = tagNames ? `${p.text} ${tagNames}` : p.text
+			return {
+				source_type: 'phrase',
+				source_id: p.id!,
+				entity_type: 'phrase',
+				entity_id: p.id!,
+				entity_lang: p.lang!,
+				text_lang: p.lang!,
+				text: p.text!,
+				text_normalized: normalize(p.lang!, searchableText),
+			}
+		})
 }
 
 async function loadTranslations(): Promise<CorpusRow[]> {
