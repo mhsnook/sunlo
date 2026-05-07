@@ -1,6 +1,10 @@
 -- Seed data for comment system
 -- Add sample comments and comment-phrase links for testing
 --
+set
+	session_replication_role = replica;
+
+--
 -- Data for Name: request_comment; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 insert into
