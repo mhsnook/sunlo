@@ -97,13 +97,6 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'chat_message_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
-					{
 						foreignKeyName: 'chat_message_playlist_id_fkey'
 						columns: ['playlist_id']
 						isOneToOne: false
@@ -199,13 +192,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'comment_phrase_link_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -439,13 +425,6 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'notification_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
-					{
 						foreignKeyName: 'notification_request_id_fkey'
 						columns: ['request_id']
 						isOneToOne: false
@@ -676,13 +655,6 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'phrase_see_also_from_phrase_id_fkey'
-						columns: ['from_phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
-					{
 						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
 						columns: ['to_phrase_id']
 						isOneToOne: false
@@ -694,13 +666,6 @@ export type Database = {
 						columns: ['to_phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'phrase_see_also_to_phrase_id_fkey'
-						columns: ['to_phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 				]
@@ -856,13 +821,6 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'phrase_tag_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
-					{
 						foreignKeyName: 'phrase_tag_tag_id_fkey'
 						columns: ['tag_id']
 						isOneToOne: false
@@ -951,13 +909,6 @@ export type Database = {
 						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
-					{
-						foreignKeyName: 'phrase_translation_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
 				]
 			}
 			playlist_phrase_link: {
@@ -1001,13 +952,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'playlist_phrase_link_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1080,6 +1024,48 @@ export type Database = {
 						referencedColumns: ['uid']
 					},
 				]
+			}
+			search_corpus: {
+				Row: {
+					created_at: string
+					embedding: string
+					entity_id: string
+					entity_lang: string
+					entity_type: string
+					id: string
+					source_id: string
+					source_type: string
+					text: string
+					text_lang: string
+					text_normalized: string
+				}
+				Insert: {
+					created_at?: string
+					embedding: string
+					entity_id: string
+					entity_lang: string
+					entity_type: string
+					id?: string
+					source_id: string
+					source_type: string
+					text: string
+					text_lang: string
+					text_normalized: string
+				}
+				Update: {
+					created_at?: string
+					embedding?: string
+					entity_id?: string
+					entity_lang?: string
+					entity_type?: string
+					id?: string
+					source_id?: string
+					source_type?: string
+					text?: string
+					text_lang?: string
+					text_normalized?: string
+				}
+				Relationships: []
 			}
 			tag: {
 				Row: {
@@ -1209,13 +1195,6 @@ export type Database = {
 						referencedColumns: ['id']
 					},
 					{
-						foreignKeyName: 'user_card_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
-					{
 						foreignKeyName: 'user_card_uid_fkey'
 						columns: ['uid']
 						isOneToOne: false
@@ -1304,13 +1283,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'user_card_review_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1700,13 +1672,6 @@ export type Database = {
 						referencedRelation: 'phrase_meta'
 						referencedColumns: ['id']
 					},
-					{
-						foreignKeyName: 'user_card_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
-						referencedColumns: ['id']
-					},
 				]
 			}
 			public_profile: {
@@ -1784,13 +1749,6 @@ export type Database = {
 						columns: ['phrase_id']
 						isOneToOne: false
 						referencedRelation: 'phrase_meta'
-						referencedColumns: ['id']
-					},
-					{
-						foreignKeyName: 'user_card_phrase_id_fkey'
-						columns: ['phrase_id']
-						isOneToOne: false
-						referencedRelation: 'phrase_search_index'
 						referencedColumns: ['id']
 					},
 					{
@@ -1910,6 +1868,38 @@ export type Database = {
 			is_admin: { Args: never; Returns: boolean }
 			recount_all_upvotes: { Args: never; Returns: undefined }
 			refresh_meta_language: { Args: never; Returns: undefined }
+			search_by_anchors: {
+				Args: {
+					anchor_ids: string[]
+					exclude_ids?: string[]
+					match_limit?: number
+					target_langs?: string[]
+				}
+				Returns: {
+					entity_id: string
+					entity_type: string
+					matched_lang: string
+					matched_text: string
+					matched_via: string
+					similarity: number
+				}[]
+			}
+			search_by_query: {
+				Args: {
+					exclude_ids?: string[]
+					match_limit?: number
+					query_embedding: string
+					target_langs?: string[]
+				}
+				Returns: {
+					entity_id: string
+					entity_type: string
+					matched_lang: string
+					matched_text: string
+					matched_via: string
+					similarity: number
+				}[]
+			}
 			search_by_trigram: {
 				Args: {
 					cursor_created_at?: string
@@ -2249,6 +2239,7 @@ export type Database = {
 					id: string
 					in_progress_size: number
 					key: string
+					metadata: Json | null
 					owner_id: string | null
 					upload_signature: string
 					user_metadata: Json | null
@@ -2260,6 +2251,7 @@ export type Database = {
 					id: string
 					in_progress_size?: number
 					key: string
+					metadata?: Json | null
 					owner_id?: string | null
 					upload_signature: string
 					user_metadata?: Json | null
@@ -2271,6 +2263,7 @@ export type Database = {
 					id?: string
 					in_progress_size?: number
 					key?: string
+					metadata?: Json | null
 					owner_id?: string | null
 					upload_signature?: string
 					user_metadata?: Json | null
@@ -2389,6 +2382,14 @@ export type Database = {
 			[_ in never]: never
 		}
 		Functions: {
+			allow_any_operation: {
+				Args: { expected_operations: string[] }
+				Returns: boolean
+			}
+			allow_only_operation: {
+				Args: { expected_operation: string }
+				Returns: boolean
+			}
 			can_insert_object: {
 				Args: { bucketid: string; metadata: Json; name: string; owner: string }
 				Returns: undefined
