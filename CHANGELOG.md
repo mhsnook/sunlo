@@ -1,5 +1,56 @@
 # Change Log
 
+## v0.24 - Smart Search, Chat-style Discovery, TanStack Form
+
+_7 May, 2026_
+
+### Features
+
+- **Smart Search** — `/search` now blends semantic (BGE-M3 cosine via Cloudflare Workers AI) and trigram (pg_trgm) signals into a single ranked list across phrases, requests, and playlists. Symmetric `sqrt(x) + sqrt(y)` score formula amplifies low-end matches (typo recovery, inflected forms) without letting them dominate. Lang and tag chips are filters on a text query (the search bar requires text now). Tag names are folded into the searched text so a query like "greeting" surfaces phrases tagged that way even if their text doesn't say it.
+- **Chat-style discovery** (`/chats/$lang`) — new conversational phrasebook search. Type in plain English; semantic-only results (no trigram) come back in a chat-like turn-by-turn UI. Tap the **+** on a result to add it to a per-language cart, then "more like these" pivots to a new search using the cart contents as anchors. User-approved normalization with a live suggestion strip ("did you mean…?") feeds the search.
+- **`/search/test` diagnostic page** — hidden auth-only route that mirrors `/search` but renders the score breakdown (Ω semantic, Δ trigram, Σ combined) under each result row. For tuning the blending formula by eyeballing real queries.
+- **Browse Requests language picker** — clicking a request from a cross-language list intercepts with a language-picker dialog so the request lands in the right deck.
+- **TanStack Form migration** — every form across the app moved from react-hook-form to TanStack Form for consistency with the rest of the TanStack stack.
+
+### Improvements
+
+- **Lazy-load `AppSidebar` and `AppNav`** — first paint is faster; the navigation chrome no longer blocks main-bundle parse.
+- **Bundle-size diff job in PR CI** — every PR now reports raw + gzipped main-bundle deltas so size regressions are caught before merge.
+- **`/search` route lazy-loaded** — the search UI plus all its sub-components ship in a separate chunk, not the main bundle. Diagnostic-only code (`ScoreBreakdown`) lives in the `/search/test` chunk via render-prop injection.
+- **Main-bundle code-splitting around contributions routes restored** — was inadvertently broken in a previous refactor.
+- **Sibling card burying refined** — when a phrase has both forward and reverse cards eligible, the lower-priority sibling is buried (avoids back-to-back review of the same phrase). First-day exception keeps both siblings of a brand-new pair visible.
+
+### Fixes
+
+- Fix `phrase_meta` view lacking `security_invoker` rule.
+- Fix scenetest console errors and timing flakiness in admin phrase table + new-user cleanup.
+
+### Refactors
+
+- **Smart-search architecture** — the previously monolithic `useHybridSearch` hook split into composable primitives: `useSemanticSearch` (Edge Function), `useTrigramSearch` (pg_trgm RPC), `useLocalSearch` (in-memory substring scan). `useHybridSearch` blends the server pair; `useMergedSearch` composes everything into a single ranked list consumed identically by `/search` and `BrowseSearchOverlay` — same ranking guaranteed by construction.
+- **`search_corpus` is the single source of truth for both semantic and lexical search** — the old `phrase_search_index` materialized view + `search_phrases_smart` RPC were dropped. New `search_by_trigram` RPC mirrors `search_by_query`'s shape; both run against `search_corpus`.
+- **Contributions feature module dissolved** (#583) — split across the relevant feature directories; one less artificial boundary.
+- **UI preferences consolidated** into a shared module (#604).
+- **`ActionCard` props tightened** with a discriminated union (#608).
+- **`SearchEntityType` unified** — was duplicated as `SearchResultType`; lives in `src/hooks/search-config.ts` now.
+- **`chatSearchLive` delegates to `runSemanticSearch`** — the chat client and `/search` share the underlying edge-function call without sharing React shape.
+
+### Migrations
+
+- `20260429120000_search_corpus.sql` — denormalized search corpus table with `entity_id` / `entity_type` discriminator, HNSW vector index for semantic, btree on `text_normalized` for the embedding cache.
+- `20260506120000_widen_smart_search_lang_filter.sql` — `lang_filter` widens from `text` to `text[]` (matches the semantic RPCs' contract).
+- `20260506130000_search_corpus_trigram.sql` — drops `phrase_search_index` + `search_phrases_smart`; adds `gin_trgm_ops` index on `search_corpus.text_normalized` and the new `search_by_trigram` RPC.
+
+After applying migrations, run `pnpm tsx scripts/backfill-search-corpus.ts` to populate the corpus (the script now selects from `phrase_meta` and folds tag names into `text_normalized`).
+
+### CI / DX
+
+- **Scenetest upgraded to v0.9.0** — panel-dupe fix, comments-tab scene added, scene coverage updated for the form migration.
+- **`oxfmt` documented as the JS/TS formatter** in CLAUDE.md (prettier remains for SQL).
+- **`dev:local` and `build:test` scripts** — set `VITE_CHAT_USE_MOCK=true` so the chat UI runs against canned data without populating the corpus or hitting Workers AI. Useful for scenetest and offline UI work.
+- **Comment ownership gating test + seed data** (#588).
+- **`MIN_QUERY_LENGTH` and `LOCAL_ONLY_TRIGRAM_SCORE` centralized** in `src/hooks/search-config.ts` (were defined in 4+ places).
+
 ## v0.23 - Admin Panel, Learn Page Redesign, Recognise & Recall
 
 _25 April, 2026_
