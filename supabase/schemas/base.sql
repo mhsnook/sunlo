@@ -68,6 +68,10 @@ create extension if not exists "uuid-ossp"
 with
 	schema "extensions";
 
+create extension if not exists "vector"
+with
+	schema "public";
+
 create type "public"."card_direction" as enum('forward', 'reverse');
 
 alter type "public"."card_direction" owner to "postgres";
@@ -612,83 +616,234 @@ $$;
 
 alter function "public"."refresh_meta_language" () owner to "postgres";
 
-create or replace function "public"."refresh_phrase_search_index" () returns "void" language "plpgsql" security definer as $$
-BEGIN
-  IF EXISTS (SELECT 1 FROM pg_matviews WHERE matviewname = 'phrase_search_index' AND ispopulated) THEN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY phrase_search_index;
-  ELSE
-    REFRESH MATERIALIZED VIEW phrase_search_index;
-  END IF;
-END;
+create or replace function "public"."search_by_anchors" (
+	"anchor_ids" "uuid" [],
+	"target_langs" "text" [] default null::"text" [],
+	"exclude_ids" "uuid" [] default '{}'::"uuid" [],
+	"match_limit" integer default 20
+) returns table (
+	"entity_type" "text",
+	"entity_id" "uuid",
+	"matched_via" "text",
+	"matched_text" "text",
+	"matched_lang" "text",
+	"similarity" real
+) language "plpgsql" stable as $$
+declare
+	avg_embedding vector(1024);
+begin
+	-- Average over primary rows (phrase + request + playlist), not
+	-- translations. Translations capture the entity's meaning in another
+	-- language; including them in the centroid would smear the semantic
+	-- anchor toward whatever target language the translations happen to
+	-- be in.
+	--
+	-- search_corpus.entity_id is qualified because PL/pgSQL with RETURNS
+	-- TABLE creates implicit OUT parameters for each return column; an
+	-- unqualified `entity_id` would clash with the OUT parameter and
+	-- raise "column reference 'entity_id' is ambiguous" at call time.
+	select avg(embedding) into avg_embedding
+	from search_corpus
+	where source_type in ('phrase', 'request', 'playlist')
+		and search_corpus.entity_id = any(anchor_ids);
+
+	if avg_embedding is null then
+		return;
+	end if;
+
+	return query
+	select * from search_by_query(
+		avg_embedding,
+		target_langs,
+		exclude_ids,
+		match_limit
+	);
+end;
 $$;
 
-alter function "public"."refresh_phrase_search_index" () owner to "postgres";
+alter function "public"."search_by_anchors" (
+	"anchor_ids" "uuid" [],
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) owner to "postgres";
 
-create or replace function "public"."search_phrases_smart" (
+create or replace function "public"."search_by_query" (
+	"query_embedding" "public"."vector",
+	"target_langs" "text" [] default null::"text" [],
+	"exclude_ids" "uuid" [] default '{}'::"uuid" [],
+	"match_limit" integer default 20
+) returns table (
+	"entity_type" "text",
+	"entity_id" "uuid",
+	"matched_via" "text",
+	"matched_text" "text",
+	"matched_lang" "text",
+	"similarity" real
+) language "sql" stable as $$
+	with match_pool as (
+		select
+			cc.entity_id,
+			cc.entity_type,
+			cc.source_type,
+			cc.text as matched_text,
+			cc.text_lang as matched_lang,
+			1 - (cc.embedding <=> query_embedding) as similarity
+		from search_corpus cc
+		where (target_langs is null or cc.entity_lang = any(target_langs))
+			and cc.entity_id <> all(exclude_ids)
+		order by cc.embedding <=> query_embedding
+		limit match_limit * 5
+	),
+	live_pool as (
+		select mp.* from match_pool mp
+		where (
+			mp.entity_type = 'phrase'
+			and exists (
+				select 1 from phrase
+				where id = mp.entity_id and archived = false
+			)
+		) or (
+			mp.entity_type = 'request'
+			and exists (
+				select 1 from phrase_request
+				where id = mp.entity_id and deleted = false
+			)
+		) or (
+			mp.entity_type = 'playlist'
+			and exists (
+				select 1 from phrase_playlist
+				where id = mp.entity_id and deleted = false
+			)
+		)
+	),
+	deduped as (
+		select distinct on (entity_id)
+			entity_id, entity_type, source_type, matched_text, matched_lang, similarity
+		from live_pool
+		order by entity_id, similarity desc
+	)
+	select
+		entity_type,
+		entity_id,
+		source_type as matched_via,
+		matched_text,
+		matched_lang,
+		similarity::real
+	from deduped
+	order by similarity desc
+	limit match_limit;
+$$;
+
+alter function "public"."search_by_query" (
+	"query_embedding" "public"."vector",
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) owner to "postgres";
+
+create or replace function "public"."search_by_trigram" (
 	"query" "text",
-	"lang_filter" "text" [] default null::"text" [],
-	"sort_by" "text" default 'relevance'::"text",
-	"result_limit" integer default 20,
+	"target_langs" "text" [] default null::"text" [],
+	"exclude_ids" "uuid" [] default '{}'::"uuid" [],
+	"match_limit" integer default 20,
 	"cursor_created_at" timestamp with time zone default null::timestamp with time zone,
 	"cursor_id" "uuid" default null::"uuid"
 ) returns table (
-	"id" "uuid",
-	"similarity_score" real,
-	"popularity_score" integer,
+	"entity_type" "text",
+	"entity_id" "uuid",
+	"matched_via" "text",
+	"matched_text" "text",
+	"matched_lang" "text",
+	"similarity" real,
 	"created_at" timestamp with time zone
 ) language "plpgsql" stable as $$
-DECLARE
-  normalized_query TEXT;
-BEGIN
-  normalized_query := LOWER(TRIM(query));
+declare
+	normalized_query text;
+begin
+	normalized_query := lower(trim(query));
+	if length(normalized_query) < 2 then
+		return;
+	end if;
 
-  IF normalized_query = '' OR LENGTH(normalized_query) < 2 THEN
-    RETURN;
-  END IF;
-
-  RETURN QUERY
-  WITH scored AS (
-    SELECT
-      psi.id,
-      psi.created_at,
-      psi.popularity,
-      GREATEST(
-        similarity(psi.search_text, normalized_query),
-        CASE WHEN psi.search_text ILIKE '%' || normalized_query || '%' THEN 0.4 ELSE 0 END,
-        CASE WHEN psi.search_text ILIKE normalized_query || '%' THEN 0.6 ELSE 0 END,
-        CASE WHEN psi.search_text ILIKE '% ' || normalized_query || '%' THEN 0.5 ELSE 0 END
-      ) AS sim_score
-    FROM phrase_search_index psi
-    WHERE
-      (lang_filter IS NULL OR psi.lang = ANY(lang_filter))
-      AND (
-        psi.search_text ILIKE '%' || normalized_query || '%'
-        OR similarity(psi.search_text, normalized_query) > 0.1
-      )
-  )
-  SELECT
-    scored.id,
-    scored.sim_score::REAL AS similarity_score,
-    scored.popularity::INT AS popularity_score,
-    scored.created_at
-  FROM scored
-  WHERE
-    (cursor_created_at IS NULL AND cursor_id IS NULL)
-    OR (scored.created_at, scored.id) < (cursor_created_at, cursor_id)
-  ORDER BY
-    CASE WHEN sort_by = 'relevance' THEN scored.sim_score END DESC NULLS LAST,
-    CASE WHEN sort_by = 'popularity' THEN scored.popularity END DESC NULLS LAST,
-    scored.created_at DESC,
-    scored.id DESC
-  LIMIT result_limit;
-END;
+	return query
+	with match_pool as (
+		select
+			cc.entity_id,
+			cc.entity_type,
+			cc.source_type,
+			cc.text as matched_text,
+			cc.text_lang as matched_lang,
+			cc.created_at,
+			greatest(
+				similarity(cc.text_normalized, normalized_query),
+				case when cc.text_normalized ilike '%' || normalized_query || '%' then 0.4 else 0 end,
+				case when cc.text_normalized ilike normalized_query || '%' then 0.6 else 0 end,
+				case when cc.text_normalized ilike '% ' || normalized_query || '%' then 0.5 else 0 end
+			) as sim_score
+		from search_corpus cc
+		where (target_langs is null or cc.entity_lang = any(target_langs))
+			and cc.entity_id <> all(exclude_ids)
+			and (
+				cc.text_normalized ilike '%' || normalized_query || '%'
+				or similarity(cc.text_normalized, normalized_query) > 0.1
+			)
+	),
+	live_pool as (
+		select mp.* from match_pool mp
+		where (
+			mp.entity_type = 'phrase'
+			and exists (
+				select 1 from phrase
+				where id = mp.entity_id and archived = false
+			)
+		) or (
+			mp.entity_type = 'request'
+			and exists (
+				select 1 from phrase_request
+				where id = mp.entity_id and deleted = false
+			)
+		) or (
+			mp.entity_type = 'playlist'
+			and exists (
+				select 1 from phrase_playlist
+				where id = mp.entity_id and deleted = false
+			)
+		)
+	),
+	deduped as (
+		select distinct on (lp.entity_id)
+			lp.entity_id,
+			lp.entity_type,
+			lp.source_type,
+			lp.matched_text,
+			lp.matched_lang,
+			lp.sim_score,
+			lp.created_at
+		from live_pool lp
+		order by lp.entity_id, lp.sim_score desc
+	)
+	select
+		d.entity_type,
+		d.entity_id,
+		d.source_type as matched_via,
+		d.matched_text,
+		d.matched_lang,
+		d.sim_score::real as similarity,
+		d.created_at
+	from deduped d
+	where (cursor_created_at is null and cursor_id is null)
+		or (d.created_at, d.entity_id) < (cursor_created_at, cursor_id)
+	order by d.sim_score desc, d.created_at desc, d.entity_id desc
+	limit match_limit;
+end;
 $$;
 
-alter function "public"."search_phrases_smart" (
+alter function "public"."search_by_trigram" (
 	"query" "text",
-	"lang_filter" "text" [],
-	"sort_by" "text",
-	"result_limit" integer,
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer,
 	"cursor_created_at" timestamp with time zone,
 	"cursor_id" "uuid"
 ) owner to "postgres";
@@ -836,17 +991,6 @@ END;
 $$;
 
 alter function "public"."trigger_refresh_meta_language" () owner to "postgres";
-
-create or replace function "public"."trigger_refresh_phrase_search" () returns "trigger" language "plpgsql" security definer as $$
-BEGIN
-  -- Use pg_notify to debounce refreshes in production
-  -- For now, refresh immediately (can be optimized later with a background job)
-  PERFORM refresh_phrase_search_index();
-  RETURN NULL;
-END;
-$$;
-
-alter function "public"."trigger_refresh_phrase_search" () owner to "postgres";
 
 create or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1683,6 +1827,39 @@ create table if not exists "public"."request_comment" (
 
 alter table "public"."request_comment" owner to "postgres";
 
+create table if not exists "public"."search_corpus" (
+	"id" "uuid" default "gen_random_uuid" () not null,
+	"source_type" "text" not null,
+	"source_id" "uuid" not null,
+	"entity_id" "uuid" not null,
+	"entity_type" "text" not null,
+	"entity_lang" "text" not null,
+	"text_lang" "text" not null,
+	"text" "text" not null,
+	"text_normalized" "text" not null,
+	"embedding" "public"."vector" (1024) not null,
+	"created_at" timestamp with time zone default "now" () not null,
+	constraint "search_corpus_entity_type_check" check (
+		(
+			"entity_type" = any (array['phrase'::"text", 'request'::"text", 'playlist'::"text"])
+		)
+	),
+	constraint "search_corpus_source_type_check" check (
+		(
+			"source_type" = any (
+				array[
+					'phrase'::"text",
+					'translation'::"text",
+					'request'::"text",
+					'playlist'::"text"
+				]
+			)
+		)
+	)
+);
+
+alter table "public"."search_corpus" owner to "postgres";
+
 create or replace view "public"."user_card_plus"
 with
 	("security_invoker" = 'true') as
@@ -1908,57 +2085,14 @@ create table if not exists "public"."user_deck_review_state" (
 
 alter table "public"."user_deck_review_state" owner to "postgres";
 
-alter table only "public"."phrase"
-add constraint "card_phrase_pkey" primary key ("id");
-
-create materialized view "public"."phrase_search_index" as
-select
-	"p"."id",
-	"p"."lang",
-	"p"."text",
-	"p"."created_at",
-	coalesce("ps"."count_learners", (0)::bigint) as "popularity",
-	"lower" (
-		(
-			(
-				(
-					(coalesce("p"."text", ''::"text") || ' '::"text") || coalesce("string_agg" (distinct "t"."text", ' '::"text"), ''::"text")
-				) || ' '::"text"
-			) || coalesce("string_agg" (distinct "tag"."name", ' '::"text"), ''::"text")
-		)
-	) as "search_text"
-from
-	(
-		(
-			(
-				(
-					"public"."phrase" "p"
-					left join "public"."phrase_translation" "t" on (
-						(
-							("t"."phrase_id" = "p"."id")
-							and ("t"."archived" = false)
-						)
-					)
-				)
-				left join "public"."phrase_tag" "pt" on (("pt"."phrase_id" = "p"."id"))
-			)
-			left join "public"."tag" on (("tag"."id" = "pt"."tag_id"))
-		)
-		left join "public"."phrase_stats" "ps" on (("ps"."phrase_id" = "p"."id"))
-	)
-group by
-	"p"."id",
-	"ps"."count_learners"
-with
-	no data;
-
-alter table "public"."phrase_search_index" owner to "postgres";
-
 alter table only "public"."admin_user"
 add constraint "admin_user_pkey" primary key ("uid");
 
 alter table only "public"."phrase"
 add constraint "card_phrase_id_int_key" unique ("id");
+
+alter table only "public"."phrase"
+add constraint "card_phrase_pkey" primary key ("id");
 
 alter table only "public"."phrase_relation"
 add constraint "card_see_also_pkey" primary key ("id");
@@ -2026,6 +2160,12 @@ add constraint "profiles_username_key" unique ("username");
 alter table only "public"."request_comment"
 add constraint "request_comment_pkey" primary key ("id");
 
+alter table only "public"."search_corpus"
+add constraint "search_corpus_pkey" primary key ("id");
+
+alter table only "public"."search_corpus"
+add constraint "search_corpus_source_type_source_id_key" unique ("source_type", "source_id");
+
 alter table only "public"."tag"
 add constraint "tag_name_lang_key" unique ("name", "lang");
 
@@ -2091,16 +2231,6 @@ create index "idx_notification_uid_unread" on "public"."notification" using "btr
 where
 	("read_at" is null);
 
-create index "idx_phrase_search_cursor" on "public"."phrase_search_index" using "btree" ("created_at" desc, "id");
-
-create unique index "idx_phrase_search_id" on "public"."phrase_search_index" using "btree" ("id");
-
-create index "idx_phrase_search_lang" on "public"."phrase_search_index" using "btree" ("lang");
-
-create index "idx_phrase_search_popularity" on "public"."phrase_search_index" using "btree" ("popularity" desc);
-
-create index "idx_phrase_search_trgm" on "public"."phrase_search_index" using "gin" ("search_text" "public"."gin_trgm_ops");
-
 create index "idx_upvote_comment" on "public"."comment_upvote" using "btree" ("comment_id");
 
 create index "idx_upvote_user" on "public"."comment_upvote" using "btree" ("uid");
@@ -2110,6 +2240,18 @@ create index "phrase_playlist_uid_idx" on "public"."phrase_playlist" using "btre
 create index "playlist_phrase_link_phrase_id_idx" on "public"."playlist_phrase_link" using "btree" ("phrase_id");
 
 create index "playlist_phrase_link_playlist_id_idx" on "public"."playlist_phrase_link" using "btree" ("playlist_id");
+
+create index "search_corpus_embedding_hnsw_idx" on "public"."search_corpus" using "hnsw" ("embedding" "public"."vector_cosine_ops");
+
+create index "search_corpus_entity_id_idx" on "public"."search_corpus" using "btree" ("entity_id");
+
+create index "search_corpus_entity_lang_idx" on "public"."search_corpus" using "btree" ("entity_lang");
+
+create index "search_corpus_entity_type_idx" on "public"."search_corpus" using "btree" ("entity_type");
+
+create index "search_corpus_text_normalized_idx" on "public"."search_corpus" using "btree" ("text_normalized");
+
+create index "search_corpus_text_normalized_trgm_idx" on "public"."search_corpus" using "gin" ("text_normalized" "public"."gin_trgm_ops");
 
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
@@ -2162,27 +2304,6 @@ create or replace trigger "refresh_meta_language_on_phrase_change"
 after insert
 or delete on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
-
-create or replace trigger "refresh_search_on_phrase_change"
-after insert
-or delete
-or
-update on "public"."phrase" for each statement
-execute function "public"."trigger_refresh_phrase_search" ();
-
-create or replace trigger "refresh_search_on_tag_change"
-after insert
-or delete
-or
-update on "public"."phrase_tag" for each statement
-execute function "public"."trigger_refresh_phrase_search" ();
-
-create or replace trigger "refresh_search_on_translation_change"
-after insert
-or delete
-or
-update on "public"."phrase_translation" for each statement
-execute function "public"."trigger_refresh_phrase_search" ();
 
 create or replace trigger "tr_update_comment_upvote_count"
 after insert
@@ -2944,6 +3065,13 @@ alter table "public"."playlist_phrase_link" enable row level security;
 
 alter table "public"."request_comment" enable row level security;
 
+alter table "public"."search_corpus" enable row level security;
+
+create policy "search_corpus_public_read" on "public"."search_corpus" for
+select
+	to "authenticated",
+	"anon" using (true);
+
 alter table "public"."tag" enable row level security;
 
 alter table "public"."user_card" enable row level security;
@@ -2994,6 +3122,310 @@ grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "anon";
 grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "authenticated";
 
 grant all on function "public"."gtrgm_out" ("public"."gtrgm") to "service_role";
+
+grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "postgres";
+
+grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "anon";
+
+grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "authenticated";
+
+grant all on function "public"."halfvec_in" ("cstring", "oid", integer) to "service_role";
+
+grant all on function "public"."halfvec_out" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_out" ("public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_out" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_out" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_recv" ("internal", "oid", integer) to "postgres";
+
+grant all on function "public"."halfvec_recv" ("internal", "oid", integer) to "anon";
+
+grant all on function "public"."halfvec_recv" ("internal", "oid", integer) to "authenticated";
+
+grant all on function "public"."halfvec_recv" ("internal", "oid", integer) to "service_role";
+
+grant all on function "public"."halfvec_send" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_send" ("public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_send" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_send" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_typmod_in" ("cstring" []) to "postgres";
+
+grant all on function "public"."halfvec_typmod_in" ("cstring" []) to "anon";
+
+grant all on function "public"."halfvec_typmod_in" ("cstring" []) to "authenticated";
+
+grant all on function "public"."halfvec_typmod_in" ("cstring" []) to "service_role";
+
+grant all on function "public"."sparsevec_in" ("cstring", "oid", integer) to "postgres";
+
+grant all on function "public"."sparsevec_in" ("cstring", "oid", integer) to "anon";
+
+grant all on function "public"."sparsevec_in" ("cstring", "oid", integer) to "authenticated";
+
+grant all on function "public"."sparsevec_in" ("cstring", "oid", integer) to "service_role";
+
+grant all on function "public"."sparsevec_out" ("public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_out" ("public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_out" ("public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_out" ("public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_recv" ("internal", "oid", integer) to "postgres";
+
+grant all on function "public"."sparsevec_recv" ("internal", "oid", integer) to "anon";
+
+grant all on function "public"."sparsevec_recv" ("internal", "oid", integer) to "authenticated";
+
+grant all on function "public"."sparsevec_recv" ("internal", "oid", integer) to "service_role";
+
+grant all on function "public"."sparsevec_send" ("public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_send" ("public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_send" ("public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_send" ("public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_typmod_in" ("cstring" []) to "postgres";
+
+grant all on function "public"."sparsevec_typmod_in" ("cstring" []) to "anon";
+
+grant all on function "public"."sparsevec_typmod_in" ("cstring" []) to "authenticated";
+
+grant all on function "public"."sparsevec_typmod_in" ("cstring" []) to "service_role";
+
+grant all on function "public"."vector_in" ("cstring", "oid", integer) to "postgres";
+
+grant all on function "public"."vector_in" ("cstring", "oid", integer) to "anon";
+
+grant all on function "public"."vector_in" ("cstring", "oid", integer) to "authenticated";
+
+grant all on function "public"."vector_in" ("cstring", "oid", integer) to "service_role";
+
+grant all on function "public"."vector_out" ("public"."vector") to "postgres";
+
+grant all on function "public"."vector_out" ("public"."vector") to "anon";
+
+grant all on function "public"."vector_out" ("public"."vector") to "authenticated";
+
+grant all on function "public"."vector_out" ("public"."vector") to "service_role";
+
+grant all on function "public"."vector_recv" ("internal", "oid", integer) to "postgres";
+
+grant all on function "public"."vector_recv" ("internal", "oid", integer) to "anon";
+
+grant all on function "public"."vector_recv" ("internal", "oid", integer) to "authenticated";
+
+grant all on function "public"."vector_recv" ("internal", "oid", integer) to "service_role";
+
+grant all on function "public"."vector_send" ("public"."vector") to "postgres";
+
+grant all on function "public"."vector_send" ("public"."vector") to "anon";
+
+grant all on function "public"."vector_send" ("public"."vector") to "authenticated";
+
+grant all on function "public"."vector_send" ("public"."vector") to "service_role";
+
+grant all on function "public"."vector_typmod_in" ("cstring" []) to "postgres";
+
+grant all on function "public"."vector_typmod_in" ("cstring" []) to "anon";
+
+grant all on function "public"."vector_typmod_in" ("cstring" []) to "authenticated";
+
+grant all on function "public"."vector_typmod_in" ("cstring" []) to "service_role";
+
+grant all on function "public"."array_to_halfvec" (real[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_halfvec" (real[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_halfvec" (real[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_halfvec" (real[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_sparsevec" (real[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_sparsevec" (real[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_sparsevec" (real[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_sparsevec" (real[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_vector" (real[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_vector" (real[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_vector" (real[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_vector" (real[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_halfvec" (double precision[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_halfvec" (double precision[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_halfvec" (double precision[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_halfvec" (double precision[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_sparsevec" (double precision[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_sparsevec" (double precision[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_sparsevec" (double precision[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_sparsevec" (double precision[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_vector" (double precision[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_vector" (double precision[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_vector" (double precision[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_vector" (double precision[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_halfvec" (integer[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_halfvec" (integer[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_halfvec" (integer[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_halfvec" (integer[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_sparsevec" (integer[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_sparsevec" (integer[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_sparsevec" (integer[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_sparsevec" (integer[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_vector" (integer[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_vector" (integer[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_vector" (integer[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_vector" (integer[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_halfvec" (numeric[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_halfvec" (numeric[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_halfvec" (numeric[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_halfvec" (numeric[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_sparsevec" (numeric[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_sparsevec" (numeric[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_sparsevec" (numeric[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_sparsevec" (numeric[], integer, boolean) to "service_role";
+
+grant all on function "public"."array_to_vector" (numeric[], integer, boolean) to "postgres";
+
+grant all on function "public"."array_to_vector" (numeric[], integer, boolean) to "anon";
+
+grant all on function "public"."array_to_vector" (numeric[], integer, boolean) to "authenticated";
+
+grant all on function "public"."array_to_vector" (numeric[], integer, boolean) to "service_role";
+
+grant all on function "public"."halfvec_to_float4" ("public"."halfvec", integer, boolean) to "postgres";
+
+grant all on function "public"."halfvec_to_float4" ("public"."halfvec", integer, boolean) to "anon";
+
+grant all on function "public"."halfvec_to_float4" ("public"."halfvec", integer, boolean) to "authenticated";
+
+grant all on function "public"."halfvec_to_float4" ("public"."halfvec", integer, boolean) to "service_role";
+
+grant all on function "public"."halfvec" ("public"."halfvec", integer, boolean) to "postgres";
+
+grant all on function "public"."halfvec" ("public"."halfvec", integer, boolean) to "anon";
+
+grant all on function "public"."halfvec" ("public"."halfvec", integer, boolean) to "authenticated";
+
+grant all on function "public"."halfvec" ("public"."halfvec", integer, boolean) to "service_role";
+
+grant all on function "public"."halfvec_to_sparsevec" ("public"."halfvec", integer, boolean) to "postgres";
+
+grant all on function "public"."halfvec_to_sparsevec" ("public"."halfvec", integer, boolean) to "anon";
+
+grant all on function "public"."halfvec_to_sparsevec" ("public"."halfvec", integer, boolean) to "authenticated";
+
+grant all on function "public"."halfvec_to_sparsevec" ("public"."halfvec", integer, boolean) to "service_role";
+
+grant all on function "public"."halfvec_to_vector" ("public"."halfvec", integer, boolean) to "postgres";
+
+grant all on function "public"."halfvec_to_vector" ("public"."halfvec", integer, boolean) to "anon";
+
+grant all on function "public"."halfvec_to_vector" ("public"."halfvec", integer, boolean) to "authenticated";
+
+grant all on function "public"."halfvec_to_vector" ("public"."halfvec", integer, boolean) to "service_role";
+
+grant all on function "public"."sparsevec_to_halfvec" ("public"."sparsevec", integer, boolean) to "postgres";
+
+grant all on function "public"."sparsevec_to_halfvec" ("public"."sparsevec", integer, boolean) to "anon";
+
+grant all on function "public"."sparsevec_to_halfvec" ("public"."sparsevec", integer, boolean) to "authenticated";
+
+grant all on function "public"."sparsevec_to_halfvec" ("public"."sparsevec", integer, boolean) to "service_role";
+
+grant all on function "public"."sparsevec" ("public"."sparsevec", integer, boolean) to "postgres";
+
+grant all on function "public"."sparsevec" ("public"."sparsevec", integer, boolean) to "anon";
+
+grant all on function "public"."sparsevec" ("public"."sparsevec", integer, boolean) to "authenticated";
+
+grant all on function "public"."sparsevec" ("public"."sparsevec", integer, boolean) to "service_role";
+
+grant all on function "public"."sparsevec_to_vector" ("public"."sparsevec", integer, boolean) to "postgres";
+
+grant all on function "public"."sparsevec_to_vector" ("public"."sparsevec", integer, boolean) to "anon";
+
+grant all on function "public"."sparsevec_to_vector" ("public"."sparsevec", integer, boolean) to "authenticated";
+
+grant all on function "public"."sparsevec_to_vector" ("public"."sparsevec", integer, boolean) to "service_role";
+
+grant all on function "public"."vector_to_float4" ("public"."vector", integer, boolean) to "postgres";
+
+grant all on function "public"."vector_to_float4" ("public"."vector", integer, boolean) to "anon";
+
+grant all on function "public"."vector_to_float4" ("public"."vector", integer, boolean) to "authenticated";
+
+grant all on function "public"."vector_to_float4" ("public"."vector", integer, boolean) to "service_role";
+
+grant all on function "public"."vector_to_halfvec" ("public"."vector", integer, boolean) to "postgres";
+
+grant all on function "public"."vector_to_halfvec" ("public"."vector", integer, boolean) to "anon";
+
+grant all on function "public"."vector_to_halfvec" ("public"."vector", integer, boolean) to "authenticated";
+
+grant all on function "public"."vector_to_halfvec" ("public"."vector", integer, boolean) to "service_role";
+
+grant all on function "public"."vector_to_sparsevec" ("public"."vector", integer, boolean) to "postgres";
+
+grant all on function "public"."vector_to_sparsevec" ("public"."vector", integer, boolean) to "anon";
+
+grant all on function "public"."vector_to_sparsevec" ("public"."vector", integer, boolean) to "authenticated";
+
+grant all on function "public"."vector_to_sparsevec" ("public"."vector", integer, boolean) to "service_role";
+
+grant all on function "public"."vector" ("public"."vector", integer, boolean) to "postgres";
+
+grant all on function "public"."vector" ("public"."vector", integer, boolean) to "anon";
+
+grant all on function "public"."vector" ("public"."vector", integer, boolean) to "authenticated";
+
+grant all on function "public"."vector" ("public"."vector", integer, boolean) to "service_role";
 
 grant all on function "public"."add_phrase_translation_card" (
 	"phrase_text" "text",
@@ -3058,6 +3490,22 @@ grant all on function "public"."auto_upvote_new_request" () to "authenticated";
 
 grant all on function "public"."auto_upvote_new_request" () to "service_role";
 
+grant all on function "public"."binary_quantize" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."binary_quantize" ("public"."halfvec") to "anon";
+
+grant all on function "public"."binary_quantize" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."binary_quantize" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."binary_quantize" ("public"."vector") to "postgres";
+
+grant all on function "public"."binary_quantize" ("public"."vector") to "anon";
+
+grant all on function "public"."binary_quantize" ("public"."vector") to "authenticated";
+
+grant all on function "public"."binary_quantize" ("public"."vector") to "service_role";
+
 grant all on function "public"."bulk_add_phrases" (
 	"p_lang" character,
 	"p_phrases" "public"."phrase_with_translations_input" [],
@@ -3075,6 +3523,30 @@ grant all on function "public"."bulk_add_phrases" (
 	"p_phrases" "public"."phrase_with_translations_input" [],
 	"p_user_id" "uuid"
 ) to "service_role";
+
+grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."cosine_distance" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."cosine_distance" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."cosine_distance" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."cosine_distance" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
 
 grant all on function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
@@ -3328,11 +3800,331 @@ grant all on function "public"."gtrgm_union" ("internal", "internal") to "authen
 
 grant all on function "public"."gtrgm_union" ("internal", "internal") to "service_role";
 
+grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_accum" (double precision[], "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_add" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_add" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_add" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_add" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_avg" (double precision[]) to "postgres";
+
+grant all on function "public"."halfvec_avg" (double precision[]) to "anon";
+
+grant all on function "public"."halfvec_avg" (double precision[]) to "authenticated";
+
+grant all on function "public"."halfvec_avg" (double precision[]) to "service_role";
+
+grant all on function "public"."halfvec_cmp" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_cmp" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_cmp" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_cmp" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_combine" (double precision[], double precision[]) to "postgres";
+
+grant all on function "public"."halfvec_combine" (double precision[], double precision[]) to "anon";
+
+grant all on function "public"."halfvec_combine" (double precision[], double precision[]) to "authenticated";
+
+grant all on function "public"."halfvec_combine" (double precision[], double precision[]) to "service_role";
+
+grant all on function "public"."halfvec_concat" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_concat" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_concat" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_concat" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_eq" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_eq" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_eq" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_eq" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_ge" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_ge" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_ge" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_ge" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_gt" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_gt" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_gt" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_gt" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_l2_squared_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_l2_squared_distance" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_l2_squared_distance" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_l2_squared_distance" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_le" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_le" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_le" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_le" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_lt" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_lt" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_lt" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_lt" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_mul" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_mul" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_mul" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_mul" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_ne" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_ne" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_ne" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_ne" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_negative_inner_product" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_negative_inner_product" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_negative_inner_product" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_negative_inner_product" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_spherical_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_spherical_distance" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_spherical_distance" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_spherical_distance" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."halfvec_sub" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."halfvec_sub" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."halfvec_sub" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."halfvec_sub" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."hamming_distance" (bit, bit) to "postgres";
+
+grant all on function "public"."hamming_distance" (bit, bit) to "anon";
+
+grant all on function "public"."hamming_distance" (bit, bit) to "authenticated";
+
+grant all on function "public"."hamming_distance" (bit, bit) to "service_role";
+
+grant all on function "public"."hnsw_bit_support" ("internal") to "postgres";
+
+grant all on function "public"."hnsw_bit_support" ("internal") to "anon";
+
+grant all on function "public"."hnsw_bit_support" ("internal") to "authenticated";
+
+grant all on function "public"."hnsw_bit_support" ("internal") to "service_role";
+
+grant all on function "public"."hnsw_halfvec_support" ("internal") to "postgres";
+
+grant all on function "public"."hnsw_halfvec_support" ("internal") to "anon";
+
+grant all on function "public"."hnsw_halfvec_support" ("internal") to "authenticated";
+
+grant all on function "public"."hnsw_halfvec_support" ("internal") to "service_role";
+
+grant all on function "public"."hnsw_sparsevec_support" ("internal") to "postgres";
+
+grant all on function "public"."hnsw_sparsevec_support" ("internal") to "anon";
+
+grant all on function "public"."hnsw_sparsevec_support" ("internal") to "authenticated";
+
+grant all on function "public"."hnsw_sparsevec_support" ("internal") to "service_role";
+
+grant all on function "public"."hnswhandler" ("internal") to "postgres";
+
+grant all on function "public"."hnswhandler" ("internal") to "anon";
+
+grant all on function "public"."hnswhandler" ("internal") to "authenticated";
+
+grant all on function "public"."hnswhandler" ("internal") to "service_role";
+
+grant all on function "public"."inner_product" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."inner_product" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."inner_product" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."inner_product" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."inner_product" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."inner_product" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."inner_product" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."inner_product" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."inner_product" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."inner_product" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."inner_product" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."inner_product" ("public"."vector", "public"."vector") to "service_role";
+
 grant all on function "public"."is_admin" () to "anon";
 
 grant all on function "public"."is_admin" () to "authenticated";
 
 grant all on function "public"."is_admin" () to "service_role";
+
+grant all on function "public"."ivfflat_bit_support" ("internal") to "postgres";
+
+grant all on function "public"."ivfflat_bit_support" ("internal") to "anon";
+
+grant all on function "public"."ivfflat_bit_support" ("internal") to "authenticated";
+
+grant all on function "public"."ivfflat_bit_support" ("internal") to "service_role";
+
+grant all on function "public"."ivfflat_halfvec_support" ("internal") to "postgres";
+
+grant all on function "public"."ivfflat_halfvec_support" ("internal") to "anon";
+
+grant all on function "public"."ivfflat_halfvec_support" ("internal") to "authenticated";
+
+grant all on function "public"."ivfflat_halfvec_support" ("internal") to "service_role";
+
+grant all on function "public"."ivfflathandler" ("internal") to "postgres";
+
+grant all on function "public"."ivfflathandler" ("internal") to "anon";
+
+grant all on function "public"."ivfflathandler" ("internal") to "authenticated";
+
+grant all on function "public"."ivfflathandler" ("internal") to "service_role";
+
+grant all on function "public"."jaccard_distance" (bit, bit) to "postgres";
+
+grant all on function "public"."jaccard_distance" (bit, bit) to "anon";
+
+grant all on function "public"."jaccard_distance" (bit, bit) to "authenticated";
+
+grant all on function "public"."jaccard_distance" (bit, bit) to "service_role";
+
+grant all on function "public"."l1_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."l1_distance" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."l1_distance" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."l1_distance" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."l1_distance" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."l1_distance" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."l1_distance" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."l1_distance" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."l1_distance" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."l1_distance" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."l1_distance" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."l1_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."l2_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
+
+grant all on function "public"."l2_distance" ("public"."halfvec", "public"."halfvec") to "anon";
+
+grant all on function "public"."l2_distance" ("public"."halfvec", "public"."halfvec") to "authenticated";
+
+grant all on function "public"."l2_distance" ("public"."halfvec", "public"."halfvec") to "service_role";
+
+grant all on function "public"."l2_distance" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."l2_distance" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."l2_distance" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."l2_distance" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."l2_distance" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."l2_distance" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."l2_distance" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."l2_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."l2_norm" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."l2_norm" ("public"."halfvec") to "anon";
+
+grant all on function "public"."l2_norm" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."l2_norm" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."l2_norm" ("public"."sparsevec") to "postgres";
+
+grant all on function "public"."l2_norm" ("public"."sparsevec") to "anon";
+
+grant all on function "public"."l2_norm" ("public"."sparsevec") to "authenticated";
+
+grant all on function "public"."l2_norm" ("public"."sparsevec") to "service_role";
+
+grant all on function "public"."l2_normalize" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."l2_normalize" ("public"."halfvec") to "anon";
+
+grant all on function "public"."l2_normalize" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."l2_normalize" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."l2_normalize" ("public"."sparsevec") to "postgres";
+
+grant all on function "public"."l2_normalize" ("public"."sparsevec") to "anon";
+
+grant all on function "public"."l2_normalize" ("public"."sparsevec") to "authenticated";
+
+grant all on function "public"."l2_normalize" ("public"."sparsevec") to "service_role";
+
+grant all on function "public"."l2_normalize" ("public"."vector") to "postgres";
+
+grant all on function "public"."l2_normalize" ("public"."vector") to "anon";
+
+grant all on function "public"."l2_normalize" ("public"."vector") to "authenticated";
+
+grant all on function "public"."l2_normalize" ("public"."vector") to "service_role";
 
 grant all on function "public"."notify_on_comment" () to "anon";
 
@@ -3370,35 +4162,71 @@ grant all on function "public"."refresh_meta_language" () to "authenticated";
 
 grant all on function "public"."refresh_meta_language" () to "service_role";
 
-grant all on function "public"."refresh_phrase_search_index" () to "anon";
+grant all on function "public"."search_by_anchors" (
+	"anchor_ids" "uuid" [],
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "anon";
 
-grant all on function "public"."refresh_phrase_search_index" () to "authenticated";
+grant all on function "public"."search_by_anchors" (
+	"anchor_ids" "uuid" [],
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "authenticated";
 
-grant all on function "public"."refresh_phrase_search_index" () to "service_role";
+grant all on function "public"."search_by_anchors" (
+	"anchor_ids" "uuid" [],
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "service_role";
 
-grant all on function "public"."search_phrases_smart" (
+grant all on function "public"."search_by_query" (
+	"query_embedding" "public"."vector",
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "anon";
+
+grant all on function "public"."search_by_query" (
+	"query_embedding" "public"."vector",
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "authenticated";
+
+grant all on function "public"."search_by_query" (
+	"query_embedding" "public"."vector",
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer
+) to "service_role";
+
+grant all on function "public"."search_by_trigram" (
 	"query" "text",
-	"lang_filter" "text" [],
-	"sort_by" "text",
-	"result_limit" integer,
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer,
 	"cursor_created_at" timestamp with time zone,
 	"cursor_id" "uuid"
 ) to "anon";
 
-grant all on function "public"."search_phrases_smart" (
+grant all on function "public"."search_by_trigram" (
 	"query" "text",
-	"lang_filter" "text" [],
-	"sort_by" "text",
-	"result_limit" integer,
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer,
 	"cursor_created_at" timestamp with time zone,
 	"cursor_id" "uuid"
 ) to "authenticated";
 
-grant all on function "public"."search_phrases_smart" (
+grant all on function "public"."search_by_trigram" (
 	"query" "text",
-	"lang_filter" "text" [],
-	"sort_by" "text",
-	"result_limit" integer,
+	"target_langs" "text" [],
+	"exclude_ids" "uuid" [],
+	"match_limit" integer,
 	"cursor_created_at" timestamp with time zone,
 	"cursor_id" "uuid"
 ) to "service_role";
@@ -3469,6 +4297,78 @@ grant all on function "public"."similarity_op" ("text", "text") to "authenticate
 
 grant all on function "public"."similarity_op" ("text", "text") to "service_role";
 
+grant all on function "public"."sparsevec_cmp" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_cmp" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_cmp" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_cmp" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_eq" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_eq" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_eq" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_eq" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_ge" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_ge" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_ge" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_ge" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_gt" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_gt" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_gt" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_gt" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_l2_squared_distance" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_l2_squared_distance" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_l2_squared_distance" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_l2_squared_distance" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_le" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_le" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_le" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_le" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_lt" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_lt" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_lt" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_lt" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_ne" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_ne" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_ne" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_ne" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
+grant all on function "public"."sparsevec_negative_inner_product" ("public"."sparsevec", "public"."sparsevec") to "postgres";
+
+grant all on function "public"."sparsevec_negative_inner_product" ("public"."sparsevec", "public"."sparsevec") to "anon";
+
+grant all on function "public"."sparsevec_negative_inner_product" ("public"."sparsevec", "public"."sparsevec") to "authenticated";
+
+grant all on function "public"."sparsevec_negative_inner_product" ("public"."sparsevec", "public"."sparsevec") to "service_role";
+
 grant all on function "public"."strict_word_similarity" ("text", "text") to "postgres";
 
 grant all on function "public"."strict_word_similarity" ("text", "text") to "anon";
@@ -3509,17 +4409,27 @@ grant all on function "public"."strict_word_similarity_op" ("text", "text") to "
 
 grant all on function "public"."strict_word_similarity_op" ("text", "text") to "service_role";
 
+grant all on function "public"."subvector" ("public"."halfvec", integer, integer) to "postgres";
+
+grant all on function "public"."subvector" ("public"."halfvec", integer, integer) to "anon";
+
+grant all on function "public"."subvector" ("public"."halfvec", integer, integer) to "authenticated";
+
+grant all on function "public"."subvector" ("public"."halfvec", integer, integer) to "service_role";
+
+grant all on function "public"."subvector" ("public"."vector", integer, integer) to "postgres";
+
+grant all on function "public"."subvector" ("public"."vector", integer, integer) to "anon";
+
+grant all on function "public"."subvector" ("public"."vector", integer, integer) to "authenticated";
+
+grant all on function "public"."subvector" ("public"."vector", integer, integer) to "service_role";
+
 grant all on function "public"."trigger_refresh_meta_language" () to "anon";
 
 grant all on function "public"."trigger_refresh_meta_language" () to "authenticated";
 
 grant all on function "public"."trigger_refresh_meta_language" () to "service_role";
-
-grant all on function "public"."trigger_refresh_phrase_search" () to "anon";
-
-grant all on function "public"."trigger_refresh_phrase_search" () to "authenticated";
-
-grant all on function "public"."trigger_refresh_phrase_search" () to "service_role";
 
 grant all on function "public"."update_comment_upvote_count" () to "anon";
 
@@ -3569,6 +4479,166 @@ grant all on function "public"."validate_friend_request_action" () to "authentic
 
 grant all on function "public"."validate_friend_request_action" () to "service_role";
 
+grant all on function "public"."vector_accum" (double precision[], "public"."vector") to "postgres";
+
+grant all on function "public"."vector_accum" (double precision[], "public"."vector") to "anon";
+
+grant all on function "public"."vector_accum" (double precision[], "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_accum" (double precision[], "public"."vector") to "service_role";
+
+grant all on function "public"."vector_add" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_add" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_add" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_add" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_avg" (double precision[]) to "postgres";
+
+grant all on function "public"."vector_avg" (double precision[]) to "anon";
+
+grant all on function "public"."vector_avg" (double precision[]) to "authenticated";
+
+grant all on function "public"."vector_avg" (double precision[]) to "service_role";
+
+grant all on function "public"."vector_cmp" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_cmp" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_cmp" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_cmp" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_combine" (double precision[], double precision[]) to "postgres";
+
+grant all on function "public"."vector_combine" (double precision[], double precision[]) to "anon";
+
+grant all on function "public"."vector_combine" (double precision[], double precision[]) to "authenticated";
+
+grant all on function "public"."vector_combine" (double precision[], double precision[]) to "service_role";
+
+grant all on function "public"."vector_concat" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_concat" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_concat" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_concat" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_dims" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."vector_dims" ("public"."halfvec") to "anon";
+
+grant all on function "public"."vector_dims" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."vector_dims" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."vector_dims" ("public"."vector") to "postgres";
+
+grant all on function "public"."vector_dims" ("public"."vector") to "anon";
+
+grant all on function "public"."vector_dims" ("public"."vector") to "authenticated";
+
+grant all on function "public"."vector_dims" ("public"."vector") to "service_role";
+
+grant all on function "public"."vector_eq" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_eq" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_eq" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_eq" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_ge" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_ge" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_ge" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_ge" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_gt" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_gt" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_gt" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_gt" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_l2_squared_distance" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_l2_squared_distance" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_l2_squared_distance" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_l2_squared_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_le" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_le" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_le" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_le" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_lt" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_lt" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_lt" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_lt" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_mul" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_mul" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_mul" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_mul" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_ne" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_ne" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_ne" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_ne" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_negative_inner_product" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_negative_inner_product" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_negative_inner_product" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_negative_inner_product" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_norm" ("public"."vector") to "postgres";
+
+grant all on function "public"."vector_norm" ("public"."vector") to "anon";
+
+grant all on function "public"."vector_norm" ("public"."vector") to "authenticated";
+
+grant all on function "public"."vector_norm" ("public"."vector") to "service_role";
+
+grant all on function "public"."vector_spherical_distance" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_spherical_distance" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_spherical_distance" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_spherical_distance" ("public"."vector", "public"."vector") to "service_role";
+
+grant all on function "public"."vector_sub" ("public"."vector", "public"."vector") to "postgres";
+
+grant all on function "public"."vector_sub" ("public"."vector", "public"."vector") to "anon";
+
+grant all on function "public"."vector_sub" ("public"."vector", "public"."vector") to "authenticated";
+
+grant all on function "public"."vector_sub" ("public"."vector", "public"."vector") to "service_role";
+
 grant all on function "public"."word_similarity" ("text", "text") to "postgres";
 
 grant all on function "public"."word_similarity" ("text", "text") to "anon";
@@ -3608,6 +4678,38 @@ grant all on function "public"."word_similarity_op" ("text", "text") to "anon";
 grant all on function "public"."word_similarity_op" ("text", "text") to "authenticated";
 
 grant all on function "public"."word_similarity_op" ("text", "text") to "service_role";
+
+grant all on function "public"."avg" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."avg" ("public"."halfvec") to "anon";
+
+grant all on function "public"."avg" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."avg" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."avg" ("public"."vector") to "postgres";
+
+grant all on function "public"."avg" ("public"."vector") to "anon";
+
+grant all on function "public"."avg" ("public"."vector") to "authenticated";
+
+grant all on function "public"."avg" ("public"."vector") to "service_role";
+
+grant all on function "public"."sum" ("public"."halfvec") to "postgres";
+
+grant all on function "public"."sum" ("public"."halfvec") to "anon";
+
+grant all on function "public"."sum" ("public"."halfvec") to "authenticated";
+
+grant all on function "public"."sum" ("public"."halfvec") to "service_role";
+
+grant all on function "public"."sum" ("public"."vector") to "postgres";
+
+grant all on function "public"."sum" ("public"."vector") to "anon";
+
+grant all on function "public"."sum" ("public"."vector") to "authenticated";
+
+grant all on function "public"."sum" ("public"."vector") to "service_role";
 
 grant all on table "public"."admin_user" to "service_role";
 
@@ -3777,6 +4879,12 @@ grant all on table "public"."request_comment" to "authenticated";
 
 grant all on table "public"."request_comment" to "service_role";
 
+grant all on table "public"."search_corpus" to "anon";
+
+grant all on table "public"."search_corpus" to "authenticated";
+
+grant all on table "public"."search_corpus" to "service_role";
+
 grant all on table "public"."user_card_plus" to "anon";
 
 grant all on table "public"."user_card_plus" to "authenticated";
@@ -3800,12 +4908,6 @@ grant all on table "public"."user_deck_review_state" to "anon";
 grant all on table "public"."user_deck_review_state" to "authenticated";
 
 grant all on table "public"."user_deck_review_state" to "service_role";
-
-grant all on table "public"."phrase_search_index" to "anon";
-
-grant all on table "public"."phrase_search_index" to "authenticated";
-
-grant all on table "public"."phrase_search_index" to "service_role";
 
 alter default privileges for role "postgres" in schema "public"
 grant all on sequences to "postgres";
