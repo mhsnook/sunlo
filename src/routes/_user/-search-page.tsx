@@ -27,10 +27,7 @@ import {
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
-import {
-	combinedScore,
-	type HybridSearchResult,
-} from '@/hooks/use-hybrid-search'
+import type { HybridSearchResult } from '@/hooks/use-hybrid-search'
 import {
 	useMergedSearch,
 	type MergedSearchItem,
@@ -45,8 +42,16 @@ import { Route as SearchRoute } from './search'
 // search.index.lazy.tsx) and `/search/test` (via search.test.lazy.tsx)
 // import this; keeping it out of the eager `search.tsx` layout means
 // none of this code lands in the main bundle.
+//
+// `rowExtras` is a render prop: a callback the consumer provides if it
+// wants something rendered in each row's right column under the type
+// badge. /search/test injects ScoreBreakdown here; /search passes
+// nothing. The score-breakdown component therefore lives only in the
+// diagnostic route's chunk, not in this file's chunk.
 
-export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
+export type RowExtrasRenderer = (item: MergedSearchItem) => ReactNode
+
+export function SearchPage({ rowExtras }: { rowExtras?: RowExtrasRenderer }) {
 	const { q: initialQuery, langs: initialLangs } = SearchRoute.useSearch()
 
 	const [inputText, setInputText] = useState(initialQuery ?? '')
@@ -244,16 +249,14 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 										<PhraseResultRow
 											key={`phrase-${item.id}`}
 											phrase={item.entity}
-											diagnostic={diagnostic}
+											extras={rowExtras?.(item)}
 										/>
 									) : (
 										<EntityResultRow
 											key={`${item.type}-${item.id}`}
 											type={item.type}
 											entity={item.entity}
-											diagnostic={diagnostic}
-											semanticScore={item.semanticScore}
-											trigramScore={item.trigramScore}
+											extras={rowExtras?.(item)}
 										/>
 									)
 								)}
@@ -472,10 +475,10 @@ function TypeBadge({ type }: { type: SearchEntityType }) {
 
 function PhraseResultRow({
 	phrase,
-	diagnostic = false,
+	extras,
 }: {
 	phrase: HybridSearchResult
-	diagnostic?: boolean
+	extras?: ReactNode
 }) {
 	const translations = phrase.translations_mine?.length
 		? phrase.translations_mine
@@ -526,55 +529,21 @@ function PhraseResultRow({
 				)}
 				<div className="flex flex-col items-end gap-1">
 					<TypeBadge type="phrase" />
-					{diagnostic && (
-						<ScoreBreakdown
-							semantic={phrase.semanticScore ?? 0}
-							trigram={phrase.similarityScore ?? 0}
-						/>
-					)}
+					{extras}
 				</div>
 			</div>
 		</Link>
 	)
 }
 
-const fmt2 = (n: number) => n.toFixed(2)
-
-function ScoreBreakdown({
-	semantic,
-	trigram = 0,
-}: {
-	semantic: number
-	trigram?: number
-}) {
-	const semContribution = Math.sqrt(semantic)
-	const triContribution = Math.sqrt(trigram)
-	const combined = combinedScore(semantic, trigram)
-	return (
-		<div className="text-muted-foreground/70 flex flex-col items-end gap-0 font-mono text-[10px] leading-tight tabular-nums">
-			<span>
-				Ω {fmt2(semantic)} → {fmt2(semContribution)}
-			</span>
-			<span>
-				Δ {fmt2(trigram)} → {fmt2(triContribution)}
-			</span>
-			<span className="text-foreground font-semibold">Σ {fmt2(combined)}</span>
-		</div>
-	)
-}
-
 function EntityResultRow({
 	type,
 	entity,
-	diagnostic = false,
-	semanticScore = 0,
-	trigramScore = 0,
+	extras,
 }: {
 	type: 'playlist' | 'request'
 	entity: PhrasePlaylistType | PhraseRequestType
-	diagnostic?: boolean
-	semanticScore?: number
-	trigramScore?: number
+	extras?: ReactNode
 }) {
 	const title =
 		type === 'playlist'
@@ -607,9 +576,7 @@ function EntityResultRow({
 				)}
 				<div className="flex flex-col items-end gap-1">
 					<TypeBadge type={type} />
-					{diagnostic && (
-						<ScoreBreakdown semantic={semanticScore} trigram={trigramScore} />
-					)}
+					{extras}
 				</div>
 			</div>
 		</>
