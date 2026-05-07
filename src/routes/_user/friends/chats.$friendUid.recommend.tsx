@@ -33,27 +33,33 @@ import { Button } from '@/components/ui/button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
-import type { SearchResult, SearchResultType } from '@/types/search-result'
+import type { SearchEntityType } from '@/hooks/search-config'
 
-type ContentFilter = SearchResultType
+type ContentFilter = SearchEntityType
 
-// Map from tab values (plural) to SearchResultType (singular)
-const tabToFilter = (v: string): ContentFilter | null =>
-	v === 'phrases'
-		? 'phrase'
-		: v === 'playlists'
-			? 'playlist'
-			: v === 'requests'
-				? 'request'
-				: null
-const filterToTab = (f: ContentFilter | null): string =>
-	f === 'phrase'
-		? 'phrases'
-		: f === 'playlist'
-			? 'playlists'
-			: f === 'request'
-				? 'requests'
-				: 'all'
+// Local flat shape — recommend uses its own browse-mode local matching
+// (empty query shows all in-lang items), so it doesn't compose with
+// useMergedSearch like /search and the overlay do.
+interface SearchResult {
+	id: string
+	lang: string
+	title: string
+	subtitle: string | null
+	type: SearchEntityType
+}
+
+const TAB_TO_FILTER: Record<string, ContentFilter | null> = {
+	all: null,
+	phrases: 'phrase',
+	playlists: 'playlist',
+	requests: 'request',
+}
+
+const FILTER_TO_TAB: Record<ContentFilter, string> = {
+	phrase: 'phrases',
+	playlist: 'playlists',
+	request: 'requests',
+}
 
 export const Route = createFileRoute(
 	'/_user/friends/chats/$friendUid/recommend'
@@ -287,8 +293,10 @@ function RouteComponent() {
 				{/* Filter Tabs */}
 				<div className="border-b px-4 py-2.5">
 					<Tabs
-						value={filterToTab(activeFilter)}
-						onValueChange={(v: string) => setActiveFilter(tabToFilter(v))}
+						value={activeFilter ? FILTER_TO_TAB[activeFilter] : 'all'}
+						onValueChange={(v: string) =>
+							setActiveFilter(TAB_TO_FILTER[v] ?? null)
+						}
 					>
 						<TabsList>
 							<TabsTrigger value="all">All</TabsTrigger>

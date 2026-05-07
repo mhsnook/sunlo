@@ -1,9 +1,6 @@
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react'
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
 import * as z from 'zod'
-import { useDebounceWithFlush } from '@/hooks/use-debounce'
-import { inArray } from '@tanstack/db'
-import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Search,
 	SlidersHorizontal,
@@ -28,19 +25,20 @@ import {
 	useAllLangTags,
 	useLanguagesWithPhrases,
 } from '@/features/languages/hooks'
-import { phrasePlaylistsActive } from '@/features/playlists/live'
-import { phraseRequestsActive } from '@/features/requests/live'
 import type { LanguageType, LangTagType } from '@/features/languages/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 import {
-	useHybridSearch,
 	combinedScore,
 	type HybridSearchResult,
 } from '@/hooks/use-hybrid-search'
+import {
+	useMergedSearch,
+	type MergedSearchItem,
+} from '@/hooks/use-merged-search'
 
 import { parseSearchInput, type SearchFilter } from '@/lib/parse-search-input'
-import type { SearchResultType } from '@/types/search-result'
+import type { SearchEntityType } from '@/hooks/search-config'
 
 // --- Route ---
 
@@ -70,7 +68,6 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 	const { q: initialQuery, langs: initialLangs } = Route.useSearch()
 
 	const [inputText, setInputText] = useState(initialQuery ?? '')
-	const [debouncedText, flushSearch] = useDebounceWithFlush(inputText, 150)
 	const [filters, setFilters] = useState<Array<SearchFilter>>(() => {
 		if (!initialLangs) return []
 		const langCodes = initialLangs.split(',').filter((l) => l in allLanguages)
@@ -81,7 +78,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		}))
 	})
 	const [showQuickFilters, setShowQuickFilters] = useState(false)
-	const [typeFilters, setTypeFilters] = useState<Set<SearchResultType>>(
+	const [typeFilters, setTypeFilters] = useState<Set<SearchEntityType>>(
 		new Set()
 	)
 	const scrollRef = useRef<HTMLDivElement>(null)
@@ -117,8 +114,8 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 
 	// Smart parse: detect filter suggestions, strip explicit filter label words
 	const parsed = useMemo(
-		() => parseSearchInput(debouncedText, filters, uniqueTagNames),
-		[debouncedText, filters, uniqueTagNames]
+		() => parseSearchInput(inputText, filters, uniqueTagNames),
+		[inputText, filters, uniqueTagNames]
 	)
 
 	const effectiveText = parsed.effectiveText
@@ -128,133 +125,43 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 	// phrases," that's /learn/$lang or the browse charts, not /search.)
 	const hasActiveSearch = effectiveText.length >= 2
 
-	// --- Phrase search ---
-	const shouldTrigram =
-		hasActiveSearch && (typeFilters.size === 0 || typeFilters.has('phrase'))
-
-	const smartSearch = useHybridSearch(
+	const smartSearch = useMergedSearch(
 		langFilter ? [langFilter] : [],
-		shouldTrigram ? effectiveText : ''
+		hasActiveSearch ? effectiveText : ''
 	)
 
-	const phraseResults: Array<HybridSearchResult> = useMemo(() => {
-		if (!shouldTrigram) return []
-		if (tagFilters.length === 0) return smartSearch.data
-		// Tag filter applied as a post-filter on server results; the trigram
-		// + semantic backends don't filter by tags directly.
-		return smartSearch.data.filter((p) =>
-			tagFilters.every((tag) => (p.tags ?? []).some((t) => t?.name === tag))
-		)
-	}, [shouldTrigram, smartSearch.data, tagFilters])
-
-	// --- Playlist + request candidates ---
-	// The server-side semantic + trigram backends already returned the
-	// matching entity_ids via smartSearch.{semanticById, trigramById}; the
-	// local query just hydrates those ids to full rows for display
-	// (title, description, upvote_count).
-	const candidateIds = useMemo(() => {
-		const ids = new Set<string>()
-		smartSearch.semanticById.forEach((_, id) => ids.add(id))
-		smartSearch.trigramById.forEach((_, id) => ids.add(id))
-		return [...ids]
-	}, [smartSearch.semanticById, smartSearch.trigramById])
-
-	const { data: playlistResults } = useLiveQuery(
-		(q) => {
-			if (!hasActiveSearch) return undefined
-			if (typeFilters.size > 0 && !typeFilters.has('playlist')) return undefined
-			if (candidateIds.length === 0) return undefined
-			return q
-				.from({ playlist: phrasePlaylistsActive })
-				.where(({ playlist }) => inArray(playlist.id, candidateIds))
-		},
-		[hasActiveSearch, typeFilters, candidateIds]
-	)
-
-	const { data: requestResults } = useLiveQuery(
-		(q) => {
-			if (!hasActiveSearch) return undefined
-			if (typeFilters.size > 0 && !typeFilters.has('request')) return undefined
-			if (candidateIds.length === 0) return undefined
-			return q
-				.from({ req: phraseRequestsActive })
-				.where(({ req }) => inArray(req.id, candidateIds))
-		},
-		[hasActiveSearch, typeFilters, candidateIds]
-	)
-
-	// --- Merge and sort results by relevance ---
-	type ScoredResult =
-		| { type: 'phrase'; score: number; phrase: HybridSearchResult }
-		| {
-				type: 'playlist'
-				score: number
-				entity: PhrasePlaylistType
-				semanticScore: number
-				trigramScore: number
-		  }
-		| {
-				type: 'request'
-				score: number
-				entity: PhraseRequestType
-				semanticScore: number
-				trigramScore: number
-		  }
-
-	const { mergedResults, playlistCount, requestCount } = useMemo(() => {
-		const items: Array<ScoredResult> = []
-		let playlists = 0
-		let requests = 0
-
-		for (const phrase of phraseResults) {
-			items.push({ type: 'phrase', score: phrase.combinedScore, phrase })
-		}
-
-		const scoreEntity = <
-			T extends PhrasePlaylistType | PhraseRequestType,
-			K extends 'playlist' | 'request',
-		>(
-			pool: Array<T> | undefined,
-			type: K
-		): number => {
-			let count = 0
-			for (const entity of pool ?? []) {
-				const semantic = smartSearch.semanticById.get(entity.id) ?? 0
-				const trigram = smartSearch.trigramById.get(entity.id) ?? 0
-				if (semantic === 0 && trigram === 0) continue
-				items.push({
-					type,
-					score: combinedScore(semantic, trigram),
-					entity,
-					semanticScore: semantic,
-					trigramScore: trigram,
-				} as ScoredResult)
-				count++
+	const { mergedResults, phraseCount, playlistCount, requestCount } =
+		useMemo(() => {
+			const items: Array<MergedSearchItem> = []
+			let phrases = 0
+			let playlists = 0
+			let requests = 0
+			for (const item of smartSearch.items) {
+				if (typeFilters.size > 0 && !typeFilters.has(item.type)) continue
+				if (
+					item.type === 'phrase' &&
+					tagFilters.length > 0 &&
+					!tagFilters.every((tag) =>
+						(item.entity.tags ?? []).some((t) => t?.name === tag)
+					)
+				) {
+					continue
+				}
+				items.push(item)
+				if (item.type === 'phrase') phrases++
+				else if (item.type === 'playlist') playlists++
+				else requests++
 			}
-			return count
-		}
+			return {
+				mergedResults: items,
+				phraseCount: phrases,
+				playlistCount: playlists,
+				requestCount: requests,
+			}
+		}, [smartSearch.items, typeFilters, tagFilters])
 
-		playlists = scoreEntity(playlistResults, 'playlist')
-		requests = scoreEntity(requestResults, 'request')
-
-		return {
-			mergedResults: items.toSorted((a, b) => b.score - a.score),
-			playlistCount: playlists,
-			requestCount: requests,
-		}
-	}, [
-		phraseResults,
-		playlistResults,
-		requestResults,
-		smartSearch.semanticById,
-		smartSearch.trigramById,
-	])
-
-	const phraseCount = phraseResults.length
 	const totalCount = mergedResults.length
-
-	const isSearching =
-		hasActiveSearch && (shouldTrigram ? smartSearch.isLoading : false)
+	const isSearching = hasActiveSearch && smartSearch.isLoading
 
 	// --- Actions ---
 
@@ -282,7 +189,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		setInputText('')
 	}
 
-	const toggleTypeFilter = (type: SearchResultType) => {
+	const toggleTypeFilter = (type: SearchEntityType) => {
 		setTypeFilters((prev) => {
 			const next = new Set(prev)
 			if (next.has(type)) {
@@ -315,8 +222,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 
 		let msg = `Found ${parts.join(', ')}`
 		if (langFilter) msg += ` in ${allLanguages[langFilter] ?? langFilter}`
-		if (effectiveText.length >= 2) msg += ` matching "${effectiveText}"`
-		if (shouldTrigram) msg += ' (fuzzy)'
+		if (effectiveText.length >= 2) msg += ` matching "${effectiveText}" (fuzzy)`
 		return msg
 	}, [
 		hasActiveSearch,
@@ -327,7 +233,6 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 		requestCount,
 		langFilter,
 		effectiveText,
-		shouldTrigram,
 	])
 
 	return (
@@ -367,13 +272,13 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 								{mergedResults.map((item) =>
 									item.type === 'phrase' ? (
 										<PhraseResultRow
-											key={`phrase-${item.phrase.id}`}
-											phrase={item.phrase}
+											key={`phrase-${item.id}`}
+											phrase={item.entity}
 											diagnostic={diagnostic}
 										/>
 									) : (
 										<EntityResultRow
-											key={`${item.type}-${item.entity.id}`}
+											key={`${item.type}-${item.id}`}
 											type={item.type}
 											entity={item.entity}
 											diagnostic={diagnostic}
@@ -384,7 +289,7 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 								)}
 							</div>
 						)}
-						{shouldTrigram && smartSearch.hasNextPage && (
+						{hasActiveSearch && smartSearch.hasNextPage && (
 							<div className="flex justify-center pt-2">
 								<Button
 									variant="soft"
@@ -515,12 +420,6 @@ export function SearchPage({ diagnostic = false }: { diagnostic?: boolean }) {
 								data-testid="search-input"
 								value={inputText}
 								onChange={(e) => setInputText(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === 'Enter') {
-										e.preventDefault()
-										flushSearch()
-									}
-								}}
 								placeholder="Search phrases, playlists, and requests..."
 								className="ps-9"
 							/>
@@ -592,7 +491,7 @@ function EmptyResults() {
 	)
 }
 
-function TypeBadge({ type }: { type: SearchResultType }) {
+function TypeBadge({ type }: { type: SearchEntityType }) {
 	const icon =
 		type === 'phrase' ? (
 			<MessageSquareQuote className="size-3" />

@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 
 import supabase from '@/lib/supabase-client'
+import { MIN_QUERY_LENGTH, type SearchEntityType } from '@/hooks/search-config'
 
 // One layer of the search stack: hits the `search` Edge Function and returns
 // raw entity results (phrases, requests, playlists). Composed by
@@ -14,8 +15,6 @@ import supabase from '@/lib/supabase-client'
 //                cosine similarity against search_corpus.
 //   - 'anchor' — caller passes entity_ids; edge function averages their
 //                stored embeddings server-side. No Workers AI call.
-
-export type SearchEntityType = 'phrase' | 'request' | 'playlist'
 
 export type SemanticResult = {
 	entity_type: SearchEntityType
@@ -77,7 +76,9 @@ export function useSemanticSearch(
 	const { enabled = true, excludeIds = [], limit = DEFAULT_LIMIT } = opts
 
 	const isQueryNonEmpty =
-		query.kind === 'text' ? query.text.length >= 2 : query.ids.length > 0
+		query.kind === 'text'
+			? query.text.length >= MIN_QUERY_LENGTH
+			: query.ids.length > 0
 	const finalEnabled = enabled && isQueryNonEmpty
 
 	const queryKey = useMemo(

@@ -7,9 +7,7 @@ import {
 	type KeyboardEvent as ReactKeyboardEvent,
 } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useDebounce } from '@/hooks/use-debounce'
-import { useLocalSearch } from '@/hooks/use-local-search'
-import { useHybridSearch, combinedScore } from '@/hooks/use-hybrid-search'
+import { useMergedSearch } from '@/hooks/use-merged-search'
 import {
 	Search,
 	X,
@@ -27,7 +25,7 @@ import { LangBadge } from '@/components/ui/badge'
 import { SelectOneLanguage } from '@/components/select-one-language'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import type { SearchResult } from '@/types/search-result'
+import type { MergedSearchItem } from '@/hooks/use-merged-search'
 
 export default function BrowseSearchOverlay({
 	onClose,
@@ -45,8 +43,7 @@ export default function BrowseSearchOverlay({
 	)
 	const [selectedIndex, setSelectedIndex] = useState(0)
 
-	const debouncedQuery = useDebounce(query, 150)
-	const lowerQuery = debouncedQuery.toLowerCase().trim()
+	const lowerQuery = query.toLowerCase().trim()
 	const hasQuery = lowerQuery.length > 0
 
 	// Get user's deck languages
@@ -78,117 +75,11 @@ export default function BrowseSearchOverlay({
 		return base
 	}, [userLangs, extraLangs, selectedLangs])
 
-	// Layered search: local for instant feedback (in-memory substring match),
-	// Layered search:
-	//   - useLocalSearch fires synchronously off the local collections —
-	//     instant phrase / playlist / request matches that render before
-	//     the server returns.
-	//   - useHybridSearch fires after the debounce settles, returning
-	//     server-side combined rankings.
-	// Both go into one merged list ranked by combinedScore desc — same
-	// formula and ordering as /search, so the diagnostic page actually
-	// diagnoses the overlay.
-	const local = useLocalSearch(
-		selectedLangs.length > 0 ? selectedLangs : null,
-		debouncedQuery,
-		{ limit: 20 }
+	const merged = useMergedSearch(selectedLangs, query)
+	const results = useMemo(
+		() => (hasQuery ? merged.items.slice(0, 20) : []),
+		[hasQuery, merged.items]
 	)
-	const hybrid = useHybridSearch(selectedLangs, debouncedQuery)
-
-	const results = useMemo((): Array<SearchResult> => {
-		if (!hasQuery) return []
-
-		type ScoredItem = SearchResult & { score: number }
-		const byId = new Map<string, ScoredItem>()
-
-		const recordPhrase = (
-			id: string,
-			lang: string,
-			text: string,
-			translation: string | null,
-			semantic: number,
-			trigram: number
-		) => {
-			const score = combinedScore(semantic, trigram)
-			const existing = byId.get(id)
-			if (existing && existing.score >= score) return
-			byId.set(id, {
-				id,
-				type: 'phrase',
-				lang,
-				title: text,
-				subtitle: translation,
-				score,
-			})
-		}
-
-		// Server-ranked phrases first — they have real scores.
-		for (const p of hybrid.data) {
-			recordPhrase(
-				p.id,
-				p.lang,
-				p.text,
-				p.translations_mine?.[0]?.text ??
-					p.translations_other?.[0]?.text ??
-					null,
-				p.semanticScore,
-				p.similarityScore
-			)
-		}
-		// Local phrases that the server didn't surface get a synthetic
-		// trigram score so they still appear (e.g., before debounce settles
-		// or when search_corpus is empty).
-		for (const p of local.phrases) {
-			if (byId.has(p.id)) continue
-			recordPhrase(
-				p.id,
-				p.lang,
-				p.text,
-				p.translations?.[0]?.text ?? null,
-				0,
-				0.3
-			)
-		}
-
-		for (const playlist of local.playlists) {
-			const semantic = hybrid.semanticById.get(playlist.id) ?? 0
-			const trigram = hybrid.trigramById.get(playlist.id) ?? 0.3
-			byId.set(playlist.id, {
-				id: playlist.id,
-				type: 'playlist',
-				lang: playlist.lang,
-				title: playlist.title,
-				subtitle: playlist.description,
-				score: combinedScore(semantic, trigram),
-			})
-		}
-
-		for (const req of local.requests) {
-			const semantic = hybrid.semanticById.get(req.id) ?? 0
-			const trigram = hybrid.trigramById.get(req.id) ?? 0.3
-			byId.set(req.id, {
-				id: req.id,
-				type: 'request',
-				lang: req.lang,
-				title: req.prompt,
-				subtitle: `${req.upvote_count} upvotes`,
-				score: combinedScore(semantic, trigram),
-			})
-		}
-
-		return [...byId.values()]
-			.toSorted((a, b) => b.score - a.score)
-			.slice(0, 20)
-			.map(({ score: _score, ...rest }) => rest)
-	}, [
-		hasQuery,
-		local.phrases,
-		local.playlists,
-		local.requests,
-		hybrid.data,
-		hybrid.semanticById,
-		hybrid.trigramById,
-	])
 
 	// Reset selected index when results change
 	const resetKey = `${results.length}-${lowerQuery}`
@@ -356,7 +247,7 @@ export default function BrowseSearchOverlay({
 							results.map((result, index) => (
 								<SearchResultLink
 									key={`${result.type}-${result.id}`}
-									result={result}
+									item={result}
 									isSelected={index === selectedIndex}
 									onMouseEnter={() => setSelectedIndex(index)}
 								/>
@@ -404,71 +295,92 @@ export default function BrowseSearchOverlay({
 }
 
 function SearchResultLink({
-	result,
+	item,
 	isSelected,
 	onMouseEnter,
 }: {
-	result: SearchResult
+	item: MergedSearchItem
 	isSelected: boolean
 	onMouseEnter: () => void
 }) {
 	const className =
 		'flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-lc-up-2 data-[selected=true]:bg-lc-up-2'
-
-	const inner = (
-		<>
-			<LangBadge lang={result.lang} />
-			<div className="min-w-0 flex-1">
-				<p className="truncate text-sm font-medium">{result.title}</p>
-				{result.subtitle && (
-					<p className="text-muted-foreground truncate text-xs">
-						{result.subtitle}
-					</p>
-				)}
-			</div>
-			<span className="text-muted-foreground shrink-0 text-xs capitalize">
-				{result.type}
-			</span>
-		</>
-	)
-
 	const linkProps = {
 		'data-selected': isSelected,
 		className,
 		onMouseEnter,
 	} as const
 
-	if (result.type === 'phrase') {
+	const { title, subtitle } = renderFields(item)
+	const inner = (
+		<>
+			<LangBadge lang={item.entity.lang} />
+			<div className="min-w-0 flex-1">
+				<p className="truncate text-sm font-medium">{title}</p>
+				{subtitle && (
+					<p className="text-muted-foreground truncate text-xs">{subtitle}</p>
+				)}
+			</div>
+			<span className="text-muted-foreground shrink-0 text-xs capitalize">
+				{item.type}
+			</span>
+		</>
+	)
+
+	if (item.type === 'phrase') {
 		return (
 			<Link
 				to="/learn/$lang/phrases/$id"
-				params={{ lang: result.lang, id: result.id }}
+				params={{ lang: item.entity.lang, id: item.id }}
 				{...linkProps}
 			>
 				{inner}
 			</Link>
 		)
 	}
-
-	if (result.type === 'playlist') {
+	if (item.type === 'playlist') {
 		return (
 			<Link
 				to="/learn/$lang/playlists/$playlistId"
-				params={{ lang: result.lang, playlistId: result.id }}
+				params={{ lang: item.entity.lang, playlistId: item.id }}
 				{...linkProps}
 			>
 				{inner}
 			</Link>
 		)
 	}
-
 	return (
 		<Link
 			to="/learn/$lang/requests/$id"
-			params={{ lang: result.lang, id: result.id }}
+			params={{ lang: item.entity.lang, id: item.id }}
 			{...linkProps}
 		>
 			{inner}
 		</Link>
 	)
+}
+
+function renderFields(item: MergedSearchItem): {
+	title: string
+	subtitle: string | null
+} {
+	if (item.type === 'phrase') {
+		return {
+			title: item.entity.text,
+			subtitle:
+				item.entity.translations_mine?.[0]?.text ??
+				item.entity.translations_other?.[0]?.text ??
+				null,
+		}
+	}
+	if (item.type === 'playlist') {
+		return {
+			title: item.entity.title,
+			subtitle: item.entity.description,
+		}
+	}
+	return {
+		title: item.entity.prompt,
+		subtitle: `${item.entity.upvote_count} upvote${item.entity.upvote_count !== 1 ? 's' : ''}`,
+	}
 }
