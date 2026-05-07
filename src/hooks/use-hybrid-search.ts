@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { inArray } from '@tanstack/db'
 import { useDebounce } from '@/hooks/use-debounce'
+import { MIN_QUERY_LENGTH } from '@/hooks/search-config'
 import { useSemanticSearch } from '@/hooks/use-semantic-search'
 import { useTrigramSearch } from '@/hooks/use-trigram-search'
 
@@ -18,7 +19,6 @@ export type HybridSearchResult = PhraseFullFilteredType & {
 
 const SEARCH_DEBOUNCE_MS = 300
 const SEMANTIC_TOP_K = 20
-const MIN_QUERY_LENGTH = 2
 
 // Symmetric score-blend: sqrt(x) + sqrt(y). Sqrt amplifies low values on
 // both sides — trigram similarity in the 0.15-0.30 range often surfaces

@@ -4,8 +4,9 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { phrasesFull } from '@/features/phrases/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { phraseRequestsActive } from '@/features/requests/live'
+import { MIN_QUERY_LENGTH } from '@/hooks/search-config'
 
-import type { PhraseFullType } from '@/features/phrases/schemas'
+import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type { PhrasePlaylistType } from '@/features/playlists/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 
@@ -22,7 +23,7 @@ import type { PhraseRequestType } from '@/features/requests/schemas'
 // `langs` filters by entity lang when set; null/empty array searches all.
 
 export type LocalSearchResults = {
-	phrases: Array<PhraseFullType>
+	phrases: Array<PhraseFullFullType>
 	playlists: Array<PhrasePlaylistType>
 	requests: Array<PhraseRequestType>
 }
@@ -34,10 +35,9 @@ export type LocalSearchOpts = {
 }
 
 const DEFAULT_LIMIT = 20
-const MIN_QUERY_LENGTH = 2
 const ALL_TYPES = { phrases: true, playlists: true, requests: true }
 
-const EMPTY_PHRASES: Array<PhraseFullType> = []
+const EMPTY_PHRASES: Array<PhraseFullFullType> = []
 const EMPTY_PLAYLISTS: Array<PhrasePlaylistType> = []
 const EMPTY_REQUESTS: Array<PhraseRequestType> = []
 

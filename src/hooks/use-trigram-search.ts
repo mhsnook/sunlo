@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
 
 import supabase from '@/lib/supabase-client'
-import type { SearchEntityType } from '@/hooks/use-semantic-search'
+import { MIN_QUERY_LENGTH, type SearchEntityType } from '@/hooks/search-config'
 
 // One layer of the search stack: hits search_by_trigram (pg_trgm-based
 // fuzzy search across search_corpus). Returns multi-entity rows
@@ -21,7 +21,6 @@ export type TrigramRow = {
 }
 
 const DEFAULT_PAGE_SIZE = 20
-const MIN_QUERY_LENGTH = 2
 const EMPTY_PAGES: Array<Array<TrigramRow>> = []
 
 export function useTrigramSearch(
