@@ -1,4 +1,7 @@
 -- v0.18 extra seed data: more HIN/KAN playlists, comments with replies, review histories
+set
+	session_replication_role = replica;
+
 -- Users reference:
 --   cf1f69ce = GarlicFace (sunloapp@gmail.com) - main test user
 --   7ad846a9 = Lexigrine (sunloapp+friend@gmail.com)

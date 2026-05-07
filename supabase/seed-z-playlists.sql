@@ -1,3 +1,6 @@
+set
+	session_replication_role = replica;
+
 --
 -- Data for Name: phrase; Type: TABLE DATA; Schema: public; Owner: postgres
 --
