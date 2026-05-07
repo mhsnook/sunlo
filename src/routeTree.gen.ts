@@ -28,12 +28,10 @@ import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSetNewPasswordRouteImport } from './routes/_auth/set-new-password'
 import { Route as AuthLoginRouteImport } from './routes/_auth/login'
 import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
-import { Route as UserSearchIndexRouteImport } from './routes/_user/search.index'
 import { Route as UserProfileIndexRouteImport } from './routes/_user/profile/index'
 import { Route as UserLearnIndexRouteImport } from './routes/_user/learn/index'
 import { Route as UserFriendsIndexRouteImport } from './routes/_user/friends/index'
 import { Route as UserAdminIndexRouteImport } from './routes/_user/admin/index'
-import { Route as UserSearchTestRouteImport } from './routes/_user/search.test'
 import { Route as UserProfileChangePasswordRouteImport } from './routes/_user/profile/change-password'
 import { Route as UserProfileChangeEmailConfirmRouteImport } from './routes/_user/profile/change-email-confirm'
 import { Route as UserProfileChangeEmailRouteImport } from './routes/_user/profile/change-email'
@@ -85,6 +83,8 @@ const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
 const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
 const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
+const UserSearchIndexLazyRouteImport = createFileRoute('/_user/search/')()
+const UserSearchTestLazyRouteImport = createFileRoute('/_user/search/test')()
 const UserFriendsInviteLazyRouteImport = createFileRoute(
   '/_user/friends/invite',
 )()
@@ -211,11 +211,13 @@ const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
 } as any)
-const UserSearchIndexRoute = UserSearchIndexRouteImport.update({
+const UserSearchIndexLazyRoute = UserSearchIndexLazyRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => UserSearchRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_user/search.index.lazy').then((d) => d.Route),
+)
 const UserProfileIndexRoute = UserProfileIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -236,6 +238,13 @@ const UserAdminIndexRoute = UserAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UserAdminRoute,
 } as any)
+const UserSearchTestLazyRoute = UserSearchTestLazyRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => UserSearchRoute,
+} as any).lazy(() =>
+  import('./routes/_user/search.test.lazy').then((d) => d.Route),
+)
 const UserFriendsInviteLazyRoute = UserFriendsInviteLazyRouteImport.update({
   id: '/invite',
   path: '/invite',
@@ -243,11 +252,6 @@ const UserFriendsInviteLazyRoute = UserFriendsInviteLazyRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_user/friends/invite.lazy').then((d) => d.Route),
 )
-const UserSearchTestRoute = UserSearchTestRouteImport.update({
-  id: '/test',
-  path: '/test',
-  getParentRoute: () => UserSearchRoute,
-} as any)
 const UserProfileChangePasswordRoute =
   UserProfileChangePasswordRouteImport.update({
     id: '/change-password',
@@ -513,13 +517,13 @@ export interface FileRoutesByFullPath {
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/search/test': typeof UserSearchTestRoute
   '/friends/invite': typeof UserFriendsInviteLazyRoute
+  '/search/test': typeof UserSearchTestLazyRoute
   '/admin/': typeof UserAdminIndexRoute
   '/friends/': typeof UserFriendsIndexRoute
   '/learn/': typeof UserLearnIndexRoute
   '/profile/': typeof UserProfileIndexRoute
-  '/search/': typeof UserSearchIndexRoute
+  '/search/': typeof UserSearchIndexLazyRoute
   '/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
@@ -577,13 +581,13 @@ export interface FileRoutesByTo {
   '/profile/change-email': typeof UserProfileChangeEmailRoute
   '/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/search/test': typeof UserSearchTestRoute
   '/friends/invite': typeof UserFriendsInviteLazyRoute
+  '/search/test': typeof UserSearchTestLazyRoute
   '/admin': typeof UserAdminIndexRoute
   '/friends': typeof UserFriendsIndexRoute
   '/learn': typeof UserLearnIndexRoute
   '/profile': typeof UserProfileIndexRoute
-  '/search': typeof UserSearchIndexRoute
+  '/search': typeof UserSearchIndexLazyRoute
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
@@ -650,13 +654,13 @@ export interface FileRoutesById {
   '/_user/profile/change-email': typeof UserProfileChangeEmailRoute
   '/_user/profile/change-email-confirm': typeof UserProfileChangeEmailConfirmRoute
   '/_user/profile/change-password': typeof UserProfileChangePasswordRoute
-  '/_user/search/test': typeof UserSearchTestRoute
   '/_user/friends/invite': typeof UserFriendsInviteLazyRoute
+  '/_user/search/test': typeof UserSearchTestLazyRoute
   '/_user/admin/': typeof UserAdminIndexRoute
   '/_user/friends/': typeof UserFriendsIndexRoute
   '/_user/learn/': typeof UserLearnIndexRoute
   '/_user/profile/': typeof UserProfileIndexRoute
-  '/_user/search/': typeof UserSearchIndexRoute
+  '/_user/search/': typeof UserSearchIndexLazyRoute
   '/_user/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/_user/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
   '/_user/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
@@ -726,8 +730,8 @@ export interface FileRouteTypes {
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
-    | '/search/test'
     | '/friends/invite'
+    | '/search/test'
     | '/admin/'
     | '/friends/'
     | '/learn/'
@@ -790,8 +794,8 @@ export interface FileRouteTypes {
     | '/profile/change-email'
     | '/profile/change-email-confirm'
     | '/profile/change-password'
-    | '/search/test'
     | '/friends/invite'
+    | '/search/test'
     | '/admin'
     | '/friends'
     | '/learn'
@@ -862,8 +866,8 @@ export interface FileRouteTypes {
     | '/_user/profile/change-email'
     | '/_user/profile/change-email-confirm'
     | '/_user/profile/change-password'
-    | '/_user/search/test'
     | '/_user/friends/invite'
+    | '/_user/search/test'
     | '/_user/admin/'
     | '/_user/friends/'
     | '/_user/learn/'
@@ -1089,7 +1093,7 @@ declare module '@tanstack/react-router' {
       id: '/_user/search/'
       path: '/'
       fullPath: '/search/'
-      preLoaderRoute: typeof UserSearchIndexRouteImport
+      preLoaderRoute: typeof UserSearchIndexLazyRouteImport
       parentRoute: typeof UserSearchRoute
     }
     '/_user/profile/': {
@@ -1120,19 +1124,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserAdminIndexRouteImport
       parentRoute: typeof UserAdminRoute
     }
+    '/_user/search/test': {
+      id: '/_user/search/test'
+      path: '/test'
+      fullPath: '/search/test'
+      preLoaderRoute: typeof UserSearchTestLazyRouteImport
+      parentRoute: typeof UserSearchRoute
+    }
     '/_user/friends/invite': {
       id: '/_user/friends/invite'
       path: '/invite'
       fullPath: '/friends/invite'
       preLoaderRoute: typeof UserFriendsInviteLazyRouteImport
       parentRoute: typeof UserFriendsRoute
-    }
-    '/_user/search/test': {
-      id: '/_user/search/test'
-      path: '/test'
-      fullPath: '/search/test'
-      preLoaderRoute: typeof UserSearchTestRouteImport
-      parentRoute: typeof UserSearchRoute
     }
     '/_user/profile/change-password': {
       id: '/_user/profile/change-password'
@@ -1685,13 +1689,13 @@ const UserProfileRouteWithChildren = UserProfileRoute._addFileChildren(
 )
 
 interface UserSearchRouteChildren {
-  UserSearchTestRoute: typeof UserSearchTestRoute
-  UserSearchIndexRoute: typeof UserSearchIndexRoute
+  UserSearchTestLazyRoute: typeof UserSearchTestLazyRoute
+  UserSearchIndexLazyRoute: typeof UserSearchIndexLazyRoute
 }
 
 const UserSearchRouteChildren: UserSearchRouteChildren = {
-  UserSearchTestRoute: UserSearchTestRoute,
-  UserSearchIndexRoute: UserSearchIndexRoute,
+  UserSearchTestLazyRoute: UserSearchTestLazyRoute,
+  UserSearchIndexLazyRoute: UserSearchIndexLazyRoute,
 }
 
 const UserSearchRouteWithChildren = UserSearchRoute._addFileChildren(
