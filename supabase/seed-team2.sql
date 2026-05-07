@@ -1,12 +1,21 @@
 -- Seed data for scenetest team 2 (FR/ES/EU).
 --
--- Mirrors the resource shape of the default team in seed.sql / seed-v018-extras.sql /
--- seed-comments.sql, using French (full) / Spanish (partial) / Basque (empty).
+-- Mirrors the resource shape of team 1 (see seed-team1.sql), using:
+--   lang_full    = French (fra): rich corpus, learner has full deck with reviews
+--   lang_partial = Spanish (spa): medium corpus, used for CRUD flows
+--   lang_empty   = Basque (eus): no learner deck, for "create new deck" flows
+--
 -- The two teams run scenes concurrently against the same database; their
 -- actor UUIDs, emails, and resource UUIDs are disjoint by construction.
+-- All UUIDs here are referenced from scenetest/actors/team2.ts.
 --
--- All UUIDs here are referenced from scenetest/actors/team2.ts. Any new tag
--- added to that file must have its corresponding row added here.
+-- Actor UIDs (parsed by scripts/dump-new-seeds.ts):
+-- @uid learner   21f1f69c-10fa-4059-8fd4-3c6dcef9ba18
+-- @uid friend    27ad846a-d55b-4035-8be2-dbcc70074f74
+-- @uid learner2  22dfa256-ef7b-41b0-b05a-d97afab8dd21
+-- @uid learner3  2a32f65e-a496-4afc-abd3-798d8e6d9ec5
+-- @uid new-user  2e4e5f6a-7b8c-4d0e-a1f2-b3c4d5e6f7a8
+--
 set
 	session_replication_role = replica;
 
