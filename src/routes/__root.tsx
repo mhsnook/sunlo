@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import type { QueryClient } from '@tanstack/react-query'
 import {
 	createRootRouteWithContext,
@@ -5,15 +6,25 @@ import {
 	Outlet,
 	useNavigate,
 } from '@tanstack/react-router'
+import { OctagonMinus } from 'lucide-react'
 import { Toasters } from '@/components/ui/sonner'
-
 import type { AuthState } from '@/lib/use-auth'
 import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
-import { OctagonMinus } from 'lucide-react'
 import { TitleBar } from '@/types/main'
+
+// Dev-only identity switcher. The ternary collapses to null in production
+// builds (import.meta.env.DEV is statically replaced), so the dynamic
+// import() call becomes unreachable and vite tree-shakes the whole chunk.
+const DevIdentitySwitcher = import.meta.env.DEV
+	? lazy(() =>
+			import('@/components/dev-identity-switcher').then((m) => ({
+				default: m.DevIdentitySwitcher,
+			}))
+		)
+	: null
 
 export interface MyRouterContext {
 	auth: AuthState
@@ -39,6 +50,11 @@ function RootComponent() {
 				<Outlet />
 			</div>
 			<Toasters />
+			{DevIdentitySwitcher ? (
+				<Suspense fallback={null}>
+					<DevIdentitySwitcher />
+				</Suspense>
+			) : null}
 		</SidebarProvider>
 	)
 }
