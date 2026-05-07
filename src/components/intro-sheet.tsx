@@ -117,14 +117,16 @@ export function IntroSheet({
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent
 				data-testid={testId ?? 'intro-message-section'}
-				className="max-h-[85vh] overflow-y-auto sm:max-w-lg"
+				className="flex max-h-[85vh] flex-col sm:max-w-lg"
 				hideClose={requireAffirmation}
 			>
 				<DialogHeader>
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
-				<div className="space-y-4 py-4">{children}</div>
+				<div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
+					{children}
+				</div>
 				<DialogFooter className="gap-2 sm:gap-0">
 					{!requireAffirmation && skipLabel && (
 						<Button variant="soft" onClick={handleSkip}>
