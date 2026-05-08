@@ -16,7 +16,7 @@
 //   CLOUDFLARE_ACCOUNT_ID
 //   CLOUDFLARE_API_TOKEN
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
+import { createClient } from '@supabase/supabase-js'
 import { normalize } from '../_shared/normalize.ts'
 
 const CORS_HEADERS = {
@@ -56,8 +56,15 @@ type SearchResult = {
 	description?: string | null
 }
 
-const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')!
-const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')!
+const CF_ACCOUNT_ID = Deno.env.get('CLOUDFLARE_ACCOUNT_ID')
+const CF_API_TOKEN = Deno.env.get('CLOUDFLARE_API_TOKEN')
+const HAS_WORKERS_AI = Boolean(CF_ACCOUNT_ID && CF_API_TOKEN)
+
+if (!HAS_WORKERS_AI) {
+	console.log(
+		'[search] Workers AI keys not configured — text queries will use trigram-anchor fallback (corpus-vector lookup, then top trigram hits as anchors for search_by_anchors)'
+	)
+}
 
 const supabase = createClient(
 	Deno.env.get('SUPABASE_URL')!,
@@ -88,13 +95,16 @@ function vectorToPgLiteral(vec: number[]): string {
 	return `[${vec.join(',')}]`
 }
 
-// Try to reuse a stored embedding from search_corpus before calling
-// Workers AI. The corpus already has (text_normalized, embedding) pairs
-// for everything indexed, and BGE-M3 is deterministic for the same input,
-// so a cache hit yields the exact embedding we'd compute fresh. Lookup
-// is O(log n) via search_corpus_text_normalized_idx.
+// Try to obtain a query embedding without calling Workers AI when we can.
+// The corpus already has (text_normalized, embedding) pairs for everything
+// indexed, and BGE-M3 is deterministic, so an exact-match cache hit yields
+// the same embedding we'd compute fresh. Lookup is O(log n) via
+// search_corpus_text_normalized_idx.
 //
-// GOTCHAS — re-evaluate before relying on this in production:
+// Returns null when (a) no cache hit AND (b) Workers AI keys are not
+// configured. The caller falls back to trigram-anchor search in that case.
+//
+// GOTCHAS — re-evaluate before relying on the cache in production:
 //
 // (1) Topology assumption. This optimization is only worthwhile when the
 //     Edge Function and the database are colocated. Today both live in
@@ -109,7 +119,7 @@ function vectorToPgLiteral(vec: number[]): string {
 //     phrase strings; rare for free-form questions. We don't know yet
 //     whether the hit rate justifies the second round-trip on misses.
 //     If it doesn't, delete this and call embedViaWorkersAI directly.
-async function getOrEmbed(normalized: string): Promise<number[]> {
+async function tryGetEmbedding(normalized: string): Promise<number[] | null> {
 	const { data: cached } = await supabase
 		.from('search_corpus')
 		.select('embedding')
@@ -118,7 +128,57 @@ async function getOrEmbed(normalized: string): Promise<number[]> {
 		.maybeSingle()
 
 	if (cached?.embedding) return JSON.parse(cached.embedding) as number[]
+	if (!HAS_WORKERS_AI) return null
 	return embedViaWorkersAI(normalized)
+}
+
+// Trigram-anchor fallback. Used when Workers AI is unavailable AND the
+// query has no exact-match cache hit. Runs a trigram match against the
+// search_text_index materialized view to surface the lexically-closest
+// indexed entities, then feeds their entity_ids into search_by_anchors —
+// which averages those entities' corpus vectors and runs cosine similarity
+// against the rest of search_corpus.
+//
+// Effect: lexical hits anchor a small semantic neighborhood, and that
+// neighborhood is what gets returned. For a real query ("greetings") this
+// behaves close to true semantic search. For garbage input ("sdfsfdg"),
+// trigram still picks *something*, the anchors get a fuzzy centroid, and
+// the result is plausible-shaped randomness — which is the desired UX in
+// dev/demo modes without paid embedding calls.
+//
+// Returns [] if trigram finds nothing or if none of the matched entities
+// have corpus vectors yet (search_by_anchors handles the latter by
+// returning empty when the centroid is null).
+async function searchViaTrigramAnchor(
+	queryText: string,
+	langs: string[] | null,
+	excludeIds: string[],
+	matchLimit: number
+): Promise<CorpusMatch[]> {
+	const { data: trigramHits, error: trigramErr } = await supabase.rpc(
+		'search_by_trigram',
+		{
+			query: queryText,
+			target_langs: langs,
+			exclude_ids: excludeIds,
+			match_limit: 8,
+		}
+	)
+	if (trigramErr) throw trigramErr
+	if (!trigramHits?.length) return []
+
+	const anchorIds = (trigramHits as Array<{ entity_id: string }>).map(
+		(h) => h.entity_id
+	)
+
+	const { data, error } = await supabase.rpc('search_by_anchors', {
+		anchor_ids: anchorIds,
+		target_langs: langs,
+		exclude_ids: excludeIds,
+		match_limit: matchLimit,
+	})
+	if (error) throw error
+	return (data ?? []) as CorpusMatch[]
 }
 
 async function hydrateResults(matches: CorpusMatch[]): Promise<SearchResult[]> {
@@ -258,16 +318,24 @@ Deno.serve(async (req) => {
 				})
 			}
 
-			const embedding = await getOrEmbed(normalized)
-			const { data, error } = await supabase.rpc('search_by_query', {
-				query_embedding: vectorToPgLiteral(embedding),
-				target_langs: langs,
-				exclude_ids: excludeIds,
-				match_limit: matchLimit,
-			})
-
-			if (error) throw error
-			matches = (data ?? []) as CorpusMatch[]
+			const embedding = await tryGetEmbedding(normalized)
+			if (embedding) {
+				const { data, error } = await supabase.rpc('search_by_query', {
+					query_embedding: vectorToPgLiteral(embedding),
+					target_langs: langs,
+					exclude_ids: excludeIds,
+					match_limit: matchLimit,
+				})
+				if (error) throw error
+				matches = (data ?? []) as CorpusMatch[]
+			} else {
+				matches = await searchViaTrigramAnchor(
+					body.query.text,
+					langs,
+					excludeIds,
+					matchLimit
+				)
+			}
 		} else {
 			const { data, error } = await supabase.rpc('search_by_anchors', {
 				anchor_ids: body.query.ids,
