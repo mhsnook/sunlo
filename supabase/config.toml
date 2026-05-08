@@ -277,6 +277,16 @@ enabled = true
 # without a JWT (/chats and /search both work for unauthenticated visitors).
 verify_jwt = false
 
+[functions.embed-corpus-row]
+enabled = true
+# Internal-only: called by Postgres triggers (via pg_net) on source-table
+# changes. JWT verification rejects random internet callers — triggers
+# send the calling user's auth header (or a service-role JWT fallback
+# from vault) so legitimate trigger invocations pass; a raw POST from
+# the public internet without a Supabase-issued JWT gets a 401 from the
+# runtime before the function code runs.
+verify_jwt = true
+
 [analytics]
 enabled = false
 port = 54327

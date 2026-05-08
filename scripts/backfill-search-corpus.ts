@@ -14,10 +14,11 @@
 //     existed. Use after seed changes or when normalization rules change.
 //
 //   pnpm tsx scripts/backfill-search-corpus.ts --skip-existing
-//     Skip rows that are already present in search_corpus (matched by
-//     source_type + source_id). Use when you've added new content
-//     (e.g., a new request, new phrases) and want to embed only the
-//     new rows. Cheapest run-mode that still calls Workers AI.
+//     Skip rows whose corpus.vectorized_at is already at or beyond the
+//     source row's updated_at — i.e. embed only rows that are new or
+//     stale. Cheapest run-mode that still calls Workers AI; recovers
+//     from missed embed dispatches (Studio admin edits, post-deploy
+//     drift) without re-burning credits on already-fresh rows.
 //
 //   pnpm tsx scripts/backfill-search-corpus.ts --normalize-only
 //     Only updates text + text_normalized on existing rows. Skips
@@ -73,6 +74,10 @@ type CorpusRow = {
 	text_lang: string
 	text: string
 	text_normalized: string
+	// Source row's most-recent meaningful change. Written as
+	// vectorized_at on the corpus row; --skip-existing compares this to
+	// existing corpus.vectorized_at to decide whether to re-embed.
+	updated_at: string
 }
 
 async function embedBatch(texts: string[]): Promise<number[][]> {
@@ -102,7 +107,7 @@ function pgVecLiteral(v: number[]): string {
 async function loadPhrases(): Promise<CorpusRow[]> {
 	const { data, error } = await supabase
 		.from('phrase_meta')
-		.select('id, text, lang, tags')
+		.select('id, text, lang, tags, updated_at, created_at')
 		.eq('archived', false)
 	if (error) throw error
 	return (data ?? [])
@@ -124,6 +129,7 @@ async function loadPhrases(): Promise<CorpusRow[]> {
 				text_lang: p.lang!,
 				text: p.text!,
 				text_normalized: normalize(p.lang!, searchableText),
+				updated_at: p.updated_at ?? p.created_at!,
 			}
 		})
 }
@@ -131,7 +137,9 @@ async function loadPhrases(): Promise<CorpusRow[]> {
 async function loadTranslations(): Promise<CorpusRow[]> {
 	const { data, error } = await supabase
 		.from('phrase_translation')
-		.select('id, phrase_id, text, lang, phrase!inner(lang)')
+		.select(
+			'id, phrase_id, text, lang, updated_at, created_at, phrase!inner(lang)'
+		)
 		.eq('archived', false)
 		.eq('phrase.archived', false)
 	if (error) throw error
@@ -146,13 +154,14 @@ async function loadTranslations(): Promise<CorpusRow[]> {
 			text_lang: t.lang,
 			text: t.text,
 			text_normalized: normalize(t.lang, t.text),
+			updated_at: t.updated_at ?? t.created_at,
 		}))
 }
 
 async function loadRequests(): Promise<CorpusRow[]> {
 	const { data, error } = await supabase
 		.from('phrase_request')
-		.select('id, prompt, lang')
+		.select('id, prompt, lang, updated_at, created_at')
 		.eq('deleted', false)
 	if (error) throw error
 	return (data ?? [])
@@ -166,13 +175,14 @@ async function loadRequests(): Promise<CorpusRow[]> {
 			text_lang: r.lang,
 			text: r.prompt,
 			text_normalized: normalize(r.lang, r.prompt),
+			updated_at: r.updated_at ?? r.created_at,
 		}))
 }
 
 async function loadPlaylists(): Promise<CorpusRow[]> {
 	const { data, error } = await supabase
 		.from('phrase_playlist')
-		.select('id, title, description, lang')
+		.select('id, title, description, lang, updated_at, created_at')
 		.eq('deleted', false)
 	if (error) throw error
 	return (data ?? [])
@@ -193,25 +203,31 @@ async function loadPlaylists(): Promise<CorpusRow[]> {
 			text_lang: p.lang,
 			text,
 			text_normalized: normalize(p.lang, text),
+			updated_at: p.updated_at ?? p.created_at,
 		}))
 }
 
-async function loadExistingKeys(): Promise<Set<string>> {
-	const keys = new Set<string>()
+// Map<key, corpus.vectorized_at> for every row already in search_corpus.
+// --skip-existing uses this to decide whether the source row is fresher
+// than what's indexed.
+async function loadExistingFreshness(): Promise<Map<string, string>> {
+	const freshness = new Map<string, string>()
 	let from = 0
 	const PAGE = 1000
 	for (;;) {
 		const { data, error } = await supabase
 			.from('search_corpus')
-			.select('source_type, source_id')
+			.select('source_type, source_id, vectorized_at')
 			.range(from, from + PAGE - 1)
 		if (error) throw error
 		if (!data || data.length === 0) break
-		for (const row of data) keys.add(`${row.source_type}|${row.source_id}`)
+		for (const row of data) {
+			freshness.set(`${row.source_type}|${row.source_id}`, row.vectorized_at)
+		}
 		if (data.length < PAGE) break
 		from += PAGE
 	}
-	return keys
+	return freshness
 }
 
 async function fullBackfill(rows: CorpusRow[]) {
@@ -230,6 +246,7 @@ async function fullBackfill(rows: CorpusRow[]) {
 			text: r.text,
 			text_normalized: r.text_normalized,
 			embedding: pgVecLiteral(embeddings[idx]!),
+			vectorized_at: r.updated_at,
 		}))
 
 		const { error } = await supabase
@@ -312,11 +329,17 @@ async function main() {
 	)
 
 	if (SKIP_EXISTING) {
-		const existing = await loadExistingKeys()
+		const freshness = await loadExistingFreshness()
 		const before = rows.length
-		rows = rows.filter((r) => !existing.has(`${r.source_type}|${r.source_id}`))
+		rows = rows.filter((r) => {
+			const corpusVectorizedAt = freshness.get(
+				`${r.source_type}|${r.source_id}`
+			)
+			if (corpusVectorizedAt === undefined) return true // not yet embedded
+			return r.updated_at > corpusVectorizedAt // source is fresher
+		})
 		console.log(
-			`Filtered out ${before - rows.length} existing rows; ${rows.length} new rows to embed`
+			`Filtered out ${before - rows.length} fresh rows; ${rows.length} new or stale rows to embed`
 		)
 		if (rows.length === 0) {
 			console.log('Nothing to do.')
