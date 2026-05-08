@@ -32,10 +32,15 @@
  *   --reseed             Truncate all seeded tables then reload all seed files.
  *                        Table list is derived from TABLES config automatically.
  *                        Runs via docker exec into the local postgres container.
+ *                        Also truncates search_corpus if seed-corpus.sql exists.
+ *   --corpus-only        Dump search_corpus to seed-corpus.sql (overwrite).
+ *                        Run after backfill-search-corpus.ts to capture embeddings.
+ *                        seed-corpus.sql uses ON CONFLICT DO UPDATE; --reseed will
+ *                        include it automatically when present.
  *   --dry-run            Print SQL to stdout instead of writing files; skip shift
  */
 
-import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 const REPO_ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
 const SEEDS_DIR = `${REPO_ROOT}/supabase/seeds`
@@ -316,7 +321,7 @@ const SKIP_TABLES = new Set([
 	// deprecated, no longer used in the app
 	'phrase_relation',
 	'user_client_event',
-	// backfilled by scripts/backfill-search-corpus.ts, not seeded directly
+	// dumped separately via --corpus-only into seed-corpus.sql
 	'search_corpus',
 	// views — read-only, PostgREST exposes them but they are never INSERTed
 	'feed_activities',
@@ -547,13 +552,27 @@ async function listSeedFiles(): Promise<string[]> {
 async function reseedDatabase(dryRun: boolean): Promise<void> {
 	// Derive the truncation table list from TABLES config.
 	// SKIP_TABLES contains views and non-truncatable objects — exclude them.
+	// Include search_corpus in truncation only when seed-corpus.sql exists,
+	// so users who haven't run --corpus-only don't lose their local embeddings.
+	let hasCorpusSeed = false
+	try {
+		await Deno.stat(`${SEEDS_DIR}/seed-corpus.sql`)
+		hasCorpusSeed = true
+	} catch {
+		/* file absent */
+	}
+
 	const truncateTables = [
 		// All tables we actively dump/seed
 		...new Set(TABLES.map((t) => t.table)),
 		// db_meta is in SKIP_TABLES (excluded from dumping) but seed-zzz.sql
 		// writes seeded_at into it, so we must truncate it to allow a clean reseed.
 		'db_meta',
-	].filter((t) => !SKIP_TABLES.has(t) || t === 'db_meta')
+		// Only truncate corpus when we have a seed file to reload it from
+		...(hasCorpusSeed ? ['search_corpus'] : []),
+	].filter(
+		(t) => !SKIP_TABLES.has(t) || t === 'db_meta' || t === 'search_corpus'
+	)
 
 	// CASCADE handles any deprecated tables that still have FKs to seeded tables
 	// (e.g. phrase_relation → phrase) without needing to list them explicitly.
@@ -658,6 +677,98 @@ async function backupSeeds(): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Corpus dump  (--corpus-only)
+// ---------------------------------------------------------------------------
+
+// 4 decimal places is plenty for cosine similarity in staging/tests.
+// Full float32 precision (8+ decimals) makes the file ~3× larger for no benefit.
+const EMBEDDING_PRECISION = 3
+
+function roundEmbedding(vec: string): string {
+	// PostgREST returns vectors as "[0.12345678,...]" — parse, round, reserialise
+	const inner = vec.slice(1, -1)
+	const rounded = inner
+		.split(',')
+		.map((n) => parseFloat(n).toFixed(EMBEDDING_PRECISION))
+		.join(',')
+	return `[${rounded}]`
+}
+
+async function dumpCorpus(
+	supabase: SupabaseClient,
+	dryRun: boolean
+): Promise<void> {
+	const { data, error } = await supabase.from('search_corpus').select('*')
+	if (error) {
+		console.error(`Error fetching search_corpus: ${error.message}`)
+		Deno.exit(1)
+	}
+	if (!data || data.length === 0) {
+		console.error(
+			'-- search_corpus is empty — run backfill-search-corpus.ts first'
+		)
+		return
+	}
+
+	const rows = data as Record<string, unknown>[]
+	const cols = Object.keys(rows[0])
+	const colList = cols.map((c) => `"${c}"`).join(', ')
+
+	const blocks = rows.map((row) => {
+		const vals = cols
+			.map((col) => {
+				const val = row[col]
+				if (val === null || val === undefined) return '\t\tnull'
+				// created_at: store as now() so the file stays valid across DB resets
+				if (col === 'created_at') return '\t\tnow()'
+				if (col === 'embedding' && typeof val === 'string')
+					return `\t\t'${roundEmbedding(val)}'`
+				if (typeof val === 'string') return `\t\t'${val.replace(/'/g, "''")}'`
+				if (typeof val === 'number') return `\t\t${val}`
+				if (typeof val === 'boolean') return `\t\t${val}`
+				return `\t\t'${JSON.stringify(val).replace(/'/g, "''")}'`
+			})
+			.join(',\n')
+		return `\t(\n${vals}\n\t)`
+	})
+
+	// Update everything except the natural key on conflict
+	const keyCols = new Set(['id', 'source_type', 'source_id'])
+	const updateCols = cols.filter((c) => !keyCols.has(c))
+	const updateClause = updateCols
+		.map((c) => `"${c}" = excluded."${c}"`)
+		.join(',\n\t\t')
+
+	const stamp = new Date().toISOString()
+	const sql = [
+		`set`,
+		`\tsession_replication_role = replica;`,
+		``,
+		`-- generated by dump-new-seeds --corpus-only ${stamp}`,
+		`-- ${rows.length} row(s)`,
+		``,
+		`--`,
+		`-- search_corpus (${rows.length} rows)`,
+		`--`,
+		`insert into`,
+		`\t"public"."search_corpus" (${colList})`,
+		`values`,
+		blocks.join(',\n'),
+		`on conflict (source_type, source_id) do update set`,
+		`\t${updateClause};`,
+		``,
+	].join('\n')
+
+	if (dryRun) {
+		await Deno.stdout.write(new TextEncoder().encode(sql))
+	} else {
+		const targetPath = `${SEEDS_DIR}/seed-corpus.sql`
+		await Deno.writeTextFile(targetPath, sql)
+		console.error(`-- → ${targetPath} (${rows.length} rows)`)
+	}
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
@@ -668,6 +779,7 @@ async function main() {
 	let allRows = false
 	let fullMode = false
 	let reseedMode = false
+	let corpusOnly = false
 	let shiftDays = 0
 	let dryRun = false
 
@@ -678,6 +790,7 @@ async function main() {
 			fullMode = true
 			allRows = true
 		} else if (args[i] === '--reseed') reseedMode = true
+		else if (args[i] === '--corpus-only') corpusOnly = true
 		else if (args[i] === '--shift-back' && args[i + 1])
 			shiftDays = parseInt(args[++i])
 		else if (args[i] === '--dry-run') dryRun = true
@@ -698,9 +811,6 @@ async function main() {
 		return
 	}
 
-	if (fullMode)
-		console.error('-- Mode: --full (all rows, overwrite team files)')
-
 	const supabaseUrl =
 		Deno.env.get('VITE_SUPABASE_URL') ?? 'http://127.0.0.1:54321'
 	const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -714,6 +824,14 @@ async function main() {
 	const supabase: SupabaseClient = createClient(supabaseUrl, serviceRoleKey, {
 		auth: { persistSession: false },
 	})
+
+	if (corpusOnly) {
+		await dumpCorpus(supabase, dryRun)
+		return
+	}
+
+	if (fullMode)
+		console.error('-- Mode: --full (all rows, overwrite team files)')
 
 	// Determine cutoff timestamp
 	let cutoffIso: string | null = null
