@@ -12,3 +12,10 @@ values
 on conflict ("key") do update
 set
 	"value" = excluded."value";
+
+-- Every seed file sets session_replication_role = replica, which disables
+-- the statement-level triggers that keep search_text_index in step with
+-- source-table writes. Refresh the MV once at the end of seed loading so
+-- trigram search has rows to match against. (refresh materialized view
+-- is a direct command, not a trigger, so replica mode doesn't block it.)
+refresh materialized view "public"."search_text_index";
