@@ -9,8 +9,8 @@ learner:
 - up
 - see add-phrase-page
 - see add-phrase-form
-- typeInto add-phrase-form phrase-text-input [team.full_test_phrase_text]
-- typeInto add-phrase-form translation-text-input [team.full_test_phrase_translation]
+- typeInto add-phrase-form phrase-text-input '[team.full_test_phrase_text]'
+- typeInto add-phrase-form translation-text-input '[team.full_test_phrase_translation]'
 - click add-phrase-form submit-button
 - up
 - seeToast toast-success
