@@ -13,7 +13,7 @@ const config = {
 	identifierCase: 'lower',
 	indentStyle: 'standard',
 	logicalOperatorNewline: 'before',
-	expressionWidth: 64,
+	expressionWidth: 120,
 	denseOperators: false,
 	database: 'postgresql',
 }
