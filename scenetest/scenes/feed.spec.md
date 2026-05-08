@@ -55,6 +55,8 @@ learner:
 
 # opening a chat marks messages as read
 
+cleanup: supabase.from('chat_message').update({ read_at: null }).eq('sender_uid', '[learner2.key]').eq('recipient_uid', '[learner.key]')
+
 learner:
 
 - login
