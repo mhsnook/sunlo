@@ -117,9 +117,18 @@ Populates the `search_corpus` table with denormalized phrase + translation
   `/chats/$lang` returns empty results and `/search` falls back to
   trigram-only ranking.
 
-`supabase db reset` wipes `search_corpus`. Run this script afterwards
-(or any time the seed data or `src/features/chat/normalize.ts` rules
-change) to repopulate it.
+Since the auto-sync triggers (`embed-corpus-row`) handle ongoing changes,
+this script's role downgrades to **initial population + disaster
+recovery**:
+
+- **Initial population** after `supabase db reset` — the triggers only
+  catch changes that happen _after_ the reset, so existing seed data
+  needs a one-shot embed pass.
+- **Disaster recovery** if Workers AI was down for a stretch — re-run
+  with `--skip-existing` to fill in rows the triggers couldn't embed.
+
+For routine "I edited a phrase" the triggers handle it; you don't need
+the script.
 
 ### Local
 

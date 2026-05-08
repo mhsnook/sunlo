@@ -100,14 +100,7 @@ alter type "public"."learning_goal" owner to "postgres";
 
 comment on type "public"."learning_goal" is 'why are you learning this language?';
 
-create type "public"."notification_type" as enum(
-	'request_commented',
-	'comment_replied',
-	'phrase_translated',
-	'phrase_referenced',
-	'request_upvoted',
-	'change_suggested'
-);
+create type "public"."notification_type" as enum('request_commented', 'comment_replied', 'phrase_translated', 'phrase_referenced', 'request_upvoted', 'change_suggested');
 
 alter type "public"."notification_type" owner to "postgres";
 
@@ -115,11 +108,7 @@ create type "public"."translation_input" as ("lang" character(3), "text" "text")
 
 alter type "public"."translation_input" owner to "postgres";
 
-create type "public"."phrase_with_translations_input" as (
-	"phrase_text" "text",
-	"translations" "public"."translation_input" [],
-	"only_reverse" boolean
-);
+create type "public"."phrase_with_translations_input" as ("phrase_text" "text", "translations" "public"."translation_input" [], "only_reverse" boolean);
 
 alter type "public"."phrase_with_translations_input" owner to "postgres";
 
@@ -190,11 +179,7 @@ alter function "public"."add_phrase_translation_card" (
 	"phrase_only_reverse" boolean
 ) owner to "postgres";
 
-create or replace function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) returns "jsonb" language "plpgsql" as $$
+create or replace function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) returns "jsonb" language "plpgsql" as $$
 DECLARE
     tag_name text;
     v_tag_id uuid;
@@ -244,11 +229,7 @@ BEGIN
 END;
 $$;
 
-alter function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) owner to "postgres";
+alter function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) owner to "postgres";
 
 create or replace function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") returns boolean language "sql" security definer as $$
   SELECT EXISTS (
@@ -276,11 +257,7 @@ $$;
 
 alter function "public"."auto_upvote_new_request" () owner to "postgres";
 
-create or replace function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) returns "jsonb" language "plpgsql" as $$
+create or replace function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") returns "jsonb" language "plpgsql" as $$
 declare
     phrase_item public.phrase_with_translations_input;
     new_phrase public.phrase;
@@ -317,11 +294,16 @@ begin
 end;
 $$;
 
-alter function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) owner to "postgres";
+alter function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") owner to "postgres";
+
+create or replace function "public"."bump_phrase_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+	new.updated_at := clock_timestamp();
+	return new;
+end;
+$$;
+
+alter function "public"."bump_phrase_updated_at" () owner to "postgres";
 
 create or replace function "public"."create_comment_with_phrases" (
 	"p_request_id" "uuid",
@@ -375,12 +357,7 @@ BEGIN
 END;
 $$;
 
-alter function "public"."create_comment_with_phrases" (
-	"p_request_id" "uuid",
-	"p_content" "text",
-	"p_parent_comment_id" "uuid",
-	"p_phrase_ids" "uuid" []
-) owner to "postgres";
+alter function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) owner to "postgres";
 
 create or replace function "public"."create_playlist_with_links" (
 	"lang" "text",
@@ -444,14 +421,7 @@ BEGIN
 END;
 $$;
 
-alter function "public"."create_playlist_with_links" (
-	"lang" "text",
-	"title" "text",
-	"description" "text",
-	"href" "text",
-	"cover_image_path" "text",
-	"phrases" "jsonb"
-) owner to "postgres";
+alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
 create or replace function "public"."is_admin" () returns boolean language "sql" stable security definer as $$
   select exists (
@@ -661,12 +631,7 @@ begin
 end;
 $$;
 
-alter function "public"."search_by_anchors" (
-	"anchor_ids" "uuid" [],
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) owner to "postgres";
+alter function "public"."search_by_anchors" ("anchor_ids" "uuid" [], "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) owner to "postgres";
 
 create or replace function "public"."search_by_query" (
 	"query_embedding" "public"."vector",
@@ -735,12 +700,7 @@ create or replace function "public"."search_by_query" (
 	limit match_limit;
 $$;
 
-alter function "public"."search_by_query" (
-	"query_embedding" "public"."vector",
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) owner to "postgres";
+alter function "public"."search_by_query" ("query_embedding" "public"."vector", "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) owner to "postgres";
 
 create or replace function "public"."search_by_trigram" (
 	"query" "text",
@@ -769,59 +729,37 @@ begin
 	return query
 	with match_pool as (
 		select
-			cc.entity_id,
-			cc.entity_type,
-			cc.source_type,
-			cc.text as matched_text,
-			cc.text_lang as matched_lang,
-			cc.created_at,
+			sti.entity_id,
+			sti.entity_type,
+			sti.source_type,
+			sti.text as matched_text,
+			sti.text_lang as matched_lang,
+			sti.entity_created_at,
 			greatest(
-				similarity(cc.text_normalized, normalized_query),
-				case when cc.text_normalized ilike '%' || normalized_query || '%' then 0.4 else 0 end,
-				case when cc.text_normalized ilike normalized_query || '%' then 0.6 else 0 end,
-				case when cc.text_normalized ilike '% ' || normalized_query || '%' then 0.5 else 0 end
+				similarity(sti.text_normalized, normalized_query),
+				case when sti.text_normalized ilike '%' || normalized_query || '%' then 0.4 else 0 end,
+				case when sti.text_normalized ilike normalized_query || '%' then 0.6 else 0 end,
+				case when sti.text_normalized ilike '% ' || normalized_query || '%' then 0.5 else 0 end
 			) as sim_score
-		from search_corpus cc
-		where (target_langs is null or cc.entity_lang = any(target_langs))
-			and cc.entity_id <> all(exclude_ids)
+		from search_text_index sti
+		where (target_langs is null or sti.entity_lang = any(target_langs))
+			and sti.entity_id <> all(exclude_ids)
 			and (
-				cc.text_normalized ilike '%' || normalized_query || '%'
-				or similarity(cc.text_normalized, normalized_query) > 0.1
+				sti.text_normalized ilike '%' || normalized_query || '%'
+				or similarity(sti.text_normalized, normalized_query) > 0.1
 			)
-	),
-	live_pool as (
-		select mp.* from match_pool mp
-		where (
-			mp.entity_type = 'phrase'
-			and exists (
-				select 1 from phrase
-				where id = mp.entity_id and archived = false
-			)
-		) or (
-			mp.entity_type = 'request'
-			and exists (
-				select 1 from phrase_request
-				where id = mp.entity_id and deleted = false
-			)
-		) or (
-			mp.entity_type = 'playlist'
-			and exists (
-				select 1 from phrase_playlist
-				where id = mp.entity_id and deleted = false
-			)
-		)
 	),
 	deduped as (
-		select distinct on (lp.entity_id)
-			lp.entity_id,
-			lp.entity_type,
-			lp.source_type,
-			lp.matched_text,
-			lp.matched_lang,
-			lp.sim_score,
-			lp.created_at
-		from live_pool lp
-		order by lp.entity_id, lp.sim_score desc
+		select distinct on (mp.entity_id)
+			mp.entity_id,
+			mp.entity_type,
+			mp.source_type,
+			mp.matched_text,
+			mp.matched_lang,
+			mp.sim_score,
+			mp.entity_created_at
+		from match_pool mp
+		order by mp.entity_id, mp.sim_score desc
 	)
 	select
 		d.entity_type,
@@ -830,11 +768,11 @@ begin
 		d.matched_text,
 		d.matched_lang,
 		d.sim_score::real as similarity,
-		d.created_at
+		d.entity_created_at as created_at
 	from deduped d
 	where (cursor_created_at is null and cursor_id is null)
-		or (d.created_at, d.entity_id) < (cursor_created_at, cursor_id)
-	order by d.sim_score desc, d.created_at desc, d.entity_id desc
+		or (d.entity_created_at, d.entity_id) < (cursor_created_at, cursor_id)
+	order by d.sim_score desc, d.entity_created_at desc, d.entity_id desc
 	limit match_limit;
 end;
 $$;
@@ -983,6 +921,65 @@ $$;
 
 alter function "public"."set_phrase_request_upvote" ("p_request_id" "uuid", "p_action" "text") owner to "postgres";
 
+create or replace function "public"."skip_stale_corpus_upsert" () returns "trigger" language "plpgsql" as $$
+begin
+	if tg_op = 'UPDATE' and new.vectorized_at < old.vectorized_at then
+		return null;
+	end if;
+	return new;
+end;
+$$;
+
+alter function "public"."skip_stale_corpus_upsert" () owner to "postgres";
+
+create or replace function "public"."trigger_notify_corpus_embed_change" () returns "trigger" language "plpgsql" security definer as $$
+declare
+	source_type_arg text := tg_argv[0];
+	affected_id uuid;
+	project_url text;
+	headers_raw text;
+	auth_header text;
+begin
+	headers_raw := current_setting('request.headers', true);
+	if headers_raw is null
+		or (headers_raw::json->>'authorization') is null
+	then
+		-- No PostgREST session = direct DB edit (Studio admin, psql).
+		-- Skip the dispatch; the next app-driven edit or backfill run
+		-- will re-sync.
+		return null;
+	end if;
+	auth_header := headers_raw::json->>'authorization';
+
+	-- For phrase_tag rows, the entity that needs re-embedding is the
+	-- parent phrase. Other tables: the row itself.
+	if tg_table_name = 'phrase_tag' then
+		affected_id := coalesce((new).phrase_id, (old).phrase_id);
+	else
+		affected_id := coalesce((new).id, (old).id);
+	end if;
+
+	select decrypted_secret into project_url
+	from vault.decrypted_secrets
+	where name = 'project_url';
+
+	perform net.http_post(
+		url := project_url || '/functions/v1/embed-corpus-row',
+		headers := jsonb_build_object(
+			'Content-Type', 'application/json',
+			'Authorization', auth_header
+		),
+		body := jsonb_build_object(
+			'source_type', source_type_arg,
+			'source_id', affected_id
+		)
+	);
+	return null;
+end;
+$$;
+
+alter function "public"."trigger_notify_corpus_embed_change" () owner to "postgres";
+
 create or replace function "public"."trigger_refresh_meta_language" () returns "trigger" language "plpgsql" security definer as $$
 BEGIN
   PERFORM refresh_meta_language();
@@ -991,6 +988,22 @@ END;
 $$;
 
 alter function "public"."trigger_refresh_meta_language" () owner to "postgres";
+
+create or replace function "public"."trigger_refresh_search_text_index" () returns "trigger" language "plpgsql" security definer as $$
+begin
+	if exists (
+		select 1 from pg_matviews
+		where matviewname = 'search_text_index' and ispopulated
+	) then
+		refresh materialized view concurrently search_text_index;
+	else
+		refresh materialized view search_text_index;
+	end if;
+	return null;
+end;
+$$;
+
+alter function "public"."trigger_refresh_search_text_index" () owner to "postgres";
 
 create or replace function "public"."update_comment_upvote_count" () returns "trigger" language "plpgsql" security definer as $$
 begin
@@ -1090,6 +1103,15 @@ $$;
 
 alter function "public"."update_phrase_translation_updated_at" () owner to "postgres";
 
+create or replace function "public"."update_user_deck_updated_at" () returns "trigger" language "plpgsql" as $$
+begin
+  NEW.updated_at = now();
+  return NEW;
+end;
+$$;
+
+alter function "public"."update_user_deck_updated_at" () owner to "postgres";
+
 create or replace function "public"."validate_friend_request_action" () returns "trigger" language "plpgsql" security definer
 set
 	"search_path" to 'public' as $$
@@ -1167,10 +1189,7 @@ set
 set
 	default_table_access_method = "heap";
 
-create table if not exists "public"."admin_user" (
-	"uid" "uuid" not null,
-	"created_at" timestamp with time zone default "now" () not null
-);
+create table if not exists "public"."admin_user" ("uid" "uuid" not null, "created_at" timestamp with time zone default "now" () not null);
 
 alter table "public"."admin_user" owner to "postgres";
 
@@ -1225,6 +1244,10 @@ create table if not exists "public"."comment_upvote" (
 
 alter table "public"."comment_upvote" owner to "postgres";
 
+create table if not exists "public"."db_meta" ("key" "text" not null, "value" "text" not null);
+
+alter table "public"."db_meta" owner to "postgres";
+
 create table if not exists "public"."phrase" (
 	"text" "text" not null,
 	"id" "uuid" default "extensions"."uuid_generate_v4" () not null,
@@ -1233,7 +1256,8 @@ create table if not exists "public"."phrase" (
 	"created_at" timestamp with time zone default "now" () not null,
 	"text_script" "text",
 	"only_reverse" boolean default false not null,
-	"archived" boolean default false not null
+	"archived" boolean default false not null,
+	"updated_at" timestamp with time zone default "now" () not null
 );
 
 alter table "public"."phrase" owner to "postgres";
@@ -1357,14 +1381,7 @@ from
 		)
 	)
 where
-	(
-		"card"."status" = any (
-			array[
-				'active'::"public"."card_status",
-				'learned'::"public"."card_status"
-			]
-		)
-	)
+	("card"."status" = any (array['active'::"public"."card_status", 'learned'::"public"."card_status"]))
 group by
 	"card"."phrase_id";
 
@@ -1437,14 +1454,7 @@ select distinct
 		"p"."text",
 		'source',
 		case
-			when ("cpl"."request_id" is not null) then "jsonb_build_object" (
-				'type',
-				'request',
-				'id',
-				"cpl"."request_id",
-				'comment_id',
-				"cpl"."comment_id"
-			)
+			when ("cpl"."request_id" is not null) then "jsonb_build_object" ('type', 'request', 'id', "cpl"."request_id", 'comment_id', "cpl"."comment_id")
 			when ("ppl"."playlist_id" is not null) then "jsonb_build_object" (
 				'type',
 				'playlist',
@@ -1505,12 +1515,8 @@ select distinct
 	on ("a"."uid_less", "a"."uid_more") "a"."uid_less",
 	"a"."uid_more",
 	case
-		when (
-			"a"."action_type" = 'accept'::"public"."friend_request_response"
-		) then 'friends'::"text"
-		when (
-			"a"."action_type" = 'invite'::"public"."friend_request_response"
-		) then 'pending'::"text"
+		when ("a"."action_type" = 'accept'::"public"."friend_request_response") then 'friends'::"text"
+		when ("a"."action_type" = 'invite'::"public"."friend_request_response") then 'pending'::"text"
 		when (
 			"a"."action_type" = any (
 				array[
@@ -1539,11 +1545,7 @@ order by
 
 alter table "public"."friend_summary" owner to "postgres";
 
-create table if not exists "public"."language" (
-	"name" "text" not null,
-	"lang" character varying not null,
-	"alias_of" character varying
-);
+create table if not exists "public"."language" ("name" "text" not null, "lang" character varying not null, "alias_of" character varying);
 
 alter table "public"."language" owner to "postgres";
 
@@ -1559,13 +1561,12 @@ create table if not exists "public"."user_deck" (
 	"daily_review_goal" smallint default 15 not null,
 	"preferred_translation_lang" character varying(3) default null::character varying,
 	"review_answer_mode" "text",
+	"updated_at" timestamp with time zone default "now" () not null,
 	constraint "daily_review_goal_valid_values" check (("daily_review_goal" = any (array[10, 15, 20]))),
 	constraint "user_deck_review_answer_mode_check" check (
 		(
 			("review_answer_mode" is null)
-			or (
-				"review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"])
-			)
+			or ("review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"]))
 		)
 	)
 );
@@ -1691,9 +1692,7 @@ with
 		select
 			"pt"."phrase_id" as "t_phrase_id",
 			(
-				"json_agg" (
-					distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")
-				) filter (
+				"json_agg" (distinct "jsonb_build_object" ('id', "tag"."id", 'name', "tag"."name")) filter (
 					where
 						("tag"."id" is not null)
 				)
@@ -1717,7 +1716,8 @@ select
 	coalesce("stats"."count_learners", (0)::bigint) as "count_learners",
 	"stats"."avg_difficulty",
 	"stats"."avg_stability",
-	coalesce("tags"."tags", '[]'::"jsonb") as "tags"
+	coalesce("tags"."tags", '[]'::"jsonb") as "tags",
+	"phrase"."updated_at"
 from
 	(
 		(
@@ -1787,16 +1787,8 @@ create table if not exists "public"."user_profile" (
 	"font_preference" "text" default 'default'::"text",
 	"review_answer_mode" "text" default '2-buttons'::"text",
 	"sound_enabled" boolean default true not null,
-	constraint "user_profile_font_preference_check" check (
-		(
-			"font_preference" = any (array['default'::"text", 'dyslexic'::"text"])
-		)
-	),
-	constraint "user_profile_review_answer_mode_check" check (
-		(
-			"review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"])
-		)
-	),
+	constraint "user_profile_font_preference_check" check (("font_preference" = any (array['default'::"text", 'dyslexic'::"text"]))),
+	constraint "user_profile_review_answer_mode_check" check (("review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"]))),
 	constraint "username_length" check (("char_length" ("username") >= 3))
 );
 
@@ -1828,7 +1820,6 @@ create table if not exists "public"."request_comment" (
 alter table "public"."request_comment" owner to "postgres";
 
 create table if not exists "public"."search_corpus" (
-	"id" "uuid" default "gen_random_uuid" () not null,
 	"source_type" "text" not null,
 	"source_id" "uuid" not null,
 	"entity_id" "uuid" not null,
@@ -1839,26 +1830,108 @@ create table if not exists "public"."search_corpus" (
 	"text_normalized" "text" not null,
 	"embedding" "public"."vector" (1024) not null,
 	"created_at" timestamp with time zone default "now" () not null,
-	constraint "search_corpus_entity_type_check" check (
-		(
-			"entity_type" = any (array['phrase'::"text", 'request'::"text", 'playlist'::"text"])
-		)
-	),
-	constraint "search_corpus_source_type_check" check (
-		(
-			"source_type" = any (
-				array[
-					'phrase'::"text",
-					'translation'::"text",
-					'request'::"text",
-					'playlist'::"text"
-				]
-			)
-		)
-	)
+	"vectorized_at" timestamp with time zone default "now" () not null,
+	constraint "search_corpus_entity_type_check" check (("entity_type" = any (array['phrase'::"text", 'request'::"text", 'playlist'::"text"]))),
+	constraint "search_corpus_source_type_check" check (("source_type" = any (array['phrase'::"text", 'translation'::"text", 'request'::"text", 'playlist'::"text"])))
 );
 
 alter table "public"."search_corpus" owner to "postgres";
+
+create materialized view "public"."search_text_index" as
+with
+	"phrase_tags" as (
+		select
+			"pt"."phrase_id",
+			"string_agg" ("t"."name", ' '::"text") as "tag_names"
+		from
+			(
+				"public"."phrase_tag" "pt"
+				join "public"."tag" "t" on (("t"."id" = "pt"."tag_id"))
+			)
+		group by
+			"pt"."phrase_id"
+	)
+select
+	'phrase'::"text" as "source_type",
+	"p"."id" as "source_id",
+	"p"."id" as "entity_id",
+	'phrase'::"text" as "entity_type",
+	"p"."lang" as "entity_lang",
+	"p"."lang" as "text_lang",
+	"p"."text",
+	"lower" (("p"."text" || coalesce((' '::"text" || "ptags"."tag_names"), ''::"text"))) as "text_normalized",
+	"p"."created_at" as "entity_created_at"
+from
+	(
+		"public"."phrase" "p"
+		left join "phrase_tags" "ptags" on (("ptags"."phrase_id" = "p"."id"))
+	)
+where
+	("p"."archived" = false)
+union all
+select
+	'translation'::"text" as "source_type",
+	"t"."id" as "source_id",
+	"t"."phrase_id" as "entity_id",
+	'phrase'::"text" as "entity_type",
+	"p"."lang" as "entity_lang",
+	"t"."lang" as "text_lang",
+	"t"."text",
+	"lower" ("t"."text") as "text_normalized",
+	"p"."created_at" as "entity_created_at"
+from
+	(
+		"public"."phrase_translation" "t"
+		join "public"."phrase" "p" on (("p"."id" = "t"."phrase_id"))
+	)
+where
+	(
+		("t"."archived" = false)
+		and ("p"."archived" = false)
+	)
+union all
+select
+	'request'::"text" as "source_type",
+	"r"."id" as "source_id",
+	"r"."id" as "entity_id",
+	'request'::"text" as "entity_type",
+	"r"."lang" as "entity_lang",
+	"r"."lang" as "text_lang",
+	"r"."prompt" as "text",
+	"lower" ("r"."prompt") as "text_normalized",
+	"r"."created_at" as "entity_created_at"
+from
+	"public"."phrase_request" "r"
+where
+	("r"."deleted" = false)
+union all
+select
+	'playlist'::"text" as "source_type",
+	"pl"."id" as "source_id",
+	"pl"."id" as "entity_id",
+	'playlist'::"text" as "entity_type",
+	"pl"."lang" as "entity_lang",
+	"pl"."lang" as "text_lang",
+	case
+		when (coalesce("pl"."description", ''::"text") <> ''::"text") then (("pl"."title" || '
+'::"text") || "pl"."description")
+		else "pl"."title"
+	end as "text",
+	"lower" (
+		case
+			when (coalesce("pl"."description", ''::"text") <> ''::"text") then (("pl"."title" || ' '::"text") || "pl"."description")
+			else "pl"."title"
+		end
+	) as "text_normalized",
+	"pl"."created_at" as "entity_created_at"
+from
+	"public"."phrase_playlist" "pl"
+where
+	("pl"."deleted" = false)
+with
+	no data;
+
+alter table "public"."search_text_index" owner to "postgres";
 
 create or replace view "public"."user_card_plus"
 with
@@ -2115,6 +2188,9 @@ add constraint "comment_phrase_link_pkey" primary key ("id");
 alter table only "public"."comment_upvote"
 add constraint "comment_upvote_pkey" primary key ("comment_id", "uid");
 
+alter table only "public"."db_meta"
+add constraint "db_meta_pkey" primary key ("key");
+
 alter table only "public"."friend_request_action"
 add constraint "friend_request_action_pkey" primary key ("id");
 
@@ -2161,10 +2237,7 @@ alter table only "public"."request_comment"
 add constraint "request_comment_pkey" primary key ("id");
 
 alter table only "public"."search_corpus"
-add constraint "search_corpus_pkey" primary key ("id");
-
-alter table only "public"."search_corpus"
-add constraint "search_corpus_source_type_source_id_key" unique ("source_type", "source_id");
+add constraint "search_corpus_pkey" primary key ("source_type", "source_id");
 
 alter table only "public"."tag"
 add constraint "tag_name_lang_key" unique ("name", "lang");
@@ -2251,11 +2324,66 @@ create index "search_corpus_entity_type_idx" on "public"."search_corpus" using "
 
 create index "search_corpus_text_normalized_idx" on "public"."search_corpus" using "btree" ("text_normalized");
 
-create index "search_corpus_text_normalized_trgm_idx" on "public"."search_corpus" using "gin" ("text_normalized" "public"."gin_trgm_ops");
+create index "search_corpus_vectorized_at_idx" on "public"."search_corpus" using "btree" ("vectorized_at");
+
+create index "search_text_index_entity_id_idx" on "public"."search_text_index" using "btree" ("entity_id");
+
+create index "search_text_index_entity_lang_idx" on "public"."search_text_index" using "btree" ("entity_lang");
+
+create unique index "search_text_index_source_idx" on "public"."search_text_index" using "btree" ("source_type", "source_id");
+
+create index "search_text_index_text_normalized_trgm_idx" on "public"."search_text_index" using "gin" ("text_normalized" "public"."gin_trgm_ops");
 
 create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "lang");
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
+
+create or replace trigger "bump_phrase_updated_at" before
+update on "public"."phrase" for each row
+execute function "public"."bump_phrase_updated_at" ();
+
+create or replace trigger "embed_corpus_on_phrase_change"
+after insert
+or delete
+or
+update of "text",
+"lang",
+"archived" on "public"."phrase" for each row
+execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
+
+create or replace trigger "embed_corpus_on_playlist_change"
+after insert
+or delete
+or
+update of "title",
+"description",
+"lang",
+"deleted" on "public"."phrase_playlist" for each row
+execute function "public"."trigger_notify_corpus_embed_change" ('playlist');
+
+create or replace trigger "embed_corpus_on_request_change"
+after insert
+or delete
+or
+update of "prompt",
+"lang",
+"deleted" on "public"."phrase_request" for each row
+execute function "public"."trigger_notify_corpus_embed_change" ('request');
+
+create or replace trigger "embed_corpus_on_tag_change"
+after insert
+or delete on "public"."phrase_tag" for each row
+execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
+
+create or replace trigger "embed_corpus_on_translation_change"
+after insert
+or delete
+or
+update of "text",
+"lang",
+"archived",
+"phrase_id" on "public"."phrase_translation" for each row
+execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
 create or replace trigger "on_phrase_playlist_updated" before
 update on "public"."phrase_playlist" for each row
@@ -2305,6 +2433,53 @@ after insert
 or delete on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
 
+create or replace trigger "refresh_text_index_on_phrase_change"
+after insert
+or delete
+or
+update of "text",
+"lang",
+"archived" on "public"."phrase" for each statement
+execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "refresh_text_index_on_playlist_change"
+after insert
+or delete
+or
+update of "title",
+"description",
+"lang",
+"deleted" on "public"."phrase_playlist" for each statement
+execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "refresh_text_index_on_request_change"
+after insert
+or delete
+or
+update of "prompt",
+"lang",
+"deleted" on "public"."phrase_request" for each statement
+execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "refresh_text_index_on_tag_change"
+after insert
+or delete on "public"."phrase_tag" for each statement
+execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "refresh_text_index_on_translation_change"
+after insert
+or delete
+or
+update of "text",
+"lang",
+"archived",
+"phrase_id" on "public"."phrase_translation" for each statement
+execute function "public"."trigger_refresh_search_text_index" ();
+
+create or replace trigger "skip_stale_corpus_upsert" before
+update on "public"."search_corpus" for each row
+execute function "public"."skip_stale_corpus_upsert" ();
+
 create or replace trigger "tr_update_comment_upvote_count"
 after insert
 or delete on "public"."comment_upvote" for each row
@@ -2332,6 +2507,10 @@ execute function "public"."update_phrase_translation_updated_at" ();
 
 create or replace trigger "trigger_validate_friend_request_action" before insert on "public"."friend_request_action" for each row
 execute function "public"."validate_friend_request_action" ();
+
+create or replace trigger "update_user_deck_updated_at" before
+update on "public"."user_deck" for each row
+execute function "public"."update_user_deck_updated_at" ();
 
 alter table only "public"."admin_user"
 add constraint "admin_user_uid_fkey" foreign key ("uid") references "auth"."users" ("id") on delete cascade;
@@ -3460,23 +3639,11 @@ grant all on function "public"."add_phrase_translation_card" (
 	"phrase_only_reverse" boolean
 ) to "service_role";
 
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) to "anon";
+grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "anon";
 
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) to "authenticated";
+grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "authenticated";
 
-grant all on function "public"."add_tags_to_phrase" (
-	"p_phrase_id" "uuid",
-	"p_lang" character varying,
-	"p_tags" "text" []
-) to "service_role";
+grant all on function "public"."add_tags_to_phrase" ("p_phrase_id" "uuid", "p_lang" character varying, "p_tags" "text" []) to "service_role";
 
 grant all on function "public"."are_friends" ("uid1" "uuid", "uid2" "uuid") to "anon";
 
@@ -3506,23 +3673,17 @@ grant all on function "public"."binary_quantize" ("public"."vector") to "authent
 
 grant all on function "public"."binary_quantize" ("public"."vector") to "service_role";
 
-grant all on function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) to "anon";
+grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "anon";
 
-grant all on function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) to "authenticated";
+grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "authenticated";
 
-grant all on function "public"."bulk_add_phrases" (
-	"p_lang" character,
-	"p_phrases" "public"."phrase_with_translations_input" [],
-	"p_user_id" "uuid"
-) to "service_role";
+grant all on function "public"."bulk_add_phrases" ("p_lang" character, "p_phrases" "public"."phrase_with_translations_input" [], "p_user_id" "uuid") to "service_role";
+
+grant all on function "public"."bump_phrase_updated_at" () to "anon";
+
+grant all on function "public"."bump_phrase_updated_at" () to "authenticated";
+
+grant all on function "public"."bump_phrase_updated_at" () to "service_role";
 
 grant all on function "public"."cosine_distance" ("public"."halfvec", "public"."halfvec") to "postgres";
 
@@ -3548,93 +3709,25 @@ grant all on function "public"."cosine_distance" ("public"."vector", "public"."v
 
 grant all on function "public"."cosine_distance" ("public"."vector", "public"."vector") to "service_role";
 
-grant all on function "public"."create_comment_with_phrases" (
-	"p_request_id" "uuid",
-	"p_content" "text",
-	"p_parent_comment_id" "uuid",
-	"p_phrase_ids" "uuid" []
-) to "anon";
+grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "anon";
 
-grant all on function "public"."create_comment_with_phrases" (
-	"p_request_id" "uuid",
-	"p_content" "text",
-	"p_parent_comment_id" "uuid",
-	"p_phrase_ids" "uuid" []
-) to "authenticated";
+grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "authenticated";
 
-grant all on function "public"."create_comment_with_phrases" (
-	"p_request_id" "uuid",
-	"p_content" "text",
-	"p_parent_comment_id" "uuid",
-	"p_phrase_ids" "uuid" []
-) to "service_role";
+grant all on function "public"."create_comment_with_phrases" ("p_request_id" "uuid", "p_content" "text", "p_parent_comment_id" "uuid", "p_phrase_ids" "uuid" []) to "service_role";
 
-grant all on function "public"."create_playlist_with_links" (
-	"lang" "text",
-	"title" "text",
-	"description" "text",
-	"href" "text",
-	"cover_image_path" "text",
-	"phrases" "jsonb"
-) to "anon";
+grant all on function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") to "anon";
 
-grant all on function "public"."create_playlist_with_links" (
-	"lang" "text",
-	"title" "text",
-	"description" "text",
-	"href" "text",
-	"cover_image_path" "text",
-	"phrases" "jsonb"
-) to "authenticated";
+grant all on function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") to "authenticated";
 
-grant all on function "public"."create_playlist_with_links" (
-	"lang" "text",
-	"title" "text",
-	"description" "text",
-	"href" "text",
-	"cover_image_path" "text",
-	"phrases" "jsonb"
-) to "service_role";
+grant all on function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") to "service_role";
 
-grant all on function "public"."gin_extract_query_trgm" (
-	"text",
-	"internal",
-	smallint,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "postgres";
+grant all on function "public"."gin_extract_query_trgm" ("text", "internal", smallint, "internal", "internal", "internal", "internal") to "postgres";
 
-grant all on function "public"."gin_extract_query_trgm" (
-	"text",
-	"internal",
-	smallint,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "anon";
+grant all on function "public"."gin_extract_query_trgm" ("text", "internal", smallint, "internal", "internal", "internal", "internal") to "anon";
 
-grant all on function "public"."gin_extract_query_trgm" (
-	"text",
-	"internal",
-	smallint,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "authenticated";
+grant all on function "public"."gin_extract_query_trgm" ("text", "internal", smallint, "internal", "internal", "internal", "internal") to "authenticated";
 
-grant all on function "public"."gin_extract_query_trgm" (
-	"text",
-	"internal",
-	smallint,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "service_role";
+grant all on function "public"."gin_extract_query_trgm" ("text", "internal", smallint, "internal", "internal", "internal", "internal") to "service_role";
 
 grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "postgres";
 
@@ -3644,89 +3737,21 @@ grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to 
 
 grant all on function "public"."gin_extract_value_trgm" ("text", "internal") to "service_role";
 
-grant all on function "public"."gin_trgm_consistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "postgres";
+grant all on function "public"."gin_trgm_consistent" ("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") to "postgres";
 
-grant all on function "public"."gin_trgm_consistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "anon";
+grant all on function "public"."gin_trgm_consistent" ("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") to "anon";
 
-grant all on function "public"."gin_trgm_consistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "authenticated";
+grant all on function "public"."gin_trgm_consistent" ("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") to "authenticated";
 
-grant all on function "public"."gin_trgm_consistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal",
-	"internal"
-) to "service_role";
+grant all on function "public"."gin_trgm_consistent" ("internal", smallint, "text", integer, "internal", "internal", "internal", "internal") to "service_role";
 
-grant all on function "public"."gin_trgm_triconsistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal"
-) to "postgres";
+grant all on function "public"."gin_trgm_triconsistent" ("internal", smallint, "text", integer, "internal", "internal", "internal") to "postgres";
 
-grant all on function "public"."gin_trgm_triconsistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal"
-) to "anon";
+grant all on function "public"."gin_trgm_triconsistent" ("internal", smallint, "text", integer, "internal", "internal", "internal") to "anon";
 
-grant all on function "public"."gin_trgm_triconsistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal"
-) to "authenticated";
+grant all on function "public"."gin_trgm_triconsistent" ("internal", smallint, "text", integer, "internal", "internal", "internal") to "authenticated";
 
-grant all on function "public"."gin_trgm_triconsistent" (
-	"internal",
-	smallint,
-	"text",
-	integer,
-	"internal",
-	"internal",
-	"internal"
-) to "service_role";
+grant all on function "public"."gin_trgm_triconsistent" ("internal", smallint, "text", integer, "internal", "internal", "internal") to "service_role";
 
 grant all on function "public"."gtrgm_compress" ("internal") to "postgres";
 
@@ -4162,47 +4187,17 @@ grant all on function "public"."refresh_meta_language" () to "authenticated";
 
 grant all on function "public"."refresh_meta_language" () to "service_role";
 
-grant all on function "public"."search_by_anchors" (
-	"anchor_ids" "uuid" [],
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "anon";
+grant all on function "public"."search_by_anchors" ("anchor_ids" "uuid" [], "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "anon";
 
-grant all on function "public"."search_by_anchors" (
-	"anchor_ids" "uuid" [],
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "authenticated";
+grant all on function "public"."search_by_anchors" ("anchor_ids" "uuid" [], "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "authenticated";
 
-grant all on function "public"."search_by_anchors" (
-	"anchor_ids" "uuid" [],
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "service_role";
+grant all on function "public"."search_by_anchors" ("anchor_ids" "uuid" [], "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "service_role";
 
-grant all on function "public"."search_by_query" (
-	"query_embedding" "public"."vector",
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "anon";
+grant all on function "public"."search_by_query" ("query_embedding" "public"."vector", "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "anon";
 
-grant all on function "public"."search_by_query" (
-	"query_embedding" "public"."vector",
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "authenticated";
+grant all on function "public"."search_by_query" ("query_embedding" "public"."vector", "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "authenticated";
 
-grant all on function "public"."search_by_query" (
-	"query_embedding" "public"."vector",
-	"target_langs" "text" [],
-	"exclude_ids" "uuid" [],
-	"match_limit" integer
-) to "service_role";
+grant all on function "public"."search_by_query" ("query_embedding" "public"."vector", "target_langs" "text" [], "exclude_ids" "uuid" [], "match_limit" integer) to "service_role";
 
 grant all on function "public"."search_by_trigram" (
 	"query" "text",
@@ -4296,6 +4291,12 @@ grant all on function "public"."similarity_op" ("text", "text") to "anon";
 grant all on function "public"."similarity_op" ("text", "text") to "authenticated";
 
 grant all on function "public"."similarity_op" ("text", "text") to "service_role";
+
+grant all on function "public"."skip_stale_corpus_upsert" () to "anon";
+
+grant all on function "public"."skip_stale_corpus_upsert" () to "authenticated";
+
+grant all on function "public"."skip_stale_corpus_upsert" () to "service_role";
 
 grant all on function "public"."sparsevec_cmp" ("public"."sparsevec", "public"."sparsevec") to "postgres";
 
@@ -4425,11 +4426,23 @@ grant all on function "public"."subvector" ("public"."vector", integer, integer)
 
 grant all on function "public"."subvector" ("public"."vector", integer, integer) to "service_role";
 
+grant all on function "public"."trigger_notify_corpus_embed_change" () to "anon";
+
+grant all on function "public"."trigger_notify_corpus_embed_change" () to "authenticated";
+
+grant all on function "public"."trigger_notify_corpus_embed_change" () to "service_role";
+
 grant all on function "public"."trigger_refresh_meta_language" () to "anon";
 
 grant all on function "public"."trigger_refresh_meta_language" () to "authenticated";
 
 grant all on function "public"."trigger_refresh_meta_language" () to "service_role";
+
+grant all on function "public"."trigger_refresh_search_text_index" () to "anon";
+
+grant all on function "public"."trigger_refresh_search_text_index" () to "authenticated";
+
+grant all on function "public"."trigger_refresh_search_text_index" () to "service_role";
 
 grant all on function "public"."update_comment_upvote_count" () to "anon";
 
@@ -4472,6 +4485,12 @@ grant all on function "public"."update_phrase_translation_updated_at" () to "ano
 grant all on function "public"."update_phrase_translation_updated_at" () to "authenticated";
 
 grant all on function "public"."update_phrase_translation_updated_at" () to "service_role";
+
+grant all on function "public"."update_user_deck_updated_at" () to "anon";
+
+grant all on function "public"."update_user_deck_updated_at" () to "authenticated";
+
+grant all on function "public"."update_user_deck_updated_at" () to "service_role";
 
 grant all on function "public"."validate_friend_request_action" () to "anon";
 
@@ -4735,6 +4754,12 @@ grant all on table "public"."comment_upvote" to "authenticated";
 
 grant all on table "public"."comment_upvote" to "service_role";
 
+grant all on table "public"."db_meta" to "anon";
+
+grant all on table "public"."db_meta" to "authenticated";
+
+grant all on table "public"."db_meta" to "service_role";
+
 grant all on table "public"."phrase" to "anon";
 
 grant all on table "public"."phrase" to "authenticated";
@@ -4884,6 +4909,12 @@ grant all on table "public"."search_corpus" to "anon";
 grant all on table "public"."search_corpus" to "authenticated";
 
 grant all on table "public"."search_corpus" to "service_role";
+
+grant all on table "public"."search_text_index" to "anon";
+
+grant all on table "public"."search_text_index" to "authenticated";
+
+grant all on table "public"."search_text_index" to "service_role";
 
 grant all on table "public"."user_card_plus" to "anon";
 
