@@ -2,7 +2,6 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { useLiveQuery } from '@tanstack/react-db'
-import { useDebounce } from '@/hooks/use-debounce'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Search,
@@ -33,13 +32,16 @@ import { Button } from '@/components/ui/button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
-import type { SearchEntityType } from '@/hooks/search-config'
+import { useMergedSearch } from '@/hooks/use-merged-search'
+import { MIN_QUERY_LENGTH, type SearchEntityType } from '@/hooks/search-config'
 
 type ContentFilter = SearchEntityType
 
-// Local flat shape — recommend uses its own browse-mode local matching
-// (empty query shows all in-lang items), so it doesn't compose with
-// useMergedSearch like /search and the overlay do.
+// Local flat shape used by the result list. When a real query is present
+// we get smart-ranked results from useMergedSearch (semantic + trigram +
+// local). When the query is empty/short we fall back to a local-only
+// browse mode so the user can still scan in-language content by tab/lang
+// without having to type.
 interface SearchResult {
 	id: string
 	lang: string
@@ -78,10 +80,16 @@ function RouteComponent() {
 	const [activeFilter, setActiveFilter] = useState<ContentFilter | null>(null)
 	const [showCreator, setShowCreator] = useState(false)
 
-	const debouncedQuery = useDebounce(query, 150)
-	const lowerQuery = debouncedQuery.toLowerCase().trim()
+	const trimmedQuery = query.trim()
+	const isSmartMode = trimmedQuery.length >= MIN_QUERY_LENGTH
+	const langs = useMemo(() => (lang ? [lang] : []), [lang])
 
-	// Collections data
+	const merged = useMergedSearch(langs, trimmedQuery)
+
+	// Browse-mode collections — only consulted when the query is empty
+	// (or too short for the server-backed search to engage). The smart
+	// path returns nothing without a real query, so this preserves the
+	// "filter by lang/type, see all in-lang items" UX.
 	const { data: allPhrases } = useLiveQuery((q) =>
 		q.from({ phrase: phrasesCollection })
 	)
@@ -92,27 +100,53 @@ function RouteComponent() {
 		q.from({ playlist: phrasePlaylistsActive })
 	)
 
-	// Filter and search results
 	const results = useMemo((): Array<SearchResult> => {
+		if (isSmartMode) {
+			const items: Array<SearchResult> = []
+			for (const item of merged.items) {
+				if (activeFilter !== null && item.type !== activeFilter) continue
+				if (item.type === 'phrase') {
+					items.push({
+						id: item.id,
+						type: 'phrase',
+						lang: item.entity.lang,
+						title: item.entity.text,
+						subtitle:
+							item.entity.translations_mine?.[0]?.text ??
+							item.entity.translations_other?.[0]?.text ??
+							null,
+					})
+				} else if (item.type === 'playlist') {
+					items.push({
+						id: item.id,
+						type: 'playlist',
+						lang: item.entity.lang,
+						title: item.entity.title,
+						subtitle: item.entity.description,
+					})
+				} else {
+					items.push({
+						id: item.id,
+						type: 'request',
+						lang: item.entity.lang,
+						title: item.entity.prompt,
+						subtitle: null,
+					})
+				}
+				if (items.length >= 24) break
+			}
+			return items
+		}
+
+		// Browse mode — no query, just slice in-lang items by filter.
 		const items: Array<SearchResult> = []
 		const langFilter = lang || null
 
 		if (activeFilter === null || activeFilter === 'phrase') {
 			const matching =
 				allPhrases
-					?.filter((phrase) => {
-						if (langFilter && phrase.lang !== langFilter) return false
-						if (!lowerQuery) return true
-						const searchText = [
-							phrase.text,
-							...(phrase.translations?.map((t) => t.text) ?? []),
-						]
-							.join(' ')
-							.toLowerCase()
-						return searchText.includes(lowerQuery)
-					})
+					?.filter((phrase) => !langFilter || phrase.lang === langFilter)
 					.slice(0, 8) ?? []
-
 			for (const phrase of matching) {
 				items.push({
 					id: phrase.id,
@@ -127,16 +161,8 @@ function RouteComponent() {
 		if (activeFilter === null || activeFilter === 'playlist') {
 			const matching =
 				allPlaylists
-					?.filter((playlist) => {
-						if (langFilter && playlist.lang !== langFilter) return false
-						if (!lowerQuery) return true
-						const searchText = [playlist.title, playlist.description ?? '']
-							.join(' ')
-							.toLowerCase()
-						return searchText.includes(lowerQuery)
-					})
+					?.filter((playlist) => !langFilter || playlist.lang === langFilter)
 					.slice(0, 8) ?? []
-
 			for (const playlist of matching) {
 				items.push({
 					id: playlist.id,
@@ -151,13 +177,8 @@ function RouteComponent() {
 		if (activeFilter === null || activeFilter === 'request') {
 			const matching =
 				allRequests
-					?.filter((req) => {
-						if (langFilter && req.lang !== langFilter) return false
-						if (!lowerQuery) return true
-						return req.prompt.toLowerCase().includes(lowerQuery)
-					})
+					?.filter((req) => !langFilter || req.lang === langFilter)
 					.slice(0, 8) ?? []
-
 			for (const req of matching) {
 				items.push({
 					id: req.id,
@@ -170,10 +191,19 @@ function RouteComponent() {
 		}
 
 		return items
-	}, [allPhrases, allPlaylists, allRequests, activeFilter, lang, lowerQuery])
+	}, [
+		isSmartMode,
+		merged.items,
+		activeFilter,
+		lang,
+		allPhrases,
+		allPlaylists,
+		allRequests,
+	])
 
 	const showResults =
-		lowerQuery.length > 0 || activeFilter !== null || lang.length > 0
+		trimmedQuery.length > 0 || activeFilter !== null || lang.length > 0
+	const isLoading = isSmartMode && merged.isLoading && results.length === 0
 
 	// Focus input when dialog opens
 	useEffect(() => {
@@ -324,7 +354,14 @@ function RouteComponent() {
 				{/* Results */}
 				<div className="min-h-0 flex-1 overflow-y-auto">
 					{showResults ? (
-						results.length === 0 ? (
+						isLoading ? (
+							<div
+								className="text-muted-foreground px-4 py-8 text-center text-sm"
+								data-testid="chat-recommend-loading"
+							>
+								Searching…
+							</div>
+						) : results.length === 0 ? (
 							<div className="text-muted-foreground px-4 py-8 text-center text-sm">
 								No results found
 							</div>
