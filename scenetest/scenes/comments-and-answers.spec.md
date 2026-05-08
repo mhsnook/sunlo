@@ -73,7 +73,7 @@ learner3:
 - click attach-phrase-button
 - up
 - typeInto phrase-search-input [team.partial_attach_phrase_search]
-- click phrase-picker-item
+- click phrase-picker-item #1
 - click submit-button
 - up
 - seeToast toast-success

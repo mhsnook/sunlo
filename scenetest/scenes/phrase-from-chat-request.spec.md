@@ -28,8 +28,8 @@ learner:
 - click create-new-phrase-button
 - up
 - see inline-phrase-creator
-- typeInto inline-phrase-creator phrase-text-input [team.full_chat_phrase_a_text]
-- typeInto inline-phrase-creator translation-text-input [team.full_chat_phrase_a_translation]
+- typeInto inline-phrase-creator phrase-text-input '[team.full_chat_phrase_a_text]'
+- typeInto inline-phrase-creator translation-text-input '[team.full_chat_phrase_a_translation]'
 - click inline-phrase-creator submit-button
 - up
 - seeToast toast-success
@@ -61,8 +61,8 @@ learner:
 - click create-new-phrase-button
 - up
 - see inline-phrase-creator
-- typeInto inline-phrase-creator phrase-text-input [team.full_chat_phrase_b_text]
-- typeInto inline-phrase-creator translation-text-input [team.full_chat_phrase_b_translation]
+- typeInto inline-phrase-creator phrase-text-input '[team.full_chat_phrase_b_text]'
+- typeInto inline-phrase-creator translation-text-input '[team.full_chat_phrase_b_translation]'
 - click inline-phrase-creator submit-button
 - up
 - seeToast toast-success
