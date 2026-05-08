@@ -39,25 +39,10 @@ The migrations should run when the main branch deploys. Or you can `supabase db 
 
 ### To Modify the Seeds
 
-When adding new features that use new parts of the database, it's a good idea to put in new seeds
-that mimic both the common uses of the feature and also the edge cases that we want to be sure
-will still work properly in production. But the seeds file is not a static set of information, so
-some care must be taken when updating it.
+We have a script capped `dump-new-seeds.ts` which is useful for taking local database state and turning it into seeds, specifically for this app.
 
-The easiest way to modify the seeds might be simply by hand editing `seed.sql`. You will notice in
-the file, most dates are calculated from a formula like this: `now() - interval '20 hours 30 minutes'`.
-This
-ensures that whenever we are working on the app, this review was always created twenty hours and 30 minutes ago.
-So our features for "recently added cards" and "cards overdue" and so on will always stay in sync.
-Virtually every record in the seed file uses dates and day_session strings constructed in this way.
-
-But you can also modify the data in other ways: use the app! use this new feature of yours! Or go
-into the local admin and modify data there. Then, when you're ready, you can dump the whole seeds
-file like this: `pnpm run seeds:data`, or modify this command per your needs:
-`supabase db dump --data-only --local > supabase/seed.sql`.
-
-Then, be prepared to heavily curate this file because the seeding process will not have any
-knowledge of our approach to dates, and your PR will be rejected if your seeds do not follow it.
+- run the seeds with `supabase db reset`
+- then modify data in the app and run ``
 
 ### Search corpus
 
