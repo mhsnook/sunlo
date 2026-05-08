@@ -1,35 +1,44 @@
-#!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write
+#!/usr/bin/env -S deno run --allow-env --allow-net --allow-read --allow-write --allow-run=cp,docker
 /**
- * Dump seed rows — delta since last db reset — directly into the correct seed
- * files.  Optionally shifts every interval in those files backwards so data
- * stays in the past across multiple sessions.
+ * Dump seed rows into the correct seed files.
  *
- * Typical workflow
- * ────────────────
- *   supabase db reset          # loads seeds; sets db_meta.seeded_at
- *   # …use the app as various users, creating rows at "now"…
- *   deno run … dump-new-seeds.ts --shift-back 1
- *     → appends new rows to seed-team1/2/public.sql
- *     → shifts every interval in those files back 1 day
- *   # repeat each session: data depth grows naturally
+ * Modes
+ * ─────
+ *   (default)  Delta: rows created since last db reset, appended to seed-{N}-team*.sql
+ *   --full     Full rebuild: ALL rows overwrite seed-{N}-team*.sql files
+ *   --all      No time filter but still appends (not overwrite)
+ *
+ * File structure
+ * ──────────────
+ *   seed-meta.sql          — language + tag (always overwritten, no team partition)
+ *   seed-1-team1.sql       — layer-1 team1 rows  (phrases, requests, playlists, profiles, decks)
+ *   seed-1-team2.sql       — layer-1 team2 rows
+ *   seed-1-team-none.sql   — layer-1 rows not assigned to any team
+ *   seed-2-team1.sql       — layer-2 team1 rows  (cards, reviews, comments, translations, upvotes)
+ *   seed-2-team2.sql       — layer-2 team2 rows
+ *   seed-2-team-none.sql   — layer-2 rows not assigned to any team
+ *   seed-zzz.sql           — sets seeded_at last (never touched by this script)
  *
  * Usage:
  *   deno run --allow-env --allow-net --allow-read --allow-write \
  *     scripts/dump-new-seeds.ts [options]
  *
  * Options:
- *   --team <1|2|public>  Only dump rows for that team (default: all)
- *   --tables <t1,t2,…>   Restrict to specific tables
  *   --since <interval>   Override baseline; e.g. "2 days"
- *   --all                No time filter — dump every tracked row
+ *   --all                No time filter — dump every tracked row (still appends)
+ *   --full               Full rebuild: no time filter + overwrites all team files
  *   --shift-back <N>     After writing, shift all intervals in seed files back
  *                        N days (integer).  Pass alone to shift without dumping.
+ *   --reseed             Truncate all seeded tables then reload all seed files.
+ *                        Table list is derived from TABLES config automatically.
+ *                        Runs via docker exec into the local postgres container.
  *   --dry-run            Print SQL to stdout instead of writing files; skip shift
  */
 
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js'
 
 const REPO_ROOT = new URL('..', import.meta.url).pathname.replace(/\/$/, '')
+const SEEDS_DIR = `${REPO_ROOT}/supabase/seeds`
 
 // Load .env into Deno.env. Using --env-file on the CLI conflicts with the
 // Node 22 shim (pnpm's `deno` package), which intercepts --env-file as a
@@ -50,13 +59,19 @@ try {
 	/* .env not present — rely on process environment */
 }
 
+const NOW_MS = Date.now()
+const TODAY_UTC_NOON = (() => {
+	const d = new Date()
+	d.setUTCHours(12, 0, 0, 0)
+	return d.getTime()
+})()
+
 // ---------------------------------------------------------------------------
 // Team definitions
 // ---------------------------------------------------------------------------
 
 const TEAMS = {
 	'1': {
-		file: 'seed-team1.sql',
 		// Actor UIDs — keep in sync with scenetest/actors/default.ts
 		uids: new Set([
 			'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18', // learner (GarlicFace)
@@ -69,7 +84,6 @@ const TEAMS = {
 		langs: new Set(['hin', 'kan', 'ben', 'tam', 'ibo', 'aka']),
 	},
 	'2': {
-		file: 'seed-team2.sql',
 		// Actor UIDs — keep in sync with scenetest/actors/team2.ts
 		uids: new Set([
 			'21f1f69c-10fa-4059-8fd4-3c6dcef9ba18', // learner-t2 (GarlicTongue)
@@ -122,6 +136,13 @@ interface TableCfg {
 	 * Use for shared/meta tables (e.g. 'seed-meta.sql').
 	 */
 	file?: string
+	/**
+	 * Seed layer: 1 = parent rows (phrases, requests, profiles, decks),
+	 * 2 = child rows (cards, reviews, comments, translations, upvotes, links).
+	 * Determines which seed-{layer}-team*.sql file a row lands in.
+	 * Default: 1.
+	 */
+	layer?: 1 | 2
 }
 
 const TABLES: TableCfg[] = [
@@ -135,9 +156,10 @@ const TABLES: TableCfg[] = [
 		file: 'seed-meta.sql',
 	},
 	{
+		// no time filter → always dumps all rows with ON CONFLICT DO NOTHING
 		table: 'tag',
 		partitionCol: 'lang',
-		timestamps: ['created_at'],
+		timestamps: [],
 		file: 'seed-meta.sql',
 	},
 
@@ -158,56 +180,7 @@ const TABLES: TableCfg[] = [
 		timestamps: ['created_at', 'updated_at'],
 	},
 
-	// ---- comments (require phrase_request to exist) ----
-	{
-		table: 'request_comment',
-		partitionCol: 'uid',
-		timestamps: ['created_at', 'updated_at'],
-	},
-
-	// ---- link / join tables (require their parents above) ----
-	{
-		// phrase_tag has no direct lang column; join phrase to get phrase.lang
-		table: 'phrase_tag',
-		partitionCol: 'lang',
-		joinThrough: { alias: 'phrase', fk: 'phrase_id', col: 'lang' },
-		timestamps: ['created_at'],
-	},
-	{
-		table: 'playlist_phrase_link',
-		partitionCol: 'uid',
-		timestamps: ['created_at'],
-	},
-	{
-		table: 'comment_phrase_link',
-		partitionCol: 'uid',
-		timestamps: ['created_at'],
-	},
-
-	// ---- translations and upvotes ----
-	{
-		// translation lang = target language, not phrase language — use added_by
-		table: 'phrase_translation',
-		partitionCol: 'added_by',
-		timestamps: ['created_at', 'updated_at'],
-	},
-	{
-		table: 'phrase_request_upvote',
-		partitionCol: 'uid',
-		timestamps: ['created_at'],
-	},
-	{
-		table: 'phrase_playlist_upvote',
-		partitionCol: 'uid',
-		timestamps: ['created_at'],
-	},
-	{
-		table: 'comment_upvote',
-		partitionCol: 'uid',
-		timestamps: ['created_at'],
-	},
-
-	// ---- social / activity ----
+	// ---- layer 1: social / identity (FK only to auth.users or each other) ----
 	{
 		table: 'chat_message',
 		partitionCol: 'sender_uid',
@@ -219,17 +192,10 @@ const TABLES: TableCfg[] = [
 		timestamps: ['created_at'],
 	},
 	{
-		table: 'notification',
-		partitionCol: 'uid',
-		timestamps: ['created_at', 'read_at'],
-	},
-	{
 		table: 'admin_user',
 		partitionCol: 'uid',
 		timestamps: ['created_at'],
 	},
-
-	// ---- user data (all uid-partitioned) ----
 	{
 		table: 'user_profile',
 		partitionCol: 'uid',
@@ -240,10 +206,83 @@ const TABLES: TableCfg[] = [
 		partitionCol: 'uid',
 		timestamps: ['created_at', 'updated_at'],
 	},
+
+	// ---- layer 2: children (FK to phrases, requests, playlists, decks) ----
+
+	// comments (require phrase_request to exist)
+	{
+		// follow request_id → phrase_request.lang so comments land in the same
+		// team file as their parent request rather than the commenter's team
+		table: 'request_comment',
+		partitionCol: 'lang',
+		joinThrough: { alias: 'phrase_request', fk: 'request_id', col: 'lang' },
+		timestamps: ['created_at', 'updated_at'],
+		layer: 2,
+	},
+
+	// link / join tables
+	{
+		// phrase_tag has no direct lang column; join phrase to get phrase.lang
+		table: 'phrase_tag',
+		partitionCol: 'lang',
+		joinThrough: { alias: 'phrase', fk: 'phrase_id', col: 'lang' },
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+	{
+		table: 'playlist_phrase_link',
+		partitionCol: 'uid',
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+	{
+		table: 'comment_phrase_link',
+		partitionCol: 'uid',
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+
+	// translations and upvotes
+	{
+		// translation lang = target language, not phrase language — use added_by
+		table: 'phrase_translation',
+		partitionCol: 'added_by',
+		timestamps: ['created_at', 'updated_at'],
+		layer: 2,
+	},
+	{
+		table: 'phrase_request_upvote',
+		partitionCol: 'uid',
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+	{
+		table: 'phrase_playlist_upvote',
+		partitionCol: 'uid',
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+	{
+		table: 'comment_upvote',
+		partitionCol: 'uid',
+		timestamps: ['created_at'],
+		layer: 2,
+	},
+
+	// notifications (may FK to many layer-1 rows)
+	{
+		table: 'notification',
+		partitionCol: 'uid',
+		timestamps: ['created_at', 'read_at'],
+		layer: 2,
+	},
+
+	// user learning data
 	{
 		table: 'user_card',
 		partitionCol: 'uid',
 		timestamps: ['created_at', 'updated_at'],
+		layer: 2,
 	},
 	{
 		table: 'user_deck_review_state',
@@ -251,6 +290,7 @@ const TABLES: TableCfg[] = [
 		timestamps: ['created_at'],
 		dates: ['day_session'],
 		dateFromTimestamp: { day_session: 'created_at' },
+		layer: 2,
 	},
 	{
 		table: 'user_card_review',
@@ -258,11 +298,13 @@ const TABLES: TableCfg[] = [
 		timestamps: ['created_at', 'updated_at'],
 		dates: ['day_session'],
 		dateFromTimestamp: { day_session: 'created_at' },
+		layer: 2,
 	},
 	{
 		table: 'user_client_event',
 		partitionCol: 'uid',
 		timestamps: ['created_at'],
+		layer: 2,
 	},
 ]
 
@@ -273,6 +315,7 @@ const SKIP_TABLES = new Set([
 	'db_meta',
 	// deprecated, no longer used in the app
 	'phrase_relation',
+	'user_client_event',
 	// backfilled by scripts/backfill-search-corpus.ts, not seeded directly
 	'search_corpus',
 	// views — read-only, PostgREST exposes them but they are never INSERTed
@@ -300,22 +343,20 @@ function msToInterval(ms: number): string {
 
 function fmtTimestamp(isoStr: string | null): string {
 	if (isoStr === null) return 'null'
-	const ageMs = Date.now() - new Date(isoStr).getTime()
+	const ageMs = NOW_MS - new Date(isoStr).getTime()
 	return `now() - interval '${msToInterval(Math.abs(ageMs))}'`
 }
 
 function fmtDate(dateStr: string | null): string {
 	if (dateStr === null) return 'null'
 	const d = new Date(dateStr + 'T12:00:00Z')
-	const now = new Date()
-	now.setUTCHours(12, 0, 0, 0)
-	const n = Math.round((now.getTime() - d.getTime()) / 86_400_000)
+	const n = Math.round((TODAY_UTC_NOON - d.getTime()) / 86_400_000)
 	return n === 0 ? '(current_date)::date' : `(current_date - ${n})::date`
 }
 
 function fmtDateFromTimestamp(isoStr: string | null): string {
 	if (isoStr === null) return 'null'
-	const ageMs = Date.now() - new Date(isoStr).getTime()
+	const ageMs = NOW_MS - new Date(isoStr).getTime()
 	return `(now() - interval '${msToInterval(Math.abs(ageMs))}' - interval '4 hours')::date`
 }
 
@@ -340,9 +381,7 @@ function fmtValue(
 	if (typeof val === 'string') return `'${val.replace(/'/g, "''")}'`
 	if (typeof val === 'number') return String(val)
 	if (typeof val === 'boolean') return val ? 'true' : 'false'
-	if (typeof val === 'object')
-		return `'${JSON.stringify(val).replace(/'/g, "''")}'`
-	return `'${String(val).replace(/'/g, "''")}'`
+	return `'${JSON.stringify(val).replace(/'/g, "''")}'`
 }
 
 // ---------------------------------------------------------------------------
@@ -393,7 +432,8 @@ function generateInsert(
 // Partition helper
 // ---------------------------------------------------------------------------
 
-function assignBucket(row: Record<string, unknown>, cfg: TableCfg): string {
+// Returns the team key ('1', '2', 'none') or an explicit filename for file-override tables.
+function assignTeam(row: Record<string, unknown>, cfg: TableCfg): string {
 	if (cfg.file) return cfg.file
 	let val: string
 	if (cfg.joinThrough) {
@@ -406,8 +446,10 @@ function assignBucket(row: Record<string, unknown>, cfg: TableCfg): string {
 	}
 	val = val.toLowerCase()
 
+	// joinThrough always joins on a lang column — check explicitly rather than
+	// assuming any joinThrough implies lang partitioning.
 	const isLangPartition =
-		cfg.partitionCol === 'lang' || cfg.joinThrough !== undefined
+		cfg.partitionCol === 'lang' || cfg.joinThrough?.col === 'lang'
 	for (const [teamKey, team] of Object.entries(TEAMS) as [
 		TeamKey,
 		(typeof TEAMS)[TeamKey],
@@ -415,7 +457,7 @@ function assignBucket(row: Record<string, unknown>, cfg: TableCfg): string {
 		const set = isLangPartition ? team.langs : team.uids
 		if ((set as Set<string>).has(val)) return teamKey
 	}
-	return 'public'
+	return 'none'
 }
 
 // ---------------------------------------------------------------------------
@@ -448,9 +490,13 @@ function unitMs(unit: string): number {
 async function shiftSeedFiles(shiftDays: number): Promise<void> {
 	const shiftMs = shiftDays * 86_400_000
 	const targets = [
-		...Object.values(TEAMS).map((t) => `${REPO_ROOT}/supabase/${t.file}`),
-		`${REPO_ROOT}/supabase/seed-public.sql`,
-		`${REPO_ROOT}/supabase/seed-meta.sql`,
+		...[1, 2].flatMap((layer) =>
+			['1', '2', 'none'].map(
+				(team) =>
+					`${SEEDS_DIR}/seed-${layer}-team${team === 'none' ? '-none' : team}.sql`
+			)
+		),
+		`${SEEDS_DIR}/seed-meta.sql`,
 	]
 	for (const filePath of targets) {
 		let text: string
@@ -487,26 +533,151 @@ async function shiftSeedFiles(shiftDays: number): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Reseed: truncate all seeded tables then reload seed files
+// ---------------------------------------------------------------------------
+
+async function listSeedFiles(): Promise<string[]> {
+	const files: string[] = []
+	for await (const entry of Deno.readDir(SEEDS_DIR)) {
+		if (entry.isFile && entry.name.endsWith('.sql')) files.push(entry.name)
+	}
+	return files.sort()
+}
+
+async function reseedDatabase(dryRun: boolean): Promise<void> {
+	// Derive the truncation table list from TABLES config.
+	// SKIP_TABLES contains views and non-truncatable objects — exclude them.
+	const truncateTables = [
+		// All tables we actively dump/seed
+		...new Set(TABLES.map((t) => t.table)),
+		// db_meta is in SKIP_TABLES (excluded from dumping) but seed-zzz.sql
+		// writes seeded_at into it, so we must truncate it to allow a clean reseed.
+		'db_meta',
+	].filter((t) => !SKIP_TABLES.has(t) || t === 'db_meta')
+
+	// CASCADE handles any deprecated tables that still have FKs to seeded tables
+	// (e.g. phrase_relation → phrase) without needing to list them explicitly.
+	const truncateSQL = [
+		'set\n\tsession_replication_role = replica;',
+		'',
+		'truncate',
+		truncateTables.map((t) => `\tpublic.${t}`).join(',\n') + '\ncascade;',
+		'',
+		'reset all;',
+		'',
+	].join('\n')
+
+	const seedFiles = await listSeedFiles()
+
+	if (dryRun) {
+		console.log('-- TRUNCATION SQL (derived from TABLES config):')
+		console.log(truncateSQL)
+		console.log('-- SEED FILES (in load order):')
+		for (const f of seedFiles) console.log(`--   seeds/${f}`)
+		return
+	}
+
+	// Discover the local postgres container (supabase_db_<project>)
+	const { stdout: psOut } = await new Deno.Command('docker', {
+		args: ['ps', '--format', '{{.Names}}'],
+	}).output()
+	const containerName = new TextDecoder()
+		.decode(psOut)
+		.split('\n')
+		.find((n) => n.startsWith('supabase_db_'))
+		?.trim()
+
+	if (!containerName) {
+		console.error(
+			'Error: could not find a running supabase_db_* container. Is supabase running?'
+		)
+		Deno.exit(1)
+	}
+
+	// Build full SQL: truncation followed by all seed files
+	let fullSQL = truncateSQL + '\n'
+	for (const fname of seedFiles) {
+		fullSQL += (await Deno.readTextFile(`${SEEDS_DIR}/${fname}`)) + '\n'
+	}
+
+	console.error(
+		`-- Truncating ${truncateTables.length} tables then loading ${seedFiles.length} seed files via ${containerName}...`
+	)
+
+	const proc = new Deno.Command('docker', {
+		args: [
+			'exec',
+			'-i',
+			containerName,
+			'psql',
+			'-U',
+			'postgres',
+			'-d',
+			'postgres',
+			'-v',
+			'ON_ERROR_STOP=1',
+		],
+		stdin: 'piped',
+		stdout: 'inherit',
+		stderr: 'inherit',
+	}).spawn()
+
+	const writer = proc.stdin.getWriter()
+	await writer.write(new TextEncoder().encode(fullSQL))
+	await writer.close()
+
+	const { code } = await proc.status
+	if (code !== 0) {
+		console.error(`-- psql exited with code ${code}`)
+		Deno.exit(code)
+	}
+	console.error('-- reseed complete')
+}
+
+// ---------------------------------------------------------------------------
+// Backup seeds directory
+// ---------------------------------------------------------------------------
+
+async function backupSeeds(): Promise<void> {
+	const bakDir = `${SEEDS_DIR}.bak`
+	const bak2Dir = `${SEEDS_DIR}.bak2`
+
+	const answer = prompt('Backup seeds/ to seeds.bak before overwriting? [Y/n]')
+	if (answer?.trim().toLowerCase() === 'n') return
+
+	// -rn = no-clobber: succeeds only if .bak exists AND .bak2 doesn't yet.
+	const bak2Result = await new Deno.Command('cp', {
+		args: ['-rn', bakDir, bak2Dir],
+	}).output()
+	if (bak2Result.success)
+		console.error(`-- → ${bak2Dir} (first-backup preserved)`)
+
+	await Deno.remove(bakDir, { recursive: true }).catch(() => {})
+	await new Deno.Command('cp', { args: ['-r', SEEDS_DIR, bakDir] }).output()
+	console.error(`-- → ${bakDir} (backup created)`)
+}
+
+// ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
 async function main() {
 	const args = [...Deno.args]
 
-	let teamFilter: TeamKey | 'public' | null = null
-	let tablesFilter: string[] | null = null
 	let sinceOverride: string | null = null
 	let allRows = false
+	let fullMode = false
+	let reseedMode = false
 	let shiftDays = 0
 	let dryRun = false
 
 	for (let i = 0; i < args.length; i++) {
-		if (args[i] === '--team' && args[i + 1])
-			teamFilter = args[++i] as TeamKey | 'public'
-		else if (args[i] === '--tables' && args[i + 1])
-			tablesFilter = args[++i].split(',').map((t) => t.trim())
-		else if (args[i] === '--since' && args[i + 1]) sinceOverride = args[++i]
+		if (args[i] === '--since' && args[i + 1]) sinceOverride = args[++i]
 		else if (args[i] === '--all') allRows = true
+		else if (args[i] === '--full') {
+			fullMode = true
+			allRows = true
+		} else if (args[i] === '--reseed') reseedMode = true
 		else if (args[i] === '--shift-back' && args[i + 1])
 			shiftDays = parseInt(args[++i])
 		else if (args[i] === '--dry-run') dryRun = true
@@ -514,16 +685,21 @@ async function main() {
 
 	// --shift-back alone: skip the dump, just shift
 	const shiftOnly =
-		shiftDays > 0 &&
-		args.filter(
-			(a) => !['--shift-back', String(shiftDays), '--dry-run'].includes(a)
-		).length === 0
+		shiftDays > 0 && !fullMode && !allRows && !reseedMode && !sinceOverride
 
 	if (shiftOnly) {
 		if (!dryRun) await shiftSeedFiles(shiftDays)
 		else console.error('-- --dry-run: skipping shift')
 		return
 	}
+
+	if (reseedMode) {
+		await reseedDatabase(dryRun)
+		return
+	}
+
+	if (fullMode)
+		console.error('-- Mode: --full (all rows, overwrite team files)')
 
 	const supabaseUrl =
 		Deno.env.get('VITE_SUPABASE_URL') ?? 'http://127.0.0.1:54321'
@@ -562,100 +738,107 @@ async function main() {
 		console.error('-- Mode: --all (no time filter)')
 	}
 
-	const tables = tablesFilter
-		? TABLES.filter((t) => tablesFilter!.includes(t.table))
-		: TABLES
+	// Bucket key: "${layer}-${team}" for team rows (e.g. '1-1', '2-none'),
+	// or an explicit filename for file-override tables (e.g. 'seed-meta.sql').
+	// File-override buckets are always overwritten; team buckets are appended
+	// unless --full is set, in which case they are also overwritten.
+	const BUCKET_FILE: Record<string, string> = {}
+	for (const layer of [1, 2]) {
+		for (const team of ['1', '2', 'none']) {
+			BUCKET_FILE[`${layer}-${team}`] =
+				`seed-${layer}-team${team === 'none' ? '-none' : team}.sql`
+		}
+	}
 
-	// Bucket keys: team key ('1', '2'), 'public', or an explicit filename ('seed-meta.sql')
-	const BUCKET_FILE: Record<string, string> = {
-		'1': TEAMS['1'].file,
-		'2': TEAMS['2'].file,
-		public: 'seed-public.sql',
-	}
-	const buckets: Record<string, Record<string, string>> = {
-		'1': {},
-		'2': {},
-		public: {},
-	}
+	const buckets: Record<string, string[]> = {}
 	let totalRows = 0
 
-	for (const cfg of tables) {
-		const selectCols = cfg.joinThrough
-			? `*, ${cfg.joinThrough.alias}:${cfg.joinThrough.fk}(${cfg.joinThrough.col})`
-			: '*'
-
-		let query = supabase.from(cfg.table).select(selectCols)
-
-		// Only apply time filter when the table has timestamp columns to filter on
-		if (cutoffIso && cfg.timestamps.includes('created_at')) {
+	const fetchResults = await Promise.all(
+		TABLES.map(async (cfg) => {
+			const selectCols = cfg.joinThrough
+				? `*, ${cfg.joinThrough.alias}:${cfg.joinThrough.fk}(${cfg.joinThrough.col})`
+				: '*'
+			let query = supabase.from(cfg.table).select(selectCols)
 			// Strict gt on created_at only. Using gte would include rows inserted
 			// at the exact moment of seeded_at (same db reset transaction). Including
 			// updated_at in an OR caused rows whose updated_at defaulted to now() at
 			// seed-time (missing column → DEFAULT now()) to be re-captured as "new".
-			query = query.gt('created_at', cutoffIso)
-		}
+			if (cutoffIso && cfg.timestamps.includes('created_at'))
+				query = query.gt('created_at', cutoffIso)
+			const { data, error } = await query
+			return { cfg, data, error }
+		})
+	)
 
-		const { data, error } = await query
-
+	for (const { cfg, data, error } of fetchResults) {
 		if (error) {
 			console.error(`Warning: ${cfg.table}: ${error.message}`)
 			continue
 		}
 		if (!data || data.length === 0) continue
 
-		// Partition rows into buckets
-		const byBucket: Record<string, Record<string, unknown>[]> = {
-			'1': [],
-			'2': [],
-			public: [],
-		}
+		const byBucket: Record<string, Record<string, unknown>[]> = {}
 		for (const row of data as Record<string, unknown>[]) {
-			const bucket = assignBucket(row, cfg)
-			if (!byBucket[bucket]) byBucket[bucket] = []
-			byBucket[bucket].push(row)
+			const team = assignTeam(row, cfg)
+			const bucketKey = team.endsWith('.sql')
+				? team
+				: `${cfg.layer ?? 1}-${team}`
+			if (!byBucket[bucketKey]) byBucket[bucketKey] = []
+			byBucket[bucketKey].push(row)
 		}
 
 		for (const [bucket, rows] of Object.entries(byBucket)) {
-			if (rows.length === 0) continue
-			// file-override buckets always included; team buckets respect teamFilter
-			if (!(bucket in BUCKET_FILE) || !teamFilter || bucket === teamFilter) {
-				if (!buckets[bucket]) buckets[bucket] = {}
-				const sql = generateInsert(cfg.table, rows, cfg)
-				if (sql) {
-					buckets[bucket][cfg.table] = sql
-					totalRows += rows.length
-				}
+			const sql = generateInsert(cfg.table, rows, cfg)
+			if (sql) {
+				if (!buckets[bucket]) buckets[bucket] = []
+				buckets[bucket].push(sql)
+				totalRows += rows.length
 			}
 		}
 	}
 
-	// Output — team buckets filtered by teamFilter; file-override buckets always shown
-	const teamBuckets = teamFilter ? [teamFilter] : ['1', '2', 'public']
-	const fileBuckets = Object.keys(buckets).filter((k) => !(k in BUCKET_FILE))
+	// Output — file-override buckets first (always overwrite), then team buckets
+	const allBuckets = Object.keys(buckets)
+	const fileBuckets = allBuckets.filter((k) => !(k in BUCKET_FILE))
+	const activeBuckets = allBuckets.filter((k) => k in BUCKET_FILE).sort() // ensures seed-1-* before seed-2-*
+
 	const stamp = new Date().toISOString()
 
-	for (const bucket of [...fileBuckets, ...teamBuckets]) {
+	// Backup before overwriting in --full mode
+	if (fullMode && !dryRun) await backupSeeds()
+
+	for (const bucket of [...fileBuckets, ...activeBuckets]) {
 		const sections = buckets[bucket]
-		if (!sections || Object.keys(sections).length === 0) continue
+		if (!sections?.length) continue
 
 		const file = BUCKET_FILE[bucket] ?? bucket
-		const block = Object.values(sections).join('')
+		const block = sections.join('')
+		const isFileOverride = !(bucket in BUCKET_FILE)
+		const isOverwrite = fullMode || isFileOverride
 
 		if (dryRun) {
 			console.log(
 				`\n-- ============================================================`
 			)
-			console.log(`-- TARGET FILE: supabase/${file}`)
+			console.log(
+				`-- TARGET FILE: seeds/${file}${isOverwrite ? ' (overwrite)' : ' (append)'}`
+			)
 			console.log(
 				`-- ============================================================\n`
 			)
-			Deno.stdout.write(new TextEncoder().encode(block))
+			await Deno.stdout.write(new TextEncoder().encode(block))
 		} else {
-			const targetPath = `${REPO_ROOT}/supabase/${file}`
-			await Deno.writeTextFile(targetPath, `\n-- dump ${stamp}\n${block}`, {
-				append: true,
-			})
-			console.error(`-- → ${targetPath}`)
+			const targetPath = `${SEEDS_DIR}/${file}`
+			if (isOverwrite) {
+				const header = `set\n\tsession_replication_role = replica;\n\n-- generated by dump-new-seeds ${stamp}\n\n`
+				await Deno.writeTextFile(targetPath, header + block)
+				console.error(`-- → ${targetPath} (overwritten)`)
+			} else {
+				await Deno.writeTextFile(targetPath, `\n-- dump ${stamp}\n${block}`, {
+					append: true,
+				})
+				console.error(`-- → ${targetPath}`)
+			}
 		}
 	}
 
