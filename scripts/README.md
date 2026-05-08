@@ -11,6 +11,103 @@ safety pause before any non-local write.
 
 ---
 
+## `dump-new-seeds.ts`
+
+Captures rows that changed since the last `supabase db reset` and emits
+INSERT SQL with relative timestamps (`now() - interval 'N days'`), ready
+to paste into the appropriate seed file.
+
+### How it knows what changed
+
+`seed.sql` inserts `seeded_at = now()` into `public.db_meta` on every
+`db reset`. The script queries that value as its baseline and finds all
+rows where `created_at > seeded_at` OR `updated_at > seeded_at` (the
+latter catches profile edits, translation edits, etc. on existing rows).
+If `db_meta` isn't populated yet (e.g. you haven't reset since adding the
+migration), pass `--since` as a fallback.
+
+### How rows are assigned to teams
+
+Each table has a `partitionCol`. Two rules:
+
+- `partitionCol = 'lang'` → row goes to the team whose `langs` set
+  contains that value (e.g. `'hin'` → team 1, `'fra'` → team 2)
+- anything else (`uid`, `added_by`, `sender_uid`, …) → row goes to the
+  team whose `uids` set contains that value
+
+Rows that don't match either team go to a **public** bucket (tagged
+`seed-public.sql`). `phrase_tag` has no direct `lang` column — it joins
+through `phrase.lang` automatically.
+
+Team UIDs and lang sets are defined at the top of the script. Keep them
+in sync with `scenetest/actors/default.ts` and `scenetest/actors/team2.ts`
+when actors are added or renamed.
+
+### Usage
+
+```bash
+# Typical session: dump new rows and push all timestamps back 1 day
+deno run --env-file --allow-env --allow-net --allow-read --allow-write \
+  scripts/dump-new-seeds.ts --shift-back 1
+
+# Dump only (no time shift)
+deno run --env-file --allow-env --allow-net --allow-read --allow-write \
+  scripts/dump-new-seeds.ts
+
+# Shift all seed file timestamps back 1 day without dumping
+deno run --env-file --allow-env --allow-net --allow-read --allow-write \
+  scripts/dump-new-seeds.ts --shift-back 1
+
+# Preview what would be written (stdout, no files touched)
+deno run --env-file --allow-env --allow-net \
+  scripts/dump-new-seeds.ts --dry-run
+
+# Only team 1's delta
+deno run --env-file --allow-env --allow-net --allow-read --allow-write \
+  scripts/dump-new-seeds.ts --team 1 --shift-back 1
+
+# Full snapshot — every row for all tracked tables
+deno run --env-file --allow-env --allow-net --allow-read --allow-write \
+  scripts/dump-new-seeds.ts --all
+```
+
+Output goes to **stdout** with `-- TARGET FILE: supabase/seed-team1.sql`
+markers so you know where each block belongs. Diagnostic lines are written
+to **stderr** so they don't contaminate redirected output.
+
+### CLI flags
+
+| Flag                    | Effect                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------- |
+| _(none)_                | Delta since `db_meta.seeded_at` (or `--since` fallback), all teams and tables.  |
+| `--team <1\|2\|public>` | Only output rows belonging to that team (or the unassigned public bucket).      |
+| `--tables <t1,t2,…>`    | Restrict to specific table names.                                               |
+| `--since <interval>`    | Override baseline; e.g. `"2 days"`, `"6 hours"`. Ignored when `db_meta` is set. |
+| `--all`                 | No time filter — dump all tracked rows regardless of age.                       |
+
+### Required env vars
+
+| Var                         | Notes                                        |
+| --------------------------- | -------------------------------------------- |
+| `VITE_SUPABASE_URL`         | Defaults to `http://127.0.0.1:54321`         |
+| `SUPABASE_SERVICE_ROLE_KEY` | From `.env`; run `supabase status` to get it |
+
+### Tracked tables
+
+Language-partitioned: `phrase`, `phrase_request`, `phrase_playlist`,
+`phrase_tag` (joined via `phrase.lang`)
+
+UID-partitioned: `phrase_translation` (`added_by`), `playlist_phrase_link`,
+`request_comment`, `chat_message` (`sender_uid`), `friend_request_action`
+(`uid_by`), `phrase_request_upvote`, `user_profile`, `user_deck`,
+`user_card`, `user_deck_review_state`, `user_card_review`,
+`user_client_event`
+
+To add a new table, add an entry to `TABLES` in the script with
+`partitionCol`, `timestamps`, and optionally `dates` / `dateFromTimestamp`.
+
+---
+
 ## `backfill-search-corpus.ts`
 
 Populates the `search_corpus` table with denormalized phrase + translation

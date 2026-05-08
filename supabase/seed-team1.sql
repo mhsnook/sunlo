@@ -6177,3 +6177,690 @@ values
 		'{"code": "invalid_credentials", "name": "AuthApiError", "status": "400"}',
 		'http://localhost:5173/login?redirectedFrom=%2Flearn%2Ftam%2Ffeed'
 	);
+
+-- dump 2026-05-08T06:17:28.387Z
+--
+-- user_card (67 rows)
+--
+insert into
+	"public"."user_card" (
+		"uid",
+		"id",
+		"phrase_id",
+		"updated_at",
+		"created_at",
+		"status",
+		"lang",
+		"direction"
+	)
+values
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'28ebfb12-3af1-44ec-ad34-b6fb180875dd',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'93840f5c-8d49-4f1d-9944-be6c580d7716',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7129b571-1707-4f79-80ed-175b070fb5be',
+		'12536684-0b35-4aff-80cd-f4ce56c866b6',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'048e501d-d7ed-48b8-b184-b4972b1b4f02',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'3684c6d0-3bdf-4b0b-b387-7784e1acf9c3',
+		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'683f2f81-a8fa-4529-b1ad-6d5aa62c08dc',
+		'90108f59-7968-457f-9744-2e3b44e980dd',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c9d91a56-ab2f-449f-848c-fa3d46291569',
+		'170f5fd4-58f8-4b05-aba4-23522f35800f',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'60de9458-e2fd-4659-b9e8-3d6467d36ee3',
+		'f1f5234e-0426-44f5-a007-b67329a70a81',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'6a3439f9-3cf6-40c6-a43c-520bbf27aced',
+		'5b5cc7ec-702e-4dc1-a568-0dcc660c25bb',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'learned',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'f81a8b0c-6c1a-4679-9a2e-f03c73446faf',
+		'1395ae94-46d9-4a54-92f5-fb8b76db896b',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'4addbdc0-e8e8-48be-9be0-ebc3c9e91e25',
+		'ded8028a-493f-438f-8b72-316c769a66b9',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'e11b5797-3bc4-43fd-b689-b41239e5433c',
+		'1f6bac22-b32a-4b77-9857-d2de02b538de',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'2b2d8000-aaab-4ebb-912f-c4c73df70005',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'cfc0c751-ff5f-42a8-80d9-ba644ec6d8f4',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'09701911-7aee-4a8e-a141-a07d9020ffdb',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'56043c5f-c46a-4f2b-bb28-4181127ab610',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7682d98e-ad5f-4056-ac38-ac6f02d3dd74',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'56a0edbf-53b3-45a7-a74e-9f5e178dd559',
+		'f6b69f3b-09b9-41a7-a9f2-255da0697015',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'5487ebd9-6a88-471c-ae73-9ec5d14cf1c4',
+		'8167b776-fc93-4e3f-b06e-5fa5818f2d3b',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'57e5b373-4932-40d6-991c-0a2c51d03fe1',
+		'43a760da-65af-400e-b3f0-fbed7a6b338e',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'6a75c059-7d5d-47ee-ba81-e6fdd7c40536',
+		'0823546b-d240-4f14-9d51-8dfae5fcddc3',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'9e42e6d5-56ee-4c41-a30a-c4cdad5d051d',
+		'a2777e37-b02e-4d8b-9a39-1a9ad56af4f2',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'50c86176-4d60-4fca-ae41-9759adb58eaf',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'793542c3-ffe6-445d-8bea-8110e7b87b71',
+		'ddd650c2-00e9-43f1-8624-5a97282087aa',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'f25f7745-2e00-431a-b951-464f98ab93d8',
+		'7aac8e8f-4de1-41a0-b910-a2c9b80e47f9',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'3b40c7be-d5a0-4d15-8db6-2f275cab7144',
+		'ffc9e2ca-7c33-4c6f-a64a-9a8d67fe2e30',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'cc8efbef-4816-4d01-b224-401502ded148',
+		'fdd62764-2438-42bb-af7f-9eb378082899',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'd95d7aa6-ff00-43e5-a556-62bf5ef6f167',
+		'fae20b24-42dc-4b9e-aebc-22afcdfc4689',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'17518423-8a9f-4a92-a52e-cc2b4da7dac4',
+		'f878e60f-9647-4728-a368-fc8681b0acbb',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'5da17451-0375-45e5-9bf4-c245800d05ab',
+		'fd535752-d602-4ab8-8656-9e11692f30fc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'b9530683-e3eb-468a-a0f4-e417386a9df5',
+		'fa26ba78-a7a3-49f8-8516-034424477dec',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'9863c71f-2799-4c3d-8ed4-46737372ef23',
+		'163d7f57-a76f-4e5b-9346-1de5cfeba7d8',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'd5a12bf9-0964-4008-9750-39dcfe1dce2d',
+		'c3c81fa4-9c63-4569-b9b6-9c931ee3154f',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'60ad1983-0396-4d1a-97db-6e4a3ff802bf',
+		'93d5d050-e9af-4652-9c76-9dc2a232640a',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'306eca85-ddb8-4a1d-8a52-2f06793b5fca',
+		'c5c8cf9b-bf1a-4d4a-aff6-21b8dc86fcc9',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'950161cc-c739-43cb-883a-ee8a3a698ea2',
+		'b2736292-1137-41db-a453-ad203726d8c5',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'ac183892-d2a9-4ffd-95f1-f1468e680c4b',
+		'a875f6e4-a8cc-4f68-baf3-ca2aea273568',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'4a7dc943-200a-4985-a8e3-6cfc5e4621c2',
+		'a00febfd-e6d6-40bc-a3b8-e31563410db8',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'05e471ea-809f-4da1-838d-6cdf52b5bd3e',
+		'97f2f7cb-a1c5-4bb1-a93b-d475fa96ae68',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'16c14a30-1e94-4d1f-b22a-4a0c9769ae61',
+		'4b7b3741-16ce-4ce8-a9b8-70556451a8e5',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'f1ebf197-1df9-4d16-8367-dd22fe86448a',
+		'49066ea2-e608-42ab-8817-1f20b0eada03',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'872242bf-3384-4dc2-aacf-8652a1028652',
+		'4677f15a-1cd9-40a3-876c-30662c5eec3f',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'de1ff057-73af-4992-b5ab-50325f5213f7',
+		'44bcd224-b4b3-46ce-b260-2136712b0907',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'tam',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'4a8526cb-6198-4b39-b0bb-4fa0175e4231',
+		'dd039576-9798-422f-b946-ffe86e0d8324',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'e113ce6c-8333-49b8-9a32-e778db144ec7',
+		'b0fbbe1d-705e-4d93-a231-ac55263fcfee',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'511511c3-04fa-4469-ad4f-1e7cace6cfa8',
+		'235ce61c-be21-4697-815d-d5aa1a4ff121',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'30114bea-e912-4a12-ba3f-08673f876c01',
+		'9a2bc2c8-7d7a-4ddd-8eed-2812bbf73471',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'5ca1fbba-918d-4a70-a0e5-9c74a3bf53a9',
+		'90108f59-7968-457f-9744-2e3b44e980dd',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'0ace0c8b-3509-48d2-83fe-d33a710c4fee',
+		'b9e3edac-de8b-4796-b436-a0cded08d2ae',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'264139c1-82a0-46d9-9ec6-c58145b2f4a8',
+		'c1cc1a36-1b77-41bf-9a05-6e7914d256e2',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'02485cdb-2d6a-4c9f-b93b-5d8baace3973',
+		'b7247f31-3758-47ea-bdf8-1c2a7ff161ed',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7a2d341e-912f-4a79-8b80-f59591b1d9de',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7f7494a8-e130-4916-93df-9850c0d1eb12',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'e2455e61-704e-42e0-afac-b249cce7dead',
+		'48edc28c-1530-4549-b48c-f678033a6892',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'348ce5b8-b69f-4a9d-ad1f-250d8ea74fb8',
+		'cc3847f3-b151-401e-80c9-4aef221c54b5',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'3c4bc3e2-bbda-479f-9de4-93f8c89ac2e3',
+		'0e33be07-6d4a-4c99-8282-921038188cbf',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'33f8944a-c45e-49b5-b887-c0438ff1457a',
+		'48fe0624-f586-4812-a1a5-33c634995671',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'ab219aab-214b-4375-abc1-80cdace99069',
+		'7dd33e23-2b6d-4b1f-bc8c-1da690d14bfb',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'hin',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'4c96b93f-288f-4df5-821a-2c788c5dac19',
+		'aa110001-1111-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'7ba05874-a6d2-4f21-bd96-497b86031cf1',
+		'aa110002-2222-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'a98d0f4e-1c29-411b-9f18-ed8f8aa66a9a',
+		'aa110005-5555-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
+		'c85ece73-2949-47e9-a722-f195e36bcd46',
+		'aa110006-6666-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'f69a2384-9375-4ff8-aa4c-63827955e20b',
+		'aa110004-4444-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a2dfa256-ef7b-41b0-b05a-d97afab8dd21',
+		'033a6866-f2e8-4f0d-a8e5-2c4ac8196099',
+		'aa110008-8888-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'42298744-1009-4dfe-8fb1-8484a1f6e4c8',
+		'aa110001-1111-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'b1741730-6151-4075-8a3b-49f9620b9e07',
+		'aa110002-2222-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	),
+	(
+		'a32f65e7-a496-4afc-abd3-798d8e6d9ec5',
+		'8be6fc4f-3cbe-445a-b2a5-bab5a00c3a75',
+		'aa110003-3333-4aaa-bbbb-cccccccccccc',
+		now() - interval '11 minutes',
+		now() - interval '11 minutes',
+		'active',
+		'kan',
+		'reverse'
+	);
