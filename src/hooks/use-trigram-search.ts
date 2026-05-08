@@ -39,7 +39,7 @@ export function useTrigramSearch(
 			if (!finalEnabled) return []
 			const { data, error } = await supabase.rpc('search_by_trigram', {
 				query,
-				target_langs: langs,
+				target_langs: langs ?? undefined,
 				match_limit: pageSize,
 				cursor_created_at: pageParam?.created_at,
 				cursor_id: pageParam?.entity_id,

@@ -243,6 +243,21 @@ export type Database = {
 					},
 				]
 			}
+			db_meta: {
+				Row: {
+					key: string
+					value: string
+				}
+				Insert: {
+					key: string
+					value: string
+				}
+				Update: {
+					key?: string
+					value?: string
+				}
+				Relationships: []
+			}
 			friend_request_action: {
 				Row: {
 					action_type:
@@ -457,6 +472,7 @@ export type Database = {
 					only_reverse: boolean
 					text: string
 					text_script: string | null
+					updated_at: string
 				}
 				Insert: {
 					added_by?: string
@@ -467,6 +483,7 @@ export type Database = {
 					only_reverse?: boolean
 					text: string
 					text_script?: string | null
+					updated_at?: string
 				}
 				Update: {
 					added_by?: string
@@ -477,6 +494,7 @@ export type Database = {
 					only_reverse?: boolean
 					text?: string
 					text_script?: string | null
+					updated_at?: string
 				}
 				Relationships: [
 					{
@@ -1032,12 +1050,12 @@ export type Database = {
 					entity_id: string
 					entity_lang: string
 					entity_type: string
-					id: string
 					source_id: string
 					source_type: string
 					text: string
 					text_lang: string
 					text_normalized: string
+					vectorized_at: string
 				}
 				Insert: {
 					created_at?: string
@@ -1045,12 +1063,12 @@ export type Database = {
 					entity_id: string
 					entity_lang: string
 					entity_type: string
-					id?: string
 					source_id: string
 					source_type: string
 					text: string
 					text_lang: string
 					text_normalized: string
+					vectorized_at?: string
 				}
 				Update: {
 					created_at?: string
@@ -1058,12 +1076,12 @@ export type Database = {
 					entity_id?: string
 					entity_lang?: string
 					entity_type?: string
-					id?: string
 					source_id?: string
 					source_type?: string
 					text?: string
 					text_lang?: string
 					text_normalized?: string
+					vectorized_at?: string
 				}
 				Relationships: []
 			}
@@ -1375,6 +1393,7 @@ export type Database = {
 					preferred_translation_lang: string | null
 					review_answer_mode: string | null
 					uid: string
+					updated_at: string
 				}
 				Insert: {
 					archived?: boolean
@@ -1386,6 +1405,7 @@ export type Database = {
 					preferred_translation_lang?: string | null
 					review_answer_mode?: string | null
 					uid?: string
+					updated_at?: string
 				}
 				Update: {
 					archived?: boolean
@@ -1397,6 +1417,7 @@ export type Database = {
 					preferred_translation_lang?: string | null
 					review_answer_mode?: string | null
 					uid?: string
+					updated_at?: string
 				}
 				Relationships: [
 					{
@@ -1618,6 +1639,7 @@ export type Database = {
 					only_reverse: boolean | null
 					tags: Json | null
 					text: string | null
+					updated_at: string | null
 				}
 				Relationships: [
 					{
@@ -1689,6 +1711,20 @@ export type Database = {
 					avatar_path?: string | null
 					uid?: string | null
 					username?: string | null
+				}
+				Relationships: []
+			}
+			search_text_index: {
+				Row: {
+					entity_created_at: string | null
+					entity_id: string | null
+					entity_lang: string | null
+					entity_type: string | null
+					source_id: string | null
+					source_type: string | null
+					text: string | null
+					text_lang: string | null
+					text_normalized: string | null
 				}
 				Relationships: []
 			}
@@ -1907,7 +1943,7 @@ export type Database = {
 					exclude_ids?: string[]
 					match_limit?: number
 					query: string
-					target_langs?: string[] | null
+					target_langs?: string[]
 				}
 				Returns: {
 					created_at: string
