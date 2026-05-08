@@ -176,7 +176,7 @@ pnpm run seeds:data
 pnpm run seeds:apply
 ```
 
-**Important**: When regenerating `base.sql` and `seed.sql`, be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
+**Important**: When regenerating `base.sql` and running the seeding script (`pnpm seeds:data`), be careful not to commit unintended deletions (like realtime table configurations). Always review the diff carefully.
 
 ### Database Workflow
 
@@ -366,7 +366,7 @@ const mutation = useMutation({
   - `fields/` - Reusable form field components
 - `supabase/schemas/` - Database schema definitions
 - `supabase/migrations/` - Database migrations
-- `supabase/seed.sql` - Seed data
+- `supabase/seed-*.sql` - Various seed data files, loaded in alphabetical order
 
 ### Feature Module Pattern
 

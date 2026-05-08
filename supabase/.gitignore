@@ -2,3 +2,7 @@
 .branches
 .temp
 .env
+
+# Seed backups (created by dump-new-seeds.ts --full)
+seeds.bak/
+seeds.bak2/
