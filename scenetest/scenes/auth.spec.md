@@ -81,7 +81,7 @@ learner:
 - login
 - see sidebar-user-menu-trigger
 - see decks-list-grid
-- reload
+- openTo /learn
 - see sidebar-user-menu-trigger
 - see decks-list-grid
 
