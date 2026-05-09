@@ -257,6 +257,7 @@ natural wrapper element to label.
 | Selector                    | Attribute   | Component/Location | Description                                        |
 | --------------------------- | ----------- | ------------------ | -------------------------------------------------- |
 | `landing-page`              | data-testid | Home route         | Landing page container                             |
+| `homepage-app-link`         | data-testid | Home route         | Avatar/app link shown when authenticated           |
 | `browse-languages-link`     | data-testid | Landing page       | Link to browse                                     |
 | `browse-page`               | data-testid | Browse route       | Browse page container                              |
 | `language-card-list`        | data-testid | Browse page        | List of language cards                             |

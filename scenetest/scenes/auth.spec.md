@@ -3,6 +3,7 @@
 learner:
 
 - login
+- see sidebar-user-menu-trigger
 - see decks-list-grid
 
 # new user completes onboarding and affirms community norms
@@ -33,6 +34,7 @@ learner:
 - up
 - see landing-page
 - see homepage-login-link
+- notSee homepage-app-link
 - notSee sidebar-user-menu-trigger
 - openTo /learn
 - see logged-out-learn-page
@@ -71,3 +73,39 @@ visitor:
 - up
 - see deck-feed-page
 - see login-link
+
+# learner session persists after page reload
+
+learner:
+
+- login
+- see sidebar-user-menu-trigger
+- see decks-list-grid
+- openTo /learn
+- see sidebar-user-menu-trigger
+- see decks-list-grid
+
+# logged-in user sees app link on homepage, not login link
+
+learner:
+
+- login
+- openTo /
+- see homepage-app-link
+- notSee homepage-login-link
+
+# learner signs out, browses as visitor, logs back in and sees decks
+
+learner:
+
+- login
+- see decks-list-grid
+- click sidebar-user-menu-trigger
+- click sidebar-signout-button
+- up
+- see landing-page
+- openTo /learn/browse
+- see browse-page
+- login
+- see sidebar-user-menu-trigger
+- see decks-list-grid
