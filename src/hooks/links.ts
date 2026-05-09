@@ -25,6 +25,7 @@ import {
 	MessageCircleHeart,
 	MessageSquareQuote,
 	MessagesSquare,
+	Network,
 	Newspaper,
 	Rocket,
 	Search,
@@ -78,12 +79,12 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn',
 			},
 		},
-		'/learn/browse': {
+		'/browse': {
 			name: 'Browse',
 			title: 'Browse Library',
 			Icon: Compass,
 			link: {
-				to: '/learn/browse',
+				to: '/browse',
 			},
 		},
 		'/learn/add-deck': {
@@ -102,12 +103,20 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/contributions',
 			},
 		},
-		'/learn/browse/charts': {
+		'/browse/charts': {
 			name: 'Charts',
 			title: 'Library Data',
 			Icon: BarChart3,
 			link: {
-				to: '/learn/browse/charts',
+				to: '/browse/charts',
+			},
+		},
+		'/browse/graph': {
+			name: 'Graph',
+			title: 'Similarity Graph',
+			Icon: Network,
+			link: {
+				to: '/browse/graph',
 			},
 		},
 		'/search': {

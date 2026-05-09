@@ -23,14 +23,16 @@ const publicDeckLinks = ['/learn/$lang/feed']
 const friendsMenu = makeLinks(['/friends/chats', '/friends/invite'])
 const learnMenu = makeLinks([
 	'/learn',
-	'/learn/browse',
-	'/learn/browse/charts',
+	'/browse',
+	'/browse/charts',
+	'/browse/graph',
 	'/learn/add-deck',
 ])
 const learnMenuPublic = makeLinks([
 	'/learn',
-	'/learn/browse',
-	'/learn/browse/charts',
+	'/browse',
+	'/browse/charts',
+	'/browse/graph',
 	'/learn/add-deck',
 ])
 const siteMenu = makeLinks([
@@ -56,10 +58,11 @@ export function NavMain({ lang }: { lang?: string }) {
 	const { isMobile, open } = useSidebar()
 
 	// Choose appropriate deck menu based on auth and deck status
-	const deckMenu =
-		isDeckFound ? makeLinks(deckLinks, lang)
-		: lang && lang in languages ? makeLinks(publicDeckLinks, lang)
-		: null
+	const deckMenu = isDeckFound
+		? makeLinks(deckLinks, lang)
+		: lang && lang in languages
+			? makeLinks(publicDeckLinks, lang)
+			: null
 
 	return (
 		<>
@@ -69,14 +72,15 @@ export function NavMain({ lang }: { lang?: string }) {
 						!open && !isMobile ? 'px-0.5' : 'border-4-mlo-primary border-b px-2'
 					}
 				>
-					{!isDeckFound && isAuth ?
+					{!isDeckFound && isAuth ? (
 						<DeckNotFound lang={lang} />
-					:	<OneSidebarMenu
+					) : (
+						<OneSidebarMenu
 							menu={deckMenu}
 							title=""
 							className="bg-0-lo-primary mb-2 rounded-xl"
 						/>
-					}
+					)}
 				</div>
 			)}
 			<OneSidebarMenu

@@ -1,5 +1,5 @@
 import { type CSSProperties } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createLazyFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	Globe,
@@ -41,7 +41,7 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 
-export const Route = createFileRoute('/_user/learn/browse/')({
+export const Route = createLazyFileRoute('/_user/browse/')({
 	component: BrowsePage,
 })
 
@@ -49,7 +49,7 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function BrowsePage() {
 	const { isAuth } = useAuth()
-	const navigate = useNavigate({ from: Route.fullPath })
+	const navigate = useNavigate({ from: '/browse' })
 
 	return (
 		<main style={style} className="space-y-8 pb-12" data-testid="browse-page">
@@ -58,7 +58,10 @@ function BrowsePage() {
 				type="button"
 				onClick={() =>
 					void navigate({
-						search: (prev) => ({ ...prev, search: true }),
+						search: (prev: Record<string, unknown>) => ({
+							...prev,
+							search: true,
+						}),
 						replace: true,
 					})
 				}
@@ -194,7 +197,6 @@ function LanguagesSection() {
 		q.from({ phrase: phrasesCollection })
 	)
 
-	// Calculate request and phrase counts per language
 	const requestsByLang =
 		requestCounts?.reduce(
 			(acc, req) => {
@@ -465,7 +467,6 @@ function TrendingPlaylistsSection() {
 		q.from({ link: playlistPhraseLinksCollection })
 	)
 
-	// Count phrases per playlist
 	const phrasesPerPlaylist =
 		playlistLinks?.reduce(
 			(acc, link) => {

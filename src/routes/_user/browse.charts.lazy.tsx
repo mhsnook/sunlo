@@ -1,6 +1,5 @@
 import type { CSSProperties } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
-import * as z from 'zod'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { BarChart3 } from 'lucide-react'
 
 import {
@@ -21,12 +20,7 @@ import {
 	useAvailableLanguages,
 } from '@/components/library-charts'
 
-const ChartsSearchParams = z.object({
-	lang: z.string().optional(),
-})
-
-export const Route = createFileRoute('/_user/learn/browse/charts')({
-	validateSearch: ChartsSearchParams,
+export const Route = createLazyFileRoute('/_user/browse/charts')({
 	component: ChartsPage,
 })
 
@@ -48,13 +42,11 @@ function ChartsPage() {
 
 	return (
 		<main style={style} className="space-y-10 pb-16" data-testid="library-page">
-			{/* Summary Stats */}
 			<section>
 				<h2 className="mb-4 text-2xl font-bold">Library at a Glance</h2>
 				<LibrarySummaryStats />
 			</section>
 
-			{/* Language Comparison */}
 			<Card>
 				<CardHeader>
 					<h2 className="text-xl font-bold">Languages by Content</h2>
@@ -67,7 +59,6 @@ function ChartsPage() {
 				</CardContent>
 			</Card>
 
-			{/* Language Selector for per-language charts */}
 			{availableLanguages.length > 0 && (
 				<div className="flex flex-col items-start gap-2 @md:flex-row @md:items-center">
 					<span className="text-muted-foreground text-sm font-medium">
@@ -80,9 +71,11 @@ function ChartsPage() {
 						}}
 					>
 						<SelectTrigger className="w-60 border">
-							{activeLanguage ?
+							{activeLanguage ? (
 								`${activeLanguage.name} (${activeLanguage.lang})`
-							:	<SelectValue placeholder="Select a language" />}
+							) : (
+								<SelectValue placeholder="Select a language" />
+							)}
 						</SelectTrigger>
 						<SelectContent>
 							{availableLanguages.map((lang) => (
@@ -95,10 +88,8 @@ function ChartsPage() {
 				</div>
 			)}
 
-			{/* Per-language Charts */}
 			{activeLang && (
 				<div className="space-y-8">
-					{/* Tag Treemap */}
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Topics & Tags</h2>
@@ -112,7 +103,6 @@ function ChartsPage() {
 						</CardContent>
 					</Card>
 
-					{/* Difficulty Distribution */}
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Difficulty Distribution</h2>
@@ -126,7 +116,6 @@ function ChartsPage() {
 						</CardContent>
 					</Card>
 
-					{/* Difficulty vs Popularity Scatter */}
 					<Card>
 						<CardHeader>
 							<h2 className="text-xl font-bold">Difficulty vs Popularity</h2>
@@ -143,17 +132,13 @@ function ChartsPage() {
 				</div>
 			)}
 
-			{/* Empty state */}
 			{!availableLanguages.length && (
 				<div className="py-12 text-center">
 					<BarChart3 className="text-muted-foreground mx-auto mb-4 size-12" />
 					<p className="text-muted-foreground text-lg">
 						No library data available yet.
 					</p>
-					<Link
-						to="/learn/browse"
-						className={buttonVariants({ variant: 'soft' })}
-					>
+					<Link to="/browse" className={buttonVariants({ variant: 'soft' })}>
 						Browse Languages
 					</Link>
 				</div>
