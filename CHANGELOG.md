@@ -1,5 +1,42 @@
 # Change Log
 
+## v0.25 - Auto-sync Search Corpus, Send-to-Friend Recommend, Concurrent-Team Tests
+
+_9 May, 2026_
+
+### Features
+
+- **Auto-sync search corpus** — the corpus now stays current automatically as users edit phrases, translations, requests, and playlists. Two parallel indexes maintained in Postgres: `search_text_index` materialized view (trigram side, refreshed in-transaction by statement-level triggers — always consistent) and `search_corpus` table (embedding side, populated async via `pg_net` → new `embed-corpus-row` edge function → Cloudflare Workers AI). Source writes don't pay Workers AI latency. A `BEFORE UPDATE` guard on `search_corpus` drops out-of-order embed completions at the row level.
+- **First-party-only mode** — both edge functions auto-detect missing `CLOUDFLARE_ACCOUNT_ID` / `CLOUDFLARE_API_TOKEN` at boot and adapt. `/search` text queries route through `search_by_trigram` → `search_by_anchors` over the seeded corpus vectors instead of Workers AI. `embed-corpus-row` no-ops the embed-and-upsert path while still running archive/delete cleanup. Local dev without Cloudflare keys, and any first-party-only deployment, get plausible-shaped results without third-party calls.
+- **Seeded search corpus** — `supabase/seeds/seed-corpus.sql` ships 422 pre-vectorized rows so fresh installs have a working semantic corpus on `supabase db reset` without running the backfill.
+- **Send-to-friend recommend dialog** — the recommend-to-friend flow uses the smart-search stack (semantic + trigram + local) for picking phrases.
+- **Floating dev-only identity switcher** — quick actor swap in dev for testing multi-user flows without re-login.
+
+### Improvements
+
+- **`vectorized_at` staleness tracking** — `search_corpus.vectorized_at` is set to `source.updated_at` on every embed upsert. The backfill's `--skip-existing` now means _skip-if-fresh_: compares timestamps and re-embeds only new or stale rows. Recovers from missed embed dispatches without re-burning credits on already-fresh rows.
+- **Idempotent seeds and dump scripts** — seeds + `dump-new-seeds.ts` can run repeatedly without errors.
+- **Concurrent-team test data** — second-team seeds and scenetest support so multi-user flows can exercise concurrent independent teams.
+
+### Refactors
+
+- **`search` edge function decomposition** — `getOrEmbed` → `tryGetEmbedding` returning `number[] | null`, with `searchViaTrigramAnchor` as the no-Workers-AI path. The corpus-vector cache now does double duty as exact-match query embedding source.
+
+### Migrations
+
+- `20260507130000_search_corpus_auto_sync.sql` — adds `phrase.updated_at` + bump trigger; promotes `search_corpus`'s natural key `(source_type, source_id)` to PK and drops the unused synthetic `id`; adds `vectorized_at` + a stale-write guard; creates `search_text_index` materialized view + statement-level refresh triggers across `phrase`, `phrase_translation`, `phrase_request`, `phrase_playlist`, `phrase_tag`; updates `search_by_trigram` to query the MV; configures `pg_net` + per-row triggers that dispatch to `embed-corpus-row`. `seed-zzz.sql` refreshes the MV at end-of-seed (seed loaders set `session_replication_role = replica`, which skips trigger-based MV updates during bulk load).
+
+After applying migrations, the seeded corpus + `seed-zzz.sql` MV refresh covers fresh installs. Re-run `pnpm tsx scripts/backfill-search-corpus.ts` only if the seed corpus is stale or you want fresh embeddings against current source data.
+
+### CI / DX
+
+- **`pnpm exec`** in pre-commit hooks instead of `pnpx`.
+- **SQL prettier** expression width loosened from 64 to 120 (less noise on unrelated SQL changes).
+- **`dump-new-seeds.ts --corpus-only`** flag for refreshing `seed-corpus.sql` after a backfill.
+- **Schema/types regen** with datestamp metadata.
+- **Search architecture documented** — new README section with a Mermaid component diagram, two-index comparison table, write/query path descriptions, and a four-mode operating table covering production / local-with-Cloudflare / local-without-Cloudflare / mock-chat.
+- **Spec fixes** — scenetest spec drift cleaned up.
+
 ## v0.24 - Smart Search, Chat-style Discovery, TanStack Form
 
 _7 May, 2026_
