@@ -34,6 +34,9 @@ learner:
 - see landing-page
 - see homepage-login-link
 - notSee sidebar-user-menu-trigger
+- openTo /learn
+- see logged-out-learn-page
+- notSee decks-list-grid
 
 # visitor can browse languages without logging in
 
@@ -58,4 +61,13 @@ visitor:
 - see logged-out-learn-page
 - see browse-languages-prompt
 - up
+- see login-link
+
+# visitor sees login options in sidebar on language page
+
+visitor:
+
+- openTo /learn/[team.lang_full]/feed
+- up
+- see deck-feed-page
 - see login-link

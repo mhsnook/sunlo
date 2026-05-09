@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { TEST_LANG, TEST_LANG_DISPLAY } from '../helpers/test-constants'
 
 // These tests verify logged-out navigation from a fresh browser state
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -79,18 +78,7 @@ test.describe('Logged Out Navigation', () => {
 		await expect(languageCards.first()).toBeVisible()
 	})
 
-	test('can navigate to a language from browse', async ({ page }) => {
-		await page.goto('/learn/browse')
-
-		// Find and click on a language card
-		const langCard = page
-			.getByRole('link', { name: new RegExp(TEST_LANG_DISPLAY, 'i') })
-			.first()
-		await langCard.click()
-
-		// Should be on language page (feed or browse)
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
-	})
+	// Covered by scenetest: auth.spec.md "visitor can browse languages without logging in"
 
 	test('login link appears and works', async ({ page }) => {
 		await page.goto('/learn')
@@ -125,18 +113,5 @@ test.describe('Logged Out Navigation', () => {
 		}
 	})
 
-	test('sidebar shows login options for logged-out users', async ({ page }) => {
-		// Navigate to a language page (browse -> language)
-		await page.goto('/learn/browse')
-		await page
-			.getByRole('link', { name: new RegExp(TEST_LANG_DISPLAY, 'i') })
-			.first()
-			.click()
-		await expect(page).toHaveURL(new RegExp(`/learn/${TEST_LANG}`))
-
-		// Sidebar should show login/signup for logged-out users
-		await expect(
-			page.getByRole('link', { name: /log in/i }).first()
-		).toBeVisible()
-	})
+	// Covered by scenetest: auth.spec.md "visitor sees login options in sidebar on language page"
 })
