@@ -124,7 +124,7 @@ export function IntroSheet({
 					<DialogTitle>{title}</DialogTitle>
 					{description && <DialogDescription>{description}</DialogDescription>}
 				</DialogHeader>
-				<div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
+				<div className="-mt-4 min-h-0 flex-1 space-y-4 overflow-y-auto pt-4">
 					{children}
 				</div>
 				<DialogFooter className="gap-2 sm:gap-0">
