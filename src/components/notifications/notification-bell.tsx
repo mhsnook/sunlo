@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 import { Bell } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { useUnreadCount } from '@/features/notifications/hooks'
+import { useUnreadCount } from '@/features/notifications'
 import { useAuth } from '@/lib/use-auth'
 
 export function NotificationBell() {

@@ -27,8 +27,10 @@ import {
 import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
-import { notificationsCollection } from '@/features/notifications/collections'
-import { useNotificationsRealtime } from '@/features/notifications/hooks'
+import {
+	notificationsCollection,
+	useNotificationsRealtime,
+} from '@/features/notifications'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 

@@ -15,7 +15,7 @@ import {
 } from '@/features/comments/collections'
 import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
-import { notificationsCollection } from '@/features/notifications/collections'
+import { notificationsCollection } from '@/features/notifications'
 import { queryClient } from '@/lib/query-client'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 

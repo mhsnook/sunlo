@@ -389,19 +389,24 @@ src/features/<domain>/
 
 **Import conventions:**
 
+The barrel (`index.ts`) defines the **public API** of a feature. Anything re-exported there is fair game for consumers anywhere in the app. Anything defined inside the feature but **not** re-exported is implicitly private — only that feature's own files should reach for it.
+
 ```typescript
-// ✅ Consumer code (routes, components) — import from the barrel
+// ✅ Consumer code (routes, components, other features) — always import from the barrel
 import { useDeckMeta, type DeckMetaType } from '@/features/deck'
 import { useLanguagePhrases } from '@/features/phrases'
-
-// ✅ Cross-domain wiring (one feature importing from another) — import from specific files
-import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
 
 // ✅ Intra-feature imports — use relative paths
 import { CardReviewSchema } from './schemas'
 import { cardReviewsCollection } from './collections'
+
+// ❌ Reaching into another feature's internals
+import { DeckMetaSchema } from '@/features/deck/schemas'
 ```
+
+If you need something that isn't in a feature's barrel, the answer is "promote it to public" (add the export to `index.ts`) — not "reach in." The barrel is the contract; promoting an export is a deliberate API decision.
+
+**Lint enforcement (rolling out per feature):** an oxlint `no-restricted-imports` rule blocks `@/features/<feature>/<internal>` paths once a feature has been migrated to the barrel-only pattern. See `.oxlintrc.json` for the current list of locked-down features. Migrating a new feature is two steps: (1) update consumers to import from the barrel, (2) add the feature to the rule's `patterns` group.
 
 **Feature domains and what they contain:**
 
@@ -578,13 +583,9 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 ### Import Patterns
 
 ```typescript
-// Feature public API (preferred for consumer code)
+// Feature public API (always for cross-feature consumers)
 import { useDeckMeta, type DeckMetaType } from '@/features/deck'
 import { useLanguagePhrases } from '@/features/phrases'
-
-// Feature internals (for cross-domain wiring)
-import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaSchema } from '@/features/deck/schemas'
 
 // Supabase client
 import supabase from '@/lib/supabase-client'

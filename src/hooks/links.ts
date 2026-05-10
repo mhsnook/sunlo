@@ -1,7 +1,7 @@
 import { useParams } from '@tanstack/react-router'
 import { useUnreadChatsCount } from '@/features/social/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
-import { useUnreadCount } from '@/features/notifications/hooks'
+import { useUnreadCount } from '@/features/notifications'
 import { todayString } from '@/lib/utils'
 
 import { LinkType } from '@/types/main'

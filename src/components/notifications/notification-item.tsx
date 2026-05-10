@@ -11,11 +11,11 @@ import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
-import type {
-	NotificationType,
-	NotificationTypeEnum,
-} from '@/features/notifications/schemas'
-import { useMarkAsRead } from '@/features/notifications/hooks'
+import {
+	type NotificationType,
+	type NotificationTypeEnum,
+	useMarkAsRead,
+} from '@/features/notifications'
 import { useRequest } from '@/features/requests/hooks'
 import { useOnePhrase } from '@/features/phrases/hooks'
 import { useOneComment } from '@/features/comments/hooks'

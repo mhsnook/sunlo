@@ -6,9 +6,9 @@ import {
 	useNotifications,
 	useMarkAllAsRead,
 	useUnreadCount,
-} from '@/features/notifications/hooks'
+	type NotificationType,
+} from '@/features/notifications'
 import { NotificationItem } from './notification-item'
-import type { NotificationType } from '@/features/notifications/schemas'
 
 export function NotificationList() {
 	const { data: notifications } = useNotifications()

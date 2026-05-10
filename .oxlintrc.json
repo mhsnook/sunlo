@@ -113,12 +113,29 @@
 				"prefer-promise-reject-errors": "off",
 				"require-await": "off",
 				"react-hooks/rules-of-hooks": "error",
-				"react-hooks/exhaustive-deps": "warn"
+				"react-hooks/exhaustive-deps": "warn",
+				"no-restricted-imports": [
+					"error",
+					{
+						"patterns": [
+							{
+								"group": ["@/features/notifications/*"],
+								"message": "Import from the '@/features/notifications' barrel — feature internals are private."
+							}
+						]
+					}
+				]
 			},
 			"env": {
 				"es2022": true
 			},
 			"plugins": ["react", "unicorn", "typescript", "oxc"]
+		},
+		{
+			"files": ["src/features/notifications/**/*.{ts,tsx}"],
+			"rules": {
+				"no-restricted-imports": "off"
+			}
 		}
 	]
 }

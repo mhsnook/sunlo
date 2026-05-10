@@ -1,8 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import {
-	NotificationSchema,
-	NotificationTypeSchema,
-} from '@/features/notifications/schemas'
+import { NotificationSchema, NotificationTypeSchema } from './schemas'
 
 describe('NotificationTypeSchema', () => {
 	it('accepts all valid notification types', () => {

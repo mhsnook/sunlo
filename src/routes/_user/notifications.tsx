@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { notificationsCollection } from '@/features/notifications/collections'
+import { notificationsCollection } from '@/features/notifications'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { RequireAuth } from '@/components/require-auth'
 import { NotificationList } from '@/components/notifications/notification-list'
