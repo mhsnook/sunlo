@@ -519,7 +519,7 @@ function RequestsYouCanHelp() {
 			{requestsToShow.length >= 4 && (
 				<div className="mt-4 text-center">
 					<Link
-						to="/learn/browse"
+						to="/browse"
 						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						See More Requests

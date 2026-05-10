@@ -16,7 +16,7 @@ export const Route = createFileRoute('/_user/friends')({
 			title: 'Friends and Contacts',
 		},
 		searchAction: true,
-		contextMenu: ['/friends/invite'],
+		contextMenu: ['/friends/chats', '/friends/invite'],
 	}),
 	validateSearch: FriendsSearchParams,
 	loader: async ({ context }) => {

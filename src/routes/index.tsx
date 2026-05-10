@@ -62,7 +62,7 @@ function BrowseLink() {
 				'border-border/50 h-12 w-12 rounded-full border bg-white/10 text-slate-800 transition-all duration-300 hover:bg-white/50 dark:border-white/10 dark:bg-black/10 dark:text-slate-200 dark:hover:bg-black/50'
 			)}
 			from={Route.fullPath}
-			to="/learn/browse"
+			to="/browse"
 			data-testid="browse-languages-link"
 		>
 			<Compass className="h-5 w-5" />
@@ -96,22 +96,24 @@ function UserLogin() {
 
 	// User is authenticated - show profile if loaded, otherwise show app link
 	return !isReady ? null : (
-			<Link
-				className="ring-offset-background rounded-squircle focus-visible:ring-ring border-border/50 inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
-				from={Route.fullPath}
-				to="/learn"
-				data-testid="homepage-app-link"
-			>
-				{profile ?
-					<Avatar className="size-12">
-						<AvatarImage
-							src={avatarUrlify(profile.avatar_path)}
-							alt="Your profile pic"
-						/>
-						<AvatarFallback>{profile.username?.slice(0, 2)}</AvatarFallback>
-					</Avatar>
-				:	<LogIn className="h-5 w-5 text-slate-800 dark:text-slate-200" />}
-				<span className="sr-only">Go to app</span>
-			</Link>
-		)
+		<Link
+			className="ring-offset-background rounded-squircle focus-visible:ring-ring border-border/50 inline-flex aspect-square h-12 w-12 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-full border bg-white/10 shadow transition-all duration-300 hover:bg-white/50 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden dark:border-white/10 dark:bg-black/10 dark:hover:bg-black/50"
+			from={Route.fullPath}
+			to="/learn"
+			data-testid="homepage-app-link"
+		>
+			{profile ? (
+				<Avatar className="size-12">
+					<AvatarImage
+						src={avatarUrlify(profile.avatar_path)}
+						alt="Your profile pic"
+					/>
+					<AvatarFallback>{profile.username?.slice(0, 2)}</AvatarFallback>
+				</Avatar>
+			) : (
+				<LogIn className="h-5 w-5 text-slate-800 dark:text-slate-200" />
+			)}
+			<span className="sr-only">Go to app</span>
+		</Link>
+	)
 }

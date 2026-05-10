@@ -25,7 +25,7 @@ const ChartsSearchParams = z.object({
 	lang: z.string().optional(),
 })
 
-export const Route = createFileRoute('/_user/learn/browse/charts')({
+export const Route = createFileRoute('/_user/browse/charts')({
 	validateSearch: ChartsSearchParams,
 	component: ChartsPage,
 })
@@ -80,9 +80,11 @@ function ChartsPage() {
 						}}
 					>
 						<SelectTrigger className="w-60 border">
-							{activeLanguage ?
+							{activeLanguage ? (
 								`${activeLanguage.name} (${activeLanguage.lang})`
-							:	<SelectValue placeholder="Select a language" />}
+							) : (
+								<SelectValue placeholder="Select a language" />
+							)}
 						</SelectTrigger>
 						<SelectContent>
 							{availableLanguages.map((lang) => (
@@ -150,10 +152,7 @@ function ChartsPage() {
 					<p className="text-muted-foreground text-lg">
 						No library data available yet.
 					</p>
-					<Link
-						to="/learn/browse"
-						className={buttonVariants({ variant: 'soft' })}
-					>
+					<Link to="/browse" className={buttonVariants({ variant: 'soft' })}>
 						Browse Languages
 					</Link>
 				</div>

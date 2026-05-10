@@ -5,6 +5,9 @@ import {
 	BookType,
 	Columns2,
 	Grid2x2,
+	MonitorCog,
+	Moon,
+	Sun,
 	Volume2,
 	VolumeX,
 } from 'lucide-react'
@@ -21,13 +24,66 @@ import { Label } from '@/components/ui/label'
 import { InfoDialog } from '@/components/info-dialog'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { cancelAllSounds, previewAllSounds } from '@/lib/review-sounds'
+import { useTheme } from '@/components/theme-provider'
 
-export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
+export function DisplayPreferences({
+	profile,
+}: {
+	profile: MyProfileType | null
+}) {
 	return (
 		<div className="space-y-8" data-testid="display-preferences-page">
-			<FontPreferenceSection profile={profile} />
-			<SoundPreferenceSection profile={profile} />
-			<ReviewAnswerModeSection profile={profile} />
+			<ThemeSection />
+			{profile ? (
+				<>
+					<FontPreferenceSection profile={profile} />
+					<SoundPreferenceSection profile={profile} />
+					<ReviewAnswerModeSection profile={profile} />
+				</>
+			) : null}
+		</div>
+	)
+}
+
+function ThemeSection() {
+	const { theme, setTheme } = useTheme()
+	return (
+		<div className="space-y-4" data-testid="theme-preference">
+			<div className="space-y-2">
+				<Label>Appearance</Label>
+				<p className="text-muted-foreground text-sm">
+					Choose light, dark, or follow your system setting.
+				</p>
+			</div>
+			<div className="flex gap-2">
+				<ChoiceTile
+					selected={theme === 'light'}
+					onClick={() => setTheme('light')}
+					data-key="light"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<Sun className="size-5 shrink-0" />
+					<span className="font-medium">Light</span>
+				</ChoiceTile>
+				<ChoiceTile
+					selected={theme === 'dark'}
+					onClick={() => setTheme('dark')}
+					data-key="dark"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<Moon className="size-5 shrink-0" />
+					<span className="font-medium">Dark</span>
+				</ChoiceTile>
+				<ChoiceTile
+					selected={theme === 'system'}
+					onClick={() => setTheme('system')}
+					data-key="system"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<MonitorCog className="size-5 shrink-0" />
+					<span className="font-medium">System</span>
+				</ChoiceTile>
+			</div>
 		</div>
 	)
 }

@@ -20,10 +20,10 @@ import { useOnePublicProfile } from '@/features/social/public-profile'
 import { avatarUrlify } from '@/lib/hooks'
 import { ago } from '@/lib/dayjs'
 
-const MAX_FRIENDS = 5
+const MAX_FRIENDS = 12
 const MAX_ACTIVITIES_PER_FRIEND = 3
 
-export function FriendsFeedSnippet({ viewAllLang }: { viewAllLang: string }) {
+export function FriendsFeed() {
 	const { data: friends } = useFriendUids()
 	const { data: items, isLoading } = useRecentFriendsActivity()
 
@@ -64,35 +64,17 @@ export function FriendsFeedSnippet({ viewAllLang }: { viewAllLang: string }) {
 				data-testid="friends-feed-quiet"
 			>
 				<p className="italic">Your friends haven't posted anything yet.</p>
-				<Link
-					to="/learn/$lang/requests/new"
-					params={{ lang: viewAllLang }}
-					className="s-link-muted mt-2 inline-flex items-center gap-1"
-				>
-					Be the first with a request
-					<ChevronsRight className="h-4 w-4" />
-				</Link>
 			</div>
 		)
 	}
 
 	return (
-		<div data-testid="friends-feed-snippet">
+		<div data-testid="friends-feed">
 			<ul className="divide-border divide-y">
 				{groups.map((group) => (
 					<FriendGroup key={group.uid} group={group} />
 				))}
 			</ul>
-			<Link
-				to="/learn/$lang/feed"
-				params={{ lang: viewAllLang }}
-				search={{ feed: 'friends' }}
-				className="s-link-muted mt-3 inline-flex items-center gap-1 text-sm"
-				data-testid="view-friends-feed-link"
-			>
-				See more from friends
-				<ChevronsRight className="h-4 w-4" />
-			</Link>
 		</div>
 	)
 }

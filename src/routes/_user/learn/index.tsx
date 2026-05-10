@@ -20,7 +20,6 @@ import type { DeckMetaType } from '@/features/deck/schemas'
 
 import { DeckTile, AddDeckTile } from './-deck-tile'
 import { ReviewBanner } from './-review-banner'
-import { FriendsFeedSnippet } from './-friends-feed'
 import {
 	compareDecks,
 	DeckDueProbe,
@@ -162,17 +161,6 @@ function AuthenticatedHome({
 					</Link>
 				) : null}
 			</section>
-
-			<section
-				className="space-y-3"
-				aria-labelledby="friends-feed-heading"
-				data-testid="friends-feed-section"
-			>
-				<SectionLabel id="friends-feed-heading">
-					Recent from friends
-				</SectionLabel>
-				<FriendsFeedSnippet viewAllLang={feedLang} />
-			</section>
 		</main>
 	)
 }
@@ -289,7 +277,7 @@ function BrowsePrompt() {
 					<ChevronsRight className="h-6 w-5" />
 				</Link>
 				<Link
-					to="/learn/browse"
+					to="/browse"
 					className={buttonVariants({ variant: 'neutral', size: 'lg' })}
 				>
 					<Compass size={14} /> Browse languages

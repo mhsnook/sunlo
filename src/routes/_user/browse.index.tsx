@@ -41,7 +41,7 @@ import {
 import { cn } from '@/lib/utils'
 import Flagged from '@/components/flagged'
 
-export const Route = createFileRoute('/_user/learn/browse/')({
+export const Route = createFileRoute('/_user/browse/')({
 	component: BrowsePage,
 })
 
