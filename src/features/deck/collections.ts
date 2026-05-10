@@ -58,5 +58,20 @@ export const cardsCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: CardMetaSchema,
+		onUpdate: async ({ transaction }) => {
+			// Throwing rolls the optimistic state back. { refetch: false } keeps
+			// the confirmed value locally instead of reloading user_card_plus —
+			// safe because user_card has no triggers that change other columns.
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('user_card')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
