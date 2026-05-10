@@ -1,16 +1,4 @@
-export {
-	NotificationSchema,
-	NotificationTypeSchema,
-	type NotificationType,
-	type NotificationTypeEnum,
-} from './schemas'
-
-export { notificationsCollection } from './collections'
-
-export {
-	useNotifications,
-	useUnreadCount,
-	useMarkAsRead,
-	useMarkAllAsRead,
-	useNotificationsRealtime,
-} from './hooks'
+// Type registry for the notifications feature. Cross-feature TYPE imports
+// come through this barrel. Runtime values (collections, hooks, Zod
+// schemas) are imported directly from their files.
+export type { NotificationType, NotificationTypeEnum } from './schemas'

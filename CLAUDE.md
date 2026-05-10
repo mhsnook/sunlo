@@ -379,7 +379,7 @@ src/features/<domain>/
   schemas.ts      — Zod schemas and inferred types
   collections.ts  — TanStack DB collections
   hooks.ts        — React hooks (useLiveQuery, useMutation)
-  index.ts        — Barrel file (public API re-exports)
+  index.ts        — Type registry (barrel of types only)
   # Some features also have:
   live.ts         — Live query definitions (phrases, social)
   mutations.ts    — Mutation hooks (deck)
@@ -389,24 +389,34 @@ src/features/<domain>/
 
 **Import conventions:**
 
-The barrel (`index.ts`) defines the **public API** of a feature. Anything re-exported there is fair game for consumers anywhere in the app. Anything defined inside the feature but **not** re-exported is implicitly private — only that feature's own files should reach for it.
+The barrel (`index.ts`) is a **type registry** — and ONLY a type registry. It re-exports the feature's public types from `./schemas` (and any other internal file), or defines types inline. It exports zero runtime values. The point is to give every feature a one-stop "table of contents" of its type contract that humans and LLMs can navigate without reading every file.
+
+Runtime values — Zod schemas, collections, hooks, mutation builders, stores — are imported directly from the file that defines them. Routing those through the barrel would force everything into a single bundle and break code-splitting, which is why we explicitly do NOT do it.
 
 ```typescript
-// ✅ Consumer code (routes, components, other features) — always import from the barrel
-import { useDeckMeta, type DeckMetaType } from '@/features/deck'
-import { useLanguagePhrases } from '@/features/phrases'
+// ✅ Cross-feature TYPE imports — through the barrel
+import type { DeckMetaType } from '@/features/deck'
+import type { NotificationType } from '@/features/notifications'
 
-// ✅ Intra-feature imports — use relative paths
+// ✅ Cross-feature VALUE imports — direct paths
+import { decksCollection } from '@/features/deck/collections'
+import { useDeckMeta } from '@/features/deck/hooks'
+import { NotificationSchema } from '@/features/notifications/schemas'
+
+// ✅ Intra-feature imports — relative paths
 import { CardReviewSchema } from './schemas'
 import { cardReviewsCollection } from './collections'
 
-// ❌ Reaching into another feature's internals
-import { DeckMetaSchema } from '@/features/deck/schemas'
+// ❌ Cross-feature TYPE imports reaching past the barrel
+import type { DeckMetaType } from '@/features/deck/schemas'
+
+// ❌ Putting runtime values in the barrel
+// (defeats code-splitting; the barrel is types only)
 ```
 
-If you need something that isn't in a feature's barrel, the answer is "promote it to public" (add the export to `index.ts`) — not "reach in." The barrel is the contract; promoting an export is a deliberate API decision.
+If a type isn't in a feature's barrel, the answer is "add it to `index.ts`." The barrel is the type contract; expanding it is a deliberate API decision.
 
-**Lint enforcement (rolling out per feature):** an oxlint `no-restricted-imports` rule blocks `@/features/<feature>/<internal>` paths once a feature has been migrated to the barrel-only pattern. See `.oxlintrc.json` for the current list of locked-down features. Migrating a new feature is two steps: (1) update consumers to import from the barrel, (2) add the feature to the rule's `patterns` group.
+There's no lint rule enforcing this yet — it's convention. We considered locking each feature behind a `no-restricted-imports` rule, but blocking value imports from internal paths broke code-splitting, so we backed off. A narrower rule that flags only cross-feature `import type` from internal paths is on the table for later.
 
 **Feature domains and what they contain:**
 
@@ -583,9 +593,12 @@ This ensures seed data remains relevant (cards "created 4 days ago" are always 4
 ### Import Patterns
 
 ```typescript
-// Feature public API (always for cross-feature consumers)
-import { useDeckMeta, type DeckMetaType } from '@/features/deck'
-import { useLanguagePhrases } from '@/features/phrases'
+// Cross-feature types — through the barrel
+import type { DeckMetaType } from '@/features/deck'
+
+// Cross-feature values — direct paths
+import { useDeckMeta } from '@/features/deck/hooks'
+import { useLanguagePhrases } from '@/features/phrases/hooks'
 
 // Supabase client
 import supabase from '@/lib/supabase-client'
