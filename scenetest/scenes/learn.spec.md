@@ -1,4 +1,4 @@
-# learner navigates within a deck using sidebar
+# learner navigates within a deck using app-nav
 
 cleanup: supabase.from('user_card_review').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
 cleanup: supabase.from('user_deck_review_state').delete().eq('uid', '[learner.key]').eq('lang', '[team.lang_full]')
@@ -7,18 +7,18 @@ learner:
 
 - login
 - go-to-deck
-- click /learn/$lang/feed
+- click appnav-feed
 - up
 - see deck-feed-page
 - up
-- click /learn/$lang/review
+- click appnav-contributions
+- up
+- see contributions-page
+- up
+- click appnav-review
 - up
 - ifClick review-intro-dismiss
 - see review-setup-page
-- up
-- click /learn/$lang/contributions
-- up
-- see contributions-page
 
 # learner switches between decks
 
@@ -37,15 +37,14 @@ learner:
 - up
 - see deck-feed-page
 
-# learner accesses profile from user menu
+# learner accesses profile from sidebar
 
 learner:
 
 - login
 - openTo /learn
 - up
-- click sidebar-user-menu-trigger
-- click user-menu-profile
+- click sidebar-profile-settings-link
 - up
 - see profile-page
 - seeText Display Preferences
@@ -138,7 +137,7 @@ learner:
 
 - login
 - go-to-deck
-- click /learn/$lang/review
+- click appnav-review
 - up
 - ifClick review-intro-dismiss
 - see review-setup-page

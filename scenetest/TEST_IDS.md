@@ -57,9 +57,9 @@ natural wrapper element to label.
 | `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                                      |
 | `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming                             |
 | `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                                              |
-| `sidebar-user-menu-trigger`     | data-testid | Sidebar                | User avatar/menu button                                     |
-| `sidebar-signout-button`        | data-testid | User menu              | Sign out button                                             |
-| `profile-menu-item`             | data-testid | User menu              | Link to profile                                             |
+| `sidebar-profile-settings-link` | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)      |
+| `sidebar-display-settings-link` | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)         |
+| `profile-signout-button`        | data-testid | Profile page           | Sign out button at bottom of profile page                   |
 
 ## Deck Management
 

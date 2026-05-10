@@ -13,7 +13,7 @@ learner:
 
 - login
 - go-to-deck
-- click /learn/$lang/review
+- click appnav-review
 - up
 - see review-setup-page
 - click start-review-button
