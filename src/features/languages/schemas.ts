@@ -21,8 +21,6 @@ export const PhraseTagSchema = z.object({
 	name: z.string(),
 })
 
-export type PhraseTagType = z.infer<typeof PhraseTagSchema>
-
 export const LanguageSchema = z.object({
 	lang: LangSchema,
 	alias_of: z.string().length(3).nullable(),

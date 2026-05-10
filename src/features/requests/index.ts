@@ -27,5 +27,4 @@ export {
 	useRequestLinksWithComments,
 	useHasRequestUpvote,
 	useAnyonesPhraseRequests,
-	type FulfillRequestResponse,
 } from './hooks'

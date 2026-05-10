@@ -10,7 +10,6 @@ export {
 	LanguageKnownSchema,
 	type LanguageKnownType,
 	LanguagesKnownSchema,
-	type LanguagesKnownType,
 	LanguageProficiencyEnumSchema,
 	type LanguageProficiencyEnumType,
 	LearningGoalEnumSchema,

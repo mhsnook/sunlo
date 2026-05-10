@@ -7,13 +7,6 @@ export type pids = Array<uuid>
 
 export type RolesEnum = 'learner' | 'helper' | 'both'
 
-export type Tag = {
-	id: uuid
-	name: string
-}
-
-export type SelectOption = { value: string; label: string }
-
 // Base microcopy type: name (compact, with icon) + title (descriptive, standalone)
 // Used as the foundation for nav links, action buttons, status labels, etc.
 export type Microcopy = {
@@ -42,10 +35,6 @@ export type LinkType = Microcopy & {
 	}
 	useBadge?: () => number | string | boolean | undefined | null
 }
-export type MenuType = LinkType & {
-	items: Array<LinkType>
-}
-
 export type TitleBar = {
 	title: string
 	subtitle?: string

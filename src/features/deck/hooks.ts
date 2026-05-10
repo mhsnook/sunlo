@@ -140,7 +140,7 @@ export const useDeckRoutineStats = (lang: string) => {
 	}
 }
 
-export type DeckPids = {
+type DeckPids = {
 	all: pids
 	active: pids
 	inactive: pids
