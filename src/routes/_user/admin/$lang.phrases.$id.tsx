@@ -17,7 +17,7 @@ import type {
 	PhraseFullFilteredType,
 	PhraseFullType,
 	TranslationType,
-} from '@/features/phrases/schemas'
+} from '@/features/phrases'
 import { TranslationSchema } from '@/features/phrases/schemas'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'

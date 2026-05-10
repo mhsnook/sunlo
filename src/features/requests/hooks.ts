@@ -9,7 +9,7 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from './collections'
-import type { CommentPhraseLinkType } from '@/features/comments/schemas'
+import type { CommentPhraseLinkType } from '@/features/comments'
 import type { PhraseRequestType } from './schemas'
 import { mapArrays } from '@/lib/utils'
 

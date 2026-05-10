@@ -1,12 +1,12 @@
 import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { cn } from '@/lib/utils'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 
 export const PhraseTinyCard = ({
 	pid,
@@ -39,9 +39,9 @@ export const PhraseTinyCard = ({
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
 					<p className="text-muted-foreground text-sm">
-						{phrase.translations_mine?.[0]?.text.length ?
-							phrase.translations_mine[0].text
-						:	phrase.translations[0]?.text}
+						{phrase.translations_mine?.[0]?.text.length
+							? phrase.translations_mine[0].text
+							: phrase.translations[0]?.text}
 					</p>
 				</div>
 				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">
@@ -63,9 +63,9 @@ export const PhraseTinyCard = ({
 				<div className="line-clamp-3">
 					<p className="font-semibold">{phrase.text}</p>{' '}
 					<p className="text-muted-foreground text-sm">
-						{phrase.translations_mine?.[0]?.text.length ?
-							phrase.translations_mine[0].text
-						:	phrase.translations[0]?.text}
+						{phrase.translations_mine?.[0]?.text.length
+							? phrase.translations_mine[0].text
+							: phrase.translations[0]?.text}
 					</p>
 				</div>
 				<div className="mt-auto flex w-full flex-row justify-between self-end pt-2">

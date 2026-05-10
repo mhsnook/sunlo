@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'

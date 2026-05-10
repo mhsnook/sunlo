@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
 import {
@@ -11,11 +11,12 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { Button, buttonVariants } from '@/components/ui/button'
+import type { buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
-import { VariantProps } from 'class-variance-authority'
-import { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import type { VariantProps } from 'class-variance-authority'
+import type { PhraseFullFilteredType } from '@/features/phrases'
 import { useAllChats } from '@/features/social/hooks'
 
 function useSendPhraseToFriendMutation(
@@ -102,17 +103,18 @@ export function SendPhraseToFriendButton({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild={!link} className={link ? 'w-full' : ''}>
-				{link ?
+				{link ? (
 					<span
 						className={`inline-flex cursor-pointer items-center gap-2 ${className}`}
 					>
 						<Send />
 						{text}
 					</span>
-				:	<Button {...props}>
+				) : (
+					<Button {...props}>
 						<Send /> {text && <span className="hidden @md:inline">{text}</span>}
 					</Button>
-				}
+				)}
 			</DialogTrigger>
 			<SendDialogContent phrase={phrase} setOpen={setOpen} />
 		</Dialog>

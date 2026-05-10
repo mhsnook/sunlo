@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useRelationFriends } from '@/features/social/hooks'
 import { Loader } from '@/components/ui/loader'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Checkbox } from '@/components/ui/checkbox'
 import { User } from 'lucide-react'
 import { avatarUrlify } from '@/lib/hooks'
@@ -37,17 +37,18 @@ export function SelectMultipleFriends({
 						className={`${uids.includes(f.uid) ? 'bg-1-mlo-primary outline-primary-foresoft/30 outline' : ''} flex items-center justify-between gap-2 rounded-2xl px-3 py-2 transition-all`}
 					>
 						<div className="flex flex-row items-center gap-2">
-							{f.profile.avatar_path ?
+							{f.profile.avatar_path ? (
 								<img
 									src={avatarUrlify(f.profile.avatar_path)}
 									alt={`${f.profile.username}'s avatar`}
 									className="rounded-squircle size-8 rounded-full object-cover"
 								/>
-							:	<User
+							) : (
+								<User
 									style={{ background: `#${f.profile.uid.slice(-6)}44` }}
 									className="rounded-squircle size-8 rounded-full p-1"
 								/>
-							}
+							)}
 							<span>{f.profile.username}</span>
 						</div>
 						<Checkbox

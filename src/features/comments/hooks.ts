@@ -2,8 +2,8 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { CommentPhraseLinkType, RequestCommentType } from './schemas'
-import type { PhraseFullFullType } from '@/features/phrases/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseFullFullType } from '@/features/phrases'
+import type { PhraseRequestType } from '@/features/requests'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,

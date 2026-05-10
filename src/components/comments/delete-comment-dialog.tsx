@@ -13,7 +13,7 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/features/comments/schemas'
+import type { RequestCommentType } from '@/features/comments'
 import supabase from '@/lib/supabase-client'
 import { safeWrite } from '@/lib/collections/safe-write'
 import { commentsCollection } from '@/features/comments/collections'

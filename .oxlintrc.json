@@ -113,7 +113,15 @@
 				"prefer-promise-reject-errors": "off",
 				"require-await": "off",
 				"react-hooks/rules-of-hooks": "error",
-				"react-hooks/exhaustive-deps": "warn"
+				"react-hooks/exhaustive-deps": "warn",
+				"@typescript-eslint/consistent-type-imports": [
+					"error",
+					{
+						"prefer": "type-imports",
+						"fixStyle": "separate-type-imports",
+						"disallowTypeAnnotations": true
+					}
+				]
 			},
 			"env": {
 				"es2022": true

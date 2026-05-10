@@ -24,9 +24,9 @@ import {
 	useAllLangTags,
 	useLanguagesWithPhrases,
 } from '@/features/languages/hooks'
-import type { LanguageType, LangTagType } from '@/features/languages/schemas'
-import type { PhrasePlaylistType } from '@/features/playlists/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { LanguageType, LangTagType } from '@/features/languages'
+import type { PhrasePlaylistType } from '@/features/playlists'
+import type { PhraseRequestType } from '@/features/requests'
 import type { HybridSearchResult } from '@/hooks/use-hybrid-search'
 import {
 	useMergedSearch,

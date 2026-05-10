@@ -4,7 +4,7 @@
  * Triggered by user gesture (button click) so no autoplay issues.
  */
 
-import type { Score } from '@/features/review/fsrs'
+import type { Score } from '@/features/review'
 
 // Track live contexts and pending timeouts so we can abort at any time.
 const activeContexts = new Set<AudioContext>()

@@ -10,7 +10,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card'
 import { RequestForm } from '@/components/requests/request-form'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseRequestType } from '@/features/requests'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: NewRequestPage,

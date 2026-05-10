@@ -9,7 +9,7 @@
  * - Score: User's self-assessment (1=Again, 2=Hard, 3=Good, 4=Easy)
  */
 
-import { CardReviewType } from './schemas'
+import type { CardReviewType } from './schemas'
 import { dateDiff } from '@/lib/utils'
 
 // FSRS v5 weights (pre-trained parameters)

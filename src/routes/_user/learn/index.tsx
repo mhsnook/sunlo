@@ -16,7 +16,7 @@ import { useDecks } from '@/features/deck/hooks'
 import { useProfile } from '@/features/profile/hooks'
 import { useAuth } from '@/lib/use-auth'
 import { decksCollection } from '@/features/deck/collections'
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckMetaType } from '@/features/deck'
 
 import { DeckTile, AddDeckTile } from './-deck-tile'
 import { ReviewBanner } from './-review-banner'

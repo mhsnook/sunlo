@@ -5,7 +5,7 @@ import isoWeek from 'dayjs/plugin/isoWeek'
 
 import type { pids, UseLiveQueryResult } from '@/types/main'
 import type { CardMetaType, DeckMetaType } from './schemas'
-import type { CardReviewType } from '@/features/review/schemas'
+import type { CardReviewType } from '@/features/review'
 import { decksCollection, cardsCollection } from './collections'
 import {
 	cardReviewsCollection,

@@ -3,7 +3,7 @@
  * Backward compat: entries without a colon are treated as "phrase_id:forward".
  */
 
-import type { CardDirectionType } from '@/features/deck/schemas'
+import type { CardDirectionType } from '@/features/deck'
 import type { uuid } from '@/types/main'
 
 /**

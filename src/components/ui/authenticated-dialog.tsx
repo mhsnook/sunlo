@@ -1,4 +1,5 @@
-import { ComponentPropsWithoutRef, ReactNode, useState } from 'react'
+import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { useAuth } from '@/lib/use-auth'
@@ -45,9 +46,10 @@ export function AuthenticatedDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			{isAuth ?
+			{isAuth ? (
 				children
-			:	<DialogContent className="sm:max-w-106">
+			) : (
+				<DialogContent className="sm:max-w-106">
 					<DialogHeader>
 						<DialogTitle>{authTitle}</DialogTitle>
 						<DialogDescription>{authMessage}</DialogDescription>
@@ -74,7 +76,7 @@ export function AuthenticatedDialog({
 						</div>
 					</div>
 				</DialogContent>
-			}
+			)}
 		</Dialog>
 	)
 }

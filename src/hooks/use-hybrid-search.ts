@@ -9,7 +9,7 @@ import { useTrigramSearch } from '@/hooks/use-trigram-search'
 import { phrasesFull } from '@/features/phrases/live'
 import { useLanguagesToShow } from '@/features/profile/hooks'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
-import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import type { PhraseFullFilteredType } from '@/features/phrases'
 
 export type HybridSearchResult = PhraseFullFilteredType & {
 	similarityScore: number // trigram (0..1)

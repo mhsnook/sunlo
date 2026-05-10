@@ -4,7 +4,7 @@ import { Rocket } from 'lucide-react'
 import { Garlic } from '@/components/garlic'
 import { LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckMetaType } from '@/features/deck'
 import { useLangActiveDays } from './-deck-ranking'
 
 export function ReviewBanner({

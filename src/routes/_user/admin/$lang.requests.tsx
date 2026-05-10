@@ -1,4 +1,4 @@
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useAuth } from '@/lib/use-auth'
 import Callout from '@/components/ui/callout'

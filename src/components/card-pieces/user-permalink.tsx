@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/features/social/public-profile'
@@ -11,18 +11,18 @@ export function TinySelfAvatar({ className }: { className?: string }) {
 	const { data } = useProfile()
 	const avatarUrl = avatarUrlify(data?.avatar_path)
 	return !avatarUrl ? null : (
-			<Avatar
-				className={cn(
-					'bg-foreground text-background h-8 w-8 rounded-lg',
-					className
-				)}
-			>
-				<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
-				<AvatarFallback className="text-[10px] font-bold">
-					{data?.username?.slice(0, 2)}
-				</AvatarFallback>
-			</Avatar>
-		)
+		<Avatar
+			className={cn(
+				'bg-foreground text-background h-8 w-8 rounded-lg',
+				className
+			)}
+		>
+			<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
+			<AvatarFallback className="text-[10px] font-bold">
+				{data?.username?.slice(0, 2)}
+			</AvatarFallback>
+		</Avatar>
+	)
 }
 
 export function UidPermalink({
@@ -75,7 +75,7 @@ export function UidPermalink({
 				</Link>
 				{timeValue && (
 					<div className="text-muted-foreground">
-						{timeLinkTo ?
+						{timeLinkTo ? (
 							<Link
 								to={timeLinkTo}
 								params={timeLinkParams}
@@ -87,7 +87,9 @@ export function UidPermalink({
 								)}
 								{ago(timeValue)}
 							</Link>
-						:	ago(timeValue)}
+						) : (
+							ago(timeValue)
+						)}
 					</div>
 				)}
 			</div>
@@ -145,7 +147,7 @@ export function UidPermalinkInline({
 				{timeValue && (
 					<>
 						<div className="text-muted-foreground">
-							{timeLinkTo ?
+							{timeLinkTo ? (
 								<Link
 									to={timeLinkTo}
 									params={timeLinkParams}
@@ -157,7 +159,9 @@ export function UidPermalinkInline({
 									)}
 									/ {ago(timeValue)}
 								</Link>
-							:	ago(timeValue)}
+							) : (
+								ago(timeValue)
+							)}
 						</div>
 					</>
 				)}

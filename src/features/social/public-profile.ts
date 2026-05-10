@@ -1,7 +1,7 @@
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { friendSummariesCollection } from './collections'
 import type { FriendSummaryType } from './schemas'
-import type { PublicProfileType } from '@/features/profile/schemas'
+import type { PublicProfileType } from '@/features/profile'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import { eq, ilike } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
@@ -11,11 +11,11 @@ export const useSearchProfilesByUsername = (
 ): UseLiveQueryResult<PublicProfileType[]> => {
 	return useLiveQuery(
 		(q) =>
-			!query.trim() ?
-				undefined
-			:	q
-					.from({ profile: publicProfilesCollection })
-					.where(({ profile }) => ilike(profile.username, `%${query}%`)),
+			!query.trim()
+				? undefined
+				: q
+						.from({ profile: publicProfilesCollection })
+						.where(({ profile }) => ilike(profile.username, `%${query}%`)),
 		[query]
 	)
 }
@@ -37,13 +37,12 @@ export const useOnePublicProfile = (
 				)
 				.fn.select(({ profile, relation }) => ({
 					...profile,
-					relation:
-						!relation ? null : (
-							{
+					relation: !relation
+						? null
+						: {
 								...relation,
 								isMostRecentByMe: relation.most_recent_uid_for === relation.uid,
-							}
-						),
+							},
 				})),
 		[uid]
 	)

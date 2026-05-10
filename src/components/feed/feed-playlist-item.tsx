@@ -1,5 +1,5 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
-import { FeedActivityType } from '@/features/feed/schemas'
+import type { FeedActivityType } from '@/features/feed'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import { useOnePlaylist } from '@/features/playlists/hooks'
 import { useNavigate } from '@tanstack/react-router'

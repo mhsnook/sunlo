@@ -9,7 +9,7 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from './store'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, lt, useLiveQuery } from '@tanstack/react-db'
@@ -20,7 +20,7 @@ import {
 	type DailyReviewStateType,
 } from './schemas'
 import { calculateFSRS, type Score } from './fsrs'
-import type { CardDirectionType } from '@/features/deck/schemas'
+import type { CardDirectionType } from '@/features/deck'
 import { toManifestEntry, type ManifestEntry } from './manifest'
 import {
 	buildReviewsMap,

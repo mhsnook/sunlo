@@ -18,7 +18,7 @@ import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseRequestType } from '@/features/requests'
 import { ago } from '@/lib/dayjs'
 
 export const Route = createFileRoute('/_user/admin/$lang/requests/')({

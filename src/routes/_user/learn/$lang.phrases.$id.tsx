@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { BigPhraseCard } from '@/components/cards/big-phrase-card'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'

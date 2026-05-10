@@ -2,8 +2,8 @@ import { TriangleAlert } from 'lucide-react'
 import { memo, useEffect, type PropsWithChildren } from 'react'
 import Callout from '@/components/ui/callout'
 import supabase from '@/lib/supabase-client'
-import { Json } from '@/types/supabase'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { Json } from '@/types/supabase'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 /*
   If the error message passed as `children` is nullable, we can simply use:
@@ -77,14 +77,9 @@ export const ShowErrorDontLog = memo(function ShowAndLogError({
 			Icon={DestructiveTriangle}
 		>
 			<strong>
-				{'status' in error ?
-					<> (Error {error.status}) </>
-				:	null}
+				{'status' in error ? <> (Error {error.status}) </> : null}
 				{/* Text is only for display purposes; not logged */}
-				{text}{' '}
-				{'cause' in error ?
-					<>({error.cause})</>
-				:	null}
+				{text} {'cause' in error ? <>({error.cause})</> : null}
 			</strong>
 			<p>{error.message} </p>
 		</Callout>

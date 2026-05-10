@@ -1,6 +1,6 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import type { PhraseFullFullType } from '@/features/phrases/schemas'
+import type { PhraseFullFullType } from '@/features/phrases'
 import type { PhrasePlaylistType, PlaylistPhraseLinkType } from './schemas'
 
 import {

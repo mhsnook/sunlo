@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 import {
 	DropdownMenu,
@@ -25,17 +25,14 @@ import { useDecks, useMyCard } from '@/features/deck/hooks'
 import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import {
-	CardMetaSchema,
-	CardMetaType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
+import type { CardMetaType } from '@/features/deck'
+import { CardMetaSchema, CardStatusEnumSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
-import {
+import type {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
-} from '@/features/phrases/schemas'
-import { Tables } from '@/types/supabase'
+} from '@/features/phrases'
+import type { Tables } from '@/types/supabase'
 import type { ActionCopy } from '@/types/main'
 
 type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType

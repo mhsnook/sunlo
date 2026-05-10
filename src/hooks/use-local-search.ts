@@ -6,9 +6,9 @@ import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { phraseRequestsActive } from '@/features/requests/live'
 import { MIN_QUERY_LENGTH } from '@/hooks/search-config'
 
-import type { PhraseFullFullType } from '@/features/phrases/schemas'
-import type { PhrasePlaylistType } from '@/features/playlists/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseFullFullType } from '@/features/phrases'
+import type { PhrasePlaylistType } from '@/features/playlists'
+import type { PhraseRequestType } from '@/features/requests'
 
 // In-memory search across the locally-cached collections (phrases,
 // playlists, requests). Synchronous-feeling: results update as soon as

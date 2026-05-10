@@ -1,7 +1,8 @@
 import languages from '@/lib/languages'
 import { useProfile } from '@/features/profile/hooks'
-import { pids } from '@/types/main'
-import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
+import type { pids } from '@/types/main'
+import type { LucideIcon } from 'lucide-react'
+import { Brain, Carrot, Sparkles, TrendingUp } from 'lucide-react'
 import {
 	DrawerContent,
 	DrawerDescription,
@@ -34,10 +35,9 @@ export function SelectPhrasesToAddToReview({
 		)
 	// Toggle card selection
 	const toggleCardSelection = (pid1: string) => {
-		const updatedRecs =
-			!algoRecsSelected.includes(pid1) ?
-				[...algoRecsSelected, pid1]
-			:	algoRecsSelected.filter((pid2) => pid1 !== pid2)
+		const updatedRecs = !algoRecsSelected.includes(pid1)
+			? [...algoRecsSelected, pid1]
+			: algoRecsSelected.filter((pid2) => pid1 !== pid2)
 		setAlgoRecsSelected(updatedRecs)
 	}
 
@@ -84,7 +84,7 @@ export function SelectPhrasesToAddToReview({
 									<s.Icon className="inline size-6" /> {s.description}
 								</p>
 								<div className="grid gap-3 @lg:grid-cols-2">
-									{algoRecsFiltered[s.key].length > 0 ?
+									{algoRecsFiltered[s.key].length > 0 ? (
 										algoRecsFiltered[s.key].map((pid) => {
 											return (
 												<TapCardToSelect
@@ -96,10 +96,11 @@ export function SelectPhrasesToAddToReview({
 												/>
 											)
 										})
-									:	<p className="text-muted-foreground">
+									) : (
+										<p className="text-muted-foreground">
 											Sorry, all out of recommendations today
 										</p>
-									}
+									)}
 								</div>
 							</div>
 						)

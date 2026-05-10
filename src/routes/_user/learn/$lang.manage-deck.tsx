@@ -1,7 +1,8 @@
-import { CSSProperties, useMemo, useState } from 'react'
+import type { CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 import {
 	ArrowDown,
 	ArrowUp,
@@ -30,7 +31,7 @@ import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { cn, sessionDaysDiff } from '@/lib/utils'
 import { calculateInterval } from '@/features/review'
-import { Tables } from '@/types/supabase'
+import type { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
 	component: ManageDeckPage,

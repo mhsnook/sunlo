@@ -3,8 +3,8 @@ import { Logs } from 'lucide-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import * as z from 'zod'
 
-import type { FeedActivityType } from '@/features/feed/schemas'
-import type { FeedFilterType } from '@/features/feed/hooks'
+import type { FeedActivityType } from '@/features/feed'
+import type { FeedFilterType } from '@/features/feed'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import languages from '@/lib/languages'
 import { FeedComposer } from '@/components/feed/feed-composer'
@@ -250,41 +250,41 @@ function RecentFeed() {
 		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
 
 	// Use main query pagination when unfiltered, filtered query pagination when filtered
-	const hasNextPage =
-		filterType ?
-			(merged.hasNextPage ?? false)
-		:	(mainQuery.hasNextPage ?? false)
-	const fetchNextPage =
-		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
-	const isFetchingNextPage =
-		filterType ?
-			(merged.isFetchingNextPage ?? false)
-		:	mainQuery.isFetchingNextPage
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
 	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
-			{isLoading ?
+			{isLoading ? (
 				<p>Loading feed...</p>
-			: groupedItems.length === 0 ?
+			) : groupedItems.length === 0 ? (
 				<FeedEmptyState
 					filterType={filterType}
 					feedTab="newest"
 					lang={params.lang}
 				/>
-			:	<>
+			) : (
+				<>
 					{groupedItems.map((item) => (
 						<FeedItem
 							key={
-								'earliest_created_at' in item ?
-									`group-${item.earliest_created_at}`
-								:	item.id
+								'earliest_created_at' in item
+									? `group-${item.earliest_created_at}`
+									: item.id
 							}
 							item={item}
 						/>
 					))}
 
-					{hasNextPage ?
+					{hasNextPage ? (
 						<Button
 							variant="soft"
 							onClick={() => void fetchNextPage()}
@@ -293,7 +293,8 @@ function RecentFeed() {
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
-					:	<p className="text-muted-foreground my-6 ms-6 italic">
+					) : (
+						<p className="text-muted-foreground my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"
@@ -304,9 +305,9 @@ function RecentFeed() {
 							</Link>{' '}
 							to learn together?
 						</p>
-					}
+					)}
 				</>
-			}
+			)}
 		</div>
 	)
 }
@@ -338,41 +339,41 @@ function FriendsFeed() {
 	const groupedItems =
 		merged.items.length === 0 ? [] : groupConsecutivePhrases(merged.items)
 
-	const hasNextPage =
-		filterType ?
-			(merged.hasNextPage ?? false)
-		:	(mainQuery.hasNextPage ?? false)
-	const fetchNextPage =
-		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
-	const isFetchingNextPage =
-		filterType ?
-			(merged.isFetchingNextPage ?? false)
-		:	mainQuery.isFetchingNextPage
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
 	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
-			{isLoading ?
+			{isLoading ? (
 				<p>Loading feed...</p>
-			: groupedItems.length === 0 ?
+			) : groupedItems.length === 0 ? (
 				<FeedEmptyState
 					filterType={filterType}
 					feedTab="friends"
 					lang={params.lang}
 				/>
-			:	<>
+			) : (
+				<>
 					{groupedItems.map((item) => (
 						<FeedItem
 							key={
-								'earliest_created_at' in item ?
-									`group-${item.earliest_created_at}`
-								:	item.id
+								'earliest_created_at' in item
+									? `group-${item.earliest_created_at}`
+									: item.id
 							}
 							item={item}
 						/>
 					))}
 
-					{hasNextPage ?
+					{hasNextPage ? (
 						<Button
 							variant="soft"
 							onClick={() => void fetchNextPage()}
@@ -381,7 +382,8 @@ function FriendsFeed() {
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
-					:	<p className="text-muted-foreground my-6 ms-6 italic">
+					) : (
+						<p className="text-muted-foreground my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"
@@ -392,9 +394,9 @@ function FriendsFeed() {
 							</Link>{' '}
 							to learn together?
 						</p>
-					}
+					)}
 				</>
-			}
+			)}
 		</div>
 	)
 }
@@ -415,34 +417,34 @@ function PopularFeed() {
 	// No grouping for Popular feed to preserve popularity order
 	const merged = mergeFilteredFeed(unfilteredItems, filterType, filteredQuery)
 
-	const hasNextPage =
-		filterType ?
-			(merged.hasNextPage ?? false)
-		:	(mainQuery.hasNextPage ?? false)
-	const fetchNextPage =
-		filterType ? (merged.fetchNextPage ?? (() => {})) : mainQuery.fetchNextPage
-	const isFetchingNextPage =
-		filterType ?
-			(merged.isFetchingNextPage ?? false)
-		:	mainQuery.isFetchingNextPage
+	const hasNextPage = filterType
+		? (merged.hasNextPage ?? false)
+		: (mainQuery.hasNextPage ?? false)
+	const fetchNextPage = filterType
+		? (merged.fetchNextPage ?? (() => {}))
+		: mainQuery.fetchNextPage
+	const isFetchingNextPage = filterType
+		? (merged.isFetchingNextPage ?? false)
+		: mainQuery.isFetchingNextPage
 	const isLoading = mainQuery.isLoading || (merged.isBackfillLoading ?? false)
 
 	return (
 		<div className="space-y-4" data-testid="feed-item-list">
-			{isLoading ?
+			{isLoading ? (
 				<p>Loading feed...</p>
-			: merged.items.length === 0 ?
+			) : merged.items.length === 0 ? (
 				<FeedEmptyState
 					filterType={filterType}
 					feedTab="popular"
 					lang={params.lang}
 				/>
-			:	<>
+			) : (
+				<>
 					{merged.items.map((item) => (
 						<FeedItem key={item.id} item={item} />
 					))}
 
-					{hasNextPage ?
+					{hasNextPage ? (
 						<Button
 							variant="soft"
 							onClick={() => void fetchNextPage()}
@@ -451,7 +453,8 @@ function PopularFeed() {
 						>
 							{isFetchingNextPage ? 'Loading...' : 'Load More'}
 						</Button>
-					:	<p className="text-muted-foreground my-6 ms-6 italic">
+					) : (
+						<p className="text-muted-foreground my-6 ms-6 italic">
 							This is the end of the feed... how about{' '}
 							<Link
 								to="/friends/invite"
@@ -462,9 +465,9 @@ function PopularFeed() {
 							</Link>{' '}
 							to learn together?
 						</p>
-					}
+					)}
 				</>
-			}
+			)}
 		</div>
 	)
 }

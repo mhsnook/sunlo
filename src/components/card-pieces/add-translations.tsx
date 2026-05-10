@@ -19,7 +19,8 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import { Button, ButtonProps } from '@/components/ui/button'
+import type { ButtonProps } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'

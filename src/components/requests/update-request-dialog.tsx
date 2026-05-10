@@ -9,7 +9,7 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseRequestType } from '@/features/requests'
 import { RequestForm } from './request-form'
 
 export function UpdateRequestDialog({

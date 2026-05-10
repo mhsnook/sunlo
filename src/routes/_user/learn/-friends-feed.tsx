@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 
 import { useFriendUids, useRecentFriendsActivity } from '@/features/feed/hooks'
-import type { FeedActivityType } from '@/features/feed/schemas'
+import type { FeedActivityType } from '@/features/feed'
 import {
 	FeedActivityPayloadPhraseSchema,
 	FeedActivityPayloadPlaylistSchema,

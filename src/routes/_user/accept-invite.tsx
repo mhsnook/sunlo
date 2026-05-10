@@ -4,7 +4,7 @@ import { toastError, toastSuccess } from '@/components/ui/sonner'
 import * as z from 'zod'
 import { ArrowRightLeft } from 'lucide-react'
 
-import type { PublicProfileType } from '@/features/profile/schemas'
+import type { PublicProfileType } from '@/features/profile'
 import { ShowAndLogError } from '@/components/errors'
 import { SuccessCheckmark } from '@/components/success-checkmark'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -75,9 +75,10 @@ function AcceptInvitePage() {
 
 	return (
 		<main className="w-app flex h-screen flex-col justify-center p-2 pb-20">
-			{isLoading ?
+			{isLoading ? (
 				<Loader />
-			:	<Card>
+			) : (
+				<Card>
 					<CardHeader>
 						<CardTitle>
 							Accept invite from <strong>{friend?.username}</strong>?
@@ -89,23 +90,25 @@ function AcceptInvitePage() {
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-4">
-						{acceptOrDeclineMutation.error ?
+						{acceptOrDeclineMutation.error ? (
 							<ShowAndLogError
 								error={acceptOrDeclineMutation.error}
 								text="Something went wrong"
 							/>
-						: !acceptOrDeclineMutation.isSuccess ?
+						) : !acceptOrDeclineMutation.isSuccess ? (
 							<AcceptInviteForm
 								profile={profile}
 								friend={friend}
 								acceptOrDeclineMutation={acceptOrDeclineMutation}
 							/>
-						: acceptOrDeclineMutation.variables.action === 'accept' ?
+						) : acceptOrDeclineMutation.variables.action === 'accept' ? (
 							<ShowAccepted friend={friend} />
-						:	<ShowDeclined />}
+						) : (
+							<ShowDeclined />
+						)}
 					</CardContent>
 				</Card>
-			}
+			)}
 		</main>
 	)
 }
@@ -125,7 +128,7 @@ function AcceptInviteForm({
 }) {
 	return (
 		<>
-			{profile ?
+			{profile ? (
 				<div className="relative mx-auto flex h-44 max-w-[400px] flex-row items-center justify-around gap-4">
 					<img
 						src={avatarUrlify(profile.avatar_path, 128)}
@@ -133,7 +136,7 @@ function AcceptInviteForm({
 						className="mx-auto max-w-32 shrink rounded-xl"
 						alt={`Your avatar`}
 					/>
-					{friend ?
+					{friend ? (
 						<>
 							<ArrowRightLeft className="mx-auto opacity-70" />
 							<img
@@ -142,9 +145,9 @@ function AcceptInviteForm({
 								alt={`${friend.username}'s avatar`}
 							/>
 						</>
-					:	null}
+					) : null}
 				</div>
-			:	null}
+			) : null}
 			<div className="flex flex-row justify-center gap-4">
 				<Button
 					size="lg"

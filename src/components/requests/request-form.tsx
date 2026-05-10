@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 
 import supabase from '@/lib/supabase-client'
 import { MarkdownHint } from '@/components/comments/comment-dialog'
@@ -9,9 +9,9 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
+import type { PhraseRequestType } from '@/features/requests'
 import {
 	PhraseRequestSchema,
-	PhraseRequestType,
 	RequestPhraseFormSchema,
 	type RequestPhraseFormInputs,
 	requestPromptPlaceholders,

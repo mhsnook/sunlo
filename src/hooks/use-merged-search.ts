@@ -9,8 +9,8 @@ import {
 import { LOCAL_ONLY_TRIGRAM_SCORE } from '@/hooks/search-config'
 import { splitPhraseTranslations } from '@/hooks/composite-phrase'
 import { useLanguagesToShow } from '@/features/profile/hooks'
-import type { PhrasePlaylistType } from '@/features/playlists/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhrasePlaylistType } from '@/features/playlists'
+import type { PhraseRequestType } from '@/features/requests'
 
 // Top-level search hook used by /search and BrowseSearchOverlay. Composes
 // useLocalSearch (instant in-memory) + useHybridSearch (server-blended)

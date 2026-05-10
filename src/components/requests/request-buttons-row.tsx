@@ -9,7 +9,7 @@ import { buttonVariants } from '@/components/ui/button'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/features/requests/hooks'
 import { UpvoteRequest } from './upvote-request-button'
-import { PhraseRequestType } from '@/features/requests/schemas'
+import type { PhraseRequestType } from '@/features/requests'
 
 const showThread = { show: 'thread' } as const
 const answersOnly = { show: 'answers-only' } as const

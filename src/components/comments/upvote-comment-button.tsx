@@ -11,7 +11,7 @@ import supabase from '@/lib/supabase-client'
 import { safeWrite } from '@/lib/collections/safe-write'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/features/comments/schemas'
+import type { RequestCommentType } from '@/features/comments'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function Upvote({ comment }: { comment: RequestCommentType }) {

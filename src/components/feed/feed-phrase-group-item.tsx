@@ -1,11 +1,11 @@
-import { FeedActivityType } from '@/features/feed/schemas'
+import type { FeedActivityType } from '@/features/feed'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { useProfile } from '@/features/profile/hooks'
 import { useMyCard } from '@/features/deck/hooks'
 import { MessageSquareQuote, Users } from 'lucide-react'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 
 export function PhraseSummaryLine({
 	item,

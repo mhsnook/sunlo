@@ -1,6 +1,6 @@
-import type { PhraseFullFilteredType } from '@/features/phrases/schemas'
-import type { CardDirectionType } from '@/features/deck/schemas'
-import type { CardReviewType } from '@/features/review/schemas'
+import type { PhraseFullFilteredType } from '@/features/phrases'
+import type { CardDirectionType } from '@/features/deck'
+import type { CardReviewType } from '@/features/review'
 
 import { cn } from '@/lib/utils'
 import { ago } from '@/lib/dayjs'

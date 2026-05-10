@@ -4,7 +4,7 @@ import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { useUnreadCount } from '@/features/notifications/hooks'
 import { todayString } from '@/lib/utils'
 
-import { LinkType } from '@/types/main'
+import type { LinkType } from '@/types/main'
 import {
 	BarChart3,
 	Bell,
@@ -33,7 +33,8 @@ import {
 	UserPen,
 	UserPlus,
 } from 'lucide-react'
-import languages, { LangKey } from '@/lib/languages'
+import type { LangKey } from '@/lib/languages'
+import languages from '@/lib/languages'
 
 export const links = (lang?: LangKey): Record<string, LinkType> => {
 	const constantLinks = {

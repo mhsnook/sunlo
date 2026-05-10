@@ -48,6 +48,17 @@ export default [
 					allowThrowingUnknown: false,
 				},
 			],
+			// Cross-feature type imports must come from the barrel
+			// (esquery's regex literal can't escape `/` directly, so `/`).
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						"ImportDeclaration[importKind='type'][source.value=/^@\\u002Ffeatures\\u002F[^\\u002F]+\\u002F.+/]",
+					message:
+						"Cross-feature type imports must come from the barrel '@/features/<feature>', not internal paths like '@/features/<feature>/schemas'.",
+				},
+			],
 		},
 	},
 	{

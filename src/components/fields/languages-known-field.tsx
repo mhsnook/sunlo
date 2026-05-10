@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import type {
 	LanguageKnownType,
 	LanguageProficiencyEnumType,
-} from '@/features/profile/schemas'
+} from '@/features/profile'
 import { Card } from '@/components/ui/card'
 import { useFieldContext } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'

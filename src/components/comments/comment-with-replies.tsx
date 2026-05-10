@@ -16,7 +16,7 @@ import { buttonVariants } from '@/components/ui/button'
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { Upvote } from './upvote-comment-button'
 import { CommentContextMenu } from './comment-context-menu'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { Separator } from '../ui/separator'
 
 interface CommentThreadProps {

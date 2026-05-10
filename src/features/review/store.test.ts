@@ -4,7 +4,7 @@ import {
 	getIndexOfNextAgainCard,
 	type ReviewsMap,
 } from '@/features/review/review-utils'
-import type { CardReviewType } from '@/features/review/schemas'
+import type { CardReviewType } from './schemas'
 import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
 
 /**

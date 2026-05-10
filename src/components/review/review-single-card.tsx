@@ -41,15 +41,15 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendDialog } from '@/components/card-pieces/send-phrase-to-friend'
-import {
+import type {
 	PhraseFullFilteredType,
 	TranslationType,
-} from '@/features/phrases/schemas'
+} from '@/features/phrases'
 import {
 	type CardDirectionType,
 	CardStatusEnumSchema,
 } from '@/features/deck/schemas'
-import { uuid } from '@/types/main'
+import type { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import supabase from '@/lib/supabase-client'

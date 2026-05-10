@@ -2,7 +2,7 @@ import { createLiveQueryCollection, eq } from '@tanstack/db'
 import { friendSummariesCollection } from './collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import type { FriendSummaryType } from './schemas'
-import type { PublicProfileType } from '@/features/profile/schemas'
+import type { PublicProfileType } from '@/features/profile'
 
 export type RelationsFullType = FriendSummaryType & {
 	isMostRecentByMe: boolean

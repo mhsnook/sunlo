@@ -6,7 +6,7 @@ import {
 import { useLiveQuery, eq } from '@tanstack/react-db'
 import supabase from '@/lib/supabase-client'
 import { FeedActivitySchema, type FeedActivityType } from './schemas'
-import type { LangType } from '@/features/languages/schemas'
+import type { LangType } from '@/features/languages'
 import { friendSummariesCollection } from '@/features/social/collections'
 
 export type FeedFilterType = 'request' | 'playlist' | 'phrase'

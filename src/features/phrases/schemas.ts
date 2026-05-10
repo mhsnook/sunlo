@@ -1,8 +1,8 @@
 import * as z from 'zod'
 import { LangSchema } from '@/features/languages/schemas'
 import { PhraseTagSchema } from '@/features/languages/schemas'
-import type { PublicProfileType } from '@/features/profile/schemas'
-import type { PhraseRequestType } from '@/features/requests/schemas'
+import type { PublicProfileType } from '@/features/profile'
+import type { PhraseRequestType } from '@/features/requests'
 
 export const FilterEnumSchema = z.enum([
 	'language_filtered',

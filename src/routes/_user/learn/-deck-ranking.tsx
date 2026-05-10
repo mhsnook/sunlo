@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import dayjs from 'dayjs'
 import { and, eq, gte, useLiveQuery } from '@tanstack/react-db'
 
-import type { DeckMetaType } from '@/features/deck/schemas'
+import type { DeckMetaType } from '@/features/deck'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import {

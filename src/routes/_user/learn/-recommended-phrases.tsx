@@ -1,10 +1,12 @@
 import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { Brain, Carrot, TrendingUp } from 'lucide-react'
 
 import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
-import { CompositePids, useCompositePids } from '@/hooks/composite-pids'
+import type { CompositePids } from '@/hooks/composite-pids'
+import { useCompositePids } from '@/hooks/composite-pids'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 
@@ -21,13 +23,15 @@ const PhraseSection = ({ description, pids, Icon }: PhraseSectionProps) => {
 				{description}
 				<Icon className="inline size-6" />
 			</p>
-			{pids?.length > 0 ?
+			{pids?.length > 0 ? (
 				<div className="grid grid-cols-1 gap-4 @xl:grid-cols-2">
 					{pids.map((pid) => (
 						<PhraseTinyCard key={pid} pid={pid} />
 					))}
 				</div>
-			:	<p className="text-muted-foreground">No recommendations available</p>}
+			) : (
+				<p className="text-muted-foreground">No recommendations available</p>
+			)}
 		</div>
 	)
 }
@@ -48,40 +52,42 @@ export function RecommendedPhrasesCard({ lang }: { lang: string }) {
 	const hasRecommendations =
 		top8.popular.length > 0 || top8.newest.length > 0 || top8.easiest.length > 0
 
-	return !hasRecommendations ?
-			<p className="text-muted-foreground mx-4 text-sm italic">
-				There are no smart recommendations for you at this time. Check back
-				later or consider{' '}
-				<Link
-					className="s-link-muted"
-					to="/learn/$lang/requests/new"
-					params={{ lang }}
-				>
-					requesting a phrase
-				</Link>
-				.
-			</p>
-		:	<Card>
-				<CardHeader>
-					<CardTitle>Recommended For You</CardTitle>
-				</CardHeader>
+	return !hasRecommendations ? (
+		<p className="text-muted-foreground mx-4 text-sm italic">
+			There are no smart recommendations for you at this time. Check back later
+			or consider{' '}
+			<Link
+				className="s-link-muted"
+				to="/learn/$lang/requests/new"
+				params={{ lang }}
+			>
+				requesting a phrase
+			</Link>
+			.
+		</p>
+	) : (
+		<Card>
+			<CardHeader>
+				<CardTitle>Recommended For You</CardTitle>
+			</CardHeader>
 
-				<CardContent className="space-y-4">
-					<PhraseSection
-						description={`Popular among all ${languages[lang]} learners`}
-						pids={top8.popular.slice(0, 4)}
-						Icon={TrendingUp}
-					/>
-					<PhraseSection
-						description="Newly added"
-						pids={top8.newest.slice(0, 4)}
-						Icon={Brain}
-					/>
-					<PhraseSection
-						description="Broaden your vocabulary"
-						pids={top8.easiest.slice(0, 4)}
-						Icon={Carrot}
-					/>
-				</CardContent>
-			</Card>
+			<CardContent className="space-y-4">
+				<PhraseSection
+					description={`Popular among all ${languages[lang]} learners`}
+					pids={top8.popular.slice(0, 4)}
+					Icon={TrendingUp}
+				/>
+				<PhraseSection
+					description="Newly added"
+					pids={top8.newest.slice(0, 4)}
+					Icon={Brain}
+				/>
+				<PhraseSection
+					description="Broaden your vocabulary"
+					pids={top8.easiest.slice(0, 4)}
+					Icon={Carrot}
+				/>
+			</CardContent>
+		</Card>
+	)
 }

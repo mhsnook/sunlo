@@ -416,7 +416,12 @@ import type { DeckMetaType } from '@/features/deck/schemas'
 
 If a type isn't in a feature's barrel, the answer is "add it to `index.ts`." The barrel is the type contract; expanding it is a deliberate API decision.
 
-There's no lint rule enforcing this yet — it's convention. We considered locking each feature behind a `no-restricted-imports` rule, but blocking value imports from internal paths broke code-splitting, so we backed off. A narrower rule that flags only cross-feature `import type` from internal paths is on the table for later.
+**Lint enforcement.** Two rules cooperate:
+
+1. `@typescript-eslint/consistent-type-imports` (in `.oxlintrc.json`, with `fixStyle: "separate-type-imports"`) — `oxlint --fix` rewrites mixed `import { foo, type Bar }` into two separate statements, one for values and one for types. The pre-commit hook applies this automatically.
+2. `no-restricted-syntax` (in `eslint.config.js`) — blocks `import type { ... } from '@/features/<feature>/<internal>'`. Cross-feature type imports must come from the barrel.
+
+Together these enforce: types come from the barrel, values come from internal paths, and no statement mixes the two. Value imports from the barrel aren't blocked (the lint can't tell value imports apart from type imports without the split), but barrels export zero runtime values, so any value import through a barrel fails to resolve — structurally enforced.
 
 **Feature domains and what they contain:**
 

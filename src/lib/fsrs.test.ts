@@ -6,7 +6,7 @@ import {
 	retrievability,
 	type Score,
 } from '@/features/review/fsrs'
-import type { CardReviewType } from '@/features/review/schemas'
+import type { CardReviewType } from '@/features/review'
 
 // Helper to make a mock previous review.
 // Valid v4 UUIDs: position 14 = '4' (version), position 19 ∈ {8,9,a,b}

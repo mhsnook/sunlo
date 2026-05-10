@@ -1,7 +1,7 @@
 import { type CSSProperties } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
+import type { PostgrestError } from '@supabase/supabase-js'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import {
@@ -27,7 +27,7 @@ import { ArchiveDeckButton } from './-archive-deck-button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { decksCollection } from '@/features/deck/collections'
 import { DeckMetaRawSchema, type DeckMetaType } from '@/features/deck/schemas'
-import { Tables } from '@/types/supabase'
+import type { Tables } from '@/types/supabase'
 import { useProfile } from '@/features/profile/hooks'
 import { type ReviewAnswerModeType } from '@/features/profile/schemas'
 import { cn } from '@/lib/utils'

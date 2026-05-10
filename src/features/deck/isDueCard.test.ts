@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { isDueCard } from '@/features/deck/is-due-card'
-import type { CardMetaType } from '@/features/deck/schemas'
+import type { CardMetaType } from './schemas'
 
 function mockCard(overrides: Partial<CardMetaType> = {}): CardMetaType {
 	return {

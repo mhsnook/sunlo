@@ -9,7 +9,7 @@ import {
 	NavigationMenuLink,
 	NavigationMenuList,
 } from '@/components/ui/navigation-menu'
-import { LinkType } from '@/types/main'
+import type { LinkType } from '@/types/main'
 import { useLinks } from '@/hooks/links'
 import { TinyBadge } from '@/components/ui/badge'
 import {

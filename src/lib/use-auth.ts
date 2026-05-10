@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-import { RolesEnum, uuid } from '@/types/main'
+import type { RolesEnum, uuid } from '@/types/main'
 
 export const emptyAuth = {
 	isLoaded: false,

@@ -18,7 +18,7 @@ import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrases'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
-import { CSSProperties } from 'react'
+import type { CSSProperties } from 'react'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { DeckNewIntro, DeckNewCallout } from '@/components/intros'
 
@@ -77,33 +77,32 @@ function DeckOverview({ deckIsNew = false }: { deckIsNew?: boolean }) {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-2 text-sm">
-				{deckIsNew ?
+				{deckIsNew ? (
 					<p className="text-base">
 						Let's get started! Browse the feed to find phrases, or add your own.
 					</p>
-				: meta.most_recent_review_at ?
+				) : meta.most_recent_review_at ? (
 					<p>
 						Your last review was{' '}
 						<span className="font-bold">{ago(meta.most_recent_review_at)}</span>
 					</p>
-				:	<p>You haven't done any reviews yet</p>}
-				{!deckIsNew && routineStats ?
+				) : (
+					<p>You haven't done any reviews yet</p>
+				)}
+				{!deckIsNew && routineStats ? (
 					<p>
 						You've kept up with your routine
 						<span className="font-bold">
-							{(
-								routineStats.daysMet === routineStats.daysSoFar &&
-								routineStats.daysSoFar > 1
-							) ?
-								` all ${routineStats.daysSoFar} days this week!`
-							:	` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
-									routineStats.daysSoFar === 1 ? 'day' : 'days'
-								}`
-							}
+							{routineStats.daysMet === routineStats.daysSoFar &&
+							routineStats.daysSoFar > 1
+								? ` all ${routineStats.daysSoFar} days this week!`
+								: ` ${routineStats.daysMet} out of ${routineStats.daysSoFar} ${
+										routineStats.daysSoFar === 1 ? 'day' : 'days'
+									}`}
 						</span>{' '}
 						this week.
 					</p>
-				:	null}
+				) : null}
 				{!deckIsNew && (
 					<p>
 						You have{' '}
@@ -146,11 +145,11 @@ function DeckSettings() {
 					<li>
 						Your learning motivation is:{' '}
 						<strong>
-							{data?.learning_goal === 'family' ?
-								'To connect with family'
-							: data?.learning_goal === 'visiting' ?
-								'Preparing to visit'
-							:	'Living in a new place'}
+							{data?.learning_goal === 'family'
+								? 'To connect with family'
+								: data?.learning_goal === 'visiting'
+									? 'Preparing to visit'
+									: 'Living in a new place'}
 						</strong>
 					</li>
 					<Flagged name="learning_goals">

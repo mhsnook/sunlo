@@ -15,7 +15,8 @@ import {
 	friendSummariesCollection,
 } from '@/features/social/collections'
 import { clearUser } from '@/lib/collections/clear-user'
-import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
+import type { AuthLoaded } from '@/lib/use-auth'
+import { AuthContext, emptyAuth } from '@/lib/use-auth'
 
 async function checkAdminStatus(): Promise<boolean> {
 	const { data } = await supabase.from('admin_user').select('uid')

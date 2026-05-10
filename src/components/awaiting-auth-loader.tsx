@@ -1,4 +1,5 @@
-import { CSSProperties, useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import { Loader } from '@/components/ui/loader'
 import { Button } from '@/components/ui/button'
 import { ShowErrorDontLog } from '@/components/errors'

@@ -5,7 +5,7 @@
  */
 
 import type { CardReviewType } from './schemas'
-import type { CardDirectionType } from '@/features/deck/schemas'
+import type { CardDirectionType } from '@/features/deck'
 import type { uuid } from '@/types/main'
 import { toManifestEntry, type ManifestEntry } from './manifest'
 
@@ -117,7 +117,7 @@ export function getIndexOfNextAgainCard(
 		const indexChecking = (i + currentCardIndex + 1) % manifest.length
 		return reviewsMap[manifest[indexChecking]]?.score === 1
 	})
-	return index !== -1 ?
-			(index + currentCardIndex + 1) % manifest.length
-		:	manifest.length
+	return index !== -1
+		? (index + currentCardIndex + 1) % manifest.length
+		: manifest.length
 }

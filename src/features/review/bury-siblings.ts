@@ -32,7 +32,7 @@
  */
 
 import type { CardReviewType } from './schemas'
-import type { CardDirectionType } from '@/features/deck/schemas'
+import type { CardDirectionType } from '@/features/deck'
 import type { uuid } from '@/types/main'
 import { retrievability } from './fsrs'
 import { dateDiff } from '@/lib/utils'
