@@ -722,7 +722,9 @@ function EditPhraseDialog({
 	onClose: () => void
 }) {
 	const [phraseText, setPhraseText] = useState(phrase.phrase_text)
-	const [translations, setTranslations] = useState(phrase.translations)
+	const [translations, setTranslations] = useState(() =>
+		phrase.translations.map((t) => ({ ...t, _key: crypto.randomUUID() }))
+	)
 	const [selectedTags, setSelectedTags] = useState<Array<string>>(phrase.tags)
 
 	const { data: langTags } = useLanguageTags(lang)
@@ -741,7 +743,10 @@ function EditPhraseDialog({
 	}
 
 	const addTranslation = () => {
-		setTranslations((prev) => [...prev, { lang: translationLang, text: '' }])
+		setTranslations((prev) => [
+			...prev,
+			{ _key: crypto.randomUUID(), lang: translationLang, text: '' },
+		])
 	}
 
 	const removeTranslation = (index: number) => {
@@ -753,7 +758,9 @@ function EditPhraseDialog({
 		onSave({
 			...phrase,
 			phrase_text: phraseText,
-			translations: translations.filter((t) => t.text.trim()),
+			translations: translations
+				.filter((t) => t.text.trim())
+				.map(({ _key, ...rest }) => rest),
 			tags: selectedTags,
 		})
 	}
@@ -781,7 +788,7 @@ function EditPhraseDialog({
 					<div className="space-y-2">
 						<Label>Translations</Label>
 						{translations.map((t, i) => (
-							<div key={i} className="flex items-center gap-2">
+							<div key={t._key} className="flex items-center gap-2">
 								<SelectOneOfYourLanguages
 									value={t.lang}
 									setValue={(val) => updateTranslation(i, { lang: val })}
