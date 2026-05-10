@@ -11,17 +11,16 @@ import {
 	playlistPhraseLinksCollection,
 } from '@/features/playlists/collections'
 
-export const Route = createFileRoute('/_user/learn/browse')({
+export const Route = createFileRoute('/_user/browse')({
 	beforeLoad: ({ context }) => ({
 		titleBar: {
 			title: 'Explore Languages',
 			subtitle: 'Browse the public library',
 		},
-		appnav: ['/learn/browse', '/learn/browse/charts'],
-		contextMenu:
-			context.auth.isAuth ?
-				['/learn/add-deck', '/learn/contributions']
-			:	['/login', '/signup'],
+		appnav: ['/browse', '/browse/charts'],
+		contextMenu: context.auth.isAuth
+			? ['/learn/add-deck', '/learn/contributions']
+			: ['/login', '/signup'],
 	}),
 	loader: async () => {
 		await Promise.all([

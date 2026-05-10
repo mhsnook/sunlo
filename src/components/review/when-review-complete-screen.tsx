@@ -28,9 +28,7 @@ export function WhenComplete() {
 	const stage = storeStage || stats?.stage
 
 	const showWhich =
-		stats?.unreviewed && stage < 2 ? 'a'
-		: stats?.again && stage < 5 ? 'b'
-		: 'c'
+		stats?.unreviewed && stage < 2 ? 'a' : stats?.again && stage < 5 ? 'b' : 'c'
 
 	// When the user naturally finishes (no skip button), persist stage 5
 	useEffect(() => {
@@ -47,14 +45,14 @@ export function WhenComplete() {
 			data-testid="review-complete-page"
 		>
 			<CardContent className="flex grow flex-col justify-center gap-6">
-				{showWhich === 'a' ?
+				{showWhich === 'a' ? (
 					<>
 						<CardTitle className="text-center">Step 2 of 3</CardTitle>
 						<p className="text-center text-lg">
 							You've completed your first pass, but there{' '}
-							{stats.unreviewed === 1 ?
-								'is still 1 card'
-							:	`are still ${stats.unreviewed} cards`}{' '}
+							{stats.unreviewed === 1
+								? 'is still 1 card'
+								: `are still ${stats.unreviewed} cards`}{' '}
 							you haven't reviewed yet. Let's go back and finish them &mdash;
 							you can do it!
 						</p>
@@ -78,7 +76,7 @@ export function WhenComplete() {
 							Skip step 2
 						</Button>
 					</>
-				: showWhich === 'b' ?
+				) : showWhich === 'b' ? (
 					<>
 						<CardTitle className="text-center">Step 3 of 3</CardTitle>
 						<p className="text-center text-lg">
@@ -128,7 +126,8 @@ export function WhenComplete() {
 							Skip step 3
 						</Button>
 					</>
-				:	<div className="flex h-full flex-col items-center justify-center gap-6 pb-16">
+				) : (
+					<div className="flex h-full flex-col items-center justify-center gap-6 pb-16">
 						<SuccessCheckmark />
 						<CardTitle className="text-center">Review Complete!</CardTitle>
 						<p className="text-muted-foreground text-center">
@@ -193,7 +192,7 @@ export function WhenComplete() {
 									Stats
 								</Link>
 								<Link
-									to="/learn/browse"
+									to="/browse"
 									className={buttonVariants({
 										variant: 'soft',
 										size: 'lg',
@@ -206,7 +205,7 @@ export function WhenComplete() {
 							</div>
 						</div>
 					</div>
-				}
+				)}
 			</CardContent>
 		</Card>
 	)

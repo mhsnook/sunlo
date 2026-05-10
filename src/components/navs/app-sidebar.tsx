@@ -11,7 +11,6 @@ import {
 	SidebarRail,
 } from '@/components/ui/sidebar'
 import { useParams } from '@tanstack/react-router'
-import { ModeToggle } from '@/components/navs/mode-toggle'
 
 export function AppSidebar({
 	focusMode,
@@ -29,10 +28,7 @@ export function AppSidebar({
 			</SidebarHeader>
 			<SidebarContent>
 				<ActiveReviewCallout currentLang={lang} />
-				<NavMain lang={lang} />
-				<div className="mt-auto p-2">
-					<ModeToggle />
-				</div>
+				<NavMain />
 			</SidebarContent>
 			<SidebarFooter>
 				<NavUser />

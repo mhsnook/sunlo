@@ -30,7 +30,6 @@ import {
 	Search,
 	Settings,
 	Share,
-	UserPen,
 	UserPlus,
 } from 'lucide-react'
 import languages, { LangKey } from '@/lib/languages'
@@ -72,18 +71,18 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/learn': {
 			name: 'Home',
-			title: 'All Decks',
+			title: 'Home',
 			Icon: Home,
 			link: {
 				to: '/learn',
 			},
 		},
-		'/learn/browse': {
+		'/browse': {
 			name: 'Browse',
-			title: 'Browse Library',
+			title: 'Browse',
 			Icon: Compass,
 			link: {
-				to: '/learn/browse',
+				to: '/browse',
 			},
 		},
 		'/learn/add-deck': {
@@ -102,17 +101,17 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/learn/contributions',
 			},
 		},
-		'/learn/browse/charts': {
+		'/browse/charts': {
 			name: 'Charts',
 			title: 'Library Data',
 			Icon: BarChart3,
 			link: {
-				to: '/learn/browse/charts',
+				to: '/browse/charts',
 			},
 		},
 		'/search': {
 			name: 'Search',
-			title: 'Phrase Finder',
+			title: 'Search',
 			link: {
 				to: '/search',
 			},
@@ -144,8 +143,8 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 		},
 		'/profile': {
 			name: 'Profile',
-			title: 'View Profile',
-			Icon: UserPen,
+			title: 'Profile & settings',
+			Icon: Settings,
 			link: {
 				to: '/profile',
 			},
