@@ -6,7 +6,6 @@ import {
 } from '@/features/profile/schemas'
 
 export const CardStatusEnumSchema = z.enum(['active', 'learned', 'skipped'])
-export type CardStatusEnumType = z.infer<typeof CardStatusEnumSchema>
 
 export const CardDirectionSchema = z.enum(['forward', 'reverse'])
 export type CardDirectionType = z.infer<typeof CardDirectionSchema>
@@ -34,7 +33,6 @@ export const DeckMetaSchema = DeckMetaRawSchema.extend({
 	language: z.string(),
 })
 
-export type DeckMetaRawType = z.infer<typeof DeckMetaRawSchema>
 export type DeckMetaType = z.infer<typeof DeckMetaSchema>
 
 export const CardMetaSchema = z.object({

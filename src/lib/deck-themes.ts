@@ -38,5 +38,3 @@ export function setTheme(element?: HTMLElement, index?: number) {
 	el.style.setProperty('--hue-neutral', String(theme.hueOff))
 	el.style.setProperty('--hue-accent', String(theme.hueAccent))
 }
-
-export type ThemeCSS = CSSProperties

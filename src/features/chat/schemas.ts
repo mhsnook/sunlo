@@ -8,7 +8,6 @@ export const ChatTranslationSchema = z.object({
 	lang: z.string(),
 	text: z.string(),
 })
-export type ChatTranslationType = z.infer<typeof ChatTranslationSchema>
 
 export const ChatResultPhraseSchema = z.object({
 	id: z.string(),

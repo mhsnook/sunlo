@@ -14,7 +14,6 @@ export {
 	PhrasePlaylistUpdateSchema,
 	type PhrasePlaylistUpdateType,
 	PlaylistPhraseLinkIncludedInsertSchema,
-	type PlaylistPhraseLinkIncludedInsertType,
 	validateUrl,
 } from './schemas'
 

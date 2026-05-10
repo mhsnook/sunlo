@@ -21,7 +21,6 @@ export type LanguageKnownType = z.infer<typeof LanguageKnownSchema>
 export const LanguagesKnownSchema = z
 	.array(LanguageKnownSchema)
 	.min(1, 'Please add at least one language you know.')
-export type LanguagesKnownType = z.infer<typeof LanguagesKnownSchema>
 
 export const PublicProfileSchema = z.object({
 	uid: z.string().uuid(),

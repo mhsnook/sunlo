@@ -3,7 +3,6 @@
 
 export {
 	ChatTranslationSchema,
-	type ChatTranslationType,
 	ChatResultPhraseSchema,
 	type ChatResultPhraseType,
 	ChatQuerySchema,

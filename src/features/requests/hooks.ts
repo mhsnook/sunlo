@@ -1,6 +1,5 @@
 import { eq, useLiveQuery } from '@tanstack/react-db'
 
-import type { Tables } from '@/types/supabase'
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import {
 	commentPhraseLinksCollection,
@@ -113,9 +112,3 @@ export const useHasRequestUpvote = (requestId: uuid): boolean =>
 				.where(({ upvote }) => eq(upvote.request_id, requestId)),
 		[requestId]
 	).data?.length
-
-export type FulfillRequestResponse = {
-	phrase: Tables<'phrase'>
-	translation: Tables<'phrase_translation'>
-	card: Tables<'user_card'> | null
-}
