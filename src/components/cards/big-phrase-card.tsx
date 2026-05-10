@@ -39,11 +39,8 @@ import {
 import { Loader } from '@/components/ui/loader'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { Button } from '@/components/ui/button'
-import {
-	usePhraseProvenance,
-	useRelatedCards,
-	type PhraseProvenanceItem as PhraseProvenanceItemType,
-} from '@/features/phrases/hooks'
+import { usePhraseProvenance, useRelatedCards } from '@/features/phrases/hooks'
+import type { PhraseProvenanceItem as PhraseProvenanceItemType } from '@/features/phrases'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import Flagged from '@/components/flagged'

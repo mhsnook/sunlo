@@ -2,8 +2,8 @@ import { TriangleAlert } from 'lucide-react'
 import { memo, useEffect, type PropsWithChildren } from 'react'
 import Callout from '@/components/ui/callout'
 import supabase from '@/lib/supabase-client'
-import type { Json } from '@/types/supabase'
-import type { PostgrestError } from '@supabase/supabase-js'
+import { Json } from '@/types/supabase'
+import { PostgrestError } from '@supabase/supabase-js'
 
 /*
   If the error message passed as `children` is nullable, we can simply use:

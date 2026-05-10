@@ -1,7 +1,7 @@
 import { type ReactNode, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
 import {

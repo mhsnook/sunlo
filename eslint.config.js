@@ -48,8 +48,9 @@ export default [
 					allowThrowingUnknown: false,
 				},
 			],
-			// Cross-feature type imports must come from the barrel
-			// (esquery's regex literal can't escape `/` directly, so `/`).
+			// Barrel pattern enforcement, scoped to @/features/* imports only.
+			// esquery's regex literal can't escape `/` directly, so / is the
+			// literal slash inside the source.value patterns.
 			'no-restricted-syntax': [
 				'error',
 				{
@@ -57,6 +58,12 @@ export default [
 						"ImportDeclaration[importKind='type'][source.value=/^@\\u002Ffeatures\\u002F[^\\u002F]+\\u002F.+/]",
 					message:
 						"Cross-feature type imports must come from the barrel '@/features/<feature>', not internal paths like '@/features/<feature>/schemas'.",
+				},
+				{
+					selector:
+						"ImportDeclaration[source.value=/^@\\u002Ffeatures\\u002F.+/] > ImportSpecifier[importKind='type']",
+					message:
+						"Don't mix value and type specifiers in a feature import. Split into a plain `import { ... }` from the internal path and an `import type { ... }` from the barrel.",
 				},
 			],
 		},

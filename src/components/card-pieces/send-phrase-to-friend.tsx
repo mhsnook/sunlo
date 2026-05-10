@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import supabase from '@/lib/supabase-client'
 import { Send } from 'lucide-react'
 import {
@@ -11,12 +11,11 @@ import {
 	DialogTrigger,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import type { buttonVariants } from '@/components/ui/button'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { useUserId } from '@/lib/use-auth'
 import { SelectMultipleFriends } from '@/components/select-multiple-friends'
-import type { VariantProps } from 'class-variance-authority'
-import type { PhraseFullFilteredType } from '@/features/phrases'
+import { VariantProps } from 'class-variance-authority'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { useAllChats } from '@/features/social/hooks'
 
 function useSendPhraseToFriendMutation(

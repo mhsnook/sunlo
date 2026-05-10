@@ -4,11 +4,8 @@ import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
 
-import {
-	TranslationSchema,
-	type PhraseFullType,
-	type TranslationType,
-} from '@/features/phrases/schemas'
+import { TranslationSchema } from '@/features/phrases/schemas'
+import type { PhraseFullType, TranslationType } from '@/features/phrases'
 import supabase from '@/lib/supabase-client'
 import {
 	Dialog,
@@ -19,8 +16,7 @@ import {
 	DialogFooter,
 } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
-import type { ButtonProps } from '@/components/ui/button'
-import { Button } from '@/components/ui/button'
+import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'

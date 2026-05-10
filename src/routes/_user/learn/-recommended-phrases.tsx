@@ -1,12 +1,10 @@
 import { useRef } from 'react'
 import { Link } from '@tanstack/react-router'
-import type { LucideIcon } from 'lucide-react'
-import { Brain, Carrot, TrendingUp } from 'lucide-react'
+import { Brain, Carrot, LucideIcon, TrendingUp } from 'lucide-react'
 
 import type { pids } from '@/types/main'
 import languages from '@/lib/languages'
-import type { CompositePids } from '@/hooks/composite-pids'
-import { useCompositePids } from '@/hooks/composite-pids'
+import { CompositePids, useCompositePids } from '@/hooks/composite-pids'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 

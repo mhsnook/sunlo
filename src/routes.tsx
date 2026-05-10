@@ -1,8 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
-import type { Register } from '@tanstack/react-router'
-import { RouterProvider } from '@tanstack/react-router'
+import { RouterProvider, Register } from '@tanstack/react-router'
 import { useAuth } from '@/lib/use-auth'
-import type { MyRouterContext } from './routes/__root'
+import { MyRouterContext } from './routes/__root'
 import { AwaitingAuthLoader } from './components/awaiting-auth-loader'
 
 export default function Routes({ router }: Register) {

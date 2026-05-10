@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button'
 import {
 	PhrasePlaylistSchema,
 	PhrasePlaylistUpdateSchema,
-	type PhrasePlaylistType,
-	type PhrasePlaylistUpdateType,
 } from '@/features/playlists/schemas'
+import type {
+	PhrasePlaylistType,
+	PhrasePlaylistUpdateType,
+} from '@/features/playlists'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'

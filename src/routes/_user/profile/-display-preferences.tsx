@@ -11,12 +11,11 @@ import {
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
-import type { MyProfileType } from '@/features/profile'
-import {
-	type FontPreferenceType,
-	MyProfileSchema,
-	type ReviewAnswerModeType,
-} from '@/features/profile/schemas'
+import { MyProfileSchema, MyProfileType } from '@/features/profile/schemas'
+import type {
+	FontPreferenceType,
+	ReviewAnswerModeType,
+} from '@/features/profile'
 import { Label } from '@/components/ui/label'
 import { InfoDialog } from '@/components/info-dialog'
 import { ChoiceTile } from '@/components/ui/choice-tile'

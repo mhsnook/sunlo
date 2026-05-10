@@ -10,13 +10,13 @@ import { commentsCollection } from '@/features/comments/collections'
 import { usePhrasesFromComment } from '@/features/comments/hooks'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import { useUserId } from '@/lib/use-auth'
-import { type RequestCommentType } from '@/features/comments/schemas'
+import type { RequestCommentType } from '@/features/comments'
 import { buttonVariants } from '@/components/ui/button'
 
 import { DeleteCommentDialog } from './delete-comment-dialog'
 import { Upvote } from './upvote-comment-button'
 import { CommentContextMenu } from './comment-context-menu'
-import type { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 import { Separator } from '../ui/separator'
 
 interface CommentThreadProps {

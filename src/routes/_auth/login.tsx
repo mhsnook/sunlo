@@ -2,7 +2,7 @@ import { createFileRoute, Navigate } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/use-auth'
 import { LoginCardBody } from '@/components/login-card-body'
-import type { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 
 export interface LoginSearchParams {
 	redirectedFrom?: string

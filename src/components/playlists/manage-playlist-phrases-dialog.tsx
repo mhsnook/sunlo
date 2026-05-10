@@ -17,10 +17,8 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import {
-	type PhrasePlaylistType,
-	validateUrl,
-} from '@/features/playlists/schemas'
+import { validateUrl } from '@/features/playlists/schemas'
+import type { PhrasePlaylistType } from '@/features/playlists'
 import supabase from '@/lib/supabase-client'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { useOnePlaylistPhrases } from '@/features/playlists/hooks'
@@ -257,7 +255,7 @@ export function ManagePlaylistPhrasesDialog({
 
 				<div className="min-h-0 flex-1 overflow-y-auto pr-4">
 					<div className="space-y-3">
-						{phrasesData && phrasesData.length > 0 ?
+						{phrasesData && phrasesData.length > 0 ? (
 							phrasesData.map((item, index) => (
 								<div
 									key={item.link.id}
@@ -339,10 +337,11 @@ export function ManagePlaylistPhrasesDialog({
 									</div>
 								</div>
 							))
-						:	<p className="text-muted-foreground py-8 text-center">
+						) : (
+							<p className="text-muted-foreground py-8 text-center">
 								No phrases in this playlist yet. Add some below!
 							</p>
-						}
+						)}
 					</div>
 
 					{/* Inline phrase creator */}

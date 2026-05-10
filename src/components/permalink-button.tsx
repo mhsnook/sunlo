@@ -1,9 +1,8 @@
 import { EllipsisVertical } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import type { LinkProps } from '@tanstack/react-router'
-import { Link } from '@tanstack/react-router'
-import type { VariantProps } from 'class-variance-authority'
+import { Link, LinkProps } from '@tanstack/react-router'
+import { VariantProps } from 'class-variance-authority'
 
 export default function PermalinkButton({
 	to,

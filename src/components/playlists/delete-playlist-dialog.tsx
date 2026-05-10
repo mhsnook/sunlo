@@ -13,7 +13,7 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import type { PhrasePlaylistType } from '@/features/playlists'
+import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import supabase from '@/lib/supabase-client'
 import { phrasePlaylistsCollection } from '@/features/playlists/collections'
 import { useNavigate } from '@tanstack/react-router'

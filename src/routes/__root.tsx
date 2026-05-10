@@ -13,7 +13,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
-import type { TitleBar } from '@/types/main'
+import { TitleBar } from '@/types/main'
 
 // Dev-only identity switcher. The ternary collapses to null in production
 // builds (import.meta.env.DEV is statically replaced), so the dynamic

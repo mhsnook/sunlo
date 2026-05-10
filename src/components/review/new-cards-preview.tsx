@@ -12,10 +12,8 @@ import { useNewCardEntries } from '@/features/review/store'
 import type { uuid } from '@/types/main'
 import type { TranslationType } from '@/features/phrases'
 import type { CardDirectionType } from '@/features/deck'
-import {
-	parseManifestEntry,
-	type ManifestEntry,
-} from '@/features/review/manifest'
+import { parseManifestEntry } from '@/features/review/manifest'
+import type { ManifestEntry } from '@/features/review'
 
 function PreviewCard({
 	pid,

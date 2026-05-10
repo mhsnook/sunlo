@@ -10,7 +10,7 @@ import { useHasRequestUpvote } from '@/features/requests/hooks'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import type { PhraseRequestType } from '@/features/requests'
+import { PhraseRequestType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {

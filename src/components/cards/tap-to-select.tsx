@@ -7,9 +7,9 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CheckCircle } from 'lucide-react'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
-import type { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 
 type TapCardToSelectProps = {
 	toggleCardSelection: (pid: string) => void

@@ -2,7 +2,7 @@ import { Link } from '@tanstack/react-router'
 
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Callout from '@/components/ui/callout'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import {
 	useOnePlaylist,

@@ -9,7 +9,7 @@ import {
 	useReviewLang,
 	useReviewStage,
 } from './store'
-import type { PostgrestError } from '@supabase/supabase-js'
+import { PostgrestError } from '@supabase/supabase-js'
 import { cardReviewsCollection, reviewDaysCollection } from './collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { and, eq, lt, useLiveQuery } from '@tanstack/react-db'

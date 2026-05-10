@@ -4,15 +4,14 @@ import { createFileRoute, Navigate, useNavigate } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { toastSuccess } from '@/components/ui/sonner'
-import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
+import { toManifestEntry } from '@/features/review/manifest'
+import type { ManifestEntry } from '@/features/review'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { useDeckCards } from '@/features/deck/hooks'
 import { isDueCard } from '@/features/deck/is-due-card'
 import { phrasesCollection } from '@/features/phrases/collections'
-import {
-	partitionBuriedSiblings,
-	type BurySiblingCandidate,
-} from '@/features/review/bury-siblings'
+import { partitionBuriedSiblings } from '@/features/review/bury-siblings'
+import type { BurySiblingCandidate } from '@/features/review'
 import { eq, useLiveQuery } from '@tanstack/react-db'
 import {
 	BookOpen,

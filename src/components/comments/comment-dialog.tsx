@@ -24,9 +24,11 @@ import {
 import {
 	CommentPhraseLinkSchema,
 	RequestCommentSchema,
-	type CommentPhraseLinkType,
-	type RequestCommentType,
 } from '@/features/comments/schemas'
+import type {
+	CommentPhraseLinkType,
+	RequestCommentType,
+} from '@/features/comments'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
 import { useRequest } from '@/features/requests/hooks'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'

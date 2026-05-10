@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/features/social/public-profile'

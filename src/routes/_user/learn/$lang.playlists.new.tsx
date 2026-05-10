@@ -1,19 +1,18 @@
-import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { useMutation } from '@tanstack/react-query'
-import type { Tables } from '@/types/supabase'
+import { Tables } from '@/types/supabase'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
 	PhrasePlaylistInsertSchema,
-	type PhrasePlaylistInsertType,
 	PhrasePlaylistSchema,
 	PlaylistPhraseLinkSchema,
 } from '@/features/playlists/schemas'
+import type { PhrasePlaylistInsertType } from '@/features/playlists'
 import {
 	phrasePlaylistsCollection,
 	playlistPhraseLinksCollection,

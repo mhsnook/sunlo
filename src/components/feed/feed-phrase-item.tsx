@@ -1,5 +1,7 @@
-import type { FeedActivityType } from '@/features/feed'
-import { FeedActivityPayloadPhraseSchema } from '@/features/feed/schemas'
+import {
+	FeedActivityType,
+	FeedActivityPayloadPhraseSchema,
+} from '@/features/feed/schemas'
 import { UidPermalinkInline } from '@/components/card-pieces/user-permalink'
 import { Link } from '@tanstack/react-router'
 import { usePhrase } from '@/hooks/composite-phrase'

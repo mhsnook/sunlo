@@ -1,8 +1,7 @@
-import type { CSSProperties } from 'react'
-import { useMemo, useState } from 'react'
+import { CSSProperties, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import type { PostgrestError } from '@supabase/supabase-js'
+import { PostgrestError } from '@supabase/supabase-js'
 import {
 	ArrowDown,
 	ArrowUp,
@@ -23,15 +22,13 @@ import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 import { useDeckMeta, useDeckCards } from '@/features/deck/hooks'
 import { cardsCollection } from '@/features/deck/collections'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
-import {
-	type CardMetaType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
+import { CardStatusEnumSchema } from '@/features/deck/schemas'
+import type { CardMetaType } from '@/features/deck'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
 import { cn, sessionDaysDiff } from '@/lib/utils'
 import { calculateInterval } from '@/features/review'
-import type { Tables } from '@/types/supabase'
+import { Tables } from '@/types/supabase'
 
 export const Route = createFileRoute('/_user/learn/$lang/manage-deck')({
 	component: ManageDeckPage,

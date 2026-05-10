@@ -416,12 +416,14 @@ import type { DeckMetaType } from '@/features/deck/schemas'
 
 If a type isn't in a feature's barrel, the answer is "add it to `index.ts`." The barrel is the type contract; expanding it is a deliberate API decision.
 
-**Lint enforcement.** Two rules cooperate:
+**Lint enforcement.** Two `no-restricted-syntax` selectors in `eslint.config.js`, both scoped to `@/features/*`:
 
-1. `@typescript-eslint/consistent-type-imports` (in `.oxlintrc.json`, with `fixStyle: "separate-type-imports"`) — `oxlint --fix` rewrites mixed `import { foo, type Bar }` into two separate statements, one for values and one for types. The pre-commit hook applies this automatically.
-2. `no-restricted-syntax` (in `eslint.config.js`) — blocks `import type { ... } from '@/features/<feature>/<internal>'`. Cross-feature type imports must come from the barrel.
+1. Blocks `import type { ... } from '@/features/<feature>/<internal>'`. Cross-feature type imports must come from the barrel.
+2. Blocks inline `type` specifiers in any feature import — i.e. mixed `import { foo, type Bar } from '@/features/...'` is rejected. Split into a plain `import` from the internal path and an `import type` from the barrel.
 
-Together these enforce: types come from the barrel, values come from internal paths, and no statement mixes the two. Value imports from the barrel aren't blocked (the lint can't tell value imports apart from type imports without the split), but barrels export zero runtime values, so any value import through a barrel fails to resolve — structurally enforced.
+The first selector keeps types funneled through the barrel; the second prevents the mixed-import escape hatch that would let an inline `type X` slip past the first rule. Together they enforce: feature types come from the barrel, feature values come from internal paths, and the two never share a statement.
+
+The rules don't fire on imports outside `@/features/*`, so the rest of the codebase can keep mixed imports as-is. Value imports through a barrel aren't blocked, but barrels export zero runtime values, so a value import through a barrel fails to resolve — structurally enforced.
 
 **Feature domains and what they contain:**
 

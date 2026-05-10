@@ -1,12 +1,12 @@
 import { usePhrase } from '@/hooks/composite-phrase'
 import { Link } from '@tanstack/react-router'
 import { Loader } from '@/components/ui/loader'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { LangBadge } from '@/components/ui/badge'
 import { CardStatusHeart } from '@/components/card-pieces/card-status-dropdown'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { cn } from '@/lib/utils'
-import type { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 
 export const PhraseTinyCard = ({
 	pid,

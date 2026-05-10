@@ -21,10 +21,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { phraseRequestsCollection } from '@/features/requests/collections'
-import {
-	PhraseRequestSchema,
-	type PhraseRequestType,
-} from '@/features/requests/schemas'
+import { PhraseRequestSchema } from '@/features/requests/schemas'
+import type { PhraseRequestType } from '@/features/requests'
 import { useAuth } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
 import { Markdown } from '@/components/my-markdown'

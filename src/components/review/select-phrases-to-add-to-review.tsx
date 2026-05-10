@@ -1,8 +1,7 @@
 import languages from '@/lib/languages'
 import { useProfile } from '@/features/profile/hooks'
-import type { pids } from '@/types/main'
-import type { LucideIcon } from 'lucide-react'
-import { Brain, Carrot, Sparkles, TrendingUp } from 'lucide-react'
+import { pids } from '@/types/main'
+import { Brain, Carrot, LucideIcon, Sparkles, TrendingUp } from 'lucide-react'
 import {
 	DrawerContent,
 	DrawerDescription,

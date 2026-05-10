@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useRelationFriends } from '@/features/social/hooks'
 import { Loader } from '@/components/ui/loader'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { Checkbox } from '@/components/ui/checkbox'
 import { User } from 'lucide-react'
 import { avatarUrlify } from '@/lib/hooks'

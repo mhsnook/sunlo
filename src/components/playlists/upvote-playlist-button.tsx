@@ -10,7 +10,7 @@ import { useHasPlaylistUpvote } from '@/features/playlists/hooks'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import type { PhrasePlaylistType } from '@/features/playlists'
+import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {

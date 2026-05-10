@@ -1,4 +1,4 @@
-import type { FeedActivityType } from '@/features/feed'
+import { FeedActivityType } from '@/features/feed/schemas'
 import { RequestItem } from '@/components/requests/request-list-item'
 
 import { useRequest } from '@/features/requests/hooks'

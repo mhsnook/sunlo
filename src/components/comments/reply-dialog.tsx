@@ -19,10 +19,12 @@ import {
 import { useOneComment } from '@/features/comments/hooks'
 import {
 	CommentPhraseLinkSchema,
-	type CommentPhraseLinkType,
 	RequestCommentSchema,
-	type RequestCommentType,
 } from '@/features/comments/schemas'
+import type {
+	CommentPhraseLinkType,
+	RequestCommentType,
+} from '@/features/comments'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { useAppForm } from '@/components/form'

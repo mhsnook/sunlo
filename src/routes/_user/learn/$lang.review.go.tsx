@@ -22,10 +22,8 @@ import {
 	cardReviewsCollection,
 	reviewDaysCollection,
 } from '@/features/review/collections'
-import {
-	parseManifestEntry,
-	type ManifestEntry,
-} from '@/features/review/manifest'
+import { parseManifestEntry } from '@/features/review/manifest'
+import type { ManifestEntry } from '@/features/review'
 import { useCheck, should } from '@scenetest/checks-react'
 import { todayString } from '@/lib/utils'
 

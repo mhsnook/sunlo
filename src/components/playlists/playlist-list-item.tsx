@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { ExternalLink, Plus, Send, Bookmark } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
-import type { PhrasePlaylistType } from '@/features/playlists'
+import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { useOnePlaylistPhrases } from '@/features/playlists/hooks'

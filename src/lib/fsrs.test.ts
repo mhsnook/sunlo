@@ -4,8 +4,8 @@ import {
 	validateFSRSValues,
 	intervals,
 	retrievability,
-	type Score,
 } from '@/features/review/fsrs'
+import type { Score } from '@/features/review'
 import type { CardReviewType } from '@/features/review'
 
 // Helper to make a mock previous review.

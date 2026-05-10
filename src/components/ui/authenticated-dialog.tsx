@@ -1,5 +1,4 @@
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
-import { useState } from 'react'
+import { ComponentPropsWithoutRef, ReactNode, useState } from 'react'
 import { Link } from '@tanstack/react-router'
 
 import { useAuth } from '@/lib/use-auth'

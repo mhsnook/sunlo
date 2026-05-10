@@ -8,6 +8,7 @@ export {
 	PhraseRequestUpvoteSchema,
 	type PhraseRequestUpvoteType,
 	PhraseRequestStatusEnumSchema,
+	type RequestPhraseFormInputs,
 } from './schemas'
 
 // Collections

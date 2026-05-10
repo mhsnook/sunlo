@@ -19,7 +19,8 @@ import {
 import { CardContent } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
-import { intervals, type Score } from '@/features/review/fsrs'
+import { intervals } from '@/features/review/fsrs'
+import type { Score } from '@/features/review'
 import PracticeHistoryDialog from '@/components/practice-history-dialog'
 import Flagged from '@/components/flagged'
 import { Button } from '@/components/ui/button'
@@ -41,15 +42,13 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SendPhraseToFriendDialog } from '@/components/card-pieces/send-phrase-to-friend'
-import type {
+import {
 	PhraseFullFilteredType,
 	TranslationType,
-} from '@/features/phrases'
-import {
-	type CardDirectionType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
-import type { uuid } from '@/types/main'
+} from '@/features/phrases/schemas'
+import { CardStatusEnumSchema } from '@/features/deck/schemas'
+import type { CardDirectionType } from '@/features/deck'
+import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import supabase from '@/lib/supabase-client'

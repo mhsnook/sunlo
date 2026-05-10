@@ -13,7 +13,7 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import type { PhraseRequestType } from '@/features/requests'
+import { PhraseRequestType } from '@/features/requests/schemas'
 import supabase from '@/lib/supabase-client'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { useNavigate } from '@tanstack/react-router'

@@ -4,7 +4,7 @@ import { AvatarIconRow } from '@/components/ui/avatar-icon'
 import { ConfirmDestructiveActionDialog } from '@/components/confirm-destructive-action-dialog'
 import { useFriendRequestAction } from '@/features/social/hooks'
 import { IconSizedLoader } from '@/components/ui/loader'
-import type { uuid } from '@/types/main'
+import { uuid } from '@/types/main'
 import { useOnePublicProfile } from '@/features/social/public-profile'
 
 export function ProfileWithRelationship({ uid }: { uid: uuid }) {

@@ -21,16 +21,11 @@ import {
 import type { uuid } from '@/types/main'
 import { Loader } from '@/components/ui/loader'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import {
-	useAnyonesPhraseRequests,
-	type PhraseRequestType,
-} from '@/features/requests'
+import { useAnyonesPhraseRequests } from '@/features/requests'
+import type { PhraseRequestType } from '@/features/requests'
 import { useAnyonesPhrases } from '@/features/phrases'
-import {
-	useAnyonesComments,
-	usePhrasesFromComment,
-	type RequestCommentType,
-} from '@/features/comments'
+import { useAnyonesComments, usePhrasesFromComment } from '@/features/comments'
+import type { RequestCommentType } from '@/features/comments'
 
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'

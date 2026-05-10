@@ -4,10 +4,10 @@ import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
 import supabase from '@/lib/supabase-client'
-import type { MyProfileType } from '@/features/profile'
 import {
 	LanguagesKnownSchema,
 	MyProfileSchema,
+	MyProfileType,
 } from '@/features/profile/schemas'
 import { Button } from '@/components/ui/button'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'

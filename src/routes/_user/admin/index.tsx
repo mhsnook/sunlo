@@ -1,5 +1,4 @@
-import type { CSSProperties } from 'react'
-import { useState } from 'react'
+import { CSSProperties, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronsRight, ShieldAlert } from 'lucide-react'
 

@@ -12,7 +12,7 @@ import {
 	DialogTitle,
 } from '@/components/ui/dialog'
 import { getThemeCss } from '@/lib/deck-themes'
-import type { DeckMetaType } from '@/features/deck'
+import { DeckMetaType } from '@/features/deck/schemas'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
 import { todayString } from '@/lib/utils'

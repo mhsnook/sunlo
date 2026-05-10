@@ -18,7 +18,7 @@ import Flagged from '@/components/flagged'
 import { RecommendedPhrasesCard } from '@/routes/_user/learn/-recommended-phrases'
 import { ActivityChart } from '@/components/activity-chart'
 import { DeckStatsBadges } from '@/components/stats-badges'
-import type { CSSProperties } from 'react'
+import { CSSProperties } from 'react'
 import { useIntro } from '@/hooks/use-intro-seen'
 import { DeckNewIntro, DeckNewCallout } from '@/components/intros'
 

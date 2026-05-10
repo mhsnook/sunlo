@@ -2,10 +2,11 @@ import { describe, it, expect } from 'vitest'
 import {
 	getIndexOfNextUnreviewedCard,
 	getIndexOfNextAgainCard,
-	type ReviewsMap,
 } from '@/features/review/review-utils'
+import type { ReviewsMap } from './review-utils'
 import type { CardReviewType } from './schemas'
-import { toManifestEntry, type ManifestEntry } from '@/features/review/manifest'
+import { toManifestEntry } from '@/features/review/manifest'
+import type { ManifestEntry } from './manifest'
 
 /**
  * These tests verify the session-navigation functions with manifests that
