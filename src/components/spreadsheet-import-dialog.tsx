@@ -137,9 +137,9 @@ export function SpreadsheetImportDialog({
 			<DialogContent className="max-h-[90vh] overflow-y-auto">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-1">
-						{step === 'paste' ?
-							'Paste from Spreadsheet'
-						:	'Map Columns & Review'}
+						{step === 'paste'
+							? 'Paste from Spreadsheet'
+							: 'Map Columns & Review'}
 						{step === 'paste' && (
 							<InfoDialog title="Spreadsheet Import Format">
 								<p>
@@ -188,20 +188,20 @@ export function SpreadsheetImportDialog({
 						)}
 					</DialogTitle>
 					<DialogDescription>
-						{step === 'paste' ?
-							'Paste tab-separated data from a spreadsheet. The first row should contain column headers.'
-						:	`Set the role and language for each column, then review the ${includedCount} phrases to import.`
-						}
+						{step === 'paste'
+							? 'Paste tab-separated data from a spreadsheet. The first row should contain column headers.'
+							: `Set the role and language for each column, then review the ${includedCount} phrases to import.`}
 					</DialogDescription>
 				</DialogHeader>
 
-				{step === 'paste' ?
+				{step === 'paste' ? (
 					<PasteStep
 						rawText={rawText}
 						setRawText={setRawText}
 						onParse={handleParse}
 					/>
-				:	<MapAndReviewStep
+				) : (
+					<MapAndReviewStep
 						headers={headers}
 						rows={rows}
 						mappings={mappings}
@@ -221,7 +221,7 @@ export function SpreadsheetImportDialog({
 						onBack={handleBack}
 						onImport={handleImport}
 					/>
-				}
+				)}
 			</DialogContent>
 		</Dialog>
 	)
@@ -314,7 +314,10 @@ function MapAndReviewStep({
 						<thead>
 							<tr className="bg-muted/50">
 								{headers.map((header, i) => (
-									<th key={i} className="px-3 py-2 text-start font-medium">
+									<th
+										key={`col-${i}-${header}`}
+										className="px-3 py-2 text-start font-medium"
+									>
 										{header}
 									</th>
 								))}
@@ -323,12 +326,16 @@ function MapAndReviewStep({
 						<tbody>
 							<tr className="border-t">
 								{mappings.map((mapping, i) => (
-									<td key={i} className="px-3 py-2">
-										{mapping.role === 'phrase' ?
+									<td
+										key={`role-${i}-${headers[i] ?? ''}`}
+										className="px-3 py-2"
+									>
+										{mapping.role === 'phrase' ? (
 											<span className="text-muted-foreground text-xs font-medium">
 												Phrase ({languages[lang]})
 											</span>
-										:	<select
+										) : (
+											<select
 												value={mapping.role}
 												onChange={(e) =>
 													updateMapping(i, {
@@ -342,14 +349,17 @@ function MapAndReviewStep({
 												<option value="translation">Translation</option>
 												<option value="tags">Tags</option>
 											</select>
-										}
+										)}
 									</td>
 								))}
 							</tr>
 							<tr className="border-t">
 								{mappings.map((mapping, i) => (
-									<td key={i} className="px-3 py-2">
-										{mapping.role === 'translation' ?
+									<td
+										key={`lang-${i}-${headers[i] ?? ''}`}
+										className="px-3 py-2"
+									>
+										{mapping.role === 'translation' ? (
 											<SelectOneOfYourLanguages
 												value={mapping.lang}
 												setValue={(val) =>
@@ -359,7 +369,7 @@ function MapAndReviewStep({
 												}
 												className="w-36"
 											/>
-										:	null}
+										) : null}
 									</td>
 								))}
 							</tr>
@@ -432,7 +442,7 @@ function MapAndReviewStep({
 
 									return (
 										<tr
-											key={rowIndex}
+											key={`row-${rowIndex}`}
 											className={`border-t ${!includedRows[rowIndex] ? 'opacity-40' : ''}`}
 										>
 											<td className="px-2 py-1.5">
@@ -445,7 +455,7 @@ function MapAndReviewStep({
 											<td className="px-2 py-1.5">
 												{translationTexts.map((t, i) => (
 													<div
-														key={i}
+														key={`tr-${i}-${t}`}
 														className="text-muted-foreground text-xs"
 													>
 														{t}
@@ -457,7 +467,7 @@ function MapAndReviewStep({
 													<div className="flex flex-wrap gap-1">
 														{tagTexts.map((t, i) => (
 															<span
-																key={i}
+																key={`tag-${i}-${t}`}
 																className="bg-muted inline-block rounded px-1.5 py-0.5 text-xs"
 															>
 																{t}
