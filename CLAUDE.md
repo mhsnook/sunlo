@@ -287,31 +287,67 @@ export const useDeckCards = (lang: string) =>
 
 ### Mutations Pattern
 
-**Always use `useMutation`** for any server state changes (including login/logout), even when there's no form.
-
-Standard approach:
-
-1. Return updated/inserted rows from mutation with `.select()`
-2. Update local collection in `onSuccess` with `utils.writeInsert/writeUpdate`
-3. For complex server-side changes, use `invalidateQueries()` instead
-
-Two update patterns:
-
-1. **Direct collection updates** (optimistic UI):
+**Standard:** define persistence on the collection itself via `onInsert / onUpdate / onDelete` handlers, then call `collection.insert / update / delete` from components. The optimistic update lands in the same tick; throwing from the handler rolls it back automatically. Attach success/error UX to the returned `Transaction.isPersisted.promise`.
 
 ```typescript
-phrasePlaylistsCollection.utils.writeInsert(PhrasePlaylistSchema.parse(data))
+// features/<domain>/collections.ts — persistence lives here
+export const cardsCollection = createCollection(
+	queryCollectionOptions({
+		// ...id, queryKey, queryFn, getKey, schema...
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('user_card')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false } // optimistic value matches server; skip reload
+		},
+	})
+)
+
+// component — declare the optimistic intent, react to collection state
+const { data: card } = useMyCard(phrase.id)
+
+const setCardStatus = (status: CardStatus) => {
+	if (!card) return
+	const tx = cardsCollection.update(card.id, (draft) => {
+		draft.status = status
+	})
+	tx.isPersisted.promise.then(
+		() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
+		(err) => {
+			toastError('Failed to update card status')
+			console.error('rolled back', err)
+		}
+	)
+}
 ```
 
-2. **React Query mutations** (typical pattern):
+The component subscribes to the collection via `useLiveQuery` (here through `useMyCard`), so the menu / button state reflects the optimistic value immediately and flips back if the server rejects.
+
+See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked example. See also the [TanStack DB optimistic-mutations skill](node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
+
+**Reasonable exceptions:**
+
+- **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
+
+**Deprecated** — do not use for new code, and migrate when touching old code (tracked by the `transform` label):
 
 ```typescript
+// ❌ useMutation calling supabase directly + manual local sync in onSuccess.
+// React Query routes onSuccess errors to onError, so a successful DB write
+// whose post-success sync throws surfaces as a misleading "Failed to X" toast.
 const mutation = useMutation({
 	mutationFn: async (values) => {
 		const { data } = await supabase
 			.from('phrase')
 			.insert(values)
-			.select() // Always return the data
+			.select()
 			.throwOnError()
 		return data[0]
 	},
@@ -846,37 +882,13 @@ Use `await Promise.all([...])` when the route needs the data before first render
 
 ### Mutation Best Practices
 
-- **Always use `useMutation`** for any server state changes (including login/logout)
-- **Return updated/inserted rows** from mutations with `.select()`
-- **Update local collections** in `onSuccess` using `collection.utils.writeInsert/writeUpdate`
-- Use `toast.success()` in onSuccess, `toast.error()` and `console.log('Error', error)` in onError
-- For complex server-side updates, it's fine to just `invalidateQueries()` instead
+- **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
+- **Throw from the handler** to roll the optimistic state back; **return `{ refetch: false }`** from a `queryCollectionOptions` handler when the optimistic value already matches what the server confirmed (skip the post-handler full refetch)
+- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
+- **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
+- For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
 
-### Complete Mutation Example
-
-```typescript
-const mutation = useMutation<DeckRow, PostgrestError, DeckGoalFormInputs>({
-	mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
-	mutationFn: async (values) => {
-		const { data } = await supabase
-			.from('user_deck')
-			.update(values)
-			.eq('lang', lang)
-			.eq('uid', userId!)
-			.throwOnError()
-			.select()
-		return data[0]
-	},
-	onSuccess: (data) => {
-		toast.success('Deck settings updated!')
-		decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-	},
-	onError: (error) => {
-		toast.error('Update failed')
-		console.log('Error', error)
-	},
-})
-```
+See the "Mutations Pattern" section above for a worked example, and PR #623 / the `transform` label for the in-flight migration.
 
 ## Testing Conventions
 
