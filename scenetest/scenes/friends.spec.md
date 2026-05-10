@@ -46,10 +46,11 @@ learner:
 - see friend-search-overlay
 - see friend-search-input
 
-# friends index redirects to chats
+# friends index shows the friends feed
 
 learner:
 
 - login
 - openTo /friends
-- see chats-page
+- see friends-home-page
+- see friends-feed-section
