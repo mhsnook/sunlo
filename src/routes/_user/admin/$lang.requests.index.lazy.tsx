@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { eq } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
@@ -21,7 +21,7 @@ import { phraseRequestsCollection } from '@/features/requests/collections'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 import { ago } from '@/lib/dayjs'
 
-export const Route = createFileRoute('/_user/admin/$lang/requests/')({
+export const Route = createLazyFileRoute('/_user/admin/$lang/requests/')({
 	component: AdminRequestsIndex,
 })
 

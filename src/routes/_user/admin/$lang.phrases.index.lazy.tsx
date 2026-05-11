@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import {
 	Archive,
 	ArrowDown,
@@ -20,7 +20,7 @@ import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import { ago } from '@/lib/dayjs'
 
-export const Route = createFileRoute('/_user/admin/$lang/phrases/')({
+export const Route = createLazyFileRoute('/_user/admin/$lang/phrases/')({
 	component: AdminPhrasesIndex,
 })
 

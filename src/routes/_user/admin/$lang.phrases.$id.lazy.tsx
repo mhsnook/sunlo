@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import {
 	Archive,
@@ -40,7 +40,7 @@ import supabase from '@/lib/supabase-client'
 import { ago } from '@/lib/dayjs'
 import languages from '@/lib/languages'
 
-export const Route = createFileRoute('/_user/admin/$lang/phrases/$id')({
+export const Route = createLazyFileRoute('/_user/admin/$lang/phrases/$id')({
 	component: AdminPhraseDetail,
 })
 

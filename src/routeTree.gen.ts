@@ -23,7 +23,6 @@ import { Route as UserLearnRouteImport } from './routes/_user/learn'
 import { Route as UserGettingStartedRouteImport } from './routes/_user/getting-started'
 import { Route as UserFriendsRouteImport } from './routes/_user/friends'
 import { Route as UserBrowseRouteImport } from './routes/_user/browse'
-import { Route as UserAdminRouteImport } from './routes/_user/admin'
 import { Route as UserAcceptInviteRouteImport } from './routes/_user/accept-invite'
 import { Route as AuthSignupRouteImport } from './routes/_auth/signup'
 import { Route as AuthSetNewPasswordRouteImport } from './routes/_auth/set-new-password'
@@ -63,8 +62,6 @@ import { Route as UserAdminLangPhrasesRouteImport } from './routes/_user/admin/$
 import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
 import { Route as UserLearnLangRequestsIndexRouteImport } from './routes/_user/learn/$lang.requests.index'
 import { Route as UserLearnLangPlaylistsIndexRouteImport } from './routes/_user/learn/$lang.playlists.index'
-import { Route as UserAdminLangRequestsIndexRouteImport } from './routes/_user/admin/$lang.requests.index'
-import { Route as UserAdminLangPhrasesIndexRouteImport } from './routes/_user/admin/$lang.phrases.index'
 import { Route as UserLearnLangReviewPreviewRouteImport } from './routes/_user/learn/$lang.review.preview'
 import { Route as UserLearnLangReviewGoRouteImport } from './routes/_user/learn/$lang.review.go'
 import { Route as UserLearnLangRequestsNewRouteImport } from './routes/_user/learn/$lang.requests.new'
@@ -74,8 +71,6 @@ import { Route as UserLearnLangPlaylistsPlaylistIdRouteImport } from './routes/_
 import { Route as UserLearnLangPhrasesNewRouteImport } from './routes/_user/learn/$lang.phrases.new'
 import { Route as UserLearnLangPhrasesIdRouteImport } from './routes/_user/learn/$lang.phrases.$id'
 import { Route as UserFriendsChatsFriendUidRecommendRouteImport } from './routes/_user/friends/chats.$friendUid.recommend'
-import { Route as UserAdminLangRequestsIdRouteImport } from './routes/_user/admin/$lang.requests.$id'
-import { Route as UserAdminLangPhrasesIdRouteImport } from './routes/_user/admin/$lang.phrases.$id'
 
 const ThemesLazyRouteImport = createFileRoute('/themes')()
 const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
@@ -84,10 +79,23 @@ const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
 const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
 const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
+const UserAdminLazyRouteImport = createFileRoute('/_user/admin')()
 const UserSearchIndexLazyRouteImport = createFileRoute('/_user/search/')()
 const UserSearchTestLazyRouteImport = createFileRoute('/_user/search/test')()
 const UserFriendsInviteLazyRouteImport = createFileRoute(
   '/_user/friends/invite',
+)()
+const UserAdminLangRequestsIndexLazyRouteImport = createFileRoute(
+  '/_user/admin/$lang/requests/',
+)()
+const UserAdminLangPhrasesIndexLazyRouteImport = createFileRoute(
+  '/_user/admin/$lang/phrases/',
+)()
+const UserAdminLangRequestsIdLazyRouteImport = createFileRoute(
+  '/_user/admin/$lang/requests/$id',
+)()
+const UserAdminLangPhrasesIdLazyRouteImport = createFileRoute(
+  '/_user/admin/$lang/phrases/$id',
 )()
 
 const ThemesLazyRoute = ThemesLazyRouteImport.update({
@@ -147,6 +155,11 @@ const ChatsLangLazyRoute = ChatsLangLazyRouteImport.update({
   path: '/$lang',
   getParentRoute: () => ChatsRoute,
 } as any).lazy(() => import('./routes/chats.$lang.lazy').then((d) => d.Route))
+const UserAdminLazyRoute = UserAdminLazyRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => UserRoute,
+} as any).lazy(() => import('./routes/_user/admin.lazy').then((d) => d.Route))
 const UserWelcomeRoute = UserWelcomeRouteImport.update({
   id: '/welcome',
   path: '/welcome',
@@ -185,11 +198,6 @@ const UserFriendsRoute = UserFriendsRouteImport.update({
 const UserBrowseRoute = UserBrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
-  getParentRoute: () => UserRoute,
-} as any)
-const UserAdminRoute = UserAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
   getParentRoute: () => UserRoute,
 } as any)
 const UserAcceptInviteRoute = UserAcceptInviteRouteImport.update({
@@ -247,8 +255,10 @@ const UserBrowseIndexRoute = UserBrowseIndexRouteImport.update({
 const UserAdminIndexRoute = UserAdminIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => UserAdminRoute,
-} as any)
+  getParentRoute: () => UserAdminLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/index.lazy').then((d) => d.Route),
+)
 const UserSearchTestLazyRoute = UserSearchTestLazyRouteImport.update({
   id: '/test',
   path: '/test',
@@ -318,13 +328,17 @@ const UserBrowseChartsRoute = UserBrowseChartsRouteImport.update({
 const UserAdminRoutesRoute = UserAdminRoutesRouteImport.update({
   id: '/routes',
   path: '/routes',
-  getParentRoute: () => UserAdminRoute,
-} as any)
+  getParentRoute: () => UserAdminLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/routes.lazy').then((d) => d.Route),
+)
 const UserAdminLangRoute = UserAdminLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
-  getParentRoute: () => UserAdminRoute,
-} as any)
+  getParentRoute: () => UserAdminLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/$lang.lazy').then((d) => d.Route),
+)
 const UserLearnLangIndexRoute = UserLearnLangIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -392,12 +406,36 @@ const UserAdminLangRequestsRoute = UserAdminLangRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
   getParentRoute: () => UserAdminLangRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_user/admin/$lang.requests.lazy').then((d) => d.Route),
+)
 const UserAdminLangPhrasesRoute = UserAdminLangPhrasesRouteImport.update({
   id: '/phrases',
   path: '/phrases',
   getParentRoute: () => UserAdminLangRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_user/admin/$lang.phrases.lazy').then((d) => d.Route),
+)
+const UserAdminLangRequestsIndexLazyRoute =
+  UserAdminLangRequestsIndexLazyRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => UserAdminLangRequestsRoute,
+  } as any).lazy(() =>
+    import('./routes/_user/admin/$lang.requests.index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
+const UserAdminLangPhrasesIndexLazyRoute =
+  UserAdminLangPhrasesIndexLazyRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => UserAdminLangPhrasesRoute,
+  } as any).lazy(() =>
+    import('./routes/_user/admin/$lang.phrases.index.lazy').then(
+      (d) => d.Route,
+    ),
+  )
 const UserLearnLangReviewIndexRoute =
   UserLearnLangReviewIndexRouteImport.update({
     id: '/',
@@ -416,18 +454,22 @@ const UserLearnLangPlaylistsIndexRoute =
     path: '/',
     getParentRoute: () => UserLearnLangPlaylistsRoute,
   } as any)
-const UserAdminLangRequestsIndexRoute =
-  UserAdminLangRequestsIndexRouteImport.update({
-    id: '/',
-    path: '/',
+const UserAdminLangRequestsIdLazyRoute =
+  UserAdminLangRequestsIdLazyRouteImport.update({
+    id: '/$id',
+    path: '/$id',
     getParentRoute: () => UserAdminLangRequestsRoute,
-  } as any)
-const UserAdminLangPhrasesIndexRoute =
-  UserAdminLangPhrasesIndexRouteImport.update({
-    id: '/',
-    path: '/',
+  } as any).lazy(() =>
+    import('./routes/_user/admin/$lang.requests.$id.lazy').then((d) => d.Route),
+  )
+const UserAdminLangPhrasesIdLazyRoute =
+  UserAdminLangPhrasesIdLazyRouteImport.update({
+    id: '/$id',
+    path: '/$id',
     getParentRoute: () => UserAdminLangPhrasesRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_user/admin/$lang.phrases.$id.lazy').then((d) => d.Route),
+  )
 const UserLearnLangReviewPreviewRoute =
   UserLearnLangReviewPreviewRouteImport.update({
     id: '/preview',
@@ -478,16 +520,6 @@ const UserFriendsChatsFriendUidRecommendRoute =
     path: '/recommend',
     getParentRoute: () => UserFriendsChatsFriendUidRoute,
   } as any)
-const UserAdminLangRequestsIdRoute = UserAdminLangRequestsIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => UserAdminLangRequestsRoute,
-} as any)
-const UserAdminLangPhrasesIdRoute = UserAdminLangPhrasesIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => UserAdminLangPhrasesRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -502,7 +534,6 @@ export interface FileRoutesByFullPath {
   '/set-new-password': typeof AuthSetNewPasswordRoute
   '/signup': typeof AuthSignupRoute
   '/accept-invite': typeof UserAcceptInviteRoute
-  '/admin': typeof UserAdminRouteWithChildren
   '/browse': typeof UserBrowseRouteWithChildren
   '/friends': typeof UserFriendsRouteWithChildren
   '/getting-started': typeof UserGettingStartedRoute
@@ -511,6 +542,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof UserProfileRouteWithChildren
   '/search': typeof UserSearchRouteWithChildren
   '/welcome': typeof UserWelcomeRoute
+  '/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
@@ -547,8 +579,6 @@ export interface FileRoutesByFullPath {
   '/admin/$lang/': typeof UserAdminLangIndexRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdRoute
-  '/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -558,11 +588,13 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
-  '/admin/$lang/phrases/': typeof UserAdminLangPhrasesIndexRoute
-  '/admin/$lang/requests/': typeof UserAdminLangRequestsIndexRoute
+  '/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdLazyRoute
+  '/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdLazyRoute
   '/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
   '/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
+  '/admin/$lang/phrases/': typeof UserAdminLangPhrasesIndexLazyRoute
+  '/admin/$lang/requests/': typeof UserAdminLangRequestsIndexLazyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -608,8 +640,6 @@ export interface FileRoutesByTo {
   '/admin/$lang': typeof UserAdminLangIndexRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
-  '/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdRoute
-  '/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -619,11 +649,13 @@ export interface FileRoutesByTo {
   '/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
-  '/admin/$lang/phrases': typeof UserAdminLangPhrasesIndexRoute
-  '/admin/$lang/requests': typeof UserAdminLangRequestsIndexRoute
+  '/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdLazyRoute
+  '/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdLazyRoute
   '/learn/$lang/playlists': typeof UserLearnLangPlaylistsIndexRoute
   '/learn/$lang/requests': typeof UserLearnLangRequestsIndexRoute
   '/learn/$lang/review': typeof UserLearnLangReviewIndexRoute
+  '/admin/$lang/phrases': typeof UserAdminLangPhrasesIndexLazyRoute
+  '/admin/$lang/requests': typeof UserAdminLangRequestsIndexLazyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -641,7 +673,6 @@ export interface FileRoutesById {
   '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
   '/_auth/signup': typeof AuthSignupRoute
   '/_user/accept-invite': typeof UserAcceptInviteRoute
-  '/_user/admin': typeof UserAdminRouteWithChildren
   '/_user/browse': typeof UserBrowseRouteWithChildren
   '/_user/friends': typeof UserFriendsRouteWithChildren
   '/_user/getting-started': typeof UserGettingStartedRoute
@@ -650,6 +681,7 @@ export interface FileRoutesById {
   '/_user/profile': typeof UserProfileRouteWithChildren
   '/_user/search': typeof UserSearchRouteWithChildren
   '/_user/welcome': typeof UserWelcomeRoute
+  '/_user/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
@@ -686,8 +718,6 @@ export interface FileRoutesById {
   '/_user/admin/$lang/': typeof UserAdminLangIndexRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
-  '/_user/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdRoute
-  '/_user/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdRoute
   '/_user/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
   '/_user/learn/$lang/phrases/$id': typeof UserLearnLangPhrasesIdRoute
   '/_user/learn/$lang/phrases/new': typeof UserLearnLangPhrasesNewRoute
@@ -697,11 +727,13 @@ export interface FileRoutesById {
   '/_user/learn/$lang/requests/new': typeof UserLearnLangRequestsNewRoute
   '/_user/learn/$lang/review/go': typeof UserLearnLangReviewGoRoute
   '/_user/learn/$lang/review/preview': typeof UserLearnLangReviewPreviewRoute
-  '/_user/admin/$lang/phrases/': typeof UserAdminLangPhrasesIndexRoute
-  '/_user/admin/$lang/requests/': typeof UserAdminLangRequestsIndexRoute
+  '/_user/admin/$lang/phrases/$id': typeof UserAdminLangPhrasesIdLazyRoute
+  '/_user/admin/$lang/requests/$id': typeof UserAdminLangRequestsIdLazyRoute
   '/_user/learn/$lang/playlists/': typeof UserLearnLangPlaylistsIndexRoute
   '/_user/learn/$lang/requests/': typeof UserLearnLangRequestsIndexRoute
   '/_user/learn/$lang/review/': typeof UserLearnLangReviewIndexRoute
+  '/_user/admin/$lang/phrases/': typeof UserAdminLangPhrasesIndexLazyRoute
+  '/_user/admin/$lang/requests/': typeof UserAdminLangRequestsIndexLazyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -718,7 +750,6 @@ export interface FileRouteTypes {
     | '/set-new-password'
     | '/signup'
     | '/accept-invite'
-    | '/admin'
     | '/browse'
     | '/friends'
     | '/getting-started'
@@ -727,6 +758,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/search'
     | '/welcome'
+    | '/admin'
     | '/chats/$lang'
     | '/chats/'
     | '/admin/$lang'
@@ -763,8 +795,6 @@ export interface FileRouteTypes {
     | '/admin/$lang/'
     | '/friends/chats/'
     | '/learn/$lang/'
-    | '/admin/$lang/phrases/$id'
-    | '/admin/$lang/requests/$id'
     | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/phrases/$id'
     | '/learn/$lang/phrases/new'
@@ -774,11 +804,13 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
     | '/learn/$lang/review/preview'
-    | '/admin/$lang/phrases/'
-    | '/admin/$lang/requests/'
+    | '/admin/$lang/phrases/$id'
+    | '/admin/$lang/requests/$id'
     | '/learn/$lang/playlists/'
     | '/learn/$lang/requests/'
     | '/learn/$lang/review/'
+    | '/admin/$lang/phrases/'
+    | '/admin/$lang/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -824,8 +856,6 @@ export interface FileRouteTypes {
     | '/admin/$lang'
     | '/friends/chats'
     | '/learn/$lang'
-    | '/admin/$lang/phrases/$id'
-    | '/admin/$lang/requests/$id'
     | '/friends/chats/$friendUid/recommend'
     | '/learn/$lang/phrases/$id'
     | '/learn/$lang/phrases/new'
@@ -835,11 +865,13 @@ export interface FileRouteTypes {
     | '/learn/$lang/requests/new'
     | '/learn/$lang/review/go'
     | '/learn/$lang/review/preview'
-    | '/admin/$lang/phrases'
-    | '/admin/$lang/requests'
+    | '/admin/$lang/phrases/$id'
+    | '/admin/$lang/requests/$id'
     | '/learn/$lang/playlists'
     | '/learn/$lang/requests'
     | '/learn/$lang/review'
+    | '/admin/$lang/phrases'
+    | '/admin/$lang/requests'
   id:
     | '__root__'
     | '/'
@@ -856,7 +888,6 @@ export interface FileRouteTypes {
     | '/_auth/set-new-password'
     | '/_auth/signup'
     | '/_user/accept-invite'
-    | '/_user/admin'
     | '/_user/browse'
     | '/_user/friends'
     | '/_user/getting-started'
@@ -865,6 +896,7 @@ export interface FileRouteTypes {
     | '/_user/profile'
     | '/_user/search'
     | '/_user/welcome'
+    | '/_user/admin'
     | '/chats/$lang'
     | '/chats/'
     | '/_user/admin/$lang'
@@ -901,8 +933,6 @@ export interface FileRouteTypes {
     | '/_user/admin/$lang/'
     | '/_user/friends/chats/'
     | '/_user/learn/$lang/'
-    | '/_user/admin/$lang/phrases/$id'
-    | '/_user/admin/$lang/requests/$id'
     | '/_user/friends/chats/$friendUid/recommend'
     | '/_user/learn/$lang/phrases/$id'
     | '/_user/learn/$lang/phrases/new'
@@ -912,11 +942,13 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/requests/new'
     | '/_user/learn/$lang/review/go'
     | '/_user/learn/$lang/review/preview'
-    | '/_user/admin/$lang/phrases/'
-    | '/_user/admin/$lang/requests/'
+    | '/_user/admin/$lang/phrases/$id'
+    | '/_user/admin/$lang/requests/$id'
     | '/_user/learn/$lang/playlists/'
     | '/_user/learn/$lang/requests/'
     | '/_user/learn/$lang/review/'
+    | '/_user/admin/$lang/phrases/'
+    | '/_user/admin/$lang/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1010,6 +1042,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatsLangLazyRouteImport
       parentRoute: typeof ChatsRoute
     }
+    '/_user/admin': {
+      id: '/_user/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof UserAdminLazyRouteImport
+      parentRoute: typeof UserRoute
+    }
     '/_user/welcome': {
       id: '/_user/welcome'
       path: '/welcome'
@@ -1064,13 +1103,6 @@ declare module '@tanstack/react-router' {
       path: '/browse'
       fullPath: '/browse'
       preLoaderRoute: typeof UserBrowseRouteImport
-      parentRoute: typeof UserRoute
-    }
-    '/_user/admin': {
-      id: '/_user/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof UserAdminRouteImport
       parentRoute: typeof UserRoute
     }
     '/_user/accept-invite': {
@@ -1148,7 +1180,7 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof UserAdminIndexRouteImport
-      parentRoute: typeof UserAdminRoute
+      parentRoute: typeof UserAdminLazyRoute
     }
     '/_user/search/test': {
       id: '/_user/search/test'
@@ -1239,14 +1271,14 @@ declare module '@tanstack/react-router' {
       path: '/routes'
       fullPath: '/admin/routes'
       preLoaderRoute: typeof UserAdminRoutesRouteImport
-      parentRoute: typeof UserAdminRoute
+      parentRoute: typeof UserAdminLazyRoute
     }
     '/_user/admin/$lang': {
       id: '/_user/admin/$lang'
       path: '/$lang'
       fullPath: '/admin/$lang'
       preLoaderRoute: typeof UserAdminLangRouteImport
-      parentRoute: typeof UserAdminRoute
+      parentRoute: typeof UserAdminLazyRoute
     }
     '/_user/learn/$lang/': {
       id: '/_user/learn/$lang/'
@@ -1346,6 +1378,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserAdminLangPhrasesRouteImport
       parentRoute: typeof UserAdminLangRoute
     }
+    '/_user/admin/$lang/requests/': {
+      id: '/_user/admin/$lang/requests/'
+      path: '/'
+      fullPath: '/admin/$lang/requests/'
+      preLoaderRoute: typeof UserAdminLangRequestsIndexLazyRouteImport
+      parentRoute: typeof UserAdminLangRequestsRoute
+    }
+    '/_user/admin/$lang/phrases/': {
+      id: '/_user/admin/$lang/phrases/'
+      path: '/'
+      fullPath: '/admin/$lang/phrases/'
+      preLoaderRoute: typeof UserAdminLangPhrasesIndexLazyRouteImport
+      parentRoute: typeof UserAdminLangPhrasesRoute
+    }
     '/_user/learn/$lang/review/': {
       id: '/_user/learn/$lang/review/'
       path: '/'
@@ -1367,18 +1413,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserLearnLangPlaylistsIndexRouteImport
       parentRoute: typeof UserLearnLangPlaylistsRoute
     }
-    '/_user/admin/$lang/requests/': {
-      id: '/_user/admin/$lang/requests/'
-      path: '/'
-      fullPath: '/admin/$lang/requests/'
-      preLoaderRoute: typeof UserAdminLangRequestsIndexRouteImport
+    '/_user/admin/$lang/requests/$id': {
+      id: '/_user/admin/$lang/requests/$id'
+      path: '/$id'
+      fullPath: '/admin/$lang/requests/$id'
+      preLoaderRoute: typeof UserAdminLangRequestsIdLazyRouteImport
       parentRoute: typeof UserAdminLangRequestsRoute
     }
-    '/_user/admin/$lang/phrases/': {
-      id: '/_user/admin/$lang/phrases/'
-      path: '/'
-      fullPath: '/admin/$lang/phrases/'
-      preLoaderRoute: typeof UserAdminLangPhrasesIndexRouteImport
+    '/_user/admin/$lang/phrases/$id': {
+      id: '/_user/admin/$lang/phrases/$id'
+      path: '/$id'
+      fullPath: '/admin/$lang/phrases/$id'
+      preLoaderRoute: typeof UserAdminLangPhrasesIdLazyRouteImport
       parentRoute: typeof UserAdminLangPhrasesRoute
     }
     '/_user/learn/$lang/review/preview': {
@@ -1444,20 +1490,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserFriendsChatsFriendUidRecommendRouteImport
       parentRoute: typeof UserFriendsChatsFriendUidRoute
     }
-    '/_user/admin/$lang/requests/$id': {
-      id: '/_user/admin/$lang/requests/$id'
-      path: '/$id'
-      fullPath: '/admin/$lang/requests/$id'
-      preLoaderRoute: typeof UserAdminLangRequestsIdRouteImport
-      parentRoute: typeof UserAdminLangRequestsRoute
-    }
-    '/_user/admin/$lang/phrases/$id': {
-      id: '/_user/admin/$lang/phrases/$id'
-      path: '/$id'
-      fullPath: '/admin/$lang/phrases/$id'
-      preLoaderRoute: typeof UserAdminLangPhrasesIdRouteImport
-      parentRoute: typeof UserAdminLangPhrasesRoute
-    }
   }
 }
 
@@ -1476,66 +1508,6 @@ const AuthRouteChildren: AuthRouteChildren = {
 }
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
-interface UserAdminLangPhrasesRouteChildren {
-  UserAdminLangPhrasesIdRoute: typeof UserAdminLangPhrasesIdRoute
-  UserAdminLangPhrasesIndexRoute: typeof UserAdminLangPhrasesIndexRoute
-}
-
-const UserAdminLangPhrasesRouteChildren: UserAdminLangPhrasesRouteChildren = {
-  UserAdminLangPhrasesIdRoute: UserAdminLangPhrasesIdRoute,
-  UserAdminLangPhrasesIndexRoute: UserAdminLangPhrasesIndexRoute,
-}
-
-const UserAdminLangPhrasesRouteWithChildren =
-  UserAdminLangPhrasesRoute._addFileChildren(UserAdminLangPhrasesRouteChildren)
-
-interface UserAdminLangRequestsRouteChildren {
-  UserAdminLangRequestsIdRoute: typeof UserAdminLangRequestsIdRoute
-  UserAdminLangRequestsIndexRoute: typeof UserAdminLangRequestsIndexRoute
-}
-
-const UserAdminLangRequestsRouteChildren: UserAdminLangRequestsRouteChildren = {
-  UserAdminLangRequestsIdRoute: UserAdminLangRequestsIdRoute,
-  UserAdminLangRequestsIndexRoute: UserAdminLangRequestsIndexRoute,
-}
-
-const UserAdminLangRequestsRouteWithChildren =
-  UserAdminLangRequestsRoute._addFileChildren(
-    UserAdminLangRequestsRouteChildren,
-  )
-
-interface UserAdminLangRouteChildren {
-  UserAdminLangPhrasesRoute: typeof UserAdminLangPhrasesRouteWithChildren
-  UserAdminLangRequestsRoute: typeof UserAdminLangRequestsRouteWithChildren
-  UserAdminLangIndexRoute: typeof UserAdminLangIndexRoute
-}
-
-const UserAdminLangRouteChildren: UserAdminLangRouteChildren = {
-  UserAdminLangPhrasesRoute: UserAdminLangPhrasesRouteWithChildren,
-  UserAdminLangRequestsRoute: UserAdminLangRequestsRouteWithChildren,
-  UserAdminLangIndexRoute: UserAdminLangIndexRoute,
-}
-
-const UserAdminLangRouteWithChildren = UserAdminLangRoute._addFileChildren(
-  UserAdminLangRouteChildren,
-)
-
-interface UserAdminRouteChildren {
-  UserAdminLangRoute: typeof UserAdminLangRouteWithChildren
-  UserAdminRoutesRoute: typeof UserAdminRoutesRoute
-  UserAdminIndexRoute: typeof UserAdminIndexRoute
-}
-
-const UserAdminRouteChildren: UserAdminRouteChildren = {
-  UserAdminLangRoute: UserAdminLangRouteWithChildren,
-  UserAdminRoutesRoute: UserAdminRoutesRoute,
-  UserAdminIndexRoute: UserAdminIndexRoute,
-}
-
-const UserAdminRouteWithChildren = UserAdminRoute._addFileChildren(
-  UserAdminRouteChildren,
-)
 
 interface UserBrowseRouteChildren {
   UserBrowseChartsRoute: typeof UserBrowseChartsRoute
@@ -1721,9 +1693,68 @@ const UserSearchRouteWithChildren = UserSearchRoute._addFileChildren(
   UserSearchRouteChildren,
 )
 
+interface UserAdminLangPhrasesRouteChildren {
+  UserAdminLangPhrasesIdLazyRoute: typeof UserAdminLangPhrasesIdLazyRoute
+  UserAdminLangPhrasesIndexLazyRoute: typeof UserAdminLangPhrasesIndexLazyRoute
+}
+
+const UserAdminLangPhrasesRouteChildren: UserAdminLangPhrasesRouteChildren = {
+  UserAdminLangPhrasesIdLazyRoute: UserAdminLangPhrasesIdLazyRoute,
+  UserAdminLangPhrasesIndexLazyRoute: UserAdminLangPhrasesIndexLazyRoute,
+}
+
+const UserAdminLangPhrasesRouteWithChildren =
+  UserAdminLangPhrasesRoute._addFileChildren(UserAdminLangPhrasesRouteChildren)
+
+interface UserAdminLangRequestsRouteChildren {
+  UserAdminLangRequestsIdLazyRoute: typeof UserAdminLangRequestsIdLazyRoute
+  UserAdminLangRequestsIndexLazyRoute: typeof UserAdminLangRequestsIndexLazyRoute
+}
+
+const UserAdminLangRequestsRouteChildren: UserAdminLangRequestsRouteChildren = {
+  UserAdminLangRequestsIdLazyRoute: UserAdminLangRequestsIdLazyRoute,
+  UserAdminLangRequestsIndexLazyRoute: UserAdminLangRequestsIndexLazyRoute,
+}
+
+const UserAdminLangRequestsRouteWithChildren =
+  UserAdminLangRequestsRoute._addFileChildren(
+    UserAdminLangRequestsRouteChildren,
+  )
+
+interface UserAdminLangRouteChildren {
+  UserAdminLangPhrasesRoute: typeof UserAdminLangPhrasesRouteWithChildren
+  UserAdminLangRequestsRoute: typeof UserAdminLangRequestsRouteWithChildren
+  UserAdminLangIndexRoute: typeof UserAdminLangIndexRoute
+}
+
+const UserAdminLangRouteChildren: UserAdminLangRouteChildren = {
+  UserAdminLangPhrasesRoute: UserAdminLangPhrasesRouteWithChildren,
+  UserAdminLangRequestsRoute: UserAdminLangRequestsRouteWithChildren,
+  UserAdminLangIndexRoute: UserAdminLangIndexRoute,
+}
+
+const UserAdminLangRouteWithChildren = UserAdminLangRoute._addFileChildren(
+  UserAdminLangRouteChildren,
+)
+
+interface UserAdminLazyRouteChildren {
+  UserAdminLangRoute: typeof UserAdminLangRouteWithChildren
+  UserAdminRoutesRoute: typeof UserAdminRoutesRoute
+  UserAdminIndexRoute: typeof UserAdminIndexRoute
+}
+
+const UserAdminLazyRouteChildren: UserAdminLazyRouteChildren = {
+  UserAdminLangRoute: UserAdminLangRouteWithChildren,
+  UserAdminRoutesRoute: UserAdminRoutesRoute,
+  UserAdminIndexRoute: UserAdminIndexRoute,
+}
+
+const UserAdminLazyRouteWithChildren = UserAdminLazyRoute._addFileChildren(
+  UserAdminLazyRouteChildren,
+)
+
 interface UserRouteChildren {
   UserAcceptInviteRoute: typeof UserAcceptInviteRoute
-  UserAdminRoute: typeof UserAdminRouteWithChildren
   UserBrowseRoute: typeof UserBrowseRouteWithChildren
   UserFriendsRoute: typeof UserFriendsRouteWithChildren
   UserGettingStartedRoute: typeof UserGettingStartedRoute
@@ -1732,11 +1763,11 @@ interface UserRouteChildren {
   UserProfileRoute: typeof UserProfileRouteWithChildren
   UserSearchRoute: typeof UserSearchRouteWithChildren
   UserWelcomeRoute: typeof UserWelcomeRoute
+  UserAdminLazyRoute: typeof UserAdminLazyRouteWithChildren
 }
 
 const UserRouteChildren: UserRouteChildren = {
   UserAcceptInviteRoute: UserAcceptInviteRoute,
-  UserAdminRoute: UserAdminRouteWithChildren,
   UserBrowseRoute: UserBrowseRouteWithChildren,
   UserFriendsRoute: UserFriendsRouteWithChildren,
   UserGettingStartedRoute: UserGettingStartedRoute,
@@ -1745,6 +1776,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserProfileRoute: UserProfileRouteWithChildren,
   UserSearchRoute: UserSearchRouteWithChildren,
   UserWelcomeRoute: UserWelcomeRoute,
+  UserAdminLazyRoute: UserAdminLazyRouteWithChildren,
 }
 
 const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
