@@ -53,24 +53,60 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const baseErrors = fs.readFileSync('/tmp/base-errors.txt', 'utf8').trim().split('\n').filter(Boolean);
-            const prErrors   = fs.readFileSync('/tmp/pr-errors.txt',   'utf8').trim().split('\n').filter(Boolean);
+            const baseLines = fs.readFileSync('/tmp/base-errors.txt', 'utf8').trim().split('\n').filter(Boolean);
+            const prLines   = fs.readFileSync('/tmp/pr-errors.txt',   'utf8').trim().split('\n').filter(Boolean);
 
-            const baseSet = new Set(baseErrors);
-            const prSet   = new Set(prErrors);
-            const newErrors = prErrors.filter(e => !baseSet.has(e));
-            const resolved  = baseErrors.filter(e => !prSet.has(e));
+            // Parse "file(line,col): error TS####: message" — tsc's default (non-pretty) format.
+            const parse = (raw) => {
+              const m = raw.match(/^(.+?)\((\d+),(\d+)\):\s*(error\s+TS\d+:\s*.*)$/);
+              if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
+              return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
+            };
 
+            const baseErrors = baseLines.map(parse);
+            const prErrors   = prLines.map(parse);
+            const baseSet = new Set(baseLines);
+            const prSet   = new Set(prLines);
+
+            // First pass: exact-match set difference.
+            const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
+            const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
+
+            // Second pass: pair "new" with "resolved" when same file + same error code/message
+            // and line numbers within 10. Treat as a shifted (unchanged) error rather than a
+            // new one — an unrelated edit just bumped the line number.
+            const PROXIMITY = 10;
+            const resolvedPool = [...resolvedCandidates];
+            const newErrors = [];
+            const moved = [];
+            for (const n of newCandidates) {
+              const idx = resolvedPool.findIndex(r =>
+                r.file === n.file &&
+                r.rest === n.rest &&
+                Math.abs(r.line - n.line) <= PROXIMITY
+              );
+              if (idx >= 0) {
+                moved.push({ from: resolvedPool[idx], to: n });
+                resolvedPool.splice(idx, 1);
+              } else {
+                newErrors.push(n);
+              }
+            }
+            const resolved = resolvedPool;
+
+            fs.writeFileSync('/tmp/tsc-new-count.txt', String(newErrors.length));
+
+            const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
             const summary = `**Before:** ${baseErrors.length} error(s) → **After:** ${prErrors.length} error(s)` +
               (newErrors.length || resolved.length
-                ? ` (+${newErrors.length} new, −${resolved.length} resolved)`
-                : ' (no change)');
+                ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
+                : ` (no change)${movedNote}`);
 
             const lines = ['### TypeScript type check', '', summary];
             if (newErrors.length > 0)
-              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.join('\n')}\n\`\`\``);
+              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.map(e => e.raw).join('\n')}\n\`\`\``);
             if (resolved.length > 0)
-              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.join('\n')}\n\`\`\``);
+              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.map(e => e.raw).join('\n')}\n\`\`\``);
             const body = lines.join('\n');
 
             const marker = '### TypeScript type check';
@@ -93,7 +129,7 @@ jobs:
 
       - name: Fail on new errors
         run: |
-          NEW=$(comm -13 /tmp/base-errors.txt /tmp/pr-errors.txt | wc -l | tr -d ' ')
+          NEW=$(cat /tmp/tsc-new-count.txt 2>/dev/null || echo 0)
           if [ "$NEW" -gt 0 ]; then
             echo "❌ $NEW new type error(s) introduced — see PR comment for details"
             exit 1
