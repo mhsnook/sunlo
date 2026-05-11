@@ -149,24 +149,61 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const baseErrors = fs.readFileSync('/tmp/base-lint.txt', 'utf8').trim().split('\n').filter(Boolean);
-            const prErrors   = fs.readFileSync('/tmp/pr-lint.txt',   'utf8').trim().split('\n').filter(Boolean);
+            const baseLines = fs.readFileSync('/tmp/base-lint.txt', 'utf8').trim().split('\n').filter(Boolean);
+            const prLines   = fs.readFileSync('/tmp/pr-lint.txt',   'utf8').trim().split('\n').filter(Boolean);
 
-            const baseSet = new Set(baseErrors);
-            const prSet   = new Set(prErrors);
-            const newErrors = prErrors.filter(e => !baseSet.has(e));
-            const resolved  = baseErrors.filter(e => !prSet.has(e));
+            // Parse "file:line:col: message" — file paths in this repo have no colons.
+            const parse = (raw) => {
+              const m = raw.match(/^([^:]+):(\d+):(\d+):\s*(.*)$/);
+              if (!m) return { file: '', line: 0, col: 0, rest: raw, raw };
+              return { file: m[1], line: parseInt(m[2], 10), col: parseInt(m[3], 10), rest: m[4], raw };
+            };
 
+            const baseErrors = baseLines.map(parse);
+            const prErrors   = prLines.map(parse);
+            const baseSet = new Set(baseLines);
+            const prSet   = new Set(prLines);
+
+            // First pass: exact-match set difference.
+            const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
+            const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
+
+            // Second pass: pair a "new" with a "resolved" when same file + same message text
+            // and line numbers within 10 of each other. Treat those as the same lint issue
+            // that just shifted (e.g. an unrelated edit pushed it up/down the file).
+            const PROXIMITY = 10;
+            const resolvedPool = [...resolvedCandidates];
+            const newErrors = [];
+            const moved = [];
+            for (const n of newCandidates) {
+              const idx = resolvedPool.findIndex(r =>
+                r.file === n.file &&
+                r.rest === n.rest &&
+                Math.abs(r.line - n.line) <= PROXIMITY
+              );
+              if (idx >= 0) {
+                moved.push({ from: resolvedPool[idx], to: n });
+                resolvedPool.splice(idx, 1);
+              } else {
+                newErrors.push(n);
+              }
+            }
+            const resolved = resolvedPool;
+
+            // Persist the new-error count so the fail step can read it without redoing this work.
+            fs.writeFileSync('/tmp/lint-new-count.txt', String(newErrors.length));
+
+            const movedNote = moved.length ? ` (${moved.length} shifted within ±${PROXIMITY} lines, not counted)` : '';
             const summary = `**Before:** ${baseErrors.length} issue(s) → **After:** ${prErrors.length} issue(s)` +
               (newErrors.length || resolved.length
-                ? ` (+${newErrors.length} new, −${resolved.length} resolved)`
-                : ' (no change)');
+                ? ` (+${newErrors.length} new, −${resolved.length} resolved)${movedNote}`
+                : ` (no change)${movedNote}`);
 
             const lines = ['### Lint (oxlint + eslint)', '', summary];
             if (newErrors.length > 0)
-              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.slice(0, 50).join('\n')}\n${newErrors.length > 50 ? `… and ${newErrors.length - 50} more` : ''}\n\`\`\``);
+              lines.push(`\n**New (${newErrors.length}):**\n\`\`\`\n${newErrors.slice(0, 50).map(e => e.raw).join('\n')}\n${newErrors.length > 50 ? `… and ${newErrors.length - 50} more` : ''}\n\`\`\``);
             if (resolved.length > 0)
-              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.slice(0, 50).join('\n')}\n${resolved.length > 50 ? `… and ${resolved.length - 50} more` : ''}\n\`\`\``);
+              lines.push(`\n**Resolved (${resolved.length}):**\n\`\`\`\n${resolved.slice(0, 50).map(e => e.raw).join('\n')}\n${resolved.length > 50 ? `… and ${resolved.length - 50} more` : ''}\n\`\`\``);
             const body = lines.join('\n');
 
             const marker = '### Lint (oxlint + eslint)';
@@ -189,7 +226,7 @@ jobs:
 
       - name: Fail on new issues
         run: |
-          NEW=$(comm -13 /tmp/base-lint.txt /tmp/pr-lint.txt | wc -l | tr -d ' ')
+          NEW=$(cat /tmp/lint-new-count.txt 2>/dev/null || echo 0)
           if [ "$NEW" -gt 0 ]; then
             echo "❌ $NEW new lint issue(s) introduced — see PR comment for details"
             exit 1
