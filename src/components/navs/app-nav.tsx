@@ -19,6 +19,7 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
+import { resolveNavList } from '@/types/route-static-data'
 import { useAuth } from '@/lib/use-auth'
 
 const activeProps = {
@@ -34,15 +35,14 @@ const inactiveProps = {
 export function AppNav() {
 	const { isAuth } = useAuth()
 	const matches = useMatches()
-	const an = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
-	const appnav = (
-		!an ? [] : !Array.isArray(an[0]) ? an : isAuth ? an[0] : (an[1] ?? [])
-	) as string[]
-	const cm = matches.findLast((m) => m.staticData.contextMenu)?.staticData
-		.contextMenu
-	const contextMenu = (
-		!cm ? [] : !Array.isArray(cm[0]) ? cm : isAuth ? cm[0] : (cm[1] ?? [])
-	) as string[]
+	const appnav = resolveNavList(
+		matches.findLast((m) => m.staticData.appnav)?.staticData.appnav,
+		isAuth
+	)
+	const contextMenu = resolveNavList(
+		matches.findLast((m) => m.staticData.contextMenu)?.staticData.contextMenu,
+		isAuth
+	)
 	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,

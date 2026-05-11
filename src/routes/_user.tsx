@@ -19,6 +19,7 @@ const AppNav = lazy(() =>
 	import('@/components/navs/app-nav').then((m) => ({ default: m.AppNav }))
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
+import { resolveNavList } from '@/types/route-static-data'
 import {
 	myProfileCollection,
 	myProfileQuery,
@@ -115,23 +116,13 @@ function UserLayout() {
 
 	const focusMode = matches.some((m) => m.staticData.focusMode)
 	const wideContent = matches.some((m) => m.staticData.wideContent)
-	const fullWidth = matches.some((m) => m.staticData.fullWidth)
 	// Layout A (default): page flows naturally, one browser scrollbar
 	// Layout B (fixedHeight): viewport-locked container with internal scroll
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
 
 	// Skip the AppNav chunk entirely when no route declares an appnav
 	const appnav = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
-	const appnavList = (
-		!appnav
-			? []
-			: !Array.isArray(appnav[0])
-				? appnav
-				: auth.isAuth
-					? appnav[0]
-					: (appnav[1] ?? [])
-	) as string[]
-	const hasAppNav = !!appnavList.length
+	const hasAppNav = !!resolveNavList(appnav, auth.isAuth).length
 
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()
@@ -171,11 +162,7 @@ function UserLayout() {
 					<div
 						className={cn(
 							'mx-auto flex min-w-0 flex-1 flex-col overflow-x-clip',
-							fullWidth
-								? 'max-w-none'
-								: wideContent
-									? 'max-w-6xl'
-									: 'max-w-4xl',
+							wideContent ? 'max-w-6xl' : 'max-w-4xl',
 							fixedHeight && 'min-h-0 overflow-y-auto'
 						)}
 					>
