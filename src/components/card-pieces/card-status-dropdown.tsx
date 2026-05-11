@@ -116,6 +116,9 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
+const isLearnerStatus = (s: LearningStatus | undefined) =>
+	s === 'active' || s === 'learned' ? 1 : 0
+
 // count_learners is server-derived (aggregated in the phrase_full view from
 // user_card status), so phrasesCollection has no direct mutation handler for
 // it — we apply the predicted delta optimistically via writeUpdate and revert
@@ -131,12 +134,12 @@ function updatePhraseCount(
 		console.error(`updatePhraseCount: no phrase ${phraseId} in collection`)
 		return
 	}
-	const counts = (s: LearningStatus | undefined) =>
-		s === 'active' || s === 'learned' ? 1 : 0
 	phrasesCollection.utils.writeUpdate({
 		id: previous.id,
 		count_learners: Math.max(
-			(previous.count_learners ?? 0) - counts(oldStatus) + counts(newStatus),
+			(previous.count_learners ?? 0) -
+				isLearnerStatus(oldStatus) +
+				isLearnerStatus(newStatus),
 			0
 		),
 	})
