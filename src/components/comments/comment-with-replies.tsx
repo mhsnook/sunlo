@@ -7,8 +7,9 @@ import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { commentsCollection } from '@/features/comments/collections'
-import { usePhrasesFromComment } from '@/features/comments/hooks'
+import { useCommentPhraseLinks } from '@/features/comments/hooks'
 import { publicProfilesCollection } from '@/features/profile/collections'
+import { WithPhrase } from '@/components/with-phrase'
 import { useUserId } from '@/lib/use-auth'
 import { type RequestCommentType } from '@/features/comments/schemas'
 import { buttonVariants } from '@/components/ui/button'
@@ -49,8 +50,8 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 		isFocusMode && replies.some(({ reply }) => reply.id === search.focus)
 	const showSubthread = isFocused || hasHighlightedReply
 
-	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
-	const phrases = phraseFromComment ?? []
+	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
+	const links = phraseLinks ?? []
 
 	const isOwner = userId === comment.uid
 	const replyCount = replies?.length ?? 0
@@ -113,14 +114,18 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 					</div>
 				)}
 
-				{phrases && phrases.length > 0 && (
+				{links.length > 0 && (
 					<div
 						className="mt-3 space-y-2"
 						data-testid="comment-phrase-link-badge"
 					>
-						{phrases.map(({ phrase }) => {
-							return <CardResultSimple key={phrase.id} phrase={phrase} />
-						})}
+						{links.map((link) => (
+							<WithPhrase
+								key={link.id}
+								pid={link.phrase_id}
+								Component={CardResultSimple}
+							/>
+						))}
 					</div>
 				)}
 
@@ -208,13 +213,13 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 }
 
 function CommentReply({ comment, lang }: CommentThreadProps) {
-	const { data: phraseFromComment } = usePhrasesFromComment(comment.id)
+	const { data: phraseLinks } = useCommentPhraseLinks(comment.id)
 	const isHighlighted = useSearch({
 		strict: false,
 		select: (data) => data.focus === comment.id && !data.mode,
 	})
 	const userId = useUserId()
-	const phrases = phraseFromComment ?? []
+	const links = phraseLinks ?? []
 
 	const isOwner = userId === comment.uid
 
@@ -262,10 +267,14 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 				</div>
 			)}
 
-			{phrases && phrases.length > 0 && (
+			{links.length > 0 && (
 				<div className="ms-8 mt-2 space-y-1.5">
-					{phrases.map(({ phrase }) => (
-						<CardResultSimple key={phrase.id} phrase={phrase} />
+					{links.map((link) => (
+						<WithPhrase
+							key={link.id}
+							pid={link.phrase_id}
+							Component={CardResultSimple}
+						/>
 					))}
 				</div>
 			)}

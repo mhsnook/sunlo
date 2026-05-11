@@ -21,7 +21,7 @@ export {
 // Hooks
 export {
 	useOneComment,
-	usePhrasesFromComment,
+	useCommentPhraseLinks,
 	useHasCommentUpvote,
 	useAnyonesComments,
 } from './hooks'
