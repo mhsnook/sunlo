@@ -49,6 +49,8 @@ natural wrapper element to label.
 | ------------------------------- | ----------- | ---------------------- | ----------------------------------------------------------- |
 | `login-link`                    | data-testid | Sidebar                | Link to login page for logged-out users                     |
 | `login-form`                    | data-testid | Login page             | The login form container                                    |
+| `login-signup-link`             | data-testid | Login page             | "Create account" link to /signup                            |
+| `login-forgot-password-link`    | data-testid | Login page             | "Forgot password?" link to /forgot-password                 |
 | `email-input`                   | data-testid | Form fields            | Email input                                                 |
 | `password-input`                | data-testid | Form fields            | Password input                                              |
 | `submit-button`                 | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |

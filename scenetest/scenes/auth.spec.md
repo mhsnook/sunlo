@@ -1,3 +1,12 @@
+# login page shows signup and forgot-password links
+
+visitor:
+
+- openTo /login
+- see login-form
+- see login-signup-link
+- see login-forgot-password-link
+
 # learner logs in and sees their decks
 
 learner:
