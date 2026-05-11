@@ -1,18 +1,15 @@
 import { Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	Bookmark,
 	BookmarkCheck,
 	BookmarkPlus,
 	BookmarkX,
-	CheckCircle,
 	ChevronDown,
 	PlusCircle,
 } from 'lucide-react'
 
-import supabase from '@/lib/supabase-client'
-import { PostgrestError } from '@supabase/supabase-js'
+import { failed, serverCheck, should } from '@scenetest/checks-react'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 import {
 	DropdownMenu,
@@ -21,21 +18,19 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
-import { useDecks, useMyCard } from '@/features/deck/hooks'
+import {
+	useDecks,
+	useMyCard,
+	type CardWithSibling,
+} from '@/features/deck/hooks'
 import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
-import {
-	CardMetaSchema,
-	CardMetaType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
 } from '@/features/phrases/schemas'
-import { Tables } from '@/types/supabase'
 import type { ActionCopy } from '@/types/main'
 
 type AnyPhrase = PhraseFullFilteredType | PhraseFullFullType
@@ -121,106 +116,121 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
-function updatePhraseCounts(
-	oldCard: CardMetaType | undefined,
-	newCard: Tables<'user_card'>
-) {
-	if (oldCard?.status === newCard?.status) return
-	const oldPhrase = phrasesCollection.get(newCard.phrase_id)
-	if (!oldPhrase) {
-		console.error(
-			`Odd that we have a new card but can't find the phrase for id "${newCard.phrase_id}"`
-		)
+const isLearnerStatus = (s: LearningStatus | undefined) =>
+	s === 'active' || s === 'learned' ? 1 : 0
+
+// count_learners is server-derived (aggregated in the phrase_full view from
+// user_card status), so phrasesCollection has no direct mutation handler for
+// it — we apply the predicted delta optimistically via writeUpdate and revert
+// it manually if the card transaction rolls back.
+function updatePhraseCount(
+	phraseId: string,
+	oldStatus: LearningStatus | undefined,
+	newStatus: LearningStatus
+): (() => void) | undefined {
+	if (oldStatus === newStatus) return
+	const previous = phrasesCollection.get(phraseId)
+	if (!previous) {
+		console.error(`updatePhraseCount: no phrase ${phraseId} in collection`)
 		return
 	}
 	phrasesCollection.utils.writeUpdate({
-		id: oldPhrase.id,
+		id: previous.id,
 		count_learners: Math.max(
-			(oldPhrase?.count_learners ?? 0) -
-				(oldCard?.status === 'active' || oldCard?.status === 'learned'
-					? 1
-					: 0) +
-				(newCard.status === 'active' || newCard.status === 'learned' ? 1 : 0),
+			(previous.count_learners ?? 0) -
+				isLearnerStatus(oldStatus) +
+				isLearnerStatus(newStatus),
 			0
 		),
 	})
+	return () => phrasesCollection.utils.writeUpdate(previous)
 }
 
-function useCardStatusMutation(
+function useCardStatusMutator(
 	phrase: AnyPhrase,
-	card: CardMetaType | undefined
+	card: CardWithSibling | undefined
 ) {
 	const userId = useUserId()
 
-	return useMutation<
-		Array<Tables<'user_card'>>,
-		PostgrestError,
-		{ status: LearningStatus }
-	>({
-		mutationKey: ['upsert-card', phrase.id],
-		mutationFn: async ({ status }: { status: LearningStatus }) => {
-			if (!phrase)
-				throw new Error('Trying to change status of a card that does not exist')
-			if (!userId)
-				throw new Error("Trying to change card status but you're not logged in")
-			const { data } = card
-				? await supabase
-						.from('user_card')
-						.update({
-							status,
-						})
-						.eq('phrase_id', phrase.id)
-						.eq('uid', userId)
-						.select()
-						.throwOnError()
-				: await supabase
-						.from('user_card')
-						.insert(
-							directionsForPhrase(phrase.only_reverse).map((direction) => ({
-								lang: phrase.lang,
-								phrase_id: phrase.id,
-								status,
-								direction,
-							}))
-						)
-						.select()
-						.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			try {
-				if (data[0]) updatePhraseCounts(card, data[0])
+	return (status: LearningStatus) => {
+		if (!userId) return
+		if (card?.status === status) return
 
-				if (card) {
-					for (const c of data) {
-						cardsCollection.utils.writeUpdate({
-							id: c.id,
-							status: CardStatusEnumSchema.parse(c.status),
-							updated_at: c.updated_at!,
+		const tx = card
+			? cardsCollection.update(
+					card.sibling_id ? [card.id, card.sibling_id] : [card.id],
+					(drafts) => {
+						drafts.forEach((d) => {
+							d.status = status
 						})
 					}
-				} else {
-					for (const c of data) {
-						cardsCollection.utils.writeInsert(CardMetaSchema.parse(c))
-					}
-				}
-			} catch (e) {
-				console.error('Card saved but failed to update local collection', e)
-				toastError(
-					'Card saved, but your app may be out of date — try refreshing'
 				)
-				return
-			}
+			: (() => {
+					const nowIso = new Date().toISOString()
+					return cardsCollection.insert(
+						directionsForPhrase(phrase.only_reverse).map((direction) => ({
+							id: crypto.randomUUID(),
+							uid: userId,
+							phrase_id: phrase.id,
+							lang: phrase.lang,
+							status,
+							direction,
+							created_at: nowIso,
+							updated_at: nowIso,
+							last_reviewed_at: null,
+							difficulty: null,
+							stability: null,
+						}))
+					)
+				})()
 
-			if (card) toastSuccess(`Updated card status to "${data[0].status}"`)
-			else toastSuccess('Added this phrase to your deck')
-		},
-		onError: (error) => {
-			if (card) toastError('There was an error updating this card')
-			else toastError('There was an error adding this card to your deck')
-			console.log(`error upserting card`, error)
-		},
-	})
+		const revertCount = updatePhraseCount(phrase.id, card?.status, status)
+
+		tx.isPersisted.promise.then(
+			() => {
+				// Verify (in test mode) that the DB-side state matches what we
+				// asked for — both directions of the phrase share the new status.
+				// Stripped in production by vite-plugin-scenetest.
+				serverCheck(
+					'card status persists to all sibling cards',
+					async (server, { uid, phraseId, expectedStatus }) => {
+						const { data: rows, error } = await server.supabase
+							.from('user_card')
+							.select('id, direction, status')
+							.eq('uid', uid)
+							.eq('phrase_id', phraseId)
+						if (error || !rows) {
+							failed('fetch user_card after status mutation', {
+								error: error?.message,
+							})
+							return
+						}
+						should('at least one card row exists', rows.length >= 1, { rows })
+						should(
+							'all sibling cards share the expected status',
+							rows.every((r) => r.status === expectedStatus),
+							{ rows, expected: expectedStatus }
+						)
+					},
+					() => ({ uid: userId, phraseId: phrase.id, expectedStatus: status })
+				)
+				toastSuccess(
+					card
+						? `Updated card status to "${status}"`
+						: 'Added this phrase to your deck'
+				)
+			},
+			(err) => {
+				revertCount?.()
+				toastError(
+					card
+						? 'There was an error updating this card'
+						: 'There was an error adding this card to your deck'
+				)
+				console.error('Card status mutation rolled back:', err)
+			}
+		)
+	}
 }
 
 export function CardStatusDropdown({
@@ -232,7 +242,7 @@ export function CardStatusDropdown({
 	const deckPresent = decks?.some((d) => d.lang === phrase.lang) ?? false
 	const { data: card } = useMyCard(phrase.id)
 
-	const cardMutation = useCardStatusMutation(phrase, card)
+	const setCardStatus = useCardStatusMutator(phrase, card)
 
 	const choice = !deckPresent ? 'nodeck' : !card ? 'nocard' : card.status
 
@@ -247,16 +257,11 @@ export function CardStatusDropdown({
 						className="m-0 min-w-28 justify-between px-1.5"
 						data-name="card-status-dropdown"
 						data-key={phrase.id}
-						disabled={cardMutation.isPending}
 					/>
 				}
 			>
 				<span className="flex items-center justify-center [&_svg]:size-4">
-					{cardMutation.isSuccess ? (
-						<CheckCircle className="text-green-500" />
-					) : (
-						<StatusIcon choice={choice} />
-					)}{' '}
+					<StatusIcon choice={choice} />
 				</span>
 				<span className="me-1">{statusStrings[choice].name}</span>
 				<ChevronDown size={12} />
@@ -272,7 +277,7 @@ export function CardStatusDropdown({
 					</DropdownMenuItem>
 				) : !card ? (
 					<DropdownMenuItem
-						onClick={() => cardMutation.mutate({ status: 'active' })}
+						onClick={() => setCardStatus('active')}
 						data-testid="add-to-deck-option"
 					>
 						<StatusSpan choice="nocard" />
@@ -280,34 +285,22 @@ export function CardStatusDropdown({
 				) : (
 					<>
 						<DropdownMenuItem
-							onClick={() =>
-								card?.status === 'active'
-									? false
-									: cardMutation.mutate({ status: 'active' })
-							}
-							className={card?.status === 'active' ? 'bg-2-mid-primary' : ''}
+							onClick={() => setCardStatus('active')}
+							className={card.status === 'active' ? 'bg-2-mid-primary' : ''}
 							data-testid="activate-card-option"
 						>
 							<StatusSpan choice="active" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							onClick={() =>
-								card?.status === 'learned'
-									? false
-									: cardMutation.mutate({ status: 'learned' })
-							}
-							className={card?.status === 'learned' ? 'bg-2-mid-primary' : ''}
+							onClick={() => setCardStatus('learned')}
+							className={card.status === 'learned' ? 'bg-2-mid-primary' : ''}
 							data-testid="set-learned-option"
 						>
 							<StatusSpan choice="learned" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
-							onClick={() =>
-								card?.status === 'skipped'
-									? false
-									: cardMutation.mutate({ status: 'skipped' })
-							}
-							className={card?.status === 'skipped' ? 'bg-2-mid-primary' : ''}
+							onClick={() => setCardStatus('skipped')}
+							className={card.status === 'skipped' ? 'bg-2-mid-primary' : ''}
 							data-testid="ignore-card-option"
 						>
 							<StatusSpan choice="skipped" />
@@ -326,7 +319,7 @@ export function CardStatusHeart({
 }) {
 	const requireAuth = useRequireAuth()
 	const { data: card } = useMyCard(phrase.id)
-	const mutation = useCardStatusMutation(phrase, card)
+	const setCardStatus = useCardStatusMutator(phrase, card)
 	const statusToPost = card?.status === 'active' ? 'skipped' : 'active'
 	return (
 		<Button
@@ -334,12 +327,11 @@ export function CardStatusHeart({
 			size="icon"
 			data-name="card-status-heart"
 			data-key={phrase.id}
-			disabled={mutation.isPending}
 			onClick={(e) => {
 				e.preventDefault()
 				e.stopPropagation()
 				requireAuth(
-					() => mutation.mutate({ status: statusToPost }),
+					() => setCardStatus(statusToPost),
 					'Please log in to add phrases to your library'
 				)
 			}}
