@@ -14,12 +14,8 @@ export const Route = createFileRoute('/_user/friends')({
 	staticData: {
 		searchAction: true,
 		contextMenu: ['/friends/chats', '/friends/invite'],
+		titleBar: { title: 'Friends and Contacts' },
 	},
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Friends and Contacts',
-		},
-	}),
 	validateSearch: FriendsSearchParams,
 	loader: async ({ context }) => {
 		// Only preload if authenticated

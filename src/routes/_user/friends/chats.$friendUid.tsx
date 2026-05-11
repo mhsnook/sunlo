@@ -25,12 +25,10 @@ import { PlaylistPreview } from '@/routes/_user/friends/-playlist-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
-	staticData: { appnav: [] },
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Chat',
-		},
-	}),
+	staticData: {
+		appnav: [],
+		titleBar: { title: 'Chat' },
+	},
 })
 
 function ChatPage() {

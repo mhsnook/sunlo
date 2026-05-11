@@ -18,13 +18,11 @@ export const Route = createFileRoute('/_user/browse')({
 			auth: ['/learn/add-deck', '/learn/contributions'],
 			unauth: ['/login', '/signup'],
 		},
-	},
-	beforeLoad: () => ({
 		titleBar: {
 			title: 'Explore Languages',
 			subtitle: 'Browse the public library',
 		},
-	}),
+	},
 	loader: async () => {
 		await Promise.all([
 			languagesCollection.preload(),

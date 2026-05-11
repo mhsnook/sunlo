@@ -10,13 +10,13 @@ export const Route = createFileRoute(
 	'/_user/learn/$lang/playlists/$playlistId'
 )({
 	component: PlaylistPage,
-	staticData: { appnav: [] },
-	beforeLoad: ({ params }) => ({
-		titleBar: {
+	staticData: {
+		appnav: [],
+		titleBar: ({ params }) => ({
 			title: `Playlist of ${languages[params.lang]} Flashcards`,
 			subtitle: '',
-		},
-	}),
+		}),
+	},
 })
 
 const style = { viewTransitionName: `main-area` } as CSSProperties

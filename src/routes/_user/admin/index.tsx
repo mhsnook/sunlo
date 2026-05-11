@@ -12,12 +12,9 @@ import { languagesCollection } from '@/features/languages/collections'
 
 export const Route = createFileRoute('/_user/admin/')({
 	component: AdminIndex,
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Admin',
-			subtitle: 'Content Management',
-		},
-	}),
+	staticData: {
+		titleBar: { title: 'Admin', subtitle: 'Content Management' },
+	},
 	loader: async () => {
 		await languagesCollection.preload()
 	},

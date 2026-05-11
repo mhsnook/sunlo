@@ -10,11 +10,9 @@ import { UserContributions } from '../learn/-contributions'
 
 export const Route = createFileRoute('/_user/friends/$uid')({
 	component: ProfilePage,
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Profile',
-		},
-	}),
+	staticData: {
+		titleBar: { title: 'Profile' },
+	},
 	loader: ({ context, params }) => {
 		const { uid } = params
 		const isMine = uid === context.auth.userId
@@ -32,11 +30,11 @@ function ProfilePage() {
 		)
 	return (
 		<main className="mx-auto w-full space-y-6 px-2 py-6">
-			{isMine ?
+			{isMine ? (
 				<p className="text-muted-foreground mb-1 text-center italic">
 					This is how your profile appears to others
 				</p>
-			:	null}
+			) : null}
 			<Card>
 				<CardHeader>
 					<CardTitle className="mx-auto">
@@ -46,19 +44,20 @@ function ProfilePage() {
 				</CardHeader>
 				<CardContent className="space-y-4 text-center">
 					<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-						{profile.avatar_path ?
+						{profile.avatar_path ? (
 							<img
 								src={avatarUrlify(profile.avatar_path, 128)}
 								alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 								className="size-32 rounded-full object-cover"
 							/>
-						:	<>
+						) : (
+							<>
 								<User className="text-muted-foreground/20 size-32 rounded-full p-1 blur-xs" />
 								<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
 									{(profile.username ?? '').slice(0, 2)}
 								</span>
 							</>
-						}
+						)}
 					</div>
 					<h2 className="text-xl font-semibold">{profile.username}</h2>
 					<div>

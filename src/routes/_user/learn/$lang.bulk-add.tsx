@@ -64,11 +64,11 @@ type StagedPhrase = {
 
 export const Route = createFileRoute('/_user/learn/$lang/bulk-add')({
 	component: BulkAddPhrasesPage,
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: {
-			title: `Bulk Add ${languages[lang]} Phrases`,
-		},
-	}),
+	staticData: {
+		titleBar: ({ params }) => ({
+			title: `Bulk Add ${languages[params.lang]} Phrases`,
+		}),
+	},
 })
 
 const style = { viewTransitionName: `main-area` } as CSSProperties

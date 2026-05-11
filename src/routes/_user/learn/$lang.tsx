@@ -46,16 +46,12 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			],
 			unauth: [],
 		},
+		titleBar: ({ params }) => ({ title: `${languages[params.lang]} Deck` }),
 	},
 	beforeLoad: ({ params: { lang } }) => {
 		if (!languages[lang]) {
 			console.log(`not found`)
 			throw notFound()
-		}
-		return {
-			titleBar: {
-				title: `${languages[lang]} Deck`,
-			},
 		}
 	},
 	loader: async ({ context }) => {

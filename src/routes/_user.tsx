@@ -33,15 +33,13 @@ import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user')({
-	beforeLoad: () => {
-		// Auth is optional - RLS handles data security
-		// Individual routes can require auth if needed
-		return {
-			titleBar: {
-				title: 'Learning Home',
-				subtitle: 'Which deck are we studying today?',
-			},
-		}
+	// Auth is optional at this layout — RLS handles data security and
+	// individual routes can require auth if needed.
+	staticData: {
+		titleBar: {
+			title: 'Learning Home',
+			subtitle: 'Which deck are we studying today?',
+		},
 	},
 	loader: async ({ context, location }) => {
 		// If not authenticated, skip user-specific loading

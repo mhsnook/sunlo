@@ -31,18 +31,18 @@ export const Route = createFileRoute('/_user/getting-started')({
 			: {}
 	},
 	component: GettingStartedPage,
+	staticData: {
+		titleBar: {
+			title: 'Getting Started',
+			subtitle: 'Set your username and dive in!',
+		},
+	},
 	beforeLoad: ({ context }) => {
 		if (!context.auth.isAuth) {
 			console.log(
 				'Issuing redirect to /login from /getting-started page bc not logged in'
 			)
 			throw redirect({ to: '/login' })
-		}
-		return {
-			titleBar: {
-				title: 'Getting Started',
-				subtitle: 'Set your username and dive in!',
-			},
 		}
 	},
 })

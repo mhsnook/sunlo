@@ -8,13 +8,8 @@ export const Route = createFileRoute('/_user/admin/$lang/requests')({
 	component: AdminRequestsLayout,
 	staticData: {
 		appnav: ['/admin/$lang/phrases', '/admin/$lang/requests'],
+		titleBar: { title: 'Admin', subtitle: 'Request Management' },
 	},
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Admin',
-			subtitle: 'Request Management',
-		},
-	}),
 })
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
