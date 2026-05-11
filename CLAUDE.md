@@ -77,10 +77,15 @@ pnpm scene scenetest/scenes/decks.spec.md
 
 Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
 
-**When scenetest isn't enough**: If a user journey can't be expressed in a scene spec (e.g. you need fine-grained browser control, network interception, or multi-tab behavior), you have two options — in either case, **add a comment explaining why scenetest couldn't cover it**:
+**Three authoring surfaces, all under `scenetest/scenes/`** (see [reference](https://scenetest.msnook.xyz/reference/concurrent-and-classic.md)). Pick the lightest surface that does the job:
 
-1. **Scenetest with inline assertions** (`useTestEffect`) — for cases where the scene steps work but you need to verify internal component state or collection data alongside them.
-2. **Playwright** — for cases that require low-level browser control that scenetest can't provide at all.
+1. **Markdown scenes** (`.spec.md`) — the default. Reach for this first.
+2. **TypeScript scenes** — `scene()` from `@scenetest/scenes`. Same scene runtime, in TS, for custom setup/teardown or logic Markdown can't express.
+3. **Playwright specs** — `test()` from `@scenetest/scenes` (NOT raw `@playwright/test`). Sequential await-driven model with scenetest's actor handles and selectors. For multi-actor flows with timing-sensitive logic the scene runtime can't express.
+
+**Runtime checks** are scenetest's inline assertion functions — `should()`, `failed()`, `serverCheck()` — that live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. Inline checks are a peer to scene specs, not a fallback — use them to validate internal state that external tests can't easily observe.
+
+**Do not write new `@playwright/test` specs.** The legacy `e2e/` directory is being decommissioned — see the `transform` label.
 
 #### Writing Scene Specs
 
@@ -139,23 +144,9 @@ learner:
 
 **Setup directives** run before the scene to pre-set state (e.g., `setup: supabase.from('user_deck').update(...)`). Use them when a scene requires non-default initial state.
 
-### Testing (Playwright)
+### Testing (Playwright — legacy, being removed)
 
-```bash
-# Run all e2e tests (Playwright)
-pnpm test
-
-# Run tests with UI
-pnpm test:ui
-
-# Run specific test file
-npx playwright test e2e/mutations/decks.spec.ts
-
-# Run tests for single browser
-npx playwright test --project=chromium
-```
-
-Test files located in `/e2e/` directory. Tests require Supabase to be running locally.
+The `e2e/` directory and `pnpm test` / `pnpm test:ui` scripts are deprecated and slated for removal — see the `transform` label. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
 
 ### Database Management
 
@@ -892,23 +883,27 @@ See the "Mutations Pattern" section above for a worked example, and PR #623 / th
 
 ## Testing Conventions
 
-### Playwright E2E Tests
+### Scene navigation
 
-- Test files in `/e2e/` directory
-- **NEVER use `page.goto()`** - it bypasses TanStack Router and breaks cache
-- Create reusable navigation functions in `goto-helpers.ts`
+Navigate through the UI by clicking links and buttons, not by reloading the page. A full reload (e.g. `openTo` mid-scene) wipes the TanStack Router cache and forces a refetch of all data, which both slows the scene and hides cache-invalidation regressions. `openTo` is for the entry point only; after that, drive the actor through clicks.
 
-#### Navigate through the UI
+```markdown
+# ✅ Correct — preserves router cache
 
-Using buttons and links; never use `goto` (except in the very first part of the script) because we need to know that the cache is updating correctly, and a `goto` will cause a full refetch of all data.
+learner:
 
-```typescript
-// ✅ Correct - preserves router state
-await page.getByTestId('app-nav-menu').getByTestId('nav-link--feed').click()
+- openTo /learn
+- click app-nav-menu nav-link--feed
 
-// ❌ Wrong - breaks router cache
-await page.goto('/learn/hin/feed')
+# ❌ Wrong — full reload, refetches everything
+
+learner:
+
+- openTo /learn
+- openTo /learn/hin/feed
 ```
+
+For legacy `@playwright/test` specs in `e2e/`, the equivalent rule was "never use `page.goto()`" — same principle.
 
 ## Use UI Semantics for Test Selectors
 
