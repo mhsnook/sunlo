@@ -6,6 +6,6 @@ export const Route = createFileRoute('/_user/admin/routes')({
 			title: 'Routes',
 			subtitle: 'Static introspection of the route tree',
 		},
-		fullWidth: true,
+		wideContent: true,
 	},
 })

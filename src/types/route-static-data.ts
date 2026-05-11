@@ -37,7 +37,22 @@ declare module '@tanstack/react-router' {
 		focusMode?: boolean
 		wideContent?: boolean
 		fixedHeight?: boolean
-		fullWidth?: boolean
 		titleBar?: TitleBarStatic
 	}
+}
+
+/**
+ * Resolve a NavList to a flat array of route ids.
+ *   string[]                 → returned as-is
+ *   [string[]]               → returned when isAuth, [] otherwise (hidden)
+ *   [string[], string[]]     → list[0] when isAuth, list[1] when not
+ */
+export function resolveNavList(
+	list: NavList | undefined,
+	isAuth: boolean
+): string[] {
+	if (!list) return []
+	if (!Array.isArray(list[0])) return list as string[]
+	const tuple = list as [string[]] | [string[], string[]]
+	return isAuth ? tuple[0] : (tuple[1] ?? [])
 }

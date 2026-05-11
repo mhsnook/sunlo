@@ -20,7 +20,6 @@ type Row = {
 	focusMode: boolean
 	wideContent: boolean
 	fixedHeight: boolean
-	fullWidth: boolean
 }
 
 type RouteLike = {
@@ -37,7 +36,6 @@ type RouteLike = {
 			focusMode?: boolean
 			wideContent?: boolean
 			fixedHeight?: boolean
-			fullWidth?: boolean
 		}
 	}
 }
@@ -56,7 +54,6 @@ function readRows(routesById: Record<string, RouteLike>): Row[] {
 			focusMode: sd.focusMode === true,
 			wideContent: sd.wideContent === true,
 			fixedHeight: sd.fixedHeight === true,
-			fullWidth: sd.fullWidth === true,
 		}
 	})
 }
@@ -90,7 +87,6 @@ function RoutesIntrospection() {
 			focus: rows.filter((r) => r.focusMode).length,
 			wide: rows.filter((r) => r.wideContent).length,
 			fixed: rows.filter((r) => r.fixedHeight).length,
-			full: rows.filter((r) => r.fullWidth).length,
 		}),
 		[rows]
 	)
@@ -103,7 +99,7 @@ function RoutesIntrospection() {
 					{counts.total} routes · {counts.lazy} lazy · {counts.titleBar}{' '}
 					titleBar · {counts.appnav} appnav · {counts.ctxmenu} contextMenu ·{' '}
 					{counts.search} search · {counts.focus} focusMode · {counts.wide}{' '}
-					wideContent · {counts.fixed} fixedHeight · {counts.full} fullWidth
+					wideContent · {counts.fixed} fixedHeight
 				</p>
 				<p className="text-muted-foreground mt-1 text-xs">
 					Everything read from <code>staticData</code>. Dynamic titleBar values
@@ -131,7 +127,6 @@ function RoutesIntrospection() {
 							<Th center>search</Th>
 							<Th center>focus</Th>
 							<Th center>wide</Th>
-							<Th center>full</Th>
 							<Th center>fixed</Th>
 						</tr>
 					</thead>
@@ -151,7 +146,6 @@ function RoutesIntrospection() {
 								<BoolCell on={r.searchAction} />
 								<BoolCell on={r.focusMode} />
 								<BoolCell on={r.wideContent} />
-								<BoolCell on={r.fullWidth} />
 								<BoolCell on={r.fixedHeight} />
 							</tr>
 						))}
