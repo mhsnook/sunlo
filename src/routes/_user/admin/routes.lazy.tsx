@@ -28,8 +28,8 @@ type RouteLike = {
 	id: string
 	fullPath?: string
 	path?: string
+	lazyFn?: unknown
 	options?: {
-		lazyFn?: unknown
 		staticData?: StaticDataRouteOption
 	}
 }
@@ -40,7 +40,7 @@ function readRows(routesById: Record<string, RouteLike>): Row[] {
 		return {
 			id,
 			path: route.fullPath ?? route.path ?? id,
-			isLazy: typeof route.options?.lazyFn === 'function',
+			isLazy: typeof route.lazyFn === 'function',
 			appnav: sd.appnav,
 			contextMenu: sd.contextMenu,
 			titleBar: sd.titleBar,
