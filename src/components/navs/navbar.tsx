@@ -6,7 +6,7 @@ import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCanGoBack } from '@tanstack/react-router'
 import { NotificationBell } from '@/components/notifications/notification-bell'
-import { useAuth } from '@/lib/use-auth'
+import { useTitleBar } from '@/hooks/use-title-bar'
 
 export default function Navbar() {
 	const matches = useMatches()
@@ -34,18 +34,7 @@ function Title() {
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
-	const matches = useMatches()
-	const { isAuth } = useAuth()
-
-	const titleBarMatch = matches.findLast((m) => m.staticData.titleBar)
-	const tb = titleBarMatch?.staticData.titleBar
-	const titleBar =
-		typeof tb === 'function'
-			? tb({
-					params: (titleBarMatch?.params ?? {}) as Record<string, string>,
-					isAuth,
-				})
-			: tb
+	const titleBar = useTitleBar()
 
 	const onBackClick =
 		titleBar && 'onBackClick' in titleBar ? titleBar.onBackClick : null

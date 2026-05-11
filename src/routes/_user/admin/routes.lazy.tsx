@@ -1,7 +1,9 @@
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import { createLazyFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 import type { NavList, TitleBarStatic } from '@/types/route-static-data'
+import type { StaticDataRouteOption } from '@tanstack/react-router'
 
 export const Route = createLazyFileRoute('/_user/admin/routes')({
 	component: RoutesIntrospection,
@@ -28,15 +30,7 @@ type RouteLike = {
 	path?: string
 	options?: {
 		lazyFn?: unknown
-		staticData?: {
-			appnav?: NavList
-			contextMenu?: NavList
-			titleBar?: TitleBarStatic
-			searchAction?: boolean
-			focusMode?: boolean
-			wideContent?: boolean
-			fixedHeight?: boolean
-		}
+		staticData?: StaticDataRouteOption
 	}
 }
 
@@ -107,12 +101,12 @@ function RoutesIntrospection() {
 				</p>
 			</header>
 
-			<input
+			<Input
 				type="text"
 				placeholder="Filter by id…"
 				value={filter}
 				onChange={(e) => setFilter(e.target.value)}
-				className="border-3-mlo-primary bg-card w-full max-w-md rounded-2xl border px-3 py-2 text-sm"
+				className="max-w-md"
 			/>
 
 			<div className="overflow-x-auto">
@@ -209,6 +203,10 @@ function TitleBarCell({ tb }: { tb: TitleBarStatic | undefined }) {
 	)
 }
 
+function fmtList(arr: string[]): string {
+	return arr.length === 0 ? '[]' : arr.join(', ')
+}
+
 function NavCell({ list }: { list: NavList | undefined }) {
 	if (list === undefined)
 		return <td className="text-muted-foreground px-2 py-1.5 text-xs">·</td>
@@ -216,7 +214,7 @@ function NavCell({ list }: { list: NavList | undefined }) {
 	if (typeof list[0] === 'string' || list.length === 0)
 		return (
 			<td className="px-2 py-1.5 font-mono text-xs">
-				{list.length === 0 ? '[]' : (list as string[]).join(', ')}
+				{fmtList(list as string[])}
 			</td>
 		)
 	// Tuple shape: [authArr] or [authArr, unauthArr]
@@ -225,16 +223,11 @@ function NavCell({ list }: { list: NavList | undefined }) {
 	return (
 		<td className="px-2 py-1.5 font-mono text-xs">
 			<div>
-				<span className="text-muted-foreground">auth:</span>{' '}
-				{authArr.length === 0 ? '[]' : authArr.join(', ')}
+				<span className="text-muted-foreground">auth:</span> {fmtList(authArr)}
 			</div>
 			<div>
 				<span className="text-muted-foreground">unauth:</span>{' '}
-				{unauthArr === null
-					? '(hidden)'
-					: unauthArr.length === 0
-						? '[]'
-						: unauthArr.join(', ')}
+				{unauthArr === null ? '(hidden)' : fmtList(unauthArr)}
 			</div>
 		</td>
 	)
