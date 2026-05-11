@@ -1,5 +1,4 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
@@ -8,21 +7,15 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
-import { MarkdownHint } from './comment-dialog'
-import supabase from '@/lib/supabase-client'
-import { safeWrite } from '@/lib/collections/safe-write'
+import { MarkdownHint, createComment } from './comment-dialog'
+import { useUserId } from '@/lib/use-auth'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
 } from '@/features/comments/collections'
 import { useOneComment } from '@/features/comments/hooks'
-import {
-	CommentPhraseLinkSchema,
-	type CommentPhraseLinkType,
-	RequestCommentSchema,
-	type RequestCommentType,
-} from '@/features/comments/schemas'
+import { type RequestCommentType } from '@/features/comments/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { useAppForm } from '@/components/form'
@@ -153,69 +146,42 @@ function NewReplyForm({
 	onClose: () => void
 }) {
 	const navigate = useNavigate()
-
-	const createMutation = useMutation({
-		mutationFn: async (values: { content: string }) => {
-			const { data, error } = await supabase.rpc(
-				'create_comment_with_phrases',
-				{
-					p_request_id: requestId,
-					p_content: values.content,
-					p_parent_comment_id: parentCommentId,
-					p_phrase_ids: [],
-				}
-			)
-			if (error) throw error
-			return data as {
-				request_comment: RequestCommentType
-				comment_phrase_links: CommentPhraseLinkType[]
-			}
-		},
-		onSuccess: async (data) => {
-			const comment = RequestCommentSchema.parse(data.request_comment)
-			await safeWrite(
-				() => commentsCollection.preload(),
-				() => commentsCollection.utils.writeInsert(comment)
-			)
-			await safeWrite(
-				() => commentUpvotesCollection.preload(),
-				() =>
-					commentUpvotesCollection.utils.writeInsert({
-						comment_id: comment.id,
-					})
-			)
-			if (data.comment_phrase_links?.length) {
-				const links = data.comment_phrase_links.map((l) =>
-					CommentPhraseLinkSchema.parse(l)
-				)
-				await safeWrite(
-					() => commentPhraseLinksCollection.preload(),
-					() =>
-						links.forEach((link) =>
-							commentPhraseLinksCollection.utils.writeInsert(link)
-						)
-				)
-			}
-			void navigate({
-				to: '/learn/$lang/requests/$id',
-				params: { lang, id: requestId },
-				search: { focus: parentCommentId },
-			})
-			toastSuccess('Reply posted!')
-			onClose()
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to post reply: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
+	const userId = useUserId()
 
 	const form = useAppForm({
 		defaultValues: { content: '' },
 		validators: { onChange: ReplyFormSchema },
 		onSubmit: async ({ value, formApi }) => {
-			await createMutation.mutateAsync(value)
-			formApi.reset()
+			if (!userId) return
+			try {
+				await Promise.all([
+					commentsCollection.preload(),
+					commentUpvotesCollection.preload(),
+					commentPhraseLinksCollection.preload(),
+				])
+				const commentId = crypto.randomUUID()
+				const tx = createComment({
+					commentId,
+					requestId,
+					uid: userId,
+					content: value.content,
+					parentCommentId,
+					phraseLinks: [],
+				})
+				await tx.isPersisted.promise
+				void navigate({
+					to: '/learn/$lang/requests/$id',
+					params: { lang, id: requestId },
+					search: { focus: parentCommentId },
+				})
+				toastSuccess('Reply posted!')
+				formApi.reset()
+				onClose()
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to post reply: ${message}`)
+				console.error(err)
+			}
 		},
 	})
 
@@ -252,37 +218,23 @@ function EditReplyForm({
 	comment: RequestCommentType
 	onClose: () => void
 }) {
-	const updateMutation = useMutation({
-		mutationFn: async (values: { content: string }) => {
-			const { data, error } = await supabase
-				.from('request_comment')
-				.update({ content: values.content })
-				.eq('id', comment.id)
-				.select()
-				.single()
-			if (error) throw error
-			return data
-		},
-		onSuccess: async (data) => {
-			const parsed = RequestCommentSchema.parse(data)
-			await safeWrite(
-				() => commentsCollection.preload(),
-				() => commentsCollection.utils.writeUpdate(parsed)
-			)
-			toastSuccess('Reply updated!')
-			onClose()
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update reply: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
-
 	const form = useAppForm({
 		defaultValues: { content: comment.content },
 		validators: { onChange: ReplyFormSchema },
 		onSubmit: async ({ value }) => {
-			await updateMutation.mutateAsync(value)
+			try {
+				const tx = commentsCollection.update(comment.id, (draft) => {
+					draft.content = value.content
+					draft.updated_at = new Date().toISOString()
+				})
+				await tx.isPersisted.promise
+				toastSuccess('Reply updated!')
+				onClose()
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to update reply: ${message}`)
+				console.error(err)
+			}
 		},
 	})
 

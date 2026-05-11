@@ -29,6 +29,30 @@ export const commentsCollection = createCollection(
 		schema: RequestCommentSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('request_comment')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('request_comment')
+						.delete()
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			// Default refetch picks up cascaded deletes of replies and links.
+		},
 	})
 )
 

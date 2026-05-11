@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { createOptimisticAction, eq } from '@tanstack/db'
+import { useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
 import { Paperclip, Plus, Search, X } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
@@ -14,7 +14,7 @@ import { Dialog, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Separator } from '@/components/ui/separator'
 import supabase from '@/lib/supabase-client'
-import { safeWrite } from '@/lib/collections/safe-write'
+import { useUserId } from '@/lib/use-auth'
 import { cn } from '@/lib/utils'
 import {
 	commentPhraseLinksCollection,
@@ -22,8 +22,6 @@ import {
 	commentsCollection,
 } from '@/features/comments/collections'
 import {
-	CommentPhraseLinkSchema,
-	RequestCommentSchema,
 	type CommentPhraseLinkType,
 	type RequestCommentType,
 } from '@/features/comments/schemas'
@@ -406,6 +404,143 @@ const CommentFormSchema = z.object({
 	content: z.string().max(1000, 'Comment must be less than 1000 characters'),
 })
 
+type CreateCommentInput = {
+	commentId: uuid
+	requestId: uuid
+	uid: uuid
+	content: string
+	parentCommentId: uuid | null
+	phraseLinks: Array<{ linkId: uuid; phraseId: uuid }>
+}
+
+export const createComment = createOptimisticAction<CreateCommentInput>({
+	onMutate: ({
+		commentId,
+		requestId,
+		uid,
+		content,
+		parentCommentId,
+		phraseLinks,
+	}) => {
+		const now = new Date().toISOString()
+		commentsCollection.insert({
+			id: commentId,
+			request_id: requestId,
+			parent_comment_id: parentCommentId,
+			uid,
+			content,
+			created_at: now,
+			updated_at: now,
+			// DB trigger auto-upvotes the author, so the count starts at 1.
+			upvote_count: 1,
+		})
+		commentUpvotesCollection.insert({ comment_id: commentId })
+		for (const { linkId, phraseId } of phraseLinks) {
+			commentPhraseLinksCollection.insert({
+				id: linkId,
+				comment_id: commentId,
+				request_id: requestId,
+				phrase_id: phraseId,
+				uid,
+				created_at: now,
+			})
+		}
+	},
+	mutationFn: async ({ requestId, content, parentCommentId, phraseLinks }) => {
+		const { error } = await supabase.rpc('create_comment_with_phrases', {
+			p_request_id: requestId,
+			p_content: content,
+			p_parent_comment_id: parentCommentId ?? undefined,
+			p_phrase_ids: phraseLinks.map((l) => l.phraseId),
+		})
+		if (error) throw error
+		await Promise.all([
+			commentsCollection.utils.refetch(),
+			commentUpvotesCollection.utils.refetch(),
+			commentPhraseLinksCollection.utils.refetch(),
+		])
+	},
+})
+
+type UpdateCommentInput = {
+	commentId: uuid
+	requestId: uuid
+	uid: uuid
+	content: string
+	linksToDelete: Array<{ linkId: uuid; phraseId: uuid }>
+	linksToInsert: Array<{ linkId: uuid; phraseId: uuid }>
+}
+
+const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
+	onMutate: ({
+		commentId,
+		requestId,
+		uid,
+		content,
+		linksToDelete,
+		linksToInsert,
+	}) => {
+		const now = new Date().toISOString()
+		commentsCollection.update(commentId, (draft) => {
+			draft.content = content
+			draft.updated_at = now
+		})
+		for (const link of linksToDelete) {
+			commentPhraseLinksCollection.delete(link.linkId)
+		}
+		for (const link of linksToInsert) {
+			commentPhraseLinksCollection.insert({
+				id: link.linkId,
+				comment_id: commentId,
+				request_id: requestId,
+				phrase_id: link.phraseId,
+				uid,
+				created_at: now,
+			})
+		}
+	},
+	mutationFn: async ({
+		commentId,
+		content,
+		linksToDelete,
+		linksToInsert,
+		requestId,
+	}) => {
+		await supabase
+			.from('request_comment')
+			.update({ content })
+			.eq('id', commentId)
+			.throwOnError()
+		if (linksToDelete.length > 0) {
+			await supabase
+				.from('comment_phrase_link')
+				.delete()
+				.eq('comment_id', commentId)
+				.in(
+					'phrase_id',
+					linksToDelete.map((l) => l.phraseId)
+				)
+				.throwOnError()
+		}
+		if (linksToInsert.length > 0) {
+			await supabase
+				.from('comment_phrase_link')
+				.insert(
+					linksToInsert.map((l) => ({
+						comment_id: commentId,
+						request_id: requestId,
+						phrase_id: l.phraseId,
+					}))
+				)
+				.throwOnError()
+		}
+		await Promise.all([
+			commentsCollection.utils.refetch(),
+			commentPhraseLinksCollection.utils.refetch(),
+		])
+	},
+})
+
 function NewCommentForm({
 	requestId,
 	selectedPhraseIds,
@@ -417,63 +552,41 @@ function NewCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
-	const createMutation = useMutation({
-		mutationFn: async (values: { content: string }) => {
-			const { data, error } = await supabase.rpc(
-				'create_comment_with_phrases',
-				{
-					p_request_id: requestId,
-					p_content: values.content,
-					p_parent_comment_id: undefined,
-					p_phrase_ids: selectedPhraseIds,
-				}
-			)
-			if (error) throw error
-			return data as {
-				request_comment: RequestCommentType
-				comment_phrase_links: CommentPhraseLinkType[]
-			}
-		},
-		onSuccess: async (data) => {
-			const comment = RequestCommentSchema.parse(data.request_comment)
-			await safeWrite(
-				() => commentsCollection.preload(),
-				() => commentsCollection.utils.writeInsert(comment)
-			)
-			await safeWrite(
-				() => commentUpvotesCollection.preload(),
-				() =>
-					commentUpvotesCollection.utils.writeInsert({
-						comment_id: comment.id,
-					})
-			)
-			if (data.comment_phrase_links?.length) {
-				const links = data.comment_phrase_links.map((l) =>
-					CommentPhraseLinkSchema.parse(l)
-				)
-				await safeWrite(
-					() => commentPhraseLinksCollection.preload(),
-					() =>
-						links.forEach((link) =>
-							commentPhraseLinksCollection.utils.writeInsert(link)
-						)
-				)
-			}
-			toastSuccess('Comment posted!')
-			onClose()
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to post comment: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
+	const userId = useUserId()
 
 	const form = useAppForm({
 		defaultValues: { content: '' },
 		validators: { onChange: CommentFormSchema },
 		onSubmit: async ({ value, formApi }) => {
-			await createMutation.mutateAsync(value)
-			formApi.reset()
+			if (!userId) return
+			try {
+				await Promise.all([
+					commentsCollection.preload(),
+					commentUpvotesCollection.preload(),
+					commentPhraseLinksCollection.preload(),
+				])
+				const commentId = crypto.randomUUID()
+				const phraseLinks = selectedPhraseIds.map((phraseId) => ({
+					linkId: crypto.randomUUID(),
+					phraseId,
+				}))
+				const tx = createComment({
+					commentId,
+					requestId,
+					uid: userId,
+					content: value.content,
+					parentCommentId: null,
+					phraseLinks,
+				})
+				await tx.isPersisted.promise
+				toastSuccess('Comment posted!')
+				formApi.reset()
+				onClose()
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to post comment: ${message}`)
+				console.error(err)
+			}
 		},
 	})
 
@@ -539,94 +652,47 @@ function EditCommentForm({
 	onRemovePhrase: (id: uuid) => void
 	onClose: () => void
 }) {
-	const updateMutation = useMutation({
-		mutationFn: async (values: { content: string }) => {
+	const form = useAppForm({
+		defaultValues: { content: comment.content },
+		validators: { onChange: CommentFormSchema },
+		onSubmit: async ({ value }) => {
 			const existingPhraseIds = new Set(
 				(existingLinks ?? []).map((link) => link.phrase_id)
 			)
 			const newPhraseIds = new Set(selectedPhraseIds)
 
-			const { data: updatedComment, error: commentError } = await supabase
-				.from('request_comment')
-				.update({ content: values.content })
-				.eq('id', comment.id)
-				.select()
-				.single()
-			if (commentError) throw commentError
+			const linksToDelete = (existingLinks ?? [])
+				.filter((l) => !newPhraseIds.has(l.phrase_id))
+				.map((l) => ({ linkId: l.id, phraseId: l.phrase_id }))
 
-			const toDelete = [...existingPhraseIds].filter(
-				(id) => !newPhraseIds.has(id)
-			)
-			if (toDelete.length > 0) {
-				const { error: deleteError } = await supabase
-					.from('comment_phrase_link')
-					.delete()
-					.eq('comment_id', comment.id)
-					.in('phrase_id', toDelete)
-				if (deleteError) throw deleteError
+			const linksToInsert = [...newPhraseIds]
+				.filter((id) => !existingPhraseIds.has(id))
+				.map((phraseId) => ({
+					linkId: crypto.randomUUID(),
+					phraseId,
+				}))
+
+			try {
+				await Promise.all([
+					commentsCollection.preload(),
+					commentPhraseLinksCollection.preload(),
+				])
+				const tx = updateCommentWithLinks({
+					commentId: comment.id,
+					requestId: comment.request_id,
+					uid: comment.uid,
+					content: value.content,
+					linksToDelete,
+					linksToInsert,
+				})
+				await tx.isPersisted.promise
+				toastSuccess('Comment updated!')
+				onClose()
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to update comment: ${message}`)
+				console.error(err)
 			}
-
-			const toInsert = [...newPhraseIds].filter(
-				(id) => !existingPhraseIds.has(id)
-			)
-			let insertedLinks: CommentPhraseLinkType[] = []
-			if (toInsert.length > 0) {
-				const { data: newLinks, error: insertError } = await supabase
-					.from('comment_phrase_link')
-					.insert(
-						toInsert.map((phraseId) => ({
-							comment_id: comment.id,
-							request_id: comment.request_id,
-							phrase_id: phraseId,
-						}))
-					)
-					.select()
-				if (insertError) throw insertError
-				insertedLinks = newLinks ?? []
-			}
-
-			return { updatedComment, toDelete, insertedLinks }
-		},
-		onSuccess: async ({ updatedComment, toDelete, insertedLinks }) => {
-			const parsed = RequestCommentSchema.parse(updatedComment)
-			await safeWrite(
-				() => commentsCollection.preload(),
-				() => commentsCollection.utils.writeUpdate(parsed)
-			)
-
-			const linksById = new Map(
-				(existingLinks ?? []).map((link) => [link.phrase_id, link])
-			)
-			const parsedLinks = insertedLinks.map((l) =>
-				CommentPhraseLinkSchema.parse(l)
-			)
-			await safeWrite(
-				() => commentPhraseLinksCollection.preload(),
-				() => {
-					for (const phraseId of toDelete) {
-						const link = linksById.get(phraseId)
-						if (link) commentPhraseLinksCollection.utils.writeDelete(link.id)
-					}
-					for (const link of parsedLinks) {
-						commentPhraseLinksCollection.utils.writeInsert(link)
-					}
-				}
-			)
-
-			toastSuccess('Comment updated!')
-			onClose()
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update comment: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
-
-	const form = useAppForm({
-		defaultValues: { content: comment.content },
-		validators: { onChange: CommentFormSchema },
-		onSubmit: async ({ value }) => {
-			await updateMutation.mutateAsync(value)
 		},
 	})
 
