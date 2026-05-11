@@ -4,6 +4,7 @@ import { chatMessagesCollection } from '@/features/social/collections'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/chats')({
+	staticData: { wideContent: true, fixedHeight: true },
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Chats',

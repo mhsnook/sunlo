@@ -30,6 +30,7 @@ import { useCheck, should } from '@scenetest/checks-react'
 import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
+	staticData: { focusMode: true, fixedHeight: true },
 	beforeLoad: () => ({
 		contextMenu: [],
 		focusMode: true,
