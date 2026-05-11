@@ -1,6 +1,7 @@
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
+import type { NavList } from '@/types/route-static-data'
 
 export const Route = createFileRoute('/_user/admin/routes')({
 	component: RoutesIntrospection,
@@ -18,31 +19,41 @@ type Row = {
 	id: string
 	path: string
 	isLazy: boolean
+	appnav?: NavList
+	contextMenu?: NavList
+	searchAction: boolean
 	focusMode: boolean
 	wideContent: boolean
 	fixedHeight: boolean
 }
 
-function readRows(routesById: Record<string, unknown>): Row[] {
-	return Object.entries(routesById).map(([id, route]) => {
-		const r = route as {
-			id: string
-			fullPath?: string
-			path?: string
-			options?: {
-				lazyFn?: unknown
-				staticData?: {
-					focusMode?: boolean
-					wideContent?: boolean
-					fixedHeight?: boolean
-				}
-			}
+type RouteLike = {
+	id: string
+	fullPath?: string
+	path?: string
+	options?: {
+		lazyFn?: unknown
+		staticData?: {
+			appnav?: NavList
+			contextMenu?: NavList
+			searchAction?: boolean
+			focusMode?: boolean
+			wideContent?: boolean
+			fixedHeight?: boolean
 		}
-		const sd = r.options?.staticData ?? {}
+	}
+}
+
+function readRows(routesById: Record<string, RouteLike>): Row[] {
+	return Object.entries(routesById).map(([id, route]) => {
+		const sd = route.options?.staticData ?? {}
 		return {
 			id,
-			path: r.fullPath ?? r.path ?? id,
-			isLazy: typeof r.options?.lazyFn === 'function',
+			path: route.fullPath ?? route.path ?? id,
+			isLazy: typeof route.options?.lazyFn === 'function',
+			appnav: sd.appnav,
+			contextMenu: sd.contextMenu,
+			searchAction: sd.searchAction === true,
 			focusMode: sd.focusMode === true,
 			wideContent: sd.wideContent === true,
 			fixedHeight: sd.fixedHeight === true,
@@ -56,7 +67,7 @@ function RoutesIntrospection() {
 
 	const rows = useMemo(
 		() =>
-			readRows(router.routesById as unknown as Record<string, unknown>).sort(
+			readRows(router.routesById as unknown as Record<string, RouteLike>).sort(
 				(a, b) => a.id.localeCompare(b.id)
 			),
 		[router]
@@ -72,6 +83,9 @@ function RoutesIntrospection() {
 		() => ({
 			total: rows.length,
 			lazy: rows.filter((r) => r.isLazy).length,
+			appnav: rows.filter((r) => r.appnav !== undefined).length,
+			ctxmenu: rows.filter((r) => r.contextMenu !== undefined).length,
+			search: rows.filter((r) => r.searchAction).length,
 			focus: rows.filter((r) => r.focusMode).length,
 			wide: rows.filter((r) => r.wideContent).length,
 			fixed: rows.filter((r) => r.fixedHeight).length,
@@ -84,13 +98,14 @@ function RoutesIntrospection() {
 			<header>
 				<h1 className="text-2xl font-bold">Route tree</h1>
 				<p className="text-muted-foreground mt-1 text-sm">
-					{counts.total} routes · {counts.lazy} lazy · {counts.focus} focusMode
-					· {counts.wide} wideContent · {counts.fixed} fixedHeight
+					{counts.total} routes · {counts.lazy} lazy · {counts.appnav} appnav ·{' '}
+					{counts.ctxmenu} contextMenu · {counts.search} search · {counts.focus}{' '}
+					focusMode · {counts.wide} wideContent · {counts.fixed} fixedHeight
 				</p>
 				<p className="text-muted-foreground mt-1 text-xs">
-					Layout flags read from <code>staticData</code>. <code>appnav</code>{' '}
-					and <code>contextMenu</code> are returned from <code>beforeLoad</code>{' '}
-					and therefore not introspectable here — see the source.
+					Nav and layout flags read from <code>staticData</code>. titleBar still
+					lives in <code>beforeLoad</code> (it sometimes interpolates runtime
+					params like <code>$lang</code>).
 				</p>
 			</header>
 
@@ -108,24 +123,30 @@ function RoutesIntrospection() {
 						<tr className="border-b text-left text-xs tracking-wider uppercase">
 							<Th>Route id</Th>
 							<Th center>Lazy</Th>
-							<Th center>focusMode</Th>
-							<Th center>wideContent</Th>
-							<Th center>fixedHeight</Th>
+							<Th>appnav</Th>
+							<Th>contextMenu</Th>
+							<Th center>search</Th>
+							<Th center>focus</Th>
+							<Th center>wide</Th>
+							<Th center>fixed</Th>
 						</tr>
 					</thead>
 					<tbody>
 						{filtered.map((r) => (
 							<tr
 								key={r.id}
-								className="hover:bg-1-mlo-primary/40 border-b"
+								className="hover:bg-1-mlo-primary/40 border-b align-top"
 								data-name="admin-route-row"
 								data-key={r.id}
 							>
 								<td className="py-1.5 pr-4 font-mono text-xs">{r.id}</td>
-								<Cell on={r.isLazy} />
-								<Cell on={r.focusMode} />
-								<Cell on={r.wideContent} />
-								<Cell on={r.fixedHeight} />
+								<BoolCell on={r.isLazy} />
+								<NavCell list={r.appnav} />
+								<NavCell list={r.contextMenu} />
+								<BoolCell on={r.searchAction} />
+								<BoolCell on={r.focusMode} />
+								<BoolCell on={r.wideContent} />
+								<BoolCell on={r.fixedHeight} />
 							</tr>
 						))}
 					</tbody>
@@ -143,7 +164,7 @@ function Th({ children, center }: { children: ReactNode; center?: boolean }) {
 	)
 }
 
-function Cell({ on }: { on: boolean }) {
+function BoolCell({ on }: { on: boolean }) {
 	return (
 		<td
 			className={cn(
@@ -152,6 +173,29 @@ function Cell({ on }: { on: boolean }) {
 			)}
 		>
 			{on ? '✓' : '·'}
+		</td>
+	)
+}
+
+function NavCell({ list }: { list: NavList | undefined }) {
+	if (list === undefined)
+		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">·</td>
+	if (Array.isArray(list))
+		return (
+			<td className="py-1.5 pr-4 font-mono text-xs">
+				{list.length === 0 ? '[]' : list.join(', ')}
+			</td>
+		)
+	return (
+		<td className="py-1.5 pr-4 font-mono text-xs">
+			<div>
+				<span className="text-muted-foreground">auth:</span>{' '}
+				{list.auth.length === 0 ? '[]' : list.auth.join(', ')}
+			</div>
+			<div>
+				<span className="text-muted-foreground">unauth:</span>{' '}
+				{list.unauth.length === 0 ? '[]' : list.unauth.join(', ')}
+			</div>
 		</td>
 	)
 }

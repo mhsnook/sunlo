@@ -49,9 +49,9 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
 	}),
+	staticData: { appnav: [] },
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: { title: `${languages[lang]} Request` },
-		appnav: [],
 	}),
 	loader: async ({ context, location, cause }) => {
 		const preloads: Promise<unknown>[] = [
