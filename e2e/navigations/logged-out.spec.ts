@@ -29,7 +29,7 @@ test.describe('Logged Out Navigation', () => {
 			.click()
 
 		// Should be on the browse page
-		await expect(page).toHaveURL(/\/learn\/browse/)
+		await expect(page).toHaveURL(/\/browse/)
 	})
 
 	test('can navigate to signup from landing', async ({ page }) => {
@@ -64,11 +64,11 @@ test.describe('Logged Out Navigation', () => {
 		await page.getByRole('link', { name: /browse languages/i }).click()
 
 		// Should be on the browse page
-		await expect(page).toHaveURL(/\/learn\/browse/)
+		await expect(page).toHaveURL(/\/browse/)
 	})
 
 	test('browse page shows language cards', async ({ page }) => {
-		await page.goto('/learn/browse')
+		await page.goto('/browse')
 
 		// Wait for page to finish loading, then check for language cards
 		await expect(page.getByTestId('browse-page')).toBeVisible({
