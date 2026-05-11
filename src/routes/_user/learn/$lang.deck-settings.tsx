@@ -1,7 +1,5 @@
 import { type CSSProperties } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import {
@@ -21,13 +19,10 @@ import { ChoiceTile } from '@/components/ui/choice-tile'
 import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta } from '@/features/deck/hooks'
-import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/use-auth'
 import { ArchiveDeckButton } from './-archive-deck-button'
 import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
 import { decksCollection } from '@/features/deck/collections'
-import { DeckMetaRawSchema, type DeckMetaType } from '@/features/deck/schemas'
-import { Tables } from '@/types/supabase'
+import { type DeckMetaType } from '@/features/deck/schemas'
 import { useProfile } from '@/features/profile/hooks'
 import { type ReviewAnswerModeType } from '@/features/profile/schemas'
 import { cn } from '@/lib/utils'
@@ -183,33 +178,21 @@ function DailyGoalSection({
 	lang: string
 	daily_review_goal: number
 }) {
-	const userId = useUserId()
-
-	const mutation = useMutation<Tables<'user_deck'>, PostgrestError, number>({
-		mutationKey: ['user', lang, 'deck', 'settings', 'daily-goal'],
-		mutationFn: async (daily_review_goal) => {
-			const { data } = await supabase
-				.from('user_deck')
-				.update({ daily_review_goal })
-				.eq('lang', lang)
-				.eq('uid', userId!)
-				.throwOnError()
-				.select()
-			if (!data)
-				throw new Error('Failed to update daily goal: did not find deck')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			toastSuccess('Your daily review goal has been updated.')
-		},
-		onError: (error) => {
-			toastError(
-				'There was some error; please refresh the page to see if settings updated correctly.'
-			)
-			console.log(`Daily Goal update error`, { error })
-		},
-	})
+	const updateDailyGoal = (value: number) => {
+		if (value === daily_review_goal) return
+		const tx = decksCollection.update(lang, (draft) => {
+			draft.daily_review_goal = value
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Your daily review goal has been updated.'),
+			(error) => {
+				toastError(
+					'There was some error; please refresh the page to see if settings updated correctly.'
+				)
+				console.error('Daily Goal update error:', error)
+			}
+		)
+	}
 
 	return (
 		<div className="rounded shadow">
@@ -261,10 +244,8 @@ function DailyGoalSection({
 							key={option.value}
 							option={option}
 							selected={daily_review_goal === option.value}
-							disabled={
-								mutation.isPending || daily_review_goal === option.value
-							}
-							onClick={() => mutation.mutate(option.value)}
+							disabled={daily_review_goal === option.value}
+							onClick={() => updateDailyGoal(option.value)}
 						/>
 					))}
 				</div>
@@ -302,37 +283,21 @@ function LearningGoalSection({
 	lang: string
 	learning_goal: LearningGoalType
 }) {
-	const userId = useUserId()
-
-	const mutation = useMutation<
-		Tables<'user_deck'>,
-		PostgrestError,
-		LearningGoalType
-	>({
-		mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
-		mutationFn: async (learning_goal) => {
-			const { data } = await supabase
-				.from('user_deck')
-				.update({ learning_goal })
-				.eq('lang', lang)
-				.eq('uid', userId!)
-				.throwOnError()
-				.select()
-			if (!data)
-				throw new Error('Failed to update deck goal: did not find deck')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			toastSuccess('Your learning goal has been updated.')
-		},
-		onError: (error) => {
-			toastError(
-				'There was some error; please refresh the page to see if settings updated correctly.'
-			)
-			console.log(`Language Goal update error`, { error })
-		},
-	})
+	const updateLearningGoal = (value: LearningGoalType) => {
+		if (value === learning_goal) return
+		const tx = decksCollection.update(lang, (draft) => {
+			draft.learning_goal = value
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Your learning goal has been updated.'),
+			(error) => {
+				toastError(
+					'There was some error; please refresh the page to see if settings updated correctly.'
+				)
+				console.error('Language Goal update error:', error)
+			}
+		)
+	}
 
 	return (
 		<div className="rounded shadow">
@@ -355,8 +320,8 @@ function LearningGoalSection({
 							key={option.value}
 							option={option}
 							selected={learning_goal === option.value}
-							disabled={mutation.isPending || learning_goal === option.value}
-							onClick={() => mutation.mutate(option.value)}
+							disabled={learning_goal === option.value}
+							onClick={() => updateLearningGoal(option.value)}
 						/>
 					))}
 				</div>
@@ -372,49 +337,32 @@ function PreferredTranslationLanguageSection({
 	lang: string
 	preferred_translation_lang: string | null
 }) {
-	const userId = useUserId()
 	const { data: profile } = useProfile()
 	const profileDefaultLang = profile?.languages_known[0]?.lang ?? null
 
-	const mutation = useMutation<
-		Tables<'user_deck'>,
-		PostgrestError,
-		string | null
-	>({
-		mutationKey: ['user', lang, 'deck', 'settings', 'preferred-translation'],
-		mutationFn: async (preferred_translation_lang) => {
-			const { data } = await supabase
-				.from('user_deck')
-				.update({ preferred_translation_lang })
-				.eq('lang', lang)
-				.eq('uid', userId!)
-				.throwOnError()
-				.select()
-			if (!data)
-				throw new Error(
-					'Failed to update preferred translation language: did not find deck'
+	const updatePreferred = (next: string | null) => {
+		if (next === preferred_translation_lang) return
+		const tx = decksCollection.update(lang, (draft) => {
+			draft.preferred_translation_lang = next
+		})
+		tx.isPersisted.promise.then(
+			() =>
+				toastSuccess(
+					next
+						? 'Your preferred translation language has been updated.'
+						: 'Deck will now use your profile default translation language.'
+				),
+			(error) => {
+				toastError(
+					'There was some error; please refresh the page to see if settings updated correctly.'
 				)
-			return data[0]
-		},
-		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			toastSuccess(
-				data.preferred_translation_lang
-					? 'Your preferred translation language has been updated.'
-					: 'Deck will now use your profile default translation language.'
-			)
-		},
-		onError: (error) => {
-			toastError(
-				'There was some error; please refresh the page to see if settings updated correctly.'
-			)
-			console.log(`Preferred translation lang update error`, { error })
-		},
-	})
+				console.error('Preferred translation lang update error:', error)
+			}
+		)
+	}
 
 	const handleSetLang = (val: string) => {
-		const next = val || null
-		if (next !== preferred_translation_lang) mutation.mutate(next)
+		updatePreferred(val || null)
 	}
 
 	return (
@@ -456,8 +404,8 @@ function PreferredTranslationLanguageSection({
 					<Button
 						variant="neutral"
 						size="sm"
-						onClick={() => mutation.mutate(null)}
-						disabled={preferred_translation_lang === null || mutation.isPending}
+						onClick={() => updatePreferred(null)}
+						disabled={preferred_translation_lang === null}
 						data-testid="clear-preferred-translation-button"
 					>
 						Use profile default
@@ -490,46 +438,30 @@ function ReviewAnswerModeSection({
 	lang: string
 	review_answer_mode: ReviewAnswerModeType | null
 }) {
-	const userId = useUserId()
 	const { data: profile } = useProfile()
 	const profileMode = profile?.review_answer_mode ?? '2-buttons'
 	const hasOverride = review_answer_mode !== null
 
-	const mutation = useMutation<
-		Tables<'user_deck'>,
-		PostgrestError,
-		ReviewAnswerModeType | null
-	>({
-		mutationKey: ['user', lang, 'deck', 'settings', 'review-answer-mode'],
-		mutationFn: async (review_answer_mode) => {
-			const { data } = await supabase
-				.from('user_deck')
-				.update({ review_answer_mode })
-				.eq('lang', lang)
-				.eq('uid', userId!)
-				.throwOnError()
-				.select()
-			if (!data)
-				throw new Error(
-					'Failed to update review answer mode: did not find deck'
+	const updateAnswerMode = (next: ReviewAnswerModeType | null) => {
+		if (next === review_answer_mode) return
+		const tx = decksCollection.update(lang, (draft) => {
+			draft.review_answer_mode = next
+		})
+		tx.isPersisted.promise.then(
+			() =>
+				toastSuccess(
+					next
+						? 'Review answer mode updated for this deck.'
+						: 'Deck will now use your profile setting.'
+				),
+			(error) => {
+				toastError(
+					'There was some error; please refresh the page to see if settings updated correctly.'
 				)
-			return data[0]
-		},
-		onSuccess: (data) => {
-			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-			toastSuccess(
-				data.review_answer_mode
-					? 'Review answer mode updated for this deck.'
-					: 'Deck will now use your profile setting.'
-			)
-		},
-		onError: (error) => {
-			toastError(
-				'There was some error; please refresh the page to see if settings updated correctly.'
-			)
-			console.log(`Review answer mode update error`, { error })
-		},
-	})
+				console.error('Review answer mode update error:', error)
+			}
+		)
+	}
 
 	return (
 		<div className="rounded shadow">
@@ -570,10 +502,8 @@ function ReviewAnswerModeSection({
 							key={option.value}
 							option={option}
 							selected={review_answer_mode === option.value}
-							disabled={
-								mutation.isPending || review_answer_mode === option.value
-							}
-							onClick={() => mutation.mutate(option.value)}
+							disabled={review_answer_mode === option.value}
+							onClick={() => updateAnswerMode(option.value)}
 						/>
 					))}
 				</div>
@@ -581,8 +511,8 @@ function ReviewAnswerModeSection({
 					<Button
 						variant="neutral"
 						size="sm"
-						disabled={!hasOverride || mutation.isPending}
-						onClick={() => mutation.mutate(null)}
+						disabled={!hasOverride}
+						onClick={() => updateAnswerMode(null)}
 						data-testid="clear-review-answer-mode-button"
 					>
 						Use profile default
