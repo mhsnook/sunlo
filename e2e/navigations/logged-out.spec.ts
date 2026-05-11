@@ -67,51 +67,8 @@ test.describe('Logged Out Navigation', () => {
 		await expect(page).toHaveURL(/\/browse/)
 	})
 
-	test('browse page shows language cards', async ({ page }) => {
-		await page.goto('/browse')
-
-		// Wait for page to finish loading, then check for language cards
-		await expect(page.getByTestId('browse-page')).toBeVisible({
-			timeout: 10000,
-		})
-		const languageCards = page.locator('[data-slot=card]')
-		await expect(languageCards.first()).toBeVisible()
-	})
-
-	// Covered by scenetest: auth.spec.md "visitor can browse languages without logging in"
-
-	test('login link appears and works', async ({ page }) => {
-		await page.goto('/learn')
-
-		// Find login link
-		const loginLink = page.getByRole('link', { name: /log in/i }).first()
-		await expect(loginLink).toBeVisible()
-
-		// Click to go to login page
-		await loginLink.click()
-		await expect(page).toHaveURL(/\/login/)
-
-		// Should see login form
-		await expect(
-			page.getByRole('heading', { name: /please log in/i })
-		).toBeVisible()
-		await expect(page.locator('input[name="email"]')).toBeVisible()
-		await expect(page.locator('input[name="password"]')).toBeVisible()
-	})
-
-	test('signup link appears and works', async ({ page }) => {
-		await page.goto('/learn')
-
-		// Find signup link
-		const signupLink = page.getByRole('link', { name: /sign up/i }).first()
-		if ((await signupLink.count()) > 0) {
-			await signupLink.click()
-			await expect(page).toHaveURL(/\/signup/)
-
-			// Should see signup form
-			await expect(page.locator('input[name="email"]')).toBeVisible()
-		}
-	})
-
-	// Covered by scenetest: auth.spec.md "visitor sees login options in sidebar on language page"
+	// Covered by scenetest:
+	// - auth.spec.md "visitor can browse languages without logging in" (browse page)
+	// - auth.spec.md "visitor sees login options in sidebar on language page" (login link)
+	// - auth.spec.md "login page shows signup and forgot-password links" (signup link)
 })
