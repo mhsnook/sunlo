@@ -17,6 +17,7 @@ import {
 import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
+	staticData: { focusMode: true },
 	beforeLoad: () => ({
 		contextMenu: [],
 		focusMode: true,

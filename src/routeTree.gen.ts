@@ -44,6 +44,7 @@ import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
 import { Route as UserBrowseChartsRouteImport } from './routes/_user/browse.charts'
+import { Route as UserAdminRoutesRouteImport } from './routes/_user/admin/routes'
 import { Route as UserAdminLangRouteImport } from './routes/_user/admin/$lang'
 import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
@@ -314,6 +315,11 @@ const UserBrowseChartsRoute = UserBrowseChartsRouteImport.update({
   path: '/charts',
   getParentRoute: () => UserBrowseRoute,
 } as any)
+const UserAdminRoutesRoute = UserAdminRoutesRouteImport.update({
+  id: '/routes',
+  path: '/routes',
+  getParentRoute: () => UserAdminRoute,
+} as any)
 const UserAdminLangRoute = UserAdminLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -508,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
+  '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -574,6 +581,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats': typeof ChatsIndexLazyRoute
+  '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/learn/add-deck': typeof UserLearnAddDeckRoute
@@ -645,6 +653,7 @@ export interface FileRoutesById {
   '/chats/$lang': typeof ChatsLangLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
+  '/_user/admin/routes': typeof UserAdminRoutesRoute
   '/_user/browse/charts': typeof UserBrowseChartsRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -721,6 +730,7 @@ export interface FileRouteTypes {
     | '/chats/$lang'
     | '/chats/'
     | '/admin/$lang'
+    | '/admin/routes'
     | '/browse/charts'
     | '/friends/$uid'
     | '/friends/chats'
@@ -787,6 +797,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/chats/$lang'
     | '/chats'
+    | '/admin/routes'
     | '/browse/charts'
     | '/friends/$uid'
     | '/learn/add-deck'
@@ -857,6 +868,7 @@ export interface FileRouteTypes {
     | '/chats/$lang'
     | '/chats/'
     | '/_user/admin/$lang'
+    | '/_user/admin/routes'
     | '/_user/browse/charts'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
@@ -1222,6 +1234,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserBrowseChartsRouteImport
       parentRoute: typeof UserBrowseRoute
     }
+    '/_user/admin/routes': {
+      id: '/_user/admin/routes'
+      path: '/routes'
+      fullPath: '/admin/routes'
+      preLoaderRoute: typeof UserAdminRoutesRouteImport
+      parentRoute: typeof UserAdminRoute
+    }
     '/_user/admin/$lang': {
       id: '/_user/admin/$lang'
       path: '/$lang'
@@ -1504,11 +1523,13 @@ const UserAdminLangRouteWithChildren = UserAdminLangRoute._addFileChildren(
 
 interface UserAdminRouteChildren {
   UserAdminLangRoute: typeof UserAdminLangRouteWithChildren
+  UserAdminRoutesRoute: typeof UserAdminRoutesRoute
   UserAdminIndexRoute: typeof UserAdminIndexRoute
 }
 
 const UserAdminRouteChildren: UserAdminRouteChildren = {
   UserAdminLangRoute: UserAdminLangRouteWithChildren,
+  UserAdminRoutesRoute: UserAdminRoutesRoute,
   UserAdminIndexRoute: UserAdminIndexRoute,
 }
 
