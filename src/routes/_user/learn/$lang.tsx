@@ -27,25 +27,24 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
 	staticData: {
 		searchAction: true,
-		appnav: {
-			auth: [
+		appnav: [
+			[
 				'/learn/$lang/feed',
 				'/learn/$lang/review',
 				'/learn/$lang/contributions',
 				'/learn/$lang/stats',
 			],
-			unauth: ['/learn/$lang/feed'],
-		},
-		contextMenu: {
-			auth: [
+			['/learn/$lang/feed'],
+		],
+		contextMenu: [
+			[
 				'/learn/$lang/manage-deck',
 				'/learn/$lang/requests/new',
 				'/learn/$lang/phrases/new',
 				'/learn/$lang/playlists/new',
 				'/learn/$lang/deck-settings',
 			],
-			unauth: [],
-		},
+		],
 		titleBar: ({ params }) => ({ title: `${languages[params.lang]} Deck` }),
 	},
 	beforeLoad: ({ params: { lang } }) => {

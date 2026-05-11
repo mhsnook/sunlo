@@ -7,16 +7,20 @@
  * route file's "shape in the UI" obvious without reading the function
  * body, and removes the need to wire context plumbing through beforeLoad.
  *
- * For values that branch on `auth.isAuth`, use the `{ auth, unauth }`
- * shape and resolve at render time via resolveNavList.
+ * NavList shape:
+ *   - string[]                    same for everyone
+ *   - [string[]]                  shown when logged in, hidden when not
+ *   - [string[], string[]]        [authArr, unauthArr]
  *
- * For values that interpolate runtime params (e.g. `$lang`), pass a
- * function. It's called at render time with `{ params, isAuth }`; the
- * React Compiler memoizes the result.
+ * Resolve at the call site:
+ *   !Array.isArray(list[0]) ? list : isAuth ? list[0] : list[1] ?? []
+ *
+ * TitleBar can be either a static object or a function called at render
+ * time with `{ params, isAuth }`. React Compiler memoizes the result.
  */
 import type { TitleBar } from './main'
 
-export type NavList = string[] | { auth: string[]; unauth: string[] }
+export type NavList = string[] | [string[]] | [string[], string[]]
 
 export type TitleBarFn = (args: {
 	params: Record<string, string>
@@ -35,22 +39,4 @@ declare module '@tanstack/react-router' {
 		fixedHeight?: boolean
 		titleBar?: TitleBarStatic
 	}
-}
-
-export function resolveNavList(
-	list: NavList | undefined,
-	isAuth: boolean
-): string[] {
-	if (!list) return []
-	if (Array.isArray(list)) return list
-	return isAuth ? list.auth : list.unauth
-}
-
-export function resolveTitleBar(
-	tb: TitleBarStatic | undefined,
-	args: { params: Record<string, string>; isAuth: boolean }
-): TitleBar | undefined {
-	if (!tb) return undefined
-	if (typeof tb === 'function') return tb(args)
-	return tb
 }
