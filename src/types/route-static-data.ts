@@ -37,6 +37,7 @@ declare module '@tanstack/react-router' {
 		focusMode?: boolean
 		wideContent?: boolean
 		fixedHeight?: boolean
+		fullWidth?: boolean
 		titleBar?: TitleBarStatic
 	}
 }

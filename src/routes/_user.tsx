@@ -115,6 +115,7 @@ function UserLayout() {
 
 	const focusMode = matches.some((m) => m.staticData.focusMode)
 	const wideContent = matches.some((m) => m.staticData.wideContent)
+	const fullWidth = matches.some((m) => m.staticData.fullWidth)
 	// Layout A (default): page flows naturally, one browser scrollbar
 	// Layout B (fixedHeight): viewport-locked container with internal scroll
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
@@ -170,7 +171,11 @@ function UserLayout() {
 					<div
 						className={cn(
 							'mx-auto flex min-w-0 flex-1 flex-col overflow-x-clip',
-							wideContent ? 'max-w-6xl' : 'max-w-4xl',
+							fullWidth
+								? 'max-w-none'
+								: wideContent
+									? 'max-w-6xl'
+									: 'max-w-4xl',
 							fixedHeight && 'min-h-0 overflow-y-auto'
 						)}
 					>
