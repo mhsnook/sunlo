@@ -13,6 +13,7 @@ const SearchParams = z.object({
 export const Route = createFileRoute('/_user/search')({
 	component: () => <Outlet />,
 	validateSearch: SearchParams,
+	staticData: { fixedHeight: true },
 	beforeLoad: () => ({
 		titleBar: { title: 'Search' },
 		appnav: [],
