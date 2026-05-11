@@ -1,16 +1,16 @@
 import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import type { NavList } from '@/types/route-static-data'
+import type { NavList, TitleBarStatic } from '@/types/route-static-data'
 
 export const Route = createFileRoute('/_user/admin/routes')({
 	component: RoutesIntrospection,
-	beforeLoad: () => ({
+	staticData: {
 		titleBar: {
 			title: 'Routes',
 			subtitle: 'Static introspection of the route tree',
 		},
-	}),
+	},
 })
 
 const style = { viewTransitionName: 'main-area' } as CSSProperties
@@ -21,6 +21,7 @@ type Row = {
 	isLazy: boolean
 	appnav?: NavList
 	contextMenu?: NavList
+	titleBar?: TitleBarStatic
 	searchAction: boolean
 	focusMode: boolean
 	wideContent: boolean
@@ -36,6 +37,7 @@ type RouteLike = {
 		staticData?: {
 			appnav?: NavList
 			contextMenu?: NavList
+			titleBar?: TitleBarStatic
 			searchAction?: boolean
 			focusMode?: boolean
 			wideContent?: boolean
@@ -53,6 +55,7 @@ function readRows(routesById: Record<string, RouteLike>): Row[] {
 			isLazy: typeof route.options?.lazyFn === 'function',
 			appnav: sd.appnav,
 			contextMenu: sd.contextMenu,
+			titleBar: sd.titleBar,
 			searchAction: sd.searchAction === true,
 			focusMode: sd.focusMode === true,
 			wideContent: sd.wideContent === true,
@@ -83,6 +86,7 @@ function RoutesIntrospection() {
 		() => ({
 			total: rows.length,
 			lazy: rows.filter((r) => r.isLazy).length,
+			titleBar: rows.filter((r) => r.titleBar !== undefined).length,
 			appnav: rows.filter((r) => r.appnav !== undefined).length,
 			ctxmenu: rows.filter((r) => r.contextMenu !== undefined).length,
 			search: rows.filter((r) => r.searchAction).length,
@@ -98,14 +102,14 @@ function RoutesIntrospection() {
 			<header>
 				<h1 className="text-2xl font-bold">Route tree</h1>
 				<p className="text-muted-foreground mt-1 text-sm">
-					{counts.total} routes · {counts.lazy} lazy · {counts.appnav} appnav ·{' '}
-					{counts.ctxmenu} contextMenu · {counts.search} search · {counts.focus}{' '}
-					focusMode · {counts.wide} wideContent · {counts.fixed} fixedHeight
+					{counts.total} routes · {counts.lazy} lazy · {counts.titleBar}{' '}
+					titleBar · {counts.appnav} appnav · {counts.ctxmenu} contextMenu ·{' '}
+					{counts.search} search · {counts.focus} focusMode · {counts.wide}{' '}
+					wideContent · {counts.fixed} fixedHeight
 				</p>
 				<p className="text-muted-foreground mt-1 text-xs">
-					Nav and layout flags read from <code>staticData</code>. titleBar still
-					lives in <code>beforeLoad</code> (it sometimes interpolates runtime
-					params like <code>$lang</code>).
+					Everything read from <code>staticData</code>. Dynamic titleBar values
+					(functions of params / isAuth) are shown as <em>(fn)</em>.
 				</p>
 			</header>
 
@@ -123,6 +127,7 @@ function RoutesIntrospection() {
 						<tr className="border-b text-left text-xs tracking-wider uppercase">
 							<Th>Route id</Th>
 							<Th center>Lazy</Th>
+							<Th>titleBar</Th>
 							<Th>appnav</Th>
 							<Th>contextMenu</Th>
 							<Th center>search</Th>
@@ -141,6 +146,7 @@ function RoutesIntrospection() {
 							>
 								<td className="py-1.5 pr-4 font-mono text-xs">{r.id}</td>
 								<BoolCell on={r.isLazy} />
+								<TitleBarCell tb={r.titleBar} />
 								<NavCell list={r.appnav} />
 								<NavCell list={r.contextMenu} />
 								<BoolCell on={r.searchAction} />
@@ -173,6 +179,21 @@ function BoolCell({ on }: { on: boolean }) {
 			)}
 		>
 			{on ? '✓' : '·'}
+		</td>
+	)
+}
+
+function TitleBarCell({ tb }: { tb: TitleBarStatic | undefined }) {
+	if (tb === undefined)
+		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">·</td>
+	if (typeof tb === 'function')
+		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">(fn)</td>
+	return (
+		<td className="py-1.5 pr-4 text-xs">
+			<div className="font-medium">{tb.title}</div>
+			{tb.subtitle ? (
+				<div className="text-muted-foreground">{tb.subtitle}</div>
+			) : null}
 		</td>
 	)
 }

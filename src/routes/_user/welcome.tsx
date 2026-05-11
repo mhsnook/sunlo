@@ -52,12 +52,12 @@ import { CommunityNormsIntro } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/welcome')({
 	component: WelcomePage,
-	beforeLoad: () => ({
+	staticData: {
 		titleBar: {
 			title: 'Welcome to Sunlo',
 			subtitle: 'Learn languages with friends',
 		},
-	}),
+	},
 	loader: async () => {
 		await Promise.all([
 			phraseRequestsCollection.preload(),

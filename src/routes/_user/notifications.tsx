@@ -5,11 +5,9 @@ import { RequireAuth } from '@/components/require-auth'
 import { NotificationList } from '@/components/notifications/notification-list'
 
 export const Route = createFileRoute('/_user/notifications')({
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Notifications',
-		},
-	}),
+	staticData: {
+		titleBar: { title: 'Notifications' },
+	},
 	loader: async ({ context }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([

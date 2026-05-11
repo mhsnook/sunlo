@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCanGoBack } from '@tanstack/react-router'
-import type { MyRouterContext } from '@/routes/__root'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { resolveTitleBar } from '@/types/route-static-data'
+import { useAuth } from '@/lib/use-auth'
 
 export default function Navbar() {
 	const matches = useMatches()
@@ -35,11 +36,13 @@ function Title() {
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
 	const matches = useMatches()
+	const { isAuth } = useAuth()
 
-	const titleBarMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.titleBar
-	)
-	const titleBar = (titleBarMatch?.context as MyRouterContext)?.titleBar
+	const titleBarMatch = matches.findLast((m) => m.staticData.titleBar)
+	const titleBar = resolveTitleBar(titleBarMatch?.staticData.titleBar, {
+		params: (titleBarMatch?.params ?? {}) as Record<string, string>,
+		isAuth,
+	})
 
 	const onBackClick =
 		titleBar && 'onBackClick' in titleBar ? titleBar.onBackClick : null

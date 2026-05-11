@@ -9,12 +9,12 @@ import type { CSSProperties } from 'react'
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 	validateSearch: UserContributionsTabs,
 	component: Page,
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: {
-			title: `Contributions to the ${languages[lang]} Library`,
+	staticData: {
+		titleBar: ({ params }) => ({
+			title: `Contributions to the ${languages[params.lang]} Library`,
 			subtitle: '',
-		},
-	}),
+		}),
+	},
 	loader: async () => {
 		await phraseRequestsCollection.preload()
 	},

@@ -23,15 +23,13 @@ export const Route = createFileRoute('/_user/learn')({
 			auth: ['/learn/add-deck', '/learn/contributions'],
 			unauth: [],
 		},
-	},
-	beforeLoad: ({ context }) => ({
-		titleBar: {
+		titleBar: ({ isAuth }) => ({
 			title: 'Learning Home',
-			subtitle: context.auth.isAuth
+			subtitle: isAuth
 				? 'Which deck are we studying today?'
 				: 'Explore community-created language learning content',
-		},
-	}),
+		}),
+	},
 })
 
 function setSearchParam(key: string, value: string | null) {

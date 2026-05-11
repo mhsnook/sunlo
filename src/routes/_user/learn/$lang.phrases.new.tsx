@@ -49,11 +49,11 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 			text: (search?.text as string) ?? '',
 		}
 	},
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: {
-			title: `Add ${languages[lang]} Phrase`,
-		},
-	}),
+	staticData: {
+		titleBar: ({ params }) => ({
+			title: `Add ${languages[params.lang]} Phrase`,
+		}),
+	},
 	loader: async ({ context }) => {
 		if (context.auth.isAuth) {
 			await cardsCollection.preload()

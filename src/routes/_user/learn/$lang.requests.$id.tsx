@@ -49,10 +49,12 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
 	}),
-	staticData: { appnav: [] },
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: { title: `${languages[lang]} Request` },
-	}),
+	staticData: {
+		appnav: [],
+		titleBar: ({ params }) => ({
+			title: `${languages[params.lang]} Request`,
+		}),
+	},
 	loader: async ({ context, location, cause }) => {
 		const preloads: Promise<unknown>[] = [
 			commentsCollection.preload(),
