@@ -1,8 +1,8 @@
-# Initiate Transform
+# Become-From
 
 Formally initiate an architectural transformation — deprecate an old code pattern in favor of a new one. Produces three durable artifacts: a documented standard in `CLAUDE.md`, an initial scan of the codebase, and a tracking issue labeled `transform` that automated tools (and future Claude sessions) can parse.
 
-Invoke when the developer says something like _"initiate a transform,"_ _"start a transform,"_ or _"/initiate-transform."_
+Invoke when the developer says something like _"become X from Y,"_ _"set up a become-from,"_ or _"/become-from."_ Read the invocation as the verb **become** taking a target and a source — e.g. _"become localfirst from useMutation,"_ _"become pure-PWA from the current mixed mode."_
 
 ## When to use this
 
