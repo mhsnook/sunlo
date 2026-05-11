@@ -54,5 +54,17 @@ export const myProfileCollection = createCollection(
 		queryClient,
 		startSync: false,
 		schema: MyProfileSchema,
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('user_profile')
+						.update(m.changes)
+						.eq('uid', m.original.uid)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
