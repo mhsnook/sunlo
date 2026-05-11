@@ -2,14 +2,12 @@ import { eq, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
 import type { CommentPhraseLinkType, RequestCommentType } from './schemas'
-import type { PhraseFullFullType } from '@/features/phrases/schemas'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
 } from './collections'
-import { phrasesFull } from '@/features/phrases/live'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 
 /** Look up a single comment by ID. Returns undefined when no id is given. */
@@ -27,22 +25,20 @@ export const useOneComment = (
 		[commentId]
 	)
 
-/** All phrases attached to a comment, hydrated through phrasesFull. */
-export const usePhrasesFromComment = (
+/**
+ * Comment-phrase-link rows for a single comment. Phrase hydration is the
+ * caller's job — render each link's `phrase_id` through a per-row component
+ * (e.g. `<WithPhrase pid={link.phrase_id} ... />`) so each phrase row owns
+ * its own subscription. Keeps the cross-feature edge inside `phrases`.
+ */
+export const useCommentPhraseLinks = (
 	commentId: uuid
-): UseLiveQueryResult<
-	{ phrase: PhraseFullFullType; link: CommentPhraseLinkType }[]
-> =>
+): UseLiveQueryResult<CommentPhraseLinkType[]> =>
 	useLiveQuery(
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.comment_id, commentId))
-				.join(
-					{ phrase: phrasesFull },
-					({ link, phrase }) => eq(link.phrase_id, phrase.id),
-					'inner'
-				),
+				.where(({ link }) => eq(link.comment_id, commentId)),
 		[commentId]
 	)
 
