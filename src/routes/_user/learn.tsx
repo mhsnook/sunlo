@@ -19,10 +19,7 @@ export const Route = createFileRoute('/_user/learn')({
 	validateSearch: LearnSearchParams,
 	staticData: {
 		searchAction: true,
-		contextMenu: {
-			auth: ['/learn/add-deck', '/learn/contributions'],
-			unauth: [],
-		},
+		contextMenu: [['/learn/add-deck', '/learn/contributions']],
 		titleBar: ({ isAuth }) => ({
 			title: 'Learning Home',
 			subtitle: isAuth

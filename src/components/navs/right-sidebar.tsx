@@ -1,17 +1,16 @@
 import { Link, useMatches } from '@tanstack/react-router'
 import { useLinks } from '@/hooks/links'
 import { cn } from '@/lib/utils'
-import { resolveNavList } from '@/types/route-static-data'
 import { useAuth } from '@/lib/use-auth'
 
 export function RightSidebar() {
 	const { isAuth } = useAuth()
 	const matches = useMatches()
-	const contextMenuMatch = matches.findLast((m) => m.staticData.contextMenu)
-	const contextMenu = resolveNavList(
-		contextMenuMatch?.staticData.contextMenu,
-		isAuth
-	)
+	const cm = matches.findLast((m) => m.staticData.contextMenu)?.staticData
+		.contextMenu
+	const contextMenu = (
+		!cm ? [] : !Array.isArray(cm[0]) ? cm : isAuth ? cm[0] : (cm[1] ?? [])
+	) as string[]
 	const links = useLinks(contextMenu)
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
 

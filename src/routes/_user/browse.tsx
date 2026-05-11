@@ -14,10 +14,10 @@ import {
 export const Route = createFileRoute('/_user/browse')({
 	staticData: {
 		appnav: ['/browse', '/browse/charts'],
-		contextMenu: {
-			auth: ['/learn/add-deck', '/learn/contributions'],
-			unauth: ['/login', '/signup'],
-		},
+		contextMenu: [
+			['/learn/add-deck', '/learn/contributions'],
+			['/login', '/signup'],
+		],
 		titleBar: {
 			title: 'Explore Languages',
 			subtitle: 'Browse the public library',

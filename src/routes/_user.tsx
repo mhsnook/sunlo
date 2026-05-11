@@ -19,7 +19,6 @@ const AppNav = lazy(() =>
 	import('@/components/navs/app-nav').then((m) => ({ default: m.AppNav }))
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
-import { resolveNavList } from '@/types/route-static-data'
 import {
 	myProfileCollection,
 	myProfileQuery,
@@ -121,11 +120,17 @@ function UserLayout() {
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
 
 	// Skip the AppNav chunk entirely when no route declares an appnav
-	const appnavMatch = matches.findLast((m) => m.staticData.appnav)
-	const hasAppNav = !!resolveNavList(
-		appnavMatch?.staticData.appnav,
-		auth.isAuth
-	).length
+	const appnav = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
+	const appnavList = (
+		!appnav
+			? []
+			: !Array.isArray(appnav[0])
+				? appnav
+				: auth.isAuth
+					? appnav[0]
+					: (appnav[1] ?? [])
+	) as string[]
+	const hasAppNav = !!appnavList.length
 
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()

@@ -144,7 +144,7 @@ function RoutesIntrospection() {
 								data-name="admin-route-row"
 								data-key={r.id}
 							>
-								<td className="py-1.5 pr-4 font-mono text-xs">{r.id}</td>
+								<td className="px-2 py-1.5 font-mono text-xs">{r.id}</td>
 								<BoolCell on={r.isLazy} />
 								<TitleBarCell tb={r.titleBar} />
 								<NavCell list={r.appnav} />
@@ -164,7 +164,7 @@ function RoutesIntrospection() {
 
 function Th({ children, center }: { children: ReactNode; center?: boolean }) {
 	return (
-		<th className={cn('py-2 font-semibold', center ? 'text-center' : '')}>
+		<th className={cn('px-2 py-2 font-semibold', center ? 'text-center' : '')}>
 			{children}
 		</th>
 	)
@@ -174,7 +174,7 @@ function BoolCell({ on }: { on: boolean }) {
 	return (
 		<td
 			className={cn(
-				'py-1.5 text-center',
+				'px-2 py-1.5 text-center',
 				on ? 'text-7-hi-success' : 'text-muted-foreground'
 			)}
 		>
@@ -185,11 +185,11 @@ function BoolCell({ on }: { on: boolean }) {
 
 function TitleBarCell({ tb }: { tb: TitleBarStatic | undefined }) {
 	if (tb === undefined)
-		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">·</td>
+		return <td className="text-muted-foreground px-2 py-1.5 text-xs">·</td>
 	if (typeof tb === 'function')
-		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">(fn)</td>
+		return <td className="text-muted-foreground px-2 py-1.5 text-xs">(fn)</td>
 	return (
-		<td className="py-1.5 pr-4 text-xs">
+		<td className="px-2 py-1.5 text-xs">
 			<div className="font-medium">{tb.title}</div>
 			{tb.subtitle ? (
 				<div className="text-muted-foreground">{tb.subtitle}</div>
@@ -200,22 +200,30 @@ function TitleBarCell({ tb }: { tb: TitleBarStatic | undefined }) {
 
 function NavCell({ list }: { list: NavList | undefined }) {
 	if (list === undefined)
-		return <td className="text-muted-foreground py-1.5 pr-4 text-xs">·</td>
-	if (Array.isArray(list))
+		return <td className="text-muted-foreground px-2 py-1.5 text-xs">·</td>
+	// Flat array shape: string[] — same for both auth states.
+	if (typeof list[0] === 'string' || list.length === 0)
 		return (
-			<td className="py-1.5 pr-4 font-mono text-xs">
-				{list.length === 0 ? '[]' : list.join(', ')}
+			<td className="px-2 py-1.5 font-mono text-xs">
+				{list.length === 0 ? '[]' : (list as string[]).join(', ')}
 			</td>
 		)
+	// Tuple shape: [authArr] or [authArr, unauthArr]
+	const authArr = list[0]
+	const unauthArr = (list[1] ?? null) as string[] | null
 	return (
-		<td className="py-1.5 pr-4 font-mono text-xs">
+		<td className="px-2 py-1.5 font-mono text-xs">
 			<div>
 				<span className="text-muted-foreground">auth:</span>{' '}
-				{list.auth.length === 0 ? '[]' : list.auth.join(', ')}
+				{authArr.length === 0 ? '[]' : authArr.join(', ')}
 			</div>
 			<div>
 				<span className="text-muted-foreground">unauth:</span>{' '}
-				{list.unauth.length === 0 ? '[]' : list.unauth.join(', ')}
+				{unauthArr === null
+					? '(hidden)'
+					: unauthArr.length === 0
+						? '[]'
+						: unauthArr.join(', ')}
 			</div>
 		</td>
 	)
