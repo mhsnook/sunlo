@@ -28,6 +28,18 @@ export const phraseRequestsCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('phrase_request')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
 	})
 )
 
