@@ -134,6 +134,10 @@ function UserLayout() {
 		} else {
 			setOpen(savedOpenState.current)
 		}
+		// Fires only on focusMode transitions. Including `open` in the deps
+		// would re-save and re-fire every time the user toggles the sidebar,
+		// defeating the save/restore.
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
 	}, [focusMode])
 
 	// Apply user's font preference to the document body
