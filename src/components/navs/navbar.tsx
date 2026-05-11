@@ -10,12 +10,8 @@ import { NotificationBell } from '@/components/notifications/notification-bell'
 
 export default function Navbar() {
 	const matches = useMatches()
-	const focusMode = matches.some(
-		(m) => (m.context as MyRouterContext)?.focusMode
-	)
-	const hasSearchAction = matches.some(
-		(m) => (m.context as MyRouterContext)?.searchAction
-	)
+	const focusMode = matches.some((m) => m.staticData.focusMode)
+	const hasSearchAction = matches.some((m) => m.staticData.searchAction)
 
 	return (
 		<nav

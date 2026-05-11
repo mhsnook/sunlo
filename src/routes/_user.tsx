@@ -19,7 +19,7 @@ const AppNav = lazy(() =>
 	import('@/components/navs/app-nav').then((m) => ({ default: m.AppNav }))
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
-import type { MyRouterContext } from './__root'
+import { resolveNavList } from '@/types/route-static-data'
 import {
 	myProfileCollection,
 	myProfileQuery,
@@ -113,29 +113,21 @@ export const Route = createFileRoute('/_user')({
 })
 
 function UserLayout() {
+	const { auth } = Route.useRouteContext()
 	const matches = useMatches()
-	// Check if any route has enabled focus mode (e.g. review/go)
-	const focusMode = matches.some(
-		(m) => (m.context as MyRouterContext)?.focusMode
-	)
 
-	// Check if any route requests wider content (e.g. chats)
-	const wideContent = matches.some(
-		(m) => (m.context as MyRouterContext)?.wideContent
-	)
-
-	// Check if any route requests fixed-height layout (e.g. chats, review)
+	const focusMode = matches.some((m) => m.staticData.focusMode)
+	const wideContent = matches.some((m) => m.staticData.wideContent)
 	// Layout A (default): page flows naturally, one browser scrollbar
 	// Layout B (fixedHeight): viewport-locked container with internal scroll
-	const fixedHeight = matches.some(
-		(m) => (m.context as MyRouterContext)?.fixedHeight
-	)
+	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
 
 	// Skip the AppNav chunk entirely when no route declares an appnav
-	const appnavMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.appnav
-	)
-	const hasAppNav = !!(appnavMatch?.context as MyRouterContext)?.appnav?.length
+	const appnavMatch = matches.findLast((m) => m.staticData.appnav)
+	const hasAppNav = !!resolveNavList(
+		appnavMatch?.staticData.appnav,
+		auth.isAuth
+	).length
 
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()

@@ -30,12 +30,11 @@ import { useCheck, should } from '@scenetest/checks-react'
 import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
-	staticData: { focusMode: true, fixedHeight: true },
-	beforeLoad: () => ({
+	staticData: {
 		contextMenu: [],
 		focusMode: true,
 		fixedHeight: true,
-	}),
+	},
 	component: ReviewPage,
 	loader: async ({ context, params }) => {
 		if (!context.auth.isAuth) return

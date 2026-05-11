@@ -17,6 +17,13 @@ const LearnSearchParams = z.object({
 export const Route = createFileRoute('/_user/learn')({
 	component: LearnLayout,
 	validateSearch: LearnSearchParams,
+	staticData: {
+		searchAction: true,
+		contextMenu: {
+			auth: ['/learn/add-deck', '/learn/contributions'],
+			unauth: [],
+		},
+	},
 	beforeLoad: ({ context }) => ({
 		titleBar: {
 			title: 'Learning Home',
@@ -24,10 +31,6 @@ export const Route = createFileRoute('/_user/learn')({
 				? 'Which deck are we studying today?'
 				: 'Explore community-created language learning content',
 		},
-		searchAction: true,
-		contextMenu: context.auth.isAuth
-			? ['/learn/add-deck', '/learn/contributions']
-			: [],
 	}),
 })
 

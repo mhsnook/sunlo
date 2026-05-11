@@ -11,12 +11,14 @@ const FriendsSearchParams = z.object({
 })
 
 export const Route = createFileRoute('/_user/friends')({
+	staticData: {
+		searchAction: true,
+		contextMenu: ['/friends/chats', '/friends/invite'],
+	},
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Friends and Contacts',
 		},
-		searchAction: true,
-		contextMenu: ['/friends/chats', '/friends/invite'],
 	}),
 	validateSearch: FriendsSearchParams,
 	loader: async ({ context }) => {

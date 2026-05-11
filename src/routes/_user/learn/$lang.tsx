@@ -25,7 +25,29 @@ import { ReviewStoreProvider } from '@/components/review/review-context-provider
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
-	beforeLoad: ({ params: { lang }, context }) => {
+	staticData: {
+		searchAction: true,
+		appnav: {
+			auth: [
+				'/learn/$lang/feed',
+				'/learn/$lang/review',
+				'/learn/$lang/contributions',
+				'/learn/$lang/stats',
+			],
+			unauth: ['/learn/$lang/feed'],
+		},
+		contextMenu: {
+			auth: [
+				'/learn/$lang/manage-deck',
+				'/learn/$lang/requests/new',
+				'/learn/$lang/phrases/new',
+				'/learn/$lang/playlists/new',
+				'/learn/$lang/deck-settings',
+			],
+			unauth: [],
+		},
+	},
+	beforeLoad: ({ params: { lang } }) => {
 		if (!languages[lang]) {
 			console.log(`not found`)
 			throw notFound()
@@ -34,24 +56,6 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			titleBar: {
 				title: `${languages[lang]} Deck`,
 			},
-			searchAction: true,
-			appnav: context.auth.isAuth
-				? [
-						'/learn/$lang/feed',
-						'/learn/$lang/review',
-						'/learn/$lang/contributions',
-						'/learn/$lang/stats',
-					]
-				: ['/learn/$lang/feed'],
-			contextMenu: context.auth.isAuth
-				? [
-						'/learn/$lang/manage-deck',
-						'/learn/$lang/requests/new',
-						'/learn/$lang/phrases/new',
-						'/learn/$lang/playlists/new',
-						'/learn/$lang/deck-settings',
-					]
-				: [],
 		}
 	},
 	loader: async ({ context }) => {

@@ -19,7 +19,8 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import type { MyRouterContext } from '@/routes/__root'
+import { resolveNavList } from '@/types/route-static-data'
+import { useAuth } from '@/lib/use-auth'
 
 const activeProps = {
 	className: 'border-primary text-primary-foresoft',
@@ -32,16 +33,15 @@ const inactiveProps = {
 } as const
 
 export function AppNav() {
+	const { isAuth } = useAuth()
 	const matches = useMatches()
-	const appnavMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.appnav
+	const appnavMatch = matches.findLast((m) => m.staticData.appnav)
+	const appnav = resolveNavList(appnavMatch?.staticData.appnav, isAuth)
+	const contextMenuMatch = matches.findLast((m) => m.staticData.contextMenu)
+	const contextMenu = resolveNavList(
+		contextMenuMatch?.staticData.contextMenu,
+		isAuth
 	)
-	const appnav = (appnavMatch?.context as MyRouterContext)?.appnav
-	const contextMenuMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.contextMenu
-	)
-	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
-		?.contextMenu
 	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,

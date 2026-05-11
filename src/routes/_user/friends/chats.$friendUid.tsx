@@ -25,11 +25,11 @@ import { PlaylistPreview } from '@/routes/_user/friends/-playlist-preview'
 
 export const Route = createFileRoute('/_user/friends/chats/$friendUid')({
 	component: ChatPage,
+	staticData: { appnav: [] },
 	beforeLoad: () => ({
 		titleBar: {
 			title: 'Chat',
 		},
-		appnav: [],
 	}),
 })
 
@@ -107,15 +107,17 @@ function ChatPage() {
 				<div className="flex-1">
 					<p className="font-semibold">{relUsername}</p>
 					<p className="text-muted-foreground text-xs">
-						{relation.status === 'friends' ?
+						{relation.status === 'friends' ? (
 							'Friends'
-						: relation.status === 'pending' && !relation.isMostRecentByMe ?
+						) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
 							<span className="text-primary inline-flex items-center gap-1">
 								<UserPlus className="size-3" /> Wants to connect
 							</span>
-						: relation.status === 'pending' ?
+						) : relation.status === 'pending' ? (
 							'Request sent'
-						:	'Not connected'}
+						) : (
+							'Not connected'
+						)}
 					</p>
 				</div>
 			</CardHeader>
@@ -126,9 +128,10 @@ function ChatPage() {
 						className="space-y-4 pt-4 pb-2"
 						data-testid="chat-messages-container"
 					>
-						{!messagesQuery.data?.length ?
+						{!messagesQuery.data?.length ? (
 							<EmptyChat profile={relation.profile} />
-						:	messagesQuery.data?.map((msg) => {
+						) : (
+							messagesQuery.data?.map((msg) => {
 								if (typeof msg === 'undefined') return null
 								const isMine = msg.sender_uid === userId
 								return (
@@ -137,9 +140,9 @@ function ChatPage() {
 										data-testid="chat-message-bubble"
 										className={cn(
 											'max-w-[80%] items-start gap-2',
-											isMine ?
-												'align-end ms-auto justify-end ps-[10%]'
-											:	'align-start me-auto justify-start pe-[10%]'
+											isMine
+												? 'align-end ms-auto justify-end ps-[10%]'
+												: 'align-start me-auto justify-start pe-[10%]'
 										)}
 									>
 										{!isMine && (
@@ -166,9 +169,9 @@ function ChatPage() {
 											<div
 												className={cn(
 													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
-													isMine ?
-														'bg-primary text-primary-foreground/70 ms-6 place-self-end'
-													:	'bg-muted me-6 place-self-start'
+													isMine
+														? 'bg-primary text-primary-foreground/70 ms-6 place-self-end'
+														: 'bg-muted me-6 place-self-start'
 												)}
 											>
 												{msg.message_type === 'recommendation' && (
@@ -195,13 +198,13 @@ function ChatPage() {
 									</div>
 								)
 							})
-						}
+						)}
 					</div>
 					<div ref={bottomRef} />
 				</ScrollArea>
 			</CardContent>
 			<div className="border-t p-4">
-				{relation.status === 'friends' ?
+				{relation.status === 'friends' ? (
 					<div className="relative">
 						<Link
 							to="/friends/chats/$friendUid/recommend"
@@ -217,19 +220,20 @@ function ChatPage() {
 							</span>
 						</Link>
 					</div>
-				: relation.status === 'pending' && !relation.isMostRecentByMe ?
+				) : relation.status === 'pending' && !relation.isMostRecentByMe ? (
 					<div className="flex flex-col items-center gap-2 py-2">
 						<p className="text-muted-foreground text-sm">
 							{relUsername} wants to connect
 						</p>
 						<RelationshipActions uid_for={friendUid} />
 					</div>
-				:	<p className="text-muted-foreground p-2 text-center text-sm italic">
-						{relation.status === 'pending' ?
-							'Waiting for them to accept your request.'
-						:	'You must be friends to chat.'}
+				) : (
+					<p className="text-muted-foreground p-2 text-center text-sm italic">
+						{relation.status === 'pending'
+							? 'Waiting for them to accept your request.'
+							: 'You must be friends to chat.'}
 					</p>
-				}
+				)}
 			</div>
 			<Outlet />
 		</Card>
@@ -240,16 +244,17 @@ const EmptyChat = ({ profile }: { profile: PublicProfileType }) => (
 	<div className="flex flex-col items-center justify-center gap-6 py-10">
 		<p className="text-xl font-bold">{profile.username}</p>
 		<div className="bg-muted-foreground/40 relative mx-auto flex size-32 items-center justify-center rounded-full text-4xl">
-			{profile.avatar_path ?
+			{profile.avatar_path ? (
 				<img
 					src={avatarUrlify(profile.avatar_path, 128)}
 					alt={`${profile.username ? `${profile.username}'s` : 'Your'} avatar`}
 					className="size-32 rounded-full object-cover"
 				/>
-			:	<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
+			) : (
+				<span className="absolute top-0 right-0 bottom-0 left-0 flex size-32 items-center justify-center font-bold capitalize">
 					{(profile.username ?? '').slice(0, 2)}
 				</span>
-			}
+			)}
 		</div>
 		<p>
 			<Link

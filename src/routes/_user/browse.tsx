@@ -12,15 +12,18 @@ import {
 } from '@/features/playlists/collections'
 
 export const Route = createFileRoute('/_user/browse')({
-	beforeLoad: ({ context }) => ({
+	staticData: {
+		appnav: ['/browse', '/browse/charts'],
+		contextMenu: {
+			auth: ['/learn/add-deck', '/learn/contributions'],
+			unauth: ['/login', '/signup'],
+		},
+	},
+	beforeLoad: () => ({
 		titleBar: {
 			title: 'Explore Languages',
 			subtitle: 'Browse the public library',
 		},
-		appnav: ['/browse', '/browse/charts'],
-		contextMenu: context.auth.isAuth
-			? ['/learn/add-deck', '/learn/contributions']
-			: ['/login', '/signup'],
 	}),
 	loader: async () => {
 		await Promise.all([
