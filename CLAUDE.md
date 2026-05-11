@@ -77,13 +77,13 @@ pnpm scene scenetest/scenes/decks.spec.md
 
 Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
 
-**Three authoring surfaces, all under `scenetest/scenes/`** (see [reference](https://scenetest.msnook.xyz/reference/concurrent-and-classic.md)). Pick the lightest surface that does the job:
+**Strong default: Markdown scenes + inline runtime checks.** Three authoring surfaces exist under `scenetest/scenes/` (see [reference](https://scenetest.msnook.xyz/reference/concurrent-and-classic.md)), but reach for them in this order:
 
-1. **Markdown scenes** (`.spec.md`) — the default. Reach for this first.
+1. **Markdown scenes** (`.spec.md`) — the default for nearly every spec.
 2. **TypeScript scenes** — `scene()` from `@scenetest/scenes`. Same scene runtime, in TS, for custom setup/teardown or logic Markdown can't express.
-3. **Playwright specs** — `test()` from `@scenetest/scenes` (NOT raw `@playwright/test`). Sequential await-driven model with scenetest's actor handles and selectors. For multi-actor flows with timing-sensitive logic the scene runtime can't express.
+3. **Playwright specs** — `test()` from `@scenetest/scenes` (NOT raw `@playwright/test`). Sequential await-driven model with scenetest's actor handles and selectors. Only for multi-actor flows with timing-sensitive logic the scene runtime can't express.
 
-**Runtime checks** are scenetest's inline assertion functions — `should()`, `failed()`, `serverCheck()` — that live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. Inline checks are a peer to scene specs, not a fallback — use them to validate internal state that external tests can't easily observe.
+**Runtime checks** — scenetest's inline assertion functions `should()`, `failed()`, `serverCheck()` — live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. They're a peer to scene specs, not a fallback. **Lean on them especially for mutation flows**: the scene asserts the user-visible outcome (`see toast-success`), while the inline check inside the mutation handler enforces the collection-state / client-server agreement that the old e2e tests were scraping from the DOM.
 
 **Do not write new `@playwright/test` specs.** The legacy `e2e/` directory is being decommissioned — see the `transform` label.
 
