@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query'
+import { createOptimisticAction } from '@tanstack/db'
+import type { MouseEvent } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
@@ -13,54 +14,65 @@ import { Button } from '@/components/ui/button'
 import { PhraseRequestType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
+type UpvoteInput = {
+	requestId: uuid
+	action: 'add' | 'remove'
+	currentCount: number
+}
+
+const setRequestUpvote = createOptimisticAction<UpvoteInput>({
+	onMutate: ({ requestId, action, currentCount }) => {
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		phraseRequestsCollection.update(requestId, (draft) => {
+			draft.upvote_count = nextCount
+		})
+		if (action === 'add') {
+			phraseRequestUpvotesCollection.insert({ request_id: requestId })
+		} else {
+			phraseRequestUpvotesCollection.delete(requestId)
+		}
+	},
+	mutationFn: async ({ requestId, action }) => {
+		const { error } = await supabase.rpc('set_phrase_request_upvote', {
+			p_request_id: requestId,
+			p_action: action,
+		})
+		if (error) throw error
+		await Promise.all([
+			phraseRequestsCollection.utils.refetch(),
+			phraseRequestUpvotesCollection.utils.refetch(),
+		])
+	},
+})
+
 export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 	const requireAuth = useRequireAuth()
 	const hasUpvoted = useHasRequestUpvote(request.id)
 
-	// Upvote mutation with explicit action
-	const upvoteMutation = useMutation({
-		mutationFn: async (action: 'add' | 'remove') => {
-			const { data, error } = await supabase.rpc('set_phrase_request_upvote', {
-				p_request_id: request.id,
-				p_action: action,
-			})
-			if (error) throw error
-			return data as {
-				request_id: uuid
-				action: 'added' | 'removed' | 'no_change'
-			}
-		},
-		onSuccess: (data) => {
-			// Only update if server actually made a change
-			if (data.action === 'no_change') return
-
-			const currentCount = request.upvote_count ?? 0
-			const newCount =
-				data.action === 'added'
-					? currentCount + 1
-					: Math.max(0, currentCount - 1)
-
-			// Update the request count
-			phraseRequestsCollection.utils.writeUpdate({
-				id: data.request_id,
-				upvote_count: newCount,
-			})
-
-			// Update the upvotes collection
-			if (data.action === 'added') {
-				phraseRequestUpvotesCollection.utils.writeInsert({
-					request_id: data.request_id,
+	const handleClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		requireAuth(() => {
+			const action: 'add' | 'remove' = hasUpvoted ? 'remove' : 'add'
+			void Promise.all([
+				phraseRequestsCollection.preload(),
+				phraseRequestUpvotesCollection.preload(),
+			]).then(() => {
+				const tx = setRequestUpvote({
+					requestId: request.id,
+					action,
+					currentCount: request.upvote_count ?? 0,
 				})
-				toastSuccess('Vote added!')
-			} else if (data.action === 'removed') {
-				phraseRequestUpvotesCollection.utils.writeDelete(data.request_id)
-				toastSuccess('Vote removed')
-			}
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update upvote: ${error.message}`)
-		},
-	})
+				tx.isPersisted.promise.then(
+					() => toastSuccess(action === 'add' ? 'Vote added!' : 'Vote removed'),
+					(err: unknown) => {
+						const message = err instanceof Error ? err.message : 'unknown error'
+						toastError(`Failed to update upvote: ${message}`)
+					}
+				)
+			})
+		}, 'Please log in to vote on requests')
+	}
 
 	return (
 		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
@@ -69,14 +81,7 @@ export function UpvoteRequest({ request }: { request: PhraseRequestType }) {
 				title={hasUpvoted ? 'Remove vote' : 'Vote up this request'}
 				size="icon"
 				data-testid="upvote-request-button"
-				onClick={(e) => {
-					e.stopPropagation()
-					requireAuth(() => {
-						// Send explicit action based on current state
-						upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
-					}, 'Please log in to vote on requests')
-				}}
-				disabled={upvoteMutation.isPending}
+				onClick={handleClick}
 			>
 				<ThumbsUp />
 			</Button>
