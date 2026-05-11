@@ -72,9 +72,10 @@ jobs:
             const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
             const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
 
-            // Second pass: pair "new" with "resolved" when same file + same error code/message
-            // and line numbers within 10. Treat as a shifted (unchanged) error rather than a
-            // new one — an unrelated edit just bumped the line number.
+            // Second pass: pair "new" with "resolved" when same file + same column + same
+            // error code/message and line numbers within 10. Treat as a shifted (unchanged)
+            // error rather than a new one — an unrelated edit just bumped the line number.
+            // A changed column means the line itself was edited, so the error is fair game.
             const PROXIMITY = 10;
             const resolvedPool = [...resolvedCandidates];
             const newErrors = [];
@@ -82,6 +83,7 @@ jobs:
             for (const n of newCandidates) {
               const idx = resolvedPool.findIndex(r =>
                 r.file === n.file &&
+                r.col === n.col &&
                 r.rest === n.rest &&
                 Math.abs(r.line - n.line) <= PROXIMITY
               );
@@ -204,9 +206,10 @@ jobs:
             const newCandidates = prErrors.filter(e => !baseSet.has(e.raw));
             const resolvedCandidates = baseErrors.filter(e => !prSet.has(e.raw));
 
-            // Second pass: pair a "new" with a "resolved" when same file + same message text
-            // and line numbers within 10 of each other. Treat those as the same lint issue
-            // that just shifted (e.g. an unrelated edit pushed it up/down the file).
+            // Second pass: pair a "new" with a "resolved" when same file + same column +
+            // same message text and line numbers within 10. Treat those as the same lint
+            // issue that just shifted (e.g. an unrelated edit pushed it up/down the file).
+            // A changed column means the line itself was edited, so the issue is fair game.
             const PROXIMITY = 10;
             const resolvedPool = [...resolvedCandidates];
             const newErrors = [];
@@ -214,6 +217,7 @@ jobs:
             for (const n of newCandidates) {
               const idx = resolvedPool.findIndex(r =>
                 r.file === n.file &&
+                r.col === n.col &&
                 r.rest === n.rest &&
                 Math.abs(r.line - n.line) <= PROXIMITY
               );
