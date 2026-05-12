@@ -29,7 +29,6 @@ export const DeckMetaRawSchema = z.object({
 })
 
 export const DeckMetaSchema = DeckMetaRawSchema.extend({
-	theme: z.number(),
 	language: z.string(),
 })
 
