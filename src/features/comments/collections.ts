@@ -29,6 +29,35 @@ export const commentsCollection = createCollection(
 		schema: RequestCommentSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('request_comment')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('request_comment')
+						.delete()
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			// Cascade-deleted replies and phrase links linger in the local
+			// collections until the next stale refetch, but they don't render
+			// (orphaned replies have no parent anchor; orphaned phrase links
+			// filter out of the provenance inner-join). Skipping the full-table
+			// refetch is worth that small inconsistency.
+			return { refetch: false }
+		},
 	})
 )
 
