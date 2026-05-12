@@ -33,16 +33,27 @@ const setCommentUpvote = createOptimisticAction<UpvoteInput>({
 			commentUpvotesCollection.delete(commentId)
 		}
 	},
-	mutationFn: async ({ commentId, action }) => {
+	mutationFn: async ({ commentId, action, currentCount }) => {
 		const { error } = await supabase.rpc('set_comment_upvote', {
 			p_comment_id: commentId,
 			p_action: action,
 		})
 		if (error) throw error
-		await Promise.all([
-			commentsCollection.utils.refetch(),
-			commentUpvotesCollection.utils.refetch(),
-		])
+		// Trust the optimistic ±1 count. Drifts by 1 in the 'no_change' edge
+		// case (e.g. server already had us upvoted from another tab) and
+		// self-corrects on next stale refetch. Avoids a full request_comment
+		// table refetch on every click.
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		commentsCollection.utils.writeUpdate({
+			id: commentId,
+			upvote_count: nextCount,
+		})
+		if (action === 'add') {
+			commentUpvotesCollection.utils.writeInsert({ comment_id: commentId })
+		} else {
+			commentUpvotesCollection.utils.writeDelete(commentId)
+		}
 	},
 })
 

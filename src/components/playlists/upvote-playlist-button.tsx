@@ -33,16 +33,29 @@ const setPlaylistUpvote = createOptimisticAction<UpvoteInput>({
 			phrasePlaylistUpvotesCollection.delete(playlistId)
 		}
 	},
-	mutationFn: async ({ playlistId, action }) => {
+	mutationFn: async ({ playlistId, action, currentCount }) => {
 		const { error } = await supabase.rpc('set_phrase_playlist_upvote', {
 			p_playlist_id: playlistId,
 			p_action: action,
 		})
 		if (error) throw error
-		await Promise.all([
-			phrasePlaylistsCollection.utils.refetch(),
-			phrasePlaylistUpvotesCollection.utils.refetch(),
-		])
+		// Trust the optimistic ±1 count. Drifts by 1 in the 'no_change' edge
+		// case (e.g. server already had us upvoted from another tab) and
+		// self-corrects on next stale refetch. Avoids a full phrase_playlist
+		// table refetch on every click.
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		phrasePlaylistsCollection.utils.writeUpdate({
+			id: playlistId,
+			upvote_count: nextCount,
+		})
+		if (action === 'add') {
+			phrasePlaylistUpvotesCollection.utils.writeInsert({
+				playlist_id: playlistId,
+			})
+		} else {
+			phrasePlaylistUpvotesCollection.utils.writeDelete(playlistId)
+		}
 	},
 })
 
