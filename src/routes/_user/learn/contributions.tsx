@@ -1,6 +1,4 @@
-import { useUserId } from '@/lib/use-auth'
 import { createFileRoute } from '@tanstack/react-router'
-import { UserContributions } from './-contributions'
 import { UserContributionsTabs } from './-contributions-tabs'
 
 export const Route = createFileRoute('/_user/learn/contributions')({
@@ -11,10 +9,4 @@ export const Route = createFileRoute('/_user/learn/contributions')({
 			subtitle: 'Your own Requests, Phrases and Playlists',
 		},
 	}),
-	component: RouteComponent,
 })
-
-function RouteComponent() {
-	const userId = useUserId()
-	return <UserContributions uid={userId!} />
-}

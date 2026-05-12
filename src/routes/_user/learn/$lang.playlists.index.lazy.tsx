@@ -1,0 +1,54 @@
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
+import { Loader } from '@/components/ui/loader'
+import { useLangPlaylists } from '@/features/playlists/hooks'
+import type { CSSProperties } from 'react'
+import languages from '@/lib/languages'
+import { buttonVariants } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+
+export const Route = createLazyFileRoute('/_user/learn/$lang/playlists/')({
+	component: RouteComponent,
+})
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
+function RouteComponent() {
+	const { lang } = Route.useParams()
+
+	const { data: playlists, isLoading } = useLangPlaylists(lang)
+	return (
+		<main style={style}>
+			<div className="flex flex-row items-center justify-between">
+				<h2 className="h2">Playlists of {languages[lang]} flashcards</h2>
+				<Link
+					to="/learn/$lang/playlists/new"
+					params={{ lang }}
+					className={buttonVariants()}
+				>
+					<Plus /> Create playlist
+				</Link>
+			</div>
+			{isLoading ? (
+				<Loader />
+			) : (
+				<div className="divide-y border" data-testid="playlist-list">
+					{playlists?.map((p) => (
+						<Link
+							key={p.id}
+							to="/learn/$lang/playlists/$playlistId"
+							params={{ lang, playlistId: p.id }}
+							style={
+								{ viewTransitionName: `playlist-${p.id}` } as CSSProperties
+							}
+							className="block p-4"
+							data-testid="playlist-item"
+							data-key={p.id}
+						>
+							{p.title}
+						</Link>
+					))}
+				</div>
+			)}
+		</main>
+	)
+}

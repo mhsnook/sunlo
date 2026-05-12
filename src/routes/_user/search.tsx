@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import * as z from 'zod'
 
 const SearchParams = z.object({
@@ -11,7 +11,6 @@ const SearchParams = z.object({
 // either the index route (search.index.lazy.tsx) or the diagnostic route
 // (search.test.lazy.tsx) loads.
 export const Route = createFileRoute('/_user/search')({
-	component: () => <Outlet />,
 	validateSearch: SearchParams,
 	beforeLoad: () => ({
 		titleBar: { title: 'Search' },
