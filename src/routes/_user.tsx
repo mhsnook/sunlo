@@ -1,14 +1,21 @@
-import { lazy, Suspense, useEffect, useRef } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import {
 	createFileRoute,
 	Outlet,
 	redirect,
 	useMatches,
+	useParams,
+	useRouter,
 } from '@tanstack/react-router'
+import * as z from 'zod'
 import { cn } from '@/lib/utils'
 import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import Navbar from '@/components/navs/navbar'
+import BrowseSearchOverlay from '@/components/browse-search-overlay'
+import FriendSearchOverlay from '@/components/friend-search-overlay'
+import languages from '@/lib/languages'
+import type { SearchScope } from '@/types/route-static-data'
 
 const AppSidebar = lazy(() =>
 	import('@/components/navs/app-sidebar').then((m) => ({
@@ -32,6 +39,10 @@ import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
 
+const UserSearchParams = z.object({
+	search: z.boolean().optional(),
+})
+
 export const Route = createFileRoute('/_user')({
 	// Auth is optional at this layout — RLS handles data security and
 	// individual routes can require auth if needed.
@@ -41,6 +52,7 @@ export const Route = createFileRoute('/_user')({
 			subtitle: 'Which deck are we studying today?',
 		},
 	},
+	validateSearch: UserSearchParams,
 	loader: async ({ context, location }) => {
 		// If not authenticated, skip user-specific loading
 		if (!context.auth.isAuth) return
@@ -110,6 +122,13 @@ export const Route = createFileRoute('/_user')({
 	pendingComponent: Loader,
 })
 
+function setSearchParam(key: string, value: string | null) {
+	const url = new URL(window.location.href)
+	if (value === null) url.searchParams.delete(key)
+	else url.searchParams.set(key, value)
+	return url.pathname + url.search
+}
+
 function UserLayout() {
 	const { auth } = Route.useRouteContext()
 	const matches = useMatches()
@@ -123,6 +142,38 @@ function UserLayout() {
 	// Skip the AppNav chunk entirely when no route declares an appnav
 	const appnav = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
 	const hasAppNav = !!resolveNavList(appnav, auth.isAuth).length
+
+	// Resolve the search overlay the same way titleBar / appnav are resolved:
+	// the deepest match that declares `search` wins.
+	const searchScope: SearchScope | undefined = matches.findLast(
+		(m) => m.staticData.search
+	)?.staticData.search
+	const { search: isSearchOpen } = Route.useSearch()
+	const router = useRouter()
+	const { lang } = useParams({ strict: false })
+	const initialLangs = lang && lang in languages ? [lang] : undefined
+
+	const closeSearch = useCallback(() => {
+		void router.navigate({ to: setSearchParam('search', null), replace: true })
+	}, [router])
+
+	// Ctrl+K / Cmd+K toggles the overlay on any route that opts into a search
+	// scope. Disabled on routes that don't, so /search itself, the legacy /chat,
+	// etc. keep their own keybindings free.
+	useEffect(() => {
+		if (!searchScope) return
+		const handler = (e: KeyboardEvent) => {
+			if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+				e.preventDefault()
+				void router.navigate({
+					to: setSearchParam('search', isSearchOpen ? null : 'true'),
+					replace: true,
+				})
+			}
+		}
+		window.addEventListener('keydown', handler)
+		return () => window.removeEventListener('keydown', handler)
+	}, [searchScope, isSearchOpen, router])
 
 	// Auto-collapse sidebar when entering focus mode, restore when leaving
 	const { setOpen, open } = useSidebar()
@@ -197,6 +248,15 @@ function UserLayout() {
 					<RightSidebar />
 				</div>
 			</SidebarInset>
+			{isSearchOpen && searchScope === 'content' && (
+				<BrowseSearchOverlay
+					onClose={closeSearch}
+					initialLangs={initialLangs}
+				/>
+			)}
+			{isSearchOpen && searchScope === 'profiles' && (
+				<FriendSearchOverlay onClose={closeSearch} />
+			)}
 		</div>
 	)
 }

@@ -26,7 +26,7 @@ import { ReviewStoreProvider } from '@/components/review/review-context-provider
 export const Route = createFileRoute('/_user/learn/$lang')({
 	component: LanguageLayout,
 	staticData: {
-		searchAction: true,
+		search: 'content',
 		appnav: [
 			[
 				'/learn/$lang/feed',

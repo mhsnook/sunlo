@@ -11,7 +11,7 @@ import { useTitleBar } from '@/hooks/use-title-bar'
 export default function Navbar() {
 	const matches = useMatches()
 	const focusMode = matches.some((m) => m.staticData.focusMode)
-	const hasSearchAction = matches.some((m) => m.staticData.searchAction)
+	const hasSearchAction = matches.some((m) => !!m.staticData.search)
 
 	return (
 		<nav

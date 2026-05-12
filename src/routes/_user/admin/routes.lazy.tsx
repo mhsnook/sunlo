@@ -2,7 +2,11 @@ import { type CSSProperties, type ReactNode, useMemo, useState } from 'react'
 import { createLazyFileRoute, useRouter } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
 import { Input } from '@/components/ui/input'
-import type { NavList, TitleBarStatic } from '@/types/route-static-data'
+import type {
+	NavList,
+	SearchScope,
+	TitleBarStatic,
+} from '@/types/route-static-data'
 import type { StaticDataRouteOption } from '@tanstack/react-router'
 
 export const Route = createLazyFileRoute('/_user/admin/routes')({
@@ -18,7 +22,7 @@ type Row = {
 	appnav?: NavList
 	contextMenu?: NavList
 	titleBar?: TitleBarStatic
-	searchAction: boolean
+	search: SearchScope | undefined
 	focusMode: boolean
 	wideContent: boolean
 	fixedHeight: boolean
@@ -44,7 +48,7 @@ function readRows(routesById: Record<string, RouteLike>): Row[] {
 			appnav: sd.appnav,
 			contextMenu: sd.contextMenu,
 			titleBar: sd.titleBar,
-			searchAction: sd.searchAction === true,
+			search: sd.search,
 			focusMode: sd.focusMode === true,
 			wideContent: sd.wideContent === true,
 			fixedHeight: sd.fixedHeight === true,
@@ -77,7 +81,7 @@ function RoutesIntrospection() {
 			titleBar: rows.filter((r) => r.titleBar !== undefined).length,
 			appnav: rows.filter((r) => r.appnav !== undefined).length,
 			ctxmenu: rows.filter((r) => r.contextMenu !== undefined).length,
-			search: rows.filter((r) => r.searchAction).length,
+			search: rows.filter((r) => r.search !== undefined).length,
 			focus: rows.filter((r) => r.focusMode).length,
 			wide: rows.filter((r) => r.wideContent).length,
 			fixed: rows.filter((r) => r.fixedHeight).length,
@@ -137,7 +141,7 @@ function RoutesIntrospection() {
 								<TitleBarCell tb={r.titleBar} />
 								<NavCell list={r.appnav} />
 								<NavCell list={r.contextMenu} />
-								<BoolCell on={r.searchAction} />
+								<SearchCell scope={r.search} />
 								<BoolCell on={r.focusMode} />
 								<BoolCell on={r.wideContent} />
 								<BoolCell on={r.fixedHeight} />
@@ -184,6 +188,16 @@ function BoolCell({ on }: { on: boolean }) {
 			)}
 		>
 			{on ? '✓' : '·'}
+		</td>
+	)
+}
+
+function SearchCell({ scope }: { scope: SearchScope | undefined }) {
+	if (scope === undefined)
+		return <td className="text-muted-foreground px-2 py-1.5 text-center">·</td>
+	return (
+		<td className="text-7-hi-success px-2 py-1.5 text-center font-mono text-xs">
+			{scope}
 		</td>
 	)
 }
