@@ -11,7 +11,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ThemesRouteImport } from './routes/themes'
 import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as UserRouteImport } from './routes/_user'
 import { Route as AuthRouteImport } from './routes/_auth'
@@ -73,6 +72,7 @@ import { Route as UserLearnLangPhrasesNewRouteImport } from './routes/_user/lear
 import { Route as UserLearnLangPhrasesIdRouteImport } from './routes/_user/learn/$lang.phrases.$id'
 import { Route as UserFriendsChatsFriendUidRecommendRouteImport } from './routes/_user/friends/chats.$friendUid.recommend'
 
+const ThemesLazyRouteImport = createFileRoute('/themes')()
 const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
@@ -100,6 +100,11 @@ const UserAdminLangPhrasesIdLazyRouteImport = createFileRoute(
   '/_user/admin/$lang/phrases/$id',
 )()
 
+const ThemesLazyRoute = ThemesLazyRouteImport.update({
+  id: '/themes',
+  path: '/themes',
+  getParentRoute: () => rootRouteImport,
+} as any).lazy(() => import('./routes/themes.lazy').then((d) => d.Route))
 const RequestRemovalLazyRoute = RequestRemovalLazyRouteImport.update({
   id: '/request-removal',
   path: '/request-removal',
@@ -124,11 +129,6 @@ const ComponentsLazyRoute = ComponentsLazyRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/components.lazy').then((d) => d.Route))
-const ThemesRoute = ThemesRouteImport.update({
-  id: '/themes',
-  path: '/themes',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ChatsRoute = ChatsRouteImport.update({
   id: '/chats',
   path: '/chats',
@@ -150,7 +150,7 @@ const IndexRoute = IndexRouteImport.update({
 const ThemesIndexLazyRoute = ThemesIndexLazyRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => ThemesRoute,
+  getParentRoute: () => ThemesLazyRoute,
 } as any).lazy(() => import('./routes/themes.index.lazy').then((d) => d.Route))
 const ChatsIndexLazyRoute = ChatsIndexLazyRouteImport.update({
   id: '/',
@@ -160,7 +160,7 @@ const ChatsIndexLazyRoute = ChatsIndexLazyRouteImport.update({
 const ThemesTypographyLazyRoute = ThemesTypographyLazyRouteImport.update({
   id: '/typography',
   path: '/typography',
-  getParentRoute: () => ThemesRoute,
+  getParentRoute: () => ThemesLazyRoute,
 } as any).lazy(() =>
   import('./routes/themes.typography.lazy').then((d) => d.Route),
 )
@@ -538,11 +538,11 @@ const UserFriendsChatsFriendUidRecommendRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chats': typeof ChatsRouteWithChildren
-  '/themes': typeof ThemesRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
+  '/themes': typeof ThemesLazyRouteWithChildren
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -680,11 +680,11 @@ export interface FileRoutesById {
   '/_auth': typeof AuthRouteWithChildren
   '/_user': typeof UserRouteWithChildren
   '/chats': typeof ChatsRouteWithChildren
-  '/themes': typeof ThemesRouteWithChildren
   '/components': typeof ComponentsLazyRoute
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
+  '/themes': typeof ThemesLazyRouteWithChildren
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
@@ -759,11 +759,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/chats'
-    | '/themes'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
+    | '/themes'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -900,11 +900,11 @@ export interface FileRouteTypes {
     | '/_auth'
     | '/_user'
     | '/chats'
-    | '/themes'
     | '/components'
     | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
+    | '/themes'
     | '/_auth/forgot-password'
     | '/_auth/login'
     | '/_auth/set-new-password'
@@ -980,15 +980,22 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   UserRoute: typeof UserRouteWithChildren
   ChatsRoute: typeof ChatsRouteWithChildren
-  ThemesRoute: typeof ThemesRouteWithChildren
   ComponentsLazyRoute: typeof ComponentsLazyRoute
   MicrocopyLazyRoute: typeof MicrocopyLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
+  ThemesLazyRoute: typeof ThemesLazyRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/themes': {
+      id: '/themes'
+      path: '/themes'
+      fullPath: '/themes'
+      preLoaderRoute: typeof ThemesLazyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request-removal': {
       id: '/request-removal'
       path: '/request-removal'
@@ -1015,13 +1022,6 @@ declare module '@tanstack/react-router' {
       path: '/components'
       fullPath: '/components'
       preLoaderRoute: typeof ComponentsLazyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/themes': {
-      id: '/themes'
-      path: '/themes'
-      fullPath: '/themes'
-      preLoaderRoute: typeof ThemesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chats': {
@@ -1057,7 +1057,7 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/themes/'
       preLoaderRoute: typeof ThemesIndexLazyRouteImport
-      parentRoute: typeof ThemesRoute
+      parentRoute: typeof ThemesLazyRoute
     }
     '/chats/': {
       id: '/chats/'
@@ -1071,7 +1071,7 @@ declare module '@tanstack/react-router' {
       path: '/typography'
       fullPath: '/themes/typography'
       preLoaderRoute: typeof ThemesTypographyLazyRouteImport
-      parentRoute: typeof ThemesRoute
+      parentRoute: typeof ThemesLazyRoute
     }
     '/chats/$lang': {
       id: '/chats/$lang'
@@ -1831,29 +1831,30 @@ const ChatsRouteChildren: ChatsRouteChildren = {
 
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
-interface ThemesRouteChildren {
+interface ThemesLazyRouteChildren {
   ThemesTypographyLazyRoute: typeof ThemesTypographyLazyRoute
   ThemesIndexLazyRoute: typeof ThemesIndexLazyRoute
 }
 
-const ThemesRouteChildren: ThemesRouteChildren = {
+const ThemesLazyRouteChildren: ThemesLazyRouteChildren = {
   ThemesTypographyLazyRoute: ThemesTypographyLazyRoute,
   ThemesIndexLazyRoute: ThemesIndexLazyRoute,
 }
 
-const ThemesRouteWithChildren =
-  ThemesRoute._addFileChildren(ThemesRouteChildren)
+const ThemesLazyRouteWithChildren = ThemesLazyRoute._addFileChildren(
+  ThemesLazyRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
   UserRoute: UserRouteWithChildren,
   ChatsRoute: ChatsRouteWithChildren,
-  ThemesRoute: ThemesRouteWithChildren,
   ComponentsLazyRoute: ComponentsLazyRoute,
   MicrocopyLazyRoute: MicrocopyLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
+  ThemesLazyRoute: ThemesLazyRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
