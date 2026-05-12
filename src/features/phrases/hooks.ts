@@ -1,5 +1,6 @@
 import { and, eq, ilike, inArray } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
+import { useMemo } from 'react'
 
 import type { pids, UseLiveQueryResult, uuid } from '@/types/main'
 import type {
@@ -151,16 +152,15 @@ export function useAnyonesPhrases(
  * Get all provenance items (playlists + comments) sorted by date.
  * Underlying joins live in `phrases/live.ts`.
  */
-export function usePhraseProvenance(phraseId: uuid) {
+export function usePhraseProvenance(phraseId: uuid): PhraseProvenanceItem[] {
 	const { data: playlists } = usePhrasePlaylists(phraseId)
 	const { data: comments } = usePhraseComments(phraseId)
 
-	const items: PhraseProvenanceItem[] = [
-		...(playlists ?? []),
-		...(comments ?? []),
-	].toSorted(
-		(a, b) =>
-			new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+	return useMemo(
+		() =>
+			[...(playlists ?? []), ...(comments ?? [])].toSorted((a, b) =>
+				a.created_at === b.created_at ? 0 : a.created_at > b.created_at ? -1 : 1
+			),
+		[playlists, comments]
 	)
-	return items
 }
