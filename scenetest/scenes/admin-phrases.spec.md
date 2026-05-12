@@ -9,8 +9,6 @@ cleanup: supabase.from('admin_user').delete().eq('uid', '[learner.key]')
 
 learner:
 
-- openTo /
-- see landing-page
 - login
 - openTo /learn/[team.lang_partial]/phrases/[team.partial_nocard_phrase]
 - up
