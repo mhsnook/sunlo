@@ -77,7 +77,9 @@ const RequestRemovalLazyRouteImport = createFileRoute('/request-removal')()
 const PrivacyPolicyLazyRouteImport = createFileRoute('/privacy-policy')()
 const MicrocopyLazyRouteImport = createFileRoute('/microcopy')()
 const ComponentsLazyRouteImport = createFileRoute('/components')()
+const ThemesIndexLazyRouteImport = createFileRoute('/themes/')()
 const ChatsIndexLazyRouteImport = createFileRoute('/chats/')()
+const ThemesTypographyLazyRouteImport = createFileRoute('/themes/typography')()
 const ChatsLangLazyRouteImport = createFileRoute('/chats/$lang')()
 const UserAdminLazyRouteImport = createFileRoute('/_user/admin')()
 const UserSearchIndexLazyRouteImport = createFileRoute('/_user/search/')()
@@ -145,11 +147,23 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ThemesIndexLazyRoute = ThemesIndexLazyRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ThemesLazyRoute,
+} as any).lazy(() => import('./routes/themes.index.lazy').then((d) => d.Route))
 const ChatsIndexLazyRoute = ChatsIndexLazyRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => ChatsRoute,
 } as any).lazy(() => import('./routes/chats.index.lazy').then((d) => d.Route))
+const ThemesTypographyLazyRoute = ThemesTypographyLazyRouteImport.update({
+  id: '/typography',
+  path: '/typography',
+  getParentRoute: () => ThemesLazyRoute,
+} as any).lazy(() =>
+  import('./routes/themes.typography.lazy').then((d) => d.Route),
+)
 const ChatsLangLazyRoute = ChatsLangLazyRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -528,7 +542,7 @@ export interface FileRoutesByFullPath {
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/themes': typeof ThemesLazyRoute
+  '/themes': typeof ThemesLazyRouteWithChildren
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -544,7 +558,9 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof UserWelcomeRoute
   '/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
+  '/themes/': typeof ThemesIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/charts': typeof UserBrowseChartsRoute
@@ -602,7 +618,6 @@ export interface FileRoutesByTo {
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/themes': typeof ThemesLazyRoute
   '/forgot-password': typeof AuthForgotPasswordRoute
   '/login': typeof AuthLoginRoute
   '/set-new-password': typeof AuthSetNewPasswordRoute
@@ -612,7 +627,9 @@ export interface FileRoutesByTo {
   '/notifications': typeof UserNotificationsRoute
   '/welcome': typeof UserWelcomeRoute
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats': typeof ChatsIndexLazyRoute
+  '/themes': typeof ThemesIndexLazyRoute
   '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
@@ -667,7 +684,7 @@ export interface FileRoutesById {
   '/microcopy': typeof MicrocopyLazyRoute
   '/privacy-policy': typeof PrivacyPolicyLazyRoute
   '/request-removal': typeof RequestRemovalLazyRoute
-  '/themes': typeof ThemesLazyRoute
+  '/themes': typeof ThemesLazyRouteWithChildren
   '/_auth/forgot-password': typeof AuthForgotPasswordRoute
   '/_auth/login': typeof AuthLoginRoute
   '/_auth/set-new-password': typeof AuthSetNewPasswordRoute
@@ -683,7 +700,9 @@ export interface FileRoutesById {
   '/_user/welcome': typeof UserWelcomeRoute
   '/_user/admin': typeof UserAdminLazyRouteWithChildren
   '/chats/$lang': typeof ChatsLangLazyRoute
+  '/themes/typography': typeof ThemesTypographyLazyRoute
   '/chats/': typeof ChatsIndexLazyRoute
+  '/themes/': typeof ThemesIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/_user/admin/routes': typeof UserAdminRoutesRoute
   '/_user/browse/charts': typeof UserBrowseChartsRoute
@@ -760,7 +779,9 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/admin'
     | '/chats/$lang'
+    | '/themes/typography'
     | '/chats/'
+    | '/themes/'
     | '/admin/$lang'
     | '/admin/routes'
     | '/browse/charts'
@@ -818,7 +839,6 @@ export interface FileRouteTypes {
     | '/microcopy'
     | '/privacy-policy'
     | '/request-removal'
-    | '/themes'
     | '/forgot-password'
     | '/login'
     | '/set-new-password'
@@ -828,7 +848,9 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/welcome'
     | '/chats/$lang'
+    | '/themes/typography'
     | '/chats'
+    | '/themes'
     | '/admin/routes'
     | '/browse/charts'
     | '/friends/$uid'
@@ -898,7 +920,9 @@ export interface FileRouteTypes {
     | '/_user/welcome'
     | '/_user/admin'
     | '/chats/$lang'
+    | '/themes/typography'
     | '/chats/'
+    | '/themes/'
     | '/_user/admin/$lang'
     | '/_user/admin/routes'
     | '/_user/browse/charts'
@@ -960,7 +984,7 @@ export interface RootRouteChildren {
   MicrocopyLazyRoute: typeof MicrocopyLazyRoute
   PrivacyPolicyLazyRoute: typeof PrivacyPolicyLazyRoute
   RequestRemovalLazyRoute: typeof RequestRemovalLazyRoute
-  ThemesLazyRoute: typeof ThemesLazyRoute
+  ThemesLazyRoute: typeof ThemesLazyRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -1028,12 +1052,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/themes/': {
+      id: '/themes/'
+      path: '/'
+      fullPath: '/themes/'
+      preLoaderRoute: typeof ThemesIndexLazyRouteImport
+      parentRoute: typeof ThemesLazyRoute
+    }
     '/chats/': {
       id: '/chats/'
       path: '/'
       fullPath: '/chats/'
       preLoaderRoute: typeof ChatsIndexLazyRouteImport
       parentRoute: typeof ChatsRoute
+    }
+    '/themes/typography': {
+      id: '/themes/typography'
+      path: '/typography'
+      fullPath: '/themes/typography'
+      preLoaderRoute: typeof ThemesTypographyLazyRouteImport
+      parentRoute: typeof ThemesLazyRoute
     }
     '/chats/$lang': {
       id: '/chats/$lang'
@@ -1793,6 +1831,20 @@ const ChatsRouteChildren: ChatsRouteChildren = {
 
 const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
+interface ThemesLazyRouteChildren {
+  ThemesTypographyLazyRoute: typeof ThemesTypographyLazyRoute
+  ThemesIndexLazyRoute: typeof ThemesIndexLazyRoute
+}
+
+const ThemesLazyRouteChildren: ThemesLazyRouteChildren = {
+  ThemesTypographyLazyRoute: ThemesTypographyLazyRoute,
+  ThemesIndexLazyRoute: ThemesIndexLazyRoute,
+}
+
+const ThemesLazyRouteWithChildren = ThemesLazyRoute._addFileChildren(
+  ThemesLazyRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRouteWithChildren,
@@ -1802,7 +1854,7 @@ const rootRouteChildren: RootRouteChildren = {
   MicrocopyLazyRoute: MicrocopyLazyRoute,
   PrivacyPolicyLazyRoute: PrivacyPolicyLazyRoute,
   RequestRemovalLazyRoute: RequestRemovalLazyRoute,
-  ThemesLazyRoute: ThemesLazyRoute,
+  ThemesLazyRoute: ThemesLazyRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
