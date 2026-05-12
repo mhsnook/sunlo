@@ -12,27 +12,27 @@ export const Route = createLazyFileRoute('/themes/typography')({
 	component: TypographyLab,
 })
 
-const GOOGLE_FONT_HREF =
-	'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap'
-
-function useAtkinsonNext() {
+function useGoogleFont(href: string | null) {
 	useEffect(() => {
-		const existing = document.querySelector<HTMLLinkElement>(
-			`link[href="${GOOGLE_FONT_HREF}"]`
-		)
-		if (existing) return
-		const preconnect1 = document.createElement('link')
-		preconnect1.rel = 'preconnect'
-		preconnect1.href = 'https://fonts.googleapis.com'
-		const preconnect2 = document.createElement('link')
-		preconnect2.rel = 'preconnect'
-		preconnect2.href = 'https://fonts.gstatic.com'
-		preconnect2.crossOrigin = 'anonymous'
+		if (!href) return
+		if (document.querySelector<HTMLLinkElement>(`link[href="${href}"]`)) return
+		if (!document.querySelector('link[data-gfonts-preconnect]')) {
+			const preconnect1 = document.createElement('link')
+			preconnect1.rel = 'preconnect'
+			preconnect1.href = 'https://fonts.googleapis.com'
+			preconnect1.dataset.gfontsPreconnect = 'true'
+			const preconnect2 = document.createElement('link')
+			preconnect2.rel = 'preconnect'
+			preconnect2.href = 'https://fonts.gstatic.com'
+			preconnect2.crossOrigin = 'anonymous'
+			preconnect2.dataset.gfontsPreconnect = 'true'
+			document.head.append(preconnect1, preconnect2)
+		}
 		const link = document.createElement('link')
 		link.rel = 'stylesheet'
-		link.href = GOOGLE_FONT_HREF
-		document.head.append(preconnect1, preconnect2, link)
-	}, [])
+		link.href = href
+		document.head.append(link)
+	}, [href])
 }
 
 type SampleProps = {
@@ -212,25 +212,72 @@ function Slider({
 	)
 }
 
-const CURRENT_FAMILY =
-	"'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-const NEXT_FAMILY =
-	"'Atkinson Hyperlegible Next', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+const FALLBACK_STACK =
+	"-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+
+function weightLadder(min: number, max: number): Array<number> {
+	const stops = [
+		100, 200, 250, 300, 325, 350, 375, 400, 450, 500, 600, 700, 800, 900,
+	]
+	return stops.filter((w) => w >= min && w <= max)
+}
+
+const FONTS = {
+	atkinsonNext: {
+		key: 'atkinsonNext' as const,
+		label: 'Atkinson Hyperlegible Next',
+		short: 'Atkinson Next',
+		family: `'Atkinson Hyperlegible Next', ${FALLBACK_STACK}`,
+		href: 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,200..800;1,200..800&display=swap',
+		min: 200,
+		max: 800,
+		hasItalic: true,
+	},
+	lexend: {
+		key: 'lexend' as const,
+		label: 'Lexend',
+		short: 'Lexend',
+		family: `'Lexend', ${FALLBACK_STACK}`,
+		href: 'https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap',
+		min: 100,
+		max: 900,
+		hasItalic: false,
+	},
+}
+type FontKey = keyof typeof FONTS
+
+const CURRENT_FAMILY = `'Atkinson Hyperlegible', ${FALLBACK_STACK}`
 
 function TypographyLab() {
-	useAtkinsonNext()
+	const [rightFontKey, setRightFontKey] = useState<FontKey>('atkinsonNext')
+	const rightFont = FONTS[rightFontKey]
+
+	useGoogleFont(FONTS.atkinsonNext.href)
+	useGoogleFont(rightFontKey === 'lexend' ? FONTS.lexend.href : null)
 
 	const [nextWeight, setNextWeight] = useState(350)
 	const [nextBold, setNextBold] = useState(600)
 	const [tracking, setTracking] = useState(0)
 
-	const presets: Array<{ label: string; weight: number; bold: number }> = [
-		{ label: 'Next 300 / 600', weight: 300, bold: 600 },
-		{ label: 'Next 325 / 600', weight: 325, bold: 600 },
-		{ label: 'Next 350 / 650', weight: 350, bold: 650 },
-		{ label: 'Next 375 / 700', weight: 375, bold: 700 },
-		{ label: 'Next 400 / 700', weight: 400, bold: 700 },
-	]
+	const presets: Record<
+		FontKey,
+		Array<{ label: string; weight: number; bold: number }>
+	> = {
+		atkinsonNext: [
+			{ label: '300 / 600', weight: 300, bold: 600 },
+			{ label: '325 / 600', weight: 325, bold: 600 },
+			{ label: '350 / 650', weight: 350, bold: 650 },
+			{ label: '375 / 700', weight: 375, bold: 700 },
+			{ label: '400 / 700', weight: 400, bold: 700 },
+		],
+		lexend: [
+			{ label: '300 / 600', weight: 300, bold: 600 },
+			{ label: '350 / 600', weight: 350, bold: 600 },
+			{ label: '400 / 600', weight: 400, bold: 600 },
+			{ label: '400 / 700', weight: 400, bold: 700 },
+			{ label: '450 / 700', weight: 450, bold: 700 },
+		],
+	}
 
 	const trackingStyle: CSSProperties = {
 		letterSpacing: `${tracking}em`,
@@ -250,18 +297,33 @@ function TypographyLab() {
 			</div>
 
 			<div className="bg-card space-y-4 rounded-xl border p-4 shadow">
+				<div className="space-y-2">
+					<Label>Right column font</Label>
+					<div className="flex flex-wrap gap-2">
+						{(Object.keys(FONTS) as Array<FontKey>).map((k) => (
+							<Button
+								key={k}
+								size="sm"
+								variant={k === rightFontKey ? 'soft' : 'neutral'}
+								onClick={() => setRightFontKey(k)}
+							>
+								{FONTS[k].label}
+							</Button>
+						))}
+					</div>
+				</div>
 				<div className="space-y-3">
 					<Slider
-						label="Next body weight"
-						min={200}
-						max={800}
+						label={`${rightFont.short} body`}
+						min={rightFont.min}
+						max={rightFont.max}
 						value={nextWeight}
 						onChange={setNextWeight}
 					/>
 					<Slider
-						label="Next bold weight"
-						min={400}
-						max={800}
+						label={`${rightFont.short} bold`}
+						min={Math.max(rightFont.min, 400)}
+						max={rightFont.max}
 						value={nextBold}
 						onChange={setNextBold}
 					/>
@@ -277,7 +339,7 @@ function TypographyLab() {
 				<div className="space-y-2">
 					<Label>Presets</Label>
 					<div className="flex flex-wrap gap-2">
-						{presets.map((p) => (
+						{presets[rightFontKey].map((p) => (
 							<Button
 								key={p.label}
 								size="sm"
@@ -306,34 +368,31 @@ function TypographyLab() {
 					boldWeight={700}
 				/>
 				<SampleBlock
-					label="New — Atkinson Hyperlegible Next (variable)"
-					fontFamily={NEXT_FAMILY}
+					label={`${rightFont.label} (variable)`}
+					fontFamily={rightFont.family}
 					weight={nextWeight}
 					boldWeight={nextBold}
 				/>
 			</div>
 
 			<div className="bg-card space-y-3 rounded-xl border p-4 shadow">
-				<h2 className="text-lg font-semibold">Weight ladder · Next</h2>
+				<h2 className="text-lg font-semibold">
+					Weight ladder · {rightFont.short}
+				</h2>
 				<p className="text-muted-foreground text-sm">
 					Each row is the same paragraph at a different variable-axis weight.
 				</p>
-				<div className="space-y-2" style={{ fontFamily: NEXT_FAMILY }}>
-					{[200, 250, 300, 325, 350, 375, 400, 450, 500, 600, 700, 800].map(
-						(w) => (
-							<div
-								key={w}
-								className="flex items-baseline gap-4 border-b pb-1.5"
-							>
-								<span className="text-muted-foreground w-12 shrink-0 text-xs">
-									{w}
-								</span>
-								<span style={{ fontWeight: w }}>
-									The quick brown fox jumps over the lazy dog — 0123456789
-								</span>
-							</div>
-						)
-					)}
+				<div className="space-y-2" style={{ fontFamily: rightFont.family }}>
+					{weightLadder(rightFont.min, rightFont.max).map((w) => (
+						<div key={w} className="flex items-baseline gap-4 border-b pb-1.5">
+							<span className="text-muted-foreground w-12 shrink-0 text-xs">
+								{w}
+							</span>
+							<span style={{ fontWeight: w }}>
+								The quick brown fox jumps over the lazy dog — 0123456789
+							</span>
+						</div>
+					))}
 				</div>
 			</div>
 		</div>
