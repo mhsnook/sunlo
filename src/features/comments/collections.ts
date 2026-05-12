@@ -51,7 +51,12 @@ export const commentsCollection = createCollection(
 						.throwOnError()
 				)
 			)
-			// Default refetch picks up cascaded deletes of replies and links.
+			// Cascade-deleted replies and phrase links linger in the local
+			// collections until the next stale refetch, but they don't render
+			// (orphaned replies have no parent anchor; orphaned phrase links
+			// filter out of the provenance inner-join). Skipping the full-table
+			// refetch is worth that small inconsistency.
+			return { refetch: false }
 		},
 	})
 )
