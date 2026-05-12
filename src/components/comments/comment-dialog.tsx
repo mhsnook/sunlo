@@ -22,7 +22,9 @@ import {
 	commentsCollection,
 } from '@/features/comments/collections'
 import {
+	CommentPhraseLinkSchema,
 	type CommentPhraseLinkType,
+	RequestCommentSchema,
 	type RequestCommentType,
 } from '@/features/comments/schemas'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
@@ -447,18 +449,25 @@ export const createComment = createOptimisticAction<CreateCommentInput>({
 		}
 	},
 	mutationFn: async ({ requestId, content, parentCommentId, phraseLinks }) => {
-		const { error } = await supabase.rpc('create_comment_with_phrases', {
+		const { data, error } = await supabase.rpc('create_comment_with_phrases', {
 			p_request_id: requestId,
 			p_content: content,
 			p_parent_comment_id: parentCommentId ?? undefined,
 			p_phrase_ids: phraseLinks.map((l) => l.phraseId),
 		})
 		if (error) throw error
-		await Promise.all([
-			commentsCollection.utils.refetch(),
-			commentUpvotesCollection.utils.refetch(),
-			commentPhraseLinksCollection.utils.refetch(),
-		])
+		const result = data as {
+			request_comment: RequestCommentType
+			comment_phrase_links: CommentPhraseLinkType[]
+		}
+		const comment = RequestCommentSchema.parse(result.request_comment)
+		commentsCollection.utils.writeInsert(comment)
+		commentUpvotesCollection.utils.writeInsert({ comment_id: comment.id })
+		for (const link of result.comment_phrase_links) {
+			commentPhraseLinksCollection.utils.writeInsert(
+				CommentPhraseLinkSchema.parse(link)
+			)
+		}
 	},
 })
 
@@ -506,11 +515,17 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 		linksToInsert,
 		requestId,
 	}) => {
-		await supabase
+		const { data: updatedComment } = await supabase
 			.from('request_comment')
 			.update({ content })
 			.eq('id', commentId)
+			.select()
+			.single()
 			.throwOnError()
+		commentsCollection.utils.writeUpdate(
+			RequestCommentSchema.parse(updatedComment)
+		)
+
 		if (linksToDelete.length > 0) {
 			await supabase
 				.from('comment_phrase_link')
@@ -521,9 +536,13 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 					linksToDelete.map((l) => l.phraseId)
 				)
 				.throwOnError()
+			for (const link of linksToDelete) {
+				commentPhraseLinksCollection.utils.writeDelete(link.linkId)
+			}
 		}
+
 		if (linksToInsert.length > 0) {
-			await supabase
+			const { data: newLinks } = await supabase
 				.from('comment_phrase_link')
 				.insert(
 					linksToInsert.map((l) => ({
@@ -532,12 +551,14 @@ const updateCommentWithLinks = createOptimisticAction<UpdateCommentInput>({
 						phrase_id: l.phraseId,
 					}))
 				)
+				.select()
 				.throwOnError()
+			for (const link of newLinks ?? []) {
+				commentPhraseLinksCollection.utils.writeInsert(
+					CommentPhraseLinkSchema.parse(link)
+				)
+			}
 		}
-		await Promise.all([
-			commentsCollection.utils.refetch(),
-			commentPhraseLinksCollection.utils.refetch(),
-		])
 	},
 })
 
