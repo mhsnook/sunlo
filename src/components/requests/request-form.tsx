@@ -10,6 +10,7 @@ import {
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
 import {
+	PhraseRequestSchema,
 	PhraseRequestType,
 	RequestPhraseFormSchema,
 	requestPromptPlaceholders,
@@ -44,14 +45,19 @@ const createRequest = createOptimisticAction<CreateInput>({
 		phraseRequestUpvotesCollection.insert({ request_id: id })
 	},
 	mutationFn: async ({ id, prompt, lang, userId }) => {
-		await supabase
+		const { data: inserted } = await supabase
 			.from('phrase_request')
 			.insert({ id, prompt, lang, requester_uid: userId })
+			.select()
+			.single()
 			.throwOnError()
-		await Promise.all([
-			phraseRequestsCollection.utils.refetch(),
-			phraseRequestUpvotesCollection.utils.refetch(),
-		])
+		// inserted.upvote_count is 0 (pre-trigger); override to 1 to match
+		// what the DB has after the auto-upvote trigger fires.
+		phraseRequestsCollection.utils.writeInsert({
+			...PhraseRequestSchema.parse(inserted),
+			upvote_count: 1,
+		})
+		phraseRequestUpvotesCollection.utils.writeInsert({ request_id: id })
 	},
 })
 
