@@ -1,4 +1,10 @@
-import { and, createLiveQueryCollection, eq, inArray } from '@tanstack/db'
+import {
+	and,
+	BasicIndex,
+	createLiveQueryCollection,
+	eq,
+	inArray,
+} from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
@@ -34,6 +40,8 @@ export const phrasesFull = createLiveQueryCollection({
 				].join(', '),
 			})),
 })
+
+phrasesFull.createIndex((row) => row.id, { indexType: BasicIndex })
 
 export interface PhraseProvenancePlaylist {
 	type: 'playlist'
