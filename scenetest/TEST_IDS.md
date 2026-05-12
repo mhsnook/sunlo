@@ -161,6 +161,10 @@ natural wrapper element to label.
 | `search-page`                            | data-testid | Search route             | Search page container                                                                                              |
 | `search-input`                           | data-testid | Search page              | Search text input                                                                                                  |
 | `search-results`                         | data-testid | Search page              | Search results container                                                                                           |
+| `browse-search-trigger`                  | data-testid | Browse page              | Button that opens the search overlay (also via `?search=true`)                                                     |
+| `browse-search-overlay`                  | data-testid | Search overlay           | Dialog container for the public-library search overlay                                                             |
+| `browse-search-input`                    | data-testid | Search overlay           | Search input inside the overlay                                                                                    |
+| `browse-search-results`                  | data-testid | Search overlay           | Results list inside the overlay                                                                                    |
 
 ## Phrase Requests
 
