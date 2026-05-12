@@ -29,11 +29,20 @@ export type TitleBarFn = (args: {
 
 export type TitleBarStatic = TitleBar | TitleBarFn
 
+/**
+ * Which search overlay a route opts into. Resolved by walking `matches` in
+ * the `_user` layout (the same way `titleBar` is resolved) so the overlay,
+ * Ctrl+K handler, and `?search=true` validateSearch live in exactly one place.
+ *   - 'content'  → public-library search (phrases / playlists / requests)
+ *   - 'profiles' → people search (friends, public profiles)
+ */
+export type SearchScope = 'content' | 'profiles'
+
 declare module '@tanstack/react-router' {
 	interface StaticDataRouteOption {
 		appnav?: NavList
 		contextMenu?: NavList
-		searchAction?: boolean
+		search?: SearchScope
 		focusMode?: boolean
 		wideContent?: boolean
 		fixedHeight?: boolean
