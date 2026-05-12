@@ -4,6 +4,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vitejs.dev/config/
 export default defineConfig(() => {
@@ -19,6 +20,12 @@ export default defineConfig(() => {
 				babel: {
 					plugins: ['babel-plugin-react-compiler'],
 				},
+			}),
+			visualizer({
+				filename: 'dist/stats.html',
+				template: 'treemap',
+				gzipSize: true,
+				brotliSize: true,
 			}),
 		],
 		build: {
