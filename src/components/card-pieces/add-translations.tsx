@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from 'react'
 import * as z from 'zod'
-import { useMutation } from '@tanstack/react-query'
+import { createOptimisticAction } from '@tanstack/db'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
 
@@ -26,6 +26,7 @@ import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
 import { useAppForm } from '@/components/form'
+import type { uuid } from '@/types/main'
 
 const createAddTranslationsSchema = (phraseLang: string) =>
 	z.object({
@@ -42,6 +43,139 @@ type AddTranslationsType = z.infer<
 	ReturnType<typeof createAddTranslationsSchema>
 >
 
+type AddTranslationInput = {
+	phraseId: uuid
+	tempId: uuid
+	userId: uuid
+	translation_lang: string
+	translation_text: string
+}
+
+const addTranslationAction = createOptimisticAction<AddTranslationInput>({
+	onMutate: ({
+		phraseId,
+		tempId,
+		userId,
+		translation_lang,
+		translation_text,
+	}) => {
+		const now = new Date().toISOString()
+		phrasesCollection.update(phraseId, (draft) => {
+			// PhraseFullSchema uses z.preprocess for translations/tags which makes
+			// the draft's input type unknown; cast back to the output type.
+			const d = draft as unknown as PhraseFullType
+			d.translations.unshift({
+				id: tempId,
+				created_at: now,
+				text: translation_text,
+				lang: translation_lang,
+				phrase_id: phraseId,
+				added_by: userId,
+				archived: false,
+				updated_at: null,
+			})
+		})
+	},
+	mutationFn: async ({
+		phraseId,
+		tempId,
+		translation_lang,
+		translation_text,
+	}) => {
+		const { data } = await supabase
+			.from('phrase_translation')
+			.insert({
+				lang: translation_lang,
+				text: translation_text,
+				phrase_id: phraseId,
+			})
+			.select()
+			.single()
+			.throwOnError()
+		const newTrans = TranslationSchema.parse(data)
+		const current = phrasesCollection.get(phraseId)
+		if (!current) return
+		// current.translations is optimistic-merged: contains our temp entry.
+		// Build the synced state with the server row in place of the temp.
+		phrasesCollection.utils.writeUpdate({
+			id: phraseId,
+			translations: [
+				newTrans,
+				...current.translations.filter((t) => t.id !== tempId),
+			],
+		})
+	},
+})
+
+type UpdateTranslationInput = {
+	phraseId: uuid
+	translationId: uuid
+	newText: string
+}
+
+const updateTranslationAction = createOptimisticAction<UpdateTranslationInput>({
+	onMutate: ({ phraseId, translationId, newText }) => {
+		phrasesCollection.update(phraseId, (draft) => {
+			const d = draft as unknown as PhraseFullType
+			const t = d.translations.find((x) => x.id === translationId)
+			if (t) t.text = newText
+		})
+	},
+	mutationFn: async ({ phraseId, translationId, newText }) => {
+		const { data } = await supabase
+			.from('phrase_translation')
+			.update({ text: newText })
+			.eq('id', translationId)
+			.select()
+			.single()
+			.throwOnError()
+		const updated = TranslationSchema.parse(data)
+		const current = phrasesCollection.get(phraseId)
+		if (!current) return
+		phrasesCollection.utils.writeUpdate({
+			id: phraseId,
+			translations: current.translations.map((t) =>
+				t.id === translationId ? updated : t
+			),
+		})
+	},
+})
+
+type ToggleArchiveTranslationInput = {
+	phraseId: uuid
+	translationId: uuid
+	nextArchived: boolean
+}
+
+const toggleArchiveTranslationAction =
+	createOptimisticAction<ToggleArchiveTranslationInput>({
+		onMutate: ({ phraseId, translationId, nextArchived }) => {
+			phrasesCollection.update(phraseId, (draft) => {
+				const d = draft as unknown as PhraseFullType
+				const t = d.translations.find((x) => x.id === translationId)
+				if (t) t.archived = nextArchived
+			})
+		},
+		mutationFn: async ({ phraseId, translationId, nextArchived }) => {
+			const { data } = await supabase
+				.from('phrase_translation')
+				.update({ archived: nextArchived })
+				.eq('id', translationId)
+				.select()
+				.single()
+				.throwOnError()
+			const updated = TranslationSchema.parse(data)
+			const current = phrasesCollection.get(phraseId)
+			if (!current) return
+			phrasesCollection.utils.writeUpdate({
+				id: phraseId,
+				translations: current.translations.map((t) =>
+					t.id === translationId ? updated : t
+				),
+			})
+		},
+	})
+
 export function AddTranslationsDialog({
 	phrase,
 	...props
@@ -49,44 +183,9 @@ export function AddTranslationsDialog({
 	phrase: PhraseFullType
 }) {
 	const preferredTranslationLang = usePreferredTranslationLang(phrase.lang)
+	const userId = useUserId()
 	const closeRef = useRef<HTMLButtonElement | null>(null)
 	const close = () => closeRef.current?.click()
-
-	const addTranslation = useMutation({
-		mutationKey: ['add-translation', phrase.id, phrase.lang],
-		mutationFn: async ({
-			translation_lang,
-			translation_text,
-		}: AddTranslationsType) => {
-			console.log(`Adding translation`, {
-				translation_lang,
-				translation_text,
-			})
-			const { data } = await supabase
-				.from('phrase_translation')
-				.insert({
-					lang: translation_lang,
-					text: translation_text,
-					phrase_id: phrase.id,
-				})
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to add translation')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: [TranslationSchema.parse(data), ...phrase.translations],
-			})
-			close()
-			form.reset()
-			toastSuccess(`Translation added for ${phrase.text}`)
-		},
-		onError: (error) => {
-			toastError(error.message)
-		},
-	})
 
 	const schema = useMemo(
 		() => createAddTranslationsSchema(phrase.lang),
@@ -98,16 +197,28 @@ export function AddTranslationsDialog({
 			translation_lang: preferredTranslationLang,
 		},
 		validators: { onChange: schema },
-		onSubmit: async ({ value }) => {
-			await addTranslation.mutateAsync(value)
+		onSubmit: async ({ value }: { value: AddTranslationsType }) => {
+			if (!userId) return
+			try {
+				const tempId = crypto.randomUUID()
+				const tx = addTranslationAction({
+					phraseId: phrase.id,
+					tempId,
+					userId,
+					translation_lang: value.translation_lang,
+					translation_text: value.translation_text,
+				})
+				await tx.isPersisted.promise
+				close()
+				form.reset()
+				toastSuccess(`Translation added for ${phrase.text}`)
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(message)
+				console.error('Add translation rolled back:', err)
+			}
 		},
 	})
-
-	if (addTranslation.error)
-		console.log(
-			`Uncaught somewhere in the translation mutation`,
-			addTranslation.error
-		)
 
 	return (
 		<Dialog>
@@ -183,7 +294,6 @@ export function AddTranslationsDialog({
 	)
 }
 
-// Component for displaying a translation with edit/delete options
 function TranslationListItem({
 	trans,
 	phrase,
@@ -196,71 +306,50 @@ function TranslationListItem({
 	const [isEditing, setIsEditing] = useState(false)
 	const [editText, setEditText] = useState(trans.text)
 
-	const updateTranslation = useMutation({
-		mutationKey: ['update-translation', trans.id],
-		mutationFn: async (newText: string) => {
-			const { data } = await supabase
-				.from('phrase_translation')
-				.update({ text: newText })
-				.eq('id', trans.id)
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to update translation')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id === trans.id ? TranslationSchema.parse(data) : t
-				),
-			})
-			setIsEditing(false)
-			toastSuccess('Translation updated')
-		},
-		onError: (error) => {
-			toastError(error.message)
-		},
-	})
-
-	const toggleArchiveTranslation = useMutation({
-		mutationKey: [
-			'archive-translation',
-			trans.id,
-			trans.archived ? 'unarchive' : 'archive',
-		],
-		mutationFn: async () => {
-			await supabase
-				.from('phrase_translation')
-				.update({ archived: !trans.archived })
-				.eq('id', trans.id)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id !== trans.id ? t : { ...t, archived: !trans.archived }
-				),
-			})
-			toastSuccess(`Translation ${trans.archived ? 'un' : ''}archived`)
-		},
-		onError: (error) => {
-			toastError(error.message)
-		},
-	})
-
 	const handleSave = () => {
-		if (editText.trim() && editText !== trans.text) {
-			updateTranslation.mutate(editText.trim())
-		} else {
+		const newText = editText.trim()
+		if (!newText || newText === trans.text) {
 			setIsEditing(false)
+			return
 		}
+		const tx = updateTranslationAction({
+			phraseId: phrase.id,
+			translationId: trans.id,
+			newText,
+		})
+		tx.isPersisted.promise.then(
+			() => {
+				setIsEditing(false)
+				toastSuccess('Translation updated')
+			},
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(message)
+				console.error('Update translation rolled back:', err)
+			}
+		)
 	}
 
 	const handleCancel = () => {
 		setEditText(trans.text)
 		setIsEditing(false)
+	}
+
+	const handleToggleArchive = () => {
+		const nextArchived = !trans.archived
+		const tx = toggleArchiveTranslationAction({
+			phraseId: phrase.id,
+			translationId: trans.id,
+			nextArchived,
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess(`Translation ${nextArchived ? '' : 'un'}archived`),
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(message)
+				console.error('Archive translation rolled back:', err)
+			}
+		)
 	}
 
 	return (
@@ -280,7 +369,6 @@ function TranslationListItem({
 						variant="ghost"
 						className="size-6"
 						onClick={handleSave}
-						disabled={updateTranslation.isPending}
 					>
 						<Check className="size-3" />
 					</Button>
@@ -316,8 +404,7 @@ function TranslationListItem({
 								size="icon"
 								variant="ghost"
 								className="size-6"
-								onClick={() => toggleArchiveTranslation.mutate()}
-								disabled={toggleArchiveTranslation.isPending}
+								onClick={handleToggleArchive}
 							>
 								{trans.archived ? (
 									<Undo2 className="size-3" />

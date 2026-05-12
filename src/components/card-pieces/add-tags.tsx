@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { createOptimisticAction } from '@tanstack/db'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
@@ -26,16 +26,99 @@ import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
+import type { uuid } from '@/types/main'
 
 const addTagsSchema = z.object({
 	tags: z.array(z.string()).min(1, 'Select at least one tag to add.'),
 })
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
-type AddTagsReturnValues = {
+type AddTagsRPCReturn = {
 	tags: Tables<'tag'>[]
 	phrase_tags: Tables<'phrase_tag'>[]
 }
+
+type AddTagsInput = {
+	phraseId: uuid
+	lang: string
+	tagNames: string[]
+}
+
+const addTagsAction = createOptimisticAction<AddTagsInput>({
+	onMutate: ({ phraseId, tagNames }) => {
+		// Resolve names to existing tag IDs where possible; otherwise use temp IDs.
+		// Synced state will get the real IDs once the RPC returns.
+		const langTags = langTagsCollection.toArray as LangTagType[]
+		const optimisticTags = tagNames.map((name) => {
+			const existing = langTags.find((t) => t.name === name)
+			return {
+				id: existing?.id ?? crypto.randomUUID(),
+				name,
+			}
+		})
+		phrasesCollection.update(phraseId, (draft) => {
+			// PhraseFullSchema uses z.preprocess for tags which makes the draft's
+			// input type unknown; cast back to the output type.
+			const d = draft as unknown as PhraseFullFilteredType
+			d.tags = [...(d.tags ?? []), ...optimisticTags]
+		})
+	},
+	mutationFn: async ({ phraseId, lang, tagNames }) => {
+		const { data, error } = await supabase.rpc('add_tags_to_phrase', {
+			p_phrase_id: phraseId,
+			p_lang: lang,
+			p_tags: tagNames,
+		})
+		if (error) throw error
+		const result = data as AddTagsRPCReturn
+		for (const t of result.tags) {
+			langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
+		}
+		const serverTags = result.phrase_tags
+			.map((pt) => langTagsCollection.get(pt.tag_id))
+			.filter(Boolean) as LangTagType[]
+		const serverTagPairs = serverTags.map((t) => ({ id: t.id, name: t.name }))
+
+		const current = phrasesCollection.get(phraseId)
+		if (!current) return
+		// current.tags is optimistic-merged: contains temp entries we added.
+		// Dedupe by name so temps get replaced by real-ID server entries.
+		const newNames = new Set(serverTagPairs.map((t) => t.name))
+		const filteredCurrent = current.tags.filter((t) => !newNames.has(t.name))
+		phrasesCollection.utils.writeUpdate({
+			id: phraseId,
+			tags: [...filteredCurrent, ...serverTagPairs],
+		})
+	},
+})
+
+type RemoveTagInput = {
+	phraseId: uuid
+	tagId: uuid
+}
+
+const removeTagAction = createOptimisticAction<RemoveTagInput>({
+	onMutate: ({ phraseId, tagId }) => {
+		phrasesCollection.update(phraseId, (draft) => {
+			const d = draft as unknown as PhraseFullFilteredType
+			d.tags = d.tags.filter((t) => t.id !== tagId)
+		})
+	},
+	mutationFn: async ({ phraseId, tagId }) => {
+		await supabase
+			.from('phrase_tag')
+			.delete()
+			.eq('phrase_id', phraseId)
+			.eq('tag_id', tagId)
+			.throwOnError()
+		const current = phrasesCollection.get(phraseId)
+		if (!current) return
+		phrasesCollection.utils.writeUpdate({
+			id: phraseId,
+			tags: current.tags.filter((t) => t.id !== tagId),
+		})
+	},
+})
 
 export function AddTags({
 	phrase,
@@ -47,53 +130,26 @@ export function AddTags({
 	const [open, setOpen] = useState(false)
 	const { data: allLangTags } = useLanguageTags(phrase?.lang)
 
-	const addTagsMutation = useMutation({
-		mutationFn: async (values: AddTagsFormValues) => {
-			console.log(`Running addTagsMutation fn`, { values, allLangTags })
-			if (values.tags.length === 0) return
-
-			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
-				p_phrase_id: phrase.id,
-				p_lang: phrase.lang,
-				p_tags: values.tags,
-			})
-
-			if (error) throw error
-			return data as AddTagsReturnValues
-		},
-		onSuccess: (data) => {
-			if (data?.tags.length) {
-				data?.tags.map((t) => {
-					langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
-				})
-			}
-			if (data?.phrase_tags.length) {
-				const langTags = data.phrase_tags
-					.map((t) => langTagsCollection.get(t.tag_id))
-					.filter(Boolean) as LangTagType[]
-				phrasesCollection.utils.writeUpdate({
-					id: phrase.id,
-					tags: [
-						...(phrase.tags ?? []),
-						...(langTags.map((t) => ({ id: t.id, name: t.name })) ?? []),
-					],
-				})
-			}
-			setOpen(false)
-			form.reset()
-			toastSuccess('Tags added!')
-		},
-		onError: (error) => {
-			console.log(`Failed to add tags: ${error.message}`, error)
-			toastError(`Failed to add tags: ${error.message}`)
-		},
-	})
-
 	const form = useAppForm({
 		defaultValues: { tags: [] } as AddTagsFormValues,
 		validators: { onChange: addTagsSchema },
-		onSubmit: async ({ value }) => {
-			await addTagsMutation.mutateAsync(value)
+		onSubmit: async ({ value }: { value: AddTagsFormValues }) => {
+			if (value.tags.length === 0) return
+			try {
+				const tx = addTagsAction({
+					phraseId: phrase.id,
+					lang: phrase.lang,
+					tagNames: value.tags,
+				})
+				await tx.isPersisted.promise
+				setOpen(false)
+				form.reset()
+				toastSuccess('Tags added!')
+			} catch (err) {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to add tags: ${message}`)
+				console.error('Add tags rolled back:', err)
+			}
 		},
 	})
 
@@ -139,7 +195,6 @@ export function AddTags({
 											key={tag.id}
 											tag={tag}
 											phraseId={phrase.id}
-											phraseTags={phrase.tags ?? []}
 										/>
 									) : (
 										<Badge key={tag.id} variant="secondary">
@@ -206,40 +261,27 @@ export function AddTags({
 function RemovableTagBadge({
 	tag,
 	phraseId,
-	phraseTags,
 }: {
 	tag: { id: string; name: string }
 	phraseId: string
-	phraseTags: Array<{ id: string; name: string }>
 }) {
-	const removeTag = useMutation({
-		mutationFn: async () => {
-			await supabase
-				.from('phrase_tag')
-				.delete()
-				.eq('phrase_id', phraseId)
-				.eq('tag_id', tag.id)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			phrasesCollection.utils.writeUpdate({
-				id: phraseId,
-				tags: phraseTags.filter((t) => t.id !== tag.id),
-			})
-			toastSuccess(`Tag "${tag.name}" removed`)
-		},
-		onError: (error) => {
-			toastError('Failed to remove tag')
-			console.error(error)
-		},
-	})
+	const handleRemove = () => {
+		const tx = removeTagAction({ phraseId, tagId: tag.id })
+		tx.isPersisted.promise.then(
+			() => toastSuccess(`Tag "${tag.name}" removed`),
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to remove tag: ${message}`)
+				console.error('Remove tag rolled back:', err)
+			}
+		)
+	}
 
 	return (
 		<Badge variant="secondary" className="gap-1">
 			{tag.name}
 			<button
-				onClick={() => removeTag.mutate()}
-				disabled={removeTag.isPending}
+				onClick={handleRemove}
 				className="hover:text-destructive -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />
