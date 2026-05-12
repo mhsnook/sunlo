@@ -27,29 +27,23 @@ export const useRequestLinksPhraseIds = (
 	)
 }
 
+/**
+ * Comment-phrase-link rows for a request, grouped by `phrase_id`. The
+ * previous version joined `commentsCollection` to project
+ * `parent_comment_id`, but no consumer reads that field — `comment_id`
+ * is already on the link.
+ */
 export const useRequestLinksWithComments = (requestId: uuid) => {
 	const { data, isLoading } = useLiveQuery(
 		(q) =>
 			q
 				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, requestId))
-				.join(
-					{ comment: commentsCollection },
-					({ link, comment }) => eq(link.comment_id, comment.id),
-					'inner'
-				)
-				.select(({ link, comment }) => ({
-					...link,
-					parent_comment_id: comment.parent_comment_id,
-				})),
+				.where(({ link }) => eq(link.request_id, requestId)),
 		[requestId]
 	)
 	return {
 		isLoading,
-		data: mapArrays<
-			CommentPhraseLinkType & { parent_comment_id: uuid | null },
-			'phrase_id'
-		>(data, 'phrase_id'),
+		data: mapArrays<CommentPhraseLinkType, 'phrase_id'>(data, 'phrase_id'),
 	}
 }
 
