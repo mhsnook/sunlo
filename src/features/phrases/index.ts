@@ -18,7 +18,17 @@ export {
 export { phrasesCollection } from './collections'
 
 // Live collections
-export { phrasesFull } from './live'
+export {
+	phrasesFull,
+	usePhrasePlaylists,
+	usePhraseComments,
+	useRelatedCards,
+	type PhraseProvenanceItem,
+	type PhraseProvenancePlaylist,
+	type PhraseProvenanceComment,
+	type RelatedCard,
+	type RelatedCardSource,
+} from './live'
 
 // Hooks
 export {
@@ -29,12 +39,7 @@ export {
 	useLanguagePhrase,
 	useAllMyPhrasesLang,
 	useAnyonesPhrases,
-	usePhrasePlaylists,
-	usePhraseComments,
 	usePhraseProvenance,
-	type PhraseProvenanceItem,
-	type PhraseProvenancePlaylist,
-	type PhraseProvenanceComment,
 } from './hooks'
 
 export {
