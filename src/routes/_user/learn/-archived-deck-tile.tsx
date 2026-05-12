@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
+import { LangBadge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import {
 	Dialog,
@@ -26,7 +27,6 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 
 	const totalCards = pids?.all.length ?? 0
 	const lastReviewed = ago(deck.most_recent_review_at)
-	const tileCode = deck.lang.slice(0, 3).toUpperCase()
 
 	const mutation = useMutation({
 		mutationFn: async () => {
@@ -66,9 +66,7 @@ export function ArchivedDeckTile({ deck }: { deck: DeckMetaType }) {
 						className="flex h-full flex-col gap-3 p-4 opacity-80 hover:opacity-100 hover:shadow"
 						data-testid={`archived-deck-tile-${deck.lang}`}
 					>
-						<span className="bg-1-mlo-neutral text-6-mid-neutral border-2-lo-neutral inline-flex w-fit items-center justify-center rounded-md border px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase">
-							{tileCode}
-						</span>
+						<LangBadge lang={deck.lang} />
 
 						<div className="space-y-0.5">
 							<h3 className="text-muted-foreground text-lg leading-tight font-semibold">

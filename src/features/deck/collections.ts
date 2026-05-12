@@ -10,7 +10,6 @@ import {
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { sortDecksByCreation } from '@/lib/utils'
-import { themes } from '@/lib/deck-themes'
 import languages from '@/lib/languages'
 
 export const decksCollection = createCollection(
@@ -27,9 +26,8 @@ export const decksCollection = createCollection(
 				data
 					?.map((item) => DeckMetaRawSchema.parse(item))
 					.toSorted(sortDecksByCreation)
-					.map((d, i) =>
+					.map((d) =>
 						Object.assign(d, {
-							theme: i % themes.length,
 							language: languages[d.lang],
 						})
 					) ?? []

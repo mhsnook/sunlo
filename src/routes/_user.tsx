@@ -35,6 +35,7 @@ import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
 import { notificationsCollection } from '@/features/notifications/collections'
+import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
 import { queryClient } from '@/lib/query-client'
@@ -83,6 +84,7 @@ export const Route = createFileRoute('/_user')({
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
 				void notificationsCollection.preload()
+				void languagesCollection.preload()
 			}
 			return
 		}
@@ -115,6 +117,7 @@ export const Route = createFileRoute('/_user')({
 				void decksCollection.preload()
 				void friendSummariesCollection.preload()
 				void notificationsCollection.preload()
+				void languagesCollection.preload()
 			}
 		}
 	},

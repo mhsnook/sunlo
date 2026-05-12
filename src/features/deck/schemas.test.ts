@@ -111,7 +111,7 @@ describe('DeckMetaRawSchema', () => {
 })
 
 describe('DeckMetaSchema (extended)', () => {
-	it('requires theme and language in addition to raw fields', () => {
+	it('requires language in addition to raw fields', () => {
 		const result = DeckMetaSchema.parse({
 			uid: 'cf1f69ce-10fa-4059-8fd4-3c6dcef9ba18',
 			lang: 'kan',
@@ -121,10 +121,8 @@ describe('DeckMetaSchema (extended)', () => {
 			learning_goal: 'moving',
 			preferred_translation_lang: null,
 			review_answer_mode: null,
-			theme: 3,
 			language: 'Kannada',
 		})
-		expect(result.theme).toBe(3)
 		expect(result.language).toBe('Kannada')
 	})
 })

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { createFileRoute, Outlet, notFound } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
-import { setTheme } from '@/lib/deck-themes'
+import { setLangTheme, useLangPopularityReady } from '@/lib/lang-theme'
 import { todayString } from '@/lib/utils'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phrasesCollection } from '@/features/phrases/collections'
@@ -20,7 +20,6 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
-import { useDeckMeta } from '@/features/deck/hooks'
 import { ReviewStoreProvider } from '@/components/review/review-context-provider'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
@@ -77,16 +76,16 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 
 function LanguageLayout() {
 	const params = Route.useParams()
-	const { data: deck } = useDeckMeta(params.lang)
 	const dayString = todayString()
+	const ready = useLangPopularityReady()
 
 	useEffect(() => {
-		if (typeof deck?.theme === 'number')
-			setTheme(document.documentElement, deck?.theme ?? undefined)
+		if (!ready) return
+		setLangTheme(document.documentElement, params.lang)
 		return () => {
-			setTheme()
+			setLangTheme()
 		}
-	}, [deck?.theme])
+	}, [params.lang, ready])
 
 	return (
 		<ReviewStoreProvider lang={params.lang} dayString={dayString}>
