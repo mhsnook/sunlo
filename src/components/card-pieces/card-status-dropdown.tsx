@@ -286,21 +286,21 @@ export function CardStatusDropdown({
 					<>
 						<DropdownMenuItem
 							onClick={() => setCardStatus('active')}
-							className={card.status === 'active' ? 'bg-2-mid-primary' : ''}
+							className={card.status === 'active' ? 'bg-0-mid-primary' : ''}
 							data-testid="activate-card-option"
 						>
 							<StatusSpan choice="active" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() => setCardStatus('learned')}
-							className={card.status === 'learned' ? 'bg-2-mid-primary' : ''}
+							className={card.status === 'learned' ? 'bg-0-mid-primary' : ''}
 							data-testid="set-learned-option"
 						>
 							<StatusSpan choice="learned" />
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={() => setCardStatus('skipped')}
-							className={card.status === 'skipped' ? 'bg-2-mid-primary' : ''}
+							className={card.status === 'skipped' ? 'bg-0-mid-primary' : ''}
 							data-testid="ignore-card-option"
 						>
 							<StatusSpan choice="skipped" />
