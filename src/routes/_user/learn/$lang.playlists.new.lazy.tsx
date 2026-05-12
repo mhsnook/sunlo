@@ -1,0 +1,340 @@
+import { CSSProperties, useState } from 'react'
+import { createLazyFileRoute, useNavigate } from '@tanstack/react-router'
+import { Button } from '@/components/ui/button'
+import { useMutation } from '@tanstack/react-query'
+import { Tables } from '@/types/supabase'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
+import supabase from '@/lib/supabase-client'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+	PhrasePlaylistInsertSchema,
+	type PhrasePlaylistInsertType,
+	PhrasePlaylistSchema,
+	PlaylistPhraseLinkSchema,
+} from '@/features/playlists/schemas'
+import {
+	phrasePlaylistsCollection,
+	playlistPhraseLinksCollection,
+	phrasePlaylistUpvotesCollection,
+} from '@/features/playlists/collections'
+import { Trash, ChevronUp, ChevronDown, Link as LinkIcon } from 'lucide-react'
+import { SelectPhrasesForComment } from '@/components/comments/select-phrases-for-comment'
+import { CoverImageField } from '@/components/fields/cover-image-field'
+import { isEmbeddableUrl } from '@/components/playlists/playlist-embed'
+import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import { useInvalidateFeed } from '@/features/feed/hooks'
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from '@/components/ui/card'
+import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
+import { useAppForm } from '@/components/form'
+
+export const Route = createLazyFileRoute('/_user/learn/$lang/playlists/new')({
+	component: NewPlaylistPage,
+})
+
+type CreatePlaylistRPCReturnType = {
+	playlist: Tables<'phrase_playlist'>
+	links: Tables<'playlist_phrase_link'>[]
+}
+
+type PhraseWithHref = {
+	phrase_id: string
+	href: string | null
+}
+
+const style = { viewTransitionName: `main-area` } as CSSProperties
+
+// Outer component handles auth check
+function NewPlaylistPage() {
+	const isAuth = useIsAuthenticated()
+
+	if (!isAuth) {
+		return (
+			<RequireAuth message="You need to be logged in to create playlists.">
+				<div />
+			</RequireAuth>
+		)
+	}
+
+	return <NewPlaylistPageContent />
+}
+
+function NewPlaylistPageContent() {
+	const navigate = useNavigate()
+	const { lang } = Route.useParams()
+
+	const [selectedPhrases, setSelectedPhrases] = useState<PhraseWithHref[]>([])
+
+	const invalidateFeed = useInvalidateFeed()
+	const mutation = useMutation({
+		mutationKey: ['createPlaylist'],
+		mutationFn: async (values: PhrasePlaylistInsertType) => {
+			const phrasesWithOrder = selectedPhrases.map((p, i) => ({
+				phrase_id: p.phrase_id,
+				href: p.href,
+				order: i,
+			}))
+			const { data } = await supabase
+				.rpc('create_playlist_with_links', {
+					title: values.title,
+					description: values.description,
+					href: values.href ?? undefined,
+					cover_image_path: values.cover_image_path ?? undefined,
+					phrases: phrasesWithOrder,
+					lang,
+				})
+				.throwOnError()
+			return data as CreatePlaylistRPCReturnType
+		},
+		onSuccess: async (data) => {
+			// writeInsert requires an active manual-sync context. preload()
+			// is idempotent: returns the cached promise if sync is already up,
+			// or re-spins it up if it was cleaned up after gcTime expired.
+			await Promise.all([
+				phrasePlaylistsCollection.preload(),
+				playlistPhraseLinksCollection.preload(),
+				phrasePlaylistUpvotesCollection.preload(),
+			])
+			phrasePlaylistsCollection.utils.writeInsert(
+				PhrasePlaylistSchema.parse(data.playlist)
+			)
+			data.links.forEach((link) =>
+				playlistPhraseLinksCollection.utils.writeInsert(
+					PlaylistPhraseLinkSchema.parse(link)
+				)
+			)
+			phrasePlaylistUpvotesCollection.utils.writeInsert({
+				playlist_id: data.playlist.id,
+			})
+			invalidateFeed(lang)
+			toastSuccess(`Added new playlist with ${data.links.length} phrases`)
+			void navigate({
+				to: '/learn/$lang/playlists/$playlistId',
+				params: { lang, playlistId: data.playlist.id },
+			})
+		},
+		onError: (error) => {
+			console.error(error)
+			toastError('There was an error creating your playlist')
+		},
+	})
+
+	const form = useAppForm({
+		defaultValues: {
+			title: '',
+			description: '',
+			href: null,
+			cover_image_path: null,
+			phrases: [],
+		} as PhrasePlaylistInsertType,
+		validators: { onChange: PhrasePlaylistInsertSchema },
+		onSubmit: async ({ value }) => {
+			await mutation.mutateAsync(value)
+		},
+	})
+
+	const handleSelectionChange = (phraseIds: string[]) => {
+		setSelectedPhrases((current) => {
+			const existingMap = new Map(current.map((p) => [p.phrase_id, p]))
+			return phraseIds.map(
+				(id) => existingMap.get(id) ?? { phrase_id: id, href: null }
+			)
+		})
+	}
+
+	const removePhrase = (phraseId: string) => {
+		setSelectedPhrases((phrases) =>
+			phrases.filter((p) => p.phrase_id !== phraseId)
+		)
+	}
+
+	const movePhrase = (index: number, direction: 'up' | 'down') => {
+		setSelectedPhrases((phrases) => {
+			const newPhrases = [...phrases]
+			const targetIndex = direction === 'up' ? index - 1 : index + 1
+			if (targetIndex < 0 || targetIndex >= phrases.length) return phrases
+			;[newPhrases[index], newPhrases[targetIndex]] = [
+				newPhrases[targetIndex],
+				newPhrases[index],
+			]
+			return newPhrases
+		})
+	}
+
+	const updatePhraseHref = (phraseId: string, href: string) => {
+		setSelectedPhrases((phrases) =>
+			phrases.map((p) =>
+				p.phrase_id === phraseId ? { ...p, href: href || null } : p
+			)
+		)
+	}
+
+	const selectedPhraseIds = selectedPhrases.map((p) => p.phrase_id)
+
+	return (
+		<main style={style}>
+			<Card>
+				<CardHeader>
+					<CardTitle>Create New Playlist</CardTitle>
+					<CardDescription>
+						A group of flash cards that go together. Optional: Link to a podcast
+						or video.
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form
+						role="form"
+						noValidate
+						data-testid="new-playlist-form"
+						onSubmit={(e) => {
+							e.preventDefault()
+							e.stopPropagation()
+							void form.handleSubmit()
+						}}
+						className="space-y-6"
+					>
+						<form.AppField name="title">
+							{(field) => (
+								<field.TextInput label="Title" placeholder="Playlist Title" />
+							)}
+						</form.AppField>
+
+						<form.AppField name="description">
+							{(field) => (
+								<field.TextareaInput
+									label="Description"
+									placeholder="Optional description"
+									description="Describe what this playlist is about"
+								/>
+							)}
+						</form.AppField>
+
+						<form.AppField name="href">
+							{(field) => (
+								<field.TextInput
+									label="Source Link"
+									type="url"
+									placeholder="https://youtube.com/watch?v=... or Spotify link"
+									description="Link to a video or podcast episode"
+								/>
+							)}
+						</form.AppField>
+
+						<form.Subscribe selector={(s) => s.values.href}>
+							{(href) =>
+								isEmbeddableUrl(href) ? null : (
+									<form.AppField name="cover_image_path">
+										{() => <CoverImageField />}
+									</form.AppField>
+								)
+							}
+						</form.Subscribe>
+
+						<div className="space-y-3">
+							<div className="w-full">
+								<Label>Phrases ({selectedPhrases.length})</Label>
+							</div>
+
+							{selectedPhrases.map((phrase, index) => (
+								<div
+									key={phrase.phrase_id}
+									className="bg-muted/30 rounded border p-3"
+								>
+									<div className="flex items-start gap-2">
+										<div className="flex flex-col gap-1">
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6"
+												aria-label="Move phrase up"
+												disabled={index === 0}
+												onClick={() => movePhrase(index, 'up')}
+											>
+												<ChevronUp className="h-4 w-4" />
+											</Button>
+											<Button
+												type="button"
+												variant="ghost"
+												size="icon"
+												className="h-6 w-6"
+												aria-label="Move phrase down"
+												disabled={index === selectedPhrases.length - 1}
+												onClick={() => movePhrase(index, 'down')}
+											>
+												<ChevronDown className="h-4 w-4" />
+											</Button>
+										</div>
+
+										<div className="min-w-0 flex-1">
+											<PhraseTinyCard pid={phrase.phrase_id} nonInteractive />
+
+											<div className="mt-2 flex items-center gap-2">
+												<LinkIcon className="text-muted-foreground h-4 w-4 flex-shrink-0" />
+												<Input
+													type="url"
+													placeholder="Timestamp link (optional)"
+													value={phrase.href ?? ''}
+													onChange={(e) =>
+														updatePhraseHref(phrase.phrase_id, e.target.value)
+													}
+													className="h-8 text-sm"
+												/>
+											</div>
+										</div>
+
+										<Button
+											type="button"
+											onClick={() => removePhrase(phrase.phrase_id)}
+											variant="red-soft"
+											size="icon"
+											aria-label="Remove phrase"
+										>
+											<Trash className="h-4 w-4" />
+										</Button>
+									</div>
+								</div>
+							))}
+
+							<SelectPhrasesForComment
+								lang={lang}
+								selectedPhraseIds={selectedPhraseIds}
+								onSelectionChange={handleSelectionChange}
+								maxPhrases={null}
+								triggerText={
+									selectedPhrases.length
+										? '+ Add more phrases'
+										: 'Add phrases to your playlist'
+								}
+							/>
+						</div>
+
+						<div className="flex justify-end gap-4 pt-4">
+							<Button
+								type="button"
+								onClick={() => window.history.back()}
+								variant="neutral"
+							>
+								Cancel
+							</Button>
+							<form.AppForm>
+								<form.SubmitButton
+									pendingText="Creating..."
+									disabled={selectedPhrases.length === 0}
+								>
+									Create Playlist
+								</form.SubmitButton>
+							</form.AppForm>
+						</div>
+					</form>
+				</CardContent>
+			</Card>
+		</main>
+	)
+}

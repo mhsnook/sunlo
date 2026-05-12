@@ -2,13 +2,10 @@ import { createFileRoute } from '@tanstack/react-router'
 import languages from '@/lib/languages'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 
-import { UserContributions } from './-contributions'
 import { UserContributionsTabs } from './-contributions-tabs'
-import type { CSSProperties } from 'react'
 
 export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 	validateSearch: UserContributionsTabs,
-	component: Page,
 	beforeLoad: ({ params: { lang } }) => ({
 		titleBar: {
 			title: `Contributions to the ${languages[lang]} Library`,
@@ -19,16 +16,3 @@ export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 		await phraseRequestsCollection.preload()
 	},
 })
-
-const style = { viewTransitionName: `main-area` } as CSSProperties
-
-function Page() {
-	const params = Route.useParams()
-	const uid = Route.useRouteContext().auth.userId!
-
-	return (
-		<main style={style} data-testid="contributions-page">
-			<UserContributions uid={uid} lang={params.lang} />
-		</main>
-	)
-}
