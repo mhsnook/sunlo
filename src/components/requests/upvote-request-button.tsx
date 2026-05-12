@@ -33,16 +33,29 @@ const setRequestUpvote = createOptimisticAction<UpvoteInput>({
 			phraseRequestUpvotesCollection.delete(requestId)
 		}
 	},
-	mutationFn: async ({ requestId, action }) => {
+	mutationFn: async ({ requestId, action, currentCount }) => {
 		const { error } = await supabase.rpc('set_phrase_request_upvote', {
 			p_request_id: requestId,
 			p_action: action,
 		})
 		if (error) throw error
-		await Promise.all([
-			phraseRequestsCollection.utils.refetch(),
-			phraseRequestUpvotesCollection.utils.refetch(),
-		])
+		// Trust the optimistic ±1 count. Drifts by 1 in the 'no_change' edge
+		// case (e.g. server already had us upvoted from another tab) and
+		// self-corrects on next stale refetch. Avoids a full phrase_request
+		// table refetch on every click.
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		phraseRequestsCollection.utils.writeUpdate({
+			id: requestId,
+			upvote_count: nextCount,
+		})
+		if (action === 'add') {
+			phraseRequestUpvotesCollection.utils.writeInsert({
+				request_id: requestId,
+			})
+		} else {
+			phraseRequestUpvotesCollection.utils.writeDelete(requestId)
+		}
 	},
 })
 

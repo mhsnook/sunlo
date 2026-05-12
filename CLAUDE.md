@@ -327,6 +327,20 @@ See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked exam
 - **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
 - **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
 
+#### Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
+
+`collection.utils.refetch()` is **a full table fetch** (`queryCollectionOptions.queryFn` re-runs `.from('…').select()` for the whole table). After a single-row mutation, this is wildly disproportionate: a refetch of `phrase_request` to confirm one new request pulls every request in the system.
+
+The cheap alternative: make supabase or the RPC hand back the affected rows, and write them into the synced state directly.
+
+- For direct supabase writes, append `.select()` (or `.select().single()`) to `insert / update / delete` calls. The post-mutation row(s) come back in the response.
+- For RPCs, prefer ones that already `RETURN json_build_object(...)` with the affected rows (e.g. `create_comment_with_phrases`).
+- Inside a `createOptimisticAction.mutationFn`, call `collection.utils.writeInsert(parsed)` / `writeUpdate(parsed)` / `writeDelete(key)` with the server's returned row(s). The synced state is now correct without a full refetch, and the optimistic state drops cleanly when the action resolves.
+
+Treat `collection.utils.refetch()` like `useEffect`: a code smell that needs a justification. **If you're about to add one, stop and check with the human first.** Usually one of these is the right move instead: pass client-generated IDs to the server so optimistic === synced; use `.select()` to get the row back; or change the RPC to return what you need. Legitimate uses do exist (e.g. picking up cascade-deleted rows on a parent delete) but they're rare and should be commented at the call site.
+
+If you do call `refetch()` against a `startSync: false` user collection that's small (one-column-of-IDs tables like `*_upvote`), note that in a comment — it's much cheaper than refetching a public table, but still worth flagging.
+
 **Deprecated** — do not use for new code, and migrate when touching old code (tracked by the `transform` label):
 
 ```typescript
