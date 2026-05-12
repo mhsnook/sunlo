@@ -38,7 +38,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { ThemeToggle } from '@/components/theme-toggle'
 
-export const Route = createLazyFileRoute('/themes')({
+export const Route = createLazyFileRoute('/themes/')({
 	component: ThemesPage,
 })
 
@@ -382,9 +382,9 @@ function InteractiveStates() {
 				>
 					<Bookmark
 						className={
-							bookmarked ?
-								'fill-purple-600/50 text-purple-600'
-							:	'text-muted-foreground'
+							bookmarked
+								? 'fill-purple-600/50 text-purple-600'
+								: 'text-muted-foreground'
 						}
 					/>
 				</Button>
@@ -575,9 +575,9 @@ function ThemesPage() {
 						key={`${t.name}-${i}`}
 						onClick={() => selectTheme(i)}
 						className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-sm font-medium shadow transition ${
-							i === selectedIdx ?
-								'border-primary bg-1-mlo-primary text-primary-foresoft'
-							:	'border-border bg-card text-card-foreground hover:bg-muted'
+							i === selectedIdx
+								? 'border-primary bg-1-mlo-primary text-primary-foresoft'
+								: 'border-border bg-card text-card-foreground hover:bg-muted'
 						}`}
 					>
 						<span
