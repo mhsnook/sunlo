@@ -200,7 +200,7 @@ function WelcomeHeader({
 				to="/learn/$lang/phrases/new"
 				params={{ lang: addPhraseLang }}
 				data-testid="add-phrase-button"
-				className={buttonVariants({ variant: 'default' })}
+				className={buttonVariants({ variant: 'soft' })}
 			>
 				<Plus />
 				Add a phrase
