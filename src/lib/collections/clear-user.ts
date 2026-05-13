@@ -12,7 +12,7 @@ import {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
-} from '@/features/comments/collections'
+} from '@/features/requests/collections'
 import { phraseRequestUpvotesCollection } from '@/features/requests/collections'
 import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
 import { notificationsCollection } from '@/features/notifications/collections'

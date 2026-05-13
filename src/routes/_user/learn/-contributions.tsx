@@ -30,7 +30,7 @@ import {
 	useAnyonesComments,
 	useCommentPhraseLinks,
 	type RequestCommentType,
-} from '@/features/comments'
+} from '@/features/requests'
 
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'

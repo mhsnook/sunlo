@@ -13,9 +13,9 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
-} from '@/features/comments/collections'
-import { useOneComment } from '@/features/comments/hooks'
-import { type RequestCommentType } from '@/features/comments/schemas'
+} from '@/features/requests/collections'
+import { useOneComment } from '@/features/requests/hooks'
+import { type RequestCommentType } from '@/features/requests/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { Markdown } from '@/components/my-markdown'
 import { useAppForm } from '@/components/form'

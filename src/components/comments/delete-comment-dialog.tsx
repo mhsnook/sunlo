@@ -12,8 +12,8 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/features/comments/schemas'
-import { commentsCollection } from '@/features/comments/collections'
+import { RequestCommentType } from '@/features/requests/schemas'
+import { commentsCollection } from '@/features/requests/collections'
 
 export function DeleteCommentDialog({
 	comment,

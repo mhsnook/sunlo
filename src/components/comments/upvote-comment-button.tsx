@@ -6,12 +6,12 @@ import { ThumbsUp } from 'lucide-react'
 import {
 	commentsCollection,
 	commentUpvotesCollection,
-} from '@/features/comments/collections'
-import { useHasCommentUpvote } from '@/features/comments/hooks'
+} from '@/features/requests/collections'
+import { useHasCommentUpvote } from '@/features/requests/hooks'
 import supabase from '@/lib/supabase-client'
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/features/comments/schemas'
+import { RequestCommentType } from '@/features/requests/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
 type UpvoteInput = {

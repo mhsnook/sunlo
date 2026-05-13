@@ -15,7 +15,7 @@ import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { buttonVariants } from '@/components/ui/button'
 import { cn, mapArrays } from '@/lib/utils'
-import type { CommentPhraseLinkType } from '@/features/comments/schemas'
+import type { CommentPhraseLinkType } from '@/features/requests/schemas'
 import Flagged from '@/components/flagged'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
@@ -27,8 +27,8 @@ import {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
-} from '@/features/comments/collections'
-import { useOneComment } from '@/features/comments/hooks'
+} from '@/features/requests/collections'
+import { useOneComment } from '@/features/requests/hooks'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,

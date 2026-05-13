@@ -20,13 +20,13 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
-} from '@/features/comments/collections'
+} from '@/features/requests/collections'
 import {
 	CommentPhraseLinkSchema,
 	type CommentPhraseLinkType,
 	RequestCommentSchema,
 	type RequestCommentType,
-} from '@/features/comments/schemas'
+} from '@/features/requests/schemas'
 import { useLanguagePhrasesSearch } from '@/features/phrases/hooks'
 import { useRequest } from '@/features/requests/hooks'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
