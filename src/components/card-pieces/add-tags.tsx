@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { createOptimisticAction } from '@tanstack/db'
 import * as z from 'zod'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { toastError } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Tags, X } from 'lucide-react'
 
@@ -133,23 +133,21 @@ export function AddTags({
 	const form = useAppForm({
 		defaultValues: { tags: [] } as AddTagsFormValues,
 		validators: { onChange: addTagsSchema },
-		onSubmit: async ({ value }: { value: AddTagsFormValues }) => {
+		onSubmit: ({ value }: { value: AddTagsFormValues }) => {
 			if (value.tags.length === 0) return
-			try {
-				const tx = addTagsAction({
-					phraseId: phrase.id,
-					lang: phrase.lang,
-					tagNames: value.tags,
-				})
-				await tx.isPersisted.promise
-				setOpen(false)
-				form.reset()
-				toastSuccess('Tags added!')
-			} catch (err) {
+			const tx = addTagsAction({
+				phraseId: phrase.id,
+				lang: phrase.lang,
+				tagNames: value.tags,
+			})
+			// Optimistic badges already render; close + reset right away.
+			setOpen(false)
+			form.reset()
+			tx.isPersisted.promise.catch((err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
 				toastError(`Failed to add tags: ${message}`)
 				console.error('Add tags rolled back:', err)
-			}
+			})
 		},
 	})
 
@@ -267,14 +265,12 @@ function RemovableTagBadge({
 }) {
 	const handleRemove = () => {
 		const tx = removeTagAction({ phraseId, tagId: tag.id })
-		tx.isPersisted.promise.then(
-			() => toastSuccess(`Tag "${tag.name}" removed`),
-			(err: unknown) => {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to remove tag: ${message}`)
-				console.error('Remove tag rolled back:', err)
-			}
-		)
+		// Badge disappears immediately — no success toast needed.
+		tx.isPersisted.promise.catch((err: unknown) => {
+			const message = err instanceof Error ? err.message : 'unknown error'
+			toastError(`Failed to remove tag "${tag.name}": ${message}`)
+			console.error('Remove tag rolled back:', err)
+		})
 	}
 
 	return (

@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import * as z from 'zod'
 import { createOptimisticAction } from '@tanstack/db'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { toastError } from '@/components/ui/sonner'
 import { Pencil, Check, X, Archive, Undo2 } from 'lucide-react'
 
 import {
@@ -197,26 +197,25 @@ export function AddTranslationsDialog({
 			translation_lang: preferredTranslationLang,
 		},
 		validators: { onChange: schema },
-		onSubmit: async ({ value }: { value: AddTranslationsType }) => {
+		onSubmit: ({ value }: { value: AddTranslationsType }) => {
 			if (!userId) return
-			try {
-				const tempId = crypto.randomUUID()
-				const tx = addTranslationAction({
-					phraseId: phrase.id,
-					tempId,
-					userId,
-					translation_lang: value.translation_lang,
-					translation_text: value.translation_text,
-				})
-				await tx.isPersisted.promise
-				close()
-				form.reset()
-				toastSuccess(`Translation added for ${phrase.text}`)
-			} catch (err) {
+			const tempId = crypto.randomUUID()
+			const tx = addTranslationAction({
+				phraseId: phrase.id,
+				tempId,
+				userId,
+				translation_lang: value.translation_lang,
+				translation_text: value.translation_text,
+			})
+			// Local-first: the optimistic translation already shows in the list.
+			// Close + reset immediately; only surface if the server rejects.
+			close()
+			form.reset()
+			tx.isPersisted.promise.catch((err: unknown) => {
 				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(message)
+				toastError(`Failed to add translation: ${message}`)
 				console.error('Add translation rolled back:', err)
-			}
+			})
 		},
 	})
 
@@ -317,17 +316,13 @@ function TranslationListItem({
 			translationId: trans.id,
 			newText,
 		})
-		tx.isPersisted.promise.then(
-			() => {
-				setIsEditing(false)
-				toastSuccess('Translation updated')
-			},
-			(err: unknown) => {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(message)
-				console.error('Update translation rolled back:', err)
-			}
-		)
+		// Optimistic update already shows the new text; exit edit mode now.
+		setIsEditing(false)
+		tx.isPersisted.promise.catch((err: unknown) => {
+			const message = err instanceof Error ? err.message : 'unknown error'
+			toastError(`Failed to update translation: ${message}`)
+			console.error('Update translation rolled back:', err)
+		})
 	}
 
 	const handleCancel = () => {
@@ -342,14 +337,14 @@ function TranslationListItem({
 			translationId: trans.id,
 			nextArchived,
 		})
-		tx.isPersisted.promise.then(
-			() => toastSuccess(`Translation ${nextArchived ? '' : 'un'}archived`),
-			(err: unknown) => {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(message)
-				console.error('Archive translation rolled back:', err)
-			}
-		)
+		// The strikethrough / archive state flips in the same tick — no toast needed.
+		tx.isPersisted.promise.catch((err: unknown) => {
+			const message = err instanceof Error ? err.message : 'unknown error'
+			toastError(
+				`Failed to ${nextArchived ? 'archive' : 'unarchive'} translation: ${message}`
+			)
+			console.error('Archive translation rolled back:', err)
+		})
 	}
 
 	return (
