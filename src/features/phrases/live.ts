@@ -17,8 +17,8 @@ import {
 import {
 	commentPhraseLinksCollection,
 	commentsCollection,
-} from '@/features/comments/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
+	phraseRequestsCollection,
+} from '@/features/requests/collections'
 
 export const phrasesFull = createLiveQueryCollection({
 	id: 'phrases_full',

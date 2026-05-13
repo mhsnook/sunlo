@@ -18,7 +18,7 @@ import type {
 import { useMarkAsRead } from '@/features/notifications/hooks'
 import { useRequest } from '@/features/requests/hooks'
 import { useOnePhrase } from '@/features/phrases/hooks'
-import { useOneComment } from '@/features/comments/hooks'
+import { useOneComment } from '@/features/requests/hooks'
 import { Button } from '@/components/ui/button'
 
 const notificationConfig: Record<

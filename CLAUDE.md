@@ -375,9 +375,8 @@ const mutation = useMutation({
   - `phrases/` - Phrases, translations, search, provenance (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
   - `deck/` - Decks, cards, deck mutations (`schemas.ts`, `collections.ts`, `hooks.ts`, `mutations.ts`)
   - `review/` - Review sessions, FSRS algorithm, review store (`schemas.ts`, `collections.ts`, `hooks.ts`, `store.ts`, `fsrs.ts`)
-  - `requests/` - Phrase requests & upvotes (`schemas.ts`, `collections.ts`, `hooks.tsx`)
-  - `comments/` - Comment system (`schemas.ts`, `collections.ts`)
-  - `social/` - Friends, chat, public profiles (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
+  - `requests/` - Phrase requests, comments on requests, upvotes for both, and the comment→phrase links that make up an answer thread. Deliberately one module — a comment without a request is meaningless (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
+  - `social/` - Friends, chat, public profiles, friend feed (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
   - `playlists/` - Playlists & phrase links (`schemas.ts`, `collections.ts`, `hooks.ts`)
   - `feed/` - Activity feed (`schemas.ts`, `hooks.ts`)
 - `src/lib/` - Cross-cutting utilities
@@ -413,6 +412,8 @@ const mutation = useMutation({
 
 The codebase uses a **"deep module" architecture** (inspired by Ousterhout's _A Philosophy of Software Design_). Each feature domain is a self-contained directory under `src/features/` containing its own schemas, collections, hooks, and a barrel file (`index.ts`) that exports the public API.
 
+**Module boundaries are intentionally wide where concepts are inseparable.** A `requests/` module holds requests, the comments that answer them, the comment→phrase links that form an answer, and upvotes on both — because a comment without a request is meaningless. `social/` holds friends + chat + feed for the same reason: they're all "things that happen between users." Don't split a wide module into narrower ones just to satisfy a "no cross-feature import" lint rule; if two concepts only exist together, they belong together. The rule against cross-feature `collections.ts` imports applies _between_ genuinely separate modules — not within one wide module just because it has many tables.
+
 **Directory structure per feature:**
 
 ```
@@ -446,18 +447,17 @@ import { cardReviewsCollection } from './collections'
 
 **Feature domains and what they contain:**
 
-| Domain      | Schemas                                 | Collections                                         | Key Hooks                              |
-| ----------- | --------------------------------------- | --------------------------------------------------- | -------------------------------------- |
-| `profile`   | PublicProfile, MyProfile, LanguageKnown | publicProfiles, myProfile                           | useAuth, useProfile                    |
-| `languages` | Language, LangTag, LangSchema           | languages, langTags                                 | useLanguageMeta, useLanguageTags       |
-| `phrases`   | PhraseFull, Translation, PhraseSearch   | phrases, phrasesFull (live)                         | useLanguagePhrases, usePhrase          |
-| `deck`      | DeckMeta, CardMeta                      | decks, cards                                        | useDeckMeta, useDeckCards, useDeckPids |
-| `review`    | CardReview, DailyReviewState            | cardReviews, reviewDays                             | useReviewsToday, useReviewMutation     |
-| `requests`  | PhraseRequest                           | phraseRequests                                      | useRequest, useRequestCounts           |
-| `comments`  | RequestComment, CommentPhraseLink       | comments, commentPhraseLinks                        | (inline in components)                 |
-| `social`    | FriendSummary, ChatMessage              | friendSummaries, chatMessages, relationsFull (live) | useRelationFriends, useAllChats        |
-| `playlists` | PhrasePlaylist, PlaylistPhraseLink      | phrasePlaylists, playlistPhraseLinks                | useOnePlaylist, useLangPlaylists       |
-| `feed`      | FeedActivity                            | (uses React Query)                                  | useFeedLang                            |
+| Domain      | Schemas                                                   | Collections                                           | Key Hooks                                                          |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `profile`   | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                             | useAuth, useProfile                                                |
+| `languages` | Language, LangTag, LangSchema                             | languages, langTags                                   | useLanguageMeta, useLanguageTags                                   |
+| `phrases`   | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                           | useLanguagePhrases, usePhrase                                      |
+| `deck`      | DeckMeta, CardMeta                                        | decks, cards                                          | useDeckMeta, useDeckCards, useDeckPids                             |
+| `review`    | CardReview, DailyReviewState                              | cardReviews, reviewDays                               | useReviewsToday, useReviewMutation                                 |
+| `requests`  | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
+| `social`    | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)   | useRelationFriends, useAllChats                                    |
+| `playlists` | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                  | useOnePlaylist, useLangPlaylists                                   |
+| `feed`      | FeedActivity                                              | (uses React Query)                                    | useFeedLang                                                        |
 
 ### Routing Conventions
 
