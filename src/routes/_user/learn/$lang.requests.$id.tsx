@@ -8,16 +8,14 @@ import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import {
-	useRequest,
-	useRequestLinksWithComments,
-} from '@/features/requests/hooks'
+import { useRequest } from '@/features/requests/hooks'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { cn, mapArrays } from '@/lib/utils'
+import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import Flagged from '@/components/flagged'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
@@ -179,18 +177,18 @@ const showThread = { show: 'thread' } as const
 
 function AnswersOnlyView() {
 	const params = Route.useParams()
-	const { data: linksWithCommentsMap, isLoading } = useRequestLinksWithComments(
-		params.id
+	const { data: links, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.request_id, params.id)),
+		[params.id]
 	)
 	if (isLoading) return <Loader />
-	if (!linksWithCommentsMap) {
-		console.log(
-			`isLoading has completed but links is not linking`,
-			linksWithCommentsMap
-		)
-		return null
-	}
-
+	const linksWithCommentsMap = mapArrays<CommentPhraseLinkType, 'phrase_id'>(
+		links,
+		'phrase_id'
+	)
 	const phraseIds = Object.keys(linksWithCommentsMap)
 
 	return (

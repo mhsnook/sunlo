@@ -9,9 +9,7 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from './collections'
-import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from './schemas'
-import { mapArrays } from '@/lib/utils'
 
 export const useRequestLinksPhraseIds = (
 	requestId: uuid
@@ -25,26 +23,6 @@ export const useRequestLinksPhraseIds = (
 				.distinct(),
 		[requestId]
 	)
-}
-
-/**
- * Comment-phrase-link rows for a request, grouped by `phrase_id`. The
- * previous version joined `commentsCollection` to project
- * `parent_comment_id`, but no consumer reads that field — `comment_id`
- * is already on the link.
- */
-export const useRequestLinksWithComments = (requestId: uuid) => {
-	const { data, isLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, requestId)),
-		[requestId]
-	)
-	return {
-		isLoading,
-		data: mapArrays<CommentPhraseLinkType, 'phrase_id'>(data, 'phrase_id'),
-	}
 }
 
 export const useRequestCounts = (
