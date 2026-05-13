@@ -24,7 +24,6 @@ export {
 	useRequest,
 	useRequestCounts,
 	useRequestLinksPhraseIds,
-	useRequestLinksWithComments,
 	useHasRequestUpvote,
 	useAnyonesPhraseRequests,
 } from './hooks'

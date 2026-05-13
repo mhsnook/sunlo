@@ -9,9 +9,7 @@ import {
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from './collections'
-import type { CommentPhraseLinkType } from '@/features/comments/schemas'
 import type { PhraseRequestType } from './schemas'
-import { mapArrays } from '@/lib/utils'
 
 export const useRequestLinksPhraseIds = (
 	requestId: uuid
@@ -25,32 +23,6 @@ export const useRequestLinksPhraseIds = (
 				.distinct(),
 		[requestId]
 	)
-}
-
-export const useRequestLinksWithComments = (requestId: uuid) => {
-	const { data, isLoading } = useLiveQuery(
-		(q) =>
-			q
-				.from({ link: commentPhraseLinksCollection })
-				.where(({ link }) => eq(link.request_id, requestId))
-				.join(
-					{ comment: commentsCollection },
-					({ link, comment }) => eq(link.comment_id, comment.id),
-					'inner'
-				)
-				.select(({ link, comment }) => ({
-					...link,
-					parent_comment_id: comment.parent_comment_id,
-				})),
-		[requestId]
-	)
-	return {
-		isLoading,
-		data: mapArrays<
-			CommentPhraseLinkType & { parent_comment_id: uuid | null },
-			'phrase_id'
-		>(data, 'phrase_id'),
-	}
 }
 
 export const useRequestCounts = (
