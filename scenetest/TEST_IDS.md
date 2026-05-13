@@ -315,7 +315,9 @@ natural wrapper element to label.
 | Selector                    | Attribute   | Component/Location  | Description                                                                       |
 | --------------------------- | ----------- | ------------------- | --------------------------------------------------------------------------------- |
 | `open-comment-dialog`       | data-testid | Request detail page | Fake-input link that opens the comment dialog (`?mode=comment`)                   |
-| `view-comments-link`        | data-testid | Request page        | Chat-bubble icon: navigates to thread view (`?show=thread`)                       |
+| `comments-count`            | data-testid | Request page        | Inline metadata: chat-bubble icon + comment count                                 |
+| `answers-count`             | data-testid | Request page        | Inline metadata: wallet-card icon + answer count                                  |
+| `answers-only-toggle`       | data-testid | Request detail page | Switch toggling between full thread and answers-only views (`?show=answers-only`) |
 | `comment-dialog`            | data-testid | Dialog              | Comment dialog container (scopes both `new-comment-form` and `edit-comment-form`) |
 | `new-comment-form`          | data-testid | Comment dialog      | Form element when creating a new comment                                          |
 | `edit-comment-form`         | data-testid | Comment dialog      | Form element when editing an existing comment                                     |

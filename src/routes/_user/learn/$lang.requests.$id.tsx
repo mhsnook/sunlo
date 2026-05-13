@@ -1,7 +1,7 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { CSSProperties } from 'react'
+import { CSSProperties, useId } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { buttonVariants } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { cn, mapArrays } from '@/lib/utils'
 import type { CommentPhraseLinkType } from '@/features/requests/schemas'
 import Flagged from '@/components/flagged'
@@ -163,6 +164,7 @@ function RequestThreadPage() {
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
+				<AnswersOnlyToggle answersOnly={search.show === 'answers-only'} />
 				{search.show === 'answers-only' ? (
 					<AnswersOnlyView />
 				) : (
@@ -173,7 +175,34 @@ function RequestThreadPage() {
 	)
 }
 
-const showThread = { show: 'thread' } as const
+function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
+	const navigate = useNavigate()
+	const id = useId()
+	return (
+		<div className="my-4 flex items-center gap-3 px-4">
+			<Switch
+				id={id}
+				checked={answersOnly}
+				onCheckedChange={(checked) => {
+					void navigate({
+						to: '.',
+						search: (s) => ({
+							...s,
+							show: checked ? 'answers-only' : 'thread',
+						}),
+					})
+				}}
+				data-testid="answers-only-toggle"
+			/>
+			<label
+				htmlFor={id}
+				className="text-muted-foreground cursor-pointer text-sm"
+			>
+				Only show comments with answers
+			</label>
+		</div>
+	)
+}
 
 function AnswersOnlyView() {
 	const params = Route.useParams()
@@ -196,10 +225,7 @@ function AnswersOnlyView() {
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
 					Showing {phraseIds.length} flashcard
-					{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
-					<Link to="." className="s-link" search={showThread}>
-						Return to discussion.
-					</Link>
+					{phraseIds.length !== 1 ? 's' : ''} suggested.
 				</p>
 				<div className="grid divide-y border">
 					{!phraseIds.length && (
@@ -243,8 +269,6 @@ function AnswersOnlyView() {
 	)
 }
 
-const answersOnly = { show: 'answers-only' } as const
-
 function TopLevelComments({
 	requestId,
 	lang,
@@ -273,10 +297,7 @@ function TopLevelComments({
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
 					Showing {comments.length} comment
-					{comments.length !== 1 ? 's' : ''}.{' '}
-					<Link to="." className="s-link" search={answersOnly}>
-						Show only proposed answers.
-					</Link>
+					{comments.length !== 1 ? 's' : ''}.
 				</p>
 				<div className="divide-y border">
 					{comments.map((comment) => (
