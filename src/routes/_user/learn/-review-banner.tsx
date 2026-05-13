@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Rocket } from 'lucide-react'
 
-import { Garlic } from '@/components/garlic'
 import { buttonVariants } from '@/components/ui/button'
 import type { DeckMetaType } from '@/features/deck/schemas'
 import { useLangActiveDays } from './-deck-ranking'
@@ -27,9 +26,14 @@ export function ReviewBanner({
 		>
 			<div className="flex flex-col items-start gap-4 @md:flex-row @md:items-center @md:justify-between">
 				<div className="flex items-center gap-4">
-					<div className="hidden shrink-0 @sm:block">
-						<Garlic size={56} />
-					</div>
+					<img
+						src="/images/garlic-logo.svg"
+						alt="a smiling garlic"
+						width={56}
+						height={56}
+						className="hidden shrink-0 place-self-center @sm:block"
+					/>
+
 					<div className="space-y-1">
 						<h2 className="text-lg leading-tight font-bold @md:text-xl">
 							<span className="text-primary-foresoft">{focusDue}</span>{' '}
