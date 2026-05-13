@@ -210,7 +210,7 @@ function AnswersOnlyView() {
 					{phraseIds.map((pid) => (
 						<div key={pid} className="p-4 pb-2">
 							<WithPhrase pid={pid} Component={CardResultSimple} />
-							<p className="text-sm">
+							<p className="mt-3 text-sm">
 								View in thread:{' '}
 								{linksWithCommentsMap[pid].map((l, i, arr) => (
 									<span key={l.id}>
