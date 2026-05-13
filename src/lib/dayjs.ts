@@ -26,6 +26,9 @@ dayjs.updateLocale('en', {
 const ago = (dbstring: string | null) =>
 	dbstring ? dayjs(dbstring).fromNow() : null
 
+const fullTimestamp = (dbstring: string) =>
+	dayjs(dbstring).format('D MMM YYYY [at] HH:mm')
+
 const inLastWeek = (dbstring: string) =>
 	dayjs(dbstring).isAfter(dayjs().subtract(7, 'days'))
 
@@ -41,4 +44,4 @@ const formatInterval = (days: number): string => {
 	return `${Math.round(rounded / 365)}yr`
 }
 
-export { ago, inLastWeek, formatInterval }
+export { ago, fullTimestamp, inLastWeek, formatInterval }

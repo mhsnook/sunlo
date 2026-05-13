@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
-import { ago } from '@/lib/dayjs'
+import { ago, fullTimestamp } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/features/social/public-profile'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { useProfile } from '@/features/profile/hooks'
@@ -11,18 +11,18 @@ export function TinySelfAvatar({ className }: { className?: string }) {
 	const { data } = useProfile()
 	const avatarUrl = avatarUrlify(data?.avatar_path)
 	return !avatarUrl ? null : (
-			<Avatar
-				className={cn(
-					'bg-foreground text-background h-8 w-8 rounded-lg',
-					className
-				)}
-			>
-				<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
-				<AvatarFallback className="text-[10px] font-bold">
-					{data?.username?.slice(0, 2)}
-				</AvatarFallback>
-			</Avatar>
-		)
+		<Avatar
+			className={cn(
+				'bg-foreground text-background h-8 w-8 rounded-lg',
+				className
+			)}
+		>
+			<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
+			<AvatarFallback className="text-[10px] font-bold">
+				{data?.username?.slice(0, 2)}
+			</AvatarFallback>
+		</Avatar>
+	)
 }
 
 export function UidPermalink({
@@ -75,19 +75,24 @@ export function UidPermalink({
 				</Link>
 				{timeValue && (
 					<div className="text-muted-foreground">
-						{timeLinkTo ?
+						{timeLinkTo ? (
 							<Link
 								to={timeLinkTo}
 								params={timeLinkParams}
 								search={timeLinkSearch}
+								title={fullTimestamp(timeValue)}
 								className="s-link-hidden"
 							>
 								{action && (
 									<span className="text-muted-foreground"> {action} </span>
 								)}
-								{ago(timeValue)}
+								<time dateTime={timeValue}>{ago(timeValue)}</time>
 							</Link>
-						:	ago(timeValue)}
+						) : (
+							<time dateTime={timeValue} title={fullTimestamp(timeValue)}>
+								{ago(timeValue)}
+							</time>
+						)}
 					</div>
 				)}
 			</div>
@@ -143,23 +148,26 @@ export function UidPermalinkInline({
 					<span className="font-medium">{data.username}</span>
 				</Link>
 				{timeValue && (
-					<>
-						<div className="text-muted-foreground">
-							{timeLinkTo ?
-								<Link
-									to={timeLinkTo}
-									params={timeLinkParams}
-									search={timeLinkSearch}
-									className="s-link-hidden hover:underline"
-								>
-									{action && (
-										<span className="text-muted-foreground">{action} </span>
-									)}
-									/ {ago(timeValue)}
-								</Link>
-							:	ago(timeValue)}
-						</div>
-					</>
+					<div className="text-muted-foreground">
+						{timeLinkTo ? (
+							<Link
+								to={timeLinkTo}
+								params={timeLinkParams}
+								search={timeLinkSearch}
+								title={fullTimestamp(timeValue)}
+								className="s-link-hidden hover:underline"
+							>
+								{action && (
+									<span className="text-muted-foreground">{action} </span>
+								)}
+								/ <time dateTime={timeValue}>{ago(timeValue)}</time>
+							</Link>
+						) : (
+							<time dateTime={timeValue} title={fullTimestamp(timeValue)}>
+								{ago(timeValue)}
+							</time>
+						)}
+					</div>
 				)}
 			</div>
 		</div>
