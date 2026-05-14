@@ -1,7 +1,5 @@
 import type { uuid } from '@/types/main'
-import { useState } from 'react'
 import * as z from 'zod'
-import { toastSuccess } from '@/components/ui/sonner'
 
 import { LanguagesKnownSchema, MyProfileType } from '@/features/profile/schemas'
 import { Button } from '@/components/ui/button'
@@ -27,25 +25,20 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 		languages_known: profile.languages_known,
 	}
 	const uid: uuid = profile.uid
-	const [submitError, setSubmitError] = useState<Error | null>(null)
 
 	const form = useAppForm({
 		defaultValues: initialData,
 		validators: { onChange: ProfileEditFormSchema },
-		onSubmit: async ({ value, formApi }) => {
-			setSubmitError(null)
-			const tx = myProfileCollection.update(uid, (draft) => {
+		onSubmit: ({ value, formApi }) => {
+			// Fire-and-forget: optimistic profile change shows instantly. The
+			// onUpdate handler in myProfileCollection owns the error toast; on
+			// rollback the previous values come back via useLiveQuery.
+			myProfileCollection.update(uid, (draft) => {
 				draft.username = value.username
 				draft.avatar_path = value.avatar_path ?? ''
 				draft.languages_known = value.languages_known
 			})
-			try {
-				await tx.isPersisted.promise
-				toastSuccess(`Successfully updated your profile`)
-				formApi.reset(value)
-			} catch (err) {
-				setSubmitError(err as Error)
-			}
+			formApi.reset(value)
 		},
 	})
 
@@ -87,12 +80,6 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 						Reset
 					</Button>
 				</div>
-				<form.AppForm>
-					<form.FormAlert
-						error={submitError}
-						text="Error trying to update your profile"
-					/>
-				</form.AppForm>
 			</div>
 		</form>
 	)

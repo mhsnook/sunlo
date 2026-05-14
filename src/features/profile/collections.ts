@@ -10,6 +10,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { toastError } from '@/components/ui/sonner'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -58,16 +59,21 @@ export const myProfileCollection = createCollection(
 		startSync: false,
 		schema: MyProfileSchema,
 		onUpdate: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('user_profile')
-						.update(m.changes)
-						.eq('uid', m.original.uid)
-						.throwOnError()
+			try {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('user_profile')
+							.update(m.changes)
+							.eq('uid', m.original.uid)
+							.throwOnError()
+					)
 				)
-			)
-			return { refetch: false }
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to save your profile — please try again')
+				throw err
+			}
 		},
 	})
 )

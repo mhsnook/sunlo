@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -24,14 +23,10 @@ export function DeleteCommentDialog({
 
 	const deleteComment = () => {
 		setOpen(false)
-		const tx = commentsCollection.delete(comment.id)
-		tx.isPersisted.promise.then(
-			() => toastSuccess('Comment deleted'),
-			(err: unknown) => {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to delete comment: ${message}`)
-			}
-		)
+		// Fire-and-forget. The comment vanishes from the thread optimistically.
+		// Error toast lives in commentsCollection.onDelete; on rollback the row
+		// reappears.
+		commentsCollection.delete(comment.id)
 	}
 
 	return (

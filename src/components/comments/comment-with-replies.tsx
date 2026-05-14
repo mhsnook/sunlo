@@ -58,7 +58,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 
 	return (
 		<div
-			className={`${
+			className={`animate-in fade-in slide-in-from-top-1 duration-300 ${
 				isFocused
 					? 'border-primary bg-card/50 rounded border border-s-2'
 					: hasHighlightedReply

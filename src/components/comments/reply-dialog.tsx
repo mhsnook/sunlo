@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
 import * as z from 'zod'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 
 import type { uuid } from '@/types/main'
 import { Button } from '@/components/ui/button'
@@ -9,11 +8,7 @@ import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog
 import { Separator } from '@/components/ui/separator'
 import { MarkdownHint, createComment } from './comment-dialog'
 import { useUserId } from '@/lib/use-auth'
-import {
-	commentPhraseLinksCollection,
-	commentUpvotesCollection,
-	commentsCollection,
-} from '@/features/requests/collections'
+import { commentsCollection } from '@/features/requests/collections'
 import { useOneComment } from '@/features/requests/hooks'
 import { type RequestCommentType } from '@/features/requests/schemas'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
@@ -151,37 +146,26 @@ function NewReplyForm({
 	const form = useAppForm({
 		defaultValues: { content: '' },
 		validators: { onChange: ReplyFormSchema },
-		onSubmit: async ({ value, formApi }) => {
+		onSubmit: ({ value, formApi }) => {
 			if (!userId) return
-			try {
-				await Promise.all([
-					commentsCollection.preload(),
-					commentUpvotesCollection.preload(),
-					commentPhraseLinksCollection.preload(),
-				])
-				const commentId = crypto.randomUUID()
-				const tx = createComment({
-					commentId,
-					requestId,
-					uid: userId,
-					content: value.content,
-					parentCommentId,
-					phraseLinks: [],
-				})
-				await tx.isPersisted.promise
-				void navigate({
-					to: '/learn/$lang/requests/$id',
-					params: { lang, id: requestId },
-					search: { focus: parentCommentId },
-				})
-				toastSuccess('Reply posted!')
-				formApi.reset()
-				onClose()
-			} catch (err) {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to post reply: ${message}`)
-				console.error(err)
-			}
+			// Fire-and-forget. Action mutationFn owns the error toast and
+			// optimistic rollback.
+			const commentId = crypto.randomUUID()
+			createComment({
+				commentId,
+				requestId,
+				uid: userId,
+				content: value.content,
+				parentCommentId,
+				phraseLinks: [],
+			})
+			void navigate({
+				to: '/learn/$lang/requests/$id',
+				params: { lang, id: requestId },
+				search: { focus: parentCommentId },
+			})
+			formApi.reset()
+			onClose()
 		},
 	})
 
@@ -221,20 +205,13 @@ function EditReplyForm({
 	const form = useAppForm({
 		defaultValues: { content: comment.content },
 		validators: { onChange: ReplyFormSchema },
-		onSubmit: async ({ value }) => {
-			try {
-				const tx = commentsCollection.update(comment.id, (draft) => {
-					draft.content = value.content
-					draft.updated_at = new Date().toISOString()
-				})
-				await tx.isPersisted.promise
-				toastSuccess('Reply updated!')
-				onClose()
-			} catch (err) {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to update reply: ${message}`)
-				console.error(err)
-			}
+		onSubmit: ({ value }) => {
+			// Fire-and-forget. Error toast lives in commentsCollection.onUpdate.
+			commentsCollection.update(comment.id, (draft) => {
+				draft.content = value.content
+				draft.updated_at = new Date().toISOString()
+			})
+			onClose()
 		},
 	})
 

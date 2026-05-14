@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
 	AlertDialog,
@@ -26,22 +25,16 @@ export function DeleteRequestDialog({
 
 	const deleteRequest = () => {
 		setOpen(false)
-		const tx = phraseRequestsCollection.update(request.id, (draft) => {
+		// Fire-and-forget: the optimistic soft-delete removes the row from
+		// phraseRequestsActive immediately. Error toast lives in
+		// phraseRequestsCollection.onUpdate; on rollback the row reappears.
+		phraseRequestsCollection.update(request.id, (draft) => {
 			draft.deleted = true
 		})
-		tx.isPersisted.promise.then(
-			() => {
-				toastSuccess('Request deleted')
-				void navigate({
-					to: '/learn/$lang',
-					params: { lang: request.lang },
-				})
-			},
-			(err: unknown) => {
-				const message = err instanceof Error ? err.message : 'unknown error'
-				toastError(`Failed to delete request: ${message}`)
-			}
-		)
+		void navigate({
+			to: '/learn/$lang',
+			params: { lang: request.lang },
+		})
 	}
 
 	return (

@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
@@ -10,6 +9,7 @@ import {
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
 import {
+	PhraseRequestSchema,
 	PhraseRequestType,
 	RequestPhraseFormSchema,
 	requestPromptPlaceholders,
@@ -18,7 +18,7 @@ import { useRequest } from '@/features/requests/hooks'
 import { useOneRandomly } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/components/form'
-import { toastSuccess, toastError } from '@/components/ui/sonner'
+import { toastError } from '@/components/ui/sonner'
 import type { uuid } from '@/types/main'
 
 type CreateInput = {
@@ -44,14 +44,24 @@ const createRequest = createOptimisticAction<CreateInput>({
 		phraseRequestUpvotesCollection.insert({ request_id: id })
 	},
 	mutationFn: async ({ id, prompt, lang, userId }) => {
-		await supabase
-			.from('phrase_request')
-			.insert({ id, prompt, lang, requester_uid: userId })
-			.throwOnError()
-		await Promise.all([
-			phraseRequestsCollection.utils.refetch(),
-			phraseRequestUpvotesCollection.utils.refetch(),
-		])
+		try {
+			const { data: inserted } = await supabase
+				.from('phrase_request')
+				.insert({ id, prompt, lang, requester_uid: userId })
+				.select()
+				.single()
+				.throwOnError()
+			// inserted.upvote_count is 0 (pre-trigger); override to 1 to match
+			// the DB state after the auto-upvote trigger fires.
+			phraseRequestsCollection.utils.writeInsert({
+				...PhraseRequestSchema.parse(inserted),
+				upvote_count: 1,
+			})
+			phraseRequestUpvotesCollection.utils.writeInsert({ request_id: id })
+		} catch (err) {
+			toastError('Failed to post your request — please try again')
+			throw err
+		}
 	},
 })
 
@@ -75,51 +85,31 @@ export function RequestForm({
 	const invalidateFeed = useInvalidateFeed()
 	const { data: request } = useRequest(requestId ?? '')
 	const isEditing = !!requestId
-	const [submitError, setSubmitError] = useState<Error | null>(null)
 
 	const form = useAppForm({
 		defaultValues: { prompt: request?.prompt ?? '' },
 		validators: { onChange: RequestPhraseFormSchema },
-		onSubmit: async ({ value, formApi }) => {
-			setSubmitError(null)
-			try {
-				if (isEditing) {
-					const tx = phraseRequestsCollection.update(requestId, (draft) => {
-						draft.prompt = value.prompt
-					})
-					await tx.isPersisted.promise
-					const updated = phraseRequestsCollection.get(requestId)
-					toastSuccess('Request updated!')
-					if (updated) onSuccess?.(updated)
-				} else {
-					await Promise.all([
-						phraseRequestsCollection.preload(),
-						phraseRequestUpvotesCollection.preload(),
-					])
-					const id = crypto.randomUUID()
-					const tx = createRequest({
-						id,
-						prompt: value.prompt,
-						lang,
-						userId: userId!,
-					})
-					await tx.isPersisted.promise
-					const created = phraseRequestsCollection.get(id)
-					invalidateFeed(lang)
-					toastSuccess('Your request has been posted!')
-					if (created) onSuccess?.(created)
-				}
-				formApi.reset()
-			} catch (err) {
-				const error = err instanceof Error ? err : new Error('unknown error')
-				setSubmitError(error)
-				toastError(
-					isEditing
-						? 'There was an error updating your request.'
-						: 'There was an error posting your request.'
-				)
-				console.error(error)
+		onSubmit: ({ value, formApi }) => {
+			if (isEditing) {
+				// Fire-and-forget edit. Error toast lives in phraseRequestsCollection.onUpdate.
+				phraseRequestsCollection.update(requestId, (draft) => {
+					draft.prompt = value.prompt
+				})
+				const updated = phraseRequestsCollection.get(requestId)
+				if (updated) onSuccess?.(updated)
+			} else {
+				if (!userId) return
+				const id = crypto.randomUUID()
+				createRequest({ id, prompt: value.prompt, lang, userId })
+				const created = phraseRequestsCollection.get(id)
+				invalidateFeed(lang)
+				// Hand the optimistic row to the parent — it'll navigate to
+				// /requests/[id]. If the action rolls back, useRequest on that
+				// page returns undefined and the page renders its "couldn't find
+				// that request" view. The action's mutationFn owns the error toast.
+				if (created) onSuccess?.(created)
 			}
+			formApi.reset()
 		},
 	})
 
@@ -160,17 +150,6 @@ export function RequestForm({
 					</Button>
 				)}
 			</div>
-
-			<form.AppForm>
-				<form.FormAlert
-					error={submitError}
-					text={
-						isEditing
-							? 'There was an error updating your request.'
-							: 'There was an error posting your request.'
-					}
-				/>
-			</form.AppForm>
 		</form>
 	)
 }

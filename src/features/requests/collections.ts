@@ -15,6 +15,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { toastError } from '@/components/ui/sonner'
 
 export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
@@ -35,16 +36,21 @@ export const phraseRequestsCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onUpdate: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('phrase_request')
-						.update(m.changes)
-						.eq('id', m.original.id)
-						.throwOnError()
+			try {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('phrase_request')
+							.update(m.changes)
+							.eq('id', m.original.id)
+							.throwOnError()
+					)
 				)
-			)
-			return { refetch: false }
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to save your changes — please try again')
+				throw err
+			}
 		},
 	})
 )
@@ -85,33 +91,43 @@ export const commentsCollection = createCollection(
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
 		onUpdate: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('request_comment')
-						.update(m.changes)
-						.eq('id', m.original.id)
-						.throwOnError()
+			try {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('request_comment')
+							.update(m.changes)
+							.eq('id', m.original.id)
+							.throwOnError()
+					)
 				)
-			)
-			return { refetch: false }
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to save your comment — please try again')
+				throw err
+			}
 		},
 		onDelete: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('request_comment')
-						.delete()
-						.eq('id', m.original.id)
-						.throwOnError()
+			try {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('request_comment')
+							.delete()
+							.eq('id', m.original.id)
+							.throwOnError()
+					)
 				)
-			)
-			// Cascade-deleted replies and phrase links linger in the local
-			// collections until the next stale refetch, but they don't render
-			// (orphaned replies have no parent anchor; orphaned phrase links
-			// filter out of the provenance inner-join). Skipping the full-table
-			// refetch is worth that small inconsistency.
-			return { refetch: false }
+				// Cascade-deleted replies and phrase links linger in the local
+				// collections until the next stale refetch, but they don't render
+				// (orphaned replies have no parent anchor; orphaned phrase links
+				// filter out of the provenance inner-join). Skipping the full-table
+				// refetch is worth that small inconsistency.
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to delete comment — please try again')
+				throw err
+			}
 		},
 	})
 )

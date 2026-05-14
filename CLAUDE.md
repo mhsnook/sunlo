@@ -341,6 +341,65 @@ Treat `collection.utils.refetch()` like `useEffect`: a code smell that needs a j
 
 If you do call `refetch()` against a `startSync: false` user collection that's small (one-column-of-IDs tables like `*_upvote`), note that in a comment — it's much cheaper than refetching a public table, but still worth flagging.
 
+#### Fire-and-forget mutations — don't await `tx.isPersisted.promise` before UI work
+
+The point of optimistic mutations is that the UI advances synchronously when `onMutate` fires. If you `await tx.isPersisted.promise` before closing a dialog, navigating, or resetting a form, you've reintroduced the "wait for the server" UX the new pattern is meant to retire — local state already has the new value; the round-trip is just confirmation.
+
+✅ **Fire the mutation, then move on:**
+
+```typescript
+const handleClick = () => {
+	myProfileCollection.update(uid, (draft) => {
+		draft.font_preference = 'dyslexic'
+	})
+	// No .then, no .catch, no await. The collection's onUpdate handler owns
+	// the error toast. On rollback the previous value comes back automatically
+	// via useLiveQuery.
+}
+```
+
+❌ **Don't:**
+
+```typescript
+const handleClick = async () => {
+	const tx = myProfileCollection.update(uid, (draft) => {
+		draft.font_preference = 'dyslexic'
+	})
+	await tx.isPersisted.promise // ← waits for server round-trip
+	toastSuccess('Font updated') // ← UI already reflects the change
+	closeDialog() // ← should happen synchronously
+}
+```
+
+**Error handling lives in the collection handler (or action `mutationFn`), not at every call site.** Each `onInsert / onUpdate / onDelete` wraps its supabase calls in `try { ... } catch (err) { toastError('...'); throw err }`. The throw rolls the optimistic state back; the toast tells the user. Call sites stop needing `.catch`.
+
+```typescript
+// features/profile/collections.ts
+onUpdate: async ({ transaction }) => {
+	try {
+		await Promise.all(
+			transaction.mutations.map((m) =>
+				supabase
+					.from('user_profile')
+					.update(m.changes)
+					.eq('uid', m.original.uid)
+					.throwOnError()
+			)
+		)
+		return { refetch: false }
+	} catch (err) {
+		toastError('Failed to save your profile — please try again')
+		throw err
+	}
+}
+```
+
+Same shape inside `createOptimisticAction.mutationFn`: try the supabase/RPC calls + post-write `writeInsert`/`writeUpdate`, catch and toast a context-specific message, re-throw to roll back.
+
+**When success toasts are appropriate:** rarely. If the optimistic change is visible (a card appeared, a row got struck through, a setting flipped), the UI already says "it worked." Reserve success toasts for actions whose effect is invisible from the current screen (e.g. a request posted that takes you to a new page — even there, the new page's existence is the success signal).
+
+**Navigating-to-the-new-thing on insert:** fire the action, navigate immediately with the optimistic row's id, let the destination page's normal "couldn't find that X" branch handle the rollback case. The error toast from the action's `mutationFn` is enough to tell the user "we lost it."
+
 **Deprecated** — do not use for new code, and migrate when touching old code (tracked by the `transform` label):
 
 ```typescript
