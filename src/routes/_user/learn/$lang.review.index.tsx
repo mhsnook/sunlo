@@ -1,10 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { decksCollection } from '@/features/deck/collections'
+import { decksQuery } from '@/features/deck/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	loader: async ({ context }) => {
 		if (context.auth.isAuth) {
-			await decksCollection.preload()
+			await queryClient.ensureQueryData(decksQuery)
 		}
 	},
 })

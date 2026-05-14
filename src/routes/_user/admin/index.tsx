@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { languagesCollection } from '@/features/languages/collections'
+import { languagesQuery } from '@/features/languages/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/admin/')({
 	beforeLoad: () => ({
@@ -9,6 +10,6 @@ export const Route = createFileRoute('/_user/admin/')({
 		},
 	}),
 	loader: async () => {
-		await languagesCollection.preload()
+		await queryClient.ensureQueryData(languagesQuery)
 	},
 })

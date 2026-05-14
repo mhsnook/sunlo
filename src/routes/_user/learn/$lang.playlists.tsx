@@ -1,18 +1,19 @@
 import {
-	phrasePlaylistsCollection,
-	playlistPhraseLinksCollection,
-	phrasePlaylistUpvotesCollection,
-} from '@/features/playlists/collections'
+	phrasePlaylistsQuery,
+	playlistPhraseLinksQuery,
+	phrasePlaylistUpvotesQuery,
+} from '@/features/playlists/queries'
+import { queryClient } from '@/lib/query-client'
 import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists')({
 	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
-			phrasePlaylistsCollection.preload(),
-			playlistPhraseLinksCollection.preload(),
+			queryClient.ensureQueryData(phrasePlaylistsQuery),
+			queryClient.ensureQueryData(playlistPhraseLinksQuery),
 		]
 		if (context.auth.isAuth) {
-			preloads.push(phrasePlaylistUpvotesCollection.preload())
+			preloads.push(queryClient.ensureQueryData(phrasePlaylistUpvotesQuery))
 		}
 		await Promise.all(preloads)
 	},

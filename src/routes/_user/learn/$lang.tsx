@@ -1,22 +1,20 @@
 import { createFileRoute, notFound } from '@tanstack/react-router'
 
 import languages from '@/lib/languages'
-import { langTagsCollection } from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { cardsCollection, decksCollection } from '@/features/deck/collections'
-import { publicProfilesCollection } from '@/features/profile/collections'
+import { langTagsQuery } from '@/features/languages/queries'
+import { phrasesQuery } from '@/features/phrases/queries'
+import { cardsQuery, decksQuery } from '@/features/deck/queries'
+import { publicProfilesQuery } from '@/features/profile/queries'
+import { cardReviewsQuery, reviewDaysQuery } from '@/features/review/queries'
 import {
-	cardReviewsCollection,
-	reviewDaysCollection,
-} from '@/features/review/collections'
+	phrasePlaylistsQuery,
+	playlistPhraseLinksQuery,
+} from '@/features/playlists/queries'
 import {
-	phrasePlaylistsCollection,
-	playlistPhraseLinksCollection,
-} from '@/features/playlists/collections'
-import {
-	phraseRequestsCollection,
-	phraseRequestUpvotesCollection,
-} from '@/features/requests/collections'
+	phraseRequestsQuery,
+	phraseRequestUpvotesQuery,
+} from '@/features/requests/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/learn/$lang')({
 	beforeLoad: ({ params: { lang }, context }) => {
@@ -50,20 +48,20 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 	},
 	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
-			langTagsCollection.preload(),
-			phrasesCollection.preload(),
-			publicProfilesCollection.preload(),
-			phrasePlaylistsCollection.preload(),
-			playlistPhraseLinksCollection.preload(),
-			phraseRequestsCollection.preload(),
+			queryClient.ensureQueryData(langTagsQuery),
+			queryClient.ensureQueryData(phrasesQuery),
+			queryClient.ensureQueryData(publicProfilesQuery),
+			queryClient.ensureQueryData(phrasePlaylistsQuery),
+			queryClient.ensureQueryData(playlistPhraseLinksQuery),
+			queryClient.ensureQueryData(phraseRequestsQuery),
 		]
 		if (context.auth.isAuth) {
 			preloads.push(
-				reviewDaysCollection.preload(),
-				cardReviewsCollection.preload(),
-				cardsCollection.preload(),
-				decksCollection.preload(),
-				phraseRequestUpvotesCollection.preload()
+				queryClient.ensureQueryData(reviewDaysQuery),
+				queryClient.ensureQueryData(cardReviewsQuery),
+				queryClient.ensureQueryData(cardsQuery),
+				queryClient.ensureQueryData(decksQuery),
+				queryClient.ensureQueryData(phraseRequestUpvotesQuery)
 			)
 		}
 		await Promise.all(preloads)

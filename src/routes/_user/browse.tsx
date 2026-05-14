@@ -1,15 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { languagesQuery, langTagsQuery } from '@/features/languages/queries'
+import { phrasesQuery } from '@/features/phrases/queries'
+import { phraseRequestsQuery } from '@/features/requests/queries'
 import {
-	languagesCollection,
-	langTagsCollection,
-} from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import {
-	phrasePlaylistsCollection,
-	playlistPhraseLinksCollection,
-} from '@/features/playlists/collections'
+	phrasePlaylistsQuery,
+	playlistPhraseLinksQuery,
+} from '@/features/playlists/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/browse')({
 	beforeLoad: ({ context }) => ({
@@ -24,12 +22,12 @@ export const Route = createFileRoute('/_user/browse')({
 	}),
 	loader: async () => {
 		await Promise.all([
-			languagesCollection.preload(),
-			langTagsCollection.preload(),
-			phraseRequestsCollection.preload(),
-			phrasePlaylistsCollection.preload(),
-			phrasesCollection.preload(),
-			playlistPhraseLinksCollection.preload(),
+			queryClient.ensureQueryData(languagesQuery),
+			queryClient.ensureQueryData(langTagsQuery),
+			queryClient.ensureQueryData(phraseRequestsQuery),
+			queryClient.ensureQueryData(phrasePlaylistsQuery),
+			queryClient.ensureQueryData(phrasesQuery),
+			queryClient.ensureQueryData(playlistPhraseLinksQuery),
 		])
 	},
 })

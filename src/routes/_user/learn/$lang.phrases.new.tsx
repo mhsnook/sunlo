@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { cardsCollection } from '@/features/deck/collections'
+import { cardsQuery } from '@/features/deck/queries'
+import { queryClient } from '@/lib/query-client'
 
 export interface SearchParams {
 	text?: string
@@ -19,7 +20,7 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/new')({
 	}),
 	loader: async ({ context }) => {
 		if (context.auth.isAuth) {
-			await cardsCollection.preload()
+			await queryClient.ensureQueryData(cardsQuery)
 		}
 	},
 })

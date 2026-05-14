@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import languages from '@/lib/languages'
-import { phraseRequestsCollection } from '@/features/requests/collections'
+import { phraseRequestsQuery } from '@/features/requests/queries'
+import { queryClient } from '@/lib/query-client'
 
 import { UserContributionsTabs } from './-contributions-tabs'
 
@@ -13,6 +14,6 @@ export const Route = createFileRoute('/_user/learn/$lang/contributions')({
 		},
 	}),
 	loader: async () => {
-		await phraseRequestsCollection.preload()
+		await queryClient.ensureQueryData(phraseRequestsQuery)
 	},
 })

@@ -9,22 +9,24 @@ import {
 	PhrasePlaylistUpvoteSchema,
 	type PhrasePlaylistUpvoteType,
 } from './schemas'
+import {
+	phrasePlaylistsQuery,
+	playlistPhraseLinksQuery,
+	phrasePlaylistUpvotesQuery,
+} from './queries'
 import { queryClient } from '@/lib/query-client'
-import supabase from '@/lib/supabase-client'
+
+export {
+	phrasePlaylistsQuery,
+	playlistPhraseLinksQuery,
+	phrasePlaylistUpvotesQuery,
+}
 
 export const phrasePlaylistsCollection = createCollection(
 	queryCollectionOptions({
 		id: 'phrase_playlist',
-		queryKey: ['public', 'playlist'],
-		queryFn: async () => {
-			console.log(`Loading phrasePlaylistsCollection`)
-			const { data } = await supabase
-				.from('phrase_playlist')
-				.select()
-				.throwOnError()
-
-			return data
-		},
+		queryKey: phrasePlaylistsQuery.queryKey,
+		queryFn: phrasePlaylistsQuery.queryFn!,
 		getKey: (item: PhrasePlaylistType) => item.id,
 		queryClient,
 		schema: PhrasePlaylistSchema,
@@ -36,16 +38,8 @@ export const phrasePlaylistsCollection = createCollection(
 export const playlistPhraseLinksCollection = createCollection(
 	queryCollectionOptions({
 		id: 'playlist_phrase_links',
-		queryKey: ['public', 'playlist_phrase_link'],
-		queryFn: async () => {
-			console.log(`Loading playlistPhraseLinksCollection`)
-			const { data } = await supabase
-				.from('playlist_phrase_link')
-				.select()
-				.throwOnError()
-
-			return data
-		},
+		queryKey: playlistPhraseLinksQuery.queryKey,
+		queryFn: playlistPhraseLinksQuery.queryFn!,
 		getKey: (item: PlaylistPhraseLinkType) => item.id,
 		queryClient,
 		schema: PlaylistPhraseLinkSchema,
@@ -57,15 +51,8 @@ export const playlistPhraseLinksCollection = createCollection(
 export const phrasePlaylistUpvotesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'phrase_playlist_upvotes',
-		queryKey: ['user', 'phrase_playlist_upvote'],
-		queryFn: async () => {
-			console.log(`Loading phrasePlaylistUpvotesCollection`)
-			const { data } = await supabase
-				.from('phrase_playlist_upvote')
-				.select('playlist_id')
-				.throwOnError()
-			return data?.map((item) => PhrasePlaylistUpvoteSchema.parse(item)) ?? []
-		},
+		queryKey: phrasePlaylistUpvotesQuery.queryKey,
+		queryFn: phrasePlaylistUpvotesQuery.queryFn!,
 		getKey: (item: PhrasePlaylistUpvoteType) => item.playlist_id,
 		queryClient,
 		schema: PhrasePlaylistUpvoteSchema,

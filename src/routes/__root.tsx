@@ -7,13 +7,15 @@ import {
 	useNavigate,
 } from '@tanstack/react-router'
 import { OctagonMinus } from 'lucide-react'
-import { Toasters } from '@/components/ui/sonner'
 import type { AuthState } from '@/lib/use-auth'
-import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import { TitleBar } from '@/types/main'
+
+const Toasters = lazy(() =>
+	import('@/components/ui/sonner').then((m) => ({ default: m.Toasters }))
+)
 
 // Dev-only identity switcher. The ternary collapses to null in production
 // builds (import.meta.env.DEV is statically replaced), so the dynamic
@@ -45,17 +47,19 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootComponent() {
 	return (
-		<SidebarProvider>
+		<>
 			<div className="@container mx-auto w-full">
 				<Outlet />
 			</div>
-			<Toasters />
+			<Suspense fallback={null}>
+				<Toasters />
+			</Suspense>
 			{DevIdentitySwitcher ? (
 				<Suspense fallback={null}>
 					<DevIdentitySwitcher />
 				</Suspense>
 			) : null}
-		</SidebarProvider>
+		</>
 	)
 }
 

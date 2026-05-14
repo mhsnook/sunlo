@@ -1,12 +1,10 @@
 import type { uuid } from '@/types/main'
 import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
 import type { DeckMetaType } from '@/features/deck/schemas'
-import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useState } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs))
+	return clsx(inputs)
 }
 
 export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
@@ -65,10 +63,11 @@ export function round(num: number, places: number = 2): number {
  * precise elapsed time matters (e.g. computing retrievability decay).
  */
 export function dateDiff(prev_at: string | Date, later_at?: string | Date) {
-	const later: Date =
-		!later_at ? new Date()
-		: typeof later_at === 'string' ? new Date(later_at)
-		: later_at
+	const later: Date = !later_at
+		? new Date()
+		: typeof later_at === 'string'
+			? new Date(later_at)
+			: later_at
 	const prev: Date = typeof prev_at === 'string' ? new Date(prev_at) : prev_at
 	// @ts-expect-error it's actually fine to subract date objects like ints
 	return (later - prev) / 1000 / 24 / 60 / 60
@@ -82,10 +81,11 @@ export function sessionDaysDiff(
 	prev_at: string | Date,
 	later_at?: string | Date
 ): number {
-	const later =
-		!later_at ? new Date()
-		: typeof later_at === 'string' ? new Date(later_at)
-		: later_at
+	const later = !later_at
+		? new Date()
+		: typeof later_at === 'string'
+			? new Date(later_at)
+			: later_at
 	const prev = typeof prev_at === 'string' ? new Date(prev_at) : prev_at
 
 	// Shift both by -4 hours so 4am becomes the day boundary
@@ -171,22 +171,20 @@ export const sortDecksByCreation = (
 	a: Partial<DeckMetaType> & { created_at: string; lang: string },
 	b: Partial<DeckMetaType> & { created_at: string; lang: string }
 ) =>
-	a.created_at > b.created_at ? 1
-	: a.created_at < b.created_at ? -1
-	: a.lang > b.lang ? 1
-	: -1
+	a.created_at > b.created_at
+		? 1
+		: a.created_at < b.created_at
+			? -1
+			: a.lang > b.lang
+				? 1
+				: -1
 
 // sort DESC most recent first
 export const sortDecksByActivity = (a: DeckMetaType, b: DeckMetaType) => {
 	const aDate = a.most_recent_review_at ?? a.created_at
 	const bDate = b.most_recent_review_at ?? b.created_at
 
-	return (
-		aDate > bDate ? -1
-		: aDate < bDate ? 1
-		: a.lang > b.lang ? -1
-		: 1
-	)
+	return aDate > bDate ? -1 : aDate < bDate ? 1 : a.lang > b.lang ? -1 : 1
 }
 
 export const preventDefaultCallback = (e: { preventDefault: () => void }) =>
@@ -199,18 +197,25 @@ export function isNativeAppUserAgent() {
 	)
 }
 
+// Sonner is lazy-imported here so neither utils.ts (imported everywhere) nor
+// callers of copyLink pull the sonner library into the eager bundle.
+const lazyToast = (kind: 'success' | 'error', msg: string) =>
+	void import('@/components/ui/sonner').then((m) =>
+		kind === 'success' ? m.toastSuccess(msg) : m.toastError(msg)
+	)
+
 export function copyLink(url?: string, fallback = true) {
-	if (!navigator?.clipboard) toastError('Failed to copy link')
+	if (!navigator?.clipboard) lazyToast('error', 'Failed to copy link')
 	if (!fallback && !url) {
 		throw new Error('No url to copy')
 	} else
 		navigator.clipboard
 			.writeText(url ?? window?.location?.href)
 			.then(() => {
-				toastSuccess('Link copied to clipboard')
+				lazyToast('success', 'Link copied to clipboard')
 			})
 			.catch(() => {
-				toastError('Failed to copy link')
+				lazyToast('error', 'Failed to copy link')
 			})
 }
 

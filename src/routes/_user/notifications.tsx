@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { notificationsCollection } from '@/features/notifications/collections'
-import { publicProfilesCollection } from '@/features/profile/collections'
+import { notificationsQuery } from '@/features/notifications/queries'
+import { publicProfilesQuery } from '@/features/profile/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/notifications')({
 	beforeLoad: () => ({
@@ -11,8 +12,8 @@ export const Route = createFileRoute('/_user/notifications')({
 	loader: async ({ context }) => {
 		if (!context.auth.isAuth) return
 		await Promise.all([
-			notificationsCollection.preload(),
-			publicProfilesCollection.preload(),
+			queryClient.ensureQueryData(notificationsQuery),
+			queryClient.ensureQueryData(publicProfilesQuery),
 		])
 	},
 })

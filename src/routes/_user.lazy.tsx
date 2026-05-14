@@ -1,7 +1,11 @@
 import { lazy, Suspense, useEffect, useRef } from 'react'
 import { createLazyFileRoute, Outlet, useMatches } from '@tanstack/react-router'
 import { cn } from '@/lib/utils'
-import { SidebarInset, useSidebar } from '@/components/ui/sidebar'
+import {
+	SidebarInset,
+	SidebarProvider,
+	useSidebar,
+} from '@/components/ui/sidebar'
 import { Loader } from '@/components/ui/loader'
 import Navbar from '@/components/navs/navbar'
 
@@ -25,6 +29,14 @@ export const Route = createLazyFileRoute('/_user')({
 })
 
 function UserLayout() {
+	return (
+		<SidebarProvider>
+			<UserLayoutInner />
+		</SidebarProvider>
+	)
+}
+
+function UserLayoutInner() {
 	const matches = useMatches()
 	// Check if any route has enabled focus mode (e.g. review/go)
 	const focusMode = matches.some(

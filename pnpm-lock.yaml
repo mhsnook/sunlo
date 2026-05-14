@@ -198,9 +198,6 @@ importers:
       rollup-plugin-visualizer:
         specifier: ^7.0.1
         version: 7.0.1(rollup@4.60.1)
-      tailwind-merge:
-        specifier: ^2.6.0
-        version: 2.6.0
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
@@ -3211,9 +3208,6 @@ packages:
 
   tabbable@6.4.0:
     resolution: {integrity: sha512-05PUHKSNE8ou2dwIxTngl4EzcnsCDZGJ/iCLtDflR/SHB/ny14rXc+qU5P4mG9JkusiV7EivzY9Mhm55AzAvCg==}
-
-  tailwind-merge@2.6.0:
-    resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
 
   tailwind-oklch@0.5.0:
     resolution: {integrity: sha512-igRFgzmlT7+NbSxBEUenccu8uMDPqOIiXsXvkVGlaVP7KkWg8FH9RWfHdIeJ69pdKvI6mhoQspNnj1fK9k9YQg==}
@@ -6559,8 +6553,6 @@ snapshots:
       has-flag: 4.0.0
 
   tabbable@6.4.0: {}
-
-  tailwind-merge@2.6.0: {}
 
   tailwind-oklch@0.5.0(tailwindcss@4.1.18):
     dependencies:

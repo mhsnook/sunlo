@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { chatMessagesCollection } from '@/features/social/collections'
+import { chatMessagesQuery } from '@/features/social/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/friends/chats')({
 	beforeLoad: () => ({
@@ -12,7 +13,7 @@ export const Route = createFileRoute('/_user/friends/chats')({
 	loader: async ({ context }) => {
 		// Only preload if authenticated to ensure RLS works correctly
 		if (context.auth.isAuth) {
-			await chatMessagesCollection.preload()
+			await queryClient.ensureQueryData(chatMessagesQuery)
 		}
 	},
 })

@@ -8,18 +8,34 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase, { pingSupabase } from '@/lib/supabase-client'
-import { myProfileCollection } from '@/features/profile/collections'
-import { decksCollection } from '@/features/deck/collections'
-import {
-	chatMessagesCollection,
-	friendSummariesCollection,
-} from '@/features/social/collections'
-import { clearUser } from '@/lib/collections/clear-user'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 async function checkAdminStatus(): Promise<boolean> {
 	const { data } = await supabase.from('admin_user').select('uid')
 	return (data?.length ?? 0) > 0
+}
+
+// Pulled lazily to keep @tanstack/db out of the eager bundle for visitors
+// who aren't logged in. The dynamic imports resolve as soon as auth state
+// changes, so logged-in users start fetching collection chunks immediately.
+async function refetchOnSignIn() {
+	const [
+		{ myProfileCollection },
+		{ decksCollection },
+		{ friendSummariesCollection, chatMessagesCollection },
+	] = await Promise.all([
+		import('@/features/profile/collections'),
+		import('@/features/deck/collections'),
+		import('@/features/social/collections'),
+	])
+	// Profile must load before isReady goes true so the _user loader
+	// finds the profile collection populated (avoids race condition).
+	await myProfileCollection.utils.refetch()
+	void decksCollection.utils.refetch()
+	void friendSummariesCollection.utils.refetch()
+	if (chatMessagesCollection.size > 0) {
+		void chatMessagesCollection.utils.refetch()
+	}
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -43,22 +59,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				// 'cleaned-up' status event that subscribed live queries log
 				// as an error — many components (e.g. NavUser) call useProfile()
 				// unconditionally, so their subscriptions persist past logout.
-				void clearUser()
+				void import('@/lib/collections/clear-user').then(({ clearUser }) =>
+					clearUser()
+				)
 				setIsAdmin(false)
 			}
 			// Refetch user collections only when logging in from a logged-out state
 			// (not on token refresh or other events that already have a user)
 			const isLoggingIn = !sessionState?.user.id && session?.user.id
 			if (isLoggingIn) {
-				// Profile must load before isReady goes true so the _user loader
-				// finds the profile collection populated (avoids race condition).
-				void myProfileCollection.utils.refetch().then(() => setIsReady(true))
-				void decksCollection.utils.refetch()
-				void friendSummariesCollection.utils.refetch()
-				// Refetch chat messages if previously loaded (for correct RLS filtering)
-				if (chatMessagesCollection.size > 0) {
-					void chatMessagesCollection.utils.refetch()
-				}
+				void refetchOnSignIn().then(() => setIsReady(true))
 				// Check admin status: RLS returns 0 rows for non-admins, 1 for admins
 				// Table not in generated types yet — run `pnpm types` after migration
 				void checkAdminStatus().then(setIsAdmin)

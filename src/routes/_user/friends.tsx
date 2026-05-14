@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
 import * as z from 'zod'
-import { publicProfilesCollection } from '@/features/profile/collections'
-import { friendSummariesCollection } from '@/features/social/collections'
+import { publicProfilesQuery } from '@/features/profile/queries'
+import { friendSummariesQuery } from '@/features/social/queries'
+import { queryClient } from '@/lib/query-client'
 
 const FriendsSearchParams = z.object({
 	search: z.boolean().optional(),
@@ -20,8 +21,8 @@ export const Route = createFileRoute('/_user/friends')({
 		// Only preload if authenticated
 		if (!context.auth.isAuth) return
 		await Promise.all([
-			friendSummariesCollection.preload(),
-			publicProfilesCollection.preload(),
+			queryClient.ensureQueryData(friendSummariesQuery),
+			queryClient.ensureQueryData(publicProfilesQuery),
 		])
 	},
 })

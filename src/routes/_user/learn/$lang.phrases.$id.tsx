@@ -1,7 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { cardsCollection } from '@/features/deck/collections'
-import { publicProfilesCollection } from '@/features/profile/collections'
+import { phrasesQuery } from '@/features/phrases/queries'
+import { cardsQuery } from '@/features/deck/queries'
+import { publicProfilesQuery } from '@/features/profile/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	beforeLoad: () => ({
@@ -11,11 +12,11 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	}),
 	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
-			phrasesCollection.preload(),
-			publicProfilesCollection.preload(),
+			queryClient.ensureQueryData(phrasesQuery),
+			queryClient.ensureQueryData(publicProfilesQuery),
 		]
 		if (context.auth.isAuth) {
-			preloads.push(cardsCollection.preload())
+			preloads.push(queryClient.ensureQueryData(cardsQuery))
 		}
 		await Promise.all(preloads)
 	},

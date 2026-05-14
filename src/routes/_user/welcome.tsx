@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { languagesCollection } from '@/features/languages/collections'
+import { phraseRequestsQuery } from '@/features/requests/queries'
+import { languagesQuery } from '@/features/languages/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/welcome')({
 	beforeLoad: () => ({
@@ -11,8 +12,8 @@ export const Route = createFileRoute('/_user/welcome')({
 	}),
 	loader: async () => {
 		await Promise.all([
-			phraseRequestsCollection.preload(),
-			languagesCollection.preload(),
+			queryClient.ensureQueryData(phraseRequestsQuery),
+			queryClient.ensureQueryData(languagesQuery),
 		])
 	},
 })

@@ -1,16 +1,17 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { phraseRequestsCollection } from '@/features/requests/collections'
-import { langTagsCollection } from '@/features/languages/collections'
-import { publicProfilesCollection } from '@/features/profile/collections'
+import { phrasesQuery } from '@/features/phrases/queries'
+import { phraseRequestsQuery } from '@/features/requests/queries'
+import { langTagsQuery } from '@/features/languages/queries'
+import { publicProfilesQuery } from '@/features/profile/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/admin/$lang')({
 	loader: async () => {
 		await Promise.all([
-			phrasesCollection.preload(),
-			phraseRequestsCollection.preload(),
-			langTagsCollection.preload(),
-			publicProfilesCollection.preload(),
+			queryClient.ensureQueryData(phrasesQuery),
+			queryClient.ensureQueryData(phraseRequestsQuery),
+			queryClient.ensureQueryData(langTagsQuery),
+			queryClient.ensureQueryData(publicProfilesQuery),
 		])
 	},
 })

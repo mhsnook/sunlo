@@ -2,11 +2,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import * as z from 'zod'
 import languages from '@/lib/languages'
 import {
-	commentsCollection,
-	commentPhraseLinksCollection,
-	commentUpvotesCollection,
-} from '@/features/comments/collections'
-import { toastNeutral } from '@/components/ui/sonner'
+	commentsQuery,
+	commentPhraseLinksQuery,
+	commentUpvotesQuery,
+} from '@/features/comments/queries'
+import { queryClient } from '@/lib/query-client'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	validateSearch: z.object({
@@ -21,18 +21,21 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 	}),
 	loader: async ({ context, location, cause }) => {
 		const preloads: Promise<unknown>[] = [
-			commentsCollection.preload(),
-			commentPhraseLinksCollection.preload(),
+			queryClient.ensureQueryData(commentsQuery),
+			queryClient.ensureQueryData(commentPhraseLinksQuery),
 		]
 		if (context.auth.isAuth) {
-			preloads.push(commentUpvotesCollection.preload())
+			preloads.push(queryClient.ensureQueryData(commentUpvotesQuery))
 		}
 		await Promise.all(preloads)
 		const rawFocus = new URLSearchParams(location.searchStr).get('focus')
 		if (rawFocus && !z.string().uuid().safeParse(rawFocus).success) {
 			if (cause === 'preload')
 				console.error('Malformed focus param in preload link:', rawFocus)
-			else toastNeutral("Couldn't find that comment")
+			else {
+				const { toastNeutral } = await import('@/components/ui/sonner')
+				toastNeutral("Couldn't find that comment")
+			}
 		}
 	},
 })

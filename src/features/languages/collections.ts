@@ -6,22 +6,16 @@ import {
 	LangTagSchema,
 	type LangTagType,
 } from './schemas'
+import { languagesQuery, langTagsQuery } from './queries'
 import { queryClient } from '@/lib/query-client'
-import supabase from '@/lib/supabase-client'
+
+export { languagesQuery, langTagsQuery }
 
 export const languagesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'languages',
-		queryKey: ['public', 'meta_language'],
-		queryFn: async () => {
-			console.log(`Loading languagesCollection`)
-			const { data } = await supabase
-				.from('meta_language')
-				.select()
-				.is('alias_of', null)
-				.throwOnError()
-			return data?.map((item) => LanguageSchema.parse(item)) ?? []
-		},
+		queryKey: languagesQuery.queryKey,
+		queryFn: languagesQuery.queryFn!,
 		getKey: (item: LanguageType) => item.lang,
 		schema: LanguageSchema,
 		queryClient,
@@ -31,13 +25,9 @@ export const languagesCollection = createCollection(
 export const langTagsCollection = createCollection(
 	queryCollectionOptions({
 		id: 'lang_tags',
-		queryKey: ['public', 'lang_tag'],
+		queryKey: langTagsQuery.queryKey,
+		queryFn: langTagsQuery.queryFn!,
 		getKey: (item: LangTagType) => item.id,
-		queryFn: async () => {
-			console.log(`Loading langTagsCollection`)
-			const { data } = await supabase.from('tag').select().throwOnError()
-			return data?.map((p) => LangTagSchema.parse(p)) ?? []
-		},
 		schema: LangTagSchema,
 		queryClient,
 	})

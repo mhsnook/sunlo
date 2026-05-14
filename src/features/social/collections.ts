@@ -6,21 +6,16 @@ import {
 	ChatMessageSchema,
 	type ChatMessageType,
 } from './schemas'
+import { friendSummariesQuery, chatMessagesQuery } from './queries'
 import { queryClient } from '@/lib/query-client'
-import supabase from '@/lib/supabase-client'
+
+export { friendSummariesQuery, chatMessagesQuery }
 
 export const friendSummariesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'friends',
-		queryKey: ['user', 'friend_summary'],
-		queryFn: async () => {
-			console.log(`Loading friendSummariesCollection`)
-			const { data } = await supabase
-				.from('friend_summary')
-				.select()
-				.throwOnError()
-			return data?.map((item) => FriendSummarySchema.parse(item)) ?? []
-		},
+		queryKey: friendSummariesQuery.queryKey,
+		queryFn: friendSummariesQuery.queryFn!,
 		getKey: (item: FriendSummaryType) => `${item.uid_less}--${item.uid_more}`,
 		queryClient,
 		startSync: false,
@@ -33,15 +28,8 @@ export const friendSummariesCollection = createCollection(
 export const chatMessagesCollection = createCollection(
 	queryCollectionOptions({
 		id: 'chat_messages',
-		queryKey: ['user', 'chat_message'],
-		queryFn: async () => {
-			console.log(`Loading chatMessagesCollection`)
-			const { data } = await supabase
-				.from('chat_message')
-				.select()
-				.throwOnError()
-			return data?.map((item) => ChatMessageSchema.parse(item)) ?? []
-		},
+		queryKey: chatMessagesQuery.queryKey,
+		queryFn: chatMessagesQuery.queryFn!,
 		getKey: (item: ChatMessageType) => item.id,
 		queryClient,
 		startSync: false,
