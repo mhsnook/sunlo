@@ -1699,16 +1699,19 @@ export type Database = {
 			public_profile: {
 				Row: {
 					avatar_path: string | null
+					languages_known: Json | null
 					uid: string | null
 					username: string | null
 				}
 				Insert: {
 					avatar_path?: string | null
+					languages_known?: Json | null
 					uid?: string | null
 					username?: string | null
 				}
 				Update: {
 					avatar_path?: string | null
+					languages_known?: Json | null
 					uid?: string | null
 					username?: string | null
 				}

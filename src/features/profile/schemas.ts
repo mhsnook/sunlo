@@ -26,6 +26,10 @@ export const PublicProfileSchema = z.object({
 	uid: z.string().uuid(),
 	username: z.preprocess((val) => val ?? '', z.string()),
 	avatar_path: z.preprocess((val) => val ?? '', z.string()),
+	languages_known: z.preprocess(
+		(val) => val ?? [],
+		z.array(LanguageKnownSchema)
+	),
 })
 
 export type PublicProfileType = z.infer<typeof PublicProfileSchema>

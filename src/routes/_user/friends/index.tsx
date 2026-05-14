@@ -4,6 +4,7 @@ import { Search, Share } from 'lucide-react'
 
 import { buttonVariants } from '@/components/ui/button'
 import { FriendsFeed } from './-friends-feed'
+import { FriendsList } from './-friends-list'
 
 export const Route = createFileRoute('/_user/friends/')({
 	component: FriendsHomePage,
@@ -47,6 +48,20 @@ function FriendsHomePage() {
 					</Link>
 				</div>
 			</header>
+
+			<section
+				className="space-y-3"
+				aria-labelledby="friends-list-heading"
+				data-testid="friends-list-section"
+			>
+				<h2
+					id="friends-list-heading"
+					className="text-muted-foreground text-xs font-semibold tracking-wider uppercase"
+				>
+					Your friends
+				</h2>
+				<FriendsList />
+			</section>
 
 			<section
 				className="space-y-3"

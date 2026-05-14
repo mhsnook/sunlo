@@ -1800,7 +1800,8 @@ create or replace view "public"."public_profile" as
 select
 	"user_profile"."uid",
 	"user_profile"."username",
-	"user_profile"."avatar_path"
+	"user_profile"."avatar_path",
+	"user_profile"."languages_known"
 from
 	"public"."user_profile";
 
