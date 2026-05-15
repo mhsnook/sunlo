@@ -35,6 +35,37 @@ export const phraseRequestsCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			try {
+				await supabase
+					.from('phrase_request')
+					.insert(
+						transaction.mutations.map((m) => ({
+							id: m.modified.id,
+							prompt: m.modified.prompt,
+							lang: m.modified.lang,
+							requester_uid: m.modified.requester_uid,
+						}))
+					)
+					.throwOnError()
+				// The DB trigger auto-creates a phrase_request_upvote row for the
+				// requester. Mirror that in the local collection so the upvote
+				// button on the new-request page reflects "already upvoted" right
+				// away — but only if the upvotes collection has finished loading.
+				// If not, the trigger's row will surface on the next stale refetch.
+				if (phraseRequestUpvotesCollection.status === 'ready') {
+					for (const m of transaction.mutations) {
+						phraseRequestUpvotesCollection.utils.writeInsert({
+							request_id: m.modified.id,
+						})
+					}
+				}
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to post your request — please try again')
+				throw err
+			}
+		},
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(

@@ -1,15 +1,8 @@
-import { createOptimisticAction } from '@tanstack/db'
-
-import supabase from '@/lib/supabase-client'
 import { MarkdownHint } from '@/components/comments/comment-dialog'
 import { useUserId } from '@/lib/use-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
+import { phraseRequestsCollection } from '@/features/requests/collections'
 import {
-	phraseRequestsCollection,
-	phraseRequestUpvotesCollection,
-} from '@/features/requests/collections'
-import {
-	PhraseRequestSchema,
 	PhraseRequestType,
 	RequestPhraseFormSchema,
 	requestPromptPlaceholders,
@@ -18,52 +11,7 @@ import { useRequest } from '@/features/requests/hooks'
 import { useOneRandomly } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/components/form'
-import { toastError } from '@/components/ui/sonner'
 import type { uuid } from '@/types/main'
-
-type CreateInput = {
-	id: uuid
-	prompt: string
-	lang: string
-	userId: uuid
-}
-
-const createRequest = createOptimisticAction<CreateInput>({
-	onMutate: ({ id, prompt, lang, userId }) => {
-		phraseRequestsCollection.insert({
-			id,
-			prompt,
-			lang,
-			requester_uid: userId,
-			// DB trigger auto-upvotes the requester, so the count starts at 1.
-			upvote_count: 1,
-			deleted: false,
-			created_at: new Date().toISOString(),
-			updated_at: null,
-		})
-		phraseRequestUpvotesCollection.insert({ request_id: id })
-	},
-	mutationFn: async ({ id, prompt, lang, userId }) => {
-		try {
-			const { data: inserted } = await supabase
-				.from('phrase_request')
-				.insert({ id, prompt, lang, requester_uid: userId })
-				.select()
-				.single()
-				.throwOnError()
-			// inserted.upvote_count is 0 (pre-trigger); override to 1 to match
-			// the DB state after the auto-upvote trigger fires.
-			phraseRequestsCollection.utils.writeInsert({
-				...PhraseRequestSchema.parse(inserted),
-				upvote_count: 1,
-			})
-			phraseRequestUpvotesCollection.utils.writeInsert({ request_id: id })
-		} catch (err) {
-			toastError('Failed to post your request — please try again')
-			throw err
-		}
-	},
-})
 
 export function RequestForm({
 	lang,
@@ -100,13 +48,26 @@ export function RequestForm({
 			} else {
 				if (!userId) return
 				const id = crypto.randomUUID()
-				createRequest({ id, prompt: value.prompt, lang, userId })
-				const created = phraseRequestsCollection.get(id)
+				// Fire-and-forget create. The handler in phraseRequestsCollection.onInsert
+				// does the supabase insert and mirrors the trigger's auto-upvote row
+				// into phraseRequestUpvotesCollection (when that collection is ready).
+				phraseRequestsCollection.insert({
+					id,
+					prompt: value.prompt,
+					lang,
+					requester_uid: userId,
+					// DB trigger auto-upvotes the requester, so the count starts at 1.
+					upvote_count: 1,
+					deleted: false,
+					created_at: new Date().toISOString(),
+					updated_at: null,
+				})
 				invalidateFeed(lang)
 				// Hand the optimistic row to the parent — it'll navigate to
-				// /requests/[id]. If the action rolls back, useRequest on that
-				// page returns undefined and the page renders its "couldn't find
-				// that request" view. The action's mutationFn owns the error toast.
+				// /requests/[id]. If the insert rolls back, the destination
+				// page's "couldn't find that request" fallback handles it; the
+				// onInsert handler shows the error toast.
+				const created = phraseRequestsCollection.get(id)
 				if (created) onSuccess?.(created)
 			}
 			formApi.reset()
