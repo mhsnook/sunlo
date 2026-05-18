@@ -37,7 +37,19 @@ const CHROMA_NUMS = new Set([
 ])
 
 const LC_NAMED = ['base', 'fore', 'none', 'full'] as const
-const LC_NUMS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
+const LC_NUMS = new Set([
+	'0',
+	'1',
+	'2',
+	'3',
+	'4',
+	'5',
+	'6',
+	'7',
+	'8',
+	'9',
+	'10',
+])
 
 const isHue: ClassValidator = (s) => (HUES as readonly string[]).includes(s)
 const isChroma: ClassValidator = (s) =>
@@ -150,6 +162,26 @@ export function summarizeOverrides(
 	}
 
 	return overrides.length > 0 ? overrides : null
+}
+
+/**
+ * Pull the first `src/...` location out of a stack trace, skipping any frames
+ * inside this file or utils.ts (where cn() itself lives). Handles Chromium's
+ * "at Fn (URL:line:col)" and Firefox's "Fn@URL:line:col" shapes, and strips
+ * Vite's `?t=...` query suffix from module URLs.
+ */
+export function findCallSite(stack: string | undefined): string | undefined {
+	if (!stack) return undefined
+	for (const line of stack.split('\n')) {
+		if (line.includes('/lib/utils.ts')) continue
+		if (line.includes('/lib/twmerge-oklch')) continue
+		const m = line.match(/\/(src\/[^:)\s]+):(\d+):(\d+)/)
+		if (m) {
+			const path = m[1].split('?')[0]
+			return `${path}:${m[2]}`
+		}
+	}
+	return undefined
 }
 
 function findReplacement(

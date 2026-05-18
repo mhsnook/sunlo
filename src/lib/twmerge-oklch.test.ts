@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { getOklchTwMerge, summarizeOverrides } from './twmerge-oklch'
+import {
+	findCallSite,
+	getOklchTwMerge,
+	summarizeOverrides,
+} from './twmerge-oklch'
 
 const twMerge = getOklchTwMerge()
 
@@ -108,5 +112,48 @@ describe('summarizeOverrides suppresses no-op duplicates', () => {
 		expect(summarizeOverrides(raw, twMerge(raw))).toEqual([
 			{ dropped: 'p-4', replacement: 'p-2' },
 		])
+	})
+})
+
+describe('findCallSite extracts the calling file:line from a stack', () => {
+	test('chromium-style stack: skips utils.ts and returns first src/ frame', () => {
+		const stack = [
+			'Error',
+			'    at cn (http://localhost:5173/src/lib/utils.ts:12:23)',
+			'    at Button (http://localhost:5173/src/components/ui/button.tsx:55:20)',
+			'    at div',
+		].join('\n')
+		expect(findCallSite(stack)).toBe('src/components/ui/button.tsx:55')
+	})
+
+	test('firefox-style stack', () => {
+		const stack = [
+			'cn@http://localhost:5173/src/lib/utils.ts:12:23',
+			'Popover@http://localhost:5173/src/components/ui/popover.tsx:42:15',
+		].join('\n')
+		expect(findCallSite(stack)).toBe('src/components/ui/popover.tsx:42')
+	})
+
+	test('strips Vite ?t= query suffix from path', () => {
+		const stack = [
+			'Error',
+			'    at cn (http://localhost:5173/src/lib/utils.ts:12:23)',
+			'    at Foo (http://localhost:5173/src/components/foo.tsx?t=1700000000000:10:5)',
+		].join('\n')
+		expect(findCallSite(stack)).toBe('src/components/foo.tsx:10')
+	})
+
+	test('skips frames inside twmerge-oklch itself', () => {
+		const stack = [
+			'    at cn (http://localhost:5173/src/lib/utils.ts:12:23)',
+			'    at devCheckTwMerge (http://localhost:5173/src/lib/twmerge-oklch.ts:8:1)',
+			'    at App (http://localhost:5173/src/app.tsx:5:5)',
+		].join('\n')
+		expect(findCallSite(stack)).toBe('src/app.tsx:5')
+	})
+
+	test('returns undefined when no src/ frame is present', () => {
+		expect(findCallSite('Error\n    at <anonymous>')).toBeUndefined()
+		expect(findCallSite(undefined)).toBeUndefined()
 	})
 })

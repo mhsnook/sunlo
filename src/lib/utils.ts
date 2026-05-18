@@ -6,7 +6,11 @@ import { useState } from 'react'
 
 export function cn(...inputs: ClassValue[]) {
 	const raw = clsx(inputs)
-	if (import.meta.env.DEV) void devCheckTwMerge(raw)
+	if (import.meta.env.DEV) {
+		// Capture the stack synchronously — the async checker runs later, by
+		// which time the original call stack has unwound.
+		void devCheckTwMerge(raw, new Error().stack)
+	}
 	return raw
 }
 
@@ -15,8 +19,8 @@ export function cn(...inputs: ClassValue[]) {
 // Pure-duplicate dedupes are no-ops and are suppressed. Production builds
 // dead-code-eliminate the call site, so neither tailwind-merge nor the
 // oklch config module reaches the production bundle.
-async function devCheckTwMerge(raw: string) {
-	const { getOklchTwMerge, summarizeOverrides } =
+async function devCheckTwMerge(raw: string, stack: string | undefined) {
+	const { getOklchTwMerge, summarizeOverrides, findCallSite } =
 		await import('./twmerge-oklch')
 	const merged = getOklchTwMerge()(raw)
 	if (merged === raw) return
@@ -27,7 +31,8 @@ async function devCheckTwMerge(raw: string) {
 			replacement ? `${dropped} → ${replacement}` : dropped
 		)
 		.join(', ')
-	console.warn(`[cn] tw-merge: ${list}`)
+	const where = findCallSite(stack)
+	console.warn(`[cn] tw-merge: ${list}${where ? `\n  at ${where}` : ''}`)
 }
 
 export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
