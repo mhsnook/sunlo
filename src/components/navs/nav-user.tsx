@@ -1,4 +1,5 @@
 import { LogIn, Settings, UserPlus } from 'lucide-react'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
 	SidebarGroup,
 	SidebarMenu,
@@ -7,11 +8,14 @@ import {
 	useSidebar,
 } from '@/components/ui/sidebar'
 import { useAuth } from '@/lib/use-auth'
+import { useProfile } from '@/features/profile/hooks'
 import { Link } from '@tanstack/react-router'
+import { avatarUrlify } from '@/lib/hooks'
 
 export function NavUser() {
 	const { setClosedMobile } = useSidebar()
 	const { isAuth } = useAuth()
+	const { data: profile } = useProfile()
 
 	if (!isAuth) {
 		return (
@@ -54,6 +58,8 @@ export function NavUser() {
 		)
 	}
 
+	const avatarUrl = avatarUrlify(profile?.avatar_path)
+
 	return (
 		<SidebarGroup>
 			<SidebarMenu>
@@ -63,7 +69,12 @@ export function NavUser() {
 						data-testid="sidebar-profile-settings-link"
 					>
 						<Link to="/profile" onClick={setClosedMobile}>
-							<Settings className="size-4" />
+							<Avatar className="size-6">
+								<AvatarImage src={avatarUrl} alt={profile?.username} />
+								<AvatarFallback className="rounded text-[10px]">
+									Me
+								</AvatarFallback>
+							</Avatar>
 							<span>Profile &amp; settings</span>
 						</Link>
 					</SidebarMenuButton>
