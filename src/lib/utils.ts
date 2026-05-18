@@ -12,10 +12,11 @@ export function cn(...inputs: ClassValue[]) {
 
 // Dev-only: lazily loads tailwind-merge and warns when the input contains
 // conflicting utilities that twMerge would collapse. Production builds
-// dead-code-eliminate the call site, so tailwind-merge never reaches the
-// production bundle.
+// dead-code-eliminate the call site, so neither tailwind-merge nor the
+// oklch config module reaches the production bundle.
 async function devCheckTwMerge(raw: string) {
-	const { twMerge } = await import('tailwind-merge')
+	const { getOklchTwMerge } = await import('./twmerge-oklch')
+	const twMerge = getOklchTwMerge()
 	const merged = twMerge(raw)
 	if (merged !== raw) {
 		console.warn(
