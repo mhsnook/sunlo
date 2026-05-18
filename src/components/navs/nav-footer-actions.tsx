@@ -17,7 +17,7 @@ export function NavFooterActions() {
 				data-testid="sidebar-open-source-link"
 			>
 				<Github className="size-4" />
-				<span>Free forever &middot; Open source</span>
+				<span>Free &amp; open source</span>
 			</a>
 			<Button
 				variant="ghost"
