@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { getOklchTwMerge } from './twmerge-oklch'
+import { getOklchTwMerge, summarizeOverrides } from './twmerge-oklch'
 
 const twMerge = getOklchTwMerge()
 
@@ -65,5 +65,48 @@ describe('real-world conflicts from user-reported example still flag', () => {
 
 	test('transition-colors + transition-all collapses', () => {
 		expect(twMerge('transition-colors transition-all')).toBe('transition-all')
+	})
+})
+
+describe('summarizeOverrides suppresses no-op duplicates', () => {
+	test('pure duplicate returns null', () => {
+		const raw = 'w-72 w-72'
+		expect(summarizeOverrides(raw, twMerge(raw))).toBeNull()
+	})
+
+	test('duplicate in the middle of unchanged classes returns null', () => {
+		const raw = 'p-2 w-72 rounded-md w-72'
+		expect(summarizeOverrides(raw, twMerge(raw))).toBeNull()
+	})
+
+	test('user-reported popover case: only w-72 dup, no warning', () => {
+		const raw =
+			'bg-popover text-popover-foreground z-50 w-72 rounded-md border shadow-md outline-hidden w-72'
+		expect(summarizeOverrides(raw, twMerge(raw))).toBeNull()
+	})
+
+	test('real override surfaces with replacement', () => {
+		const raw = 'rounded-md w-72 p-4 outline-hidden w-72 p-2'
+		const merged = twMerge(raw)
+		expect(summarizeOverrides(raw, merged)).toEqual([
+			{ dropped: 'p-4', replacement: 'p-2' },
+		])
+	})
+
+	test('multiple real overrides surface together', () => {
+		const raw =
+			'border border-transparent transition-colors rounded-xl border-border/50 transition-all rounded-full'
+		expect(summarizeOverrides(raw, twMerge(raw))).toEqual([
+			{ dropped: 'border-transparent', replacement: 'border-border/50' },
+			{ dropped: 'transition-colors', replacement: 'transition-all' },
+			{ dropped: 'rounded-xl', replacement: 'rounded-full' },
+		])
+	})
+
+	test('dup + real override: only override is reported', () => {
+		const raw = 'w-72 p-4 w-72 p-2'
+		expect(summarizeOverrides(raw, twMerge(raw))).toEqual([
+			{ dropped: 'p-4', replacement: 'p-2' },
+		])
 	})
 })

@@ -23,16 +23,27 @@ const HUES = [
 ] as const
 
 const CHROMAS = ['lo', 'mlo', 'mid', 'mhi', 'hi'] as const
-const CHROMA_NUMS = new Set(['10', '20', '30', '40', '50', '60', '70', '80', '90', '95'])
+const CHROMA_NUMS = new Set([
+	'10',
+	'20',
+	'30',
+	'40',
+	'50',
+	'60',
+	'70',
+	'80',
+	'90',
+	'95',
+])
 
 const LC_NAMED = ['base', 'fore', 'none', 'full'] as const
-const LC_NUMS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+const LC_NUMS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'])
 
 const isHue: ClassValidator = (s) => (HUES as readonly string[]).includes(s)
 const isChroma: ClassValidator = (s) =>
 	(CHROMAS as readonly string[]).includes(s) || CHROMA_NUMS.has(s)
 const isLc: ClassValidator = (s) =>
-	(LC_NAMED as readonly string[]).includes(s) || LC_NUMS.includes(s)
+	(LC_NAMED as readonly string[]).includes(s) || LC_NUMS.has(s)
 
 // Two-axis shorthand "{L}-{C}", e.g. `bg-3-mhi`
 const isTwoAxis: ClassValidator = (s) => {
@@ -107,4 +118,51 @@ let cachedFn: ((input: string) => string) | undefined
 export function getOklchTwMerge() {
 	if (!cachedFn) cachedFn = extendTailwindMerge(twMergeConfig)
 	return cachedFn
+}
+
+/**
+ * Find classes present in `input` that are entirely absent from `merged` —
+ * these are the real overrides. Classes that merely got deduplicated (still
+ * present in merged) are no-ops and suppressed. For each override we make a
+ * best-effort guess at what replaced it by walking back hyphen-segments and
+ * looking for any merged class with the same prefix.
+ *
+ * Returns null when every diff is a pure-duplicate no-op (no warning needed).
+ */
+export function summarizeOverrides(
+	input: string,
+	merged: string
+): Array<{ dropped: string; replacement?: string }> | null {
+	const inTokens = input.split(/\s+/).filter(Boolean)
+	const outTokens = merged.split(/\s+/).filter(Boolean)
+	const outSet = new Set(outTokens)
+
+	const overrides: Array<{ dropped: string; replacement?: string }> = []
+	const seen = new Set<string>()
+	for (const cls of inTokens) {
+		if (seen.has(cls)) continue
+		seen.add(cls)
+		if (outSet.has(cls)) continue
+		overrides.push({
+			dropped: cls,
+			replacement: findReplacement(cls, outTokens),
+		})
+	}
+
+	return overrides.length > 0 ? overrides : null
+}
+
+function findReplacement(
+	dropped: string,
+	mergedTokens: Array<string>
+): string | undefined {
+	const segments = dropped.split('-')
+	for (let i = segments.length - 1; i >= 1; i--) {
+		const prefix = segments.slice(0, i).join('-') + '-'
+		const match = mergedTokens.find(
+			(c) => c !== dropped && c.startsWith(prefix)
+		)
+		if (match) return match
+	}
+	return undefined
 }

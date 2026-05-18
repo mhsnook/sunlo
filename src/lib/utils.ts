@@ -10,19 +10,24 @@ export function cn(...inputs: ClassValue[]) {
 	return raw
 }
 
-// Dev-only: lazily loads tailwind-merge and warns when the input contains
-// conflicting utilities that twMerge would collapse. Production builds
+// Dev-only: lazily loads tailwind-merge, computes the merged output, and
+// warns only on real overrides (classes fully absent from the merged result).
+// Pure-duplicate dedupes are no-ops and are suppressed. Production builds
 // dead-code-eliminate the call site, so neither tailwind-merge nor the
 // oklch config module reaches the production bundle.
 async function devCheckTwMerge(raw: string) {
-	const { getOklchTwMerge } = await import('./twmerge-oklch')
-	const twMerge = getOklchTwMerge()
-	const merged = twMerge(raw)
-	if (merged !== raw) {
-		console.warn(
-			`[cn] tailwind-merge conflict:\n  input:  "${raw}"\n  merged: "${merged}"`
+	const { getOklchTwMerge, summarizeOverrides } =
+		await import('./twmerge-oklch')
+	const merged = getOklchTwMerge()(raw)
+	if (merged === raw) return
+	const overrides = summarizeOverrides(raw, merged)
+	if (!overrides) return
+	const list = overrides
+		.map(({ dropped, replacement }) =>
+			replacement ? `${dropped} → ${replacement}` : dropped
 		)
-	}
+		.join(', ')
+	console.warn(`[cn] tw-merge: ${list}`)
 }
 
 export function mapArray<T extends Record<string, unknown>, K extends keyof T>(
