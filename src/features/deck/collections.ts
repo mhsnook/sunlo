@@ -11,6 +11,7 @@ import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { sortDecksByCreation } from '@/lib/utils'
 import languages from '@/lib/languages'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const decksCollection = createCollection(
 	queryCollectionOptions({
@@ -42,7 +43,7 @@ export const decksCollection = createCollection(
 				transaction.mutations.map((m) =>
 					supabase
 						.from('user_deck')
-						.update(m.changes)
+						.update(m.changes as TablesUpdate<'user_deck'>)
 						.eq('uid', m.original.uid)
 						.eq('lang', m.original.lang)
 						.throwOnError()
@@ -99,7 +100,7 @@ export const cardsCollection = createCollection(
 				transaction.mutations.map((m) =>
 					supabase
 						.from('user_card')
-						.update(m.changes)
+						.update(m.changes as TablesUpdate<'user_card'>)
 						.eq('id', m.original.id)
 						.throwOnError()
 				)
