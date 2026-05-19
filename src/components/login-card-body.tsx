@@ -49,7 +49,6 @@ export function LoginCardBody({
 	return (
 		<form
 			data-testid="login-form"
-			role="form"
 			noValidate
 			className="space-y-4"
 			onSubmit={(e) => {

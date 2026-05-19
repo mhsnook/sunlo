@@ -44,6 +44,21 @@ const UserSearchParams = z.object({
 	search: z.boolean().optional(),
 })
 
+// Always fetch fresh profile data to avoid race conditions after login
+const fetchProfileData = async () => {
+	// Use fetchQuery to always get fresh data, not stale cache
+	const profileData = await queryClient.fetchQuery({
+		...myProfileQuery,
+		// Short stale time to ensure we get fresh data after login
+		staleTime: 1000,
+	})
+	// Sync the collection if query has data but collection doesn't
+	if (profileData && profileData.length > 0 && myProfileCollection.size === 0) {
+		await myProfileCollection.utils.refetch()
+	}
+	return profileData
+}
+
 export const Route = createFileRoute('/_user')({
 	// Auth is optional at this layout — RLS handles data security and
 	// individual routes can require auth if needed.
@@ -57,26 +72,6 @@ export const Route = createFileRoute('/_user')({
 	loader: async ({ context, location }) => {
 		// If not authenticated, skip user-specific loading
 		if (!context.auth.isAuth) return
-
-		// Always fetch fresh profile data to avoid race conditions after login
-		// This ensures we have the latest data even if the collection is stale
-		const fetchProfileData = async () => {
-			// Use fetchQuery to always get fresh data, not stale cache
-			const profileData = await queryClient.fetchQuery({
-				...myProfileQuery,
-				// Short stale time to ensure we get fresh data after login
-				staleTime: 1000,
-			})
-			// Sync the collection if query has data but collection doesn't
-			if (
-				profileData &&
-				profileData.length > 0 &&
-				myProfileCollection.size === 0
-			) {
-				await myProfileCollection.utils.refetch()
-			}
-			return profileData
-		}
 
 		// If collection is already loaded with data, just preload other collections
 		if (myProfileCollection.size === 1) {

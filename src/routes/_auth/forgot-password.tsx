@@ -68,7 +68,6 @@ function ForgotPasswordPage() {
 				) : (
 					<form
 						data-testid="forgot-password-form"
-						role="form"
 						noValidate
 						className="space-y-4"
 						onSubmit={(e) => {
