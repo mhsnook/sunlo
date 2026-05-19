@@ -102,7 +102,6 @@ function SignUp() {
 	})
 
 	const form = useAppForm({
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- assertion widens user_role from "learner" to the FormInputs union expected by mutateAsync
 		defaultValues: {
 			email: '',
 			password: '',

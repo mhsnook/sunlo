@@ -1,3 +1,4 @@
+// oxlint-disable react/no-array-index-key -- parsed spreadsheet rows / columns are immutable after parse; never reordered or filtered
 import { useState, useMemo } from 'react'
 import { ArrowLeft, ArrowRight, FileSpreadsheet } from 'lucide-react'
 
@@ -403,7 +404,7 @@ function MapAndReviewStep({
 						<table className="w-full text-sm">
 							<thead className="bg-muted/50 sticky top-0">
 								<tr>
-									<th className="w-8 px-2 py-1.5" />
+									<th className="w-8 px-2 py-1.5" aria-label="Select row" />
 									<th className="px-2 py-1.5 text-start font-medium">Phrase</th>
 									<th className="px-2 py-1.5 text-start font-medium">
 										Translations

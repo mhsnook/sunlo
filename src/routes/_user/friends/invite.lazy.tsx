@@ -55,7 +55,7 @@ function InviteFriendPage() {
 
 			{
 				/* Invite Options */
-				share.can ?
+				share.can ? (
 					<div className="grid grid-cols-1 gap-6 @xl:grid-cols-2">
 						{/* Quick Share */}
 						<Card className="group border-border/50 transition-all duration-300 hover:shadow-lg">
@@ -102,7 +102,7 @@ function InviteFriendPage() {
 							</CardContent>
 						</Card>
 					</div>
-				:	null
+				) : null
 			}
 
 			{/* Sharing Methods */}
@@ -117,6 +117,7 @@ function InviteFriendPage() {
 						{/* Email */}
 						<a
 							href={`mailto:?subject=${encodeURIComponent(share.data.title)}&body=${encodeURIComponent(share.data.text)}`}
+							aria-label="Send via email"
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
@@ -135,6 +136,7 @@ function InviteFriendPage() {
 						{/* WhatsApp */}
 						<a
 							href={`whatsapp://send?text=${encodeURIComponent(share.data.text)}`}
+							aria-label="Share on WhatsApp"
 							className="group border-border/50 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 						>
 							<div className="flex items-center space-x-4">
@@ -152,6 +154,7 @@ function InviteFriendPage() {
 						{share.can ? null : (
 							<button
 								onClick={share.copyUrl}
+								aria-label="Copy shareable invite link"
 								className="group border-border/50 col-span-2 rounded-xl border p-6 text-left shadow transition-all duration-200 hover:shadow-lg"
 							>
 								<div className="flex items-center space-x-3">
