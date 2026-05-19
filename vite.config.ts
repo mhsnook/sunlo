@@ -1,4 +1,3 @@
-import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
@@ -19,9 +18,7 @@ export default defineConfig(() => {
 			babel({ presets: [reactCompilerPreset()] }),
 		],
 		resolve: {
-			alias: {
-				'@': fileURLToPath(new URL('./src', import.meta.url)),
-			},
+			tsconfigPaths: true,
 		},
 		build: {
 			chunkSizeWarningLimit: 750,

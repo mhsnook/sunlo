@@ -65,7 +65,6 @@ export default [
 				project: ['./tsconfig.node.json'],
 				// tsconfigRootDir: './',
 			},
-			globals: { ...globals.node },
 		},
 		plugins: {
 			'@typescript-eslint': tseslint.plugin,
