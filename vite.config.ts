@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
+import react, { reactCompilerPreset } from '@vitejs/plugin-react'
+import babel from '@rolldown/plugin-babel'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
 
@@ -10,17 +10,16 @@ export default defineConfig(() => {
 	return {
 		plugins: [
 			scenetest(),
-			tsconfigPaths(),
 			tailwindcss(),
 			tanstackRouter({
 				autoCodeSplitting: true,
 			}),
-			react({
-				babel: {
-					plugins: ['babel-plugin-react-compiler'],
-				},
-			}),
+			react(),
+			babel({ presets: [reactCompilerPreset()] }),
 		],
+		resolve: {
+			tsconfigPaths: true,
+		},
 		build: {
 			chunkSizeWarningLimit: 750,
 		},
