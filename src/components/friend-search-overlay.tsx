@@ -1,10 +1,4 @@
-import {
-	useState,
-	useRef,
-	useEffect,
-	useCallback,
-	type KeyboardEvent as ReactKeyboardEvent,
-} from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useDebounce } from '@/hooks/use-debounce'
 import { Search, X } from 'lucide-react'
 
@@ -44,16 +38,6 @@ export default function FriendSearchOverlay({
 		return () => clearTimeout(t)
 	}, [])
 
-	const handleKeyDown = useCallback(
-		(e: ReactKeyboardEvent) => {
-			if (e.key === 'Escape') {
-				e.preventDefault()
-				onClose()
-			}
-		},
-		[onClose]
-	)
-
 	return (
 		<Dialog open onOpenChange={(o) => !o && onClose()}>
 			<DialogContent
@@ -80,7 +64,6 @@ export default function FriendSearchOverlay({
 							placeholder="Search by username..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
-							onKeyDown={handleKeyDown}
 							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-muted-foreground flex-1 bg-transparent outline-none`}
 							data-testid="friend-search-input"
 						/>
