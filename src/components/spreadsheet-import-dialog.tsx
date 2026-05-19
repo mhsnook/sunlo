@@ -1,3 +1,4 @@
+// oxlint-disable react/no-array-index-key -- parsed spreadsheet rows / columns are immutable after parse; never reordered or filtered
 import { useState, useMemo } from 'react'
 import { ArrowLeft, ArrowRight, FileSpreadsheet } from 'lucide-react'
 
