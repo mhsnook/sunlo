@@ -132,7 +132,6 @@ function NewPlaylistPageContent() {
 	})
 
 	const form = useAppForm({
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- assertion widens null-typed fields to PhrasePlaylistInsertType's nullable string/array types
 		defaultValues: {
 			title: '',
 			description: '',
