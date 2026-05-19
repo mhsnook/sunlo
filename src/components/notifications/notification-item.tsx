@@ -123,7 +123,9 @@ export function NotificationItem({
 	} as CSSProperties
 
 	return (
+		// oxlint-disable-next-line jsx-a11y/control-has-associated-label -- accessible name comes from rich nested content (actor name, body, time)
 		<div
+			// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- intentional div-as-link; avoiding nested-anchor invariant inside a list item
 			role="link"
 			tabIndex={0}
 			className={cn(

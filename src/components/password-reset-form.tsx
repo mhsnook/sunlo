@@ -55,7 +55,6 @@ export function PasswordResetForm() {
 			) : (
 				<form
 					data-testid="password-reset-form"
-					role="form"
 					noValidate
 					className="space-y-4"
 					onSubmit={(e) => {

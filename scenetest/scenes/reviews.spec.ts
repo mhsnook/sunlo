@@ -10,10 +10,10 @@ import { createClient } from '@supabase/supabase-js'
 import type { Database } from '../../src/types/supabase'
 
 // Inlined from src/lib/utils to avoid pulling in browser-only imports (sonner)
+const pad = (n: number) => `0${n}`.slice(-2)
 function todayString() {
 	const now = new Date()
 	now.setHours(now.getHours() - 4)
-	const pad = (n: number) => `0${n}`.slice(-2)
 	return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
