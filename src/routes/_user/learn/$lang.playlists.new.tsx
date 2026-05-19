@@ -138,7 +138,7 @@ function NewPlaylistPageContent() {
 			href: null,
 			cover_image_path: null,
 			phrases: [],
-		} as PhrasePlaylistInsertType,
+		},
 		validators: { onChange: PhrasePlaylistInsertSchema },
 		onSubmit: async ({ value }) => {
 			await mutation.mutateAsync(value)
@@ -195,7 +195,6 @@ function NewPlaylistPageContent() {
 				</CardHeader>
 				<CardContent>
 					<form
-						role="form"
 						noValidate
 						data-testid="new-playlist-form"
 						onSubmit={(e) => {

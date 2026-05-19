@@ -75,7 +75,6 @@ function ChangeEmailPage() {
 				) : (
 					<form
 						data-testid="change-email-form"
-						role="form"
 						noValidate
 						className="space-y-4"
 						onSubmit={(e) => {

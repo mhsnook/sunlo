@@ -70,15 +70,17 @@ export default function FriendSearchOverlay({
 				</div>
 
 				{/* Search Input */}
-				<div className="p-3" role="search" onKeyDown={handleKeyDown}>
+				<search className="p-3">
 					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
 						<Search className="text-muted-foreground size-5 shrink-0" />
 						<input
 							ref={inputRef}
 							type="text"
+							aria-label="Search by username"
 							placeholder="Search by username..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
+							onKeyDown={handleKeyDown}
 							className={`${hasQuery ? 'text-base' : 'p-2 text-xl'} placeholder:text-muted-foreground flex-1 bg-transparent outline-none`}
 							data-testid="friend-search-input"
 						/>
@@ -92,7 +94,7 @@ export default function FriendSearchOverlay({
 							</button>
 						)}
 					</div>
-				</div>
+				</search>
 
 				{/* Results */}
 				{hasQuery && (
@@ -100,15 +102,16 @@ export default function FriendSearchOverlay({
 						className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 pb-4"
 						data-testid="friend-search-results"
 					>
-						{showLoader ?
+						{showLoader ? (
 							<div className="flex h-20 items-center justify-center opacity-50">
 								<Loader />
 							</div>
-						: filteredResults.length === 0 ?
+						) : filteredResults.length === 0 ? (
 							<Callout variant="ghost" Icon={BigGarlic}>
 								<p>No users match that search, but you can invite a friend!</p>
 							</Callout>
-						:	<>
+						) : (
+							<>
 								<p className="text-muted-foreground ms-1 text-sm italic">
 									{filteredResults.length} result
 									{filteredResults.length === 1 ? '' : 's'}
@@ -119,7 +122,7 @@ export default function FriendSearchOverlay({
 									</div>
 								))}
 							</>
-						}
+						)}
 					</div>
 				)}
 			</DialogContent>

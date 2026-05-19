@@ -17,6 +17,11 @@ interface CommentContextMenuProps {
 	lang: string
 }
 
+const handleReport = () => {
+	// Placeholder for report functionality
+	toastSuccess('Thank you for reporting. We will review this comment shortly.')
+}
+
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 	const commentUrl = `${window.location.origin}/learn/${lang}/requests/${comment.request_id}?focus=${comment.id}`
 
@@ -48,13 +53,6 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 			.catch(() => {
 				toastError('Failed to copy link')
 			})
-	}
-
-	const handleReport = () => {
-		// Placeholder for report functionality
-		toastSuccess(
-			'Thank you for reporting. We will review this comment shortly.'
-		)
 	}
 
 	return (

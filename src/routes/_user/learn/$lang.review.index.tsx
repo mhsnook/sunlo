@@ -59,6 +59,18 @@ import {
 import { useIntro } from '@/hooks/use-intro-seen'
 import { ReviewIntro, ReviewCallout } from '@/components/intros'
 
+function phraseBreakdown(
+	bothSides: number,
+	frontOnly: number,
+	backOnly: number
+): string {
+	const parts: Array<string> = []
+	if (bothSides > 0) parts.push(`${bothSides} recognition & recall`)
+	if (frontOnly > 0) parts.push(`${frontOnly} recognition`)
+	if (backOnly > 0) parts.push(`${backOnly} recall`)
+	return parts.join(' · ')
+}
+
 export const Route = createFileRoute('/_user/learn/$lang/review/')({
 	loader: async ({ context }) => {
 		if (context.auth.isAuth) {
@@ -293,18 +305,6 @@ function ReviewPageContent() {
 	).length
 	const schedFrontOnly = schedForwardPhrases.size - schedBothSides
 	const schedBackOnly = schedReversePhrases.size - schedBothSides
-
-	function phraseBreakdown(
-		bothSides: number,
-		frontOnly: number,
-		backOnly: number
-	): string {
-		const parts: Array<string> = []
-		if (bothSides > 0) parts.push(`${bothSides} recognition & recall`)
-		if (frontOnly > 0) parts.push(`${frontOnly} recognition`)
-		if (backOnly > 0) parts.push(`${backOnly} recall`)
-		return parts.join(' · ')
-	}
 
 	// const countSurplusOrDeficit = freshCards.length - countNeeded
 	const { mutate, isPending } = useMutation({
