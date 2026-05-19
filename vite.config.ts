@@ -1,8 +1,8 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import react, { reactCompilerPreset } from '@vitejs/plugin-react'
 import babel from '@rolldown/plugin-babel'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import tsconfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
 import scenetest from '@scenetest/vite-plugin'
 
@@ -11,7 +11,6 @@ export default defineConfig(() => {
 	return {
 		plugins: [
 			scenetest(),
-			tsconfigPaths(),
 			tailwindcss(),
 			tanstackRouter({
 				autoCodeSplitting: true,
@@ -19,6 +18,11 @@ export default defineConfig(() => {
 			react(),
 			babel({ presets: [reactCompilerPreset()] }),
 		],
+		resolve: {
+			alias: {
+				'@': fileURLToPath(new URL('./src', import.meta.url)),
+			},
+		},
 		build: {
 			chunkSizeWarningLimit: 750,
 		},
