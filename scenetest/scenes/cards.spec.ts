@@ -56,6 +56,7 @@ test('learner adds a freshly-created phrase from the feed and cycles its card st
 					phrase_id: phraseId,
 					lang: 'eng',
 					text: 'cards scene translation',
+					added_by: learner.key,
 				})
 				.throwOnError()
 		})
