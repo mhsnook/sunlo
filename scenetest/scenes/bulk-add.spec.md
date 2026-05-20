@@ -15,11 +15,16 @@ learner:
 
 # learner stages a phrase via the inline add bar
 
+// The first typeInto puts a throwaway draft in the field; the second
+// replaces it (typeInto clears before typing). Staging the result proves
+// the phrase field carries only the final value into the staged row.
+
 learner:
 
 - login
 - openTo /learn/[team.lang_full]/bulk-add
 - up
+- typeInto inline-phrase-input 'discarded draft'
 - typeInto inline-phrase-input 'namaste duniya'
 - pressKey Enter
 - typeInto inline-translation-input 'hello world'
