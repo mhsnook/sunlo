@@ -2,19 +2,485 @@ import type { CSSProperties } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
+import {
+	ChevronDown,
+	Lightbulb,
+	Logs,
+	Mail,
+	MessageSquare,
+	MoreVertical,
+	Reply,
+	Rocket,
+	Share2,
+	ThumbsUp,
+} from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
 	getLangHue,
 	getLangHueIndex,
 	getLangPopularityIndex,
+	getLangThemeCss,
 	LANG_HUES,
 } from '@/lib/lang-theme'
+import { cn } from '@/lib/utils'
 import { languagesCollection } from '@/features/languages/collections'
-import { LangBadge } from '@/components/ui/badge'
+import { Badge, LangBadge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import {
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+} from '@/components/ui/card'
+import { CardlikeFlashcard, CardlikeRequest } from '@/components/ui/card-like'
+import { Separator } from '@/components/ui/separator'
+import { Markdown } from '@/components/my-markdown'
 
 export const Route = createLazyFileRoute('/themes/')({
 	component: ThemesPage,
 })
+
+// Made-up language code + content so the showcase needs no real data.
+const SHOWCASE_LANG = 'sun'
+
+const REQUEST_PROMPT = `I'm visiting a friend's grandparents next week and want to greet them politely. How would I say:
+
+> Good evening — it's an honour to meet you.
+
+in a respectful, formal register?`
+
+const ANSWER_PHRASES = [
+	{ text: 'selamat sonja', translation: 'good evening' },
+	{ text: 'suka berkenal', translation: "it's an honour to meet you" },
+]
+
+const REVIEW_TRANSLATIONS = ['good evening', 'an evening greeting']
+
+const ANSWER_CHOICES = [
+	{
+		label: 'Again',
+		interval: '8 min',
+		cls: 'rounded-s-2xl border-red-600! bg-red-600! text-white',
+	},
+	{
+		label: 'Hard',
+		interval: '2 days',
+		cls: 'border-gray-200! bg-gray-200! text-gray-700!',
+	},
+	{
+		label: 'Good',
+		interval: '5 days',
+		cls: 'border-green-500! bg-green-500! text-white',
+	},
+	{
+		label: 'Easy',
+		interval: '11 days',
+		cls: 'rounded-e-2xl border-blue-500 bg-blue-500! text-white',
+	},
+]
+
+function Byline({
+	initials,
+	name,
+	action,
+	time,
+	size = 'lg',
+}: {
+	initials: string
+	name: string
+	action: string
+	time: string
+	size?: 'lg' | 'sm'
+}) {
+	if (size === 'sm')
+		return (
+			<div className="inline-flex flex-row items-center gap-2">
+				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
+					<AvatarFallback className="text-[10px] font-bold">
+						{initials}
+					</AvatarFallback>
+				</Avatar>
+				<div className="flex flex-row items-center gap-1.5 text-sm">
+					<span className="font-medium">{name}</span>
+					<span className="text-muted-foreground">
+						{action} / <time>{time}</time>
+					</span>
+				</div>
+			</div>
+		)
+	return (
+		<div className="flex flex-row items-center gap-3">
+			<Avatar className="bg-foreground text-background rounded-2xl">
+				<AvatarFallback className="font-bold">{initials}</AvatarFallback>
+			</Avatar>
+			<div className="text-sm">
+				<span className="font-medium">{name}</span>
+				<div className="text-muted-foreground">
+					{action} <time>{time}</time>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+function AnswerCard({
+	text,
+	translation,
+}: {
+	text: string
+	translation: string
+}) {
+	return (
+		<CardlikeFlashcard className="flex max-w-120 flex-row gap-2 py-0 ps-4 pe-1">
+			<div className="grow py-6">
+				<div className="space-x-2 pb-2">
+					<LangBadge lang={SHOWCASE_LANG} />
+					<h4 className="inline-flex gap-2 align-baseline font-semibold">
+						&ldquo;{text}&rdquo;
+					</h4>
+				</div>
+				<ul className="mt-2 space-y-1">
+					<li className="flex items-center gap-2 text-sm">
+						<LangBadge lang="eng" />
+						<span>{translation}</span>
+					</li>
+				</ul>
+			</div>
+		</CardlikeFlashcard>
+	)
+}
+
+function ReplyItem({
+	initials,
+	name,
+	time,
+	content,
+}: {
+	initials: string
+	name: string
+	time: string
+	content: string
+}) {
+	return (
+		<div className="mt-2 py-2">
+			<Byline
+				size="sm"
+				initials={initials}
+				name={name}
+				action="replied"
+				time={time}
+			/>
+			<div className="ms-8 mt-1">
+				<Markdown>{content}</Markdown>
+			</div>
+			<div className="text-muted-foreground ms-8 mt-2 flex items-center gap-2">
+				<Button variant="ghost" size="sm">
+					<ThumbsUp className="me-1 size-4" /> 1
+				</Button>
+			</div>
+		</div>
+	)
+}
+
+function ShowcaseRequestThread() {
+	return (
+		<div className="space-y-4" data-testid="showcase-request">
+			<CardlikeRequest>
+				<CardHeader className="border-2-lo-primary py-3 @md:py-6">
+					<div className="flex flex-row items-center justify-between gap-2">
+						<Byline
+							initials="PL"
+							name="Priya L."
+							action="posted a Request"
+							time="3 days ago"
+						/>
+						<LangBadge lang={SHOWCASE_LANG} />
+					</div>
+					<CardDescription className="sr-only">
+						A request for assistance, and a comments thread for other users to
+						discuss and answer with comments, flash card recommendations, or
+						both.
+					</CardDescription>
+				</CardHeader>
+				<CardContent className="flex flex-col gap-6">
+					<div className="inline-flex flex-row gap-2">
+						<Badge variant="outline">Greetings</Badge>
+						<Badge variant="outline">Formal register</Badge>
+					</div>
+					<div className="text-lg">
+						<Markdown>{REQUEST_PROMPT}</Markdown>
+					</div>
+				</CardContent>
+				<CardFooter className="flex flex-col gap-4 border-t py-4">
+					<div className="flex w-full flex-row items-center gap-2">
+						<Avatar className="bg-foreground text-background h-8 w-8 shrink-0 rounded-lg">
+							<AvatarFallback className="text-[10px] font-bold">
+								You
+							</AvatarFallback>
+						</Avatar>
+						<p className="bg-card/50 text-muted-foreground/70 w-full rounded-xl border px-2 py-1.5 pe-6 text-start text-sm shadow-xs inset-shadow-sm">
+							Add a comment or suggest a card...
+						</p>
+					</div>
+					<div className="text-muted-foreground flex w-full flex-wrap items-center gap-4 text-sm">
+						<span className="flex items-center gap-1">
+							<ThumbsUp className="size-4" /> 4
+						</span>
+						<span className="flex items-center gap-1">
+							<MessageSquare className="size-4" /> 2 comments
+						</span>
+						<span className="flex items-center gap-1">
+							<Mail className="size-4" /> 2 answers
+						</span>
+						<Share2 className="ms-auto size-4" />
+					</div>
+				</CardFooter>
+			</CardlikeRequest>
+
+			<div className="divide-y border">
+				{/* A comment that answers with two suggested flashcards */}
+				<div className="p-4">
+					<Byline
+						size="sm"
+						initials="MR"
+						name="Marco R."
+						action="commented"
+						time="2 days ago"
+					/>
+					<div className="mt-2">
+						<Markdown>
+							{
+								"Two phrases cover this nicely — the first is the everyday polite greeting, the second adds the warmth you're after."
+							}
+						</Markdown>
+					</div>
+					<div className="mt-3 space-y-2">
+						{ANSWER_PHRASES.map((p) => (
+							<AnswerCard
+								key={p.text}
+								text={p.text}
+								translation={p.translation}
+							/>
+						))}
+					</div>
+					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+						<Button variant="ghost" size="sm">
+							<ThumbsUp className="me-1 size-4" /> 6
+						</Button>
+						<Button variant="ghost" size="sm">
+							<Reply className="me-1 size-4" /> Reply
+						</Button>
+					</div>
+				</div>
+
+				{/* A comment with a couple of replies */}
+				<div className="p-4">
+					<Byline
+						size="sm"
+						initials="TK"
+						name="Theo K."
+						action="commented"
+						time="1 day ago"
+					/>
+					<div className="mt-2">
+						<Markdown>
+							{
+								"Don't forget the small head-bow when you say it — register is carried as much by the gesture as by the words here."
+							}
+						</Markdown>
+					</div>
+					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
+						<Button variant="ghost" size="sm">
+							<ThumbsUp className="me-1 size-4" /> 3
+						</Button>
+						<Button variant="soft" size="sm">
+							<ChevronDown className="me-1 size-4" /> 2 replies
+						</Button>
+					</div>
+					<div className="mt-3 space-y-2 text-sm">
+						<Separator />
+						<div className="divide-y">
+							<ReplyItem
+								initials="PL"
+								name="Priya L."
+								time="1 day ago"
+								content="Good to know. Is the head-bow expected with grandparents specifically, or with anyone older?"
+							/>
+							<ReplyItem
+								initials="MR"
+								name="Marco R."
+								time="22 hours ago"
+								content="Anyone clearly older than you — but especially grandparents."
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+function ShowcaseDeckDialog() {
+	return (
+		<div
+			className="bg-card grid max-w-md gap-4 rounded border p-6 shadow-lg"
+			style={getLangThemeCss(SHOWCASE_LANG)}
+			data-testid="showcase-deck-dialog"
+		>
+			<div className="flex flex-col space-y-1.5 border-b pb-4">
+				<h3 className="text-foreground/90 text-lg leading-none font-semibold tracking-tight">
+					Sunese
+				</h3>
+				<p className="text-muted-foreground text-sm">
+					<span className="text-primary-foresoft font-medium">
+						24 cards due
+					</span>
+					{' · '}83 total
+				</p>
+			</div>
+
+			<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+				<div className="from-5-mhi-primary to-6-mid-primary text-primary-foreground flex h-full flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 shadow">
+					<Rocket className="size-6" />
+					<div>
+						<div className="text-base leading-tight font-semibold">
+							Daily practice
+						</div>
+						<div className="text-primary-foreground/80 text-xs">
+							24 cards ready
+						</div>
+					</div>
+				</div>
+				<div className="border-2-lo-primary bg-1-mlo-primary text-primary-foresoft flex h-full flex-col items-start gap-2 rounded-2xl border p-4 shadow">
+					<Logs className="size-6" />
+					<div>
+						<div className="text-base leading-tight font-semibold">
+							Browse deck
+						</div>
+						<div className="text-muted-foreground text-xs">
+							Feed, phrases, stats & settings
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<nav
+				aria-label="Deck quick links"
+				className="flex flex-wrap gap-x-4 gap-y-2 px-2 pt-1 text-sm"
+			>
+				<span className="s-link">Manage Cards</span>
+				<span className="s-link">New Phrase</span>
+				<span className="s-link">Stats</span>
+				<span className="s-link">Search</span>
+				<span className="s-link">Settings</span>
+			</nav>
+		</div>
+	)
+}
+
+function ShowcaseReviewCard() {
+	return (
+		<div
+			className="mx-auto flex max-w-160 flex-col gap-2"
+			data-testid="showcase-review-card"
+		>
+			<CardlikeFlashcard className="flex w-full flex-col">
+				<CardContent className="relative flex flex-col items-center justify-center gap-4">
+					<Button
+						variant="ghost"
+						size="icon"
+						aria-label="Open context menu"
+						className="absolute end-4 top-4"
+						disabled
+					>
+						<MoreVertical />
+					</Button>
+					<Badge
+						variant="outline"
+						className="absolute start-4 top-4 gap-1 text-xs"
+					>
+						Recognition <Lightbulb className="size-3" />
+					</Badge>
+					<div className="pt-16">
+						<div className="text-center text-2xl font-bold">
+							&ldquo;selamat sonja&rdquo;
+						</div>
+					</div>
+					<Separator />
+					<div className="w-full space-y-3">
+						<h3 className="text-muted-foreground text-center text-sm font-medium tracking-wide uppercase">
+							Translations
+						</h3>
+						{REVIEW_TRANSLATIONS.map((t) => (
+							<div key={t} className="flex items-center justify-center gap-2">
+								<LangBadge lang="eng" />
+								<div className="text-lg">{t}</div>
+							</div>
+						))}
+					</div>
+				</CardContent>
+			</CardlikeFlashcard>
+
+			<div className="grid w-full grid-cols-4">
+				{ANSWER_CHOICES.map((c) => (
+					<Button
+						key={c.label}
+						variant="default"
+						className={cn(
+							'h-auto w-full flex-col gap-0 rounded-none py-2',
+							c.cls
+						)}
+					>
+						<span>{c.label}</span>
+						<span className="text-xs font-normal opacity-80">{c.interval}</span>
+					</Button>
+				))}
+			</div>
+		</div>
+	)
+}
+
+function ComponentShowcase() {
+	return (
+		<section
+			className="@container space-y-6"
+			style={getLangThemeCss(SHOWCASE_LANG)}
+		>
+			<div className="space-y-1">
+				<h2 className="text-lg font-semibold">Components in context</h2>
+				<p className="text-muted-foreground text-sm">
+					Real UI components assembled with a made-up language ({SHOWCASE_LANG})
+					and placeholder content — a request thread, the deck dialog, and a
+					card mid-review.
+				</p>
+			</div>
+
+			<div className="grid gap-6 @4xl:grid-cols-2">
+				<div className="space-y-2">
+					<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+						Request thread
+					</h3>
+					<ShowcaseRequestThread />
+				</div>
+				<div className="space-y-6">
+					<div className="space-y-2">
+						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+							Deck dialog
+						</h3>
+						<ShowcaseDeckDialog />
+					</div>
+					<div className="space-y-2">
+						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+							Card in review
+						</h3>
+						<ShowcaseReviewCard />
+					</div>
+				</div>
+			</div>
+		</section>
+	)
+}
 
 function ThemesPage() {
 	const { data: ranked = [] } = useLiveQuery((q) =>
@@ -32,6 +498,8 @@ function ThemesPage() {
 
 	return (
 		<div className="mx-auto max-w-5xl space-y-8 p-6">
+			<ComponentShowcase />
+
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
 				<p className="text-muted-foreground text-sm">
