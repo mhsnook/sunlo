@@ -19,6 +19,7 @@ import { notificationsCollection } from '@/features/notifications/collections'
 import { queryClient } from '@/lib/query-client'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 import { clearPersistedUserData } from '@/lib/collections/local-cache'
+import { should } from '@scenetest/checks-react'
 
 export const clearUser = async () => {
 	console.log('Sign-out: clearing user collections and local cache')
@@ -52,4 +53,27 @@ export const clearUser = async () => {
 
 	// confirm-quit phase: drop the localStorage sidecar cache too.
 	clearPersistedUserData()
+
+	// Confirm logout returned every user-scoped collection to a neutral
+	// (empty) state. commentsCollection / commentPhraseLinksCollection are
+	// public, so they keep their rows and are deliberately excluded.
+	// Stripped from production by the Vite plugin.
+	const userCollectionSizes = {
+		myProfile: myProfileCollection.toArray.length,
+		decks: decksCollection.toArray.length,
+		cards: cardsCollection.toArray.length,
+		reviewDays: reviewDaysCollection.toArray.length,
+		cardReviews: cardReviewsCollection.toArray.length,
+		friendSummaries: friendSummariesCollection.toArray.length,
+		chatMessages: chatMessagesCollection.toArray.length,
+		commentUpvotes: commentUpvotesCollection.toArray.length,
+		phraseRequestUpvotes: phraseRequestUpvotesCollection.toArray.length,
+		phrasePlaylistUpvotes: phrasePlaylistUpvotesCollection.toArray.length,
+		notifications: notificationsCollection.toArray.length,
+	}
+	should(
+		'all user-scoped collections are empty after logout',
+		Object.values(userCollectionSizes).every((n) => n === 0),
+		userCollectionSizes
+	)
 }
