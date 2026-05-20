@@ -15,6 +15,7 @@ import Routes from './routes'
 import '@/styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
+import './lib/collections/local-cache'
 import './test-runtime-helpers'
 
 // Create a new router instance
