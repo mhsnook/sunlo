@@ -9,6 +9,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { should, serverCheck, failed } from '@scenetest/checks-react'
 import { sortDecksByCreation } from '@/lib/utils'
 import languages from '@/lib/languages'
 import type { TablesUpdate } from '@/types/supabase'
@@ -48,6 +49,47 @@ export const decksCollection = createCollection(
 						.eq('lang', m.original.lang)
 						.throwOnError()
 				)
+			)
+			// m.changes IS the optimistic collection value, so confirming the
+			// server row matches it proves client/server agreement without
+			// inspecting the collection separately. Stripped from production.
+			serverCheck(
+				'user_deck rows match the submitted updates',
+				async (server, { updates }) => {
+					await Promise.all(
+						updates.map(async (u) => {
+							const { data, error } = await server.supabase
+								.from('user_deck')
+								.select()
+								.eq('uid', u.uid)
+								.eq('lang', u.lang)
+								.maybeSingle()
+							if (error || !data) {
+								failed('fetch user_deck after update', {
+									error: error?.message,
+									lang: u.lang,
+								})
+								return
+							}
+							const row = data as Record<string, unknown>
+							should(
+								`user_deck (${u.lang}) persisted the submitted values`,
+								Object.entries(u.changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+								{ submitted: u.changes, returned: data }
+							)
+						})
+					)
+				},
+				() => ({
+					updates: transaction.mutations.map((m) => ({
+						uid: m.original.uid,
+						lang: m.original.lang,
+						changes: m.changes as Record<string, unknown>,
+					})),
+				})
 			)
 			return { refetch: false }
 		},
@@ -90,6 +132,53 @@ export const cardsCollection = createCollection(
 					}))
 				)
 				.throwOnError()
+			// Confirm the server stored the same cards our optimistic insert
+			// added to the collection. Stripped from production.
+			serverCheck(
+				'inserted user_card rows match the optimistic cards',
+				async (server, { cards }) => {
+					const { data, error } = await server.supabase
+						.from('user_card')
+						.select('id, status, phrase_id, direction, lang')
+						.in(
+							'id',
+							cards.map((c) => c.id)
+						)
+					if (error || !data) {
+						failed('fetch user_card after insert', { error: error?.message })
+						return
+					}
+					should(
+						'every optimistic card was inserted',
+						data.length === cards.length,
+						{
+							expected: cards.length,
+							got: data.length,
+						}
+					)
+					cards.forEach((c) => {
+						const row = data.find((d) => d.id === c.id)
+						should(
+							`user_card ${c.id} matches the optimistic row`,
+							!!row &&
+								row.status === c.status &&
+								row.phrase_id === c.phrase_id &&
+								row.direction === c.direction &&
+								row.lang === c.lang,
+							{ optimistic: c, returned: row }
+						)
+					})
+				},
+				() => ({
+					cards: transaction.mutations.map((m) => ({
+						id: m.modified.id,
+						status: m.modified.status,
+						phrase_id: m.modified.phrase_id,
+						direction: m.modified.direction,
+						lang: m.modified.lang,
+					})),
+				})
+			)
 			return { refetch: false }
 		},
 		onUpdate: async ({ transaction }) => {
@@ -104,6 +193,44 @@ export const cardsCollection = createCollection(
 						.eq('id', m.original.id)
 						.throwOnError()
 				)
+			)
+			// Confirm the server row matches the optimistic update. Stripped
+			// from production.
+			serverCheck(
+				'user_card rows match the submitted updates',
+				async (server, { updates }) => {
+					await Promise.all(
+						updates.map(async (u) => {
+							const { data, error } = await server.supabase
+								.from('user_card')
+								.select()
+								.eq('id', u.id)
+								.maybeSingle()
+							if (error || !data) {
+								failed('fetch user_card after update', {
+									error: error?.message,
+									id: u.id,
+								})
+								return
+							}
+							const row = data as Record<string, unknown>
+							should(
+								`user_card ${u.id} persisted the submitted values`,
+								Object.entries(u.changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+								{ submitted: u.changes, returned: data }
+							)
+						})
+					)
+				},
+				() => ({
+					updates: transaction.mutations.map((m) => ({
+						id: m.original.id,
+						changes: m.changes as Record<string, unknown>,
+					})),
+				})
 			)
 			return { refetch: false }
 		},
