@@ -287,6 +287,12 @@ enabled = true
 # runtime before the function code runs.
 verify_jwt = true
 
+[functions.tts]
+enabled = true
+# Authenticated: the play button only renders for logged-in users, and each
+# call spends paid Workers AI credits — reject anonymous callers.
+verify_jwt = true
+
 [analytics]
 enabled = false
 port = 54327

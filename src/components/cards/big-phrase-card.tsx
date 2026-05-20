@@ -43,6 +43,7 @@ import {
 	type PhraseProvenanceItem as PhraseProvenanceItemType,
 } from '@/features/phrases'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
+import { PhraseSpeakerButton } from '@/components/phrase-speaker-button'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
 import { ago } from '@/lib/dayjs'
 import { useMyCard } from '@/features/deck/hooks'
@@ -93,15 +94,24 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 							</div>
 							<AdminGearLink phraseId={pid} lang={phrase.lang} />
 						</div>
-						<CardTitle className="space-x-1 text-2xl">
-							<span
-								style={
-									{ viewTransitionName: `phrase-text-${pid}` } as CSSProperties
-								}
-							>
-								&ldquo;{phrase.text}&rdquo;
-							</span>
-						</CardTitle>
+						<div className="flex flex-row items-center gap-2">
+							<CardTitle className="space-x-1 text-2xl">
+								<span
+									style={
+										{
+											viewTransitionName: `phrase-text-${pid}`,
+										} as CSSProperties
+									}
+								>
+									&ldquo;{phrase.text}&rdquo;
+								</span>
+							</CardTitle>
+							<PhraseSpeakerButton
+								text={phrase.text}
+								lang={phrase.lang}
+								aria-label="Play phrase"
+							/>
+						</div>
 					</div>
 				</CardHeader>
 

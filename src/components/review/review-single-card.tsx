@@ -5,7 +5,7 @@ import {
 	useEffect,
 	useState,
 } from 'react'
-import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
 import { Link } from '@tanstack/react-router'
@@ -17,7 +17,6 @@ import {
 	History,
 	Lightbulb,
 	MoreVertical,
-	Play,
 	RotateCcw,
 	Send,
 } from 'lucide-react'
@@ -27,7 +26,7 @@ import { cn } from '@/lib/utils'
 import { formatInterval } from '@/lib/dayjs'
 import { intervals, type Score } from '@/features/review/fsrs'
 import PracticeHistoryDialog from '@/components/practice-history-dialog'
-import Flagged from '@/components/flagged'
+import { PhraseSpeakerButton } from '@/components/phrase-speaker-button'
 import { Button } from '@/components/ui/button'
 import {
 	useChainPredecessorForPhrase,
@@ -60,11 +59,6 @@ import { useMyCard } from '@/features/deck/hooks'
 import { useCheck, should } from '@scenetest/checks-react'
 
 type CardStatus = CardMetaType['status']
-
-const playAudio = (text: string) => {
-	toastNeutral(`Playing audio for: ${text}`)
-	// In a real application, you would trigger audio playback here
-}
 
 const COIN_COLORS: Record<Score, string> = {
 	1: 'bg-red-600',
@@ -165,16 +159,11 @@ export function ReviewSingleCard({
 			<div className="text-center text-2xl font-bold">
 				&ldquo;{phrase.text}&rdquo;
 			</div>
-			<Flagged name="text_to_speech">
-				<Button
-					size="icon"
-					variant="neutral"
-					onClick={() => playAudio(phrase.text)}
-					aria-label="Play phrase"
-				>
-					<Play className="size-4" />
-				</Button>
-			</Flagged>
+			<PhraseSpeakerButton
+				text={phrase.text}
+				lang={phrase.lang}
+				aria-label="Play phrase"
+			/>
 		</div>
 	)
 
@@ -188,16 +177,11 @@ export function ReviewSingleCard({
 				<div key={trans.id} className="flex items-center justify-center gap-2">
 					<LangBadge lang={trans.lang} />
 					<div className="text-lg">{trans.text}</div>
-					<Flagged name="text_to_speech">
-						<Button
-							size="icon"
-							variant="neutral"
-							onClick={() => playAudio(trans.text)}
-							aria-label="Play translation"
-						>
-							<Play className="size-4" />
-						</Button>
-					</Flagged>
+					<PhraseSpeakerButton
+						text={trans.text}
+						lang={trans.lang}
+						aria-label="Play translation"
+					/>
 				</div>
 			))}
 		</div>
