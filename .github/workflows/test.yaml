@@ -368,6 +368,36 @@ jobs:
               });
             }
 
+  prod-bundle-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Set up dummy env for build
+        run: |
+          echo "VITE_SUPABASE_URL=http://127.0.0.1:54321" >> $GITHUB_ENV
+          echo "VITE_SUPABASE_ANON_KEY=dummy" >> $GITHUB_ENV
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build production bundle
+        run: pnpm build
+
+      - name: Scan bundle for leaked dev-only code
+        run: ./scripts/check-prod-bundle.sh dist
+
   unit:
     runs-on: ubuntu-latest
     timeout-minutes: 3
