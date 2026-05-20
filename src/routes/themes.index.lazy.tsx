@@ -12,6 +12,7 @@ import {
 	Reply,
 	Rocket,
 	Share2,
+	Star,
 	ThumbsUp,
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
@@ -565,6 +566,9 @@ function ComponentShowcase() {
 	)
 }
 
+// Our standard brand hue, shown alongside the per-language stops.
+const BRAND_HUE = 300
+
 function ThemesPage() {
 	const { data: ranked = [] } = useLiveQuery((q) =>
 		q
@@ -573,14 +577,32 @@ function ThemesPage() {
 			.orderBy(({ language }) => language.display_order)
 	)
 
+	const [activeHue, setActiveHue] = useState<number | null>(null)
+
 	const grouped = LANG_HUES.map((hue, i) => ({
 		index: i,
 		hue,
 		langs: allLanguageOptions.filter((opt) => getLangHueIndex(opt.value) === i),
 	}))
 
+	const swatches = [
+		...LANG_HUES.map((hue, i) => ({ hue, label: `#${i}`, brand: false })),
+		{ hue: BRAND_HUE, label: 'Brand', brand: true },
+	]
+
 	return (
-		<div className="mx-auto max-w-5xl space-y-8 p-6">
+		<div
+			className="mx-auto max-w-5xl space-y-8 p-6"
+			style={
+				activeHue === null
+					? undefined
+					: ({
+							'--hue-primary': activeHue,
+							'--hue-accent': activeHue,
+							'--hue-neutral': activeHue,
+						} as CSSProperties)
+			}
+		>
 			<ComponentShowcase />
 
 			<header className="space-y-2">
@@ -594,25 +616,62 @@ function ThemesPage() {
 			</header>
 
 			<section className="space-y-2">
-				<h2 className="text-lg font-semibold">Swatches</h2>
-				<div className="grid grid-cols-5 gap-2 @md:grid-cols-10">
-					{LANG_HUES.map((hue, i) => (
-						<div
-							key={hue}
-							className="flex flex-col items-center gap-1 rounded p-2 text-xs"
-							style={{ '--hue-primary': hue } as CSSProperties}
+				<div className="flex items-center justify-between gap-2">
+					<h2 className="text-lg font-semibold">Swatches</h2>
+					{activeHue !== null && (
+						<Button
+							size="sm"
+							variant="neutral"
+							onClick={() => setActiveHue(null)}
 						>
-							<div className="bg-1-mlo-primary h-10 w-full rounded" />
-							<span className="text-muted-foreground">
-								#{i} · {hue}°
-							</span>
-						</div>
-					))}
+							Reset page hue
+						</Button>
+					)}
+				</div>
+				<p className="text-muted-foreground text-sm">
+					Click any swatch to theme the whole page with that hue.
+				</p>
+				<div className="grid grid-cols-5 gap-2 @md:grid-cols-10">
+					{swatches.map((s) => {
+						const isActive = activeHue === s.hue
+						return (
+							<button
+								key={s.label}
+								type="button"
+								aria-pressed={isActive}
+								onClick={() => setActiveHue(isActive ? null : s.hue)}
+								className={cn(
+									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
+									isActive
+										? 'border-primary ring-primary ring-2'
+										: s.brand
+											? 'border-primary'
+											: 'hover:border-border border-transparent'
+								)}
+								style={{ '--hue-primary': s.hue } as CSSProperties}
+							>
+								<div className="bg-1-mlo-primary h-10 w-full rounded" />
+								<span
+									className={cn(
+										'flex items-center gap-1',
+										s.brand
+											? 'text-primary-foresoft font-semibold'
+											: 'text-muted-foreground'
+									)}
+								>
+									{s.brand && <Star className="size-3" />}
+									{s.label} · {s.hue}°
+								</span>
+							</button>
+						)
+					})}
 				</div>
 			</section>
 
-			<section className="space-y-2">
-				<h2 className="text-lg font-semibold">Popularity walk</h2>
+			<details className="rounded border p-4 [&>*+*]:mt-2">
+				<summary className="cursor-pointer text-lg font-semibold">
+					Popularity walk
+				</summary>
 				<p className="text-muted-foreground text-sm">
 					Languages in popularity order. The stop column should read 6, 0, 4, 8,
 					2, 7, 1, 5, 9, 3, 6, 0, 4 …
@@ -631,10 +690,12 @@ function ThemesPage() {
 						</div>
 					))}
 				</div>
-			</section>
+			</details>
 
-			<section className="space-y-4">
-				<h2 className="text-lg font-semibold">Languages by stop</h2>
+			<details className="rounded border p-4 [&>*+*]:mt-4">
+				<summary className="cursor-pointer text-lg font-semibold">
+					Languages by stop
+				</summary>
 				{grouped.map((group) => (
 					<div key={group.hue} className="space-y-2">
 						<div className="text-muted-foreground text-xs">
@@ -660,7 +721,7 @@ function ThemesPage() {
 						</div>
 					</div>
 				))}
-			</section>
+			</details>
 		</div>
 	)
 }
