@@ -29,78 +29,80 @@ test('learner adds a freshly-created phrase from the feed and cycles its card st
 }) => {
 	const lang = team.tags!.lang_full
 	const learner = await actor('learner')
-	let phraseId = ''
 
-	await learner
-		.do(async () => {
-			// Idempotent: clear any phrases left by an earlier failed run.
-			await supabase
-				.from('phrase')
-				.delete()
-				.eq('added_by', learner.key)
-				.like('text', 'Cards scene phrase%')
-			const { data: phrase } = await supabase
-				.from('phrase')
-				.insert({
-					lang,
-					text: `Cards scene phrase ${Date.now()}`,
-					added_by: learner.key,
-				})
-				.select()
-				.single()
-				.throwOnError()
-			phraseId = phrase!.id
-			await supabase
-				.from('phrase_translation')
-				.insert({
-					phrase_id: phraseId,
-					lang: 'eng',
-					text: 'cards scene translation',
-					added_by: learner.key,
-				})
-				.throwOnError()
+	// Create the phrase BEFORE building the action chain. The chain is
+	// constructed eagerly, so any `${phraseId}` interpolated into a selector
+	// must already hold its real value when the chain is assembled — a value
+	// set inside a later .do() callback would interpolate as empty.
+	await supabase
+		.from('phrase')
+		.delete()
+		.eq('added_by', learner.key)
+		.like('text', 'Cards scene phrase%')
+	const { data: phrase } = await supabase
+		.from('phrase')
+		.insert({
+			lang,
+			text: `Cards scene phrase ${Date.now()}`,
+			added_by: learner.key,
 		})
-		.openTo('/login')
-		.typeInto('email-input', learner.email!)
-		.typeInto('password-input', learner.password!)
-		.click('submit-button')
-		.notSee('login-form')
-		// the freshly-created phrase shows up as a feed activity item …
-		.openTo(`/learn/${lang}/feed`)
-		.up()
-		.see('deck-feed-page')
-		.see(`feed-phrase-link ${phraseId}`)
-		// … and links through to its detail page
-		.click(`feed-phrase-link ${phraseId}`)
-		.up()
-		.see('phrase-detail-page')
-		// add it to the deck — cardsCollection.onInsert's serverCheck confirms
-		// the server row matches the optimistic card
-		.click('card-status-dropdown')
-		.click('add-to-deck-option')
-		.up()
-		.seeToast('toast-success')
-		// cycle the status — each update fires cardsCollection.onUpdate's
-		// serverCheck
-		.click('card-status-dropdown')
-		.click('set-learned-option')
-		.up()
-		.seeToast('toast-success')
-		.click('card-status-dropdown')
-		.click('ignore-card-option')
-		.up()
-		.seeToast('toast-success')
-		.click('card-status-dropdown')
-		.click('activate-card-option')
-		.up()
-		.seeToast('toast-success')
-		// reload to confirm the card state re-hydrates cleanly from the server
-		.do(async (page) => {
-			await page.reload()
+		.select()
+		.single()
+		.throwOnError()
+	const phraseId = phrase!.id
+	await supabase
+		.from('phrase_translation')
+		.insert({
+			phrase_id: phraseId,
+			lang: 'eng',
+			text: 'cards scene translation',
+			added_by: learner.key,
 		})
-		.see('phrase-detail-page')
-		.do(async () => {
-			// Deleting the phrase cascades to its translation and user_card rows.
-			await supabase.from('phrase').delete().eq('id', phraseId).throwOnError()
-		})
+		.throwOnError()
+
+	try {
+		await learner
+			.openTo('/login')
+			.typeInto('email-input', learner.email!)
+			.typeInto('password-input', learner.password!)
+			.click('submit-button')
+			.notSee('login-form')
+			// the freshly-created phrase shows up as a feed activity item …
+			.openTo(`/learn/${lang}/feed`)
+			.up()
+			.see('deck-feed-page')
+			.see(`feed-phrase-link ${phraseId}`)
+			// … and links through to its detail page
+			.click(`feed-phrase-link ${phraseId}`)
+			.up()
+			.see('phrase-detail-page')
+			// add it to the deck — cardsCollection.onInsert's serverCheck confirms
+			// the server row matches the optimistic card
+			.click('card-status-dropdown')
+			.click('add-to-deck-option')
+			.up()
+			.seeToast('toast-success')
+			// cycle the status — each update fires cardsCollection.onUpdate's
+			// serverCheck
+			.click('card-status-dropdown')
+			.click('set-learned-option')
+			.up()
+			.seeToast('toast-success')
+			.click('card-status-dropdown')
+			.click('ignore-card-option')
+			.up()
+			.seeToast('toast-success')
+			.click('card-status-dropdown')
+			.click('activate-card-option')
+			.up()
+			.seeToast('toast-success')
+			// reload to confirm the card state re-hydrates cleanly from the server
+			.do(async (page) => {
+				await page.reload()
+			})
+			.see('phrase-detail-page')
+	} finally {
+		// Deleting the phrase cascades to its translation and user_card rows.
+		await supabase.from('phrase').delete().eq('id', phraseId).throwOnError()
+	}
 })
