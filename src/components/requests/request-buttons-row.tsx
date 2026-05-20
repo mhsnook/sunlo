@@ -1,4 +1,4 @@
-import { MessagesSquare, Repeat, Send, WalletCards } from 'lucide-react'
+import { MessageSquare, Repeat, Send, WalletCards } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request-to-friend'
@@ -46,7 +46,7 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 					className="flex flex-row items-center gap-2"
 					data-testid="comments-count"
 				>
-					<MessagesSquare className="size-4" aria-hidden="true" />
+					<MessageSquare className="size-4" aria-hidden="true" />
 					<span>
 						{countComments}
 						<span className="@max-lg:sr-only">
