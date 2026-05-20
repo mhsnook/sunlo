@@ -15,8 +15,11 @@ import Routes from './routes'
 import '@/styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
-import './lib/collections/local-cache'
+import { restorePersistedUserData } from './lib/collections/local-cache'
 import './test-runtime-helpers'
+
+// sync phase: restore persisted user data from localStorage before first paint.
+restorePersistedUserData()
 
 // Create a new router instance
 const router = createRouter({

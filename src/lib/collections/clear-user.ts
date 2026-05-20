@@ -18,6 +18,7 @@ import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collection
 import { notificationsCollection } from '@/features/notifications/collections'
 import { queryClient } from '@/lib/query-client'
 import { resetUiPrefs } from '@/lib/ui-prefs'
+import { clearPersistedUserData } from '@/lib/collections/local-cache'
 
 export const clearUser = async () => {
 	resetUiPrefs()
@@ -47,4 +48,7 @@ export const clearUser = async () => {
 	// Also clear React Query cache for user queries to prevent stale data
 	// from showing after sign out (e.g., avatar on home page)
 	queryClient.removeQueries({ queryKey: ['user'] })
+
+	// confirm-quit phase: drop the localStorage sidecar cache too.
+	clearPersistedUserData()
 }
