@@ -2,6 +2,7 @@ import { type ReactNode, CSSProperties, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
+import { should } from '@scenetest/checks-react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'
@@ -312,6 +313,12 @@ function BulkAddPhrasesPage() {
 
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
 
+			should(
+				'bulk add wrote every submitted phrase into phrasesCollection',
+				phrasesToInsert.every((p) => phrasesCollection.has(p.id)),
+				{ count: phrasesToInsert.length }
+			)
+
 			if (cards.length) {
 				cards.forEach((card) =>
 					cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
@@ -402,6 +409,7 @@ function BulkAddPhrasesPage() {
 											size="sm"
 											className="text-destructive text-xs"
 											onClick={() => setStagedPhrases([])}
+											data-testid="clear-staged-phrases"
 										>
 											Clear all
 										</Button>
@@ -686,6 +694,7 @@ function StagedPhraseRow({
 					size="icon"
 					className="size-7"
 					aria-label="Edit phrase"
+					data-testid="edit-staged-phrase"
 					onClick={onEdit}
 				>
 					<Pencil className="size-3.5" />
@@ -695,6 +704,7 @@ function StagedPhraseRow({
 					size="icon"
 					className="size-7"
 					aria-label="Remove phrase"
+					data-testid="remove-staged-phrase"
 					onClick={onRemove}
 				>
 					<Trash2 className="text-destructive size-3.5" />

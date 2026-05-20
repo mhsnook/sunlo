@@ -133,6 +133,24 @@ natural wrapper element to label.
 | `add-tags-trigger`         | data-testid | Big phrase card    | Tags icon that opens the edit-tags dialog                                             |
 | `add-tags-dialog`          | data-testid | Dialog             | Edit-tags dialog (contains `add-tags-form`)                                           |
 | `bulk-add-page`            | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add                                                   |
+| `inline-add-bar`           | data-testid | Bulk add page      | Inline phrase/translation entry bar                                                   |
+| `inline-phrase-input`      | data-testid | Inline add bar     | Phrase text input                                                                     |
+| `inline-translation-input` | data-testid | Inline add bar     | Translation text input                                                                |
+| `inline-add-button`        | data-testid | Inline add bar     | Button that stages the typed phrase                                                   |
+| `empty-state-hint`         | data-testid | Bulk add page      | Hint shown when no phrases are staged                                                 |
+| `staged-phrases-list`      | data-testid | Bulk add page      | Container listing staged phrases                                                      |
+| `staged-count`             | data-testid | Bulk add page      | "N phrases ready" label                                                               |
+| `staged-phrase-text`       | data-testid | Staged phrase row  | Staged phrase native text                                                             |
+| `staged-translation-text`  | data-testid | Staged phrase row  | Staged phrase translation text                                                        |
+| `edit-staged-phrase`       | data-testid | Staged phrase row  | Opens the edit dialog for that row                                                    |
+| `remove-staged-phrase`     | data-testid | Staged phrase row  | Removes that row from the staging list                                                |
+| `clear-staged-phrases`     | data-testid | Bulk add page      | "Clear all" button — empties the staging list                                         |
+| `edit-phrase-text`         | data-testid | Edit phrase dialog | Phrase text input inside the edit dialog                                              |
+| `edit-translation-0`       | data-testid | Edit phrase dialog | First translation input inside the edit dialog                                        |
+| `edit-save-button`         | data-testid | Edit phrase dialog | Saves edits and closes the dialog                                                     |
+| `submit-staged-phrases`    | data-testid | Bulk add page      | Submits all staged phrases to the database                                            |
+| `success-section`          | data-testid | Bulk add page      | "Successfully Added" section after a submit                                           |
+| `success-phrase-list`      | data-testid | Success section    | List of newly created phrase cards                                                    |
 
 ## Sidebar Navigation
 
