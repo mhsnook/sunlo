@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
@@ -19,7 +19,6 @@ import {
 	getLangHue,
 	getLangHueIndex,
 	getLangPopularityIndex,
-	getLangThemeCss,
 	LANG_HUES,
 } from '@/lib/lang-theme'
 import { cn } from '@/lib/utils'
@@ -124,6 +123,29 @@ function Byline({
 	)
 }
 
+// A ghost button that lights up to `soft` when active — the standard
+// ghost→soft toggle pattern, used here for upvotes.
+function UpvoteButton({
+	count,
+	defaultVoted = false,
+}: {
+	count: number
+	defaultVoted?: boolean
+}) {
+	const [voted, setVoted] = useState(defaultVoted)
+	return (
+		<Button
+			variant={voted ? 'soft' : 'ghost'}
+			size="sm"
+			aria-pressed={voted}
+			onClick={() => setVoted((v) => !v)}
+		>
+			<ThumbsUp className="me-1 size-4" />
+			{count + (voted ? 1 : 0)}
+		</Button>
+	)
+}
+
 function AnswerCard({
 	text,
 	translation,
@@ -175,9 +197,7 @@ function ReplyItem({
 				<Markdown>{content}</Markdown>
 			</div>
 			<div className="text-muted-foreground ms-8 mt-2 flex items-center gap-2">
-				<Button variant="ghost" size="sm">
-					<ThumbsUp className="me-1 size-4" /> 1
-				</Button>
+				<UpvoteButton count={1} />
 			</div>
 		</div>
 	)
@@ -265,9 +285,7 @@ function ShowcaseRequestThread() {
 						))}
 					</div>
 					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
-						<Button variant="ghost" size="sm">
-							<ThumbsUp className="me-1 size-4" /> 6
-						</Button>
+						<UpvoteButton count={6} defaultVoted />
 						<Button variant="ghost" size="sm">
 							<Reply className="me-1 size-4" /> Reply
 						</Button>
@@ -291,9 +309,7 @@ function ShowcaseRequestThread() {
 						</Markdown>
 					</div>
 					<div className="text-muted-foreground mt-3 flex items-center gap-4 text-sm">
-						<Button variant="ghost" size="sm">
-							<ThumbsUp className="me-1 size-4" /> 3
-						</Button>
+						<UpvoteButton count={3} />
 						<Button variant="soft" size="sm">
 							<ChevronDown className="me-1 size-4" /> 2 replies
 						</Button>
@@ -325,7 +341,6 @@ function ShowcaseDeckDialog() {
 	return (
 		<div
 			className="bg-card grid max-w-md gap-4 rounded border p-6 shadow-lg"
-			style={getLangThemeCss(SHOWCASE_LANG)}
 			data-testid="showcase-deck-dialog"
 		>
 			<div className="flex flex-col space-y-1.5 border-b pb-4">
@@ -441,12 +456,74 @@ function ShowcaseReviewCard() {
 	)
 }
 
+// Ghost button that toggles to its lit `soft` state — same pattern as
+// the upvote buttons in the request thread.
+function HighlightToggleButton() {
+	const [active, setActive] = useState(true)
+	return (
+		<Button
+			variant={active ? 'soft' : 'ghost'}
+			size="sm"
+			aria-pressed={active}
+			onClick={() => setActive((v) => !v)}
+		>
+			Highlight
+		</Button>
+	)
+}
+
+function ShowcaseButtonsAndType() {
+	return (
+		<div
+			className="bg-card max-w-md space-y-5 rounded border p-5 shadow-lg"
+			data-testid="showcase-buttons-type"
+		>
+			<div className="space-y-2">
+				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+					Button variants
+				</p>
+				<div className="flex flex-wrap gap-2">
+					<Button size="sm">Primary</Button>
+					<Button size="sm" variant="soft">
+						Primary soft
+					</Button>
+					<Button size="sm" variant="neutral">
+						Neutral
+					</Button>
+					<HighlightToggleButton />
+					<Button size="sm" variant="red">
+						Red
+					</Button>
+					<Button size="sm" variant="red-soft">
+						Red soft
+					</Button>
+				</div>
+			</div>
+			<Separator />
+			<div className="space-y-1.5">
+				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+					Type scale
+				</p>
+				<p className="text-2xl font-bold">Display heading</p>
+				<p className="text-xl">Section heading</p>
+				<p className="text-base">
+					Body copy at the base size — the default for reading.
+				</p>
+				<p className="text-sm">Small print for captions and metadata.</p>
+				<p className="text-muted-foreground text-sm">
+					Muted grey for secondary, lower-priority text.
+				</p>
+				<p className="text-base">
+					A base line with <span className="font-bold">bold</span> emphasis.
+				</p>
+			</div>
+		</div>
+	)
+}
+
 function ComponentShowcase() {
 	return (
-		<section
-			className="@container space-y-6"
-			style={getLangThemeCss(SHOWCASE_LANG)}
-		>
+		<section className="@container space-y-6">
 			<div className="space-y-1">
 				<h2 className="text-lg font-semibold">Components in context</h2>
 				<p className="text-muted-foreground text-sm">
@@ -475,6 +552,12 @@ function ComponentShowcase() {
 							Card in review
 						</h3>
 						<ShowcaseReviewCard />
+					</div>
+					<div className="space-y-2">
+						<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+							Buttons & type
+						</h3>
+						<ShowcaseButtonsAndType />
 					</div>
 				</div>
 			</div>
