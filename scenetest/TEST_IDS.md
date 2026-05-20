@@ -149,7 +149,10 @@ natural wrapper element to label.
 | `profile-page`                           | data-testid | Profile route            | Profile page container                                                                                             |
 | `update-profile-form`                    | data-testid | Profile route            | Edit-profile form (scope `username-input` / `submit-button`)                                                       |
 | `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
-| `profile-creation-form`                  | data-testid | Onboarding route         | Initial profile-creation form (scope `username-input` / `submit-button`)                                           |
+| `profile-creation-form`                  | data-testid | Onboarding route         | Profile-setup form on /getting-started (scope `username-input` / `submit-button`)                                  |
+| `onboarding-nudge`                       | data-testid | Sidebar                  | Soft prompt to finish onboarding (shown while `flags['needs-onboarding']`)                                         |
+| `onboarding-nudge-cta`                   | data-testid | Onboarding nudge         | Link from the nudge to /getting-started                                                                            |
+| `onboarding-nudge-dismiss`               | data-testid | Onboarding nudge         | Dismisses the nudge (clears the `needs-onboarding` flag)                                                           |
 | `languages-known`                        | data-testid | Profile / onboarding     | Container for the languages-known array editor (rows have `data-key={index}`)                                      |
 | `add-language-button`                    | data-testid | Languages-known          | Opens the language picker; selecting a language pushes a new row                                                   |
 | `language-name`                          | data-testid | Languages-known row      | Read-only display of this row's language name                                                                      |
@@ -370,11 +373,14 @@ element to appear and then disappear:
 See also the `Languages-known field` section above for testids inside the
 LanguagesKnownField (used on /profile and /getting-started).
 
-| Selector                | Attribute   | Component/Location                              | Description                                                            |
-| ----------------------- | ----------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `getting-started-page`  | data-testid | `routes/_user/getting-started.tsx`              | Onboarding page container                                              |
-| `profile-creation-form` | data-testid | `routes/_user/getting-started.tsx`              | Form on the onboarding page (scope `username-input` / `submit-button`) |
-| `update-profile-form`   | data-testid | `routes/_user/profile/-update-profile-form.tsx` | Form on /profile (scope `username-input` / `submit-button`)            |
+| Selector                   | Attribute   | Component/Location                              | Description                                                   |
+| -------------------------- | ----------- | ----------------------------------------------- | ------------------------------------------------------------- |
+| `getting-started-page`     | data-testid | `routes/_user/getting-started.tsx`              | Onboarding page container                                     |
+| `profile-creation-form`    | data-testid | `routes/_user/getting-started.tsx`              | Profile-setup form (scope `username-input` / `submit-button`) |
+| `onboarding-nudge`         | data-testid | `components/navs/onboarding-nudge.tsx`          | Sidebar prompt to finish onboarding                           |
+| `onboarding-nudge-cta`     | data-testid | `components/navs/onboarding-nudge.tsx`          | Link from the nudge to /getting-started                       |
+| `onboarding-nudge-dismiss` | data-testid | `components/navs/onboarding-nudge.tsx`          | Dismisses the nudge, clearing the `needs-onboarding` flag     |
+| `update-profile-form`      | data-testid | `routes/_user/profile/-update-profile-form.tsx` | Form on /profile (scope `username-input` / `submit-button`)   |
 
 ## Chat previews
 

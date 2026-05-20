@@ -2,7 +2,6 @@ import { lazy, Suspense, useCallback, useEffect, useRef } from 'react'
 import {
 	createFileRoute,
 	Outlet,
-	redirect,
 	useMatches,
 	useParams,
 	useRouter,
@@ -27,10 +26,7 @@ const AppNav = lazy(() =>
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { resolveNavList } from '@/types/route-static-data'
-import {
-	myProfileCollection,
-	myProfileQuery,
-} from '@/features/profile/collections'
+import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
@@ -38,26 +34,10 @@ import { notificationsCollection } from '@/features/notifications/collections'
 import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
-import { queryClient } from '@/lib/query-client'
 
 const UserSearchParams = z.object({
 	search: z.boolean().optional(),
 })
-
-// Always fetch fresh profile data to avoid race conditions after login
-const fetchProfileData = async () => {
-	// Use fetchQuery to always get fresh data, not stale cache
-	const profileData = await queryClient.fetchQuery({
-		...myProfileQuery,
-		// Short stale time to ensure we get fresh data after login
-		staleTime: 1000,
-	})
-	// Sync the collection if query has data but collection doesn't
-	if (profileData && profileData.length > 0 && myProfileCollection.size === 0) {
-		await myProfileCollection.utils.refetch()
-	}
-	return profileData
-}
 
 export const Route = createFileRoute('/_user')({
 	// Auth is optional at this layout — RLS handles data security and
@@ -69,52 +49,43 @@ export const Route = createFileRoute('/_user')({
 		},
 	},
 	validateSearch: UserSearchParams,
-	loader: async ({ context, location }) => {
+	loader: async ({ context }) => {
 		// If not authenticated, skip user-specific loading
 		if (!context.auth.isAuth) return
 
-		// If collection is already loaded with data, just preload other collections
-		if (myProfileCollection.size === 1) {
-			if (location.pathname !== '/getting-started') {
-				void decksCollection.preload()
-				void friendSummariesCollection.preload()
-				void notificationsCollection.preload()
-				void languagesCollection.preload()
-			}
-			return
-		}
-
-		// Collection not ready - handle various states
+		// The profile collection must be populated before first render —
+		// NavUser, OnboardingNudge and others call useProfile() unconditionally.
 		if (myProfileCollection.status === 'error') {
 			console.log(
 				`myProfileCollection is in an error state. We'll clean it up and reload it.`
 			)
 			await myProfileCollection.cleanup()
 		}
+		await myProfileCollection.preload()
 
-		// Fetch profile data - this is the source of truth
-		const profileData = await fetchProfileData()
-
-		if (location.pathname !== '/getting-started') {
-			// Only redirect to getting-started if:
-			// 1. Collection is empty AND
-			// 2. Fresh query returned no data
-			// This avoids false redirects during login race conditions
-			if (
-				!myProfileCollection.size &&
-				(!profileData || profileData.length === 0)
-			) {
-				console.log(
-					`Triggering redirect from /_user to /getting-started because no profile found`
-				)
-				throw redirect({ to: '/getting-started' })
-			} else {
-				void decksCollection.preload()
-				void friendSummariesCollection.preload()
-				void notificationsCollection.preload()
-				void languagesCollection.preload()
-			}
+		// Invariant: handle_new_user() + the migration backfill guarantee a
+		// user_profile row for every confirmed auth user. An empty collection
+		// might just be a stale logged-out cache, so force one authoritative
+		// refetch before concluding the row is genuinely gone. If it still
+		// is, the invariant is broken — fail loudly rather than let the user
+		// roam a nameless, half-working app with no recovery path.
+		if (myProfileCollection.size === 0) {
+			await myProfileCollection.utils.refetch()
 		}
+		if (myProfileCollection.size === 0) {
+			console.error(
+				`No user_profile row for authenticated user ${context.auth.userId} — ` +
+					`the handle_new_user trigger or backfill did not run for this account.`
+			)
+			throw new Error(
+				"We couldn't load your account profile. Try refreshing the page — if this keeps happening, please contact support."
+			)
+		}
+
+		void decksCollection.preload()
+		void friendSummariesCollection.preload()
+		void notificationsCollection.preload()
+		void languagesCollection.preload()
 	},
 	component: UserLayout,
 	pendingComponent: Loader,

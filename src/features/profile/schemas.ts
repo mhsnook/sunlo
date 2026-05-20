@@ -36,13 +36,30 @@ export type FontPreferenceType = z.infer<typeof FontPreferenceSchema>
 export const ReviewAnswerModeSchema = z.enum(['4-buttons', '2-buttons'])
 export type ReviewAnswerModeType = z.infer<typeof ReviewAnswerModeSchema>
 
+// Generic jsonb bag for open-ended per-user profile state — room for
+// intro-message dismissals and other flags without a schema change. The
+// flag key is exported so reads/writes share one constant: the catchall
+// below accepts any string key, so a bare-string typo would pass silently.
+export const FLAG_NEEDS_ONBOARDING = 'needs-onboarding'
+
+export const ProfileFlagsSchema = z
+	.object({
+		[FLAG_NEEDS_ONBOARDING]: z.boolean().optional(),
+	})
+	.catchall(z.union([z.boolean(), z.string()]))
+export type ProfileFlagsType = z.infer<typeof ProfileFlagsSchema>
+
 export const MyProfileSchema = PublicProfileSchema.extend({
 	created_at: z.string(),
-	languages_known: LanguagesKnownSchema,
+	// Allow empty: a trigger-created profile starts with no languages, and
+	// the user fills them in via /getting-started. The min(1) rule lives on
+	// LanguagesKnownSchema, which the onboarding form uses for validation.
+	languages_known: z.array(LanguageKnownSchema),
 	updated_at: z.string().nullable(),
 	font_preference: FontPreferenceSchema.nullable().default('default'),
 	review_answer_mode: ReviewAnswerModeSchema.nullable().default('2-buttons'),
 	sound_enabled: z.boolean().default(true),
+	flags: ProfileFlagsSchema.default({}),
 })
 
 export type MyProfileType = z.infer<typeof MyProfileSchema>
