@@ -423,6 +423,17 @@ $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
 
+create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
+begin
+	insert into "public"."user_profile" ("uid", "flags")
+	values (new.id, '{"needs-onboarding": true}'::jsonb)
+	on conflict ("uid") do nothing;
+	return new;
+end;
+$$;
+
+alter function "public"."handle_new_user" () owner to "postgres";
+
 create or replace function "public"."is_admin" () returns boolean language "sql" stable security definer as $$
   select exists (
     select 1 from public.admin_user where uid = auth.uid()
@@ -1787,6 +1798,7 @@ create table if not exists "public"."user_profile" (
 	"font_preference" "text" default 'default'::"text",
 	"review_answer_mode" "text" default '2-buttons'::"text",
 	"sound_enabled" boolean default true not null,
+	"flags" "jsonb" default '{}'::"jsonb" not null,
 	constraint "user_profile_font_preference_check" check (("font_preference" = any (array['default'::"text", 'dyslexic'::"text"]))),
 	constraint "user_profile_review_answer_mode_check" check (("review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"]))),
 	constraint "username_length" check (("char_length" ("username") >= 3))

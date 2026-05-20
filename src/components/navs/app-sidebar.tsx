@@ -3,6 +3,7 @@ import { NavMain } from '@/components/navs/nav-main'
 import { NavUser } from '@/components/navs/nav-user'
 import { DeckSwitcher } from '@/components/navs/deck-switcher'
 import { ActiveReviewCallout } from '@/components/navs/active-review-callout'
+import { OnboardingNudge } from '@/components/navs/onboarding-nudge'
 import {
 	Sidebar,
 	SidebarContent,
@@ -28,6 +29,7 @@ export function AppSidebar({
 				<DeckSwitcher lang={lang} />
 			</SidebarHeader>
 			<SidebarContent>
+				<OnboardingNudge />
 				<ActiveReviewCallout currentLang={lang} />
 				<NavMain lang={lang} />
 				<div className="mt-auto p-2">

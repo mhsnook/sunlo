@@ -1496,6 +1496,7 @@ export type Database = {
 				Row: {
 					avatar_path: string | null
 					created_at: string
+					flags: Json
 					font_preference: string | null
 					languages_known: Json
 					review_answer_mode: string | null
@@ -1507,6 +1508,7 @@ export type Database = {
 				Insert: {
 					avatar_path?: string | null
 					created_at?: string
+					flags?: Json
 					font_preference?: string | null
 					languages_known?: Json
 					review_answer_mode?: string | null
@@ -1518,6 +1520,7 @@ export type Database = {
 				Update: {
 					avatar_path?: string | null
 					created_at?: string
+					flags?: Json
 					font_preference?: string | null
 					languages_known?: Json
 					review_answer_mode?: string | null

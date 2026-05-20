@@ -6,20 +6,24 @@ learner:
 - see sidebar-user-menu-trigger
 - see decks-list-grid
 
-# new user completes onboarding and affirms community norms
+# new user follows the onboarding nudge and completes setup
 
-cleanup: supabase.from('user_profile').delete().eq('uid', '[new-user.key]')
+cleanup: supabase.from('user_profile').update({ username: null, languages_known: [], flags: { 'needs-onboarding': true } }).eq('uid', '[new-user.key]')
 
 new-user:
 
 - login
 - seeToast toast-success
+- see onboarding-nudge
+- click onboarding-nudge-cta
+- up
 - see getting-started-page
 - see profile-creation-form
 - typeInto profile-creation-form username-input 'NewLearnerName'
 - click profile-creation-form submit-button
 - up
 - seeToast toast-success
+- notSee onboarding-nudge
 
 # user signs out and is redirected to home
 
