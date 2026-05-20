@@ -1885,6 +1885,17 @@ values
 	);
 
 --
+-- new-user: a trigger-style auto-provisioned profile, pre-onboarding.
+-- Mirrors what handle_new_user() produces in production. Seeding runs
+-- with triggers disabled, so this stand-in keeps the actor usable and
+-- drives the onboarding-nudge flow.
+--
+insert into
+	"public"."user_profile" ("uid", "created_at", "flags")
+values
+	('d4e5f6a7-b8c9-4d0e-a1f2-b3c4d5e6f7a8', now() - interval '1 hour', '{"needs-onboarding": true}'::"jsonb");
+
+--
 -- user_deck (12 rows)
 --
 insert into

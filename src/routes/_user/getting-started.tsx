@@ -1,21 +1,24 @@
-import type { CSSProperties } from 'react'
-import { createFileRoute, Navigate, redirect } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
+import { type CSSProperties } from 'react'
+import {
+	createFileRoute,
+	Navigate,
+	redirect,
+	useNavigate,
+} from '@tanstack/react-router'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 
-import type { TablesInsert } from '@/types/supabase'
 import type { uuid } from '@/types/main'
 import {
+	FLAG_NEEDS_ONBOARDING,
 	LanguagesKnownSchema,
-	MyProfileSchema,
+	type MyProfileType,
 } from '@/features/profile/schemas'
-import { useUserId } from '@/lib/use-auth'
 import { useProfile } from '@/features/profile/hooks'
-import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { SuccessCheckmarkTrans } from '@/components/success-checkmark'
+import { Loader } from '@/components/ui/loader'
 import { useAppForm } from '@/components/form'
 
 type GettingStartedProps = {
@@ -32,6 +35,7 @@ export const Route = createFileRoute('/_user/getting-started')({
 	},
 	component: GettingStartedPage,
 	staticData: {
+		focusMode: true,
 		titleBar: {
 			title: 'Getting Started',
 			subtitle: 'Set your username and dive in!',
@@ -51,15 +55,18 @@ const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function GettingStartedPage() {
 	const { referrer }: GettingStartedProps = Route.useSearch()
-	const userId = useUserId()
-	const { data: profile } = useProfile()
+	const { data: profile, isLoading } = useProfile()
 
-	// After profile creation, go to welcome page (or friend's chat if invited)
 	const nextPage = referrer ? `/friends/chats/${referrer}` : '/welcome'
 
-	return profile ? (
-		<Navigate to={nextPage} />
-	) : (
+	// The _user loader guarantees a profile row for authed users (it throws
+	// otherwise), so !profile here is only the brief live-query load window —
+	// show the loader, don't mistake it for "already onboarded" and bounce.
+	if (isLoading || !profile) return <Loader />
+	if (profile.flags[FLAG_NEEDS_ONBOARDING] !== true)
+		return <Navigate to={nextPage} />
+
+	return (
 		<main
 			className="w-app px-[5cqw] py-10"
 			style={style}
@@ -74,7 +81,7 @@ function GettingStartedPage() {
 					</p>
 				</div>
 			</div>
-			<ProfileCreationForm userId={userId!} />
+			<ProfileSetupForm profile={profile} nextPage={nextPage} />
 		</main>
 	)
 }
@@ -89,41 +96,39 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-function ProfileCreationForm({ userId }: { userId: string }) {
-	const mainForm = useMutation({
-		mutationKey: ['user', userId],
-		mutationFn: async (values: TablesInsert<'user_profile'>) => {
-			const { data } = await supabase
-				.from('user_profile')
-				.upsert(values)
-				.match({ uid: userId })
-				.throwOnError()
-				.select()
-			return data
-		},
-		onSuccess: (data) => {
-			if (!data)
-				throw new Error(
-					`Somehow the server didn't return any data for the new profile...`
-				)
-			console.log(`Success! Profile:`, data)
-			myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data[0]))
-			toastSuccess('Success!')
-		},
-		onError: (error) => {
-			console.log(`Error:`, error)
-			toastError(`there was some error: ${error.message}`)
-		},
-	})
+function ProfileSetupForm({
+	profile,
+	nextPage,
+}: {
+	profile: MyProfileType
+	nextPage: string
+}) {
+	const navigate = useNavigate()
 
 	const form = useAppForm({
 		defaultValues: {
-			username: '',
-			languages_known: [{ lang: 'eng', level: 'fluent' }],
+			username: profile.username,
+			languages_known:
+				profile.languages_known.length > 0
+					? profile.languages_known
+					: [{ lang: 'eng', level: 'fluent' }],
 		} as FormData,
 		validators: { onChange: formSchema },
 		onSubmit: async ({ value }) => {
-			await mainForm.mutateAsync(value)
+			const tx = myProfileCollection.update(profile.uid, (draft) => {
+				draft.username = value.username
+				draft.languages_known = value.languages_known
+				draft.updated_at = new Date().toISOString()
+				draft.flags = { ...draft.flags, [FLAG_NEEDS_ONBOARDING]: false }
+			})
+			try {
+				await tx.isPersisted.promise
+				toastSuccess('Success!')
+				void navigate({ to: nextPage })
+			} catch (error) {
+				console.log(`Error:`, error)
+				toastError(`There was an error saving your profile.`)
+			}
 		},
 	})
 

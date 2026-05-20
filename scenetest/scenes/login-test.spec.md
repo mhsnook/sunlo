@@ -9,7 +9,7 @@ learner:
 - notSee login-form
 - see decks-list-grid
 
-# new-user logs in
+# new-user logs in and is nudged to finish onboarding
 
 new-user:
 
@@ -19,4 +19,4 @@ new-user:
 - click submit-button
 - up
 - notSee login-form
-- see getting-started-page
+- see onboarding-nudge
