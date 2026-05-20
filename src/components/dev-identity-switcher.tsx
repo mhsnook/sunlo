@@ -10,6 +10,7 @@ import {
 	PopoverContent,
 } from '@/components/ui/popover'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { isDevEnvironment } from '@/lib/dev-mode'
 import { cn } from '@/lib/utils'
 
 type Actor = { role: string; email: string; username?: string }
@@ -69,7 +70,10 @@ const TEAMS: Array<Team> = [
 ]
 
 export function DevIdentitySwitcher() {
-	if (!import.meta.env.DEV) return null
+	// Gate on a real local-dev session, not just the build-time DEV flag: a
+	// production deploy built/served in the wrong Vite mode would otherwise
+	// expose this one-click login switcher and its hardcoded test password.
+	if (!isDevEnvironment()) return null
 	// Hide under Playwright/scenetest so the corner button can't intercept
 	// clicks or overlap toasts. navigator.webdriver is set by Playwright by
 	// default; manual dev sessions get the widget as expected.
