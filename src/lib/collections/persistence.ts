@@ -4,19 +4,21 @@ import {
 	openBrowserWASQLiteOPFSDatabase,
 	persistedCollectionOptions,
 	type BrowserWASQLiteDatabase,
-	type PersistedCollectionPersistence,
 } from '@tanstack/browser-db-sqlite-persistence'
-
-// Bump when the persisted shape of any backed-up collection changes. A version
-// mismatch drops the local SQLite cache and re-syncs from Supabase.
-const SCHEMA_VERSION = 1
 
 const DB_NAME = 'sunlo-user-collections'
 
+// Bump when the persisted shape of any user collection changes. For these
+// synced collections a version mismatch drops the local SQLite copy and
+// re-syncs from Supabase, so over-invalidating is cheap.
+const SCHEMA_VERSION = 1
+
 // Open the OPFS database lazily on first collection sync rather than at module
-// load: the SQLite worker is ~1.7 MB and we don't want it blocking first paint.
-// Every backed-up collection shares this one database; the driver serialises
-// access internally.
+// load. The wa-sqlite worker is ~1.7 MB; deferring it keeps it off the critical
+// path for first paint and the public/login pages, lets a worker-load failure
+// degrade to network-only sync instead of white-screening the app, and means
+// logged-out visitors never download it. All persisted collections share this
+// one database; the driver serialises access internally.
 function createLazyDatabase(): BrowserWASQLiteDatabase {
 	let opening: Promise<BrowserWASQLiteDatabase> | null = null
 	const open = () =>
@@ -32,51 +34,31 @@ function createLazyDatabase(): BrowserWASQLiteDatabase {
 	}
 }
 
-// OPFS + Web Workers are required for the local backup. They're absent in SSR,
-// older browsers, and some private-browsing modes — when missing we return null
-// and collections fall back to network-only sync. Module load must never throw.
-function initPersistence(): PersistedCollectionPersistence | null {
-	if (
-		typeof navigator === 'undefined' ||
-		typeof navigator.storage?.getDirectory !== 'function' ||
-		typeof Worker !== 'function'
-	) {
-		return null
-	}
-	try {
-		return createBrowserWASQLitePersistence({
-			database: createLazyDatabase(),
-			coordinator: new BrowserCollectionCoordinator({ dbName: DB_NAME }),
-		})
-	} catch (error) {
-		console.warn(
-			'[collections] Local SQLite backup unavailable; using network-only sync.',
-			error
-		)
-		return null
-	}
-}
+const persistence = createBrowserWASQLitePersistence({
+	database: createLazyDatabase(),
+	coordinator: new BrowserCollectionCoordinator({ dbName: DB_NAME }),
+})
 
-const persistence = initPersistence()
+// persistedCollectionOptions can't infer the collection's item type back
+// through a generic wrapper, and passing explicit <T, TKey> generics would
+// drop the queryCollectionOptions utils (refetch / writeInsert / …) that
+// callers rely on. Treat it as a type-transparent transform instead: the
+// runtime swap is sound because the sync-present path only replaces `sync`
+// and adds `persistence` — getKey, schema, utils and the mutation handlers
+// all pass through untouched.
+const persist = persistedCollectionOptions as <T extends object>(
+	options: T
+) => T
 
 /**
- * Wraps a query-collection's options with a durable local SQLite backup.
+ * Wraps a query collection's options with a durable local SQLite base.
  *
- * The collection hydrates instantly from OPFS on reload and keeps serving data
- * while offline; Supabase stays authoritative and reconciles on the next sync.
- * `persistedCollectionOptions` only wraps the `sync` layer and adds `persistence`
- * — getKey/schema/utils/onUpdate all pass through untouched, so the result is
- * structurally the same collection config. A no-op when OPFS is unavailable, so
- * callers need no fallback of their own.
+ * The collection hydrates from OPFS instantly on reload and keeps serving data
+ * while offline; Supabase stays the source of truth and reconciles on the next
+ * sync. Used by the user collections — profile, decks, cards, reviews.
  */
-export function withLocalBackup<TOptions extends object>(
+export function withPersistence<TOptions extends object>(
 	options: TOptions
 ): TOptions {
-	if (!persistence) return options
-	const wrapped = persistedCollectionOptions({
-		...options,
-		persistence,
-		schemaVersion: SCHEMA_VERSION,
-	} as unknown as Parameters<typeof persistedCollectionOptions>[0])
-	return wrapped as unknown as TOptions
+	return persist({ ...options, persistence, schemaVersion: SCHEMA_VERSION })
 }

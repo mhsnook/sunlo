@@ -8,14 +8,14 @@ import {
 	type CardMetaType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
-import { withLocalBackup } from '@/lib/collections/persistence'
+import { withPersistence } from '@/lib/collections/persistence'
 import supabase from '@/lib/supabase-client'
 import { sortDecksByCreation } from '@/lib/utils'
 import languages from '@/lib/languages'
 import type { TablesUpdate } from '@/types/supabase'
 
 export const decksCollection = createCollection(
-	withLocalBackup(
+	withPersistence(
 		queryCollectionOptions({
 			id: 'decks',
 			queryKey: ['user', 'deck_plus'],
@@ -58,7 +58,7 @@ export const decksCollection = createCollection(
 )
 
 export const cardsCollection = createCollection(
-	withLocalBackup(
+	withPersistence(
 		queryCollectionOptions({
 			id: 'cards',
 			queryKey: ['user', 'card'],

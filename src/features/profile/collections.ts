@@ -9,7 +9,7 @@ import {
 	type MyProfileType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
-import { withLocalBackup } from '@/lib/collections/persistence'
+import { withPersistence } from '@/lib/collections/persistence'
 import supabase from '@/lib/supabase-client'
 
 export const publicProfilesCollection = createCollection(
@@ -47,7 +47,7 @@ export const myProfileQuery = queryOptions({
 })
 
 export const myProfileCollection = createCollection(
-	withLocalBackup(
+	withPersistence(
 		queryCollectionOptions({
 			id: 'my_profile',
 			queryKey: myProfileQuery.queryKey,

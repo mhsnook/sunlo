@@ -7,11 +7,11 @@ import {
 	type DailyReviewStateType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
-import { withLocalBackup } from '@/lib/collections/persistence'
+import { withPersistence } from '@/lib/collections/persistence'
 import supabase from '@/lib/supabase-client'
 
 export const cardReviewsCollection = createCollection(
-	withLocalBackup(
+	withPersistence(
 		queryCollectionOptions({
 			id: 'card_reviews',
 			queryKey: ['user', 'card_review'],
@@ -32,7 +32,7 @@ export const cardReviewsCollection = createCollection(
 )
 
 export const reviewDaysCollection = createCollection(
-	withLocalBackup(
+	withPersistence(
 		queryCollectionOptions({
 			id: 'review_days',
 			queryKey: ['user', 'daily_review_state'],
