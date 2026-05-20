@@ -9,6 +9,7 @@ import {
 	type MyProfileType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
+import { withLocalBackup } from '@/lib/collections/persistence'
 import supabase from '@/lib/supabase-client'
 
 export const publicProfilesCollection = createCollection(
@@ -46,28 +47,30 @@ export const myProfileQuery = queryOptions({
 })
 
 export const myProfileCollection = createCollection(
-	queryCollectionOptions({
-		id: 'my_profile',
-		queryKey: myProfileQuery.queryKey,
-		queryFn: async (args) => {
-			console.log(`Loading myProfileCollection`)
-			return myProfileQuery.queryFn!(args)
-		},
-		getKey: (item: MyProfileType) => item.uid,
-		queryClient,
-		startSync: false,
-		schema: MyProfileSchema,
-		onUpdate: async ({ transaction }) => {
-			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
-						.from('user_profile')
-						.update(m.changes)
-						.eq('uid', m.original.uid)
-						.throwOnError()
+	withLocalBackup(
+		queryCollectionOptions({
+			id: 'my_profile',
+			queryKey: myProfileQuery.queryKey,
+			queryFn: async (args) => {
+				console.log(`Loading myProfileCollection`)
+				return myProfileQuery.queryFn!(args)
+			},
+			getKey: (item: MyProfileType) => item.uid,
+			queryClient,
+			startSync: false,
+			schema: MyProfileSchema,
+			onUpdate: async ({ transaction }) => {
+				await Promise.all(
+					transaction.mutations.map((m) =>
+						supabase
+							.from('user_profile')
+							.update(m.changes)
+							.eq('uid', m.original.uid)
+							.throwOnError()
+					)
 				)
-			)
-			return { refetch: false }
-		},
-	})
+				return { refetch: false }
+			},
+		})
+	)
 )

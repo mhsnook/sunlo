@@ -20,6 +20,12 @@ export default defineConfig(() => {
 		resolve: {
 			tsconfigPaths: true,
 		},
+		// The OPFS SQLite adapter ships a Web Worker with the wasm binary inlined,
+		// loaded via `new Worker(new URL(...))`. esbuild's dep pre-bundling mangles
+		// that pattern, so it must be served as native ESM.
+		optimizeDeps: {
+			exclude: ['@tanstack/browser-db-sqlite-persistence'],
+		},
 		build: {
 			chunkSizeWarningLimit: 750,
 		},
