@@ -115,7 +115,7 @@ function FriendGroup({ group }: { group: FriendGroupType }) {
 				>
 					<Avatar className="bg-foreground text-background mt-0.5 size-8 rounded-lg">
 						<AvatarImage src={avatarUrl} alt={`${username}'s avatar`} />
-						<AvatarFallback className="text-[10px] font-bold">
+						<AvatarFallback seed={group.uid} className="text-[10px] font-bold">
 							{username.slice(0, 2)}
 						</AvatarFallback>
 					</Avatar>
