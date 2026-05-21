@@ -1,8 +1,9 @@
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
 import {
+	Bookmark,
 	ChevronDown,
 	Lightbulb,
 	Logs,
@@ -35,6 +36,12 @@ import {
 } from '@/components/ui/card'
 import { CardlikeFlashcard, CardlikeRequest } from '@/components/ui/card-like'
 import { Separator } from '@/components/ui/separator'
+import {
+	toastError,
+	toastInfo,
+	toastNeutral,
+	toastSuccess,
+} from '@/components/ui/sonner'
 import { Markdown } from '@/components/my-markdown'
 
 export const Route = createLazyFileRoute('/themes/')({
@@ -124,6 +131,27 @@ function Byline({
 	)
 }
 
+// Mirrors CardStatusHeart — a bookmark that lights up when the phrase
+// is in your deck. Local state only for the showcase.
+function BookmarkToggle() {
+	const [saved, setSaved] = useState(false)
+	return (
+		<Button
+			variant={saved ? 'soft' : 'ghost'}
+			size="icon"
+			aria-pressed={saved}
+			aria-label={saved ? 'Remove from deck' : 'Add to deck'}
+			onClick={() => setSaved((v) => !v)}
+		>
+			<Bookmark
+				className={
+					saved ? 'text-primary fill-current/50' : 'text-muted-foreground'
+				}
+			/>
+		</Button>
+	)
+}
+
 // A ghost button that lights up to `soft` when active — the standard
 // ghost→soft toggle pattern, used here for upvotes.
 function UpvoteButton({
@@ -169,6 +197,9 @@ function AnswerCard({
 						<span>{translation}</span>
 					</li>
 				</ul>
+			</div>
+			<div className="flex flex-col gap-2 px-4 py-4">
+				<BookmarkToggle />
 			</div>
 		</CardlikeFlashcard>
 	)
@@ -501,6 +532,42 @@ function ShowcaseButtonsAndType() {
 				</div>
 			</div>
 			<Separator />
+			<div className="space-y-2">
+				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+					Toasts
+				</p>
+				<div className="flex flex-wrap gap-2">
+					<Button
+						size="sm"
+						variant="soft"
+						onClick={() => toastSuccess('Saved — your changes are in.')}
+					>
+						Success
+					</Button>
+					<Button
+						size="sm"
+						variant="soft"
+						onClick={() => toastInfo('Heads up — here is some context.')}
+					>
+						Info
+					</Button>
+					<Button
+						size="sm"
+						variant="soft"
+						onClick={() => toastError('Something went wrong. Try again.')}
+					>
+						Error
+					</Button>
+					<Button
+						size="sm"
+						variant="soft"
+						onClick={() => toastNeutral('A plain, no-icon message.')}
+					>
+						Neutral
+					</Button>
+				</div>
+			</div>
+			<Separator />
 			<div className="space-y-1.5">
 				<p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
 					Type scale
@@ -579,30 +646,45 @@ function ThemesPage() {
 
 	const [activeHue, setActiveHue] = useState<number | null>(null)
 
+	// Apply the picked hue to <html> so it reaches the body background
+	// (--background is hue-derived) and the whole app chrome — not just
+	// this page's subtree. Cleared on reset and when leaving the page.
+	useEffect(() => {
+		const root = document.documentElement
+		const props = ['--hue-primary', '--hue-accent', '--hue-neutral']
+		if (activeHue === null) {
+			props.forEach((p) => root.style.removeProperty(p))
+			return
+		}
+		props.forEach((p) => root.style.setProperty(p, String(activeHue)))
+		return () => props.forEach((p) => root.style.removeProperty(p))
+	}, [activeHue])
+
 	const grouped = LANG_HUES.map((hue, i) => ({
 		index: i,
 		hue,
 		langs: allLanguageOptions.filter((opt) => getLangHueIndex(opt.value) === i),
 	}))
 
+	// Brand first, then the per-language stops descending from just below
+	// the brand hue, wrapping the above-brand stops to the end.
+	const langSwatches = LANG_HUES.map((hue, i) => ({
+		hue,
+		label: `#${i}`,
+		brand: false,
+	}))
 	const swatches = [
-		...LANG_HUES.map((hue, i) => ({ hue, label: `#${i}`, brand: false })),
 		{ hue: BRAND_HUE, label: 'Brand', brand: true },
+		...langSwatches
+			.filter((s) => s.hue < BRAND_HUE)
+			.toSorted((a, b) => b.hue - a.hue),
+		...langSwatches
+			.filter((s) => s.hue > BRAND_HUE)
+			.toSorted((a, b) => b.hue - a.hue),
 	]
 
 	return (
-		<div
-			className="mx-auto max-w-5xl space-y-8 p-6"
-			style={
-				activeHue === null
-					? undefined
-					: ({
-							'--hue-primary': activeHue,
-							'--hue-accent': activeHue,
-							'--hue-neutral': activeHue,
-						} as CSSProperties)
-			}
-		>
+		<div className="@container mx-auto max-w-5xl space-y-8 p-6">
 			<ComponentShowcase />
 
 			<header className="space-y-2">
@@ -631,7 +713,7 @@ function ThemesPage() {
 				<p className="text-muted-foreground text-sm">
 					Click any swatch to theme the whole page with that hue.
 				</p>
-				<div className="grid grid-cols-5 gap-2 @md:grid-cols-10">
+				<div className="grid grid-cols-4 gap-2 @md:grid-cols-6 @3xl:grid-cols-11">
 					{swatches.map((s) => {
 						const isActive = activeHue === s.hue
 						return (
@@ -639,6 +721,9 @@ function ThemesPage() {
 								key={s.label}
 								type="button"
 								aria-pressed={isActive}
+								aria-label={`Theme the page with ${
+									s.brand ? 'the brand' : `stop ${s.label}`
+								} hue, ${s.hue} degrees`}
 								onClick={() => setActiveHue(isActive ? null : s.hue)}
 								className={cn(
 									'flex cursor-pointer flex-col items-center gap-1 rounded border p-2 text-xs transition-colors',
@@ -651,16 +736,17 @@ function ThemesPage() {
 								style={{ '--hue-primary': s.hue } as CSSProperties}
 							>
 								<div className="bg-1-mlo-primary h-10 w-full rounded" />
-								<span
-									className={cn(
-										'flex items-center gap-1',
-										s.brand
-											? 'text-primary-foresoft font-semibold'
-											: 'text-muted-foreground'
-									)}
-								>
-									{s.brand && <Star className="size-3" />}
-									{s.label} · {s.hue}°
+								<span className="flex flex-col items-center text-center leading-tight">
+									<span
+										className={cn(
+											'flex items-center gap-0.5',
+											s.brand && 'text-primary-foresoft font-semibold'
+										)}
+									>
+										{s.brand && <Star className="size-3" />}
+										{s.brand ? 'Brand' : s.label}
+									</span>
+									<span className="text-muted-foreground">{s.hue}°</span>
 								</span>
 							</button>
 						)
