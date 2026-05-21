@@ -153,31 +153,33 @@ function ChatPage() {
 												: 'align-start me-auto justify-start pe-[10%]'
 										)}
 									>
-										{!isMine && (
-											<Avatar className="my-5 h-8 w-8">
-												<AvatarImage src={relAvatarUrl} alt={relUsername} />
-												<AvatarFallback>
-													{relUsername.charAt(0).toUpperCase()}
-												</AvatarFallback>
-											</Avatar>
-										)}
 										<div>
-											<p
-												className={cn(
-													'text-muted-foreground mx-0 mb-1 text-xs',
-													isMine && 'text-end'
+											<div className="mb-1 flex items-center gap-2">
+												{!isMine && (
+													<Avatar className="h-8 w-8 shrink-0">
+														<AvatarImage src={relAvatarUrl} alt={relUsername} />
+														<AvatarFallback>
+															{relUsername.charAt(0).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
 												)}
-											>
-												{isMine ? (
-													<>
-														{messageLabel} &middot; {ago(msg.created_at)}
-													</>
-												) : (
-													<>
-														{ago(msg.created_at)} &middot; {messageLabel}
-													</>
-												)}
-											</p>
+												<p
+													className={cn(
+														'text-muted-foreground grow text-xs',
+														isMine && 'text-end'
+													)}
+												>
+													{isMine ? (
+														<>
+															{messageLabel} &middot; {ago(msg.created_at)}
+														</>
+													) : (
+														<>
+															{ago(msg.created_at)} &middot; {messageLabel}
+														</>
+													)}
+												</p>
+											</div>
 											{msg.phrase_id && msg.lang && (
 												<CardPreview pid={msg.phrase_id} isMine={isMine} />
 											)}
