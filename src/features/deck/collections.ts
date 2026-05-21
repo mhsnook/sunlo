@@ -52,17 +52,18 @@ export const decksCollection = createCollection(
 						.throwOnError()
 					// m.changes IS the optimistic collection value, so confirming the
 					// server's returned row matches it proves client/server agreement.
-					// Stripped from production by the Vite plugin.
+					// The row-guard is inside should() so the whole call strips
+					// cleanly from production builds.
 					const row = data?.[0] as Record<string, unknown> | undefined
-					if (row)
-						should(
-							`user_deck (${m.original.lang}) server row matches the submitted update`,
+					should(
+						`user_deck (${m.original.lang}) server row matches the submitted update`,
+						!row ||
 							Object.entries(changes).every(
 								([k, v]) =>
 									k === 'updated_at' || k === 'created_at' || row[k] === v
 							),
-							{ submitted: changes, returned: row }
-						)
+						{ submitted: changes, returned: row }
+					)
 				})
 			)
 			return { refetch: false }
@@ -140,17 +141,18 @@ export const cardsCollection = createCollection(
 						.select()
 						.throwOnError()
 					// Confirm the server's returned row matches the optimistic
-					// update. Stripped from production by the Vite plugin.
+					// update. The row-guard is inside should() so the whole call
+					// strips cleanly from production builds.
 					const row = data?.[0] as Record<string, unknown> | undefined
-					if (row)
-						should(
-							`user_card ${m.original.id} server row matches the submitted update`,
+					should(
+						`user_card ${m.original.id} server row matches the submitted update`,
+						!row ||
 							Object.entries(changes).every(
 								([k, v]) =>
 									k === 'updated_at' || k === 'created_at' || row[k] === v
 							),
-							{ submitted: changes, returned: row }
-						)
+						{ submitted: changes, returned: row }
+					)
 				})
 			)
 			return { refetch: false }
