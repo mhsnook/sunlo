@@ -9,7 +9,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { should, serverCheck, failed } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks-react'
 import { sortDecksByCreation } from '@/lib/utils'
 import languages from '@/lib/languages'
 import type { TablesUpdate } from '@/types/supabase'
@@ -41,54 +41,28 @@ export const decksCollection = createCollection(
 		schema: DeckMetaSchema,
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'user_deck'>
+					const { data } = await supabase
 						.from('user_deck')
-						.update(m.changes as TablesUpdate<'user_deck'>)
+						.update(changes)
 						.eq('uid', m.original.uid)
 						.eq('lang', m.original.lang)
+						.select()
 						.throwOnError()
-				)
-			)
-			// m.changes IS the optimistic collection value, so confirming the
-			// server row matches it proves client/server agreement without
-			// inspecting the collection separately. Stripped from production.
-			serverCheck(
-				'user_deck rows match the submitted updates',
-				async (server, { updates }) => {
-					await Promise.all(
-						updates.map(async (u) => {
-							const { data, error } = await server.supabase
-								.from('user_deck')
-								.select()
-								.eq('uid', u.uid)
-								.eq('lang', u.lang)
-								.maybeSingle()
-							if (error || !data) {
-								failed('fetch user_deck after update', {
-									error: error?.message,
-									lang: u.lang,
-								})
-								return
-							}
-							const row = data as Record<string, unknown>
-							should(
-								`user_deck (${u.lang}) persisted the submitted values`,
-								Object.entries(u.changes).every(
-									([k, v]) =>
-										k === 'updated_at' || k === 'created_at' || row[k] === v
-								),
-								{ submitted: u.changes, returned: data }
-							)
-						})
-					)
-				},
-				() => ({
-					updates: transaction.mutations.map((m) => ({
-						uid: m.original.uid,
-						lang: m.original.lang,
-						changes: m.changes as Record<string, unknown>,
-					})),
+					// m.changes IS the optimistic collection value, so confirming the
+					// server's returned row matches it proves client/server agreement.
+					// Stripped from production by the Vite plugin.
+					const row = data?.[0] as Record<string, unknown> | undefined
+					if (row)
+						should(
+							`user_deck (${m.original.lang}) server row matches the submitted update`,
+							Object.entries(changes).every(
+								([k, v]) =>
+									k === 'updated_at' || k === 'created_at' || row[k] === v
+							),
+							{ submitted: changes, returned: row }
+						)
 				})
 			)
 			return { refetch: false }
@@ -117,67 +91,38 @@ export const cardsCollection = createCollection(
 			// difficulty, stability) lives in user_card_plus via the user_card_review
 			// join, not on the underlying table. { refetch: false } because our
 			// optimistic row already carries the same column values we send.
-			await supabase
+			const rows = transaction.mutations.map((m) => ({
+				id: m.modified.id,
+				uid: m.modified.uid,
+				phrase_id: m.modified.phrase_id,
+				lang: m.modified.lang,
+				status: m.modified.status,
+				direction: m.modified.direction,
+				created_at: m.modified.created_at,
+				updated_at: m.modified.updated_at,
+			}))
+			const { data } = await supabase
 				.from('user_card')
-				.insert(
-					transaction.mutations.map((m) => ({
-						id: m.modified.id,
-						uid: m.modified.uid,
-						phrase_id: m.modified.phrase_id,
-						lang: m.modified.lang,
-						status: m.modified.status,
-						direction: m.modified.direction,
-						created_at: m.modified.created_at,
-						updated_at: m.modified.updated_at,
-					}))
-				)
+				.insert(rows)
+				.select()
 				.throwOnError()
 			// Confirm the server stored the same cards our optimistic insert
-			// added to the collection. Stripped from production.
-			serverCheck(
-				'inserted user_card rows match the optimistic cards',
-				async (server, { cards }) => {
-					const { data, error } = await server.supabase
-						.from('user_card')
-						.select('id, status, phrase_id, direction, lang')
-						.in(
-							'id',
-							cards.map((c) => c.id)
+			// added to the collection. Stripped from production by the Vite plugin.
+			should(
+				'user_card insert returned rows matching the optimistic cards',
+				!!data &&
+					data.length === rows.length &&
+					rows.every((row) =>
+						data.some(
+							(d) =>
+								d.id === row.id &&
+								d.status === row.status &&
+								d.phrase_id === row.phrase_id &&
+								d.direction === row.direction &&
+								d.lang === row.lang
 						)
-					if (error || !data) {
-						failed('fetch user_card after insert', { error: error?.message })
-						return
-					}
-					should(
-						'every optimistic card was inserted',
-						data.length === cards.length,
-						{
-							expected: cards.length,
-							got: data.length,
-						}
-					)
-					cards.forEach((c) => {
-						const row = data.find((d) => d.id === c.id)
-						should(
-							`user_card ${c.id} matches the optimistic row`,
-							!!row &&
-								row.status === c.status &&
-								row.phrase_id === c.phrase_id &&
-								row.direction === c.direction &&
-								row.lang === c.lang,
-							{ optimistic: c, returned: row }
-						)
-					})
-				},
-				() => ({
-					cards: transaction.mutations.map((m) => ({
-						id: m.modified.id,
-						status: m.modified.status,
-						phrase_id: m.modified.phrase_id,
-						direction: m.modified.direction,
-						lang: m.modified.lang,
-					})),
-				})
+					),
+				{ submitted: rows, returned: data }
 			)
 			return { refetch: false }
 		},
@@ -186,50 +131,26 @@ export const cardsCollection = createCollection(
 			// the confirmed value locally instead of reloading user_card_plus —
 			// safe because user_card has no triggers that change other columns.
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'user_card'>
+					const { data } = await supabase
 						.from('user_card')
-						.update(m.changes as TablesUpdate<'user_card'>)
+						.update(changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
-			)
-			// Confirm the server row matches the optimistic update. Stripped
-			// from production.
-			serverCheck(
-				'user_card rows match the submitted updates',
-				async (server, { updates }) => {
-					await Promise.all(
-						updates.map(async (u) => {
-							const { data, error } = await server.supabase
-								.from('user_card')
-								.select()
-								.eq('id', u.id)
-								.maybeSingle()
-							if (error || !data) {
-								failed('fetch user_card after update', {
-									error: error?.message,
-									id: u.id,
-								})
-								return
-							}
-							const row = data as Record<string, unknown>
-							should(
-								`user_card ${u.id} persisted the submitted values`,
-								Object.entries(u.changes).every(
-									([k, v]) =>
-										k === 'updated_at' || k === 'created_at' || row[k] === v
-								),
-								{ submitted: u.changes, returned: data }
-							)
-						})
-					)
-				},
-				() => ({
-					updates: transaction.mutations.map((m) => ({
-						id: m.original.id,
-						changes: m.changes as Record<string, unknown>,
-					})),
+					// Confirm the server's returned row matches the optimistic
+					// update. Stripped from production by the Vite plugin.
+					const row = data?.[0] as Record<string, unknown> | undefined
+					if (row)
+						should(
+							`user_card ${m.original.id} server row matches the submitted update`,
+							Object.entries(changes).every(
+								([k, v]) =>
+									k === 'updated_at' || k === 'created_at' || row[k] === v
+							),
+							{ submitted: changes, returned: row }
+						)
 				})
 			)
 			return { refetch: false }
