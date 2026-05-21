@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
+import { X } from 'lucide-react'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
@@ -17,11 +19,42 @@ const FormSchema = z.object({
 
 type FormInputs = z.infer<typeof FormSchema>
 
+// Supabase returns the same error whether the email is unknown or the password
+// is wrong, so the copy can't single out one or the other.
+function isInvalidCredentials(error: Error | null): boolean {
+	if (!error) return false
+	return (
+		(error as { code?: string }).code === 'invalid_credentials' ||
+		error.message === 'Invalid login credentials'
+	)
+}
+
+function InvalidCredentialsError() {
+	return (
+		<div
+			role="alert"
+			data-testid="login-error-invalid-credentials"
+			className="animate-shake flex items-center gap-2"
+		>
+			<span className="hue-danger bg-5-mhi flex size-7 shrink-0 items-center justify-center rounded-full">
+				<X className="size-4 text-white" aria-hidden={true} />
+			</span>
+			<strong className="text-7-mhi-danger">
+				Incorrect email or password. Try again?
+			</strong>
+		</div>
+	)
+}
+
 export function LoginCardBody({
 	onSuccess,
 }: {
 	onSuccess?: (email: string | undefined) => void
 }) {
+	// Bumped on every failed attempt so the error re-keys and replays its
+	// shake animation — even when the user resubmits without editing anything.
+	const [failedAttempts, setFailedAttempts] = useState(0)
+
 	const loginMutation = useMutation({
 		mutationKey: ['login'],
 		mutationFn: async ({ email, password }: FormInputs) => {
@@ -36,6 +69,7 @@ export function LoginCardBody({
 			if (email) toastSuccess(`Logged in as ${email}`)
 			onSuccess?.(email)
 		},
+		onError: () => setFailedAttempts((n) => n + 1),
 	})
 
 	const form = useAppForm({
@@ -80,9 +114,16 @@ export function LoginCardBody({
 					Create account
 				</Link>
 			</div>
-			<form.AppForm>
-				<form.FormAlert error={loginMutation.error} text="Problem logging in" />
-			</form.AppForm>
+			{isInvalidCredentials(loginMutation.error) ? (
+				<InvalidCredentialsError key={failedAttempts} />
+			) : (
+				<form.AppForm>
+					<form.FormAlert
+						error={loginMutation.error}
+						text="Problem logging in"
+					/>
+				</form.AppForm>
+			)}
 
 			<p>
 				<Link

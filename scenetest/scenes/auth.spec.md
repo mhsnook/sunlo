@@ -7,6 +7,21 @@ visitor:
 - see login-signup-link
 - see login-forgot-password-link
 
+# login with the wrong password shows a friendly error
+
+learner:
+
+- openTo /login
+- typeInto email-input [self.email]
+- typeInto password-input 'definitely-not-the-password'
+- click submit-button
+- up
+- see login-error-invalid-credentials
+- see login-form
+- click submit-button
+- up
+- see login-error-invalid-credentials
+
 # learner logs in and sees their decks
 
 learner:
