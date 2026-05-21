@@ -46,6 +46,8 @@ supabase start
 supabase db reset
 ```
 
+**Build environment — `.env` must be populated before any production build.** `src/lib/supabase-client.ts` throws when `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A `vite build` with those vars missing does **not** error — instead the guard constant-folds to `if (true) throw`, the `createClient()` call below it becomes dead code, and the bundler silently tree-shakes out the **entire `@supabase/*` SDK (~640 KB)**. The build "succeeds" but ships without Supabase, and any bundle-size measurement is off by roughly a third. Always build with `.env` populated — dummy-but-truthy `VITE_*` values are enough, the build never connects — and sanity-check that large expected dependencies actually appear in `dist/` (e.g. `grep -l GoTrueClient dist/assets/*.js`). The same applies to any tooling that builds the app, including bundle analyzers.
+
 ### Development
 
 ```bash
