@@ -47,18 +47,19 @@ export const phraseRequestsCollection = createCollection(
 					// m.changes IS the optimistic collection value; confirming the
 					// server's returned row matches it proves client/server
 					// agreement. A soft-delete (deleted: true) may not be
-					// selectable back under RLS — the guard skips the assertion
-					// rather than failing. Stripped from production.
+					// selectable back under RLS — `!row ||` skips the assertion
+					// rather than failing. The guard lives inside should() so the
+					// whole call strips cleanly from production builds.
 					const row = data?.[0] as Record<string, unknown> | undefined
-					if (row)
-						should(
-							`phrase_request ${m.original.id} server row matches the submitted update`,
+					should(
+						`phrase_request ${m.original.id} server row matches the submitted update`,
+						!row ||
 							Object.entries(m.changes).every(
 								([k, v]) =>
 									k === 'updated_at' || k === 'created_at' || row[k] === v
 							),
-							{ submitted: m.changes, returned: row }
-						)
+						{ submitted: m.changes, returned: row }
+					)
 				})
 			)
 			return { refetch: false }
@@ -111,17 +112,18 @@ export const commentsCollection = createCollection(
 						.select()
 						.throwOnError()
 					// Confirm the server's returned row matches the optimistic
-					// edit. Stripped from production by the Vite plugin.
+					// edit. The row-guard lives inside should() so the whole call
+					// strips cleanly from production builds.
 					const row = data?.[0] as Record<string, unknown> | undefined
-					if (row)
-						should(
-							`request_comment ${m.original.id} server row matches the submitted update`,
+					should(
+						`request_comment ${m.original.id} server row matches the submitted update`,
+						!row ||
 							Object.entries(m.changes).every(
 								([k, v]) =>
 									k === 'updated_at' || k === 'created_at' || row[k] === v
 							),
-							{ submitted: m.changes, returned: row }
-						)
+						{ submitted: m.changes, returned: row }
+					)
 				})
 			)
 			return { refetch: false }
