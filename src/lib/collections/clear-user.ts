@@ -21,6 +21,7 @@ import { resetUiPrefs } from '@/lib/ui-prefs'
 import { clearPersistedUserData } from '@/lib/collections/local-cache'
 
 export const clearUser = async () => {
+	console.log('Sign-out: clearing user collections and local cache')
 	resetUiPrefs()
 
 	// Refetch (don't cleanup) each user collection. Post-logout the client has

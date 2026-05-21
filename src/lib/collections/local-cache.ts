@@ -36,6 +36,7 @@ import { DeckMetaSchema } from '@/features/deck/schemas'
 // A user collection mirrored to localStorage. `queryKey` must match the
 // collection's own queryKey in its features/*/collections.ts.
 type PersistedCollection = {
+	label: string
 	storageKey: string
 	queryKey: ReadonlyArray<string>
 	collection: {
@@ -47,12 +48,14 @@ type PersistedCollection = {
 
 const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
 	{
+		label: 'profile',
 		storageKey: 'sunlo-cache-profile',
 		queryKey: myProfileQuery.queryKey,
 		collection: myProfileCollection,
 		parseRow: (row) => MyProfileSchema.parse(row),
 	},
 	{
+		label: 'decks',
 		storageKey: 'sunlo-cache-decks',
 		queryKey: ['user', 'deck_plus'],
 		collection: decksCollection,
@@ -79,7 +82,8 @@ function hasSupabaseSessionToken(): boolean {
 	return false
 }
 
-function mirrorCollection(entry: PersistedCollection): void {
+function mirrorCollection(entry: PersistedCollection): number {
+	let restoredCount = 0
 	try {
 		const stored = localStorage.getItem(entry.storageKey)
 		if (stored !== null) {
@@ -87,6 +91,7 @@ function mirrorCollection(entry: PersistedCollection): void {
 			// app version is discarded rather than seeded as bad data.
 			const rows = (JSON.parse(stored) as Array<unknown>).map(entry.parseRow)
 			queryClient.setQueryData(entry.queryKey, rows)
+			restoredCount = rows.length
 		}
 	} catch (error) {
 		console.warn(
@@ -106,6 +111,8 @@ function mirrorCollection(entry: PersistedCollection): void {
 			console.warn(`[local-cache] could not save ${entry.storageKey}`, error)
 		}
 	})
+
+	return restoredCount
 }
 
 /**
@@ -116,8 +123,18 @@ function mirrorCollection(entry: PersistedCollection): void {
  * for a logged-out visitor.
  */
 export function restorePersistedUserData(): void {
-	if (!hasSupabaseSessionToken()) return
-	for (const entry of PERSISTED_COLLECTIONS) mirrorCollection(entry)
+	if (!hasSupabaseSessionToken()) {
+		console.log('App bootstrap: no Supabase session in localStorage')
+		return
+	}
+	const restored: Record<string, number> = {}
+	for (const entry of PERSISTED_COLLECTIONS) {
+		restored[entry.label] = mirrorCollection(entry)
+	}
+	console.log(
+		'App bootstrap: found Supabase session; restored from cache:',
+		restored
+	)
 }
 
 /**
