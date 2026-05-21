@@ -108,7 +108,9 @@ function UserLogin() {
 						src={avatarUrlify(profile.avatar_path)}
 						alt="Your profile pic"
 					/>
-					<AvatarFallback>{profile.username?.slice(0, 2)}</AvatarFallback>
+					<AvatarFallback seed={profile.uid}>
+						{profile.username?.slice(0, 2)}
+					</AvatarFallback>
 				</Avatar>
 			) : (
 				<LogIn className="h-5 w-5 text-slate-800 dark:text-slate-200" />

@@ -97,7 +97,7 @@ function ChatPage() {
 				<Link to="/friends/$uid" params={{ uid: friendUid }}>
 					<Avatar>
 						<AvatarImage src={relAvatarUrl} alt={relUsername} />
-						<AvatarFallback>
+						<AvatarFallback seed={friendUid}>
 							{relUsername.charAt(0).toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
@@ -158,7 +158,7 @@ function ChatPage() {
 												{!isMine && (
 													<Avatar className="h-8 w-8 shrink-0">
 														<AvatarImage src={relAvatarUrl} alt={relUsername} />
-														<AvatarFallback>
+														<AvatarFallback seed={friendUid}>
 															{relUsername.charAt(0).toUpperCase()}
 														</AvatarFallback>
 													</Avatar>

@@ -24,18 +24,21 @@ export function ChatsSidebar() {
 				data-testid="friend-chat-list"
 				className="flex flex-1 flex-col gap-2 overflow-y-auto p-2"
 			>
-				{isLoading ?
+				{isLoading ? (
 					<>
 						<ChatSkeleton />
 						<ChatSkeleton />
 						<ChatSkeleton />
 					</>
-				: !entries?.length ?
+				) : !entries?.length ? (
 					<p className="text-muted-foreground p-4 text-sm">
 						You have no friends to chat with yet.
 					</p>
-				:	entries.map((entry) => <ChatEntryItem key={entry.uid} entry={entry} />)
-				}
+				) : (
+					entries.map((entry) => (
+						<ChatEntryItem key={entry.uid} entry={entry} />
+					))
+				)}
 			</CardContent>
 		</Card>
 	)
@@ -70,51 +73,54 @@ function ChatEntryItem({ entry }: { entry: ChatEntry }) {
 					src={avatarUrlify(profile?.avatar_path)}
 					alt={profile?.username}
 				/>
-				<AvatarFallback>
+				<AvatarFallback seed={uid}>
 					{profile?.username?.charAt(0).toUpperCase()}
 				</AvatarFallback>
 			</Avatar>
 			<div className="flex-1 overflow-hidden">
 				<div className="flex items-center gap-2 font-semibold">
 					<span>{profile?.username}</span>
-					{unreadCount ?
+					{unreadCount ? (
 						<Badge data-testid="unread-badge" size="sm">
 							{unreadCount}
 						</Badge>
-					: hasPendingRequest ?
+					) : hasPendingRequest ? (
 						<div className="bg-primary h-2.5 w-2.5 rounded-full" />
-					:	null}
+					) : null}
 				</div>
-				{hasPendingRequest ?
+				{hasPendingRequest ? (
 					<p className="text-muted-foreground line-clamp-1 text-xs">
 						<UserPlus className="me-1 inline size-3" />
 						Wants to connect • {ago(mostRecentActivity)}
 					</p>
-				:	<p
+				) : (
+					<p
 						className={cn(
 							'line-clamp-2 text-xs',
-							isUnreadPreview ?
-								'text-foreground font-medium'
-							:	'text-muted-foreground'
+							isUnreadPreview
+								? 'text-foreground font-medium'
+								: 'text-muted-foreground'
 						)}
 					>
-						{previewMessage ?
+						{previewMessage ? (
 							<>
 								{ago(previewMessage.created_at)} •{' '}
-								{'isByMe' in previewMessage && previewMessage.isByMe ?
-									'you '
-								:	'they '}
-								{previewMessage.message_type === 'recommendation' ?
-									'sent a recommendation'
-								: previewMessage.message_type === 'request' ?
-									'requested a card'
-								: previewMessage.message_type === 'playlist' ?
-									'shared a playlist'
-								:	'accepted your recommendation'}
+								{'isByMe' in previewMessage && previewMessage.isByMe
+									? 'you '
+									: 'they '}
+								{previewMessage.message_type === 'recommendation'
+									? 'sent a recommendation'
+									: previewMessage.message_type === 'request'
+										? 'requested a card'
+										: previewMessage.message_type === 'playlist'
+											? 'shared a playlist'
+											: 'accepted your recommendation'}
 							</>
-						:	'No messages yet'}
+						) : (
+							'No messages yet'
+						)}
 					</p>
-				}
+				)}
 			</div>
 		</Link>
 	)

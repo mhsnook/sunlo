@@ -104,7 +104,7 @@ function Byline({
 		return (
 			<div className="inline-flex flex-row items-center gap-2">
 				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
-					<AvatarFallback className="text-[10px] font-bold">
+					<AvatarFallback seed={name} className="text-[10px] font-bold">
 						{initials}
 					</AvatarFallback>
 				</Avatar>
@@ -119,7 +119,9 @@ function Byline({
 	return (
 		<div className="flex flex-row items-center gap-3">
 			<Avatar className="bg-foreground text-background rounded-2xl">
-				<AvatarFallback className="font-bold">{initials}</AvatarFallback>
+				<AvatarFallback seed={name} className="font-bold">
+					{initials}
+				</AvatarFallback>
 			</Avatar>
 			<div className="text-sm">
 				<span className="font-medium">{name}</span>
@@ -267,7 +269,10 @@ function ShowcaseRequestThread() {
 				<CardFooter className="flex flex-col gap-4 border-t py-4">
 					<div className="flex w-full flex-row items-center gap-2">
 						<Avatar className="bg-foreground text-background h-8 w-8 shrink-0 rounded-lg">
-							<AvatarFallback className="text-[10px] font-bold">
+							<AvatarFallback
+								seed="showcase-self"
+								className="text-[10px] font-bold"
+							>
 								You
 							</AvatarFallback>
 						</Avatar>

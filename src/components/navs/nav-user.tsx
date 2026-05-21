@@ -71,7 +71,10 @@ export function NavUser() {
 						<Link to="/profile" onClick={setClosedMobile}>
 							<Avatar className="size-6">
 								<AvatarImage src={avatarUrl} alt={profile?.username} />
-								<AvatarFallback className="rounded text-[10px]">
+								<AvatarFallback
+									seed={profile?.uid}
+									className="rounded text-[10px]"
+								>
 									Me
 								</AvatarFallback>
 							</Avatar>
