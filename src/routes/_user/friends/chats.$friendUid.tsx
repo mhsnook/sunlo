@@ -132,6 +132,16 @@ function ChatPage() {
 							messagesQuery.data?.map((msg) => {
 								if (typeof msg === 'undefined') return null
 								const isMine = msg.sender_uid === userId
+								const messageLabel =
+									msg.message_type === 'recommendation'
+										? 'Sent a phrase recommendation.'
+										: msg.message_type === 'request'
+											? 'Requested a phrase.'
+											: msg.message_type === 'playlist'
+												? 'Shared a playlist.'
+												: `${isMine ? 'You' : relUsername} added this to ${
+														isMine ? 'your' : 'their'
+													} deck.`
 								return (
 									<div
 										key={msg.id}
@@ -152,17 +162,21 @@ function ChatPage() {
 											</Avatar>
 										)}
 										<div>
-											<p className="text-muted-foreground mx-0 mb-1 text-xs">
-												{ago(msg.created_at)} &middot;{' '}
-												{msg.message_type === 'recommendation'
-													? 'Sent a phrase recommendation.'
-													: msg.message_type === 'request'
-														? 'Requested a phrase.'
-														: msg.message_type === 'playlist'
-															? 'Shared a playlist.'
-															: `${isMine ? 'You' : relUsername} added this to ${
-																	isMine ? 'your' : 'their'
-																} deck.`}
+											<p
+												className={cn(
+													'text-muted-foreground mx-0 mb-1 text-xs',
+													isMine && 'text-end'
+												)}
+											>
+												{isMine ? (
+													<>
+														{messageLabel} &middot; {ago(msg.created_at)}
+													</>
+												) : (
+													<>
+														{ago(msg.created_at)} &middot; {messageLabel}
+													</>
+												)}
 											</p>
 											{msg.phrase_id && msg.lang && (
 												<CardPreview pid={msg.phrase_id} isMine={isMine} />
