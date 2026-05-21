@@ -1,11 +1,11 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
-import { KeyRound } from 'lucide-react'
+import { X } from 'lucide-react'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
 import { buttonVariants } from '@/components/ui/button'
-import Callout from '@/components/ui/callout'
 import supabase from '@/lib/supabase-client'
 import { useAppForm } from '@/components/form'
 
@@ -29,29 +29,21 @@ function isInvalidCredentials(error: Error | null): boolean {
 	)
 }
 
-function InvalidCredentialsAlert() {
+function InvalidCredentialsError() {
 	return (
-		<div data-testid="login-error-invalid-credentials">
-			<Callout variant="problem" size="sm" alert Icon={KeyRoundIcon}>
-				<strong>That email and password don&rsquo;t match</strong>
-				<p>
-					Double-check your password for typos, or{' '}
-					<Link
-						to="/forgot-password"
-						data-testid="login-error-reset-password-link"
-						className="s-link"
-					>
-						reset your password
-					</Link>{' '}
-					if you&rsquo;ve forgotten it.
-				</p>
-			</Callout>
+		<div
+			role="alert"
+			data-testid="login-error-invalid-credentials"
+			className="animate-shake flex items-center gap-2"
+		>
+			<span className="hue-danger bg-5-mhi flex size-7 shrink-0 items-center justify-center rounded-full">
+				<X className="size-4 text-white" aria-hidden={true} />
+			</span>
+			<strong className="text-7-mhi-danger">
+				Incorrect email or password. Try again?
+			</strong>
 		</div>
 	)
-}
-
-function KeyRoundIcon() {
-	return <KeyRound className="text-5-mhi" aria-hidden={true} />
 }
 
 export function LoginCardBody({
@@ -59,6 +51,10 @@ export function LoginCardBody({
 }: {
 	onSuccess?: (email: string | undefined) => void
 }) {
+	// Bumped on every failed attempt so the error re-keys and replays its
+	// shake animation — even when the user resubmits without editing anything.
+	const [failedAttempts, setFailedAttempts] = useState(0)
+
 	const loginMutation = useMutation({
 		mutationKey: ['login'],
 		mutationFn: async ({ email, password }: FormInputs) => {
@@ -73,6 +69,7 @@ export function LoginCardBody({
 			if (email) toastSuccess(`Logged in as ${email}`)
 			onSuccess?.(email)
 		},
+		onError: () => setFailedAttempts((n) => n + 1),
 	})
 
 	const form = useAppForm({
@@ -118,7 +115,7 @@ export function LoginCardBody({
 				</Link>
 			</div>
 			{isInvalidCredentials(loginMutation.error) ? (
-				<InvalidCredentialsAlert />
+				<InvalidCredentialsError key={failedAttempts} />
 			) : (
 				<form.AppForm>
 					<form.FormAlert

@@ -45,25 +45,24 @@ natural wrapper element to label.
 
 ## Authentication & Navigation
 
-| Selector                          | Attribute   | Component/Location     | Description                                                     |
-| --------------------------------- | ----------- | ---------------------- | --------------------------------------------------------------- |
-| `login-link`                      | data-testid | Sidebar                | Link to login page for logged-out users                         |
-| `login-form`                      | data-testid | Login page             | The login form container                                        |
-| `login-signup-link`               | data-testid | Login page             | "Create account" link to /signup                                |
-| `login-forgot-password-link`      | data-testid | Login page             | "Forgot password?" link to /forgot-password                     |
-| `login-error-invalid-credentials` | data-testid | Login page             | Friendly alert shown when email/password don't match            |
-| `login-error-reset-password-link` | data-testid | Login page             | "reset your password" link inside the invalid-credentials alert |
-| `email-input`                     | data-testid | Form fields            | Email input                                                     |
-| `password-input`                  | data-testid | Form fields            | Password input                                                  |
-| `submit-button`                   | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous)     |
-| `welcome-page`                    | data-testid | Welcome route          | Welcome page container                                          |
-| `community-norms-dialog`          | data-testid | Welcome page           | Community norms intro dialog                                    |
-| `affirm-community-norms-button`   | data-testid | Community norms dialog | Button to affirm norms                                          |
-| `sunlo-welcome-explainer`         | data-testid | Welcome page           | Welcome content after affirming                                 |
-| `go-to-decks-link`                | data-testid | Welcome page           | Link to /learn                                                  |
-| `sidebar-profile-settings-link`   | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)          |
-| `sidebar-display-settings-link`   | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)             |
-| `profile-signout-button`          | data-testid | Profile page           | Sign out button at bottom of profile page                       |
+| Selector                          | Attribute   | Component/Location     | Description                                                 |
+| --------------------------------- | ----------- | ---------------------- | ----------------------------------------------------------- |
+| `login-link`                      | data-testid | Sidebar                | Link to login page for logged-out users                     |
+| `login-form`                      | data-testid | Login page             | The login form container                                    |
+| `login-signup-link`               | data-testid | Login page             | "Create account" link to /signup                            |
+| `login-forgot-password-link`      | data-testid | Login page             | "Forgot password?" link to /forgot-password                 |
+| `login-error-invalid-credentials` | data-testid | Login page             | One-line error shown when the email/password don't match    |
+| `email-input`                     | data-testid | Form fields            | Email input                                                 |
+| `password-input`                  | data-testid | Form fields            | Password input                                              |
+| `submit-button`                   | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |
+| `welcome-page`                    | data-testid | Welcome route          | Welcome page container                                      |
+| `community-norms-dialog`          | data-testid | Welcome page           | Community norms intro dialog                                |
+| `affirm-community-norms-button`   | data-testid | Community norms dialog | Button to affirm norms                                      |
+| `sunlo-welcome-explainer`         | data-testid | Welcome page           | Welcome content after affirming                             |
+| `go-to-decks-link`                | data-testid | Welcome page           | Link to /learn                                              |
+| `sidebar-profile-settings-link`   | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)      |
+| `sidebar-display-settings-link`   | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)         |
+| `profile-signout-button`          | data-testid | Profile page           | Sign out button at bottom of profile page                   |
 
 ## Deck Management
 

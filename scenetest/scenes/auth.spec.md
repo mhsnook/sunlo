@@ -17,8 +17,10 @@ learner:
 - click submit-button
 - up
 - see login-error-invalid-credentials
-- see login-error-reset-password-link
 - see login-form
+- click submit-button
+- up
+- see login-error-invalid-credentials
 
 # learner logs in and sees their decks
 
