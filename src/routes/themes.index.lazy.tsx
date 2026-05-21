@@ -683,6 +683,10 @@ function ThemesPage() {
 			.toSorted((a, b) => b.hue - a.hue),
 	]
 
+	// Brand is the default hue, so picking it (or clearing) is not an
+	// override — the reset control has nothing to do in that state.
+	const isDefaultHue = activeHue === null || activeHue === BRAND_HUE
+
 	return (
 		<div className="@container mx-auto max-w-5xl space-y-8 p-6">
 			<ComponentShowcase />
@@ -700,15 +704,17 @@ function ThemesPage() {
 			<section className="space-y-2">
 				<div className="flex items-center justify-between gap-2">
 					<h2 className="text-lg font-semibold">Swatches</h2>
-					{activeHue !== null && (
-						<Button
-							size="sm"
-							variant="neutral"
-							onClick={() => setActiveHue(null)}
-						>
-							Reset page hue
-						</Button>
-					)}
+					{/* Always rendered so its show/hide never shifts the layout. */}
+					<Button
+						size="sm"
+						variant="neutral"
+						onClick={() => setActiveHue(null)}
+						className={cn(isDefaultHue && 'invisible')}
+						aria-hidden={isDefaultHue}
+						tabIndex={isDefaultHue ? -1 : undefined}
+					>
+						Reset page hue
+					</Button>
 				</div>
 				<p className="text-muted-foreground text-sm">
 					Click any swatch to theme the whole page with that hue.
