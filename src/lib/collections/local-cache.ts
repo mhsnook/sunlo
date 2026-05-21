@@ -4,13 +4,16 @@ import {
 	myProfileQuery,
 } from '@/features/profile/collections'
 import { MyProfileSchema } from '@/features/profile/schemas'
+import { decksCollection } from '@/features/deck/collections'
+import { DeckMetaSchema } from '@/features/deck/schemas'
 
 /**
- * Local persistence for user-owned collections — for now, only the profile.
+ * Local persistence for user-owned collections — currently the profile and
+ * decks. Both are small and slow-changing, so a localStorage mirror is a cheap
+ * way to paint them on the first frame after a reload.
  *
- * This is a sidecar cache, never a source of truth. It exists so a returning
- * user sees their profile on the first paint, before the network round trip.
- * Supabase stays authoritative and overwrites it on revalidation.
+ * This is a sidecar cache, never a source of truth. Supabase stays
+ * authoritative and overwrites it on revalidation.
  *
  * The two functions here are lifecycle hooks. The wider app lifecycle is a
  * confidence ladder — each phase is more certain about who the user is and
@@ -30,8 +33,32 @@ import { MyProfileSchema } from '@/features/profile/schemas'
  * Only the `bootstrap` and `confirm-quit` hooks belong to this module today.
  */
 
-// localStorage key holding the cached profile rows.
-const PROFILE_CACHE_KEY = 'sunlo-cache-profile'
+// A user collection mirrored to localStorage. `queryKey` must match the
+// collection's own queryKey in its features/*/collections.ts.
+type PersistedCollection = {
+	storageKey: string
+	queryKey: ReadonlyArray<string>
+	collection: {
+		readonly toArray: ReadonlyArray<unknown>
+		subscribeChanges: (callback: () => void) => unknown
+	}
+	parseRow: (row: unknown) => unknown
+}
+
+const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
+	{
+		storageKey: 'sunlo-cache-profile',
+		queryKey: myProfileQuery.queryKey,
+		collection: myProfileCollection,
+		parseRow: (row) => MyProfileSchema.parse(row),
+	},
+	{
+		storageKey: 'sunlo-cache-decks',
+		queryKey: ['user', 'deck_plus'],
+		collection: decksCollection,
+		parseRow: (row) => DeckMetaSchema.parse(row),
+	},
+]
 
 /**
  * Synchronous, network-free guess at "is someone logged in on this device" —
@@ -52,44 +79,45 @@ function hasSupabaseSessionToken(): boolean {
 	return false
 }
 
+function mirrorCollection(entry: PersistedCollection): void {
+	try {
+		const stored = localStorage.getItem(entry.storageKey)
+		if (stored !== null) {
+			// Validate each row through its schema so a cache written by an older
+			// app version is discarded rather than seeded as bad data.
+			const rows = (JSON.parse(stored) as Array<unknown>).map(entry.parseRow)
+			queryClient.setQueryData(entry.queryKey, rows)
+		}
+	} catch (error) {
+		console.warn(
+			`[local-cache] discarding unreadable ${entry.storageKey}`,
+			error
+		)
+		localStorage.removeItem(entry.storageKey)
+	}
+
+	entry.collection.subscribeChanges(() => {
+		try {
+			localStorage.setItem(
+				entry.storageKey,
+				JSON.stringify(entry.collection.toArray)
+			)
+		} catch (error) {
+			console.warn(`[local-cache] could not save ${entry.storageKey}`, error)
+		}
+	})
+}
+
 /**
  * `bootstrap` phase (entry script, before React renders): if this device looks
- * logged in, prime the React Query cache from localStorage so the profile
- * paints before any network call, then mirror future collection changes back.
+ * logged in, prime the React Query cache from localStorage so the persisted
+ * collections paint before any network call, then mirror future changes back.
  * The restored rows are unvalidated — `supabase-init` revalidates them. No-op
  * for a logged-out visitor.
  */
 export function restorePersistedUserData(): void {
 	if (!hasSupabaseSessionToken()) return
-
-	try {
-		const stored = localStorage.getItem(PROFILE_CACHE_KEY)
-		if (stored !== null) {
-			// Validate through the schema so a cache written by an older app
-			// version is discarded rather than seeded as bad data.
-			const rows = (JSON.parse(stored) as Array<unknown>).map((row) =>
-				MyProfileSchema.parse(row)
-			)
-			queryClient.setQueryData(myProfileQuery.queryKey, rows)
-		}
-	} catch (error) {
-		console.warn(
-			`[local-cache] discarding unreadable ${PROFILE_CACHE_KEY}`,
-			error
-		)
-		localStorage.removeItem(PROFILE_CACHE_KEY)
-	}
-
-	myProfileCollection.subscribeChanges(() => {
-		try {
-			localStorage.setItem(
-				PROFILE_CACHE_KEY,
-				JSON.stringify(myProfileCollection.toArray)
-			)
-		} catch (error) {
-			console.warn(`[local-cache] could not save ${PROFILE_CACHE_KEY}`, error)
-		}
-	})
+	for (const entry of PERSISTED_COLLECTIONS) mirrorCollection(entry)
 }
 
 /**
@@ -97,5 +125,7 @@ export function restorePersistedUserData(): void {
  * different user on the same device can't read the previous user's data.
  */
 export function clearPersistedUserData(): void {
-	localStorage.removeItem(PROFILE_CACHE_KEY)
+	for (const entry of PERSISTED_COLLECTIONS) {
+		localStorage.removeItem(entry.storageKey)
+	}
 }
