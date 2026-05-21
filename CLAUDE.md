@@ -148,7 +148,7 @@ learner:
 
 ### Testing (Playwright — legacy, being removed)
 
-The `e2e/` directory and `pnpm test` / `pnpm test:ui` scripts are deprecated and slated for removal — see the `transform` label. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
+The `e2e/` directory is deprecated and slated for removal — see the `transform` label. Its `pnpm test` / `pnpm test:*` scripts have already been removed; the remaining specs run via `pnpm exec playwright test` directly. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
 
 ### Database Management
 
