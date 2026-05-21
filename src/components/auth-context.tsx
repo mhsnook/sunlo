@@ -24,6 +24,13 @@ async function checkAdminStatus(): Promise<boolean> {
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
+	// Two monotonic lifecycle latches — once true, never reset (sessionState
+	// itself still mutates on sign-in/out, which is why the router never
+	// unmounts once mounted):
+	//   isLoaded → "supabase-init": the client has confirmed the session at
+	//     least once, from getSession() or onAuthStateChange, whichever won.
+	//   isReady  → "data-loaded": the profile refetch has resolved. Today this
+	//     latches on the profile alone; other user data loads in behind it.
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [isReady, setIsReady] = useState(false)
 	const [isAdmin, setIsAdmin] = useState(false)
@@ -50,9 +57,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			// (not on token refresh or other events that already have a user)
 			const isLoggingIn = !sessionState?.user.id && session?.user.id
 			if (isLoggingIn) {
+				const cachedUid = myProfileCollection.toArray[0]?.uid
+				const cacheStatus = !cachedUid
+					? 'no local cache'
+					: cachedUid === session?.user.id
+						? 'user ID agrees with local cache'
+						: 'user ID differs from local cache (stale — will be replaced)'
+				console.log(
+					`Supabase init: session confirmed; ${cacheStatus}; fetching user data`
+				)
 				// Profile must load before isReady goes true so the _user loader
 				// finds the profile collection populated (avoids race condition).
-				void myProfileCollection.utils.refetch().then(() => setIsReady(true))
+				void myProfileCollection.utils.refetch().then(() => {
+					console.log('Data loaded: profile revalidated against the server')
+					setIsReady(true)
+				})
 				void decksCollection.utils.refetch()
 				void friendSummariesCollection.utils.refetch()
 				// Refetch chat messages if previously loaded (for correct RLS filtering)
@@ -65,6 +84,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 				setSessionState(session)
 				setIsLoaded(true)
 				return
+			}
+			if (!session && event === 'GET_SESSION') {
+				console.log('Supabase init: no active session — running as a visitor')
 			}
 			setSessionState(session)
 			setIsLoaded(true)
