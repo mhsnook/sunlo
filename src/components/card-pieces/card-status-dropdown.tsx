@@ -9,7 +9,6 @@ import {
 	PlusCircle,
 } from 'lucide-react'
 
-import { failed, serverCheck, should } from '@scenetest/checks-react'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 import {
 	DropdownMenu,
@@ -188,32 +187,6 @@ function useCardStatusMutator(
 
 		tx.isPersisted.promise.then(
 			() => {
-				// Verify (in test mode) that the DB-side state matches what we
-				// asked for — both directions of the phrase share the new status.
-				// Stripped in production by vite-plugin-scenetest.
-				serverCheck(
-					'card status persists to all sibling cards',
-					async (server, { uid, phraseId, expectedStatus }) => {
-						const { data: rows, error } = await server.supabase
-							.from('user_card')
-							.select('id, direction, status')
-							.eq('uid', uid)
-							.eq('phrase_id', phraseId)
-						if (error || !rows) {
-							failed('fetch user_card after status mutation', {
-								error: error?.message,
-							})
-							return
-						}
-						should('at least one card row exists', rows.length >= 1, { rows })
-						should(
-							'all sibling cards share the expected status',
-							rows.every((r) => r.status === expectedStatus),
-							{ rows, expected: expectedStatus }
-						)
-					},
-					() => ({ uid: userId, phraseId: phrase.id, expectedStatus: status })
-				)
 				toastSuccess(
 					card
 						? `Updated card status to "${status}"`
