@@ -16,6 +16,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { should } from '@scenetest/checks-react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 
@@ -51,10 +52,18 @@ export function ArchiveDeckButton({
 			if (!data) return null
 			decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
 
+			// Confirm the server row's archived flag matches what we submitted.
+			// Stripped from production by the Vite plugin.
+			should(
+				'user_deck archived flag matches the submitted value',
+				data.archived === !archived,
+				{ submitted: !archived, returned: data }
+			)
+
 			toastSuccess(
-				!data.archived ?
-					'The deck has been re-activated!'
-				:	'The deck has been archived and hidden from your active decks.'
+				!data.archived
+					? 'The deck has been re-activated!'
+					: 'The deck has been archived and hidden from your active decks.'
 			)
 
 			if (!data.archived) {
@@ -80,7 +89,7 @@ export function ArchiveDeckButton({
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<AlertDialogTrigger asChild className={className}>
-				{archived ?
+				{archived ? (
 					<Button
 						variant="soft"
 						size="sm"
@@ -90,7 +99,8 @@ export function ArchiveDeckButton({
 						<ArchiveRestore className="text-primary h-4 w-4" />
 						Restore deck
 					</Button>
-				:	<Button
+				) : (
+					<Button
 						variant="red-soft"
 						size="sm"
 						disabled={!!archived}
@@ -99,47 +109,47 @@ export function ArchiveDeckButton({
 						<Archive className="h-4 w-4" />
 						Archive deck
 					</Button>
-				}
+				)}
 			</AlertDialogTrigger>
 			<AlertDialogContent
 				data-testid={
-					archived ?
-						'restore-confirmation-dialog'
-					:	'archive-confirmation-dialog'
+					archived
+						? 'restore-confirmation-dialog'
+						: 'archive-confirmation-dialog'
 				}
 			>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{archived ?
-							'Restore this deck?'
-						:	'Are you sure you want to archive this deck?'}
+						{archived
+							? 'Restore this deck?'
+							: 'Are you sure you want to archive this deck?'}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
-						{archived ?
-							`You can pick up right where you left off.`
-						:	`This action will hide the deck from your active decks. You can unarchive it later if needed.`
-						}
+						{archived
+							? `You can pick up right where you left off.`
+							: `This action will hide the deck from your active decks. You can unarchive it later if needed.`}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
 					<AlertDialogCancel className={buttonVariants({ variant: 'neutral' })}>
 						Cancel
 					</AlertDialogCancel>
-					{archived ?
+					{archived ? (
 						<AlertDialogAction
 							onClick={() => mutation.mutate()}
 							data-testid="confirm-restore-button"
 						>
 							Restore
 						</AlertDialogAction>
-					:	<AlertDialogAction
+					) : (
+						<AlertDialogAction
 							className={buttonVariants({ variant: 'red' })}
 							onClick={() => mutation.mutate()}
 							data-testid="confirm-archive-button"
 						>
 							Archive
 						</AlertDialogAction>
-					}
+					)}
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
