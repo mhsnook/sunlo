@@ -134,14 +134,14 @@ function ChatPage() {
 								const isMine = msg.sender_uid === userId
 								const messageLabel =
 									msg.message_type === 'recommendation'
-										? 'Sent a phrase recommendation.'
+										? 'Sent a phrase recommendation'
 										: msg.message_type === 'request'
-											? 'Requested a phrase.'
+											? 'Requested a phrase'
 											: msg.message_type === 'playlist'
-												? 'Shared a playlist.'
+												? 'Shared a playlist'
 												: `${isMine ? 'You' : relUsername} added this to ${
 														isMine ? 'your' : 'their'
-													} deck.`
+													} deck`
 								return (
 									<div
 										key={msg.id}
