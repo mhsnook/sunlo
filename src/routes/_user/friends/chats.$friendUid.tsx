@@ -153,7 +153,16 @@ function ChatPage() {
 										)}
 										<div>
 											<p className="text-muted-foreground mx-0 mb-1 text-xs">
-												{ago(msg.created_at)}
+												{ago(msg.created_at)} &middot;{' '}
+												{msg.message_type === 'recommendation'
+													? 'Sent a phrase recommendation.'
+													: msg.message_type === 'request'
+														? 'Requested a phrase.'
+														: msg.message_type === 'playlist'
+															? 'Shared a playlist.'
+															: `${isMine ? 'You' : relUsername} added this to ${
+																	isMine ? 'your' : 'their'
+																} deck.`}
 											</p>
 											{msg.phrase_id && msg.lang && (
 												<CardPreview pid={msg.phrase_id} isMine={isMine} />
@@ -164,34 +173,6 @@ function ChatPage() {
 											{msg.playlist_id && msg.lang && (
 												<PlaylistPreview id={msg.playlist_id} />
 											)}
-											<div
-												className={cn(
-													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
-													isMine
-														? 'bg-primary text-primary-foreground/70 ms-6 place-self-end'
-														: 'bg-muted me-6 place-self-start'
-												)}
-											>
-												{msg.message_type === 'recommendation' && (
-													<p className="text-sm italic">
-														Sent a phrase recommendation.
-													</p>
-												)}
-												{msg.message_type === 'request' && (
-													<p className="text-sm italic">Requested a phrase.</p>
-												)}
-												{msg.message_type === 'accepted' && (
-													<div className="text-sm italic">
-														<p>
-															{isMine ? 'You' : relUsername} added this to{' '}
-															{isMine ? 'your' : 'their'} deck.
-														</p>
-													</div>
-												)}
-												{msg.message_type === 'playlist' && (
-													<p className="text-sm italic">Shared a playlist.</p>
-												)}
-											</div>
 										</div>
 									</div>
 								)
