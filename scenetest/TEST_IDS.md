@@ -51,6 +51,8 @@ natural wrapper element to label.
 | `login-form`                    | data-testid | Login page             | The login form container                                    |
 | `login-signup-link`             | data-testid | Login page             | "Create account" link to /signup                            |
 | `login-forgot-password-link`    | data-testid | Login page             | "Forgot password?" link to /forgot-password                 |
+| `reset-link-invalid`            | data-testid | Set-new-password page  | Card shown when the recovery link is invalid or expired     |
+| `request-new-link`              | data-testid | Set-new-password page  | Link to /forgot-password from the invalid-link card         |
 | `email-input`                   | data-testid | Form fields            | Email input                                                 |
 | `password-input`                | data-testid | Form fields            | Password input                                              |
 | `submit-button`                 | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |
