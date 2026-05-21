@@ -1,91 +1,103 @@
 # React to SolidJS feasibility: Sunlo
 
-Built as it stands, Sunlo ships about **2.26 MB of JavaScript (777 KB
-gzipped)**, of which **448 KB (141 KB gzipped) is the always-loaded main
+Built as it stands, Sunlo ships about **2.93 MB of JavaScript (959 KB
+gzipped)**, of which **1,090 KB (320 KB gzipped) is the always-loaded main
 chunk**. Rebuilt in SolidJS 2.0 — taking the default replacement for every
-dependency — the projection is roughly **1.97 MB / ~685 KB gzipped** total and
-**~325 KB / ~100 KB gzipped** for the main chunk. That is about **290 KB raw /
-95 KB gzipped off the total bundle, and 125 KB raw / 40 KB gzipped off the main
-chunk**. Almost the entire main-chunk saving is one item: React's ~135 KB DOM
-runtime collapsing to ~20 KB of `solid-js`. The rest of this report shows where
-that number comes from and the shape of the work behind it.
+dependency — the projection is roughly **2.64 MB / ~865 KB gzipped** total and
+**~970 KB / ~282 KB gzipped** for the main chunk. That is about **290 KB raw /
+95 KB gzipped off the total bundle, and 120 KB raw / 38 KB gzipped off the main
+chunk**. Almost the entire main-chunk saving is one swap: React's ~135 KB DOM
+runtime collapsing to ~20 KB of `solid-js`.
+
+Note the proportion before reading on: the React runtime is only about **13% of
+that 1,090 KB main chunk**. The rest is the TanStack DB stack, the Supabase
+SDK, Base UI, `zod`, and app code — all of which is either kept untouched or
+swapped like-for-like. The migration's bundle effect is real but modest against
+a foundation this heavy.
 
 This is information for a migration decision, not a recommendation. It does not
 argue for or against the move and it does not estimate effort in time.
 
 _Assessment baseline: SolidJS 2.0. Built and measured 2026-05-21 on branch
-`claude/react-solidjs-migration-tool` (`pnpm build`, Vite 8)._
+`claude/react-solidjs-migration-tool` (`pnpm build`, Vite 8, Supabase
+credentials present — see Method note in §1)._
 
 ## 1. Bundle projection
 
 ### Measured today
 
-|                                     | Raw     | Gzip   |
-| ----------------------------------- | ------- | ------ |
-| Total JS (247 chunks)               | 2.26 MB | 777 KB |
-| Main / entry chunk (`index-*.js`)   | 448 KB  | 141 KB |
-| CSS (unaffected by the migration)   | 182 KB  | 26 KB  |
-| `chart-*.js` (recharts, lazy)       | 323 KB  | 96 KB  |
-| `my-markdown-*.js` (markdown, lazy) | 116 KB  | 35 KB  |
-| `form-*.js` (TanStack Form, lazy)   | 50 KB   | 14 KB  |
+|                                     | Raw      | Gzip   |
+| ----------------------------------- | -------- | ------ |
+| Total JS (248 chunks)               | 2.93 MB  | 959 KB |
+| Main / entry chunk (`index-*.js`)   | 1,090 KB | 320 KB |
+| CSS (unaffected by the migration)   | 182 KB   | 26 KB  |
+| `chart-*.js` (recharts, lazy)       | 323 KB   | 97 KB  |
+| `my-markdown-*.js` (markdown, lazy) | 116 KB   | 35 KB  |
 
 ### Where the JavaScript goes today
 
-Attributed from the build's module treemap (gzipped, approximate — the
-treemap measures pre-minification, so these are scaled to the real totals):
+Attributed from the build's module treemap (gzipped, approximate — the treemap
+measures pre-minification, scaled here to the real totals):
 
-| Slice                                                             | ≈ Gzip  | Migration fate                                     |
-| ----------------------------------------------------------------- | ------- | -------------------------------------------------- |
-| App source (~275 components)                                      | ~263 KB | rewritten; size roughly held (see §5)              |
-| `@tanstack/*` — router, query, db, form                           | ~102 KB | **mostly kept** — the cores are framework-agnostic |
-| `recharts` + `d3`                                                 | ~117 KB | **rebuilt** on a different charting engine         |
-| Base UI (`@base-ui/react`, `@floating-ui`)                        | ~99 KB  | swapped to Kobalte — size roughly neutral          |
-| React runtime (`react-dom`, `react`, `scheduler`)                 | ~48 KB  | **collapses** to `solid-js`                        |
-| Markdown ecosystem (`react-markdown` + remark/micromark)          | ~35 KB  | **kept** — only the thin renderer swaps            |
-| Everything else (`zod`, `sonner`, `lucide`, `vaul`, `zustand`, …) | ~113 KB | mostly kept; a few small swaps                     |
+| Slice                                                                         | ≈ Gzip  | Migration fate                                     |
+| ----------------------------------------------------------------------------- | ------- | -------------------------------------------------- |
+| App source (~275 components)                                                  | ~305 KB | rewritten; size roughly held (see §5)              |
+| `recharts` + `d3`                                                             | ~115 KB | **rebuilt** on a different charting engine         |
+| Other deps (`sonner`, `lucide`, `vaul`, `immer`, `qrcode`, `tailwind-merge`…) | ~130 KB | mostly kept; a few small swaps                     |
+| `@tanstack/*` — router, query, db, form                                       | ~117 KB | **mostly kept** — the cores are framework-agnostic |
+| Base UI (`@base-ui/react`, `@floating-ui`)                                    | ~120 KB | swapped to Kobalte — size roughly neutral          |
+| React runtime (`react-dom`, `react`, `scheduler`)                             | ~48 KB  | **collapses** to `solid-js`                        |
+| `@supabase/*` SDK                                                             | ~43 KB  | **kept** — framework-agnostic                      |
+| Markdown ecosystem (`react-markdown` + remark/micromark)                      | ~32 KB  | **kept** — only the thin renderer swaps            |
 
 The single most useful observation: a large share of the bundle — the
-`@tanstack` cores, the markdown ecosystem, `zod`, styling — is
-framework-agnostic and **does not move at all**. The migration's bundle effect
-is concentrated in two places.
+`@tanstack` cores, the `@supabase` SDK, the markdown ecosystem, `zod`, styling
+— is framework-agnostic and **does not move at all**. The migration's bundle
+effect is concentrated in two places: the React runtime and the chart engine.
 
 ### The projection — what actually moves
 
-| Change                                           | ≈ Gzip delta | Lands in                      |
-| ------------------------------------------------ | ------------ | ----------------------------- |
-| `react` + `react-dom` + `scheduler` → `solid-js` | **−40 KB**   | main chunk                    |
-| `zustand` → Solid's built-in `createStore`       | −2 KB        | main chunk                    |
-| `recharts` → `solid-chartjs` (or ECharts)        | **≈ −50 KB** | lazy (stats / charts routes)  |
-| `vaul`, `qrcode.react`, misc small swaps         | ≈ −5 KB      | mixed                         |
-| `@base-ui/react` → Kobalte                       | **≈ 0 (±)**  | mixed — see uncertainty below |
-| `@tanstack` React adapters → Solid adapters      | ≈ 0          | mixed — shared cores          |
-| Markdown ecosystem, all kept dependencies        | 0            | —                             |
+| Change                                             | ≈ Gzip delta | Lands in                      |
+| -------------------------------------------------- | ------------ | ----------------------------- |
+| `react` + `react-dom` + `scheduler` → `solid-js`   | **−36 KB**   | main chunk                    |
+| `zustand` → Solid's built-in `createStore`         | −2 KB        | main chunk                    |
+| `recharts` → `solid-chartjs` (or ECharts)          | **≈ −53 KB** | lazy (stats / charts routes)  |
+| `vaul`, `qrcode.react`, misc small swaps           | ≈ −5 KB      | mixed                         |
+| `@base-ui/react` → Kobalte                         | **≈ 0 (±)**  | mixed — see uncertainty below |
+| `@tanstack` React adapters → Solid adapters        | ≈ 0          | mixed — shared cores          |
+| `@supabase` SDK, markdown ecosystem, all kept deps | 0            | —                             |
 
-**Projected result:** total JS ≈ 1.97 MB raw / ~685 KB gzip; main chunk
-≈ 325 KB raw / ~100 KB gzip.
+**Projected result:** total JS ≈ 2.64 MB raw / ~865 KB gzip; main chunk
+≈ 970 KB raw / ~282 KB gzip.
 
 ### Method and uncertainty
 
-- **Measured** (firm): the current bundle, from an actual `pnpm build`.
+- **Measured** (firm): the current bundle, from an actual `pnpm build` with
+  Supabase credentials present in the environment.
+- **Build-environment note:** `src/lib/supabase-client.ts` throws if
+  `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are unset. A build _without_
+  those vars constant-folds that guard to `if (true) throw`, makes the
+  `createClient()` call dead code, and lets the bundler tree-shake out the
+  entire `@supabase/*` SDK — ~640 KB, vanished. The baseline above is the
+  credentialed build (the one your CI and deploy produce). Measure a
+  representative build or this number is wrong by a third.
 - **Firm projection:** the React-runtime collapse. `react-dom` + `react` +
   `scheduler` is ~135 KB raw / ~44 KB gzip of well-characterized code;
-  `solid-js` is ~20 KB raw / ~7.5 KB gzip. This delta is near-certain and it
-  is the bulk of the main-chunk win.
-- **Soft projection:** the charting delta depends on which Solid charting
-  library is chosen — `solid-chartjs` (Chart.js) lands around ~190 KB raw;
-  a lighter library would save more, ECharts less. The −50 KB gzip figure
-  assumes `solid-chartjs`.
-- **The one real unknown:** Base UI → Kobalte. Base UI is ~250 KB raw /
-  ~99 KB gzip of this bundle. Kobalte is a comparable accessible-primitives
-  library; whether it lands smaller, similar, or larger was not measured.
-  This could swing the total saving by roughly ±40 KB.
-- **Not counted — upside:** the ~800 KB raw of app code is held flat in the
-  projection. In practice Solid compiles components to compact DOM operations
-  rather than `React.createElement` trees, and the React Compiler's injected
-  memoization — currently woven through all ~275 components — disappears
-  entirely. App code would very likely shrink, possibly materially. It is not
-  banked here because it cannot be measured without doing the port. Treat it
-  as headroom on top of the headline.
+  `solid-js` is ~20 KB raw / ~7.5 KB gzip. This delta is near-certain and is
+  the bulk of the main-chunk win.
+- **Soft projection:** the charting delta depends on the Solid charting library
+  chosen — `solid-chartjs` (Chart.js) lands around ~190 KB raw; a lighter
+  library saves more, ECharts less.
+- **The one real unknown:** Base UI → Kobalte. Base UI is ~120 KB gzip of this
+  bundle. Kobalte is a comparable accessible-primitives library; whether it
+  lands smaller, similar, or larger was not measured. This could swing the
+  total by roughly ±40 KB.
+- **Not counted — upside:** the ~960 KB raw of app code is held flat in the
+  projection. Solid compiles components to compact DOM operations rather than
+  `React.createElement` trees, and the React Compiler's injected memoization —
+  woven through all ~275 components — disappears. App code would likely shrink,
+  possibly materially. Not banked, because it cannot be measured without doing
+  the port.
 
 ## 2. Scope & inventory
 
@@ -119,10 +131,15 @@ internals.
 
 `zod`, `dayjs`, `class-variance-authority`, `clsx`, `tailwind-merge`,
 `tailwindcss` and every Tailwind plugin, `tailwind-oklch`, `tailwindcss-animate`,
-`@supabase/supabase-js`, `ts-fsrs`, the Fontsource fonts — and, importantly,
-the `@tanstack` cores and the entire `remark`/`micromark` markdown ecosystem,
-which together are a large slice of the bundle (§1). The `tailwind-oklch` color
-system and the `cn()` helper carry over untouched.
+`ts-fsrs`, the Fontsource fonts — the `@tanstack` cores, the entire
+`remark`/`micromark` markdown ecosystem, and, notably, **the whole
+`@supabase/*` SDK** (`supabase-js`, `auth-js`, `realtime-js`, `postgrest-js`,
+`storage-js`, `phoenix` — together ~330 KB of the bundle, one of its largest
+single blocks). All of this carries over untouched. The `tailwind-oklch` color
+system and the `cn()` helper carry over too. Vite itself stays.
+
+This is a large fraction of the dependency list, and a large fraction of the
+bundle — a meaningful point in the migration's favor.
 
 ### Swap — clear leader, one obvious target
 
@@ -140,16 +157,14 @@ system and the `cn()` helper carry over untouched.
 
 ### Swap — contested, a real decision with no dominant winner
 
-- **`@base-ui/react` (38 component wrappers, ~99 KB gzipped of the bundle).**
+- **`@base-ui/react` (38 component wrappers, ~120 KB gzipped of the bundle).**
   Base UI has **no SolidJS port** — it is React-only. The Solid space offers
   three credible options and no default: **Kobalte** (closest to Radix, the
-  de-facto community pick), **Corvu** (complementary primitives, often used
-  alongside Kobalte), and **Ark UI** (Chakra team, on Zag.js — exposes the
-  _same component API for React and Solid_). This is the most consequential
-  single choice in the migration, and per §1 it is also the projection's
-  largest unknown.
-- **`vaul` (drawer, ~12 KB gzipped).** No direct port; re-implement on Corvu's
-  drawer or Kobalte.
+  de-facto community pick), **Corvu** (complementary primitives), and **Ark
+  UI** (Chakra team, on Zag.js — exposes the _same component API for React and
+  Solid_). The most consequential single choice in the migration, and per §1
+  the projection's largest unknown.
+- **`vaul` (drawer).** No direct port; re-implement on Corvu's drawer or Kobalte.
 - **`cmdk` (command menu).** Solid ports exist but are small and thinly
   maintained — a wonky corner.
 - **`qrcode.react`.** Minor; a Solid QR component exists, verify maintenance.
@@ -157,9 +172,9 @@ system and the `cn()` helper carry over untouched.
 
 ### No direct equivalent — rebuild on a different paradigm
 
-- **`recharts` 3.7.0 (~117 KB gzipped with its d3 dependencies).** Solid has no
+- **`recharts` 3.7.0 (~115 KB gzipped with its d3 dependencies).** Solid has no
   declarative-SVG charting library equivalent to Recharts. The realistic path
-  is `solid-chartjs` (Chart.js, canvas) or an ECharts wrapper — a _different_
+  is `solid-chartjs` (Chart.js, canvas) or an ECharts wrapper — a different
   rendering model and API. It is **contained**: three files
   (`components/activity-chart.tsx`, `components/library-charts.tsx`,
   `components/ui/chart.tsx`) feeding two lazy route chunks. A scoped soft wall,
@@ -252,11 +267,12 @@ also bundle saving number two (§1).
 ### Seam 9 — code-splitting and odds-and-ends
 
 `_user.tsx` uses `React.lazy` + `<Suspense>` for `AppSidebar` / `AppNav`, and
-the router plugin does `autoCodeSplitting`. `lazy()` and `<Suspense>` exist in
-Solid; Suspense is reworked in Solid 2.0, but here it does code-split loading,
-not data orchestration, so the concern is low. The two `useSyncExternalStore`
-uses in `lib/lang-theme.ts` become a native Solid signal/store — a small, clean
-rewrite.
+the router plugin does `autoCodeSplitting`. The code-splitting is in good
+shape: `recharts`, the markdown ecosystem, every route, forms, and per-icon
+chunks are all already lazy. `lazy()` and `<Suspense>` exist in Solid; Suspense
+is reworked in Solid 2.0, but here it does code-split loading, not data
+orchestration, so the concern is low. The two `useSyncExternalStore` uses in
+`lib/lang-theme.ts` become a native Solid signal/store — a small, clean rewrite.
 
 ## 5. The per-component rewrite
 
@@ -283,6 +299,10 @@ upside is the uncounted headroom from §1.
   migration win: the Compiler's entire job is unnecessary in Solid, so its
   config is deleted rather than ported, and its injected memoization leaves the
   bundle (§1, uncounted upside).
+- **Proportion check.** The React runtime is ~13% of the 1,090 KB main chunk
+  and ~5% of the 2.93 MB total. A migration trims that slice; the data layer,
+  Supabase SDK, and UI primitives — the other ~87% of the main chunk — stay.
+  The bundle case for migrating is real but should not be oversold.
 - **Honesty caveat.** There is no published production React-to-Solid migration
   case study with before/after numbers to cite. The bundle figures here are
   measured and projected from this repo's own build; performance figures in the
@@ -295,8 +315,8 @@ Sources: [react-dom — Bundlephobia](https://bundlephobia.com/package/react-dom
 
 ## 7. Suggested spikes
 
-Three contained seams worth probing first, to surface rough edges before any
-broad commitment:
+Three contained seams are worth probing first, to surface rough edges before
+any broad commitment:
 
 1. **`@tanstack/solid-db`** — the highest-risk dependency. Stand up one
    collection and one `useLiveQuery` equivalent in isolation and confirm the

@@ -86,9 +86,24 @@ This is the core measurement — do not skip or estimate it away.
 build`). If the build cannot run in this environment, say so explicitly in
   the report and fall back to per-package sizes from bundlephobia, clearly
   labelled as estimates.
+- **Build a _representative_ bundle — env vars matter.** Apps routinely gate
+  code on build-time env (`import.meta.env.VITE_*`, `process.env.*`). A common
+  pattern: `if (!import.meta.env.VITE_X) throw …` guarding a client
+  constructor. Build with that var **unset** and the guard constant-folds to
+  `if (true) throw`, the constructor below it becomes dead code, and the
+  bundler tree-shakes out the _entire SDK behind it_ — silently. The measured
+  bundle is then hundreds of KB too light and the whole report is wrong.
+  Before trusting the numbers: check for a `.env` / `.env.example`, set any
+  required `VITE_*` vars to dummy-but-truthy values (the build does not
+  connect to anything), and confirm large expected dependencies actually
+  appear in the output (`grep` the dist for a known SDK symbol). If your build
+  and a clean CI build disagree on size, the build environment is the suspect
+  — not the code.
 - Record **total JS** (sum of all emitted chunks) and the **entry/main chunk**
   (the always-loaded one), both **raw and gzipped**. Vite prints gzip sizes
-  per chunk.
+  per chunk. Note that a bundle visualizer's treemap reports _pre-minification_
+  sizes — use it for proportional attribution, and the real `dist/` files for
+  absolute totals.
 - Attribute kilobytes to packages. Run a bundle visualizer that emits machine-
   readable output — e.g. `npx vite-bundle-visualizer --template raw-data -o
 /tmp/bundle.json` (or `rollup-plugin-visualizer`, or `source-map-explorer`
