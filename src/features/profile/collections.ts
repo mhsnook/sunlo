@@ -10,6 +10,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -62,7 +63,7 @@ export const myProfileCollection = createCollection(
 				transaction.mutations.map((m) =>
 					supabase
 						.from('user_profile')
-						.update(m.changes)
+						.update(m.changes as TablesUpdate<'user_profile'>)
 						.eq('uid', m.original.uid)
 						.throwOnError()
 				)

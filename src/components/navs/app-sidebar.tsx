@@ -4,6 +4,7 @@ import { NavUser } from '@/components/navs/nav-user'
 import { NavFooterActions } from '@/components/navs/nav-footer-actions'
 import { DeckSwitcher } from '@/components/navs/deck-switcher'
 import { ActiveReviewCallout } from '@/components/navs/active-review-callout'
+import { OnboardingNudge } from '@/components/navs/onboarding-nudge'
 import {
 	Sidebar,
 	SidebarContent,
@@ -29,6 +30,7 @@ export function AppSidebar({
 				<DeckSwitcher lang={lang} />
 			</SidebarHeader>
 			<SidebarContent>
+				<OnboardingNudge />
 				<ActiveReviewCallout currentLang={lang} />
 				<NavMain />
 				<SidebarSeparator />

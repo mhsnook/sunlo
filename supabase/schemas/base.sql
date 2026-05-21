@@ -36,8 +36,6 @@ create extension if not exists "pg_net"
 with
 	schema "extensions";
 
-create extension if not exists "pgsodium";
-
 alter schema "public" owner to "postgres";
 
 create extension if not exists "pg_graphql"
@@ -422,6 +420,17 @@ END;
 $$;
 
 alter function "public"."create_playlist_with_links" ("lang" "text", "title" "text", "description" "text", "href" "text", "cover_image_path" "text", "phrases" "jsonb") owner to "postgres";
+
+create or replace function "public"."handle_new_user" () returns "trigger" language "plpgsql" security definer as $$
+begin
+	insert into "public"."user_profile" ("uid", "flags")
+	values (new.id, '{"needs-onboarding": true}'::jsonb)
+	on conflict ("uid") do nothing;
+	return new;
+end;
+$$;
+
+alter function "public"."handle_new_user" () owner to "postgres";
 
 create or replace function "public"."is_admin" () returns boolean language "sql" stable security definer as $$
   select exists (
@@ -1787,6 +1796,7 @@ create table if not exists "public"."user_profile" (
 	"font_preference" "text" default 'default'::"text",
 	"review_answer_mode" "text" default '2-buttons'::"text",
 	"sound_enabled" boolean default true not null,
+	"flags" "jsonb" default '{}'::"jsonb" not null,
 	constraint "user_profile_font_preference_check" check (("font_preference" = any (array['default'::"text", 'dyslexic'::"text"]))),
 	constraint "user_profile_review_answer_mode_check" check (("review_answer_mode" = any (array['4-buttons'::"text", '2-buttons'::"text"]))),
 	constraint "username_length" check (("char_length" ("username") >= 3))
@@ -1856,8 +1866,8 @@ select
 	"p"."id" as "source_id",
 	"p"."id" as "entity_id",
 	'phrase'::"text" as "entity_type",
-	"p"."lang" as "entity_lang",
-	"p"."lang" as "text_lang",
+	("p"."lang")::"text" as "entity_lang",
+	("p"."lang")::"text" as "text_lang",
 	"p"."text",
 	"lower" (("p"."text" || coalesce((' '::"text" || "ptags"."tag_names"), ''::"text"))) as "text_normalized",
 	"p"."created_at" as "entity_created_at"
@@ -1874,8 +1884,8 @@ select
 	"t"."id" as "source_id",
 	"t"."phrase_id" as "entity_id",
 	'phrase'::"text" as "entity_type",
-	"p"."lang" as "entity_lang",
-	"t"."lang" as "text_lang",
+	("p"."lang")::"text" as "entity_lang",
+	("t"."lang")::"text" as "text_lang",
 	"t"."text",
 	"lower" ("t"."text") as "text_normalized",
 	"p"."created_at" as "entity_created_at"
@@ -1895,8 +1905,8 @@ select
 	"r"."id" as "source_id",
 	"r"."id" as "entity_id",
 	'request'::"text" as "entity_type",
-	"r"."lang" as "entity_lang",
-	"r"."lang" as "text_lang",
+	("r"."lang")::"text" as "entity_lang",
+	("r"."lang")::"text" as "text_lang",
 	"r"."prompt" as "text",
 	"lower" ("r"."prompt") as "text_normalized",
 	"r"."created_at" as "entity_created_at"
@@ -1910,8 +1920,8 @@ select
 	"pl"."id" as "source_id",
 	"pl"."id" as "entity_id",
 	'playlist'::"text" as "entity_type",
-	"pl"."lang" as "entity_lang",
-	"pl"."lang" as "text_lang",
+	("pl"."lang")::"text" as "entity_lang",
+	("pl"."lang")::"text" as "text_lang",
 	case
 		when (coalesce("pl"."description", ''::"text") <> ''::"text") then (("pl"."title" || '
 '::"text") || "pl"."description")
@@ -2338,55 +2348,42 @@ create unique index "uid_deck" on "public"."user_deck" using "btree" ("uid", "la
 
 create unique index "unique_text_phrase_lang" on "public"."phrase_translation" using "btree" ("text", "lang", "phrase_id");
 
-create or replace trigger "bump_phrase_updated_at" before
-update on "public"."phrase" for each row
+create or replace trigger "bump_phrase_updated_at"
+before update on "public"."phrase" for each row
 execute function "public"."bump_phrase_updated_at" ();
 
 create or replace trigger "embed_corpus_on_phrase_change"
-after insert
-or delete
-or
-update of "text",
+after insert or delete or update of "text",
 "lang",
 "archived" on "public"."phrase" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
 
 create or replace trigger "embed_corpus_on_playlist_change"
-after insert
-or delete
-or
-update of "title",
+after insert or delete or update of "title",
 "description",
 "lang",
 "deleted" on "public"."phrase_playlist" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('playlist');
 
 create or replace trigger "embed_corpus_on_request_change"
-after insert
-or delete
-or
-update of "prompt",
+after insert or delete or update of "prompt",
 "lang",
 "deleted" on "public"."phrase_request" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('request');
 
 create or replace trigger "embed_corpus_on_tag_change"
-after insert
-or delete on "public"."phrase_tag" for each row
+after insert or delete on "public"."phrase_tag" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('phrase');
 
 create or replace trigger "embed_corpus_on_translation_change"
-after insert
-or delete
-or
-update of "text",
+after insert or delete or update of "text",
 "lang",
 "archived",
 "phrase_id" on "public"."phrase_translation" for each row
 execute function "public"."trigger_notify_corpus_embed_change" ('translation');
 
-create or replace trigger "on_phrase_playlist_updated" before
-update on "public"."phrase_playlist" for each row
+create or replace trigger "on_phrase_playlist_updated"
+before update on "public"."phrase_playlist" for each row
 execute function "public"."update_phrase_playlist_timestamp" ();
 
 create or replace trigger "on_phrase_playlist_upvote_added"
@@ -2401,8 +2398,8 @@ create or replace trigger "on_phrase_request_auto_upvote"
 after insert on "public"."phrase_request" for each row
 execute function "public"."auto_upvote_new_request" ();
 
-create or replace trigger "on_phrase_request_updated" before
-update on "public"."phrase_request" for each row
+create or replace trigger "on_phrase_request_updated"
+before update on "public"."phrase_request" for each row
 execute function "public"."update_phrase_request_timestamp" ();
 
 create or replace trigger "on_phrase_request_upvote_added"
@@ -2414,75 +2411,57 @@ after delete on "public"."phrase_request_upvote" for each row
 execute function "public"."update_phrase_request_upvote_count" ();
 
 create or replace trigger "on_playlist_phrase_link_changed"
-after insert
-or delete on "public"."playlist_phrase_link" for each row
+after insert or delete on "public"."playlist_phrase_link" for each row
 execute function "public"."update_parent_playlist_timestamp" ();
 
 create or replace trigger "on_playlist_phrase_link_updated"
-after
-update on "public"."playlist_phrase_link" for each row
+after update on "public"."playlist_phrase_link" for each row
 execute function "public"."update_parent_playlist_timestamp" ();
 
 create or replace trigger "refresh_meta_language_on_deck_change"
-after insert
-or delete on "public"."user_deck" for each statement
+after insert or delete on "public"."user_deck" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
 
 create or replace trigger "refresh_meta_language_on_phrase_change"
-after insert
-or delete on "public"."phrase" for each statement
+after insert or delete on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_meta_language" ();
 
 create or replace trigger "refresh_text_index_on_phrase_change"
-after insert
-or delete
-or
-update of "text",
+after insert or delete or update of "text",
 "lang",
 "archived" on "public"."phrase" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_playlist_change"
-after insert
-or delete
-or
-update of "title",
+after insert or delete or update of "title",
 "description",
 "lang",
 "deleted" on "public"."phrase_playlist" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_request_change"
-after insert
-or delete
-or
-update of "prompt",
+after insert or delete or update of "prompt",
 "lang",
 "deleted" on "public"."phrase_request" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_tag_change"
-after insert
-or delete on "public"."phrase_tag" for each statement
+after insert or delete on "public"."phrase_tag" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
 create or replace trigger "refresh_text_index_on_translation_change"
-after insert
-or delete
-or
-update of "text",
+after insert or delete or update of "text",
 "lang",
 "archived",
 "phrase_id" on "public"."phrase_translation" for each statement
 execute function "public"."trigger_refresh_search_text_index" ();
 
-create or replace trigger "skip_stale_corpus_upsert" before
-update on "public"."search_corpus" for each row
+create or replace trigger "skip_stale_corpus_upsert"
+before update on "public"."search_corpus" for each row
 execute function "public"."skip_stale_corpus_upsert" ();
 
 create or replace trigger "tr_update_comment_upvote_count"
-after insert
-or delete on "public"."comment_upvote" for each row
+after insert or delete on "public"."comment_upvote" for each row
 execute function "public"."update_comment_upvote_count" ();
 
 create or replace trigger "trg_notify_on_comment"
@@ -2501,15 +2480,16 @@ create or replace trigger "trg_notify_on_translation"
 after insert on "public"."phrase_translation" for each row
 execute function "public"."notify_on_translation" ();
 
-create or replace trigger "trigger_update_phrase_translation_updated_at" before
-update on "public"."phrase_translation" for each row
+create or replace trigger "trigger_update_phrase_translation_updated_at"
+before update on "public"."phrase_translation" for each row
 execute function "public"."update_phrase_translation_updated_at" ();
 
-create or replace trigger "trigger_validate_friend_request_action" before insert on "public"."friend_request_action" for each row
+create or replace trigger "trigger_validate_friend_request_action"
+before insert on "public"."friend_request_action" for each row
 execute function "public"."validate_friend_request_action" ();
 
-create or replace trigger "update_user_deck_updated_at" before
-update on "public"."user_deck" for each row
+create or replace trigger "update_user_deck_updated_at"
+before update on "public"."user_deck" for each row
 execute function "public"."update_user_deck_updated_at" ();
 
 alter table only "public"."admin_user"
@@ -3968,6 +3948,12 @@ grant all on function "public"."hamming_distance" (bit, bit) to "anon";
 grant all on function "public"."hamming_distance" (bit, bit) to "authenticated";
 
 grant all on function "public"."hamming_distance" (bit, bit) to "service_role";
+
+grant all on function "public"."handle_new_user" () to "anon";
+
+grant all on function "public"."handle_new_user" () to "authenticated";
+
+grant all on function "public"."handle_new_user" () to "service_role";
 
 grant all on function "public"."hnsw_bit_support" ("internal") to "postgres";
 
