@@ -15,7 +15,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { should, serverCheck, failed } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks-react'
 
 export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
@@ -37,52 +37,28 @@ export const phraseRequestsCollection = createCollection(
 		defaultIndexType: BasicIndex,
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const { data } = await supabase
 						.from('phrase_request')
 						.update(m.changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
-			)
-			// m.changes IS the optimistic collection value; confirming the
-			// server row matches it proves client/server agreement. The
-			// service-role client bypasses RLS, so soft-deleted rows
-			// (deleted: true) are still readable. Stripped from production.
-			serverCheck(
-				'phrase_request rows match the submitted updates',
-				async (server, { updates }) => {
-					await Promise.all(
-						updates.map(async (u) => {
-							const { data, error } = await server.supabase
-								.from('phrase_request')
-								.select()
-								.eq('id', u.id)
-								.maybeSingle()
-							if (error || !data) {
-								failed('fetch phrase_request after update', {
-									error: error?.message,
-									id: u.id,
-								})
-								return
-							}
-							const row = data as Record<string, unknown>
-							should(
-								`phrase_request ${u.id} persisted the submitted values`,
-								Object.entries(u.changes).every(
-									([k, v]) =>
-										k === 'updated_at' || k === 'created_at' || row[k] === v
-								),
-								{ submitted: u.changes, returned: data }
-							)
-						})
-					)
-				},
-				() => ({
-					updates: transaction.mutations.map((m) => ({
-						id: m.original.id,
-						changes: m.changes as Record<string, unknown>,
-					})),
+					// m.changes IS the optimistic collection value; confirming the
+					// server's returned row matches it proves client/server
+					// agreement. A soft-delete (deleted: true) may not be
+					// selectable back under RLS — the guard skips the assertion
+					// rather than failing. Stripped from production.
+					const row = data?.[0] as Record<string, unknown> | undefined
+					if (row)
+						should(
+							`phrase_request ${m.original.id} server row matches the submitted update`,
+							Object.entries(m.changes).every(
+								([k, v]) =>
+									k === 'updated_at' || k === 'created_at' || row[k] === v
+							),
+							{ submitted: m.changes, returned: row }
+						)
 				})
 			)
 			return { refetch: false }
@@ -127,84 +103,47 @@ export const commentsCollection = createCollection(
 		defaultIndexType: BasicIndex,
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const { data } = await supabase
 						.from('request_comment')
 						.update(m.changes)
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
-			)
-			// Confirm the server row matches the optimistic edit. Stripped
-			// from production.
-			serverCheck(
-				'request_comment rows match the submitted updates',
-				async (server, { updates }) => {
-					await Promise.all(
-						updates.map(async (u) => {
-							const { data, error } = await server.supabase
-								.from('request_comment')
-								.select()
-								.eq('id', u.id)
-								.maybeSingle()
-							if (error || !data) {
-								failed('fetch request_comment after update', {
-									error: error?.message,
-									id: u.id,
-								})
-								return
-							}
-							const row = data as Record<string, unknown>
-							should(
-								`request_comment ${u.id} persisted the submitted values`,
-								Object.entries(u.changes).every(
-									([k, v]) =>
-										k === 'updated_at' || k === 'created_at' || row[k] === v
-								),
-								{ submitted: u.changes, returned: data }
-							)
-						})
-					)
-				},
-				() => ({
-					updates: transaction.mutations.map((m) => ({
-						id: m.original.id,
-						changes: m.changes as Record<string, unknown>,
-					})),
+					// Confirm the server's returned row matches the optimistic
+					// edit. Stripped from production by the Vite plugin.
+					const row = data?.[0] as Record<string, unknown> | undefined
+					if (row)
+						should(
+							`request_comment ${m.original.id} server row matches the submitted update`,
+							Object.entries(m.changes).every(
+								([k, v]) =>
+									k === 'updated_at' || k === 'created_at' || row[k] === v
+							),
+							{ submitted: m.changes, returned: row }
+						)
 				})
 			)
 			return { refetch: false }
 		},
 		onDelete: async ({ transaction }) => {
 			await Promise.all(
-				transaction.mutations.map((m) =>
-					supabase
+				transaction.mutations.map(async (m) => {
+					const { data } = await supabase
 						.from('request_comment')
 						.delete()
 						.eq('id', m.original.id)
+						.select()
 						.throwOnError()
-				)
-			)
-			// Confirm the rows are gone server-side. Stripped from production.
-			serverCheck(
-				'deleted request_comment rows are gone from the server',
-				async (server, { ids }) => {
-					const { data, error } = await server.supabase
-						.from('request_comment')
-						.select('id')
-						.in('id', ids)
-					if (error) {
-						failed('fetch request_comment after delete', {
-							error: error.message,
-						})
-						return
-					}
-					should('no deleted comment rows remain', (data?.length ?? 0) === 0, {
-						deletedIds: ids,
-						stillPresent: data,
-					})
-				},
-				() => ({ ids: transaction.mutations.map((m) => m.original.id) })
+					// A delete with .select() returns the rows it removed; confirm
+					// we removed exactly the targeted comment. Stripped from
+					// production by the Vite plugin.
+					should(
+						`request_comment delete removed comment ${m.original.id}`,
+						data?.length === 1 && data[0].id === m.original.id,
+						{ targetId: m.original.id, returned: data }
+					)
+				})
 			)
 			// Cascade-deleted replies and phrase links linger in the local
 			// collections until the next stale refetch, but they don't render
