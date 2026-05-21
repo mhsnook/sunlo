@@ -54,10 +54,6 @@ export const PlaylistPhraseLinkIncludedInsertSchema = z.object({
 	href: urlFieldInsert.optional(),
 })
 
-export type PlaylistPhraseLinkIncludedInsertType = z.infer<
-	typeof PlaylistPhraseLinkIncludedInsertSchema
->
-
 export const PhrasePlaylistInsertSchema = z.object({
 	title: z.string().min(1, 'Title is required'),
 	description: z.string().optional(),

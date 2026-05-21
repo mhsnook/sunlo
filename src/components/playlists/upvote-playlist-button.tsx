@@ -1,4 +1,5 @@
-import { useMutation } from '@tanstack/react-query'
+import { createOptimisticAction } from '@tanstack/db'
+import type { MouseEvent } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { ThumbsUp } from 'lucide-react'
 
@@ -13,54 +14,78 @@ import { Button } from '@/components/ui/button'
 import { PhrasePlaylistType } from '@/features/playlists/schemas'
 import { useRequireAuth } from '@/hooks/use-require-auth'
 
+type UpvoteInput = {
+	playlistId: uuid
+	action: 'add' | 'remove'
+	currentCount: number
+}
+
+const setPlaylistUpvote = createOptimisticAction<UpvoteInput>({
+	onMutate: ({ playlistId, action, currentCount }) => {
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		phrasePlaylistsCollection.update(playlistId, (draft) => {
+			draft.upvote_count = nextCount
+		})
+		if (action === 'add') {
+			phrasePlaylistUpvotesCollection.insert({ playlist_id: playlistId })
+		} else {
+			phrasePlaylistUpvotesCollection.delete(playlistId)
+		}
+	},
+	mutationFn: async ({ playlistId, action, currentCount }) => {
+		const { error } = await supabase.rpc('set_phrase_playlist_upvote', {
+			p_playlist_id: playlistId,
+			p_action: action,
+		})
+		if (error) throw error
+		// Trust the optimistic ±1 count. Drifts by 1 in the 'no_change' edge
+		// case (e.g. server already had us upvoted from another tab) and
+		// self-corrects on next stale refetch. Avoids a full phrase_playlist
+		// table refetch on every click.
+		const nextCount =
+			action === 'add' ? currentCount + 1 : Math.max(0, currentCount - 1)
+		phrasePlaylistsCollection.utils.writeUpdate({
+			id: playlistId,
+			upvote_count: nextCount,
+		})
+		if (action === 'add') {
+			phrasePlaylistUpvotesCollection.utils.writeInsert({
+				playlist_id: playlistId,
+			})
+		} else {
+			phrasePlaylistUpvotesCollection.utils.writeDelete(playlistId)
+		}
+	},
+})
+
 export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 	const requireAuth = useRequireAuth()
 	const hasUpvoted = useHasPlaylistUpvote(playlist.id)
 
-	// Upvote mutation with explicit action
-	const upvoteMutation = useMutation({
-		mutationFn: async (action: 'add' | 'remove') => {
-			const { data, error } = await supabase.rpc('set_phrase_playlist_upvote', {
-				p_playlist_id: playlist.id,
-				p_action: action,
-			})
-			if (error) throw error
-			return data as {
-				playlist_id: uuid
-				action: 'added' | 'removed' | 'no_change'
-			}
-		},
-		onSuccess: (data) => {
-			// Only update if server actually made a change
-			if (data.action === 'no_change') return
-
-			const currentCount = playlist.upvote_count ?? 0
-			const newCount =
-				data.action === 'added'
-					? currentCount + 1
-					: Math.max(0, currentCount - 1)
-
-			// Update the playlist count
-			phrasePlaylistsCollection.utils.writeUpdate({
-				id: data.playlist_id,
-				upvote_count: newCount,
-			})
-
-			// Update the upvotes collection
-			if (data.action === 'added') {
-				phrasePlaylistUpvotesCollection.utils.writeInsert({
-					playlist_id: data.playlist_id,
+	const handleClick = (e: MouseEvent) => {
+		e.stopPropagation()
+		requireAuth(() => {
+			const action: 'add' | 'remove' = hasUpvoted ? 'remove' : 'add'
+			void Promise.all([
+				phrasePlaylistsCollection.preload(),
+				phrasePlaylistUpvotesCollection.preload(),
+			]).then(() => {
+				const tx = setPlaylistUpvote({
+					playlistId: playlist.id,
+					action,
+					currentCount: playlist.upvote_count ?? 0,
 				})
-				toastSuccess('Vote added!')
-			} else if (data.action === 'removed') {
-				phrasePlaylistUpvotesCollection.utils.writeDelete(data.playlist_id)
-				toastSuccess('Vote removed')
-			}
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to update upvote: ${error.message}`)
-		},
-	})
+				tx.isPersisted.promise.then(
+					() => toastSuccess(action === 'add' ? 'Vote added!' : 'Vote removed'),
+					(err: unknown) => {
+						const message = err instanceof Error ? err.message : 'unknown error'
+						toastError(`Failed to update upvote: ${message}`)
+					}
+				)
+			})
+		}, 'Please log in to vote on playlists')
+	}
 
 	return (
 		<div className="text-muted-foreground flex flex-row items-center gap-2 text-sm">
@@ -69,14 +94,7 @@ export function UpvotePlaylist({ playlist }: { playlist: PhrasePlaylistType }) {
 				aria-label={hasUpvoted ? 'Remove vote' : 'Vote up this playlist'}
 				size="icon"
 				data-name="upvote-playlist-button"
-				onClick={(e) => {
-					e.stopPropagation()
-					requireAuth(() => {
-						// Send explicit action based on current state
-						upvoteMutation.mutate(hasUpvoted ? 'remove' : 'add')
-					}, 'Please log in to vote on playlists')
-				}}
-				disabled={upvoteMutation.isPending}
+				onClick={handleClick}
 			>
 				<ThumbsUp />
 			</Button>

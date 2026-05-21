@@ -7,11 +7,9 @@ import { publicProfilesCollection } from '@/features/profile/collections'
 
 export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	component: RouteComponent,
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Phrase',
-		},
-	}),
+	staticData: {
+		titleBar: { title: 'Phrase' },
+	},
 	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
 			phrasesCollection.preload(),

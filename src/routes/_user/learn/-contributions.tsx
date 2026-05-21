@@ -28,12 +28,13 @@ import {
 import { useAnyonesPhrases } from '@/features/phrases'
 import {
 	useAnyonesComments,
-	usePhrasesFromComment,
+	useCommentPhraseLinks,
 	type RequestCommentType,
-} from '@/features/comments'
+} from '@/features/requests'
 
 import { RequestItem } from '@/components/requests/request-list-item'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
+import { WithPhrase } from '@/components/with-phrase'
 import { useAnyonesPlaylists } from '@/features/playlists/hooks'
 import { PlaylistItem } from '@/components/playlists/playlist-list-item'
 import languages from '@/lib/languages'
@@ -355,7 +356,7 @@ function CommentCardWithPhrases({
 	comment: RequestCommentType
 	request: PhraseRequestType
 }) {
-	const { data: phrases } = usePhrasesFromComment(comment.id)
+	const { data: links } = useCommentPhraseLinks(comment.id)
 
 	return (
 		<div
@@ -376,10 +377,14 @@ function CommentCardWithPhrases({
 					<Markdown>{comment.content}</Markdown>
 				</div>
 			)}
-			{phrases && phrases.length > 0 && (
+			{links && links.length > 0 && (
 				<div className="ms-8 mt-1 space-y-2">
-					{phrases.map(({ phrase }) => (
-						<CardResultSimple key={phrase.id} phrase={phrase} />
+					{links.map((link) => (
+						<WithPhrase
+							key={link.id}
+							pid={link.phrase_id}
+							Component={CardResultSimple}
+						/>
 					))}
 				</div>
 			)}

@@ -265,21 +265,21 @@ describe('sortDecksByCreation', () => {
 	})
 })
 
-describe('sortDecksByActivity', () => {
-	const makeDeck = (
-		overrides: Partial<{
-			created_at: string
-			most_recent_review_at: string | null
-			lang: string
-		}>
-	) =>
-		({
-			created_at: '2025-01-01',
-			most_recent_review_at: null,
-			lang: 'hin',
-			...overrides,
-		}) as Parameters<typeof sortDecksByActivity>[0]
+const makeDeck = (
+	overrides: Partial<{
+		created_at: string
+		most_recent_review_at: string | null
+		lang: string
+	}>
+) =>
+	({
+		created_at: '2025-01-01',
+		most_recent_review_at: null,
+		lang: 'hin',
+		...overrides,
+	}) as Parameters<typeof sortDecksByActivity>[0]
 
+describe('sortDecksByActivity', () => {
 	it('sorts descending by most recent activity', () => {
 		const decks = [
 			makeDeck({ most_recent_review_at: '2025-01-01', lang: 'hin' }),

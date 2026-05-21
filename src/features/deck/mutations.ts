@@ -7,7 +7,6 @@ import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import { decksCollection } from './collections'
 import { DeckMetaSchema } from './schemas'
-import { useDecks } from './hooks'
 
 async function postNewDeck(lang: string) {
 	// console.log(`postNewDeck ${lang}`)
@@ -24,7 +23,6 @@ async function postNewDeck(lang: string) {
 
 export const useNewDeckMutation = () => {
 	const navigate = useNavigate()
-	const countDecks = useDecks().data?.length ?? 0
 	const mutation = useMutation({
 		mutationFn: async (variables: { lang: string }) => {
 			console.log(`mutationFn ${variables.lang}`)
@@ -38,7 +36,6 @@ export const useNewDeckMutation = () => {
 			const deck2 = {
 				...deck,
 				language: languages[deck.lang],
-				theme: countDecks % 5,
 			}
 
 			decksCollection.utils.writeInsert(DeckMetaSchema.parse(deck2))

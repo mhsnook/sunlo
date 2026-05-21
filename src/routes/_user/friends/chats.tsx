@@ -4,13 +4,11 @@ import { chatMessagesCollection } from '@/features/social/collections'
 import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/friends/chats')({
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Chats',
-		},
+	staticData: {
 		wideContent: true,
 		fixedHeight: true,
-	}),
+		titleBar: { title: 'Chats' },
+	},
 	loader: async ({ context }) => {
 		// Only preload if authenticated to ensure RLS works correctly
 		if (context.auth.isAuth) {

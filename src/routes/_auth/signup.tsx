@@ -140,7 +140,6 @@ function SignUp() {
 					) : (
 						<form
 							data-testid="signup-form"
-							role="form"
 							noValidate
 							className="space-y-4"
 							onSubmit={(e) => {

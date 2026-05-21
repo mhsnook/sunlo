@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Trash2 } from 'lucide-react'
 import {
@@ -13,10 +12,8 @@ import {
 	AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { RequestCommentType } from '@/features/comments/schemas'
-import supabase from '@/lib/supabase-client'
-import { safeWrite } from '@/lib/collections/safe-write'
-import { commentsCollection } from '@/features/comments/collections'
+import { RequestCommentType } from '@/features/requests/schemas'
+import { commentsCollection } from '@/features/requests/collections'
 
 export function DeleteCommentDialog({
 	comment,
@@ -24,27 +21,19 @@ export function DeleteCommentDialog({
 	comment: RequestCommentType
 }) {
 	const [open, setOpen] = useState(false)
-	// Delete comment mutation
-	const mutation = useMutation({
-		mutationFn: async () => {
-			const { error } = await supabase
-				.from('request_comment')
-				.delete()
-				.eq('id', comment.id)
 
-			if (error) throw error
-		},
-		onSuccess: async () => {
-			await safeWrite(
-				() => commentsCollection.preload(),
-				() => commentsCollection.utils.writeDelete(comment.id)
-			)
-			toastSuccess('Comment deleted')
-		},
-		onError: (error: Error) => {
-			toastError(`Failed to delete comment: ${error.message}`)
-		},
-	})
+	const deleteComment = () => {
+		setOpen(false)
+		const tx = commentsCollection.delete(comment.id)
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Comment deleted'),
+			(err: unknown) => {
+				const message = err instanceof Error ? err.message : 'unknown error'
+				toastError(`Failed to delete comment: ${message}`)
+			}
+		)
+	}
+
 	return (
 		<AlertDialog open={open} onOpenChange={setOpen}>
 			<Button
@@ -67,8 +56,7 @@ export function DeleteCommentDialog({
 				<AlertDialogFooter>
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
-						disabled={mutation.isPending}
-						onClick={() => mutation.mutate()}
+						onClick={deleteComment}
 						className="bg-destructive text-destructive-foreground"
 						data-testid="confirm-delete-comment-button"
 					>

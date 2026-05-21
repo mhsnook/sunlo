@@ -49,6 +49,8 @@ natural wrapper element to label.
 | ------------------------------- | ----------- | ---------------------- | ----------------------------------------------------------- |
 | `login-link`                    | data-testid | Sidebar                | Link to login page for logged-out users                     |
 | `login-form`                    | data-testid | Login page             | The login form container                                    |
+| `login-signup-link`             | data-testid | Login page             | "Create account" link to /signup                            |
+| `login-forgot-password-link`    | data-testid | Login page             | "Forgot password?" link to /forgot-password                 |
 | `email-input`                   | data-testid | Form fields            | Email input                                                 |
 | `password-input`                | data-testid | Form fields            | Password input                                              |
 | `submit-button`                 | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |
@@ -57,9 +59,9 @@ natural wrapper element to label.
 | `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                                      |
 | `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming                             |
 | `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                                              |
-| `sidebar-user-menu-trigger`     | data-testid | Sidebar                | User avatar/menu button                                     |
-| `sidebar-signout-button`        | data-testid | User menu              | Sign out button                                             |
-| `profile-menu-item`             | data-testid | User menu              | Link to profile                                             |
+| `sidebar-profile-settings-link` | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)      |
+| `sidebar-display-settings-link` | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)         |
+| `profile-signout-button`        | data-testid | Profile page           | Sign out button at bottom of profile page                   |
 
 ## Deck Management
 
@@ -162,6 +164,10 @@ natural wrapper element to label.
 | `search-page`                            | data-testid | Search route             | Search page container                                                                                              |
 | `search-input`                           | data-testid | Search page              | Search text input                                                                                                  |
 | `search-results`                         | data-testid | Search page              | Search results container                                                                                           |
+| `browse-search-trigger`                  | data-testid | Browse page              | Button that opens the search overlay (also via `?search=true`)                                                     |
+| `browse-search-overlay`                  | data-testid | Search overlay           | Dialog container for the public-library search overlay                                                             |
+| `browse-search-input`                    | data-testid | Search overlay           | Search input inside the overlay                                                                                    |
+| `browse-search-results`                  | data-testid | Search overlay           | Results list inside the overlay                                                                                    |
 
 ## Phrase Requests
 
@@ -312,7 +318,9 @@ natural wrapper element to label.
 | Selector                    | Attribute   | Component/Location  | Description                                                                       |
 | --------------------------- | ----------- | ------------------- | --------------------------------------------------------------------------------- |
 | `open-comment-dialog`       | data-testid | Request detail page | Fake-input link that opens the comment dialog (`?mode=comment`)                   |
-| `view-comments-link`        | data-testid | Request page        | Chat-bubble icon: navigates to thread view (`?show=thread`)                       |
+| `comments-count`            | data-testid | Request page        | Inline metadata: chat-bubble icon + comment count                                 |
+| `answers-count`             | data-testid | Request page        | Inline metadata: wallet-card icon + answer count                                  |
+| `answers-only-toggle`       | data-testid | Request detail page | Switch toggling between full thread and answers-only views (`?show=answers-only`) |
 | `comment-dialog`            | data-testid | Dialog              | Comment dialog container (scopes both `new-comment-form` and `edit-comment-form`) |
 | `new-comment-form`          | data-testid | Comment dialog      | Form element when creating a new comment                                          |
 | `edit-comment-form`         | data-testid | Comment dialog      | Form element when editing an existing comment                                     |

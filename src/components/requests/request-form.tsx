@@ -1,5 +1,5 @@
-import { useMutation } from '@tanstack/react-query'
-import { PostgrestError } from '@supabase/supabase-js'
+import { useState } from 'react'
+import { createOptimisticAction } from '@tanstack/db'
 
 import supabase from '@/lib/supabase-client'
 import { MarkdownHint } from '@/components/comments/comment-dialog'
@@ -10,10 +10,8 @@ import {
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
 import {
-	PhraseRequestSchema,
 	PhraseRequestType,
 	RequestPhraseFormSchema,
-	type RequestPhraseFormInputs,
 	requestPromptPlaceholders,
 } from '@/features/requests/schemas'
 import { useRequest } from '@/features/requests/hooks'
@@ -22,6 +20,40 @@ import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/components/form'
 import { toastSuccess, toastError } from '@/components/ui/sonner'
 import type { uuid } from '@/types/main'
+
+type CreateInput = {
+	id: uuid
+	prompt: string
+	lang: string
+	userId: uuid
+}
+
+const createRequest = createOptimisticAction<CreateInput>({
+	onMutate: ({ id, prompt, lang, userId }) => {
+		phraseRequestsCollection.insert({
+			id,
+			prompt,
+			lang,
+			requester_uid: userId,
+			// DB trigger auto-upvotes the requester, so the count starts at 1.
+			upvote_count: 1,
+			deleted: false,
+			created_at: new Date().toISOString(),
+			updated_at: null,
+		})
+		phraseRequestUpvotesCollection.insert({ request_id: id })
+	},
+	mutationFn: async ({ id, prompt, lang, userId }) => {
+		await supabase
+			.from('phrase_request')
+			.insert({ id, prompt, lang, requester_uid: userId })
+			.throwOnError()
+		await Promise.all([
+			phraseRequestsCollection.utils.refetch(),
+			phraseRequestUpvotesCollection.utils.refetch(),
+		])
+	},
+})
 
 export function RequestForm({
 	lang,
@@ -43,67 +75,51 @@ export function RequestForm({
 	const invalidateFeed = useInvalidateFeed()
 	const { data: request } = useRequest(requestId ?? '')
 	const isEditing = !!requestId
-
-	const mutation = useMutation<
-		PhraseRequestType,
-		PostgrestError,
-		RequestPhraseFormInputs
-	>({
-		mutationFn: async ({ prompt }) => {
-			if (isEditing) {
-				const { data } = await supabase
-					.from('phrase_request')
-					.update({ prompt })
-					.eq('id', requestId)
-					.throwOnError()
-					.select()
-					.single()
-				return data!
-			}
-			const { data } = await supabase
-				.from('phrase_request')
-				.insert({ prompt, lang, requester_uid: userId! })
-				.throwOnError()
-				.select()
-				.single()
-			return data!
-		},
-		onSuccess: (data) => {
-			const parsed = PhraseRequestSchema.parse(data)
-			if (isEditing) {
-				phraseRequestsCollection.utils.writeUpdate(parsed)
-				toastSuccess('Request updated!')
-			} else {
-				// The DB trigger auto-upvotes, but RETURNING gets the pre-trigger value.
-				// Override upvote_count to reflect the auto-upvote.
-				phraseRequestsCollection.utils.writeInsert({
-					...parsed,
-					upvote_count: 1,
-				})
-				phraseRequestUpvotesCollection.utils.writeInsert({
-					request_id: data.id,
-				})
-				invalidateFeed(lang)
-				toastSuccess('Your request has been posted!')
-			}
-			onSuccess?.(data)
-		},
-		onError: (error) => {
-			console.error(error)
-			toastError(
-				isEditing
-					? 'There was an error updating your request.'
-					: 'There was an error posting your request.'
-			)
-		},
-	})
+	const [submitError, setSubmitError] = useState<Error | null>(null)
 
 	const form = useAppForm({
 		defaultValues: { prompt: request?.prompt ?? '' },
 		validators: { onChange: RequestPhraseFormSchema },
 		onSubmit: async ({ value, formApi }) => {
-			await mutation.mutateAsync(value)
-			formApi.reset()
+			setSubmitError(null)
+			try {
+				if (isEditing) {
+					const tx = phraseRequestsCollection.update(requestId, (draft) => {
+						draft.prompt = value.prompt
+					})
+					await tx.isPersisted.promise
+					const updated = phraseRequestsCollection.get(requestId)
+					toastSuccess('Request updated!')
+					if (updated) onSuccess?.(updated)
+				} else {
+					await Promise.all([
+						phraseRequestsCollection.preload(),
+						phraseRequestUpvotesCollection.preload(),
+					])
+					const id = crypto.randomUUID()
+					const tx = createRequest({
+						id,
+						prompt: value.prompt,
+						lang,
+						userId: userId!,
+					})
+					await tx.isPersisted.promise
+					const created = phraseRequestsCollection.get(id)
+					invalidateFeed(lang)
+					toastSuccess('Your request has been posted!')
+					if (created) onSuccess?.(created)
+				}
+				formApi.reset()
+			} catch (err) {
+				const error = err instanceof Error ? err : new Error('unknown error')
+				setSubmitError(error)
+				toastError(
+					isEditing
+						? 'There was an error updating your request.'
+						: 'There was an error posting your request.'
+				)
+				console.error(error)
+			}
 		},
 	})
 
@@ -147,7 +163,7 @@ export function RequestForm({
 
 			<form.AppForm>
 				<form.FormAlert
-					error={mutation.error}
+					error={submitError}
 					text={
 						isEditing
 							? 'There was an error updating your request.'

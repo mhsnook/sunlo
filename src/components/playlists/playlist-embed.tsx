@@ -149,6 +149,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'youtube' && (
 				<iframe
 					className="aspect-video h-full w-full"
+					// oxlint-disable-next-line react/iframe-missing-sandbox -- third-party embeds need both flags to render
 					sandbox="allow-scripts allow-same-origin allow-presentation"
 					src={embedInfo.embedUrl}
 					title="YouTube video player"
@@ -159,6 +160,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'spotify' && (
 				<iframe
 					className="w-full"
+					// oxlint-disable-next-line react/iframe-missing-sandbox -- third-party embeds need both flags to render
 					sandbox="allow-scripts allow-same-origin allow-presentation"
 					style={height152}
 					src={embedInfo.embedUrl}
@@ -170,6 +172,7 @@ export function PlaylistEmbed({ href }: PlaylistEmbedProps) {
 			{embedInfo.type === 'soundcloud' && (
 				<iframe
 					className="w-full"
+					// oxlint-disable-next-line react/iframe-missing-sandbox -- third-party embeds need both flags to render
 					sandbox="allow-scripts allow-same-origin allow-presentation"
 					style={height172}
 					src={embedInfo.embedUrl}

@@ -1,8 +1,13 @@
-import { type CSSProperties, useCallback, useEffect, useState } from 'react'
+import {
+	type CSSProperties,
+	type ReactNode,
+	useCallback,
+	useEffect,
+	useState,
+} from 'react'
 import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
 import { playReviewSound } from '@/lib/review-sounds'
 import { useSoundEnabled } from '@/features/profile'
-import { useMutation } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
 	BookmarkCheck,
@@ -13,6 +18,7 @@ import {
 	Lightbulb,
 	MoreVertical,
 	Play,
+	RotateCcw,
 	Send,
 } from 'lucide-react'
 
@@ -45,17 +51,15 @@ import {
 	PhraseFullFilteredType,
 	TranslationType,
 } from '@/features/phrases/schemas'
-import {
-	type CardDirectionType,
-	CardStatusEnumSchema,
-} from '@/features/deck/schemas'
+import { type CardDirectionType, type CardMetaType } from '@/features/deck'
 import { uuid } from '@/types/main'
 import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
-import supabase from '@/lib/supabase-client'
-import { useUserId } from '@/lib/use-auth'
 import { cardsCollection } from '@/features/deck/collections'
+import { useMyCard } from '@/features/deck/hooks'
 import { useCheck, should } from '@scenetest/checks-react'
+
+type CardStatus = CardMetaType['status']
 
 const playAudio = (text: string) => {
 	toastNeutral(`Playing audio for: ${text}`)
@@ -404,6 +408,37 @@ export function ReviewSingleCard({
 	)
 }
 
+const STATUS_TOAST_MESSAGES: Record<CardStatus, string> = {
+	active: 'This card is back in your active reviews.',
+	learned:
+		"Great! This card is now marked as learned and won't appear in your reviews.",
+	skipped: "This card has been skipped and won't appear in your reviews.",
+}
+
+const REACTIVATE_ITEM = {
+	icon: <RotateCcw className="me-2 h-4 w-4" />,
+	label: 'Re-activate this card',
+}
+
+// One row per non-active status: the action shown when current status is
+// 'active', or "Re-activate this card" when current status already matches.
+const STATUS_TOGGLE_ITEMS: Array<{
+	target: Exclude<CardStatus, 'active'>
+	icon: ReactNode
+	label: string
+}> = [
+	{
+		target: 'learned',
+		icon: <BookmarkCheck className="me-2 h-4 w-4 text-green-600" />,
+		label: "I've learned this",
+	},
+	{
+		target: 'skipped',
+		icon: <BookmarkX className="me-2 h-4 w-4" />,
+		label: 'Skip this card',
+	},
+]
+
 function ContextMenu({
 	phrase,
 	direction,
@@ -414,44 +449,27 @@ function ContextMenu({
 	const [isOpen, setIsOpen] = useState(false)
 	const [sendChatOpen, setSendChatOpen] = useState(false)
 	const [detailsOpen, setDetailsOpen] = useState(false)
-	const userId = useUserId()
 
-	const cardStatusMutation = useMutation({
-		mutationKey: ['update-card-status', phrase.id],
-		mutationFn: async (status: 'learned' | 'skipped') => {
-			if (!userId) throw new Error('You must be logged in')
-			const { data } = await supabase
-				.from('user_card')
-				.update({ status })
-				.eq('phrase_id', phrase.id)
-				.eq('uid', userId)
-				.select()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			if (data) {
-				for (const card of data) {
-					cardsCollection.utils.writeUpdate({
-						id: card.id,
-						status: CardStatusEnumSchema.parse(card.status),
-						updated_at: card.updated_at!,
-					})
-				}
-				const status = data[0]?.status
-				const message =
-					status === 'learned'
-						? "Great! This card is now marked as learned and won't appear in your reviews."
-						: "This card has been skipped and won't appear in your reviews."
-				toastSuccess(message)
+	const { data: card } = useMyCard(phrase.id)
+	const currentStatus = card?.status
+
+	const setCardStatus = (status: CardStatus) => {
+		if (!card) return
+		const ids = card.sibling_id ? [card.id, card.sibling_id] : [card.id]
+		setIsOpen(false)
+		const tx = cardsCollection.update(ids, (drafts) => {
+			drafts.forEach((d) => {
+				d.status = status
+			})
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
+			(err) => {
+				toastError('Failed to update card status')
+				console.error('Card status update rolled back:', err)
 			}
-			setIsOpen(false)
-		},
-		onError: (error) => {
-			toastError('Failed to update card status')
-			console.log('Error updating card status', error)
-		},
-	})
+		)
+	}
 
 	return (
 		<>
@@ -469,20 +487,18 @@ function ContextMenu({
 					<MoreVertical />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align="end" className="w-56">
-					<DropdownMenuItem
-						onClick={() => cardStatusMutation.mutate('learned')}
-						disabled={cardStatusMutation.isPending}
-					>
-						<BookmarkCheck className="me-2 h-4 w-4 text-green-600" />
-						I've learned this
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						onClick={() => cardStatusMutation.mutate('skipped')}
-						disabled={cardStatusMutation.isPending}
-					>
-						<BookmarkX className="me-2 h-4 w-4" />
-						Skip this card
-					</DropdownMenuItem>
+					{STATUS_TOGGLE_ITEMS.map(({ target, icon, label }) => {
+						const isCurrent = currentStatus === target
+						return (
+							<DropdownMenuItem
+								key={target}
+								onClick={() => setCardStatus(isCurrent ? 'active' : target)}
+							>
+								{isCurrent ? REACTIVATE_ITEM.icon : icon}
+								{isCurrent ? REACTIVATE_ITEM.label : label}
+							</DropdownMenuItem>
+						)
+					})}
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						render={

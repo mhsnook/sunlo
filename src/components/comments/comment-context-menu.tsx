@@ -1,7 +1,7 @@
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { Share, Link as LinkIcon, Flag, MoreVertical } from 'lucide-react'
 
-import type { RequestCommentType } from '@/features/comments/schemas'
+import type { RequestCommentType } from '@/features/requests/schemas'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -15,6 +15,11 @@ import Flagged from '../flagged'
 interface CommentContextMenuProps {
 	comment: RequestCommentType
 	lang: string
+}
+
+const handleReport = () => {
+	// Placeholder for report functionality
+	toastSuccess('Thank you for reporting. We will review this comment shortly.')
 }
 
 export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
@@ -48,13 +53,6 @@ export function CommentContextMenu({ comment, lang }: CommentContextMenuProps) {
 			.catch(() => {
 				toastError('Failed to copy link')
 			})
-	}
-
-	const handleReport = () => {
-		// Placeholder for report functionality
-		toastSuccess(
-			'Thank you for reporting. We will review this comment shortly.'
-		)
 	}
 
 	return (

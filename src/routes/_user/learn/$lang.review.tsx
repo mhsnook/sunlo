@@ -6,13 +6,13 @@ import { ReviewStoreProvider } from '@/components/review/review-context-provider
 
 export const Route = createFileRoute('/_user/learn/$lang/review')({
 	component: ReviewPage,
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: {
-			title: `Review ${languages[lang]} cards`,
-			onBackClick: '/learn/$lang',
-		},
+	staticData: {
 		appnav: [],
-	}),
+		titleBar: ({ params }) => ({
+			title: `Review ${languages[params.lang]} cards`,
+			onBackClick: '/learn/$lang',
+		}),
+	},
 })
 
 function ReviewPage() {

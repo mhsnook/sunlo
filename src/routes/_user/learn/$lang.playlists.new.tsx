@@ -37,11 +37,11 @@ import { useAppForm } from '@/components/form'
 
 export const Route = createFileRoute('/_user/learn/$lang/playlists/new')({
 	component: NewPlaylistPage,
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: {
-			title: `Add ${languages[lang]} Playlist`,
-		},
-	}),
+	staticData: {
+		titleBar: ({ params }) => ({
+			title: `Add ${languages[params.lang]} Playlist`,
+		}),
+	},
 })
 
 type CreatePlaylistRPCReturnType = {
@@ -195,7 +195,6 @@ function NewPlaylistPageContent() {
 				</CardHeader>
 				<CardContent>
 					<form
-						role="form"
 						noValidate
 						data-testid="new-playlist-form"
 						onSubmit={(e) => {

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import {
 	Archive,
 	ArrowDown,
@@ -20,12 +20,29 @@ import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import { ago } from '@/lib/dayjs'
 
-export const Route = createFileRoute('/_user/admin/$lang/phrases/')({
+export const Route = createLazyFileRoute('/_user/admin/$lang/phrases/')({
 	component: AdminPhrasesIndex,
 })
 
 type SortField = 'text' | 'learners' | 'created'
 type SortDir = 'asc' | 'desc'
+
+function SortIcon({
+	field,
+	sortField,
+	sortDir,
+}: {
+	field: SortField
+	sortField: SortField
+	sortDir: SortDir
+}) {
+	if (sortField !== field) return <ArrowUpDown className="h-3 w-3" />
+	return sortDir === 'asc' ? (
+		<ArrowUp className="h-3 w-3" />
+	) : (
+		<ArrowDown className="h-3 w-3" />
+	)
+}
 
 function AdminPhrasesIndex() {
 	const { lang } = Route.useParams()
@@ -71,15 +88,6 @@ function AdminPhrasesIndex() {
 		}
 	}
 
-	const SortIcon = ({ field }: { field: SortField }) => {
-		if (sortField !== field) return <ArrowUpDown className="h-3 w-3" />
-		return sortDir === 'asc' ? (
-			<ArrowUp className="h-3 w-3" />
-		) : (
-			<ArrowDown className="h-3 w-3" />
-		)
-	}
-
 	if (isLoading) return <Loader />
 
 	return (
@@ -119,7 +127,12 @@ function AdminPhrasesIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('text')}
 									>
-										Phrase <SortIcon field="text" />
+										Phrase{' '}
+										<SortIcon
+											field="text"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-start font-medium">Tags</th>
@@ -128,7 +141,12 @@ function AdminPhrasesIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('learners')}
 									>
-										Learners <SortIcon field="learners" />
+										Learners{' '}
+										<SortIcon
+											field="learners"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-start font-medium">
@@ -136,7 +154,12 @@ function AdminPhrasesIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('created')}
 									>
-										Created <SortIcon field="created" />
+										Created{' '}
+										<SortIcon
+											field="created"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-end font-medium">Action</th>

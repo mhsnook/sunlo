@@ -1,19 +1,19 @@
-import { useMutation } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import {
 	BookA,
 	BookType,
 	Columns2,
 	Grid2x2,
+	MonitorCog,
+	Moon,
+	Sun,
 	Volume2,
 	VolumeX,
 } from 'lucide-react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import supabase from '@/lib/supabase-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import {
 	type FontPreferenceType,
-	MyProfileSchema,
 	MyProfileType,
 	type ReviewAnswerModeType,
 } from '@/features/profile/schemas'
@@ -21,13 +21,66 @@ import { Label } from '@/components/ui/label'
 import { InfoDialog } from '@/components/info-dialog'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { cancelAllSounds, previewAllSounds } from '@/lib/review-sounds'
+import { useTheme } from '@/components/theme-provider'
 
-export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
+export function DisplayPreferences({
+	profile,
+}: {
+	profile: MyProfileType | null
+}) {
 	return (
 		<div className="space-y-8" data-testid="display-preferences-page">
-			<FontPreferenceSection profile={profile} />
-			<SoundPreferenceSection profile={profile} />
-			<ReviewAnswerModeSection profile={profile} />
+			<ThemeSection />
+			{profile ? (
+				<>
+					<FontPreferenceSection profile={profile} />
+					<SoundPreferenceSection profile={profile} />
+					<ReviewAnswerModeSection profile={profile} />
+				</>
+			) : null}
+		</div>
+	)
+}
+
+function ThemeSection() {
+	const { theme, setTheme } = useTheme()
+	return (
+		<div className="space-y-4" data-testid="theme-preference">
+			<div className="space-y-2">
+				<Label>Appearance</Label>
+				<p className="text-muted-foreground text-sm">
+					Choose light, dark, or follow your system setting.
+				</p>
+			</div>
+			<div className="flex gap-2">
+				<ChoiceTile
+					selected={theme === 'light'}
+					onClick={() => setTheme('light')}
+					data-key="light"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<Sun className="size-5 shrink-0" />
+					<span className="font-medium">Light</span>
+				</ChoiceTile>
+				<ChoiceTile
+					selected={theme === 'dark'}
+					onClick={() => setTheme('dark')}
+					data-key="dark"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<Moon className="size-5 shrink-0" />
+					<span className="font-medium">Dark</span>
+				</ChoiceTile>
+				<ChoiceTile
+					selected={theme === 'system'}
+					onClick={() => setTheme('system')}
+					data-key="system"
+					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+				>
+					<MonitorCog className="size-5 shrink-0" />
+					<span className="font-medium">System</span>
+				</ChoiceTile>
+			</div>
 		</div>
 	)
 }
@@ -35,32 +88,18 @@ export function DisplayPreferences({ profile }: { profile: MyProfileType }) {
 function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 	const currentPref = profile.font_preference ?? 'default'
 
-	const updateFontPref = useMutation({
-		mutationFn: async (font_preference: FontPreferenceType) => {
-			const { data } = await supabase
-				.from('user_profile')
-				.update({ font_preference })
-				.eq('uid', profile.uid)
-				.select()
-				.maybeSingle()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			if (data)
-				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			toastSuccess('Font preference updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update preference')
-			console.log('Error', error)
-		},
-	})
-
-	const handleFontChange = (pref: FontPreferenceType) => {
-		if (pref !== currentPref) {
-			updateFontPref.mutate(pref)
-		}
+	const handleFontChange = (font_preference: FontPreferenceType) => {
+		if (font_preference === currentPref) return
+		const tx = myProfileCollection.update(profile.uid, (draft) => {
+			draft.font_preference = font_preference
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Font preference updated'),
+			(err) => {
+				toastError('Failed to update preference')
+				console.error('Font preference update rolled back:', err)
+			}
+		)
 	}
 
 	return (
@@ -76,7 +115,6 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 				<ChoiceTile
 					selected={currentPref === 'default'}
 					onClick={() => handleFontChange('default')}
-					disabled={updateFontPref.isPending}
 					data-key="default"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
@@ -91,7 +129,6 @@ function FontPreferenceSection({ profile }: { profile: MyProfileType }) {
 				<ChoiceTile
 					selected={currentPref === 'dyslexic'}
 					onClick={() => handleFontChange('dyslexic')}
-					disabled={updateFontPref.isPending}
 					data-key="dyslexic"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
@@ -115,27 +152,18 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 
 	useEffect(() => cancelAllSounds, [])
 
-	const updateSoundPref = useMutation({
-		mutationFn: async (sound_enabled: boolean) => {
-			const { data } = await supabase
-				.from('user_profile')
-				.update({ sound_enabled })
-				.eq('uid', profile.uid)
-				.select()
-				.maybeSingle()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			if (data)
-				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			toastSuccess('Sound preference updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update preference')
-			console.log('Error', error)
-		},
-	})
+	const updateSoundPref = (sound_enabled: boolean) => {
+		const tx = myProfileCollection.update(profile.uid, (draft) => {
+			draft.sound_enabled = sound_enabled
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Sound preference updated'),
+			(err) => {
+				toastError('Failed to update preference')
+				console.error('Sound preference update rolled back:', err)
+			}
+		)
+	}
 
 	return (
 		<div className="space-y-4" data-testid="sound-preference">
@@ -149,10 +177,9 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 				<ChoiceTile
 					selected={current}
 					onClick={() => {
-						if (!current) updateSoundPref.mutate(true)
+						if (!current) updateSoundPref(true)
 						previewAllSounds()
 					}}
-					disabled={updateSoundPref.isPending}
 					data-key="on"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
@@ -163,9 +190,8 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 					selected={!current}
 					onClick={() => {
 						cancelAllSounds()
-						if (current) updateSoundPref.mutate(false)
+						if (current) updateSoundPref(false)
 					}}
-					disabled={updateSoundPref.isPending}
 					data-key="off"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
@@ -180,27 +206,19 @@ function SoundPreferenceSection({ profile }: { profile: MyProfileType }) {
 function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 	const currentMode = profile.review_answer_mode ?? '2-buttons'
 
-	const updateAnswerMode = useMutation({
-		mutationFn: async (review_answer_mode: ReviewAnswerModeType) => {
-			const { data } = await supabase
-				.from('user_profile')
-				.update({ review_answer_mode })
-				.eq('uid', profile.uid)
-				.select()
-				.maybeSingle()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			if (data)
-				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			toastSuccess('Review answer mode updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update review answer mode')
-			console.log('Error', error)
-		},
-	})
+	const updateAnswerMode = (review_answer_mode: ReviewAnswerModeType) => {
+		if (review_answer_mode === currentMode) return
+		const tx = myProfileCollection.update(profile.uid, (draft) => {
+			draft.review_answer_mode = review_answer_mode
+		})
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Review answer mode updated'),
+			(err) => {
+				toastError('Failed to update review answer mode')
+				console.error('Review answer mode update rolled back:', err)
+			}
+		)
+	}
 
 	return (
 		<div className="space-y-4">
@@ -221,10 +239,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 			<div className="flex gap-2" data-testid="review-answer-mode">
 				<ChoiceTile
 					selected={currentMode === '4-buttons'}
-					onClick={() =>
-						currentMode !== '4-buttons' && updateAnswerMode.mutate('4-buttons')
-					}
-					disabled={updateAnswerMode.isPending}
+					onClick={() => updateAnswerMode('4-buttons')}
 					data-key="4-buttons"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>
@@ -238,10 +253,7 @@ function ReviewAnswerModeSection({ profile }: { profile: MyProfileType }) {
 				</ChoiceTile>
 				<ChoiceTile
 					selected={currentMode === '2-buttons'}
-					onClick={() =>
-						currentMode !== '2-buttons' && updateAnswerMode.mutate('2-buttons')
-					}
-					disabled={updateAnswerMode.isPending}
+					onClick={() => updateAnswerMode('2-buttons')}
 					data-key="2-buttons"
 					className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
 				>

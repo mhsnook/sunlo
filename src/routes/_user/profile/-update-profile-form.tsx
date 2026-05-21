@@ -1,14 +1,9 @@
 import type { uuid } from '@/types/main'
-import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
 import * as z from 'zod'
 import { toastSuccess } from '@/components/ui/sonner'
 
-import supabase from '@/lib/supabase-client'
-import {
-	LanguagesKnownSchema,
-	MyProfileSchema,
-	MyProfileType,
-} from '@/features/profile/schemas'
+import { LanguagesKnownSchema, MyProfileType } from '@/features/profile/schemas'
 import { Button } from '@/components/ui/button'
 import { LanguagesKnownField } from '@/components/fields/languages-known-field'
 import { AvatarEditorField } from '@/routes/_user/profile/-avatar-editor-field'
@@ -32,31 +27,25 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 		languages_known: profile.languages_known,
 	}
 	const uid: uuid = profile.uid
-
-	const updateProfile = useMutation({
-		mutationFn: async (values: ProfileEditFormInputs) => {
-			const { data } = await supabase
-				.from('user_profile')
-				.update(values)
-				.eq('uid', uid)
-				.select()
-				.maybeSingle()
-				.throwOnError()
-			return data
-		},
-		onSuccess: (data) => {
-			if (data)
-				myProfileCollection.utils.writeUpdate(MyProfileSchema.parse(data))
-			toastSuccess(`Successfully updated your profile`)
-		},
-	})
+	const [submitError, setSubmitError] = useState<Error | null>(null)
 
 	const form = useAppForm({
 		defaultValues: initialData,
 		validators: { onChange: ProfileEditFormSchema },
 		onSubmit: async ({ value, formApi }) => {
-			await updateProfile.mutateAsync(value)
-			formApi.reset(value)
+			setSubmitError(null)
+			const tx = myProfileCollection.update(uid, (draft) => {
+				draft.username = value.username
+				draft.avatar_path = value.avatar_path ?? ''
+				draft.languages_known = value.languages_known
+			})
+			try {
+				await tx.isPersisted.promise
+				toastSuccess(`Successfully updated your profile`)
+				formApi.reset(value)
+			} catch (err) {
+				setSubmitError(err as Error)
+			}
 		},
 	})
 
@@ -100,7 +89,7 @@ export function UpdateProfileForm({ profile }: { profile: MyProfileType }) {
 				</div>
 				<form.AppForm>
 					<form.FormAlert
-						error={updateProfile.error}
+						error={submitError}
 						text="Error trying to update your profile"
 					/>
 				</form.AppForm>

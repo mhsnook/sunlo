@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { CircleCheck, Logs, Rocket } from 'lucide-react'
 
+import { LangBadge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import {
 	Dialog,
@@ -11,7 +12,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from '@/components/ui/dialog'
-import { getThemeCss } from '@/lib/deck-themes'
+import { useLangThemeCss } from '@/lib/lang-theme'
 import { DeckMetaType } from '@/features/deck/schemas'
 import { useDeckPids } from '@/features/deck/hooks'
 import { useActiveReviewRemaining } from '@/features/review/hooks'
@@ -25,8 +26,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 	const totalCards = pids?.all.length ?? 0
 	const dueToday =
 		remaining !== null ? remaining : (pids?.today_active.length ?? 0)
-	const tileCode = deck.lang.slice(0, 3).toUpperCase()
-	const style = getThemeCss(deck.theme)
+	const style = useLangThemeCss(deck.lang)
 
 	return (
 		<>
@@ -42,9 +42,7 @@ export function DeckTile({ deck }: { deck: DeckMetaType }) {
 						className="flex h-full flex-col gap-3 p-4 hover:shadow"
 						data-testid={`deck-tile-${deck.lang}`}
 					>
-						<span className="from-5-mhi-primary to-6-mid-primary text-primary-foreground inline-flex w-fit items-center justify-center rounded-md bg-gradient-to-br px-2.5 py-1 font-mono text-sm font-semibold tracking-wider uppercase shadow-xs">
-							{tileCode}
-						</span>
+						<LangBadge lang={deck.lang} />
 
 						<div className="space-y-0.5">
 							<h3 className="text-lg leading-tight font-semibold">

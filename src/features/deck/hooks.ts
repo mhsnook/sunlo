@@ -84,16 +84,19 @@ export const useDecks = (): UseLiveQueryResult<DeckMetaType[]> => {
 	}
 }
 
+export type CardWithSibling = CardMetaType & { sibling_id: string | null }
+
 export const useMyCard = (
 	phraseId: string | null | undefined
-): UseLiveQueryResult<CardMetaType> => {
+): UseLiveQueryResult<CardWithSibling> => {
 	const query = useLiveQuery(
 		(q) =>
 			!phraseId
 				? undefined
 				: q
 						.from({ card: cardsCollection })
-						.where(({ card }) => eq(card.phrase_id, phraseId)),
+						.where(({ card }) => eq(card.phrase_id, phraseId))
+						.orderBy(({ card }) => card.direction, 'asc'),
 		[phraseId]
 	)
 	should(
@@ -102,7 +105,11 @@ export const useMyCard = (
 			query.data.length <= 1 ||
 			new Set(query.data.map((c) => c.status)).size === 1
 	)
-	return { ...query, data: query.data?.[0] } as UseLiveQueryResult<CardMetaType>
+	const [card, sibling] = query.data ?? []
+	return {
+		...query,
+		data: card ? { ...card, sibling_id: sibling?.id ?? null } : undefined,
+	} as UseLiveQueryResult<CardWithSibling>
 }
 
 export const useDeckCards = (
@@ -140,7 +147,7 @@ export const useDeckRoutineStats = (lang: string) => {
 	}
 }
 
-export type DeckPids = {
+type DeckPids = {
 	all: pids
 	active: pids
 	inactive: pids

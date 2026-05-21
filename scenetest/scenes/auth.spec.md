@@ -1,9 +1,18 @@
+# login page shows signup and forgot-password links
+
+visitor:
+
+- openTo /login
+- see login-form
+- see login-signup-link
+- see login-forgot-password-link
+
 # learner logs in and sees their decks
 
 learner:
 
 - login
-- see sidebar-user-menu-trigger
+- see sidebar-profile-settings-link
 - see decks-list-grid
 
 # new user follows the onboarding nudge and completes setup
@@ -33,13 +42,15 @@ learner:
 - openTo /learn
 - see decks-list-grid
 - up
-- click sidebar-user-menu-trigger
-- click sidebar-signout-button
+- click sidebar-profile-settings-link
+- up
+- see profile-page
+- click profile-signout-button
 - up
 - see landing-page
 - see homepage-login-link
 - notSee homepage-app-link
-- notSee sidebar-user-menu-trigger
+- notSee sidebar-profile-settings-link
 - openTo /learn
 - see logged-out-learn-page
 - notSee decks-list-grid
@@ -83,10 +94,10 @@ visitor:
 learner:
 
 - login
-- see sidebar-user-menu-trigger
+- see sidebar-profile-settings-link
 - see decks-list-grid
 - openTo /learn
-- see sidebar-user-menu-trigger
+- see sidebar-profile-settings-link
 - see decks-list-grid
 
 # logged-in user sees app link on homepage, not login link
@@ -104,12 +115,14 @@ learner:
 
 - login
 - see decks-list-grid
-- click sidebar-user-menu-trigger
-- click sidebar-signout-button
+- click sidebar-profile-settings-link
+- up
+- see profile-page
+- click profile-signout-button
 - up
 - see landing-page
-- openTo /learn/browse
+- openTo /browse
 - see browse-page
 - login
-- see sidebar-user-menu-trigger
+- see sidebar-profile-settings-link
 - see decks-list-grid

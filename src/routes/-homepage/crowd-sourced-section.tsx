@@ -168,7 +168,7 @@ export function CrowdSourcedSection() {
 
 							<div className="text-center">
 								<Link
-									to="/learn/browse"
+									to="/browse"
 									className={cn(
 										buttonVariants({ size: 'lg' }),
 										'bg-emerald-600 font-semibold text-white/80 transition-all duration-300 hover:bg-emerald-700'

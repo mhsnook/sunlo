@@ -1,23 +1,18 @@
-import { Link, useParams, useSearch } from '@tanstack/react-router'
-import { MessagesSquare, Repeat, Send, WalletCards } from 'lucide-react'
+import { MessageSquare, Repeat, Send, WalletCards } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request-to-friend'
 import { ShareRequestButton } from '@/components/card-pieces/share-request-button'
 import CopyLinkButton from '@/components/copy-link-button'
-import { buttonVariants } from '@/components/ui/button'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/features/requests/hooks'
 import { UpvoteRequest } from './upvote-request-button'
 import { PhraseRequestType } from '@/features/requests/schemas'
 
-const showThread = { show: 'thread' } as const
-const answersOnly = { show: 'answers-only' } as const
-
 export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 	const counts = useRequestCounts(request.id)
-	const currentUrlParams = useParams({ strict: false })
-	const search = useSearch({ strict: false })
+	const countComments = counts?.countComments ?? 0
+	const countAnswers = counts?.countLinks ?? 0
 	return (
 		<div className="@container flex w-full flex-row items-center justify-between gap-2">
 			<div className="text-muted-foreground flex flex-row items-center gap-4 text-sm font-normal @xl:gap-6">
@@ -47,56 +42,29 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 					</div>
 				</Flagged>
 
-				<div className="flex flex-row items-center gap-2">
-					<Link
-						to="/learn/$lang/requests/$id"
-						params={{ lang: request.lang, id: request.id }}
-						title={`View comments (${counts?.countComments ?? 0})`}
-						aria-label="View comments"
-						search={showThread}
-						className={buttonVariants({
-							variant:
-								currentUrlParams.id === request.id &&
-								search.show !== 'answers-only'
-									? 'soft'
-									: 'ghost',
-							size: 'icon',
-						})}
-						data-testid="view-comments-link"
-					>
-						<MessagesSquare />
-					</Link>
-					<span className="@max-sm:sr-only">
-						{counts?.countComments ?? 0}
+				<div
+					className="flex flex-row items-center gap-2"
+					data-testid="comments-count"
+				>
+					<MessageSquare className="size-4" aria-hidden="true" />
+					<span>
+						{countComments}
 						<span className="@max-lg:sr-only">
 							{' '}
-							comment{counts?.countComments === 1 ? '' : 's'}
+							comment{countComments === 1 ? '' : 's'}
 						</span>
 					</span>
 				</div>
-				<div className="flex flex-row items-center gap-2">
-					<Link
-						to="/learn/$lang/requests/$id"
-						params={{ lang: request.lang, id: request.id }}
-						title={`Click to view answers (${counts?.countLinks ?? 0})`}
-						search={
-							search.show === 'answers-only' &&
-							currentUrlParams.id === request.id
-								? showThread
-								: answersOnly
-						}
-						className={buttonVariants({
-							variant: search.show === 'answers-only' ? 'soft' : 'ghost',
-							size: 'icon',
-						})}
-					>
-						<WalletCards />
-					</Link>
-					<span className="@max-sm:sr-only">
-						{counts?.countLinks ?? 0}
+				<div
+					className="flex flex-row items-center gap-2"
+					data-testid="answers-count"
+				>
+					<WalletCards className="size-4" aria-hidden="true" />
+					<span>
+						{countAnswers}
 						<span className="@max-lg:sr-only">
 							{' '}
-							answer{counts?.countLinks === 1 ? '' : 's'}
+							answer{countAnswers === 1 ? '' : 's'}
 						</span>
 					</span>
 				</div>

@@ -170,12 +170,13 @@ export default function BrowseSearchOverlay({
 				</div>
 
 				{/* Search Input */}
-				<div className="p-3" role="search" onKeyDown={handleKeyDown}>
+				<search className="p-3">
 					<div className="bg-muted/50 flex items-center gap-3 rounded-2xl border px-3 py-2 inset-shadow-sm">
 						<Search className="text-muted-foreground size-5 shrink-0" />
 						<input
 							ref={inputRef}
 							type="text"
+							aria-label="Search phrases, playlists, and requests"
 							placeholder="Search phrases, playlists, requests..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}
@@ -193,7 +194,7 @@ export default function BrowseSearchOverlay({
 							</button>
 						)}
 					</div>
-				</div>
+				</search>
 
 				{/* Language pills */}
 				{hasQuery && displayLangs.length > 0 && (

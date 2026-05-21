@@ -9,7 +9,8 @@
 		"react-perf"
 	],
 	"rules": {
-		"jsx-a11y/prefer-tag-over-role": "warn"
+		"jsx-a11y/prefer-tag-over-role": "warn",
+		"no-shadow": "off"
 	},
 	"categories": {
 		"correctness": "error",
@@ -23,7 +24,7 @@
 	"env": {
 		"builtin": true
 	},
-	"ignorePatterns": ["dist/", "src-tauri/", "scripts/"],
+	"ignorePatterns": ["dist/", "src-tauri/", "scripts/", "e2e/"],
 	"overrides": [
 		{
 			"files": ["src/**/*.{ts,tsx}", "vite.config.ts"],

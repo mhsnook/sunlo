@@ -1,8 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Rocket } from 'lucide-react'
 
-import { Garlic } from '@/components/garlic'
-import { LangBadge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import type { DeckMetaType } from '@/features/deck/schemas'
 import { useLangActiveDays } from './-deck-ranking'
@@ -28,21 +26,23 @@ export function ReviewBanner({
 		>
 			<div className="flex flex-col items-start gap-4 @md:flex-row @md:items-center @md:justify-between">
 				<div className="flex items-center gap-4">
-					<div className="hidden shrink-0 @sm:block">
-						<Garlic size={56} />
-					</div>
+					<img
+						src="/images/garlic-logo.svg"
+						alt="a smiling garlic"
+						width={56}
+						height={56}
+						className="hidden shrink-0 place-self-center @sm:block"
+					/>
+
 					<div className="space-y-1">
-						<h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-lg leading-tight font-bold @md:text-xl">
-							<span>
-								<span className="text-primary-foresoft">{focusDue}</span>{' '}
-								{focusDue === 1 ? 'card' : 'cards'} ready for review
-							</span>
-							<LangBadge lang={focus.lang} />
+						<h2 className="text-lg leading-tight font-bold @md:text-xl">
+							<span className="text-primary-foresoft">{focusDue}</span>{' '}
+							{focus.language} {focusDue === 1 ? 'card' : 'cards'} ready for
+							review
 						</h2>
 						<p className="text-muted-foreground text-sm">
-							{focus.language} · about {estMinutes}{' '}
-							{estMinutes === 1 ? 'minute' : 'minutes'}. Consistency beats
-							cramming —{' '}
+							About {estMinutes} {estMinutes === 1 ? 'minute' : 'minutes'}.
+							Consistency beats cramming —{' '}
 							{activeDays > 0 ? (
 								<>
 									you&apos;ve studied{' '}

@@ -1,6 +1,7 @@
 import { createCollection } from '@tanstack/react-db'
 import { queryCollectionOptions } from '@tanstack/query-db-collection'
 import { queryOptions } from '@tanstack/react-query'
+import { BasicIndex } from '@tanstack/db'
 import {
 	PublicProfileSchema,
 	type PublicProfileType,
@@ -26,6 +27,8 @@ export const publicProfilesCollection = createCollection(
 		getKey: (item: PublicProfileType) => item.uid,
 		queryClient,
 		schema: PublicProfileSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
 	})
 )
 

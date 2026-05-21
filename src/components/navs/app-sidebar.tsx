@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react'
 import { NavMain } from '@/components/navs/nav-main'
 import { NavUser } from '@/components/navs/nav-user'
+import { NavFooterActions } from '@/components/navs/nav-footer-actions'
 import { DeckSwitcher } from '@/components/navs/deck-switcher'
 import { ActiveReviewCallout } from '@/components/navs/active-review-callout'
 import { OnboardingNudge } from '@/components/navs/onboarding-nudge'
@@ -10,9 +11,9 @@ import {
 	SidebarFooter,
 	SidebarHeader,
 	SidebarRail,
+	SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { useParams } from '@tanstack/react-router'
-import { ModeToggle } from '@/components/navs/mode-toggle'
 
 export function AppSidebar({
 	focusMode,
@@ -31,13 +32,12 @@ export function AppSidebar({
 			<SidebarContent>
 				<OnboardingNudge />
 				<ActiveReviewCallout currentLang={lang} />
-				<NavMain lang={lang} />
-				<div className="mt-auto p-2">
-					<ModeToggle />
-				</div>
+				<NavMain />
+				<SidebarSeparator />
+				<NavUser />
 			</SidebarContent>
 			<SidebarFooter>
-				<NavUser />
+				<NavFooterActions />
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>

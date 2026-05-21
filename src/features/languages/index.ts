@@ -10,7 +10,6 @@ export {
 	LangTagSchema,
 	type LangTagType,
 	PhraseTagSchema,
-	type PhraseTagType,
 } from './schemas'
 
 // Collections

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { eq } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
@@ -21,12 +21,29 @@ import { phraseRequestsCollection } from '@/features/requests/collections'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 import { ago } from '@/lib/dayjs'
 
-export const Route = createFileRoute('/_user/admin/$lang/requests/')({
+export const Route = createLazyFileRoute('/_user/admin/$lang/requests/')({
 	component: AdminRequestsIndex,
 })
 
 type SortField = 'prompt' | 'upvotes' | 'created'
 type SortDir = 'asc' | 'desc'
+
+function SortIcon({
+	field,
+	sortField,
+	sortDir,
+}: {
+	field: SortField
+	sortField: SortField
+	sortDir: SortDir
+}) {
+	if (sortField !== field) return <ArrowUpDown className="h-3 w-3" />
+	return sortDir === 'asc' ? (
+		<ArrowUp className="h-3 w-3" />
+	) : (
+		<ArrowDown className="h-3 w-3" />
+	)
+}
 
 function AdminRequestsIndex() {
 	const { lang } = Route.useParams()
@@ -76,15 +93,6 @@ function AdminRequestsIndex() {
 		}
 	}
 
-	const SortIcon = ({ field }: { field: SortField }) => {
-		if (sortField !== field) return <ArrowUpDown className="h-3 w-3" />
-		return sortDir === 'asc' ? (
-			<ArrowUp className="h-3 w-3" />
-		) : (
-			<ArrowDown className="h-3 w-3" />
-		)
-	}
-
 	if (isLoading) return <Loader />
 
 	return (
@@ -124,7 +132,12 @@ function AdminRequestsIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('prompt')}
 									>
-										Prompt <SortIcon field="prompt" />
+										Prompt{' '}
+										<SortIcon
+											field="prompt"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-start font-medium">
@@ -132,7 +145,12 @@ function AdminRequestsIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('upvotes')}
 									>
-										Upvotes <SortIcon field="upvotes" />
+										Upvotes{' '}
+										<SortIcon
+											field="upvotes"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-start font-medium">
@@ -140,7 +158,12 @@ function AdminRequestsIndex() {
 										className="inline-flex items-center gap-1"
 										onClick={() => toggleSort('created')}
 									>
-										Created <SortIcon field="created" />
+										Created{' '}
+										<SortIcon
+											field="created"
+											sortField={sortField}
+											sortDir={sortDir}
+										/>
 									</button>
 								</th>
 								<th className="px-3 py-2 text-end font-medium">Action</th>

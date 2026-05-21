@@ -5,12 +5,12 @@ import { UserContributionsTabs } from './-contributions-tabs'
 
 export const Route = createFileRoute('/_user/learn/contributions')({
 	validateSearch: UserContributionsTabs,
-	beforeLoad: () => ({
+	staticData: {
 		titleBar: {
 			title: 'Contributions to the Library',
 			subtitle: 'Your own Requests, Phrases and Playlists',
 		},
-	}),
+	},
 	component: RouteComponent,
 })
 

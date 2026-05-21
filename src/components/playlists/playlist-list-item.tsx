@@ -298,9 +298,6 @@ function PhraseBookmarkBadge({ phraseId }: { phraseId: string }) {
 	const { data: card } = useMyCard(phraseId)
 	if (!card?.status || !['active', 'learned'].includes(card.status)) return null
 	return (
-		<Bookmark
-			className="shrink-0 fill-purple-600/50 text-purple-600"
-			size={12}
-		/>
+		<Bookmark className="text-primary shrink-0 fill-current/50" size={12} />
 	)
 }

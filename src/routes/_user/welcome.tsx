@@ -47,12 +47,12 @@ import { CommunityNormsIntro } from '@/components/intros'
 
 export const Route = createFileRoute('/_user/welcome')({
 	component: WelcomePage,
-	beforeLoad: () => ({
+	staticData: {
 		titleBar: {
 			title: 'Welcome to Sunlo',
 			subtitle: 'Learn languages with friends',
 		},
-	}),
+	},
 	loader: async () => {
 		await Promise.all([
 			phraseRequestsCollection.preload(),
@@ -509,7 +509,7 @@ function RequestsYouCanHelp() {
 			{requestsToShow.length >= 4 && (
 				<div className="mt-4 text-center">
 					<Link
-						to="/learn/browse"
+						to="/browse"
 						className={buttonVariants({ variant: 'soft', size: 'sm' })}
 					>
 						See More Requests

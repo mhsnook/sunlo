@@ -19,7 +19,8 @@ import {
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import type { MyRouterContext } from '@/routes/__root'
+import { resolveNavList } from '@/types/route-static-data'
+import { useAuth } from '@/lib/use-auth'
 
 const activeProps = {
 	className: 'border-primary text-primary-foresoft',
@@ -32,16 +33,16 @@ const inactiveProps = {
 } as const
 
 export function AppNav() {
+	const { isAuth } = useAuth()
 	const matches = useMatches()
-	const appnavMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.appnav
+	const appnav = resolveNavList(
+		matches.findLast((m) => m.staticData.appnav)?.staticData.appnav,
+		isAuth
 	)
-	const appnav = (appnavMatch?.context as MyRouterContext)?.appnav
-	const contextMenuMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.contextMenu
+	const contextMenu = resolveNavList(
+		matches.findLast((m) => m.staticData.contextMenu)?.staticData.contextMenu,
+		isAuth
 	)
-	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
-		?.contextMenu
 	const links = useLinks(appnav)
 	const [ref, entry] = useIntersectionObserver({
 		threshold: 0,
@@ -57,7 +58,7 @@ export function AppNav() {
 				className={`bg-base-lo-neutral sticky z-30 mt-1 border-b transition-colors ${entry?.isIntersecting === false ? 'border-border' : 'border-transparent'} top-0 flex w-full flex-row items-center justify-between gap-2`}
 				style={{ viewTransitionName: 'appnav' }}
 			>
-				<div className="scrollbar-none w-0 grow overflow-x-auto">
+				<div className="w-0 grow scrollbar-none overflow-x-auto">
 					<NavigationMenu className="mt-2 mb-1">
 						<NavigationMenuList className="flex w-full flex-row justify-start ps-2">
 							{links.map((l: LinkType) => (

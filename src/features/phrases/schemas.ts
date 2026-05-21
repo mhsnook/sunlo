@@ -14,10 +14,7 @@ export const FilterEnumSchema = z.enum([
 	'language',
 ])
 
-export type FilterEnumType = z.infer<typeof FilterEnumSchema>
-
 export const SmartSearchSortBySchema = z.enum(['relevance', 'popularity'])
-export type SmartSearchSortByType = z.infer<typeof SmartSearchSortBySchema>
 
 export const PhraseSearchSchema = z.object({
 	text: z.string().optional(),
@@ -25,8 +22,6 @@ export const PhraseSearchSchema = z.object({
 	tags: z.string().optional(),
 	sort: SmartSearchSortBySchema.optional(),
 })
-
-export type PhraseSearchType = z.infer<typeof PhraseSearchSchema>
 
 export const TranslationSchema = z.object({
 	id: z.string().uuid(),
@@ -57,12 +52,6 @@ export const PhraseFullSchema = z.object({
 })
 
 export type PhraseFullType = z.infer<typeof PhraseFullSchema>
-
-// Type returned by splitPhraseTranslations - PhraseFullType with split translations
-export type PhraseWithTranslationSplit = PhraseFullType & {
-	translations_mine: Array<TranslationType>
-	translations_other: Array<TranslationType>
-}
 
 export type PhraseFullFullType = PhraseFullType & {
 	profile: PublicProfileType

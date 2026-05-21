@@ -49,7 +49,6 @@ export function LoginCardBody({
 	return (
 		<form
 			data-testid="login-form"
-			role="form"
 			noValidate
 			className="space-y-4"
 			onSubmit={(e) => {
@@ -73,7 +72,11 @@ export function LoginCardBody({
 					</form.SubmitButton>
 				</form.AppForm>
 
-				<Link to="/signup" className={buttonVariants({ variant: 'neutral' })}>
+				<Link
+					to="/signup"
+					data-testid="login-signup-link"
+					className={buttonVariants({ variant: 'neutral' })}
+				>
 					Create account
 				</Link>
 			</div>
@@ -82,7 +85,11 @@ export function LoginCardBody({
 			</form.AppForm>
 
 			<p>
-				<Link to="/forgot-password" className="s-link text-sm">
+				<Link
+					to="/forgot-password"
+					data-testid="login-forgot-password-link"
+					className="s-link text-sm"
+				>
 					Forgot password?
 				</Link>
 			</p>

@@ -10,13 +10,13 @@ export const Route = createFileRoute(
 	'/_user/learn/$lang/playlists/$playlistId'
 )({
 	component: PlaylistPage,
-	beforeLoad: ({ params }) => ({
-		titleBar: {
+	staticData: {
+		appnav: [],
+		titleBar: ({ params }) => ({
 			title: `Playlist of ${languages[params.lang]} Flashcards`,
 			subtitle: '',
-		},
-		appnav: [],
-	}),
+		}),
+	},
 })
 
 const style = { viewTransitionName: `main-area` } as CSSProperties
@@ -27,11 +27,13 @@ function PlaylistPage() {
 
 	return (
 		<main style={style} data-testid="playlist-detail-page">
-			{isLoading ?
+			{isLoading ? (
 				<Loader />
-			: !playlist ?
+			) : !playlist ? (
 				<Show404 />
-			:	<PlaylistItem playlist={playlist} />}
+			) : (
+				<PlaylistItem playlist={playlist} />
+			)}
 		</main>
 	)
 }

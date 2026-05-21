@@ -24,11 +24,9 @@ const SearchSchema = z.object({
 
 export const Route = createFileRoute('/_user/learn/add-deck')({
 	validateSearch: SearchSchema,
-	beforeLoad: () => ({
-		titleBar: {
-			title: 'Start A New Deck of Flashcards',
-		},
-	}),
+	staticData: {
+		titleBar: { title: 'Start A New Deck of Flashcards' },
+	},
 	component: NewDeckForm,
 })
 

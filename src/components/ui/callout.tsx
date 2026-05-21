@@ -16,7 +16,7 @@ const variants = {
 }
 
 const iconCircleVariants = {
-	default: 'bg-lc-[97] bg-c-[2]',
+	default: 'bg-lc-[95] bg-c-[6]',
 	problem: 'border border-lc-[82] border-c-[9] bg-none-lo',
 	ghost: 'bg-1-lo-neutral',
 }

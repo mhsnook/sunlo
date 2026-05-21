@@ -13,7 +13,7 @@ import { SidebarProvider } from '@/components/ui/sidebar'
 import Callout from '@/components/ui/callout'
 import { buttonVariants } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
-import { TitleBar } from '@/types/main'
+import '@/types/route-static-data'
 
 // Dev-only identity switcher. The ternary collapses to null in production
 // builds (import.meta.env.DEV is statically replaced), so the dynamic
@@ -29,13 +29,6 @@ const DevIdentitySwitcher = import.meta.env.DEV
 export interface MyRouterContext {
 	auth: AuthState
 	queryClient: QueryClient
-	titleBar?: TitleBar
-	appnav?: string[]
-	contextMenu?: string[]
-	searchAction?: boolean
-	focusMode?: boolean
-	wideContent?: boolean
-	fixedHeight?: boolean
 }
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({

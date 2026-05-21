@@ -5,17 +5,13 @@ import { Button } from '@/components/ui/button'
 import { useNavigate, useRouter, useMatches } from '@tanstack/react-router'
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { useCanGoBack } from '@tanstack/react-router'
-import type { MyRouterContext } from '@/routes/__root'
 import { NotificationBell } from '@/components/notifications/notification-bell'
+import { useTitleBar } from '@/hooks/use-title-bar'
 
 export default function Navbar() {
 	const matches = useMatches()
-	const focusMode = matches.some(
-		(m) => (m.context as MyRouterContext)?.focusMode
-	)
-	const hasSearchAction = matches.some(
-		(m) => (m.context as MyRouterContext)?.searchAction
-	)
+	const focusMode = matches.some((m) => m.staticData.focusMode)
+	const hasSearchAction = matches.some((m) => !!m.staticData.search)
 
 	return (
 		<nav
@@ -38,12 +34,7 @@ function Title() {
 	const navigate = useNavigate()
 	const router = useRouter()
 	const canGoBack = useCanGoBack()
-	const matches = useMatches()
-
-	const titleBarMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.titleBar
-	)
-	const titleBar = (titleBarMatch?.context as MyRouterContext)?.titleBar
+	const titleBar = useTitleBar()
 
 	const onBackClick =
 		titleBar && 'onBackClick' in titleBar ? titleBar.onBackClick : null

@@ -1,23 +1,22 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { and, eq, isNull, useLiveQuery } from '@tanstack/react-db'
 import * as z from 'zod'
-import { CSSProperties } from 'react'
+import { CSSProperties, useId } from 'react'
 import { Paperclip } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
 import { CardContent, CardFooter } from '@/components/ui/card'
 import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
-import {
-	useRequest,
-	useRequestLinksWithComments,
-} from '@/features/requests/hooks'
+import { useRequest } from '@/features/requests/hooks'
 import { Markdown } from '@/components/my-markdown'
 import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
 import { buttonVariants } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Switch } from '@/components/ui/switch'
+import { cn, mapArrays } from '@/lib/utils'
+import type { CommentPhraseLinkType } from '@/features/requests/schemas'
 import Flagged from '@/components/flagged'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
@@ -29,8 +28,8 @@ import {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
-} from '@/features/comments/collections'
-import { useOneComment } from '@/features/comments/hooks'
+} from '@/features/requests/collections'
+import { useOneComment } from '@/features/requests/hooks'
 import { TinySelfAvatar } from '@/components/card-pieces/user-permalink'
 import {
 	CommentDialog,
@@ -49,10 +48,12 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		mode: z.enum(['reply', 'edit', 'comment', 'search']).optional(),
 		attaching: z.boolean().optional(),
 	}),
-	beforeLoad: ({ params: { lang } }) => ({
-		titleBar: { title: `${languages[lang]} Request` },
+	staticData: {
 		appnav: [],
-	}),
+		titleBar: ({ params }) => ({
+			title: `${languages[params.lang]} Request`,
+		}),
+	},
 	loader: async ({ context, location, cause }) => {
 		const preloads: Promise<unknown>[] = [
 			commentsCollection.preload(),
@@ -163,6 +164,7 @@ function RequestThreadPage() {
 
 			{/* Comment system */}
 			<Collapsible open={search.show !== 'request-only'}>
+				<AnswersOnlyToggle answersOnly={search.show === 'answers-only'} />
 				{search.show === 'answers-only' ? (
 					<AnswersOnlyView />
 				) : (
@@ -173,22 +175,49 @@ function RequestThreadPage() {
 	)
 }
 
-const showThread = { show: 'thread' } as const
+function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
+	const navigate = useNavigate()
+	const id = useId()
+	return (
+		<div className="my-4 flex items-center gap-3 px-4">
+			<Switch
+				id={id}
+				checked={answersOnly}
+				onCheckedChange={(checked) => {
+					void navigate({
+						to: '.',
+						search: (s) => ({
+							...s,
+							show: checked ? 'answers-only' : 'thread',
+						}),
+					})
+				}}
+				data-testid="answers-only-toggle"
+			/>
+			<label
+				htmlFor={id}
+				className="text-muted-foreground cursor-pointer text-sm"
+			>
+				Only show comments with answers
+			</label>
+		</div>
+	)
+}
 
 function AnswersOnlyView() {
 	const params = Route.useParams()
-	const { data: linksWithCommentsMap, isLoading } = useRequestLinksWithComments(
-		params.id
+	const { data: links, isLoading } = useLiveQuery(
+		(q) =>
+			q
+				.from({ link: commentPhraseLinksCollection })
+				.where(({ link }) => eq(link.request_id, params.id)),
+		[params.id]
 	)
 	if (isLoading) return <Loader />
-	if (!linksWithCommentsMap) {
-		console.log(
-			`isLoading has completed but links is not linking`,
-			linksWithCommentsMap
-		)
-		return null
-	}
-
+	const linksWithCommentsMap = mapArrays<CommentPhraseLinkType, 'phrase_id'>(
+		links,
+		'phrase_id'
+	)
 	const phraseIds = Object.keys(linksWithCommentsMap)
 
 	return (
@@ -196,10 +225,7 @@ function AnswersOnlyView() {
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
 					Showing {phraseIds.length} flashcard
-					{phraseIds.length !== 1 ? 's' : ''} suggested.{' '}
-					<Link to="." className="s-link" search={showThread}>
-						Return to discussion.
-					</Link>
+					{phraseIds.length !== 1 ? 's' : ''} suggested.
 				</p>
 				<div className="grid divide-y border">
 					{!phraseIds.length && (
@@ -210,7 +236,7 @@ function AnswersOnlyView() {
 					{phraseIds.map((pid) => (
 						<div key={pid} className="p-4 pb-2">
 							<WithPhrase pid={pid} Component={CardResultSimple} />
-							<p className="text-sm">
+							<p className="mt-3 text-sm">
 								View in thread:{' '}
 								{linksWithCommentsMap[pid].map((l, i, arr) => (
 									<span key={l.id}>
@@ -243,8 +269,6 @@ function AnswersOnlyView() {
 	)
 }
 
-const answersOnly = { show: 'answers-only' } as const
-
 function TopLevelComments({
 	requestId,
 	lang,
@@ -273,10 +297,7 @@ function TopLevelComments({
 			<div className="my-4 space-y-3">
 				<p className="text-muted-foreground px-4 text-sm">
 					Showing {comments.length} comment
-					{comments.length !== 1 ? 's' : ''}.{' '}
-					<Link to="." className="s-link" search={answersOnly}>
-						Show only proposed answers.
-					</Link>
+					{comments.length !== 1 ? 's' : ''}.
 				</p>
 				<div className="divide-y border">
 					{comments.map((comment) => (

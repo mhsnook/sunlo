@@ -77,10 +77,15 @@ pnpm scene scenetest/scenes/decks.spec.md
 
 Scene specs located in `/scenetest/scenes/` directory (`.spec.md` files). Requires the dev server (`pnpm dev`) and Supabase to be running locally. Config is in `scenetest/config.ts`.
 
-**When scenetest isn't enough**: If a user journey can't be expressed in a scene spec (e.g. you need fine-grained browser control, network interception, or multi-tab behavior), you have two options — in either case, **add a comment explaining why scenetest couldn't cover it**:
+**Strong default: Markdown scenes + inline runtime checks.** Three authoring surfaces exist under `scenetest/scenes/` (see [reference](https://scenetest.msnook.xyz/reference/concurrent-and-classic.md)), but reach for them in this order:
 
-1. **Scenetest with inline assertions** (`useTestEffect`) — for cases where the scene steps work but you need to verify internal component state or collection data alongside them.
-2. **Playwright** — for cases that require low-level browser control that scenetest can't provide at all.
+1. **Markdown scenes** (`.spec.md`) — the default for nearly every spec.
+2. **TypeScript scenes** — `scene()` from `@scenetest/scenes`. Same scene runtime, in TS, for custom setup/teardown or logic Markdown can't express.
+3. **Playwright specs** — `test()` from `@scenetest/scenes` (NOT raw `@playwright/test`). Sequential await-driven model with scenetest's actor handles and selectors. Only for multi-actor flows with timing-sensitive logic the scene runtime can't express.
+
+**Runtime checks** — scenetest's inline assertion functions `should()`, `failed()`, `serverCheck()` — live inside application code (components, mutation callbacks, effects) and report to the observer panel in dev. The Vite plugin strips them from production builds. They're a peer to scene specs, not a fallback. **Lean on them especially for mutation flows**: the scene asserts the user-visible outcome (`see toast-success`), while the inline check inside the mutation handler enforces the collection-state / client-server agreement that the old e2e tests were scraping from the DOM.
+
+**Do not write new `@playwright/test` specs.** The legacy `e2e/` directory is being decommissioned — see the `transform` label.
 
 #### Writing Scene Specs
 
@@ -139,23 +144,9 @@ learner:
 
 **Setup directives** run before the scene to pre-set state (e.g., `setup: supabase.from('user_deck').update(...)`). Use them when a scene requires non-default initial state.
 
-### Testing (Playwright)
+### Testing (Playwright — legacy, being removed)
 
-```bash
-# Run all e2e tests (Playwright)
-pnpm test
-
-# Run tests with UI
-pnpm test:ui
-
-# Run specific test file
-npx playwright test e2e/mutations/decks.spec.ts
-
-# Run tests for single browser
-npx playwright test --project=chromium
-```
-
-Test files located in `/e2e/` directory. Tests require Supabase to be running locally.
+The `e2e/` directory and `pnpm test` / `pnpm test:ui` scripts are deprecated and slated for removal — see the `transform` label. Don't add new specs here. Migrate existing ones to `scenetest/scenes/`.
 
 ### Database Management
 
@@ -287,31 +278,81 @@ export const useDeckCards = (lang: string) =>
 
 ### Mutations Pattern
 
-**Always use `useMutation`** for any server state changes (including login/logout), even when there's no form.
-
-Standard approach:
-
-1. Return updated/inserted rows from mutation with `.select()`
-2. Update local collection in `onSuccess` with `utils.writeInsert/writeUpdate`
-3. For complex server-side changes, use `invalidateQueries()` instead
-
-Two update patterns:
-
-1. **Direct collection updates** (optimistic UI):
+**Standard:** define persistence on the collection itself via `onInsert / onUpdate / onDelete` handlers, then call `collection.insert / update / delete` from components. The optimistic update lands in the same tick; throwing from the handler rolls it back automatically. Attach success/error UX to the returned `Transaction.isPersisted.promise`.
 
 ```typescript
-phrasePlaylistsCollection.utils.writeInsert(PhrasePlaylistSchema.parse(data))
+// features/<domain>/collections.ts — persistence lives here
+export const cardsCollection = createCollection(
+	queryCollectionOptions({
+		// ...id, queryKey, queryFn, getKey, schema...
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map((m) =>
+					supabase
+						.from('user_card')
+						.update(m.changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				)
+			)
+			return { refetch: false } // optimistic value matches server; skip reload
+		},
+	})
+)
+
+// component — declare the optimistic intent, react to collection state
+const { data: card } = useMyCard(phrase.id)
+
+const setCardStatus = (status: CardStatus) => {
+	if (!card) return
+	const tx = cardsCollection.update(card.id, (draft) => {
+		draft.status = status
+	})
+	tx.isPersisted.promise.then(
+		() => toastSuccess(STATUS_TOAST_MESSAGES[status]),
+		(err) => {
+			toastError('Failed to update card status')
+			console.error('rolled back', err)
+		}
+	)
+}
 ```
 
-2. **React Query mutations** (typical pattern):
+The component subscribes to the collection via `useLiveQuery` (here through `useMyCard`), so the menu / button state reflects the optimistic value immediately and flips back if the server rejects.
+
+See PR #623 (`cardsCollection.onUpdate` + review context-menu) for a worked example. See also the [TanStack DB optimistic-mutations skill](node_modules/@tanstack/db/skills/db-core/mutations-optimistic/SKILL.md) for `createOptimisticAction` (multi-collection atomic mutations) and `createPacedMutations` (auto-save / debounce / throttle).
+
+**Reasonable exceptions:**
+
+- **Realtime sync handlers** writing supabase channel events into a collection (`chatMessagesCollection.utils.writeInsert(...)` inside a `postgres_changes` callback) — that's sync, not a mutation.
+- **Mutations whose server-side transformation can't be predicted client-side** (e.g. FSRS scheduling on review submission) — evaluate case-by-case; may need `createOptimisticAction` with a best-guess optimistic update, or may legitimately keep the React Query pattern.
+
+#### Don't refetch entire tables to sync — return the row and `writeInsert` / `writeUpdate` / `writeDelete`
+
+`collection.utils.refetch()` is **a full table fetch** (`queryCollectionOptions.queryFn` re-runs `.from('…').select()` for the whole table). After a single-row mutation, this is wildly disproportionate: a refetch of `phrase_request` to confirm one new request pulls every request in the system.
+
+The cheap alternative: make supabase or the RPC hand back the affected rows, and write them into the synced state directly.
+
+- For direct supabase writes, append `.select()` (or `.select().single()`) to `insert / update / delete` calls. The post-mutation row(s) come back in the response.
+- For RPCs, prefer ones that already `RETURN json_build_object(...)` with the affected rows (e.g. `create_comment_with_phrases`).
+- Inside a `createOptimisticAction.mutationFn`, call `collection.utils.writeInsert(parsed)` / `writeUpdate(parsed)` / `writeDelete(key)` with the server's returned row(s). The synced state is now correct without a full refetch, and the optimistic state drops cleanly when the action resolves.
+
+Treat `collection.utils.refetch()` like `useEffect`: a code smell that needs a justification. **If you're about to add one, stop and check with the human first.** Usually one of these is the right move instead: pass client-generated IDs to the server so optimistic === synced; use `.select()` to get the row back; or change the RPC to return what you need. Legitimate uses do exist (e.g. picking up cascade-deleted rows on a parent delete) but they're rare and should be commented at the call site.
+
+If you do call `refetch()` against a `startSync: false` user collection that's small (one-column-of-IDs tables like `*_upvote`), note that in a comment — it's much cheaper than refetching a public table, but still worth flagging.
+
+**Deprecated** — do not use for new code, and migrate when touching old code (tracked by the `transform` label):
 
 ```typescript
+// ❌ useMutation calling supabase directly + manual local sync in onSuccess.
+// React Query routes onSuccess errors to onError, so a successful DB write
+// whose post-success sync throws surfaces as a misleading "Failed to X" toast.
 const mutation = useMutation({
 	mutationFn: async (values) => {
 		const { data } = await supabase
 			.from('phrase')
 			.insert(values)
-			.select() // Always return the data
+			.select()
 			.throwOnError()
 		return data[0]
 	},
@@ -334,9 +375,8 @@ const mutation = useMutation({
   - `phrases/` - Phrases, translations, search, provenance (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
   - `deck/` - Decks, cards, deck mutations (`schemas.ts`, `collections.ts`, `hooks.ts`, `mutations.ts`)
   - `review/` - Review sessions, FSRS algorithm, review store (`schemas.ts`, `collections.ts`, `hooks.ts`, `store.ts`, `fsrs.ts`)
-  - `requests/` - Phrase requests & upvotes (`schemas.ts`, `collections.ts`, `hooks.tsx`)
-  - `comments/` - Comment system (`schemas.ts`, `collections.ts`)
-  - `social/` - Friends, chat, public profiles (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
+  - `requests/` - Phrase requests, comments on requests, upvotes for both, and the comment→phrase links that make up an answer thread. Deliberately one module — a comment without a request is meaningless (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`)
+  - `social/` - Friends, chat, public profiles, friend feed (`schemas.ts`, `collections.ts`, `live.ts`, `hooks.ts`, `public-profile.ts`)
   - `playlists/` - Playlists & phrase links (`schemas.ts`, `collections.ts`, `hooks.ts`)
   - `feed/` - Activity feed (`schemas.ts`, `hooks.ts`)
 - `src/lib/` - Cross-cutting utilities
@@ -372,6 +412,8 @@ const mutation = useMutation({
 
 The codebase uses a **"deep module" architecture** (inspired by Ousterhout's _A Philosophy of Software Design_). Each feature domain is a self-contained directory under `src/features/` containing its own schemas, collections, hooks, and a barrel file (`index.ts`) that exports the public API.
 
+**Module boundaries are intentionally wide where concepts are inseparable.** A `requests/` module holds requests, the comments that answer them, the comment→phrase links that form an answer, and upvotes on both — because a comment without a request is meaningless. `social/` holds friends + chat + feed for the same reason: they're all "things that happen between users." Don't split a wide module into narrower ones just to satisfy a "no cross-feature import" lint rule; if two concepts only exist together, they belong together. The rule against cross-feature `collections.ts` imports applies _between_ genuinely separate modules — not within one wide module just because it has many tables.
+
 **Directory structure per feature:**
 
 ```
@@ -405,18 +447,17 @@ import { cardReviewsCollection } from './collections'
 
 **Feature domains and what they contain:**
 
-| Domain      | Schemas                                 | Collections                                         | Key Hooks                              |
-| ----------- | --------------------------------------- | --------------------------------------------------- | -------------------------------------- |
-| `profile`   | PublicProfile, MyProfile, LanguageKnown | publicProfiles, myProfile                           | useAuth, useProfile                    |
-| `languages` | Language, LangTag, LangSchema           | languages, langTags                                 | useLanguageMeta, useLanguageTags       |
-| `phrases`   | PhraseFull, Translation, PhraseSearch   | phrases, phrasesFull (live)                         | useLanguagePhrases, usePhrase          |
-| `deck`      | DeckMeta, CardMeta                      | decks, cards                                        | useDeckMeta, useDeckCards, useDeckPids |
-| `review`    | CardReview, DailyReviewState            | cardReviews, reviewDays                             | useReviewsToday, useReviewMutation     |
-| `requests`  | PhraseRequest                           | phraseRequests                                      | useRequest, useRequestCounts           |
-| `comments`  | RequestComment, CommentPhraseLink       | comments, commentPhraseLinks                        | (inline in components)                 |
-| `social`    | FriendSummary, ChatMessage              | friendSummaries, chatMessages, relationsFull (live) | useRelationFriends, useAllChats        |
-| `playlists` | PhrasePlaylist, PlaylistPhraseLink      | phrasePlaylists, playlistPhraseLinks                | useOnePlaylist, useLangPlaylists       |
-| `feed`      | FeedActivity                            | (uses React Query)                                  | useFeedLang                            |
+| Domain      | Schemas                                                   | Collections                                           | Key Hooks                                                          |
+| ----------- | --------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------ |
+| `profile`   | PublicProfile, MyProfile, LanguageKnown                   | publicProfiles, myProfile                             | useAuth, useProfile                                                |
+| `languages` | Language, LangTag, LangSchema                             | languages, langTags                                   | useLanguageMeta, useLanguageTags                                   |
+| `phrases`   | PhraseFull, Translation, PhraseSearch                     | phrases, phrasesFull (live)                           | useLanguagePhrases, usePhrase                                      |
+| `deck`      | DeckMeta, CardMeta                                        | decks, cards                                          | useDeckMeta, useDeckCards, useDeckPids                             |
+| `review`    | CardReview, DailyReviewState                              | cardReviews, reviewDays                               | useReviewsToday, useReviewMutation                                 |
+| `requests`  | PhraseRequest, RequestComment, CommentPhraseLink, upvotes | phraseRequests, comments, commentPhraseLinks, upvotes | useRequest, useRequestCounts, useOneComment, useCommentPhraseLinks |
+| `social`    | FriendSummary, ChatMessage                                | friendSummaries, chatMessages, relationsFull (live)   | useRelationFriends, useAllChats                                    |
+| `playlists` | PhrasePlaylist, PlaylistPhraseLink                        | phrasePlaylists, playlistPhraseLinks                  | useOnePlaylist, useLangPlaylists                                   |
+| `feed`      | FeedActivity                                              | (uses React Query)                                    | useFeedLang                                                        |
 
 ### Routing Conventions
 
@@ -846,57 +887,37 @@ Use `await Promise.all([...])` when the route needs the data before first render
 
 ### Mutation Best Practices
 
-- **Always use `useMutation`** for any server state changes (including login/logout)
-- **Return updated/inserted rows** from mutations with `.select()`
-- **Update local collections** in `onSuccess` using `collection.utils.writeInsert/writeUpdate`
-- Use `toast.success()` in onSuccess, `toast.error()` and `console.log('Error', error)` in onError
-- For complex server-side updates, it's fine to just `invalidateQueries()` instead
+- **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
+- **Throw from the handler** to roll the optimistic state back; **return `{ refetch: false }`** from a `queryCollectionOptions` handler when the optimistic value already matches what the server confirmed (skip the post-handler full refetch)
+- **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
+- **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
+- For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
 
-### Complete Mutation Example
-
-```typescript
-const mutation = useMutation<DeckRow, PostgrestError, DeckGoalFormInputs>({
-	mutationKey: ['user', lang, 'deck', 'settings', 'goal'],
-	mutationFn: async (values) => {
-		const { data } = await supabase
-			.from('user_deck')
-			.update(values)
-			.eq('lang', lang)
-			.eq('uid', userId!)
-			.throwOnError()
-			.select()
-		return data[0]
-	},
-	onSuccess: (data) => {
-		toast.success('Deck settings updated!')
-		decksCollection.utils.writeUpdate(DeckMetaRawSchema.parse(data))
-	},
-	onError: (error) => {
-		toast.error('Update failed')
-		console.log('Error', error)
-	},
-})
-```
+See the "Mutations Pattern" section above for a worked example, and PR #623 / the `transform` label for the in-flight migration.
 
 ## Testing Conventions
 
-### Playwright E2E Tests
+### Scene navigation
 
-- Test files in `/e2e/` directory
-- **NEVER use `page.goto()`** - it bypasses TanStack Router and breaks cache
-- Create reusable navigation functions in `goto-helpers.ts`
+Navigate through the UI by clicking links and buttons, not by reloading the page. A full reload (e.g. `openTo` mid-scene) wipes the TanStack Router cache and forces a refetch of all data, which both slows the scene and hides cache-invalidation regressions. `openTo` is for the entry point only; after that, drive the actor through clicks.
 
-#### Navigate through the UI
+```markdown
+# ✅ Correct — preserves router cache
 
-Using buttons and links; never use `goto` (except in the very first part of the script) because we need to know that the cache is updating correctly, and a `goto` will cause a full refetch of all data.
+learner:
 
-```typescript
-// ✅ Correct - preserves router state
-await page.getByTestId('app-nav-menu').getByTestId('nav-link--feed').click()
+- openTo /learn
+- click app-nav-menu nav-link--feed
 
-// ❌ Wrong - breaks router cache
-await page.goto('/learn/hin/feed')
+# ❌ Wrong — full reload, refetches everything
+
+learner:
+
+- openTo /learn
+- openTo /learn/hin/feed
 ```
+
+For legacy `@playwright/test` specs in `e2e/`, the equivalent rule was "never use `page.goto()`" — same principle.
 
 ## Use UI Semantics for Test Selectors
 

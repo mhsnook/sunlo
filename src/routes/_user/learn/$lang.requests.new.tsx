@@ -14,9 +14,9 @@ import type { PhraseRequestType } from '@/features/requests/schemas'
 
 export const Route = createFileRoute('/_user/learn/$lang/requests/new')({
 	component: NewRequestPage,
-	beforeLoad: () => ({
+	staticData: {
 		titleBar: { title: 'New Community Request' },
-	}),
+	},
 })
 
 function NewRequestPage() {

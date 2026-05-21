@@ -1,4 +1,4 @@
-import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { PhraseRequestType } from '@/features/requests/schemas'
 import { useRequestLinksPhraseIds } from '@/features/requests/hooks'
 import { CardContent, CardFooter } from '@/components/ui/card'
@@ -27,43 +27,44 @@ export function RequestItem({ request }: { request: PhraseRequestType }) {
 	}
 
 	return !request ? null : (
-			<CardlikeRequest
-				role="link"
-				className="group cursor-pointer hover:shadow"
-				style={{ viewTransitionName: `request-${request.id}` } as CSSProperties}
-				onClick={handleRequestClick}
-				onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
-					if (e.key === 'Enter') handleRequestClick(e)
-					else return
-				}}
-				tabIndex={0}
-				data-name="request-item"
-				data-testid="request-item"
-				data-key={request.id}
-				data-uid={request.requester_uid}
-			>
-				<RequestHeader request={request} />
-				<CardContent>
-					<div className="text-lg">
-						<Markdown>{request.prompt}</Markdown>
-					</div>
+		<CardlikeRequest
+			// oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- CardlikeRequest is a div container; nesting an <a> would require restructuring
+			role="link"
+			className="group cursor-pointer hover:shadow"
+			style={{ viewTransitionName: `request-${request.id}` }}
+			onClick={handleRequestClick}
+			onKeyDown={(e: KeyboardEvent<HTMLElement>) => {
+				if (e.key === 'Enter') handleRequestClick(e)
+				else return
+			}}
+			tabIndex={0}
+			data-name="request-item"
+			data-testid="request-item"
+			data-key={request.id}
+			data-uid={request.requester_uid}
+		>
+			<RequestHeader request={request} />
+			<CardContent>
+				<div className="text-lg">
+					<Markdown>{request.prompt}</Markdown>
+				</div>
 
-					<p className="text-muted-foreground mt-4 text-sm">
-						{links?.length || 'No'} answer{links?.length === 1 ? '' : 's'}{' '}
-						{links?.length ? '' : 'yet'}
-					</p>
-					<ScrollArea className="flex w-full flex-row justify-start gap-2">
-						<div className="flex w-full flex-row justify-start gap-2">
-							{links?.map((l) => (
-								<PhraseTinyCard key={l.phrase_id} pid={l.phrase_id} />
-							))}
-						</div>
-						<ScrollBar orientation="horizontal" />
-					</ScrollArea>
-				</CardContent>
-				<CardFooter className="flex flex-col gap-4 border-t py-4">
-					<RequestButtonsRow request={request} />
-				</CardFooter>
-			</CardlikeRequest>
-		)
+				<p className="text-muted-foreground mt-4 text-sm">
+					{links?.length || 'No'} answer{links?.length === 1 ? '' : 's'}{' '}
+					{links?.length ? '' : 'yet'}
+				</p>
+				<ScrollArea className="flex w-full flex-row justify-start gap-2">
+					<div className="flex w-full flex-row justify-start gap-2">
+						{links?.map((l) => (
+							<PhraseTinyCard key={l.phrase_id} pid={l.phrase_id} />
+						))}
+					</div>
+					<ScrollBar orientation="horizontal" />
+				</ScrollArea>
+			</CardContent>
+			<CardFooter className="flex flex-col gap-4 border-t py-4">
+				<RequestButtonsRow request={request} />
+			</CardFooter>
+		</CardlikeRequest>
+	)
 }

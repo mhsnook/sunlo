@@ -17,10 +17,10 @@ import {
 import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/preview')({
-	beforeLoad: () => ({
+	staticData: {
 		contextMenu: [],
 		focusMode: true,
-	}),
+	},
 	component: PreviewPage,
 	loader: async ({ context, params }) => {
 		if (!context.auth.isAuth) return

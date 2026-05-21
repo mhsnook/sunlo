@@ -1,19 +1,18 @@
 import { Link, useMatches } from '@tanstack/react-router'
-import type { MyRouterContext } from '@/routes/__root'
 import { useLinks } from '@/hooks/links'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/use-auth'
+import { resolveNavList } from '@/types/route-static-data'
 
 export function RightSidebar() {
+	const { isAuth } = useAuth()
 	const matches = useMatches()
-	const contextMenuMatch = matches.findLast(
-		(m) => (m.context as MyRouterContext)?.contextMenu
+	const contextMenu = resolveNavList(
+		matches.findLast((m) => m.staticData.contextMenu)?.staticData.contextMenu,
+		isAuth
 	)
-	const contextMenu = (contextMenuMatch?.context as MyRouterContext)
-		?.contextMenu
 	const links = useLinks(contextMenu)
-	const fixedHeight = matches.some(
-		(m) => (m.context as MyRouterContext)?.fixedHeight
-	)
+	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
 
 	// In fixedHeight mode (chats, review), hide when empty to reclaim space.
 	// In default mode, render the empty placeholder for visual consistency.
