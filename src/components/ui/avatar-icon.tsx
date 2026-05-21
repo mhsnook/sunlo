@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { User } from 'lucide-react'
 import { PublicProfileType } from '@/features/profile/schemas'
 import { avatarUrlify } from '@/lib/hooks'
+import { getAvatarHue } from '@/lib/lang-theme'
 
 type AvatarIconRowProps = PublicProfileType & {
 	children?: ReactNode
@@ -22,17 +23,18 @@ export function AvatarIconRow({
 				params={{ uid }}
 				className="hover:bg-1-mlo-primary hover:border-2-mlo-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2"
 			>
-				{avatarUrl ?
+				{avatarUrl ? (
 					<img
 						src={avatarUrl}
 						alt={`${username}'s avatar`}
 						className="rounded-squircle size-8 rounded-full object-cover"
 					/>
-				:	<User
-						style={{ background: `#${uid.slice(-6)}44` }}
-						className="bg-foreground/20 rounded-squircle size-8 rounded-full p-1"
+				) : (
+					<User
+						style={{ '--hue-primary': getAvatarHue(uid) } as CSSProperties}
+						className="bg-5-mhi-primary text-primary-foreground rounded-squircle size-8 rounded-full p-1"
 					/>
-				}
+				)}
 				<span>{username}</span>
 			</Link>
 			{children}
