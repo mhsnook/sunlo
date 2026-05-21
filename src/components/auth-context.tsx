@@ -24,6 +24,13 @@ async function checkAdminStatus(): Promise<boolean> {
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
+	// Two monotonic lifecycle latches — once true, never reset (sessionState
+	// itself still mutates on sign-in/out, which is why the router never
+	// unmounts once mounted):
+	//   isLoaded → "supabase-init": the client has confirmed the session at
+	//     least once, from getSession() or onAuthStateChange, whichever won.
+	//   isReady  → "data-loaded": the profile refetch has resolved. Today this
+	//     latches on the profile alone; other user data loads in behind it.
 	const [isLoaded, setIsLoaded] = useState(false)
 	const [isReady, setIsReady] = useState(false)
 	const [isAdmin, setIsAdmin] = useState(false)

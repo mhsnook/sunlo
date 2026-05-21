@@ -18,7 +18,8 @@ import { queryClient } from './lib/query-client'
 import { restorePersistedUserData } from './lib/collections/local-cache'
 import './test-runtime-helpers'
 
-// sync phase: restore persisted user data from localStorage before first paint.
+// bootstrap phase: restore persisted user data from localStorage, synchronously
+// in the entry script — before React renders and before any collection syncs.
 restorePersistedUserData()
 
 // Create a new router instance

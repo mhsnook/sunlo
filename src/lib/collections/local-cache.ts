@@ -12,20 +12,22 @@ import { MyProfileSchema } from '@/features/profile/schemas'
  * user sees their profile on the first paint, before the network round trip.
  * Supabase stays authoritative and overwrites it on revalidation.
  *
- * The two functions here are boot-lifecycle hooks. Mapped onto the wider app
- * lifecycle (most of which still lives in auth-context and the route loaders):
+ * The two functions here are lifecycle hooks. The wider app lifecycle is a
+ * confidence ladder — each phase is more certain about who the user is and
+ * whether the on-screen data is real (most of it lives in auth-context):
  *
- *   sync          — synchronous cold boot. We can read localStorage/cookies
- *                   but the Supabase session is not yet confirmed.
+ *   bootstrap     — entry script, before React renders. Identity and data are
+ *                   both guesses read from localStorage.
  *                   → restorePersistedUserData()
- *   supabase-init — getSession() has resolved; real loads + revalidation begin.
- *                   → (auth-context)
- *   data-loaded   — user data is in; preload public extras.
- *                   → (route loaders)
- *   confirm-quit  — sign-out; make all non-public local data gone.
+ *   supabase-init — the client has confirmed the session (getSession() or an
+ *                   onAuthStateChange event, whichever wins the race). Identity
+ *                   known; data still the unvalidated guess. → auth-context isLoaded
+ *   data-loaded   — user data fetched and validated; now we're sure.
+ *                   → auth-context isReady
+ *   confirm-quit  — sign-out edge; make all non-public local data gone.
  *                   → clearPersistedUserData()
  *
- * Only the `sync` and `confirm-quit` hooks belong to this module today.
+ * Only the `bootstrap` and `confirm-quit` hooks belong to this module today.
  */
 
 // localStorage key holding the cached profile rows.
@@ -33,9 +35,9 @@ const PROFILE_CACHE_KEY = 'sunlo-cache-profile'
 
 /**
  * Synchronous, network-free guess at "is someone logged in on this device" —
- * just the presence of a Supabase auth token in localStorage. Lets the `sync`
- * phase decide whether to bother restoring, before `supabase-init` formally
- * resolves the session. The project ref varies (local vs prod) so we match the
+ * just the presence of a Supabase auth token in localStorage. Lets the
+ * `bootstrap` phase decide whether to bother restoring, before `supabase-init`
+ * confirms the session. The project ref varies (local vs prod) so we match the
  * `sb-<ref>-auth-token` shape rather than reconstructing the exact key.
  */
 function hasSupabaseSessionToken(): boolean {
@@ -51,10 +53,11 @@ function hasSupabaseSessionToken(): boolean {
 }
 
 /**
- * `sync` phase (cold boot): if this device looks logged in, prime the React
- * Query cache from localStorage so the profile paints before any network call,
- * then mirror future collection changes back. The restored rows are unvalidated
- * — `supabase-init` revalidates them. No-op for a logged-out visitor.
+ * `bootstrap` phase (entry script, before React renders): if this device looks
+ * logged in, prime the React Query cache from localStorage so the profile
+ * paints before any network call, then mirror future collection changes back.
+ * The restored rows are unvalidated — `supabase-init` revalidates them. No-op
+ * for a logged-out visitor.
  */
 export function restorePersistedUserData(): void {
 	if (!hasSupabaseSessionToken()) return
