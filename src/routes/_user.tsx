@@ -107,6 +107,7 @@ function UserLayout() {
 	// Layout A (default): page flows naturally, one browser scrollbar
 	// Layout B (fixedHeight): viewport-locked container with internal scroll
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
+	const chromeless = matches.some((m) => m.staticData.chromeless)
 
 	// Skip the AppNav chunk entirely when no route declares an appnav
 	const appnav = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
@@ -190,7 +191,7 @@ function UserLayout() {
 							fixedHeight && 'min-h-0 overflow-y-auto'
 						)}
 					>
-						<Navbar />
+						{!chromeless && <Navbar />}
 						{hasAppNav && (
 							<Suspense
 								fallback={

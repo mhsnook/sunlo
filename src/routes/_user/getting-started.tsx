@@ -36,10 +36,7 @@ export const Route = createFileRoute('/_user/getting-started')({
 	component: GettingStartedPage,
 	staticData: {
 		focusMode: true,
-		titleBar: {
-			title: 'Getting Started',
-			subtitle: 'Set your username and dive in!',
-		},
+		chromeless: true,
 	},
 	beforeLoad: ({ context }) => {
 		if (!context.auth.isAuth) {

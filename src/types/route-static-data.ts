@@ -47,6 +47,13 @@ declare module '@tanstack/react-router' {
 		wideContent?: boolean
 		fixedHeight?: boolean
 		titleBar?: TitleBarStatic
+		/**
+		 * Drop the top navbar entirely — title bar, back button, and sidebar
+		 * opener. For forward-only pages with their own heading (e.g. signup
+		 * onboarding) where there is nowhere to go "back" to. Orthogonal to
+		 * `focusMode`; combine both for a fully distraction-free page.
+		 */
+		chromeless?: boolean
 	}
 }
 
