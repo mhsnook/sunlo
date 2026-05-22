@@ -289,22 +289,27 @@ test('a request-linked phrase is folded into the request, not shown standalone',
 			.see('deck-feed-page')
 			.seeText(requestText)
 			.do(async (page) => {
-				const standalone = page
-					.locator('[data-name="feed-item-phrase"]')
-					.filter({ hasText: phraseText })
-				const n = await standalone.count()
-				if (n > 0)
-					throw new Error(
-						`request-linked phrase shown as ${n} standalone feed item(s)`
-					)
 				const requestItem = page
 					.locator('[data-name="feed-item-request"]')
 					.filter({ hasText: requestText })
 				if ((await requestItem.count()) === 0)
 					throw new Error('request missing from feed')
-				const itemText = await requestItem.first().innerText()
-				if (!/1 answer/i.test(itemText))
-					throw new Error(`request item should show "1 answer": ${itemText}`)
+				// The answer count is a live query over commentPhraseLinksCollection
+				// (useRequestCounts), which syncs lazily once a component
+				// subscribes — wait for the request item to settle to "1 answer".
+				await requestItem
+					.filter({ hasText: /1 answer/i })
+					.first()
+					.waitFor({ state: 'visible', timeout: 15000 })
+				// The answer phrase is folded into the request, not rendered as a
+				// standalone phrase activity.
+				const standalone = page
+					.locator('[data-name="feed-item-phrase"]')
+					.filter({ hasText: phraseText })
+				if ((await standalone.count()) > 0)
+					throw new Error(
+						'request-linked phrase shown as a standalone feed item'
+					)
 			})
 	} finally {
 		if (linkId)
