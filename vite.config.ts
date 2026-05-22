@@ -22,6 +22,25 @@ export default defineConfig(() => {
 		},
 		build: {
 			chunkSizeWarningLimit: 750,
+			rollupOptions: {
+				output: {
+					// Split rarely-changing deps into their own content-hashed
+					// chunks so repeat visitors keep them cached across the many
+					// app-code deploys that happen between dependency bumps.
+					advancedChunks: {
+						groups: [
+							{
+								name: 'react-vendor',
+								test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+							},
+							{
+								name: 'supabase-vendor',
+								test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+							},
+						],
+					},
+				},
+			},
 		},
 		envPrefix: ['VITE_'],
 		server: {
