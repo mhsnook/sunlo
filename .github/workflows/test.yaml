@@ -304,50 +304,110 @@ jobs:
       - name: Build PR branch
         run: pnpm build:test
 
-      - name: Measure PR bundle
-        run: |
-          PR_FILE=$(ls -S dist/assets/index-*.js | head -1)
-          echo "PR_RAW=$(stat -c%s "$PR_FILE")" >> $GITHUB_ENV
-          echo "PR_GZ=$(gzip -c "$PR_FILE" | wc -c)" >> $GITHUB_ENV
-
       - name: Build base branch
         run: |
           git worktree add /tmp/base-branch origin/${{ github.base_ref }}
           cd /tmp/base-branch
           pnpm install --frozen-lockfile --silent
           pnpm build:test
-          BASE_FILE=$(ls -S dist/assets/index-*.js | head -1)
-          echo "BASE_RAW=$(stat -c%s "$BASE_FILE")" >> $GITHUB_ENV
-          echo "BASE_GZ=$(gzip -c "$BASE_FILE" | wc -c)" >> $GITHUB_ENV
-          cd $GITHUB_WORKSPACE
-          git worktree remove --force /tmp/base-branch
 
       - name: Comment on PR
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+            const path = require('path');
+            const zlib = require('zlib');
+
+            // Measure the eager-load JS of a built dist/ dir: the entry <script>
+            // plus every <link rel="modulepreload"> chunk listed in index.html.
+            const measure = (dist) => {
+              const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
+              const files = [...new Set(
+                [...html.matchAll(/assets\/[A-Za-z0-9._-]+\.js/g)].map((m) => m[0])
+              )];
+              let eagerRaw = 0, eagerGz = 0;
+              let index = { raw: 0, gz: 0 };
+              const vendors = {};
+              for (const rel of files) {
+                const buf = fs.readFileSync(path.join(dist, rel));
+                const raw = buf.length, gz = zlib.gzipSync(buf).length;
+                eagerRaw += raw; eagerGz += gz;
+                const name = rel.slice('assets/'.length);
+                if (name.includes('-vendor-')) {
+                  // strip Vite's trailing 8-char content hash for a stable key
+                  vendors[name.replace(/-[A-Za-z0-9_-]{8}\.js$/, '')] = { file: name, raw, gz };
+                } else if (name.startsWith('index-')) {
+                  index = { raw, gz };
+                }
+              }
+              return { eagerRaw, eagerGz, index, vendors };
+            };
+
+            const pr = measure('dist');
+            const base = measure('/tmp/base-branch/dist');
+
             const fmt = (n) => (n / 1024).toFixed(2) + ' kB';
-            const diff = (pr, base) => {
-              const d = pr - base;
-              const pct = base ? ((d / base) * 100).toFixed(2) : '0.00';
+            const diff = (p, b) => {
+              const d = p - b;
+              const pct = b ? ((d / b) * 100).toFixed(2) : '0.00';
               const sign = d > 0 ? '+' : '';
               const emoji = d > 0 ? '🔺' : d < 0 ? '🟢' : '➖';
               return `${emoji} ${sign}${(d / 1024).toFixed(2)} kB (${sign}${pct}%)`;
             };
-            const prRaw = parseInt(process.env.PR_RAW);
-            const prGz = parseInt(process.env.PR_GZ);
-            const baseRaw = parseInt(process.env.BASE_RAW);
-            const baseGz = parseInt(process.env.BASE_GZ);
+            const table = (pRaw, pGz, bRaw, bGz) => [
+              '|         | Base            | PR              | Δ                    |',
+              '|---------|-----------------|-----------------|----------------------|',
+              `| Raw     | ${fmt(bRaw).padEnd(15)} | ${fmt(pRaw).padEnd(15)} | ${diff(pRaw, bRaw)} |`,
+              `| Gzipped | ${fmt(bGz).padEnd(15)} | ${fmt(pGz).padEnd(15)} | ${diff(pGz, bGz)} |`,
+            ].join('\n');
+
+            // Vendor chunks compared by logical name — an identical hash means identical content.
+            const vendorNames = [...new Set([...Object.keys(base.vendors), ...Object.keys(pr.vendors)])].sort();
+            const changed = [];
+            const unchanged = [];
+            let unchangedRaw = 0, unchangedGz = 0;
+            for (const n of vendorNames) {
+              const b = base.vendors[n], p = pr.vendors[n];
+              if (b && p && b.file === p.file) {
+                unchanged.push(n);
+                unchangedRaw += p.raw;
+                unchangedGz += p.gz;
+              } else {
+                changed.push({ n, b, p });
+              }
+            }
+
+            let vendorSection;
+            if (vendorNames.length === 0) {
+              vendorSection = '_No vendor chunks in the eager set._';
+            } else if (changed.length === 0) {
+              vendorSection = `✅ **Vendor chunks unchanged** — ${unchanged.join(', ')} totalling `
+                + `${fmt(unchangedRaw)} raw (${fmt(unchangedGz)} gzipped), all still cached for repeat visitors.`;
+            } else {
+              const rows = changed.map(({ n, b, p }) => {
+                if (!b) return `- 🆕 \`${n}\` added — ${fmt(p.raw)} raw (${fmt(p.gz)} gz)`;
+                if (!p) return `- ❌ \`${n}\` removed — was ${fmt(b.raw)} raw`;
+                return `- 🔺 \`${n}\` — ${fmt(b.raw)} → ${fmt(p.raw)} raw (${diff(p.raw, b.raw)})`;
+              });
+              const stable = unchanged.length
+                ? `\n\n${unchanged.length} other vendor chunk(s) unchanged — ${fmt(unchangedRaw)} raw (${fmt(unchangedGz)} gz).`
+                : '';
+              vendorSection = `**Vendor chunks changed:**\n${rows.join('\n')}${stable}`;
+            }
 
             const body = [
               '### Main bundle size',
               '',
-              '`dist/assets/index-*.js` (largest chunk)',
+              '**Eager load** — entry chunk + every `modulepreload` in `index.html` (what a first paint downloads)',
               '',
-              '|         | Base            | PR              | Δ                    |',
-              '|---------|-----------------|-----------------|----------------------|',
-              `| Raw     | ${fmt(baseRaw).padEnd(15)} | ${fmt(prRaw).padEnd(15)} | ${diff(prRaw, baseRaw)} |`,
-              `| Gzipped | ${fmt(baseGz).padEnd(15)} | ${fmt(prGz).padEnd(15)} | ${diff(prGz, baseGz)} |`,
+              table(pr.eagerRaw, pr.eagerGz, base.eagerRaw, base.eagerGz),
+              '',
+              '**`index-*.js`** — the non-vendored entry chunk, re-downloaded on every deploy',
+              '',
+              table(pr.index.raw, pr.index.gz, base.index.raw, base.index.gz),
+              '',
+              vendorSection,
             ].join('\n');
 
             const marker = '### Main bundle size';
