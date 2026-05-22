@@ -27,7 +27,7 @@ export default defineConfig(() => {
 					// Split rarely-changing deps into their own content-hashed
 					// chunks so repeat visitors keep them cached across the many
 					// app-code deploys that happen between dependency bumps.
-					advancedChunks: {
+					codeSplitting: {
 						groups: [
 							{
 								name: 'react-vendor',
