@@ -68,7 +68,14 @@ export const myProfileCollection = createCollection(
 						.throwOnError()
 				)
 			)
-			return { refetch: false }
+			// Refetch so the query cache holds the server's post-update row.
+			// With { refetch: false } the cache keeps the stale pre-update
+			// value; only the optimistic overlay carries the change. If the
+			// collection is later torn down and re-synced (GC, navigation
+			// churn), preload() rehydrates from that stale cache — staleTime
+			// + refetchOnMount: false mean it won't re-fetch — and the change
+			// silently disappears (e.g. the onboarding nudge reappearing).
+			return { refetch: true }
 		},
 	})
 )
