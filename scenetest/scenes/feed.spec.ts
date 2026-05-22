@@ -1,12 +1,4 @@
 // oxlint-disable no-await-in-loop
-// Migrated from e2e/mutations/feed.spec.ts to the scenetest test() surface
-// (runs on scenetest's teams + runner). Test 7 (upvote playlists) is already
-// covered by feed.spec.md ("learner upvotes a playlist in feed").
-//
-// Fixture rows are created via the service role before the action chain is
-// built, and asserted by their (nonce-tagged) text so no runtime id needs to
-// reach a selector. try/finally guarantees cleanup. DOM-shape assertions
-// (ordering, fold-out of child phrases, pagination) run inside .do() blocks.
 
 import { test } from '@scenetest/scenes'
 import { createClient } from '@supabase/supabase-js'
