@@ -37,6 +37,16 @@ export default defineConfig(() => {
 								name: 'supabase-vendor',
 								test: /[\\/]node_modules[\\/]@supabase[\\/]/,
 							},
+							{
+								name: 'markdown-vendor',
+								test: /[\\/]node_modules[\\/](react-markdown|unified|remark-[a-z-]+|rehype-[a-z-]+|micromark[a-z-]*|mdast-[a-z-]+|hast-[a-z-]+|unist-[a-z-]+|vfile[a-z-]*|property-information)[\\/]/,
+							},
+							{
+								// every lucide icon the app actually imports, in one
+								// chunk — tree-shaking still drops unused icons.
+								name: 'lucide-vendor',
+								test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+							},
 						],
 					},
 				},
