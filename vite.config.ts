@@ -22,6 +22,35 @@ export default defineConfig(() => {
 		},
 		build: {
 			chunkSizeWarningLimit: 750,
+			rollupOptions: {
+				output: {
+					// Split rarely-changing deps into their own content-hashed
+					// chunks so repeat visitors keep them cached across the many
+					// app-code deploys that happen between dependency bumps.
+					codeSplitting: {
+						groups: [
+							{
+								name: 'react-vendor',
+								test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
+							},
+							{
+								name: 'supabase-vendor',
+								test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+							},
+							{
+								name: 'markdown-vendor',
+								test: /[\\/]node_modules[\\/](react-markdown|unified|remark-[a-z-]+|rehype-[a-z-]+|micromark[a-z-]*|mdast-[a-z-]+|hast-[a-z-]+|unist-[a-z-]+|vfile[a-z-]*|property-information)[\\/]/,
+							},
+							{
+								// every lucide icon the app actually imports, in one
+								// chunk — tree-shaking still drops unused icons.
+								name: 'lucide-vendor',
+								test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+							},
+						],
+					},
+				},
+			},
 		},
 		envPrefix: ['VITE_'],
 		server: {
