@@ -27,6 +27,8 @@ const AppNav = lazy(() =>
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { resolveNavList } from '@/types/route-static-data'
 import { myProfileCollection } from '@/features/profile/collections'
+import { MyProfileSchema } from '@/features/profile/schemas'
+import supabase from '@/lib/supabase-client'
 import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
@@ -55,23 +57,33 @@ export const Route = createFileRoute('/_user')({
 
 		// The profile collection must be populated before first render —
 		// NavUser, OnboardingNudge and others call useProfile() unconditionally.
-		if (myProfileCollection.status === 'error') {
-			console.log(
-				`myProfileCollection is in an error state. We'll clean it up and reload it.`
-			)
-			await myProfileCollection.cleanup()
-		}
 		await myProfileCollection.preload()
 
-		// Invariant: handle_new_user() + the migration backfill guarantee a
-		// user_profile row for every confirmed auth user. An empty collection
-		// might just be a stale logged-out cache, so force one authoritative
-		// refetch before concluding the row is genuinely gone. If it still
-		// is, the invariant is broken — fail loudly rather than let the user
-		// roam a nameless, half-working app with no recovery path.
+		// Empty here means the collection synced before auth resolved (NavUser
+		// calls useProfile() unconditionally) and parked `ready` with []. The
+		// observer-driven recovery paths drop or race the new result, so
+		// fetch the row and writeInsert directly — no observer chain.
 		if (myProfileCollection.size === 0) {
-			await myProfileCollection.utils.refetch()
+			const {
+				data: { session },
+			} = await supabase.auth.getSession()
+			if (session) {
+				const { data } = await supabase
+					.from('user_profile')
+					.select()
+					.eq('uid', session.user.id)
+					.maybeSingle()
+				if (data) {
+					myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data))
+				}
+			}
 		}
+
+		// Invariant: handle_new_user() + the migration backfill guarantee a
+		// user_profile row for every confirmed auth user. If the collection is
+		// still empty after a clean authenticated fetch, the invariant is
+		// broken — fail loudly rather than let the user roam a nameless,
+		// half-working app with no recovery path.
 		if (myProfileCollection.size === 0) {
 			console.error(
 				`No user_profile row for authenticated user ${context.auth.userId} — ` +
