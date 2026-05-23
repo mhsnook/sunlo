@@ -22,11 +22,11 @@ import { DeckMetaSchema } from '@/features/deck/schemas'
  *   bootstrap     — entry script, before React renders. Identity and data are
  *                   both guesses read from localStorage.
  *                   → restorePersistedUserData()
- *   supabase-init — the client has confirmed the session (getSession() or an
- *                   onAuthStateChange event, whichever wins the race). Identity
- *                   known; data still the unvalidated guess. → auth-context isLoaded
+ *   supabase-init — the client has reported the session via an
+ *                   onAuthStateChange event. Identity known; data still
+ *                   the unvalidated guess. → auth-context isLoaded
  *   data-loaded   — user data fetched and validated; now we're sure.
- *                   → auth-context isReady
+ *                   → route loaders (e.g. the _user loader's preload())
  *   confirm-quit  — sign-out edge; make all non-public local data gone.
  *                   → clearPersistedUserData()
  *

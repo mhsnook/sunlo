@@ -36,9 +36,18 @@ export const myProfileQuery = queryOptions({
 	queryKey: ['user', 'profile'],
 	queryFn: async (_) => {
 		console.log(`Running myProfileQuery`)
+		// Identity-aware: no session → [] without a DB hit; with a session,
+		// query the row explicitly. Disambiguates "empty because logged out"
+		// from "empty because RLS filtered" so a sync that ran without auth
+		// can't masquerade as an authoritative empty result.
+		const {
+			data: { session },
+		} = await supabase.auth.getSession()
+		if (!session) return []
 		const { data } = await supabase
 			.from('user_profile')
 			.select()
+			.eq('uid', session.user.id)
 			.throwOnError()
 			.maybeSingle()
 		if (!data) return []

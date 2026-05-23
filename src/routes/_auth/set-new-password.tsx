@@ -28,13 +28,13 @@ const cardClass =
 	'mx-auto mt-[10cqh] w-full max-w-md [padding:clamp(0.5rem,2cqw,2rem)]'
 
 function SetNewPasswordPage() {
-	const { isReady, isAuth } = useAuth()
+	const { isLoaded, isAuth } = useAuth()
 
 	// A valid recovery link signs the user in (via the URL hash) before this
 	// page settles. Once auth has resolved with no session, the link never
 	// authenticated us — say why, instead of showing a form that can only
 	// fail with a cryptic "Auth session missing" error.
-	if (recoveryLinkError || (isReady && !isAuth)) {
+	if (recoveryLinkError || (isLoaded && !isAuth)) {
 		return (
 			<Card className={cardClass} data-testid="reset-link-invalid">
 				<CardHeader>
@@ -68,7 +68,7 @@ function SetNewPasswordPage() {
 		)
 	}
 
-	if (!isReady) {
+	if (!isLoaded) {
 		return (
 			<Card className={cardClass}>
 				<CardHeader>
