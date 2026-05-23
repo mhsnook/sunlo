@@ -9,7 +9,7 @@ import languages from '@/lib/languages'
 import { decksCollection } from './collections'
 import { DeckMetaSchema } from './schemas'
 
-async function postNewDeck(lang: string) {
+export async function postNewDeck(lang: string) {
 	// console.log(`postNewDeck ${lang}`)
 	if (typeof lang !== 'string' || lang.length !== 3)
 		throw new Error('Form not right. Maybe refresh. Or tell the devs.')

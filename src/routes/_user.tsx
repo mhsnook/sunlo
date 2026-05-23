@@ -32,6 +32,7 @@ import {
 } from '@/features/profile/collections'
 import { queryClient } from '@/lib/query-client'
 import { decksCollection } from '@/features/deck/collections'
+import { useDeckMeta } from '@/features/deck/hooks'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
 import { notificationsCollection } from '@/features/notifications/collections'
@@ -114,7 +115,6 @@ function UserLayout() {
 
 	// Skip the AppNav chunk entirely when no route declares an appnav
 	const appnav = matches.findLast((m) => m.staticData.appnav)?.staticData.appnav
-	const hasAppNav = !!resolveNavList(appnav, auth.isAuth).length
 
 	// Resolve the search overlay the same way titleBar / appnav are resolved:
 	// the deepest match that declares `search` wins.
@@ -125,6 +125,16 @@ function UserLayout() {
 	const router = useRouter()
 	const { lang } = useParams({ strict: false })
 	const initialLangs = lang && lang in languages ? [lang] : undefined
+
+	// $lang appnav is deck-specific (feed/review/contributions/stats). Hide it
+	// when the visitor has no active deck for this language — they're browsing,
+	// not learning, and the deck-scoped links would only lead to dead pages.
+	const langGatesAppNav = !!lang && lang in languages
+	const { data: currentDeck } = useDeckMeta(langGatesAppNav ? lang : '')
+	const hasActiveDeckForLang =
+		!langGatesAppNav || (!!currentDeck && !currentDeck.archived)
+	const hasAppNav =
+		hasActiveDeckForLang && !!resolveNavList(appnav, auth.isAuth).length
 
 	const closeSearch = useCallback(() => {
 		void router.navigate({ to: setSearchParam('search', null), replace: true })
