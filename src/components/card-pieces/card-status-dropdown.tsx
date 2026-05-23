@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
 	ArchiveRestore,
@@ -29,7 +28,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { useUserId } from '@/lib/use-auth'
 import {
-	useDecks,
 	useDeckMeta,
 	useMyCard,
 	type CardWithSibling,
@@ -226,77 +224,103 @@ export function CardStatusDropdown({
 	className,
 }: CardStatusDropdownProps) {
 	const userId = useUserId()
-	const { data: decks } = useDecks()
-	const deckPresent = decks?.some((d) => d.lang === phrase.lang) ?? false
+	const { data: deck } = useDeckMeta(phrase.lang)
 	const { data: card } = useMyCard(phrase.id)
 
 	const setCardStatus = useCardStatusMutator(phrase, card)
 
-	const choice = !deckPresent ? 'nodeck' : !card ? 'nocard' : card.status
+	// Same FK / archived gate as CardStatusHeart — route through the dialog
+	// when there's no deck or the deck is archived, regardless of which
+	// status the user picked from the menu.
+	const needsDeckSetup = !deck || deck.archived
+	const [pendingStatus, setPendingStatus] = useState<LearningStatus | null>(
+		null
+	)
+
+	const pickStatus = (status: LearningStatus) => {
+		if (needsDeckSetup) {
+			setPendingStatus(status)
+		} else {
+			setCardStatus(status)
+		}
+	}
+
+	const choice: ShowableActions = needsDeckSetup
+		? 'nodeck'
+		: !card
+			? 'nocard'
+			: card.status
 
 	return !userId ? null : (
-		<DropdownMenu>
-			<DropdownMenuTrigger
-				className={className}
-				render={
-					<Button
-						variant={card?.status === 'active' ? 'soft' : 'ghost'}
-						size="sm"
-						className="m-0 min-w-28 justify-between px-1.5"
-						data-name="card-status-dropdown"
-						data-key={phrase.id}
-					/>
-				}
-			>
-				<span className="flex items-center justify-center [&_svg]:size-4">
-					<StatusIcon choice={choice} />
-				</span>
-				<span className="me-1">{statusStrings[choice].name}</span>
-				<ChevronDown size={12} />
-			</DropdownMenuTrigger>
-			<DropdownMenuContent className="">
-				{!deckPresent ? (
-					<DropdownMenuItem
-						render={
-							<Link to="/learn/add-deck" search={{ lang: phrase.lang }} />
-						}
-					>
-						<StatusSpan choice="nodeck" />
-					</DropdownMenuItem>
-				) : !card ? (
-					<DropdownMenuItem
-						onClick={() => setCardStatus('active')}
-						data-testid="add-to-deck-option"
-					>
-						<StatusSpan choice="nocard" />
-					</DropdownMenuItem>
-				) : (
-					<>
+		<>
+			<DropdownMenu>
+				<DropdownMenuTrigger
+					className={className}
+					render={
+						<Button
+							variant={card?.status === 'active' ? 'soft' : 'ghost'}
+							size="sm"
+							className="m-0 min-w-28 justify-between px-1.5"
+							data-name="card-status-dropdown"
+							data-key={phrase.id}
+						/>
+					}
+				>
+					<span className="flex items-center justify-center [&_svg]:size-4">
+						<StatusIcon choice={choice} />
+					</span>
+					<span className="me-1">{statusStrings[choice].name}</span>
+					<ChevronDown size={12} />
+				</DropdownMenuTrigger>
+				<DropdownMenuContent className="">
+					{!card ? (
 						<DropdownMenuItem
-							onClick={() => setCardStatus('active')}
-							className={card.status === 'active' ? 'bg-0-mid-primary' : ''}
-							data-testid="activate-card-option"
+							onClick={() => pickStatus('active')}
+							data-testid="add-to-deck-option"
 						>
-							<StatusSpan choice="active" />
+							<StatusSpan choice={needsDeckSetup ? 'nodeck' : 'nocard'} />
 						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={() => setCardStatus('learned')}
-							className={card.status === 'learned' ? 'bg-0-mid-primary' : ''}
-							data-testid="set-learned-option"
-						>
-							<StatusSpan choice="learned" />
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={() => setCardStatus('skipped')}
-							className={card.status === 'skipped' ? 'bg-0-mid-primary' : ''}
-							data-testid="ignore-card-option"
-						>
-							<StatusSpan choice="skipped" />
-						</DropdownMenuItem>
-					</>
-				)}
-			</DropdownMenuContent>
-		</DropdownMenu>
+					) : (
+						<>
+							<DropdownMenuItem
+								onClick={() => pickStatus('active')}
+								className={card.status === 'active' ? 'bg-0-mid-primary' : ''}
+								data-testid="activate-card-option"
+							>
+								<StatusSpan choice="active" />
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => pickStatus('learned')}
+								className={card.status === 'learned' ? 'bg-0-mid-primary' : ''}
+								data-testid="set-learned-option"
+							>
+								<StatusSpan choice="learned" />
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								onClick={() => pickStatus('skipped')}
+								className={card.status === 'skipped' ? 'bg-0-mid-primary' : ''}
+								data-testid="ignore-card-option"
+							>
+								<StatusSpan choice="skipped" />
+							</DropdownMenuItem>
+						</>
+					)}
+				</DropdownMenuContent>
+			</DropdownMenu>
+			{needsDeckSetup && (
+				<StartLearningDialog
+					open={pendingStatus !== null}
+					onOpenChange={(o) => {
+						if (!o) setPendingStatus(null)
+					}}
+					lang={phrase.lang}
+					archivedDeck={deck?.archived ? deck : null}
+					onConfirmed={() => {
+						if (pendingStatus) setCardStatus(pendingStatus)
+					}}
+				/>
+			)}
+		</>
 	)
 }
 
