@@ -5,7 +5,6 @@ import { RolesEnum, uuid } from '@/types/main'
 export const emptyAuth = {
 	isLoaded: false,
 	isAuth: false,
-	isReady: false,
 	userId: null,
 	userEmail: null,
 	userRole: null,
@@ -18,7 +17,6 @@ type AuthNotLoaded = Readonly<typeof emptyAuth>
 type AuthNotLoggedIn = {
 	isLoaded: true
 	isAuth: false
-	isReady: true
 	userId: null
 	userEmail: null
 	userRole: null
@@ -28,7 +26,6 @@ type AuthNotLoggedIn = {
 type AuthLoggedIn = {
 	isLoaded: true
 	isAuth: true
-	isReady: boolean
 	userId: uuid
 	userEmail: string
 	userRole: RolesEnum

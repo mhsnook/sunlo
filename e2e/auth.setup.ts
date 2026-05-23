@@ -29,7 +29,7 @@ for (const { email, storagePath } of users) {
 		await page.fill('input[name="password"]', 'password')
 		await page.click('button[type="submit"]')
 
-		// Wait for deterministic redirect: login → profile loads → isReady → Navigate → /learn
+		// Wait for deterministic redirect: login → Navigate → _user loader loads profile → /learn
 		await expect(page).toHaveURL(/\/learn$/, { timeout: 20000 })
 
 		// Save storage state (cookies + localStorage including auth tokens and intro states)

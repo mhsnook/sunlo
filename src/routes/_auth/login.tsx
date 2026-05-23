@@ -20,10 +20,10 @@ export const Route = createFileRoute('/_auth/login')({
 const style = { viewTransitionName: `main-area` } as CSSProperties
 
 function LoginForm() {
-	const { isAuth, isReady } = useAuth()
+	const { isAuth } = useAuth()
 	const { redirectedFrom } = Route.useSearch()
 
-	if (isReady && isAuth)
+	if (isAuth)
 		return <Navigate to={redirectedFrom || '/learn'} from={Route.fullPath} />
 
 	return (
