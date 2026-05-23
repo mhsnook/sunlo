@@ -122,40 +122,44 @@ natural wrapper element to label.
 
 ## Card Management
 
-| Selector                   | Attribute   | Component/Location | Description                                                                           |
-| -------------------------- | ----------- | ------------------ | ------------------------------------------------------------------------------------- |
-| `phrase-detail-page`       | data-testid | Phrase route       | Phrase detail page container                                                          |
-| `card-status-dropdown`     | data-testid | Phrase page        | Dropdown for card status                                                              |
-| `add-to-deck-option`       | data-testid | Status dropdown    | "Add to deck" option                                                                  |
-| `set-learned-option`       | data-testid | Status dropdown    | "Set learned" option                                                                  |
-| `ignore-card-option`       | data-testid | Status dropdown    | "Ignore card" option                                                                  |
-| `activate-card-option`     | data-testid | Status dropdown    | "Activate card" option                                                                |
-| `add-phrase-page`          | data-testid | Add phrase route   | Container for /learn/$lang/phrases/new                                                |
-| `add-phrase-form`          | data-testid | Add phrase route   | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`) |
-| `bulk-add-link`            | data-testid | Add phrase page    | Link to bulk-add page                                                                 |
-| `add-translations-trigger` | data-testid | Big phrase card    | Pencil icon that opens the manage-translations dialog                                 |
-| `add-translations-dialog`  | data-testid | Dialog             | Manage-translations dialog (scope `translation-text-input` / `submit-button`)         |
-| `add-tags-trigger`         | data-testid | Big phrase card    | Tags icon that opens the edit-tags dialog                                             |
-| `add-tags-dialog`          | data-testid | Dialog             | Edit-tags dialog (contains `add-tags-form`)                                           |
-| `bulk-add-page`            | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add                                                   |
-| `inline-add-bar`           | data-testid | Bulk add page      | Inline phrase/translation entry bar                                                   |
-| `inline-phrase-input`      | data-testid | Inline add bar     | Phrase text input                                                                     |
-| `inline-translation-input` | data-testid | Inline add bar     | Translation text input                                                                |
-| `inline-add-button`        | data-testid | Inline add bar     | Button that stages the typed phrase                                                   |
-| `empty-state-hint`         | data-testid | Bulk add page      | Hint shown when no phrases are staged                                                 |
-| `staged-phrases-list`      | data-testid | Bulk add page      | Container listing staged phrases                                                      |
-| `staged-count`             | data-testid | Bulk add page      | "N phrases ready" label                                                               |
-| `staged-phrase-text`       | data-testid | Staged phrase row  | Staged phrase native text                                                             |
-| `staged-translation-text`  | data-testid | Staged phrase row  | Staged phrase translation text                                                        |
-| `edit-staged-phrase`       | data-testid | Staged phrase row  | Opens the edit dialog for that row                                                    |
-| `remove-staged-phrase`     | data-testid | Staged phrase row  | Removes that row from the staging list                                                |
-| `clear-staged-phrases`     | data-testid | Bulk add page      | "Clear all" button — empties the staging list                                         |
-| `edit-phrase-text`         | data-testid | Edit phrase dialog | Phrase text input inside the edit dialog                                              |
-| `edit-translation-0`       | data-testid | Edit phrase dialog | First translation input inside the edit dialog                                        |
-| `edit-save-button`         | data-testid | Edit phrase dialog | Saves edits and closes the dialog                                                     |
-| `submit-staged-phrases`    | data-testid | Bulk add page      | Submits all staged phrases to the database                                            |
-| `success-section`          | data-testid | Bulk add page      | "Successfully Added" section after a submit                                           |
-| `success-phrase-list`      | data-testid | Success section    | List of newly created phrase cards                                                    |
+| Selector                        | Attribute   | Component/Location    | Description                                                                                                                 |
+| ------------------------------- | ----------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `phrase-detail-page`            | data-testid | Phrase route          | Phrase detail page container                                                                                                |
+| `card-status-dropdown`          | data-testid | Phrase page           | Dropdown for card status                                                                                                    |
+| `add-to-deck-option`            | data-testid | Status dropdown       | "Add to deck" option                                                                                                        |
+| `set-learned-option`            | data-testid | Status dropdown       | "Set learned" option                                                                                                        |
+| `ignore-card-option`            | data-testid | Status dropdown       | "Ignore card" option                                                                                                        |
+| `activate-card-option`          | data-testid | Status dropdown       | "Activate card" option                                                                                                      |
+| `card-status-heart`             | data-name   | Phrase tiny card      | Bookmark/heart toggle on phrase tiny cards (scope by `[data-key={phrase.id}]`)                                              |
+| `start-learning-dialog`         | data-testid | Dialog                | Yes/no dialog shown when bookmarking a phrase whose language you aren't learning yet (data-mode is "create" or "unarchive") |
+| `confirm-start-learning-button` | data-testid | Start-learning dialog | "Yes, start/restore and add" button                                                                                         |
+| `cancel-start-learning-button`  | data-testid | Start-learning dialog | "No, not now" button                                                                                                        |
+| `add-phrase-page`               | data-testid | Add phrase route      | Container for /learn/$lang/phrases/new                                                                                      |
+| `add-phrase-form`               | data-testid | Add phrase route      | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`)                                       |
+| `bulk-add-link`                 | data-testid | Add phrase page       | Link to bulk-add page                                                                                                       |
+| `add-translations-trigger`      | data-testid | Big phrase card       | Pencil icon that opens the manage-translations dialog                                                                       |
+| `add-translations-dialog`       | data-testid | Dialog                | Manage-translations dialog (scope `translation-text-input` / `submit-button`)                                               |
+| `add-tags-trigger`              | data-testid | Big phrase card       | Tags icon that opens the edit-tags dialog                                                                                   |
+| `add-tags-dialog`               | data-testid | Dialog                | Edit-tags dialog (contains `add-tags-form`)                                                                                 |
+| `bulk-add-page`                 | data-testid | Bulk add route        | Container for /learn/$lang/bulk-add                                                                                         |
+| `inline-add-bar`                | data-testid | Bulk add page         | Inline phrase/translation entry bar                                                                                         |
+| `inline-phrase-input`           | data-testid | Inline add bar        | Phrase text input                                                                                                           |
+| `inline-translation-input`      | data-testid | Inline add bar        | Translation text input                                                                                                      |
+| `inline-add-button`             | data-testid | Inline add bar        | Button that stages the typed phrase                                                                                         |
+| `empty-state-hint`              | data-testid | Bulk add page         | Hint shown when no phrases are staged                                                                                       |
+| `staged-phrases-list`           | data-testid | Bulk add page         | Container listing staged phrases                                                                                            |
+| `staged-count`                  | data-testid | Bulk add page         | "N phrases ready" label                                                                                                     |
+| `staged-phrase-text`            | data-testid | Staged phrase row     | Staged phrase native text                                                                                                   |
+| `staged-translation-text`       | data-testid | Staged phrase row     | Staged phrase translation text                                                                                              |
+| `edit-staged-phrase`            | data-testid | Staged phrase row     | Opens the edit dialog for that row                                                                                          |
+| `remove-staged-phrase`          | data-testid | Staged phrase row     | Removes that row from the staging list                                                                                      |
+| `clear-staged-phrases`          | data-testid | Bulk add page         | "Clear all" button — empties the staging list                                                                               |
+| `edit-phrase-text`              | data-testid | Edit phrase dialog    | Phrase text input inside the edit dialog                                                                                    |
+| `edit-translation-0`            | data-testid | Edit phrase dialog    | First translation input inside the edit dialog                                                                              |
+| `edit-save-button`              | data-testid | Edit phrase dialog    | Saves edits and closes the dialog                                                                                           |
+| `submit-staged-phrases`         | data-testid | Bulk add page         | Submits all staged phrases to the database                                                                                  |
+| `success-section`               | data-testid | Bulk add page         | "Successfully Added" section after a submit                                                                                 |
+| `success-phrase-list`           | data-testid | Success section       | List of newly created phrase cards                                                                                          |
 
 ## Sidebar Navigation
 
