@@ -58,6 +58,10 @@ export default defineTeam({
 		// Full-lang request shared from learner2 to learner in chat;
 		// drives phrase-from-chat-request.spec.md.
 		full_shared_chat_request: 'e0d3a74e-4fe7-43c0-aa35-d05c83929986',
+		// Seeded answer phrase linked under [full_shared_chat_request] (friend's
+		// comment 11111111 attaches it). Stable handle for picking a specific
+		// `card-status-heart` on the request detail page.
+		full_shared_chat_answer_pid: '1395ae94-46d9-4a54-92f5-fb8b76db896b',
 		// Test phrase pairs used by phrase-from-chat-request scenes when the
 		// learner creates a new full-lang phrase inline. The form takes a
 		// `phrase-text-input` (becomes phrase.text — English source here) and
