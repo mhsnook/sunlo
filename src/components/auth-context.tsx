@@ -41,10 +41,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			initialAuthSeen.current = true
 			const isIdentityChange = !isInitial && prevUserId !== nextUserId
 
-			if (isIdentityChange && prevUserId) {
-				// Departing user (sign-out / switch): wipe user-scoped collections
-				// and the local cache. A plain login (no previous user) needs no
-				// teardown — route loaders fetch the new user's data fresh.
+			if (isIdentityChange) {
+				// Any identity change — sign-out, switch, or first-login. The
+				// first-login case matters too: layout subscribers (NavUser /
+				// sidebar) sync user collections logged-out and park them
+				// `ready` with [], which would short-circuit later preload()s.
 				void clearUser()
 			}
 			if (isIdentityChange && !nextUserId) setIsAdmin(false)

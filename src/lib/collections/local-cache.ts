@@ -82,25 +82,7 @@ function hasSupabaseSessionToken(): boolean {
 	return false
 }
 
-function mirrorCollection(entry: PersistedCollection): number {
-	let restoredCount = 0
-	try {
-		const stored = localStorage.getItem(entry.storageKey)
-		if (stored !== null) {
-			// Validate each row through its schema so a cache written by an older
-			// app version is discarded rather than seeded as bad data.
-			const rows = (JSON.parse(stored) as Array<unknown>).map(entry.parseRow)
-			queryClient.setQueryData(entry.queryKey, rows)
-			restoredCount = rows.length
-		}
-	} catch (error) {
-		console.warn(
-			`[local-cache] discarding unreadable ${entry.storageKey}`,
-			error
-		)
-		localStorage.removeItem(entry.storageKey)
-	}
-
+function attachMirror(entry: PersistedCollection): void {
 	entry.collection.subscribeChanges(() => {
 		try {
 			localStorage.setItem(
@@ -111,30 +93,50 @@ function mirrorCollection(entry: PersistedCollection): number {
 			console.warn(`[local-cache] could not save ${entry.storageKey}`, error)
 		}
 	})
+}
 
-	return restoredCount
+function hydrateFromStorage(entry: PersistedCollection): number {
+	try {
+		const stored = localStorage.getItem(entry.storageKey)
+		if (stored === null) return 0
+		// Validate each row through its schema so a cache written by an older
+		// app version is discarded rather than seeded as bad data.
+		const rows = (JSON.parse(stored) as Array<unknown>).map(entry.parseRow)
+		queryClient.setQueryData(entry.queryKey, rows)
+		return rows.length
+	} catch (error) {
+		console.warn(
+			`[local-cache] discarding unreadable ${entry.storageKey}`,
+			error
+		)
+		localStorage.removeItem(entry.storageKey)
+		return 0
+	}
 }
 
 /**
- * `bootstrap` phase (entry script, before React renders): if this device looks
- * logged in, prime the React Query cache from localStorage so the persisted
- * collections paint before any network call, then mirror future changes back.
- * The restored rows are unvalidated — `supabase-init` revalidates them. No-op
- * for a logged-out visitor.
+ * `bootstrap` phase (entry script, before React renders): wire the
+ * localStorage mirror for each persisted collection so future changes are
+ * saved, and if this device looks logged in, prime the React Query cache
+ * from localStorage. The mirror has to attach unconditionally — bootstrap
+ * runs once, so a visitor who logs in this session needs the listener
+ * already in place for their post-login data to persist.
  */
 export function restorePersistedUserData(): void {
-	if (!hasSupabaseSessionToken()) {
-		console.log('App bootstrap: no Supabase session in localStorage')
-		return
-	}
+	const hasSession = hasSupabaseSessionToken()
 	const restored: Record<string, number> = {}
 	for (const entry of PERSISTED_COLLECTIONS) {
-		restored[entry.label] = mirrorCollection(entry)
+		attachMirror(entry)
+		restored[entry.label] = hasSession ? hydrateFromStorage(entry) : 0
 	}
-	console.log(
-		'App bootstrap: found Supabase session; restored from cache:',
-		restored
-	)
+	if (hasSession) {
+		console.log(
+			'App bootstrap: found Supabase session; restored from cache:',
+			restored
+		)
+	} else {
+		console.log('App bootstrap: no Supabase session in localStorage')
+	}
 }
 
 /**
