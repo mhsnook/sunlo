@@ -26,9 +26,11 @@ const AppNav = lazy(() =>
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { resolveNavList } from '@/types/route-static-data'
-import { myProfileCollection } from '@/features/profile/collections'
-import { MyProfileSchema } from '@/features/profile/schemas'
-import supabase from '@/lib/supabase-client'
+import {
+	myProfileCollection,
+	myProfileQuery,
+} from '@/features/profile/collections'
+import { queryClient } from '@/lib/query-client'
 import { decksCollection } from '@/features/deck/collections'
 import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
@@ -59,24 +61,14 @@ export const Route = createFileRoute('/_user')({
 		// NavUser, OnboardingNudge and others call useProfile() unconditionally.
 		await myProfileCollection.preload()
 
-		// Empty here means the collection synced before auth resolved (NavUser
-		// calls useProfile() unconditionally) and parked `ready` with []. The
-		// observer-driven recovery paths drop or race the new result, so
-		// fetch the row and writeInsert directly — no observer chain.
+		// Belt-and-suspenders: clearUser on the auth flip already cleaned
+		// this up. If we still see size 0, force a fresh sync — synchronous
+		// removeQueries (cleanup's own runs async-after-await and races
+		// preload), cleanup() to flip off `ready`, then preload() to refetch.
 		if (myProfileCollection.size === 0) {
-			const {
-				data: { session },
-			} = await supabase.auth.getSession()
-			if (session) {
-				const { data } = await supabase
-					.from('user_profile')
-					.select()
-					.eq('uid', session.user.id)
-					.maybeSingle()
-				if (data) {
-					myProfileCollection.utils.writeInsert(MyProfileSchema.parse(data))
-				}
-			}
+			queryClient.removeQueries({ queryKey: myProfileQuery.queryKey })
+			await myProfileCollection.cleanup()
+			await myProfileCollection.preload()
 		}
 
 		// Invariant: handle_new_user() + the migration backfill guarantee a
