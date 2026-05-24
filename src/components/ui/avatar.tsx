@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react'
 import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
 
 import { cn } from '@/lib/utils'
+import { getAvatarHue } from '@/lib/lang-theme'
 
 const Avatar = ({ className, ...props }: AvatarPrimitive.Root.Props) => (
 	<AvatarPrimitive.Root
@@ -23,14 +25,25 @@ const AvatarImage = ({ className, ...props }: AvatarPrimitive.Image.Props) => (
 
 const AvatarFallback = ({
 	className,
+	seed,
+	style,
 	...props
-}: AvatarPrimitive.Fallback.Props) => (
+}: AvatarPrimitive.Fallback.Props & { seed?: string }) => (
 	<AvatarPrimitive.Fallback
 		data-slot="avatar-fallback"
 		className={cn(
-			'bg-muted flex h-full w-full items-center justify-center',
+			'flex h-full w-full items-center justify-center',
+			seed ? 'bg-5-mhi-primary text-primary-foreground' : 'bg-muted',
 			className
 		)}
+		style={
+			seed
+				? {
+						...style,
+						...({ '--hue-primary': getAvatarHue(seed) } as CSSProperties),
+					}
+				: style
+		}
 		{...props}
 	/>
 )

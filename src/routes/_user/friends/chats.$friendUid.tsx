@@ -97,7 +97,7 @@ function ChatPage() {
 				<Link to="/friends/$uid" params={{ uid: friendUid }}>
 					<Avatar>
 						<AvatarImage src={relAvatarUrl} alt={relUsername} />
-						<AvatarFallback>
+						<AvatarFallback seed={friendUid}>
 							{relUsername.charAt(0).toUpperCase()}
 						</AvatarFallback>
 					</Avatar>
@@ -132,6 +132,16 @@ function ChatPage() {
 							messagesQuery.data?.map((msg) => {
 								if (typeof msg === 'undefined') return null
 								const isMine = msg.sender_uid === userId
+								const messageLabel =
+									msg.message_type === 'recommendation'
+										? 'Sent a phrase recommendation'
+										: msg.message_type === 'request'
+											? 'Requested a phrase'
+											: msg.message_type === 'playlist'
+												? 'Shared a playlist'
+												: `${isMine ? 'You' : relUsername} added this to ${
+														isMine ? 'your' : 'their'
+													} deck`
 								return (
 									<div
 										key={msg.id}
@@ -143,18 +153,33 @@ function ChatPage() {
 												: 'align-start me-auto justify-start pe-[10%]'
 										)}
 									>
-										{!isMine && (
-											<Avatar className="my-5 h-8 w-8">
-												<AvatarImage src={relAvatarUrl} alt={relUsername} />
-												<AvatarFallback>
-													{relUsername.charAt(0).toUpperCase()}
-												</AvatarFallback>
-											</Avatar>
-										)}
 										<div>
-											<p className="text-muted-foreground mx-0 mb-1 text-xs">
-												{ago(msg.created_at)}
-											</p>
+											<div className="mb-1 flex items-center gap-2">
+												{!isMine && (
+													<Avatar className="h-8 w-8 shrink-0">
+														<AvatarImage src={relAvatarUrl} alt={relUsername} />
+														<AvatarFallback seed={friendUid}>
+															{relUsername.charAt(0).toUpperCase()}
+														</AvatarFallback>
+													</Avatar>
+												)}
+												<p
+													className={cn(
+														'text-muted-foreground grow text-xs',
+														isMine && 'text-end'
+													)}
+												>
+													{isMine ? (
+														<>
+															{messageLabel} &middot; {ago(msg.created_at)}
+														</>
+													) : (
+														<>
+															{ago(msg.created_at)} &middot; {messageLabel}
+														</>
+													)}
+												</p>
+											</div>
 											{msg.phrase_id && msg.lang && (
 												<CardPreview pid={msg.phrase_id} isMine={isMine} />
 											)}
@@ -164,34 +189,6 @@ function ChatPage() {
 											{msg.playlist_id && msg.lang && (
 												<PlaylistPreview id={msg.playlist_id} />
 											)}
-											<div
-												className={cn(
-													'relative z-0 max-w-xs rounded-b-2xl p-3 lg:max-w-md',
-													isMine
-														? 'bg-primary text-primary-foreground/70 ms-6 place-self-end'
-														: 'bg-muted me-6 place-self-start'
-												)}
-											>
-												{msg.message_type === 'recommendation' && (
-													<p className="text-sm italic">
-														Sent a phrase recommendation.
-													</p>
-												)}
-												{msg.message_type === 'request' && (
-													<p className="text-sm italic">Requested a phrase.</p>
-												)}
-												{msg.message_type === 'accepted' && (
-													<div className="text-sm italic">
-														<p>
-															{isMine ? 'You' : relUsername} added this to{' '}
-															{isMine ? 'your' : 'their'} deck.
-														</p>
-													</div>
-												)}
-												{msg.message_type === 'playlist' && (
-													<p className="text-sm italic">Shared a playlist.</p>
-												)}
-											</div>
 										</div>
 									</div>
 								)

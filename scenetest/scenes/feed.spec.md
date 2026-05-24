@@ -51,7 +51,7 @@ learner:
 - click friend-chat-link [friend.key]
 - up
 - see chat-messages-container
-- seeText Sent a phrase recommendation.
+- seeText Sent a phrase recommendation
 
 # opening a chat marks messages as read
 

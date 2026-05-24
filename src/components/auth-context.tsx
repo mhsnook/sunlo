@@ -1,6 +1,7 @@
 import {
 	type PropsWithChildren,
 	useState,
+	useRef,
 	useEffectEvent,
 	useLayoutEffect,
 } from 'react'
@@ -8,12 +9,6 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase, { pingSupabase } from '@/lib/supabase-client'
-import { myProfileCollection } from '@/features/profile/collections'
-import { decksCollection } from '@/features/deck/collections'
-import {
-	chatMessagesCollection,
-	friendSummariesCollection,
-} from '@/features/social/collections'
 import { clearUser } from '@/lib/collections/clear-user'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
@@ -24,86 +19,62 @@ async function checkAdminStatus(): Promise<boolean> {
 
 export function AuthProvider({ children }: PropsWithChildren) {
 	const [sessionState, setSessionState] = useState<Session | null>(null)
+	// Monotonic latch: true once the auth client has reported its first
+	// session (or null). RouterProvider gates on it and stays mounted for
+	// the rest of the session; route loaders own data loading.
 	const [isLoaded, setIsLoaded] = useState(false)
-	const [isReady, setIsReady] = useState(false)
 	const [isAdmin, setIsAdmin] = useState(false)
 	const [connectionError, setConnectionError] = useState<Error | null>(null)
+	// The first event onAuthStateChange delivers — whatever it is; supabase
+	// can emit SIGNED_IN / TOKEN_REFRESHED ahead of INITIAL_SESSION when the
+	// stored token needs refreshing — is a boot-time read, not a transition.
+	// Treat it as such (skip clearUser, skip the persisted-cache wipe).
+	const initialAuthSeen = useRef(false)
 
 	const handleNewAuthState = useEffectEvent(
-		(event: AuthChangeEvent | 'GET_SESSION', session: Session | null) => {
+		(event: AuthChangeEvent, session: Session | null) => {
 			console.log(`User auth event: ${event}`)
-			const isSigningOut = event === 'SIGNED_OUT'
-			const isSwitchingUsers =
-				sessionState?.user.id &&
-				session?.user.id &&
-				sessionState.user.id !== session.user.id
-			if (isSigningOut || isSwitchingUsers) {
-				// Refetch (not cleanup) user collections so RLS-filtered empty
-				// results clear the data. Calling .cleanup() would fire a
-				// 'cleaned-up' status event that subscribed live queries log
-				// as an error — many components (e.g. NavUser) call useProfile()
-				// unconditionally, so their subscriptions persist past logout.
+			const prevUserId = sessionState?.user.id ?? null
+			const nextUserId = session?.user.id ?? null
+
+			const isInitial = !initialAuthSeen.current
+			initialAuthSeen.current = true
+			const isIdentityChange = !isInitial && prevUserId !== nextUserId
+
+			if (isIdentityChange) {
+				// Any identity change — sign-out, switch, or first-login. The
+				// first-login case matters too: layout subscribers (NavUser /
+				// sidebar) sync user collections logged-out and park them
+				// `ready` with [], which would short-circuit later preload()s.
 				void clearUser()
-				setIsAdmin(false)
 			}
-			// Refetch user collections only when logging in from a logged-out state
-			// (not on token refresh or other events that already have a user)
-			const isLoggingIn = !sessionState?.user.id && session?.user.id
-			if (isLoggingIn) {
-				// Profile must load before isReady goes true so the _user loader
-				// finds the profile collection populated (avoids race condition).
-				void myProfileCollection.utils.refetch().then(() => setIsReady(true))
-				void decksCollection.utils.refetch()
-				void friendSummariesCollection.utils.refetch()
-				// Refetch chat messages if previously loaded (for correct RLS filtering)
-				if (chatMessagesCollection.size > 0) {
-					void chatMessagesCollection.utils.refetch()
-				}
-				// Check admin status: RLS returns 0 rows for non-admins, 1 for admins
-				// Table not in generated types yet — run `pnpm types` after migration
-				void checkAdminStatus().then(setIsAdmin)
-				setSessionState(session)
-				setIsLoaded(true)
-				return
+			if (isIdentityChange && !nextUserId) setIsAdmin(false)
+
+			if (nextUserId && (isInitial || isIdentityChange)) {
+				// Defer out of the auth callback: the auth client holds an
+				// internal lock for its duration and a query fired inside it can
+				// go out unauthenticated. A macrotask hop releases the lock.
+				setTimeout(() => {
+					void checkAdminStatus().then(setIsAdmin)
+				}, 0)
 			}
+
 			setSessionState(session)
 			setIsLoaded(true)
-			setIsReady(true)
 		}
 	)
 
 	useLayoutEffect(() => {
-		// Ping Supabase and read the session in parallel. The ping catches
-		// "backend unreachable" (e.g. local Docker offline) because
-		// getSession() resolves from localStorage without any network call
-		// when no session is cached.
-		void Promise.all([pingSupabase(), supabase.auth.getSession()])
-			.then(
-				([
-					,
-					{
-						data: { session },
-						error,
-					},
-				]) => {
-					if (error) {
-						console.error('Supabase getSession error:', error)
-						setConnectionError(error)
-						setIsLoaded(true)
-						setIsReady(true)
-						return
-					}
-					handleNewAuthState('GET_SESSION', session)
-				}
+		// pingSupabase() surfaces a "backend unreachable" error —
+		// onAuthStateChange reads the restored session from localStorage and
+		// never makes a network call on its own, so it can't catch this.
+		void pingSupabase().catch((error: unknown) => {
+			console.error('Supabase unreachable:', error)
+			setConnectionError(
+				error instanceof Error ? error : new Error('Unknown connection error')
 			)
-			.catch((error: unknown) => {
-				console.error('Supabase unreachable:', error)
-				setConnectionError(
-					error instanceof Error ? error : new Error('Unknown connection error')
-				)
-				setIsLoaded(true)
-				setIsReady(true)
-			})
+			setIsLoaded(true)
+		})
 		const { data: listener } =
 			supabase.auth.onAuthStateChange(handleNewAuthState)
 
@@ -115,7 +86,6 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	const value = isLoaded
 		? ({
 				isAuth: sessionState?.user.role === 'authenticated',
-				isReady,
 				userId: sessionState?.user.id ?? null,
 				userEmail: sessionState?.user.email ?? null,
 				userRole:

@@ -195,7 +195,6 @@ function NewPlaylistPageContent() {
 				</CardHeader>
 				<CardContent>
 					<form
-						role="form"
 						noValidate
 						data-testid="new-playlist-form"
 						onSubmit={(e) => {

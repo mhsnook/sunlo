@@ -13,10 +13,12 @@ export function RightSidebar() {
 	)
 	const links = useLinks(contextMenu)
 	const fixedHeight = matches.some((m) => m.staticData.fixedHeight)
+	const focusMode = matches.some((m) => m.staticData.focusMode)
 
-	// In fixedHeight mode (chats, review), hide when empty to reclaim space.
+	// In fixedHeight (chats, review) and focusMode (onboarding) pages, hide when
+	// empty to reclaim space and keep content centred on the viewport.
 	// In default mode, render the empty placeholder for visual consistency.
-	if (!links?.length && fixedHeight) return null
+	if (!links?.length && (fixedHeight || focusMode)) return null
 
 	return (
 		<aside className="sticky top-4 hidden w-(--sidebar-width) shrink-0 self-start ps-8 pt-4 @3xl:block">

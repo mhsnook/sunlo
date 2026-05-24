@@ -2,13 +2,14 @@ import type { Tables } from '@/types/supabase'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
+import { should } from '@scenetest/checks-react'
 
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import { decksCollection } from './collections'
 import { DeckMetaSchema } from './schemas'
 
-async function postNewDeck(lang: string) {
+export async function postNewDeck(lang: string) {
 	// console.log(`postNewDeck ${lang}`)
 	if (typeof lang !== 'string' || lang.length !== 3)
 		throw new Error('Form not right. Maybe refresh. Or tell the devs.')
@@ -39,6 +40,14 @@ export const useNewDeckMutation = () => {
 			}
 
 			decksCollection.utils.writeInsert(DeckMetaSchema.parse(deck2))
+
+			// Confirm the server-created row carries the language we asked for.
+			// Stripped from production by the Vite plugin.
+			should(
+				'created user_deck row matches the requested language',
+				deck.lang === variables.lang,
+				{ requested: variables.lang, returned: deck }
+			)
 
 			void navigate({
 				to: `/learn/$lang`,

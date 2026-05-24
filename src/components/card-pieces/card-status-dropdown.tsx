@@ -1,16 +1,26 @@
+import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import {
+	ArchiveRestore,
 	Bookmark,
 	BookmarkCheck,
 	BookmarkPlus,
 	BookmarkX,
 	ChevronDown,
 	PlusCircle,
+	Sparkles,
 } from 'lucide-react'
 
-import { failed, serverCheck, should } from '@scenetest/checks-react'
 import { useRequireAuth } from '@/hooks/use-require-auth'
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from '@/components/ui/dialog'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -20,13 +30,17 @@ import {
 import { useUserId } from '@/lib/use-auth'
 import {
 	useDecks,
+	useDeckMeta,
 	useMyCard,
 	type CardWithSibling,
 } from '@/features/deck/hooks'
+import languages from '@/lib/languages'
 import { Button } from '@/components/ui/button'
 import { phrasesCollection } from '@/features/phrases/collections'
-import { cardsCollection } from '@/features/deck/collections'
+import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { directionsForPhrase } from '@/features/deck/card-directions'
+import { postNewDeck } from '@/features/deck/mutations'
+import { DeckMetaSchema, type DeckMetaType } from '@/features/deck/schemas'
 import {
 	PhraseFullFilteredType,
 	PhraseFullFullType,
@@ -188,32 +202,6 @@ function useCardStatusMutator(
 
 		tx.isPersisted.promise.then(
 			() => {
-				// Verify (in test mode) that the DB-side state matches what we
-				// asked for — both directions of the phrase share the new status.
-				// Stripped in production by vite-plugin-scenetest.
-				serverCheck(
-					'card status persists to all sibling cards',
-					async (server, { uid, phraseId, expectedStatus }) => {
-						const { data: rows, error } = await server.supabase
-							.from('user_card')
-							.select('id, direction, status')
-							.eq('uid', uid)
-							.eq('phrase_id', phraseId)
-						if (error || !rows) {
-							failed('fetch user_card after status mutation', {
-								error: error?.message,
-							})
-							return
-						}
-						should('at least one card row exists', rows.length >= 1, { rows })
-						should(
-							'all sibling cards share the expected status',
-							rows.every((r) => r.status === expectedStatus),
-							{ rows, expected: expectedStatus }
-						)
-					},
-					() => ({ uid: userId, phraseId: phrase.id, expectedStatus: status })
-				)
 				toastSuccess(
 					card
 						? `Updated card status to "${status}"`
@@ -319,35 +307,185 @@ export function CardStatusHeart({
 }) {
 	const requireAuth = useRequireAuth()
 	const { data: card } = useMyCard(phrase.id)
+	const { data: deck } = useDeckMeta(phrase.lang)
 	const setCardStatus = useCardStatusMutator(phrase, card)
 	const statusToPost = card?.status === 'active' ? 'skipped' : 'active'
+
+	// FK constraint: user_card(uid, lang) → user_deck(uid, lang). No deck row
+	// would throw. An archived deck would technically satisfy the FK, but the
+	// card would land in a deck the user can't see — also wrong UX. Both cases
+	// route through the dialog.
+	const needsDeckSetup = !deck || deck.archived
+	const [dialogOpen, setDialogOpen] = useState(false)
+
 	return (
-		<Button
-			variant={card?.status === 'active' ? 'soft' : 'ghost'}
-			size="icon"
-			data-name="card-status-heart"
-			data-key={phrase.id}
-			onClick={(e) => {
-				e.preventDefault()
-				e.stopPropagation()
-				requireAuth(
-					() => setCardStatus(statusToPost),
-					'Please log in to add phrases to your library'
-				)
-			}}
-			aria-label={
-				card?.status === 'active'
-					? 'Skip this phrase (remove it from your active deck)'
-					: 'Learn this phrase (add to your active deck)'
-			}
-		>
-			<Bookmark
-				className={
+		<>
+			<Button
+				variant={card?.status === 'active' ? 'soft' : 'ghost'}
+				size="icon"
+				data-name="card-status-heart"
+				data-key={phrase.id}
+				onClick={(e) => {
+					e.preventDefault()
+					e.stopPropagation()
+					requireAuth(() => {
+						if (needsDeckSetup) {
+							setDialogOpen(true)
+						} else {
+							setCardStatus(statusToPost)
+						}
+					}, 'Please log in to add phrases to your library')
+				}}
+				aria-label={
 					card?.status === 'active'
-						? 'text-primary fill-current/50'
-						: 'text-muted-foreground'
+						? 'Skip this phrase (remove it from your active deck)'
+						: 'Learn this phrase (add to your active deck)'
 				}
-			/>
-		</Button>
+			>
+				<Bookmark
+					className={
+						card?.status === 'active'
+							? 'text-primary fill-current/50'
+							: 'text-muted-foreground'
+					}
+				/>
+			</Button>
+			{needsDeckSetup && (
+				<StartLearningDialog
+					open={dialogOpen}
+					onOpenChange={setDialogOpen}
+					lang={phrase.lang}
+					archivedDeck={deck?.archived ? deck : null}
+					onConfirmed={() => setCardStatus(statusToPost)}
+				/>
+			)}
+		</>
+	)
+}
+
+/**
+ * Yes/no dialog shown when the user taps the bookmark on a phrase whose
+ * language they aren't actively learning. Creates the deck (or unarchives an
+ * existing one) and then runs `onConfirmed` to add the card.
+ */
+function StartLearningDialog({
+	open,
+	onOpenChange,
+	lang,
+	archivedDeck,
+	onConfirmed,
+}: {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	lang: string
+	archivedDeck: DeckMetaType | null
+	onConfirmed: () => void
+}) {
+	const [pending, setPending] = useState(false)
+	const language = languages[lang] ?? lang
+	const isUnarchive = !!archivedDeck
+
+	const handleConfirm = async () => {
+		setPending(true)
+		try {
+			if (isUnarchive) {
+				const tx = decksCollection.update(lang, (draft) => {
+					draft.archived = false
+				})
+				await tx.isPersisted.promise
+			} else {
+				const row = await postNewDeck(lang)
+				decksCollection.utils.writeInsert(
+					DeckMetaSchema.parse({ ...row, language })
+				)
+			}
+			toastSuccess(
+				isUnarchive
+					? `Restored your ${language} deck`
+					: `Started a new ${language} deck`
+			)
+			onConfirmed()
+			onOpenChange(false)
+		} catch (err) {
+			console.error('StartLearningDialog: failed to set up deck', err)
+			toastError(
+				isUnarchive
+					? `Couldn't restore your ${language} deck`
+					: `Couldn't start a new ${language} deck`
+			)
+		} finally {
+			setPending(false)
+		}
+	}
+
+	return (
+		<Dialog open={open} onOpenChange={onOpenChange}>
+			<DialogContent
+				data-testid="start-learning-dialog"
+				data-key={lang}
+				data-mode={isUnarchive ? 'unarchive' : 'create'}
+				className="max-w-md"
+			>
+				<DialogHeader>
+					<DialogTitle>
+						{isUnarchive
+							? `Restore your ${language} deck?`
+							: `Start learning ${language}?`}
+					</DialogTitle>
+					<DialogDescription>
+						{isUnarchive
+							? `You have an archived ${language} deck. Restore it and add this phrase to start learning again.`
+							: `You aren't learning ${language} yet. Start a new deck and add this phrase?`}
+					</DialogDescription>
+				</DialogHeader>
+
+				<div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
+					<button
+						type="button"
+						onClick={() => void handleConfirm()}
+						disabled={pending}
+						data-testid="confirm-start-learning-button"
+						className="from-5-mhi-primary to-6-mid-primary text-primary-foreground hover:from-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl bg-gradient-to-br p-4 text-start shadow transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+					>
+						{isUnarchive ? (
+							<ArchiveRestore className="size-6" />
+						) : (
+							<Sparkles className="size-6" />
+						)}
+						<div>
+							<div className="text-base leading-tight font-semibold">
+								{pending
+									? isUnarchive
+										? 'Restoring…'
+										: 'Starting…'
+									: isUnarchive
+										? 'Yes, restore and add'
+										: 'Yes, start and add'}
+							</div>
+							<div className="text-primary-foreground/80 text-xs">
+								{isUnarchive
+									? 'Reactivate your deck and bookmark this phrase'
+									: `Create your ${language} deck and bookmark this phrase`}
+							</div>
+						</div>
+					</button>
+
+					<DialogClose
+						data-testid="cancel-start-learning-button"
+						className="border-2-lo-neutral bg-1-mlo-neutral text-7-mid-neutral hover:bg-lc-down-1 hover:text-lc-up-1 flex h-full cursor-pointer flex-col items-start gap-2 rounded-2xl border p-4 text-start shadow transition-transform hover:-translate-y-0.5"
+					>
+						<Bookmark className="size-6" />
+						<div>
+							<div className="text-base leading-tight font-semibold">
+								No, not now
+							</div>
+							<div className="text-muted-foreground text-xs">
+								Just browsing — leave my decks alone
+							</div>
+						</div>
+					</DialogClose>
+				</div>
+			</DialogContent>
+		</Dialog>
 	)
 }

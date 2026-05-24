@@ -33,6 +33,11 @@ export default [
 
 			...reactHooks.configs.recommended.rules,
 			'react-refresh/only-export-components': ['off'],
+			// Long-running false-positive history in inference-heavy contexts
+			// (TanStack Form's useForm generics in particular). eslint --fix
+			// silently strips load-bearing casts, so keep the rule off project-
+			// wide rather than re-add per-line disables.
+			'@typescript-eslint/no-unnecessary-type-assertion': 'off',
 			'@typescript-eslint/only-throw-error': [
 				'error',
 				{

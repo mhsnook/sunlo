@@ -29,6 +29,7 @@ export function UserRoleField() {
 			<p>Are you learning for yourself, or helping a friend?</p>
 			<div className="grid grid-cols-3 gap-3">
 				{options.map(({ value: v, label, Icon }) => (
+					// oxlint-disable-next-line jsx-a11y/interactive-supports-focus -- ChoiceTile renders a <button>, which is natively focusable
 					<ChoiceTile
 						key={v}
 						role="radio"

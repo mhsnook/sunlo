@@ -1,10 +1,5 @@
 import { type CSSProperties, useMemo, useState } from 'react'
-import {
-	createFileRoute,
-	Link,
-	Navigate,
-	useNavigate,
-} from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useLiveQuery } from '@tanstack/react-db'
 import {
 	WalletCards,
@@ -70,7 +65,7 @@ const style = { viewTransitionName: 'main-area' } as CSSProperties
 
 function WelcomePage() {
 	const navigate = useNavigate()
-	const { data: profile, isLoading: profileLoading } = useProfile()
+	const { data: profile } = useProfile()
 	const { data: decks } = useDecks()
 	const { userRole } = useAuth()
 	const { isOpen, needsAffirmation, handleAffirm } = useIntro(
@@ -80,11 +75,6 @@ function WelcomePage() {
 		}
 	)
 	const [browseRequestsOpen, setBrowseRequestsOpen] = useState(false)
-
-	// Redirect to getting-started if no profile
-	if (!profileLoading && !profile) {
-		return <Navigate to="/getting-started" />
-	}
 
 	const hasDecks = decks && decks.length > 0
 	const isLearner = userRole === 'learner'

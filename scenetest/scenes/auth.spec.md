@@ -7,6 +7,21 @@ visitor:
 - see login-signup-link
 - see login-forgot-password-link
 
+# login with the wrong password shows a friendly error
+
+learner:
+
+- openTo /login
+- typeInto email-input [self.email]
+- typeInto password-input 'definitely-not-the-password'
+- click submit-button
+- up
+- see login-error-invalid-credentials
+- see login-form
+- click submit-button
+- up
+- see login-error-invalid-credentials
+
 # learner logs in and sees their decks
 
 learner:
@@ -15,20 +30,24 @@ learner:
 - see sidebar-profile-settings-link
 - see decks-list-grid
 
-# new user completes onboarding and affirms community norms
+# new user follows the onboarding nudge and completes setup
 
-cleanup: supabase.from('user_profile').delete().eq('uid', '[new-user.key]')
+cleanup: supabase.from('user_profile').update({ username: null, languages_known: [], flags: { 'needs-onboarding': true } }).eq('uid', '[new-user.key]')
 
 new-user:
 
 - login
 - seeToast toast-success
+- see onboarding-nudge
+- click onboarding-nudge-cta
+- up
 - see getting-started-page
 - see profile-creation-form
 - typeInto profile-creation-form username-input 'NewLearnerName'
 - click profile-creation-form submit-button
 - up
 - seeToast toast-success
+- notSee onboarding-nudge
 
 # user signs out and is redirected to home
 

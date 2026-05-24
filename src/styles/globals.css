@@ -171,6 +171,7 @@
 	--animate-card-out-right: card-out-right 0.2s ease-in forwards;
 	--animate-card-pop-in: card-pop-in 0.2s ease-out forwards;
 	--animate-score-coin: score-coin 0.65s ease-out forwards;
+	--animate-shake: shake 0.4s ease-in-out;
 
 	@keyframes accordion-down {
 		from {
@@ -234,6 +235,20 @@
 		100% {
 			opacity: 0;
 			transform: translateX(-50%) translateY(-48px) scale(0.8);
+		}
+	}
+	@keyframes shake {
+		0%,
+		100% {
+			transform: translateX(0);
+		}
+		20%,
+		60% {
+			transform: translateX(-0.35rem);
+		}
+		40%,
+		80% {
+			transform: translateX(0.35rem);
 		}
 	}
 }

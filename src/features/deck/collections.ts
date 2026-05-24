@@ -9,9 +9,11 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { should } from '@scenetest/checks-react'
 import { sortDecksByCreation } from '@/lib/utils'
 import { toastError } from '@/components/ui/sonner'
 import languages from '@/lib/languages'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const decksCollection = createCollection(
 	queryCollectionOptions({
@@ -41,14 +43,30 @@ export const decksCollection = createCollection(
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(
-					transaction.mutations.map((m) =>
-						supabase
+					transaction.mutations.map(async (m) => {
+						const changes = m.changes as TablesUpdate<'user_deck'>
+						const { data } = await supabase
 							.from('user_deck')
-							.update(m.changes)
+							.update(changes)
 							.eq('uid', m.original.uid)
 							.eq('lang', m.original.lang)
+							.select()
 							.throwOnError()
-					)
+						// m.changes IS the optimistic collection value, so confirming the
+						// server's returned row matches it proves client/server agreement.
+						// The row-guard is inside should() so the whole call strips
+						// cleanly from production builds.
+						const row = data?.[0] as Record<string, unknown> | undefined
+						should(
+							`user_deck (${m.original.lang}) server row matches the submitted update`,
+							!row ||
+								Object.entries(changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+							{ submitted: changes, returned: row }
+						)
+					})
 				)
 				return { refetch: false }
 			} catch (err) {
@@ -81,21 +99,39 @@ export const cardsCollection = createCollection(
 			// join, not on the underlying table. { refetch: false } because our
 			// optimistic row already carries the same column values we send.
 			try {
-				await supabase
+				const rows = transaction.mutations.map((m) => ({
+					id: m.modified.id,
+					uid: m.modified.uid,
+					phrase_id: m.modified.phrase_id,
+					lang: m.modified.lang,
+					status: m.modified.status,
+					direction: m.modified.direction,
+					created_at: m.modified.created_at,
+					updated_at: m.modified.updated_at,
+				}))
+				const { data } = await supabase
 					.from('user_card')
-					.insert(
-						transaction.mutations.map((m) => ({
-							id: m.modified.id,
-							uid: m.modified.uid,
-							phrase_id: m.modified.phrase_id,
-							lang: m.modified.lang,
-							status: m.modified.status,
-							direction: m.modified.direction,
-							created_at: m.modified.created_at,
-							updated_at: m.modified.updated_at,
-						}))
-					)
+					.insert(rows)
+					.select()
 					.throwOnError()
+				// Confirm the server stored the same cards our optimistic insert
+				// added to the collection. Stripped from production by the Vite plugin.
+				should(
+					'user_card insert returned rows matching the optimistic cards',
+					!!data &&
+						data.length === rows.length &&
+						rows.every((row) =>
+							data.some(
+								(d) =>
+									d.id === row.id &&
+									d.status === row.status &&
+									d.phrase_id === row.phrase_id &&
+									d.direction === row.direction &&
+									d.lang === row.lang
+							)
+						),
+					{ submitted: rows, returned: data }
+				)
 				return { refetch: false }
 			} catch (err) {
 				toastError('Failed to save card — please try again')
@@ -108,13 +144,28 @@ export const cardsCollection = createCollection(
 			// safe because user_card has no triggers that change other columns.
 			try {
 				await Promise.all(
-					transaction.mutations.map((m) =>
-						supabase
+					transaction.mutations.map(async (m) => {
+						const changes = m.changes as TablesUpdate<'user_card'>
+						const { data } = await supabase
 							.from('user_card')
-							.update(m.changes)
+							.update(changes)
 							.eq('id', m.original.id)
+							.select()
 							.throwOnError()
-					)
+						// Confirm the server's returned row matches the optimistic
+						// update. The row-guard is inside should() so the whole call
+						// strips cleanly from production builds.
+						const row = data?.[0] as Record<string, unknown> | undefined
+						should(
+							`user_card ${m.original.id} server row matches the submitted update`,
+							!row ||
+								Object.entries(changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+							{ submitted: changes, returned: row }
+						)
+					})
 				)
 				return { refetch: false }
 			} catch (err) {

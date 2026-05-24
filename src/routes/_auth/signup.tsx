@@ -63,7 +63,7 @@ type FormInputs = z.infer<typeof FormSchema>
 
 function SignUp() {
 	const { referrer } = Route.useSearch()
-	const { isAuth, isReady } = useAuth()
+	const { isAuth } = useAuth()
 	const navigate = Route.useNavigate()
 
 	const signupMutation = useMutation({
@@ -113,7 +113,7 @@ function SignUp() {
 		},
 	})
 
-	if (isReady && isAuth) {
+	if (isAuth) {
 		console.log(
 			`Issuing redirect from Signup component to /getting-started because auth.isAuth has become true`
 		)
@@ -140,7 +140,6 @@ function SignUp() {
 					) : (
 						<form
 							data-testid="signup-form"
-							role="form"
 							noValidate
 							className="space-y-4"
 							onSubmit={(e) => {

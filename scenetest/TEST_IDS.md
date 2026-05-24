@@ -45,23 +45,28 @@ natural wrapper element to label.
 
 ## Authentication & Navigation
 
-| Selector                        | Attribute   | Component/Location     | Description                                                 |
-| ------------------------------- | ----------- | ---------------------- | ----------------------------------------------------------- |
-| `login-link`                    | data-testid | Sidebar                | Link to login page for logged-out users                     |
-| `login-form`                    | data-testid | Login page             | The login form container                                    |
-| `login-signup-link`             | data-testid | Login page             | "Create account" link to /signup                            |
-| `login-forgot-password-link`    | data-testid | Login page             | "Forgot password?" link to /forgot-password                 |
-| `email-input`                   | data-testid | Form fields            | Email input                                                 |
-| `password-input`                | data-testid | Form fields            | Password input                                              |
-| `submit-button`                 | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous) |
-| `welcome-page`                  | data-testid | Welcome route          | Welcome page container                                      |
-| `community-norms-dialog`        | data-testid | Welcome page           | Community norms intro dialog                                |
-| `affirm-community-norms-button` | data-testid | Community norms dialog | Button to affirm norms                                      |
-| `sunlo-welcome-explainer`       | data-testid | Welcome page           | Welcome content after affirming                             |
-| `go-to-decks-link`              | data-testid | Welcome page           | Link to /learn                                              |
-| `sidebar-profile-settings-link` | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)      |
-| `sidebar-display-settings-link` | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)         |
-| `profile-signout-button`        | data-testid | Profile page           | Sign out button at bottom of profile page                   |
+| Selector                          | Attribute   | Component/Location     | Description                                                   |
+| --------------------------------- | ----------- | ---------------------- | ------------------------------------------------------------- |
+| `login-link`                      | data-testid | Sidebar                | Link to login page for logged-out users                       |
+| `login-form`                      | data-testid | Login page             | The login form container                                      |
+| `login-signup-link`               | data-testid | Login page             | "Create account" link to /signup                              |
+| `login-forgot-password-link`      | data-testid | Login page             | "Forgot password?" link to /forgot-password                   |
+| `login-error-invalid-credentials` | data-testid | Login page             | One-line error shown when the email/password don't match      |
+| `reset-link-invalid`              | data-testid | Set-new-password page  | Card shown when the recovery link is invalid or expired       |
+| `request-new-link`                | data-testid | Set-new-password page  | Link to /forgot-password from the invalid-link card           |
+| `forgot-password-form`            | data-testid | Forgot-password page   | Recovery-request form (scope `email-input` / `submit-button`) |
+| `password-reset-form`             | data-testid | Set-new-password page  | New-password form (scope `password-input` / `submit-button`)  |
+| `email-input`                     | data-testid | Form fields            | Email input                                                   |
+| `password-input`                  | data-testid | Form fields            | Password input                                                |
+| `submit-button`                   | data-testid | Form submit            | Generic submit button (scope by parent form when ambiguous)   |
+| `welcome-page`                    | data-testid | Welcome route          | Welcome page container                                        |
+| `community-norms-dialog`          | data-testid | Welcome page           | Community norms intro dialog                                  |
+| `affirm-community-norms-button`   | data-testid | Community norms dialog | Button to affirm norms                                        |
+| `sunlo-welcome-explainer`         | data-testid | Welcome page           | Welcome content after affirming                               |
+| `go-to-decks-link`                | data-testid | Welcome page           | Link to /learn                                                |
+| `sidebar-profile-settings-link`   | data-testid | Sidebar                | Avatar row that links to /profile (Profile & settings)        |
+| `sidebar-display-settings-link`   | data-testid | Sidebar                | Unauthenticated link to /profile (Display settings)           |
+| `profile-signout-button`          | data-testid | Profile page           | Sign out button at bottom of profile page                     |
 
 ## Deck Management
 
@@ -117,22 +122,44 @@ natural wrapper element to label.
 
 ## Card Management
 
-| Selector                   | Attribute   | Component/Location | Description                                                                           |
-| -------------------------- | ----------- | ------------------ | ------------------------------------------------------------------------------------- |
-| `phrase-detail-page`       | data-testid | Phrase route       | Phrase detail page container                                                          |
-| `card-status-dropdown`     | data-testid | Phrase page        | Dropdown for card status                                                              |
-| `add-to-deck-option`       | data-testid | Status dropdown    | "Add to deck" option                                                                  |
-| `set-learned-option`       | data-testid | Status dropdown    | "Set learned" option                                                                  |
-| `ignore-card-option`       | data-testid | Status dropdown    | "Ignore card" option                                                                  |
-| `activate-card-option`     | data-testid | Status dropdown    | "Activate card" option                                                                |
-| `add-phrase-page`          | data-testid | Add phrase route   | Container for /learn/$lang/phrases/new                                                |
-| `add-phrase-form`          | data-testid | Add phrase route   | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`) |
-| `bulk-add-link`            | data-testid | Add phrase page    | Link to bulk-add page                                                                 |
-| `add-translations-trigger` | data-testid | Big phrase card    | Pencil icon that opens the manage-translations dialog                                 |
-| `add-translations-dialog`  | data-testid | Dialog             | Manage-translations dialog (scope `translation-text-input` / `submit-button`)         |
-| `add-tags-trigger`         | data-testid | Big phrase card    | Tags icon that opens the edit-tags dialog                                             |
-| `add-tags-dialog`          | data-testid | Dialog             | Edit-tags dialog (contains `add-tags-form`)                                           |
-| `bulk-add-page`            | data-testid | Bulk add route     | Container for /learn/$lang/bulk-add                                                   |
+| Selector                        | Attribute   | Component/Location    | Description                                                                                                                 |
+| ------------------------------- | ----------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `phrase-detail-page`            | data-testid | Phrase route          | Phrase detail page container                                                                                                |
+| `card-status-dropdown`          | data-testid | Phrase page           | Dropdown for card status                                                                                                    |
+| `add-to-deck-option`            | data-testid | Status dropdown       | "Add to deck" option                                                                                                        |
+| `set-learned-option`            | data-testid | Status dropdown       | "Set learned" option                                                                                                        |
+| `ignore-card-option`            | data-testid | Status dropdown       | "Ignore card" option                                                                                                        |
+| `activate-card-option`          | data-testid | Status dropdown       | "Activate card" option                                                                                                      |
+| `card-status-heart`             | data-name   | Phrase tiny card      | Bookmark/heart toggle on phrase tiny cards (scope by `[data-key={phrase.id}]`)                                              |
+| `start-learning-dialog`         | data-testid | Dialog                | Yes/no dialog shown when bookmarking a phrase whose language you aren't learning yet (data-mode is "create" or "unarchive") |
+| `confirm-start-learning-button` | data-testid | Start-learning dialog | "Yes, start/restore and add" button                                                                                         |
+| `cancel-start-learning-button`  | data-testid | Start-learning dialog | "No, not now" button                                                                                                        |
+| `add-phrase-page`               | data-testid | Add phrase route      | Container for /learn/$lang/phrases/new                                                                                      |
+| `add-phrase-form`               | data-testid | Add phrase route      | Form element (scope `phrase-text-input` / `translation-text-input` / `submit-button`)                                       |
+| `bulk-add-link`                 | data-testid | Add phrase page       | Link to bulk-add page                                                                                                       |
+| `add-translations-trigger`      | data-testid | Big phrase card       | Pencil icon that opens the manage-translations dialog                                                                       |
+| `add-translations-dialog`       | data-testid | Dialog                | Manage-translations dialog (scope `translation-text-input` / `submit-button`)                                               |
+| `add-tags-trigger`              | data-testid | Big phrase card       | Tags icon that opens the edit-tags dialog                                                                                   |
+| `add-tags-dialog`               | data-testid | Dialog                | Edit-tags dialog (contains `add-tags-form`)                                                                                 |
+| `bulk-add-page`                 | data-testid | Bulk add route        | Container for /learn/$lang/bulk-add                                                                                         |
+| `inline-add-bar`                | data-testid | Bulk add page         | Inline phrase/translation entry bar                                                                                         |
+| `inline-phrase-input`           | data-testid | Inline add bar        | Phrase text input                                                                                                           |
+| `inline-translation-input`      | data-testid | Inline add bar        | Translation text input                                                                                                      |
+| `inline-add-button`             | data-testid | Inline add bar        | Button that stages the typed phrase                                                                                         |
+| `empty-state-hint`              | data-testid | Bulk add page         | Hint shown when no phrases are staged                                                                                       |
+| `staged-phrases-list`           | data-testid | Bulk add page         | Container listing staged phrases                                                                                            |
+| `staged-count`                  | data-testid | Bulk add page         | "N phrases ready" label                                                                                                     |
+| `staged-phrase-text`            | data-testid | Staged phrase row     | Staged phrase native text                                                                                                   |
+| `staged-translation-text`       | data-testid | Staged phrase row     | Staged phrase translation text                                                                                              |
+| `edit-staged-phrase`            | data-testid | Staged phrase row     | Opens the edit dialog for that row                                                                                          |
+| `remove-staged-phrase`          | data-testid | Staged phrase row     | Removes that row from the staging list                                                                                      |
+| `clear-staged-phrases`          | data-testid | Bulk add page         | "Clear all" button — empties the staging list                                                                               |
+| `edit-phrase-text`              | data-testid | Edit phrase dialog    | Phrase text input inside the edit dialog                                                                                    |
+| `edit-translation-0`            | data-testid | Edit phrase dialog    | First translation input inside the edit dialog                                                                              |
+| `edit-save-button`              | data-testid | Edit phrase dialog    | Saves edits and closes the dialog                                                                                           |
+| `submit-staged-phrases`         | data-testid | Bulk add page         | Submits all staged phrases to the database                                                                                  |
+| `success-section`               | data-testid | Bulk add page         | "Successfully Added" section after a submit                                                                                 |
+| `success-phrase-list`           | data-testid | Success section       | List of newly created phrase cards                                                                                          |
 
 ## Sidebar Navigation
 
@@ -149,7 +176,10 @@ natural wrapper element to label.
 | `profile-page`                           | data-testid | Profile route            | Profile page container                                                                                             |
 | `update-profile-form`                    | data-testid | Profile route            | Edit-profile form (scope `username-input` / `submit-button`)                                                       |
 | `getting-started-page`                   | data-testid | Onboarding route         | Getting-started page container                                                                                     |
-| `profile-creation-form`                  | data-testid | Onboarding route         | Initial profile-creation form (scope `username-input` / `submit-button`)                                           |
+| `profile-creation-form`                  | data-testid | Onboarding route         | Profile-setup form on /getting-started (scope `username-input` / `submit-button`)                                  |
+| `onboarding-nudge`                       | data-testid | Sidebar                  | Soft prompt to finish onboarding (shown while `flags['needs-onboarding']`)                                         |
+| `onboarding-nudge-cta`                   | data-testid | Onboarding nudge         | Link from the nudge to /getting-started                                                                            |
+| `onboarding-nudge-dismiss`               | data-testid | Onboarding nudge         | Dismisses the nudge (clears the `needs-onboarding` flag)                                                           |
 | `languages-known`                        | data-testid | Profile / onboarding     | Container for the languages-known array editor (rows have `data-key={index}`)                                      |
 | `add-language-button`                    | data-testid | Languages-known          | Opens the language picker; selecting a language pushes a new row                                                   |
 | `language-name`                          | data-testid | Languages-known row      | Read-only display of this row's language name                                                                      |
@@ -370,11 +400,14 @@ element to appear and then disappear:
 See also the `Languages-known field` section above for testids inside the
 LanguagesKnownField (used on /profile and /getting-started).
 
-| Selector                | Attribute   | Component/Location                              | Description                                                            |
-| ----------------------- | ----------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
-| `getting-started-page`  | data-testid | `routes/_user/getting-started.tsx`              | Onboarding page container                                              |
-| `profile-creation-form` | data-testid | `routes/_user/getting-started.tsx`              | Form on the onboarding page (scope `username-input` / `submit-button`) |
-| `update-profile-form`   | data-testid | `routes/_user/profile/-update-profile-form.tsx` | Form on /profile (scope `username-input` / `submit-button`)            |
+| Selector                   | Attribute   | Component/Location                              | Description                                                   |
+| -------------------------- | ----------- | ----------------------------------------------- | ------------------------------------------------------------- |
+| `getting-started-page`     | data-testid | `routes/_user/getting-started.tsx`              | Onboarding page container                                     |
+| `profile-creation-form`    | data-testid | `routes/_user/getting-started.tsx`              | Profile-setup form (scope `username-input` / `submit-button`) |
+| `onboarding-nudge`         | data-testid | `components/navs/onboarding-nudge.tsx`          | Sidebar prompt to finish onboarding                           |
+| `onboarding-nudge-cta`     | data-testid | `components/navs/onboarding-nudge.tsx`          | Link from the nudge to /getting-started                       |
+| `onboarding-nudge-dismiss` | data-testid | `components/navs/onboarding-nudge.tsx`          | Dismisses the nudge, clearing the `needs-onboarding` flag     |
+| `update-profile-form`      | data-testid | `routes/_user/profile/-update-profile-form.tsx` | Form on /profile (scope `username-input` / `submit-button`)   |
 
 ## Chat previews
 

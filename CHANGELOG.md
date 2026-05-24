@@ -1,5 +1,64 @@
 # Change Log
 
+## v0.26 - Auto-provisioned Profiles, Optimistic Mutations, Navigation Refresh
+
+_21 May, 2026_
+
+### Features
+
+- **Auto-provisioned user profiles** — a Postgres trigger (`handle_new_user`) creates a `user_profile` row for every confirmed auth user, so profile existence now tracks "is this a user at all" rather than "has onboarding finished". The old `/getting-started` hard redirect is gone: onboarding is a soft, dismissible sidebar nudge driven by a new `flags` jsonb column (`needs-onboarding`). This eliminates the issue #134 RLS-violation race by design — there is no client-side profile _creation_ anymore, only updates. `/getting-started` runs in focus mode and updates the pre-existing row; the `_user` loader fails loudly if a confirmed user is somehow missing a profile.
+- **Navigation reorganized around top-level sections** — the sidebar moves the user nav into the content area with a dedicated footer-actions row, and the search overlay is hoisted into the `_user` layout, opened via `staticData.search` so any route can opt in.
+- **`/admin/routes` introspection page** — a lazy-loaded admin view listing the app's route tree.
+- **`/themes` workshop** — a Typography Lab for comparing fonts, plus a component showcase that previews UI components against a mock language.
+
+### Improvements
+
+- **Optimistic mutations across the app** — comments, upvotes, card-status changes, the request form + delete dialog, deck settings, and profile preferences all moved from `useMutation` + manual sync to the collection-config (`onInsert/onUpdate/onDelete`) and `createOptimisticAction` patterns. Upvote actions no longer refetch whole tables. The pattern is codified in `CLAUDE.md`.
+- **localStorage sidecar cache** — the profile and decks collections are mirrored to localStorage and restored into the query cache before React renders, so they paint on the first frame after a reload instead of waiting for the network. Supabase stays the source of truth and overwrites the cache on revalidation.
+- **Per-language OKLCH hue palette** — replaces the old deck-theme indirection; each language gets a consistent hue from the tailwind-oklch scale, and hardcoded purples are dropped from card/phrase status icons.
+- **Atkinson Hyperlegible Next** is now the body font.
+- **Softer surfaces** — the default `Callout` variant lightened for a gentler success state; active/hover tints toned down across badges, dropdowns, and ghost buttons.
+- **Join indexes** added to the `phrasesFull` and `publicProfilesCollection` live queries.
+- Smaller touches — the review-ready banner inlines the language name and uses the (flipped) garlic logo; relative-time permalinks gain a full-timestamp tooltip; request comment counts use a single-comment icon.
+
+### Refactors
+
+- **`features/comments` merged into `features/requests`** — a comment without a request is meaningless, so they are one wide module now.
+- Cross-feature phrase joins moved into `phrases/live.ts` using nested `q.from()`; `usePhrasesFromComment` and `useRequestLinksWithComments` joins simplified.
+- Route nav/layout config (`titleBar`, `appnav`) moved from `beforeLoad` into `staticData`.
+- Chat message metadata streamlined.
+- Dead code removed — 5 unused files and 15 unused type aliases.
+
+### Migrations
+
+- `20260520120000_auto_create_user_profile.sql` — adds the `flags` jsonb column to `user_profile`; the `handle_new_user()` function; two `auth.users` triggers (`on_auth_user_confirmed` for email/password confirmation, `on_auth_user_created` for OAuth/magic-link); and a one-time backfill giving existing confirmed-but-profileless users a row.
+
+`seed-zzz.sql` now also refreshes the `meta_language` materialized view at end-of-seed. Like `search_text_index`, its refresh triggers are skipped during replica-mode bulk loading, so fresh installs were left with empty language lists until this.
+
+### Build / Dependencies
+
+- **Vite 8 (Rolldown)** — the build now runs on the Rolldown-powered Vite 8.
+- `@supabase/supabase-js` bumped to 2.106; `@tanstack/router` pinned above the GHSA-g7cv-rxg3-hmpx advisory range; dev / non-runtime dependencies refreshed.
+- Vercel build command pinned to a production Vite build.
+
+### CI / DX
+
+- **Prod-bundle scan** — CI catches dev-only code leaking into production builds; dev-only UI is gated on local hostname, not build mode alone.
+- Scenetest runs against `pnpm dev:local` on port 5173; the cold-start first-spec failure is fixed; `_warmup` renamed to `00-warmup` for explicit sort order.
+- Supabase CLI version pinned in CI (setup-cli 404 workaround).
+- Lint reporting detects shifted issues; oxlint no longer lints `e2e/`; the lint-staged glob is fixed so JSON-only commits don't fail; assorted lint cleanups.
+- Playwright e2e marked deprecated in the testing docs; redundant specs removed.
+- Scenetest spec drift fixed (a stale `seeText` after a copy change).
+- New `Become-From` skill (renamed from "Initiate Transform").
+
+### Fixes
+
+- Phrase card — placeholder Delete/Edit buttons removed.
+- Comments/answers — duplicate toggles replaced with a metadata line + switch; "View in thread" spacing fixed.
+- Dialog layout and close-button positioning improved.
+- Password-reset form surfaces submit errors instead of silently failing on a doomed submit.
+- Generated colors restored for avatar placeholders.
+
 ## v0.25 - Auto-sync Search Corpus, Send-to-Friend Recommend, Concurrent-Team Tests
 
 _9 May, 2026_

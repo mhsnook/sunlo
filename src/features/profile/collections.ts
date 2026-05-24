@@ -11,6 +11,7 @@ import {
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { toastError } from '@/components/ui/sonner'
+import type { TablesUpdate } from '@/types/supabase'
 
 export const publicProfilesCollection = createCollection(
 	queryCollectionOptions({
@@ -36,9 +37,18 @@ export const myProfileQuery = queryOptions({
 	queryKey: ['user', 'profile'],
 	queryFn: async (_) => {
 		console.log(`Running myProfileQuery`)
+		// Identity-aware: no session → [] without a DB hit; with a session,
+		// query the row explicitly. Disambiguates "empty because logged out"
+		// from "empty because RLS filtered" so a sync that ran without auth
+		// can't masquerade as an authoritative empty result.
+		const {
+			data: { session },
+		} = await supabase.auth.getSession()
+		if (!session) return []
 		const { data } = await supabase
 			.from('user_profile')
 			.select()
+			.eq('uid', session.user.id)
 			.throwOnError()
 			.maybeSingle()
 		if (!data) return []
@@ -64,7 +74,7 @@ export const myProfileCollection = createCollection(
 					transaction.mutations.map((m) =>
 						supabase
 							.from('user_profile')
-							.update(m.changes)
+							.update(m.changes as TablesUpdate<'user_profile'>)
 							.eq('uid', m.original.uid)
 							.throwOnError()
 					)

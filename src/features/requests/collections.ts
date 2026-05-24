@@ -16,6 +16,7 @@ import {
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
 import { toastError } from '@/components/ui/sonner'
+import { should } from '@scenetest/checks-react'
 
 export const phraseRequestsCollection = createCollection(
 	queryCollectionOptions({
@@ -69,13 +70,30 @@ export const phraseRequestsCollection = createCollection(
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(
-					transaction.mutations.map((m) =>
-						supabase
+					transaction.mutations.map(async (m) => {
+						const { data } = await supabase
 							.from('phrase_request')
 							.update(m.changes)
 							.eq('id', m.original.id)
+							.select()
 							.throwOnError()
-					)
+						// m.changes IS the optimistic collection value; confirming the
+						// server's returned row matches it proves client/server
+						// agreement. A soft-delete (deleted: true) may not be
+						// selectable back under RLS — `!row ||` skips the assertion
+						// rather than failing. The guard lives inside should() so the
+						// whole call strips cleanly from production builds.
+						const row = data?.[0] as Record<string, unknown> | undefined
+						should(
+							`phrase_request ${m.original.id} server row matches the submitted update`,
+							!row ||
+								Object.entries(m.changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+							{ submitted: m.changes, returned: row }
+						)
+					})
 				)
 				return { refetch: false }
 			} catch (err) {
@@ -124,13 +142,27 @@ export const commentsCollection = createCollection(
 		onUpdate: async ({ transaction }) => {
 			try {
 				await Promise.all(
-					transaction.mutations.map((m) =>
-						supabase
+					transaction.mutations.map(async (m) => {
+						const { data } = await supabase
 							.from('request_comment')
 							.update(m.changes)
 							.eq('id', m.original.id)
+							.select()
 							.throwOnError()
-					)
+						// Confirm the server's returned row matches the optimistic
+						// edit. The row-guard lives inside should() so the whole call
+						// strips cleanly from production builds.
+						const row = data?.[0] as Record<string, unknown> | undefined
+						should(
+							`request_comment ${m.original.id} server row matches the submitted update`,
+							!row ||
+								Object.entries(m.changes).every(
+									([k, v]) =>
+										k === 'updated_at' || k === 'created_at' || row[k] === v
+								),
+							{ submitted: m.changes, returned: row }
+						)
+					})
 				)
 				return { refetch: false }
 			} catch (err) {
@@ -141,13 +173,22 @@ export const commentsCollection = createCollection(
 		onDelete: async ({ transaction }) => {
 			try {
 				await Promise.all(
-					transaction.mutations.map((m) =>
-						supabase
+					transaction.mutations.map(async (m) => {
+						const { data } = await supabase
 							.from('request_comment')
 							.delete()
 							.eq('id', m.original.id)
+							.select()
 							.throwOnError()
-					)
+						// A delete with .select() returns the rows it removed; confirm
+						// we removed exactly the targeted comment. Stripped from
+						// production by the Vite plugin.
+						should(
+							`request_comment delete removed comment ${m.original.id}`,
+							data?.length === 1 && data[0].id === m.original.id,
+							{ targetId: m.original.id, returned: data }
+						)
+					})
 				)
 				// Cascade-deleted replies and phrase links linger in the local
 				// collections until the next stale refetch, but they don't render

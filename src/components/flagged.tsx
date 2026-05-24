@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { flags } from '@/lib/flags'
+import { isDevEnvironment } from '@/lib/dev-mode'
 import { cn } from '@/lib/utils'
 
 export default function Flagged({
@@ -16,11 +17,12 @@ export default function Flagged({
 		if (flags[name].disabled === true) return null
 		// the enabled flag is the primary control
 		if (flags[name].enabled === true) return children
-	} else if (import.meta.env.DEV) return children
-	// show content in dev/preview mode, with a little yellow border
-	return import.meta.env.PROD ?
-			null
-		:	<div className={cn('border border-dashed border-yellow-500', className)}>
-				{children}
-			</div>
+	} else if (isDevEnvironment()) return children
+	// show content in a local dev session only, with a little yellow border;
+	// never on a deployed domain, even if the build mode is wrong
+	return isDevEnvironment() ? (
+		<div className={cn('border border-dashed border-yellow-500', className)}>
+			{children}
+		</div>
+	) : null
 }

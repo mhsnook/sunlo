@@ -302,6 +302,7 @@ function RouteComponent() {
 						<input
 							ref={inputRef}
 							type="text"
+							aria-label="Search phrases, playlists, and requests"
 							placeholder="Search phrases, playlists, requests..."
 							value={query}
 							onChange={(e) => setQuery(e.target.value)}

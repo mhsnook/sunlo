@@ -58,7 +58,10 @@ export function UidPermalink({
 			>
 				<Avatar className="bg-foreground text-background rounded-2xl">
 					<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
-					<AvatarFallback className="mx-auto place-self-center font-bold">
+					<AvatarFallback
+						seed={uid}
+						className="mx-auto place-self-center font-bold"
+					>
 						{data.username?.slice(0, 2)}
 					</AvatarFallback>
 				</Avatar>
@@ -133,7 +136,7 @@ export function UidPermalinkInline({
 			>
 				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
 					<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
-					<AvatarFallback className="text-[10px] font-bold">
+					<AvatarFallback seed={uid} className="text-[10px] font-bold">
 						{data.username?.slice(0, 2)}
 					</AvatarFallback>
 				</Avatar>

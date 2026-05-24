@@ -6,9 +6,7 @@ import {
 	MessagesSquare,
 	ListMusic,
 	Users,
-	Edit,
 	Settings,
-	Trash2,
 } from 'lucide-react'
 
 import type { uuid } from '@/types/main'
@@ -46,7 +44,6 @@ import {
 } from '@/features/phrases'
 import { PhraseTinyCard } from '@/components/cards/phrase-tiny-card'
 import { PlaylistEmbed } from '@/components/playlists/playlist-embed'
-import Flagged from '@/components/flagged'
 import { ago } from '@/lib/dayjs'
 import { useMyCard } from '@/features/deck/hooks'
 import { useAuth } from '@/lib/use-auth'
@@ -94,21 +91,7 @@ export function BigPhraseCard({ pid }: { pid: uuid }) {
 									</Badge>
 								)}
 							</div>
-							<div className="flex flex-row items-center gap-2">
-								<AdminGearLink phraseId={pid} lang={phrase.lang} />
-								<Flagged>
-									<Button
-										size="icon"
-										variant="ghost"
-										aria-label="Delete phrase"
-									>
-										<Trash2 />
-									</Button>
-									<Button size="icon" variant="ghost" aria-label="Edit phrase">
-										<Edit />
-									</Button>
-								</Flagged>
-							</div>
+							<AdminGearLink phraseId={pid} lang={phrase.lang} />
 						</div>
 						<CardTitle className="space-x-1 text-2xl">
 							<span

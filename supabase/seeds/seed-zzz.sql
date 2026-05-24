@@ -14,8 +14,13 @@ set
 	"value" = excluded."value";
 
 -- Every seed file sets session_replication_role = replica, which disables
--- the statement-level triggers that keep search_text_index in step with
--- source-table writes. Refresh the MV once at the end of seed loading so
--- trigram search has rows to match against. (refresh materialized view
--- is a direct command, not a trigger, so replica mode doesn't block it.)
+-- the statement-level triggers that keep these materialized views in step
+-- with source-table writes. Refresh them once at the end of seed loading.
+-- (refresh materialized view is a direct command, not a trigger, so replica
+-- mode doesn't block it.)
+--   search_text_index — so trigram search has rows to match against.
+--   meta_language     — so language lists (browse, chats) are non-empty;
+--                       its refresh triggers fire on phrase / user_deck writes.
 refresh materialized view "public"."search_text_index";
+
+refresh materialized view "public"."meta_language";
