@@ -128,6 +128,17 @@ function StatusSpan({ choice }: { choice: ShowableActions }) {
 	)
 }
 
+// Trigger dot colour by card state. The dropdown menu items still use the
+// full icon family in `statusStrings`; the trigger is intentionally flat —
+// one shape, one size, just hue swapping with the state.
+const triggerDotClass: Record<ShowableActions, string> = {
+	active: 'bg-primary',
+	learned: 'bg-5-hi-success',
+	skipped: 'bg-4-lo-neutral',
+	nocard: 'bg-3-lo-neutral',
+	nodeck: 'bg-3-lo-neutral',
+}
+
 const isLearnerStatus = (s: LearningStatus | undefined) =>
 	s === 'active' || s === 'learned' ? 1 : 0
 
@@ -245,11 +256,15 @@ export function CardStatusDropdown({
 		}
 	}
 
-	const choice: ShowableActions = needsDeckSetup
+	// Dropdown items still show the full action context (incl. nodeck copy);
+	// the trigger only narrates the card's actual state — flat and consistent,
+	// regardless of whether the underlying deck needs setup.
+	const menuChoice: ShowableActions = needsDeckSetup
 		? 'nodeck'
 		: !card
 			? 'nocard'
 			: card.status
+	const triggerChoice: ShowableActions = !card ? 'nocard' : card.status
 
 	return !userId ? null : (
 		<>
@@ -260,17 +275,18 @@ export function CardStatusDropdown({
 						<Button
 							variant={card?.status === 'active' ? 'soft' : 'ghost'}
 							size="sm"
-							className="m-0 min-w-28 justify-between px-1.5"
 							data-name="card-status-dropdown"
 							data-key={phrase.id}
+							aria-label={`Card status: ${statusStrings[triggerChoice].name}`}
 						/>
 					}
 				>
-					<span className="flex items-center justify-center [&_svg]:size-4">
-						<StatusIcon choice={choice} />
-					</span>
-					<span className="me-1">{statusStrings[choice].name}</span>
-					<ChevronDown size={12} />
+					<span
+						aria-hidden="true"
+						className={`size-2 shrink-0 rounded-full ${triggerDotClass[triggerChoice]}`}
+					/>
+					<span>{statusStrings[triggerChoice].name}</span>
+					<ChevronDown className="opacity-60" />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className="">
 					{!card ? (
@@ -278,7 +294,7 @@ export function CardStatusDropdown({
 							onClick={() => pickStatus('active')}
 							data-testid="add-to-deck-option"
 						>
-							<StatusSpan choice={needsDeckSetup ? 'nodeck' : 'nocard'} />
+							<StatusSpan choice={menuChoice} />
 						</DropdownMenuItem>
 					) : (
 						<>
