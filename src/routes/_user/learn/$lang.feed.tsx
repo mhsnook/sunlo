@@ -174,6 +174,7 @@ function DeckFeedPage() {
 	const handleValueChange = (value: string) => {
 		void navigate({
 			search: { feed: value as 'newest' | 'friends' | 'popular' },
+			replace: true,
 		})
 	}
 	const search = Route.useSearch()

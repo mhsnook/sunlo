@@ -90,6 +90,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 							<>
 								<Link
 									to="."
+									replace={true}
 									search={(prev) => ({
 										...prev,
 										focus: comment.id,
@@ -139,6 +140,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								size: 'sm',
 							})}
 							to={'.'}
+							replace={true}
 							search={(search) => ({
 								...search,
 								focus: comment.id,
@@ -158,6 +160,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 								size: 'sm',
 							})}
 							to={'.'}
+							replace={true}
 							search={(search) => {
 								if (showSubthread) {
 									const { focus: _, ...args } = search
@@ -185,6 +188,7 @@ export function CommentWithReplies({ comment, lang }: CommentThreadProps) {
 						<Separator />
 						<Link
 							to="."
+							replace={true}
 							search={(prev) => ({
 								...prev,
 								focus: comment.id,
@@ -243,6 +247,7 @@ function CommentReply({ comment, lang }: CommentThreadProps) {
 						<>
 							<Link
 								to="."
+								replace={true}
 								search={(prev) => ({
 									...prev,
 									focus: comment.id,

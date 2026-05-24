@@ -34,6 +34,7 @@ export function FeedFilterMenu() {
 				...prev,
 				filter_type: value === 'all' ? undefined : value,
 			})) as never,
+			replace: true,
 		})
 	}
 

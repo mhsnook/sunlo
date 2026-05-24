@@ -58,6 +58,7 @@ export function ReplyDialog({ requestId, lang, mode }: ReplyDialogProps) {
 	const close = () => {
 		void navigate({
 			to: '.',
+			replace: true,
 			search: (prev: Record<string, unknown>) => {
 				const { mode: _, ...rest } = prev
 				return rest
@@ -173,6 +174,7 @@ function NewReplyForm({
 					to: '/learn/$lang/requests/$id',
 					params: { lang, id: requestId },
 					search: { focus: parentCommentId },
+					replace: true,
 				})
 				toastSuccess('Reply posted!')
 				formApi.reset()

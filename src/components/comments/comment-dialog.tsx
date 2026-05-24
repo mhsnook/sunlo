@@ -113,6 +113,7 @@ export function CommentDialog({
 		if (mode?.kind === 'quicksearch') {
 			void navigate({
 				to: '.',
+				replace: true,
 				search: (prev: Record<string, unknown>) => {
 					const { mode: _, attaching: __, ...rest } = prev
 					return rest
@@ -124,6 +125,7 @@ export function CommentDialog({
 		) {
 			void navigate({
 				to: '.',
+				replace: true,
 				search: (prev: Record<string, unknown>) => {
 					const { attaching: _, ...rest } = prev
 					return rest
@@ -132,6 +134,7 @@ export function CommentDialog({
 		} else {
 			void navigate({
 				to: '.',
+				replace: true,
 				search: (prev: Record<string, unknown>) => {
 					const { mode: _, attaching: __, ...rest } = prev
 					return rest
@@ -186,6 +189,7 @@ export function CommentDialog({
 							if (mode?.kind === 'quicksearch') {
 								void navigate({
 									to: '.',
+									replace: true,
 									search: (prev: Record<string, unknown>) => ({
 										...prev,
 										mode: 'comment' as const,
@@ -194,6 +198,7 @@ export function CommentDialog({
 							} else {
 								void navigate({
 									to: '.',
+									replace: true,
 									search: (prev: Record<string, unknown>) => {
 										const { attaching: _, ...rest } = prev
 										return rest
@@ -366,6 +371,7 @@ function AttachedPhraseCards({
 				{selectedPhraseIds.length < 4 && (
 					<Link
 						to="."
+						replace={true}
 						search={(prev: Record<string, unknown>) => ({
 							...prev,
 							attaching: true,
@@ -380,6 +386,7 @@ function AttachedPhraseCards({
 	) : (
 		<Link
 			to="."
+			replace={true}
 			search={(prev: Record<string, unknown>) => ({
 				...prev,
 				attaching: true,

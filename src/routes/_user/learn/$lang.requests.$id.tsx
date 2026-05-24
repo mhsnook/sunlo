@@ -52,6 +52,7 @@ export const Route = createFileRoute('/_user/learn/$lang/requests/$id')({
 		appnav: [],
 		titleBar: ({ params }) => ({
 			title: `${languages[params.lang]} Request`,
+			onBackClick: '/learn/$lang/requests',
 		}),
 	},
 	loader: async ({ context, location, cause }) => {
@@ -127,6 +128,7 @@ function RequestThreadPage() {
 					<div className="flex w-full flex-row items-center gap-2">
 						<Link
 							to="."
+							replace={true}
 							search={(s) => ({ ...s, mode: 'comment' })}
 							className="@group flex grow cursor-pointer flex-row items-center gap-2"
 							data-testid="open-comment-dialog"
@@ -138,6 +140,7 @@ function RequestThreadPage() {
 						</Link>
 						<Link
 							to="."
+							replace={true}
 							search={(s) => ({ ...s, mode: 'search' })}
 							className={cn(
 								buttonVariants({ variant: 'soft', size: 'sm' }),
@@ -186,6 +189,7 @@ function AnswersOnlyToggle({ answersOnly }: { answersOnly: boolean }) {
 				onCheckedChange={(checked) => {
 					void navigate({
 						to: '.',
+						replace: true,
 						search: (s) => ({
 							...s,
 							show: checked ? 'answers-only' : 'thread',
@@ -244,6 +248,7 @@ function AnswersOnlyView() {
 										{i === arr.length - 1 && arr.length > 1 ? ' and ' : ''}
 										<Link
 											to="."
+											replace={true}
 											search={{
 												show: 'thread',
 												focus: l.comment_id,
