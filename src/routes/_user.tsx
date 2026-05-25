@@ -48,10 +48,10 @@ export const Route = createFileRoute('/_user')({
 	},
 	validateSearch: UserSearchParams,
 	loader: async ({ context: { auth } }) => {
+		// Public/shared, fires regardless of auth state.
+		void languagesCollection.preload()
 		if (!auth.isAuth) return
 		await authLifecycle.loadAllTheRequiredUserDataAfterNewLogin(auth.userId!)
-		// languagesCollection is public/shared, not part of the user-data unit.
-		void languagesCollection.preload()
 	},
 	component: UserLayout,
 	pendingComponent: Loader,
