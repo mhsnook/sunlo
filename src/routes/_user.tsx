@@ -39,9 +39,11 @@ import { notificationsCollection } from '@/features/notifications/collections'
 import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
+import { PhraseSheet } from '@/components/phrase-sheet'
 
 const UserSearchParams = z.object({
 	search: z.boolean().optional(),
+	phrase: z.string().uuid().optional(),
 })
 
 export const Route = createFileRoute('/_user')({
@@ -121,7 +123,7 @@ function UserLayout() {
 	const searchScope: SearchScope | undefined = matches.findLast(
 		(m) => m.staticData.search
 	)?.staticData.search
-	const { search: isSearchOpen } = Route.useSearch()
+	const { search: isSearchOpen, phrase: phraseId } = Route.useSearch()
 	const router = useRouter()
 	const { lang } = useParams({ strict: false })
 	const initialLangs = lang && lang in languages ? [lang] : undefined
@@ -240,6 +242,7 @@ function UserLayout() {
 			{isSearchOpen && searchScope === 'profiles' && (
 				<FriendSearchOverlay onClose={closeSearch} />
 			)}
+			<PhraseSheet pid={phraseId} />
 		</div>
 	)
 }
