@@ -15,6 +15,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import { toastError } from '@/components/ui/sonner'
 import { should } from '@scenetest/checks-react'
 
 export const phraseRequestsCollection = createCollection(
@@ -82,6 +83,65 @@ export const phraseRequestUpvotesCollection = createCollection(
 		getKey: (item: PhraseRequestUpvoteType) => item.request_id,
 		queryClient,
 		schema: PhraseRequestUpvoteSchema,
+		onInsert: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					transaction.mutations.map(async (m) => {
+						const { error } = await supabase.rpc('set_phrase_request_upvote', {
+							p_request_id: m.modified.request_id,
+							p_action: 'add',
+						})
+						if (error) throw error
+					})
+				)
+				// Mirror the trigger-maintained upvote_count bump into the parent
+				// collection if it's loaded. ±1 may drift by 1 in the 'no_change'
+				// edge case (issue #647 tracks the proper RPC-returns-count fix).
+				if (phraseRequestsCollection.status === 'ready') {
+					for (const m of transaction.mutations) {
+						const parent = phraseRequestsCollection.get(m.modified.request_id)
+						if (parent) {
+							phraseRequestsCollection.utils.writeUpdate({
+								id: m.modified.request_id,
+								upvote_count: (parent.upvote_count ?? 0) + 1,
+							})
+						}
+					}
+				}
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to upvote — please try again')
+				throw err
+			}
+		},
+		onDelete: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					transaction.mutations.map(async (m) => {
+						const { error } = await supabase.rpc('set_phrase_request_upvote', {
+							p_request_id: m.original.request_id,
+							p_action: 'remove',
+						})
+						if (error) throw error
+					})
+				)
+				if (phraseRequestsCollection.status === 'ready') {
+					for (const m of transaction.mutations) {
+						const parent = phraseRequestsCollection.get(m.original.request_id)
+						if (parent) {
+							phraseRequestsCollection.utils.writeUpdate({
+								id: m.original.request_id,
+								upvote_count: Math.max(0, (parent.upvote_count ?? 0) - 1),
+							})
+						}
+					}
+				}
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to remove vote — please try again')
+				throw err
+			}
+		},
 	})
 )
 
@@ -193,5 +253,61 @@ export const commentUpvotesCollection = createCollection(
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
 		schema: CommentUpvoteSchema,
+		onInsert: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					transaction.mutations.map(async (m) => {
+						const { error } = await supabase.rpc('set_comment_upvote', {
+							p_comment_id: m.modified.comment_id,
+							p_action: 'add',
+						})
+						if (error) throw error
+					})
+				)
+				if (commentsCollection.status === 'ready') {
+					for (const m of transaction.mutations) {
+						const parent = commentsCollection.get(m.modified.comment_id)
+						if (parent) {
+							commentsCollection.utils.writeUpdate({
+								id: m.modified.comment_id,
+								upvote_count: (parent.upvote_count ?? 0) + 1,
+							})
+						}
+					}
+				}
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to upvote — please try again')
+				throw err
+			}
+		},
+		onDelete: async ({ transaction }) => {
+			try {
+				await Promise.all(
+					transaction.mutations.map(async (m) => {
+						const { error } = await supabase.rpc('set_comment_upvote', {
+							p_comment_id: m.original.comment_id,
+							p_action: 'remove',
+						})
+						if (error) throw error
+					})
+				)
+				if (commentsCollection.status === 'ready') {
+					for (const m of transaction.mutations) {
+						const parent = commentsCollection.get(m.original.comment_id)
+						if (parent) {
+							commentsCollection.utils.writeUpdate({
+								id: m.original.comment_id,
+								upvote_count: Math.max(0, (parent.upvote_count ?? 0) - 1),
+							})
+						}
+					}
+				}
+				return { refetch: false }
+			} catch (err) {
+				toastError('Failed to remove vote — please try again')
+				throw err
+			}
+		},
 	})
 )
