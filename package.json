@@ -17,6 +17,8 @@
 		"scene": "scenetest --no-panel",
 		"scene:ui": "scenetest",
 		"scene:ci": "scenetest --no-panel --format both --report scenetest/.reports",
+		"st:link": "pnpm link ../scenetest-js/packages/scenes && pnpm link ../scenetest-js/packages/vite-plugin && pnpm link ../scenetest-js/packages/checks-panel && pnpm link ../scenetest-js/packages/checks-react",
+		"st:unlink": "pnpm unlink @scenetest/scenes @scenetest/vite-plugin @scenetest/checks-panel @scenetest/checks-react && pnpm install",
 		"test:unit": "vitest run",
 		"migrate": "supabase db diff --use-pg-delta -f new_migration",
 		"types": "supabase gen types typescript --local > ./src/types/supabase.ts",
