@@ -19,7 +19,8 @@ new-user:
 - up
 - see request-detail-page
 - notSee appnav-feed
-- click card-status-heart [team.full_shared_chat_answer_pid]
+- see comment-phrase-link-badge
+- click comment-phrase-link-badge card-status-heart #1
 - up
 - see start-learning-dialog
 - click confirm-start-learning-button
