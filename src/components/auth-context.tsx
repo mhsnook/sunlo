@@ -9,7 +9,7 @@ import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 import type { RolesEnum } from '@/types/main'
 import supabase, { pingSupabase } from '@/lib/supabase-client'
-import { clearUser } from '@/lib/collections/clear-user'
+import { authLifecycle } from '@/lib/auth-lifecycle'
 import { AuthContext, AuthLoaded, emptyAuth } from '@/lib/use-auth'
 
 async function checkAdminStatus(): Promise<boolean> {
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 	// The first event onAuthStateChange delivers — whatever it is; supabase
 	// can emit SIGNED_IN / TOKEN_REFRESHED ahead of INITIAL_SESSION when the
 	// stored token needs refreshing — is a boot-time read, not a transition.
-	// Treat it as such (skip clearUser, skip the persisted-cache wipe).
+	// Skip the identity-change clear (and persisted-cache wipe) for it.
 	const initialAuthSeen = useRef(false)
 
 	const handleNewAuthState = useEffectEvent(
@@ -42,11 +42,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			const isIdentityChange = !isInitial && prevUserId !== nextUserId
 
 			if (isIdentityChange) {
-				// Any identity change — sign-out, switch, or first-login. The
-				// first-login case matters too: layout subscribers (NavUser /
-				// sidebar) sync user collections logged-out and park them
-				// `ready` with [], which would short-circuit later preload()s.
-				void clearUser()
+				void authLifecycle.clearAllUserDataOnIdentityChange()
 			}
 			if (isIdentityChange && !nextUserId) setIsAdmin(false)
 
