@@ -25,5 +25,4 @@ new-user:
 - see start-learning-dialog
 - click confirm-start-learning-button
 - up
-- seeToast toast-success
 - see appnav-feed
