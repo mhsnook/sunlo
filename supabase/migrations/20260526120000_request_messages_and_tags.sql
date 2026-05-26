@@ -177,6 +177,12 @@ create trigger ensure_phrase_request_message
 before insert on public.phrase_request for each row
 execute function public.ensure_phrase_request_message ();
 
+-- The seed loader runs with `session_replication_role = replica` to skip
+-- triggers for speed, but this trigger is the only thing populating the
+-- new not-null message_id column. ENABLE ALWAYS makes it fire in replica
+-- mode too, so seed inserts that omit message_id still get one.
+alter table public.phrase_request enable always trigger ensure_phrase_request_message;
+
 -- ── 6. seed the initial tags ────────────────────────────────────────
 insert into
 	public.message_tag (slug, label, sort_order)
