@@ -175,9 +175,12 @@ function useCardStatusMutator(
 ) {
 	const userId = useUserId()
 
-	return (status: LearningStatus) => {
-		if (!userId) return
-		if (card?.status === status) return
+	return (
+		status: LearningStatus,
+		options?: { silent?: boolean }
+	): Promise<void> => {
+		if (!userId) return Promise.resolve()
+		if (card?.status === status) return Promise.resolve()
 
 		const tx = card
 			? cardsCollection.update(
@@ -209,22 +212,25 @@ function useCardStatusMutator(
 
 		const revertCount = updatePhraseCount(phrase.id, card?.status, status)
 
-		tx.isPersisted.promise.then(
+		return tx.isPersisted.promise.then(
 			() => {
-				toastSuccess(
-					card
-						? `Updated card status to "${status}"`
-						: 'Added this phrase to your deck'
-				)
+				if (!options?.silent) {
+					toastSuccess(
+						card
+							? `Updated card status to "${status}"`
+							: 'Added this phrase to your deck'
+					)
+				}
 			},
 			(err) => {
 				revertCount?.()
+				console.error('Card status mutation rolled back:', err)
+				if (options?.silent) throw err
 				toastError(
 					card
 						? 'There was an error updating this card'
 						: 'There was an error adding this card to your deck'
 				)
-				console.error('Card status mutation rolled back:', err)
 			}
 		)
 	}
@@ -252,7 +258,7 @@ export function CardStatusDropdown({
 		if (needsDeckSetup) {
 			setPendingStatus(status)
 		} else {
-			setCardStatus(status)
+			void setCardStatus(status)
 		}
 	}
 
@@ -331,9 +337,11 @@ export function CardStatusDropdown({
 					}}
 					lang={phrase.lang}
 					archivedDeck={deck?.archived ? deck : null}
-					onConfirmed={() => {
-						if (pendingStatus) setCardStatus(pendingStatus)
-					}}
+					onConfirmed={() =>
+						pendingStatus
+							? setCardStatus(pendingStatus, { silent: true })
+							: Promise.resolve()
+					}
 				/>
 			)}
 		</>
@@ -372,7 +380,7 @@ export function CardStatusHeart({
 						if (needsDeckSetup) {
 							setDialogOpen(true)
 						} else {
-							setCardStatus(statusToPost)
+							void setCardStatus(statusToPost)
 						}
 					}, 'Please log in to add phrases to your library')
 				}}
@@ -396,7 +404,7 @@ export function CardStatusHeart({
 					onOpenChange={setDialogOpen}
 					lang={phrase.lang}
 					archivedDeck={deck?.archived ? deck : null}
-					onConfirmed={() => setCardStatus(statusToPost)}
+					onConfirmed={() => setCardStatus(statusToPost, { silent: true })}
 				/>
 			)}
 		</>
@@ -419,7 +427,7 @@ function StartLearningDialog({
 	onOpenChange: (open: boolean) => void
 	lang: string
 	archivedDeck: DeckMetaType | null
-	onConfirmed: () => void
+	onConfirmed: () => Promise<void>
 }) {
 	const [pending, setPending] = useState(false)
 	const language = languages[lang] ?? lang
@@ -427,6 +435,7 @@ function StartLearningDialog({
 
 	const handleConfirm = async () => {
 		setPending(true)
+		let deckReady = false
 		try {
 			if (isUnarchive) {
 				const tx = decksCollection.update(lang, (draft) => {
@@ -439,19 +448,22 @@ function StartLearningDialog({
 					DeckMetaSchema.parse({ ...row, language })
 				)
 			}
+			deckReady = true
+			await onConfirmed()
 			toastSuccess(
 				isUnarchive
-					? `Restored your ${language} deck`
-					: `Started a new ${language} deck`
+					? `Restored your ${language} deck and added this phrase`
+					: `Started a new ${language} deck with this phrase`
 			)
-			onConfirmed()
 			onOpenChange(false)
 		} catch (err) {
-			console.error('StartLearningDialog: failed to set up deck', err)
+			console.error('StartLearningDialog: failed', err)
 			toastError(
-				isUnarchive
-					? `Couldn't restore your ${language} deck`
-					: `Couldn't start a new ${language} deck`
+				deckReady
+					? `Created your ${language} deck but couldn't add this phrase`
+					: isUnarchive
+						? `Couldn't restore your ${language} deck`
+						: `Couldn't start a new ${language} deck`
 			)
 		} finally {
 			setPending(false)
