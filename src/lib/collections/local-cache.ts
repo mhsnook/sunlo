@@ -35,7 +35,7 @@ import { DeckMetaSchema } from '@/features/deck/schemas'
 
 // A user collection mirrored to localStorage. `queryKey` must match the
 // collection's own queryKey in its features/*/collections.ts.
-type PersistedCollection = {
+export type PersistedCollection = {
 	label: string
 	storageKey: string
 	queryKey: ReadonlyArray<string>
@@ -46,7 +46,7 @@ type PersistedCollection = {
 	parseRow: (row: unknown) => unknown
 }
 
-const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
+export const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
 	{
 		label: 'profile',
 		storageKey: 'sunlo-cache-profile',
@@ -70,7 +70,7 @@ const PERSISTED_COLLECTIONS: ReadonlyArray<PersistedCollection> = [
  * confirms the session. The project ref varies (local vs prod) so we match the
  * `sb-<ref>-auth-token` shape rather than reconstructing the exact key.
  */
-function hasSupabaseSessionToken(): boolean {
+export function hasSupabaseSessionToken(): boolean {
 	try {
 		for (let i = 0; i < localStorage.length; i++) {
 			const key = localStorage.key(i)
@@ -82,7 +82,7 @@ function hasSupabaseSessionToken(): boolean {
 	return false
 }
 
-function attachMirror(entry: PersistedCollection): void {
+export function attachMirror(entry: PersistedCollection): void {
 	entry.collection.subscribeChanges(() => {
 		try {
 			localStorage.setItem(
@@ -95,7 +95,7 @@ function attachMirror(entry: PersistedCollection): void {
 	})
 }
 
-function hydrateFromStorage(entry: PersistedCollection): number {
+export function hydrateFromStorage(entry: PersistedCollection): number {
 	try {
 		const stored = localStorage.getItem(entry.storageKey)
 		if (stored === null) return 0
@@ -111,31 +111,6 @@ function hydrateFromStorage(entry: PersistedCollection): number {
 		)
 		localStorage.removeItem(entry.storageKey)
 		return 0
-	}
-}
-
-/**
- * `bootstrap` phase (entry script, before React renders): wire the
- * localStorage mirror for each persisted collection so future changes are
- * saved, and if this device looks logged in, prime the React Query cache
- * from localStorage. The mirror has to attach unconditionally — bootstrap
- * runs once, so a visitor who logs in this session needs the listener
- * already in place for their post-login data to persist.
- */
-export function restorePersistedUserData(): void {
-	const hasSession = hasSupabaseSessionToken()
-	const restored: Record<string, number> = {}
-	for (const entry of PERSISTED_COLLECTIONS) {
-		attachMirror(entry)
-		restored[entry.label] = hasSession ? hydrateFromStorage(entry) : 0
-	}
-	if (hasSession) {
-		console.log(
-			'App bootstrap: found Supabase session; restored from cache:',
-			restored
-		)
-	} else {
-		console.log('App bootstrap: no Supabase session in localStorage')
 	}
 }
 

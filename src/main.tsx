@@ -15,12 +15,12 @@ import Routes from './routes'
 import '@/styles/globals.css'
 import { Button } from '@/components/ui/button'
 import { queryClient } from './lib/query-client'
-import { restorePersistedUserData } from './lib/collections/local-cache'
+import { authLifecycle } from './lib/auth-lifecycle'
 import './test-runtime-helpers'
 
-// bootstrap phase: restore persisted user data from localStorage, synchronously
-// in the entry script — before React renders and before any collection syncs.
-restorePersistedUserData()
+// bootstrap phase: wire localStorage mirrors and (if logged in) hydrate from
+// cache, synchronously — before React renders and before any collection syncs.
+authLifecycle.registerPersistedMirrorsAtBootstrap()
 
 // Create a new router instance
 const router = createRouter({

@@ -26,16 +26,9 @@ const AppNav = lazy(() =>
 )
 import { RightSidebar } from '@/components/navs/right-sidebar'
 import { resolveNavList } from '@/types/route-static-data'
-import {
-	myProfileCollection,
-	myProfileQuery,
-} from '@/features/profile/collections'
-import { queryClient } from '@/lib/query-client'
-import { decksCollection } from '@/features/deck/collections'
+import { authLifecycle } from '@/lib/auth-lifecycle'
 import { useDeckMeta } from '@/features/deck/hooks'
-import { friendSummariesCollection } from '@/features/social/collections'
 import { useSocialRealtime } from '@/features/social'
-import { notificationsCollection } from '@/features/notifications/collections'
 import { languagesCollection } from '@/features/languages/collections'
 import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
@@ -54,43 +47,11 @@ export const Route = createFileRoute('/_user')({
 		},
 	},
 	validateSearch: UserSearchParams,
-	loader: async ({ context }) => {
-		// If not authenticated, skip user-specific loading
-		if (!context.auth.isAuth) return
-
-		// The profile collection must be populated before first render —
-		// NavUser, OnboardingNudge and others call useProfile() unconditionally.
-		await myProfileCollection.preload()
-
-		// Belt-and-suspenders: clearUser on the auth flip already cleaned
-		// this up. If we still see size 0, force a fresh sync — synchronous
-		// removeQueries (cleanup's own runs async-after-await and races
-		// preload), cleanup() to flip off `ready`, then preload() to refetch.
-		if (myProfileCollection.size === 0) {
-			queryClient.removeQueries({ queryKey: myProfileQuery.queryKey })
-			await myProfileCollection.cleanup()
-			await myProfileCollection.preload()
-		}
-
-		// Invariant: handle_new_user() + the migration backfill guarantee a
-		// user_profile row for every confirmed auth user. If the collection is
-		// still empty after a clean authenticated fetch, the invariant is
-		// broken — fail loudly rather than let the user roam a nameless,
-		// half-working app with no recovery path.
-		if (myProfileCollection.size === 0) {
-			console.error(
-				`No user_profile row for authenticated user ${context.auth.userId} — ` +
-					`the handle_new_user trigger or backfill did not run for this account.`
-			)
-			throw new Error(
-				"We couldn't load your account profile. Try refreshing the page — if this keeps happening, please contact support."
-			)
-		}
-
-		void decksCollection.preload()
-		void friendSummariesCollection.preload()
-		void notificationsCollection.preload()
+	loader: async ({ context: { auth } }) => {
+		// Public/shared, fires regardless of auth state.
 		void languagesCollection.preload()
+		if (!auth.isAuth) return
+		await authLifecycle.loadAllTheRequiredUserDataAfterNewLogin(auth.userId!)
 	},
 	component: UserLayout,
 	pendingComponent: Loader,
