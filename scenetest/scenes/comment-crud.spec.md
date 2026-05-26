@@ -4,7 +4,7 @@
 // URL-mode edit dialog to attach a phrase and update the text.
 // Finally deletes the comment to clean up.
 
-cleanup: supabase.from('comment_phrase_link').delete().eq('uid', '[friend.key]')
+cleanup: supabase.from('comment_phrase_link').delete().eq('uid', '[friend.key]').eq('request_id', '[team.partial_crud_request]')
 cleanup: supabase.from('request_comment').delete().eq('uid', '[friend.key]').eq('request_id', '[team.partial_crud_request]')
 
 friend:
