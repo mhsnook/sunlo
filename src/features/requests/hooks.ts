@@ -5,11 +5,14 @@ import {
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
 	commentsCollection,
+	messageTagLinksCollection,
+	messageTagsCollection,
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from './collections'
 import type {
 	CommentPhraseLinkType,
+	MessageTagType,
 	PhraseRequestType,
 	RequestCommentType,
 } from './schemas'
@@ -129,6 +132,37 @@ export const useHasCommentUpvote = (commentId: uuid): boolean =>
 				.where(({ upvote }) => eq(upvote.comment_id, commentId)),
 		[commentId]
 	).data?.length
+
+/** All curated message tags, ordered by sort_order. */
+export const useMessageTags = () =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ tag: messageTagsCollection })
+				.orderBy(({ tag }) => tag.sort_order, 'asc'),
+		[]
+	)
+
+/** Tags attached to a single message, ordered by sort_order. */
+export const useMessageTagsForMessage = (
+	messageId: uuid | undefined | null
+): UseLiveQueryResult<MessageTagType[]> =>
+	useLiveQuery(
+		(q) =>
+			!messageId
+				? undefined
+				: q
+						.from({ link: messageTagLinksCollection })
+						.where(({ link }) => eq(link.message_id, messageId))
+						.join(
+							{ tag: messageTagsCollection },
+							({ link, tag }) => eq(link.tag_slug, tag.slug),
+							'inner'
+						)
+						.select(({ tag }) => tag)
+						.orderBy(({ tag }) => tag.sort_order, 'asc'),
+		[messageId]
+	)
 
 export function useAnyonesComments(
 	uid: uuid,

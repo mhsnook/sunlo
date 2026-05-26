@@ -15,6 +15,12 @@ export {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	MessageSchema,
+	type MessageType,
+	MessageTagSchema,
+	type MessageTagType,
+	MessageTagLinkSchema,
+	type MessageTagLinkType,
 } from './schemas'
 
 // Collections
@@ -24,6 +30,9 @@ export {
 	commentsCollection,
 	commentPhraseLinksCollection,
 	commentUpvotesCollection,
+	messagesCollection,
+	messageTagsCollection,
+	messageTagLinksCollection,
 } from './collections'
 
 // Live collections
@@ -40,4 +49,6 @@ export {
 	useCommentPhraseLinks,
 	useHasCommentUpvote,
 	useAnyonesComments,
+	useMessageTags,
+	useMessageTagsForMessage,
 } from './hooks'

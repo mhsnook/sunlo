@@ -16,9 +16,38 @@ export const PhraseRequestSchema = z.object({
 	upvote_count: z.number().default(0),
 	deleted: z.boolean().default(false),
 	updated_at: z.string().nullable().optional(),
+	// Server-side trigger auto-creates a message row on insert if not
+	// provided, so this is optional at insert time. The synced row always
+	// has it set; the client just doesn't need to know the value upfront.
+	message_id: z.string().uuid().optional(),
 })
 
 export type PhraseRequestType = z.infer<typeof PhraseRequestSchema>
+
+export const MessageSchema = z.object({
+	id: z.string().uuid(),
+	created_at: z.string(),
+})
+
+export type MessageType = z.infer<typeof MessageSchema>
+
+export const MessageTagSchema = z.object({
+	slug: z.string(),
+	label: z.string(),
+	description: z.string().nullable(),
+	sort_order: z.number().default(0),
+	created_at: z.string(),
+})
+
+export type MessageTagType = z.infer<typeof MessageTagSchema>
+
+export const MessageTagLinkSchema = z.object({
+	message_id: z.string().uuid(),
+	tag_slug: z.string(),
+	created_at: z.string(),
+})
+
+export type MessageTagLinkType = z.infer<typeof MessageTagLinkSchema>
 
 export const PhraseRequestUpvoteSchema = z.object({
 	request_id: z.string().uuid(),

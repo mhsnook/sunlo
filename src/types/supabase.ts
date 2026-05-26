@@ -462,6 +462,78 @@ export type Database = {
 					},
 				]
 			}
+			message: {
+				Row: {
+					created_at: string
+					id: string
+				}
+				Insert: {
+					created_at?: string
+					id?: string
+				}
+				Update: {
+					created_at?: string
+					id?: string
+				}
+				Relationships: []
+			}
+			message_tag: {
+				Row: {
+					created_at: string
+					description: string | null
+					label: string
+					slug: string
+					sort_order: number
+				}
+				Insert: {
+					created_at?: string
+					description?: string | null
+					label: string
+					slug: string
+					sort_order?: number
+				}
+				Update: {
+					created_at?: string
+					description?: string | null
+					label?: string
+					slug?: string
+					sort_order?: number
+				}
+				Relationships: []
+			}
+			message_tag_link: {
+				Row: {
+					created_at: string
+					message_id: string
+					tag_slug: string
+				}
+				Insert: {
+					created_at?: string
+					message_id: string
+					tag_slug: string
+				}
+				Update: {
+					created_at?: string
+					message_id?: string
+					tag_slug?: string
+				}
+				Relationships: [
+					{
+						foreignKeyName: 'message_tag_link_message_id_fkey'
+						columns: ['message_id']
+						isOneToOne: false
+						referencedRelation: 'message'
+						referencedColumns: ['id']
+					},
+					{
+						foreignKeyName: 'message_tag_link_tag_slug_fkey'
+						columns: ['tag_slug']
+						isOneToOne: false
+						referencedRelation: 'message_tag'
+						referencedColumns: ['slug']
+					},
+				]
+			}
 			phrase: {
 				Row: {
 					added_by: string
@@ -694,6 +766,7 @@ export type Database = {
 					deleted: boolean
 					id: string
 					lang: string
+					message_id: string
 					prompt: string
 					requester_uid: string
 					updated_at: string | null
@@ -704,6 +777,7 @@ export type Database = {
 					deleted?: boolean
 					id?: string
 					lang: string
+					message_id?: string
 					prompt: string
 					requester_uid: string
 					updated_at?: string | null
@@ -714,6 +788,7 @@ export type Database = {
 					deleted?: boolean
 					id?: string
 					lang?: string
+					message_id?: string
 					prompt?: string
 					requester_uid?: string
 					updated_at?: string | null
@@ -733,6 +808,13 @@ export type Database = {
 						isOneToOne: false
 						referencedRelation: 'meta_language'
 						referencedColumns: ['lang']
+					},
+					{
+						foreignKeyName: 'phrase_request_message_id_fkey'
+						columns: ['message_id']
+						isOneToOne: false
+						referencedRelation: 'message'
+						referencedColumns: ['id']
 					},
 					{
 						foreignKeyName: 'phrase_request_requester_uid_fkey'
