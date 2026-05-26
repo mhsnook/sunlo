@@ -12,6 +12,12 @@ import {
 	type CommentPhraseLinkType,
 	CommentUpvoteSchema,
 	type CommentUpvoteType,
+	MessageSchema,
+	type MessageType,
+	MessageTagSchema,
+	type MessageTagType,
+	MessageTagLinkSchema,
+	type MessageTagLinkType,
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
@@ -193,5 +199,94 @@ export const commentUpvotesCollection = createCollection(
 		getKey: (item: CommentUpvoteType) => item.comment_id,
 		queryClient,
 		schema: CommentUpvoteSchema,
+	})
+)
+
+// `message` is the cross-language object behind each phrase_request. Today
+// it's 1:1 with a request (auto-created by a DB trigger on insert), but
+// holds the tag links and will later group reposts of the same underlying
+// message across languages. See migration 20260526120000.
+export const messagesCollection = createCollection(
+	queryCollectionOptions({
+		id: 'messages',
+		queryKey: ['public', 'message'],
+		queryFn: async () => {
+			console.log(`Loading messagesCollection`)
+			const { data } = await supabase.from('message').select().throwOnError()
+			return data?.map((item) => MessageSchema.parse(item)) ?? []
+		},
+		getKey: (item: MessageType) => item.id,
+		queryClient,
+		schema: MessageSchema,
+	})
+)
+
+export const messageTagsCollection = createCollection(
+	queryCollectionOptions({
+		id: 'message_tags',
+		queryKey: ['public', 'message_tag'],
+		queryFn: async () => {
+			console.log(`Loading messageTagsCollection`)
+			const { data } = await supabase
+				.from('message_tag')
+				.select()
+				.order('sort_order', { ascending: true })
+				.throwOnError()
+			return data?.map((item) => MessageTagSchema.parse(item)) ?? []
+		},
+		getKey: (item: MessageTagType) => item.slug,
+		queryClient,
+		schema: MessageTagSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
+	})
+)
+
+export const messageTagLinksCollection = createCollection(
+	queryCollectionOptions({
+		id: 'message_tag_links',
+		queryKey: ['public', 'message_tag_link'],
+		queryFn: async () => {
+			console.log(`Loading messageTagLinksCollection`)
+			const { data } = await supabase
+				.from('message_tag_link')
+				.select()
+				.throwOnError()
+			return data?.map((item) => MessageTagLinkSchema.parse(item)) ?? []
+		},
+		// composite PK; getKey just needs to be stable+unique per row
+		getKey: (item: MessageTagLinkType) =>
+			`${item.message_id}--${item.tag_slug}`,
+		queryClient,
+		schema: MessageTagLinkSchema,
+		autoIndex: 'eager',
+		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('message_tag_link')
+						.insert({
+							message_id: m.modified.message_id,
+							tag_slug: m.modified.tag_slug,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('message_tag_link')
+						.delete()
+						.eq('message_id', m.original.message_id)
+						.eq('tag_slug', m.original.tag_slug)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )
