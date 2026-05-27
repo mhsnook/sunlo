@@ -51,15 +51,19 @@ export const phrasesFull = createLiveQueryCollection({
 				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
 				'inner'
 			)
-			.fn.select(({ phrase, profile }) => ({
-				...phrase,
-				profile,
-				searchableText: [
-					phrase.text,
-					...(phrase.translations?.map((t) => t.text) ?? []),
-					...(phrase.tags ?? []).map((t) => t.name),
-				].join(', '),
-			})),
+			.fn.select(({ phrase, profile }) => {
+				const translations = phrase.translations ?? []
+				return {
+					...phrase,
+					translations,
+					profile,
+					searchableText: [
+						phrase.text,
+						...translations.map((t) => t.text),
+						...(phrase.tags ?? []).map((t) => t.name),
+					].join(', '),
+				}
+			}),
 })
 
 phrasesFull.createIndex((row) => row.id, { indexType: BasicIndex })

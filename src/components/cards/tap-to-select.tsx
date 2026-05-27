@@ -34,7 +34,7 @@ export function TapCardToSelect({
 		>
 			<CardHeader className="p-3 pb-0">
 				<CardTitle className="text-base">{phrase.text}</CardTitle>
-				<CardDescription>{phrase.translations[0].text}</CardDescription>
+				<CardDescription>{phrase.translations?.[0]?.text}</CardDescription>
 			</CardHeader>
 			<CardFooter className="flex justify-end p-3 pt-0">
 				<Badge
