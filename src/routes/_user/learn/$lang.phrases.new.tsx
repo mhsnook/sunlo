@@ -22,9 +22,12 @@ import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
-import { PhraseFullSchema, TranslationSchema } from '@/features/phrases/schemas'
+import { PhraseSchema, TranslationSchema } from '@/features/phrases/schemas'
 import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { WithPhrase } from '@/components/with-phrase'
@@ -159,11 +162,9 @@ function AddPhraseTab() {
 			if (!rpcResult)
 				throw new Error('No data returned from add_phrase_translation_card')
 
-			phrasesCollection.utils.writeInsert(
-				PhraseFullSchema.parse({
-					...rpcResult.phrase,
-					translations: [TranslationSchema.parse(rpcResult.translation)],
-				})
+			phrasesCollection.utils.writeInsert(PhraseSchema.parse(rpcResult.phrase))
+			phraseTranslationsCollection.utils.writeInsert(
+				TranslationSchema.parse(rpcResult.translation)
 			)
 			if (rpcResult.card)
 				phrasesCollection.utils.writeUpdate({

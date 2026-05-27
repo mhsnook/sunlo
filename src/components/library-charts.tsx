@@ -27,7 +27,10 @@ import {
 	useLanguagesSortedByLearners,
 	useLanguagesWithPhrases,
 } from '@/features/languages/hooks'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
@@ -543,6 +546,9 @@ export function LibrarySummaryStats() {
 	const { data: allPhrases } = useLiveQuery((q) =>
 		q.from({ phrase: phrasesCollection })
 	)
+	const { data: allTranslations } = useLiveQuery((q) =>
+		q.from({ t: phraseTranslationsCollection })
+	)
 	const { data: allRequests } = useLiveQuery((q) =>
 		q.from({ req: phraseRequestsCollection })
 	)
@@ -556,12 +562,7 @@ export function LibrarySummaryStats() {
 		[allPhrases]
 	)
 
-	const totalTranslations = useMemo(
-		() =>
-			allPhrases?.reduce((sum, p) => sum + (p.translations?.length ?? 0), 0) ??
-			0,
-		[allPhrases]
-	)
+	const totalTranslations = allTranslations?.length ?? 0
 
 	const stats = [
 		{ label: 'Languages', value: allLanguages?.length ?? 0 },

@@ -21,7 +21,7 @@ import {
 import { AuthenticatedDialogContent } from '@/components/ui/authenticated-dialog'
 import { Button, ButtonProps } from '@/components/ui/button'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import { phrasesCollection } from '@/features/phrases/collections'
+import { phraseTranslationsCollection } from '@/features/phrases/collections'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { useUserId } from '@/lib/use-auth'
 import { Input } from '@/components/ui/input'
@@ -75,10 +75,9 @@ export function AddTranslationsDialog({
 			return data[0]
 		},
 		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: [TranslationSchema.parse(data), ...phrase.translations],
-			})
+			phraseTranslationsCollection.utils.writeInsert(
+				TranslationSchema.parse(data)
+			)
 			close()
 			form.reset()
 			toastSuccess(`Translation added for ${phrase.text}`)
@@ -137,11 +136,7 @@ export function AddTranslationsDialog({
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
 						{phrase.translations.map((trans) => (
-							<TranslationListItem
-								key={trans.id}
-								trans={trans}
-								phrase={phrase}
-							/>
+							<TranslationListItem key={trans.id} trans={trans} />
 						))}
 					</ol>
 				</div>
@@ -184,13 +179,7 @@ export function AddTranslationsDialog({
 }
 
 // Component for displaying a translation with edit/delete options
-function TranslationListItem({
-	trans,
-	phrase,
-}: {
-	trans: TranslationType
-	phrase: PhraseFullType
-}) {
+function TranslationListItem({ trans }: { trans: TranslationType }) {
 	const userId = useUserId()
 	const isOwner = trans.added_by === userId
 	const [isEditing, setIsEditing] = useState(false)
@@ -209,12 +198,9 @@ function TranslationListItem({
 			return data[0]
 		},
 		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id === trans.id ? TranslationSchema.parse(data) : t
-				),
-			})
+			phraseTranslationsCollection.utils.writeUpdate(
+				TranslationSchema.parse(data)
+			)
 			setIsEditing(false)
 			toastSuccess('Translation updated')
 		},
@@ -237,11 +223,9 @@ function TranslationListItem({
 				.throwOnError()
 		},
 		onSuccess: () => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id !== trans.id ? t : { ...t, archived: !trans.archived }
-				),
+			phraseTranslationsCollection.utils.writeUpdate({
+				...trans,
+				archived: !trans.archived,
 			})
 			toastSuccess(`Translation ${trans.archived ? 'un' : ''}archived`)
 		},

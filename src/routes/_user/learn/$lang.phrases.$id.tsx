@@ -1,7 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import { CSSProperties } from 'react'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 
@@ -13,6 +16,7 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 	loader: async ({ context }) => {
 		const preloads: Promise<unknown>[] = [
 			phrasesCollection.preload(),
+			phraseTranslationsCollection.preload(),
 			publicProfilesCollection.preload(),
 		]
 		if (context.auth.isAuth) {

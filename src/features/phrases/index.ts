@@ -3,6 +3,8 @@
 
 // Schemas & types
 export {
+	PhraseSchema,
+	type PhraseType,
 	PhraseFullSchema,
 	type PhraseFullType,
 	type PhraseFullFullType,
@@ -15,11 +17,12 @@ export {
 } from './schemas'
 
 // Collections
-export { phrasesCollection } from './collections'
+export { phrasesCollection, phraseTranslationsCollection } from './collections'
 
 // Live collections
 export {
 	phrasesFull,
+	phrasesWithTranslations,
 	usePhrasePlaylists,
 	usePhraseComments,
 	useRelatedCards,

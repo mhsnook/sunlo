@@ -36,7 +36,11 @@ export const TranslationSchema = z.object({
 
 export type TranslationType = z.infer<typeof TranslationSchema>
 
-export const PhraseFullSchema = z.object({
+// PhraseSchema — the row shape held by `phrasesCollection`. Mirrors what
+// `phrase_meta` returns. Translations live in their own collection now
+// (`phraseTranslationsCollection`) and are composed onto rows by the live
+// queries in `live.ts`.
+export const PhraseSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
 	text: z.string(),
@@ -48,10 +52,22 @@ export const PhraseFullSchema = z.object({
 	avg_stability: z.number().nullable().default(null),
 	count_learners: z.number().nullable().default(0),
 	tags: z.preprocess((val) => val ?? [], z.array(PhraseTagSchema)),
-	translations: z.preprocess((val) => val ?? [], z.array(TranslationSchema)),
 })
 
-export type PhraseFullType = z.infer<typeof PhraseFullSchema>
+export type PhraseType = z.infer<typeof PhraseSchema>
+
+// PhraseFullType — derived shape produced by `phrasesWithTranslations` /
+// `phrasesFull` live queries. `translations` is aggregated from
+// `phraseTranslationsCollection` via toArray() at query time.
+export type PhraseFullType = PhraseType & {
+	translations: Array<TranslationType>
+}
+
+// Parser for places (RPC responses, write paths) that need to validate a
+// composed phrase+translations payload.
+export const PhraseFullSchema = PhraseSchema.extend({
+	translations: z.preprocess((val) => val ?? [], z.array(TranslationSchema)),
+})
 
 export type PhraseFullFullType = PhraseFullType & {
 	profile: PublicProfileType

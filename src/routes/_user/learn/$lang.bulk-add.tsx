@@ -24,12 +24,15 @@ import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { PhraseFullSchema } from '@/features/phrases/schemas'
+import { PhraseSchema, TranslationSchema } from '@/features/phrases/schemas'
 import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { LangTagSchema } from '@/features/languages/schemas'
 import { langTagsCollection } from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
@@ -302,16 +305,15 @@ function BulkAddPhrasesPage() {
 						.filter((t): t is { id: string; name: string } => t !== null)
 				}
 
-				return PhraseFullSchema.parse({
-					...p,
-					translations: rpcResult.translations.filter(
-						(t) => t.phrase_id === p.id
-					),
-					tags,
-				})
+				return PhraseSchema.parse({ ...p, tags })
 			})
 
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
+			rpcResult.translations.forEach((t) =>
+				phraseTranslationsCollection.utils.writeInsert(
+					TranslationSchema.parse(t)
+				)
+			)
 
 			should(
 				'bulk add wrote every submitted phrase into phrasesCollection',
