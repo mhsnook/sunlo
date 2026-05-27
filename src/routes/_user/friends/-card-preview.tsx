@@ -10,7 +10,7 @@ import { LangBadge } from '@/components/ui/badge'
 
 export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 	const { data: phrase, status } = usePhrase(pid)
-	const chosenTranslation = phrase?.translations[0]
+	const chosenTranslation = phrase?.translations?.[0]
 
 	if (status === 'pending') return <Loader className="my-6" />
 	if (status === 'not-found' || !phrase)
@@ -30,12 +30,13 @@ export function CardPreview({ pid, isMine }: { pid: uuid; isMine: boolean }) {
 						<CardTitle className="text-lg">{phrase.text}</CardTitle>
 						<LangBadge lang={phrase.lang} />
 					</div>
-					{chosenTranslation ?
+					{chosenTranslation ? (
 						<p className="text-muted-foreground">{chosenTranslation.text}</p>
-					:	<p className="text-muted-foreground text-sm italic">
+					) : (
+						<p className="text-muted-foreground text-sm italic">
 							No translations yet
 						</p>
-					}
+					)}
 				</CardContent>
 			</CardlikeFlashcard>
 		</Link>
