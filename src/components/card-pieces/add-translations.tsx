@@ -135,7 +135,7 @@ export function AddTranslationsDialog({
 				<div className="text-muted-foreground space-y-2 text-sm">
 					<p>Please check to make sure you're not entering a duplicate.</p>
 					<ol className="space-y-2">
-						{phrase.translations.map((trans) => (
+						{(phrase.translations ?? []).map((trans) => (
 							<TranslationListItem key={trans.id} trans={trans} />
 						))}
 					</ol>

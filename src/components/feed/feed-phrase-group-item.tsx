@@ -20,7 +20,7 @@ export function PhraseSummaryLine({
 
 	// Count translations in languages the user knows
 	const userLanguages = profile?.languages_known ?? []
-	const knownLangTranslations = phrase.translations.filter((t) =>
+	const knownLangTranslations = (phrase.translations ?? []).filter((t) =>
 		userLanguages.some((ul) => ul.lang === t.lang)
 	)
 	const translationCount = knownLangTranslations.length

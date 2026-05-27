@@ -26,18 +26,19 @@ export const usePhrase = (pid: uuid): CompositePhraseQueryResults => {
 
 	if (isLoading2) return { status: 'pending', data: undefined }
 	if (!phrase) return { data: null, status: 'not-found' }
+	const translations = phrase.translations ?? []
 	const partial = {
 		...phrase,
-		translations_mine: phrase.translations,
+		translations,
+		translations_mine: translations,
 		translations_other: [] as Array<TranslationType>,
 	}
 	if (isLoading1) return { data: partial, status: 'partial' }
 	if (!languagesToShow.length) return { data: partial, status: 'complete' }
 
-	const orderedLangs =
-		languagesToShow.includes(preferredLang) ?
-			[preferredLang, ...languagesToShow.filter((l) => l !== preferredLang)]
-		:	languagesToShow
+	const orderedLangs = languagesToShow.includes(preferredLang)
+		? [preferredLang, ...languagesToShow.filter((l) => l !== preferredLang)]
+		: languagesToShow
 
 	const phraseFiltered = splitPhraseTranslations(phrase, orderedLangs)
 
@@ -54,9 +55,9 @@ function splitTranslations(
 	const translations_mine = translations_incoming
 		.filter((t) => translationLangs.includes(t.lang))
 		.toSorted((a, b) => {
-			return a.lang === b.lang ?
-					0
-				:	translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
+			return a.lang === b.lang
+				? 0
+				: translationLangs.indexOf(a.lang) - translationLangs.indexOf(b.lang)
 		})
 	const translations_other = translations_incoming.filter(
 		(t) => !translationLangs.includes(t.lang)
@@ -75,10 +76,11 @@ export function splitPhraseTranslations<T extends PhraseFullType>(
 	translations_mine: Array<TranslationType>
 	translations_other: Array<TranslationType>
 } {
+	const translations = phrase.translations ?? []
 	const { translations_mine, translations_other } = splitTranslations(
 		languagesToShow,
-		phrase.translations ?? []
+		translations
 	)
 
-	return { ...phrase, translations_mine, translations_other }
+	return { ...phrase, translations, translations_mine, translations_other }
 }
