@@ -43,6 +43,7 @@ import {
 import { cn } from '@/lib/utils'
 import { languagesCollection } from '@/features/languages/collections'
 import { Badge, LangBadge } from '@/components/ui/badge'
+import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
@@ -636,39 +637,97 @@ function ShowcaseButtonsAndType() {
 	)
 }
 
-// Static showcase of the CardStatusDropdown trigger across its visual states.
-// The real component (src/components/card-pieces/card-status-dropdown.tsx)
-// depends on auth + deck data, so we render a stripped-down twin here.
+// Showcase twin of CardStatusDropdown — the real component
+// (src/components/card-pieces/card-status-dropdown.tsx) depends on auth + deck
+// data, so we render the trigger across its visual states and reuse the
+// exported `statusStrings` map for the menu copy.
+type ShowableActions = 'active' | 'learned' | 'skipped' | 'nocard' | 'nodeck'
+
 const cardStatusShowcaseStates: Array<{
-	choice: 'active' | 'learned' | 'skipped' | 'nocard' | 'nodeck'
+	choice: ShowableActions
 	dot: string
-	label: string
-	active?: boolean
+	soft?: boolean
 }> = [
-	{ choice: 'active', dot: 'bg-primary', label: 'Active', active: true },
-	{ choice: 'learned', dot: 'bg-5-hi-success', label: 'Learned' },
-	{ choice: 'skipped', dot: 'bg-4-lo-neutral', label: 'Skipped' },
-	{ choice: 'nocard', dot: 'bg-3-lo-neutral', label: 'Not in deck' },
-	{ choice: 'nodeck', dot: 'bg-3-lo-neutral', label: 'Start deck' },
+	{ choice: 'active', dot: 'bg-primary', soft: true },
+	{ choice: 'learned', dot: 'bg-5-hi-success' },
+	{ choice: 'skipped', dot: 'bg-4-lo-neutral' },
+	{ choice: 'nocard', dot: 'bg-3-lo-neutral' },
+	{ choice: 'nodeck', dot: 'bg-3-lo-neutral' },
 ]
+
+function CardStatusMenuItem({ choice }: { choice: ShowableActions }) {
+	const { Icon, iconClassName, action, actionSecond } = statusStrings[choice]
+	return (
+		<DropdownMenuItem>
+			<div className="flex flex-row items-center gap-2 py-1 pe-2">
+				<span className="h-5 w-5">
+					<Icon className={iconClassName} aria-hidden="true" />
+				</span>
+				<div>
+					<p className="font-bold">{action}</p>
+					<p className="text-opacity-80 text-sm">{actionSecond}</p>
+				</div>
+			</div>
+		</DropdownMenuItem>
+	)
+}
+
+function CardStatusShowcaseTrigger({
+	choice,
+	dot,
+	soft,
+	defaultOpen,
+}: {
+	choice: ShowableActions
+	dot: string
+	soft?: boolean
+	defaultOpen?: boolean
+}) {
+	const { name } = statusStrings[choice]
+	// `nocard` collapses the menu to a single "Add to deck" item, matching
+	// the real CardStatusDropdown behaviour.
+	const items: ShowableActions[] =
+		choice === 'nocard' || choice === 'nodeck'
+			? [choice]
+			: ['active', 'learned', 'skipped']
+	return (
+		<DropdownMenu defaultOpen={defaultOpen}>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant={soft ? 'soft' : 'ghost'}
+						size="sm"
+						aria-label={`Card status: ${name}`}
+					/>
+				}
+			>
+				<span
+					aria-hidden="true"
+					className={`size-2 shrink-0 rounded-full ${dot}`}
+				/>
+				<span>{name}</span>
+				<ChevronDown className="opacity-60" />
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="start">
+				{items.map((c) => (
+					<CardStatusMenuItem key={c} choice={c} />
+				))}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
 
 function ShowcaseCardStatusDropdown() {
 	return (
 		<div className="flex flex-wrap items-center gap-2">
-			{cardStatusShowcaseStates.map((s) => (
-				<Button
+			{cardStatusShowcaseStates.map((s, i) => (
+				<CardStatusShowcaseTrigger
 					key={s.choice}
-					variant={s.active ? 'soft' : 'ghost'}
-					size="sm"
-					aria-label={`Card status: ${s.label}`}
-				>
-					<span
-						aria-hidden="true"
-						className={`size-2 shrink-0 rounded-full ${s.dot}`}
-					/>
-					<span>{s.label}</span>
-					<ChevronDown className="opacity-60" />
-				</Button>
+					choice={s.choice}
+					dot={s.dot}
+					soft={s.soft}
+					defaultOpen={i === 0}
+				/>
 			))}
 		</div>
 	)
@@ -876,7 +935,7 @@ function SmolShowcaseBlock({
 	children: ReactNode
 }) {
 	return (
-		<div className="space-y-2">
+		<div className="mb-6 break-inside-avoid space-y-2">
 			<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
 				{label}
 			</h3>
@@ -895,7 +954,7 @@ function SmolShowcase() {
 					language picker, and the three callout variants.
 				</p>
 			</div>
-			<div className="grid gap-6 @2xl:grid-cols-2">
+			<div className="gap-x-6 @2xl:columns-2">
 				<SmolShowcaseBlock label="Card status dropdown">
 					<ShowcaseCardStatusDropdown />
 				</SmolShowcaseBlock>
