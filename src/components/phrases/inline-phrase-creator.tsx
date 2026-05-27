@@ -12,9 +12,12 @@ import { Label } from '@/components/ui/label'
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
-import { PhraseFullSchema, TranslationSchema } from '@/features/phrases/schemas'
+import { PhraseSchema, TranslationSchema } from '@/features/phrases/schemas'
 import { CardMetaSchema } from '@/features/deck/schemas'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { usePreferredTranslationLang, useDecks } from '@/features/deck/hooks'
@@ -144,14 +147,13 @@ function InlinePhraseForm({
 			// re-spins it up if it was cleaned up after gcTime expired.
 			await Promise.all([
 				phrasesCollection.preload(),
+				phraseTranslationsCollection.preload(),
 				cardsCollection.preload(),
 			])
 
-			phrasesCollection.utils.writeInsert(
-				PhraseFullSchema.parse({
-					...data.phrase,
-					translations: [TranslationSchema.parse(data.translation)],
-				})
+			phrasesCollection.utils.writeInsert(PhraseSchema.parse(data.phrase))
+			phraseTranslationsCollection.utils.writeInsert(
+				TranslationSchema.parse(data.translation)
 			)
 			if (data.card) {
 				cardsCollection.utils.writeInsert(CardMetaSchema.parse(data.card))

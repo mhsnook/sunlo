@@ -4,7 +4,10 @@ import {
 	languagesCollection,
 	langTagsCollection,
 } from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import {
 	phrasePlaylistsCollection,
@@ -31,6 +34,7 @@ export const Route = createFileRoute('/_user/browse')({
 			phraseRequestsCollection.preload(),
 			phrasePlaylistsCollection.preload(),
 			phrasesCollection.preload(),
+			phraseTranslationsCollection.preload(),
 			playlistPhraseLinksCollection.preload(),
 		])
 	},

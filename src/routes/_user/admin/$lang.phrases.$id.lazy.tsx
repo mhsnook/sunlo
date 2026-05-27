@@ -33,7 +33,10 @@ import { AddTranslationsDialog } from '@/components/card-pieces/add-translations
 import { AddTags } from '@/components/card-pieces/add-tags'
 import { UidPermalink } from '@/components/card-pieces/user-permalink'
 import { useOnePhrase } from '@/features/phrases/hooks'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { useAuth } from '@/lib/use-auth'
 import supabase from '@/lib/supabase-client'
 import { ago } from '@/lib/dayjs'
@@ -207,7 +210,6 @@ function AdminPhraseDetail() {
 							<AdminTranslationRow
 								key={trans.id}
 								translation={trans}
-								phrase={phrase}
 								isAdmin={isAdmin}
 							/>
 						))}
@@ -312,11 +314,9 @@ function EditablePhraseText({
 
 function AdminTranslationRow({
 	translation,
-	phrase,
 	isAdmin,
 }: {
 	translation: TranslationType
-	phrase: PhraseFullType
 	isAdmin: boolean
 }) {
 	const [isEditing, setIsEditing] = useState(false)
@@ -334,12 +334,9 @@ function AdminTranslationRow({
 			return data[0]
 		},
 		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id === translation.id ? TranslationSchema.parse(data) : t
-				),
-			})
+			phraseTranslationsCollection.utils.writeUpdate(
+				TranslationSchema.parse(data)
+			)
 			setIsEditing(false)
 			toastSuccess('Translation updated')
 		},
@@ -358,13 +355,9 @@ function AdminTranslationRow({
 				.throwOnError()
 		},
 		onSuccess: () => {
-			phrasesCollection.utils.writeUpdate({
-				id: phrase.id,
-				translations: phrase.translations.map((t) =>
-					t.id !== translation.id
-						? t
-						: { ...t, archived: !translation.archived }
-				),
+			phraseTranslationsCollection.utils.writeUpdate({
+				...translation,
+				archived: !translation.archived,
 			})
 			toastSuccess(
 				`Translation ${translation.archived ? 'restored' : 'archived'}`

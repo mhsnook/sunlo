@@ -1,5 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import { langTagsCollection } from '@/features/languages/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
@@ -8,6 +11,7 @@ export const Route = createFileRoute('/_user/admin/$lang')({
 	loader: async () => {
 		await Promise.all([
 			phrasesCollection.preload(),
+			phraseTranslationsCollection.preload(),
 			phraseRequestsCollection.preload(),
 			langTagsCollection.preload(),
 			publicProfilesCollection.preload(),
