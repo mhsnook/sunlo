@@ -5,7 +5,10 @@ import languages from '@/lib/languages'
 import { setLangTheme, useLangPopularityReady } from '@/lib/lang-theme'
 import { todayString } from '@/lib/utils'
 import { langTagsCollection } from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
+import {
+	phrasesCollection,
+	phraseTranslationsCollection,
+} from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import {
@@ -56,6 +59,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 		const preloads: Promise<unknown>[] = [
 			langTagsCollection.preload(),
 			phrasesCollection.preload(),
+			phraseTranslationsCollection.preload(),
 			publicProfilesCollection.preload(),
 			phrasePlaylistsCollection.preload(),
 			playlistPhraseLinksCollection.preload(),

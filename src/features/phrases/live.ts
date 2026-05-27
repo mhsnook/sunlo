@@ -4,11 +4,12 @@ import {
 	createLiveQueryCollection,
 	eq,
 	inArray,
+	toArray,
 } from '@tanstack/db'
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import { phrasesCollection } from './collections'
+import { phrasesCollection, phraseTranslationsCollection } from './collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import {
 	playlistPhraseLinksCollection,
@@ -20,11 +21,31 @@ import {
 	phraseRequestsCollection,
 } from '@/features/requests/collections'
 
+// Phrase row with its translations aggregated via toArray(). Used by
+// `useOnePhrase` / `useLangPhrasesRaw` and as the base for `phrasesFull`.
+// Keeping it as a derived collection means the aggregation runs once and
+// is reused across consumers.
+export const phrasesWithTranslations = createLiveQueryCollection({
+	id: 'phrases_with_translations',
+	query: (q) =>
+		q.from({ phrase: phrasesCollection }).select(({ phrase }) => ({
+			...phrase,
+			translations: toArray(
+				q
+					.from({ t: phraseTranslationsCollection })
+					.where(({ t }) => eq(t.phrase_id, phrase.id))
+					.select(({ t }) => t)
+			),
+		})),
+})
+
+phrasesWithTranslations.createIndex((row) => row.id, { indexType: BasicIndex })
+
 export const phrasesFull = createLiveQueryCollection({
 	id: 'phrases_full',
 	query: (q) =>
 		q
-			.from({ phrase: phrasesCollection })
+			.from({ phrase: phrasesWithTranslations })
 			.join(
 				{ profile: publicProfilesCollection },
 				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
