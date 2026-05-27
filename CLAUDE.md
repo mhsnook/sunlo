@@ -191,10 +191,16 @@ We use **trunk-based development with a migration gate** — two deployment trac
 
 ### Decision rule
 
-> **Does this PR touch a migration file?**
+> **Two questions, in order:**
 >
-> - **No** → merge to `main`, deploy when ready.
-> - **Yes** → PR into `next`, hold for review, merge `next` → `main` when the batch is ready.
+> 1. **Was this branch created from `next`?**
+>    - **Yes** → PR into `next`, regardless of what your own changes touch. The base branch already carries unreleased migrations sitting on `next` waiting for the next release cut; merging your branch into `main` would smuggle those past the migration-track QA + CI gate.
+>    - **No** → continue to question 2.
+> 2. **Does this PR touch a migration file?**
+>    - **No** → merge to `main`, deploy when ready.
+>    - **Yes** → PR into `next`, hold for review, merge `next` → `main` when the batch is ready.
+
+The point of the gate is that **migrations only ever reach `main` through a `next` → `main` release merge** — never as a side effect of a UI PR whose branch happened to start from `next`. If you're unsure where your branch started, `git merge-base HEAD origin/next` vs `git merge-base HEAD origin/main` will tell you.
 
 ### Workflow
 
@@ -206,6 +212,7 @@ We use **trunk-based development with a migration gate** — two deployment trac
 
 - **Don't let `next` get stale.** If it's been open >2 weeks, either ship it or break the migrations into smaller pieces.
 - **Tag `next` → `main` merges** even informally — `git tag` is cheap and makes the deployment log reconstructable.
+- **Check the PR base before merging, not after.** Auto-created PRs (from the Claude Code UI, `gh pr create` without `--base`, etc.) default to the repo's default branch — usually `main`. If your branch was based on `next`, the PR will silently target the wrong branch until you change it. Check `base:` in the PR header.
 - **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/dated release entries for migration-track batches.
 - **No semver.** We're not publishing packages. Datestamps or sequential names are sufficient.
 - **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
