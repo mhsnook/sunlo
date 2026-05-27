@@ -1,20 +1,37 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import {
+	useEffect,
+	useId,
+	useState,
+	type CSSProperties,
+	type ReactNode,
+} from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
 import {
 	Bookmark,
+	Check,
 	ChevronDown,
+	ChevronsUpDown,
+	HeartPlus,
 	Lightbulb,
+	ListFilter,
+	ListPlus,
 	Logs,
 	Mail,
+	MessageCircleHeart,
+	MessageCircleWarningIcon,
 	MessageSquare,
+	MessageSquareQuote,
 	MoreVertical,
 	Reply,
 	Rocket,
+	Settings,
 	Share2,
 	Star,
+	TableProperties,
 	ThumbsUp,
+	type LucideIcon,
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
 import {
@@ -28,6 +45,31 @@ import { languagesCollection } from '@/features/languages/collections'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import Callout from '@/components/ui/callout'
+import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+	CommandSeparator,
+} from '@/components/ui/command'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from '@/components/ui/popover'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	CardContent,
 	CardDescription,
@@ -594,6 +636,296 @@ function ShowcaseButtonsAndType() {
 	)
 }
 
+// Static showcase of the CardStatusDropdown trigger across its visual states.
+// The real component (src/components/card-pieces/card-status-dropdown.tsx)
+// depends on auth + deck data, so we render a stripped-down twin here.
+const cardStatusShowcaseStates: Array<{
+	choice: 'active' | 'learned' | 'skipped' | 'nocard' | 'nodeck'
+	dot: string
+	label: string
+	active?: boolean
+}> = [
+	{ choice: 'active', dot: 'bg-primary', label: 'Active', active: true },
+	{ choice: 'learned', dot: 'bg-5-hi-success', label: 'Learned' },
+	{ choice: 'skipped', dot: 'bg-4-lo-neutral', label: 'Skipped' },
+	{ choice: 'nocard', dot: 'bg-3-lo-neutral', label: 'Not in deck' },
+	{ choice: 'nodeck', dot: 'bg-3-lo-neutral', label: 'Start deck' },
+]
+
+function ShowcaseCardStatusDropdown() {
+	return (
+		<div className="flex flex-wrap items-center gap-2">
+			{cardStatusShowcaseStates.map((s) => (
+				<Button
+					key={s.choice}
+					variant={s.active ? 'soft' : 'ghost'}
+					size="sm"
+					aria-label={`Card status: ${s.label}`}
+				>
+					<span
+						aria-hidden="true"
+						className={`size-2 shrink-0 rounded-full ${s.dot}`}
+					/>
+					<span>{s.label}</span>
+					<ChevronDown className="opacity-60" />
+				</Button>
+			))}
+		</div>
+	)
+}
+
+function ShowcaseTabsList() {
+	const tabs = [
+		{ value: 'requests', label: 'Requests', Icon: MessageCircleHeart },
+		{ value: 'phrases', label: 'Phrases', Icon: MessageSquareQuote },
+		{ value: 'playlists', label: 'Playlists', Icon: Logs },
+		{ value: 'comments', label: 'Comments', Icon: MessageSquare },
+	]
+	return (
+		<Tabs defaultValue="requests">
+			<TabsList>
+				{tabs.map(({ value, label, Icon }) => (
+					<TabsTrigger key={value} value={value}>
+						<Icon className="me-1 size-4" />
+						{label}
+					</TabsTrigger>
+				))}
+			</TabsList>
+		</Tabs>
+	)
+}
+
+const deckContextMenuItems: Array<{ label: string; Icon: LucideIcon }> = [
+	{ label: 'Manage Deck', Icon: TableProperties },
+	{ label: 'Request a Phrase', Icon: MessageCircleHeart },
+	{ label: 'Add a Phrase', Icon: MessageSquareQuote },
+	{ label: 'New Playlist', Icon: ListPlus },
+	{ label: 'Deck Settings', Icon: Settings },
+]
+
+function ShowcaseContextMenu() {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				render={<Button variant="ghost" size="icon" aria-label="Open menu" />}
+			>
+				<MoreVertical />
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end" className="w-56">
+				{deckContextMenuItems.map(({ label, Icon }) => (
+					<DropdownMenuItem key={label}>
+						<Icon className="size-5" />
+						{label}
+					</DropdownMenuItem>
+				))}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
+
+const feedFilterShowcaseOptions = [
+	['all', 'All types'],
+	['request', 'Requests'],
+	['playlist', 'Playlists'],
+	['phrase', 'New Phrases'],
+] as const
+
+function ShowcaseFilterMenu() {
+	const [active, setActive] = useState<string>('all')
+	const activeLabel =
+		feedFilterShowcaseOptions.find(([v]) => v === active)?.[1] ?? 'All types'
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger
+				render={
+					<Button
+						variant="ghost"
+						size="sm"
+						aria-label="Filter feed content"
+						className="text-muted-foreground gap-1 text-xs"
+					/>
+				}
+			>
+				<ListFilter className="size-3.5" />
+				{activeLabel}
+			</DropdownMenuTrigger>
+			<DropdownMenuContent align="end">
+				<DropdownMenuLabel>Show content type</DropdownMenuLabel>
+				<DropdownMenuSeparator />
+				{feedFilterShowcaseOptions.map(([value, label]) => (
+					<DropdownMenuItem key={value} onClick={() => setActive(value)}>
+						<Check className={active === value ? 'opacity-100' : 'opacity-0'} />
+						{label}
+					</DropdownMenuItem>
+				))}
+			</DropdownMenuContent>
+		</DropdownMenu>
+	)
+}
+
+function ShowcaseCallouts() {
+	return (
+		<div className="space-y-3">
+			<Callout variant="default" size="sm" Icon={HeartPlus}>
+				<p className="font-medium">Default callout</p>
+				<p className="text-sm">
+					Tinted in the primary hue — for guidance, tips, and friendly nudges.
+				</p>
+			</Callout>
+			<Callout variant="problem" size="sm" alert Icon={DestructiveOctagon}>
+				<p className="font-medium">Problem callout</p>
+				<p className="text-sm">
+					Carries the danger hue and an alert role — for errors and blocked
+					actions.
+				</p>
+			</Callout>
+			<Callout variant="ghost" size="sm" Icon={MessageCircleWarningIcon}>
+				<p className="font-medium">Ghost callout</p>
+				<p className="text-sm">
+					Quiet muted surface — for context the reader can take or leave.
+				</p>
+			</Callout>
+		</div>
+	)
+}
+
+// Mocked language picker — mirrors SelectOneOfYourLanguages without depending
+// on auth/profile state. Two "your languages" up top, the rest below.
+const showcaseKnownLangs = ['hin', 'tam'] as const
+
+function ShowcaseLanguagePicker() {
+	const [value, setValue] = useState<string>('hin')
+	const [open, setOpen] = useState(false)
+	const id = useId()
+
+	const otherLanguages = allLanguageOptions.filter(
+		(opt) => !showcaseKnownLangs.includes(opt.value as never)
+	)
+
+	const onSelect = (next: string) => {
+		setValue(next === value ? '' : next)
+		setOpen(false)
+	}
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild className="w-full">
+				<Button
+					variant="soft"
+					role="combobox"
+					aria-controls={id}
+					aria-expanded={open}
+					className="bg-card/50 text-foreground justify-between font-normal"
+				>
+					{value
+						? (allLanguageOptions.find((l) => l.value === value)?.label ??
+							value)
+						: 'Select language...'}
+					<ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent id={id} className="p-0">
+				<Command>
+					<CommandInput placeholder="Search language..." className="my-1" />
+					<CommandList>
+						<CommandEmpty>No language found.</CommandEmpty>
+						<CommandGroup>
+							{showcaseKnownLangs.map((lang) => (
+								<CommandItem key={lang} value={lang} onSelect={onSelect}>
+									<Check
+										className={cn(
+											'me-2 size-4',
+											value === lang ? 'opacity-100' : 'opacity-0'
+										)}
+									/>
+									{allLanguageOptions.find((l) => l.value === lang)?.label} (
+									{lang})
+								</CommandItem>
+							))}
+						</CommandGroup>
+						<CommandSeparator />
+						<CommandGroup>
+							{otherLanguages.slice(0, 50).map((language) => (
+								<CommandItem
+									key={language.value}
+									value={language.value}
+									onSelect={onSelect}
+								>
+									<Check
+										className={cn(
+											'me-2 size-4',
+											value === language.value ? 'opacity-100' : 'opacity-0'
+										)}
+									/>
+									{language.label} ({language.value})
+								</CommandItem>
+							))}
+						</CommandGroup>
+					</CommandList>
+				</Command>
+			</PopoverContent>
+		</Popover>
+	)
+}
+
+function SmolShowcaseBlock({
+	label,
+	children,
+}: {
+	label: string
+	children: ReactNode
+}) {
+	return (
+		<div className="space-y-2">
+			<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+				{label}
+			</h3>
+			{children}
+		</div>
+	)
+}
+
+function SmolShowcase() {
+	return (
+		<section className="@container space-y-6">
+			<div className="space-y-1">
+				<h2 className="text-lg font-semibold">Pickers, menus & callouts</h2>
+				<p className="text-muted-foreground text-sm">
+					Smaller building blocks shown in isolation — dropdowns, tabs, the
+					language picker, and the three callout variants.
+				</p>
+			</div>
+			<div className="grid gap-6 @2xl:grid-cols-2">
+				<SmolShowcaseBlock label="Card status dropdown">
+					<ShowcaseCardStatusDropdown />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Tabs list picker">
+					<ShowcaseTabsList />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Context menu">
+					<div className="flex items-center gap-2">
+						<ShowcaseContextMenu />
+						<span className="text-muted-foreground text-sm">
+							Click for menu items
+						</span>
+					</div>
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Filter dropdown">
+					<ShowcaseFilterMenu />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Select one of your languages">
+					<div className="max-w-xs">
+						<ShowcaseLanguagePicker />
+					</div>
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Callouts">
+					<ShowcaseCallouts />
+				</SmolShowcaseBlock>
+			</div>
+		</section>
+	)
+}
+
 function ComponentShowcase() {
 	return (
 		<section className="@container space-y-6">
@@ -695,6 +1027,8 @@ function ThemesPage() {
 	return (
 		<div className="@container mx-auto max-w-5xl space-y-8 p-6">
 			<ComponentShowcase />
+
+			<SmolShowcase />
 
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
