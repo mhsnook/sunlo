@@ -171,7 +171,7 @@ async function fetchOGData(
 		try {
 			if (route.type === 'phrase') {
 				const { data } = await supabase
-					.from('phrase_meta')
+					.from('phrase')
 					.select('text, translations:phrase_translation(text, lang)')
 					.eq('id', id)
 					.single()
@@ -197,9 +197,9 @@ async function fetchOGData(
 					// Construct cover image URL from Supabase storage
 					const supabaseUrl = process.env.VITE_SUPABASE_URL
 					const imageUrl =
-						data.cover_image_path && supabaseUrl ?
-							`${supabaseUrl}/storage/v1/object/public/avatars/${data.cover_image_path}`
-						:	undefined
+						data.cover_image_path && supabaseUrl
+							? `${supabaseUrl}/storage/v1/object/public/avatars/${data.cover_image_path}`
+							: undefined
 
 					return {
 						title: `${data.title} - ${langName} Playlist`,
@@ -236,9 +236,11 @@ async function fetchOGData(
 
 				const learnerCount = count || 0
 				const learnerText =
-					learnerCount === 0 ? 'Start learning'
-					: learnerCount === 1 ? 'Join 1 learner'
-					: `Join ${learnerCount} learners`
+					learnerCount === 0
+						? 'Start learning'
+						: learnerCount === 1
+							? 'Join 1 learner'
+							: `Join ${learnerCount} learners`
 
 				return {
 					title: `Learn ${langName} on Sunlo`,

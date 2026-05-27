@@ -8,9 +8,9 @@ import type {
 	PhraseFullFullType,
 	PhraseFullType,
 } from './schemas'
-import { phrasesCollection } from './collections'
 import {
 	phrasesFull,
+	phrasesWithTranslations,
 	usePhrasePlaylists,
 	usePhraseComments,
 	type PhraseProvenanceItem,
@@ -31,8 +31,9 @@ export const useLanguagePhrases = (
 	)
 
 /**
- * Phrases for a language, straight off `phrasesCollection` (no profile/card join).
- * Use this when you only need raw phrase metadata — charts, manage-deck, etc.
+ * Phrases for a language with translations composed in. No profile join —
+ * use this when you don't need the author's public profile (charts,
+ * manage-deck, etc).
  */
 export const useLangPhrasesRaw = (
 	lang: string
@@ -40,12 +41,12 @@ export const useLangPhrasesRaw = (
 	useLiveQuery(
 		(q) =>
 			q
-				.from({ phrase: phrasesCollection })
+				.from({ phrase: phrasesWithTranslations })
 				.where(({ phrase }) => eq(phrase.lang, lang)),
 		[lang]
 	)
 
-/** A single phrase by id from the raw `phrasesCollection`. */
+/** A single phrase by id with its translations composed in. */
 export const useOnePhrase = (
 	pid: uuid | undefined | null
 ): UseLiveQueryResult<PhraseFullType> =>
@@ -54,7 +55,7 @@ export const useOnePhrase = (
 			!pid
 				? undefined
 				: q
-						.from({ phrase: phrasesCollection })
+						.from({ phrase: phrasesWithTranslations })
 						.where(({ phrase }) => eq(phrase.id, pid))
 						.findOne(),
 		[pid]
