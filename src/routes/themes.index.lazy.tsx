@@ -85,8 +85,10 @@ import {
 	CardDescription,
 	CardFooter,
 	CardHeader,
+	CardTitle,
 } from '@/components/ui/card'
 import { CardlikeFlashcard, CardlikeRequest } from '@/components/ui/card-like'
+import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
 	toastError,
@@ -993,6 +995,8 @@ function ShowcaseChoiceTileGroup() {
 
 // Twin of the friend-chat bubble (src/routes/_user/friends/chats.$friendUid.tsx).
 // `isMine` flips alignment + drops the avatar, matching the live component.
+// Real chat messages always attach a phrase / playlist / request preview,
+// so the bubble takes its content via `children` (typically a card preview).
 function ChatBubble({
 	isMine,
 	username,
@@ -1000,7 +1004,7 @@ function ChatBubble({
 	seed,
 	label,
 	time,
-	body,
+	children,
 }: {
 	isMine: boolean
 	username: string
@@ -1008,7 +1012,7 @@ function ChatBubble({
 	seed: string
 	label: string
 	time: string
-	body: string
+	children: ReactNode
 }) {
 	return (
 		<div
@@ -1045,43 +1049,102 @@ function ChatBubble({
 						)}
 					</p>
 				</div>
-				<div
-					className={cn(
-						'rounded-2xl border px-3 py-2 text-sm',
-						isMine
-							? 'bg-1-mlo-primary border-2-mlo-primary'
-							: 'bg-card border-border'
-					)}
-				>
-					{body}
-				</div>
+				{children}
 			</div>
 			<span className="sr-only">{isMine ? 'You' : username}</span>
 		</div>
 	)
 }
 
+// Mock of CardPreview — the real component (src/routes/_user/friends/-card-preview.tsx)
+// fetches the phrase from the collection; here we pass content in directly.
+function ChatPhrasePreview({
+	isMine,
+	text,
+	translation,
+	lang,
+}: {
+	isMine: boolean
+	text: string
+	translation: string
+	lang: string
+}) {
+	return (
+		<CardlikeFlashcard
+			className={cn(
+				'relative z-10 mb-0',
+				isMine ? 'rounded-br-none' : 'rounded-bl-none'
+			)}
+		>
+			<CardContent className="space-y-2 p-4">
+				<div className="flex items-center justify-between gap-2">
+					<CardTitle className="text-lg">{text}</CardTitle>
+					<LangBadge lang={lang} />
+				</div>
+				<p className="text-muted-foreground">{translation}</p>
+			</CardContent>
+		</CardlikeFlashcard>
+	)
+}
+
 function ShowcaseChatBubbles() {
 	return (
-		<div className="bg-base-lo-neutral flex flex-col gap-4 rounded border p-4">
-			<ChatBubble
-				isMine={false}
-				username="Priya L."
-				initials="PL"
-				seed="priya"
-				label="Sent a phrase recommendation"
-				time="2m ago"
-				body="Here's the polite-greeting one we talked about — perfect for grandparents."
-			/>
-			<ChatBubble
-				isMine
-				username="You"
-				initials="Yo"
-				seed="self"
-				label="Added this to your deck"
-				time="just now"
-				body="Got it — adding to my deck now, thanks!"
-			/>
+		<div className="bg-card/50 flex h-110 flex-col rounded border">
+			<div className="flex flex-row items-center gap-3 border-b p-3">
+				<Avatar>
+					<AvatarFallback seed="priya" className="font-bold">
+						PL
+					</AvatarFallback>
+				</Avatar>
+				<div className="flex-1">
+					<p className="leading-tight font-semibold">Priya L.</p>
+					<p className="text-muted-foreground text-xs">Friends</p>
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+				<ChatBubble
+					isMine={false}
+					username="Priya L."
+					initials="PL"
+					seed="priya"
+					label="Sent a phrase recommendation"
+					time="2m ago"
+				>
+					<ChatPhrasePreview
+						isMine={false}
+						text="selamat sonja"
+						translation="good evening"
+						lang={SHOWCASE_LANG}
+					/>
+				</ChatBubble>
+				<ChatBubble
+					isMine
+					username="You"
+					initials="Yo"
+					seed="self"
+					label="Added this to your deck"
+					time="just now"
+				>
+					<ChatPhrasePreview
+						isMine
+						text="selamat sonja"
+						translation="good evening"
+						lang={SHOWCASE_LANG}
+					/>
+				</ChatBubble>
+			</div>
+			<div className="border-t p-3">
+				<div className="flex items-center gap-2">
+					<Input
+						placeholder="Send a phrase, playlist, or request..."
+						className="cursor-pointer"
+						readOnly
+					/>
+					<Button size="icon" aria-label="Open send menu">
+						<Send className="size-4" />
+					</Button>
+				</div>
+			</div>
 		</div>
 	)
 }
@@ -1115,7 +1178,7 @@ function ProfilePill({
 
 function ShowcaseProfilePills() {
 	return (
-		<div className="divide-y rounded border">
+		<div className="bg-card/50 space-y-1 rounded border p-3">
 			<ProfilePill username="Priya L." seed="priya">
 				<Button
 					variant="default"
@@ -1189,28 +1252,64 @@ function ShowcaseIntroCallout() {
 }
 
 function ShowcaseAvatarSizes() {
-	const sizes: Array<{ cls: string; label: string }> = [
-		{ cls: 'size-6', label: '6' },
-		{ cls: 'size-8', label: '8' },
-		{ cls: 'size-10', label: '10 (default)' },
-		{ cls: 'size-14', label: '14' },
-		{ cls: 'size-20', label: '20' },
+	const sizes: Array<{
+		cls: string
+		label: string
+		usage: string
+		seed: string
+		initials: string
+	}> = [
+		{
+			cls: 'size-6',
+			label: '6',
+			usage:
+				'Inline bylines and the nav-user dropdown trigger — small comment / reply rows.',
+			seed: 'priya',
+			initials: 'PL',
+		},
+		{
+			cls: 'size-8',
+			label: '8',
+			usage:
+				'Workhorse size: feed bylines, chat message bubbles, profile pills.',
+			seed: 'marco',
+			initials: 'MR',
+		},
+		{
+			cls: 'size-10',
+			label: '10 (default)',
+			usage:
+				'The bare <Avatar />: request-thread bylines and the chat-header avatar.',
+			seed: 'theo',
+			initials: 'TK',
+		},
+		{
+			cls: 'size-12',
+			label: '12',
+			usage: 'Home-page profile button in the top-right.',
+			seed: 'sofia',
+			initials: 'SM',
+		},
 	]
-	const seeds = ['priya', 'marco', 'theo', 'sofia', 'kenji']
-	const initials = ['PL', 'MR', 'TK', 'SM', 'KO']
 	return (
-		<div className="flex flex-wrap items-end gap-4">
-			{sizes.map((s, i) => (
-				<div key={s.label} className="flex flex-col items-center gap-2">
-					<Avatar className={s.cls}>
-						<AvatarFallback seed={seeds[i]} className="font-bold">
-							{initials[i]}
-						</AvatarFallback>
-					</Avatar>
-					<span className="text-muted-foreground text-xs">{s.label}</span>
+		<dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
+			{sizes.map((s) => (
+				<div
+					key={s.label}
+					className="col-span-2 grid grid-cols-subgrid items-center"
+				>
+					<dt className="flex w-16 flex-col items-center gap-1">
+						<Avatar className={s.cls}>
+							<AvatarFallback seed={s.seed} className="font-bold">
+								{s.initials}
+							</AvatarFallback>
+						</Avatar>
+						<span className="text-muted-foreground text-xs">{s.label}</span>
+					</dt>
+					<dd className="text-muted-foreground text-sm">{s.usage}</dd>
 				</div>
 			))}
-		</div>
+		</dl>
 	)
 }
 
