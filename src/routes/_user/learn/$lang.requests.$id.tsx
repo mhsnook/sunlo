@@ -10,14 +10,13 @@ import { Loader } from '@/components/ui/loader'
 import { ShowAndLogError } from '@/components/errors'
 import { useRequest } from '@/features/requests/hooks'
 import { Markdown } from '@/components/my-markdown'
-import { Badge } from '@/components/ui/badge'
 import { CardlikeRequest } from '@/components/ui/card-like'
 import { RequestHeader } from '@/components/requests/request-header'
+import { MessageTagsRow } from '@/components/requests/message-tags-row'
 import { buttonVariants } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { cn, mapArrays } from '@/lib/utils'
 import type { CommentPhraseLinkType } from '@/features/requests/schemas'
-import Flagged from '@/components/flagged'
 import { Collapsible } from '@/components/ui/collapsible'
 import languages from '@/lib/languages'
 import { RequestButtonsRow } from '@/components/requests/request-buttons-row'
@@ -113,12 +112,7 @@ function RequestThreadPage() {
 				<RequestHeader request={request} />
 
 				<CardContent className="flex flex-col gap-6">
-					<Flagged>
-						<div className="inline-flex flex-row gap-2">
-							<Badge variant="outline">Food</Badge>
-							<Badge variant="outline">Beginners</Badge>
-						</div>
-					</Flagged>
+					<MessageTagsRow messageId={request.message_id!} />
 					<div className="text-lg">
 						<Markdown>{request.prompt}</Markdown>
 					</div>

@@ -239,6 +239,46 @@ export const messageTagsCollection = createCollection(
 		schema: MessageTagSchema,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('message_tag')
+						.insert({
+							slug: m.modified.slug,
+							label: m.modified.label,
+							description: m.modified.description,
+							sort_order: m.modified.sort_order,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('message_tag')
+						.update(m.changes)
+						.eq('slug', m.original.slug)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('message_tag')
+						.delete()
+						.eq('slug', m.original.slug)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )
 

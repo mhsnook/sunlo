@@ -1,13 +1,19 @@
+import { Link } from '@tanstack/react-router'
+import { Settings } from 'lucide-react'
+
 import { PhraseRequestType } from '@/features/requests/schemas'
 import { CardDescription, CardHeader } from '@/components/ui/card'
 import { UidPermalink } from '../card-pieces/user-permalink'
 import { LangBadge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
 import { useProfile } from '@/features/profile/hooks'
+import { useAuth } from '@/lib/use-auth'
 import { UpdateRequestDialog } from './update-request-dialog'
 import { DeleteRequestDialog } from './delete-request-dialog'
 
 export function RequestHeader({ request }: { request: PhraseRequestType }) {
 	const { data: profile } = useProfile()
+	const { isAdmin } = useAuth()
 	const isOwner = profile?.uid === request.requester_uid
 
 	return (
@@ -26,6 +32,17 @@ export function RequestHeader({ request }: { request: PhraseRequestType }) {
 							<UpdateRequestDialog request={request} />
 							<DeleteRequestDialog request={request} />
 						</div>
+					)}
+					{isAdmin && (
+						<Link
+							to="/admin/$lang/requests/$id"
+							params={{ lang: request.lang, id: request.id }}
+							className={buttonVariants({ variant: 'ghost', size: 'icon' })}
+							aria-label="Manage request (admin)"
+							data-testid="admin-request-gear-link"
+						>
+							<Settings className="h-4 w-4" />
+						</Link>
 					)}
 					<LangBadge lang={request.lang} />
 				</div>

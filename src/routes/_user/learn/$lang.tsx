@@ -17,6 +17,8 @@ import {
 	playlistPhraseLinksCollection,
 } from '@/features/playlists/collections'
 import {
+	messageTagLinksCollection,
+	messageTagsCollection,
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
@@ -60,6 +62,8 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			phrasePlaylistsCollection.preload(),
 			playlistPhraseLinksCollection.preload(),
 			phraseRequestsCollection.preload(),
+			messageTagsCollection.preload(),
+			messageTagLinksCollection.preload(),
 		]
 		if (context.auth.isAuth) {
 			preloads.push(
