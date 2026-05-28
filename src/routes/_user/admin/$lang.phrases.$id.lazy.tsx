@@ -3,7 +3,6 @@ import { createLazyFileRoute, Link } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import {
 	Archive,
-	ArrowLeft,
 	Brain,
 	Check,
 	ExternalLink,
@@ -20,7 +19,7 @@ import type {
 } from '@/features/phrases/schemas'
 import { TranslationSchema } from '@/features/phrases/schemas'
 import { Badge, LangBadge } from '@/components/ui/badge'
-import { Button, buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
@@ -45,7 +44,7 @@ export const Route = createLazyFileRoute('/_user/admin/$lang/phrases/$id')({
 })
 
 function AdminPhraseDetail() {
-	const { lang, id } = Route.useParams()
+	const { id } = Route.useParams()
 	const { isAdmin } = useAuth()
 	const { data: phrase, isLoading } = useOnePhrase(id)
 
@@ -53,19 +52,14 @@ function AdminPhraseDetail() {
 
 	if (!phrase) {
 		return (
-			<div className="space-y-4">
-				<BackLink lang={lang} />
-				<Callout variant="problem">
-					<p>Phrase not found.</p>
-				</Callout>
-			</div>
+			<Callout variant="problem">
+				<p>Phrase not found.</p>
+			</Callout>
 		)
 	}
 
 	return (
 		<div className="space-y-6" data-testid="admin-phrase-detail">
-			<BackLink lang={lang} />
-
 			<div className="space-y-2">
 				<div className="flex items-start justify-between gap-2">
 					<div className="min-w-0 flex-1 space-y-1">
@@ -470,18 +464,5 @@ function AdminTranslationRow({
 				)}
 			</div>
 		</div>
-	)
-}
-
-function BackLink({ lang }: { lang: string }) {
-	return (
-		<Link
-			to="/admin/$lang/phrases"
-			params={{ lang }}
-			className={buttonVariants({ variant: 'ghost', size: 'sm' })}
-		>
-			<ArrowLeft className="me-1 h-4 w-4" />
-			All phrases
-		</Link>
 	)
 }
