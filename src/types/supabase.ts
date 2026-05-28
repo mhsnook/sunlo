@@ -479,6 +479,7 @@ export type Database = {
 			}
 			message_tag: {
 				Row: {
+					archived: boolean
 					created_at: string
 					description: string | null
 					label: string
@@ -486,6 +487,7 @@ export type Database = {
 					sort_order: number
 				}
 				Insert: {
+					archived?: boolean
 					created_at?: string
 					description?: string | null
 					label: string
@@ -493,6 +495,7 @@ export type Database = {
 					sort_order?: number
 				}
 				Update: {
+					archived?: boolean
 					created_at?: string
 					description?: string | null
 					label?: string

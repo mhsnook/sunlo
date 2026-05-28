@@ -152,36 +152,31 @@ alter column message_id
 set not null;
 
 -- ── 5. auto-create message on phrase_request insert ─────────────────
--- security definer so the trigger can write to public.message without
--- the inserting user needing a direct INSERT policy on it. The trigger
--- only fires when message_id is null on the incoming row, so a client
--- that wants to attach to an existing message can do so by passing the
--- message_id explicitly (used later for reposts / cross-posting).
-create or replace function public.ensure_phrase_request_message () returns trigger language plpgsql security definer as $$
+-- A column DEFAULT (rather than a trigger) so that:
+--   • supabase's type generator sees a non-null column_default and emits
+--     message_id as optional on Insert
+--   • defaults fire under session_replication_role = replica too, so
+--     seed loads that omit message_id still populate it (no ENABLE
+--     ALWAYS dance)
+-- security definer because public.message has no INSERT policy for
+-- authenticated users — the function writes the orphan message row on
+-- their behalf. Clients that want to attach to an existing message
+-- (used later for reposts / cross-posting) can still pass message_id
+-- explicitly; the default only fires when the column is omitted.
+create or replace function public.create_orphan_message () returns uuid language plpgsql security definer as $$
 declare
-  new_message_id uuid;
+  new_id uuid;
 begin
-  if new.message_id is null then
-    insert into public.message default values returning id into new_message_id;
-    new.message_id := new_message_id;
-  end if;
-  return new;
+  insert into public.message default values returning id into new_id;
+  return new_id;
 end;
 $$;
 
-alter function public.ensure_phrase_request_message () owner to postgres;
+alter function public.create_orphan_message () owner to postgres;
 
-drop trigger if exists ensure_phrase_request_message on public.phrase_request;
-
-create trigger ensure_phrase_request_message
-before insert on public.phrase_request for each row
-execute function public.ensure_phrase_request_message ();
-
--- The seed loader runs with `session_replication_role = replica` to skip
--- triggers for speed, but this trigger is the only thing populating the
--- new not-null message_id column. ENABLE ALWAYS makes it fire in replica
--- mode too, so seed inserts that omit message_id still get one.
-alter table public.phrase_request enable always trigger ensure_phrase_request_message;
+alter table public.phrase_request
+alter column message_id
+set default public.create_orphan_message ();
 
 -- ── 6. seed the initial tags ────────────────────────────────────────
 insert into
