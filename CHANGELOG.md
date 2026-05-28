@@ -27,7 +27,7 @@ _28 May, 2026_
 - **Playwright → Scenetest cutover** in flight: legacy npm test scripts and `nav-tests` CI job removed; new scenetest coverage for feed, playlists, bulk-add, password-reset, cards, and admin messages.
 - `should()` runtime assertions back the deck mutations and collection handlers; `serverCheck` replaced by `.select()`-then-`should()` or removed where dead.
 - **Bundle scan** in CI catches dev-only code leaking into production builds.
-- `install:st` / `uninstall:st` scripts for local scenetest-js dev.
+- `st:link` / `st:unlink` scripts for local scenetest-js dev.
 
 ## v0.26 - Auto-provisioned Profiles, Optimistic Mutations, Navigation Refresh
 
