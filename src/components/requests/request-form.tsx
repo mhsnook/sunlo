@@ -108,6 +108,7 @@ export function RequestForm({
 					await Promise.all([
 						phraseRequestsCollection.preload(),
 						phraseRequestUpvotesCollection.preload(),
+						messagesCollection.preload(),
 					])
 					const id = crypto.randomUUID()
 					const tx = createRequest({
