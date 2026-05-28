@@ -163,6 +163,7 @@ function MessageSection({
 	requestId: uuid
 	messageId: uuid
 }) {
+	const { isAdmin } = useAuth()
 	const { data: tags } = useMessageTagsForMessage(messageId)
 	return (
 		<div className="space-y-3" data-testid="admin-request-message-section">
@@ -196,14 +197,16 @@ function MessageSection({
 								data-key={tag.slug}
 							>
 								{tag.label}
-								<button
-									type="button"
-									className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
-									aria-label={`Remove ${tag.label}`}
-									onClick={() => detachTag(messageId, tag.slug)}
-								>
-									<X className="h-3 w-3" />
-								</button>
+								{isAdmin ? (
+									<button
+										type="button"
+										className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
+										aria-label={`Remove ${tag.label}`}
+										onClick={() => detachTag(messageId, tag.slug)}
+									>
+										<X className="h-3 w-3" />
+									</button>
+								) : null}
 							</Badge>
 						))}
 						{!tags?.length && (
@@ -212,6 +215,7 @@ function MessageSection({
 						<AddTagPopover
 							messageId={messageId}
 							currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
+							isAdmin={isAdmin}
 						/>
 					</dd>
 				</div>
@@ -227,9 +231,11 @@ function MessageSection({
 function AddTagPopover({
 	messageId,
 	currentSlugs,
+	isAdmin,
 }: {
 	messageId: uuid
 	currentSlugs: Set<string>
+	isAdmin: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const { data: allTags } = useMessageTags()
@@ -241,6 +247,7 @@ function AddTagPopover({
 					variant="ghost"
 					data-testid="admin-request-add-tag"
 					aria-label="Edit tags"
+					disabled={!isAdmin}
 				>
 					<Plus className="h-3 w-3" />
 				</Button>

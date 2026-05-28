@@ -7,6 +7,7 @@ import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
 import { Checkbox } from '@/components/ui/checkbox'
+import { useAuth } from '@/lib/use-auth'
 import { Loader } from '@/components/ui/loader'
 import { Separator } from '@/components/ui/separator'
 import { toastError } from '@/components/ui/sonner'
@@ -33,6 +34,7 @@ export const Route = createLazyFileRoute('/_user/admin/messages/$id')({
 
 function AdminMessageDetail() {
 	const { id } = Route.useParams()
+	const { isAdmin } = useAuth()
 	const { data: message, isLoading } = useLiveQuery(
 		(q) =>
 			q
@@ -95,14 +97,16 @@ function AdminMessageDetail() {
 							data-key={tag.slug}
 						>
 							{tag.label}
-							<button
-								type="button"
-								className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
-								aria-label={`Remove ${tag.label}`}
-								onClick={() => detachTag(message.id, tag.slug)}
-							>
-								<X className="h-3 w-3" />
-							</button>
+							{isAdmin ? (
+								<button
+									type="button"
+									className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
+									aria-label={`Remove ${tag.label}`}
+									onClick={() => detachTag(message.id, tag.slug)}
+								>
+									<X className="h-3 w-3" />
+								</button>
+							) : null}
 						</Badge>
 					))}
 					{!tags?.length && (
@@ -111,6 +115,7 @@ function AdminMessageDetail() {
 					<AddTagPopover
 						messageId={message.id}
 						currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
+						isAdmin={isAdmin}
 					/>
 				</div>
 			</section>
@@ -162,9 +167,11 @@ function AdminMessageDetail() {
 function AddTagPopover({
 	messageId,
 	currentSlugs,
+	isAdmin,
 }: {
 	messageId: uuid
 	currentSlugs: Set<string>
+	isAdmin: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const { data: allTags } = useMessageTags()
@@ -176,6 +183,7 @@ function AddTagPopover({
 					variant="ghost"
 					data-testid="message-add-tag"
 					aria-label="Edit tags"
+					disabled={!isAdmin}
 				>
 					<Plus className="h-3 w-3" />
 				</Button>

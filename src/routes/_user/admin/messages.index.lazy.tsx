@@ -310,6 +310,7 @@ function TagsStrip({
 }
 
 function NewTagButton() {
+	const { isAdmin } = useAuth()
 	const [open, setOpen] = useState(false)
 	const [slug, setSlug] = useState('')
 	const [label, setLabel] = useState('')
@@ -350,7 +351,12 @@ function NewTagButton() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button size="sm" variant="ghost" data-testid="new-tag-button">
+				<Button
+					size="sm"
+					variant="ghost"
+					data-testid="new-tag-button"
+					disabled={!isAdmin}
+				>
 					<Plus className="me-1 h-3 w-3" /> New tag
 				</Button>
 			</PopoverTrigger>
@@ -452,6 +458,7 @@ function EditTagsDialog({ tagCounts }: { tagCounts: Map<string, number> }) {
 }
 
 function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
+	const { isAdmin } = useAuth()
 	const [isEditing, setIsEditing] = useState(false)
 	const [label, setLabel] = useState(tag.label)
 	const [description, setDescription] = useState(tag.description ?? '')
@@ -590,6 +597,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 							onClick={() => setIsEditing(true)}
 							aria-label={`Edit ${tag.label}`}
 							data-testid="edit-tag-pencil"
+							disabled={!isAdmin}
 						>
 							<Pencil className="size-3.5" />
 						</Button>
@@ -600,6 +608,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 								onClick={toggleArchive}
 								aria-label={`Restore ${tag.label}`}
 								data-testid="restore-tag-button"
+								disabled={!isAdmin}
 							>
 								<Undo2 className="size-3.5" />
 							</Button>
@@ -614,6 +623,7 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 										variant="ghost"
 										aria-label={`Archive ${tag.label}`}
 										data-testid="archive-tag-button"
+										disabled={!isAdmin}
 									>
 										<Archive className="text-destructive size-3.5" />
 									</Button>
@@ -655,6 +665,7 @@ function BulkAddSection({
 	userId: string | null
 	allTags: MessageTagType[]
 }) {
+	const { isAdmin } = useAuth()
 	const [open, setOpen] = useState(false)
 	const [text, setText] = useState('')
 	const [lang, setLang] = useState('')
@@ -826,7 +837,11 @@ function BulkAddSection({
 							size="sm"
 							onClick={() => bulkAdd.mutate()}
 							disabled={
-								bulkAdd.isPending || prompts.length === 0 || !lang || !userId
+								bulkAdd.isPending ||
+								prompts.length === 0 ||
+								!lang ||
+								!userId ||
+								!isAdmin
 							}
 							data-testid="bulk-add-submit"
 						>
@@ -848,6 +863,7 @@ function SelectionBar({
 	clear: () => void
 	allTags: MessageTagType[]
 }) {
+	const { isAdmin } = useAuth()
 	const [tagPickerOpen, setTagPickerOpen] = useState(false)
 
 	const applyTag = (slug: string) => {
@@ -921,7 +937,7 @@ function SelectionBar({
 			</span>
 			<Popover open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
 				<PopoverTrigger asChild>
-					<Button size="sm" data-testid="apply-tag-button">
+					<Button size="sm" data-testid="apply-tag-button" disabled={!isAdmin}>
 						<Tags className="me-1 h-3 w-3" />
 						Apply / remove tag
 					</Button>
@@ -983,6 +999,7 @@ function MessagesTable({
 	toggleVisibleAll: () => void
 	tagsByMessage: Map<string, MessageTagType[]>
 }) {
+	const { isAdmin } = useAuth()
 	const allVisibleSelected =
 		rows.length > 0 && rows.every((r) => selected.has(r.message_id))
 
@@ -1006,6 +1023,7 @@ function MessagesTable({
 					onCheckedChange={toggleVisibleAll}
 					aria-label="Select all visible"
 					data-testid="select-all-visible"
+					disabled={!isAdmin}
 				/>
 				<span className="text-muted-foreground font-semibold tracking-wide uppercase">
 					Select all visible
@@ -1037,6 +1055,7 @@ function MessageRowItem({
 	onToggle: () => void
 	tags: MessageTagType[]
 }) {
+	const { isAdmin } = useAuth()
 	return (
 		<li
 			className={cn(
@@ -1052,6 +1071,7 @@ function MessageRowItem({
 				aria-label="Select message"
 				className="mt-1"
 				data-testid="message-row-checkbox"
+				disabled={!isAdmin}
 			/>
 			<div className="min-w-0 flex-1 space-y-1">
 				<div className="flex items-center gap-2">
@@ -1071,14 +1091,16 @@ function MessageRowItem({
 								data-key={tag.slug}
 							>
 								{tag.label}
-								<button
-									type="button"
-									className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
-									onClick={() => detachTag(row.message_id, tag.slug)}
-									aria-label={`Remove ${tag.label}`}
-								>
-									<X className="h-3 w-3" />
-								</button>
+								{isAdmin ? (
+									<button
+										type="button"
+										className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
+										onClick={() => detachTag(row.message_id, tag.slug)}
+										aria-label={`Remove ${tag.label}`}
+									>
+										<X className="h-3 w-3" />
+									</button>
+								) : null}
 							</Badge>
 						))}
 					</div>
