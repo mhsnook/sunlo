@@ -1414,7 +1414,7 @@ function ComponentShowcase() {
 				</p>
 			</div>
 
-			<div className="grid gap-6 @4xl:grid-cols-2">
+			<div className="grid gap-6 @3xl:grid-cols-2">
 				<div className="space-y-2">
 					<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
 						Request thread
