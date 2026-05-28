@@ -1,35 +1,33 @@
 # Change Log
 
-## v0.27 - Admin Tag Editor for Requests, Auth Lifecycle Cleanup, Playwright → Scenetest Cutover
+## v0.27 - Admin Tag Editor, Auth Lifecycle, Playwright → Scenetest
 
 _28 May, 2026_
 
 ### Features
 
-- **Admin tag editor for request messages** — tags now attach to the cross-language **message** behind each request (so when reposting / cross-posting lands, the tag travels with every language variant for free). A consolidated `/admin/messages` CRUD page lets admins bulk-add prompts (textarea + language picker + optional single tag → N `phrase_request` inserts, one batch), filter by tag and by free text, multi-select messages with persistent selection across filter changes, apply or remove tags across the selection, and manage the vocabulary itself via an Edit-tags dialog (inline pencil/save edit mode, archive with an AlertDialog warning + Undo restore, "+ New tag" popover). `/admin/messages/$id` shows the message id, tags, and every linked request across languages. `/admin/$lang/requests/$id` gained the same inline tag editor plus "Other requests on this message" and "Phrases attached" sections. On `/learn/$lang/requests/$id`, everyone sees read-only tag chips and admins get a Settings gear icon next to the LangBadge that jumps to the admin request page — no inline editing on the public side.
-- **Admin shell polish** — every admin route now renders inside a `bg-card/50` page card via the top-level admin layout. The appnav strip is consistent (`Phrases | Requests | Messages`) across per-language admin views, with `Messages` registered as a constant link (Tags icon, `inexact: true` so detail pages stay lit). The custom "All requests / All phrases / All messages" in-page BackLink is gone from all three admin detail pages — the navbar back chevron + appnav cover that nav.
-- **Per-deck navigation gates** — the `$lang` appnav is now deck-specific: it's hidden until the user has an active deck for that language, with a "Start learning this language" prompt taking its place. The `chromeless` route flag lets pages opt out of the top navbar entirely (used by full-screen experiences).
-- **Card status dropdown simplified** — the status menu lost its setup-affordance clutter; deck setup defers to a dedicated dialog (#693).
-- **Login error messaging** — failed-credential responses now surface a clear message instead of the generic catch-all (#680).
+- **Admin tag editor for request messages.** Tags attach to the cross-language `message` behind each request, not the request itself — so they'll travel with every language variant once cross-posting lands. New `/admin/messages` consolidates bulk-add, filter, multi-select tagging, and tag CRUD (with archive/restore). Per-request admin page gains the same inline editor plus sibling-requests and attached-phrases lists. `/learn` shows read-only chips + a gear for admins.
+- **Per-deck navigation gates** — `$lang` appnav hides until the user has an active deck; new `chromeless` route flag drops the top navbar for full-screen pages.
+- **Card status dropdown** simplified; deck setup deferred to a dedicated dialog (#693).
+- **Login error messaging** for invalid credentials (#680).
 
 ### Improvements
 
-- **Auth lifecycle consolidated** — sign-in / sign-out / identity-change handling moved into a single `authLifecycle` class with named phases (#694), eliminating a scatter of ad-hoc effects in `_user.tsx` and `auth-context.tsx`. The profile collection became identity-aware (the old `isReady` flag is gone); user collections re-sync correctly across identity changes; and a `recoverProfile` path in the `_user` loader uses `writeInsert` to restore the profile collection without a full table refetch.
-- **Vendor bundle splitting** (#686) — `lucide-vendor`, `react-vendor`, and `supabase-vendor` are now separate chunks that stay cached across deploys (only the entry chunk re-downloads).
-- **Button affordance polish** — default/red buttons darkened for stronger active contrast; the focusMode context-menu space is reclaimed when empty.
-- **Comment count icon** uses a single-comment glyph instead of the multi-message one.
+- **Auth lifecycle consolidated** into a single `authLifecycle` class (#694). Profile collection became identity-aware; user collections re-sync correctly across identity changes.
+- **Vendor bundle splitting** (#686) — separate `lucide-vendor`, `react-vendor`, `supabase-vendor` chunks stay cached across deploys.
+- Admin pages render inside a `bg-card/50` surface; appnav consistently shows Phrases / Requests / Messages.
 
 ### Migrations
 
-- `20260526120000_request_messages_and_tags.sql` — introduces `message` (cross-language grouping object behind every `phrase_request`), `message_tag` (closed admin-curated vocabulary keyed by slug), and `message_tag_link` (the join). Adds `phrase_request.message_id` (FK + NOT NULL after a deterministic per-row backfill). The column is auto-populated by a `SECURITY DEFINER` function set as the column DEFAULT — defaults fire under `session_replication_role = replica` (no `ENABLE ALWAYS` dance) and show up in `information_schema.columns`, so `pnpm run types` emits `message_id?: string` on Insert. Seeds nine starter tags (Day 1, Introductions, Getting around, Safety ⚠️, Pronouns, Counting, Odd numbers, Eating, Daily life) with `ON CONFLICT DO NOTHING` so the seed is a bootstrap floor, not source of truth.
-- `20260527120000_archive_message_tags.sql` — adds `message_tag.archived` (bool, default false) so retiring a tag is a soft-delete: link rows stay intact, archived tags drop out of pickers and public chips, admins can restore.
+- `20260526120000_request_messages_and_tags.sql` — adds `message`, `message_tag`, `message_tag_link`; `phrase_request.message_id` (auto-filled by a SECURITY DEFINER column DEFAULT); seeds nine starter tags.
+- `20260527120000_archive_message_tags.sql` — adds `message_tag.archived` for soft-delete.
 
 ### CI / DX
 
-- **Playwright → Scenetest cutover, broad coverage gains.** The legacy `e2e/` Playwright tests are being retired; the npm test scripts and the dedicated `nav-tests` CI job were removed in this batch. New `scenetest` coverage landed for the feed (order, UI-sync, popular sort, provenance, folding, pagination), playlists (delete, ownership, mutations), bulk-add (inline staging + replace semantics), password-reset, cards (migrated to the scenetest `test()` surface), and a baseline for admin messages. Phrase + request specs were restored after a coverage-gap audit. Inline runtime assertions (`should()`) now back the deck create/archive mutations and the collection-level handlers; `serverCheck` calls were either replaced by `.select()`-then-`should()` (so the assertion proves client/server agreement directly) or deleted where dead.
-- **Bundle scan** — CI catches dev-only code leaking into production builds; the `dev-only` UI gate is also hostname-aware so a misset build mode can't expose it.
-- **`install:st` / `uninstall:st` scripts** for local scenetest-js dev (work with a checked-out scenetest tree without publishing to npm).
-- **React-to-Solid feasibility skill** added (#682) — a measured bundle projection for a hypothetical Solid port.
+- **Playwright → Scenetest cutover** in flight: legacy npm test scripts and `nav-tests` CI job removed; new scenetest coverage for feed, playlists, bulk-add, password-reset, cards, and admin messages.
+- `should()` runtime assertions back the deck mutations and collection handlers; `serverCheck` replaced by `.select()`-then-`should()` or removed where dead.
+- **Bundle scan** in CI catches dev-only code leaking into production builds.
+- `install:st` / `uninstall:st` scripts for local scenetest-js dev.
 
 ## v0.26 - Auto-provisioned Profiles, Optimistic Mutations, Navigation Refresh
 
