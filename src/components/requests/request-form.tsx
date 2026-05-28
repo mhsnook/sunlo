@@ -6,10 +6,12 @@ import { MarkdownHint } from '@/components/comments/comment-dialog'
 import { useUserId } from '@/lib/use-auth'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import {
+	messagesCollection,
 	phraseRequestsCollection,
 	phraseRequestUpvotesCollection,
 } from '@/features/requests/collections'
 import {
+	PhraseRequestSchema,
 	PhraseRequestType,
 	RequestPhraseFormSchema,
 	requestPromptPlaceholders,
@@ -44,14 +46,25 @@ const createRequest = createOptimisticAction<CreateInput>({
 		phraseRequestUpvotesCollection.insert({ request_id: id })
 	},
 	mutationFn: async ({ id, prompt, lang, userId }) => {
-		await supabase
+		// .select() the inserted row back so we can drop the synced state
+		// into the collections directly — no full-table refetch. The DB's
+		// column DEFAULT on message_id creates the message row in the same
+		// transaction; pull that into messagesCollection too.
+		const { data } = await supabase
 			.from('phrase_request')
 			.insert({ id, prompt, lang, requester_uid: userId })
+			.select()
+			.single()
 			.throwOnError()
-		await Promise.all([
-			phraseRequestsCollection.utils.refetch(),
-			phraseRequestUpvotesCollection.utils.refetch(),
-		])
+		const parsed = PhraseRequestSchema.parse(data)
+		phraseRequestsCollection.utils.writeInsert(parsed)
+		messagesCollection.utils.writeInsert({
+			id: parsed.message_id!,
+			created_at: parsed.created_at,
+		})
+		// The auto-upvote trigger created the upvote row server-side; the
+		// local schema is just { request_id }, no need to fetch it back.
+		phraseRequestUpvotesCollection.utils.writeInsert({ request_id: id })
 	},
 })
 
