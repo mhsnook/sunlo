@@ -9,11 +9,13 @@ import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
 import {
+	BookA,
 	Bookmark,
 	Check,
 	ChevronDown,
 	ChevronsUpDown,
 	HeartPlus,
+	Info,
 	Lightbulb,
 	ListFilter,
 	ListPlus,
@@ -23,14 +25,20 @@ import {
 	MessageCircleWarningIcon,
 	MessageSquare,
 	MessageSquareQuote,
+	MonitorCog,
+	Moon,
 	MoreVertical,
 	Reply,
 	Rocket,
+	Send,
 	Settings,
 	Share2,
 	Star,
+	Sun,
 	TableProperties,
 	ThumbsUp,
+	UserCheck,
+	X,
 	type LucideIcon,
 } from 'lucide-react'
 import { allLanguageOptions } from '@/lib/languages'
@@ -47,6 +55,7 @@ import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
+import { ChoiceTile } from '@/components/ui/choice-tile'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import {
 	Command,
@@ -76,8 +85,10 @@ import {
 	CardDescription,
 	CardFooter,
 	CardHeader,
+	CardTitle,
 } from '@/components/ui/card'
 import { CardlikeFlashcard, CardlikeRequest } from '@/components/ui/card-like'
+import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
 import {
 	toastError,
@@ -927,6 +938,381 @@ function ShowcaseLanguagePicker() {
 	)
 }
 
+function ShowcaseChoiceTileGroup() {
+	const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+	const [font, setFont] = useState<'default' | 'dyslexic'>('default')
+	return (
+		<div className="space-y-4">
+			<div className="space-y-1">
+				<p className="text-sm font-medium">Appearance</p>
+				<div className="flex gap-2">
+					{(
+						[
+							['light', 'Light', Sun],
+							['dark', 'Dark', Moon],
+							['system', 'System', MonitorCog],
+						] as const
+					).map(([value, label, Icon]) => (
+						<ChoiceTile
+							key={value}
+							selected={theme === value}
+							onClick={() => setTheme(value)}
+							className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+						>
+							<Icon className="size-5 shrink-0" />
+							<span className="font-medium">{label}</span>
+						</ChoiceTile>
+					))}
+				</div>
+			</div>
+			<div className="space-y-1">
+				<p className="text-sm font-medium">Font style</p>
+				<div className="flex gap-2">
+					{(
+						[
+							['default', 'Default', 'Atkinson Hyperlegible'],
+							['dyslexic', 'Dyslexic', 'OpenDyslexic'],
+						] as const
+					).map(([value, label, sub]) => (
+						<ChoiceTile
+							key={value}
+							selected={font === value}
+							onClick={() => setFont(value)}
+							className="flex flex-1 items-center gap-3 px-4 py-3 text-start"
+						>
+							<BookA className="size-5 shrink-0" />
+							<div>
+								<span className="block font-medium">{label}</span>
+								<span className="text-muted-foreground text-sm">{sub}</span>
+							</div>
+						</ChoiceTile>
+					))}
+				</div>
+			</div>
+		</div>
+	)
+}
+
+// Twin of the friend-chat bubble (src/routes/_user/friends/chats.$friendUid.tsx).
+// `isMine` flips alignment + drops the avatar, matching the live component.
+// Real chat messages always attach a phrase / playlist / request preview,
+// so the bubble takes its content via `children` (typically a card preview).
+function ChatBubble({
+	isMine,
+	username,
+	initials,
+	seed,
+	label,
+	time,
+	children,
+}: {
+	isMine: boolean
+	username: string
+	initials: string
+	seed: string
+	label: string
+	time: string
+	children: ReactNode
+}) {
+	return (
+		<div
+			className={cn(
+				'max-w-[80%] items-start gap-2',
+				isMine
+					? 'align-end ms-auto justify-end ps-[10%]'
+					: 'align-start me-auto justify-start pe-[10%]'
+			)}
+		>
+			<div>
+				<div className="mb-1 flex items-center gap-2">
+					{!isMine && (
+						<Avatar className="h-8 w-8 shrink-0">
+							<AvatarFallback seed={seed} className="text-xs font-bold">
+								{initials}
+							</AvatarFallback>
+						</Avatar>
+					)}
+					<p
+						className={cn(
+							'text-muted-foreground grow text-xs',
+							isMine && 'text-end'
+						)}
+					>
+						{isMine ? (
+							<>
+								{label} &middot; {time}
+							</>
+						) : (
+							<>
+								{time} &middot; {label}
+							</>
+						)}
+					</p>
+				</div>
+				{children}
+			</div>
+			<span className="sr-only">{isMine ? 'You' : username}</span>
+		</div>
+	)
+}
+
+// Mock of CardPreview — the real component (src/routes/_user/friends/-card-preview.tsx)
+// fetches the phrase from the collection; here we pass content in directly.
+function ChatPhrasePreview({
+	isMine,
+	text,
+	translation,
+	lang,
+}: {
+	isMine: boolean
+	text: string
+	translation: string
+	lang: string
+}) {
+	return (
+		<CardlikeFlashcard
+			className={cn(
+				'relative z-10 mb-0',
+				isMine ? 'rounded-br-none' : 'rounded-bl-none'
+			)}
+		>
+			<CardContent className="space-y-2 p-4">
+				<div className="flex items-center justify-between gap-2">
+					<CardTitle className="text-lg">{text}</CardTitle>
+					<LangBadge lang={lang} />
+				</div>
+				<p className="text-muted-foreground">{translation}</p>
+			</CardContent>
+		</CardlikeFlashcard>
+	)
+}
+
+function ShowcaseChatBubbles() {
+	return (
+		<div className="bg-card/50 flex h-110 flex-col rounded border">
+			<div className="flex flex-row items-center gap-3 border-b p-3">
+				<Avatar>
+					<AvatarFallback seed="priya" className="font-bold">
+						PL
+					</AvatarFallback>
+				</Avatar>
+				<div className="flex-1">
+					<p className="leading-tight font-semibold">Priya L.</p>
+					<p className="text-muted-foreground text-xs">Friends</p>
+				</div>
+			</div>
+			<div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+				<ChatBubble
+					isMine={false}
+					username="Priya L."
+					initials="PL"
+					seed="priya"
+					label="Sent a phrase recommendation"
+					time="2m ago"
+				>
+					<ChatPhrasePreview
+						isMine={false}
+						text="selamat sonja"
+						translation="good evening"
+						lang={SHOWCASE_LANG}
+					/>
+				</ChatBubble>
+				<ChatBubble
+					isMine
+					username="You"
+					initials="Yo"
+					seed="self"
+					label="Added this to your deck"
+					time="just now"
+				>
+					<ChatPhrasePreview
+						isMine
+						text="selamat sonja"
+						translation="good evening"
+						lang={SHOWCASE_LANG}
+					/>
+				</ChatBubble>
+			</div>
+			<div className="border-t p-3">
+				<div className="flex items-center gap-2">
+					<Input
+						placeholder="Send a phrase, playlist, or request..."
+						className="cursor-pointer"
+						readOnly
+					/>
+					<Button size="icon" aria-label="Open send menu">
+						<Send className="size-4" />
+					</Button>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+// Twin of ProfileWithRelationship + AvatarIconRow. Renders the four states
+// (unconnected, pending-from-them, pending-from-me, friends) side by side
+// without depending on real profile data or the router.
+function ProfilePill({
+	username,
+	seed,
+	children,
+}: {
+	username: string
+	seed: string
+	children: ReactNode
+}) {
+	return (
+		<div className="flex w-full flex-row items-center gap-4">
+			<div className="hover:bg-1-mlo-primary hover:border-2-mlo-primary flex grow flex-row items-center justify-start gap-4 rounded-2xl border border-transparent p-2">
+				<Avatar className="size-8">
+					<AvatarFallback seed={seed} className="text-xs font-bold">
+						{username.slice(0, 2).toUpperCase()}
+					</AvatarFallback>
+				</Avatar>
+				<span>{username}</span>
+			</div>
+			<div className="flex flex-row gap-2">{children}</div>
+		</div>
+	)
+}
+
+function ShowcaseProfilePills() {
+	return (
+		<div className="bg-card/50 space-y-1 rounded border p-3">
+			<ProfilePill username="Priya L." seed="priya">
+				<Button
+					variant="default"
+					size="icon"
+					className="size-8"
+					aria-label="Send friend request"
+				>
+					<Send className="me-[0.1rem] mt-[0.1rem] size-6" />
+				</Button>
+			</ProfilePill>
+			<ProfilePill username="Marco R." seed="marco">
+				<Button
+					variant="default"
+					size="icon"
+					className="size-8"
+					aria-label="Accept invitation"
+				>
+					<ThumbsUp />
+				</Button>
+				<Button
+					variant="neutral"
+					size="icon"
+					className="size-8"
+					aria-label="Decline invitation"
+				>
+					<X className="size-6 p-0" />
+				</Button>
+			</ProfilePill>
+			<ProfilePill username="Theo K." seed="theo">
+				<Button
+					variant="neutral"
+					size="icon"
+					className="size-8"
+					aria-label="Cancel friend request"
+				>
+					<X className="size-6 p-0" />
+				</Button>
+			</ProfilePill>
+			<ProfilePill username="Sofía M." seed="sofia">
+				<UserCheck className="size-6 p-0" />
+			</ProfilePill>
+		</div>
+	)
+}
+
+function ShowcaseIntroCallout() {
+	return (
+		<div className="space-y-2">
+			<div className="border-3-mlo-primary bg-1-mlo-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
+				<Info className="text-primary mt-0.5 size-4 shrink-0" />
+				<div className="flex-1">
+					<span className="text-foreground/80">
+						Quick reminder: reviews use a 4 am cutoff, so cards due "today" stay
+						available until tomorrow morning.
+					</span>{' '}
+					<button className="text-primary underline hover:no-underline">
+						Learn more
+					</button>
+				</div>
+			</div>
+			<div className="border-3-mlo-primary bg-1-mlo-primary flex items-start gap-2 rounded border px-3 py-2 text-sm">
+				<Info className="text-primary mt-0.5 size-4 shrink-0" />
+				<div className="flex-1">
+					<span className="text-foreground/80">
+						No "show more" link when the callout stands on its own.
+					</span>
+				</div>
+			</div>
+		</div>
+	)
+}
+
+function ShowcaseAvatarSizes() {
+	const sizes: Array<{
+		cls: string
+		label: string
+		usage: string
+		seed: string
+		initials: string
+	}> = [
+		{
+			cls: 'size-6',
+			label: '6',
+			usage:
+				'Inline bylines and the nav-user dropdown trigger — small comment / reply rows.',
+			seed: 'priya',
+			initials: 'PL',
+		},
+		{
+			cls: 'size-8',
+			label: '8',
+			usage:
+				'Workhorse size: feed bylines, chat message bubbles, profile pills.',
+			seed: 'marco',
+			initials: 'MR',
+		},
+		{
+			cls: 'size-10',
+			label: '10 (default)',
+			usage:
+				'The bare <Avatar />: request-thread bylines and the chat-header avatar.',
+			seed: 'theo',
+			initials: 'TK',
+		},
+		{
+			cls: 'size-12',
+			label: '12',
+			usage: 'Home-page profile button in the top-right.',
+			seed: 'sofia',
+			initials: 'SM',
+		},
+	]
+	return (
+		<dl className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3">
+			{sizes.map((s) => (
+				<div
+					key={s.label}
+					className="col-span-2 grid grid-cols-subgrid items-center"
+				>
+					<dt className="flex w-16 flex-col items-center gap-1">
+						<Avatar className={s.cls}>
+							<AvatarFallback seed={s.seed} className="font-bold">
+								{s.initials}
+							</AvatarFallback>
+						</Avatar>
+						<span className="text-muted-foreground text-xs">{s.label}</span>
+					</dt>
+					<dd className="text-muted-foreground text-sm">{s.usage}</dd>
+				</div>
+			))}
+		</dl>
+	)
+}
+
 function SmolShowcaseBlock({
 	label,
 	children,
@@ -985,6 +1371,37 @@ function SmolShowcase() {
 	)
 }
 
+function SocialShowcase() {
+	return (
+		<section className="@container space-y-6">
+			<div className="space-y-1">
+				<h2 className="text-lg font-semibold">Profiles, chat & onboarding</h2>
+				<p className="text-muted-foreground text-sm">
+					Avatar sizes, friend-relationship pills, the chat bubble pair, and the
+					inline intro callout — each shown across the states the app uses.
+				</p>
+			</div>
+			<div className="gap-x-6 @2xl:columns-2">
+				<SmolShowcaseBlock label="Choice tile group">
+					<ShowcaseChoiceTileGroup />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Avatar sizes">
+					<ShowcaseAvatarSizes />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Profile pill (relationship states)">
+					<ShowcaseProfilePills />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Intro callout">
+					<ShowcaseIntroCallout />
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Chat bubbles (theirs + yours)">
+					<ShowcaseChatBubbles />
+				</SmolShowcaseBlock>
+			</div>
+		</section>
+	)
+}
+
 function ComponentShowcase() {
 	return (
 		<section className="@container space-y-6">
@@ -997,7 +1414,7 @@ function ComponentShowcase() {
 				</p>
 			</div>
 
-			<div className="grid gap-6 @4xl:grid-cols-2">
+			<div className="grid gap-6 @3xl:grid-cols-2">
 				<div className="space-y-2">
 					<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
 						Request thread
@@ -1088,6 +1505,8 @@ function ThemesPage() {
 			<ComponentShowcase />
 
 			<SmolShowcase />
+
+			<SocialShowcase />
 
 			<header className="space-y-2">
 				<h1 className="text-2xl font-bold">Per-language palette</h1>
