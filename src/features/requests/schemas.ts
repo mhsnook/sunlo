@@ -36,6 +36,7 @@ export const MessageTagSchema = z.object({
 	label: z.string(),
 	description: z.string().nullable(),
 	sort_order: z.number().default(0),
+	archived: z.boolean().default(false),
 	created_at: z.string(),
 })
 
