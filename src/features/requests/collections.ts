@@ -258,11 +258,21 @@ export const messageTagsCollection = createCollection(
 		onUpdate: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
-					await supabase
+					// .select() so we can confirm rows were actually affected:
+					// RLS-protected UPDATE silently returns 0 rows when the
+					// caller lacks permission (no PostgREST error). Throwing
+					// rolls the optimistic state back and surfaces the failure.
+					const { data } = await supabase
 						.from('message_tag')
 						.update(m.changes)
 						.eq('slug', m.original.slug)
+						.select()
 						.throwOnError()
+					if (!data || data.length === 0) {
+						throw new Error(
+							`Update on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
+						)
+					}
 				})
 			)
 			return { refetch: false }
@@ -270,11 +280,17 @@ export const messageTagsCollection = createCollection(
 		onDelete: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
-					await supabase
+					const { data } = await supabase
 						.from('message_tag')
 						.delete()
 						.eq('slug', m.original.slug)
+						.select()
 						.throwOnError()
+					if (!data || data.length === 0) {
+						throw new Error(
+							`Delete on message_tag "${m.original.slug}" affected no rows (permission denied or row removed).`
+						)
+					}
 				})
 			)
 			return { refetch: false }
@@ -318,12 +334,18 @@ export const messageTagLinksCollection = createCollection(
 		onDelete: async ({ transaction }) => {
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
-					await supabase
+					const { data } = await supabase
 						.from('message_tag_link')
 						.delete()
 						.eq('message_id', m.original.message_id)
 						.eq('tag_slug', m.original.tag_slug)
+						.select()
 						.throwOnError()
+					if (!data || data.length === 0) {
+						throw new Error(
+							`Delete on message_tag_link (${m.original.message_id}, ${m.original.tag_slug}) affected no rows (permission denied or row already removed).`
+						)
+					}
 				})
 			)
 			return { refetch: false }
