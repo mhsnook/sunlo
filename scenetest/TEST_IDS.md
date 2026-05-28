@@ -198,31 +198,66 @@ natural wrapper element to label.
 
 ## Phrase Requests
 
-| Selector                       | Attribute   | Component/Location  | Description                                                                                        |
-| ------------------------------ | ----------- | ------------------- | -------------------------------------------------------------------------------------------------- |
-| `contributions-page`           | data-testid | Contributions route | Contributions page container                                                                       |
-| `contributions-tab--requests`  | data-testid | Contributions page  | Tab for requests                                                                                   |
-| `contributions-tab--phrases`   | data-testid | Contributions page  | Tab for phrases                                                                                    |
-| `contributions-tab--playlists` | data-testid | Contributions page  | Tab for playlists                                                                                  |
-| `contributions-tab--answers`   | data-testid | Contributions page  | Tab for answers                                                                                    |
-| `contributions-tab--comments`  | data-testid | Contributions page  | Tab for comments                                                                                   |
-| `contributions-comment-item`   | data-testid | Comments tab        | Comment card on the comments tab (use with `data-key={commentId}`)                                 |
-| `new-request-link`             | data-testid | Contributions page  | Link to create new request                                                                         |
-| `new-request-form`             | data-testid | New request page    | Request form container (scope `prompt-input` and `submit-button` by this)                          |
-| `request-detail-page`          | data-testid | Request route       | Request detail container                                                                           |
-| `request-item`                 | data-testid | Request list        | A request list item (own user)                                                                     |
-| `other-user-request-item`      | data-testid | Request list        | A request by another user                                                                          |
-| `update-request-button`        | data-testid | Request page        | Edit button (owner only)                                                                           |
-| `edit-request-dialog`          | data-testid | Dialog              | Edit request dialog                                                                                |
-| `edit-request-form`            | data-testid | Edit dialog         | Form container inside the edit dialog (scope `prompt-input` and `submit-button` by this)           |
-| `delete-request-button`        | data-testid | Request page        | Delete button (owner only)                                                                         |
-| `delete-request-dialog`        | data-testid | Dialog              | Delete confirmation                                                                                |
-| `confirm-delete-button`        | data-testid | Dialog              | Confirm delete button                                                                              |
-| `comment-item`                 | data-name   | Request page        | Comment container (use with data-key for a specific comment)                                       |
-| `show-replies-button`          | data-name   | Comment item        | Toggle to expand/collapse the reply subthread (select via `comment-item {id} show-replies-button`) |
-| `add-reply-inline`             | data-name   | Comment subthread   | Inline prompt to open the reply dialog (select via `comment-item {id} add-reply-inline`)           |
-| `comment-context-menu-trigger` | data-testid | Comment             | Context menu button                                                                                |
-| `copy-link-menu-item`          | data-testid | Context menu        | Copy link option                                                                                   |
+| Selector                        | Attribute   | Component/Location  | Description                                                                                        |
+| ------------------------------- | ----------- | ------------------- | -------------------------------------------------------------------------------------------------- |
+| `contributions-page`            | data-testid | Contributions route | Contributions page container                                                                       |
+| `contributions-tab--requests`   | data-testid | Contributions page  | Tab for requests                                                                                   |
+| `contributions-tab--phrases`    | data-testid | Contributions page  | Tab for phrases                                                                                    |
+| `contributions-tab--playlists`  | data-testid | Contributions page  | Tab for playlists                                                                                  |
+| `contributions-tab--answers`    | data-testid | Contributions page  | Tab for answers                                                                                    |
+| `contributions-tab--comments`   | data-testid | Contributions page  | Tab for comments                                                                                   |
+| `contributions-comment-item`    | data-testid | Comments tab        | Comment card on the comments tab (use with `data-key={commentId}`)                                 |
+| `new-request-link`              | data-testid | Contributions page  | Link to create new request                                                                         |
+| `new-request-form`              | data-testid | New request page    | Request form container (scope `prompt-input` and `submit-button` by this)                          |
+| `request-detail-page`           | data-testid | Request route       | Request detail container                                                                           |
+| `message-tags-row`              | data-testid | Request detail      | Container for tag chips on a request's message (read-only)                                         |
+| `message-tag-chip`              | data-testid | Request detail      | A single tag chip (list item — has `data-key={slug}`)                                              |
+| `admin-request-gear-link`       | data-testid | Request detail      | Gear icon link to admin page (admin only)                                                          |
+| `admin-messages-page`           | data-testid | /admin/messages     | Page container                                                                                     |
+| `admin-messages-tags-strip`     | data-testid | /admin/messages     | Tag filter strip                                                                                   |
+| `tag-filter-all`                | data-testid | /admin/messages     | "All" pill (clears tag filter)                                                                     |
+| `tag-filter-chip`               | data-testid | /admin/messages     | Individual tag filter chip (has `data-key={slug}`)                                                 |
+| `new-tag-button`                | data-testid | /admin/messages     | Trigger for the "New tag" popover                                                                  |
+| `new-tag-slug`                  | data-testid | New-tag popover     | Slug input                                                                                         |
+| `new-tag-label`                 | data-testid | New-tag popover     | Label input                                                                                        |
+| `new-tag-description`           | data-testid | New-tag popover     | Description textarea                                                                               |
+| `new-tag-submit`                | data-testid | New-tag popover     | Submit button                                                                                      |
+| `edit-tags-button`              | data-testid | /admin/messages     | Trigger for the edit-tags dialog (next to "New tag")                                               |
+| `edit-tags-list`                | data-testid | Edit-tags dialog    | The list of tag rows                                                                               |
+| `edit-tag-row`                  | data-testid | Edit-tags dialog    | A tag row in the list (has `data-key={slug}`)                                                      |
+| `edit-tag-pencil`               | data-testid | Edit-tags dialog    | Pencil button to enter inline edit mode                                                            |
+| `edit-tag-label`                | data-testid | Edit-tags dialog    | Label input (edit mode)                                                                            |
+| `edit-tag-save`                 | data-testid | Edit-tags dialog    | Save button (edit mode)                                                                            |
+| `archive-tag-button`            | data-testid | Edit-tags dialog    | Archive icon opens confirm dialog (active tags)                                                    |
+| `archive-tag-confirm`           | data-testid | Confirm dialog      | Final confirm-archive button                                                                       |
+| `restore-tag-button`            | data-testid | Edit-tags dialog    | Undo icon to restore an archived tag                                                               |
+| `admin-messages-bulk-add`       | data-testid | /admin/messages     | Bulk-add section container                                                                         |
+| `bulk-add-textarea`             | data-testid | Bulk-add            | The textarea for pasted prompts                                                                    |
+| `bulk-add-submit`               | data-testid | Bulk-add            | "Add N messages" button                                                                            |
+| `admin-messages-search`         | data-testid | /admin/messages     | Filter-by-text input                                                                               |
+| `admin-messages-selection-bar`  | data-testid | /admin/messages     | Visible when ≥1 message is selected                                                                |
+| `apply-tag-button`              | data-testid | Selection bar       | Opens apply/remove-tag popover                                                                     |
+| `apply-tag-option`              | data-testid | Apply-tag popover   | Plus button per tag (has `data-key={slug}`)                                                        |
+| `admin-messages-table`          | data-testid | /admin/messages     | Container for the rows (list items have `data-name="message-row"`)                                 |
+| `select-all-visible`            | data-testid | /admin/messages     | Header checkbox                                                                                    |
+| `message-row`                   | data-testid | /admin/messages     | A single message row (has `data-key={message_id}`)                                                 |
+| `message-row-checkbox`          | data-testid | /admin/messages     | Per-row selection checkbox                                                                         |
+| `row-tag-chip`                  | data-testid | /admin/messages     | Tag chip on a row (has `data-key={slug}`, X to detach)                                             |
+| `row-open-request`              | data-testid | /admin/messages     | Link to the admin request detail page                                                              |
+| `admin-request-message-section` | data-testid | Admin request page  | Message section on the admin request detail page                                                   |
+| `request-item`                  | data-testid | Request list        | A request list item (own user)                                                                     |
+| `other-user-request-item`       | data-testid | Request list        | A request by another user                                                                          |
+| `update-request-button`         | data-testid | Request page        | Edit button (owner only)                                                                           |
+| `edit-request-dialog`           | data-testid | Dialog              | Edit request dialog                                                                                |
+| `edit-request-form`             | data-testid | Edit dialog         | Form container inside the edit dialog (scope `prompt-input` and `submit-button` by this)           |
+| `delete-request-button`         | data-testid | Request page        | Delete button (owner only)                                                                         |
+| `delete-request-dialog`         | data-testid | Dialog              | Delete confirmation                                                                                |
+| `confirm-delete-button`         | data-testid | Dialog              | Confirm delete button                                                                              |
+| `comment-item`                  | data-name   | Request page        | Comment container (use with data-key for a specific comment)                                       |
+| `show-replies-button`           | data-name   | Comment item        | Toggle to expand/collapse the reply subthread (select via `comment-item {id} show-replies-button`) |
+| `add-reply-inline`              | data-name   | Comment subthread   | Inline prompt to open the reply dialog (select via `comment-item {id} add-reply-inline`)           |
+| `comment-context-menu-trigger`  | data-testid | Comment             | Context menu button                                                                                |
+| `copy-link-menu-item`           | data-testid | Context menu        | Copy link option                                                                                   |
 
 ## Playlists
 

@@ -44,9 +44,11 @@ import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/cha
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
 import { Route as UserBrowseChartsRouteImport } from './routes/_user/browse.charts'
 import { Route as UserAdminRoutesRouteImport } from './routes/_user/admin/routes'
+import { Route as UserAdminMessagesRouteImport } from './routes/_user/admin/messages'
 import { Route as UserAdminLangRouteImport } from './routes/_user/admin/$lang'
 import { Route as UserLearnLangIndexRouteImport } from './routes/_user/learn/$lang.index'
 import { Route as UserFriendsChatsIndexRouteImport } from './routes/_user/friends/chats.index'
+import { Route as UserAdminMessagesIndexRouteImport } from './routes/_user/admin/messages.index'
 import { Route as UserAdminLangIndexRouteImport } from './routes/_user/admin/$lang.index'
 import { Route as UserLearnLangStatsRouteImport } from './routes/_user/learn/$lang.stats'
 import { Route as UserLearnLangReviewRouteImport } from './routes/_user/learn/$lang.review'
@@ -57,6 +59,7 @@ import { Route as UserLearnLangDeckSettingsRouteImport } from './routes/_user/le
 import { Route as UserLearnLangContributionsRouteImport } from './routes/_user/learn/$lang.contributions'
 import { Route as UserLearnLangBulkAddRouteImport } from './routes/_user/learn/$lang.bulk-add'
 import { Route as UserFriendsChatsFriendUidRouteImport } from './routes/_user/friends/chats.$friendUid'
+import { Route as UserAdminMessagesIdRouteImport } from './routes/_user/admin/messages.$id'
 import { Route as UserAdminLangRequestsRouteImport } from './routes/_user/admin/$lang.requests'
 import { Route as UserAdminLangPhrasesRouteImport } from './routes/_user/admin/$lang.phrases'
 import { Route as UserLearnLangReviewIndexRouteImport } from './routes/_user/learn/$lang.review.index'
@@ -346,6 +349,13 @@ const UserAdminRoutesRoute = UserAdminRoutesRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_user/admin/routes.lazy').then((d) => d.Route),
 )
+const UserAdminMessagesRoute = UserAdminMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => UserAdminLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/messages.lazy').then((d) => d.Route),
+)
 const UserAdminLangRoute = UserAdminLangRouteImport.update({
   id: '/$lang',
   path: '/$lang',
@@ -363,6 +373,13 @@ const UserFriendsChatsIndexRoute = UserFriendsChatsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => UserFriendsChatsRoute,
 } as any)
+const UserAdminMessagesIndexRoute = UserAdminMessagesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserAdminMessagesRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/messages.index.lazy').then((d) => d.Route),
+)
 const UserAdminLangIndexRoute = UserAdminLangIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -416,6 +433,13 @@ const UserFriendsChatsFriendUidRoute =
     path: '/$friendUid',
     getParentRoute: () => UserFriendsChatsRoute,
   } as any)
+const UserAdminMessagesIdRoute = UserAdminMessagesIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => UserAdminMessagesRoute,
+} as any).lazy(() =>
+  import('./routes/_user/admin/messages.$id.lazy').then((d) => d.Route),
+)
 const UserAdminLangRequestsRoute = UserAdminLangRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
@@ -562,6 +586,7 @@ export interface FileRoutesByFullPath {
   '/chats/': typeof ChatsIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
+  '/admin/messages': typeof UserAdminMessagesRouteWithChildren
   '/admin/routes': typeof UserAdminRoutesRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
@@ -583,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/search/': typeof UserSearchIndexLazyRoute
   '/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
+  '/admin/messages/$id': typeof UserAdminMessagesIdRoute
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
@@ -593,6 +619,7 @@ export interface FileRoutesByFullPath {
   '/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/admin/$lang/': typeof UserAdminLangIndexRoute
+  '/admin/messages/': typeof UserAdminMessagesIndexRoute
   '/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/learn/$lang/': typeof UserLearnLangIndexRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
@@ -647,6 +674,7 @@ export interface FileRoutesByTo {
   '/learn': typeof UserLearnIndexRoute
   '/profile': typeof UserProfileIndexRoute
   '/search': typeof UserSearchIndexLazyRoute
+  '/admin/messages/$id': typeof UserAdminMessagesIdRoute
   '/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
@@ -655,6 +683,7 @@ export interface FileRoutesByTo {
   '/learn/$lang/manage-deck': typeof UserLearnLangManageDeckRoute
   '/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/admin/$lang': typeof UserAdminLangIndexRoute
+  '/admin/messages': typeof UserAdminMessagesIndexRoute
   '/friends/chats': typeof UserFriendsChatsIndexRoute
   '/learn/$lang': typeof UserLearnLangIndexRoute
   '/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
@@ -704,6 +733,7 @@ export interface FileRoutesById {
   '/chats/': typeof ChatsIndexLazyRoute
   '/themes/': typeof ThemesIndexLazyRoute
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
+  '/_user/admin/messages': typeof UserAdminMessagesRouteWithChildren
   '/_user/admin/routes': typeof UserAdminRoutesRoute
   '/_user/browse/charts': typeof UserBrowseChartsRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
@@ -725,6 +755,7 @@ export interface FileRoutesById {
   '/_user/search/': typeof UserSearchIndexLazyRoute
   '/_user/admin/$lang/phrases': typeof UserAdminLangPhrasesRouteWithChildren
   '/_user/admin/$lang/requests': typeof UserAdminLangRequestsRouteWithChildren
+  '/_user/admin/messages/$id': typeof UserAdminMessagesIdRoute
   '/_user/friends/chats/$friendUid': typeof UserFriendsChatsFriendUidRouteWithChildren
   '/_user/learn/$lang/bulk-add': typeof UserLearnLangBulkAddRoute
   '/_user/learn/$lang/contributions': typeof UserLearnLangContributionsRoute
@@ -735,6 +766,7 @@ export interface FileRoutesById {
   '/_user/learn/$lang/review': typeof UserLearnLangReviewRouteWithChildren
   '/_user/learn/$lang/stats': typeof UserLearnLangStatsRoute
   '/_user/admin/$lang/': typeof UserAdminLangIndexRoute
+  '/_user/admin/messages/': typeof UserAdminMessagesIndexRoute
   '/_user/friends/chats/': typeof UserFriendsChatsIndexRoute
   '/_user/learn/$lang/': typeof UserLearnLangIndexRoute
   '/_user/friends/chats/$friendUid/recommend': typeof UserFriendsChatsFriendUidRecommendRoute
@@ -783,6 +815,7 @@ export interface FileRouteTypes {
     | '/chats/'
     | '/themes/'
     | '/admin/$lang'
+    | '/admin/messages'
     | '/admin/routes'
     | '/browse/charts'
     | '/friends/$uid'
@@ -804,6 +837,7 @@ export interface FileRouteTypes {
     | '/search/'
     | '/admin/$lang/phrases'
     | '/admin/$lang/requests'
+    | '/admin/messages/$id'
     | '/friends/chats/$friendUid'
     | '/learn/$lang/bulk-add'
     | '/learn/$lang/contributions'
@@ -814,6 +848,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/review'
     | '/learn/$lang/stats'
     | '/admin/$lang/'
+    | '/admin/messages/'
     | '/friends/chats/'
     | '/learn/$lang/'
     | '/friends/chats/$friendUid/recommend'
@@ -868,6 +903,7 @@ export interface FileRouteTypes {
     | '/learn'
     | '/profile'
     | '/search'
+    | '/admin/messages/$id'
     | '/friends/chats/$friendUid'
     | '/learn/$lang/bulk-add'
     | '/learn/$lang/contributions'
@@ -876,6 +912,7 @@ export interface FileRouteTypes {
     | '/learn/$lang/manage-deck'
     | '/learn/$lang/stats'
     | '/admin/$lang'
+    | '/admin/messages'
     | '/friends/chats'
     | '/learn/$lang'
     | '/friends/chats/$friendUid/recommend'
@@ -924,6 +961,7 @@ export interface FileRouteTypes {
     | '/chats/'
     | '/themes/'
     | '/_user/admin/$lang'
+    | '/_user/admin/messages'
     | '/_user/admin/routes'
     | '/_user/browse/charts'
     | '/_user/friends/$uid'
@@ -945,6 +983,7 @@ export interface FileRouteTypes {
     | '/_user/search/'
     | '/_user/admin/$lang/phrases'
     | '/_user/admin/$lang/requests'
+    | '/_user/admin/messages/$id'
     | '/_user/friends/chats/$friendUid'
     | '/_user/learn/$lang/bulk-add'
     | '/_user/learn/$lang/contributions'
@@ -955,6 +994,7 @@ export interface FileRouteTypes {
     | '/_user/learn/$lang/review'
     | '/_user/learn/$lang/stats'
     | '/_user/admin/$lang/'
+    | '/_user/admin/messages/'
     | '/_user/friends/chats/'
     | '/_user/learn/$lang/'
     | '/_user/friends/chats/$friendUid/recommend'
@@ -1311,6 +1351,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserAdminRoutesRouteImport
       parentRoute: typeof UserAdminLazyRoute
     }
+    '/_user/admin/messages': {
+      id: '/_user/admin/messages'
+      path: '/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof UserAdminMessagesRouteImport
+      parentRoute: typeof UserAdminLazyRoute
+    }
     '/_user/admin/$lang': {
       id: '/_user/admin/$lang'
       path: '/$lang'
@@ -1331,6 +1378,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/friends/chats/'
       preLoaderRoute: typeof UserFriendsChatsIndexRouteImport
       parentRoute: typeof UserFriendsChatsRoute
+    }
+    '/_user/admin/messages/': {
+      id: '/_user/admin/messages/'
+      path: '/'
+      fullPath: '/admin/messages/'
+      preLoaderRoute: typeof UserAdminMessagesIndexRouteImport
+      parentRoute: typeof UserAdminMessagesRoute
     }
     '/_user/admin/$lang/': {
       id: '/_user/admin/$lang/'
@@ -1401,6 +1455,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/friends/chats/$friendUid'
       preLoaderRoute: typeof UserFriendsChatsFriendUidRouteImport
       parentRoute: typeof UserFriendsChatsRoute
+    }
+    '/_user/admin/messages/$id': {
+      id: '/_user/admin/messages/$id'
+      path: '/$id'
+      fullPath: '/admin/messages/$id'
+      preLoaderRoute: typeof UserAdminMessagesIdRouteImport
+      parentRoute: typeof UserAdminMessagesRoute
     }
     '/_user/admin/$lang/requests': {
       id: '/_user/admin/$lang/requests'
@@ -1775,14 +1836,29 @@ const UserAdminLangRouteWithChildren = UserAdminLangRoute._addFileChildren(
   UserAdminLangRouteChildren,
 )
 
+interface UserAdminMessagesRouteChildren {
+  UserAdminMessagesIdRoute: typeof UserAdminMessagesIdRoute
+  UserAdminMessagesIndexRoute: typeof UserAdminMessagesIndexRoute
+}
+
+const UserAdminMessagesRouteChildren: UserAdminMessagesRouteChildren = {
+  UserAdminMessagesIdRoute: UserAdminMessagesIdRoute,
+  UserAdminMessagesIndexRoute: UserAdminMessagesIndexRoute,
+}
+
+const UserAdminMessagesRouteWithChildren =
+  UserAdminMessagesRoute._addFileChildren(UserAdminMessagesRouteChildren)
+
 interface UserAdminLazyRouteChildren {
   UserAdminLangRoute: typeof UserAdminLangRouteWithChildren
+  UserAdminMessagesRoute: typeof UserAdminMessagesRouteWithChildren
   UserAdminRoutesRoute: typeof UserAdminRoutesRoute
   UserAdminIndexRoute: typeof UserAdminIndexRoute
 }
 
 const UserAdminLazyRouteChildren: UserAdminLazyRouteChildren = {
   UserAdminLangRoute: UserAdminLangRouteWithChildren,
+  UserAdminMessagesRoute: UserAdminMessagesRouteWithChildren,
   UserAdminRoutesRoute: UserAdminRoutesRoute,
   UserAdminIndexRoute: UserAdminIndexRoute,
 }

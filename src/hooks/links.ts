@@ -30,6 +30,7 @@ import {
 	Search,
 	Settings,
 	Share,
+	Tags,
 	UserPlus,
 } from 'lucide-react'
 import languages, { LangKey } from '@/lib/languages'
@@ -140,6 +141,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 				to: '/notifications',
 			},
 			useBadge: () => useUnreadCount(),
+		},
+		'/admin/messages': {
+			name: 'Messages',
+			title: 'Admin: Messages',
+			Icon: Tags,
+			inexact: true,
+			link: {
+				to: '/admin/messages',
+			},
 		},
 		'/profile': {
 			name: 'Profile',
