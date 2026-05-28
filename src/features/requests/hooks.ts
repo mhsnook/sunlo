@@ -133,17 +133,18 @@ export const useHasCommentUpvote = (commentId: uuid): boolean =>
 		[commentId]
 	).data?.length
 
-/** All curated message tags, ordered by sort_order. */
+/** All active (non-archived) message tags, ordered by sort_order. */
 export const useMessageTags = () =>
 	useLiveQuery(
 		(q) =>
 			q
 				.from({ tag: messageTagsCollection })
+				.where(({ tag }) => eq(tag.archived, false))
 				.orderBy(({ tag }) => tag.sort_order, 'asc'),
 		[]
 	)
 
-/** Tags attached to a single message, ordered by sort_order. */
+/** Active tags attached to a single message, ordered by sort_order. */
 export const useMessageTagsForMessage = (
 	messageId: uuid | undefined | null
 ): UseLiveQueryResult<MessageTagType[]> =>
@@ -159,6 +160,7 @@ export const useMessageTagsForMessage = (
 							({ link, tag }) => eq(link.tag_slug, tag.slug),
 							'inner'
 						)
+						.where(({ tag }) => eq(tag.archived, false))
 						.select(({ tag }) => tag)
 						.orderBy(({ tag }) => tag.sort_order, 'asc'),
 		[messageId]
