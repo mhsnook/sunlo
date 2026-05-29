@@ -112,11 +112,12 @@ function AdminMessageDetail() {
 					{!tags?.length && (
 						<span className="text-muted-foreground italic">No tags</span>
 					)}
-					<AddTagPopover
-						messageId={message.id}
-						currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
-						isAdmin={isAdmin}
-					/>
+					{isAdmin && (
+						<AddTagPopover
+							messageId={message.id}
+							currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
+						/>
+					)}
 				</div>
 			</section>
 
@@ -167,11 +168,9 @@ function AdminMessageDetail() {
 function AddTagPopover({
 	messageId,
 	currentSlugs,
-	isAdmin,
 }: {
 	messageId: uuid
 	currentSlugs: Set<string>
-	isAdmin: boolean
 }) {
 	const [open, setOpen] = useState(false)
 	const { data: allTags } = useMessageTags()
@@ -183,7 +182,6 @@ function AddTagPopover({
 					variant="ghost"
 					data-testid="message-add-tag"
 					aria-label="Edit tags"
-					disabled={!isAdmin}
 				>
 					<Plus className="h-3 w-3" />
 				</Button>

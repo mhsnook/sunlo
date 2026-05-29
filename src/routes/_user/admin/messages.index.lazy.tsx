@@ -76,7 +76,7 @@ type MessageRow = {
 }
 
 function AdminMessagesPage() {
-	const { userId } = useAuth()
+	const { isAdmin, userId } = useAuth()
 	const [search, setSearch] = useState('')
 	const [activeTagSlug, setActiveTagSlug] = useState<string | null>(null)
 	const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -196,7 +196,7 @@ function AdminMessagesPage() {
 				setActiveTagSlug={setActiveTagSlug}
 			/>
 
-			<BulkAddSection userId={userId} allTags={allTags ?? []} />
+			{isAdmin && <BulkAddSection userId={userId} allTags={allTags ?? []} />}
 
 			<div className="space-y-3">
 				<div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
@@ -217,7 +217,7 @@ function AdminMessagesPage() {
 					</div>
 				</div>
 
-				{selected.size > 0 && (
+				{isAdmin && selected.size > 0 && (
 					<SelectionBar
 						selected={selected}
 						clear={() => setSelected(new Set())}
@@ -252,6 +252,7 @@ function TagsStrip({
 	activeTagSlug: string | null
 	setActiveTagSlug: (slug: string | null) => void
 }) {
+	const { isAdmin } = useAuth()
 	return (
 		<section
 			className="space-y-2"
@@ -262,10 +263,12 @@ function TagsStrip({
 				<h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
 					Tags
 				</h2>
-				<div className="flex items-center gap-1">
-					<EditTagsDialog tagCounts={tagCounts} />
-					<NewTagButton />
-				</div>
+				{isAdmin && (
+					<div className="flex items-center gap-1">
+						<EditTagsDialog tagCounts={tagCounts} />
+						<NewTagButton />
+					</div>
+				)}
 			</div>
 			<div className="flex flex-wrap items-center gap-2">
 				<button
@@ -310,7 +313,6 @@ function TagsStrip({
 }
 
 function NewTagButton() {
-	const { isAdmin } = useAuth()
 	const [open, setOpen] = useState(false)
 	const [slug, setSlug] = useState('')
 	const [label, setLabel] = useState('')
@@ -351,12 +353,7 @@ function NewTagButton() {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button
-					size="sm"
-					variant="ghost"
-					data-testid="new-tag-button"
-					disabled={!isAdmin}
-				>
+				<Button size="sm" variant="ghost" data-testid="new-tag-button">
 					<Plus className="me-1 h-3 w-3" /> New tag
 				</Button>
 			</PopoverTrigger>
@@ -458,7 +455,6 @@ function EditTagsDialog({ tagCounts }: { tagCounts: Map<string, number> }) {
 }
 
 function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
-	const { isAdmin } = useAuth()
 	const [isEditing, setIsEditing] = useState(false)
 	const [label, setLabel] = useState(tag.label)
 	const [description, setDescription] = useState(tag.description ?? '')
@@ -597,7 +593,6 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 							onClick={() => setIsEditing(true)}
 							aria-label={`Edit ${tag.label}`}
 							data-testid="edit-tag-pencil"
-							disabled={!isAdmin}
 						>
 							<Pencil className="size-3.5" />
 						</Button>
@@ -608,7 +603,6 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 								onClick={toggleArchive}
 								aria-label={`Restore ${tag.label}`}
 								data-testid="restore-tag-button"
-								disabled={!isAdmin}
 							>
 								<Undo2 className="size-3.5" />
 							</Button>
@@ -623,7 +617,6 @@ function TagAdminRow({ tag, count }: { tag: MessageTagType; count: number }) {
 										variant="ghost"
 										aria-label={`Archive ${tag.label}`}
 										data-testid="archive-tag-button"
-										disabled={!isAdmin}
 									>
 										<Archive className="text-destructive size-3.5" />
 									</Button>
@@ -665,7 +658,6 @@ function BulkAddSection({
 	userId: string | null
 	allTags: MessageTagType[]
 }) {
-	const { isAdmin } = useAuth()
 	const [open, setOpen] = useState(false)
 	const [text, setText] = useState('')
 	const [lang, setLang] = useState('')
@@ -837,11 +829,7 @@ function BulkAddSection({
 							size="sm"
 							onClick={() => bulkAdd.mutate()}
 							disabled={
-								bulkAdd.isPending ||
-								prompts.length === 0 ||
-								!lang ||
-								!userId ||
-								!isAdmin
+								bulkAdd.isPending || prompts.length === 0 || !lang || !userId
 							}
 							data-testid="bulk-add-submit"
 						>
@@ -863,7 +851,6 @@ function SelectionBar({
 	clear: () => void
 	allTags: MessageTagType[]
 }) {
-	const { isAdmin } = useAuth()
 	const [tagPickerOpen, setTagPickerOpen] = useState(false)
 
 	const applyTag = (slug: string) => {
@@ -937,7 +924,7 @@ function SelectionBar({
 			</span>
 			<Popover open={tagPickerOpen} onOpenChange={setTagPickerOpen}>
 				<PopoverTrigger asChild>
-					<Button size="sm" data-testid="apply-tag-button" disabled={!isAdmin}>
+					<Button size="sm" data-testid="apply-tag-button">
 						<Tags className="me-1 h-3 w-3" />
 						Apply / remove tag
 					</Button>
@@ -1017,18 +1004,19 @@ function MessagesTable({
 			data-testid="admin-messages-table"
 			data-name="message-row"
 		>
-			<div className="bg-1-lo-neutral flex items-center gap-2 border-b px-3 py-2 text-xs">
-				<Checkbox
-					checked={allVisibleSelected}
-					onCheckedChange={toggleVisibleAll}
-					aria-label="Select all visible"
-					data-testid="select-all-visible"
-					disabled={!isAdmin}
-				/>
-				<span className="text-muted-foreground font-semibold tracking-wide uppercase">
-					Select all visible
-				</span>
-			</div>
+			{isAdmin && (
+				<div className="bg-1-lo-neutral flex items-center gap-2 border-b px-3 py-2 text-xs">
+					<Checkbox
+						checked={allVisibleSelected}
+						onCheckedChange={toggleVisibleAll}
+						aria-label="Select all visible"
+						data-testid="select-all-visible"
+					/>
+					<span className="text-muted-foreground font-semibold tracking-wide uppercase">
+						Select all visible
+					</span>
+				</div>
+			)}
 			<ul className="divide-y">
 				{rows.map((row) => (
 					<MessageRowItem
@@ -1065,14 +1053,15 @@ function MessageRowItem({
 			data-testid="message-row"
 			data-key={row.message_id}
 		>
-			<Checkbox
-				checked={isSelected}
-				onCheckedChange={onToggle}
-				aria-label="Select message"
-				className="mt-1"
-				data-testid="message-row-checkbox"
-				disabled={!isAdmin}
-			/>
+			{isAdmin && (
+				<Checkbox
+					checked={isSelected}
+					onCheckedChange={onToggle}
+					aria-label="Select message"
+					className="mt-1"
+					data-testid="message-row-checkbox"
+				/>
+			)}
 			<div className="min-w-0 flex-1 space-y-1">
 				<div className="flex items-center gap-2">
 					<LangBadge lang={row.lang} />
