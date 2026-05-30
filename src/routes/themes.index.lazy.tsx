@@ -687,12 +687,10 @@ function CardStatusShowcaseTrigger({
 	choice,
 	dot,
 	soft,
-	defaultOpen,
 }: {
 	choice: ShowableActions
 	dot: string
 	soft?: boolean
-	defaultOpen?: boolean
 }) {
 	const { name } = statusStrings[choice]
 	// `nocard` collapses the menu to a single "Add to deck" item, matching
@@ -702,7 +700,7 @@ function CardStatusShowcaseTrigger({
 			? [choice]
 			: ['active', 'learned', 'skipped']
 	return (
-		<DropdownMenu defaultOpen={defaultOpen}>
+		<DropdownMenu>
 			<DropdownMenuTrigger
 				render={
 					<Button
@@ -728,18 +726,54 @@ function CardStatusShowcaseTrigger({
 	)
 }
 
+// Static, non-portal twin of DropdownMenuContent + DropdownMenuItem so we can
+// show the menu's open state in the showcase without mounting a real open
+// DropdownMenu (which would trap focus + scroll-lock the page on mount).
+// Styles mirror src/components/ui/dropdown-menu.tsx — keep in sync.
+function StaticCardStatusPopup({ items }: { items: Array<ShowableActions> }) {
+	return (
+		<div
+			aria-hidden="true"
+			className="bg-popover text-popover-foreground inline-block min-w-[8rem] overflow-hidden rounded-xl border p-1 shadow-md"
+		>
+			{items.map((choice) => {
+				const { Icon, iconClassName, action, actionSecond } =
+					statusStrings[choice]
+				return (
+					<div
+						key={choice}
+						className="relative flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-sm select-none"
+					>
+						<div className="flex flex-row items-center gap-2 py-1 pe-2">
+							<span className="h-5 w-5">
+								<Icon className={iconClassName} aria-hidden="true" />
+							</span>
+							<div>
+								<p className="font-bold">{action}</p>
+								<p className="text-opacity-80 text-sm">{actionSecond}</p>
+							</div>
+						</div>
+					</div>
+				)
+			})}
+		</div>
+	)
+}
+
 function ShowcaseCardStatusDropdown() {
 	return (
-		<div className="flex flex-wrap items-center gap-2">
-			{cardStatusShowcaseStates.map((s, i) => (
-				<CardStatusShowcaseTrigger
-					key={s.choice}
-					choice={s.choice}
-					dot={s.dot}
-					soft={s.soft}
-					defaultOpen={i === 0}
-				/>
-			))}
+		<div className="space-y-3">
+			<div className="flex flex-wrap items-center gap-2">
+				{cardStatusShowcaseStates.map((s) => (
+					<CardStatusShowcaseTrigger
+						key={s.choice}
+						choice={s.choice}
+						dot={s.dot}
+						soft={s.soft}
+					/>
+				))}
+			</div>
+			<StaticCardStatusPopup items={['active', 'learned', 'skipped']} />
 		</div>
 	)
 }
@@ -1101,37 +1135,39 @@ function ShowcaseChatBubbles() {
 					<p className="text-muted-foreground text-xs">Friends</p>
 				</div>
 			</div>
-			<div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-				<ChatBubble
-					isMine={false}
-					username="Priya L."
-					initials="PL"
-					seed="priya"
-					label="Sent a phrase recommendation"
-					time="2m ago"
-				>
-					<ChatPhrasePreview
+			<div className="flex-1 overflow-y-auto p-4">
+				<div className="space-y-4">
+					<ChatBubble
 						isMine={false}
-						text="selamat sonja"
-						translation="good evening"
-						lang={SHOWCASE_LANG}
-					/>
-				</ChatBubble>
-				<ChatBubble
-					isMine
-					username="You"
-					initials="Yo"
-					seed="self"
-					label="Added this to your deck"
-					time="just now"
-				>
-					<ChatPhrasePreview
+						username="Priya L."
+						initials="PL"
+						seed="priya"
+						label="Sent a phrase recommendation"
+						time="2m ago"
+					>
+						<ChatPhrasePreview
+							isMine={false}
+							text="selamat sonja"
+							translation="good evening"
+							lang={SHOWCASE_LANG}
+						/>
+					</ChatBubble>
+					<ChatBubble
 						isMine
-						text="selamat sonja"
-						translation="good evening"
-						lang={SHOWCASE_LANG}
-					/>
-				</ChatBubble>
+						username="You"
+						initials="Yo"
+						seed="self"
+						label="Added this to your deck"
+						time="just now"
+					>
+						<ChatPhrasePreview
+							isMine
+							text="selamat sonja"
+							translation="good evening"
+							lang={SHOWCASE_LANG}
+						/>
+					</ChatBubble>
+				</div>
 			</div>
 			<div className="border-t p-3">
 				<div className="flex items-center gap-2">
