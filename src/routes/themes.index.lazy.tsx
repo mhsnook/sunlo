@@ -1355,7 +1355,7 @@ function SmolShowcaseBlock({
 	children: ReactNode
 }) {
 	return (
-		<div className="space-y-2">
+		<div className="mb-6 break-inside-avoid space-y-2">
 			<h3 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
 				{label}
 			</h3>
@@ -1374,7 +1374,7 @@ function SmolShowcase() {
 					language picker, and the three callout variants.
 				</p>
 			</div>
-			<div className="grid gap-6 @2xl:grid-cols-2">
+			<div className="gap-x-6 @2xl:columns-2">
 				<SmolShowcaseBlock label="Card status dropdown">
 					<ShowcaseCardStatusDropdown />
 				</SmolShowcaseBlock>
@@ -1415,7 +1415,7 @@ function SocialShowcase() {
 					inline intro callout — each shown across the states the app uses.
 				</p>
 			</div>
-			<div className="grid gap-6 @2xl:grid-cols-2">
+			<div className="gap-x-6 @2xl:columns-2">
 				<SmolShowcaseBlock label="Choice tile group">
 					<ShowcaseChoiceTileGroup />
 				</SmolShowcaseBlock>
