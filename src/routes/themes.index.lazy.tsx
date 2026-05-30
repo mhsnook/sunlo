@@ -1135,37 +1135,39 @@ function ShowcaseChatBubbles() {
 					<p className="text-muted-foreground text-xs">Friends</p>
 				</div>
 			</div>
-			<div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
-				<ChatBubble
-					isMine={false}
-					username="Priya L."
-					initials="PL"
-					seed="priya"
-					label="Sent a phrase recommendation"
-					time="2m ago"
-				>
-					<ChatPhrasePreview
+			<div className="flex-1 overflow-y-auto p-4">
+				<div className="space-y-4">
+					<ChatBubble
 						isMine={false}
-						text="selamat sonja"
-						translation="good evening"
-						lang={SHOWCASE_LANG}
-					/>
-				</ChatBubble>
-				<ChatBubble
-					isMine
-					username="You"
-					initials="Yo"
-					seed="self"
-					label="Added this to your deck"
-					time="just now"
-				>
-					<ChatPhrasePreview
+						username="Priya L."
+						initials="PL"
+						seed="priya"
+						label="Sent a phrase recommendation"
+						time="2m ago"
+					>
+						<ChatPhrasePreview
+							isMine={false}
+							text="selamat sonja"
+							translation="good evening"
+							lang={SHOWCASE_LANG}
+						/>
+					</ChatBubble>
+					<ChatBubble
 						isMine
-						text="selamat sonja"
-						translation="good evening"
-						lang={SHOWCASE_LANG}
-					/>
-				</ChatBubble>
+						username="You"
+						initials="Yo"
+						seed="self"
+						label="Added this to your deck"
+						time="just now"
+					>
+						<ChatPhrasePreview
+							isMine
+							text="selamat sonja"
+							translation="good evening"
+							lang={SHOWCASE_LANG}
+						/>
+					</ChatBubble>
+				</div>
 			</div>
 			<div className="border-t p-3">
 				<div className="flex items-center gap-2">
