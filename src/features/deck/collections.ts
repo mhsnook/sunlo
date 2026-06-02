@@ -66,7 +66,7 @@ export const decksCollection = createCollection(
 					)
 				})
 			)
-			return { refetch: false }
+			return { refetch: true }
 		},
 	})
 )
@@ -90,8 +90,7 @@ export const cardsCollection = createCollection(
 		onInsert: async ({ transaction }) => {
 			// Only the user_card columns — the rest of CardMetaSchema (last_reviewed_at,
 			// difficulty, stability) lives in user_card_plus via the user_card_review
-			// join, not on the underlying table. { refetch: false } because our
-			// optimistic row already carries the same column values we send.
+			// join, not on the underlying table.
 			const rows = transaction.mutations.map((m) => ({
 				id: m.modified.id,
 				uid: m.modified.uid,
@@ -125,12 +124,9 @@ export const cardsCollection = createCollection(
 					),
 				{ submitted: rows, returned: data }
 			)
-			return { refetch: false }
+			return { refetch: true }
 		},
 		onUpdate: async ({ transaction }) => {
-			// Throwing rolls the optimistic state back. { refetch: false } keeps
-			// the confirmed value locally instead of reloading user_card_plus —
-			// safe because user_card has no triggers that change other columns.
 			await Promise.all(
 				transaction.mutations.map(async (m) => {
 					const changes = m.changes as TablesUpdate<'user_card'>
@@ -155,7 +151,7 @@ export const cardsCollection = createCollection(
 					)
 				})
 			)
-			return { refetch: false }
+			return { refetch: true }
 		},
 	})
 )

@@ -60,6 +60,16 @@ export const phraseRequestsCollection = createCollection(
 							),
 						{ submitted: m.changes, returned: row }
 					)
+					// Fold the server's truth into synced state so the optimistic
+					// overlay doesn't evaporate if the collection is re-synced.
+					// Soft-deletes hide the row from RLS; mirror that locally.
+					if (row) {
+						phraseRequestsCollection.utils.writeUpdate(
+							PhraseRequestSchema.parse(row)
+						)
+					} else {
+						phraseRequestsCollection.utils.writeDelete(m.original.id)
+					}
 				})
 			)
 			return { refetch: false }
@@ -124,6 +134,13 @@ export const commentsCollection = createCollection(
 							),
 						{ submitted: m.changes, returned: row }
 					)
+					// Fold the server's truth into synced state so the optimistic
+					// overlay survives a re-sync.
+					if (row) {
+						commentsCollection.utils.writeUpdate(
+							RequestCommentSchema.parse(row)
+						)
+					}
 				})
 			)
 			return { refetch: false }
@@ -145,13 +162,16 @@ export const commentsCollection = createCollection(
 						data?.length === 1 && data[0].id === m.original.id,
 						{ targetId: m.original.id, returned: data }
 					)
+					// Fold the delete into synced state so the row doesn't reappear
+					// on a re-sync.
+					commentsCollection.utils.writeDelete(m.original.id)
 				})
 			)
-			// Cascade-deleted replies and phrase links linger in the local
+			// Cascade-deleted replies and phrase links still linger in their own
 			// collections until the next stale refetch, but they don't render
 			// (orphaned replies have no parent anchor; orphaned phrase links
-			// filter out of the provenance inner-join). Skipping the full-table
-			// refetch is worth that small inconsistency.
+			// filter out of the provenance inner-join). Worth that small
+			// inconsistency to skip the full-table refetch.
 			return { refetch: false }
 		},
 	})

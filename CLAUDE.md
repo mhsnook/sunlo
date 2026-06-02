@@ -297,7 +297,7 @@ export const cardsCollection = createCollection(
 						.throwOnError()
 				)
 			)
-			return { refetch: false } // optimistic value matches server; skip reload
+			return { refetch: true } // default: refetch so synced cache stays authoritative
 		},
 	})
 )
@@ -890,7 +890,8 @@ Use `await Promise.all([...])` when the route needs the data before first render
 ### Mutation Best Practices
 
 - **Persistence lives on the collection** via `onInsert/onUpdate/onDelete` handlers; call sites use `collection.insert / update / delete` for optimistic local state
-- **Throw from the handler** to roll the optimistic state back; **return `{ refetch: false }`** from a `queryCollectionOptions` handler when the optimistic value already matches what the server confirmed (skip the post-handler full refetch)
+- **Throw from the handler** to roll the optimistic state back.
+- **Return `{ refetch: true }`** (the default) so the synced cache catches up to the server. Naked `{ refetch: false }` is a footgun: it keeps the new value only as an optimistic overlay, which survives until the collection is torn down and re-synced (GC, navigation churn) — then silently reverts to the pre-mutation cache. To skip the refetch safely (e.g. for large public tables), also `.select()` the server row and `writeUpdate` / `writeDelete` it into synced state (see "Don't refetch entire tables" below).
 - **Wire success/error toasts to `Transaction.isPersisted.promise`** at the call site — `onSuccess` errors won't masquerade as mutation errors anymore
 - **Subscribe to collection state with `useLiveQuery`** so the UI reflects the optimistic value (and snaps back on rollback) without ad-hoc local state
 - For mutations whose server-side effect can't be predicted client-side, see `createOptimisticAction` in the TanStack DB optimistic-mutations skill
