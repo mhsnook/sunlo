@@ -1,5 +1,5 @@
 import { Label } from '@/components/ui/label'
-import { SelectOneOfYourLanguages } from './select-one-of-your-languages'
+import { LanguagePicker } from './language-picker'
 import { useFieldContext } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
 
@@ -17,7 +17,7 @@ export default function TranslationLanguageField({
 			<Label className={showError ? 'text-destructive' : ''}>
 				Translation language
 			</Label>
-			<SelectOneOfYourLanguages
+			<LanguagePicker
 				value={field.state.value ?? ''}
 				setValue={(v) => {
 					field.handleChange(v)
@@ -25,7 +25,9 @@ export default function TranslationLanguageField({
 				}}
 				hasError={showError}
 				disabled={[phraseLang]}
-			/>
+			>
+				Select language…
+			</LanguagePicker>
 			{showError && <ErrorList errors={meta.errors} />}
 		</div>
 	)
