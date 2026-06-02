@@ -76,7 +76,7 @@ type MessageRow = {
 }
 
 function AdminMessagesPage() {
-	const { userId } = useAuth()
+	const { isAdmin, userId } = useAuth()
 	const [search, setSearch] = useState('')
 	const [activeTagSlug, setActiveTagSlug] = useState<string | null>(null)
 	const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -196,7 +196,7 @@ function AdminMessagesPage() {
 				setActiveTagSlug={setActiveTagSlug}
 			/>
 
-			<BulkAddSection userId={userId} allTags={allTags ?? []} />
+			{isAdmin && <BulkAddSection userId={userId} allTags={allTags ?? []} />}
 
 			<div className="space-y-3">
 				<div className="flex flex-col gap-3 @md:flex-row @md:items-center @md:justify-between">
@@ -217,7 +217,7 @@ function AdminMessagesPage() {
 					</div>
 				</div>
 
-				{selected.size > 0 && (
+				{isAdmin && selected.size > 0 && (
 					<SelectionBar
 						selected={selected}
 						clear={() => setSelected(new Set())}
@@ -252,6 +252,7 @@ function TagsStrip({
 	activeTagSlug: string | null
 	setActiveTagSlug: (slug: string | null) => void
 }) {
+	const { isAdmin } = useAuth()
 	return (
 		<section
 			className="space-y-2"
@@ -262,10 +263,12 @@ function TagsStrip({
 				<h2 className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
 					Tags
 				</h2>
-				<div className="flex items-center gap-1">
-					<EditTagsDialog tagCounts={tagCounts} />
-					<NewTagButton />
-				</div>
+				{isAdmin && (
+					<div className="flex items-center gap-1">
+						<EditTagsDialog tagCounts={tagCounts} />
+						<NewTagButton />
+					</div>
+				)}
 			</div>
 			<div className="flex flex-wrap items-center gap-2">
 				<button
@@ -983,6 +986,7 @@ function MessagesTable({
 	toggleVisibleAll: () => void
 	tagsByMessage: Map<string, MessageTagType[]>
 }) {
+	const { isAdmin } = useAuth()
 	const allVisibleSelected =
 		rows.length > 0 && rows.every((r) => selected.has(r.message_id))
 
@@ -1000,17 +1004,19 @@ function MessagesTable({
 			data-testid="admin-messages-table"
 			data-name="message-row"
 		>
-			<div className="bg-1-lo-neutral flex items-center gap-2 border-b px-3 py-2 text-xs">
-				<Checkbox
-					checked={allVisibleSelected}
-					onCheckedChange={toggleVisibleAll}
-					aria-label="Select all visible"
-					data-testid="select-all-visible"
-				/>
-				<span className="text-muted-foreground font-semibold tracking-wide uppercase">
-					Select all visible
-				</span>
-			</div>
+			{isAdmin && (
+				<div className="bg-1-lo-neutral flex items-center gap-2 border-b px-3 py-2 text-xs">
+					<Checkbox
+						checked={allVisibleSelected}
+						onCheckedChange={toggleVisibleAll}
+						aria-label="Select all visible"
+						data-testid="select-all-visible"
+					/>
+					<span className="text-muted-foreground font-semibold tracking-wide uppercase">
+						Select all visible
+					</span>
+				</div>
+			)}
 			<ul className="divide-y">
 				{rows.map((row) => (
 					<MessageRowItem
@@ -1037,6 +1043,7 @@ function MessageRowItem({
 	onToggle: () => void
 	tags: MessageTagType[]
 }) {
+	const { isAdmin } = useAuth()
 	return (
 		<li
 			className={cn(
@@ -1046,13 +1053,15 @@ function MessageRowItem({
 			data-testid="message-row"
 			data-key={row.message_id}
 		>
-			<Checkbox
-				checked={isSelected}
-				onCheckedChange={onToggle}
-				aria-label="Select message"
-				className="mt-1"
-				data-testid="message-row-checkbox"
-			/>
+			{isAdmin && (
+				<Checkbox
+					checked={isSelected}
+					onCheckedChange={onToggle}
+					aria-label="Select message"
+					className="mt-1"
+					data-testid="message-row-checkbox"
+				/>
+			)}
 			<div className="min-w-0 flex-1 space-y-1">
 				<div className="flex items-center gap-2">
 					<LangBadge lang={row.lang} />
@@ -1071,14 +1080,16 @@ function MessageRowItem({
 								data-key={tag.slug}
 							>
 								{tag.label}
-								<button
-									type="button"
-									className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
-									onClick={() => detachTag(row.message_id, tag.slug)}
-									aria-label={`Remove ${tag.label}`}
-								>
-									<X className="h-3 w-3" />
-								</button>
+								{isAdmin ? (
+									<button
+										type="button"
+										className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
+										onClick={() => detachTag(row.message_id, tag.slug)}
+										aria-label={`Remove ${tag.label}`}
+									>
+										<X className="h-3 w-3" />
+									</button>
+								) : null}
 							</Badge>
 						))}
 					</div>

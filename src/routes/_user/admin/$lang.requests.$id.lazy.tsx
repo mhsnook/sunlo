@@ -163,6 +163,7 @@ function MessageSection({
 	requestId: uuid
 	messageId: uuid
 }) {
+	const { isAdmin } = useAuth()
 	const { data: tags } = useMessageTagsForMessage(messageId)
 	return (
 		<div className="space-y-3" data-testid="admin-request-message-section">
@@ -196,23 +197,27 @@ function MessageSection({
 								data-key={tag.slug}
 							>
 								{tag.label}
-								<button
-									type="button"
-									className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
-									aria-label={`Remove ${tag.label}`}
-									onClick={() => detachTag(messageId, tag.slug)}
-								>
-									<X className="h-3 w-3" />
-								</button>
+								{isAdmin ? (
+									<button
+										type="button"
+										className="hover:text-c-hi ms-1 -me-1 inline-flex items-center"
+										aria-label={`Remove ${tag.label}`}
+										onClick={() => detachTag(messageId, tag.slug)}
+									>
+										<X className="h-3 w-3" />
+									</button>
+								) : null}
 							</Badge>
 						))}
 						{!tags?.length && (
 							<span className="text-muted-foreground italic">No tags</span>
 						)}
-						<AddTagPopover
-							messageId={messageId}
-							currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
-						/>
+						{isAdmin && (
+							<AddTagPopover
+								messageId={messageId}
+								currentSlugs={new Set(tags?.map((t) => t.slug) ?? [])}
+							/>
+						)}
 					</dd>
 				</div>
 			</dl>
