@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/use-auth'
 import { useLangPhrasesRaw } from '@/features/phrases/hooks'
 import type { PhraseFullType } from '@/features/phrases/schemas'
 import { ago } from '@/lib/dayjs'
@@ -46,6 +47,7 @@ function SortIcon({
 
 function AdminPhrasesIndex() {
 	const { lang } = Route.useParams()
+	const { isAdmin } = useAuth()
 	const { data: phrases, isLoading } = useLangPhrasesRaw(lang)
 
 	const [search, setSearch] = useState('')
@@ -106,6 +108,8 @@ function AdminPhrasesIndex() {
 					size="sm"
 					variant={showArchived ? 'soft' : 'ghost'}
 					onClick={() => setShowArchived((v) => !v)}
+					disabled={!isAdmin}
+					title={isAdmin ? undefined : 'Only admins can see archived items'}
 				>
 					<Archive className="me-1 h-3 w-3" />
 					{showArchived ? 'Showing archived' : 'Show archived'}

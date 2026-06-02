@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Loader } from '@/components/ui/loader'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/lib/use-auth'
 import { phraseRequestsCollection } from '@/features/requests/collections'
 import type { PhraseRequestType } from '@/features/requests/schemas'
 import { ago } from '@/lib/dayjs'
@@ -47,6 +48,7 @@ function SortIcon({
 
 function AdminRequestsIndex() {
 	const { lang } = Route.useParams()
+	const { isAdmin } = useAuth()
 	const { data: requests, isLoading } = useLiveQuery(
 		(q) =>
 			q
@@ -111,6 +113,8 @@ function AdminRequestsIndex() {
 					size="sm"
 					variant={showArchived ? 'soft' : 'ghost'}
 					onClick={() => setShowArchived((v) => !v)}
+					disabled={!isAdmin}
+					title={isAdmin ? undefined : 'Only admins can see archived items'}
 				>
 					<Archive className="me-1 h-3 w-3" />
 					{showArchived ? 'Showing archived' : 'Show archived'}
