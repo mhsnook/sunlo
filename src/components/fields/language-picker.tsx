@@ -26,15 +26,17 @@ import { LangBadge } from '@/components/ui/badge'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { useProfile } from '@/features/profile/hooks'
 import { useDecks } from '@/features/deck/hooks'
+import { useTopLanguages } from '@/features/languages'
 import { useIsMobile } from '@/hooks/use-mobile'
-import { getLangHue } from '@/lib/lang-theme'
+import { getLangThemeCss } from '@/lib/lang-theme'
 import { cn } from '@/lib/utils'
 
-const POPULAR_LANGS = ['eng', 'spa', 'fra', 'cmn', 'jpn', 'deu']
+// How many shortcut tiles to show signed-out / new users
+const POPULAR_LANG_COUNT = 6
 
-function langHueStyle(code: string): CSSProperties {
-	return { '--hue-primary': getLangHue(code) } as CSSProperties
-}
+// Shown before the languages collection has synced, so the "Popular languages"
+// section never flashes empty. Replaced by live `display_order` ranking once ready.
+const FALLBACK_POPULAR_LANGS = ['eng', 'fra', 'hin', 'kan', 'spa', 'tam']
 
 function Highlight({ text, q }: { text: string; q: string }) {
 	if (!q) return <>{text}</>
@@ -82,7 +84,7 @@ function LangTile({
 		<button
 			type="button"
 			className="bg-card border-border hover:border-primary/40 flex min-w-0 cursor-pointer flex-col gap-2 rounded-xl border p-2.5 text-left transition-all hover:-translate-y-px hover:shadow-sm"
-			style={langHueStyle(code)}
+			style={getLangThemeCss(code)}
 			onClick={() => onPick(code)}
 		>
 			<div className="flex items-center justify-between gap-2">
@@ -132,13 +134,11 @@ function AllLanguagesList({
 	exclude,
 	isDisabled,
 	isSelected,
-	q,
 	onPick,
 }: {
 	exclude: string[]
 	isDisabled: (code: string) => boolean
 	isSelected: (code: string) => boolean
-	q: string
 	onPick: (code: string) => void
 }) {
 	return (
@@ -150,7 +150,7 @@ function AllLanguagesList({
 						key={l.value}
 						code={l.value}
 						label={l.label}
-						q={q}
+						q=""
 						isSelected={isSelected(l.value)}
 						onPick={onPick}
 					/>
@@ -170,6 +170,7 @@ interface PickerBodyProps {
 	signedIn: boolean
 	knownLangs: string[]
 	deckLangs: string[]
+	popularLangs: string[]
 	primaryLang?: string
 }
 
@@ -184,6 +185,7 @@ function PickerBody({
 	signedIn,
 	knownLangs,
 	deckLangs,
+	popularLangs,
 	primaryLang,
 }: PickerBodyProps) {
 	const q = search.trim()
@@ -193,7 +195,9 @@ function PickerBody({
 	useEffect(() => {
 		const id = setTimeout(() => searchRef.current?.focus(), focusDelay)
 		return () => clearTimeout(id)
-	}, [])  
+		// run once on mount (popover/drawer open) — focusDelay is fixed per instance
+		// oxlint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
 
 	const isDisabled = useCallback(
 		(code: string) => disabled?.includes(code) ?? false,
@@ -205,22 +209,48 @@ function PickerBody({
 	)
 
 	const filteredAll = useMemo(() => {
-		if (!q) return allLanguageOptions
+		if (!q) return []
 		const needle = q.toLowerCase()
-		return allLanguageOptions.filter(
-			(l) =>
-				l.label.toLowerCase().includes(needle) ||
-				l.value.toLowerCase().startsWith(needle)
-		)
-	}, [q])
+		return allLanguageOptions
+			.filter(
+				(l) =>
+					!isDisabled(l.value) &&
+					(l.label.toLowerCase().includes(needle) ||
+						l.value.toLowerCase().startsWith(needle))
+			)
+			.slice(0, 60)
+	}, [q, isDisabled])
 
 	const visibleKnown = knownLangs.filter((c) => !isDisabled(c))
 	const visibleDecks = deckLangs.filter(
 		(c) => !isDisabled(c) && !knownLangs.includes(c)
 	)
-	const tileExclude = signedIn
-		? [...visibleKnown, ...visibleDecks]
-		: POPULAR_LANGS.filter((c) => !isDisabled(c))
+	// Tile sections shown when not searching: signed-in users see their own
+	// languages + decks; signed-out users see a popular-languages shortcut.
+	const tileSections = signedIn
+		? [
+				{
+					label: 'Your languages',
+					count: visibleKnown.length,
+					codes: visibleKnown,
+					showPrimary: true,
+				},
+				{
+					label: 'Your decks',
+					count: visibleDecks.length,
+					codes: visibleDecks,
+					showPrimary: false,
+				},
+			].filter((s) => s.codes.length > 0)
+		: [
+				{
+					label: 'Popular languages',
+					count: 'most active' as string | number,
+					codes: popularLangs.filter((c) => !isDisabled(c)),
+					showPrimary: false,
+				},
+			]
+	const tileExclude = tileSections.flatMap((s) => s.codes)
 
 	return (
 		<div className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -272,84 +302,36 @@ function PickerBody({
 						</div>
 					) : (
 						<div className="flex flex-col pt-2">
-							{filteredAll
-								.filter((l) => !isDisabled(l.value))
-								.slice(0, 60)
-								.map((l) => (
-									<LangRow
-										key={l.value}
-										code={l.value}
-										label={l.label}
-										q={q}
-										isSelected={isSelected(l.value)}
-										onPick={onPick}
-									/>
-								))}
+							{filteredAll.map((l) => (
+								<LangRow
+									key={l.value}
+									code={l.value}
+									label={l.label}
+									q={q}
+									isSelected={isSelected(l.value)}
+									onPick={onPick}
+								/>
+							))}
 						</div>
 					)
-				) : signedIn ? (
-					<>
-						{visibleKnown.length > 0 && (
-							<section className="mt-2.5">
-								<SectionHead
-									label="Your languages"
-									count={visibleKnown.length}
-								/>
-								<div className="grid grid-cols-2 gap-2 px-1">
-									{visibleKnown.map((code) => (
-										<LangTile
-											key={code}
-											code={code}
-											isPrimary={code === primaryLang}
-											isSelected={isSelected(code)}
-											onPick={onPick}
-										/>
-									))}
-								</div>
-							</section>
-						)}
-						{visibleDecks.length > 0 && (
-							<section className="mt-2.5">
-								<SectionHead label="Your decks" count={visibleDecks.length} />
-								<div className="grid grid-cols-2 gap-2 px-1">
-									{visibleDecks.map((code) => (
-										<LangTile
-											key={code}
-											code={code}
-											isSelected={isSelected(code)}
-											onPick={onPick}
-										/>
-									))}
-								</div>
-							</section>
-						)}
-						<div className="border-border mx-1 my-3 border-t border-dashed" />
-						<section>
-							<SectionHead label="All languages" count="A — Z" />
-							<AllLanguagesList
-								exclude={tileExclude}
-								isDisabled={isDisabled}
-								isSelected={isSelected}
-								q=""
-								onPick={onPick}
-							/>
-						</section>
-					</>
 				) : (
 					<>
-						<section className="mt-2.5">
-							<SectionHead label="Popular languages" count="most active" />
-							<div className="grid grid-cols-2 gap-2 px-1">
-								{POPULAR_LANGS.filter((c) => !isDisabled(c)).map((code) => (
-									<LangTile
-										key={code}
-										code={code}
-										isSelected={isSelected(code)}
-										onPick={onPick}
-									/>
-								))}
-							</div>
-						</section>
+						{tileSections.map((s) => (
+							<section key={s.label} className="mt-2.5">
+								<SectionHead label={s.label} count={s.count} />
+								<div className="grid grid-cols-2 gap-2 px-1">
+									{s.codes.map((code) => (
+										<LangTile
+											key={code}
+											code={code}
+											isPrimary={s.showPrimary && code === primaryLang}
+											isSelected={isSelected(code)}
+											onPick={onPick}
+										/>
+									))}
+								</div>
+							</section>
+						))}
 						<div className="border-border mx-1 my-3 border-t border-dashed" />
 						<section>
 							<SectionHead label="All languages" count="A — Z" />
@@ -357,7 +339,6 @@ function PickerBody({
 								exclude={tileExclude}
 								isDisabled={isDisabled}
 								isSelected={isSelected}
-								q=""
 								onPick={onPick}
 							/>
 						</section>
@@ -387,10 +368,11 @@ export function LanguagePickerTrigger({
 		<button
 			type="button"
 			className={cn(
-				'flex w-full items-center gap-2.5 rounded-2xl border bg-card px-3.5 py-2.5 text-left text-sm font-sans',
-				'cursor-pointer transition-all hover:border-primary/50',
-				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-				hasError ? 'border-destructive' : 'border-border',
+				// Match the at-rest + hover border treatment of <Input>/<Textarea>
+				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
+				'ring-offset-background cursor-pointer hover:border-primary',
+				'focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-hidden',
+				hasError ? 'border-destructive' : 'border-3-mlo-primary',
 				!value && 'text-muted-foreground',
 				className
 			)}
@@ -418,16 +400,20 @@ export function LanguagePicker({
 	disabled,
 	hasError,
 	className,
+	placeholder,
 	children,
 }: {
 	value: string
 	setValue: (v: string) => void
 	disabled?: string[]
-	/** Only used when children is a string — passed to the built-in trigger */
+	/** Passed to the built-in trigger (ignored when a custom `children` trigger is supplied) */
 	hasError?: boolean
-	/** Only used when children is a string — passed to the built-in trigger */
+	/** Passed to the built-in trigger (ignored when a custom `children` trigger is supplied) */
 	className?: string
-	children?: string | ReactElement
+	/** Placeholder shown by the built-in trigger when no value is set */
+	placeholder?: string
+	/** Supply a fully custom trigger element instead of the built-in one */
+	children?: ReactElement
 }) {
 	const [open, setOpen] = useState(false)
 	const [search, setSearch] = useState('')
@@ -436,6 +422,7 @@ export function LanguagePicker({
 
 	const { data: profile } = useProfile()
 	const { data: decks } = useDecks()
+	const { data: topLanguages } = useTopLanguages(POPULAR_LANG_COUNT)
 
 	const knownLangs = useMemo(
 		() => profile?.languages_known?.map((l) => l.lang) ?? [],
@@ -447,6 +434,13 @@ export function LanguagePicker({
 			...new Set(decks?.filter((d) => !d.archived).map((d) => d.lang) ?? []),
 		],
 		[decks]
+	)
+	const popularLangs = useMemo(
+		() =>
+			topLanguages?.length
+				? topLanguages.map((l) => l.lang)
+				: FALLBACK_POPULAR_LANGS,
+		[topLanguages]
 	)
 	const signedIn = !!profile
 
@@ -464,19 +458,14 @@ export function LanguagePicker({
 		if (!next) setSearch('')
 	}, [])
 
-	const trigger =
-		typeof children !== 'object' ? (
-			<LanguagePickerTrigger
-				value={value}
-				placeholder={
-					typeof children === 'string' ? children : 'Select language…'
-				}
-				hasError={hasError}
-				className={className}
-			/>
-		) : (
-			children
-		)
+	const trigger = children ?? (
+		<LanguagePickerTrigger
+			value={value}
+			placeholder={placeholder}
+			hasError={hasError}
+			className={className}
+		/>
+	)
 
 	const bodyProps: PickerBodyProps = {
 		search,
@@ -488,6 +477,7 @@ export function LanguagePicker({
 		signedIn,
 		knownLangs,
 		deckLangs,
+		popularLangs,
 		primaryLang,
 	}
 
@@ -495,7 +485,9 @@ export function LanguagePicker({
 		return (
 			<Drawer open={open} onOpenChange={handleOpenChange}>
 				<DrawerTrigger asChild>{trigger}</DrawerTrigger>
-				<DrawerContent className="flex max-h-[90svh] flex-col">
+				{/* bg-popover (pure white) to match the desktop popover chrome —
+				    the shared DrawerContent default bg-background is hue-tinted */}
+				<DrawerContent className="bg-popover flex max-h-[90svh] flex-col">
 					<div className="border-border flex shrink-0 items-center justify-between border-b px-4 pb-3">
 						<DrawerTitle>Pick a language</DrawerTitle>
 						<DrawerClose
@@ -517,10 +509,23 @@ export function LanguagePicker({
 			<PopoverContent
 				className="flex flex-col overflow-hidden rounded-xl p-0"
 				style={
-					{ width: 'min(420px, 92vw)', maxHeight: '540px' } as CSSProperties
+					{
+						width: 'min(420px, 92vw)',
+						// Cap to the space the positioner reports so the popup always
+						// fits its chosen side and scrolls internally — otherwise an
+						// over-tall popup overflows and gets shoved into a corner.
+						maxHeight: 'min(540px, var(--available-height))',
+					} as CSSProperties
 				}
 				align="start"
 				sideOffset={6}
+				// Allow flipping above the anchor, but never shift sideways or fall
+				// back to the perpendicular axis (which parks it at the screen edge).
+				collisionAvoidance={{
+					side: 'flip',
+					align: 'none',
+					fallbackAxisSide: 'none',
+				}}
 			>
 				<PickerBody {...bodyProps} />
 			</PopoverContent>
