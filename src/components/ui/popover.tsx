@@ -33,14 +33,19 @@ const PopoverContent = ({
 	align = 'center',
 	sideOffset = 4,
 	side = 'bottom',
+	collisionAvoidance,
 	...props
 }: PopoverPrimitive.Popup.Props &
-	Pick<PopoverPrimitive.Positioner.Props, 'align' | 'sideOffset' | 'side'>) => (
+	Pick<
+		PopoverPrimitive.Positioner.Props,
+		'align' | 'sideOffset' | 'side' | 'collisionAvoidance'
+	>) => (
 	<PopoverPrimitive.Portal>
 		<PopoverPrimitive.Positioner
 			align={align}
 			sideOffset={sideOffset}
 			side={side}
+			collisionAvoidance={collisionAvoidance}
 			positionMethod="fixed"
 			className="isolate z-50"
 		>

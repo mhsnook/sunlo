@@ -22,6 +22,7 @@ export {
 	useAllLanguages,
 	useLanguagesSortedByLearners,
 	useLanguagesWithPhrases,
+	useTopLanguages,
 	useAllLangTags,
 } from './hooks'
 

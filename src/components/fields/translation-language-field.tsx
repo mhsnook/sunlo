@@ -25,9 +25,7 @@ export default function TranslationLanguageField({
 				}}
 				hasError={showError}
 				disabled={[phraseLang]}
-			>
-				Select language…
-			</LanguagePicker>
+			/>
 			{showError && <ErrorList errors={meta.errors} />}
 		</div>
 	)

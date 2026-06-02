@@ -1,4 +1,4 @@
-import { eq, useLiveQuery } from '@tanstack/react-db'
+import { eq, gt, useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult } from '@/types/main'
 import type { LanguageType, LangTagType } from './schemas'
@@ -53,6 +53,24 @@ export const useLanguagesWithPhrases = (): UseLiveQueryResult<LanguageType[]> =>
 			.from({ lang: languagesCollection })
 			.fn.where(({ lang }) => (lang.phrases_to_learn ?? 0) > 0)
 			.orderBy(({ lang }) => lang.phrases_to_learn, 'desc')
+	)
+
+/**
+ * The most popular languages, by `display_order` — a precomputed popularity
+ * rank (learners × phrases_to_learn) where 1 is the most popular. Used to seed
+ * the language picker's shortcut tiles for signed-out / new users.
+ */
+export const useTopLanguages = (
+	limit: number
+): UseLiveQueryResult<LanguageType[]> =>
+	useLiveQuery(
+		(q) =>
+			q
+				.from({ lang: languagesCollection })
+				.where(({ lang }) => gt(lang.display_order, 0))
+				.orderBy(({ lang }) => lang.display_order, 'asc')
+				.limit(limit),
+		[limit]
 	)
 
 /** All language tags across all languages. */
