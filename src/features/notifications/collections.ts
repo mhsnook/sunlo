@@ -9,6 +9,7 @@ export const notificationsCollection = createCollection(
 		id: 'notifications',
 		queryKey: ['user', 'notification'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading notificationsCollection`)
 			const { data } = await supabase
 				.from('notification')

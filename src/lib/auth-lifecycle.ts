@@ -1,24 +1,8 @@
-import { should, failed } from '@scenetest/checks-react'
+import { failed } from '@scenetest/checks-react'
 import { queryClient } from '@/lib/query-client'
-import {
-	myProfileCollection,
-	myProfileQuery,
-} from '@/features/profile/collections'
-import { decksCollection, cardsCollection } from '@/features/deck/collections'
-import {
-	cardReviewsCollection,
-	reviewDaysCollection,
-} from '@/features/review/collections'
-import {
-	friendSummariesCollection,
-	chatMessagesCollection,
-} from '@/features/social/collections'
-import {
-	commentUpvotesCollection,
-	phraseRequestUpvotesCollection,
-} from '@/features/requests/collections'
-import { phrasePlaylistUpvotesCollection } from '@/features/playlists/collections'
-import { notificationsCollection } from '@/features/notifications/collections'
+import { myProfileCollection } from '@/features/profile/collections'
+import { decksCollection } from '@/features/deck/collections'
+import { friendSummariesCollection } from '@/features/social/collections'
 import { resetUiPrefs } from '@/lib/ui-prefs'
 import {
 	PERSISTED_COLLECTIONS,
@@ -29,16 +13,31 @@ import {
 } from '@/lib/collections/local-cache'
 
 /**
- * The auth lifecycle as a single unit. Three named operations cover the
- * timing-sensitive moments around an identity change. Each method's name
- * documents *when* it must run, and the inline should() / failed() checks
- * encode the *invariants* that must hold afterwards.
- *
- * Treat this as a coupled bundle: changing one method's contract is
- * expected to break the assertions in scenes until all the related code is
- * updated to match. That's the point — every empty-UI / stale-data bug
- * we've chased through this module was a violated invariant we didn't have
- * a check for.
+ * Force-reload a collection the shell needs before render. preload() loads a
+ * cold or cleaned-up collection; but profile and decks are kept syncing
+ * logged-out by their localStorage mirror, so they can be parked `ready` but
+ * empty — preload() no-ops on `ready`, so cleanup()+preload() forces a fresh
+ * sync. Safe because this runs in the _user loader before the shell mounts, so
+ * no live query depends on the collection (the mirror's plain subscription
+ * doesn't poison).
+ */
+const reloadFresh = async (c: {
+	size: number
+	preload: () => Promise<unknown>
+	cleanup: () => Promise<unknown>
+}): Promise<void> => {
+	await c.preload()
+	if (c.size === 0) {
+		await c.cleanup()
+		await c.preload()
+	}
+}
+
+/**
+ * The auth lifecycle as a single unit: three named operations for the
+ * timing-sensitive moments around an identity change. Each method's name says
+ * *when* it runs; the loader's failed() check encodes the invariant that must
+ * hold after a login.
  */
 class AuthLifecycle {
 	/**
@@ -66,82 +65,40 @@ class AuthLifecycle {
 	}
 
 	/**
-	 * Fires on every identity change — sign-out, account switch, AND
-	 * first-login. The first-login case matters because layout subscribers
-	 * (NavUser / sidebar) sync user collections logged-out and park them
-	 * `ready` with [], which would silently short-circuit later preload()s.
-	 * The synchronous removeQueries plugs the cleanup-vs-preload race
-	 * (cleanup()'s own removeQueries sits behind an un-awaited promise).
+	 * Fires on every identity change (sign-out, switch, first-login).
 	 *
-	 * Public collections (comments, commentPhraseLinks) are intentionally
-	 * untouched — their rows are still valid for a logged-out viewer.
+	 * Sign-out hard-reloads to a clean logged-out page. A full reload tears down
+	 * every collection and live query at once, so there's nothing to surgically
+	 * clear in memory — and none of the cleanup()-while-subscribed live-query
+	 * poisoning a soft clear risks. The localStorage wipes run first so the
+	 * reloaded page can't repaint the previous user.
+	 *
+	 * Login just drops any logged-out ['user'] queries so the _user loader
+	 * refetches authenticated.
 	 */
-	async clearAllUserDataOnIdentityChange(): Promise<void> {
-		console.log('Identity change: clearing user collections and local cache')
+	clearAllUserDataOnIdentityChange(nextUserId: string | null): void {
+		console.log('Identity change: clearing local cache')
 		resetUiPrefs()
-		queryClient.removeQueries({ queryKey: ['user'] })
-		await Promise.all([
-			myProfileCollection.cleanup(),
-			decksCollection.cleanup(),
-			cardsCollection.cleanup(),
-			reviewDaysCollection.cleanup(),
-			cardReviewsCollection.cleanup(),
-			friendSummariesCollection.cleanup(),
-			chatMessagesCollection.cleanup(),
-			commentUpvotesCollection.cleanup(),
-			phraseRequestUpvotesCollection.cleanup(),
-			phrasePlaylistUpvotesCollection.cleanup(),
-			notificationsCollection.cleanup(),
-		])
 		clearPersistedUserData()
-
-		const sizes = {
-			myProfile: myProfileCollection.toArray.length,
-			decks: decksCollection.toArray.length,
-			cards: cardsCollection.toArray.length,
-			reviewDays: reviewDaysCollection.toArray.length,
-			cardReviews: cardReviewsCollection.toArray.length,
-			friendSummaries: friendSummariesCollection.toArray.length,
-			chatMessages: chatMessagesCollection.toArray.length,
-			commentUpvotes: commentUpvotesCollection.toArray.length,
-			phraseRequestUpvotes: phraseRequestUpvotesCollection.toArray.length,
-			phrasePlaylistUpvotes: phrasePlaylistUpvotesCollection.toArray.length,
-			notifications: notificationsCollection.toArray.length,
+		if (!nextUserId) {
+			window.location.assign('/')
+			return
 		}
-		should(
-			'all user-scoped collections are empty after identity change',
-			Object.values(sizes).every((n) => n === 0),
-			sizes
-		)
+		queryClient.removeQueries({ queryKey: ['user'] })
 	}
 
 	/**
-	 * Called from the _user route loader (and re-run on every navigation into
-	 * the _user tree). Preloads the profile and fire-and-forgets the rest of
-	 * the user-scoped collections needed by the authenticated UI.
-	 *
-	 * Two failed() guards encode the contract with
-	 * clearAllUserDataOnIdentityChange:
-	 *
-	 *   - Hitting the recovery branch (size 0 after preload) means clearUser
-	 *     didn't run in time before this loader ran. The recovery still
-	 *     executes so prod keeps working; in scenes, failed() flags the bug.
-	 *   - Falling through to the missing-profile throw with seed data
-	 *     means the handle_new_user trigger / backfill didn't run for the
-	 *     account. The user-facing throw stays as the prod safety net.
+	 * _user route loader. Force-reloads what the shell renders with (profile,
+	 * decks) before it mounts. notifications loads itself when the navbar bell's
+	 * live query subscribes; friendSummaries gets a warm-up; the rest reload via
+	 * their own route loaders. The failed()/throw is the contract: an empty
+	 * profile here means handle_new_user didn't run.
 	 */
 	async loadAllTheRequiredUserDataAfterNewLogin(userId: string): Promise<void> {
-		await myProfileCollection.preload()
-
-		if (myProfileCollection.size === 0) {
-			failed(
-				'profile recovery branch hit — clearAllUserDataOnIdentityChange did not clean up in time',
-				{ userId }
-			)
-			queryClient.removeQueries({ queryKey: myProfileQuery.queryKey })
-			await myProfileCollection.cleanup()
-			await myProfileCollection.preload()
-		}
+		await Promise.all([
+			reloadFresh(myProfileCollection),
+			reloadFresh(decksCollection),
+		])
 
 		if (myProfileCollection.size === 0) {
 			failed(
@@ -157,9 +114,7 @@ class AuthLifecycle {
 			)
 		}
 
-		void decksCollection.preload()
 		void friendSummariesCollection.preload()
-		void notificationsCollection.preload()
 	}
 }
 
