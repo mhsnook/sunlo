@@ -19,6 +19,7 @@ export const decksCollection = createCollection(
 		id: 'decks',
 		queryKey: ['user', 'deck_plus'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading decksCollection`)
 			const { data } = await supabase
 				.from('user_deck_plus')
@@ -76,6 +77,7 @@ export const cardsCollection = createCollection(
 		id: 'cards',
 		queryKey: ['user', 'card'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading cardsCollection`)
 			const { data } = await supabase
 				.from('user_card_plus')

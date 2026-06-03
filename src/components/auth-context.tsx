@@ -42,7 +42,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 			const isIdentityChange = !isInitial && prevUserId !== nextUserId
 
 			if (isIdentityChange) {
-				void authLifecycle.clearAllUserDataOnIdentityChange()
+				authLifecycle.clearAllUserDataOnIdentityChange(nextUserId)
 			}
 			if (isIdentityChange && !nextUserId) setIsAdmin(false)
 

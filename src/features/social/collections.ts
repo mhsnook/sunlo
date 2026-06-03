@@ -14,6 +14,7 @@ export const friendSummariesCollection = createCollection(
 		id: 'friends',
 		queryKey: ['user', 'friend_summary'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading friendSummariesCollection`)
 			const { data } = await supabase
 				.from('friend_summary')
@@ -35,6 +36,7 @@ export const chatMessagesCollection = createCollection(
 		id: 'chat_messages',
 		queryKey: ['user', 'chat_message'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading chatMessagesCollection`)
 			const { data } = await supabase
 				.from('chat_message')

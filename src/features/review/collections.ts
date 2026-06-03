@@ -14,6 +14,7 @@ export const cardReviewsCollection = createCollection(
 		id: 'card_reviews',
 		queryKey: ['user', 'card_review'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading cardReviewsCollection`)
 			const { data } = await supabase
 				.from('user_card_review')
@@ -33,6 +34,7 @@ export const reviewDaysCollection = createCollection(
 		id: 'review_days',
 		queryKey: ['user', 'daily_review_state'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading reviewDaysCollection`)
 			const { data } = await supabase
 				.from('user_deck_review_state')

@@ -78,6 +78,7 @@ export const phraseRequestUpvotesCollection = createCollection(
 		id: 'phrase_request_upvotes',
 		queryKey: ['user', 'phrase_request_upvote'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading phraseRequestUpvotesCollection`)
 			const { data } = await supabase
 				.from('phrase_request_upvote')
@@ -188,6 +189,7 @@ export const commentUpvotesCollection = createCollection(
 		id: 'comment_upvotes',
 		queryKey: ['user', 'comment_upvote'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading commentUpvotesCollection`)
 			const { data } = await supabase
 				.from('comment_upvote')

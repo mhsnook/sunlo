@@ -59,6 +59,7 @@ export const phrasePlaylistUpvotesCollection = createCollection(
 		id: 'phrase_playlist_upvotes',
 		queryKey: ['user', 'phrase_playlist_upvote'],
 		queryFn: async () => {
+			if (!(await supabase.auth.getSession()).data?.session) return []
 			console.log(`Loading phrasePlaylistUpvotesCollection`)
 			const { data } = await supabase
 				.from('phrase_playlist_upvote')
