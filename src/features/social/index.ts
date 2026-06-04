@@ -35,6 +35,8 @@ export {
 	useChatEntries,
 	type ChatEntry,
 	useMarkAsRead,
+	useSendToFriends,
+	type ShareableContent,
 	useSocialRealtime,
 } from './hooks'
 

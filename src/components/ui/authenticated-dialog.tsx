@@ -12,6 +12,24 @@ import {
 } from '@/components/ui/dialog'
 import { buttonVariants } from '@/components/ui/button'
 
+/** The Log-in / Create-account button pair shown on any auth-gated surface. */
+export function LoginSignupButtons() {
+	return (
+		<div className="flex flex-row justify-between gap-4">
+			<Link
+				to="/login"
+				search={{ redirectedFrom: window.location.href }}
+				className={buttonVariants({ variant: 'default' })}
+			>
+				Log in
+			</Link>
+			<Link to="/signup" className={buttonVariants({ variant: 'neutral' })}>
+				Create account
+			</Link>
+		</div>
+	)
+}
+
 interface AuthenticatedDialogProps {
 	children: ReactNode
 	trigger: ReactNode
@@ -45,9 +63,10 @@ export function AuthenticatedDialog({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>{trigger}</DialogTrigger>
-			{isAuth ?
+			{isAuth ? (
 				children
-			:	<DialogContent className="sm:max-w-106">
+			) : (
+				<DialogContent className="sm:max-w-106">
 					<DialogHeader>
 						<DialogTitle>{authTitle}</DialogTitle>
 						<DialogDescription>{authMessage}</DialogDescription>
@@ -57,24 +76,10 @@ export function AuthenticatedDialog({
 							Create an account to join the community and contribute to the
 							language learning content.
 						</p>
-						<div className="flex flex-row justify-between gap-4">
-							<Link
-								to="/login"
-								search={{ redirectedFrom: window.location.href }}
-								className={buttonVariants({ variant: 'default' })}
-							>
-								Log in
-							</Link>
-							<Link
-								to="/signup"
-								className={buttonVariants({ variant: 'neutral' })}
-							>
-								Create account
-							</Link>
-						</div>
+						<LoginSignupButtons />
 					</div>
 				</DialogContent>
-			}
+			)}
 		</Dialog>
 	)
 }

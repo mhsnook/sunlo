@@ -278,7 +278,11 @@ export function PlaylistItem({
 				</div>
 				<div className="flex items-center gap-2">
 					<SharePlaylistButton id={playlist.id} />
-					<SendPlaylistToFriendDialog id={playlist.id} lang={playlist.lang}>
+					<SendPlaylistToFriendDialog
+						id={playlist.id}
+						lang={playlist.lang}
+						title={playlist.title}
+					>
 						<Button
 							variant="ghost"
 							size="icon"

@@ -313,6 +313,20 @@ natural wrapper element to label.
 | `invite-qr-card`     | data-testid | Invite page        | Card wrapping the QR code section            |
 | `invite-qr-code`     | data-testid | Invite page        | QR code element encoding the signup referral |
 
+## Share-with-friends picker
+
+Used by the "Send in chat" / share actions for phrases, playlists, and requests
+(`components/select-friends-to-share.tsx`). Responsive: centered dialog on desktop,
+bottom sheet on mobile.
+
+| Selector                 | Attribute   | Component/Location  | Description                                     |
+| ------------------------ | ----------- | ------------------- | ----------------------------------------------- |
+| `friend-picker`          | data-testid | Picker dialog/sheet | The picker popup container                      |
+| `close-friend-picker`    | data-testid | Picker header       | Close button                                    |
+| `friend-search`          | data-testid | Picker search       | Username search input (auto-focused on open)    |
+| `friend-row`             | data-testid | Picker list         | A selectable friend row (with `data-key={uid}`) |
+| `send-to-friends-button` | data-testid | Picker footer       | Confirm CTA — "Send to N"                       |
+
 ## Review
 
 | Selector               | Attribute   | Component/Location | Description             |
