@@ -1,28 +1,15 @@
 import { cn } from '@/lib/utils'
-import { avatarUrlify } from '@/lib/hooks'
 import { uuid } from '@/types/main'
 import { Link } from '@tanstack/react-router'
 import { ago, fullTimestamp } from '@/lib/dayjs'
 import { useOnePublicProfile } from '@/features/social/public-profile'
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
+import { UserAvatar } from '@/components/ui/user-avatar'
 import { useProfile } from '@/features/profile/hooks'
 
 export function TinySelfAvatar({ className }: { className?: string }) {
 	const { data } = useProfile()
-	const avatarUrl = avatarUrlify(data?.avatar_path)
-	return !avatarUrl ? null : (
-		<Avatar
-			className={cn(
-				'bg-foreground text-background h-8 w-8 rounded-lg',
-				className
-			)}
-		>
-			<AvatarImage src={avatarUrl} alt={`${data?.username}'s avatar`} />
-			<AvatarFallback className="text-[10px] font-bold">
-				{data?.username?.slice(0, 2)}
-			</AvatarFallback>
-		</Avatar>
-	)
+	if (!data) return null
+	return <UserAvatar profile={data} className={cn('size-8', className)} />
 }
 
 export function UidPermalink({
@@ -47,7 +34,6 @@ export function UidPermalink({
 	const { data, isLoading } = useOnePublicProfile(uid)
 	if (!uid || !data || isLoading) return null
 
-	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
 		<div className={cn('flex flex-row items-center gap-3', className)}>
 			<Link
@@ -56,15 +42,7 @@ export function UidPermalink({
 				className="inline-flex flex-row"
 				disabled={nonInteractive}
 			>
-				<Avatar className="bg-foreground text-background rounded-2xl">
-					<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
-					<AvatarFallback
-						seed={uid}
-						className="mx-auto place-self-center font-bold"
-					>
-						{data.username?.slice(0, 2)}
-					</AvatarFallback>
-				</Avatar>
+				<UserAvatar profile={data} />
 			</Link>
 
 			<div className="text-sm">
@@ -125,7 +103,6 @@ export function UidPermalinkInline({
 	const { data, isLoading } = useOnePublicProfile(uid)
 	if (!uid || !data || isLoading) return null
 
-	const avatarUrl = avatarUrlify(data.avatar_path)
 	return (
 		<div className={cn('inline-flex flex-row items-center gap-2', className)}>
 			<Link
@@ -134,12 +111,7 @@ export function UidPermalinkInline({
 				className="inline-flex flex-row hover:underline"
 				disabled={nonInteractive}
 			>
-				<Avatar className="bg-foreground text-background h-6 w-6 rounded-lg">
-					<AvatarImage src={avatarUrl} alt={`${data.username}'s avatar`} />
-					<AvatarFallback seed={uid} className="text-[10px] font-bold">
-						{data.username?.slice(0, 2)}
-					</AvatarFallback>
-				</Avatar>
+				<UserAvatar profile={data} className="size-6" />
 			</Link>
 			<div className="flex flex-row items-center gap-1.5 text-sm">
 				<Link
