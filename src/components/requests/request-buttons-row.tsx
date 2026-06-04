@@ -84,7 +84,11 @@ export function RequestButtonsRow({ request }: { request: PhraseRequestType }) {
 						variant="ghost"
 						size="icon"
 					/>
-					<SendRequestToFriendDialog id={request.id} lang={request.lang}>
+					<SendRequestToFriendDialog
+						id={request.id}
+						lang={request.lang}
+						prompt={request.prompt}
+					>
 						<Button
 							variant="ghost"
 							size="icon"

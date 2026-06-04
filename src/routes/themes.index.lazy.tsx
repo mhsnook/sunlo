@@ -54,6 +54,11 @@ import { Badge, LangBadge } from '@/components/ui/badge'
 import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import {
+	SelectFriendsToShareDialog,
+	SharePreviewChip,
+} from '@/components/select-friends-to-share'
+import type { RelationsFullType } from '@/features/social/live'
 import Callout from '@/components/ui/callout'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
@@ -972,6 +977,65 @@ function ShowcaseLanguagePicker() {
 	)
 }
 
+// Static friends for the share-picker showcase, sorted newest-first with a
+// couple of older entries and one pending invite to exercise every row state.
+const showcaseFriend = (
+	uid: string,
+	username: string,
+	minutesAgo: number | null,
+	status: 'friends' | 'pending' = 'friends'
+): RelationsFullType =>
+	({
+		uid,
+		status,
+		most_recent_created_at:
+			minutesAgo === null
+				? ''
+				: new Date(Date.now() - minutesAgo * 60_000).toISOString(),
+		profile: { uid, username, avatar_path: '' },
+	}) as unknown as RelationsFullType
+
+const SHOWCASE_FRIENDS: Array<RelationsFullType> = [
+	showcaseFriend('u-mei', 'meilin.w', 2),
+	showcaseFriend('u-diego', 'diego_r', 18),
+	showcaseFriend('u-aiyana', 'aiyana_b', 64),
+	showcaseFriend('u-hiro', 'hiro.tanaka', 480),
+	showcaseFriend('u-sophie', 'sophiel', 60 * 26, 'pending'),
+	showcaseFriend('u-kenji', 'kenji.ono', 60 * 24 * 7),
+	showcaseFriend('u-marco', 'marco_b', 60 * 24 * 22),
+	showcaseFriend('u-garlic', 'GarlicFace', null),
+]
+
+function ShowcaseFriendPicker() {
+	const [open, setOpen] = useState(false)
+	return (
+		<div className="bg-card/50 rounded border p-3">
+			<Button onClick={() => setOpen(true)} className="gap-2">
+				<Send className="size-4" /> Send in chat
+			</Button>
+			<SelectFriendsToShareDialog
+				open={open}
+				onOpenChange={setOpen}
+				friends={SHOWCASE_FRIENDS}
+				title="Send to friends"
+				description="Pick one or more friends to send this phrase"
+				preview={
+					<SharePreviewChip
+						title="வணக்கம், எப்படி இருக்கிறீர்கள்?"
+						subtitle="Hello, how are you?"
+					/>
+				}
+				onSend={(uids) => {
+					setOpen(false)
+					toastSuccess(
+						`Phrase sent to ${uids.length} friend${uids.length === 1 ? '' : 's'}`
+					)
+				}}
+			/>
+		</div>
+	)
+}
+
 function ShowcaseChoiceTileGroup() {
 	const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
 	const [font, setFont] = useState<'default' | 'dyslexic'>('default')
@@ -1373,7 +1437,8 @@ function SmolShowcase() {
 				<h2 className="text-lg font-semibold">Pickers, menus & callouts</h2>
 				<p className="text-muted-foreground text-sm">
 					Smaller building blocks shown in isolation — dropdowns, tabs, the
-					language picker, and the three callout variants.
+					language picker, the send-in-chat friend picker, and the three callout
+					variants.
 				</p>
 			</div>
 			<div className="gap-x-6 @2xl:columns-2">
@@ -1398,6 +1463,9 @@ function SmolShowcase() {
 					<div className="max-w-xs">
 						<ShowcaseLanguagePicker />
 					</div>
+				</SmolShowcaseBlock>
+				<SmolShowcaseBlock label="Send in chat (friend picker)">
+					<ShowcaseFriendPicker />
 				</SmolShowcaseBlock>
 				<SmolShowcaseBlock label="Callouts">
 					<ShowcaseCallouts />
