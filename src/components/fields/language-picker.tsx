@@ -7,6 +7,7 @@ import {
 	type CSSProperties,
 	type RefObject,
 	type ReactElement,
+	type ReactNode,
 	type ButtonHTMLAttributes,
 } from 'react'
 import { Globe, Search, X, Star, Check, ChevronsUpDown } from 'lucide-react'
@@ -19,9 +20,19 @@ import {
 	Drawer,
 	DrawerClose,
 	DrawerContent,
+	DrawerDescription,
 	DrawerTitle,
 	DrawerTrigger,
 } from '@/components/ui/drawer'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { LangBadge } from '@/components/ui/badge'
 import languages, { allLanguageOptions } from '@/lib/languages'
 import { useProfile } from '@/features/profile/hooks'
@@ -31,8 +42,11 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import { getLangThemeCss } from '@/lib/lang-theme'
 import { cn } from '@/lib/utils'
 
-// How many shortcut tiles to show signed-out / new users
+// How many popular shortcut tiles to display
 const POPULAR_LANG_COUNT = 6
+// Fetch headroom so that, after excluding disabled langs (e.g. the user's
+// existing decks in "discover" mode), the popular list still yields 6 tiles.
+const POPULAR_LANG_FETCH = 16
 
 // Shown before the languages collection has synced, so the "Popular languages"
 // section never flashes empty. Replaced by live `display_order` ranking once ready.
@@ -118,7 +132,8 @@ function LangRow({
 	return (
 		<button
 			type="button"
-			className="hover:bg-primary/10 focus-visible:bg-primary/10 text-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
+			data-key={code}
+			className="hover:bg-1-lo-primary focus-visible:bg-1-lo-primary text-foreground flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors outline-none"
 			onClick={() => onPick(code)}
 		>
 			<span className="min-w-0 flex-1 truncate text-sm font-semibold">
@@ -172,6 +187,8 @@ interface PickerBodyProps {
 	deckLangs: string[]
 	popularLangs: string[]
 	primaryLang?: string
+	/** Show only "Popular languages" tiles (e.g. add-deck), even when signed in */
+	discover?: boolean
 }
 
 function PickerBody({
@@ -187,6 +204,7 @@ function PickerBody({
 	deckLangs,
 	popularLangs,
 	primaryLang,
+	discover,
 }: PickerBodyProps) {
 	const q = search.trim()
 	const isFiltering = q.length > 0
@@ -225,10 +243,23 @@ function PickerBody({
 	const visibleDecks = deckLangs.filter(
 		(c) => !isDisabled(c) && !knownLangs.includes(c)
 	)
-	// Tile sections shown when not searching: signed-in users see their own
-	// languages + decks; signed-out users see a popular-languages shortcut.
-	const tileSections = signedIn
+	// Tile sections shown when not searching. Signed-in users normally see their
+	// own languages + decks. "Discover" mode (and signed-out users) instead see a
+	// popular-languages shortcut — ranked langs with disabled ones (e.g. existing
+	// decks) excluded first, then capped to POPULAR_LANG_COUNT.
+	const showPopularOnly = discover || !signedIn
+	const tileSections = showPopularOnly
 		? [
+				{
+					label: 'Popular languages',
+					count: 'most active' as string | number,
+					codes: popularLangs
+						.filter((c) => !isDisabled(c))
+						.slice(0, POPULAR_LANG_COUNT),
+					showPrimary: false,
+				},
+			]
+		: [
 				{
 					label: 'Your languages',
 					count: visibleKnown.length,
@@ -242,14 +273,6 @@ function PickerBody({
 					showPrimary: false,
 				},
 			].filter((s) => s.codes.length > 0)
-		: [
-				{
-					label: 'Popular languages',
-					count: 'most active' as string | number,
-					codes: popularLangs.filter((c) => !isDisabled(c)),
-					showPrimary: false,
-				},
-			]
 	const tileExclude = tileSections.flatMap((s) => s.codes)
 
 	return (
@@ -264,6 +287,7 @@ function PickerBody({
 						onChange={(e) => setSearch(e.target.value)}
 						placeholder="Search 100+ languages…"
 						aria-label="Search language"
+						data-testid="language-search-input"
 						className="text-foreground placeholder:text-muted-foreground min-w-0 flex-1 border-0 bg-transparent text-sm outline-none"
 					/>
 					{q ? (
@@ -301,7 +325,7 @@ function PickerBody({
 							</div>
 						</div>
 					) : (
-						<div className="flex flex-col pt-2">
+						<div className="flex flex-col pt-2" data-testid="language-options">
 							{filteredAll.map((l) => (
 								<LangRow
 									key={l.value}
@@ -367,6 +391,7 @@ export function LanguagePickerTrigger({
 	return (
 		<button
 			type="button"
+			data-testid="language-selector-button"
 			className={cn(
 				// Match the at-rest + hover border treatment of <Input>/<Textarea>
 				'flex w-full items-center gap-2.5 rounded-2xl border bg-card/50 px-3.5 py-2.5 text-left text-sm font-sans inset-shadow-sm',
@@ -401,10 +426,15 @@ export function LanguagePicker({
 	hasError,
 	className,
 	placeholder,
+	discover,
+	onConfirm,
+	confirmLabel,
+	title = 'Pick a language',
 	children,
 }: {
 	value: string
-	setValue: (v: string) => void
+	/** Commits the selection immediately. Optional in confirmation mode, where the choice is committed via `onConfirm` instead. */
+	setValue?: (v: string) => void
 	disabled?: string[]
 	/** Passed to the built-in trigger (ignored when a custom `children` trigger is supplied) */
 	hasError?: boolean
@@ -412,17 +442,33 @@ export function LanguagePicker({
 	className?: string
 	/** Placeholder shown by the built-in trigger when no value is set */
 	placeholder?: string
+	/** Show "Popular languages" tiles instead of the user's own languages/decks (e.g. add-deck) */
+	discover?: boolean
+	/**
+	 * Enables select-with-confirmation. Picking a language stages it (highlighted)
+	 * rather than committing immediately; a footer button confirms the choice and
+	 * calls this. On desktop the picker renders as a centered modal instead of an
+	 * anchored popover.
+	 */
+	onConfirm?: (lang: string) => void
+	/** Footer button content in confirmation mode (receives the staged language) */
+	confirmLabel?: (lang: string) => ReactNode
+	/** Heading shown in the drawer / modal chrome */
+	title?: string
 	/** Supply a fully custom trigger element instead of the built-in one */
 	children?: ReactElement
 }) {
 	const [open, setOpen] = useState(false)
 	const [search, setSearch] = useState('')
+	// In confirmation mode the choice is staged here until the footer confirms it.
+	const [pending, setPending] = useState(value)
 	const searchRef = useRef<HTMLInputElement | null>(null)
 	const isMobile = useIsMobile()
+	const confirmMode = !!onConfirm
 
 	const { data: profile } = useProfile()
 	const { data: decks } = useDecks()
-	const { data: topLanguages } = useTopLanguages(POPULAR_LANG_COUNT)
+	const { data: topLanguages } = useTopLanguages(POPULAR_LANG_FETCH)
 
 	const knownLangs = useMemo(
 		() => profile?.languages_known?.map((l) => l.lang) ?? [],
@@ -446,17 +492,36 @@ export function LanguagePicker({
 
 	const pick = useCallback(
 		(code: string) => {
-			setValue(code)
+			if (confirmMode) {
+				// Stage the choice; the footer button commits it.
+				setPending(code)
+				return
+			}
+			setValue?.(code)
 			setOpen(false)
 			setSearch('')
 		},
-		[setValue]
+		[confirmMode, setValue]
 	)
 
-	const handleOpenChange = useCallback((next: boolean) => {
-		setOpen(next)
-		if (!next) setSearch('')
-	}, [])
+	const handleConfirm = useCallback(() => {
+		if (!pending) return
+		onConfirm?.(pending)
+		setOpen(false)
+		setSearch('')
+	}, [onConfirm, pending])
+
+	const handleOpenChange = useCallback(
+		(next: boolean) => {
+			setOpen(next)
+			if (!next) {
+				setSearch('')
+				// Drop any staged-but-unconfirmed choice when the picker closes.
+				setPending(value)
+			}
+		},
+		[value]
+	)
 
 	const trigger = children ?? (
 		<LanguagePickerTrigger
@@ -471,7 +536,7 @@ export function LanguagePicker({
 		search,
 		setSearch,
 		onPick: pick,
-		currentValue: value,
+		currentValue: confirmMode ? pending : value,
 		disabled,
 		searchRef,
 		signedIn,
@@ -479,7 +544,24 @@ export function LanguagePicker({
 		deckLangs,
 		popularLangs,
 		primaryLang,
+		discover,
 	}
+
+	const footer = confirmMode ? (
+		<div className="border-border bg-popover shrink-0 border-t p-3.5">
+			<Button
+				className="w-full"
+				size="lg"
+				disabled={!pending}
+				onClick={handleConfirm}
+				data-testid="confirm-language-button"
+			>
+				{pending ? (confirmLabel?.(pending) ?? 'Confirm') : 'Select a language'}
+			</Button>
+		</div>
+	) : null
+
+	const description = 'Search and choose a language'
 
 	if (isMobile) {
 		return (
@@ -489,7 +571,7 @@ export function LanguagePicker({
 				    the shared DrawerContent default bg-background is hue-tinted */}
 				<DrawerContent className="bg-popover flex max-h-[90svh] flex-col">
 					<div className="border-border flex shrink-0 items-center justify-between border-b px-4 pb-3">
-						<DrawerTitle>Pick a language</DrawerTitle>
+						<DrawerTitle>{title}</DrawerTitle>
 						<DrawerClose
 							className="bg-muted text-foreground hover:bg-muted/80 flex size-8 items-center justify-center rounded-xl"
 							aria-label="Close"
@@ -497,9 +579,31 @@ export function LanguagePicker({
 							<X className="size-4" />
 						</DrawerClose>
 					</div>
+					<DrawerDescription className="sr-only">
+						{description}
+					</DrawerDescription>
 					<PickerBody {...bodyProps} focusDelay={280} />
+					{footer}
 				</DrawerContent>
 			</Drawer>
+		)
+	}
+
+	if (confirmMode) {
+		return (
+			<Dialog open={open} onOpenChange={handleOpenChange}>
+				<DialogTrigger asChild>{trigger}</DialogTrigger>
+				<DialogContent className="bg-popover flex max-h-[85vh] w-full max-w-md flex-col gap-0 overflow-hidden rounded-xl p-0">
+					<DialogHeader className="border-border shrink-0 border-b px-4 py-3 pr-12">
+						<DialogTitle>{title}</DialogTitle>
+						<DialogDescription className="sr-only">
+							{description}
+						</DialogDescription>
+					</DialogHeader>
+					<PickerBody {...bodyProps} />
+					{footer}
+				</DialogContent>
+			</Dialog>
 		)
 	}
 
