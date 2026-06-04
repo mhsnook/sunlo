@@ -2,9 +2,12 @@ name: Tests
 
 on:
   push:
-    branches: [next]
+    # Version-named release branches (next-0.28, next-0.28.1) plus bare `next`.
+    # Globs are required here — Actions matches branch filters literally otherwise,
+    # so a plain `next` would silently skip CI on every `next-*` branch.
+    branches: [next, "next-*"]
   pull_request:
-    branches: [next, main]
+    branches: [next, "next-*", main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
