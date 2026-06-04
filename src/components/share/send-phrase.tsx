@@ -4,8 +4,8 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { useSendToFriends } from '@/features/social'
 import {
 	PhrasePreviewChip,
-	SelectFriendsToShareDialog,
-} from '@/components/select-friends-to-share'
+	FriendPickerDialog,
+} from '@/components/share/friend-picker'
 import { VariantProps } from 'class-variance-authority'
 import { PhraseFullFilteredType } from '@/features/phrases/schemas'
 
@@ -26,7 +26,7 @@ function SendPhraseDialog({
 		{ onSuccess: () => onOpenChange(false) }
 	)
 	return (
-		<SelectFriendsToShareDialog
+		<FriendPickerDialog
 			open={open}
 			onOpenChange={onOpenChange}
 			trigger={trigger}

@@ -355,7 +355,7 @@ function AuthPrompt({ title, message }: { title: string; message: string }) {
    (mobile). Controlled open state; keeps its own selection
    and search, reset whenever it closes.
    ────────────────────────────────────────────────────────── */
-export function SelectFriendsToShareDialog({
+export function FriendPickerDialog({
 	open,
 	onOpenChange,
 	title = 'Send to friends',

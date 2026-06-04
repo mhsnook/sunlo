@@ -46,7 +46,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { SendPhraseToFriendDialog } from '@/components/card-pieces/send-phrase-to-friend'
+import { SendPhraseToFriendDialog } from '@/components/share/send-phrase'
 import {
 	PhraseFullFilteredType,
 	TranslationType,
