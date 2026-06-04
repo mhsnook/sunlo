@@ -1,8 +1,8 @@
 import { MessageSquare, Repeat, Send, WalletCards } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
-import { SendRequestToFriendDialog } from '@/components/card-pieces/send-request-to-friend'
-import { ShareRequestButton } from '@/components/card-pieces/share-request-button'
+import { SendRequestToFriendDialog } from '@/components/share/send-request'
+import { ShareRequestButton } from '@/components/share/share-request-button'
 import CopyLinkButton from '@/components/copy-link-button'
 import Flagged from '@/components/flagged'
 import { useRequestCounts } from '@/features/requests/hooks'

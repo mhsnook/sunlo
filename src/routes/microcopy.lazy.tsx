@@ -387,28 +387,28 @@ const shareActions: Array<{
 		action: 'Native share',
 		label: 'Share',
 		Icon: Share,
-		source: 'components/native-share-button.tsx',
+		source: 'components/share/native-share-button.tsx',
 	},
 	{
 		action: 'Share phrase',
 		label: 'Share phrase',
 		Icon: Share,
 		ariaLabel: 'Share phrase',
-		source: 'components/card-pieces/share-phrase-button.tsx',
+		source: 'components/share/share-phrase-button.tsx',
 	},
 	{
 		action: 'Share request',
 		label: 'Share request',
 		Icon: Share,
 		ariaLabel: 'Share request',
-		source: 'components/card-pieces/share-request-button.tsx',
+		source: 'components/share/share-request-button.tsx',
 	},
 	{
 		action: 'Share playlist',
 		label: 'Share playlist',
 		Icon: Share,
 		ariaLabel: 'Share playlist',
-		source: 'components/playlists/share-playlist-button.tsx',
+		source: 'components/share/share-playlist-button.tsx',
 	},
 	{
 		action: 'Copy link',
@@ -421,19 +421,19 @@ const shareActions: Array<{
 		action: 'Send phrase to friend',
 		label: 'Send to {n} friend(s)',
 		Icon: Send,
-		source: 'components/card-pieces/send-phrase-to-friend.tsx',
+		source: 'components/share/send-phrase.tsx',
 	},
 	{
 		action: 'Send request to friend',
 		label: 'Send to {n} friend(s)',
 		Icon: Send,
-		source: 'components/card-pieces/send-request-to-friend.tsx',
+		source: 'components/share/send-request.tsx',
 	},
 	{
 		action: 'Send playlist to friend',
 		label: 'Send to {n} friend(s)',
 		Icon: Send,
-		source: 'components/playlists/send-playlist-to-friend.tsx',
+		source: 'components/share/send-playlist.tsx',
 	},
 ]
 
@@ -1177,10 +1177,11 @@ function InconsistenciesSection() {
 						<CardContent className="flex items-start gap-3 p-3">
 							<Badge
 								variant={
-									issue.priority === 'high' ? 'destructive'
-									: issue.priority === 'medium' ?
-										'secondary'
-									:	'outline'
+									issue.priority === 'high'
+										? 'destructive'
+										: issue.priority === 'medium'
+											? 'secondary'
+											: 'outline'
 								}
 								className="mt-0.5 shrink-0"
 							>

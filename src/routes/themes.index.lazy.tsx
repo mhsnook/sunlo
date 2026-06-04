@@ -48,9 +48,9 @@ import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
-	SelectFriendsToShareDialog,
+	FriendPickerDialog,
 	SharePreviewChip,
-} from '@/components/select-friends-to-share'
+} from '@/components/share/friend-picker'
 import type { RelationsFullType } from '@/features/social/live'
 import Callout from '@/components/ui/callout'
 import { LanguagePicker } from '@/components/fields/language-picker'
@@ -920,7 +920,7 @@ function ShowcaseFriendPicker() {
 			<Button onClick={() => setOpen(true)} className="gap-2">
 				<Send className="size-4" /> Send in chat
 			</Button>
-			<SelectFriendsToShareDialog
+			<FriendPickerDialog
 				open={open}
 				onOpenChange={setOpen}
 				friends={SHOWCASE_FRIENDS}

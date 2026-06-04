@@ -23,11 +23,11 @@ import { AddTranslationsDialog } from '@/components/card-pieces/add-translations
 import { AddTags } from '@/components/card-pieces/add-tags'
 import { CardStatusDropdown } from '@/components/card-pieces/card-status-dropdown'
 import CopyLinkButton from '@/components/copy-link-button'
-import SharePhraseButton from '@/components/card-pieces/share-phrase-button'
+import SharePhraseButton from '@/components/share/share-phrase-button'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { usePhrase } from '@/hooks/composite-phrase'
-import { SendPhraseToFriendButton } from '@/components/card-pieces/send-phrase-to-friend'
+import { SendPhraseToFriendButton } from '@/components/share/send-phrase'
 import { cn } from '@/lib/utils'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
 import {

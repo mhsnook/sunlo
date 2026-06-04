@@ -1,46 +1,46 @@
 import { type ReactNode, useState } from 'react'
 import { uuid } from '@/types/main'
-import { ListMusic } from 'lucide-react'
+import { MessageCircleQuestion } from 'lucide-react'
 import { useSendToFriends } from '@/features/social'
 import {
-	SelectFriendsToShareDialog,
+	FriendPickerDialog,
 	SharePreviewChip,
-} from '@/components/select-friends-to-share'
+} from '@/components/share/friend-picker'
 
-export function SendPlaylistToFriendDialog({
+export function SendRequestToFriendDialog({
 	lang,
 	id,
-	title,
+	prompt,
 	children,
 }: {
 	lang: string
 	id: uuid
-	title?: string
+	prompt?: string
 	children: ReactNode
 }) {
 	const [open, setOpen] = useState(false)
 	const mutation = useSendToFriends(
 		lang,
-		{ message_type: 'playlist', playlist_id: id },
+		{ message_type: 'request', request_id: id },
 		{ onSuccess: () => setOpen(false) }
 	)
 
 	if (!lang || !id) return null
 
 	return (
-		<SelectFriendsToShareDialog
+		<FriendPickerDialog
 			open={open}
 			onOpenChange={setOpen}
 			trigger={children}
-			title="Share playlist"
-			description="Select 1 or more friends to send this playlist to your in-app chat"
+			title="Share request"
+			description="Select 1 or more friends to send this request to your in-app chat"
 			authTitle="Login to Share"
-			authMessage="You need to be logged in to share playlists with friends."
+			authMessage="You need to be logged in to share requests with friends."
 			preview={
 				<SharePreviewChip
-					icon={<ListMusic className="size-4.5" />}
-					title={title ?? 'Playlist'}
-					subtitle="Send this playlist to a friend"
+					icon={<MessageCircleQuestion className="size-4.5" />}
+					title={prompt ?? 'Phrase request'}
+					subtitle="Send this request to a friend"
 				/>
 			}
 			onSend={(uids) => mutation.mutate(uids)}
