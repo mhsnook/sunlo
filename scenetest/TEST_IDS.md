@@ -98,7 +98,9 @@ natural wrapper element to label.
 | `language-search-input`              | data-testid | Language selector   | Search input for languages                                               |
 | `language-options`                   | data-testid | Language selector   | Container for language options                                           |
 | `language-options {lang}`            | data-key    | Language selector   | Language option item (e.g. `language-options spa`)                       |
-| `add-deck-form submit-button`        | scope       | Add deck form       | Submit button (scoped by `add-deck-form`)                                |
+| `confirm-language-button`            | data-testid | Language selector   | Confirm button inside the picker (confirmation mode, e.g. add deck)      |
+| `current-deck-languages`             | data-testid | Add deck page       | Wrapping list of the learner's current (active) deck language badges     |
+| `archived-decks-link`                | data-testid | Add deck page       | Link to /learn/archived, listing archived deck language codes            |
 | `deck-feed-page`                     | data-testid | Deck feed route     | Feed page container                                                      |
 | `top-right-context-menu`             | data-testid | Navbar              | Context menu trigger                                                     |
 | `deck-settings-menu-item`            | data-testid | Context menu        | Link to deck settings                                                    |

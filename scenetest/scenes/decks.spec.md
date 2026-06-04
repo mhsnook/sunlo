@@ -16,7 +16,7 @@ learner:
 - typeInto language-search-input [team.lang_empty_name]
 - click language-options [team.lang_empty]
 - up
-- click submit-button
+- click confirm-language-button
 - up
 - seeToast toast-success
 - see deck-feed-page
