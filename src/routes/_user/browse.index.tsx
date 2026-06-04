@@ -26,19 +26,13 @@ import { phraseRequestsActive } from '@/features/requests/live'
 import { playlistPhraseLinksCollection } from '@/features/playlists/collections'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 import { useAuth } from '@/lib/use-auth'
-import languages, { allLanguageOptions } from '@/lib/languages'
+import languages from '@/lib/languages'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { buttonVariants } from '@/components/ui/button'
 import { LangBadge, Badge } from '@/components/ui/badge'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import Flagged from '@/components/flagged'
 
 export const Route = createFileRoute('/_user/browse/')({
@@ -78,23 +72,15 @@ function BrowsePage() {
 			<div className="flex flex-row items-center justify-around gap-4 @xl:justify-between">
 				<div className="flex flex-col items-center gap-3 @xl:flex-row">
 					<span className="text-muted-foreground">Go to feed:</span>
-					<Select
-						onValueChange={(lang) => {
-							if (typeof lang === 'string')
+					<LanguagePicker
+						value=""
+						setValue={(lang) => {
+							if (lang)
 								void navigate({ to: '/learn/$lang/feed', params: { lang } })
 						}}
-					>
-						<SelectTrigger className="w-56 border">
-							<SelectValue placeholder="Select a language" />
-						</SelectTrigger>
-						<SelectContent>
-							{allLanguageOptions.map((lang) => (
-								<SelectItem key={lang.value} value={lang.value}>
-									{lang.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+						className="w-56"
+						placeholder="Select a language"
+					/>
 				</div>
 				{!isAuth && (
 					<div className="flex flex-col items-stretch gap-2 @xl:flex-row @xl:items-center">

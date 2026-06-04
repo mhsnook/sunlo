@@ -22,7 +22,7 @@ import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
 import { PhraseFullSchema } from '@/features/phrases/schemas'
 import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
@@ -594,10 +594,10 @@ function InlineAddBar({
 					/>
 				</div>
 				<div className="flex-1 space-y-2">
-					<SelectOneOfYourLanguages
+					<LanguagePicker
 						value={translationLang}
 						setValue={setTranslationLang}
-						className="h-7 text-xs"
+						className="h-7 py-0 text-xs"
 						disabled={[lang]}
 					/>
 					<Input
@@ -799,10 +799,10 @@ function EditPhraseDialog({
 						<Label>Translations</Label>
 						{translations.map((t, i) => (
 							<div key={t._key} className="flex items-center gap-2">
-								<SelectOneOfYourLanguages
+								<LanguagePicker
 									value={t.lang}
 									setValue={(val) => updateTranslation(i, { lang: val })}
-									className="w-36"
+									className="w-44"
 									disabled={[lang]}
 								/>
 								<Input

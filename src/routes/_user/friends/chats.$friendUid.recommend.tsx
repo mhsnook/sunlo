@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { InlinePhraseCreator } from '@/components/phrases/inline-phrase-creator'
 import { useMergedSearch } from '@/hooks/use-merged-search'
@@ -349,7 +349,11 @@ function RouteComponent() {
 
 				{/* Language Filter */}
 				<div className="border-b px-4 py-2.5">
-					<SelectOneOfYourLanguages value={lang} setValue={setLang} />
+					<LanguagePicker
+						value={lang}
+						setValue={setLang}
+						placeholder="Filter by language…"
+					/>
 				</div>
 
 				{/* Results */}
