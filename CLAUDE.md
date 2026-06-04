@@ -184,30 +184,40 @@ We use **trunk-based development with a migration gate** — two deployment trac
 
 ### The two tracks
 
-| Track                                | Trigger               | Risk profile                       | Ceremony                                      |
-| ------------------------------------ | --------------------- | ---------------------------------- | --------------------------------------------- |
-| **Fast track** (UI-only)             | PR merges to `main`   | Low blast radius, reversible       | Deploy at will, drop a one-liner in changelog |
-| **Migration track** (schema changes) | PR into `next` branch | Expensive to reverse, needs review | Human review gate, batch release notes        |
+| Track                                | Trigger                  | Risk profile                       | Ceremony                                      |
+| ------------------------------------ | ------------------------ | ---------------------------------- | --------------------------------------------- |
+| **Fast track** (UI-only)             | PR merges to `main`      | Low blast radius, reversible       | Deploy at will, drop a one-liner in changelog |
+| **Migration track** (schema changes) | PR into `next-<version>` | Expensive to reverse, needs review | Human review gate, batch release notes        |
+
+### The migration branch is named after the version it will ship
+
+The migration-track branch is **named after the version it lands as**, not a bare `next`:
+
+- `next-0.28` → lands the v0.28 version bump + changelog entry.
+- `next-0.28.1` → a patch release; include the patch segment in the branch name.
+
+The version comes from the current `package.json` `version` (today `0.27.0`) and the latest `CHANGELOG.md` heading (today `v0.27`) — the open migration branch is the **next** of those. Naming the branch this way means the branch, the version bump it carries, and the changelog section it will add all share one identifier, so the deployment log reads cleanly.
+
+**CI matches these by glob.** `.github/workflows/test.yaml` triggers on `next` and `next-*` (push) and `next`, `next-*`, `main` (PR base). The glob is load-bearing: Actions matches branch filters literally, so dropping `next-*` would silently skip _all_ CI on a `next-0.28` branch and on every PR targeting it. If you adopt a name the glob doesn't cover, update the workflow first.
 
 ### Decision rule
 
 > **Does this PR touch a migration file?**
 >
 > - **No** → merge to `main`, deploy when ready.
-> - **Yes** → PR into `next`, hold for review, merge `next` → `main` when the batch is ready.
+> - **Yes** → PR into the open `next-<version>` branch, hold for review, merge `next-<version>` → `main` when the batch is ready.
 
 ### Workflow
 
 1. **Feature without migration** → PR → merge to `main` → deploy → one-liner changelog entry (doesn't need to be same day)
-2. **Feature with migration** → PR into `next` → accumulates with other migration PRs → human reviews full picture → merge `next` into `main` → deploy → write proper release notes
-3. **Version bumps** → only when cutting a `next` → `main` release. Use datestamps (e.g. `2026-03-27`) as release identifiers, not semver. Tag these merges with `git tag`.
+2. **Feature with migration** → PR into `next-<version>` → accumulates with other migration PRs → human reviews full picture → merge `next-<version>` into `main` → deploy → write proper release notes
+3. **Version bumps** → only when cutting a `next-<version>` → `main` release. Bump `package.json` and add the `v<version>` changelog heading to match the branch name. Tag these merges with `git tag` (e.g. `v0.28`).
 
 ### Guidelines
 
-- **Don't let `next` get stale.** If it's been open >2 weeks, either ship it or break the migrations into smaller pieces.
-- **Tag `next` → `main` merges** even informally — `git tag` is cheap and makes the deployment log reconstructable.
-- **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/dated release entries for migration-track batches.
-- **No semver.** We're not publishing packages. Datestamps or sequential names are sufficient.
+- **Don't let the `next-<version>` branch get stale.** If it's been open >2 weeks, either ship it or break the migrations into smaller pieces.
+- **Tag `next-<version>` → `main` merges** even informally — `git tag` is cheap and makes the deployment log reconstructable.
+- **Changelog has two modes**: a running "Recent changes" section for fast-track items, and named/versioned release entries (`v0.28`) for migration-track batches.
 - **Ship UI, architect the database.** UI changes should flow fast; schema changes deserve ceremony.
 
 ## Architecture Overview
