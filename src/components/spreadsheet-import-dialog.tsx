@@ -17,7 +17,7 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { InfoDialog } from '@/components/info-dialog'
 import languages from '@/lib/languages'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import {
 	parseTsv,
 	detectColumnMapping,
@@ -361,14 +361,14 @@ function MapAndReviewStep({
 										className="px-3 py-2"
 									>
 										{mapping.role === 'translation' ? (
-											<SelectOneOfYourLanguages
+											<LanguagePicker
 												value={mapping.lang}
 												setValue={(val) =>
 													updateMapping(i, {
 														lang: val,
 													})
 												}
-												className="w-36"
+												className="w-44"
 											/>
 										) : null}
 									</td>

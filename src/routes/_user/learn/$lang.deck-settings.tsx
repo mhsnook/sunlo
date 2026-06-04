@@ -20,7 +20,7 @@ import { RequireAuth, useIsAuthenticated } from '@/components/require-auth'
 
 import { useDeckMeta } from '@/features/deck/hooks'
 import { ArchiveDeckButton } from './-archive-deck-button'
-import { SelectOneOfYourLanguages } from '@/components/fields/select-one-of-your-languages'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import { decksCollection } from '@/features/deck/collections'
 import { type DeckMetaType } from '@/features/deck/schemas'
 import { useProfile } from '@/features/profile/hooks'
@@ -394,7 +394,7 @@ function PreferredTranslationLanguageSection({
 				)}
 				<div className="space-y-2">
 					<Label>Translation language for this deck</Label>
-					<SelectOneOfYourLanguages
+					<LanguagePicker
 						value={preferred_translation_lang ?? ''}
 						setValue={handleSetLang}
 						disabled={[lang]}

@@ -1,10 +1,4 @@
-import {
-	useEffect,
-	useId,
-	useState,
-	type CSSProperties,
-	type ReactNode,
-} from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { useLiveQuery } from '@tanstack/react-db'
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { gt } from '@tanstack/db'
@@ -13,7 +7,6 @@ import {
 	Bookmark,
 	Check,
 	ChevronDown,
-	ChevronsUpDown,
 	HeartPlus,
 	Info,
 	Lightbulb,
@@ -55,17 +48,9 @@ import { statusStrings } from '@/components/card-pieces/card-status-dropdown'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
+import { LanguagePicker } from '@/components/fields/language-picker'
 import { ChoiceTile } from '@/components/ui/choice-tile'
 import { DestructiveOctagon } from '@/components/ui/destructive-octagon-badge'
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-	CommandSeparator,
-} from '@/components/ui/command'
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -74,11 +59,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '@/components/ui/popover'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
 	CardContent,
@@ -893,83 +873,10 @@ function ShowcaseCallouts() {
 	)
 }
 
-// Mocked language picker — mirrors SelectOneOfYourLanguages without depending
-// on auth/profile state. Two "your languages" up top, the rest below.
-const showcaseKnownLangs = ['hin', 'tam'] as const
-
+// Showcase wrapper around the real LanguagePicker — just holds selection state.
 function ShowcaseLanguagePicker() {
 	const [value, setValue] = useState<string>('hin')
-	const [open, setOpen] = useState(false)
-	const id = useId()
-
-	const otherLanguages = allLanguageOptions.filter(
-		(opt) => !showcaseKnownLangs.includes(opt.value as never)
-	)
-
-	const onSelect = (next: string) => {
-		setValue(next === value ? '' : next)
-		setOpen(false)
-	}
-
-	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild className="w-full">
-				<Button
-					variant="soft"
-					role="combobox"
-					aria-controls={id}
-					aria-expanded={open}
-					className="bg-card/50 text-foreground justify-between font-normal"
-				>
-					{value
-						? (allLanguageOptions.find((l) => l.value === value)?.label ??
-							value)
-						: 'Select language...'}
-					<ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent id={id} className="p-0">
-				<Command>
-					<CommandInput placeholder="Search language..." className="my-1" />
-					<CommandList>
-						<CommandEmpty>No language found.</CommandEmpty>
-						<CommandGroup>
-							{showcaseKnownLangs.map((lang) => (
-								<CommandItem key={lang} value={lang} onSelect={onSelect}>
-									<Check
-										className={cn(
-											'me-2 size-4',
-											value === lang ? 'opacity-100' : 'opacity-0'
-										)}
-									/>
-									{allLanguageOptions.find((l) => l.value === lang)?.label} (
-									{lang})
-								</CommandItem>
-							))}
-						</CommandGroup>
-						<CommandSeparator />
-						<CommandGroup>
-							{otherLanguages.slice(0, 50).map((language) => (
-								<CommandItem
-									key={language.value}
-									value={language.value}
-									onSelect={onSelect}
-								>
-									<Check
-										className={cn(
-											'me-2 size-4',
-											value === language.value ? 'opacity-100' : 'opacity-0'
-										)}
-									/>
-									{language.label} ({language.value})
-								</CommandItem>
-							))}
-						</CommandGroup>
-					</CommandList>
-				</Command>
-			</PopoverContent>
-		</Popover>
-	)
+	return <LanguagePicker value={value} setValue={setValue} />
 }
 
 function ShowcaseChoiceTileGroup() {
@@ -1394,7 +1301,7 @@ function SmolShowcase() {
 				<SmolShowcaseBlock label="Filter dropdown">
 					<ShowcaseFilterMenu />
 				</SmolShowcaseBlock>
-				<SmolShowcaseBlock label="Select one of your languages">
+				<SmolShowcaseBlock label="Language picker">
 					<div className="max-w-xs">
 						<ShowcaseLanguagePicker />
 					</div>
