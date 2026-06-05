@@ -1,5 +1,6 @@
 import { createLazyFileRoute } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
+import { X } from 'lucide-react'
 import {
 	calculateFSRS,
 	calculateInterval,
@@ -7,6 +8,7 @@ import {
 	type Score,
 } from '@/features/review/fsrs'
 import { type CardReviewType } from '@/features/review/schemas'
+import { cn } from '@/lib/utils'
 import {
 	Card,
 	CardContent,
@@ -14,6 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 
 export const Route = createLazyFileRoute('/fsrs')({
@@ -28,16 +31,53 @@ export const Route = createLazyFileRoute('/fsrs')({
 // ---------------------------------------------------------------------------
 
 const DEFAULTS = {
-	/** Self-assessment used for every simulated review: 1=Again 2=Hard 3=Good 4=Easy */
-	score: 3 as Score,
+	/** The grade of each review, in order. 1=Again 2=Hard 3=Good 4=Easy. The
+	 *  first entry is the initial learning grade. */
+	scores: [1, 3, 2, 3, 3] as Array<Score>,
 	/** Retention the scheduler aims for. The card "comes back around" the moment
 	 *  its recall probability decays to this value — 0.9 = 90%. */
 	desiredRetention: 0.9,
-	/** How many times we review the card in the simulation. */
-	numReviews: 5,
 	/** Bottom of the Y axis. 0.7 = the chart starts at 70% retention. */
 	yMin: 0.7,
 } as const
+
+const PRESETS: Array<{ label: string; scores: Array<Score> }> = [
+	{ label: 'All Good', scores: [3, 3, 3, 3, 3] },
+	{ label: 'Struggling', scores: [1, 3, 2, 3, 3] },
+	{ label: 'Mid-lapse', scores: [3, 3, 3, 1, 3] },
+	{ label: 'Quick learner', scores: [4, 4, 4, 4] },
+]
+
+// Per-score presentation. Full literal class strings so Tailwind picks them up.
+const SCORE_META: Record<
+	Score,
+	{ label: string; glyph: string; text: string; activeBtn: string }
+> = {
+	1: {
+		label: 'Again',
+		glyph: '✕',
+		text: 'text-5-hi-danger',
+		activeBtn: 'bg-2-mlo-danger border-4-mid-danger text-5-hi-danger',
+	},
+	2: {
+		label: 'Hard',
+		glyph: '○',
+		text: 'text-6-hi-warning',
+		activeBtn: 'bg-2-mlo-warning border-4-mid-warning text-6-hi-warning',
+	},
+	3: {
+		label: 'Good',
+		glyph: '●',
+		text: 'text-6-hi-accent',
+		activeBtn: 'bg-2-mlo-accent border-4-mid-accent text-6-hi-accent',
+	},
+	4: {
+		label: 'Easy',
+		glyph: '◆',
+		text: 'text-5-hi-success',
+		activeBtn: 'bg-2-mlo-success border-4-mid-success text-5-hi-success',
+	},
+}
 
 // SVG geometry (in viewBox units)
 const VB = { w: 820, h: 520 }
@@ -48,21 +88,17 @@ const PLOT = {
 }
 const SAMPLES_PER_SEGMENT = 80
 
-const SCORE_LABELS: Record<Score, string> = {
-	1: 'Again',
-	2: 'Hard',
-	3: 'Good',
-	4: 'Easy',
-}
-
 // ---------------------------------------------------------------------------
 // Simulation — drive the real FSRS functions through a sequence of reviews.
 // Each review fires exactly when retrievability decays to `desiredRetention`,
-// resetting recall to 100% and lengthening the next interval (rising stability).
+// resetting recall to 100% and re-shaping the next interval according to the
+// grade: a lapse (Again) collapses stability so the next curve is short and
+// steep; an Easy stretches it far out.
 // ---------------------------------------------------------------------------
 
 interface Segment {
 	index: number
+	score: Score
 	/** Day this review happened (curve = 100% here). */
 	startDay: number
 	/** Day the next review is scheduled (curve = desiredRetention here). */
@@ -72,9 +108,8 @@ interface Segment {
 }
 
 function simulateReviews(
-	score: Score,
-	desiredRetention: number,
-	numReviews: number
+	scores: Array<Score>,
+	desiredRetention: number
 ): Array<Segment> {
 	const BASE = new Date('2025-01-01T00:00:00Z')
 	const atDay = (d: number) => new Date(BASE.getTime() + d * 86_400_000)
@@ -83,7 +118,7 @@ function simulateReviews(
 	let previousReview: CardReviewType | undefined = undefined
 	let day = 0
 
-	for (let i = 0; i < numReviews; i++) {
+	scores.forEach((score, i) => {
 		const { difficulty, stability } = calculateFSRS({
 			score,
 			previousReview,
@@ -96,6 +131,7 @@ function simulateReviews(
 
 		segments.push({
 			index: i,
+			score,
 			startDay: day,
 			endDay: day + interval,
 			stability,
@@ -120,7 +156,7 @@ function simulateReviews(
 		}
 
 		day += interval
-	}
+	})
 
 	return segments
 }
@@ -135,23 +171,54 @@ function buildPath(points: Array<[number, number]>): string {
 		.join(' ')
 }
 
+/** A grade marker centered at (x, y). Color comes from the parent <g>. */
+function ScoreGlyph({ score, x, y }: { score: Score; x: number; y: number }) {
+	if (score === 1) {
+		const s = 5.5
+		return (
+			<g stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+				<line x1={x - s} y1={y - s} x2={x + s} y2={y + s} />
+				<line x1={x - s} y1={y + s} x2={x + s} y2={y - s} />
+			</g>
+		)
+	}
+	if (score === 2)
+		return (
+			<circle
+				cx={x}
+				cy={y}
+				r={5}
+				fill="none"
+				stroke="currentColor"
+				strokeWidth={2.5}
+			/>
+		)
+	if (score === 4)
+		return (
+			<polygon
+				points={`${x},${y - 6} ${x + 6},${y} ${x},${y + 6} ${x - 6},${y}`}
+				fill="currentColor"
+			/>
+		)
+	// score 3 — Good
+	return <circle cx={x} cy={y} r={4.5} fill="currentColor" />
+}
+
 function ForgettingCurveChart({
-	score,
+	scores,
 	desiredRetention,
-	numReviews,
 	yMin,
 }: {
-	score: Score
+	scores: Array<Score>
 	desiredRetention: number
-	numReviews: number
 	yMin: number
 }) {
 	const { segments, dayMax } = useMemo(() => {
-		const segs = simulateReviews(score, desiredRetention, numReviews)
+		const segs = simulateReviews(scores, desiredRetention)
 		const lastEnd = segs.at(-1)?.endDay ?? 1
 		// A little headroom so the final reset isn't flush against the edge.
 		return { segments: segs, dayMax: Math.ceil(lastEnd * 1.08) }
-	}, [score, desiredRetention, numReviews])
+	}, [scores, desiredRetention])
 
 	// Coordinate mappers
 	const toX = (day: number) => PAD.left + (day / dayMax) * PLOT.w
@@ -165,7 +232,8 @@ function ForgettingCurveChart({
 
 	return (
 		<svg viewBox={`0 0 ${VB.w} ${VB.h}`} className="h-auto w-full">
-			<title>FSRS forgetting curve with reviews</title>
+			<title>FSRS forgetting curve for a sequence of reviews</title>
+
 			{/* Y gridlines + labels */}
 			{yTicks.map((r) => (
 				<g key={`y-${r}`}>
@@ -205,7 +273,7 @@ function ForgettingCurveChart({
 						x={toX(s.endDay)}
 						y={PAD.top + PLOT.h + 22}
 						textAnchor="middle"
-						className="fill-muted-foreground text-[13px]"
+						className="fill-muted-foreground text-[12px]"
 					>
 						{s.endDay.toFixed(1)}
 					</text>
@@ -258,49 +326,49 @@ function ForgettingCurveChart({
 				)
 			})}
 
-			{/* Dashed vertical "review" reset lines: target retention back up to 100% */}
-			{segments.slice(0, -1).map((s) => (
+			{/* Dashed vertical "review" reset lines, colored by the grade given */}
+			{segments.slice(1).map((s) => (
 				<line
 					key={`reset-${s.index}`}
-					x1={toX(s.endDay)}
-					x2={toX(s.endDay)}
+					x1={toX(s.startDay)}
+					x2={toX(s.startDay)}
 					y1={toY(desiredRetention)}
 					y2={toY(1)}
-					className="text-accent"
+					className={SCORE_META[s.score].text}
 					stroke="currentColor"
 					strokeWidth={2.5}
 					strokeDasharray="5 5"
 				/>
 			))}
 
-			{/* Review markers + arrows along the top */}
+			{/* Review markers + arrows + grade label along the top */}
 			{segments.map((s) => {
 				const x = toX(s.startDay)
+				const meta = SCORE_META[s.score]
 				return (
-					<g key={`marker-${s.index}`}>
+					<g key={`marker-${s.index}`} className={meta.text}>
 						<line
 							x1={x}
 							x2={x}
 							y1={PAD.top - 26}
-							y2={PAD.top - 4}
-							className="text-accent"
+							y2={PAD.top - 6}
 							stroke="currentColor"
 							strokeWidth={2}
 						/>
 						<path
-							d={`M${x - 4},${PAD.top - 9} L${x},${PAD.top - 2} L${x + 4},${PAD.top - 9} Z`}
-							className="fill-accent"
+							d={`M${x - 4},${PAD.top - 11} L${x},${PAD.top - 4} L${x + 4},${PAD.top - 11} Z`}
+							fill="currentColor"
 						/>
 						<text
 							x={x}
 							y={PAD.top - 32}
 							textAnchor="middle"
-							className="fill-accent-foreground text-[12px] font-medium"
+							className="text-[12px] font-medium"
+							fill="currentColor"
 						>
-							{s.index === 0 ? 'Learned' : `Review ${s.index}`}
+							{s.index === 0 ? `Learn · ${meta.label}` : meta.label}
 						</text>
-						{/* dot where this curve starts at 100% */}
-						<circle cx={x} cy={toY(1)} r={4} className="fill-accent" />
+						<ScoreGlyph score={s.score} x={x} y={toY(1)} />
 					</g>
 				)
 			})}
@@ -344,6 +412,18 @@ function ForgettingCurveChart({
 				Retention
 			</text>
 		</svg>
+	)
+}
+
+function ChartLegend() {
+	return (
+		<div className="text-muted-foreground mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs">
+			{([1, 2, 3, 4] as Array<Score>).map((s) => (
+				<span key={s} className={SCORE_META[s].text}>
+					{SCORE_META[s].glyph} {SCORE_META[s].label}
+				</span>
+			))}
+		</div>
 	)
 }
 
@@ -397,40 +477,66 @@ function RangeControl({
 // Page
 // ---------------------------------------------------------------------------
 
+// Reviews carry a stable id so the editor rows have data-dependent keys
+// (positional index keys would re-key on add/remove).
+interface Review {
+	id: number
+	score: Score
+}
+let reviewIdCounter = 0
+const makeReview = (score: Score): Review => ({ id: reviewIdCounter++, score })
+const makeReviews = (scores: ReadonlyArray<Score>) => scores.map(makeReview)
+
 function FsrsPage() {
-	const [score, setScore] = useState<Score>(DEFAULTS.score)
+	const [reviews, setReviews] = useState<Array<Review>>(() =>
+		makeReviews(DEFAULTS.scores)
+	)
 	const [desiredRetention, setDesiredRetention] = useState<number>(
 		DEFAULTS.desiredRetention
 	)
-	const [numReviews, setNumReviews] = useState<number>(DEFAULTS.numReviews)
 	const [yMin, setYMin] = useState<number>(DEFAULTS.yMin)
 
+	const scores = useMemo(() => reviews.map((r) => r.score), [reviews])
 	const segments = useMemo(
-		() => simulateReviews(score, desiredRetention, numReviews),
-		[score, desiredRetention, numReviews]
+		() => simulateReviews(scores, desiredRetention),
+		[scores, desiredRetention]
 	)
+
+	const setScoreAt = (id: number, value: Score) =>
+		setReviews((prev) =>
+			prev.map((r) => (r.id === id ? { ...r, score: value } : r))
+		)
+	const addReview = () =>
+		setReviews((prev) => (prev.length >= 8 ? prev : [...prev, makeReview(3)]))
+	const removeReview = (id: number) =>
+		setReviews((prev) =>
+			prev.length <= 1 ? prev : prev.filter((r) => r.id !== id)
+		)
 
 	return (
 		<main className="@container mx-auto max-w-5xl space-y-6 p-4 pb-20">
 			<div className="space-y-1">
 				<h1 className="text-3xl font-bold">How FSRS Works</h1>
 				<p className="text-muted-foreground text-sm">
-					The forgetting curve, drawn from the real FSRS v5 functions in{' '}
+					The forgetting curve for a whole sequence of reviews, drawn from the
+					real FSRS v5 functions in{' '}
 					<code className="text-xs">src/features/review/fsrs.ts</code>. Each
-					time recall decays to your target retention the card comes back
-					around; a correct answer resets recall to 100% and stretches the next
-					interval.
+					time recall decays to your target retention the card comes back around
+					— and how you grade it reshapes what comes next. A lapse{' '}
+					<span className="text-5-hi-danger">(Again ✕)</span> still resets
+					recall when you re-study, but stability collapses, so the next curve
+					is short and steep.
 				</p>
 			</div>
 
 			<Card>
 				<CardContent className="pt-6">
 					<ForgettingCurveChart
-						score={score}
+						scores={scores}
 						desiredRetention={desiredRetention}
-						numReviews={numReviews}
 						yMin={yMin}
 					/>
+					<ChartLegend />
 				</CardContent>
 			</Card>
 
@@ -439,31 +545,78 @@ function FsrsPage() {
 					<CardHeader>
 						<CardTitle className="text-lg">Tweak it</CardTitle>
 						<CardDescription>
-							Adjust the simulation. Defaults live in the{' '}
+							Pick a preset or grade each review yourself. Defaults live in the{' '}
 							<code className="text-xs">DEFAULTS</code> object at the top of the
 							route file.
 						</CardDescription>
 					</CardHeader>
 					<CardContent className="space-y-5">
-						<div className="space-y-1">
-							<Label>Review score</Label>
-							<div className="flex gap-2">
-								{([1, 2, 3, 4] as Array<Score>).map((s) => (
-									<button
-										key={s}
-										type="button"
-										onClick={() => setScore(s)}
-										className={
-											'flex-1 rounded-2xl border px-2 py-1.5 text-sm transition-colors ' +
-											(score === s
-												? 'border-accent bg-2-mlo-accent text-accent-foreground font-medium'
-												: 'border-border text-muted-foreground hover:bg-1-lo-accent')
-										}
+						<div className="space-y-2">
+							<Label>Presets</Label>
+							<div className="flex flex-wrap gap-2">
+								{PRESETS.map((p) => (
+									<Button
+										key={p.label}
+										variant="soft"
+										size="sm"
+										onClick={() => setReviews(makeReviews(p.scores))}
 									>
-										{SCORE_LABELS[s]}
-									</button>
+										{p.label}
+									</Button>
 								))}
 							</div>
+						</div>
+
+						<div className="space-y-2">
+							<div className="flex items-center justify-between">
+								<Label>Review sequence</Label>
+								<span className="text-muted-foreground text-xs">
+									grade each review
+								</span>
+							</div>
+							<div className="space-y-1.5">
+								{reviews.map((r, i) => (
+									<div key={r.id} className="flex items-center gap-2">
+										<span className="text-muted-foreground w-16 shrink-0 text-xs">
+											{i === 0 ? 'Learn' : `Review ${i}`}
+										</span>
+										<div className="flex flex-1 gap-1">
+											{([1, 2, 3, 4] as Array<Score>).map((opt) => (
+												<button
+													key={opt}
+													type="button"
+													onClick={() => setScoreAt(r.id, opt)}
+													className={cn(
+														'flex-1 rounded-2xl border px-1 py-1 text-xs transition-colors',
+														r.score === opt
+															? `${SCORE_META[opt].activeBtn} font-medium`
+															: 'border-border text-muted-foreground hover:bg-1-lo-neutral'
+													)}
+												>
+													{SCORE_META[opt].label}
+												</button>
+											))}
+										</div>
+										<button
+											type="button"
+											onClick={() => removeReview(r.id)}
+											aria-label={`Remove review ${i}`}
+											disabled={reviews.length <= 1}
+											className="text-muted-foreground hover:text-5-hi-danger disabled:opacity-40"
+										>
+											<X className="size-4" />
+										</button>
+									</div>
+								))}
+							</div>
+							<Button
+								variant="soft"
+								size="sm"
+								onClick={addReview}
+								disabled={reviews.length >= 8}
+							>
+								Add review
+							</Button>
 						</div>
 
 						<RangeControl
@@ -475,17 +628,6 @@ function FsrsPage() {
 							step={0.01}
 							display={`${Math.round(desiredRetention * 100)}%`}
 							onChange={setDesiredRetention}
-						/>
-
-						<RangeControl
-							id="num-reviews"
-							label="Number of reviews"
-							value={numReviews}
-							min={2}
-							max={8}
-							step={1}
-							display={String(numReviews)}
-							onChange={(v) => setNumReviews(Math.round(v))}
 						/>
 
 						<RangeControl
@@ -506,7 +648,8 @@ function FsrsPage() {
 						<CardTitle className="text-lg">Schedule</CardTitle>
 						<CardDescription>
 							Stability is the interval (in days) at which recall hits the
-							target retention. Notice it grows with every successful review.
+							target retention. Watch it grow on success and collapse on a
+							lapse.
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -514,10 +657,11 @@ function FsrsPage() {
 							<thead>
 								<tr className="text-muted-foreground border-b text-left text-xs">
 									<th className="py-1.5">#</th>
+									<th className="py-1.5">Grade</th>
 									<th className="py-1.5">Day</th>
 									<th className="py-1.5">Interval</th>
 									<th className="py-1.5">Stability</th>
-									<th className="py-1.5">Difficulty</th>
+									<th className="py-1.5">Diff.</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -525,6 +669,14 @@ function FsrsPage() {
 									<tr key={s.index} className="border-b last:border-0">
 										<td className="py-1.5 font-medium">
 											{s.index === 0 ? 'Learn' : s.index}
+										</td>
+										<td
+											className={cn(
+												'py-1.5 font-medium',
+												SCORE_META[s.score].text
+											)}
+										>
+											{SCORE_META[s.score].label}
 										</td>
 										<td className="py-1.5 tabular-nums">
 											{s.startDay.toFixed(1)}
