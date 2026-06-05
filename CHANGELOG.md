@@ -1,5 +1,34 @@
 # Change Log
 
+## v0.28 - LanguagePicker, Sharing Redesign, Translations Split
+
+_5 June, 2026_
+
+### Features
+
+- **`LanguagePicker`** — one component now drives every language-pick in the app: translation field on phrase forms, the add-deck page, and the discover flow on the languages list. Replaces three older selectors and folds in popular-language sorting plus a select-with-confirmation mode.
+- **Friend picker redesigned** for sharing phrases inside chat. Generic sharing UI consolidated under `components/share/`.
+
+### Improvements
+
+- **Hard-reload on sign-out** so user-scoped collections never carry across identities.
+- Admin affordances hidden from non-admins on public phrase pages.
+- Card-status dropdown showcase uses a static popup so it's easier to inspect on `/themes`.
+
+### Refactors
+
+- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read. Adding or editing one translation now writes a single row to its own collection instead of splicing the denormalized array on the phrase. First step in dismantling `phrase_meta`; tags and stats can follow on their own schedule.
+- **`UserAvatar`** extracted as a general component.
+- Drop the full-table refetch on new request creation; preload `messagesCollection` before the write.
+
+### Build / Dependencies
+
+- **Scenetest 0.10.0** — `@scenetest/scenes`, `@scenetest/vite-plugin`, `@scenetest/checks-panel`, `@scenetest/checks-react`.
+
+### Docs / DX
+
+- **`CLAUDE.md`** — migration-track branches are now named `next-<version>` (e.g. `next-0.28`). Deployment-gate rule rewritten: the first question is "was this branch created from `next-<version>`?", the second is "does the diff touch a migration?" — so a UI PR whose branch happened to start on `next-<version>` doesn't smuggle unreleased migrations into `main`.
+
 ## v0.27 - Admin Tag Editor, Auth Lifecycle, Playwright → Scenetest
 
 _28 May, 2026_
