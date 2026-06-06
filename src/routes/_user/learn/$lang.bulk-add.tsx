@@ -24,13 +24,18 @@ import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import { PhraseSchema, TranslationSchema } from '@/features/phrases/schemas'
+import {
+	PhraseSchema,
+	PhraseTagLinkSchema,
+	TranslationSchema,
+} from '@/features/phrases/schemas'
 import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
 import { LangTagSchema } from '@/features/languages/schemas'
 import { langTagsCollection } from '@/features/languages/collections'
 import {
 	phrasesCollection,
+	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
@@ -284,29 +289,25 @@ function BulkAddPhrasesPage() {
 				}
 			}
 
-			// Update tag collection with newly created tags
+			// Update tag collection with newly created tags + write phrase_tag links
 			for (const [, { result }] of tagsByPhraseIndex) {
 				if (result?.tags?.length) {
 					result.tags.forEach((t) =>
 						langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
 					)
 				}
+				if (result?.phrase_tags?.length) {
+					result.phrase_tags.forEach((link) =>
+						phraseTagLinksCollection.utils.writeInsert(
+							PhraseTagLinkSchema.parse(link)
+						)
+					)
+				}
 			}
 
-			const phrasesToInsert = rpcResult.phrases.map((p, index) => {
-				const tagInfo = tagsByPhraseIndex.get(index)
-				let tags: Array<{ id: string; name: string }> = []
-				if (tagInfo?.result?.phrase_tags?.length) {
-					tags = tagInfo.result.phrase_tags
-						.map((pt) => {
-							const tag = langTagsCollection.get(pt.tag_id)
-							return tag ? { id: tag.id, name: tag.name } : null
-						})
-						.filter((t): t is { id: string; name: string } => t !== null)
-				}
-
-				return PhraseSchema.parse({ ...p, tags })
-			})
+			const phrasesToInsert = rpcResult.phrases.map((p) =>
+				PhraseSchema.parse(p)
+			)
 
 			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
 			rpcResult.translations.forEach((t) =>

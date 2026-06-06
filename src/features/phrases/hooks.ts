@@ -10,7 +10,7 @@ import type {
 } from './schemas'
 import {
 	phrasesFull,
-	phrasesWithTranslations,
+	phrasesComposed,
 	usePhrasePlaylists,
 	usePhraseComments,
 	type PhraseProvenanceItem,
@@ -41,7 +41,7 @@ export const useLangPhrasesRaw = (
 	useLiveQuery(
 		(q) =>
 			q
-				.from({ phrase: phrasesWithTranslations })
+				.from({ phrase: phrasesComposed })
 				.where(({ phrase }) => eq(phrase.lang, lang)),
 		[lang]
 	)
@@ -55,7 +55,7 @@ export const useOnePhrase = (
 			!pid
 				? undefined
 				: q
-						.from({ phrase: phrasesWithTranslations })
+						.from({ phrase: phrasesComposed })
 						.where(({ phrase }) => eq(phrase.id, pid))
 						.findOne(),
 		[pid]

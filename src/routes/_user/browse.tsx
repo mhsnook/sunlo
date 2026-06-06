@@ -6,6 +6,7 @@ import {
 } from '@/features/languages/collections'
 import {
 	phrasesCollection,
+	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
 import { phraseRequestsCollection } from '@/features/requests/collections'
@@ -35,6 +36,7 @@ export const Route = createFileRoute('/_user/browse')({
 			phrasePlaylistsCollection.preload(),
 			phrasesCollection.preload(),
 			phraseTranslationsCollection.preload(),
+			phraseTagLinksCollection.preload(),
 			playlistPhraseLinksCollection.preload(),
 		])
 	},
