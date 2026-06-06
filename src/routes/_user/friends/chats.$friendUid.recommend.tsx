@@ -16,7 +16,7 @@ import {
 import type { TablesInsert } from '@/types/supabase'
 import supabase from '@/lib/supabase-client'
 import { useUserId } from '@/lib/use-auth'
-import { phrasesWithTranslations } from '@/features/phrases/live'
+import { phrasesComposed } from '@/features/phrases/live'
 import { phraseRequestsActive } from '@/features/requests/live'
 import { phrasePlaylistsActive } from '@/features/playlists/live'
 
@@ -91,7 +91,7 @@ function RouteComponent() {
 	// path returns nothing without a real query, so this preserves the
 	// "filter by lang/type, see all in-lang items" UX.
 	const { data: allPhrases } = useLiveQuery((q) =>
-		q.from({ phrase: phrasesWithTranslations })
+		q.from({ phrase: phrasesComposed })
 	)
 	const { data: allRequests } = useLiveQuery((q) =>
 		q.from({ req: phraseRequestsActive })

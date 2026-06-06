@@ -20,9 +20,12 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { langTagsCollection } from '@/features/languages/collections'
-import { phrasesCollection } from '@/features/phrases/collections'
-import { LangTagSchema, LangTagType } from '@/features/languages/schemas'
-import { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import { phraseTagLinksCollection } from '@/features/phrases/collections'
+import { LangTagSchema } from '@/features/languages/schemas'
+import {
+	PhraseFullFilteredType,
+	PhraseTagLinkSchema,
+} from '@/features/phrases/schemas'
 import { Tables } from '@/types/supabase'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
@@ -68,15 +71,10 @@ export function AddTags({
 				})
 			}
 			if (data?.phrase_tags.length) {
-				const langTags = data.phrase_tags
-					.map((t) => langTagsCollection.get(t.tag_id))
-					.filter(Boolean) as LangTagType[]
-				phrasesCollection.utils.writeUpdate({
-					id: phrase.id,
-					tags: [
-						...(phrase.tags ?? []),
-						...(langTags.map((t) => ({ id: t.id, name: t.name })) ?? []),
-					],
+				data.phrase_tags.forEach((link) => {
+					phraseTagLinksCollection.utils.writeInsert(
+						PhraseTagLinkSchema.parse(link)
+					)
 				})
 			}
 			setOpen(false)
@@ -139,7 +137,6 @@ export function AddTags({
 											key={tag.id}
 											tag={tag}
 											phraseId={phrase.id}
-											phraseTags={phrase.tags ?? []}
 										/>
 									) : (
 										<Badge key={tag.id} variant="secondary">
@@ -206,11 +203,9 @@ export function AddTags({
 function RemovableTagBadge({
 	tag,
 	phraseId,
-	phraseTags,
 }: {
 	tag: { id: string; name: string }
 	phraseId: string
-	phraseTags: Array<{ id: string; name: string }>
 }) {
 	const removeTag = useMutation({
 		mutationFn: async () => {
@@ -222,10 +217,7 @@ function RemovableTagBadge({
 				.throwOnError()
 		},
 		onSuccess: () => {
-			phrasesCollection.utils.writeUpdate({
-				id: phraseId,
-				tags: phraseTags.filter((t) => t.id !== tag.id),
-			})
+			phraseTagLinksCollection.utils.writeDelete(`${phraseId}--${tag.id}`)
 			toastSuccess(`Tag "${tag.name}" removed`)
 		},
 		onError: (error) => {

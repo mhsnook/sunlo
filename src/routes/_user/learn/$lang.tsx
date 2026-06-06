@@ -7,6 +7,7 @@ import { todayString } from '@/lib/utils'
 import { langTagsCollection } from '@/features/languages/collections'
 import {
 	phrasesCollection,
+	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
@@ -62,6 +63,7 @@ export const Route = createFileRoute('/_user/learn/$lang')({
 			langTagsCollection.preload(),
 			phrasesCollection.preload(),
 			phraseTranslationsCollection.preload(),
+			phraseTagLinksCollection.preload(),
 			publicProfilesCollection.preload(),
 			phrasePlaylistsCollection.preload(),
 			playlistPhraseLinksCollection.preload(),

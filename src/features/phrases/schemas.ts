@@ -36,10 +36,10 @@ export const TranslationSchema = z.object({
 
 export type TranslationType = z.infer<typeof TranslationSchema>
 
-// PhraseSchema — the row shape held by `phrasesCollection`. Mirrors what
-// `phrase_meta` returns. Translations live in their own collection now
-// (`phraseTranslationsCollection`) and are composed onto rows by the live
-// queries in `live.ts`.
+// PhraseSchema — the row shape held by `phrasesCollection`. Tracks the
+// `phrase` table directly (minus translations, tags, and stats which are
+// composed on by the live queries in `live.ts` or — for stats today —
+// still ride from the `phrase_meta` view).
 export const PhraseSchema = z.object({
 	id: z.string().uuid(),
 	created_at: z.string(),
@@ -51,22 +51,35 @@ export const PhraseSchema = z.object({
 	avg_difficulty: z.number().nullable().default(null),
 	avg_stability: z.number().nullable().default(null),
 	count_learners: z.number().nullable().default(0),
-	tags: z.preprocess((val) => val ?? [], z.array(PhraseTagSchema)),
 })
 
 export type PhraseType = z.infer<typeof PhraseSchema>
 
-// PhraseFullType — derived shape produced by `phrasesWithTranslations` /
+// PhraseTagLinkSchema — the row shape of `phrase_tag`, the join table
+// between phrase and tag. Composite primary key (phrase_id, tag_id).
+export const PhraseTagLinkSchema = z.object({
+	phrase_id: z.string().uuid(),
+	tag_id: z.string().uuid(),
+	created_at: z.string(),
+	added_by: z.string().uuid(),
+})
+
+export type PhraseTagLinkType = z.infer<typeof PhraseTagLinkSchema>
+
+// PhraseFullType — derived shape produced by `phrasesComposed` /
 // `phrasesFull` live queries. `translations` is aggregated from
-// `phraseTranslationsCollection` via toArray() at query time.
+// `phraseTranslationsCollection` via toArray() at query time; `tags` is
+// aggregated from `phraseTagLinksCollection` joined with langTags.
 export type PhraseFullType = PhraseType & {
 	translations: Array<TranslationType>
+	tags: Array<{ id: string; name: string }>
 }
 
 // Parser for places (RPC responses, write paths) that need to validate a
 // composed phrase+translations payload.
 export const PhraseFullSchema = PhraseSchema.extend({
 	translations: z.preprocess((val) => val ?? [], z.array(TranslationSchema)),
+	tags: z.preprocess((val) => val ?? [], z.array(PhraseTagSchema)),
 })
 
 export type PhraseFullFullType = PhraseFullType & {

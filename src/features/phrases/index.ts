@@ -5,6 +5,8 @@
 export {
 	PhraseSchema,
 	type PhraseType,
+	PhraseTagLinkSchema,
+	type PhraseTagLinkType,
 	PhraseFullSchema,
 	type PhraseFullType,
 	type PhraseFullFullType,
@@ -17,12 +19,16 @@ export {
 } from './schemas'
 
 // Collections
-export { phrasesCollection, phraseTranslationsCollection } from './collections'
+export {
+	phrasesCollection,
+	phraseTranslationsCollection,
+	phraseTagLinksCollection,
+} from './collections'
 
 // Live collections
 export {
 	phrasesFull,
-	phrasesWithTranslations,
+	phrasesComposed,
 	usePhrasePlaylists,
 	usePhraseComments,
 	useRelatedCards,
