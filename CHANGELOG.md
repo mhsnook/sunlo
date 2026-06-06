@@ -2,7 +2,7 @@
 
 ## v0.28 - LanguagePicker, Sharing Redesign, Translations & Tags Split
 
-_5 June, 2026_
+_6 June, 2026_
 
 ### Features
 
@@ -17,10 +17,15 @@ _5 June, 2026_
 
 ### Refactors
 
-- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read. Adding or editing one translation now writes a single row to its own collection instead of splicing the denormalized array on the phrase.
-- **Phrase tags split off the phrase row** in the same shape: new `phraseTagLinksCollection` reads the `phrase_tag` join table, and the live queries compose `tags` onto each phrase via `toArray()` + an inner join to `langTagsCollection`. Adding or removing a tag writes a single link row to its own collection instead of splicing the denormalized JSON array on the phrase. The `phrase_meta` view's tag aggregation CTE is now unused by the client — only `phrase_stats` remains on the row.
+- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read.
+- **Phrase tags split off the phrase row** in the same shape: new `phraseTagLinksCollection` reads the `phrase_tag` join table, and the live queries compose `tags` onto each phrase via `toArray()` + an inner join to `langTagsCollection`. After this, `phrase_meta` is just a slim phrase projection plus `phrase_stats` columns — both of those will get the same treatment in v0.29.
+- **Direct collection actions replace the phrase-creation RPCs.** Adding a phrase + translation (with or without cards), bulk-adding many phrases, adding tags, removing tags, editing or archiving a translation, and editing phrase text now all go through `collection.insert / update / delete` (with `onInsert / onUpdate / onDelete` handlers on the collection itself) or `createOptimisticAction` for multi-collection flows. No more `useMutation` + manual `writeInsert` in `onSuccess`, no more misleading "Failed to X" toasts when a post-success local sync throws. UX feedback (toasts) hangs off `tx.isPersisted.promise`, so an optimistic write that rolls back surfaces a real error instead of a spurious success.
 - **`UserAvatar`** extracted as a general component.
 - Drop the full-table refetch on new request creation; preload `messagesCollection` before the write.
+
+### Migrations
+
+- `20260606120000_drop_phrase_creation_rpcs.sql` — drops `add_phrase_translation_card`, `add_tags_to_phrase`, and `bulk_add_phrases`, plus the two composite types (`phrase_with_translations_input`, `translation_input`) that only existed to shape input to the bulk RPC. Everything they did is now driven from the client through TanStack DB collections.
 
 ### Build / Dependencies
 

@@ -1,6 +1,5 @@
 import { CSSProperties, useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { useDebounce } from '@/hooks/use-debounce'
@@ -22,12 +21,15 @@ import languages from '@/lib/languages'
 import supabase from '@/lib/supabase-client'
 import TranslationLanguageField from '@/components/fields/translation-language-field'
 import { buttonVariants } from '@/components/ui/button'
-import { PhraseSchema, TranslationSchema } from '@/features/phrases/schemas'
-import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
+import { DeckMetaSchema } from '@/features/deck/schemas'
 import {
 	phrasesCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
+import {
+	buildCardSet,
+	createPhraseWithTranslation,
+} from '@/features/phrases/mutations'
 import { cardsCollection, decksCollection } from '@/features/deck/collections'
 import { useInvalidateFeed } from '@/features/feed/hooks'
 import { WithPhrase } from '@/components/with-phrase'
@@ -103,75 +105,39 @@ function AddPhraseTab() {
 	const searchPhrase = text || ''
 
 	const invalidateFeed = useInvalidateFeed()
-	const addPhraseMutation = useMutation({
-		mutationFn: async (variables: AddPhraseFormValues) => {
-			if (!userId) {
-				console.log(`Auth guard didn't work in $lang.phrases.new`)
-				throw new Error(
-					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
-				)
-			}
-			const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
 
-			let newDeck: Tables<'user_deck'> | null = null
-			if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
-				if (hasArchivedDeck) {
-					const { data } = await supabase
-						.from('user_deck')
-						.update({ archived: false })
-						.eq('lang', lang)
-						.eq('uid', userId)
-						.select()
-						.maybeSingle()
-						.throwOnError()
-					newDeck = data
-				} else if (noDeck) {
-					const { data } = await supabase
-						.from('user_deck')
-						.insert({ lang })
-						.select()
-						.maybeSingle()
-						.throwOnError()
-					newDeck = data
-				}
-			}
-
-			const { data } = await supabase
-				.rpc('add_phrase_translation_card', {
-					phrase_lang: lang,
-					phrase_text: variables.phrase_text,
-					translation_lang: variables.translation_lang,
-					translation_text: variables.translation_text,
-					create_card: shouldCreateCard,
-					phrase_only_reverse: variables.only_reverse,
-				})
-				.throwOnError()
-
-			return {
-				rpcResult: data as {
-					phrase: Tables<'phrase'>
-					translation: Tables<'phrase_translation'>
-					card: Tables<'user_card'> | null
-					card_reverse: Tables<'user_card'> | null
-				},
-				newDeck,
-				createdCard: shouldCreateCard,
-			}
-		},
-		onSuccess: ({ rpcResult, newDeck, createdCard }) => {
-			if (!rpcResult)
-				throw new Error('No data returned from add_phrase_translation_card')
-
-			phrasesCollection.utils.writeInsert(PhraseSchema.parse(rpcResult.phrase))
-			phraseTranslationsCollection.utils.writeInsert(
-				TranslationSchema.parse(rpcResult.translation)
+	const submitPhrase = async (variables: AddPhraseFormValues) => {
+		if (!userId) {
+			console.log(`Auth guard didn't work in $lang.phrases.new`)
+			toastError(
+				"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
 			)
-			if (rpcResult.card)
-				phrasesCollection.utils.writeUpdate({
-					id: rpcResult.phrase.id,
-					count_learners: 1,
-				})
+			return
+		}
+		const shouldCreateCard = hasActiveDeck || shouldCreateOrReactivateDeck
 
+		// Deck creation/reactivation runs first — cards need a deck row.
+		let newDeck: Tables<'user_deck'> | null = null
+		if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+			if (hasArchivedDeck) {
+				const { data } = await supabase
+					.from('user_deck')
+					.update({ archived: false })
+					.eq('lang', lang)
+					.eq('uid', userId)
+					.select()
+					.maybeSingle()
+					.throwOnError()
+				newDeck = data
+			} else if (noDeck) {
+				const { data } = await supabase
+					.from('user_deck')
+					.insert({ lang })
+					.select()
+					.maybeSingle()
+					.throwOnError()
+				newDeck = data
+			}
 			if (newDeck) {
 				const deckWithTheme = {
 					...newDeck,
@@ -184,51 +150,64 @@ function AddPhraseTab() {
 					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
 				}
 			}
+		}
 
-			if (createdCard && rpcResult.card) {
-				cardsCollection.utils.writeInsert(CardMetaSchema.parse(rpcResult.card))
-				if (rpcResult.card_reverse) {
-					cardsCollection.utils.writeInsert(
-						CardMetaSchema.parse(rpcResult.card_reverse)
-					)
-				}
-			}
+		await Promise.all([
+			phrasesCollection.preload(),
+			phraseTranslationsCollection.preload(),
+			cardsCollection.preload(),
+		])
 
-			invalidateFeed(lang)
-			console.log(`Success:`, rpcResult)
-			setNewPhrases((prev) => [rpcResult.phrase.id, ...prev])
-			form.reset({
-				phrase_text: '',
-				translation_text: '',
-				translation_lang:
-					rpcResult.translation.lang ?? preferredTranslationLang,
-				only_reverse: false,
-			})
+		const phraseId = crypto.randomUUID()
+		const translationId = crypto.randomUUID()
+		const cards = shouldCreateCard ? buildCardSet(variables.only_reverse) : []
 
-			if (newDeck && createdCard) {
-				const deckAction = hasArchivedDeck
-					? `re-activated your ${languages[lang]} deck`
-					: `started learning ${languages[lang]}`
-				toastSuccess(
-					`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
-				)
-			} else if (createdCard) {
-				toastSuccess(
-					'New phrase has been added to the public library and will appear in your next review'
-				)
-			} else {
-				toastSuccess(
-					'Phrase has been added to the public library (not added to your deck)'
-				)
-			}
-		},
-		onError: (error) => {
-			toastError(
-				`There was an error submitting this new phrase: ${error.message}`
+		const tx = createPhraseWithTranslation({
+			phraseId,
+			translationId,
+			lang,
+			text: variables.phrase_text,
+			onlyReverse: variables.only_reverse,
+			translationLang: variables.translation_lang,
+			translationText: variables.translation_text,
+			uid: userId,
+			cards,
+		})
+		try {
+			await tx.isPersisted.promise
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err)
+			toastError(`There was an error submitting this new phrase: ${message}`)
+			console.log(`Error:`, err)
+			return
+		}
+
+		invalidateFeed(lang)
+		setNewPhrases((prev) => [phraseId, ...prev])
+		form.reset({
+			phrase_text: '',
+			translation_text: '',
+			translation_lang: variables.translation_lang || preferredTranslationLang,
+			only_reverse: false,
+		})
+
+		if (newDeck && shouldCreateCard) {
+			const deckAction = hasArchivedDeck
+				? `re-activated your ${languages[lang]} deck`
+				: `started learning ${languages[lang]}`
+			toastSuccess(
+				`Phrase added to the library! You've ${deckAction} and the phrase will appear in your next review.`
 			)
-			console.log(`Error:`, error)
-		},
-	})
+		} else if (shouldCreateCard) {
+			toastSuccess(
+				'New phrase has been added to the public library and will appear in your next review'
+			)
+		} else {
+			toastSuccess(
+				'Phrase has been added to the public library (not added to your deck)'
+			)
+		}
+	}
 
 	const schema = useMemo(() => createAddPhraseSchema(lang), [lang])
 	const form = useAppForm({
@@ -240,7 +219,7 @@ function AddPhraseTab() {
 		},
 		validators: { onChange: schema },
 		onSubmit: async ({ value }) => {
-			await addPhraseMutation.mutateAsync(value)
+			await submitPhrase(value)
 		},
 	})
 
