@@ -1943,32 +1943,7 @@ export type Database = {
 			}
 		}
 		Functions: {
-			add_phrase_translation_card: {
-				Args: {
-					create_card?: boolean
-					phrase_lang: string
-					phrase_only_reverse?: boolean
-					phrase_text: string
-					phrase_text_script?: string
-					translation_lang: string
-					translation_text: string
-					translation_text_script?: string
-				}
-				Returns: Json
-			}
-			add_tags_to_phrase: {
-				Args: { p_lang: string; p_phrase_id: string; p_tags: string[] }
-				Returns: Json
-			}
 			are_friends: { Args: { uid1: string; uid2: string }; Returns: boolean }
-			bulk_add_phrases: {
-				Args: {
-					p_lang: string
-					p_phrases: Database['public']['CompositeTypes']['phrase_with_translations_input'][]
-					p_user_id: string
-				}
-				Returns: Json
-			}
 			create_comment_with_phrases: {
 				Args: {
 					p_content: string

@@ -40,5 +40,22 @@ export const langTagsCollection = createCollection(
 		},
 		schema: LangTagSchema,
 		queryClient,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const r = m.modified
+					await supabase
+						.from('tag')
+						.insert({
+							id: r.id,
+							name: r.name,
+							lang: r.lang,
+							added_by: r.added_by,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )
