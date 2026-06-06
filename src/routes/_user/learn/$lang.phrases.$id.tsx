@@ -3,6 +3,7 @@ import { BigPhraseCard } from '@/components/cards/big-phrase-card'
 import { CSSProperties } from 'react'
 import {
 	phrasesCollection,
+	phraseTagLinksCollection,
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
 import { cardsCollection } from '@/features/deck/collections'
@@ -17,6 +18,7 @@ export const Route = createFileRoute('/_user/learn/$lang/phrases/$id')({
 		const preloads: Promise<unknown>[] = [
 			phrasesCollection.preload(),
 			phraseTranslationsCollection.preload(),
+			phraseTagLinksCollection.preload(),
 			publicProfilesCollection.preload(),
 		]
 		if (context.auth.isAuth) {

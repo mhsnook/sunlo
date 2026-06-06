@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.28 - LanguagePicker, Sharing Redesign, Translations Split
+## v0.28 - LanguagePicker, Sharing Redesign, Translations & Tags Split
 
 _5 June, 2026_
 
@@ -17,7 +17,8 @@ _5 June, 2026_
 
 ### Refactors
 
-- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read. Adding or editing one translation now writes a single row to its own collection instead of splicing the denormalized array on the phrase. First step in dismantling `phrase_meta`; tags and stats can follow on their own schedule.
+- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read. Adding or editing one translation now writes a single row to its own collection instead of splicing the denormalized array on the phrase.
+- **Phrase tags split off the phrase row** in the same shape: new `phraseTagLinksCollection` reads the `phrase_tag` join table, and the live queries compose `tags` onto each phrase via `toArray()` + an inner join to `langTagsCollection`. Adding or removing a tag writes a single link row to its own collection instead of splicing the denormalized JSON array on the phrase. The `phrase_meta` view's tag aggregation CTE is now unused by the client — only `phrase_stats` remains on the row.
 - **`UserAvatar`** extracted as a general component.
 - Drop the full-table refetch on new request creation; preload `messagesCollection` before the write.
 

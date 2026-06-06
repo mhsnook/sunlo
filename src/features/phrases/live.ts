@@ -9,7 +9,12 @@ import {
 import { useLiveQuery } from '@tanstack/react-db'
 
 import type { UseLiveQueryResult, uuid } from '@/types/main'
-import { phrasesCollection, phraseTranslationsCollection } from './collections'
+import {
+	phrasesCollection,
+	phraseTagLinksCollection,
+	phraseTranslationsCollection,
+} from './collections'
+import { langTagsCollection } from '@/features/languages/collections'
 import { publicProfilesCollection } from '@/features/profile/collections'
 import {
 	playlistPhraseLinksCollection,
@@ -21,12 +26,12 @@ import {
 	phraseRequestsCollection,
 } from '@/features/requests/collections'
 
-// Phrase row with its translations aggregated via toArray(). Used by
+// Phrase row with translations + tags aggregated via toArray(). Used by
 // `useOnePhrase` / `useLangPhrasesRaw` and as the base for `phrasesFull`.
-// Keeping it as a derived collection means the aggregation runs once and
-// is reused across consumers.
-export const phrasesWithTranslations = createLiveQueryCollection({
-	id: 'phrases_with_translations',
+// Keeping it as a derived collection means the aggregations run once and
+// are reused across consumers.
+export const phrasesComposed = createLiveQueryCollection({
+	id: 'phrases_composed',
 	query: (q) =>
 		q.from({ phrase: phrasesCollection }).select(({ phrase }) => ({
 			...phrase,
@@ -36,16 +41,27 @@ export const phrasesWithTranslations = createLiveQueryCollection({
 					.where(({ t }) => eq(t.phrase_id, phrase.id))
 					.select(({ t }) => t)
 			),
+			tags: toArray(
+				q
+					.from({ link: phraseTagLinksCollection })
+					.join(
+						{ tag: langTagsCollection },
+						({ link, tag }) => eq(link.tag_id, tag.id),
+						'inner'
+					)
+					.where(({ link }) => eq(link.phrase_id, phrase.id))
+					.select(({ tag }) => ({ id: tag.id, name: tag.name }))
+			),
 		})),
 })
 
-phrasesWithTranslations.createIndex((row) => row.id, { indexType: BasicIndex })
+phrasesComposed.createIndex((row) => row.id, { indexType: BasicIndex })
 
 export const phrasesFull = createLiveQueryCollection({
 	id: 'phrases_full',
 	query: (q) =>
 		q
-			.from({ phrase: phrasesWithTranslations })
+			.from({ phrase: phrasesComposed })
 			.join(
 				{ profile: publicProfilesCollection },
 				({ phrase, profile }) => eq(phrase.added_by, profile.uid),
@@ -53,14 +69,16 @@ export const phrasesFull = createLiveQueryCollection({
 			)
 			.fn.select(({ phrase, profile }) => {
 				const translations = phrase.translations ?? []
+				const tags = phrase.tags ?? []
 				return {
 					...phrase,
 					translations,
+					tags,
 					profile,
 					searchableText: [
 						phrase.text,
 						...translations.map((t) => t.text),
-						...(phrase.tags ?? []).map((t) => t.name),
+						...tags.map((t) => t.name),
 					].join(', '),
 				}
 			}),
