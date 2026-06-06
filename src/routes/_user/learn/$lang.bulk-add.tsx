@@ -1,7 +1,6 @@
 import { type ReactNode, CSSProperties, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
-import { toastError, toastNeutral, toastSuccess } from '@/components/ui/sonner'
+import { toastError, toastSuccess } from '@/components/ui/sonner'
 import { should } from '@scenetest/checks-react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
@@ -18,27 +17,17 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
-import { ShowAndLogError } from '@/components/errors'
 import languages from '@/lib/languages'
 import { usePreferredTranslationLang } from '@/features/deck/hooks'
 import { Separator } from '@/components/ui/separator'
 import { LanguagePicker } from '@/components/fields/language-picker'
 import { CardResultSimple } from '@/components/cards/card-result-simple'
-import {
-	PhraseSchema,
-	PhraseTagLinkSchema,
-	TranslationSchema,
-} from '@/features/phrases/schemas'
-import { CardMetaSchema, DeckMetaSchema } from '@/features/deck/schemas'
+import { DeckMetaSchema } from '@/features/deck/schemas'
 import { directionsForPhrase } from '@/features/deck/card-directions'
-import { LangTagSchema } from '@/features/languages/schemas'
 import { langTagsCollection } from '@/features/languages/collections'
-import {
-	phrasesCollection,
-	phraseTagLinksCollection,
-	phraseTranslationsCollection,
-} from '@/features/phrases/collections'
-import { cardsCollection, decksCollection } from '@/features/deck/collections'
+import { phrasesCollection } from '@/features/phrases/collections'
+import { bulkAddPhrases } from '@/features/phrases/mutations'
+import { decksCollection } from '@/features/deck/collections'
 import { Tables } from '@/types/supabase'
 import { uuid } from '@/types/main'
 import { WithPhrase } from '@/components/with-phrase'
@@ -58,11 +47,6 @@ import {
 } from '@/components/ui/dialog'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { useLanguageTags } from '@/features/languages/hooks'
-
-type BulkAddPhrasesResponse = {
-	phrases: Array<Tables<'phrase'>>
-	translations: Array<Tables<'phrase_translation'>>
-}
 
 type StagedPhrase = {
 	id: string
@@ -114,6 +98,7 @@ function BulkAddPhrasesPage() {
 	const [shouldCreateOrReactivateDeck, setShouldCreateOrReactivateDeck] =
 		useState(true)
 	const [shouldAddToMyDeck, setShouldAddToMyDeck] = useState(true)
+	const [isSubmitting, setIsSubmitting] = useState(false)
 
 	const invalidateFeed = useInvalidateFeed()
 
@@ -156,17 +141,33 @@ function BulkAddPhrasesPage() {
 		setStagedPhrases((prev) => prev.filter((p) => p.id !== id))
 	}
 
-	const submitMutation = useMutation({
-		mutationFn: async (phrasesToSubmit: Array<StagedPhrase>) => {
-			if (!userId) {
-				throw new Error(
-					"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
-				)
-			}
+	const handleSubmit = async () => {
+		if (stagedPhrases.length === 0 || isSubmitting) return
+		if (!userId) {
+			toastError(
+				"You must be logged in to add cards; please find the '/login' link in the sidebar, and use it."
+			)
+			return
+		}
+		setIsSubmitting(true)
+		try {
+			await runSubmit()
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
 
-			// Handle deck creation/reactivation if needed
-			let newDeck: Tables<'user_deck'> | null = null
-			if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+	const runSubmit = async () => {
+		if (!userId) return
+
+		const shouldCreateCards =
+			(hasActiveDeck || (shouldCreateOrReactivateDeck && showDeckCheckbox)) &&
+			shouldAddToMyDeck
+
+		// Deck creation/reactivation runs first — cards FK into a deck row.
+		let newDeck: Tables<'user_deck'> | null = null
+		if (showDeckCheckbox && shouldCreateOrReactivateDeck) {
+			try {
 				if (hasArchivedDeck) {
 					const { data } = await supabase
 						.from('user_deck')
@@ -186,96 +187,12 @@ function BulkAddPhrasesPage() {
 						.throwOnError()
 					newDeck = data
 				}
-			}
-
-			const p_phrases = phrasesToSubmit.map((p) => ({
-				phrase_text: p.phrase_text,
-				translations: p.translations,
-				only_reverse: false,
-			}))
-
-			const { data, error } = await supabase.rpc('bulk_add_phrases', {
-				p_lang: lang,
-				p_phrases,
-				p_user_id: userId,
-			})
-
-			if (error) throw error
-
-			const rpcResult = data as BulkAddPhrasesResponse | null
-
-			// Create cards if appropriate
-			const shouldCreateCards =
-				(hasActiveDeck || (shouldCreateOrReactivateDeck && showDeckCheckbox)) &&
-				shouldAddToMyDeck
-
-			let cards: Array<Tables<'user_card'>> = []
-			if (shouldCreateCards && rpcResult?.phrases?.length) {
-				const cardsToInsert = rpcResult.phrases.flatMap((p) =>
-					directionsForPhrase(p.only_reverse).map((direction) => ({
-						phrase_id: p.id,
-						lang,
-						uid: userId,
-						status: 'active' as const,
-						direction,
-					}))
-				)
-				const { data: cardData } = await supabase
-					.from('user_card')
-					.insert(cardsToInsert)
-					.select()
-					.throwOnError()
-				cards = cardData ?? []
-			}
-
-			// Add tags for phrases that have them
-			type AddTagsReturnValues = {
-				tags: Array<Tables<'tag'>>
-				phrase_tags: Array<Tables<'phrase_tag'>>
-			}
-			const tagsByPhraseIndex = new Map<
-				number,
-				{ result: AddTagsReturnValues | null; tagNames: Array<string> }
-			>()
-
-			if (rpcResult?.phrases?.length) {
-				const phrasesWithTags = rpcResult.phrases
-					.map((phrase, index) => ({
-						phrase,
-						index,
-						tags: phrasesToSubmit[index]?.tags ?? [],
-					}))
-					.filter(({ tags }) => tags.length > 0)
-
-				const tagResults = await Promise.all(
-					phrasesWithTags.map(async ({ phrase, index, tags }) => {
-						const { data: tagData } = await supabase.rpc('add_tags_to_phrase', {
-							p_phrase_id: phrase.id,
-							p_lang: lang,
-							p_tags: tags,
-						})
-						return {
-							index,
-							result: tagData as AddTagsReturnValues | null,
-							tagNames: tags,
-						}
-					})
-				)
-
-				for (const { index, result, tagNames } of tagResults) {
-					tagsByPhraseIndex.set(index, { result, tagNames })
-				}
-			}
-
-			return { rpcResult, newDeck, cards, tagsByPhraseIndex }
-		},
-		onSuccess: ({ rpcResult, newDeck, cards, tagsByPhraseIndex }) => {
-			if (!rpcResult) {
-				toastNeutral('No data came back from the database :-/')
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err)
+				toastError(`Error setting up deck: ${message}`)
+				console.log('Error', err)
 				return
 			}
-
-			// Update deck collection
 			if (newDeck) {
 				const deckWithTheme = {
 					...newDeck,
@@ -288,78 +205,91 @@ function BulkAddPhrasesPage() {
 					decksCollection.utils.writeInsert(DeckMetaSchema.parse(deckWithTheme))
 				}
 			}
+		}
 
-			// Update tag collection with newly created tags + write phrase_tag links
-			for (const [, { result }] of tagsByPhraseIndex) {
-				if (result?.tags?.length) {
-					result.tags.forEach((t) =>
-						langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
-					)
-				}
-				if (result?.phrase_tags?.length) {
-					result.phrase_tags.forEach((link) =>
-						phraseTagLinksCollection.utils.writeInsert(
-							PhraseTagLinkSchema.parse(link)
-						)
-					)
-				}
+		// Resolve tag IDs across the whole batch, so a name that's new and
+		// appears on multiple phrases gets one shared uuid (and one tag row).
+		const tagIdByName = new Map<string, { id: uuid; isNew: boolean }>()
+		for (const staged of stagedPhrases) {
+			for (const name of staged.tags) {
+				if (tagIdByName.has(name)) continue
+				const existing = langTagsCollection.toArray.find(
+					(t) => t.name === name && t.lang === lang
+				)
+				tagIdByName.set(name, {
+					id: existing?.id ?? crypto.randomUUID(),
+					isNew: !existing,
+				})
 			}
+		}
+		const newTags = [...tagIdByName.entries()]
+			.filter(([, v]) => v.isNew)
+			.map(([name, v]) => ({ id: v.id, name }))
 
-			const phrasesToInsert = rpcResult.phrases.map((p) =>
-				PhraseSchema.parse(p)
-			)
-
-			phrasesToInsert.forEach((p) => phrasesCollection.utils.writeInsert(p))
-			rpcResult.translations.forEach((t) =>
-				phraseTranslationsCollection.utils.writeInsert(
-					TranslationSchema.parse(t)
-				)
-			)
-
-			should(
-				'bulk add wrote every submitted phrase into phrasesCollection',
-				phrasesToInsert.every((p) => phrasesCollection.has(p.id)),
-				{ count: phrasesToInsert.length }
-			)
-
-			if (cards.length) {
-				cards.forEach((card) =>
-					cardsCollection.utils.writeInsert(CardMetaSchema.parse(card))
-				)
+		const actionPhrases = stagedPhrases.map((staged) => {
+			const phraseId = crypto.randomUUID()
+			const onlyReverse = false
+			const cards = shouldCreateCards
+				? directionsForPhrase(onlyReverse).map((direction) => ({
+						id: crypto.randomUUID(),
+						direction: direction as 'forward' | 'reverse',
+					}))
+				: []
+			return {
+				phraseId,
+				text: staged.phrase_text,
+				onlyReverse,
+				translations: staged.translations.map((t) => ({
+					id: crypto.randomUUID(),
+					lang: t.lang,
+					text: t.text,
+				})),
+				cards,
+				tagIds: staged.tags.map((name) => tagIdByName.get(name)!.id),
 			}
+		})
 
-			invalidateFeed(lang)
-			setSuccessfullyAddedPhrases((prev) => [
-				...phrasesToInsert.map((p) => p.id),
-				...prev,
-			])
-			setStagedPhrases([])
+		const tx = bulkAddPhrases({
+			lang,
+			uid: userId,
+			newTags,
+			phrases: actionPhrases,
+		})
+		try {
+			await tx.isPersisted.promise
+		} catch (err) {
+			const message = err instanceof Error ? err.message : String(err)
+			toastError(`Error adding phrases: ${message}`)
+			console.log('Error', err)
+			return
+		}
 
-			const cardsMessage = cards.length
-				? ' They will appear in your next review.'
-				: ''
-			if (newDeck) {
-				const deckAction = hasArchivedDeck
-					? `re-activated your ${languages[lang]} deck`
-					: `started learning ${languages[lang]}`
-				toastSuccess(
-					`${rpcResult.phrases.length} phrases added! You've also ${deckAction}.${cardsMessage}`
-				)
-			} else {
-				toastSuccess(
-					`${rpcResult.phrases.length} phrases added successfully!${cardsMessage}`
-				)
-			}
-		},
-		onError: (error) => {
-			toastError(`Error adding phrases: ${error.message}`)
-			console.log('Error', error)
-		},
-	})
+		const phraseIds = actionPhrases.map((p) => p.phraseId)
+		should(
+			'bulk add wrote every submitted phrase into phrasesCollection',
+			phraseIds.every((id) => phrasesCollection.has(id)),
+			{ count: phraseIds.length }
+		)
 
-	const handleSubmit = () => {
-		if (stagedPhrases.length === 0) return
-		submitMutation.mutate(stagedPhrases)
+		invalidateFeed(lang)
+		setSuccessfullyAddedPhrases((prev) => [...phraseIds, ...prev])
+		setStagedPhrases([])
+
+		const cardsMessage = shouldCreateCards
+			? ' They will appear in your next review.'
+			: ''
+		if (newDeck) {
+			const deckAction = hasArchivedDeck
+				? `re-activated your ${languages[lang]} deck`
+				: `started learning ${languages[lang]}`
+			toastSuccess(
+				`${actionPhrases.length} phrases added! You've also ${deckAction}.${cardsMessage}`
+			)
+		} else {
+			toastSuccess(
+				`${actionPhrases.length} phrases added successfully!${cardsMessage}`
+			)
+		}
 	}
 
 	return (
@@ -472,18 +402,14 @@ function BulkAddPhrasesPage() {
 								{/* Submit */}
 								<Button
 									className="w-full"
-									disabled={submitMutation.isPending}
-									onClick={handleSubmit}
+									disabled={isSubmitting}
+									onClick={() => void handleSubmit()}
 									data-testid="submit-staged-phrases"
 								>
-									{submitMutation.isPending
+									{isSubmitting
 										? 'Submitting...'
 										: `Submit ${stagedPhrases.length} Phrase${stagedPhrases.length === 1 ? '' : 's'}`}
 								</Button>
-								<ShowAndLogError
-									error={submitMutation.error}
-									text="There was an error submitting your phrases"
-								/>
 							</div>
 						) : (
 							<div

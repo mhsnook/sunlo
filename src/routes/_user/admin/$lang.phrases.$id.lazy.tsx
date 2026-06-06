@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { createLazyFileRoute, Link } from '@tanstack/react-router'
-import { useMutation } from '@tanstack/react-query'
 import {
 	Archive,
 	Brain,
@@ -17,7 +16,6 @@ import type {
 	PhraseFullType,
 	TranslationType,
 } from '@/features/phrases/schemas'
-import { TranslationSchema } from '@/features/phrases/schemas'
 import { Badge, LangBadge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import Callout from '@/components/ui/callout'
@@ -38,7 +36,6 @@ import {
 	phraseTranslationsCollection,
 } from '@/features/phrases/collections'
 import { useAuth } from '@/lib/use-auth'
-import supabase from '@/lib/supabase-client'
 import { ago } from '@/lib/dayjs'
 import languages from '@/lib/languages'
 
@@ -232,35 +229,23 @@ function EditablePhraseText({
 	const [isEditing, setIsEditing] = useState(false)
 	const [editText, setEditText] = useState(phrase.text)
 
-	const updatePhrase = useMutation({
-		mutationFn: async (newText: string) => {
-			const { data } = await supabase
-				.from('phrase')
-				.update({ text: newText })
-				.eq('id', phrase.id)
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to update phrase')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phrasesCollection.utils.writeUpdate({ id: phrase.id, text: data.text })
-			setIsEditing(false)
-			toastSuccess('Phrase text updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update phrase text')
-			console.error(error)
-		},
-	})
-
 	const handleSave = () => {
 		const trimmed = editText.trim()
-		if (trimmed && trimmed !== phrase.text) {
-			updatePhrase.mutate(trimmed)
-		} else {
+		if (!trimmed || trimmed === phrase.text) {
 			setIsEditing(false)
+			return
 		}
+		const tx = phrasesCollection.update(phrase.id, (draft) => {
+			draft.text = trimmed
+		})
+		setIsEditing(false)
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Phrase text updated'),
+			(err: Error) => {
+				toastError('Failed to update phrase text')
+				console.log(`Rolled back phrase text update`, err)
+			}
+		)
 	}
 
 	const handleCancel = () => {
@@ -280,12 +265,7 @@ function EditablePhraseText({
 						if (e.key === 'Escape') handleCancel()
 					}}
 				/>
-				<Button
-					size="icon"
-					variant="ghost"
-					onClick={handleSave}
-					disabled={updatePhrase.isPending}
-				>
+				<Button size="icon" variant="ghost" onClick={handleSave}>
 					<Check className="h-4 w-4" />
 				</Button>
 				<Button size="icon" variant="ghost" onClick={handleCancel}>
@@ -322,60 +302,38 @@ function AdminTranslationRow({
 	const [isEditing, setIsEditing] = useState(false)
 	const [editText, setEditText] = useState(translation.text)
 
-	const updateTranslation = useMutation({
-		mutationFn: async (newText: string) => {
-			const { data } = await supabase
-				.from('phrase_translation')
-				.update({ text: newText })
-				.eq('id', translation.id)
-				.throwOnError()
-				.select()
-			if (!data) throw new Error('Failed to update translation')
-			return data[0]
-		},
-		onSuccess: (data) => {
-			phraseTranslationsCollection.utils.writeUpdate(
-				TranslationSchema.parse(data)
-			)
-			setIsEditing(false)
-			toastSuccess('Translation updated')
-		},
-		onError: (error) => {
-			toastError('Failed to update translation')
-			console.error(error)
-		},
-	})
-
-	const toggleArchive = useMutation({
-		mutationFn: async () => {
-			await supabase
-				.from('phrase_translation')
-				.update({ archived: !translation.archived })
-				.eq('id', translation.id)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			phraseTranslationsCollection.utils.writeUpdate({
-				...translation,
-				archived: !translation.archived,
-			})
-			toastSuccess(
-				`Translation ${translation.archived ? 'restored' : 'archived'}`
-			)
-		},
-		onError: (error) => {
-			toastError('Failed to update translation')
-			console.error(error)
-		},
-	})
-
 	const handleSave = () => {
 		const trimmed = editText.trim()
-		if (trimmed && trimmed !== translation.text) {
-			updateTranslation.mutate(trimmed)
-		} else {
+		if (!trimmed || trimmed === translation.text) {
 			setIsEditing(false)
+			return
 		}
+		const tx = phraseTranslationsCollection.update(translation.id, (draft) => {
+			draft.text = trimmed
+		})
+		setIsEditing(false)
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Translation updated'),
+			(err: Error) => {
+				toastError('Failed to update translation')
+				console.log(`Rolled back translation update`, err)
+			}
+		)
+	}
+
+	const toggleArchive = () => {
+		const wasArchived = translation.archived
+		const tx = phraseTranslationsCollection.update(translation.id, (draft) => {
+			draft.archived = !wasArchived
+		})
+		tx.isPersisted.promise.then(
+			() =>
+				toastSuccess(`Translation ${wasArchived ? 'restored' : 'archived'}`),
+			(err: Error) => {
+				toastError('Failed to update translation')
+				console.log(`Rolled back translation archive toggle`, err)
+			}
+		)
 	}
 
 	const handleCancel = () => {
@@ -412,7 +370,6 @@ function AdminTranslationRow({
 							variant="ghost"
 							className="size-7"
 							onClick={handleSave}
-							disabled={updateTranslation.isPending}
 						>
 							<Check className="size-3.5" />
 						</Button>
@@ -443,8 +400,7 @@ function AdminTranslationRow({
 								size="icon"
 								variant="ghost"
 								className="size-7"
-								onClick={() => toggleArchive.mutate()}
-								disabled={toggleArchive.isPending}
+								onClick={toggleArchive}
 							>
 								{translation.archived ? (
 									<Undo2 className="size-3.5" />

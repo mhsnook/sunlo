@@ -11,6 +11,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
+import type { TablesUpdate } from '@/types/supabase'
 
 // Columns we want off the phrase_meta view (slim — no `tags` JSON column;
 // tags live in `phraseTagLinksCollection` and compose on via live query).
@@ -36,6 +37,37 @@ export const phrasesCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const r = m.modified
+					await supabase
+						.from('phrase')
+						.insert({
+							id: r.id,
+							lang: r.lang,
+							text: r.text,
+							only_reverse: r.only_reverse,
+							added_by: r.added_by ?? undefined,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'phrase'>
+					await supabase
+						.from('phrase')
+						.update(changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )
 
@@ -56,6 +88,49 @@ export const phraseTranslationsCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const r = m.modified
+					await supabase
+						.from('phrase_translation')
+						.insert({
+							id: r.id,
+							phrase_id: r.phrase_id,
+							lang: r.lang,
+							text: r.text,
+							added_by: r.added_by ?? undefined,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onUpdate: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const changes = m.changes as TablesUpdate<'phrase_translation'>
+					await supabase
+						.from('phrase_translation')
+						.update(changes)
+						.eq('id', m.original.id)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('phrase_translation')
+						.delete()
+						.eq('id', m.original.id)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )
 
@@ -76,5 +151,34 @@ export const phraseTagLinksCollection = createCollection(
 		queryClient,
 		autoIndex: 'eager',
 		defaultIndexType: BasicIndex,
+		onInsert: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					const r = m.modified
+					await supabase
+						.from('phrase_tag')
+						.insert({
+							phrase_id: r.phrase_id,
+							tag_id: r.tag_id,
+							added_by: r.added_by,
+						})
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
+		onDelete: async ({ transaction }) => {
+			await Promise.all(
+				transaction.mutations.map(async (m) => {
+					await supabase
+						.from('phrase_tag')
+						.delete()
+						.eq('phrase_id', m.original.phrase_id)
+						.eq('tag_id', m.original.tag_id)
+						.throwOnError()
+				})
+			)
+			return { refetch: false }
+		},
 	})
 )

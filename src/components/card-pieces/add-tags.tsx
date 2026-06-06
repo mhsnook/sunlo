@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
 import * as z from 'zod'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
 import supabase from '@/lib/supabase-client'
 import { Tags, X } from 'lucide-react'
+import { createOptimisticAction } from '@tanstack/db'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -21,12 +21,8 @@ import { Separator } from '@/components/ui/separator'
 import { MultiSelectCreatable } from '@/components/fields/multi-select-creatable'
 import { langTagsCollection } from '@/features/languages/collections'
 import { phraseTagLinksCollection } from '@/features/phrases/collections'
-import { LangTagSchema } from '@/features/languages/schemas'
-import {
-	PhraseFullFilteredType,
-	PhraseTagLinkSchema,
-} from '@/features/phrases/schemas'
-import { Tables } from '@/types/supabase'
+import { PhraseFullFilteredType } from '@/features/phrases/schemas'
+import { useUserId } from '@/lib/use-auth'
 import { useAppForm } from '@/components/form'
 import { ErrorList } from '@/components/form/fields/error-list'
 
@@ -35,10 +31,56 @@ const addTagsSchema = z.object({
 })
 
 type AddTagsFormValues = z.infer<typeof addTagsSchema>
-type AddTagsReturnValues = {
-	tags: Tables<'tag'>[]
-	phrase_tags: Tables<'phrase_tag'>[]
+
+// Pre-resolved tag inputs: the caller decides which names map to existing
+// tag IDs and which need a fresh uuid, so both optimistic and persistent
+// stages use the same IDs.
+type AddTagsAction = {
+	phraseId: string
+	lang: string
+	uid: string
+	tags: Array<{ tagId: string; name: string; isNew: boolean }>
 }
+
+const addTagsAction = createOptimisticAction<AddTagsAction>({
+	onMutate: ({ phraseId, lang, uid, tags }) => {
+		const now = new Date().toISOString()
+		for (const t of tags) {
+			if (t.isNew) {
+				langTagsCollection.insert({
+					id: t.tagId,
+					name: t.name,
+					lang,
+					added_by: uid,
+					created_at: now,
+				})
+			}
+			phraseTagLinksCollection.insert({
+				phrase_id: phraseId,
+				tag_id: t.tagId,
+				added_by: uid,
+				created_at: now,
+			})
+		}
+	},
+	mutationFn: async ({ phraseId, lang, uid, tags }) => {
+		// New tags first — phrase_tag links FK into tag.id.
+		const newRows = tags
+			.filter((t) => t.isNew)
+			.map((t) => ({ id: t.tagId, name: t.name, lang, added_by: uid }))
+		if (newRows.length) {
+			await supabase.from('tag').insert(newRows).throwOnError()
+		}
+		const linkRows = tags.map((t) => ({
+			phrase_id: phraseId,
+			tag_id: t.tagId,
+			added_by: uid,
+		}))
+		if (linkRows.length) {
+			await supabase.from('phrase_tag').insert(linkRows).throwOnError()
+		}
+	},
+})
 
 export function AddTags({
 	phrase,
@@ -47,51 +89,42 @@ export function AddTags({
 	phrase: PhraseFullFilteredType
 	allowRemove?: boolean
 }) {
+	const userId = useUserId()
 	const [open, setOpen] = useState(false)
 	const { data: allLangTags } = useLanguageTags(phrase?.lang)
 
-	const addTagsMutation = useMutation({
-		mutationFn: async (values: AddTagsFormValues) => {
-			console.log(`Running addTagsMutation fn`, { values, allLangTags })
-			if (values.tags.length === 0) return
-
-			const { data, error } = await supabase.rpc('add_tags_to_phrase', {
-				p_phrase_id: phrase.id,
-				p_lang: phrase.lang,
-				p_tags: values.tags,
-			})
-
-			if (error) throw error
-			return data as AddTagsReturnValues
-		},
-		onSuccess: (data) => {
-			if (data?.tags.length) {
-				data?.tags.map((t) => {
-					langTagsCollection.utils.writeInsert(LangTagSchema.parse(t))
-				})
+	const handleSubmit = (values: AddTagsFormValues) => {
+		if (!userId || values.tags.length === 0) return
+		const resolved: AddTagsAction['tags'] = values.tags.map((name) => {
+			const existing = (allLangTags ?? []).find((t) => t.name === name)
+			return {
+				tagId: existing?.id ?? crypto.randomUUID(),
+				name,
+				isNew: !existing,
 			}
-			if (data?.phrase_tags.length) {
-				data.phrase_tags.forEach((link) => {
-					phraseTagLinksCollection.utils.writeInsert(
-						PhraseTagLinkSchema.parse(link)
-					)
-				})
+		})
+		const tx = addTagsAction({
+			phraseId: phrase.id,
+			lang: phrase.lang,
+			uid: userId,
+			tags: resolved,
+		})
+		setOpen(false)
+		form.reset()
+		tx.isPersisted.promise.then(
+			() => toastSuccess('Tags added!'),
+			(err: Error) => {
+				toastError(`Failed to add tags: ${err.message}`)
+				console.log(`Rolled back add-tags`, err)
 			}
-			setOpen(false)
-			form.reset()
-			toastSuccess('Tags added!')
-		},
-		onError: (error) => {
-			console.log(`Failed to add tags: ${error.message}`, error)
-			toastError(`Failed to add tags: ${error.message}`)
-		},
-	})
+		)
+	}
 
 	const form = useAppForm({
 		defaultValues: { tags: [] } as AddTagsFormValues,
 		validators: { onChange: addTagsSchema },
-		onSubmit: async ({ value }) => {
-			await addTagsMutation.mutateAsync(value)
+		onSubmit: ({ value }) => {
+			handleSubmit(value)
 		},
 	})
 
@@ -207,31 +240,22 @@ function RemovableTagBadge({
 	tag: { id: string; name: string }
 	phraseId: string
 }) {
-	const removeTag = useMutation({
-		mutationFn: async () => {
-			await supabase
-				.from('phrase_tag')
-				.delete()
-				.eq('phrase_id', phraseId)
-				.eq('tag_id', tag.id)
-				.throwOnError()
-		},
-		onSuccess: () => {
-			phraseTagLinksCollection.utils.writeDelete(`${phraseId}--${tag.id}`)
-			toastSuccess(`Tag "${tag.name}" removed`)
-		},
-		onError: (error) => {
-			toastError('Failed to remove tag')
-			console.error(error)
-		},
-	})
+	const removeTag = () => {
+		const tx = phraseTagLinksCollection.delete(`${phraseId}--${tag.id}`)
+		tx.isPersisted.promise.then(
+			() => toastSuccess(`Tag "${tag.name}" removed`),
+			(err: Error) => {
+				toastError('Failed to remove tag')
+				console.log(`Rolled back tag removal`, err)
+			}
+		)
+	}
 
 	return (
 		<Badge variant="secondary" className="gap-1">
 			{tag.name}
 			<button
-				onClick={() => removeTag.mutate()}
-				disabled={removeTag.isPending}
+				onClick={removeTag}
 				className="hover:text-destructive -me-1 rounded-full p-0.5"
 			>
 				<X className="size-3" />
