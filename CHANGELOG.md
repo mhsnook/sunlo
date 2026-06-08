@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.28 - LanguagePicker, Sharing Redesign, Translations & Tags Split
+## v0.28 - LanguagePicker, Sharing Redesign, Local-First Phrase Mutations
 
 _6 June, 2026_
 
@@ -17,9 +17,8 @@ _6 June, 2026_
 
 ### Refactors
 
-- **Translations split off the phrase row.** New `phraseTranslationsCollection` reads `phrase_translation` directly; live queries compose translations back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` is still an array everywhere it's read.
-- **Phrase tags split off the phrase row** in the same shape: new `phraseTagLinksCollection` reads the `phrase_tag` join table, and the live queries compose `tags` onto each phrase via `toArray()` + an inner join to `langTagsCollection`. After this, `phrase_meta` is just a slim phrase projection plus `phrase_stats` columns — both of those will get the same treatment in v0.29.
-- **Direct collection actions replace the phrase-creation RPCs.** Adding a phrase + translation (with or without cards), bulk-adding many phrases, adding tags, removing tags, editing or archiving a translation, and editing phrase text now all go through `collection.insert / update / delete` (with `onInsert / onUpdate / onDelete` handlers on the collection itself) or `createOptimisticAction` for multi-collection flows. No more `useMutation` + manual `writeInsert` in `onSuccess`, no more misleading "Failed to X" toasts when a post-success local sync throws. UX feedback (toasts) hangs off `tx.isPersisted.promise`, so an optimistic write that rolls back surfaces a real error instead of a spurious success.
+- **Local-first phrase mutations.** Adding a phrase, adding a translation, editing or archiving a translation, adding tags, removing tags, bulk-adding many phrases, and editing phrase text used to go through `useMutation` calling a server-side RPC, then writing the result back into local collections in `onSuccess`. That whole pattern is gone. Mutations now call `collection.insert / update / delete` directly — each collection has an `onInsert / onUpdate / onDelete` handler that persists to Supabase, and toasts hang off `tx.isPersisted.promise`. Multi-collection flows (phrase + translation + cards, or phrase + new tags + tag links) use `createOptimisticAction`. Optimistic writes that fail roll back cleanly; a successful insert whose post-success sync throws no longer surfaces as a misleading "Failed to X" toast.
+- **Translations and tags split off the phrase row.** Both moved into their own collections (`phraseTranslationsCollection`, `phraseTagLinksCollection`). Live queries compose them back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` and `phrase.tags` are still arrays everywhere consumers read them. Each axis now has its own cache lifetime, its own mutation surface, and its own invalidation. After this, `phrase_meta` is just a slim phrase projection plus `phrase_stats` columns — and the client doesn't read the tag-aggregation CTE at all.
 - **`UserAvatar`** extracted as a general component.
 - Drop the full-table refetch on new request creation; preload `messagesCollection` before the write.
 
