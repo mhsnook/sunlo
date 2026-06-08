@@ -79,6 +79,26 @@ const addTagsAction = createOptimisticAction<AddTagsAction>({
 		if (linkRows.length) {
 			await supabase.from('phrase_tag').insert(linkRows).throwOnError()
 		}
+		// Sync the confirmed rows so they survive the action's optimistic-state
+		// drop at the end of mutationFn.
+		const now = new Date().toISOString()
+		for (const t of tags) {
+			if (t.isNew) {
+				langTagsCollection.utils.writeInsert({
+					id: t.tagId,
+					name: t.name,
+					lang,
+					added_by: uid,
+					created_at: now,
+				})
+			}
+			phraseTagLinksCollection.utils.writeInsert({
+				phrase_id: phraseId,
+				tag_id: t.tagId,
+				added_by: uid,
+				created_at: now,
+			})
+		}
 	},
 })
 
