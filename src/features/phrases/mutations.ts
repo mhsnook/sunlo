@@ -92,6 +92,7 @@ export const createPhraseWithTranslation =
 			uid,
 			cards,
 		}) => {
+			const now = new Date().toISOString()
 			await supabase
 				.from('phrase')
 				.insert({
@@ -126,6 +127,46 @@ export const createPhraseWithTranslation =
 						}))
 					)
 					.throwOnError()
+			}
+			// Sync the confirmed rows into the collections. The action's
+			// optimistic state drops when mutationFn resolves, so we writeInsert
+			// the same values we just persisted to keep them past this tick.
+			phrasesCollection.utils.writeInsert({
+				id: phraseId,
+				lang,
+				text,
+				only_reverse: onlyReverse,
+				added_by: uid,
+				archived: false,
+				created_at: now,
+				avg_difficulty: null,
+				avg_stability: null,
+				count_learners: cards.length > 0 ? 1 : 0,
+			})
+			phraseTranslationsCollection.utils.writeInsert({
+				id: translationId,
+				phrase_id: phraseId,
+				lang: translationLang,
+				text: translationText,
+				added_by: uid,
+				archived: false,
+				created_at: now,
+				updated_at: now,
+			})
+			for (const c of cards) {
+				cardsCollection.utils.writeInsert({
+					id: c.id,
+					phrase_id: phraseId,
+					lang,
+					uid,
+					status: 'active',
+					direction: c.direction,
+					created_at: now,
+					updated_at: now,
+					last_reviewed_at: null,
+					stability: null,
+					difficulty: null,
+				})
 			}
 		},
 	})
@@ -290,6 +331,67 @@ export const bulkAddPhrases = createOptimisticAction<BulkAddPhrasesInput>({
 		)
 		if (linkRows.length) {
 			await supabase.from('phrase_tag').insert(linkRows).throwOnError()
+		}
+		// Sync confirmed rows into the collections before the optimistic state
+		// drops at the end of mutationFn.
+		const now = new Date().toISOString()
+		for (const t of newTags) {
+			langTagsCollection.utils.writeInsert({
+				id: t.id,
+				name: t.name,
+				lang,
+				added_by: uid,
+				created_at: now,
+			})
+		}
+		for (const p of phrases) {
+			phrasesCollection.utils.writeInsert({
+				id: p.phraseId,
+				lang,
+				text: p.text,
+				only_reverse: p.onlyReverse,
+				added_by: uid,
+				archived: false,
+				created_at: now,
+				avg_difficulty: null,
+				avg_stability: null,
+				count_learners: p.cards.length > 0 ? 1 : 0,
+			})
+			for (const t of p.translations) {
+				phraseTranslationsCollection.utils.writeInsert({
+					id: t.id,
+					phrase_id: p.phraseId,
+					lang: t.lang,
+					text: t.text,
+					added_by: uid,
+					archived: false,
+					created_at: now,
+					updated_at: now,
+				})
+			}
+			for (const c of p.cards) {
+				cardsCollection.utils.writeInsert({
+					id: c.id,
+					phrase_id: p.phraseId,
+					lang,
+					uid,
+					status: 'active',
+					direction: c.direction,
+					created_at: now,
+					updated_at: now,
+					last_reviewed_at: null,
+					stability: null,
+					difficulty: null,
+				})
+			}
+			for (const tagId of p.tagIds) {
+				phraseTagLinksCollection.utils.writeInsert({
+					phrase_id: p.phraseId,
+					tag_id: tagId,
+					added_by: uid,
+					created_at: now,
+				})
+			}
 		}
 	},
 })
