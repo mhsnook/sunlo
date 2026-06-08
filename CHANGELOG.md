@@ -6,33 +6,33 @@ _6 June, 2026_
 
 ### Features
 
-- **`LanguagePicker`** — one component now drives every language-pick in the app: translation field on phrase forms, the add-deck page, and the discover flow on the languages list. Replaces three older selectors and folds in popular-language sorting plus a select-with-confirmation mode.
-- **Friend picker redesigned** for sharing phrases inside chat. Generic sharing UI consolidated under `components/share/`.
+- **`LanguagePicker`** — one component drives every language pick: translation field, add-deck, language discovery. Replaces three older selectors; adds popular-language sorting and a confirm-on-select mode.
+- **Friend picker redesigned** for sharing phrases in chat; generic sharing UI consolidated under `components/share/`.
 
 ### Improvements
 
 - **Hard-reload on sign-out** so user-scoped collections never carry across identities.
 - Admin affordances hidden from non-admins on public phrase pages.
-- Card-status dropdown showcase uses a static popup so it's easier to inspect on `/themes`.
+- Card-status dropdown showcase uses a static popup on `/themes`.
 
 ### Refactors
 
-- **Local-first phrase mutations.** Adding a phrase, adding a translation, editing or archiving a translation, adding tags, removing tags, bulk-adding many phrases, and editing phrase text used to go through `useMutation` calling a server-side RPC, then writing the result back into local collections in `onSuccess`. That whole pattern is gone. Mutations now call `collection.insert / update / delete` directly — each collection has an `onInsert / onUpdate / onDelete` handler that persists to Supabase, and toasts hang off `tx.isPersisted.promise`. Multi-collection flows (phrase + translation + cards, or phrase + new tags + tag links) use `createOptimisticAction`. Optimistic writes that fail roll back cleanly; a successful insert whose post-success sync throws no longer surfaces as a misleading "Failed to X" toast.
-- **Translations and tags split off the phrase row.** Both moved into their own collections (`phraseTranslationsCollection`, `phraseTagLinksCollection`). Live queries compose them back onto each phrase via TanStack DB's `toArray()` aggregator, so `phrase.translations` and `phrase.tags` are still arrays everywhere consumers read them. Each axis now has its own cache lifetime, its own mutation surface, and its own invalidation. After this, `phrase_meta` is just a slim phrase projection plus `phrase_stats` columns — and the client doesn't read the tag-aggregation CTE at all.
+- **Local-first phrase mutations.** Phrase, translation, tag, and bulk-add mutations now use `collection.insert / update / delete` (with `onInsert / onUpdate / onDelete` handlers) or `createOptimisticAction` for multi-collection flows. Toasts hang off `tx.isPersisted.promise`, so rollbacks surface real errors instead of misleading "Failed to X" toasts.
+- **Translations and tags split off the phrase row** into `phraseTranslationsCollection` and `phraseTagLinksCollection`. Live queries compose them back via `toArray()`, so `phrase.translations` and `phrase.tags` are still arrays at every read site. `phrase_meta` is now just a phrase projection + `phrase_stats` columns.
 - **`UserAvatar`** extracted as a general component.
-- Drop the full-table refetch on new request creation; preload `messagesCollection` before the write.
+- Drop the full-table refetch on new request creation.
 
 ### Migrations
 
-- `20260606120000_drop_phrase_creation_rpcs.sql` — drops `add_phrase_translation_card`, `add_tags_to_phrase`, and `bulk_add_phrases`, plus the two composite types (`phrase_with_translations_input`, `translation_input`) that only existed to shape input to the bulk RPC. Everything they did is now driven from the client through TanStack DB collections.
+- `20260606120000_drop_phrase_creation_rpcs.sql` — drops `add_phrase_translation_card`, `add_tags_to_phrase`, `bulk_add_phrases`, and their two composite types. The client drives these flows itself now.
 
 ### Build / Dependencies
 
-- **Scenetest 0.10.0** — `@scenetest/scenes`, `@scenetest/vite-plugin`, `@scenetest/checks-panel`, `@scenetest/checks-react`.
+- **Scenetest 0.10.0.**
 
 ### Docs / DX
 
-- **`CLAUDE.md`** — migration-track branches are now named `next-<version>` (e.g. `next-0.28`). Deployment-gate rule rewritten: the first question is "was this branch created from `next-<version>`?", the second is "does the diff touch a migration?" — so a UI PR whose branch happened to start on `next-<version>` doesn't smuggle unreleased migrations into `main`.
+- **`CLAUDE.md`** — migration-track branches named `next-<version>`. Deployment-gate rule now checks branch base before content, so a UI PR off `next-<version>` can't smuggle unreleased migrations into `main`.
 
 ## v0.27 - Admin Tag Editor, Auth Lifecycle, Playwright → Scenetest
 
