@@ -1,6 +1,6 @@
 # Change Log
 
-## v0.28 - LanguagePicker, Sharing Redesign, Local-First Phrase Mutations
+## v0.28 - LanguagePicker, Sharing Redesign, Translations & Tags Split
 
 _6 June, 2026_
 
