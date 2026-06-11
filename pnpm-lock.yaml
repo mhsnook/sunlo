@@ -105,18 +105,15 @@ importers:
       '@rolldown/plugin-babel':
         specifier: ^0.2.3
         version: 0.2.3(@babel/core@7.29.0)(@babel/runtime@7.28.6)(rolldown@1.0.1)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
-      '@scenetest/checks-panel':
-        specifier: ^0.10.0
-        version: 0.10.0
-      '@scenetest/checks-react':
-        specifier: ^0.10.0
-        version: 0.10.0(react@19.2.3)
+      '@scenetest/checks':
+        specifier: ^0.12.0
+        version: 0.12.0(react@19.2.3)
       '@scenetest/scenes':
         specifier: ^0.10.0
         version: 0.10.0(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@scenetest/vite-plugin':
-        specifier: ^0.10.0
-        version: 0.10.0(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: ^0.12.0
+        version: 0.12.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.3.0)
@@ -567,6 +564,12 @@ packages:
 
   '@fontsource/opendyslexic@5.2.5':
     resolution: {integrity: sha512-NNS9aaPQx2TlaTvb3vTEjw3xz8lKj23mBc+6rM00mSNFDygdoll0/nLMHFtDKKrBT6sMfY6TFFPOR0D9ktdspg==}
+
+  '@hono/node-server@1.19.14':
+    resolution: {integrity: sha512-GwtvgtXxnWsucXvbQXkRgqksiH2Qed37H9xHZocE5sA3N8O8O8/8FA3uclQXxXVzc9XBZuEOMK7+r02FmSpHtw==}
+    engines: {node: '>=18.14.1'}
+    peerDependencies:
+      hono: ^4
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1289,19 +1292,34 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@scenetest/checks-panel@0.10.0':
-    resolution: {integrity: sha512-DgT3aElaKdCDhm1ihA0cqjND37YvtemCwkzTUkqO3kmUDTu3eeotzW3eIMchI4xfTbvz32EZhN6V0VIdwp0I2g==}
-
-  '@scenetest/checks-react@0.10.0':
-    resolution: {integrity: sha512-AoR7VVdzrzfMb0h9ij6L1tiOZ7RcOEWoCuRncMHSjrJhEa3+OufhmhijcoddDwM044TuVVnCce+CQVn4+PmWYA==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-
   '@scenetest/checks@0.10.0':
     resolution: {integrity: sha512-aw5IwzoziDYVsFaGDzgrNRUfBG1oNOBTpX63G6esGDtRVb6iszR6UfB6rLBsS4q/Lz+qO7KcL7OvkYmtnT8sQw==}
 
-  '@scenetest/scenes-panel@0.10.0':
-    resolution: {integrity: sha512-k4+z+b/g9AYw9DOX1NgFEcL2W/l4LdO1Zhnfdd1XPLulBR1twtoXr2E4WIIsbr9wwUQc6TecFaTy/cepz/OJbA==}
+  '@scenetest/checks@0.12.0':
+    resolution: {integrity: sha512-iDvlil89AJ12j+e8cRnWBIMJVBDmPyeHjEfy0BTE0ZJ/FRdZQV/9QC3mwjfD0yEvVNgTKOoM655dGiC0Ud8G8w==}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0
+      solid-js: ^1.8.0
+      svelte: ^5.53.5
+      vue: ^3.3.0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      solid-js:
+        optional: true
+      svelte:
+        optional: true
+      vue:
+        optional: true
+
+  '@scenetest/dashboard@0.11.0':
+    resolution: {integrity: sha512-8lAlcdE/wxiQBknjtvTuNjeyoLGq/tI73/yo6n36AprUZRdmWcPxABcP1QSTP/DRJyJs4hTUzS+PL0OwjTKbxg==}
+
+  '@scenetest/protocol@0.11.0':
+    resolution: {integrity: sha512-Lh/0nGWp+pck16ncePrNd9d4MGpXOQ1G2aJxXDkc3U9GoV76iXP+sdePLjPU00sSrei15RS1iXGE71moa/AEYg==}
+
+  '@scenetest/receiver@0.11.0':
+    resolution: {integrity: sha512-9YTqKTO4aw3cfoFD+xLSND9sVcQ1NZiLClihlrpZYlBH0fdhg8UESv6QC/limJDo2rUk+MJx0PDLq9M3n04cLQ==}
 
   '@scenetest/scenes@0.10.0':
     resolution: {integrity: sha512-/oxc5SLlunlJ986x2SLfWRA1e/RoCz8M3SAVsV44flHTf23aKF8dTj5in/5dnbdQMWTwMBmurlJPyPG+cdL18A==}
@@ -1312,8 +1330,8 @@ packages:
       vite:
         optional: true
 
-  '@scenetest/vite-plugin@0.10.0':
-    resolution: {integrity: sha512-yB8s9ZDTsHsIlhHU6ZGNE1/WfLZ1a60FC3yuLN2G+CbKNXzMKqk3EQqNJx8xXAzVsEfBnNN7i9s/BtzEOVlz3Q==}
+  '@scenetest/vite-plugin@0.12.0':
+    resolution: {integrity: sha512-2Bw2PohpmI2+elz9XK21be+TsPjTAWsUQzD7ryR9SrWo6io2EKwNAwxWrUuCUsnofpcOwOeImWXnLApMS5138g==}
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
@@ -2331,6 +2349,10 @@ packages:
 
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
+
+  hono@4.12.25:
+    resolution: {integrity: sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==}
+    engines: {node: '>=16.9.0'}
 
   htm@3.1.1:
     resolution: {integrity: sha512-983Vyg8NwUE7JkZ6NmOqpCZ+sh1bKv2iYTlUkzlWmA5JD2acKoxd4KVxbMmxX/85mtfdnDmTFoNKcg5DGAvxNQ==}
@@ -3765,6 +3787,10 @@ snapshots:
 
   '@fontsource/opendyslexic@5.2.5': {}
 
+  '@hono/node-server@1.19.14(hono@4.12.25)':
+    dependencies:
+      hono: 4.12.25
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.7':
@@ -4237,16 +4263,25 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@scenetest/checks-panel@0.10.0': {}
-
-  '@scenetest/checks-react@0.10.0(react@19.2.3)':
-    dependencies:
-      '@scenetest/checks': 0.10.0
-      react: 19.2.3
-
   '@scenetest/checks@0.10.0': {}
 
-  '@scenetest/scenes-panel@0.10.0': {}
+  '@scenetest/checks@0.12.0(react@19.2.3)':
+    optionalDependencies:
+      react: 19.2.3
+
+  '@scenetest/dashboard@0.11.0':
+    dependencies:
+      '@scenetest/protocol': 0.11.0
+      htm: 3.1.1
+      preact: 10.29.1
+
+  '@scenetest/protocol@0.11.0': {}
+
+  '@scenetest/receiver@0.11.0':
+    dependencies:
+      '@hono/node-server': 1.19.14(hono@4.12.25)
+      '@scenetest/protocol': 0.11.0
+      hono: 4.12.25
 
   '@scenetest/scenes@0.10.0(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
@@ -4258,20 +4293,25 @@ snapshots:
     optionalDependencies:
       vite: 8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)
 
-  '@scenetest/vite-plugin@0.10.0(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@scenetest/vite-plugin@0.12.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@babel/parser': 7.29.2
       '@babel/traverse': 7.29.0
       '@babel/types': 7.29.0
-      '@scenetest/checks': 0.10.0
-      '@scenetest/checks-panel': 0.10.0
-      '@scenetest/scenes-panel': 0.10.0
+      '@scenetest/checks': 0.12.0(react@19.2.3)
+      '@scenetest/dashboard': 0.11.0
+      '@scenetest/protocol': 0.11.0
+      '@scenetest/receiver': 0.11.0
       htm: 3.1.1
       magic-string: 0.30.21
       preact: 10.29.1
       vite: 8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)
     transitivePeerDependencies:
+      - react
+      - solid-js
       - supports-color
+      - svelte
+      - vue
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -5323,6 +5363,8 @@ snapshots:
   hast-util-whitespace@3.0.0:
     dependencies:
       '@types/hast': 3.0.4
+
+  hono@4.12.25: {}
 
   htm@3.1.1: {}
 

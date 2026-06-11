@@ -1,5 +1,5 @@
 import { and, count, eq, gte, useLiveQuery } from '@tanstack/react-db'
-import { should } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks/react'
 import dayjs from 'dayjs'
 import isoWeek from 'dayjs/plugin/isoWeek'
 

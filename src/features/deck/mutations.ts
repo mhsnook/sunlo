@@ -2,7 +2,7 @@ import type { Tables } from '@/types/supabase'
 import { useNavigate } from '@tanstack/react-router'
 import { useMutation } from '@tanstack/react-query'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { should } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks/react'
 
 import supabase from '@/lib/supabase-client'
 import languages from '@/lib/languages'

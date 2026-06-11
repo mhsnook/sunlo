@@ -57,7 +57,7 @@ import { usePhrase } from '@/hooks/composite-phrase'
 import { CardlikeFlashcard } from '@/components/ui/card-like'
 import { cardsCollection } from '@/features/deck/collections'
 import { useMyCard } from '@/features/deck/hooks'
-import { useCheck, should } from '@scenetest/checks-react'
+import { useCheck, should } from '@scenetest/checks/react'
 
 type CardStatus = CardMetaType['status']
 

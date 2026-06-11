@@ -26,7 +26,7 @@ import {
 	parseManifestEntry,
 	type ManifestEntry,
 } from '@/features/review/manifest'
-import { useCheck, should } from '@scenetest/checks-react'
+import { useCheck, should } from '@scenetest/checks/react'
 import { todayString } from '@/lib/utils'
 
 export const Route = createFileRoute('/_user/learn/$lang/review/go')({
