@@ -1,7 +1,7 @@
 import { type ReactNode, CSSProperties, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { should } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks/react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 
 import supabase from '@/lib/supabase-client'

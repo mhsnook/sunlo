@@ -16,7 +16,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toastError, toastSuccess } from '@/components/ui/sonner'
-import { should } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks/react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Archive, ArchiveRestore } from 'lucide-react'
 

@@ -9,7 +9,7 @@ import {
 } from './schemas'
 import { queryClient } from '@/lib/query-client'
 import supabase from '@/lib/supabase-client'
-import { should } from '@scenetest/checks-react'
+import { should } from '@scenetest/checks/react'
 import { sortDecksByCreation } from '@/lib/utils'
 import languages from '@/lib/languages'
 import type { TablesUpdate } from '@/types/supabase'

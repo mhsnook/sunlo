@@ -1,4 +1,4 @@
-import { failed } from '@scenetest/checks-react'
+import { failed } from '@scenetest/checks/react'
 import { queryClient } from '@/lib/query-client'
 import { myProfileCollection } from '@/features/profile/collections'
 import { decksCollection } from '@/features/deck/collections'
