@@ -1,0 +1,33 @@
+{
+	"version": 1,
+	"scenes": "pnpm exec scenetest",
+	"stages": [
+		{
+			"name": "deps",
+			"watch": ["pnpm-lock.yaml"],
+			"run": "pnpm install --frozen-lockfile && pnpm exec playwright install chromium"
+		},
+		{
+			"name": "db",
+			"watch": ["supabase/**"],
+			"run": "bash scenetest/box-db.sh"
+		},
+		{
+			"name": "build",
+			"watch": [
+				"src/**",
+				"public/**",
+				"index.html",
+				"package.json",
+				"*.config.*",
+				"tsconfig*.json"
+			],
+			"run": "pnpm build:test"
+		},
+		{
+			"name": "serve",
+			"watch": [],
+			"run": "(pnpm preview --port 5173 &) && npx wait-on http://localhost:5173 --timeout 60000"
+		}
+	]
+}
