@@ -3,7 +3,9 @@ set -euo pipefail
 
 # The `db` stage of scenetest/pipeline.json. Boots the local Supabase stack,
 # pins the connection details the rest of the box needs, and resets to a clean
-# seeded database. Mirrors the `scenetest` job in .github/workflows/test.yaml.
+# seeded database. CI (.github/workflows/test.yaml) never boots Supabase — it
+# only typechecks, lints, and builds with dummy env — so running scenes against
+# a live, seeded DB is unique to the scenetest-cloud box.
 
 # `supabase start` is idempotent (a no-op against an already-running stack).
 # Exclude the services scenes never touch, matching CI, to keep boot fast.
