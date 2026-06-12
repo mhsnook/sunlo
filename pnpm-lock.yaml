@@ -109,11 +109,11 @@ importers:
         specifier: ^0.13.0
         version: 0.13.0(react@19.2.3)
       '@scenetest/scenes':
-        specifier: ^0.14.0
-        version: 0.14.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: ^0.15.0
+        version: 0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@scenetest/vite-plugin':
         specifier: ^0.14.0
-        version: 0.14.0(@scenetest/scenes@0.14.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
+        version: 0.14.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
       '@tailwindcss/container-queries':
         specifier: ^0.1.1
         version: 0.1.1(tailwindcss@4.3.0)
@@ -1318,8 +1318,8 @@ packages:
   '@scenetest/receiver@0.11.0':
     resolution: {integrity: sha512-9YTqKTO4aw3cfoFD+xLSND9sVcQ1NZiLClihlrpZYlBH0fdhg8UESv6QC/limJDo2rUk+MJx0PDLq9M3n04cLQ==}
 
-  '@scenetest/scenes@0.14.0':
-    resolution: {integrity: sha512-nTr5YDtVyVfkTLRpehlp2t7Tud0Oesr9Oqa8ZYLFvhbz9dzarTSiSN+/E7TY3MpQ3kpjbx8rh7fNAkJy+BgNsg==}
+  '@scenetest/scenes@0.15.0':
+    resolution: {integrity: sha512-BFcu/+B0q7lomHj/1Nks/zAJaYMQLOjc+YuVuzQf7dKtr6B9dfdNiwePc9Lr8xOanVT8Zb49aXMHbpWa9hcSTQ==}
     hasBin: true
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
@@ -4283,7 +4283,7 @@ snapshots:
       '@scenetest/protocol': 0.11.0
       hono: 4.12.25
 
-  '@scenetest/scenes@0.14.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@scenetest/checks': 0.13.0(react@19.2.3)
       '@scenetest/protocol': 0.11.0
@@ -4299,7 +4299,7 @@ snapshots:
       - svelte
       - vue
 
-  '@scenetest/vite-plugin@0.14.0(@scenetest/scenes@0.14.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
+  '@scenetest/vite-plugin@0.14.0(@scenetest/scenes@0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)))(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))':
     dependencies:
       '@babel/parser': 7.29.2
       '@babel/traverse': 7.29.0
@@ -4313,7 +4313,7 @@ snapshots:
       preact: 10.29.1
       vite: 8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0)
     optionalDependencies:
-      '@scenetest/scenes': 0.14.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@scenetest/scenes': 0.15.0(react@19.2.3)(vite@8.0.13(@types/node@25.8.0)(esbuild@0.27.3)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
     transitivePeerDependencies:
       - react
       - solid-js
