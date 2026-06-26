@@ -30,7 +30,6 @@ import { authLifecycle } from '@/lib/auth-lifecycle'
 import { useDeckMeta } from '@/features/deck/hooks'
 import { useSocialRealtime } from '@/features/social'
 import { languagesCollection } from '@/features/languages/collections'
-import { useNotificationsRealtime } from '@/features/notifications/hooks'
 import { useFontPreference } from '@/hooks/use-font-preference'
 
 const UserSearchParams = z.object({
@@ -139,9 +138,8 @@ function UserLayout() {
 	// Apply user's font preference to the document body
 	useFontPreference()
 
-	// Subscribe to realtime friend-request, chat-message, and notification events
+	// Subscribe to realtime friend-request and chat-message events.
 	useSocialRealtime()
-	useNotificationsRealtime()
 
 	return (
 		<div

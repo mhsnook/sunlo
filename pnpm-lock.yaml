@@ -17,6 +17,9 @@ importers:
       '@fontsource/opendyslexic':
         specifier: ^5.2.5
         version: 5.2.5
+      '@supabase-labs/tanstack-db':
+        specifier: ^0.0.1
+        version: 0.0.1(typescript@6.0.3)
       '@supabase/supabase-js':
         specifier: ^2.106.0
         version: 2.106.0
@@ -1341,6 +1344,9 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@supabase-labs/tanstack-db@0.0.1':
+    resolution: {integrity: sha512-qZy/9BNRB3MwTfNlk5lh17Z5PJHK5DifOfnB+dS3SSpXkM4hOx6+CwW8C2UomFDDG5hcZu8naFpX74w+OBVuXA==}
 
   '@supabase/auth-js@2.106.0':
     resolution: {integrity: sha512-JY7602OvjK2l3BjsQkpePpxR+6P0iG37gCrZNWAMhAuNh1iFnhGRwj/y5EshUG0INMPGFrj0UA9MErQ/kOEKFg==}
@@ -4324,6 +4330,17 @@ snapshots:
   '@standard-schema/spec@1.1.0': {}
 
   '@standard-schema/utils@0.3.0': {}
+
+  '@supabase-labs/tanstack-db@0.0.1(typescript@6.0.3)':
+    dependencies:
+      '@standard-schema/spec': 1.1.0
+      '@supabase/postgrest-js': 2.106.0
+      '@supabase/supabase-js': 2.106.0
+      '@tanstack/db': 0.6.5(typescript@6.0.3)
+      '@tanstack/query-core': 5.90.12
+      '@tanstack/query-db-collection': 1.0.36(@tanstack/query-core@5.90.12)(typescript@6.0.3)
+    transitivePeerDependencies:
+      - typescript
 
   '@supabase/auth-js@2.106.0':
     dependencies:
