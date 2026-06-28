@@ -197,6 +197,16 @@ natural wrapper element to label.
 | `browse-search-overlay`                  | data-testid | Search overlay           | Dialog container for the public-library search overlay                                                             |
 | `browse-search-input`                    | data-testid | Search overlay           | Search input inside the overlay                                                                                    |
 | `browse-search-results`                  | data-testid | Search overlay           | Results list inside the overlay                                                                                    |
+| `browse-lang-page`                       | data-testid | Browse `/browse/$lang`   | Language browse/discover page container                                                                            |
+| `browse-tab-{all,cards,sets,requests}`   | data-testid | Browse `/browse/$lang`   | Tab triggers (All / Cards / Sets / Requests)                                                                       |
+| `browse-topic-chips`                     | data-testid | Browse `/browse/$lang`   | Topic-tag filter chip row (chips carry `data-key={tag.id}`)                                                        |
+| `browse-level-select`                    | data-testid | Browse `/browse/$lang`   | Difficulty-level select trigger                                                                                    |
+| `browse-lang-search-input`               | data-testid | Browse `/browse/$lang`   | In-page search input filtering cards/sets/discussions                                                              |
+| `browse-sets-section`                    | data-testid | Browse `/browse/$lang`   | "Popular Sets" section                                                                                             |
+| `browse-cards-section`                   | data-testid | Browse `/browse/$lang`   | "New Cards" section                                                                                                |
+| `browse-requests-section`                | data-testid | Browse `/browse/$lang`   | "Active Discussions" section                                                                                       |
+| `browse-set-tile`                        | data-testid | Browse `/browse/$lang`   | One set tile (carries `data-key={playlist.id}`)                                                                    |
+| `browse-card-tile`                       | data-testid | Browse `/browse/$lang`   | One flashcard tile (carries `data-key={phrase.id}`)                                                                |
 
 ## Phrase Requests
 

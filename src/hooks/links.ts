@@ -253,6 +253,15 @@ export const links = (lang?: LangKey): Record<string, LinkType> => {
 			},
 			Icon: Logs,
 		},
+		'/browse/$lang': {
+			name: 'Browse',
+			title: `Browse ${languages[lang]}`,
+			link: {
+				to: '/browse/$lang',
+				params: { lang },
+			},
+			Icon: Compass,
+		},
 		'/learn/$lang/phrases/new': {
 			name: 'Phrase',
 			title: 'Add a Phrase',

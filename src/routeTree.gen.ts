@@ -43,6 +43,7 @@ import { Route as UserLearnLangRouteImport } from './routes/_user/learn/$lang'
 import { Route as UserFriendsChatsRouteImport } from './routes/_user/friends/chats'
 import { Route as UserFriendsUidRouteImport } from './routes/_user/friends/$uid'
 import { Route as UserBrowseChartsRouteImport } from './routes/_user/browse.charts'
+import { Route as UserBrowseLangRouteImport } from './routes/_user/browse.$lang'
 import { Route as UserAdminRoutesRouteImport } from './routes/_user/admin/routes'
 import { Route as UserAdminMessagesRouteImport } from './routes/_user/admin/messages'
 import { Route as UserAdminLangRouteImport } from './routes/_user/admin/$lang'
@@ -342,6 +343,11 @@ const UserBrowseChartsRoute = UserBrowseChartsRouteImport.update({
   path: '/charts',
   getParentRoute: () => UserBrowseRoute,
 } as any)
+const UserBrowseLangRoute = UserBrowseLangRouteImport.update({
+  id: '/$lang',
+  path: '/$lang',
+  getParentRoute: () => UserBrowseRoute,
+} as any)
 const UserAdminRoutesRoute = UserAdminRoutesRouteImport.update({
   id: '/routes',
   path: '/routes',
@@ -588,6 +594,7 @@ export interface FileRoutesByFullPath {
   '/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/admin/messages': typeof UserAdminMessagesRouteWithChildren
   '/admin/routes': typeof UserAdminRoutesRoute
+  '/browse/$lang': typeof UserBrowseLangRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -658,6 +665,7 @@ export interface FileRoutesByTo {
   '/chats': typeof ChatsIndexLazyRoute
   '/themes': typeof ThemesIndexLazyRoute
   '/admin/routes': typeof UserAdminRoutesRoute
+  '/browse/$lang': typeof UserBrowseLangRoute
   '/browse/charts': typeof UserBrowseChartsRoute
   '/friends/$uid': typeof UserFriendsUidRoute
   '/learn/add-deck': typeof UserLearnAddDeckRoute
@@ -735,6 +743,7 @@ export interface FileRoutesById {
   '/_user/admin/$lang': typeof UserAdminLangRouteWithChildren
   '/_user/admin/messages': typeof UserAdminMessagesRouteWithChildren
   '/_user/admin/routes': typeof UserAdminRoutesRoute
+  '/_user/browse/$lang': typeof UserBrowseLangRoute
   '/_user/browse/charts': typeof UserBrowseChartsRoute
   '/_user/friends/$uid': typeof UserFriendsUidRoute
   '/_user/friends/chats': typeof UserFriendsChatsRouteWithChildren
@@ -817,6 +826,7 @@ export interface FileRouteTypes {
     | '/admin/$lang'
     | '/admin/messages'
     | '/admin/routes'
+    | '/browse/$lang'
     | '/browse/charts'
     | '/friends/$uid'
     | '/friends/chats'
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/chats'
     | '/themes'
     | '/admin/routes'
+    | '/browse/$lang'
     | '/browse/charts'
     | '/friends/$uid'
     | '/learn/add-deck'
@@ -963,6 +974,7 @@ export interface FileRouteTypes {
     | '/_user/admin/$lang'
     | '/_user/admin/messages'
     | '/_user/admin/routes'
+    | '/_user/browse/$lang'
     | '/_user/browse/charts'
     | '/_user/friends/$uid'
     | '/_user/friends/chats'
@@ -1344,6 +1356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserBrowseChartsRouteImport
       parentRoute: typeof UserBrowseRoute
     }
+    '/_user/browse/$lang': {
+      id: '/_user/browse/$lang'
+      path: '/$lang'
+      fullPath: '/browse/$lang'
+      preLoaderRoute: typeof UserBrowseLangRouteImport
+      parentRoute: typeof UserBrowseRoute
+    }
     '/_user/admin/routes': {
       id: '/_user/admin/routes'
       path: '/routes'
@@ -1609,11 +1628,13 @@ const AuthRouteChildren: AuthRouteChildren = {
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 interface UserBrowseRouteChildren {
+  UserBrowseLangRoute: typeof UserBrowseLangRoute
   UserBrowseChartsRoute: typeof UserBrowseChartsRoute
   UserBrowseIndexRoute: typeof UserBrowseIndexRoute
 }
 
 const UserBrowseRouteChildren: UserBrowseRouteChildren = {
+  UserBrowseLangRoute: UserBrowseLangRoute,
   UserBrowseChartsRoute: UserBrowseChartsRoute,
   UserBrowseIndexRoute: UserBrowseIndexRoute,
 }
